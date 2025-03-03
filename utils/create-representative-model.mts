@@ -56,33 +56,50 @@ for (const entry of entriesToImport) {
  * The parser tries to simplify data structure as possible so these need
  * to be checked separately.
  */
-const ARRAY_OR_OBJECT_KEYS = [
-  "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin",
-  "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin.Jasenyys",
-  "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin.EntNimi",
-  "$.XmlDataFi.Henkilo.Arvonimet.Arvonimi",
-  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat.Eduskuntaryhma",
-  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat.Eduskuntaryhma.Jasenyys",
-  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatEduskuntaryhmassa.Eduskuntaryhma",
-  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa.Eduskuntaryhma",
-  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa.Eduskuntaryhma.Tehtava",
-  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa.Eduskuntaryhma.Tehtava.Jasenyys",
-  "$.XmlDataFi.Henkilo.EdustajanJulkaisut.EdustajanJulkaisu",
-  "$.XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi",
-  "$.XmlDataFi.Henkilo.EdustajatoimiKeskeytynyt.ToimenKeskeytys",
-  "$.XmlDataFi.Henkilo.Kansanedustajana.Keskeytys",
-  "$.XmlDataFi.Henkilo.KansanvalisetLuottamustehtavat.Tehtava",
-  "$.XmlDataFi.Henkilo.KirjallisuuttaEdustajasta.Julkaisu",
-  "$.XmlDataFi.Henkilo.Koulutukset.Koulutus",
-  "$.XmlDataFi.Henkilo.KunnallisetLuottamustehtavat.Tehtava",
-  "$.XmlDataFi.Henkilo.MuutLuottamustehtavat.Tehtava",
-  "$.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet.Toimielin",
-  "$.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet.Toimielin.Jasenyys",
-  "$.XmlDataFi.Henkilo.TyoUra.Tyo",
-  "$.XmlDataFi.Henkilo.Vaalipiirit.EdellisetVaalipiirit.VaaliPiiri",
-  "$.XmlDataFi.Henkilo.ValtiollisetLuottamustehtavat.Tehtava",
-  "$.XmlDataFi.Henkilo.ValtioneuvostonJasenyydet.Jasenyys",
-] satisfies `$.${string}`[] as string[];
+const ARRAY_OR_OBJECT_KEYS = {
+  "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin": "Toimielin",
+  "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin.Jasenyys":
+    "Jäsenyys",
+  "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin.EntNimi":
+    "EntinenNimi",
+  "$.XmlDataFi.Henkilo.Arvonimet.Arvonimi": "Arvonimi",
+  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat.Eduskuntaryhma":
+    "Eduskuntaryhmä",
+  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat.Eduskuntaryhma.Jasenyys":
+    "Jäsenyys",
+  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatEduskuntaryhmassa.Eduskuntaryhma":
+    "Eduskuntaryhmä",
+  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatEduskuntaryhmassa.Eduskuntaryhma.Tehtava":
+    "Tehtava",
+  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa.Eduskuntaryhma":
+    "Eduskuntaryhmä",
+  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa.Eduskuntaryhma.Tehtava":
+    "Tehtävä",
+  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa.Eduskuntaryhma.Tehtava.Jasenyys":
+    "Jäsenyys",
+  "$.XmlDataFi.Henkilo.EdustajanJulkaisut.EdustajanJulkaisu":
+    "EdustajanJulkaisu",
+  "$.XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi": "Edustajatoimi",
+  "$.XmlDataFi.Henkilo.EdustajatoimiKeskeytynyt.ToimenKeskeytys":
+    "ToimenKeskeytys",
+  "$.XmlDataFi.Henkilo.Kansanedustajana.Keskeytys": "Keskeytys",
+  "$.XmlDataFi.Henkilo.KansanvalisetLuottamustehtavat.Tehtava":
+    "LuottamusTehtävä",
+  "$.XmlDataFi.Henkilo.KirjallisuuttaEdustajasta.Julkaisu": "Julkaisu",
+  "$.XmlDataFi.Henkilo.Koulutukset.Koulutus": "Koulutus",
+  "$.XmlDataFi.Henkilo.KunnallisetLuottamustehtavat.Tehtava":
+    "LuottamusTehtävä",
+  "$.XmlDataFi.Henkilo.MuutLuottamustehtavat.Tehtava": "LuottamusTehtävä",
+  "$.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet.Toimielin": "Toimielin",
+  "$.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet.Toimielin.Jasenyys":
+    "Jäsenyys",
+  "$.XmlDataFi.Henkilo.TyoUra.Tyo": "Työ",
+  "$.XmlDataFi.Henkilo.Vaalipiirit.EdellisetVaalipiirit.VaaliPiiri":
+    "Vaalipiiri",
+  "$.XmlDataFi.Henkilo.ValtiollisetLuottamustehtavat.Tehtava":
+    "LuottamusTehtävä",
+  "$.XmlDataFi.Henkilo.ValtioneuvostonJasenyydet.Jasenyys": "Jäsenyys",
+} satisfies Record<`$.${string}`, string> as Record<string, string>;
 
 /**
  * Object of definitions constructred during model generation.
@@ -96,11 +113,8 @@ const definitions: Record<string, any> = {};
  * @param originalPath Original JSON path to the entry.
  * @see {definitions} As a side effect adds the definition to object.
  */
-const createTypeWithDefinition = (definition: any, originalPath: string) => {
-  /** Path where `$` and `.` characters have been removed (invalid URL). */
-  const p = originalPath.replace("$.", "").split(".").join("");
-  if (p in definitions) return definition[p];
-  definitions[p] = definition;
+const createTypeWithDefinition = (definition: any, p: string) => {
+  if (!(p in definitions)) definitions[p] = definition;
   return {
     anyOf: [
       {
@@ -127,8 +141,8 @@ const convertObjectIntoSchema = (cand: unknown, p = "", root = false): any => {
   // Map array type
   if (Array.isArray(cand)) {
     const defType = cand.map((e) => convertObjectIntoSchema(e, `${p}`))[0];
-    if (ARRAY_OR_OBJECT_KEYS.includes(p)) {
-      return createTypeWithDefinition(defType, p);
+    if (p in ARRAY_OR_OBJECT_KEYS) {
+      return createTypeWithDefinition(defType, ARRAY_OR_OBJECT_KEYS[p]);
     }
     return {
       type: "array",
@@ -157,8 +171,8 @@ const convertObjectIntoSchema = (cand: unknown, p = "", root = false): any => {
           }
         : {}),
     };
-    if (ARRAY_OR_OBJECT_KEYS.includes(p)) {
-      return createTypeWithDefinition(defType, p);
+    if (p in ARRAY_OR_OBJECT_KEYS) {
+      return createTypeWithDefinition(defType, ARRAY_OR_OBJECT_KEYS[p]);
     }
     return defType;
   }
