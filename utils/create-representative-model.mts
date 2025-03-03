@@ -1,10 +1,9 @@
 import fs from "fs";
 import path from "path";
 import { deepmerge } from "@fastify/deepmerge";
-import type { TableName } from "#types/index.mts";
-
 import jsonschema from "jsonschema";
-const validator = new jsonschema.Validator();
+
+import type { TableName } from "#types/index.mts";
 
 const tableName: TableName = "MemberOfParliament";
 
@@ -17,20 +16,33 @@ if (!fs.existsSync(dataDir)) {
   throw new Error(`Data directory for ${tableName} not found, skipping...`);
 }
 
+/**
+ * List of JSON filenames found in the data directory.
+ */
 const entriesToImport = fs
   .readdirSync(dataDir, { encoding: "utf8", withFileTypes: true })
   .filter((s) => s.name.endsWith(".json") && s.name !== "meta.json")
   .map((s) => s.name);
 
-let result: Record<string, any> = {};
-
+/**
+ * Adjusted deepmerge function.
+ */
 const merge = deepmerge({
   all: true,
+  /**
+   * Try to merge all arrays together to reduce the amount of data.
+   * We do not care about the values, only keys.
+   */
   mergeArray: (opt) => (target, source) => {
     const [h, ...r] = [...target, ...source];
     return [r.reduce((acc, cur) => ({ ...acc, ...cur }), h)];
   },
 });
+
+/**
+ * Merged object.
+ */
+let result: Record<string, any> = {};
 
 for (const entry of entriesToImport) {
   const { default: data } = await import(path.resolve(dataDir, entry), {
@@ -39,6 +51,11 @@ for (const entry of entriesToImport) {
   result = merge(result, data);
 }
 
+/**
+ * Paths in JSON that can either be arrays of objects or single object.
+ * The parser tries to simplify data structure as possible so these need
+ * to be checked separately.
+ */
 const ARRAY_OR_OBJECT_KEYS = [
   "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin",
   "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin.Jasenyys",
@@ -67,10 +84,21 @@ const ARRAY_OR_OBJECT_KEYS = [
   "$.XmlDataFi.Henkilo.ValtioneuvostonJasenyydet.Jasenyys",
 ] satisfies `$.${string}`[] as string[];
 
+/**
+ * Object of definitions constructred during model generation.
+ */
 const definitions: Record<string, any> = {};
 
-const createTypeWithDefinition = (definition: any, _p: string) => {
-  const p = _p.replace("$.", "").split(".").join("");
+/**
+ * Create an `anyOf` JSON Schema entry where the value can either be the
+ * definition parameter, or an array of definition paramters.
+ * @param definition Type definition to use.
+ * @param originalPath Original JSON path to the entry.
+ * @see {definitions} As a side effect adds the definition to object.
+ */
+const createTypeWithDefinition = (definition: any, originalPath: string) => {
+  /** Path where `$` and `.` characters have been removed (invalid URL). */
+  const p = originalPath.replace("$.", "").split(".").join("");
   if (p in definitions) return definition[p];
   definitions[p] = definition;
   return {
@@ -88,16 +116,17 @@ const createTypeWithDefinition = (definition: any, _p: string) => {
   };
 };
 
-const postProcess = (cand: unknown, p = "", root = false): any => {
-  if (cand === null) {
-    return {
-      type: "null",
-    };
-  }
-
+/**
+ * Converts the merged JSON object into valid JSON schema.
+ * @param cand Value to process.
+ * @param p JSON path to entry.
+ * @param root Is the node root node?
+ */
+const convertObjectIntoSchema = (cand: unknown, p = "", root = false): any => {
+  if (cand === null) return { type: "null" };
   // Map array type
   if (Array.isArray(cand)) {
-    const defType = cand.map((e) => postProcess(e, `${p}`))[0];
+    const defType = cand.map((e) => convertObjectIntoSchema(e, `${p}`))[0];
     if (ARRAY_OR_OBJECT_KEYS.includes(p)) {
       return createTypeWithDefinition(defType, p);
     }
@@ -106,7 +135,6 @@ const postProcess = (cand: unknown, p = "", root = false): any => {
       items: defType,
     };
   }
-
   // Map object type
   if (typeof cand === "object") {
     const defType = {
@@ -120,7 +148,7 @@ const postProcess = (cand: unknown, p = "", root = false): any => {
       properties: Object.fromEntries(
         Object.entries(cand as any).map(([k, v]) => [
           k,
-          postProcess(v, `${p}.${k}`),
+          convertObjectIntoSchema(v, `${p}.${k}`),
         ])
       ),
       ...(root
@@ -134,12 +162,12 @@ const postProcess = (cand: unknown, p = "", root = false): any => {
     }
     return defType;
   }
-
   // Map string type
   if (typeof cand === "string") {
     if (/^\d{2}\.\d{2}\.\d{4}$/.test(cand.trim())) {
       return {
         type: "string",
+        // Date pattern be either in `dd.mm.YYYY`, `YYYY` or `YYYY <roman-numeral>` format.
         pattern: "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$",
       };
     }
@@ -158,16 +186,19 @@ const postProcess = (cand: unknown, p = "", root = false): any => {
   throw new Error("Unknown type");
 };
 
-const schema = postProcess(result, "$", true);
-
+// Create and write the schema file
+const schema = convertObjectIntoSchema(result, "$", true);
 const schemaPath = path.join(
   import.meta.dirname,
   "../schemas/representative-model.json"
 );
-
 fs.writeFileSync(schemaPath, JSON.stringify(schema, null, 2), {
   encoding: "utf8",
 });
+
+// VALIDATE ALL FAILS AGAINST SCHEMA
+
+const validator = new jsonschema.Validator();
 
 let firstInvalid: ReturnType<(typeof validator)["validate"]> | undefined;
 let successsCount = 0;
