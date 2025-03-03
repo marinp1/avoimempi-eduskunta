@@ -36,14 +36,42 @@
             },
             "EdustajatoimiKeskeytynyt": {
               "type": "object",
-              "properties": {}
+              "properties": {
+                "ToimenKeskeytys": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/ToimenKeskeytys"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/ToimenKeskeytys"
+                      }
+                    }
+                  ]
+                }
+              }
             },
             "EdustajantoimenTila": {
               "type": "string"
             },
             "KirjallisuuttaEdustajasta": {
               "type": "object",
-              "properties": {}
+              "properties": {
+                "Julkaisu": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Julkaisu"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/Julkaisu"
+                      }
+                    }
+                  ]
+                }
+              }
             },
             "Puh": {
               "type": "string"
@@ -56,7 +84,21 @@
             },
             "NykyisetToimielinjasenyydet": {
               "type": "object",
-              "properties": {}
+              "properties": {
+                "Toimielin": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Toimielin"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/Toimielin"
+                      }
+                    }
+                  ]
+                }
+              }
             },
             "Sidonnaisuudet": {
               "type": "object",
@@ -89,12 +131,12 @@
                 "Keskeytys": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/XmlDataFiHenkiloKansanedustajanaKeskeytys"
+                      "$ref": "#/$defs/Keskeytys"
                     },
                     {
                       "type": "array",
                       "items": {
-                        "$ref": "#/$defs/XmlDataFiHenkiloKansanedustajanaKeskeytys"
+                        "$ref": "#/$defs/Keskeytys"
                       }
                     }
                   ]
@@ -103,22 +145,78 @@
             },
             "ValtioneuvostonJasenyydet": {
               "type": "object",
-              "properties": {}
+              "properties": {
+                "Jasenyys": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Jäsenyys"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/Jäsenyys"
+                      }
+                    }
+                  ]
+                }
+              }
             },
             "Sotilasarvo": {
               "type": "string"
             },
             "KansanvalisetLuottamustehtavat": {
               "type": "object",
-              "properties": {}
+              "properties": {
+                "Tehtava": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/LuottamusTehtävä"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/LuottamusTehtävä"
+                      }
+                    }
+                  ]
+                }
+              }
             },
             "EdustajanJulkaisut": {
               "type": "object",
-              "properties": {}
+              "properties": {
+                "EdustajanJulkaisu": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/EdustajanJulkaisu"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/EdustajanJulkaisu"
+                      }
+                    }
+                  ]
+                }
+              }
             },
             "MuutLuottamustehtavat": {
               "type": "object",
-              "properties": {}
+              "properties": {
+                "Tehtava": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/LuottamusTehtävä"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/LuottamusTehtävä"
+                      }
+                    }
+                  ]
+                }
+              }
             },
             "HenkiloNro": {
               "type": "string",
@@ -165,11 +263,39 @@
             },
             "Koulutukset": {
               "type": "object",
-              "properties": {}
+              "properties": {
+                "Koulutus": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Koulutus"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/Koulutus"
+                      }
+                    }
+                  ]
+                }
+              }
             },
             "TyoUra": {
               "type": "object",
-              "properties": {}
+              "properties": {
+                "Tyo": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Työ"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/Työ"
+                      }
+                    }
+                  ]
+                }
+              }
             },
             "Arvonimet": {
               "type": "object",
@@ -177,12 +303,12 @@
                 "Arvonimi": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/XmlDataFiHenkiloArvonimetArvonimi"
+                      "$ref": "#/$defs/Arvonimi"
                     },
                     {
                       "type": "array",
                       "items": {
-                        "$ref": "#/$defs/XmlDataFiHenkiloArvonimetArvonimi"
+                        "$ref": "#/$defs/Arvonimi"
                       }
                     }
                   ]
@@ -213,12 +339,12 @@
                     "VaaliPiiri": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/XmlDataFiHenkiloVaalipiiritEdellisetVaalipiiritVaaliPiiri"
+                          "$ref": "#/$defs/Vaalipiiri"
                         },
                         {
                           "type": "array",
                           "items": {
-                            "$ref": "#/$defs/XmlDataFiHenkiloVaalipiiritEdellisetVaalipiiritVaaliPiiri"
+                            "$ref": "#/$defs/Vaalipiiri"
                           }
                         }
                       ]
@@ -233,12 +359,12 @@
                 "Edustajatoimi": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/XmlDataFiHenkiloEdustajatoimetEdustajatoimi"
+                      "$ref": "#/$defs/Edustajatoimi"
                     },
                     {
                       "type": "array",
                       "items": {
-                        "$ref": "#/$defs/XmlDataFiHenkiloEdustajatoimetEdustajatoimi"
+                        "$ref": "#/$defs/Edustajatoimi"
                       }
                     }
                   ]
@@ -254,12 +380,12 @@
                     "Eduskuntaryhma": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatTehtavatEduskuntaryhmassaEduskuntaryhma"
+                          "$ref": "#/$defs/Eduskuntaryhmä"
                         },
                         {
                           "type": "array",
                           "items": {
-                            "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatTehtavatEduskuntaryhmassaEduskuntaryhma"
+                            "$ref": "#/$defs/Eduskuntaryhmä"
                           }
                         }
                       ]
@@ -303,12 +429,12 @@
                     "Eduskuntaryhma": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatTehtavatAiemmissaEduskuntaryhmissaEduskuntaryhma"
+                          "$ref": "#/$defs/Eduskuntaryhmä"
                         },
                         {
                           "type": "array",
                           "items": {
-                            "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatTehtavatAiemmissaEduskuntaryhmissaEduskuntaryhma"
+                            "$ref": "#/$defs/Eduskuntaryhmä"
                           }
                         }
                       ]
@@ -321,12 +447,12 @@
                     "Eduskuntaryhma": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatEdellisetEduskuntaryhmatEduskuntaryhma"
+                          "$ref": "#/$defs/Eduskuntaryhmä"
                         },
                         {
                           "type": "array",
                           "items": {
-                            "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatEdellisetEduskuntaryhmatEduskuntaryhma"
+                            "$ref": "#/$defs/Eduskuntaryhmä"
                           }
                         }
                       ]
@@ -337,7 +463,21 @@
             },
             "AiemmatToimielinjasenyydet": {
               "type": "object",
-              "properties": {}
+              "properties": {
+                "Toimielin": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Toimielin"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/Toimielin"
+                      }
+                    }
+                  ]
+                }
+              }
             },
             "ValtiollisetLuottamustehtavat": {
               "type": "object",
@@ -345,12 +485,12 @@
                 "Tehtava": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/XmlDataFiHenkiloValtiollisetLuottamustehtavatTehtava"
+                      "$ref": "#/$defs/LuottamusTehtävä"
                     },
                     {
                       "type": "array",
                       "items": {
-                        "$ref": "#/$defs/XmlDataFiHenkiloValtiollisetLuottamustehtavatTehtava"
+                        "$ref": "#/$defs/LuottamusTehtävä"
                       }
                     }
                   ]
@@ -359,7 +499,21 @@
             },
             "KunnallisetLuottamustehtavat": {
               "type": "object",
-              "properties": {}
+              "properties": {
+                "Tehtava": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/LuottamusTehtävä"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/LuottamusTehtävä"
+                      }
+                    }
+                  ]
+                }
+              }
             }
           }
         }
@@ -370,7 +524,7 @@
     }
   },
   "$defs": {
-    "XmlDataFiHenkiloEdustajatoimiKeskeytynytToimenKeskeytys": {
+    "ToimenKeskeytys": {
       "type": "object",
       "properties": {
         "Selite": {
@@ -389,7 +543,7 @@
         }
       }
     },
-    "XmlDataFiHenkiloKirjallisuuttaEdustajastaJulkaisu": {
+    "Julkaisu": {
       "type": "object",
       "properties": {
         "Nimi": {
@@ -404,7 +558,7 @@
         }
       }
     },
-    "XmlDataFiHenkiloNykyisetToimielinjasenyydetToimielinJasenyys": {
+    "Jäsenyys": {
       "type": "object",
       "properties": {
         "Rooli": {
@@ -416,7 +570,7 @@
         }
       }
     },
-    "XmlDataFiHenkiloNykyisetToimielinjasenyydetToimielin": {
+    "Toimielin": {
       "type": "object",
       "properties": {
         "Nimi": {
@@ -428,19 +582,19 @@
         "Jasenyys": {
           "anyOf": [
             {
-              "$ref": "#/$defs/XmlDataFiHenkiloNykyisetToimielinjasenyydetToimielinJasenyys"
+              "$ref": "#/$defs/Jäsenyys"
             },
             {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/XmlDataFiHenkiloNykyisetToimielinjasenyydetToimielinJasenyys"
+                "$ref": "#/$defs/Jäsenyys"
               }
             }
           ]
         }
       }
     },
-    "XmlDataFiHenkiloKansanedustajanaKeskeytys": {
+    "Keskeytys": {
       "type": "object",
       "properties": {
         "TilallaSelite": {
@@ -459,29 +613,7 @@
         }
       }
     },
-    "XmlDataFiHenkiloValtioneuvostonJasenyydetJasenyys": {
-      "type": "object",
-      "properties": {
-        "Ministeriys": {
-          "type": "string"
-        },
-        "Nimi": {
-          "type": "string"
-        },
-        "Hallitus": {
-          "type": "string"
-        },
-        "AlkuPvm": {
-          "type": "string",
-          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
-        },
-        "LoppuPvm": {
-          "type": "string",
-          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
-        }
-      }
-    },
-    "XmlDataFiHenkiloKansanvalisetLuottamustehtavatTehtava": {
+    "LuottamusTehtävä": {
       "type": "object",
       "properties": {
         "Nimi": {
@@ -492,7 +624,7 @@
         }
       }
     },
-    "XmlDataFiHenkiloEdustajanJulkaisutEdustajanJulkaisu": {
+    "EdustajanJulkaisu": {
       "type": "object",
       "properties": {
         "Nimi": {
@@ -507,18 +639,7 @@
         }
       }
     },
-    "XmlDataFiHenkiloMuutLuottamustehtavatTehtava": {
-      "type": "object",
-      "properties": {
-        "Nimi": {
-          "type": "string"
-        },
-        "AikaJakso": {
-          "type": "string"
-        }
-      }
-    },
-    "XmlDataFiHenkiloKoulutuksetKoulutus": {
+    "Koulutus": {
       "type": "object",
       "properties": {
         "Nimi": {
@@ -533,7 +654,7 @@
         }
       }
     },
-    "XmlDataFiHenkiloTyoUraTyo": {
+    "Työ": {
       "type": "object",
       "properties": {
         "Nimi": {
@@ -544,7 +665,7 @@
         }
       }
     },
-    "XmlDataFiHenkiloArvonimetArvonimi": {
+    "Arvonimi": {
       "type": "object",
       "properties": {
         "Nimi": {
@@ -556,7 +677,7 @@
         }
       }
     },
-    "XmlDataFiHenkiloVaalipiiritEdellisetVaalipiiritVaaliPiiri": {
+    "Vaalipiiri": {
       "type": "object",
       "properties": {
         "Nimi": {
@@ -575,7 +696,7 @@
         }
       }
     },
-    "XmlDataFiHenkiloEdustajatoimetEdustajatoimi": {
+    "Edustajatoimi": {
       "type": "object",
       "properties": {
         "AlkuPvm": {
@@ -588,7 +709,19 @@
         }
       }
     },
-    "XmlDataFiHenkiloEduskuntaryhmatTehtavatEduskuntaryhmassaEduskuntaryhma": {
+    "Tehtava": {
+      "type": "object",
+      "properties": {
+        "Rooli": {
+          "type": "string"
+        },
+        "AlkuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        }
+      }
+    },
+    "Eduskuntaryhmä": {
       "type": "object",
       "properties": {
         "Nimi": {
@@ -598,20 +731,21 @@
           "type": "string"
         },
         "Tehtava": {
-          "type": "object",
-          "properties": {
-            "Rooli": {
-              "type": "string"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Tehtava"
             },
-            "AlkuPvm": {
-              "type": "string",
-              "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Tehtava"
+              }
             }
-          }
+          ]
         }
       }
     },
-    "XmlDataFiHenkiloEduskuntaryhmatTehtavatAiemmissaEduskuntaryhmissaEduskuntaryhmaTehtava": {
+    "Tehtävä": {
       "type": "object",
       "properties": {
         "AlkuPvm": {
@@ -630,90 +764,7 @@
         }
       }
     },
-    "XmlDataFiHenkiloEduskuntaryhmatTehtavatAiemmissaEduskuntaryhmissaEduskuntaryhma": {
-      "type": "object",
-      "properties": {
-        "ToimielinNimi": {
-          "type": "string"
-        },
-        "ToimielinTunnus": {
-          "type": "string"
-        },
-        "Nimi": {
-          "type": "string"
-        },
-        "Tunnus": {
-          "type": "string"
-        },
-        "Tehtava": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatTehtavatAiemmissaEduskuntaryhmissaEduskuntaryhmaTehtava"
-            },
-            {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatTehtavatAiemmissaEduskuntaryhmissaEduskuntaryhmaTehtava"
-              }
-            }
-          ]
-        }
-      }
-    },
-    "XmlDataFiHenkiloEduskuntaryhmatEdellisetEduskuntaryhmatEduskuntaryhmaJasenyys": {
-      "type": "object",
-      "properties": {
-        "AlkuPvm": {
-          "type": "string",
-          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
-        },
-        "LoppuPvm": {
-          "type": "string",
-          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
-        }
-      }
-    },
-    "XmlDataFiHenkiloEduskuntaryhmatEdellisetEduskuntaryhmatEduskuntaryhma": {
-      "type": "object",
-      "properties": {
-        "Nimi": {
-          "type": "string"
-        },
-        "Tunnus": {
-          "type": "string"
-        },
-        "Jasenyys": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatEdellisetEduskuntaryhmatEduskuntaryhmaJasenyys"
-            },
-            {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatEdellisetEduskuntaryhmatEduskuntaryhmaJasenyys"
-              }
-            }
-          ]
-        }
-      }
-    },
-    "XmlDataFiHenkiloAiemmatToimielinjasenyydetToimielinJasenyys": {
-      "type": "object",
-      "properties": {
-        "Rooli": {
-          "type": "string"
-        },
-        "AlkuPvm": {
-          "type": "string",
-          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
-        },
-        "LoppuPvm": {
-          "type": "string",
-          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
-        }
-      }
-    },
-    "XmlDataFiHenkiloAiemmatToimielinjasenyydetToimielinEntNimi": {
+    "EntinenNimi": {
       "type": "object",
       "properties": {
         "Nimi": {
@@ -722,49 +773,6 @@
         "LoppuPvm": {
           "type": "string",
           "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
-        }
-      }
-    },
-    "XmlDataFiHenkiloAiemmatToimielinjasenyydetToimielin": {
-      "type": "object",
-      "properties": {
-        "Nimi": {
-          "type": "string"
-        },
-        "Tunnus": {
-          "type": "string"
-        },
-        "Jasenyys": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/XmlDataFiHenkiloAiemmatToimielinjasenyydetToimielinJasenyys"
-            },
-            {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/XmlDataFiHenkiloAiemmatToimielinjasenyydetToimielinJasenyys"
-              }
-            }
-          ]
-        }
-      }
-    },
-    "XmlDataFiHenkiloValtiollisetLuottamustehtavatTehtava": {
-      "type": "object",
-      "properties": {
-        "Nimi": {
-          "type": "string"
-        },
-        "AikaJakso": {
-          "type": "string"
-        }
-      }
-    },
-    "XmlDataFiHenkiloKunnallisetLuottamustehtavatTehtava": {
-      "type": "object",
-      "properties": {
-        "Nimi": {
-          "type": "string"
         }
       }
     }
