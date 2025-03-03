@@ -17,7 +17,7 @@ const parseElement = (
             element.elements?.map((e) =>
               parseElement(e, removeNulls, element.name)
             ) ?? [];
-          if (!element.attributes && data.length === 0) return null;
+          if (!element.attributes && data.length === 0) return undefined;
           const entries: Array<[string, any]> = [];
           if (element.attributes) {
             entries.push(["attributes", element.attributes]);
@@ -44,7 +44,7 @@ const parseElement = (
               }
               const [key, value] = entries[0];
               if (removeNulls) {
-                if (value === null) continue;
+                if (value === undefined) continue;
               }
               if (!(key in merged)) {
                 merged[key] = [];
@@ -57,7 +57,7 @@ const parseElement = (
               }
             }
             if (removeNulls) {
-              if (Object.keys(merged).length === 0) return null;
+              if (Object.keys(merged).length === 0) return undefined;
             }
             return merged;
           }
@@ -91,7 +91,7 @@ const postProcessXml = (data: string) => {
     console.warn(root);
     throw new Error("Invalid root element");
   }
-  const parsedRoot = parseElement(root, false);
+  const parsedRoot = parseElement(root, true);
   return parsedRoot;
 };
 
