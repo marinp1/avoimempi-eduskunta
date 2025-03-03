@@ -66,7 +66,7 @@ for (const tableName of orderedTableNames) {
     .map((s) => s.name);
   // Dynamically import the seed function.
   const { default: seedFn } = (await import(
-    path.resolve(import.meta.dirname, `${tableName}.mts`)
+    path.resolve(import.meta.dirname, `${tableName}/migrator.mts`)
   )) as {
     default: (sql: TransactionSQL) => (data: any) => Promise<void>;
   };
