@@ -1,0 +1,772 @@
+{
+  "$schema": "http://json-schema.org/draft/2020-12/schema#",
+  "id": "/representative",
+  "type": "object",
+  "properties": {
+    "personId": {
+      "type": "string",
+      "format": "number"
+    },
+    "lastname": {
+      "type": "string"
+    },
+    "firstname": {
+      "type": "string"
+    },
+    "party": {
+      "type": "string"
+    },
+    "minister": {
+      "type": "string"
+    },
+    "XmlData": {
+      "type": "null"
+    },
+    "XmlDataSv": {
+      "type": "null"
+    },
+    "XmlDataFi": {
+      "type": "object",
+      "properties": {
+        "Henkilo": {
+          "type": "object",
+          "properties": {
+            "KotiSivu": {
+              "type": "string"
+            },
+            "EdustajatoimiKeskeytynyt": {
+              "type": "object",
+              "properties": {}
+            },
+            "EdustajantoimenTila": {
+              "type": "string"
+            },
+            "KirjallisuuttaEdustajasta": {
+              "type": "object",
+              "properties": {}
+            },
+            "Puh": {
+              "type": "string"
+            },
+            "SahkoPosti": {
+              "type": "string"
+            },
+            "NykyinenKotikunta": {
+              "type": "string"
+            },
+            "NykyisetToimielinjasenyydet": {
+              "type": "object",
+              "properties": {}
+            },
+            "Sidonnaisuudet": {
+              "type": "object",
+              "properties": {
+                "Sidonnaisuus": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "Otsikko": {
+                        "type": "string"
+                      },
+                      "RyhmaOtsikko": {
+                        "type": "string"
+                      },
+                      "Sidonta": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "LisaTiedot": {
+              "type": "string"
+            },
+            "Kansanedustajana": {
+              "type": "object",
+              "properties": {
+                "Keskeytys": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/XmlDataFiHenkiloKansanedustajanaKeskeytys"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/XmlDataFiHenkiloKansanedustajanaKeskeytys"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "ValtioneuvostonJasenyydet": {
+              "type": "object",
+              "properties": {}
+            },
+            "Sotilasarvo": {
+              "type": "string"
+            },
+            "KansanvalisetLuottamustehtavat": {
+              "type": "object",
+              "properties": {}
+            },
+            "EdustajanJulkaisut": {
+              "type": "object",
+              "properties": {}
+            },
+            "MuutLuottamustehtavat": {
+              "type": "object",
+              "properties": {}
+            },
+            "HenkiloNro": {
+              "type": "string",
+              "format": "number"
+            },
+            "EtunimetNimi": {
+              "type": "string"
+            },
+            "SukuNimi": {
+              "type": "string"
+            },
+            "LajitteluNimi": {
+              "type": "string"
+            },
+            "KutsumaNimi": {
+              "type": "string"
+            },
+            "MatrikkeliNimi": {
+              "type": "string"
+            },
+            "Ammatti": {
+              "type": "string"
+            },
+            "SyntymaPvm": {
+              "type": "string",
+              "format": "number"
+            },
+            "SyntymaPaikka": {
+              "type": "string"
+            },
+            "KuolemaPvm": {
+              "type": "string",
+              "format": "number"
+            },
+            "KuolemaPaikka": {
+              "type": "string"
+            },
+            "SukuPuoliKoodi": {
+              "type": "string"
+            },
+            "KansanedustajuusPaattynytPvm": {
+              "type": "string",
+              "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+            },
+            "Koulutukset": {
+              "type": "object",
+              "properties": {}
+            },
+            "TyoUra": {
+              "type": "object",
+              "properties": {}
+            },
+            "Arvonimet": {
+              "type": "object",
+              "properties": {
+                "Arvonimi": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/XmlDataFiHenkiloArvonimetArvonimi"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/XmlDataFiHenkiloArvonimetArvonimi"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "Vaalipiirit": {
+              "type": "object",
+              "properties": {
+                "NykyinenVaalipiiri": {
+                  "type": "object",
+                  "properties": {
+                    "Nimi": {
+                      "type": "string"
+                    },
+                    "AlkuPvm": {
+                      "type": "string",
+                      "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+                    },
+                    "Tunnus": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "EdellisetVaalipiirit": {
+                  "type": "object",
+                  "properties": {
+                    "VaaliPiiri": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/XmlDataFiHenkiloVaalipiiritEdellisetVaalipiiritVaaliPiiri"
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/$defs/XmlDataFiHenkiloVaalipiiritEdellisetVaalipiiritVaaliPiiri"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "Edustajatoimet": {
+              "type": "object",
+              "properties": {
+                "Edustajatoimi": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/XmlDataFiHenkiloEdustajatoimetEdustajatoimi"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/XmlDataFiHenkiloEdustajatoimetEdustajatoimi"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "Eduskuntaryhmat": {
+              "type": "object",
+              "properties": {
+                "TehtavatEduskuntaryhmassa": {
+                  "type": "object",
+                  "properties": {
+                    "Eduskuntaryhma": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatTehtavatEduskuntaryhmassaEduskuntaryhma"
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatTehtavatEduskuntaryhmassaEduskuntaryhma"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "NykyinenEduskuntaryhma": {
+                  "type": "object",
+                  "properties": {
+                    "EntNimi": {
+                      "type": "object",
+                      "properties": {
+                        "Nimi": {
+                          "type": "string"
+                        },
+                        "AlkuPvm": {
+                          "type": "string",
+                          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+                        },
+                        "LoppuPvm": {
+                          "type": "string",
+                          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+                        }
+                      }
+                    },
+                    "Nimi": {
+                      "type": "string"
+                    },
+                    "Tunnus": {
+                      "type": "string"
+                    },
+                    "AlkuPvm": {
+                      "type": "string",
+                      "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+                    }
+                  }
+                },
+                "TehtavatAiemmissaEduskuntaryhmissa": {
+                  "type": "object",
+                  "properties": {
+                    "Eduskuntaryhma": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatTehtavatAiemmissaEduskuntaryhmissaEduskuntaryhma"
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatTehtavatAiemmissaEduskuntaryhmissaEduskuntaryhma"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "EdellisetEduskuntaryhmat": {
+                  "type": "object",
+                  "properties": {
+                    "Eduskuntaryhma": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatEdellisetEduskuntaryhmatEduskuntaryhma"
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatEdellisetEduskuntaryhmatEduskuntaryhma"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "AiemmatToimielinjasenyydet": {
+              "type": "object",
+              "properties": {}
+            },
+            "ValtiollisetLuottamustehtavat": {
+              "type": "object",
+              "properties": {
+                "Tehtava": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/XmlDataFiHenkiloValtiollisetLuottamustehtavatTehtava"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/XmlDataFiHenkiloValtiollisetLuottamustehtavatTehtava"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "KunnallisetLuottamustehtavat": {
+              "type": "object",
+              "properties": {}
+            }
+          }
+        }
+      }
+    },
+    "XmlDataEn": {
+      "type": "null"
+    }
+  },
+  "$defs": {
+    "XmlDataFiHenkiloEdustajatoimiKeskeytynytToimenKeskeytys": {
+      "type": "object",
+      "properties": {
+        "Selite": {
+          "type": "string"
+        },
+        "TilallaHenkilo": {
+          "type": "string"
+        },
+        "AlkuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        },
+        "LoppuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        }
+      }
+    },
+    "XmlDataFiHenkiloKirjallisuuttaEdustajastaJulkaisu": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        },
+        "Vuosi": {
+          "type": "string",
+          "format": "number"
+        },
+        "Tekijat": {
+          "type": "string"
+        }
+      }
+    },
+    "XmlDataFiHenkiloNykyisetToimielinjasenyydetToimielinJasenyys": {
+      "type": "object",
+      "properties": {
+        "Rooli": {
+          "type": "string"
+        },
+        "AlkuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        }
+      }
+    },
+    "XmlDataFiHenkiloNykyisetToimielinjasenyydetToimielin": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        },
+        "Tunnus": {
+          "type": "string"
+        },
+        "Jasenyys": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XmlDataFiHenkiloNykyisetToimielinjasenyydetToimielinJasenyys"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlDataFiHenkiloNykyisetToimielinjasenyydetToimielinJasenyys"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "XmlDataFiHenkiloKansanedustajanaKeskeytys": {
+      "type": "object",
+      "properties": {
+        "TilallaSelite": {
+          "type": "string"
+        },
+        "TilallaHenkilo": {
+          "type": "string"
+        },
+        "AlkuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        },
+        "LoppuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        }
+      }
+    },
+    "XmlDataFiHenkiloValtioneuvostonJasenyydetJasenyys": {
+      "type": "object",
+      "properties": {
+        "Ministeriys": {
+          "type": "string"
+        },
+        "Nimi": {
+          "type": "string"
+        },
+        "Hallitus": {
+          "type": "string"
+        },
+        "AlkuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        },
+        "LoppuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        }
+      }
+    },
+    "XmlDataFiHenkiloKansanvalisetLuottamustehtavatTehtava": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        },
+        "AikaJakso": {
+          "type": "string"
+        }
+      }
+    },
+    "XmlDataFiHenkiloEdustajanJulkaisutEdustajanJulkaisu": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        },
+        "Vuosi": {
+          "type": "string",
+          "format": "number"
+        },
+        "Tekijat": {
+          "type": "string"
+        }
+      }
+    },
+    "XmlDataFiHenkiloMuutLuottamustehtavatTehtava": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        },
+        "AikaJakso": {
+          "type": "string"
+        }
+      }
+    },
+    "XmlDataFiHenkiloKoulutuksetKoulutus": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        },
+        "Oppilaitos": {
+          "type": "string"
+        },
+        "Vuosi": {
+          "type": "string",
+          "format": "number"
+        }
+      }
+    },
+    "XmlDataFiHenkiloTyoUraTyo": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        },
+        "AikaJakso": {
+          "type": "string"
+        }
+      }
+    },
+    "XmlDataFiHenkiloArvonimetArvonimi": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        },
+        "Vuosi": {
+          "type": "string",
+          "format": "number"
+        }
+      }
+    },
+    "XmlDataFiHenkiloVaalipiiritEdellisetVaalipiiritVaaliPiiri": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        },
+        "AlkuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        },
+        "LoppuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        },
+        "Tunnus": {
+          "type": "string"
+        }
+      }
+    },
+    "XmlDataFiHenkiloEdustajatoimetEdustajatoimi": {
+      "type": "object",
+      "properties": {
+        "AlkuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        },
+        "LoppuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        }
+      }
+    },
+    "XmlDataFiHenkiloEduskuntaryhmatTehtavatEduskuntaryhmassaEduskuntaryhma": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        },
+        "Tunnus": {
+          "type": "string"
+        },
+        "Tehtava": {
+          "type": "object",
+          "properties": {
+            "Rooli": {
+              "type": "string"
+            },
+            "AlkuPvm": {
+              "type": "string",
+              "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+            }
+          }
+        }
+      }
+    },
+    "XmlDataFiHenkiloEduskuntaryhmatTehtavatAiemmissaEduskuntaryhmissaEduskuntaryhmaTehtava": {
+      "type": "object",
+      "properties": {
+        "AlkuPvm": {
+          "type": "string",
+          "format": "number"
+        },
+        "LoppuPvm": {
+          "type": "string",
+          "format": "number"
+        },
+        "AikaJakso": {
+          "type": "string"
+        },
+        "Rooli": {
+          "type": "string"
+        }
+      }
+    },
+    "XmlDataFiHenkiloEduskuntaryhmatTehtavatAiemmissaEduskuntaryhmissaEduskuntaryhma": {
+      "type": "object",
+      "properties": {
+        "ToimielinNimi": {
+          "type": "string"
+        },
+        "ToimielinTunnus": {
+          "type": "string"
+        },
+        "Nimi": {
+          "type": "string"
+        },
+        "Tunnus": {
+          "type": "string"
+        },
+        "Tehtava": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatTehtavatAiemmissaEduskuntaryhmissaEduskuntaryhmaTehtava"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatTehtavatAiemmissaEduskuntaryhmissaEduskuntaryhmaTehtava"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "XmlDataFiHenkiloEduskuntaryhmatEdellisetEduskuntaryhmatEduskuntaryhmaJasenyys": {
+      "type": "object",
+      "properties": {
+        "AlkuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        },
+        "LoppuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        }
+      }
+    },
+    "XmlDataFiHenkiloEduskuntaryhmatEdellisetEduskuntaryhmatEduskuntaryhma": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        },
+        "Tunnus": {
+          "type": "string"
+        },
+        "Jasenyys": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatEdellisetEduskuntaryhmatEduskuntaryhmaJasenyys"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlDataFiHenkiloEduskuntaryhmatEdellisetEduskuntaryhmatEduskuntaryhmaJasenyys"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "XmlDataFiHenkiloAiemmatToimielinjasenyydetToimielinJasenyys": {
+      "type": "object",
+      "properties": {
+        "Rooli": {
+          "type": "string"
+        },
+        "AlkuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        },
+        "LoppuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        }
+      }
+    },
+    "XmlDataFiHenkiloAiemmatToimielinjasenyydetToimielinEntNimi": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        },
+        "LoppuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        }
+      }
+    },
+    "XmlDataFiHenkiloAiemmatToimielinjasenyydetToimielin": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        },
+        "Tunnus": {
+          "type": "string"
+        },
+        "Jasenyys": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XmlDataFiHenkiloAiemmatToimielinjasenyydetToimielinJasenyys"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/XmlDataFiHenkiloAiemmatToimielinjasenyydetToimielinJasenyys"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "XmlDataFiHenkiloValtiollisetLuottamustehtavatTehtava": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        },
+        "AikaJakso": {
+          "type": "string"
+        }
+      }
+    },
+    "XmlDataFiHenkiloKunnallisetLuottamustehtavatTehtava": {
+      "type": "object",
+      "properties": {
+        "Nimi": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

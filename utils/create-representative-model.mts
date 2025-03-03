@@ -67,78 +67,75 @@ const ARRAY_OR_OBJECT_KEYS = [
   "$.XmlDataFi.Henkilo.ValtioneuvostonJasenyydet.Jasenyys",
 ] satisfies `$.${string}`[] as string[];
 
+const definitions: Record<string, any> = {};
+
+const createTypeWithDefinition = (definition: any, _p: string) => {
+  const p = _p.replace("$.", "").split(".").join("");
+  if (p in definitions) return definition[p];
+  definitions[p] = definition;
+  return {
+    anyOf: [
+      {
+        $ref: `#/$defs/${p}`,
+      },
+      {
+        type: "array",
+        items: {
+          $ref: `#/$defs/${p}`,
+        },
+      },
+    ],
+  };
+};
+
 const postProcess = (cand: unknown, p = "", root = false): any => {
-  if (cand === null)
+  if (cand === null) {
     return {
       type: "null",
     };
-  if (Array.isArray(cand)) {
-    if (ARRAY_OR_OBJECT_KEYS.includes(p)) {
-      return {
-        anyOf: [
-          cand.map((e) => postProcess(e, `${p}`))[0],
-          {
-            type: "array",
-            items: cand.map((e) => postProcess(e, `${p}`))[0],
-          },
-        ],
-      };
-    } else {
-      return {
-        type: "array",
-        items: cand.map((e) => postProcess(e, `${p}`))[0],
-      };
-    }
   }
+
+  // Map array type
+  if (Array.isArray(cand)) {
+    const defType = cand.map((e) => postProcess(e, `${p}`))[0];
+    if (ARRAY_OR_OBJECT_KEYS.includes(p)) {
+      return createTypeWithDefinition(defType, p);
+    }
+    return {
+      type: "array",
+      items: defType,
+    };
+  }
+
+  // Map object type
   if (typeof cand === "object") {
-    const objType = {
+    const defType = {
       ...(root
         ? {
-            $schema: "http://json-schema.org/draft-07/schema#",
-            id: "/Representative",
+            $schema: "http://json-schema.org/draft/2020-12/schema#",
+            id: "/representative",
           }
         : {}),
       type: "object",
+      properties: Object.fromEntries(
+        Object.entries(cand as any).map(([k, v]) => [
+          k,
+          postProcess(v, `${p}.${k}`),
+        ])
+      ),
+      ...(root
+        ? {
+            $defs: definitions,
+          }
+        : {}),
     };
     if (ARRAY_OR_OBJECT_KEYS.includes(p)) {
-      return {
-        anyOf: [
-          {
-            type: "array",
-            items: {
-              ...objType,
-              properties: Object.fromEntries(
-                Object.entries(cand as any).map(([k, v]) => [
-                  k,
-                  postProcess(v, `${p}.${k}`),
-                ])
-              ),
-            },
-          },
-          {
-            ...objType,
-            properties: Object.fromEntries(
-              Object.entries(cand as any).map(([k, v]) => [
-                k,
-                postProcess(v, `${p}.${k}`),
-              ])
-            ),
-          },
-        ],
-      };
-    } else {
-      return {
-        ...objType,
-        properties: Object.fromEntries(
-          Object.entries(cand as any).map(([k, v]) => [
-            k,
-            postProcess(v, `${p}.${k}`),
-          ])
-        ),
-      };
+      return createTypeWithDefinition(defType, p);
     }
+    return defType;
   }
 
+  // Map string type
   if (typeof cand === "string") {
     if (/^\d{2}\.\d{2}\.\d{4}$/.test(cand.trim())) {
       return {
@@ -156,28 +153,37 @@ const postProcess = (cand: unknown, p = "", root = false): any => {
       type: "string",
     };
   }
+
+  // Throw error on unknown
   throw new Error("Unknown type");
 };
 
 const schema = postProcess(result, "$", true);
 
-fs.writeFileSync(
-  path.join(import.meta.dirname, "../schemas/representative-model.json"),
-  JSON.stringify(schema, null, 2),
-  { encoding: "utf8" }
+const schemaPath = path.join(
+  import.meta.dirname,
+  "../schemas/representative-model.json"
 );
+
+fs.writeFileSync(schemaPath, JSON.stringify(schema, null, 2), {
+  encoding: "utf8",
+});
 
 let firstInvalid: ReturnType<(typeof validator)["validate"]> | undefined;
 let successsCount = 0;
 let failureCount = 0;
 
+const baseUrl = `file://${path.resolve(import.meta.dir, "../schemas")}`;
+
 for (const entry of entriesToImport) {
   const { default: data } = await import(path.resolve(dataDir, entry), {
     with: { type: "json" },
   });
-  validator.addSchema(schema, "/Representative");
+  validator.addSchema(schema, "/representative");
   const response = validator.validate(data, schema, {
-    allowUnknownAttributes: false,
+    allowUnknownAttributes: true,
+    required: true,
+    base: baseUrl,
   });
   if (!response.valid && !firstInvalid) {
     firstInvalid = response;
