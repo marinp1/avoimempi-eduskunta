@@ -1,20 +1,20 @@
-# Eduskunta forum
+# Avoimempi Eduskunta (More Open Parliament)
 
 Aggregate data from multiple open sources for analysis.
 
 ## Requirements
 
 - **bun** v1.2.2
+- **podman** or **docker**
 
 ## Project structure
+
+TODO: Fix this!
 
 ```txt
 # migration files
 migrations/
 └── *.sql
-# (generated) json schema file
-schemas/
-└── <TableName>.json
 src/
 │ # common constants and utils
 ├── common/
@@ -30,8 +30,10 @@ src/
 │   └── scrape-table.mts
 │ # code to import parsed data
 ├── migrator/
-│   ├── fn/
-│   │   └── <TableName>.mts
+│   ├── <TableName>/
+│   │   ├── migrator.mts
+│   │   ├── model.mts
+│   │   └── schema.json
 │   └── import-data.mts
 │ # code to parse fetched raw data
 ├── parser/
