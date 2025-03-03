@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft/2020-12/schema#",
   "id": "/representative",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "personId": {
       "type": "string",
@@ -27,15 +28,18 @@
     },
     "XmlDataFi": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "Henkilo": {
           "type": "object",
+          "additionalProperties": false,
           "properties": {
             "KotiSivu": {
               "type": "string"
             },
             "EdustajatoimiKeskeytynyt": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "ToimenKeskeytys": {
                   "anyOf": [
@@ -57,6 +61,7 @@
             },
             "KirjallisuuttaEdustajasta": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "Julkaisu": {
                   "anyOf": [
@@ -84,16 +89,17 @@
             },
             "NykyisetToimielinjasenyydet": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "Toimielin": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/Toimielin"
+                      "$ref": "#/$defs/Committee"
                     },
                     {
                       "type": "array",
                       "items": {
-                        "$ref": "#/$defs/Toimielin"
+                        "$ref": "#/$defs/Committee"
                       }
                     }
                   ]
@@ -102,11 +108,13 @@
             },
             "Sidonnaisuudet": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "Sidonnaisuus": {
                   "type": "array",
                   "items": {
                     "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                       "Otsikko": {
                         "type": "string"
@@ -127,6 +135,7 @@
             },
             "Kansanedustajana": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "Keskeytys": {
                   "anyOf": [
@@ -145,16 +154,17 @@
             },
             "ValtioneuvostonJasenyydet": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "Jasenyys": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/Jäsenyys"
+                      "$ref": "#/$defs/GovernmentMembership"
                     },
                     {
                       "type": "array",
                       "items": {
-                        "$ref": "#/$defs/Jäsenyys"
+                        "$ref": "#/$defs/GovernmentMembership"
                       }
                     }
                   ]
@@ -166,16 +176,17 @@
             },
             "KansanvalisetLuottamustehtavat": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "Tehtava": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/LuottamusTehtävä"
+                      "$ref": "#/$defs/Luottamustehtävä"
                     },
                     {
                       "type": "array",
                       "items": {
-                        "$ref": "#/$defs/LuottamusTehtävä"
+                        "$ref": "#/$defs/Luottamustehtävä"
                       }
                     }
                   ]
@@ -184,6 +195,7 @@
             },
             "EdustajanJulkaisut": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "EdustajanJulkaisu": {
                   "anyOf": [
@@ -202,16 +214,17 @@
             },
             "MuutLuottamustehtavat": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "Tehtava": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/LuottamusTehtävä"
+                      "$ref": "#/$defs/Luottamustehtävä"
                     },
                     {
                       "type": "array",
                       "items": {
-                        "$ref": "#/$defs/LuottamusTehtävä"
+                        "$ref": "#/$defs/Luottamustehtävä"
                       }
                     }
                   ]
@@ -263,6 +276,7 @@
             },
             "Koulutukset": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "Koulutus": {
                   "anyOf": [
@@ -281,6 +295,7 @@
             },
             "TyoUra": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "Tyo": {
                   "anyOf": [
@@ -299,6 +314,7 @@
             },
             "Arvonimet": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "Arvonimi": {
                   "anyOf": [
@@ -317,9 +333,11 @@
             },
             "Vaalipiirit": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "NykyinenVaalipiiri": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "Nimi": {
                       "type": "string"
@@ -335,6 +353,7 @@
                 },
                 "EdellisetVaalipiirit": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "VaaliPiiri": {
                       "anyOf": [
@@ -355,6 +374,7 @@
             },
             "Edustajatoimet": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "Edustajatoimi": {
                   "anyOf": [
@@ -373,19 +393,21 @@
             },
             "Eduskuntaryhmat": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "TehtavatEduskuntaryhmassa": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "Eduskuntaryhma": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/Eduskuntaryhmä"
+                          "$ref": "#/$defs/ParliamentGroup"
                         },
                         {
                           "type": "array",
                           "items": {
-                            "$ref": "#/$defs/Eduskuntaryhmä"
+                            "$ref": "#/$defs/ParliamentGroup"
                           }
                         }
                       ]
@@ -394,9 +416,11 @@
                 },
                 "NykyinenEduskuntaryhma": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "EntNimi": {
                       "type": "object",
+                      "additionalProperties": false,
                       "properties": {
                         "Nimi": {
                           "type": "string"
@@ -425,16 +449,17 @@
                 },
                 "TehtavatAiemmissaEduskuntaryhmissa": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "Eduskuntaryhma": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/Eduskuntaryhmä"
+                          "$ref": "#/$defs/ParliamentGroup"
                         },
                         {
                           "type": "array",
                           "items": {
-                            "$ref": "#/$defs/Eduskuntaryhmä"
+                            "$ref": "#/$defs/ParliamentGroup"
                           }
                         }
                       ]
@@ -443,16 +468,17 @@
                 },
                 "EdellisetEduskuntaryhmat": {
                   "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "Eduskuntaryhma": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/Eduskuntaryhmä"
+                          "$ref": "#/$defs/ParliamentGroup"
                         },
                         {
                           "type": "array",
                           "items": {
-                            "$ref": "#/$defs/Eduskuntaryhmä"
+                            "$ref": "#/$defs/ParliamentGroup"
                           }
                         }
                       ]
@@ -463,16 +489,17 @@
             },
             "AiemmatToimielinjasenyydet": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "Toimielin": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/Toimielin"
+                      "$ref": "#/$defs/Committee"
                     },
                     {
                       "type": "array",
                       "items": {
-                        "$ref": "#/$defs/Toimielin"
+                        "$ref": "#/$defs/Committee"
                       }
                     }
                   ]
@@ -481,16 +508,17 @@
             },
             "ValtiollisetLuottamustehtavat": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "Tehtava": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/LuottamusTehtävä"
+                      "$ref": "#/$defs/Luottamustehtävä"
                     },
                     {
                       "type": "array",
                       "items": {
-                        "$ref": "#/$defs/LuottamusTehtävä"
+                        "$ref": "#/$defs/Luottamustehtävä"
                       }
                     }
                   ]
@@ -499,16 +527,17 @@
             },
             "KunnallisetLuottamustehtavat": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
                 "Tehtava": {
                   "anyOf": [
                     {
-                      "$ref": "#/$defs/LuottamusTehtävä"
+                      "$ref": "#/$defs/Luottamustehtävä"
                     },
                     {
                       "type": "array",
                       "items": {
-                        "$ref": "#/$defs/LuottamusTehtävä"
+                        "$ref": "#/$defs/Luottamustehtävä"
                       }
                     }
                   ]
@@ -526,6 +555,7 @@
   "$defs": {
     "ToimenKeskeytys": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "Selite": {
           "type": "string"
@@ -545,6 +575,7 @@
     },
     "Julkaisu": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "Nimi": {
           "type": "string"
@@ -558,8 +589,9 @@
         }
       }
     },
-    "Jäsenyys": {
+    "CommitteeMembership": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "Rooli": {
           "type": "string"
@@ -567,11 +599,16 @@
         "AlkuPvm": {
           "type": "string",
           "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        },
+        "LoppuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
         }
       }
     },
-    "Toimielin": {
+    "Committee": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "Nimi": {
           "type": "string"
@@ -582,12 +619,25 @@
         "Jasenyys": {
           "anyOf": [
             {
-              "$ref": "#/$defs/Jäsenyys"
+              "$ref": "#/$defs/CommitteeMembership"
             },
             {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/Jäsenyys"
+                "$ref": "#/$defs/CommitteeMembership"
+              }
+            }
+          ]
+        },
+        "EntNimi": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EntinenNimi"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/EntinenNimi"
               }
             }
           ]
@@ -596,6 +646,7 @@
     },
     "Keskeytys": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "TilallaSelite": {
           "type": "string"
@@ -613,8 +664,32 @@
         }
       }
     },
-    "LuottamusTehtävä": {
+    "GovernmentMembership": {
       "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Ministeriys": {
+          "type": "string"
+        },
+        "Nimi": {
+          "type": "string"
+        },
+        "Hallitus": {
+          "type": "string"
+        },
+        "AlkuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        },
+        "LoppuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        }
+      }
+    },
+    "Luottamustehtävä": {
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
         "Nimi": {
           "type": "string"
@@ -626,6 +701,7 @@
     },
     "EdustajanJulkaisu": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "Nimi": {
           "type": "string"
@@ -641,6 +717,7 @@
     },
     "Koulutus": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "Nimi": {
           "type": "string"
@@ -656,6 +733,7 @@
     },
     "Työ": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "Nimi": {
           "type": "string"
@@ -667,6 +745,7 @@
     },
     "Arvonimi": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "Nimi": {
           "type": "string"
@@ -679,6 +758,7 @@
     },
     "Vaalipiiri": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "Nimi": {
           "type": "string"
@@ -698,6 +778,7 @@
     },
     "Edustajatoimi": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "AlkuPvm": {
           "type": "string",
@@ -709,45 +790,13 @@
         }
       }
     },
-    "Tehtava": {
+    "ParliamentGroupAssignment": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "Rooli": {
           "type": "string"
         },
-        "AlkuPvm": {
-          "type": "string",
-          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
-        }
-      }
-    },
-    "Eduskuntaryhmä": {
-      "type": "object",
-      "properties": {
-        "Nimi": {
-          "type": "string"
-        },
-        "Tunnus": {
-          "type": "string"
-        },
-        "Tehtava": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/Tehtava"
-            },
-            {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/Tehtava"
-              }
-            }
-          ]
-        }
-      }
-    },
-    "Tehtävä": {
-      "type": "object",
-      "properties": {
         "AlkuPvm": {
           "type": "string",
           "format": "number"
@@ -758,19 +807,79 @@
         },
         "AikaJakso": {
           "type": "string"
-        },
-        "Rooli": {
+        }
+      }
+    },
+    "ParliamentGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Nimi": {
           "type": "string"
+        },
+        "Tunnus": {
+          "type": "string"
+        },
+        "Tehtava": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ParliamentGroupAssignment"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ParliamentGroupAssignment"
+              }
+            }
+          ]
+        },
+        "ToimielinNimi": {
+          "type": "string"
+        },
+        "ToimielinTunnus": {
+          "type": "string"
+        },
+        "Jasenyys": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ParliamentGroupMembership"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ParliamentGroupMembership"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ParliamentGroupMembership": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "AlkuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        },
+        "LoppuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
         }
       }
     },
     "EntinenNimi": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "Nimi": {
           "type": "string"
         },
         "LoppuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        },
+        "AlkuPvm": {
           "type": "string",
           "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
         }

@@ -57,26 +57,26 @@ for (const entry of entriesToImport) {
  * to be checked separately.
  */
 const ARRAY_OR_OBJECT_KEYS = {
-  "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin": "Toimielin",
+  "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin": "Committee",
   "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin.Jasenyys":
-    "Jäsenyys",
+    "CommitteeMembership",
   "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin.EntNimi":
     "EntinenNimi",
   "$.XmlDataFi.Henkilo.Arvonimet.Arvonimi": "Arvonimi",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat.Eduskuntaryhma":
-    "Eduskuntaryhmä",
+    "ParliamentGroup",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat.Eduskuntaryhma.Jasenyys":
-    "Jäsenyys",
+    "ParliamentGroupMembership",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatEduskuntaryhmassa.Eduskuntaryhma":
-    "Eduskuntaryhmä",
+    "ParliamentGroup",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatEduskuntaryhmassa.Eduskuntaryhma.Tehtava":
-    "Tehtava",
+    "ParliamentGroupAssignment",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa.Eduskuntaryhma":
-    "Eduskuntaryhmä",
+    "ParliamentGroup",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa.Eduskuntaryhma.Tehtava":
-    "Tehtävä",
+    "ParliamentGroupAssignment",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa.Eduskuntaryhma.Tehtava.Jasenyys":
-    "Jäsenyys",
+    "ParliamentGroupMembership",
   "$.XmlDataFi.Henkilo.EdustajanJulkaisut.EdustajanJulkaisu":
     "EdustajanJulkaisu",
   "$.XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi": "Edustajatoimi",
@@ -84,27 +84,29 @@ const ARRAY_OR_OBJECT_KEYS = {
     "ToimenKeskeytys",
   "$.XmlDataFi.Henkilo.Kansanedustajana.Keskeytys": "Keskeytys",
   "$.XmlDataFi.Henkilo.KansanvalisetLuottamustehtavat.Tehtava":
-    "LuottamusTehtävä",
+    "Luottamustehtävä",
   "$.XmlDataFi.Henkilo.KirjallisuuttaEdustajasta.Julkaisu": "Julkaisu",
   "$.XmlDataFi.Henkilo.Koulutukset.Koulutus": "Koulutus",
   "$.XmlDataFi.Henkilo.KunnallisetLuottamustehtavat.Tehtava":
-    "LuottamusTehtävä",
-  "$.XmlDataFi.Henkilo.MuutLuottamustehtavat.Tehtava": "LuottamusTehtävä",
-  "$.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet.Toimielin": "Toimielin",
+    "Luottamustehtävä",
+  "$.XmlDataFi.Henkilo.MuutLuottamustehtavat.Tehtava": "Luottamustehtävä",
+  "$.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet.Toimielin": "Committee",
   "$.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet.Toimielin.Jasenyys":
-    "Jäsenyys",
+    "CommitteeMembership",
   "$.XmlDataFi.Henkilo.TyoUra.Tyo": "Työ",
   "$.XmlDataFi.Henkilo.Vaalipiirit.EdellisetVaalipiirit.VaaliPiiri":
     "Vaalipiiri",
   "$.XmlDataFi.Henkilo.ValtiollisetLuottamustehtavat.Tehtava":
-    "LuottamusTehtävä",
-  "$.XmlDataFi.Henkilo.ValtioneuvostonJasenyydet.Jasenyys": "Jäsenyys",
+    "Luottamustehtävä",
+  "$.XmlDataFi.Henkilo.ValtioneuvostonJasenyydet.Jasenyys":
+    "GovernmentMembership",
 } satisfies Record<`$.${string}`, string> as Record<string, string>;
 
 /**
  * Object of definitions constructred during model generation.
  */
 const definitions: Record<string, any> = {};
+const definitionMerge = deepmerge({ all: true });
 
 /**
  * Create an `anyOf` JSON Schema entry where the value can either be the
@@ -113,8 +115,12 @@ const definitions: Record<string, any> = {};
  * @param originalPath Original JSON path to the entry.
  * @see {definitions} As a side effect adds the definition to object.
  */
-const createTypeWithDefinition = (definition: any, p: string) => {
-  if (!(p in definitions)) definitions[p] = definition;
+const createTypeWithDefinition = (definition: unknown, p: string) => {
+  if (!(p in definitions)) {
+    definitions[p] = definition;
+  } else {
+    Object.assign(definitions[p].properties, (definition as any)["properties"]);
+  }
   return {
     anyOf: [
       {
@@ -159,6 +165,7 @@ const convertObjectIntoSchema = (cand: unknown, p = "", root = false): any => {
           }
         : {}),
       type: "object",
+      additionalProperties: false,
       properties: Object.fromEntries(
         Object.entries(cand as any).map(([k, v]) => [
           k,
@@ -210,7 +217,7 @@ fs.writeFileSync(schemaPath, JSON.stringify(schema, null, 2), {
   encoding: "utf8",
 });
 
-// VALIDATE ALL FAILS AGAINST SCHEMA
+// VALIDATE ALL FILES AGAINST SCHEMA
 
 const validator = new jsonschema.Validator();
 
