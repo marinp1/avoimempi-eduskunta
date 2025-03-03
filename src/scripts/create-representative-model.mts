@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { deepmerge } from "@fastify/deepmerge";
 import jsonschema from "jsonschema";
+import { projectRoot } from "#utils";
 
 import type { TableName } from "#types/index.mts";
 
@@ -209,10 +210,8 @@ const convertObjectIntoSchema = (cand: unknown, p = "", root = false): any => {
 
 // Create and write the schema file
 const schema = convertObjectIntoSchema(result, "$", true);
-const schemaPath = path.join(
-  import.meta.dirname,
-  "../schemas/representative-model.json"
-);
+const schemaFolder = path.resolve(projectRoot, "schemas");
+const schemaPath = path.join(schemaFolder, "representative-model.json");
 fs.writeFileSync(schemaPath, JSON.stringify(schema, null, 2), {
   encoding: "utf8",
 });
@@ -225,7 +224,7 @@ let firstInvalid: ReturnType<(typeof validator)["validate"]> | undefined;
 let successsCount = 0;
 let failureCount = 0;
 
-const baseUrl = `file://${path.resolve(import.meta.dir, "../schemas")}`;
+const baseUrl = `file://${schemaFolder}`;
 
 for (const entry of entriesToImport) {
   const { default: data } = await import(path.resolve(dataDir, entry), {

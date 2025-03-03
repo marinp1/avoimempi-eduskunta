@@ -1,4 +1,4 @@
-import type { DataModel, SQLModel } from "../types/MemberOfParliament.mts";
+import type { DataModel, SQLModel } from "#types/MemberOfParliament.mts";
 import { TransactionSQL } from "bun";
 
 const parseDate = (date?: string | null): string | null => {
