@@ -1,4 +1,4 @@
-import type { RepresentativeData } from "../types/MemberOfParliament.mts";
+import type { RepresentativeData } from "./MemberOfParliament.mts";
 
 declare global {
   namespace Modules.Parser {

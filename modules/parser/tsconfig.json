@@ -1,4 +1,7 @@
 {
   "extends": "../../tsconfig.common.json",
-  "include": ["./", "../common", "../scraper/typings"]
+  "compilerOptions": {
+    "paths": { "avoimempi-eduskunta-common/*": ["../common/*"] }
+  },
+  "include": ["./", "../common/typings", "../scraper/typings"]
 }

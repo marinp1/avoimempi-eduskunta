@@ -2,7 +2,9 @@
   "name": "avoimempi-eduskunta-parser",
   "version": "1.0.0",
   "dependencies": {
-    "xml-js": "1.6.11",
-    "avoimempi-eduskunta-common": "workspace:*"
+    "xml-js": "1.6.11"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
   }
 }

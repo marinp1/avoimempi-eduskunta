@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs";
 import { xml2json } from "xml-js";
 import { TableNames } from "avoimempi-eduskunta-common/constants/TableNames.mts";
-import { XmlNode, XmlTree } from "./types/index.mts";
+import type { XmlNode, XmlTree } from "./types/index.mts";
 
 /**
  * Parses XML contents.

@@ -1,7 +1,7 @@
 {
   "name": "avoimempi-eduskunta-scraper",
   "version": "1.0.0",
-  "dependencies": {
-    "avoimempi-eduskunta-common": "workspace:*"
+  "scripts": {
+    "typecheck": "tsc --noEmit"
   }
 }
