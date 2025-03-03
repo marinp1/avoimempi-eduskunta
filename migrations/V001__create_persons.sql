@@ -1,5 +1,5 @@
 CREATE TABLE representatives (
-    person_id SERIAL PRIMARY KEY,
+    person_id INT PRIMARY KEY,
     firstname VARCHAR(255) NOT NULL,
     lastname VARCHAR(255) NOT NULL,
     email VARCHAR(255),
@@ -28,42 +28,45 @@ CREATE TABLE representative_terms (
 );
 
 CREATE TABLE parliamentary_groups (
+    identifier VARCHAR(255) PRIMARY KEY,
+    group_name VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE parliamentary_group_memberships (
     id SERIAL PRIMARY KEY,
     person_id INT REFERENCES representatives(person_id),
-    group_name VARCHAR(255) NOT NULL,
+    group_identifier VARCHAR(255) REFERENCES parliamentary_groups(identifier),
     start_date DATE NOT NULL,
     end_date DATE NULL
+);
+
+CREATE TABLE committees (
+    identifier VARCHAR(255) PRIMARY KEY,
+    committee_name VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE committee_memberships (
     id SERIAL PRIMARY KEY,
     person_id INT REFERENCES representatives(person_id),
-    committee_name VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL,
-    start_date DATE NOT NULL,
+    committee_identifier VARCHAR(255) REFERENCES committees(identifier),
+    role VARCHAR(255) NULL,
+    start_date DATE NULL,
     end_date DATE NULL
 );
 
+CREATE TABLE educations (
+    id SERIAL PRIMARY KEY,
+    person_id INT REFERENCES representatives(person_id),
+    name VARCHAR(255) NULL,
+    establishement VARCHAR(255) NULL,
+    year INT NULL
+);
+
+/*
 CREATE TABLE declarations (
     id SERIAL PRIMARY KEY,
     person_id INT REFERENCES representatives(person_id),
     declaration_type VARCHAR(255) NOT NULL,
     description TEXT
 );
-
-CREATE TABLE incomes (
-    id SERIAL PRIMARY KEY,
-    person_id INT REFERENCES representatives(person_id),
-    source VARCHAR(255) NOT NULL,
-    amount DECIMAL(10,2),
-    income_year INT
-);
-
-CREATE TABLE gifts (
-    id SERIAL PRIMARY KEY,
-    person_id INT REFERENCES representatives(person_id),
-    giver VARCHAR(255),
-    description TEXT,
-    value DECIMAL(10,2),
-    received_date DATE
-);
+*/
