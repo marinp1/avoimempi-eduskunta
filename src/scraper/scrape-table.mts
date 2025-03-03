@@ -42,9 +42,7 @@ const scrape = async <T extends TableName>(tableName: T) => {
   let page = 0;
   /** Content of the API call. */
   let content: ApiResponse;
-  const ApiUrl = new URL(
-    `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/rows?page=${page}&perPage=100`
-  );
+  const ApiUrl = new URL(`z${tableName}/rows?page=${page}&perPage=100`);
 
   do {
     // Adjust ?page query parameter before each call
