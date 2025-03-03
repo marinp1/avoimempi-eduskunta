@@ -1,3 +1,3 @@
 node_modules
-parser/data
-scraper/data
+src/parser/data
+src/scraper/data
