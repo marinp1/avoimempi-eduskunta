@@ -11,6 +11,6 @@
     { "path": "./modules/parser" },
     { "path": "./modules/scraper" },
     { "path": "./modules/scripts" },
-    { "path": "./modules/seeder" }
+    { "path": "./modules/migrator" }
   ]
 }

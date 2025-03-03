@@ -1,5 +1,5 @@
-import { TransactionSQL } from "bun";
-import {
+import type { TransactionSQL } from "bun";
+import type {
   Committee,
   CommitteeMembership,
   Education,

@@ -2,7 +2,6 @@
   "name": "avoimempi-eduskunta-common",
   "version": "1.0.0",
   "exports": {
-    "./constants/*": "./constants/*",
-    "./utils/*": "./utils/*"
+    "./constants/*": "./constants/*"
   }
 }
