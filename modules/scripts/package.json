@@ -1,0 +1,9 @@
+{
+  "name": "avoimempi-eduskunta-scripts",
+  "version": "1.0.0",
+  "devDependencies": {
+    "avoimempi-eduskunta-common": "workspace:*",
+    "@fastify/deepmerge": "github:fastify/deepmerge",
+    "jsonschema": "1.5.0"
+  }
+}

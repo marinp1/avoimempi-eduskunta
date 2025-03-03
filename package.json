@@ -6,14 +6,12 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "workspaces": [
+    "modules/*"
+  ],
   "devDependencies": {
-    "@fastify/deepmerge": "github:fastify/deepmerge",
     "@types/bun": "^1.2.2",
     "@types/node": "^22.13.4",
-    "jsonschema": "1.5.0",
     "typescript": "5.7.3"
-  },
-  "dependencies": {
-    "xml-js": "1.6.11"
   }
 }

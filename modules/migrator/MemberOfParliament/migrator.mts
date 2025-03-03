@@ -1,5 +1,14 @@
-import type { DataModel, SQLModel } from "#types/MemberOfParliament.mts";
 import { TransactionSQL } from "bun";
+import {
+  Committee,
+  CommitteeMembership,
+  Education,
+  ElectoralDistrict,
+  ParliamentaryGroupMembership,
+  ParliamentGroup,
+  Representative,
+  RepresentativeTerm,
+} from "./model.mts";
 
 const parseDate = (date?: string | null): string | null => {
   if (!date) return null;
@@ -56,9 +65,9 @@ const removeNullEntries = <T extends Record<string, any>>(
 };
 
 export default (sql: TransactionSQL) =>
-  async (data: DataModel.RepresentativeData) => {
+  async (data: Modules.Parser.MemberOfParliament) => {
     if (process.env.DEBUG) console.log("Mapping", data.lastname, data.personId);
-    const representativeRow: SQLModel.Representative = {
+    const representativeRow: Representative = {
       person_id: Number(data.personId),
       firstname: data.firstname,
       lastname: data.lastname,
@@ -75,34 +84,32 @@ export default (sql: TransactionSQL) =>
     };
 
     // Mapping Electoral Districts
-    const electoralDistrictRows: SQLModel.ElectoralDistrict[] =
-      removeNullEntries(
-        [data.XmlDataFi.Henkilo.Vaalipiirit.EdellisetVaalipiirit.VaaliPiiri]
-          .flat()
-          .map((vaaliPiiri) => ({
-            person_id: representativeRow.person_id,
-            name: vaaliPiiri.Nimi ?? null,
-            start_date: parseDate(vaaliPiiri.AlkuPvm)!,
-            end_date: parseDate(vaaliPiiri.LoppuPvm),
-          })),
-        ["person_id"]
-      );
+    const electoralDistrictRows: ElectoralDistrict[] = removeNullEntries(
+      [data.XmlDataFi.Henkilo.Vaalipiirit.EdellisetVaalipiirit.VaaliPiiri]
+        .flat()
+        .map((vaaliPiiri) => ({
+          person_id: representativeRow.person_id,
+          name: vaaliPiiri.Nimi ?? null,
+          start_date: parseDate(vaaliPiiri.AlkuPvm)!,
+          end_date: parseDate(vaaliPiiri.LoppuPvm),
+        })),
+      ["person_id"]
+    );
 
     // Mapping Representative Terms
-    const representativeTermRows: SQLModel.RepresentativeTerm[] =
-      removeNullEntries(
-        [data.XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi]
-          .flat()
-          .map((toimi) => ({
-            person_id: representativeRow.person_id,
-            start_date: parseDate(toimi.AlkuPvm)!,
-            end_date: parseDate(toimi.LoppuPvm)!,
-          })),
-        ["person_id"]
-      );
+    const representativeTermRows: RepresentativeTerm[] = removeNullEntries(
+      [data.XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi]
+        .flat()
+        .map((toimi) => ({
+          person_id: representativeRow.person_id,
+          start_date: parseDate(toimi.AlkuPvm)!,
+          end_date: parseDate(toimi.LoppuPvm)!,
+        })),
+      ["person_id"]
+    );
 
     // Mapping Parliamentary Groups
-    const parliamentaryGroupMembershipRows: SQLModel.ParliamentaryGroupMembership[] =
+    const parliamentaryGroupMembershipRows: ParliamentaryGroupMembership[] =
       removeNullEntries(
         [
           data.XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat
@@ -132,7 +139,7 @@ export default (sql: TransactionSQL) =>
         ["person_id"]
       );
 
-    const parliamentGroupRows: SQLModel.ParliamentGroup[] = removeNullEntries(
+    const parliamentGroupRows: ParliamentGroup[] = removeNullEntries(
       [
         ...[
           data.XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat
@@ -160,27 +167,26 @@ export default (sql: TransactionSQL) =>
     );
 
     // Mapping Committee Memberships
-    const committeeMembershipRows: SQLModel.CommitteeMembership[] =
-      removeNullEntries(
-        [
-          data.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet?.Toimielin,
-          data.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet.Toimielin,
-        ]
-          .flat()
-          .filter((s) => !!s)
-          .flatMap((toimielin) =>
-            [toimielin.Jasenyys].flat().map((jasenyys) => ({
-              person_id: representativeRow.person_id,
-              committee_identifier: toimielin.Tunnus,
-              role: jasenyys?.Rooli ?? null,
-              start_date: parseDate(jasenyys?.AlkuPvm),
-              end_date: parseDate(jasenyys?.LoppuPvm),
-            }))
-          ),
-        ["person_id"]
-      );
+    const committeeMembershipRows: CommitteeMembership[] = removeNullEntries(
+      [
+        data.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet?.Toimielin,
+        data.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet.Toimielin,
+      ]
+        .flat()
+        .filter((s) => !!s)
+        .flatMap((toimielin) =>
+          [toimielin.Jasenyys].flat().map((jasenyys) => ({
+            person_id: representativeRow.person_id,
+            committee_identifier: toimielin.Tunnus,
+            role: jasenyys?.Rooli ?? null,
+            start_date: parseDate(jasenyys?.AlkuPvm),
+            end_date: parseDate(jasenyys?.LoppuPvm),
+          }))
+        ),
+      ["person_id"]
+    );
 
-    const committeeRows: SQLModel.Committee[] = removeNullEntries(
+    const committeeRows: Committee[] = removeNullEntries(
       [
         data.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet?.Toimielin,
         data.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet.Toimielin,
@@ -218,7 +224,7 @@ export default (sql: TransactionSQL) =>
     */
 
     // Mapping Incomes
-    const educationRows: SQLModel.Education[] = removeNullEntries(
+    const educationRows: Education[] = removeNullEntries(
       [data.XmlDataFi.Henkilo.Koulutukset.Koulutus].flat().map((koulutus) => ({
         person_id: representativeRow.person_id,
         name: koulutus.Nimi || null,

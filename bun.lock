@@ -1,0 +1,79 @@
+{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "eduskunta-data",
+      "devDependencies": {
+        "@types/bun": "^1.2.2",
+        "@types/node": "^22.13.4",
+        "typescript": "5.7.3",
+      },
+    },
+    "modules/common": {
+      "name": "avoimempi-eduskunta-common",
+      "version": "1.0.0",
+    },
+    "modules/migrator": {
+      "name": "avoimempi-eduskunta-migrator",
+      "version": "1.0.0",
+      "dependencies": {
+        "avoimempi-eduskunta-common": "workspace:*",
+      },
+    },
+    "modules/parser": {
+      "name": "avoimempi-eduskunta-parser",
+      "version": "1.0.0",
+      "dependencies": {
+        "avoimempi-eduskunta-common": "workspace:*",
+        "xml-js": "1.6.11",
+      },
+    },
+    "modules/scraper": {
+      "name": "avoimempi-eduskunta-scraper",
+      "version": "1.0.0",
+      "dependencies": {
+        "avoimempi-eduskunta-common": "workspace:*",
+      },
+    },
+    "modules/scripts": {
+      "name": "avoimempi-eduskunta-scripts",
+      "version": "1.0.0",
+      "devDependencies": {
+        "@fastify/deepmerge": "github:fastify/deepmerge",
+        "avoimempi-eduskunta-common": "workspace:*",
+        "jsonschema": "1.5.0",
+      },
+    },
+  },
+  "packages": {
+    "@fastify/deepmerge": ["@fastify/deepmerge@github:fastify/deepmerge#327bec0", {}, "fastify-deepmerge-327bec0"],
+
+    "@types/bun": ["@types/bun@1.2.2", "", { "dependencies": { "bun-types": "1.2.2" } }, "sha512-tr74gdku+AEDN5ergNiBnplr7hpDp3V1h7fqI2GcR/rsUaM39jpSeKH0TFibRvU0KwniRx5POgaYnaXbk0hU+w=="],
+
+    "@types/node": ["@types/node@22.13.4", "", { "dependencies": { "undici-types": "~6.20.0" } }, "sha512-ywP2X0DYtX3y08eFVx5fNIw7/uIv8hYUKgXoK8oayJlLnKcRfEYCxWMVE1XagUdVtCJlZT1AU4LXEABW+L1Peg=="],
+
+    "@types/ws": ["@types/ws@8.5.14", "", { "dependencies": { "@types/node": "*" } }, "sha512-bd/YFLW+URhBzMXurx7lWByOu+xzU9+kb3RboOteXYDfW+tr+JZa99OyNmPINEGB/ahzKrEuc8rcv4gnpJmxTw=="],
+
+    "avoimempi-eduskunta-common": ["avoimempi-eduskunta-common@workspace:modules/common"],
+
+    "avoimempi-eduskunta-migrator": ["avoimempi-eduskunta-migrator@workspace:modules/migrator"],
+
+    "avoimempi-eduskunta-parser": ["avoimempi-eduskunta-parser@workspace:modules/parser"],
+
+    "avoimempi-eduskunta-scraper": ["avoimempi-eduskunta-scraper@workspace:modules/scraper"],
+
+    "avoimempi-eduskunta-scripts": ["avoimempi-eduskunta-scripts@workspace:modules/scripts"],
+
+    "bun-types": ["bun-types@1.2.2", "", { "dependencies": { "@types/node": "*", "@types/ws": "~8.5.10" } }, "sha512-RCbMH5elr9gjgDGDhkTTugA21XtJAy/9jkKe/G3WR2q17VPGhcquf9Sir6uay9iW+7P/BV0CAHA1XlHXMAVKHg=="],
+
+    "jsonschema": ["jsonschema@1.5.0", "", {}, "sha512-K+A9hhqbn0f3pJX17Q/7H6yQfD/5OXgdrR5UE12gMXCiN9D5Xq2o5mddV2QEcX/bjla99ASsAAQUyMCCRWAEhw=="],
+
+    "sax": ["sax@1.4.1", "", {}, "sha512-+aWOz7yVScEGoKNd4PA10LZ8sk0A/z5+nXQG5giUO5rprX9jgYsTdov9qCchZiPIZezbZH+jRut8nPodFAX4Jg=="],
+
+    "typescript": ["typescript@5.7.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw=="],
+
+    "undici-types": ["undici-types@6.20.0", "", {}, "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="],
+
+    "xml-js": ["xml-js@1.6.11", "", { "dependencies": { "sax": "^1.2.4" }, "bin": "bin/cli.js" }, "sha512-7rVi2KMfwfWFl+GpPg6m80IVMWXLRjO+PxTq7V2CDhoGak0wzYzFgUY2m4XJ47OGdXd8eLE8EmwfAmdjw7lC1g=="],
+  }
+}
