@@ -10,6 +10,28 @@ const parseDate = (date?: string | null): string | null => {
     const [d, m, y] = date.split(".");
     return `${y}-${m}-${d}`;
   }
+  if (/^\d{4} [A-z]+$/.test(date)) {
+    const [y, param] = date.split(" ");
+    let month = (() => {
+      switch (param.toUpperCase()) {
+        case "I":
+          return 1;
+        case "II":
+          return 2;
+        case "III":
+          return 3;
+        case "IV":
+          return 4;
+        case "V":
+          return 5;
+        case "Y":
+          return 1;
+        default:
+          throw new Error(`Unknown month ${date}`);
+      }
+    })();
+    return `${y}-${month}-01`;
+  }
   console.warn(`Unknown format for ${date}`);
   return null;
 };
@@ -29,12 +51,13 @@ const removeNullEntries = <T extends Record<string, any>>(
       .filter(([k]) => !excludes.includes(k))
       .some(([, v]) => v !== null)
   );
+  if (process.env.DEBUG) console.log(resp);
   return resp;
 };
 
 export default (sql: TransactionSQL) =>
   async (data: DataModel.RepresentativeData) => {
-    console.log("Mapping", data.lastname, data.personId);
+    if (process.env.DEBUG) console.log("Mapping", data.lastname, data.personId);
     const representativeRow: SQLModel.Representative = {
       person_id: Number(data.personId),
       firstname: data.firstname,
@@ -244,5 +267,5 @@ export default (sql: TransactionSQL) =>
     if (educationRows.length) {
       await sql`INSERT INTO educations ${sql(educationRows)}`;
     }
-    console.log("Mapped", data.personId);
+    if (process.env.DEBUG) console.log("Mapped", data.personId);
   };
