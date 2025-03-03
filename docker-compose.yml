@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Service
+  postgres:
+    image: postgres:17-alpine
+    container_name: eduskunta_forum_db
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=eduskuntaforum
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - eduskunta_forum_db
+    restart: always
+
+  # Flyway Migration Handler
+  flyway:
+    image: flyway/flyway:11-alpine
+    container_name: eduskunta_forum_flyway
+    command: -url=jdbc:postgresql://postgres:5432/eduskuntaforum -user=admin -password=secret -locations=filesystem:/migrations -baselineOnMigrate=true migrate
+    volumes:
+      - ./migrations:/migrations # Mount your migration scripts directory
+    depends_on:
+      - postgres # Ensure postgres is up before running migrations
+    networks:
+      - eduskunta_forum_db
+    restart: "no" # We don’t want this container to restart once migrations are done
+
+volumes:
+  postgres_data:
+
+networks:
+  eduskunta_forum_db:
+    driver: bridge

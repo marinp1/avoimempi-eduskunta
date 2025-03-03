@@ -91,7 +91,7 @@ const postProcessXml = (data: string) => {
     console.warn(root);
     throw new Error("Invalid root element");
   }
-  const parsedRoot = parseElement(root, true);
+  const parsedRoot = parseElement(root, false);
   return parsedRoot;
 };
 
@@ -107,14 +107,15 @@ const tableSpecificParsing: Partial<
     const primaryKey = data.pkName;
     for (const dataRow of data.rowData) {
       const data = Object.fromEntries(
-        columnNames.map((cn, ci) => [cn, dataRow[ci]])
+        columnNames.map((cn, ci) => [cn, (dataRow[ci] as any)?.trim()])
       ) as Record<string, any>;
       if (!(primaryKey in data)) {
         throw new Error("Sanity check error, primary key not found!");
       }
       const xmlKeys = columnNames.filter((n) => n.startsWith("XmlData"));
       for (const xmlKey of xmlKeys) {
-        data[xmlKey] = postProcessXml(data[xmlKey]);
+        if (xmlKey !== "XmlDataFi") data[xmlKey] = null;
+        else data[xmlKey] = postProcessXml(data[xmlKey]);
       }
       const sortName =
         data["XmlDataFi"]?.Henkilo?.LajitteluNimi?.replace(/\s+/g, "_") ??
@@ -126,7 +127,28 @@ const tableSpecificParsing: Partial<
   },
 };
 
+const defaultParser = async (
+  data: ApiResponse
+): Promise<Array<[key: string, data: object]>> => {
+  const response: Array<[key: string, data: object]> = [];
+  const columnNames = data.columnNames;
+  const primaryKey = data.pkName;
+  for (const dataRow of data.rowData) {
+    const data = Object.fromEntries(
+      columnNames.map((cn, ci) => [cn, dataRow[ci]?.trim()])
+    ) as Record<string, any>;
+    if (!(primaryKey in data)) {
+      throw new Error("Sanity check error, primary key not found!");
+    }
+    const pk = `${data[primaryKey]}`;
+    response.push([pk, data]);
+  }
+  return response;
+};
+
 const parse = async <T extends TableName>(tableName: T) => {
+  console.time(`Parse ${tableName}`);
+
   const sourceFilesDir = path.resolve(
     import.meta.dirname,
     "../scraper",
@@ -138,11 +160,12 @@ const parse = async <T extends TableName>(tableName: T) => {
     throw new Error(`No data directory found for ${tableName}`);
 
   if (!(tableName in tableSpecificParsing)) {
-    throw new Error(`Parsing not supported for table`);
+    console.warn("Parsing not supported for table");
   }
 
   const distFolder = path.resolve(import.meta.dirname, "data", tableName);
-  if (fs.existsSync(distFolder)) fs.rmSync(distFolder, { force: true, recursive: true });
+  if (fs.existsSync(distFolder))
+    fs.rmSync(distFolder, { force: true, recursive: true });
   if (!fs.existsSync(distFolder)) fs.mkdirSync(distFolder, { recursive: true });
 
   const sourceEntries = fs.readdirSync(sourceFilesDir, {
@@ -165,7 +188,8 @@ const parse = async <T extends TableName>(tableName: T) => {
   for (const { name, getContents } of sourceFiles) {
     console.log("Parsing table", tableName, "file", name);
     const rawData = getContents();
-    const parsedEntries = await tableSpecificParsing[tableName]!(rawData);
+    const parsedEntries = await (tableSpecificParsing[tableName] ??
+      defaultParser)!(rawData);
     for (const [key, data] of parsedEntries) {
       fs.writeFileSync(
         path.join(distFolder, key + ".json"),
@@ -183,6 +207,8 @@ const parse = async <T extends TableName>(tableName: T) => {
     totalParsed,
     "entries"
   );
+
+  console.timeEnd(`Parse ${tableName}`);
 };
 
 const [, , tableToUse] = process.argv;
