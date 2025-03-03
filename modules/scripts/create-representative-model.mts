@@ -2,11 +2,9 @@ import fs from "fs";
 import path from "path";
 import { deepmerge } from "@fastify/deepmerge";
 import jsonschema from "jsonschema";
-import { projectRoot } from "#utils";
+import { projectRoot } from "avoimempi-eduskunta-common/utils/index.mts";
 
-import type { TableName } from "#types/index.mts";
-
-const tableName: TableName = "MemberOfParliament";
+const tableName: Modules.Common.TableName = "MemberOfParliament";
 
 const dataDir = path.resolve(
   import.meta.dirname,
@@ -210,8 +208,13 @@ const convertObjectIntoSchema = (cand: unknown, p = "", root = false): any => {
 
 // Create and write the schema file
 const schema = convertObjectIntoSchema(result, "$", true);
-const schemaFolder = path.resolve(projectRoot, "schemas");
-const schemaPath = path.join(schemaFolder, "representative-model.json");
+const schemaFolder = path.resolve(
+  import.meta.dirname,
+  "../",
+  "migrator",
+  "MemberOfParliament"
+);
+const schemaPath = path.join(schemaFolder, "schema.json");
 fs.writeFileSync(schemaPath, JSON.stringify(schema, null, 2), {
   encoding: "utf8",
 });

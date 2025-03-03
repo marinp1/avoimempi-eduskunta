@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { SQL, TransactionSQL } from "bun";
-import { TableNames } from "#constants/TableNames.mts";
+import { TableNames } from "avoimempi-eduskunta-common/constants/TableNames.mts";
 
 /**
  * Make sure that data is imported in this order.

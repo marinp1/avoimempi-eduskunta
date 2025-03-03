@@ -29,10 +29,10 @@ src/
 │   │   └── <TableName>.mts
 │   └── scrape-table.mts
 │ # code to import parsed data
-├── seeder/
+├── migrator/
 │   ├── fn/
 │   │   └── <TableName>.mts
-│   └── seed-data.mts
+│   └── import-data.mts
 │ # code to parse fetched raw data
 ├── parser/
 │   ├── data/

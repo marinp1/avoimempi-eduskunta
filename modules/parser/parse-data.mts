@@ -1,8 +1,8 @@
 import path from "path";
 import fs from "fs";
 import { xml2json } from "xml-js";
-import { TableNames } from "#constants/TableNames.mts";
-import { ApiResponse, TableName, XmlNode, XmlTree } from "#types/index.mts";
+import { TableNames } from "avoimempi-eduskunta-common/constants/TableNames.mts";
+import { XmlNode, XmlTree } from "./types/index.mts";
 
 /**
  * Parses XML contents.
@@ -125,8 +125,10 @@ const postProcessXml = (data: string) => {
  */
 const tableSpecificParsing: Partial<
   Record<
-    TableName,
-    (data: ApiResponse) => Promise<Array<[primaryKey: string, data: object]>>
+    Modules.Common.TableName,
+    (
+      data: Modules.Scraper.ApiResponse
+    ) => Promise<Array<[primaryKey: string, data: object]>>
   >
 > = {
   MemberOfParliament: async (data) => {
@@ -160,7 +162,7 @@ const tableSpecificParsing: Partial<
  * @param data API response to parse.
  */
 const defaultParser = async (
-  data: ApiResponse
+  data: Modules.Scraper.ApiResponse
 ): Promise<Array<[key: string, data: object]>> => {
   const response: Array<[key: string, data: object]> = [];
   const columnNames = data.columnNames;
@@ -178,7 +180,7 @@ const defaultParser = async (
   return response;
 };
 
-const parse = async <T extends TableName>(tableName: T) => {
+const parse = async <T extends Modules.Common.TableName>(tableName: T) => {
   console.time(`Parse ${tableName}`);
 
   const sourceFilesDir = path.resolve(
@@ -212,7 +214,7 @@ const parse = async <T extends TableName>(tableName: T) => {
       getContents: () =>
         JSON.parse(
           fs.readFileSync(path.join(e.parentPath, e.name), { encoding: "utf8" })
-        ) as ApiResponse,
+        ) as Modules.Scraper.ApiResponse,
     }));
 
   let totalParsed = 0;
@@ -250,4 +252,4 @@ if (!TableNames.includes(tableToUse as any)) {
   throw new Error("Invalid table name!");
 }
 
-await parse(tableToUse as TableName);
+await parse(tableToUse as Modules.Common.TableName);

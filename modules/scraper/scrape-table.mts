@@ -1,8 +1,7 @@
 import { scheduler } from "node:timers/promises";
 import path from "path";
 import fs from "fs";
-import { TableNames } from "#constants/TableNames.mts";
-import { ApiResponse, TableName } from "#types/index.mts";
+import { TableNames } from "avoimempi-eduskunta-common/constants/TableNames.mts";
 
 /** To to wait (in ms) between API calls. */
 const TIME_BETWEEN_QUERIES = 50;
@@ -15,7 +14,7 @@ let MAX_LOOP_LIMIT = 2000;
  * for futher processing.
  * @param tableName Table to fetch information from.
  */
-const scrape = async <T extends TableName>(tableName: T) => {
+const scrape = async <T extends Modules.Common.TableName>(tableName: T) => {
   const distFolder = path.resolve(import.meta.dirname, "data", tableName);
   if (!fs.existsSync(distFolder)) fs.mkdirSync(distFolder);
 
@@ -41,7 +40,7 @@ const scrape = async <T extends TableName>(tableName: T) => {
    */
   let page = 0;
   /** Content of the API call. */
-  let content: ApiResponse;
+  let content: Modules.Scraper.ApiResponse;
   const ApiUrl = new URL(`z${tableName}/rows?page=${page}&perPage=100`);
 
   do {
@@ -54,7 +53,7 @@ const scrape = async <T extends TableName>(tableName: T) => {
         "Content-Type": "application/json",
       },
     });
-    content = (await response.json()) as ApiResponse;
+    content = (await response.json()) as Modules.Scraper.ApiResponse;
     // Write content to file
     fs.writeFileSync(
       path.resolve(distFolder, `page-${String(page).padStart(5, "0")}.json`),
@@ -87,4 +86,4 @@ if (!TableNames.includes(tableToUse as any)) {
   throw new Error("Invalid table name!");
 }
 
-await scrape(tableToUse as TableName);
+await scrape(tableToUse as Modules.Common.TableName);
