@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs";
-import { SQL, TransactionSQL } from "bun";
+import { SQL, type TransactionSQL } from "bun";
 import { TableNames } from "avoimempi-eduskunta-common/constants/TableNames.mts";
 
 /**

@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import { deepmerge } from "@fastify/deepmerge";
 import jsonschema from "jsonschema";
-import { projectRoot } from "avoimempi-eduskunta-common/utils/index.mts";
 
 const tableName: Modules.Common.TableName = "MemberOfParliament";
 
