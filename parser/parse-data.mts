@@ -135,7 +135,7 @@ const defaultParser = async (
   const primaryKey = data.pkName;
   for (const dataRow of data.rowData) {
     const data = Object.fromEntries(
-      columnNames.map((cn, ci) => [cn, dataRow[ci]?.trim()])
+      columnNames.map((cn, ci) => [cn, (dataRow[ci] as any)?.trim()])
     ) as Record<string, any>;
     if (!(primaryKey in data)) {
       throw new Error("Sanity check error, primary key not found!");
