@@ -9,17 +9,15 @@ Aggregate data from multiple open sources for analysis.
 
 ## Project structure
 
-TODO: Fix this!
-
 ```txt
 # migration files
 migrations/
 └── *.sql
-src/
+modules/
 │ # common constants and utils
 ├── common/
 │   ├── constants/
-│   └── types/
+│   └── typings/
 │ # code to fetch raw data
 ├── scraper/
 │   ├── data/
@@ -32,7 +30,8 @@ src/
 ├── migrator/
 │   ├── <TableName>/
 │   │   ├── migrator.mts
-│   │   ├── model.mts
+│   │   ├── DataModel.mts
+│   │   ├── SQLModel.mts
 │   │   └── schema.json
 │   └── import-data.mts
 │ # code to parse fetched raw data
@@ -79,123 +78,149 @@ The imported data is transformed into the the following tables.
 
 ```mermaid
 erDiagram
-    representatives {
-        int person_id PK
-        string firstname
-        string lastname
-        string email
-        int birth_year
-        string birth_place
-        string gender
-        string home_municipality
-        string profession
-        string party
-        boolean minister
+    Representative {
+        INT person_id PK
+        VARCHAR(100) last_name
+        VARCHAR(100) first_name
+        VARCHAR(100) sort_name
+        VARCHAR(100) marticle_name
+        VARCHAR(100) party
+        BOOLEAN minister
+        VARCHAR(50) phone
+        VARCHAR(100) email
+        VARCHAR(100) current_municipality
+        VARCHAR(100) profession
+        TEXT website
+        TEXT additional_info
+        DATE birth_date
+        VARCHAR(100) birth_place
+        DATE death_date
+        VARCHAR(100) death_place
+        VARCHAR(16) gender
+        DATE term_end_date
     }
 
-    electoral_districts {
-        int id PK
-        int person_id FK
-        string name
-        date start_date
-        date end_date
+    Education {
+        INT id PK
+        INT person_id FK
+        VARCHAR(255) name
+        VARCHAR(255) institution
+        INT year
     }
 
-    representative_terms {
-        int id PK
-        int person_id FK
-        date start_date
-        date end_date
+    WorkHistory {
+        INT id PK
+        INT person_id FK
+        VARCHAR(255) position
+        VARCHAR(50) period
     }
 
-    parliamentary_groups {
-        int id PK
-        int person_id FK
-        string group_name
-        date start_date
-        date end_date
+    Committee {
+        VARCHAR(50) code PK
+        VARCHAR(255) name
     }
 
-    committee_memberships {
-        int id PK
-        int person_id FK
-        string committee_name
-        string role
-        date start_date
-        date end_date
+    CommitteeMembership {
+        INT id PK
+        INT person_id FK
+        VARCHAR(50) committee_code FK
+        VARCHAR(255) role
+        DATE start_date
+        DATE end_date
     }
 
-    declarations {
-        int id PK
-        int person_id FK
-        string declaration_type
-        text description
+    TrustPosition {
+        INT id PK
+        INT person_id FK
+        VARCHAR(50) position_type
+        VARCHAR(255) name
+        VARCHAR(50) period
     }
 
-    incomes {
-        int id PK
-        int person_id FK
-        string source
-        decimal amount
-        int income_year
+    GovernmentMembership {
+        INT id PK
+        INT person_id FK
+        VARCHAR(255) name
+        VARCHAR(255) ministry
+        VARCHAR(255) government
+        DATE start_date
+        DATE end_date
     }
 
-    gifts {
-        int id PK
-        int person_id FK
-        string giver
-        text description
-        decimal value
-        date received_date
+    Publications {
+        INT id PK
+        INT person_id FK
+        VARCHAR(255) title
+        INT year
+        TEXT authors
     }
 
-    representatives ||--o{ electoral_districts : ""
-    representatives ||--o{ representative_terms : ""
-    representatives ||--o{ parliamentary_groups : ""
-    representatives ||--o{ committee_memberships : ""
-    representatives ||--o{ declarations : ""
-    representatives ||--o{ incomes : ""
-    representatives ||--o{ gifts : ""
-
-    representative_votes {
-        int representative_vote_id PK
-        int person_id FK
-        int voting_session_id FK
-        string first_name
-        string last_name
-        string party_abbreviation
-        string vote
-        timestamp import_timestamp
+    ParliamentaryGroup {
+        VARCHAR(50) code PK
+        VARCHAR(255) name
     }
 
-    voting_sessions {
-        int voting_session_id PK
-        int language_id
-        int session_year
-        int session_number
-        timestamp session_date
-        timestamp reported_start_time
-        timestamp actual_start_time
-        int voting_number
-        timestamp voting_start_time
-        timestamp voting_end_time
-        string voting_title
-        string agenda_item_title
-        string agenda_item_phase
-        int agenda_item_order
-        text agenda_item_description
-        int voting_result_for
-        int voting_result_against
-        int voting_result_abstained
-        int voting_result_absent
-        int voting_result_total
-        string protocol_url
-        string protocol_reference
-        string parliamentary_case_url
-        string parliamentary_case_reference
-        timestamp import_timestamp
+    ParliamentaryGroupMembership {
+        INT id PK
+        INT person_id FK
+        VARCHAR(50) group_code FK
+        DATE start_date
+        DATE end_date
     }
 
-    representative_votes }|--|| voting_sessions: "belongs to"
-    representative_votes }|--|| representatives: "belongs to"
+    ParliamentaryGroupAssignment {
+        INT id PK
+        INT person_id FK
+        VARCHAR(50) group_code FK
+        VARCHAR(255) role
+        VARCHAR(255) time_period
+        DATE start_date
+        DATE end_date
+    }
+
+    District {
+        INT id PK
+        VARCHAR(50) code
+        VARCHAR(255) name
+    }
+
+    RepresentativeDistrict {
+        INT id PK
+        INT person_id FK
+        VARCHAR(50) district_code FK
+        DATE start_date
+        DATE end_date
+    }
+
+    Term {
+        INT id PK
+        INT person_id FK
+        DATE start_date
+        DATE end_date
+    }
+
+    Interruption {
+        INT id PK
+        INT person_id FK
+        TEXT description
+        VARCHAR(50) replacement_person
+        DATE start_date
+        DATE end_date
+    }
+
+    Representative ||--o{ Education : has
+    Representative ||--o{ WorkHistory : has
+    Representative ||--o{ CommitteeMembership : has
+    Committee ||--o{ CommitteeMembership : has
+    Representative ||--o{ TrustPosition : has
+    Representative ||--o{ GovernmentMembership : has
+    Representative ||--o{ Publications : has
+    Representative ||--o{ ParliamentaryGroupMembership : has
+    ParliamentaryGroup ||--o{ ParliamentaryGroupMembership : has
+    Representative ||--o{ ParliamentaryGroupAssignment : has
+    ParliamentaryGroup ||--o{ ParliamentaryGroupAssignment : has
+    Representative ||--o{ RepresentativeDistrict : has
+    District ||--o{ RepresentativeDistrict : has
+    Representative ||--o{ Term : has
+    Representative ||--o{ Interruption : has
 ```
