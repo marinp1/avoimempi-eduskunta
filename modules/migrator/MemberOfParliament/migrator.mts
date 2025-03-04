@@ -265,10 +265,23 @@ export default (sql: TransactionSQL) =>
         end_date: parseDate(v.LoppuPvm),
       }));
 
-    // TODO: Education
-    const educationRows: SQLModel.WorkExperience[] = [];
-    // TODO: Work
-    const workRows: SQLModel.WorkExperience[] = [];
+    const workRows: SQLModel.WorkExperience[] = mergeArrays(
+      dataToImport.XmlDataFi.Henkilo.TyoUra?.Tyo
+    ).map((v) => ({
+      person_id: +dataToImport.personId,
+      position: v.Nimi,
+      period: v.AikaJakso,
+    }));
+
+    const educationRows: SQLModel.Education[] = mergeArrays(
+      dataToImport.XmlDataFi.Henkilo.Koulutukset?.Koulutus
+    ).map((v) => ({
+      person_id: +dataToImport.personId,
+      name: v.Nimi,
+      institution: v.Oppilaitos,
+      year: parseYear(v.Vuosi),
+    }));
+
     // TODO: Publications
     const publicationRows: SQLModel.Publication[] = [];
 
@@ -337,6 +350,18 @@ export default (sql: TransactionSQL) =>
     if (governmentMembershipRows.length) {
       await sql`INSERT INTO GovernmentMembership ${sql(
         governmentMembershipRows
+      )} ON CONFLICT DO NOTHING`;
+    }
+
+    if (workRows.length) {
+      await sql`INSERT INTO WorkHistory ${sql(
+        workRows
+      )} ON CONFLICT DO NOTHING`;
+    }
+
+    if (educationRows.length) {
+      await sql`INSERT INTO Education ${sql(
+        educationRows
       )} ON CONFLICT DO NOTHING`;
     }
 
