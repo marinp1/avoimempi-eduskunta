@@ -59,8 +59,8 @@ const ARRAY_OR_OBJECT_KEYS = {
   "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin.Jasenyys":
     "CommitteeMembership",
   "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin.EntNimi":
-    "EntinenNimi",
-  "$.XmlDataFi.Henkilo.Arvonimet.Arvonimi": "Arvonimi",
+    "PreviousName",
+  "$.XmlDataFi.Henkilo.Arvonimet.Arvonimi": "Title",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat.Eduskuntaryhma":
     "ParliamentGroup",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat.Eduskuntaryhma.Jasenyys":
@@ -75,36 +75,72 @@ const ARRAY_OR_OBJECT_KEYS = {
     "ParliamentGroupAssignment",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa.Eduskuntaryhma.Tehtava.Jasenyys":
     "ParliamentGroupMembership",
-  "$.XmlDataFi.Henkilo.EdustajanJulkaisut.EdustajanJulkaisu":
-    "EdustajanJulkaisu",
-  "$.XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi": "Edustajatoimi",
+  "$.XmlDataFi.Henkilo.EdustajanJulkaisut.EdustajanJulkaisu": "Publication",
+  "$.XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi": "Term",
   "$.XmlDataFi.Henkilo.EdustajatoimiKeskeytynyt.ToimenKeskeytys":
-    "ToimenKeskeytys",
-  "$.XmlDataFi.Henkilo.Kansanedustajana.Keskeytys": "Keskeytys",
-  "$.XmlDataFi.Henkilo.KansanvalisetLuottamustehtavat.Tehtava":
-    "Luottamustehtävä",
-  "$.XmlDataFi.Henkilo.KirjallisuuttaEdustajasta.Julkaisu": "Julkaisu",
+    "Interruption",
+  "$.XmlDataFi.Henkilo.Kansanedustajana.Keskeytys": "Interruption",
+  "$.XmlDataFi.Henkilo.KansanvalisetLuottamustehtavat.Tehtava": "TrustPosition",
+  "$.XmlDataFi.Henkilo.KirjallisuuttaEdustajasta.Julkaisu": "Publication",
   "$.XmlDataFi.Henkilo.Koulutukset.Koulutus": "Koulutus",
-  "$.XmlDataFi.Henkilo.KunnallisetLuottamustehtavat.Tehtava":
-    "Luottamustehtävä",
-  "$.XmlDataFi.Henkilo.MuutLuottamustehtavat.Tehtava": "Luottamustehtävä",
+  "$.XmlDataFi.Henkilo.KunnallisetLuottamustehtavat.Tehtava": "TrustPosition",
+  "$.XmlDataFi.Henkilo.MuutLuottamustehtavat.Tehtava": "TrustPosition",
   "$.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet.Toimielin": "Committee",
   "$.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet.Toimielin.Jasenyys":
     "CommitteeMembership",
-  "$.XmlDataFi.Henkilo.TyoUra.Tyo": "Työ",
-  "$.XmlDataFi.Henkilo.Vaalipiirit.EdellisetVaalipiirit.VaaliPiiri":
-    "Vaalipiiri",
-  "$.XmlDataFi.Henkilo.ValtiollisetLuottamustehtavat.Tehtava":
-    "Luottamustehtävä",
+  "$.XmlDataFi.Henkilo.TyoUra.Tyo": "Work",
+  "$.XmlDataFi.Henkilo.Vaalipiirit.EdellisetVaalipiirit.VaaliPiiri": "District",
+  "$.XmlDataFi.Henkilo.ValtiollisetLuottamustehtavat.Tehtava": "TrustPosition",
   "$.XmlDataFi.Henkilo.ValtioneuvostonJasenyydet.Jasenyys":
     "GovernmentMembership",
-} satisfies Record<`$.${string}`, string> as Record<string, string>;
+} as const satisfies Record<`$.${string}`, string>;
+
+type SubDefinitionName =
+  (typeof ARRAY_OR_OBJECT_KEYS)[keyof typeof ARRAY_OR_OBJECT_KEYS];
 
 /**
  * Object of definitions constructred during model generation.
+ * Since deep merge does not properly merge object to arrays, add missing fields here manually.
  */
-const definitions: Record<string, any> = {};
-const definitionMerge = deepmerge({ all: true });
+const definitions = {
+  CommitteeMembership: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      AikaJakso: {
+        type: "string",
+      },
+    },
+  },
+  Title: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      Oppilaitos: {
+        type: "string",
+      },
+    },
+  },
+  ParliamentGroup: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      EntNimi: {
+        anyOf: [
+          {
+            $ref: "#/$defs/PreviousName",
+          },
+          {
+            type: "array",
+            items: {
+              $ref: "#/$defs/PreviousName",
+            },
+          },
+        ],
+      },
+    },
+  },
+} satisfies Partial<Record<SubDefinitionName, any>> as Record<string, any>;
 
 /**
  * Create an `anyOf` JSON Schema entry where the value can either be the
@@ -113,11 +149,20 @@ const definitionMerge = deepmerge({ all: true });
  * @param originalPath Original JSON path to the entry.
  * @see {definitions} As a side effect adds the definition to object.
  */
-const createTypeWithDefinition = (definition: unknown, p: string) => {
+const createTypeWithDefinition = (
+  definition: unknown,
+  p: SubDefinitionName
+) => {
   if (!(p in definitions)) {
     definitions[p] = definition;
-  } else {
-    Object.assign(definitions[p].properties, (definition as any)["properties"]);
+  } else if ("properties" in (definition as any)) {
+    const existingPropeties = Object.keys(definitions[p].properties);
+    const missingProperties = Object.fromEntries(
+      Object.entries((definition as any).properties).filter(
+        ([k, v]) => !existingPropeties.includes(k)
+      )
+    );
+    Object.assign(definitions[p].properties, missingProperties);
   }
   return {
     anyOf: [
@@ -134,6 +179,9 @@ const createTypeWithDefinition = (definition: unknown, p: string) => {
   };
 };
 
+const flattenObjectList = (val: Record<string, any>[]) =>
+  val.reduce((prev, cur) => ({ ...prev, ...cur }), {});
+
 /**
  * Converts the merged JSON object into valid JSON schema.
  * @param cand Value to process.
@@ -144,9 +192,12 @@ const convertObjectIntoSchema = (cand: unknown, p = "", root = false): any => {
   if (cand === null) return { type: "null" };
   // Map array type
   if (Array.isArray(cand)) {
-    const defType = cand.map((e) => convertObjectIntoSchema(e, `${p}`))[0];
+    const defType = convertObjectIntoSchema(flattenObjectList(cand), p);
     if (p in ARRAY_OR_OBJECT_KEYS) {
-      return createTypeWithDefinition(defType, ARRAY_OR_OBJECT_KEYS[p]);
+      return createTypeWithDefinition(
+        defType,
+        ARRAY_OR_OBJECT_KEYS[p as keyof typeof ARRAY_OR_OBJECT_KEYS]
+      );
     }
     return {
       type: "array",
@@ -177,7 +228,10 @@ const convertObjectIntoSchema = (cand: unknown, p = "", root = false): any => {
         : {}),
     };
     if (p in ARRAY_OR_OBJECT_KEYS) {
-      return createTypeWithDefinition(defType, ARRAY_OR_OBJECT_KEYS[p]);
+      return createTypeWithDefinition(
+        defType,
+        ARRAY_OR_OBJECT_KEYS[p as keyof typeof ARRAY_OR_OBJECT_KEYS]
+      );
     }
     return defType;
   }
