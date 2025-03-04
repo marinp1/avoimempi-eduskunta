@@ -73,12 +73,12 @@ export namespace SQLModel {
     person_id: number;
     name: string;
     institution: string;
-    year: number;
+    year: number | null;
   };
 
   export type WorkExperience = {
     person_id: number;
-    name: string;
+    position: string;
     period: string;
   };
 

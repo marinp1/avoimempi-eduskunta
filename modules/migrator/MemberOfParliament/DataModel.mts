@@ -60,10 +60,10 @@ export namespace DataModel {
         KuolemaPaikka?: string;
         SukuPuoliKoodi: string;
         KansanedustajuusPaattynytPvm?: string;
-        Koulutukset: {
+        Koulutukset?: {
           Koulutus: Koulutus | Koulutus[];
         };
-        TyoUra: {
+        TyoUra?: {
           Tyo: Work | Work[];
         };
         Arvonimet: {
