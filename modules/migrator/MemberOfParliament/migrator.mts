@@ -202,14 +202,20 @@ export default (sql: TransactionSQL) =>
       [
         ...mergeArrays(
           dataToImport.XmlDataFi.Henkilo.Eduskuntaryhmat
-            .EdellisetEduskuntaryhmat?.Eduskuntaryhma,
-          dataToImport.XmlDataFi.Henkilo.Eduskuntaryhmat.NykyinenEduskuntaryhma
+            .EdellisetEduskuntaryhmat?.Eduskuntaryhma
         ).flatMap((s) =>
           mergeArrays(s.Jasenyys).map((j) => ({
             ...j,
             __parent__: s,
           }))
         ),
+        ...mergeArrays(
+          dataToImport.XmlDataFi.Henkilo.Eduskuntaryhmat.NykyinenEduskuntaryhma
+        ).map((s) => ({
+          ...s,
+          LoppuPvm: null,
+          __parent__: s,
+        })),
       ].map((v) => {
         const groupCode = addParliamentGroupRow({
           code: v.__parent__.Tunnus,
