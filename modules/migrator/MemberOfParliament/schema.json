@@ -402,12 +402,12 @@
                     "Eduskuntaryhma": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ParliamentGroup"
+                          "$ref": "#/$defs/ParliamentGroupStub"
                         },
                         {
                           "type": "array",
                           "items": {
-                            "$ref": "#/$defs/ParliamentGroup"
+                            "$ref": "#/$defs/ParliamentGroupStub"
                           }
                         }
                       ]
@@ -415,37 +415,17 @@
                   }
                 },
                 "NykyinenEduskuntaryhma": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "properties": {
-                    "EntNimi": {
-                      "type": "object",
-                      "additionalProperties": false,
-                      "properties": {
-                        "Nimi": {
-                          "type": "string"
-                        },
-                        "AlkuPvm": {
-                          "type": "string",
-                          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
-                        },
-                        "LoppuPvm": {
-                          "type": "string",
-                          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
-                        }
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/ParliamentGroup"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/$defs/ParliamentGroup"
                       }
-                    },
-                    "Nimi": {
-                      "type": "string"
-                    },
-                    "Tunnus": {
-                      "type": "string"
-                    },
-                    "AlkuPvm": {
-                      "type": "string",
-                      "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
                     }
-                  }
+                  ]
                 },
                 "TehtavatAiemmissaEduskuntaryhmissa": {
                   "type": "object",
@@ -454,12 +434,12 @@
                     "Eduskuntaryhma": {
                       "anyOf": [
                         {
-                          "$ref": "#/$defs/ParliamentGroup"
+                          "$ref": "#/$defs/ParliamentGroupStub"
                         },
                         {
                           "type": "array",
                           "items": {
-                            "$ref": "#/$defs/ParliamentGroup"
+                            "$ref": "#/$defs/ParliamentGroupStub"
                           }
                         }
                       ]
@@ -612,6 +592,48 @@
         "Tunnus": {
           "type": "string"
         },
+        "AlkuPvm": {
+          "type": "string",
+          "pattern": "^([0-9]{2}.[0-9]{2}.[0-9]{4})|([0-9]{4})|([0-9]{4} [iIvV]+)$"
+        },
+        "Jasenyys": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ParliamentGroupMembership"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/ParliamentGroupMembership"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ParliamentGroupStub": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "EntNimi": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PreviousName"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/PreviousName"
+              }
+            }
+          ]
+        },
+        "Nimi": {
+          "type": "string"
+        },
+        "Tunnus": {
+          "type": "string"
+        },
         "Tehtava": {
           "anyOf": [
             {
@@ -630,19 +652,6 @@
         },
         "ToimielinTunnus": {
           "type": "string"
-        },
-        "Jasenyys": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/ParliamentGroupMembership"
-            },
-            {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/ParliamentGroupMembership"
-              }
-            }
-          ]
         }
       }
     },
