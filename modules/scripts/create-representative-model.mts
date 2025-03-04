@@ -60,21 +60,26 @@ const ARRAY_OR_OBJECT_KEYS = {
     "CommitteeMembership",
   "$.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet.Toimielin.EntNimi":
     "PreviousName",
+  "$.XmlDataFi.Henkilo.NykyinenEduskuntaryhma.EntNimi": "PreviousName",
   "$.XmlDataFi.Henkilo.Arvonimet.Arvonimi": "Title",
+  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.NykyinenEduskuntaryhma":
+    "ParliamentGroup",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat.Eduskuntaryhma":
     "ParliamentGroup",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat.Eduskuntaryhma.Jasenyys":
     "ParliamentGroupMembership",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatEduskuntaryhmassa.Eduskuntaryhma":
-    "ParliamentGroup",
+    "ParliamentGroupStub",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatEduskuntaryhmassa.Eduskuntaryhma.Tehtava":
     "ParliamentGroupAssignment",
+  "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatEduskuntaryhmassa.Eduskuntaryhma.Tehtava.Jasenyys":
+    "ParliamentGroupAssignmentMembership",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa.Eduskuntaryhma":
-    "ParliamentGroup",
+    "ParliamentGroupStub",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa.Eduskuntaryhma.Tehtava":
     "ParliamentGroupAssignment",
   "$.XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa.Eduskuntaryhma.Tehtava.Jasenyys":
-    "ParliamentGroupMembership",
+    "ParliamentGroupAssignmentMembership",
   "$.XmlDataFi.Henkilo.EdustajanJulkaisut.EdustajanJulkaisu": "Publication",
   "$.XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi": "Term",
   "$.XmlDataFi.Henkilo.EdustajatoimiKeskeytynyt.ToimenKeskeytys":
@@ -122,6 +127,25 @@ const definitions = {
     },
   },
   ParliamentGroup: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      EntNimi: {
+        anyOf: [
+          {
+            $ref: "#/$defs/PreviousName",
+          },
+          {
+            type: "array",
+            items: {
+              $ref: "#/$defs/PreviousName",
+            },
+          },
+        ],
+      },
+    },
+  },
+  ParliamentGroupStub: {
     type: "object",
     additionalProperties: false,
     properties: {
