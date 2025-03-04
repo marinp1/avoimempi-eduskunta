@@ -1,14 +1,6 @@
-import type { TransactionSQL } from "bun";
-import type {
-  Committee,
-  CommitteeMembership,
-  Education,
-  ElectoralDistrict,
-  ParliamentaryGroupMembership,
-  ParliamentGroup,
-  Representative,
-  RepresentativeTerm,
-} from "./model.mts";
+import { SQL, type TransactionSQL } from "bun";
+import type { DataModel } from "./DataModel.mts";
+import type { SQLModel } from "./SQLModel.mts";
 
 const parseDate = (date?: string | null): string | null => {
   if (!date) return null;
@@ -51,227 +43,302 @@ const parseYear = (year: string): number | null => {
   return parsed;
 };
 
-const removeNullEntries = <T extends Record<string, any>>(
-  arr: T[],
-  excludes: Array<keyof T> = []
-) => {
-  const resp = arr.filter((obj) =>
-    Object.entries(obj)
-      .filter(([k]) => !excludes.includes(k))
-      .some(([, v]) => v !== null)
-  );
-  if (process.env.DEBUG) console.log(resp);
-  return resp;
+const DatabaseTables = Object.freeze({
+  Representative: "Representative",
+  Education: "Education",
+  WorkHistory: "WorkHistory",
+  Committee: "Committee",
+  CommitteeMembership: "CommitteeMembership",
+  TrustPosition: "TrustPosition",
+  GovernmentMembership: "GovernmentMembership",
+  Publications: "Publications",
+  ParliamentaryGroup: "ParliamentaryGroup",
+  ParliamentaryGroupMembership: "ParliamentaryGroupMembership",
+  District: "District",
+  RepresentativeDistrict: "RepresentativeDistrict",
+  Term: "Term",
+  Interruption: "Interruption",
+});
+
+const mergeArrays = <T>(
+  ...values: Array<T | Array<T>>
+): Exclude<T, undefined>[] => {
+  return values
+    .flatMap((v) => (Array.isArray(v) ? v : [v]))
+    .filter((s) => !!s) as Exclude<T, undefined>[];
 };
 
 export default (sql: TransactionSQL) =>
-  async (data: Modules.Parser.MemberOfParliament) => {
-    if (process.env.DEBUG) console.log("Mapping", data.lastname, data.personId);
-    const representativeRow: Representative = {
-      person_id: Number(data.personId),
-      firstname: data.firstname,
-      lastname: data.lastname,
-      email: data.XmlDataFi.Henkilo.SahkoPosti || undefined,
-      birth_year: data.XmlDataFi.Henkilo.SyntymaPvm
-        ? parseInt(data.XmlDataFi.Henkilo.SyntymaPvm.split("-")[0])
-        : undefined,
-      birth_place: data.XmlDataFi.Henkilo.SyntymaPaikka || undefined,
-      gender: data.XmlDataFi.Henkilo.SukuPuoliKoodi || undefined,
-      home_municipality: data.XmlDataFi.Henkilo.NykyinenKotikunta || undefined,
-      profession: data.XmlDataFi.Henkilo.Ammatti,
-      party: data.party,
-      minister: data.minister !== "f",
+  async (dataToImport: DataModel.Representative) => {
+    if (process.env.DEBUG)
+      console.log("Mapping", dataToImport.lastname, dataToImport.personId);
+
+    const representativeRow: SQLModel.Representative = {
+      person_id: Number(dataToImport.personId),
+      first_name: dataToImport.firstname,
+      last_name: dataToImport.lastname,
+      sort_name: dataToImport.XmlDataFi.Henkilo.LajitteluNimi,
+      marticle_name: dataToImport.XmlDataFi.Henkilo.MatrikkeliNimi,
+      email: dataToImport.XmlDataFi.Henkilo.SahkoPosti ?? null,
+      birth_date: parseDate(dataToImport.XmlDataFi.Henkilo.SyntymaPvm)!,
+      birth_place: dataToImport.XmlDataFi.Henkilo.SyntymaPaikka,
+      death_date: parseDate(dataToImport.XmlDataFi.Henkilo.KuolemaPvm),
+      death_place: dataToImport.XmlDataFi.Henkilo.KuolemaPaikka ?? null,
+      gender: dataToImport.XmlDataFi.Henkilo.SukuPuoliKoodi,
+      current_municipality:
+        dataToImport.XmlDataFi.Henkilo.NykyinenKotikunta ?? null,
+      profession: dataToImport.XmlDataFi.Henkilo.Ammatti,
+      party: dataToImport.party,
+      minister: dataToImport.minister !== "f",
+      phone: dataToImport.XmlDataFi.Henkilo.Puh ?? null,
+      website: dataToImport.XmlDataFi.Henkilo.KotiSivu ?? null,
+      additional_info: dataToImport.XmlDataFi.Henkilo.LisaTiedot || "",
+      term_end_date: parseDate(
+        dataToImport.XmlDataFi.Henkilo.KansanedustajuusPaattynytPvm
+      ),
     };
 
-    // Mapping Electoral Districts
-    const electoralDistrictRows: ElectoralDistrict[] = removeNullEntries(
-      [data.XmlDataFi.Henkilo.Vaalipiirit.EdellisetVaalipiirit.VaaliPiiri]
-        .flat()
-        .map((vaaliPiiri) => ({
-          person_id: representativeRow.person_id,
-          name: vaaliPiiri.Nimi ?? null,
-          start_date: parseDate(vaaliPiiri.AlkuPvm)!,
-          end_date: parseDate(vaaliPiiri.LoppuPvm),
-        })),
-      ["person_id"]
-    );
+    const districtRows: SQLModel.District[] = [];
+    const electoralDistrictRows: SQLModel.RepresentativeDistrict[] =
+      mergeArrays(
+        dataToImport.XmlDataFi.Henkilo.Vaalipiirit.EdellisetVaalipiirit
+          ?.VaaliPiiri,
+        dataToImport.XmlDataFi.Henkilo.Vaalipiirit.NykyinenVaalipiiri
+      ).map((v) => {
+        if (!districtRows.find((r) => r.code === v.Tunnus)) {
+          districtRows.push({ code: v.Tunnus, name: v.Nimi || v.Tunnus });
+        }
+        return {
+          person_id: +dataToImport.personId,
+          district_code: v.Tunnus,
+          start_date: parseDate(v.AlkuPvm)!,
+          end_date: parseDate(v.LoppuPvm),
+        };
+      });
 
-    // Mapping Representative Terms
-    const representativeTermRows: RepresentativeTerm[] = removeNullEntries(
-      [data.XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi]
-        .flat()
-        .map((toimi) => ({
-          person_id: representativeRow.person_id,
-          start_date: parseDate(toimi.AlkuPvm)!,
-          end_date: parseDate(toimi.LoppuPvm)!,
-        })),
-      ["person_id"]
-    );
+    const termRows: SQLModel.Term[] = mergeArrays(
+      dataToImport.XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi
+    ).map((v) => ({
+      person_id: +dataToImport.personId,
+      start_date: parseDate(v.AlkuPvm)!,
+      end_date: parseDate(v.LoppuPvm),
+    }));
 
-    // Mapping Parliamentary Groups
-    const parliamentaryGroupMembershipRows: ParliamentaryGroupMembership[] =
-      removeNullEntries(
-        [
-          data.XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat
-            ?.Eduskuntaryhma,
-        ]
-          .flat()
-          .filter((s) => !!s)
-          .flatMap((eduskuntaryhma) =>
-            [eduskuntaryhma.Jasenyys].flat().map((jasenyys) => ({
-              person_id: representativeRow.person_id,
-              group_identifier: eduskuntaryhma.Tunnus ?? null,
-              start_date: parseDate(jasenyys?.AlkuPvm)!,
-              end_date: parseDate(jasenyys?.LoppuPvm),
-            }))
-          )
-          .concat({
-            person_id: representativeRow.person_id,
-            group_identifier:
-              data.XmlDataFi.Henkilo.Eduskuntaryhmat?.NykyinenEduskuntaryhma
-                ?.Tunnus || null,
-            start_date: parseDate(
-              data.XmlDataFi.Henkilo.Eduskuntaryhmat?.NykyinenEduskuntaryhma
-                ?.AlkuPvm
-            )!,
-            end_date: null,
-          }),
-        ["person_id"]
-      );
+    const interruptionRows: SQLModel.Interruption[] = mergeArrays(
+      dataToImport.XmlDataFi.Henkilo.EdustajatoimiKeskeytynyt?.ToimenKeskeytys
+    ).map((v) => ({
+      person_id: +dataToImport.personId,
+      start_date: parseDate(v.AlkuPvm)!,
+      end_date: parseDate(v.LoppuPvm),
+      description: v.Selite,
+      replacement_person:
+        [v.TilallaSelite ?? null, v.TilallaHenkilo ?? null]
+          .filter((s) => s)
+          .join(" ") || null,
+    }));
 
-    const parliamentGroupRows: ParliamentGroup[] = removeNullEntries(
+    const trustPositionRows: SQLModel.TrustPosition[] = [
+      ...mergeArrays(
+        dataToImport.XmlDataFi.Henkilo.ValtiollisetLuottamustehtavat?.Tehtava
+      ).map((s) => ({ ...s, type: "national" as const })),
+      ...mergeArrays(
+        dataToImport.XmlDataFi.Henkilo.KunnallisetLuottamustehtavat?.Tehtava
+      ).map((s) => ({ ...s, type: "municapility" as const })),
+      ...mergeArrays(
+        dataToImport.XmlDataFi.Henkilo.MuutLuottamustehtavat?.Tehtava
+      ).map((s) => ({ ...s, type: "other" as const })),
+      ...mergeArrays(
+        dataToImport.XmlDataFi.Henkilo.KansanvalisetLuottamustehtavat?.Tehtava
+      ).map((s) => ({ ...s, type: "international" as const })),
+    ].map((v) => ({
+      person_id: +dataToImport.personId,
+      name: v.Nimi,
+      period: v.AikaJakso,
+      position_type: v.type,
+    }));
+
+    let unknownCommitteeInd = 0;
+    const committeeRows: SQLModel.Committee[] = [];
+    const committeeMembershipRows: SQLModel.CommitteeMembership[] = [
+      ...mergeArrays(
+        dataToImport.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet?.Toimielin,
+        dataToImport.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet?.Toimielin
+      ).flatMap((s) =>
+        mergeArrays(s.Jasenyys).map((j) => ({ ...j, __parent__: s }))
+      ),
+    ].map((v) => {
+      const committee_code =
+        v.__parent__.Tunnus ||
+        `unknown${String(unknownCommitteeInd++).padStart(5, "0")}`;
+      if (!committeeRows.find((r) => r.code === committee_code)) {
+        committeeRows.push({
+          code: committee_code,
+          name: v.__parent__.Nimi ?? committee_code,
+        });
+      }
+      return {
+        person_id: +dataToImport.personId,
+        committee_code: committee_code,
+        role: v.Rooli,
+        start_date: parseDate(v.AlkuPvm)!,
+        end_date: parseDate(v.LoppuPvm),
+      };
+    });
+
+    let unknownGroupCode = 0;
+    const parliamentGroupRows: SQLModel.ParliamentGroup[] = [];
+    const addParliamentGroupRow = (data: SQLModel.ParliamentGroup) => {
+      const group_code =
+        data.code || `unknown${String(unknownGroupCode++).padStart(5, "0")}`;
+      if (!parliamentGroupRows.find((r) => r.code === group_code)) {
+        parliamentGroupRows.push({
+          code: group_code,
+          name: data.name ?? group_code,
+        });
+      }
+      return group_code;
+    };
+    const parliamentGroupMembershipRows: SQLModel.ParliamentGroupMembership[] =
       [
-        ...[
-          data.XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat
-            ?.Eduskuntaryhma,
-        ]
-          .flat()
-          .filter((s) => !!s)
-          .map((eduskuntaryhma) => ({
-            identifier: eduskuntaryhma.Tunnus,
-            group_name: eduskuntaryhma.Nimi ?? eduskuntaryhma.Tunnus,
-          })),
-        {
-          identifier:
-            data.XmlDataFi.Henkilo.Eduskuntaryhmat.NykyinenEduskuntaryhma
-              ?.Tunnus || null,
-          group_name:
-            data.XmlDataFi.Henkilo.Eduskuntaryhmat.NykyinenEduskuntaryhma
-              ?.Nimi || null,
-        },
-      ].filter((g, ind, arr) => {
-        if (ind === arr.findIndex((g1) => g1.identifier === g.identifier))
-          return true;
-        return false;
-      })
-    );
-
-    // Mapping Committee Memberships
-    const committeeMembershipRows: CommitteeMembership[] = removeNullEntries(
-      [
-        data.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet?.Toimielin,
-        data.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet.Toimielin,
-      ]
-        .flat()
-        .filter((s) => !!s)
-        .flatMap((toimielin) =>
-          [toimielin.Jasenyys].flat().map((jasenyys) => ({
-            person_id: representativeRow.person_id,
-            committee_identifier: toimielin.Tunnus,
-            role: jasenyys?.Rooli ?? null,
-            start_date: parseDate(jasenyys?.AlkuPvm),
-            end_date: parseDate(jasenyys?.LoppuPvm),
+        ...mergeArrays(
+          dataToImport.XmlDataFi.Henkilo.Eduskuntaryhmat
+            .EdellisetEduskuntaryhmat?.Eduskuntaryhma,
+          dataToImport.XmlDataFi.Henkilo.Eduskuntaryhmat.NykyinenEduskuntaryhma
+        ).flatMap((s) =>
+          mergeArrays(s.Jasenyys).map((j) => ({
+            ...j,
+            __parent__: s,
           }))
         ),
-      ["person_id"]
-    );
+      ].map((v) => {
+        const groupCode = addParliamentGroupRow({
+          code: v.__parent__.Tunnus,
+          name: v.__parent__.Nimi,
+        });
+        return {
+          person_id: +dataToImport.personId,
+          group_code: groupCode,
+          start_date: parseDate(v.AlkuPvm)!,
+          end_date: parseDate(v.LoppuPvm),
+        };
+      });
 
-    const committeeRows: Committee[] = removeNullEntries(
+    const parliamentGroupAssignmentRows: SQLModel.ParliamentGroupAssignment[] =
       [
-        data.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet?.Toimielin,
-        data.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet.Toimielin,
+        ...mergeArrays(
+          dataToImport.XmlDataFi.Henkilo.Eduskuntaryhmat
+            .TehtavatAiemmissaEduskuntaryhmissa?.Eduskuntaryhma,
+          dataToImport.XmlDataFi.Henkilo.Eduskuntaryhmat
+            .TehtavatEduskuntaryhmassa?.Eduskuntaryhma
+        ),
       ]
-        .flat()
-        .filter((s) => !!s)
-        .map((toimielin) => ({
-          committee_name: toimielin.Nimi ?? toimielin.Tunnus,
-          identifier: toimielin.Tunnus,
-        }))
-        .filter((g, ind, arr) => {
-          if (!g.identifier) return false;
-          if (ind === arr.findIndex((g1) => g1.identifier === g.identifier))
-            return true;
-          return false;
-        })
-    );
+        .flatMap((s) =>
+          mergeArrays(s.Tehtava).map((t) => ({
+            ...t,
+            __parent__: s,
+          }))
+        )
+        .map((v) => {
+          const groupCode = addParliamentGroupRow({
+            code: v.__parent__.Tunnus,
+            name: v.__parent__.Nimi,
+          });
+          return {
+            person_id: +dataToImport.personId,
+            group_code: groupCode,
+            role: v.Rooli,
+            start_date: parseDate(v.AlkuPvm)!,
+            end_date: parseDate(v.LoppuPvm),
+            time_period: v.AikaJakso || null,
+          };
+        });
 
-    /*
-    // Mapping Declarations
-    const declarationRows: SQLModel.Declaration[] = data.XmlDataFi.Henkilo
-      .Sidonnaisuudet.Sidonnaisuus
-      ? [
-          {
-            person_id: representativeRow.person_id,
-            declaration_type:
-              data.XmlDataFi.Henkilo.Sidonnaisuudet.Sidonnaisuus.Otsikko ||
-              null,
-            description:
-              data.XmlDataFi.Henkilo.Sidonnaisuudet.Sidonnaisuus.Sidonta ||
-              null,
-          },
-        ]
-      : [];
-    */
+    const governmentMembershipRows: SQLModel.GovernmentMembership[] =
+      mergeArrays(
+        dataToImport.XmlDataFi.Henkilo.ValtioneuvostonJasenyydet?.Jasenyys
+      ).map((v) => ({
+        person_id: +dataToImport.personId,
+        name: v.Nimi,
+        ministry: v.Ministeriys,
+        government: v.Hallitus,
+        start_date: parseDate(v.AlkuPvm)!,
+        end_date: parseDate(v.LoppuPvm),
+      }));
 
-    // Mapping Incomes
-    const educationRows: Education[] = removeNullEntries(
-      [data.XmlDataFi.Henkilo.Koulutukset.Koulutus].flat().map((koulutus) => ({
-        person_id: representativeRow.person_id,
-        name: koulutus.Nimi || null,
-        establishement: koulutus.Oppilaitos || null,
-        year: parseYear(koulutus.Vuosi),
-      })),
-      ["person_id"]
-    );
+    // TODO: Education
+    const educationRows: SQLModel.WorkExperience[] = [];
+    // TODO: Work
+    const workRows: SQLModel.WorkExperience[] = [];
+    // TODO: Publications
+    const publicationRows: SQLModel.Publication[] = [];
 
-    await sql`INSERT INTO representatives ${sql(
+    await sql`INSERT INTO Representative ${sql(
       representativeRow
     )} ON CONFLICT DO NOTHING`;
-    if (electoralDistrictRows.length) {
-      await sql`INSERT INTO electoral_districts ${sql(electoralDistrictRows)}`;
-    }
-    if (representativeTermRows.length) {
-      await sql`INSERT INTO representative_terms ${sql(
-        representativeTermRows
-      )}`;
-    }
-    if (parliamentGroupRows.length) {
-      await sql`INSERT INTO parliamentary_groups ${sql(
-        parliamentGroupRows
+
+    if (districtRows.length) {
+      await sql`INSERT INTO District ${sql(
+        districtRows
       )} ON CONFLICT DO NOTHING`;
     }
-    if (parliamentaryGroupMembershipRows.length) {
-      await sql`INSERT INTO parliamentary_group_memberships ${sql(
-        parliamentaryGroupMembershipRows
-      )}`;
+
+    if (electoralDistrictRows.length) {
+      await sql`INSERT INTO RepresentativeDistrict ${sql(
+        electoralDistrictRows
+      )} ON CONFLICT DO NOTHING`;
     }
+
+    if (termRows.length) {
+      await sql`INSERT INTO Term ${sql(termRows)} ON CONFLICT DO NOTHING`;
+    }
+
+    if (interruptionRows.length) {
+      await sql`INSERT INTO Interruption ${sql(
+        interruptionRows
+      )} ON CONFLICT DO NOTHING`;
+    }
+
+    if (trustPositionRows.length) {
+      await sql`INSERT INTO TrustPosition ${sql(
+        trustPositionRows
+      )} ON CONFLICT DO NOTHING`;
+    }
+
     if (committeeRows.length) {
-      await sql`INSERT INTO committees ${sql(
+      await sql`INSERT INTO Committee ${sql(
         committeeRows
       )} ON CONFLICT DO NOTHING`;
     }
+
     if (committeeMembershipRows.length) {
-      await sql`INSERT INTO committee_memberships ${sql(
+      await sql`INSERT INTO CommitteeMembership ${sql(
         committeeMembershipRows
-      )}`;
+      )} ON CONFLICT DO NOTHING`;
     }
-    /*
-    await sql`INSERT INTO declarations ${sql(
-      removeNullEntries(declarationRows, ["person_id"])
-    )}`;
-    */
-    if (educationRows.length) {
-      await sql`INSERT INTO educations ${sql(educationRows)}`;
+
+    if (parliamentGroupRows.length) {
+      await sql`INSERT INTO ParliamentaryGroup ${sql(
+        parliamentGroupRows
+      )} ON CONFLICT DO NOTHING`;
     }
-    if (process.env.DEBUG) console.log("Mapped", data.personId);
+
+    if (parliamentGroupMembershipRows.length) {
+      await sql`INSERT INTO ParliamentaryGroupMembership ${sql(
+        parliamentGroupMembershipRows
+      )} ON CONFLICT DO NOTHING`;
+    }
+
+    if (parliamentGroupAssignmentRows.length) {
+      await sql`INSERT INTO ParliamentaryGroupAssignment ${sql(
+        parliamentGroupAssignmentRows
+      )} ON CONFLICT DO NOTHING`;
+    }
+
+    if (governmentMembershipRows.length) {
+      await sql`INSERT INTO GovernmentMembership ${sql(
+        governmentMembershipRows
+      )} ON CONFLICT DO NOTHING`;
+    }
+
+    if (process.env.DEBUG) console.log("Mapped", dataToImport.personId);
   };

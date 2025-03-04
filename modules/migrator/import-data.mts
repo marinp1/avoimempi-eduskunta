@@ -5,7 +5,7 @@ import { TableNames } from "avoimempi-eduskunta-common/constants/TableNames.mts"
 
 /**
  * Make sure that data is imported in this order.
- * Non-existing table names are imported afterwards in random order.
+ * Non-existing table names are imported afterwards in undetermined order.
  */
 const IMPORT_ORDER: Partial<Record<(typeof TableNames)[number], number>> = {
   MemberOfParliament: 0,
@@ -42,12 +42,15 @@ BEGIN
 END $$;
 `;
 
-// (Try to) seed each table
+// (Try to) migrate each table
 for (const tableName of orderedTableNames) {
   /** Path to file containing seed functions. */
-  const pathToFile = path.resolve(import.meta.dirname, `${tableName}.mts`);
+  const pathToFile = path.resolve(
+    import.meta.dirname,
+    `${tableName}/migrator.mts`
+  );
   if (!fs.existsSync(pathToFile)) {
-    console.warn(`Seed fn for ${tableName} not found, skipping...`);
+    console.warn(`Migration file for ${tableName} not found, skipping...`);
     continue;
   }
   /** Path to data directory containing all files to import. */

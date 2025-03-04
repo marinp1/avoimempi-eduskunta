@@ -3,5 +3,5 @@
   "compilerOptions": {
     "paths": { "avoimempi-eduskunta-common/*": ["../common/*"] }
   },
-  "include": ["./", "../common/typings", "../parser/typings"]
+  "include": ["./", "../common/typings"]
 }
