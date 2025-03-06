@@ -125,7 +125,8 @@ export default (sql: TransactionSQL) =>
     }));
 
     const interruptionRows: SQLModel.Interruption[] = mergeArrays(
-      dataToImport.XmlDataFi.Henkilo.EdustajatoimiKeskeytynyt?.ToimenKeskeytys
+      dataToImport.XmlDataFi.Henkilo.EdustajatoimiKeskeytynyt?.ToimenKeskeytys,
+      dataToImport.XmlDataFi.Henkilo.Kansanedustajana?.Keskeytys
     ).map((v) => ({
       person_id: +dataToImport.personId,
       start_date: parseDate(v.AlkuPvm)!,
@@ -373,3 +374,7 @@ export default (sql: TransactionSQL) =>
 
     if (process.env.DEBUG) console.log("Mapped", dataToImport.personId);
   };
+
+/**
+ * SELECT r.person_id, r.last_name, r.first_name, r.current_municipality,r.profession, r.birth_date, r.birth_place, r.gender, t.start_date as term_start, i.* from representative r LEFT JOIN term t ON t.person_id = r.person_id LEFT JOIN interruption i ON r.person_id = i.person_id WHERE t.end_date IS NULL AND (i.start_date IS NULL OR t.start_date > i.start_date);
+ */

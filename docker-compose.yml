@@ -5,10 +5,8 @@ services:
   postgres:
     image: postgres:17-alpine
     container_name: avoimempi-eduskunta-postgres
-    environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=secret
-      - POSTGRES_DB=eduskuntaforum
+    env_file:
+      - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -21,7 +19,9 @@ services:
   flyway:
     image: flyway/flyway:11-alpine
     container_name: avoimempi-eduskunta-flyway
-    command: -url=jdbc:postgresql://postgres:5432/eduskuntaforum -user=admin -password=secret -locations=filesystem:/migrations -baselineOnMigrate=true migrate
+    command: "-url=jdbc:postgresql://postgres:5432/$POSTGRES_DB -user=$POSTGRES_USER -password=$POSTGRES_PASSWORD -locations=filesystem:/migrations migrate"
+    env_file:
+      - .env
     volumes:
       - ./migrations:/migrations # Mount your migration scripts directory
     depends_on:

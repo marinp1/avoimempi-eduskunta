@@ -25,7 +25,11 @@ const orderedTableNames = [...TableNames].sort(
  * TODO: Use env paramters instead of hardcoded values.
  */
 const db = new SQL(
-  new URL("postgres://admin:secret@localhost:5432/eduskuntaforum")
+  new URL(
+    `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${
+      process.env.POSTGRES_HOST ?? "localhost"
+    }:5432/${process.env.POSTGRES_DB}`
+  )
 );
 
 /** Database connection. */
