@@ -2,3 +2,5 @@ node_modules
 modules/parser/data
 modules/scraper/data
 tsconfig.tsbuildinfo
+.DS_Store
+.env
