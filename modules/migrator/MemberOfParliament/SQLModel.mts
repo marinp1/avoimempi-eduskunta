@@ -123,12 +123,12 @@ export namespace SQLModel {
 
   export type ParliamentGroup = {
     code: string;
-    name: string;
   };
 
   export type ParliamentGroupMembership = {
     person_id: number;
     group_code: string;
+    group_name: string | null;
     start_date: DateString;
     end_date: DateString | null;
   };
@@ -136,6 +136,7 @@ export namespace SQLModel {
   export type ParliamentGroupAssignment = {
     person_id: number;
     group_code: string;
+    group_name: string | null;
     role: string;
     time_period: string | null;
     start_date: DateString;

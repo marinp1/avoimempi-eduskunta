@@ -57,7 +57,6 @@ const DatabaseTables = Object.freeze({
   District: "District",
   RepresentativeDistrict: "RepresentativeDistrict",
   Term: "Term",
-  Interruption: "Interruption",
   PeopleLeavingParliament: "PeopleLeavingParliament",
   PeopleJoiningParliament: "PeopleJoiningParliament",
   TemporaryAbsence: "TemporaryAbsence",
@@ -251,7 +250,6 @@ export default (sql: TransactionSQL) =>
       if (!parliamentGroupRows.find((r) => r.code === group_code)) {
         parliamentGroupRows.push({
           code: group_code,
-          name: data.name ?? group_code,
         });
       }
       return group_code;
@@ -277,11 +275,11 @@ export default (sql: TransactionSQL) =>
       ].map((v) => {
         const groupCode = addParliamentGroupRow({
           code: v.__parent__.Tunnus,
-          name: v.__parent__.Nimi,
         });
         return {
           person_id: +dataToImport.personId,
           group_code: groupCode,
+          group_name: v.__parent__.Nimi,
           start_date: parseDate(v.AlkuPvm)!,
           end_date: parseDate(v.LoppuPvm),
         };
@@ -305,11 +303,11 @@ export default (sql: TransactionSQL) =>
         .map((v) => {
           const groupCode = addParliamentGroupRow({
             code: v.__parent__.Tunnus,
-            name: v.__parent__.Nimi,
           });
           return {
             person_id: +dataToImport.personId,
             group_code: groupCode,
+            group_name: v.__parent__.Nimi,
             role: v.Rooli,
             start_date: parseDate(v.AlkuPvm)!,
             end_date: parseDate(v.LoppuPvm),
@@ -351,7 +349,7 @@ export default (sql: TransactionSQL) =>
 
     const insertRows = async (table: string, rows: any[]) => {
       if (rows.length) {
-        await sql`INSERT INTO ${sql(table)} ${sql(
+        await sql`INSERT INTO ${sql.unsafe(table)} ${sql(
           rows
         )} ON CONFLICT DO NOTHING`;
       }
@@ -364,7 +362,7 @@ export default (sql: TransactionSQL) =>
       electoralDistrictRows
     );
     await insertRows(DatabaseTables.Term, termRows);
-    await insertRows(DatabaseTables.Interruption, absenceRows);
+    await insertRows(DatabaseTables.TemporaryAbsence, absenceRows);
     await insertRows(DatabaseTables.PeopleLeavingParliament, leavingRows);
     await insertRows(DatabaseTables.PeopleJoiningParliament, joiningRows);
     await insertRows(DatabaseTables.TrustPosition, trustPositionRows);
