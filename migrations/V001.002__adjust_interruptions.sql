@@ -14,7 +14,7 @@ CREATE TABLE PeopleJoiningParliament (
     start_date DATE
 );
 
-CREATE TABLE TemporaryAbsences (
+CREATE TABLE TemporaryAbsence (
     id SERIAL PRIMARY KEY,
     person_id INT REFERENCES Representative(person_id),
     description TEXT,
@@ -35,8 +35,8 @@ SELECT person_id, description, replacement_person, end_date
 FROM Interruption
 WHERE replacement_person LIKE 'Edeltäjä %';
 
--- Insert data into TemporaryAbsences
-INSERT INTO TemporaryAbsences (person_id, description, replacement_person, start_date, end_date)
+-- Insert data into TemporaryAbsence
+INSERT INTO TemporaryAbsence (person_id, description, replacement_person, start_date, end_date)
 SELECT person_id, description, replacement_person, start_date, end_date
 FROM Interruption
 WHERE replacement_person NOT LIKE 'Seuraaja %' AND replacement_person NOT LIKE 'Edeltäjä %';
