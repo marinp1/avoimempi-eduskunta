@@ -58,6 +58,10 @@ const DatabaseTables = Object.freeze({
   RepresentativeDistrict: "RepresentativeDistrict",
   Term: "Term",
   Interruption: "Interruption",
+  PeopleLeavingParliament: "PeopleLeavingParliament",
+  PeopleJoiningParliament: "PeopleJoiningParliament",
+  TemporaryAbsence: "TemporaryAbsence",
+  ParliamentaryGroupAssignment: "ParliamentaryGroupAssignment",
 });
 
 const mergeArrays = <T>(
@@ -345,97 +349,47 @@ export default (sql: TransactionSQL) =>
     // TODO: Publications
     const publicationRows: SQLModel.Publication[] = [];
 
-    await sql`INSERT INTO Representative ${sql(
-      representativeRow
-    )} ON CONFLICT DO NOTHING`;
+    const insertRows = async (table: string, rows: any[]) => {
+      if (rows.length) {
+        await sql`INSERT INTO ${sql(table)} ${sql(
+          rows
+        )} ON CONFLICT DO NOTHING`;
+      }
+    };
 
-    if (districtRows.length) {
-      await sql`INSERT INTO District ${sql(
-        districtRows
-      )} ON CONFLICT DO NOTHING`;
-    }
+    await insertRows(DatabaseTables.Representative, [representativeRow]);
+    await insertRows(DatabaseTables.District, districtRows);
+    await insertRows(
+      DatabaseTables.RepresentativeDistrict,
+      electoralDistrictRows
+    );
+    await insertRows(DatabaseTables.Term, termRows);
+    await insertRows(DatabaseTables.Interruption, absenceRows);
+    await insertRows(DatabaseTables.PeopleLeavingParliament, leavingRows);
+    await insertRows(DatabaseTables.PeopleJoiningParliament, joiningRows);
+    await insertRows(DatabaseTables.TrustPosition, trustPositionRows);
+    await insertRows(DatabaseTables.Committee, committeeRows);
+    await insertRows(
+      DatabaseTables.CommitteeMembership,
+      committeeMembershipRows
+    );
+    await insertRows(DatabaseTables.ParliamentaryGroup, parliamentGroupRows);
+    await insertRows(
+      DatabaseTables.ParliamentaryGroupMembership,
+      parliamentGroupMembershipRows
+    );
+    await insertRows(
+      DatabaseTables.ParliamentaryGroupAssignment,
+      parliamentGroupAssignmentRows
+    );
+    await insertRows(
+      DatabaseTables.GovernmentMembership,
+      governmentMembershipRows
+    );
+    await insertRows(DatabaseTables.WorkHistory, workRows);
+    await insertRows(DatabaseTables.Education, educationRows);
 
-    if (electoralDistrictRows.length) {
-      await sql`INSERT INTO RepresentativeDistrict ${sql(
-        electoralDistrictRows
-      )} ON CONFLICT DO NOTHING`;
-    }
-
-    if (termRows.length) {
-      await sql`INSERT INTO Term ${sql(termRows)} ON CONFLICT DO NOTHING`;
-    }
-
-    if (absenceRows.length) {
-      await sql`INSERT INTO TemporaryAbsence ${sql(
-        absenceRows
-      )} ON CONFLICT DO NOTHING`;
-    }
-
-    if (leavingRows.length) {
-      await sql`INSERT INTO PeopleLeavingParliament ${sql(
-        leavingRows
-      )} ON CONFLICT DO NOTHING`;
-    }
-
-    if (joiningRows.length) {
-      await sql`INSERT INTO PeopleJoiningParliament ${sql(
-        joiningRows
-      )} ON CONFLICT DO NOTHING`;
-    }
-
-    if (trustPositionRows.length) {
-      await sql`INSERT INTO TrustPosition ${sql(
-        trustPositionRows
-      )} ON CONFLICT DO NOTHING`;
-    }
-
-    if (committeeRows.length) {
-      await sql`INSERT INTO Committee ${sql(
-        committeeRows
-      )} ON CONFLICT DO NOTHING`;
-    }
-
-    if (committeeMembershipRows.length) {
-      await sql`INSERT INTO CommitteeMembership ${sql(
-        committeeMembershipRows
-      )} ON CONFLICT DO NOTHING`;
-    }
-
-    if (parliamentGroupRows.length) {
-      await sql`INSERT INTO ParliamentaryGroup ${sql(
-        parliamentGroupRows
-      )} ON CONFLICT DO NOTHING`;
-    }
-
-    if (parliamentGroupMembershipRows.length) {
-      await sql`INSERT INTO ParliamentaryGroupMembership ${sql(
-        parliamentGroupMembershipRows
-      )} ON CONFLICT DO NOTHING`;
-    }
-
-    if (parliamentGroupAssignmentRows.length) {
-      await sql`INSERT INTO ParliamentaryGroupAssignment ${sql(
-        parliamentGroupAssignmentRows
-      )} ON CONFLICT DO NOTHING`;
-    }
-
-    if (governmentMembershipRows.length) {
-      await sql`INSERT INTO GovernmentMembership ${sql(
-        governmentMembershipRows
-      )} ON CONFLICT DO NOTHING`;
-    }
-
-    if (workRows.length) {
-      await sql`INSERT INTO WorkHistory ${sql(
-        workRows
-      )} ON CONFLICT DO NOTHING`;
-    }
-
-    if (educationRows.length) {
-      await sql`INSERT INTO Education ${sql(
-        educationRows
-      )} ON CONFLICT DO NOTHING`;
-    }
+    // await insertRows(DatabaseTables.Publication, publicationRows); TODO: NOT IMPLEMENTED YET
 
     if (process.env.DEBUG) console.log("Mapped", dataToImport.personId);
   };
