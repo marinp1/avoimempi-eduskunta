@@ -124,19 +124,72 @@ export default (sql: TransactionSQL) =>
       end_date: parseDate(v.LoppuPvm),
     }));
 
-    const interruptionRows: SQLModel.Interruption[] = mergeArrays(
-      dataToImport.XmlDataFi.Henkilo.EdustajatoimiKeskeytynyt?.ToimenKeskeytys,
-      dataToImport.XmlDataFi.Henkilo.Kansanedustajana?.Keskeytys
-    ).map((v) => ({
-      person_id: +dataToImport.personId,
-      start_date: parseDate(v.AlkuPvm)!,
-      end_date: parseDate(v.LoppuPvm),
-      description: v.Selite,
-      replacement_person:
-        [v.TilallaSelite ?? null, v.TilallaHenkilo ?? null]
-          .filter((s) => s)
-          .join(" ") || null,
-    }));
+    type ParsedAbsence = {
+      absenceRows: SQLModel.TemporaryAbsence[];
+      joiningRows: SQLModel.JoiningParliament[];
+      leavingRows: SQLModel.LeavingParliament[];
+    };
+
+    const { absenceRows, joiningRows, leavingRows }: ParsedAbsence =
+      mergeArrays(
+        dataToImport.XmlDataFi.Henkilo.EdustajatoimiKeskeytynyt
+          ?.ToimenKeskeytys,
+        dataToImport.XmlDataFi.Henkilo.Kansanedustajana?.Keskeytys
+      )
+        .map((v) => ({
+          person_id: +dataToImport.personId,
+          start_date: parseDate(v.AlkuPvm)!,
+          end_date: parseDate(v.LoppuPvm),
+          description: v.Selite,
+          replacement_person:
+            [v.TilallaSelite ?? null, v.TilallaHenkilo ?? null]
+              .filter((s) => s)
+              .join(" ") || null,
+        }))
+        .reduce<ParsedAbsence>(
+          (prev, cur) => {
+            if (cur.replacement_person?.startsWith("Seuraaja ")) {
+              return {
+                ...prev,
+                leavingRows: [
+                  ...prev.leavingRows,
+                  {
+                    person_id: +dataToImport.personId,
+                    description: cur.description,
+                    replacement_person: cur.replacement_person,
+                    end_date: cur.end_date,
+                  },
+                ] satisfies SQLModel.LeavingParliament[],
+              };
+            }
+            if (cur.replacement_person?.startsWith("Edeltäjä ")) {
+              return {
+                ...prev,
+                joiningRows: [
+                  ...prev.joiningRows,
+                  {
+                    person_id: +dataToImport.personId,
+                    description: cur.description,
+                    replacement_person: cur.replacement_person,
+                    start_date: cur.end_date,
+                  },
+                ] satisfies SQLModel.JoiningParliament[],
+              };
+            }
+            return {
+              ...prev,
+              absenceRows: [
+                ...prev.absenceRows,
+                cur,
+              ] satisfies SQLModel.LeavingParliament[],
+            };
+          },
+          {
+            absenceRows: [],
+            joiningRows: [],
+            leavingRows: [],
+          }
+        );
 
     const trustPositionRows: SQLModel.TrustPosition[] = [
       ...mergeArrays(
@@ -312,9 +365,21 @@ export default (sql: TransactionSQL) =>
       await sql`INSERT INTO Term ${sql(termRows)} ON CONFLICT DO NOTHING`;
     }
 
-    if (interruptionRows.length) {
-      await sql`INSERT INTO Interruption ${sql(
-        interruptionRows
+    if (absenceRows.length) {
+      await sql`INSERT INTO TemporaryAbsence ${sql(
+        absenceRows
+      )} ON CONFLICT DO NOTHING`;
+    }
+
+    if (leavingRows.length) {
+      await sql`INSERT INTO PeopleLeavingParliament ${sql(
+        leavingRows
+      )} ON CONFLICT DO NOTHING`;
+    }
+
+    if (joiningRows.length) {
+      await sql`INSERT INTO PeopleJoiningParliament ${sql(
+        joiningRows
       )} ON CONFLICT DO NOTHING`;
     }
 

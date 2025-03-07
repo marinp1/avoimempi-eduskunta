@@ -25,10 +25,24 @@ export namespace SQLModel {
     term_end_date: DateString | null;
   };
 
-  export type Interruption = {
+  export type TemporaryAbsence = {
     person_id: number;
     description: string;
     start_date: DateString;
+    end_date: DateString | null;
+    replacement_person: string | null;
+  };
+
+  export type JoiningParliament = {
+    person_id: number;
+    description: string;
+    start_date: DateString | null;
+    replacement_person: string | null;
+  };
+
+  export type LeavingParliament = {
+    person_id: number;
+    description: string;
     end_date: DateString | null;
     replacement_person: string | null;
   };
