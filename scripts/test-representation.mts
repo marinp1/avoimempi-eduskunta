@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import { SQL } from "bun";
-import { test } from "node:test";
 import { deepEqual } from "node:assert";
 
 const db = new SQL(
