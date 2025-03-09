@@ -12,6 +12,7 @@
     { "path": "./modules/scraper" },
     { "path": "./modules/scripts" },
     { "path": "./modules/migrator" },
-    { "path": "./modules/backend" }
+    { "path": "./modules/backend" },
+    { "path": "./app" }
   ]
 }

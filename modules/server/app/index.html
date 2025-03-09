@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Avoimempi Eduskunta Frontend</title>
+  </head>
+  <body>
+    <h1>Parliament Composition</h1>
+    <input type="date" id="dateInput" />
+    <button onclick="fetchComposition()">Get Composition</button>
+    <div id="composition"></div>
+
+    <script>
+      async function fetchComposition() {
+        const date = document.getElementById("dateInput").value;
+        const response = await fetch(`/api/composition/${date}`);
+        const data = await response.json();
+        document.getElementById("composition").innerText = JSON.stringify(
+          data,
+          null,
+          2
+        );
+      }
+    </script>
+  </body>
+</html>

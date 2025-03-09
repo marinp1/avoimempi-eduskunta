@@ -34,8 +34,6 @@ export class DatabaseConnection {
 
   constructor() {
     this.#connectToDatabase();
-    DatabaseConnection.instance = this;
+    return this;
   }
 }
-
-new DatabaseConnection();
