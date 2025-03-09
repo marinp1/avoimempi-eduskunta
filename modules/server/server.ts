@@ -4,6 +4,14 @@ import type { BunRequest } from "bun";
 import { DatabaseConnection } from "./db.ts";
 const db = new DatabaseConnection();
 
+const fetchComposition = async (params: { date: string }) => {
+  const dateObj = new Date(params.date);
+  if (isNaN(dateObj.getTime())) throw new Error("Invalid date");
+  const response: DatabaseFunctions.GetParliamentComposition[] =
+    await db.sql`SELECT * FROM getparliamentcomposition(${dateObj.toISOString()})`;
+  return response;
+};
+
 const server = Bun.serve({
   // `routes` requires Bun v1.2.3+
   routes: {
@@ -13,16 +21,48 @@ const server = Bun.serve({
     "/api/status": new Response("OK"),
 
     "/api/composition/:date": {
-      GET: async (
+      GET: async (req: BunRequest<"/api/composition/:date">) => {
+        const composition = await fetchComposition(req.params);
+        return new Response(JSON.stringify(composition), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
+    "/composition": {
+      POST: async (
         // optional: you can explicitly pass a type to BunRequest:
-        req: BunRequest<"/api/composition/:date">
+        req: BunRequest<"/composition">
       ) => {
-        const { date } = req.params;
-        const dateObj = new Date(date);
-        if (isNaN(dateObj.getTime())) throw new Error("Invalid date");
-        const response =
-          await db.sql`SELECT * FROM getparliamentcomposition(${dateObj.toISOString()})`;
-        return Response.json(response);
+        const formData = await req.formData();
+        const composition = await fetchComposition({
+          date: formData.get("date") as string,
+        });
+        const tableRows = composition
+          .map((row) => {
+            return `<tr>${Object.values(row)
+              .map((value) => `<td>${value}</td>`)
+              .join("")}</tr>`;
+          })
+          .join("");
+        const tableHeaders = Object.keys(composition[0])
+          .map((key) => `<th>${key}</th>`)
+          .join("");
+        const htmlContent = `
+          <table border="1">
+            <thead>
+              <tr>${tableHeaders}</tr>
+            </thead>
+            <tbody>
+              ${tableRows}
+            </tbody>
+          </table>
+        `;
+        return new Response(htmlContent, {
+          headers: {
+            "Content-Type": "text/html",
+          },
+        });
       },
     },
 
