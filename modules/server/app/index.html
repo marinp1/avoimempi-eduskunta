@@ -4,24 +4,52 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Avoimempi Eduskunta Frontend</title>
+    <script type="module" src="./htmx.esm.js"></script>
+    <!-- <link rel="stylesheet" href="./app.css" /> -->
   </head>
   <body>
-    <h1>Parliament Composition</h1>
-    <input type="date" id="dateInput" />
-    <button onclick="fetchComposition()">Get Composition</button>
-    <div id="composition"></div>
+    <header>
+      <nav>
+        <ul>
+          <li><a href="#current-composition">Current Composition</a></li>
+          <li><a href="#tab2">Tab 2</a></li>
+          <li><a href="#tab3">Tab 3</a></li>
+        </ul>
+      </nav>
+    </header>
 
-    <script>
-      async function fetchComposition() {
-        const date = document.getElementById("dateInput").value;
-        const response = await fetch(`/api/composition/${date}`);
-        const data = await response.json();
-        document.getElementById("composition").innerText = JSON.stringify(
-          data,
-          null,
-          2
-        );
-      }
-    </script>
+    <main>
+      <section id="current-composition" class="tab-content">
+        <h1>Parliament Composition</h1>
+        <form
+          id="compositionForm"
+          action="/composition"
+          method="post"
+          hx-post="/composition"
+          hx-target="#composition"
+          hx-swap="innerHTML"
+        >
+          <input type="date" id="dateInput" name="date" required />
+          <button type="submit">Get Composition</button>
+        </form>
+        <div id="composition"></div>
+      </section>
+
+      <section id="tab2" class="tab-content" style="display: none">
+        <h1>Tab 2 Content</h1>
+        <p>This is the content for Tab 2.</p>
+      </section>
+
+      <section id="tab3" class="tab-content" style="display: none">
+        <h1>Tab 3 Content</h1>
+        <p>This is the content for Tab 3.</p>
+      </section>
+    </main>
+
+    <footer>
+      <p>&copy; 2023 Avoimempi Eduskunta</p>
+    </footer>
+
+    <script async type="module" src="./app.mts"></script>
   </body>
 </html>
