@@ -1,6 +1,4 @@
-import { SQL, type TransactionSQL } from "bun";
-import type { DataModel } from "./DataModel.mts";
-import type { SQLModel } from "./SQLModel.mts";
+import { type TransactionSQL } from "bun";
 
 const parseDate = (date?: string | null): string | null => {
   if (!date) return null;
@@ -76,7 +74,7 @@ export default (sql: TransactionSQL) =>
     if (process.env.DEBUG)
       console.log("Mapping", dataToImport.lastname, dataToImport.personId);
 
-    const representativeRow: SQLModel.Representative = {
+    const representativeRow: DatabaseTables.Representative = {
       person_id: Number(dataToImport.personId),
       first_name: dataToImport.firstname,
       last_name: dataToImport.lastname,
@@ -101,8 +99,8 @@ export default (sql: TransactionSQL) =>
       ),
     };
 
-    const districtRows: SQLModel.District[] = [];
-    const electoralDistrictRows: SQLModel.RepresentativeDistrict[] =
+    const districtRows: DatabaseTables.District[] = [];
+    const electoralDistrictRows: DatabaseTables.RepresentativeDistrict[] =
       mergeArrays(
         dataToImport.XmlDataFi.Henkilo.Vaalipiirit.EdellisetVaalipiirit
           ?.VaaliPiiri,
@@ -119,7 +117,7 @@ export default (sql: TransactionSQL) =>
         };
       });
 
-    const termRows: SQLModel.Term[] = mergeArrays(
+    const termRows: DatabaseTables.Term[] = mergeArrays(
       dataToImport.XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi
     ).map((v) => ({
       person_id: +dataToImport.personId,
@@ -128,9 +126,9 @@ export default (sql: TransactionSQL) =>
     }));
 
     type ParsedAbsence = {
-      absenceRows: SQLModel.TemporaryAbsence[];
-      joiningRows: SQLModel.JoiningParliament[];
-      leavingRows: SQLModel.LeavingParliament[];
+      absenceRows: DatabaseTables.TemporaryAbsence[];
+      joiningRows: DatabaseTables.JoiningParliament[];
+      leavingRows: DatabaseTables.LeavingParliament[];
     };
 
     const { absenceRows, joiningRows, leavingRows }: ParsedAbsence =
@@ -162,7 +160,7 @@ export default (sql: TransactionSQL) =>
                     replacement_person: cur.replacement_person,
                     end_date: cur.end_date,
                   },
-                ] satisfies SQLModel.LeavingParliament[],
+                ] satisfies DatabaseTables.LeavingParliament[],
               };
             }
             if (cur.replacement_person?.startsWith("Edeltäjä ")) {
@@ -176,7 +174,7 @@ export default (sql: TransactionSQL) =>
                     replacement_person: cur.replacement_person,
                     start_date: cur.end_date,
                   },
-                ] satisfies SQLModel.JoiningParliament[],
+                ] satisfies DatabaseTables.JoiningParliament[],
               };
             }
             return {
@@ -184,7 +182,7 @@ export default (sql: TransactionSQL) =>
               absenceRows: [
                 ...prev.absenceRows,
                 cur,
-              ] satisfies SQLModel.LeavingParliament[],
+              ] satisfies DatabaseTables.LeavingParliament[],
             };
           },
           {
@@ -194,7 +192,7 @@ export default (sql: TransactionSQL) =>
           }
         );
 
-    const trustPositionRows: SQLModel.TrustPosition[] = [
+    const trustPositionRows: DatabaseTables.TrustPosition[] = [
       ...mergeArrays(
         dataToImport.XmlDataFi.Henkilo.ValtiollisetLuottamustehtavat?.Tehtava
       ).map((s) => ({ ...s, type: "national" as const })),
@@ -215,8 +213,8 @@ export default (sql: TransactionSQL) =>
     }));
 
     let unknownCommitteeInd = 0;
-    const committeeRows: SQLModel.Committee[] = [];
-    const committeeMembershipRows: SQLModel.CommitteeMembership[] = [
+    const committeeRows: DatabaseTables.Committee[] = [];
+    const committeeMembershipRows: DatabaseTables.CommitteeMembership[] = [
       ...mergeArrays(
         dataToImport.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet?.Toimielin,
         dataToImport.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet?.Toimielin
@@ -243,8 +241,8 @@ export default (sql: TransactionSQL) =>
     });
 
     let unknownGroupCode = 0;
-    const parliamentGroupRows: SQLModel.ParliamentGroup[] = [];
-    const addParliamentGroupRow = (data: SQLModel.ParliamentGroup) => {
+    const parliamentGroupRows: DatabaseTables.ParliamentGroup[] = [];
+    const addParliamentGroupRow = (data: DatabaseTables.ParliamentGroup) => {
       const group_code =
         data.code || `unknown${String(unknownGroupCode++).padStart(5, "0")}`;
       if (!parliamentGroupRows.find((r) => r.code === group_code)) {
@@ -254,7 +252,7 @@ export default (sql: TransactionSQL) =>
       }
       return group_code;
     };
-    const parliamentGroupMembershipRows: SQLModel.ParliamentGroupMembership[] =
+    const parliamentGroupMembershipRows: DatabaseTables.ParliamentGroupMembership[] =
       [
         ...mergeArrays(
           dataToImport.XmlDataFi.Henkilo.Eduskuntaryhmat
@@ -285,7 +283,7 @@ export default (sql: TransactionSQL) =>
         };
       });
 
-    const parliamentGroupAssignmentRows: SQLModel.ParliamentGroupAssignment[] =
+    const parliamentGroupAssignmentRows: DatabaseTables.ParliamentGroupAssignment[] =
       [
         ...mergeArrays(
           dataToImport.XmlDataFi.Henkilo.Eduskuntaryhmat
@@ -315,7 +313,7 @@ export default (sql: TransactionSQL) =>
           };
         });
 
-    const governmentMembershipRows: SQLModel.GovernmentMembership[] =
+    const governmentMembershipRows: DatabaseTables.GovernmentMembership[] =
       mergeArrays(
         dataToImport.XmlDataFi.Henkilo.ValtioneuvostonJasenyydet?.Jasenyys
       ).map((v) => ({
@@ -327,7 +325,7 @@ export default (sql: TransactionSQL) =>
         end_date: parseDate(v.LoppuPvm),
       }));
 
-    const workRows: SQLModel.WorkExperience[] = mergeArrays(
+    const workRows: DatabaseTables.WorkExperience[] = mergeArrays(
       dataToImport.XmlDataFi.Henkilo.TyoUra?.Tyo
     ).map((v) => ({
       person_id: +dataToImport.personId,
@@ -335,7 +333,7 @@ export default (sql: TransactionSQL) =>
       period: v.AikaJakso,
     }));
 
-    const educationRows: SQLModel.Education[] = mergeArrays(
+    const educationRows: DatabaseTables.Education[] = mergeArrays(
       dataToImport.XmlDataFi.Henkilo.Koulutukset?.Koulutus
     ).map((v) => ({
       person_id: +dataToImport.personId,
@@ -345,7 +343,7 @@ export default (sql: TransactionSQL) =>
     }));
 
     // TODO: Publications
-    const publicationRows: SQLModel.Publication[] = [];
+    const publicationRows: DatabaseTables.Publication[] = [];
 
     const insertRows = async (table: string, rows: any[]) => {
       if (rows.length) {
