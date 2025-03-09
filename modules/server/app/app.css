@@ -7,6 +7,12 @@
   --footer-text-color: #ecf0f1;
   --link-hover-color: #3498db;
   --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --primary-color: #3498db;
+  --secondary-color: #2ecc71;
+  --accent-color: #e74c3c;
+  --composition-bg-color: #f9f9f9; /* Lighter background color */
+  --table-row-color: #ffffff; /* Table row color */
+  --table-alt-row-color: #f1f1f1; /* Alternate table row color */
 }
 
 body {
@@ -16,61 +22,128 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   transition: background-color 0.3s, color 0.3s;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
 
-  header {
-    background-color: var(--header-bg-color);
-    color: var(--nav-link-color);
-    padding: 1em 0;
-    text-align: center;
-    box-shadow: var(--box-shadow);
-  }
+header {
+  background-color: var(--header-bg-color);
+  color: var(--nav-link-color);
+  padding: 1em 0;
+  text-align: center;
+  box-shadow: var(--box-shadow);
+}
 
-  nav {
-    ul {
-      list-style: none;
-      padding: 0;
-      display: flex;
-      justify-content: center;
+nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+}
 
-      li {
-        margin: 0 1em;
+nav ul li {
+  margin: 0 1em;
+}
 
-        a {
-          color: var(--nav-link-color);
-          text-decoration: none;
-          font-weight: bold;
-          transition: color 0.3s;
+nav ul li a {
+  color: var(--nav-link-color);
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s;
+}
 
-          &:hover {
-            color: var(--link-hover-color);
-          }
-        }
-      }
-    }
-  }
+nav ul li a:hover {
+  color: var(--link-hover-color);
+}
 
-  main {
-    padding: 2em;
-  }
+main {
+  flex: 1;
+  padding: 2em;
+}
 
-  .tab-content {
-    display: none;
+.tab-content {
+  display: none;
+}
 
-    &.active {
-      display: block;
-    }
-  }
+.tab-content.active {
+  display: block;
+}
 
-  footer {
-    background-color: var(--footer-bg-color);
-    color: var(--footer-text-color);
-    text-align: center;
-    padding: 1em 0;
-    position: fixed;
-    width: 100%;
-    bottom: 0;
-    box-shadow: var(--box-shadow);
-  }
+#current-composition {
+  margin: 0 auto;
+  padding: 2em;
+  background-color: var(--composition-bg-color); /* Updated background color */
+  box-shadow: var(--box-shadow);
+  border-radius: 8px;
+}
+
+#compositionForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+#compositionForm input[type="date"] {
+  padding: 0.5em;
+  border: 1px solid var(--primary-color);
+  border-radius: 4px;
+  font-size: 1em;
+}
+
+#compositionForm button {
+  padding: 0.5em 1em;
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+#compositionForm button:hover {
+  background-color: var(--secondary-color);
+}
+
+#composition {
+  margin-top: 2em;
+  overflow-x: auto; /* Add horizontal scrolling if necessary */
+}
+
+#composition table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 8px; /* Rounded corners for the table */
+  overflow: hidden; /* Ensure the rounded corners are visible */
+}
+
+#composition table th,
+#composition table td {
+  padding: 0.5em;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+#composition table th {
+  background-color: var(--primary-color);
+  color: #fff;
+}
+
+#composition table tr:nth-child(even) {
+  background-color: var(--table-alt-row-color); /* Alternate row color */
+}
+
+#composition table tr:nth-child(odd) {
+  background-color: var(--table-row-color); /* Table row color */
+}
+
+footer {
+  background-color: var(--footer-bg-color);
+  color: var(--footer-text-color);
+  text-align: center;
+  padding: 1em 0;
+  box-shadow: var(--box-shadow);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -83,5 +156,8 @@ body {
     --footer-text-color: #bdc3c7;
     --link-hover-color: #3498db;
     --box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+    --composition-bg-color: #222; /* Darker background color for dark mode */
+    --table-row-color: #333; /* Dark table row color */
+    --table-alt-row-color: #444; /* Dark alternate table row color */
   }
 }

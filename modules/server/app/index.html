@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Avoimempi Eduskunta Frontend</title>
     <script type="module" src="./htmx.esm.js"></script>
-    <!-- <link rel="stylesheet" href="./app.css" /> -->
   </head>
   <body>
     <header>
@@ -29,18 +28,19 @@
           hx-target="#composition"
           hx-swap="innerHTML"
         >
+          <label for="dateInput">Select Date:</label>
           <input type="date" id="dateInput" name="date" required />
           <button type="submit">Get Composition</button>
         </form>
         <div id="composition"></div>
       </section>
 
-      <section id="tab2" class="tab-content" style="display: none">
+      <section id="tab2" class="tab-content">
         <h1>Tab 2 Content</h1>
         <p>This is the content for Tab 2.</p>
       </section>
 
-      <section id="tab3" class="tab-content" style="display: none">
+      <section id="tab3" class="tab-content">
         <h1>Tab 3 Content</h1>
         <p>This is the content for Tab 3.</p>
       </section>
