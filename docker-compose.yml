@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -26,15 +28,15 @@ services:
       - avoimempi-eduskunta-network-db
     restart: "no"
 
-  backend:
+  server:
     build:
-      context: ./modules/backend
-      dockerfile: Dockerfile
-    container_name: avoimempi-eduskunta-backend
+      context: ./
+      dockerfile: ./modules/backend/Dockerfile
+    container_name: avoimempi-eduskunta-server
     env_file:
       - .env
     ports:
-      - "5600:3000"
+      - "3000:3000"
     depends_on:
       - postgres
     networks:

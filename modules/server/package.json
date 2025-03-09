@@ -1,0 +1,10 @@
+{
+  "name": "avoimempi-eduskunta-server",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {},
+  "scripts": {
+    "start": "bun run server.ts",
+    "typecheck": "tsc --noEmit"
+  }
+}
