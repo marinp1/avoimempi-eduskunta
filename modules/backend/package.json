@@ -1,0 +1,12 @@
+{
+  "name": "avoimempi-eduskunta-backend",
+  "version": "1.0.0",
+  "dependencies": {
+    "@fastify/swagger": "9.4.2",
+    "fastify": "5.2.1"
+  },
+  "scripts": {
+    "start": "bun run src/index.mts",
+    "typecheck": "tsc --noEmit"
+  }
+}

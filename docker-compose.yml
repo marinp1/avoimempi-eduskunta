@@ -1,5 +1,4 @@
 services:
-  # PostgreSQL Service
   postgres:
     image: postgres:17-alpine
     container_name: avoimempi-eduskunta-postgres
@@ -13,7 +12,6 @@ services:
       - avoimempi-eduskunta-network-db
     restart: always
 
-  # Flyway Migration Handler
   flyway:
     image: flyway/flyway:11-alpine
     container_name: avoimempi-eduskunta-flyway
@@ -21,12 +19,27 @@ services:
     env_file:
       - .env
     volumes:
-      - ./migrations:/migrations # Mount your migration scripts directory
+      - ./migrations:/migrations
     depends_on:
-      - postgres # Ensure postgres is up before running migrations
+      - postgres
     networks:
       - avoimempi-eduskunta-network-db
-    restart: "no" # We don’t want this container to restart once migrations are done
+    restart: "no"
+
+  backend:
+    build:
+      context: ./modules/backend
+      dockerfile: Dockerfile
+    container_name: avoimempi-eduskunta-backend
+    env_file:
+      - .env
+    ports:
+      - "5600:3000"
+    depends_on:
+      - postgres
+    networks:
+      - avoimempi-eduskunta-network-db
+    restart: always
 
 volumes:
   postgres_data:
