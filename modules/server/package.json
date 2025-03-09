@@ -2,7 +2,9 @@
   "name": "avoimempi-eduskunta-server",
   "version": "1.0.0",
   "type": "module",
-  "dependencies": {},
+  "dependencies": {
+    "chart.js": "4.4.8"
+  },
   "scripts": {
     "start": "bun run server.ts",
     "typecheck": "tsc --noEmit"
