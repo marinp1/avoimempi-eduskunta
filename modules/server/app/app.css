@@ -70,7 +70,8 @@ main {
   display: block;
 }
 
-#current-composition {
+#current-composition,
+#representatives {
   margin: 0 auto;
   padding: 2em;
   background-color: var(--composition-bg-color); /* Updated background color */
@@ -106,36 +107,37 @@ main {
   background-color: var(--secondary-color);
 }
 
-#composition {
+#composition-container,
+#representatives-container {
   margin-top: 2em;
   overflow-x: auto; /* Add horizontal scrolling if necessary */
 }
 
-#composition table {
+section table {
   width: 100%;
   border-collapse: collapse;
   border-radius: 8px; /* Rounded corners for the table */
   overflow: hidden; /* Ensure the rounded corners are visible */
-}
 
-#composition table th,
-#composition table td {
-  padding: 0.5em;
-  border: 1px solid #ddd;
-  text-align: left;
-}
+  th,
+  td {
+    padding: 0.5em;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
 
-#composition table th {
-  background-color: var(--primary-color);
-  color: #fff;
-}
+  th {
+    background-color: var(--primary-color);
+    color: #fff;
+  }
 
-#composition table tr:nth-child(even) {
-  background-color: var(--table-alt-row-color); /* Alternate row color */
-}
+  tr:nth-child(even) {
+    background-color: var(--table-alt-row-color); /* Alternate row color */
+  }
 
-#composition table tr:nth-child(odd) {
-  background-color: var(--table-row-color); /* Table row color */
+  tr:nth-child(odd) {
+    background-color: var(--table-row-color); /* Table row color */
+  }
 }
 
 footer {

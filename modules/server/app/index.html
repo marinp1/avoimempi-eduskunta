@@ -11,6 +11,7 @@
       <nav>
         <ul>
           <li><a href="#current-composition">Current Composition</a></li>
+          <li><a href="#representatives">Representatives</a></li>
           <li><a href="#tab2">Tab 2</a></li>
           <li><a href="#tab3">Tab 3</a></li>
         </ul>
@@ -25,14 +26,27 @@
           action="/composition"
           method="post"
           hx-post="/composition"
-          hx-target="#composition"
+          hx-target="#composition-container"
           hx-swap="innerHTML"
         >
           <label for="dateInput">Select Date:</label>
           <input type="date" id="dateInput" name="date" required />
           <button type="submit">Get Composition</button>
         </form>
-        <div id="composition"></div>
+        <div id="composition-container"></div>
+      </section>
+
+      <section id="representatives" class="tab-content">
+        <h1>Representatives</h1>
+        <div id="representatives-container">
+          <div
+            id="load-more"
+            hx-get="/representatives?page=1&limit=100"
+            hx-trigger="intersect once"
+            hx-target="#representatives-container"
+            hx-swap="innerHTML"
+          ></div>
+        </div>
       </section>
 
       <section id="tab2" class="tab-content">

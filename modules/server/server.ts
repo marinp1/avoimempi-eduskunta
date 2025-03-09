@@ -8,16 +8,21 @@ const fetchComposition = async (params: { date: string }) => {
   const dateObj = new Date(params.date);
   if (isNaN(dateObj.getTime())) throw new Error("Invalid date");
   const response: DatabaseFunctions.GetParliamentComposition[] =
-    await db.sql`SELECT * FROM getparliamentcomposition(${dateObj.toISOString()})`;
+    await db.sql`SELECT * FROM GetParliamentComposition(${dateObj.toISOString()})`;
+  return response;
+};
+
+const fetchRepresentatives = async (page: number, limit: number) => {
+  const offset = (page - 1) * limit;
+  const response: DatabaseTables.Representative[] =
+    await db.sql`SELECT * FROM Representative LIMIT ${limit} OFFSET ${offset}`;
   return response;
 };
 
 const server = Bun.serve({
-  // `routes` requires Bun v1.2.3+
   routes: {
     "/": homepage,
 
-    // Static routes
     "/api/status": new Response("OK"),
 
     "/api/composition/:date": {
@@ -30,10 +35,7 @@ const server = Bun.serve({
     },
 
     "/composition": {
-      POST: async (
-        // optional: you can explicitly pass a type to BunRequest:
-        req: BunRequest<"/composition">
-      ) => {
+      POST: async (req: BunRequest<"/composition">) => {
         const formData = await req.formData();
         const composition = await fetchComposition({
           date: formData.get("date") as string,
@@ -66,28 +68,72 @@ const server = Bun.serve({
       },
     },
 
-    // Wildcard route for all routes that start with "/api/" and aren't otherwise matched
-    "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
+    "/representatives": {
+      GET: async (req: BunRequest<"/representatives">) => {
+        const sp = new URL(req.url).searchParams;
+        const page = +(sp.get("page") ?? "1");
+        const limit = +(sp.get("limit") ?? "100");
+        const representatives = await fetchRepresentatives(page, limit);
 
-    /*
-    // Serve a file by buffering it in memory
-    "/favicon.ico": new Response(await Bun.file("./favicon.ico").bytes(), {
-      headers: {
-        "Content-Type": "image/x-icon",
+        // Check if there are more pages to load
+        const nextPageRepresentatives = await fetchRepresentatives(
+          page + 1,
+          limit
+        );
+
+        const tableRows = representatives
+          .map((row) => {
+            return `<tr>${Object.values(row)
+              .map((value) => `<td>${value}</td>`)
+              .join("")}</tr>`;
+          })
+          .join("");
+
+        const loadMoreButton =
+          nextPageRepresentatives.length > 0
+            ? `<div id="load-more" hx-get="/representatives?page=${
+                page + 1
+              }&limit=${limit}" hx-trigger="revealed" hx-target="#representatives-table-content" hx-swap="beforeend"></div>`
+            : "";
+
+        const tableHeaders = Object.keys(representatives[0])
+          .map((key) => `<th>${key}</th>`)
+          .join("");
+
+        const htmlContent =
+          page === 1
+            ? `
+          <table border="1">
+            <thead>
+              <tr>${tableHeaders}</tr>
+            </thead>
+            <tbody id="representatives-table-content">
+              ${tableRows}
+              ${loadMoreButton}
+            </tbody>
+          </table>
+        `
+            : `
+          ${tableRows}
+          ${loadMoreButton}
+        `;
+        return new Response(htmlContent, {
+          headers: {
+            "Content-Type": "text/html",
+          },
+        });
       },
-    }),
-    */
+    },
+
+    "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
 
   development: true,
 
-  // (optional) fallback for unmatched routes:
-  // Required if Bun's version < 1.2.3
   fetch(req) {
     return new Response("Not Found", { status: 404 });
   },
 
-  // Global error handler
   error(error) {
     console.error(error);
     return new Response(`Internal Error: ${error.message}`, {

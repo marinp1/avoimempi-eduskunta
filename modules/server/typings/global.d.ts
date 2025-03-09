@@ -1,3 +1,5 @@
 declare global {
-  export * from "./htmx.esm.d.ts";
+  declare const htmx: typeof import("./htmx.esm")["default"];
 }
+
+export {};
