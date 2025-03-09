@@ -8,13 +8,15 @@ const db = new DatabaseConnection();
 const fetchComposition = async (params: { date: string; search?: string }) => {
   const dateObj = new Date(params.date);
   if (isNaN(dateObj.getTime())) throw new Error("Invalid date");
-  let query = db.sql`SELECT * FROM GetParliamentComposition(${dateObj.toISOString()})`;
-
-  if (params.search) {
-    query = db.sql`${query} WHERE sort_name ILIKE ${`%${params.search}%`}`;
-  }
-
-  const response: DatabaseFunctions.GetParliamentComposition[] = await query;
+  const d1 = dateObj.toISOString();
+  const query = `
+    SELECT pc.*, pgm.group_name, pgm.group_name
+    FROM getparliamentcomposition(${d1}) pc
+    JOIN parliamentarygroupmembership pgm
+    ON pc.person_id = pgm.person_id
+    WHERE pgm.start_date <= ${d1} AND (pgm.end_date IS NULL OR pgm.end_date >= ${d1})`;
+  const response: DatabaseFunctions.GetParliamentComposition[] =
+    await db.sql`${query}`;
   return response;
 };
 
@@ -22,6 +24,40 @@ const fetchRepresentatives = async (page: number, limit: number) => {
   const offset = (page - 1) * limit;
   const response: DatabaseTables.Representative[] =
     await db.sql`SELECT * FROM Representative LIMIT ${limit} OFFSET ${offset}`;
+  return response;
+};
+
+const fetchGenderStatistics = async () => {
+  const response: {
+    date: string;
+    total_rows: number;
+    number_of_women: number;
+    number_of_men: number;
+  }[] = await db.sql.unsafe(`
+WITH monthly_dates AS (
+	SELECT generate_series('1907-01-01'::DATE, '2025-01-01'::DATE , '1 month')::DATE as "date"
+),
+parliament_composition AS (
+    SELECT
+        md.date,
+        pc.person_id,
+        pc.gender
+    FROM
+        monthly_dates md
+    CROSS JOIN LATERAL getparliamentcomposition(md.date) pc
+)
+SELECT
+    date,
+    COUNT(*) AS total_rows,
+    COUNT(CASE WHEN gender = 'Nainen' THEN 1 END) AS number_of_women,
+    COUNT(CASE WHEN gender = 'Mies' THEN 1 END) AS number_of_men
+FROM
+    parliament_composition
+GROUP BY
+    date
+ORDER BY
+    date
+  `);
   return response;
 };
 
@@ -40,95 +76,11 @@ const server = Bun.serve({
       },
     },
 
-    "/composition": {
-      POST: async (req: BunRequest<"/composition">) => {
-        const formData = await req.formData();
-        const composition = await fetchComposition({
-          date: formData.get("date") as string,
-          search: formData.get("search") as string,
-        });
-        const tableRows = composition
-          .map((row) => {
-            return `<tr>${Object.values(row)
-              .map((value) => `<td>${value}</td>`)
-              .join("")}</tr>`;
-          })
-          .join("");
-        const tableHeaders = Object.keys(composition[0] ?? {})
-          .map((key) => `<th>${key}</th>`)
-          .join("");
-        const htmlContent = `
-          <div id="composition-count">Number of rows: ${composition.length}</div>
-          <table border="1">
-            <thead>
-              <tr>${tableHeaders}</tr>
-            </thead>
-            <tbody>
-              ${tableRows}
-            </tbody>
-          </table>
-        `;
-        return new Response(htmlContent, {
-          headers: {
-            "Content-Type": "text/html",
-          },
-        });
-      },
-    },
-
-    "/representatives": {
-      GET: async (req: BunRequest<"/representatives">) => {
-        const sp = new URL(req.url).searchParams;
-        const page = +(sp.get("page") ?? "1");
-        const limit = +(sp.get("limit") ?? "100");
-        const representatives = await fetchRepresentatives(page, limit);
-
-        // Check if there are more pages to load
-        const nextPageRepresentatives = await fetchRepresentatives(
-          page + 1,
-          limit
-        );
-
-        const tableRows = representatives
-          .map((row) => {
-            return `<tr>${Object.values(row)
-              .map((value) => `<td>${value}</td>`)
-              .join("")}</tr>`;
-          })
-          .join("");
-
-        const loadMoreButton =
-          nextPageRepresentatives.length > 0
-            ? `<div id="load-more" hx-get="/representatives?page=${
-                page + 1
-              }&limit=${limit}" hx-trigger="revealed" hx-target="#representatives-table-content" hx-swap="beforeend"></div>`
-            : "";
-
-        const tableHeaders = Object.keys(representatives[0])
-          .map((key) => `<th>${key}</th>`)
-          .join("");
-
-        const htmlContent =
-          page === 1
-            ? `
-          <table border="1">
-            <thead>
-              <tr>${tableHeaders}</tr>
-            </thead>
-            <tbody id="representatives-table-content">
-              ${tableRows}
-              ${loadMoreButton}
-            </tbody>
-          </table>
-        `
-            : `
-          ${tableRows}
-          ${loadMoreButton}
-        `;
-        return new Response(htmlContent, {
-          headers: {
-            "Content-Type": "text/html",
-          },
+    "/api/statistics/by-gender": {
+      GET: async (req: BunRequest<"/api/statistics/by-gender">) => {
+        const statistics = await fetchGenderStatistics();
+        return new Response(JSON.stringify(statistics), {
+          headers: { "Content-Type": "application/json" },
         });
       },
     },

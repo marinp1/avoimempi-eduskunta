@@ -32,9 +32,18 @@
         "jsonschema": "1.5.0",
       },
     },
+    "modules/server": {
+      "name": "avoimempi-eduskunta-server",
+      "version": "1.0.0",
+      "dependencies": {
+        "chart.js": "4.4.8",
+      },
+    },
   },
   "packages": {
     "@fastify/deepmerge": ["@fastify/deepmerge@github:fastify/deepmerge#327bec0", {}, "fastify-deepmerge-327bec0"],
+
+    "@kurkle/color": ["@kurkle/color@0.3.4", "", {}, "sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w=="],
 
     "@types/bun": ["@types/bun@1.2.4", "", { "dependencies": { "bun-types": "1.2.4" } }, "sha512-QtuV5OMR8/rdKJs213iwXDpfVvnskPXY/S0ZiFbsTjQZycuqPbMW8Gf/XhLfwE5njW8sxI2WjISURXPlHypMFA=="],
 
@@ -50,7 +59,11 @@
 
     "avoimempi-eduskunta-scripts": ["avoimempi-eduskunta-scripts@workspace:modules/scripts"],
 
+    "avoimempi-eduskunta-server": ["avoimempi-eduskunta-server@workspace:modules/server"],
+
     "bun-types": ["bun-types@1.2.4", "", { "dependencies": { "@types/node": "*", "@types/ws": "~8.5.10" } }, "sha512-nDPymR207ZZEoWD4AavvEaa/KZe/qlrbMSchqpQwovPZCKc7pwMoENjEtHgMKaAjJhy+x6vfqSBA1QU3bJgs0Q=="],
+
+    "chart.js": ["chart.js@4.4.8", "", { "dependencies": { "@kurkle/color": "^0.3.0" } }, "sha512-IkGZlVpXP+83QpMm4uxEiGqSI7jFizwVtF3+n5Pc3k7sMO+tkd0qxh2OzLhenM0K80xtmAONWGBn082EiBQSDA=="],
 
     "jsonschema": ["jsonschema@1.5.0", "", {}, "sha512-K+A9hhqbn0f3pJX17Q/7H6yQfD/5OXgdrR5UE12gMXCiN9D5Xq2o5mddV2QEcX/bjla99ASsAAQUyMCCRWAEhw=="],
 
