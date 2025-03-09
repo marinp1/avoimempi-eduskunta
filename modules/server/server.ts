@@ -1,14 +1,20 @@
+// modules/server/server.ts
 import homepage from "./app/index.html";
 import type { BunRequest } from "bun";
 
 import { DatabaseConnection } from "./db.ts";
 const db = new DatabaseConnection();
 
-const fetchComposition = async (params: { date: string }) => {
+const fetchComposition = async (params: { date: string; search?: string }) => {
   const dateObj = new Date(params.date);
   if (isNaN(dateObj.getTime())) throw new Error("Invalid date");
-  const response: DatabaseFunctions.GetParliamentComposition[] =
-    await db.sql`SELECT * FROM GetParliamentComposition(${dateObj.toISOString()})`;
+  let query = db.sql`SELECT * FROM GetParliamentComposition(${dateObj.toISOString()})`;
+
+  if (params.search) {
+    query = db.sql`${query} WHERE sort_name ILIKE ${`%${params.search}%`}`;
+  }
+
+  const response: DatabaseFunctions.GetParliamentComposition[] = await query;
   return response;
 };
 
@@ -39,6 +45,7 @@ const server = Bun.serve({
         const formData = await req.formData();
         const composition = await fetchComposition({
           date: formData.get("date") as string,
+          search: formData.get("search") as string,
         });
         const tableRows = composition
           .map((row) => {
@@ -47,10 +54,11 @@ const server = Bun.serve({
               .join("")}</tr>`;
           })
           .join("");
-        const tableHeaders = Object.keys(composition[0])
+        const tableHeaders = Object.keys(composition[0] ?? {})
           .map((key) => `<th>${key}</th>`)
           .join("");
         const htmlContent = `
+          <div id="composition-count">Number of rows: ${composition.length}</div>
           <table border="1">
             <thead>
               <tr>${tableHeaders}</tr>
