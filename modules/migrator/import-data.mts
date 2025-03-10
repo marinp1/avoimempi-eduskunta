@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs";
-import { SQL, type TransactionSQL } from "bun";
+import { Database } from "bun:sqlite";
 import { TableNames } from "avoimempi-eduskunta-common/constants/TableNames.mts";
 
 /**
@@ -22,29 +22,11 @@ const orderedTableNames = [...TableNames].sort(
 
 /**
  * Reference to running DB instance.
- * TODO: Use env paramters instead of hardcoded values.
  */
-const db = new SQL(
-  new URL(
-    `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${
-      process.env.POSTGRES_HOST ?? "localhost"
-    }:5432/${process.env.POSTGRES_DB}`
-  )
-);
-
-/** Database connection. */
-const sql = await db.connect();
-
-/** Truncate all tables in the database. */
-await sql`
-DO $$ DECLARE
-  r RECORD;
-BEGIN
-  FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema() AND tablename != 'flyway_schema_history') LOOP
-    EXECUTE 'TRUNCATE TABLE ' || quote_ident(r.tablename) || ' CASCADE';
-  END LOOP;
-END $$;
-`;
+const db = new Database("avoimempi-eduskunta.db", {
+  create: false,
+  readwrite: true,
+});
 
 // (Try to) migrate each table
 for (const tableName of orderedTableNames) {
@@ -75,7 +57,7 @@ for (const tableName of orderedTableNames) {
   const { default: seedFn } = (await import(
     path.resolve(import.meta.dirname, `${tableName}/migrator.mts`)
   )) as {
-    default: (sql: TransactionSQL) => (data: any) => Promise<void>;
+    default: (sql: Database) => (data: any) => Promise<void>;
   };
   console.time(`Seed ${tableName}`);
   console.log("Seeding", tableName);
@@ -84,13 +66,9 @@ for (const tableName of orderedTableNames) {
     const { default: data } = await import(path.resolve(dataDir, entry), {
       with: { type: "json" },
     });
-    await sql.begin(async (sql) => {
-      await seedFn(sql)(data);
-    });
+    await seedFn(db)(data);
   }
   console.timeEnd(`Seed ${tableName}`);
 }
 
-await sql`REFRESH MATERIALIZED VIEW statistics_composition_gender;`;
-
-await sql.close();
+db.close();

@@ -5,3 +5,6 @@ tsconfig.tsbuildinfo
 .DS_Store
 .env
 db_dump.sql
+
+*.db
+*.db-*

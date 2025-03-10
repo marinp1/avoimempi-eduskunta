@@ -1,4 +1,4 @@
-import { type TransactionSQL } from "bun";
+import { type Database } from "bun:sqlite";
 
 const parseDate = (date?: string | null): string | null => {
   if (!date) return null;
@@ -69,7 +69,7 @@ const mergeArrays = <T>(
     .filter((s) => !!s) as Exclude<T, undefined>[];
 };
 
-export default (sql: TransactionSQL) =>
+export default (db: Database) =>
   async (dataToImport: DataModel.Representative) => {
     if (process.env.DEBUG)
       console.log("Mapping", dataToImport.lastname, dataToImport.personId);
@@ -347,9 +347,15 @@ export default (sql: TransactionSQL) =>
 
     const insertRows = async (table: string, rows: any[]) => {
       if (rows.length) {
-        await sql`INSERT INTO ${sql.unsafe(table)} ${sql(
-          rows
-        )} ON CONFLICT DO NOTHING`;
+        const columns = Object.keys(rows[0]);
+        const values = rows.map((row) => Object.values(row));
+        const columnsString = columns.join(", ");
+        const valuesString = values
+          .map((row) => `(${row.map((value) => `'${value}'`).join(", ")})`)
+          .join(", ");
+        db.run(
+          `INSERT OR IGNORE INTO ${table} (${columnsString}) VALUES ${valuesString}`
+        );
       }
     };
 
