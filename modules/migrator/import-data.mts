@@ -91,4 +91,6 @@ for (const tableName of orderedTableNames) {
   console.timeEnd(`Seed ${tableName}`);
 }
 
+await sql`REFRESH MATERIALIZED VIEW statistics_composition_gender;`;
+
 await sql.close();
