@@ -33,31 +33,7 @@ const fetchGenderStatistics = async () => {
     total_rows: number;
     number_of_women: number;
     number_of_men: number;
-  }[] = await db.sql.unsafe(`
-WITH monthly_dates AS (
-	SELECT generate_series('1907-01-01'::DATE, '2025-01-01'::DATE , '1 month')::DATE as "date"
-),
-parliament_composition AS (
-    SELECT
-        md.date,
-        pc.person_id,
-        pc.gender
-    FROM
-        monthly_dates md
-    CROSS JOIN LATERAL getparliamentcomposition(md.date) pc
-)
-SELECT
-    date,
-    COUNT(*) AS total_rows,
-    COUNT(CASE WHEN gender = 'Nainen' THEN 1 END) AS number_of_women,
-    COUNT(CASE WHEN gender = 'Mies' THEN 1 END) AS number_of_men
-FROM
-    parliament_composition
-GROUP BY
-    date
-ORDER BY
-    date
-  `);
+  }[] = await db.sql.unsafe(`SELECT * FROM statistics_composition_gender`);
   return response;
 };
 
