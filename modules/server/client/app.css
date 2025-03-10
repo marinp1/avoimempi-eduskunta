@@ -1,0 +1,48 @@
+body,
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tab-bar {
+  background-color: #333;
+  color: white;
+  padding: 10px;
+  text-align: right;
+}
+
+.tab-bar ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tab-bar li {
+  display: inline;
+  margin-left: 10px;
+}
+
+.tab-bar button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.tab-bar button:hover {
+  text-decoration: underline;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+}
