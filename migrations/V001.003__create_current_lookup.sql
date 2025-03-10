@@ -11,7 +11,7 @@ REINDEX TABLE term;
 REINDEX TABLE temporaryabsence;
 
 -- Create a database function to get the parliament composition
-CREATE OR REPLACE FUNCTION getParliamentComposition(datestr DATE)
+CREATE OR REPLACE FUNCTION public.getParliamentComposition(datestr DATE)
 RETURNS TABLE (
     person_id INT,
     last_name VARCHAR,
@@ -42,15 +42,15 @@ SELECT
     t.start_date AS t_start_date,
     t.end_date AS t_end_date
 FROM
-    representative r
+    public.representative r
 JOIN
-    term t ON r.person_id = t.person_id
+    public.term t ON r.person_id = t.person_id
 WHERE
     t.start_date <= datestr
     AND (t.end_date IS NULL OR t.end_date >= datestr)
     AND NOT EXISTS (
         SELECT 1
-        FROM temporaryabsence ta
+        FROM public.temporaryabsence ta
         WHERE ta.person_id = r.person_id
           AND ta.start_date <= datestr
           AND (ta.end_date IS NULL OR ta.end_date >= datestr)
