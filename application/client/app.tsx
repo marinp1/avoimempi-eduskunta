@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import AboutPage from "./AboutPage.js";
-import ContactPage from "./ContactPage.js";
-import RepresentativesPage from "./RepresentativesPage.js";
+import AboutPage from "./About";
+import ContactPage from "./Contact";
+import RepresentativesPage from "./Representatives";
 
 export const App = () => {
   const [activeTab, setActiveTab] = useState("representatives");
