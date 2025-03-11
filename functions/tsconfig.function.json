@@ -2,7 +2,10 @@
   "extends": "../tsconfig.common.json",
   "compilerOptions": {
     "baseUrl": "./",
-    "paths": { "#constants/*": ["../shared/constants/*"] }
+    "paths": {
+      "#constants/*": ["../shared/constants/*"],
+      "#database": ["../shared/database/index.ts"]
+    }
   },
   "include": ["./", "../shared"]
 }

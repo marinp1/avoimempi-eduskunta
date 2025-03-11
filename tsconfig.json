@@ -7,9 +7,9 @@
     "emitDeclarationOnly": false
   },
   "references": [
-    { "path": "./packages/functions/migrator" },
-    { "path": "./packages/functions/parser" },
-    { "path": "./packages/functions/scraper" },
-    { "path": "./packages/application" }
+    { "path": "./functions/migrator" },
+    { "path": "./functions/parser" },
+    { "path": "./functions/scraper" },
+    { "path": "./application" }
   ]
 }

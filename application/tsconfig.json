@@ -1,7 +1,12 @@
 {
   "extends": "../tsconfig.common.json",
   "compilerOptions": {
-    "jsx": "react"
+    "jsx": "react",
+    "baseUrl": "./",
+    "paths": {
+      "#constants/*": ["../shared/constants/*"],
+      "#database": ["../shared/database/index.ts"]
+    }
   },
   "include": ["./", "../shared"]
 }

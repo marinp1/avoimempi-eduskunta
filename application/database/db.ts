@@ -1,8 +1,8 @@
 import { Database } from "bun:sqlite";
 import { migrate, getMigrations } from "bun-sqlite-migrations";
 import path from "path";
-
 import * as queries from "./queries";
+import { getDatabasePath } from "#database";
 
 export class DatabaseConnection {
   #database: Database | null = null;
@@ -40,7 +40,8 @@ export class DatabaseConnection {
   }
 
   #connectToDatabase() {
-    this.#database = new Database("avoimempi-eduskunta.db", { create: true });
+    const databasePath = getDatabasePath();
+    this.#database = new Database(databasePath, { create: true });
     migrate(
       this.#database,
       getMigrations(path.resolve(import.meta.dirname, "migrations"))

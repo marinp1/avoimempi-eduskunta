@@ -1,6 +1,6 @@
 {
   "extends": "../tsconfig.function.json",
   "compilerOptions": {
-    "baseUrl": "./"
+    "baseUrl": "../"
   }
 }

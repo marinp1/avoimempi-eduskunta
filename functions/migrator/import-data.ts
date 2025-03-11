@@ -1,7 +1,8 @@
 import path from "path";
 import fs from "fs";
 import { Database } from "bun:sqlite";
-import { TableNames } from "../../shared/constants/TableNames";
+import { TableNames } from "#constants/TableNames";
+import { getDatabasePath } from "#database";
 
 /**
  * Make sure that data is imported in this order.
@@ -23,7 +24,7 @@ const orderedTableNames = [...TableNames].sort(
 /**
  * Reference to running DB instance.
  */
-const db = new Database("avoimempi-eduskunta.db", {
+const db = new Database(getDatabasePath(), {
   create: false,
   readwrite: true,
 });
