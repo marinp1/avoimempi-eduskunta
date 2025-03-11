@@ -1,6 +1,7 @@
 {
   "name": "avoimempi-eduskunta-parser",
   "version": "1.0.0",
+  "type": "module",
   "dependencies": {
     "xml-js": "1.6.11"
   },

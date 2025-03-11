@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { Database } from "bun:sqlite";
-import { TableNames } from "#constants/TableNames.mts";
+import { TableNames } from "#constants/TableNames.ts";
 
 /**
  * Make sure that data is imported in this order.
@@ -44,7 +44,7 @@ for (const tableName of orderedTableNames) {
   /** Path to file containing seed functions. */
   const pathToFile = path.resolve(
     import.meta.dirname,
-    `${tableName}/migrator.mts`
+    `${tableName}/migrator.ts`
   );
   if (!fs.existsSync(pathToFile)) {
     console.warn(`Migration file for ${tableName} not found, skipping...`);
@@ -66,7 +66,7 @@ for (const tableName of orderedTableNames) {
     .map((s) => s.name);
   // Dynamically import the seed function.
   const { default: seedFn } = (await import(
-    path.resolve(import.meta.dirname, `${tableName}/migrator.mts`)
+    path.resolve(import.meta.dirname, `${tableName}/migrator.ts`)
   )) as {
     default: (sql: Database) => (data: any) => Promise<void>;
   };

@@ -1,4 +1,4 @@
-import type { TableNames } from "avoimempi-eduskunta-common/constants/TableNames.mts";
+import type { TableNames } from "../constants/TableNames.ts";
 
 declare global {
   namespace Modules.Common {
