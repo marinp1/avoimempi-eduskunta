@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import "./RepresentativesPage.css";
 import { RepresentativeAvatar } from "./RepresentativeAvatar";
 
+const SeatingCounts = [1, 16, 22, 26, 32, 30, 29, 26, 18];
+
 const RepresentativesPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [representatives, setRepresentatives] = useState<
@@ -43,6 +45,29 @@ const RepresentativesPage = () => {
     fetchRepresentatives();
   }, [selectedDate]);
 
+  const groupedRepresentatives = SeatingCounts.reduce((acc, count, ind) => {
+    const start = ind === 0 ? 0 : acc[ind - 1].end;
+    const end = start + count;
+    return [
+      ...acc,
+      {
+        start,
+        end,
+      },
+    ];
+  }, [] as { start: number; end: number }[]).map(({ start, end }) => ({
+    count: end - start,
+    representatives: representatives.slice(start, end),
+  }));
+
+  console.log(
+    representatives,
+    groupedRepresentatives,
+    groupedRepresentatives
+      .map((s) => s.representatives.length)
+      .reduce((a, b) => a + b, 0)
+  );
+
   return (
     <div className="representatives-page">
       <div className="date-selector">
@@ -54,12 +79,17 @@ const RepresentativesPage = () => {
         />
         <button onClick={handleNextDate}>&gt;</button>
       </div>
-      <div className="selected-date">
-        Selected Date: {selectedDate.toDateString()}
-      </div>
-      <div className="representatives-grid">
-        {representatives.map((representative, index) => (
-          <RepresentativeAvatar key={index} {...representative} />
+      <div className="representatives-layout">
+        {groupedRepresentatives.map(({ count, representatives }, index) => (
+          <div
+            key={`row-${count}-${index}`}
+            className="representative-row"
+            data-row={index}
+          >
+            {representatives.map((representative, index) => (
+              <RepresentativeAvatar key={index} {...representative} />
+            ))}
+          </div>
         ))}
       </div>
       <div className="representatives-content">
