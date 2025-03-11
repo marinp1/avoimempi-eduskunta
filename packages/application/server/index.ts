@@ -2,7 +2,7 @@
 import homepage from "./public/index.html";
 import type { BunRequest } from "bun";
 
-import { DatabaseConnection } from "./db.ts";
+import { DatabaseConnection } from "../database/db";
 const db = new DatabaseConnection();
 
 const server = Bun.serve({

@@ -7,12 +7,9 @@
     "emitDeclarationOnly": false
   },
   "references": [
-    { "path": "./modules/common" },
-    { "path": "./modules/parser" },
-    { "path": "./modules/scraper" },
-    { "path": "./modules/scripts" },
-    { "path": "./modules/migrator" },
-    { "path": "./modules/backend" },
-    { "path": "./app" }
+    { "path": "./packages/functions/migrator" },
+    { "path": "./packages/functions/parser" },
+    { "path": "./packages/functions/scraper" },
+    { "path": "./packages/application" }
   ]
 }
