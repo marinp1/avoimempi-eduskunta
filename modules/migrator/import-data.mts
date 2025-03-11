@@ -28,6 +28,17 @@ const db = new Database("avoimempi-eduskunta.db", {
   readwrite: true,
 });
 
+const tables = db
+  .query<{ name: string }, []>(
+    "SELECT name FROM sqlite_master WHERE type='table';"
+  )
+  .all();
+
+for (const table of tables) {
+  const tableName = table.name;
+  db.run(`DELETE FROM ${tableName};`);
+}
+
 // (Try to) migrate each table
 for (const tableName of orderedTableNames) {
   /** Path to file containing seed functions. */
