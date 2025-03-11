@@ -28,18 +28,21 @@
 }
 
 .representatives-layout {
-  --avatar-size: 60px;
+  --avatar-size: 40px;
   display: flex;
   margin: 4px;
   flex-direction: column;
 }
 
 .representative-row {
-  --additional-spacing: 20px;
   --margin: 4px;
+  --additional-spacing: 40px;
   display: flex;
   margin: var(--margin);
   justify-content: center;
+  &[data-row="0"] {
+    margin-bottom: var(--additional-spacing) * 10;
+  }
   &[data-row="1"] {
     > div:nth-of-type(5),
     > div:nth-of-type(8),
@@ -106,6 +109,8 @@
 }
 
 .representative-circle {
+  transform-box: fill-box;
+  position: relative;
   margin: var(--margin);
   display: flex;
   min-width: var(--avatar-size);
