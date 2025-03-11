@@ -1,7 +1,7 @@
 node_modules
-packages/functions/migrator/data
-packages/functions/scraper/data
-packages/functions/parser/data
+functions/migrator/data
+functions/scraper/data
+functions/parser/data
 tsconfig.tsbuildinfo
 .DS_Store
 .env

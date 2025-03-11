@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { Database } from "bun:sqlite";
-import { TableNames } from "#constants/TableNames.ts";
+import { TableNames } from "../../shared/constants/TableNames";
 
 /**
  * Make sure that data is imported in this order.

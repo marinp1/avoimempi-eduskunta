@@ -1,5 +1,5 @@
 {
-  "name": "avoimempi-eduskunta-server",
+  "name": "avoimempi-eduskunta-application",
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
