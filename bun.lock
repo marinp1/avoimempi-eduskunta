@@ -9,8 +9,8 @@
         "typescript": "5.7.3",
       },
     },
-    "packages/application": {
-      "name": "avoimempi-eduskunta-server",
+    "application": {
+      "name": "avoimempi-eduskunta-application",
       "version": "1.0.0",
       "dependencies": {
         "@types/react": "^19.0.10",
@@ -20,18 +20,18 @@
         "react-dom": "^19.0.0",
       },
     },
-    "packages/functions/migrator": {
+    "functions/migrator": {
       "name": "avoimempi-eduskunta-migrator",
       "version": "1.0.0",
     },
-    "packages/functions/parser": {
+    "functions/parser": {
       "name": "avoimempi-eduskunta-parser",
       "version": "1.0.0",
       "dependencies": {
         "xml-js": "1.6.11",
       },
     },
-    "packages/functions/scraper": {
+    "functions/scraper": {
       "name": "avoimempi-eduskunta-scraper",
       "version": "1.0.0",
     },
@@ -47,13 +47,13 @@
 
     "@types/ws": ["@types/ws@8.5.14", "", { "dependencies": { "@types/node": "*" } }, "sha512-bd/YFLW+URhBzMXurx7lWByOu+xzU9+kb3RboOteXYDfW+tr+JZa99OyNmPINEGB/ahzKrEuc8rcv4gnpJmxTw=="],
 
-    "avoimempi-eduskunta-migrator": ["avoimempi-eduskunta-migrator@workspace:packages/functions/migrator"],
+    "avoimempi-eduskunta-application": ["avoimempi-eduskunta-application@workspace:application"],
 
-    "avoimempi-eduskunta-parser": ["avoimempi-eduskunta-parser@workspace:packages/functions/parser"],
+    "avoimempi-eduskunta-migrator": ["avoimempi-eduskunta-migrator@workspace:functions/migrator"],
 
-    "avoimempi-eduskunta-scraper": ["avoimempi-eduskunta-scraper@workspace:packages/functions/scraper"],
+    "avoimempi-eduskunta-parser": ["avoimempi-eduskunta-parser@workspace:functions/parser"],
 
-    "avoimempi-eduskunta-server": ["avoimempi-eduskunta-server@workspace:packages/application"],
+    "avoimempi-eduskunta-scraper": ["avoimempi-eduskunta-scraper@workspace:functions/scraper"],
 
     "bun-sqlite-migrations": ["bun-sqlite-migrations@1.0.2", "", { "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-WLw8q67KM+1RN7o4DqVVhmJASypuBp8fygrfA8QD5HZEjiP+E5hD1SV2dpyB7A4tFqLdUF8cdln7+Ptj5+Hz1Q=="],
 

@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { xml2json } from "xml-js";
-import { TableNames } from "#constants/TableNames.ts";
+import { TableNames } from "../../shared/constants/TableNames";
 import type { XmlNode, XmlTree } from "./types/index.mts";
 
 /**

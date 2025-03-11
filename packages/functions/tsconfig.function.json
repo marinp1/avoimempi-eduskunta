@@ -1,8 +1,0 @@
-{
-  "extends": "../../tsconfig.common.json",
-  "compilerOptions": {
-    "baseUrl": "./",
-    "paths": { "#constants/*": ["../common/constants/*"] }
-  },
-  "include": ["./", "../common"]
-}

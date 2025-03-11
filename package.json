@@ -6,8 +6,8 @@
   "license": "ISC",
   "description": "",
   "workspaces": [
-    "packages/application",
-    "packages/functions/*"
+    "application",
+    "functions/*"
   ],
   "devDependencies": {
     "@types/bun": "^1.2.2",
