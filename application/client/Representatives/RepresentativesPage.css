@@ -28,6 +28,7 @@
 }
 
 .representatives-layout {
+  --avatar-size: 60px;
   display: flex;
   margin: 4px;
   flex-direction: column;
@@ -35,8 +36,9 @@
 
 .representative-row {
   --additional-spacing: 20px;
+  --margin: 4px;
   display: flex;
-  margin: 4px;
+  margin: var(--margin);
   justify-content: center;
   &[data-row="1"] {
     > div:nth-of-type(5),
@@ -74,7 +76,15 @@
     }
   }
   &[data-row="6"] {
-    margin-left: calc(var(--additional-spacing) * 2);
+    &::before {
+      content: "";
+      margin: var(--margin);
+      display: flex;
+      min-width: var(--avatar-size);
+      min-height: var(--avatar-size);
+      width: var(--avatar-size);
+      height: var(--avatar-size);
+    }
     > div:nth-of-type(6),
     > div:nth-of-type(14),
     > div:nth-of-type(22) {
@@ -96,13 +106,12 @@
 }
 
 .representative-circle {
-  --size: 28px;
-  margin: 4px;
+  margin: var(--margin);
   display: flex;
-  min-width: var(--size);
-  min-height: var(--size);
-  width: var(--size);
-  height: var(--size);
+  min-width: var(--avatar-size);
+  min-height: var(--avatar-size);
+  width: var(--avatar-size);
+  height: var(--avatar-size);
   justify-content: center;
   align-items: center;
   font-size: small;
