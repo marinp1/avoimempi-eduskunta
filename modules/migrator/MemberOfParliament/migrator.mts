@@ -351,8 +351,21 @@ export default (db: Database) =>
         const values = rows.map((row) => Object.values(row));
         const columnsString = columns.join(", ");
         const valuesString = values
-          .map((row) => `(${row.map((value) => `'${value}'`).join(", ")})`)
+          .map(
+            (row) =>
+              `(${row
+                .map(
+                  (value) =>
+                    `'${String(value || "null").replaceAll("'", "''")}'`
+                )
+                .join(", ")})`
+          )
           .join(", ");
+        if (process.env.DEBUG) {
+          console.log(
+            `INSERT OR IGNORE INTO ${table} (${columnsString}) VALUES ${valuesString}`
+          );
+        }
         db.run(
           `INSERT OR IGNORE INTO ${table} (${columnsString}) VALUES ${valuesString}`
         );
