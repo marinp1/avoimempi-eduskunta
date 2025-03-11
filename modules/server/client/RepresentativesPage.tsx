@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./RepresentativesPage.css";
+import { RepresentativeAvatar } from "./RepresentativeAvatar";
 
 const RepresentativesPage = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [representatives, setRepresentatives] = useState<
     DatabaseFunctions.GetParliamentComposition[]
   >([]);
@@ -40,15 +41,7 @@ const RepresentativesPage = () => {
     };
 
     fetchRepresentatives();
-  }, []);
-
-  const generateRepresentatives = () => {
-    return representatives.map((representative, index) => (
-      <div key={index} className="representative-circle">
-        {representative.sort_name[0]}
-      </div>
-    ));
-  };
+  }, [selectedDate]);
 
   return (
     <div className="representatives-page">
@@ -64,7 +57,11 @@ const RepresentativesPage = () => {
       <div className="selected-date">
         Selected Date: {selectedDate.toDateString()}
       </div>
-      <div className="representatives-grid">{generateRepresentatives()}</div>
+      <div className="representatives-grid">
+        {representatives.map((representative, index) => (
+          <RepresentativeAvatar key={index} {...representative} />
+        ))}
+      </div>
       <div className="representatives-content">
         {/* Content for the selected date goes here */}
       </div>
