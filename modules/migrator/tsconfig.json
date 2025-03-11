@@ -1,7 +1,0 @@
-{
-  "extends": "../../tsconfig.common.json",
-  "compilerOptions": {
-    "paths": { "avoimempi-eduskunta-common/*": ["../common/*"] }
-  },
-  "include": ["./", "../common/typings"]
-}

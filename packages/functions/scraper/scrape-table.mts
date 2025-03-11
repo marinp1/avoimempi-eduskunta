@@ -1,7 +1,7 @@
 import { scheduler } from "node:timers/promises";
 import path from "path";
 import fs from "fs";
-import { TableNames } from "avoimempi-eduskunta-common/constants/TableNames.mts";
+import { TableNames } from "#constants/TableNames.mts";
 
 /** To to wait (in ms) between API calls. */
 const TIME_BETWEEN_QUERIES = 50;
