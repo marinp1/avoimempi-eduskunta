@@ -68,6 +68,9 @@ const RepresentativesPage = () => {
       .reduce((a, b) => a + b, 0)
   );
 
+  const totalCount = 32;
+  const radius = totalCount / Math.PI / 4;
+
   return (
     <div className="representatives-page">
       <div className="date-selector">
@@ -80,17 +83,38 @@ const RepresentativesPage = () => {
         <button onClick={handleNextDate}>&gt;</button>
       </div>
       <div className="representatives-layout">
-        {groupedRepresentatives.map(({ count, representatives }, index) => (
-          <div
-            key={`row-${count}-${index}`}
-            className="representative-row"
-            data-row={index}
-          >
-            {representatives.map((representative, index) => (
-              <RepresentativeAvatar key={index} {...representative} />
-            ))}
-          </div>
-        ))}
+        {groupedRepresentatives.map(
+          ({ count: _count, representatives }, rowIndex) => {
+            return (
+              <div
+                key={`row-${_count}-${rowIndex}`}
+                className="representative-row"
+                data-row={rowIndex}
+              >
+                {representatives.map((representative, _index) => {
+                  const count = rowIndex === 6 ? _count + 1 : _count;
+                  const index = rowIndex === 6 ? _index + 1 : _index;
+                  const missing = totalCount - count;
+                  const start = (totalCount / 2) * -1 + missing / 2;
+                  const ind = start + index + 0.5;
+                  const y =
+                    rowIndex === 0
+                      ? 0
+                      : Math.floor(
+                          radius * Math.cos((ind / totalCount) * Math.PI) * 100
+                        );
+                  return (
+                    <RepresentativeAvatar
+                      key={index}
+                      {...representative}
+                      transform={{ y }}
+                    />
+                  );
+                })}
+              </div>
+            );
+          }
+        )}
       </div>
       <div className="representatives-content">
         {/* Content for the selected date goes here */}
