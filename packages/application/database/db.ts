@@ -2,7 +2,7 @@ import { Database } from "bun:sqlite";
 import { migrate, getMigrations } from "bun-sqlite-migrations";
 import path from "path";
 
-import * as queries from "../server/queries";
+import * as queries from "./queries";
 
 export class DatabaseConnection {
   #database: Database | null = null;

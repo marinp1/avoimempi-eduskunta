@@ -1,5 +1,5 @@
 // modules/server/server.ts
-import homepage from "./public/index.html";
+import homepage from "../public/index.html";
 import type { BunRequest } from "bun";
 
 import { DatabaseConnection } from "../database/db";
