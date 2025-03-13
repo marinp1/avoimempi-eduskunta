@@ -13,6 +13,19 @@ let MAX_LOOP_LIMIT = 2000;
 // EXAMPLE FOR FETCHING SINGLE ENTRY BY ID
 // https://avoindata.eduskunta.fi/api/v1/tables/MemberOfParliament/batch?pkName=personId&pkStartValue=102&perPage=1
 
+const pageCounts = await (async () => {
+  const resp = await fetch(
+    "https://avoindata.eduskunta.fi/api/v1/tables/counts"
+  );
+  const data = (await resp.json()) as {
+    tableName: Modules.Common.TableName;
+    rowCount: number;
+  }[];
+  return Object.fromEntries(
+    data.map((v) => [v.tableName, Math.ceil(v.rowCount / 100)])
+  ) as Record<Modules.Common.TableName, number>;
+})();
+
 /**
  * Fetches data from eduskunta API endpoint and saves each response to disk
  * for futher processing.
@@ -23,7 +36,7 @@ const scrape = async <T extends Modules.Common.TableName>(
   _startFromPage?: number
 ) => {
   let db = sqlite.open(
-    path.resolve(import.meta.dirname, "data", `${tableName}.db`),
+    path.resolve(import.meta.dirname, "data", `eduskunta-raw-data.db`),
     { create: true, readwrite: true }
   );
 
@@ -51,7 +64,14 @@ const scrape = async <T extends Modules.Common.TableName>(
   do {
     // Adjust ?page query parameter before each call
     ApiUrl.searchParams.set("page", String(page));
-    console.log("Fetching", ApiUrl.toString());
+    console.log(
+      "Fetching",
+      ApiUrl.toString(),
+      `(${page + 1} / ${pageCounts[tableName]})`,
+      `~ ${(((page + 1) / pageCounts[tableName]) * 100)
+        .toFixed(2)
+        .padStart(6, " ")}%`
+    );
     const response = await fetch(ApiUrl, {
       method: "GET",
       headers: {
@@ -59,13 +79,19 @@ const scrape = async <T extends Modules.Common.TableName>(
       },
     });
     content = (await response.json()) as Modules.Scraper.ApiResponse;
-    const KEYS = Object.keys(content)
-      .map((key) => `"${key}"`)
-      .join(", ");
-    const VALUES = Object.values(content)
-      .map((value) => `'${JSON.stringify(value)}'`)
-      .join(", ");
-    db.exec(`REPLACE INTO ${tableName} (${KEYS}) VALUES (${VALUES})`);
+    if (content.rowCount > 0) {
+      const KEYS = Object.keys(content)
+        .map((key) => `"${key}"`)
+        .join(", ");
+      const VALUES = Object.values(content)
+        .map((value) => {
+          return `'${JSON.stringify(value).replaceAll("'", "''")}'`;
+        })
+        .join(", ");
+      db.exec(`REPLACE INTO ${tableName} (${KEYS}) VALUES (${VALUES})`);
+    } else {
+      console.log("No content to save");
+    }
     // Wait before next call
     await scheduler.wait(TIME_BETWEEN_QUERIES);
     // Increment page index
