@@ -13,7 +13,7 @@ let MAX_LOOP_LIMIT = 2000;
 // EXAMPLE FOR FETCHING SINGLE ENTRY BY ID
 // https://avoindata.eduskunta.fi/api/v1/tables/MemberOfParliament/batch?pkName=personId&pkStartValue=102&perPage=1
 
-const pageCounts = await (async () => {
+const rowCounts = await (async () => {
   const resp = await fetch(
     "https://avoindata.eduskunta.fi/api/v1/tables/counts"
   );
@@ -22,10 +22,38 @@ const pageCounts = await (async () => {
     rowCount: number;
   }[];
   return Object.fromEntries(
-    data.map((v) => [v.tableName, Math.ceil(v.rowCount / 100)])
+    data.map((v) => [v.tableName, Math.ceil(v.rowCount)])
   ) as Record<Modules.Common.TableName, number>;
 })();
 
+const getColumnsForTable = async (tableName: Modules.Common.TableName) => {
+  const resp = await fetch(
+    `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/columns`
+  );
+  const { pkName, columnNames } =
+    (await resp.json()) as Modules.Scraper.ApiResponse;
+  return {
+    primaryColumn: pkName,
+    otherColumns: columnNames.filter((v) => v !== pkName),
+  };
+};
+
+const openDatabase = async <T extends Modules.Common.TableName>(
+  tableName: T
+) => {
+  const db = sqlite.open(
+    path.resolve(import.meta.dirname, "data", `eduskunta-raw-data.db`),
+    { create: true, readwrite: true }
+  );
+  const { primaryColumn, otherColumns } = await getColumnsForTable(tableName);
+  const KEYS = [
+    `"${primaryColumn}" INTERGER PRIMARY KEY`,
+    ...otherColumns.map((key) => `"${key}" TEXT`),
+  ].join(", ");
+  const QUERY = `CREATE TABLE IF NOT EXISTS ${tableName} (${KEYS})`;
+  db.exec(QUERY);
+  return { db, primaryColumn };
+};
 /**
  * Fetches data from eduskunta API endpoint and saves each response to disk
  * for futher processing.
@@ -35,43 +63,30 @@ const scrape = async <T extends Modules.Common.TableName>(
   tableName: T,
   _startFromPage?: number
 ) => {
-  let db = sqlite.open(
-    path.resolve(import.meta.dirname, "data", `eduskunta-raw-data.db`),
-    { create: true, readwrite: true }
-  );
+  const { db, primaryColumn } = await openDatabase(tableName);
 
-  db.exec(
-    `CREATE TABLE IF NOT EXISTS ${tableName} (page INTEGER PRIMARY KEY, perPage INTEGER, hasMore BOOLEAN, tableName TEXT, columnNames TEXT, rowData TEXT, columnCount INTEGER, rowCount INTEGER, pkName TEXT, pkStartValue TEXT, pkLastValue TEXT)`
-  );
-
-  const startPage = (() => {
+  const startPrimaryKey = (() => {
     if (_startFromPage !== undefined) return _startFromPage;
-    const stmt = db.prepare<{ page: number }, []>(
-      `SELECT page FROM ${tableName} ORDER BY page DESC LIMIT 1`
+    const stmt = db.prepare<{ [x: string]: number }, []>(
+      `SELECT ${primaryColumn} FROM ${tableName} ORDER BY ${primaryColumn} DESC LIMIT 1`
     );
-    const result = stmt.get()?.page ?? 0;
+    const result = stmt.get()?.[primaryColumn] ?? 0;
     stmt.finalize();
     return Math.max(0, result - 1);
   })();
 
-  let page = startPage;
+  let pkStartValue = startPrimaryKey;
   /** Content of the API call. */
   let content: Modules.Scraper.ApiResponse;
+
   const ApiUrl = new URL(
-    `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/rows?page=${page}&perPage=100`
+    `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/batch?pkName=${primaryColumn}&pkStartValue=${pkStartValue}&perPage=100`
   );
 
   do {
     // Adjust ?page query parameter before each call
-    ApiUrl.searchParams.set("page", String(page));
-    console.log(
-      "Fetching",
-      ApiUrl.toString(),
-      `(${page + 1} / ${pageCounts[tableName]})`,
-      `~ ${(((page + 1) / pageCounts[tableName]) * 100)
-        .toFixed(2)
-        .padStart(6, " ")}%`
-    );
+    ApiUrl.searchParams.set("pkStartValue", String(pkStartValue));
+    console.log("Fetching", ApiUrl.toString());
     const response = await fetch(ApiUrl, {
       method: "GET",
       headers: {
@@ -80,22 +95,22 @@ const scrape = async <T extends Modules.Common.TableName>(
     });
     content = (await response.json()) as Modules.Scraper.ApiResponse;
     if (content.rowCount > 0) {
-      const KEYS = Object.keys(content)
-        .map((key) => `"${key}"`)
-        .join(", ");
-      const VALUES = Object.values(content)
-        .map((value) => {
-          return `'${JSON.stringify(value).replaceAll("'", "''")}'`;
+      const KEYS = content.columnNames.map((key) => `"${key}"`).join(", ");
+      await Promise.all(
+        content.rowData.map(async (row) => {
+          const VALUES = row
+            .map((value) => `'${String(value || null).replaceAll("'", "''")}'`)
+            .join(", ");
+          db.exec(`REPLACE INTO ${tableName} (${KEYS}) VALUES (${VALUES})`);
         })
-        .join(", ");
-      db.exec(`REPLACE INTO ${tableName} (${KEYS}) VALUES (${VALUES})`);
+      );
     } else {
       console.log("No content to save");
     }
     // Wait before next call
     await scheduler.wait(TIME_BETWEEN_QUERIES);
     // Increment page index
-    page++;
+    pkStartValue = content.pkLastValue + 1;
   } while (content.hasMore && MAX_LOOP_LIMIT-- > 0);
 
   // If the scraping has been stopped due to limit reached, throw an error.
