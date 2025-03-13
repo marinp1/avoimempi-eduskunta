@@ -63,3 +63,14 @@ export const TableNames = [
   "SeatingOfParliament",
   "VaskiData",
 ] as const;
+
+export const VoteResults = Object.freeze({
+  Yes: "Jaa",
+  No: "Ei",
+  Absent: "Poissa",
+} as const);
+
+export const LanguageIds = Object.freeze({
+  Finnish: "1",
+  Swedish: "2",
+} as const);
