@@ -8,7 +8,7 @@ import { TableNames } from "../../shared/constants/TableNames";
 const TIME_BETWEEN_QUERIES = 10;
 
 /** At most make these many requests to avoid infinite call loops. */
-let MAX_LOOP_LIMIT = 2000;
+let MAX_LOOP_LIMIT = 10000; // Meaning ~ 500 000 rows
 
 // EXAMPLE FOR FETCHING SINGLE ENTRY BY ID
 // https://avoindata.eduskunta.fi/api/v1/tables/MemberOfParliament/batch?pkName=personId&pkStartValue=102&perPage=1
@@ -45,6 +45,7 @@ const openDatabase = async <T extends Modules.Common.TableName>(
     path.resolve(import.meta.dirname, "data", `eduskunta-raw-data.db`),
     { create: true, readwrite: true }
   );
+  db.exec("PRAGMA journal_mode = WAL;");
   const { primaryColumn, otherColumns } = await getColumnsForTable(tableName);
   const KEYS = [
     `"${primaryColumn}" INTERGER PRIMARY KEY`,
@@ -114,7 +115,7 @@ const scrape = async <T extends Modules.Common.TableName>(
       await Promise.all(
         content.rowData.map(async (row) => {
           const VALUES = row
-            .map((value) => `'${String(value || null).replaceAll("'", "''")}'`)
+            .map((value) => `'${String(value ?? "").replaceAll("'", "''")}'`)
             .join(", ");
           db.exec(`REPLACE INTO ${tableName} (${KEYS}) VALUES (${VALUES})`);
         })
