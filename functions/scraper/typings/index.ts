@@ -27,6 +27,8 @@ declare global {
       rowCount: number;
       /** Which column in @see {ApiResponse.columnNames} is the primary key of the table. */
       pkName: string;
+      pkStartValue: number;
+      pkLastValue: number;
     };
   }
 }
