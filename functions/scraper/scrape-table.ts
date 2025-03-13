@@ -8,7 +8,7 @@ import { TableNames } from "../../shared/constants/TableNames";
 const TIME_BETWEEN_QUERIES = 10;
 
 /** At most make these many requests to avoid infinite call loops. */
-let MAX_LOOP_LIMIT = 10000; // Meaning ~ 500 000 rows
+let MAX_LOOP_LIMIT = 10_000; // Meaning ~ 1 000 000 rows
 
 // EXAMPLE FOR FETCHING SINGLE ENTRY BY ID
 // https://avoindata.eduskunta.fi/api/v1/tables/MemberOfParliament/batch?pkName=personId&pkStartValue=102&perPage=1
