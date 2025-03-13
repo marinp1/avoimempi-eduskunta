@@ -69,8 +69,7 @@ const RepresentativesPage = () => {
   );
 
   const totalCount = 32;
-  const radius = totalCount / Math.PI / 4;
-
+  const radius = totalCount / Math.PI / 3;
   return (
     <div className="representatives-page">
       <div className="date-selector">
