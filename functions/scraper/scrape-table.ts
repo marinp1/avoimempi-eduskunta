@@ -1,4 +1,5 @@
 import { scheduler } from "node:timers/promises";
+import sqlite from "bun:sqlite";
 import path from "path";
 import fs from "fs";
 import { TableNames } from "../../shared/constants/TableNames";
@@ -19,44 +20,28 @@ let MAX_LOOP_LIMIT = 2000;
  */
 const scrape = async <T extends Modules.Common.TableName>(
   tableName: T,
-  startFromPage?: number
+  _startFromPage?: number
 ) => {
-  const distFolder = path.resolve(import.meta.dirname, "data", tableName);
-  if (!fs.existsSync(distFolder)) fs.mkdirSync(distFolder);
+  let db = sqlite.open(
+    path.resolve(import.meta.dirname, "data", `${tableName}.db`),
+    { create: true, readwrite: true }
+  );
 
-  if (startFromPage === undefined) {
-    if (!fs.existsSync(path.resolve(distFolder, "meta.json"))) {
-      startFromPage = 0;
-    } else {
-      const { lastFetchedPage } = JSON.parse(
-        fs.readFileSync(path.resolve(distFolder, "meta.json"), {
-          encoding: "utf-8",
-        })
-      );
-      if (typeof lastFetchedPage !== "number") {
-        throw new Error("Failed to read lastFetchedPage from meta.json");
-      }
-      startFromPage = Math.max(0, lastFetchedPage);
-    }
-  }
+  db.exec(
+    `CREATE TABLE IF NOT EXISTS ${tableName} (page INTEGER PRIMARY KEY, perPage INTEGER, hasMore BOOLEAN, tableName TEXT, columnNames TEXT, rowData TEXT, columnCount INTEGER, rowCount INTEGER, pkName TEXT, pkStartValue TEXT, pkLastValue TEXT)`
+  );
 
-  /**
-   * Function to write special meta.json
-   * to disk that contains information about latest fetch.
-   */
-  const writeMeta = (params: {
-    lastFetchedPage: number;
-    lastFetchTs: number;
-    pkStartValue: unknown;
-    pkEndValue: unknown;
-  }) => {
-    fs.writeFileSync(
-      path.resolve(distFolder, "meta.json"),
-      JSON.stringify(params, null, 2)
+  const startPage = (() => {
+    if (_startFromPage !== undefined) return _startFromPage;
+    const stmt = db.prepare<{ page: number }, []>(
+      `SELECT page FROM ${tableName} ORDER BY page DESC LIMIT 1`
     );
-  };
+    const result = stmt.get()?.page ?? 0;
+    stmt.finalize();
+    return Math.max(0, result - 1);
+  })();
 
-  let page = startFromPage;
+  let page = startPage;
   /** Content of the API call. */
   let content: Modules.Scraper.ApiResponse;
   const ApiUrl = new URL(
@@ -74,20 +59,13 @@ const scrape = async <T extends Modules.Common.TableName>(
       },
     });
     content = (await response.json()) as Modules.Scraper.ApiResponse;
-    // Write content to file
-    fs.writeFileSync(
-      path.resolve(distFolder, `page-${String(page).padStart(5, "0")}.json`),
-      JSON.stringify(content, null, 2)
-    );
-    // Write meta file to disk
-    const primaryKeyDataIndex = content.columnNames?.indexOf(content["pkName"]);
-    writeMeta({
-      lastFetchedPage: page,
-      lastFetchTs: Date.now(),
-      pkStartValue: content.rowData[0]?.[primaryKeyDataIndex],
-      pkEndValue:
-        content.rowData[content.rowData.length - 1]?.[primaryKeyDataIndex],
-    });
+    const KEYS = Object.keys(content)
+      .map((key) => `"${key}"`)
+      .join(", ");
+    const VALUES = Object.values(content)
+      .map((value) => `'${JSON.stringify(value)}'`)
+      .join(", ");
+    db.exec(`REPLACE INTO ${tableName} (${KEYS}) VALUES (${VALUES})`);
     // Wait before next call
     await scheduler.wait(TIME_BETWEEN_QUERIES);
     // Increment page index
@@ -98,6 +76,8 @@ const scrape = async <T extends Modules.Common.TableName>(
   if (MAX_LOOP_LIMIT <= 0) {
     throw new Error("Sanity check error");
   }
+
+  db.close();
 };
 
 const [, , tableToUse, startFromPage] = process.argv;
