@@ -52,7 +52,12 @@ const openDatabase = async <T extends Modules.Common.TableName>(
   ].join(", ");
   const QUERY = `CREATE TABLE IF NOT EXISTS ${tableName} (${KEYS})`;
   db.exec(QUERY);
-  return { db, primaryColumn };
+  const { rowCount } = db
+    .prepare<{ rowCount: number }, []>(
+      `SELECT COUNT(${primaryColumn}) as rowCount FROM ${tableName}`
+    )
+    .get()!;
+  return { db, primaryColumn, totalFetched: rowCount };
 };
 /**
  * Fetches data from eduskunta API endpoint and saves each response to disk
@@ -63,7 +68,7 @@ const scrape = async <T extends Modules.Common.TableName>(
   tableName: T,
   _startFromPage?: number
 ) => {
-  const { db, primaryColumn } = await openDatabase(tableName);
+  const { db, primaryColumn, totalFetched } = await openDatabase(tableName);
 
   const startPrimaryKey = (() => {
     if (_startFromPage !== undefined) return _startFromPage;
@@ -82,6 +87,16 @@ const scrape = async <T extends Modules.Common.TableName>(
   const ApiUrl = new URL(
     `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/batch?pkName=${primaryColumn}&pkStartValue=${pkStartValue}&perPage=100`
   );
+
+  console.warn("Total number of rows according to API:", rowCounts[tableName]);
+  console.warn(
+    "At the moment fetched rows:",
+    totalFetched,
+    `(${((totalFetched / rowCounts[tableName]) * 100).toFixed(
+      2
+    )}% fetched so far)`
+  );
+  console.warn("Starting from", pkStartValue, "in table", tableName);
 
   do {
     // Adjust ?page query parameter before each call
@@ -106,11 +121,20 @@ const scrape = async <T extends Modules.Common.TableName>(
       );
     } else {
       console.log("No content to save");
+      break;
     }
     // Wait before next call
     await scheduler.wait(TIME_BETWEEN_QUERIES);
     // Increment page index
-    pkStartValue = content.pkLastValue + 1;
+    const indexOfPrimaryKey = content.columnNames.indexOf(primaryColumn);
+    const lastFetchedKey =
+      content.pkLastValue ??
+      content.rowData[content.rowData.length - 1]?.[indexOfPrimaryKey] ??
+      null;
+    if (lastFetchedKey === null) {
+      throw new Error("Could not find last fetched key");
+    }
+    pkStartValue = lastFetchedKey + 1;
   } while (content.hasMore && MAX_LOOP_LIMIT-- > 0);
 
   // If the scraping has been stopped due to limit reached, throw an error.
