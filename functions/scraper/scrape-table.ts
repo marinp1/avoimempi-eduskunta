@@ -4,25 +4,48 @@ import fs from "fs";
 import { TableNames } from "../../shared/constants/TableNames";
 
 /** To to wait (in ms) between API calls. */
-const TIME_BETWEEN_QUERIES = 50;
+const TIME_BETWEEN_QUERIES = 10;
 
 /** At most make these many requests to avoid infinite call loops. */
 let MAX_LOOP_LIMIT = 2000;
+
+// EXAMPLE FOR FETCHING SINGLE ENTRY BY ID
+// https://avoindata.eduskunta.fi/api/v1/tables/MemberOfParliament/batch?pkName=personId&pkStartValue=102&perPage=1
 
 /**
  * Fetches data from eduskunta API endpoint and saves each response to disk
  * for futher processing.
  * @param tableName Table to fetch information from.
  */
-const scrape = async <T extends Modules.Common.TableName>(tableName: T) => {
+const scrape = async <T extends Modules.Common.TableName>(
+  tableName: T,
+  startFromPage?: number
+) => {
   const distFolder = path.resolve(import.meta.dirname, "data", tableName);
   if (!fs.existsSync(distFolder)) fs.mkdirSync(distFolder);
+
+  if (startFromPage === undefined) {
+    if (!fs.existsSync(path.resolve(distFolder, "meta.json"))) {
+      startFromPage = 0;
+    } else {
+      const { lastFetchedPage } = JSON.parse(
+        fs.readFileSync(path.resolve(distFolder, "meta.json"), {
+          encoding: "utf-8",
+        })
+      );
+      if (typeof lastFetchedPage !== "number") {
+        throw new Error("Failed to read lastFetchedPage from meta.json");
+      }
+      startFromPage = Math.max(0, lastFetchedPage);
+    }
+  }
 
   /**
    * Function to write special meta.json
    * to disk that contains information about latest fetch.
    */
   const writeMeta = (params: {
+    lastFetchedPage: number;
     lastFetchTs: number;
     pkStartValue: unknown;
     pkEndValue: unknown;
@@ -33,15 +56,12 @@ const scrape = async <T extends Modules.Common.TableName>(tableName: T) => {
     );
   };
 
-  /**
-   * Page number to start lookup from.
-   * FIXME: Always `0` at the moment, this should be last
-   * page fetched instead.
-   */
-  let page = 0;
+  let page = startFromPage;
   /** Content of the API call. */
   let content: Modules.Scraper.ApiResponse;
-  const ApiUrl = new URL(`z${tableName}/rows?page=${page}&perPage=100`);
+  const ApiUrl = new URL(
+    `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/rows?page=${page}&perPage=100`
+  );
 
   do {
     // Adjust ?page query parameter before each call
@@ -62,6 +82,7 @@ const scrape = async <T extends Modules.Common.TableName>(tableName: T) => {
     // Write meta file to disk
     const primaryKeyDataIndex = content.columnNames?.indexOf(content["pkName"]);
     writeMeta({
+      lastFetchedPage: page,
       lastFetchTs: Date.now(),
       pkStartValue: content.rowData[0]?.[primaryKeyDataIndex],
       pkEndValue:
@@ -79,11 +100,17 @@ const scrape = async <T extends Modules.Common.TableName>(tableName: T) => {
   }
 };
 
-const [, , tableToUse] = process.argv;
+const [, , tableToUse, startFromPage] = process.argv;
 
 if (!TableNames.includes(tableToUse as any)) {
   console.warn("Table name should be one of", TableNames);
   throw new Error("Invalid table name!");
 }
 
-await scrape(tableToUse as Modules.Common.TableName);
+const pageToUse = (() => {
+  const n = +startFromPage;
+  if (Number.isNaN(n) || !Number.isInteger(n) || n < 0) return undefined;
+  return n;
+})();
+
+await scrape(tableToUse as Modules.Common.TableName, pageToUse);
