@@ -1,6 +1,5 @@
 import { xml2json } from "xml-js";
 import type { XmlNode, XmlTree } from "../types";
-import type { RawDataModel } from "../types";
 
 type DataModel = RawDataModel<"MemberOfParliament">;
 

@@ -2,7 +2,7 @@ import { scheduler } from "node:timers/promises";
 import sqlite from "bun:sqlite";
 import path from "path";
 import fs from "fs";
-import { TableNames } from "../../shared/constants/TableNames";
+import { TableNames } from "../../shared/constants";
 
 /** To to wait (in ms) between API calls. */
 const TIME_BETWEEN_QUERIES = 10;
