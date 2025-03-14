@@ -3,6 +3,7 @@ import sqlite from "bun:sqlite";
 import path from "path";
 import fs from "fs";
 import { TableNames } from "../../shared/constants";
+import { getRawDatabasePath } from "#database";
 
 /** To to wait (in ms) between API calls. */
 const TIME_BETWEEN_QUERIES = 10;
@@ -41,10 +42,10 @@ const getColumnsForTable = async (tableName: Modules.Common.TableName) => {
 const openDatabase = async <T extends Modules.Common.TableName>(
   tableName: T
 ) => {
-  const db = sqlite.open(
-    path.resolve(import.meta.dirname, "data", `eduskunta-raw-data.db`),
-    { create: true, readwrite: true }
-  );
+  const db = sqlite.open(getRawDatabasePath(), {
+    create: true,
+    readwrite: true,
+  });
   db.exec("PRAGMA journal_mode = WAL;");
   const { primaryColumn, otherColumns } = await getColumnsForTable(tableName);
   const KEYS = [
