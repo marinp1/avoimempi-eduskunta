@@ -1,8 +1,7 @@
 import path from "path";
 import fs from "fs";
 import sqlite from "bun:sqlite";
-import { TableNames, PrimaryKeys } from "../../shared/constants/TableNames";
-import type { RawDataModel } from "./types";
+import { TableNames, PrimaryKeys } from "../../shared/constants";
 
 /**
  * Default parser to use if no specific handler is found.
@@ -17,7 +16,7 @@ const defaultParser = async (
 
 const getParser = async <T extends Modules.Common.TableName>(tableName: T) => {
   try {
-    return (await import("./fn/MemberOfParliament")).default;
+    return (await import(`./fn/${tableName}`)).default;
   } catch (e) {
     console.warn(`No parser found for ${tableName}, using default parser`);
     return defaultParser;

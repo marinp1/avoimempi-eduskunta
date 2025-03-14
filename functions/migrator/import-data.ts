@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { Database } from "bun:sqlite";
-import { TableNames } from "#constants/TableNames";
+import { TableNames } from "#constants/index";
 import { getDatabasePath } from "#database";
 
 /**

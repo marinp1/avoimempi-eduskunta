@@ -16,5 +16,3 @@ export type XmlNode = (XmlElementNode | XmlTextNode) & {
 export type XmlTree = {
   elements: Array<XmlNode>;
 };
-
-export * from "./RawData";

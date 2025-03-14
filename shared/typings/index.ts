@@ -2,7 +2,7 @@ import type {
   TableNames,
   VoteResults,
   LanguageIds,
-} from "../constants/TableNames.ts";
+} from "../constants/index.ts";
 
 declare global {
   namespace Modules.Common {
