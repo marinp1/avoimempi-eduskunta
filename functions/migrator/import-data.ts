@@ -14,7 +14,7 @@ const IMPORT_ORDER: Partial<Record<(typeof TableNames)[number], number>> = {
   SaliDBIstunto: 10,
   SaliDBKohta: 15,
   SaliDBAanestys: 20,
-  SaliDBKohtaAanestys: 25,
+  SaliDBKohtaAanestys: 21,
   SaliDBAanestysEdustaja: 30,
 };
 

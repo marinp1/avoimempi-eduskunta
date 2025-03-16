@@ -9,7 +9,13 @@ export const insertRows = (db: Database) => (table: string, rows: any[]) => {
       .map(
         (row) =>
           `(${row
-            .map((value) => `'${String(value || "").replaceAll("'", "''")}'`)
+            .map(
+              (value) =>
+                `'${String(value === 0 ? "0" : value || "").replaceAll(
+                  "'",
+                  "''"
+                )}'`
+            )
             .join(", ")})`
       )
       .join(", ");
@@ -22,4 +28,18 @@ export const insertRows = (db: Database) => (table: string, rows: any[]) => {
       `INSERT OR IGNORE INTO ${table} (${columnsString}) VALUES ${valuesString}`
     );
   }
+};
+
+export const parseDate = (date: string) => {
+  return date.substring(0, 10);
+};
+
+export const parseDateTime = (date: string) => {
+  return date.substring(0, 10) + "T" + date.substring(11);
+};
+
+export const parseYear = (year: string): number | null => {
+  const parsed = parseInt(year);
+  if (Number.isNaN(parsed)) return null;
+  return parsed;
 };
