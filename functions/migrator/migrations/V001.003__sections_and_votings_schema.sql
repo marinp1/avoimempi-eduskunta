@@ -11,7 +11,7 @@ CREATE TABLE Section (
   agenda_key TEXT,
   modified_datetime TEXT,
   vaski_id INTEGER,
-  FOREIGN KEY (session_key) REFERENCES Session(id),
+  FOREIGN KEY (session_key) REFERENCES Session(key),
   FOREIGN KEY (agenda_key) REFERENCES Agenda(key)
 );
 
@@ -30,14 +30,12 @@ CREATE TABLE Voting (
   n_absent INTEGER,
   n_total INTEGER,
   section_processing_phase TEXT,
-  session_number INTEGER,
+  section_title TEXT,
   session_key TEXT,
-  session_year INTEGER,
   modified_datetime TEXT,
   section_id INTEGER,
   section_key TEXT,
   main_section_id TEXT,
-  FOREIGN KEY (session_number) REFERENCES Session(number),
   FOREIGN KEY (session_key) REFERENCES Session(key),
   FOREIGN KEY (section_key) REFERENCES Section(key)
 );

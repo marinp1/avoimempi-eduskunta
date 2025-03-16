@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs";
-import { Database } from "bun:sqlite";
+import sqlite, { type Database } from "bun:sqlite";
 import { TableNames } from "#constants/index";
 import { getDatabasePath, getParsedDatabasePath } from "#database";
 import { getMigrations, migrate } from "bun-sqlite-migrations";
@@ -28,12 +28,12 @@ const orderedTableNames = [...TableNames].sort(
 /**
  * Reference to running DB instance.
  */
-const targetDatabase = new Database(getDatabasePath(), {
+const targetDatabase = sqlite.open(getDatabasePath(), {
   create: true,
   readwrite: true,
 });
 
-const sourceDb = new Database(getParsedDatabasePath(), {
+const sourceDb = sqlite.open(getParsedDatabasePath(), {
   create: false,
   readonly: true,
 });

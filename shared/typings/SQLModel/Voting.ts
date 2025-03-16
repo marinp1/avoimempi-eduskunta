@@ -15,9 +15,8 @@ declare global {
       n_absent: number;
       n_total: number;
       section_processing_phase: string;
-      session_number: number; // Session.number
-      session_year: number; // Session.year
       modified_datetime: Modules.Common.DateString;
+      section_title: string;
       section_id: number | null; // Section.id
       section_key: string; // Section.key
       main_section_id: number; // Section.id

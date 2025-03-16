@@ -23,12 +23,11 @@ export default (db: Database) =>
       n_absent: +dataToImport.AanestysTulosPoissa,
       n_total: +dataToImport.AanestysTulosYhteensa,
       section_processing_phase: dataToImport.KohtaKasittelyVaihe,
-      session_number: +dataToImport.IstuntoNumero,
-      session_year: +dataToImport.IstuntoVPVuosi,
+      section_title: dataToImport.KohtaOtsikko,
+      session_key: `${dataToImport.IstuntoVPVuosi}/${dataToImport.IstuntoNumero}`,
       section_id: +dataToImport.KohtaTunniste,
       main_section_id: +dataToImport.PaaKohtaTunniste,
       modified_datetime: "", // TODO: To be added
-      session_key: "", // To be added
       section_key: "", // To be added
     };
     insertRows(db)("Voting", [votingRow]);
