@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs";
 import { Database } from "bun:sqlite";
 import { TableNames } from "#constants/index";
-import { getDatabasePath } from "#database";
+import { getDatabasePath, getParsedDatabasePath } from "#database";
 
 /**
  * Make sure that data is imported in this order.
@@ -27,20 +27,29 @@ const orderedTableNames = [...TableNames].sort(
 /**
  * Reference to running DB instance.
  */
-const db = new Database(getDatabasePath(), {
+const targetDatabase = new Database(getDatabasePath(), {
   create: false,
   readwrite: true,
 });
 
-const tables = db
+const sourceDb = new Database(getParsedDatabasePath(), {
+  create: false,
+  readonly: true,
+});
+
+sourceDb.exec("PRAGMA journal_mode = WAL;");
+targetDatabase.exec("PRAGMA journal_mode = WAL;");
+
+const tables = targetDatabase
   .query<{ name: string }, []>(
     "SELECT name FROM sqlite_master WHERE type='table';"
   )
   .all();
 
+// Clear ALL tables
 for (const table of tables) {
   const tableName = table.name;
-  db.run(`DELETE FROM ${tableName};`);
+  targetDatabase.run(`DELETE FROM ${tableName};`);
 }
 
 // (Try to) migrate each table
@@ -54,36 +63,24 @@ for (const tableName of orderedTableNames) {
     console.warn(`Migration file for ${tableName} not found, skipping...`);
     continue;
   }
-  /** Path to data directory containing all files to import. */
-  const dataDir = path.resolve(
-    import.meta.dirname,
-    `../parser/data/${tableName}`
-  );
-  if (!fs.existsSync(dataDir)) {
-    console.warn(`Data directory for ${tableName} not found, skipping...`);
-    continue;
-  }
-  /** List of file names to import. */
-  const entriesToImport = fs
-    .readdirSync(dataDir, { encoding: "utf8", withFileTypes: true })
-    .filter((s) => s.name.endsWith(".json") && s.name !== "meta.json")
-    .map((s) => s.name);
+
   // Dynamically import the seed function.
-  const { default: seedFn } = (await import(
+  const { default: createMigrator } = (await import(
     path.resolve(import.meta.dirname, `${tableName}/migrator.ts`)
   )) as {
     default: (sql: Database) => (data: any) => Promise<void>;
   };
+
   console.time(`Seed ${tableName}`);
   console.log("Seeding", tableName);
-  // For each importable file, try to execute the seed function.
-  for (const entry of entriesToImport) {
-    const { default: data } = await import(path.resolve(dataDir, entry), {
-      with: { type: "json" },
-    });
-    await seedFn(db)(data);
+
+  const query = sourceDb.prepare<any[], []>(`SELECT * FROM ${tableName}`);
+  const migrate = createMigrator(targetDatabase);
+  for (const row of query.iterate()) {
+    await migrate(row);
   }
   console.timeEnd(`Seed ${tableName}`);
 }
 
-db.close();
+sourceDb.close();
+targetDatabase.close();

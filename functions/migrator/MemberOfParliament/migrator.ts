@@ -71,6 +71,8 @@ const mergeArrays = <T>(
 
 export default (db: Database) =>
   async (dataToImport: DataModel.Representative) => {
+    const XmlDataFi = JSON.parse(dataToImport.XmlDataFi);
+
     if (process.env.DEBUG)
       console.log("Mapping", dataToImport.lastname, dataToImport.personId);
 
@@ -78,33 +80,29 @@ export default (db: Database) =>
       person_id: Number(dataToImport.personId),
       first_name: dataToImport.firstname,
       last_name: dataToImport.lastname,
-      sort_name: dataToImport.XmlDataFi.Henkilo.LajitteluNimi,
-      marticle_name: dataToImport.XmlDataFi.Henkilo.MatrikkeliNimi,
-      email: dataToImport.XmlDataFi.Henkilo.SahkoPosti ?? null,
-      birth_date: parseDate(dataToImport.XmlDataFi.Henkilo.SyntymaPvm)!,
-      birth_place: dataToImport.XmlDataFi.Henkilo.SyntymaPaikka,
-      death_date: parseDate(dataToImport.XmlDataFi.Henkilo.KuolemaPvm),
-      death_place: dataToImport.XmlDataFi.Henkilo.KuolemaPaikka ?? null,
-      gender: dataToImport.XmlDataFi.Henkilo.SukuPuoliKoodi,
-      current_municipality:
-        dataToImport.XmlDataFi.Henkilo.NykyinenKotikunta ?? null,
-      profession: dataToImport.XmlDataFi.Henkilo.Ammatti,
+      sort_name: XmlDataFi.Henkilo.LajitteluNimi,
+      marticle_name: XmlDataFi.Henkilo.MatrikkeliNimi,
+      email: XmlDataFi.Henkilo.SahkoPosti ?? null,
+      birth_date: parseDate(XmlDataFi.Henkilo.SyntymaPvm)!,
+      birth_place: XmlDataFi.Henkilo.SyntymaPaikka,
+      death_date: parseDate(XmlDataFi.Henkilo.KuolemaPvm),
+      death_place: XmlDataFi.Henkilo.KuolemaPaikka ?? null,
+      gender: XmlDataFi.Henkilo.SukuPuoliKoodi,
+      current_municipality: XmlDataFi.Henkilo.NykyinenKotikunta ?? null,
+      profession: XmlDataFi.Henkilo.Ammatti,
       party: dataToImport.party,
       minister: dataToImport.minister !== "f",
-      phone: dataToImport.XmlDataFi.Henkilo.Puh ?? null,
-      website: dataToImport.XmlDataFi.Henkilo.KotiSivu ?? null,
-      additional_info: dataToImport.XmlDataFi.Henkilo.LisaTiedot || "",
-      term_end_date: parseDate(
-        dataToImport.XmlDataFi.Henkilo.KansanedustajuusPaattynytPvm
-      ),
+      phone: XmlDataFi.Henkilo.Puh ?? null,
+      website: XmlDataFi.Henkilo.KotiSivu ?? null,
+      additional_info: XmlDataFi.Henkilo.LisaTiedot || "",
+      term_end_date: parseDate(XmlDataFi.Henkilo.KansanedustajuusPaattynytPvm),
     };
 
     const districtRows: DatabaseTables.District[] = [];
     const electoralDistrictRows: DatabaseTables.RepresentativeDistrict[] =
       mergeArrays(
-        dataToImport.XmlDataFi.Henkilo.Vaalipiirit.EdellisetVaalipiirit
-          ?.VaaliPiiri,
-        dataToImport.XmlDataFi.Henkilo.Vaalipiirit.NykyinenVaalipiiri
+        XmlDataFi.Henkilo.Vaalipiirit.EdellisetVaalipiirit?.VaaliPiiri,
+        XmlDataFi.Henkilo.Vaalipiirit.NykyinenVaalipiiri
       ).map((v) => {
         if (!districtRows.find((r) => r.code === v.Tunnus)) {
           districtRows.push({ code: v.Tunnus, name: v.Nimi || v.Tunnus });
@@ -118,7 +116,7 @@ export default (db: Database) =>
       });
 
     const termRows: DatabaseTables.Term[] = mergeArrays(
-      dataToImport.XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi
+      XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi
     ).map((v) => ({
       person_id: +dataToImport.personId,
       start_date: parseDate(v.AlkuPvm)!,
@@ -133,9 +131,8 @@ export default (db: Database) =>
 
     const { absenceRows, joiningRows, leavingRows }: ParsedAbsence =
       mergeArrays(
-        dataToImport.XmlDataFi.Henkilo.EdustajatoimiKeskeytynyt
-          ?.ToimenKeskeytys,
-        dataToImport.XmlDataFi.Henkilo.Kansanedustajana?.Keskeytys
+        XmlDataFi.Henkilo.EdustajatoimiKeskeytynyt?.ToimenKeskeytys,
+        XmlDataFi.Henkilo.Kansanedustajana?.Keskeytys
       )
         .map((v) => ({
           person_id: +dataToImport.personId,
@@ -194,16 +191,16 @@ export default (db: Database) =>
 
     const trustPositionRows: DatabaseTables.TrustPosition[] = [
       ...mergeArrays(
-        dataToImport.XmlDataFi.Henkilo.ValtiollisetLuottamustehtavat?.Tehtava
+        XmlDataFi.Henkilo.ValtiollisetLuottamustehtavat?.Tehtava
       ).map((s) => ({ ...s, type: "national" as const })),
       ...mergeArrays(
-        dataToImport.XmlDataFi.Henkilo.KunnallisetLuottamustehtavat?.Tehtava
+        XmlDataFi.Henkilo.KunnallisetLuottamustehtavat?.Tehtava
       ).map((s) => ({ ...s, type: "municapility" as const })),
+      ...mergeArrays(XmlDataFi.Henkilo.MuutLuottamustehtavat?.Tehtava).map(
+        (s) => ({ ...s, type: "other" as const })
+      ),
       ...mergeArrays(
-        dataToImport.XmlDataFi.Henkilo.MuutLuottamustehtavat?.Tehtava
-      ).map((s) => ({ ...s, type: "other" as const })),
-      ...mergeArrays(
-        dataToImport.XmlDataFi.Henkilo.KansanvalisetLuottamustehtavat?.Tehtava
+        XmlDataFi.Henkilo.KansanvalisetLuottamustehtavat?.Tehtava
       ).map((s) => ({ ...s, type: "international" as const })),
     ].map((v) => ({
       person_id: +dataToImport.personId,
@@ -216,8 +213,8 @@ export default (db: Database) =>
     const committeeRows: DatabaseTables.Committee[] = [];
     const committeeMembershipRows: DatabaseTables.CommitteeMembership[] = [
       ...mergeArrays(
-        dataToImport.XmlDataFi.Henkilo.NykyisetToimielinjasenyydet?.Toimielin,
-        dataToImport.XmlDataFi.Henkilo.AiemmatToimielinjasenyydet?.Toimielin
+        XmlDataFi.Henkilo.NykyisetToimielinjasenyydet?.Toimielin,
+        XmlDataFi.Henkilo.AiemmatToimielinjasenyydet?.Toimielin
       ).flatMap((s) =>
         mergeArrays(s.Jasenyys).map((j) => ({ ...j, __parent__: s }))
       ),
@@ -255,8 +252,8 @@ export default (db: Database) =>
     const parliamentGroupMembershipRows: DatabaseTables.ParliamentGroupMembership[] =
       [
         ...mergeArrays(
-          dataToImport.XmlDataFi.Henkilo.Eduskuntaryhmat
-            .EdellisetEduskuntaryhmat?.Eduskuntaryhma
+          XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat
+            ?.Eduskuntaryhma
         ).flatMap((s) =>
           mergeArrays(s.Jasenyys).map((j) => ({
             ...j,
@@ -264,7 +261,7 @@ export default (db: Database) =>
           }))
         ),
         ...mergeArrays(
-          dataToImport.XmlDataFi.Henkilo.Eduskuntaryhmat.NykyinenEduskuntaryhma
+          XmlDataFi.Henkilo.Eduskuntaryhmat.NykyinenEduskuntaryhma
         ).map((s) => ({
           ...s,
           LoppuPvm: null,
@@ -286,10 +283,10 @@ export default (db: Database) =>
     const parliamentGroupAssignmentRows: DatabaseTables.ParliamentGroupAssignment[] =
       [
         ...mergeArrays(
-          dataToImport.XmlDataFi.Henkilo.Eduskuntaryhmat
-            .TehtavatAiemmissaEduskuntaryhmissa?.Eduskuntaryhma,
-          dataToImport.XmlDataFi.Henkilo.Eduskuntaryhmat
-            .TehtavatEduskuntaryhmassa?.Eduskuntaryhma
+          XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa
+            ?.Eduskuntaryhma,
+          XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatEduskuntaryhmassa
+            ?.Eduskuntaryhma
         ),
       ]
         .flatMap((s) =>
@@ -314,19 +311,19 @@ export default (db: Database) =>
         });
 
     const governmentMembershipRows: DatabaseTables.GovernmentMembership[] =
-      mergeArrays(
-        dataToImport.XmlDataFi.Henkilo.ValtioneuvostonJasenyydet?.Jasenyys
-      ).map((v) => ({
-        person_id: +dataToImport.personId,
-        name: v.Nimi,
-        ministry: v.Ministeriys,
-        government: v.Hallitus,
-        start_date: parseDate(v.AlkuPvm)!,
-        end_date: parseDate(v.LoppuPvm),
-      }));
+      mergeArrays(XmlDataFi.Henkilo.ValtioneuvostonJasenyydet?.Jasenyys).map(
+        (v) => ({
+          person_id: +dataToImport.personId,
+          name: v.Nimi,
+          ministry: v.Ministeriys,
+          government: v.Hallitus,
+          start_date: parseDate(v.AlkuPvm)!,
+          end_date: parseDate(v.LoppuPvm),
+        })
+      );
 
     const workRows: DatabaseTables.WorkExperience[] = mergeArrays(
-      dataToImport.XmlDataFi.Henkilo.TyoUra?.Tyo
+      XmlDataFi.Henkilo.TyoUra?.Tyo
     ).map((v) => ({
       person_id: +dataToImport.personId,
       position: v.Nimi,
@@ -334,7 +331,7 @@ export default (db: Database) =>
     }));
 
     const educationRows: DatabaseTables.Education[] = mergeArrays(
-      dataToImport.XmlDataFi.Henkilo.Koulutukset?.Koulutus
+      XmlDataFi.Henkilo.Koulutukset?.Koulutus
     ).map((v) => ({
       person_id: +dataToImport.personId,
       name: v.Nimi,
