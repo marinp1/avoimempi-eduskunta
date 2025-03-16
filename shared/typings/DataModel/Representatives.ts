@@ -1,4 +1,13 @@
 declare global {
+  type Stringified<T> = string & { _original: T };
+
+  interface JSON {
+    parse<T>(
+      text: Stringified<T>,
+      reviver?: (this: any, key: string, value: any) => any
+    ): T;
+  }
+
   export namespace DataModel {
     export interface Representative {
       personId: string;
@@ -8,7 +17,7 @@ declare global {
       minister: string;
       XmlData: null;
       XmlDataSv: null;
-      XmlDataFi: {
+      XmlDataFi: Stringified<{
         Henkilo: {
           KotiSivu?: string;
           EdustajatoimiKeskeytynyt?: {
@@ -101,7 +110,7 @@ declare global {
             Tehtava: TrustPosition | TrustPosition[];
           };
         };
-      };
+      }>;
       XmlDataEn: null;
     }
     export interface Interruption {
