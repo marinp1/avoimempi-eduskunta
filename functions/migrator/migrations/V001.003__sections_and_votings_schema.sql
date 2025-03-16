@@ -17,7 +17,7 @@ CREATE TABLE Section (
 
 CREATE TABLE Voting (
   id INTEGER PRIMARY KEY,
-  number INTEGER UNIQUE,
+  number INTEGER,
   start_time TEXT,
   annulled INTEGER,
   title TEXT,
@@ -32,13 +32,12 @@ CREATE TABLE Voting (
   section_processing_phase TEXT,
   session_number INTEGER,
   session_key TEXT,
+  session_year INTEGER,
   modified_datetime TEXT,
   section_id INTEGER,
   section_key TEXT,
   main_section_id TEXT,
   FOREIGN KEY (session_number) REFERENCES Session(number),
   FOREIGN KEY (session_key) REFERENCES Session(key),
-  FOREIGN KEY (section_id) REFERENCES Section(id),
-  FOREIGN KEY (section_key) REFERENCES Section(key),
-  FOREIGN KEY (main_section_id) REFERENCES Section(id)
+  FOREIGN KEY (section_key) REFERENCES Section(key)
 );
