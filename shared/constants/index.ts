@@ -39,7 +39,7 @@ export const PrimaryKeys: Record<keyof typeof TableName, string> = {
   SaliDBPuheenvuoro: "",
   SaliDBTiedote: "Id",
   SeatingOfParliament: "",
-  VaskiData: "",
+  VaskiData: "Id",
 };
 
 export const TableNames = [
