@@ -57,6 +57,12 @@ const parse = async <T extends Modules.Common.TableName>(tableName: T) => {
     targetDatabase.exec(modifiedQuery);
   }
 
+  const { rowCount } = sourceDb
+    .prepare<{ rowCount: number }, []>(
+      `SELECT COUNT(${PrimaryKeys[tableName]}) as rowCount FROM ${tableName}`
+    )
+    .get()!;
+
   const parseData = await getParser<T>(tableName);
 
   const distFolder = path.resolve(import.meta.dirname, "data", tableName);
@@ -69,6 +75,8 @@ const parse = async <T extends Modules.Common.TableName>(tableName: T) => {
   const query = sourceDb.prepare<RawDataModel<T>, []>(
     `SELECT * FROM ${tableName}`
   );
+
+  let lastPercentage = 0;
 
   const mapValue = (v: any) => {
     let val = v || "";
@@ -100,8 +108,10 @@ const parse = async <T extends Modules.Common.TableName>(tableName: T) => {
     );
 
     rowsParsed++;
-    if (rowsParsed % 100 === 0) {
-      console.log(`Parsed ${rowsParsed} rows`);
+    const percentage = Math.floor((rowsParsed / rowCount) * 100);
+    if (percentage !== lastPercentage) {
+      console.log(`Parsed ${percentage}% of rows`);
+      lastPercentage = percentage;
     }
   }
 

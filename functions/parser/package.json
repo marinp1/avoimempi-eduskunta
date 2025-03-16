@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
+    "fast-xml-parser": "^5.0.9",
     "xml-js": "1.6.11"
   },
   "scripts": {
