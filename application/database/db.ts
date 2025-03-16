@@ -41,11 +41,7 @@ export class DatabaseConnection {
 
   #connectToDatabase() {
     const databasePath = getDatabasePath();
-    this.#database = new Database(databasePath, { create: true });
-    migrate(
-      this.#database,
-      getMigrations(path.resolve(import.meta.dirname, "migrations"))
-    );
+    this.#database = new Database(databasePath, { create: false });
     this.#database.exec("PRAGMA journal_mode = WAL;");
     return this.#database;
   }

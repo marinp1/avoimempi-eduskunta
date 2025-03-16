@@ -352,8 +352,7 @@ export default (db: Database) =>
             (row) =>
               `(${row
                 .map(
-                  (value) =>
-                    `'${String(value || "null").replaceAll("'", "''")}'`
+                  (value) => `'${String(value || "").replaceAll("'", "''")}'`
                 )
                 .join(", ")})`
           )

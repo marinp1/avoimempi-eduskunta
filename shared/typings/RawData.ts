@@ -75,6 +75,65 @@ declare global {
       Status: DataStatus;
       XmlData: string;
     };
+    [TableName.SaliDBIstunto]: {
+      Id: StringifiedNumber;
+      AttachmentGroupId: string;
+      Created: StringifiedDate;
+      Imported: StringifiedDate;
+      IstuntoAlkuaika: StringifiedDate;
+      IstuntoIlmoitettuAlkuaika: StringifiedDate;
+      IstuntoLoppuaika: StringifiedDate | null;
+      IstuntoNimenhuutoaika: StringifiedDate | null;
+      IstuntoNumero: StringifiedNumber;
+      IstuntoPvm: StringifiedDate;
+      IstuntoTila: string;
+      IstuntoTilaSeliteFI: string;
+      IstuntoTilaSeliteSV: string;
+      IstuntoTyyppi: string;
+      IstuntoVPVuosi: StringifiedNumber;
+      KasiteltavaKohtaTekninenAvain: string;
+      ManuaalinenEsto: StringifiedBoolean;
+      Modified: StringifiedDate;
+      PJOtsikkoFI: string;
+      PJOtsikkoSV: string;
+      PJTekninenAvain: string;
+      PJTila: string;
+      PuhujaHenkilonumero: StringifiedNumber;
+      TekninenAvain: string;
+      XmlData: string | null;
+    };
+    [TableName.SaliDBKohta]: {
+      Id: StringifiedNumber;
+      Created: StringifiedDate;
+      HuomautuSV: string;
+      HuomautusFI: string;
+      Imported: StringifiedDate;
+      IstuntoTekninenAvain: string;
+      Jarjestysnumero: StringifiedNumber;
+      KasittelyotsikkoFI: string;
+      KasittelyotsikkoSV: string;
+      Modified: StringifiedDate;
+      OtsikkoFI: string;
+      OtsikkoSV: string;
+      PJKohtaTunnus: string;
+      PaatosFI: string;
+      PaatosSV: string;
+      PuheenvuoroTyyppiOletus: string;
+      TekninenAvain: string;
+      Tunniste: string;
+      VaskiID: StringifiedNumber;
+      VoikoPyytaaPV: StringifiedBoolean;
+      XmlData: string;
+    };
+    [TableName.SaliDBKohtaAanestys]: {
+      Id: StringifiedNumber;
+      Aanestysnumero: StringifiedNumber;
+      Created: StringifiedDate;
+      Imported: StringifiedDate;
+      IstuntoTekninenAvain: string;
+      KohtaTekninenAvain: string;
+      Modified: StringifiedDate;
+    };
   }
 
   export type RawDataModel<T extends Modules.Common.TableName> =
