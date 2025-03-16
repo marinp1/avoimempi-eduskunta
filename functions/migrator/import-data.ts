@@ -10,8 +10,11 @@ import { getDatabasePath } from "#database";
  */
 const IMPORT_ORDER: Partial<Record<(typeof TableNames)[number], number>> = {
   MemberOfParliament: 0,
-  SaliDBAanestys: 1,
-  SaliDBAanestysEdustaja: 2,
+  SaliDBIstunto: 10,
+  SaliDBKohta: 15,
+  SaliDBAanestys: 20,
+  SaliDBKohtaAanestys: 25,
+  SaliDBAanestysEdustaja: 30,
 };
 
 /** Table names in import order. */
