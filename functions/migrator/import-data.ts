@@ -41,16 +41,16 @@ const sourceDb = new Database(getParsedDatabasePath(), {
 sourceDb.exec("PRAGMA journal_mode = WAL;");
 targetDatabase.exec("PRAGMA journal_mode = WAL;");
 
+migrate(
+  targetDatabase,
+  getMigrations(path.resolve(import.meta.dirname, "migrations"))
+);
+
 const tables = targetDatabase
   .query<{ name: string }, []>(
     "SELECT name FROM sqlite_master WHERE type='table';"
   )
   .all();
-
-migrate(
-  targetDatabase,
-  getMigrations(path.resolve(import.meta.dirname, "migrations"))
-);
 
 // Clear ALL tables
 for (const table of tables) {

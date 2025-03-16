@@ -21,12 +21,10 @@ export const insertRows = (db: Database) => (table: string, rows: any[]) => {
       .join(", ");
     if (process.env.DEBUG) {
       console.log(
-        `INSERT OR IGNORE INTO ${table} (${columnsString}) VALUES ${valuesString}`
+        `INSERT INTO ${table} (${columnsString}) VALUES ${valuesString}`
       );
     }
-    db.run(
-      `INSERT OR IGNORE INTO ${table} (${columnsString}) VALUES ${valuesString}`
-    );
+    db.run(`INSERT INTO ${table} (${columnsString}) VALUES ${valuesString}`);
   }
 };
 

@@ -1,9 +1,13 @@
+import { LanguageIds } from "#constants/index";
 import { type Database } from "bun:sqlite";
 
 import { insertRows, parseDateTime } from "migrator/utils";
 
 export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBAanestys"]) => {
+    if (dataToImport.KieliId !== LanguageIds.Finnish) {
+      return;
+    }
     const votingRow: DatabaseTables.Voting = {
       id: +dataToImport.AanestysId,
       number: +dataToImport.AanestysNumero,
@@ -20,6 +24,7 @@ export default (db: Database) =>
       n_total: +dataToImport.AanestysTulosYhteensa,
       section_processing_phase: dataToImport.KohtaKasittelyVaihe,
       session_number: +dataToImport.IstuntoNumero,
+      session_year: +dataToImport.IstuntoVPVuosi,
       section_id: +dataToImport.KohtaTunniste,
       main_section_id: +dataToImport.PaaKohtaTunniste,
       modified_datetime: "", // TODO: To be added

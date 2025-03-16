@@ -6,7 +6,7 @@ CREATE TABLE Agenda (
 
 CREATE TABLE Session (
   id INTEGER PRIMARY KEY,
-  number INTEGER UNIQUE,
+  number INTEGER,
   key TEXT UNIQUE,
   date TEXT,
   year INTEGER,
