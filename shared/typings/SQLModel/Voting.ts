@@ -14,12 +14,13 @@ declare global {
       n_abstain: number;
       n_absent: number;
       n_total: number;
+      section_processing_phase: string;
       session_number: number; // Session.number
-      session_key: string; // Session.key
       modified_datetime: Modules.Common.DateString;
       section_id: number | null; // Section.id
       section_key: string; // Section.key
-      main_section_id: string; // Section.id
+      main_section_id: number; // Section.id
+      session_key: string;
     };
   }
 }

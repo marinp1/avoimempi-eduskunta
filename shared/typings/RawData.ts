@@ -24,7 +24,7 @@ declare global {
       AanestysAlkuaika: string;
       AanestysLisaOtsikko: string;
       AanestysLoppuaika: string;
-      AanestysMitatoity: StringifiedBoolean;
+      AanestysMitatoitu: StringifiedBoolean;
       AanestysNumero: StringifiedNumber;
       AanestysOtsikko: string;
       AanestysPoytakirja: string;

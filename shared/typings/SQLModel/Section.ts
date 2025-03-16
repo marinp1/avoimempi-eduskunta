@@ -8,9 +8,8 @@ declare global {
       ordinal: number;
       note: string | null;
       processing_title: string;
-      processing_phase: string;
       resolution: string;
-      session_id: string; // Session.id
+      session_key: string; // Session.key
       agenda_key: string; // Agenga.key
       modified_datetime: Modules.Common.DateString;
       vaski_id: number;

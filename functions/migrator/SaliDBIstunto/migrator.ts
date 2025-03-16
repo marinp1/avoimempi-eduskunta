@@ -1,19 +1,11 @@
 import { type Database } from "bun:sqlite";
-import { insertRows } from "migrator/utils";
 
-const parseDate = (date: string) => {
-  return date.substring(0, 10);
-};
-
-const parseDateTime = (date: string) => {
-  return date.substring(0, 10) + "T" + date.substring(11);
-};
-
-const parseYear = (year: string): number | null => {
-  const parsed = parseInt(year);
-  if (Number.isNaN(parsed)) return null;
-  return parsed;
-};
+import {
+  insertRows,
+  parseDate,
+  parseDateTime,
+  parseYear,
+} from "migrator/utils";
 
 export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBIstunto"]) => {
