@@ -3,6 +3,7 @@ import fs from "fs";
 import { Database } from "bun:sqlite";
 import { TableNames } from "#constants/index";
 import { getDatabasePath, getParsedDatabasePath } from "#database";
+import { getMigrations, migrate } from "bun-sqlite-migrations";
 
 /**
  * Make sure that data is imported in this order.
@@ -28,7 +29,7 @@ const orderedTableNames = [...TableNames].sort(
  * Reference to running DB instance.
  */
 const targetDatabase = new Database(getDatabasePath(), {
-  create: false,
+  create: true,
   readwrite: true,
 });
 
@@ -46,11 +47,18 @@ const tables = targetDatabase
   )
   .all();
 
+migrate(
+  targetDatabase,
+  getMigrations(path.resolve(import.meta.dirname, "migrations"))
+);
+
 // Clear ALL tables
 for (const table of tables) {
   const tableName = table.name;
   targetDatabase.run(`DELETE FROM ${tableName};`);
 }
+
+// MIGRATE
 
 // (Try to) migrate each table
 for (const tableName of orderedTableNames) {
@@ -73,11 +81,12 @@ for (const tableName of orderedTableNames) {
 
   console.time(`Seed ${tableName}`);
   console.log("Seeding", tableName);
-
   const query = sourceDb.prepare<any[], []>(`SELECT * FROM ${tableName}`);
   const migrate = createMigrator(targetDatabase);
   for (const row of query.iterate()) {
+    targetDatabase.exec("BEGIN TRANSACTION;");
     await migrate(row);
+    targetDatabase.exec("COMMIT;");
   }
   console.timeEnd(`Seed ${tableName}`);
 }
