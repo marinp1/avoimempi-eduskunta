@@ -41,7 +41,10 @@ export class DatabaseConnection {
 
   #connectToDatabase() {
     const databasePath = getDatabasePath();
-    this.#database = new Database(databasePath, { create: false });
+    this.#database = new Database(databasePath, {
+      create: true,
+      readonly: true,
+    });
     this.#database.exec("PRAGMA journal_mode = WAL;");
     return this.#database;
   }
