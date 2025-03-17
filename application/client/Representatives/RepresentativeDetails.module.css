@@ -33,7 +33,7 @@
 }
 
 .card-section div {
-  margin-bottom: 8px;
+  margin-bottom: 0px;
 }
 
 .card-section div strong {
@@ -45,19 +45,25 @@
   position: relative;
   padding-left: 20px;
   margin-bottom: 20px;
+
+  .timeline-event:last-of-type {
+    &::before {
+      height: 50%;
+    }
+  }
 }
 
 .timeline-event {
   position: relative;
   padding-left: 20px;
-  margin-bottom: 20px;
+  padding-bottom: 8px;
 }
 
 .timeline-event::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 0;
+  top: 4px;
   width: 4px;
   height: 100%;
   background-color: #ccc;
@@ -65,13 +71,12 @@
 
 .timeline-content {
   position: relative;
-  padding-left: 10px;
 }
 
 .timeline-content::before {
   content: "";
   position: absolute;
-  left: -12px;
+  left: -26px;
   top: 50%;
   width: 12px;
   height: 12px;

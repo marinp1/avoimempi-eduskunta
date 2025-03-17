@@ -1,6 +1,4 @@
 import { Database } from "bun:sqlite";
-import { migrate, getMigrations } from "bun-sqlite-migrations";
-import path from "path";
 import * as queries from "./queries";
 import { getDatabasePath } from "#database";
 

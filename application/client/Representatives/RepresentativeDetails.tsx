@@ -47,7 +47,8 @@ export const RepresentativeDetails: React.FC<{
     return age.toString();
   };
 
-  const displayDate = (date: string) => {
+  const displayDate = (date: string | null) => {
+    if (!date) return "ongoing";
     return new Date(date).toLocaleDateString("fi-FI");
   };
 
@@ -58,6 +59,52 @@ export const RepresentativeDetails: React.FC<{
       fetchPersonDetails(selectedRepresentative.person_id).then(setDetails);
     }
   }, [selectedRepresentative]);
+
+  const getTimelineEvents = () => {
+    const events = [];
+
+    if (selectedRepresentative) {
+      events.push({
+        date: selectedRepresentative.birth_date,
+        description: `born in ${selectedRepresentative.birth_place}`,
+      });
+
+      details?.terms.forEach((term, index) => {
+        events.push({
+          date: term.start_date,
+          description: `joined parliament in group ${details.groupMemberships[index]?.group_name}`,
+        });
+        if (term.end_date?.trim()) {
+          events.push({
+            date: term.end_date,
+            description: `left parliament`,
+          });
+        }
+      });
+
+      details?.groupMemberships.forEach((membership, index) => {
+        if (index > 0) {
+          events.push({
+            date: membership.start_date,
+            description: `changed group to ${membership.group_name}`,
+          });
+        }
+      });
+
+      if (selectedRepresentative.death_date) {
+        events.push({
+          date: selectedRepresentative.death_date,
+          description: `died in ${selectedRepresentative.death_place}`,
+        });
+      }
+    }
+
+    return events.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+  };
+
+  const timelineEvents = getTimelineEvents();
 
   return (
     <div className={styles["representative-details-container"]} style={style}>
@@ -90,22 +137,13 @@ export const RepresentativeDetails: React.FC<{
           <div className={styles["card-section"]}>
             <h3>Timeline</h3>
             <div className={styles["timeline"]}>
-              <div className={styles["timeline-event"]}>
-                <div className={styles["timeline-content"]}>
-                  <strong>Birth:</strong>{" "}
-                  {displayDate(selectedRepresentative.birth_date)} in{" "}
-                  {selectedRepresentative.birth_place}
-                </div>
-              </div>
-              {selectedRepresentative.death_date && (
-                <div className={styles["timeline-event"]}>
+              {timelineEvents.map((event, index) => (
+                <div key={index} className={styles["timeline-event"]}>
                   <div className={styles["timeline-content"]}>
-                    <strong>Death:</strong>{" "}
-                    {displayDate(selectedRepresentative.death_date)} in{" "}
-                    {selectedRepresentative.death_place}
+                    {displayDate(event.date)} {event.description}
                   </div>
                 </div>
-              )}
+              ))}
             </div>
           </div>
           <div className={styles["card-section"]}>
