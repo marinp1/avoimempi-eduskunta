@@ -20,6 +20,24 @@ const server = Bun.serve({
       },
     },
 
+    "/api/person/:id/group-memberships": {
+      GET: async (req: BunRequest<"/api/person/:id/group-memberships">) => {
+        const memberships = await db.fetchPersonGroupMemberships(req.params);
+        return new Response(JSON.stringify(memberships), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
+    "/api/person/:id/terms": {
+      GET: async (req: BunRequest<"/api/person/:id/terms">) => {
+        const memberships = await db.fetchPersonTerms(req.params);
+        return new Response(JSON.stringify(memberships), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
     "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
 

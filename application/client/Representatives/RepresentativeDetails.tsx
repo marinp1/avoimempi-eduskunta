@@ -1,13 +1,34 @@
+import React from "react";
 // @ts-expect-error err
 import styles from "./RepresentativeDetails.module.css";
 
-// console.warn(styles);
+interface TypedResponse<T> extends Omit<Response, "json"> {
+  json: () => Promise<T>;
+}
 
-import React from "react";
+declare function fetch<T>(
+  input: string | URL | globalThis.Request,
+  init?: RequestInit
+): Promise<TypedResponse<T>>;
+
+const fetchPersonDetails = async (personId: number) => {
+  const [groupMemberships, terms] = await Promise.all([
+    fetch<DatabaseTables.ParliamentGroupMembership[]>(
+      `/api/person/${personId}/group-memberships`
+    ).then((data) => data.json()),
+    fetch<DatabaseTables.Term[]>(`/api/person/${personId}/terms`).then((data) =>
+      data.json()
+    ),
+  ]);
+  return { groupMemberships, terms };
+};
 
 export const RepresentativeDetails: React.FC<{
   selectedRepresentative: DatabaseFunctions.GetParliamentComposition | null;
 }> = ({ selectedRepresentative }) => {
+  const [details, setDetails] =
+    React.useState<Awaited<ReturnType<typeof fetchPersonDetails>>>();
+
   const style: React.CSSProperties = {
     opacity: selectedRepresentative === null ? 0 : 1,
   };
@@ -30,6 +51,14 @@ export const RepresentativeDetails: React.FC<{
     return new Date(date).toLocaleDateString("fi-FI");
   };
 
+  React.useEffect(() => {
+    if (!selectedRepresentative) {
+      setDetails(undefined);
+    } else {
+      fetchPersonDetails(selectedRepresentative.person_id).then(setDetails);
+    }
+  }, [selectedRepresentative]);
+
   return (
     <div className={styles["representative-details-container"]} style={style}>
       {selectedRepresentative ? (
@@ -40,6 +69,9 @@ export const RepresentativeDetails: React.FC<{
           </h2>
           <div className={styles["card-section"]}>
             <h3>Personal Information</h3>
+            <div>
+              <strong>Person ID:</strong> {selectedRepresentative.person_id}
+            </div>
             <div>
               <strong>Sort Name:</strong> {selectedRepresentative.sort_name}
             </div>
