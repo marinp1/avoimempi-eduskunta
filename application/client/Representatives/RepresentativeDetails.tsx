@@ -1,0 +1,91 @@
+// @ts-expect-error err
+import styles from "./RepresentativeDetails.module.css";
+
+// console.warn(styles);
+
+import React from "react";
+
+export const RepresentativeDetails: React.FC<{
+  selectedRepresentative: DatabaseFunctions.GetParliamentComposition | null;
+}> = ({ selectedRepresentative }) => {
+  const style: React.CSSProperties = {
+    opacity: selectedRepresentative === null ? 0 : 1,
+  };
+
+  const calculateAge = (
+    birthDate: string,
+    deathDate?: string | null
+  ): string => {
+    const birth = new Date(birthDate);
+    const death = deathDate ? new Date(deathDate) : new Date();
+    const age = death.getFullYear() - birth.getFullYear();
+    const m = death.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && death.getDate() < birth.getDate())) {
+      return (age - 1).toString();
+    }
+    return age.toString();
+  };
+
+  const displayDate = (date: string) => {
+    return new Date(date).toLocaleDateString("fi-FI");
+  };
+
+  return (
+    <div className={styles["representative-details-container"]} style={style}>
+      {selectedRepresentative ? (
+        <div className={styles["card"]}>
+          <h2 className={styles["card-title"]}>
+            {selectedRepresentative.first_name}{" "}
+            {selectedRepresentative.last_name}
+          </h2>
+          <div className={styles["card-section"]}>
+            <h3>Personal Information</h3>
+            <div>
+              <strong>Sort Name:</strong> {selectedRepresentative.sort_name}
+            </div>
+            <div>
+              <strong>Gender:</strong> {selectedRepresentative.gender}
+            </div>
+            <div>
+              <strong>Age:</strong>{" "}
+              {calculateAge(
+                selectedRepresentative.birth_date,
+                selectedRepresentative.death_date
+              )}
+              {selectedRepresentative.death_date && " (at the time of death)"}
+            </div>
+          </div>
+          <div className={styles["card-section"]}>
+            <h3>Timeline</h3>
+            <div className={styles["timeline"]}>
+              <div className={styles["timeline-event"]}>
+                <div className={styles["timeline-content"]}>
+                  <strong>Birth:</strong>{" "}
+                  {displayDate(selectedRepresentative.birth_date)} in{" "}
+                  {selectedRepresentative.birth_place}
+                </div>
+              </div>
+              {selectedRepresentative.death_date && (
+                <div className={styles["timeline-event"]}>
+                  <div className={styles["timeline-content"]}>
+                    <strong>Death:</strong>{" "}
+                    {displayDate(selectedRepresentative.death_date)} in{" "}
+                    {selectedRepresentative.death_place}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className={styles["card-section"]}>
+            <h3>Professional Information</h3>
+            <div>
+              <strong>Profession:</strong> {selectedRepresentative.profession}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div>No representative selected</div>
+      )}
+    </div>
+  );
+};

@@ -23,7 +23,7 @@ const server = Bun.serve({
     "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
 
-  development: true,
+  development: false,
 
   fetch(req) {
     return new Response("Not Found", { status: 404 });

@@ -1,0 +1,82 @@
+/* application/client/Representatives/RepresentativeDetails.css */
+.representative-details-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  max-width: 400px;
+  width: 100%;
+  text-align: left;
+}
+
+.card-title {
+  font-size: 24px;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.card-section {
+  margin-bottom: 20px;
+}
+
+.card-section h3 {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #555;
+}
+
+.card-section div {
+  margin-bottom: 8px;
+}
+
+.card-section div strong {
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 20px;
+}
+
+.timeline-event {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 20px;
+}
+
+.timeline-event::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  background-color: #ccc;
+}
+
+.timeline-content {
+  position: relative;
+  padding-left: 10px;
+}
+
+.timeline-content::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  background-color: #fff;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  transform: translateY(-50%);
+}
