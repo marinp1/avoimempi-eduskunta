@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import "./RepresentativesPage.css";
+import styles from "./styles.module.css";
 import { RepresentativeAvatar } from "./RepresentativeAvatar";
+import { RepresentativeDetails } from "./RepresentativeDetails";
 
 const SeatingCounts = [1, 16, 22, 26, 32, 30, 29, 26, 18];
 
@@ -9,6 +10,9 @@ const RepresentativesPage = () => {
   const [representatives, setRepresentatives] = useState<
     DatabaseFunctions.GetParliamentComposition[]
   >([]);
+
+  const [selectedRepresentative, selectRepresentative] =
+    useState<DatabaseFunctions.GetParliamentComposition | null>(null);
 
   const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedDate(new Date(event.target.value));
@@ -45,6 +49,10 @@ const RepresentativesPage = () => {
     fetchRepresentatives();
   }, [selectedDate]);
 
+  useEffect(() => {
+    selectRepresentative(null);
+  }, [representatives]);
+
   const groupedRepresentatives = SeatingCounts.reduce((acc, count, ind) => {
     const start = ind === 0 ? 0 : acc[ind - 1].end;
     const end = start + count;
@@ -60,19 +68,11 @@ const RepresentativesPage = () => {
     representatives: representatives.slice(start, end),
   }));
 
-  console.log(
-    representatives,
-    groupedRepresentatives,
-    groupedRepresentatives
-      .map((s) => s.representatives.length)
-      .reduce((a, b) => a + b, 0)
-  );
-
   const totalCount = 32;
   const radius = totalCount / Math.PI / 3;
   return (
-    <div className="representatives-page">
-      <div className="date-selector">
+    <div className={styles["representatives-page"]}>
+      <div className={styles["date-selector"]}>
         <button onClick={handlePreviousDate}>&lt;</button>
         <input
           type="date"
@@ -81,13 +81,14 @@ const RepresentativesPage = () => {
         />
         <button onClick={handleNextDate}>&gt;</button>
       </div>
-      <div className="representatives-layout">
+      <RepresentativeDetails selectedRepresentative={selectedRepresentative} />
+      <div className={styles["representatives-layout"]}>
         {groupedRepresentatives.map(
           ({ count: _count, representatives }, rowIndex) => {
             return (
               <div
                 key={`row-${_count}-${rowIndex}`}
-                className="representative-row"
+                className={styles["representative-row"]}
                 data-row={rowIndex}
               >
                 {representatives.map((representative, _index) => {
@@ -105,8 +106,9 @@ const RepresentativesPage = () => {
                   return (
                     <RepresentativeAvatar
                       key={index}
-                      {...representative}
+                      person={representative}
                       transform={{ y }}
+                      selectRepresentative={selectRepresentative}
                     />
                   );
                 })}
@@ -115,7 +117,7 @@ const RepresentativesPage = () => {
           }
         )}
       </div>
-      <div className="representatives-content">
+      <div className={styles["representatives-content"]}>
         {/* Content for the selected date goes here */}
       </div>
     </div>

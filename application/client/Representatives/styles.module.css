@@ -125,6 +125,7 @@
   font-weight: bold;
   transition: background-color 0.3s ease, transform 0.3s ease;
   user-select: none;
+  cursor: pointer;
 }
 
 .representative-circle:hover {
