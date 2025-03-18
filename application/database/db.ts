@@ -15,7 +15,7 @@ export class DatabaseConnection {
     if (isNaN(dateObj.getTime())) throw new Error("Invalid date");
     const $date = dateObj.toISOString();
     const stmt = this.db.query<
-      DatabaseFunctions.GetParliamentComposition,
+      DatabaseQueries.GetParliamentComposition,
       { $date: string }
     >(queries.currentComposition);
     const data = stmt.all({ $date });
@@ -53,6 +53,16 @@ export class DatabaseConnection {
     const stmt = this.db.prepare<DatabaseTables.Term, { $personId: number }>(
       queries.sql`SELECT t.* FROM Representative r JOIN term t ON r.person_id = t.person_id WHERE r.person_id = $personId ORDER BY t.start_date ASC;`
     );
+    const data = stmt.all({ $personId: +params.id });
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchPersonVotes(params: { id: string }) {
+    const stmt = this.db.prepare<
+      DatabaseQueries.VotesByPerson,
+      { $personId: number }
+    >(queries.votesByPerson);
     const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
     return data;
