@@ -1,7 +1,5 @@
 import { scheduler } from "node:timers/promises";
 import sqlite from "bun:sqlite";
-import path from "path";
-import fs from "fs";
 import { TableNames } from "../../shared/constants";
 import { getRawDatabasePath } from "#database";
 
@@ -149,15 +147,23 @@ const scrape = async <T extends Modules.Common.TableName>(
 
 const [, , tableToUse, startFromPage] = process.argv;
 
-if (!TableNames.includes(tableToUse as any)) {
-  console.warn("Table name should be one of", TableNames);
-  throw new Error("Invalid table name!");
+if (tableToUse === "all-tables") {
+  for (const tableName of TableNames) {
+    if (tableName === "SaliDBAanestysAsiakirja") continue;
+    if (tableName === "SaliDBAanestysJakauma") continue;
+    await scrape(tableName);
+  }
+} else {
+  if (!TableNames.includes(tableToUse as any)) {
+    console.warn("Table name should be one of", TableNames);
+    throw new Error("Invalid table name!");
+  }
+
+  const pageToUse = (() => {
+    const n = +startFromPage;
+    if (Number.isNaN(n) || !Number.isInteger(n) || n < 0) return undefined;
+    return n;
+  })();
+
+  await scrape(tableToUse as Modules.Common.TableName, pageToUse);
 }
-
-const pageToUse = (() => {
-  const n = +startFromPage;
-  if (Number.isNaN(n) || !Number.isInteger(n) || n < 0) return undefined;
-  return n;
-})();
-
-await scrape(tableToUse as Modules.Common.TableName, pageToUse);
