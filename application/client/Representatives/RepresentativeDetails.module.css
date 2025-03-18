@@ -11,7 +11,7 @@
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
-  max-width: 400px;
+  max-width: 1200px;
   width: 100%;
   text-align: left;
 }
@@ -84,4 +84,12 @@
   border: 2px solid #ccc;
   border-radius: 50%;
   transform: translateY(-50%);
+}
+
+.card-container {
+  display: grid;
+  grid-template-areas:
+    "personal votings"
+    "timeline votings"
+    "professional votings";
 }

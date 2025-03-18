@@ -12,19 +12,22 @@ declare function fetch<T>(
 ): Promise<TypedResponse<T>>;
 
 const fetchPersonDetails = async (personId: number) => {
-  const [groupMemberships, terms] = await Promise.all([
+  const [groupMemberships, terms, votes] = await Promise.all([
     fetch<DatabaseTables.ParliamentGroupMembership[]>(
       `/api/person/${personId}/group-memberships`
     ).then((data) => data.json()),
     fetch<DatabaseTables.Term[]>(`/api/person/${personId}/terms`).then((data) =>
       data.json()
     ),
+    fetch<DatabaseQueries.VotesByPerson[]>(
+      `/api/person/${personId}/votes`
+    ).then((data) => data.json()),
   ]);
-  return { groupMemberships, terms };
+  return { groupMemberships, terms, votes };
 };
 
 export const RepresentativeDetails: React.FC<{
-  selectedRepresentative: DatabaseFunctions.GetParliamentComposition | null;
+  selectedRepresentative: DatabaseQueries.GetParliamentComposition | null;
 }> = ({ selectedRepresentative }) => {
   const [details, setDetails] =
     React.useState<Awaited<ReturnType<typeof fetchPersonDetails>>>();
@@ -106,6 +109,13 @@ export const RepresentativeDetails: React.FC<{
 
   const timelineEvents = getTimelineEvents();
 
+  const groupedVotes = React.useMemo(() => {
+    return Object.groupBy(
+      details?.votes ?? [],
+      (i) => `${i.section_title}: ${i.section_processing_phase}`
+    );
+  }, [details]);
+
   return (
     <div className={styles["representative-details-container"]} style={style}>
       {selectedRepresentative ? (
@@ -114,42 +124,78 @@ export const RepresentativeDetails: React.FC<{
             {selectedRepresentative.first_name}{" "}
             {selectedRepresentative.last_name}
           </h2>
-          <div className={styles["card-section"]}>
-            <h3>Personal Information</h3>
-            <div>
-              <strong>Person ID:</strong> {selectedRepresentative.person_id}
+          <div className={styles["card-container"]}>
+            <div
+              className={styles["card-section"]}
+              style={{ gridArea: "personal" }}
+            >
+              <h3>Personal Information</h3>
+              <div>
+                <strong>Person ID:</strong> {selectedRepresentative.person_id}
+              </div>
+              <div>
+                <strong>Sort Name:</strong> {selectedRepresentative.sort_name}
+              </div>
+              <div>
+                <strong>Gender:</strong> {selectedRepresentative.gender}
+              </div>
+              <div>
+                <strong>Age:</strong>{" "}
+                {calculateAge(
+                  selectedRepresentative.birth_date,
+                  selectedRepresentative.death_date
+                )}
+                {selectedRepresentative.death_date && " (at the time of death)"}
+              </div>
             </div>
-            <div>
-              <strong>Sort Name:</strong> {selectedRepresentative.sort_name}
-            </div>
-            <div>
-              <strong>Gender:</strong> {selectedRepresentative.gender}
-            </div>
-            <div>
-              <strong>Age:</strong>{" "}
-              {calculateAge(
-                selectedRepresentative.birth_date,
-                selectedRepresentative.death_date
-              )}
-              {selectedRepresentative.death_date && " (at the time of death)"}
-            </div>
-          </div>
-          <div className={styles["card-section"]}>
-            <h3>Timeline</h3>
-            <div className={styles["timeline"]}>
-              {timelineEvents.map((event, index) => (
-                <div key={index} className={styles["timeline-event"]}>
-                  <div className={styles["timeline-content"]}>
-                    {displayDate(event.date)} {event.description}
+            <div
+              className={styles["card-section"]}
+              style={{ gridArea: "timeline" }}
+            >
+              <h3>Timeline</h3>
+              <div className={styles["timeline"]}>
+                {timelineEvents.map((event, index) => (
+                  <div key={index} className={styles["timeline-event"]}>
+                    <div className={styles["timeline-content"]}>
+                      {displayDate(event.date)} {event.description}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-          <div className={styles["card-section"]}>
-            <h3>Professional Information</h3>
-            <div>
-              <strong>Profession:</strong> {selectedRepresentative.profession}
+            <div
+              className={styles["card-section"]}
+              style={{ gridArea: "professional" }}
+            >
+              <h3>Professional Information</h3>
+              <div>
+                <strong>Profession:</strong> {selectedRepresentative.profession}
+              </div>
+            </div>
+            <div
+              className={styles["card-section"]}
+              style={{ gridArea: "votings" }}
+            >
+              <h3>Voting record</h3>
+              <div>
+                {Object.entries(groupedVotes).map(([date, votes]) => (
+                  <details key={date}>
+                    <summary>
+                      <strong>{date}</strong>
+                    </summary>
+                    {votes?.map((v) => (
+                      <div key={v.id} style={{ marginLeft: "12px" }}>
+                        <span
+                          style={{ minWidth: "6ch", display: "inline-block" }}
+                        >
+                          {v.vote}
+                        </span>
+                        {displayDate(v.start_time)}: {v.title}
+                      </div>
+                    ))}
+                  </details>
+                ))}
+              </div>
             </div>
           </div>
         </div>

@@ -145,7 +145,7 @@ declare global {
     };
   }
 
-  export namespace DatabaseFunctions {
+  export namespace DatabaseQueries {
     export type GetParliamentComposition = {
       person_id: number;
       last_name: string;
@@ -158,6 +158,9 @@ declare global {
       death_place: string;
       profession: string;
     };
+
+    export type VotesByPerson = DatabaseTables.Voting &
+      Pick<DatabaseTables.Vote, "vote" | "group_abbrviation">;
   }
 }
 
