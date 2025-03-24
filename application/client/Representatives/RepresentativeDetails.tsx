@@ -2,15 +2,6 @@ import React from "react";
 // @ts-expect-error err
 import styles from "./RepresentativeDetails.module.css";
 
-interface TypedResponse<T> extends Omit<Response, "json"> {
-  json: () => Promise<T>;
-}
-
-declare function fetch<T>(
-  input: string | URL | globalThis.Request,
-  init?: RequestInit
-): Promise<TypedResponse<T>>;
-
 const fetchPersonDetails = async (personId: number) => {
   const [groupMemberships, terms, votes] = await Promise.all([
     fetch<DatabaseTables.ParliamentGroupMembership[]>(

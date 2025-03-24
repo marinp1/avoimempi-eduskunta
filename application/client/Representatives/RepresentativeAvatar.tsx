@@ -3,12 +3,12 @@ import styles from "./RepresentativeAvatar.module.css";
 
 export const RepresentativeAvatar: React.FC<
   {
-    person: DatabaseFunctions.GetParliamentComposition;
+    person: DatabaseQueries.GetParliamentComposition;
     transform: {
       y: number;
     };
     selectRepresentative: (
-      person: DatabaseFunctions.GetParliamentComposition
+      person: DatabaseQueries.GetParliamentComposition
     ) => void;
   } & {}
 > = ({ person, transform, selectRepresentative }) => {

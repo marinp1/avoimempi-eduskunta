@@ -47,10 +47,33 @@ const server = Bun.serve({
       },
     },
 
+    "/api/votings/search": {
+      GET: async (req: BunRequest<"/api/votings/search">) => {
+        const { searchParams } = new URL(req.url);
+        const q = searchParams.get("q")?.trim() || "";
+        if (!q)
+          return Response.json(
+            { message: "Missing query parameter" },
+            { status: 400 }
+          );
+        if (q.length < 3)
+          return Response.json(
+            { message: "Query paramter requires at least three characters" },
+            { status: 400 }
+          );
+        const titles = await db.queryVotings({ q });
+        return new Response(JSON.stringify(titles), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
     "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
 
-  development: false,
+  development: {
+    hmr: true,
+  },
 
   fetch(req) {
     return new Response("Not Found", { status: 404 });
