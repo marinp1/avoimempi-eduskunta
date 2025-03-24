@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import AboutPage from "./About";
-import ContactPage from "./Contact";
+import VotingsPage from "./Votings";
 import RepresentativesPage from "./Representatives";
 
 export const App = () => {
-  const [activeTab, setActiveTab] = useState("representatives");
+  const [activeTab, setActiveTab] = useState("votings");
 
   return (
     <div className="app">
@@ -25,8 +24,7 @@ export const App = () => {
       </nav>
       <div className="content">
         {activeTab === "representatives" && <RepresentativesPage />}
-        {activeTab === "about" && <AboutPage />}
-        {activeTab === "contact" && <ContactPage />}
+        {activeTab === "votings" && <VotingsPage />}
       </div>
     </div>
   );
