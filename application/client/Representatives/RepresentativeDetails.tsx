@@ -42,7 +42,7 @@ export const RepresentativeDetails: React.FC<{
   };
 
   const displayDate = (date: string | null) => {
-    if (!date) return "ongoing";
+    if (!date) return "edelleen";
     return new Date(date).toLocaleDateString("fi-FI");
   };
 
@@ -50,6 +50,7 @@ export const RepresentativeDetails: React.FC<{
     if (!selectedRepresentative) {
       setDetails(undefined);
     } else {
+      setDetails(undefined);
       fetchPersonDetails(selectedRepresentative.person_id).then(setDetails);
     }
   }, [selectedRepresentative]);
@@ -60,18 +61,18 @@ export const RepresentativeDetails: React.FC<{
     if (selectedRepresentative) {
       events.push({
         date: selectedRepresentative.birth_date,
-        description: `born in ${selectedRepresentative.birth_place}`,
+        description: `syntyi paikkakunnalla ${selectedRepresentative.birth_place}`,
       });
 
       details?.terms.forEach((term, index) => {
         events.push({
           date: term.start_date,
-          description: `joined parliament in group ${details.groupMemberships[index]?.group_name}`,
+          description: `aloitti eduskunnassa ryhmässä ${details.groupMemberships[index]?.group_name}`,
         });
         if (term.end_date?.trim()) {
           events.push({
             date: term.end_date,
-            description: `left parliament`,
+            description: `lähti eduskunnasta`,
           });
         }
       });
@@ -80,7 +81,7 @@ export const RepresentativeDetails: React.FC<{
         if (index > 0) {
           events.push({
             date: membership.start_date,
-            description: `changed group to ${membership.group_name}`,
+            description: `aloitti eduskuntaryhmässä ${membership.group_name}`,
           });
         }
       });
@@ -88,7 +89,7 @@ export const RepresentativeDetails: React.FC<{
       if (selectedRepresentative.death_date) {
         events.push({
           date: selectedRepresentative.death_date,
-          description: `died in ${selectedRepresentative.death_place}`,
+          description: `kuoli paikkakunnalla ${selectedRepresentative.death_place}`,
         });
       }
     }
@@ -120,18 +121,20 @@ export const RepresentativeDetails: React.FC<{
               className={styles["card-section"]}
               style={{ gridArea: "personal" }}
             >
-              <h3>Personal Information</h3>
+              <h3>Perustidot</h3>
               <div>
-                <strong>Person ID:</strong> {selectedRepresentative.person_id}
+                <strong>Eduskunnan henkilönumero:</strong>{" "}
+                {selectedRepresentative.person_id}
               </div>
               <div>
-                <strong>Sort Name:</strong> {selectedRepresentative.sort_name}
+                <strong>Lajittelunimi:</strong>{" "}
+                {selectedRepresentative.sort_name}
               </div>
               <div>
-                <strong>Gender:</strong> {selectedRepresentative.gender}
+                <strong>Sukupuoli:</strong> {selectedRepresentative.gender}
               </div>
               <div>
-                <strong>Age:</strong>{" "}
+                <strong>Ikä:</strong>{" "}
                 {calculateAge(
                   selectedRepresentative.birth_date,
                   selectedRepresentative.death_date
@@ -143,7 +146,7 @@ export const RepresentativeDetails: React.FC<{
               className={styles["card-section"]}
               style={{ gridArea: "timeline" }}
             >
-              <h3>Timeline</h3>
+              <h3>Aikajana</h3>
               <div className={styles["timeline"]}>
                 {timelineEvents.map((event, index) => (
                   <div key={index} className={styles["timeline-event"]}>
@@ -158,16 +161,16 @@ export const RepresentativeDetails: React.FC<{
               className={styles["card-section"]}
               style={{ gridArea: "professional" }}
             >
-              <h3>Professional Information</h3>
+              <h3>Ammattitiedot</h3>
               <div>
-                <strong>Profession:</strong> {selectedRepresentative.profession}
+                <strong>Ammatti:</strong> {selectedRepresentative.profession}
               </div>
             </div>
             <div
-              className={styles["card-section"]}
+              className={`${styles["card-section"]} ${styles["votings-container"]}`}
               style={{ gridArea: "votings" }}
             >
-              <h3>Voting record</h3>
+              <h3>Äänestyshistoria</h3>
               <div>
                 {Object.entries(groupedVotes).map(([date, votes]) => (
                   <details key={date}>

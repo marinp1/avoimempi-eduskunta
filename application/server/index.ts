@@ -72,7 +72,7 @@ const server = Bun.serve({
   },
 
   development: {
-    hmr: true,
+    hmr: false,
   },
 
   fetch(req) {
