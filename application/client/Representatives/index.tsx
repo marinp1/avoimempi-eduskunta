@@ -8,11 +8,11 @@ const SeatingCounts = [1, 16, 22, 26, 32, 30, 29, 26, 18];
 const RepresentativesPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [representatives, setRepresentatives] = useState<
-    DatabaseFunctions.GetParliamentComposition[]
+    DatabaseQueries.GetParliamentComposition[]
   >([]);
 
   const [selectedRepresentative, selectRepresentative] =
-    useState<DatabaseFunctions.GetParliamentComposition | null>(null);
+    useState<DatabaseQueries.GetParliamentComposition | null>(null);
 
   const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedDate(new Date(event.target.value));
@@ -38,7 +38,7 @@ const RepresentativesPage = () => {
         const response = await fetch(
           `/api/composition/${selectedDate.toISOString().slice(0, 10)}`
         );
-        const data: DatabaseFunctions.GetParliamentComposition[] =
+        const data: DatabaseQueries.GetParliamentComposition[] =
           await response.json();
         setRepresentatives(data);
       } catch (error) {
@@ -53,17 +53,20 @@ const RepresentativesPage = () => {
     selectRepresentative(null);
   }, [representatives]);
 
-  const groupedRepresentatives = SeatingCounts.reduce((acc, count, ind) => {
-    const start = ind === 0 ? 0 : acc[ind - 1].end;
-    const end = start + count;
-    return [
-      ...acc,
-      {
-        start,
-        end,
-      },
-    ];
-  }, [] as { start: number; end: number }[]).map(({ start, end }) => ({
+  const groupedRepresentatives = SeatingCounts.reduce(
+    (acc, count, ind) => {
+      const start = ind === 0 ? 0 : acc[ind - 1].end;
+      const end = start + count;
+      return [
+        ...acc,
+        {
+          start,
+          end,
+        },
+      ];
+    },
+    [] as { start: number; end: number }[]
+  ).map(({ start, end }) => ({
     count: end - start,
     representatives: representatives.slice(start, end),
   }));
@@ -105,6 +108,8 @@ const RepresentativesPage = () => {
                         );
                   return (
                     <RepresentativeAvatar
+                      rowIndex={rowIndex}
+                      columnIndex={_index}
                       key={index}
                       person={representative}
                       transform={{ y }}

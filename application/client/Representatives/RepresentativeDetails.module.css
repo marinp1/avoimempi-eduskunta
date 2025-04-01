@@ -88,8 +88,21 @@
 
 .card-container {
   display: grid;
+  column-gap: 16px;
+  grid-template-columns: 1fr 2fr;
+  grid-template-rows: auto auto auto;
   grid-template-areas:
     "personal votings"
     "timeline votings"
     "professional votings";
+}
+
+.votings-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-bottom: 20px;
+}
+
+.votings-container details summary {
+  cursor: pointer;
 }

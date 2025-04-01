@@ -43,5 +43,5 @@ JOIN
     Representative r on r.person_id = v.person_id
 WHERE
     r.person_id = $personId
-ORDER BY vs.start_time ASC
+ORDER BY vs.start_time DESC
 `;
