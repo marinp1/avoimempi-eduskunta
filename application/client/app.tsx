@@ -16,26 +16,6 @@ const PageComponents = {
 
 export const App = () => {
   const [activeTab, setActiveTab] = useState<Page>(Pages.Representatives);
-
   const ActivePage = PageComponents[activeTab];
-
-  return (
-    <div className="app">
-      <nav className="tab-bar">
-        <ul>
-          <li>
-            <button onClick={() => setActiveTab(Pages.Representatives)}>
-              Representatives
-            </button>
-          </li>
-          <li>
-            <button onClick={() => setActiveTab(Pages.Votings)}>Votings</button>
-          </li>
-        </ul>
-      </nav>
-      <div className="content">
-        <ActivePage />
-      </div>
-    </div>
-  );
+  return <ActivePage />;
 };

@@ -1,6 +1,5 @@
 import React from "react";
-// @ts-expect-error err
-import styles from "./RepresentativeDetails.module.css";
+// import styles from "./RepresentativeDetails.module.css";
 
 const fetchPersonDetails = async (personId: number) => {
   const [groupMemberships, terms, votes] = await Promise.all([
@@ -109,18 +108,15 @@ export const RepresentativeDetails: React.FC<{
   }, [details]);
 
   return (
-    <div className={styles["representative-details-container"]} style={style}>
+    <div style={style}>
       {selectedRepresentative ? (
-        <div className={styles["card"]}>
-          <h2 className={styles["card-title"]}>
+        <div>
+          <h2>
             {selectedRepresentative.first_name}{" "}
             {selectedRepresentative.last_name}
           </h2>
-          <div className={styles["card-container"]}>
-            <div
-              className={styles["card-section"]}
-              style={{ gridArea: "personal" }}
-            >
+          <div>
+            <div style={{ gridArea: "personal" }}>
               <h3>Perustidot</h3>
               <div>
                 <strong>Eduskunnan henkilönumero:</strong>{" "}
@@ -142,34 +138,25 @@ export const RepresentativeDetails: React.FC<{
                 {selectedRepresentative.death_date && " (at the time of death)"}
               </div>
             </div>
-            <div
-              className={styles["card-section"]}
-              style={{ gridArea: "timeline" }}
-            >
+            <div style={{ gridArea: "timeline" }}>
               <h3>Aikajana</h3>
-              <div className={styles["timeline"]}>
+              <div>
                 {timelineEvents.map((event, index) => (
-                  <div key={index} className={styles["timeline-event"]}>
-                    <div className={styles["timeline-content"]}>
+                  <div key={index}>
+                    <div>
                       {displayDate(event.date)} {event.description}
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <div
-              className={styles["card-section"]}
-              style={{ gridArea: "professional" }}
-            >
+            <div style={{ gridArea: "professional" }}>
               <h3>Ammattitiedot</h3>
               <div>
                 <strong>Ammatti:</strong> {selectedRepresentative.profession}
               </div>
             </div>
-            <div
-              className={`${styles["card-section"]} ${styles["votings-container"]}`}
-              style={{ gridArea: "votings" }}
-            >
+            <div style={{ gridArea: "votings" }}>
               <h3>Äänestyshistoria</h3>
               <div>
                 {Object.entries(groupedVotes).map(([date, votes]) => (
