@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import styles from "./styles.module.css";
+// import styles from "./styles.module.css";
 import { RepresentativeAvatar } from "./RepresentativeAvatar";
 import { RepresentativeDetails } from "./RepresentativeDetails";
 
@@ -53,29 +53,11 @@ const RepresentativesPage = () => {
     selectRepresentative(null);
   }, [representatives]);
 
-  const groupedRepresentatives = SeatingCounts.reduce(
-    (acc, count, ind) => {
-      const start = ind === 0 ? 0 : acc[ind - 1].end;
-      const end = start + count;
-      return [
-        ...acc,
-        {
-          start,
-          end,
-        },
-      ];
-    },
-    [] as { start: number; end: number }[]
-  ).map(({ start, end }) => ({
-    count: end - start,
-    representatives: representatives.slice(start, end),
-  }));
-
   const totalCount = 32;
   const radius = totalCount / Math.PI / 3;
   return (
-    <div className={styles["representatives-page"]}>
-      <div className={styles["date-selector"]}>
+    <div className="container">
+      <div className="flex place-items-center justify-center">
         <button onClick={handlePreviousDate}>&lt;</button>
         <input
           type="date"
@@ -85,45 +67,18 @@ const RepresentativesPage = () => {
         <button onClick={handleNextDate}>&gt;</button>
       </div>
       <RepresentativeDetails selectedRepresentative={selectedRepresentative} />
-      <div className={styles["representatives-layout"]}>
-        {groupedRepresentatives.map(
-          ({ count: _count, representatives }, rowIndex) => {
-            return (
-              <div
-                key={`row-${_count}-${rowIndex}`}
-                className={styles["representative-row"]}
-                data-row={rowIndex}
-              >
-                {representatives.map((representative, _index) => {
-                  const count = rowIndex === 6 ? _count + 1 : _count;
-                  const index = rowIndex === 6 ? _index + 1 : _index;
-                  const missing = totalCount - count;
-                  const start = (totalCount / 2) * -1 + missing / 2;
-                  const ind = start + index + 0.5;
-                  const y =
-                    rowIndex === 0
-                      ? 0
-                      : Math.floor(
-                          radius * Math.cos((ind / totalCount) * Math.PI) * 100
-                        );
-                  return (
-                    <RepresentativeAvatar
-                      rowIndex={rowIndex}
-                      columnIndex={_index}
-                      key={index}
-                      person={representative}
-                      transform={{ y }}
-                      selectRepresentative={selectRepresentative}
-                    />
-                  );
-                })}
-              </div>
-            );
-          }
-        )}
-      </div>
-      <div className={styles["representatives-content"]}>
-        {/* Content for the selected date goes here */}
+      <div className="grid grid-cols-4 gap-4">
+        {representatives.map((representative, index) => {
+          return (
+            <RepresentativeAvatar
+              rowIndex={index}
+              columnIndex={index}
+              key={index}
+              person={representative}
+              selectRepresentative={selectRepresentative}
+            />
+          );
+        })}
       </div>
     </div>
   );

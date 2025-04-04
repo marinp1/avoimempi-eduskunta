@@ -43,7 +43,7 @@ export const VoteResults: React.FC<{
 }> = ({ query }) => {
   const results = React.use(fetchData(query?.trim()));
   return (
-    <div className="votings-search-result">
+    <div>
       {Object.entries(results).map(([k, v]) => {
         return (
           <React.Fragment key={k}>

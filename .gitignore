@@ -9,3 +9,5 @@ db_dump.sql
 .quokka
 *.db
 *.db-*
+
+application/public/output.css
