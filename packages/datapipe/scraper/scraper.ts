@@ -25,14 +25,14 @@ interface EduskuntaApiResponse {
  */
 async function getTableCounts(): Promise<Record<string, number>> {
   const resp = await fetch(
-    "https://avoindata.eduskunta.fi/api/v1/tables/counts"
+    "https://avoindata.eduskunta.fi/api/v1/tables/counts",
   );
   const data = (await resp.json()) as {
     tableName: string;
     rowCount: number;
   }[];
   return Object.fromEntries(
-    data.map((v) => [v.tableName, Math.ceil(v.rowCount)])
+    data.map((v) => [v.tableName, Math.ceil(v.rowCount)]),
   );
 }
 
@@ -41,7 +41,7 @@ async function getTableCounts(): Promise<Record<string, number>> {
  */
 async function getTableColumns(tableName: string) {
   const resp = await fetch(
-    `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/columns`
+    `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/columns`,
   );
   const { pkName, columnNames } = (await resp.json()) as {
     pkName: string;
@@ -59,7 +59,7 @@ async function getTableColumns(tableName: string) {
 async function getLastScrapedPage(
   storage: ReturnType<typeof getStorage>,
   tableName: string,
-  stage: DataStage
+  stage: DataStage,
 ): Promise<number> {
   const prefix = StorageKeyBuilder.listPrefixForTable(stage, tableName);
   const result = await storage.list({ prefix });
@@ -143,7 +143,9 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
 
     case "start-from":
       startPage = mode.page;
-      console.log(`🚀 Starting from page: ${startPage} (will continue until end)`);
+      console.log(
+        `🚀 Starting from page: ${startPage} (will continue until end)`,
+      );
       break;
 
     case "single-page":
@@ -172,14 +174,19 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
           const pageContent = JSON.parse(pageData) as EduskuntaApiResponse;
           totalRowsScraped += pageContent.rowCount;
         } catch (error) {
-          console.warn(`⚠️  Could not read page ${page} for progress calculation`);
+          console.warn(
+            `⚠️  Could not read page ${page} for progress calculation`,
+          );
         }
       }
     }
 
     if (totalRowsScraped > 0) {
-      const percentComplete = totalRows > 0 ? (totalRowsScraped / totalRows) * 100 : 0;
-      console.log(`📊 Already scraped: ${totalRowsScraped.toLocaleString()} rows (${percentComplete.toFixed(1)}%)`);
+      const percentComplete =
+        totalRows > 0 ? (totalRowsScraped / totalRows) * 100 : 0;
+      console.log(
+        `📊 Already scraped: ${totalRowsScraped.toLocaleString()} rows (${percentComplete.toFixed(1)}%)`,
+      );
     }
   }
 
@@ -196,9 +203,13 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     const prevPageData = await storage.get(prevPageKey);
 
     if (!prevPageData) {
-      console.error(`⚠️  Cannot find page ${prevPage}, required to start from page ${startPage}`);
+      console.error(
+        `⚠️  Cannot find page ${prevPage}, required to start from page ${startPage}`,
+      );
       console.error(`⚠️  Please scrape from page 1 or use auto-resume mode`);
-      throw new Error(`Missing page ${prevPage} - cannot determine starting primary key`);
+      throw new Error(
+        `Missing page ${prevPage} - cannot determine starting primary key`,
+      );
     }
 
     const prevContent = JSON.parse(prevPageData) as EduskuntaApiResponse;
@@ -212,17 +223,22 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
       if (lastRow && lastRow[indexOfPrimaryKey] !== undefined) {
         // Convert to number if it's a string, then add 1
         const lastPkValue = lastRow[indexOfPrimaryKey];
-        pkStartValue = (typeof lastPkValue === 'string' ? parseInt(lastPkValue, 10) : lastPkValue) + 1;
+        pkStartValue =
+          (typeof lastPkValue === "string"
+            ? parseInt(lastPkValue, 10)
+            : lastPkValue) + 1;
       } else {
         throw new Error(`Cannot determine primary key from page ${prevPage}`);
       }
     }
 
-    console.log(`📌 Starting from primary key: ${pkStartValue} (from previous page)`);
+    console.log(
+      `📌 Starting from primary key: ${pkStartValue} (from previous page)`,
+    );
   }
 
   const baseUrl = new URL(
-    `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/batch`
+    `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/batch`,
   );
   baseUrl.searchParams.set("pkName", primaryColumn);
   baseUrl.searchParams.set("perPage", "100");
@@ -263,10 +279,11 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     await storage.put(key, data);
 
     totalRowsScraped += content.rowCount;
-    const percentComplete = totalRows > 0 ? (totalRowsScraped / totalRows) * 100 : 0;
+    const percentComplete =
+      totalRows > 0 ? (totalRowsScraped / totalRows) * 100 : 0;
 
     console.log(
-      `✅ Saved page ${currentPage} (${content.rowCount} rows) - ${percentComplete.toFixed(1)}% complete`
+      `✅ Saved page ${currentPage} (${content.rowCount} rows) - ${percentComplete.toFixed(1)}% complete`,
     );
 
     // Call progress callback
@@ -304,7 +321,10 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
       if (lastRow && lastRow[indexOfPrimaryKey] !== undefined) {
         // Convert to number if it's a string, then add 1
         const lastPkValue = lastRow[indexOfPrimaryKey];
-        pkStartValue = (typeof lastPkValue === 'string' ? parseInt(lastPkValue, 10) : lastPkValue) + 1;
+        pkStartValue =
+          (typeof lastPkValue === "string"
+            ? parseInt(lastPkValue, 10)
+            : lastPkValue) + 1;
       } else {
         console.error("❌ Could not determine next primary key value");
         break;
@@ -325,7 +345,7 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
  */
 export async function scrapeTables(
   tableNames: string[],
-  options?: Omit<ScrapeOptions, "tableName">
+  options?: Omit<ScrapeOptions, "tableName">,
 ): Promise<void> {
   for (const tableName of tableNames) {
     try {
@@ -336,3 +356,6 @@ export async function scrapeTables(
     }
   }
 }
+
+// Re-export Excel speeches scraper for convenience
+export { scrapeExcelSpeeches } from "./excel-speeches-scraper";

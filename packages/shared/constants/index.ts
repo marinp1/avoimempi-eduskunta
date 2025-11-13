@@ -1,6 +1,9 @@
+import path from "path";
+
 export const TableName = Object.freeze({
   Attachment: "Attachment",
   AttachmentGroup: "AttachmentGroup",
+  ExcelSpeeches: "ExcelSpeeches",
   HetekaData: "HetekaData",
   MemberOfParliament: "MemberOfParliament",
   PrimaryKeys: "PrimaryKeys",
@@ -23,6 +26,7 @@ export const TableName = Object.freeze({
 export const PrimaryKeys: Record<keyof typeof TableName, string> = {
   Attachment: "",
   AttachmentGroup: "",
+  ExcelSpeeches: "id",
   HetekaData: "",
   MemberOfParliament: "personId",
   PrimaryKeys: "",
@@ -45,6 +49,7 @@ export const PrimaryKeys: Record<keyof typeof TableName, string> = {
 export const TableNames = [
   "Attachment",
   "AttachmentGroup",
+  "ExcelSpeeches",
   "HetekaData",
   "MemberOfParliament",
   "PrimaryKeys",
@@ -74,3 +79,7 @@ export const LanguageIds = Object.freeze({
   Finnish: "1",
   Swedish: "2",
 } as const);
+
+export const getProjectRoot = () => {
+  return path.join(import.meta.dirname, "../../..");
+};

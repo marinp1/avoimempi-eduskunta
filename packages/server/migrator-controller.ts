@@ -27,6 +27,7 @@ const IMPORT_ORDER: Partial<Record<string, number>> = {
   SaliDBIstunto: 10,
   SaliDBKohta: 15,
   SaliDBPuheenvuoro: 16,
+  ExcelSpeeches: 17, // After SaliDBPuheenvuoro since it references Speech table
   SaliDBAanestys: 20,
   SaliDBKohtaAanestys: 21,
   SaliDBAanestysEdustaja: 30,
