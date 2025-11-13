@@ -5,17 +5,12 @@ import {
   DialogContent,
   Grid,
   Typography,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   List,
   ListItem,
   ListItemText,
   Box,
   CircularProgress,
-  Pagination,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 type RepresentativeDetailsType = DatabaseTables.Representative & {
   district_name: string | null;
@@ -66,13 +61,7 @@ const fetchPersonDetails = async (personId: number) => {
   };
 };
 
-const groupBy = <T, K extends keyof any>(array: T[], getKey: (item: T) => K) =>
-  array.reduce((result, item) => {
-    const key = getKey(item);
-    if (!result[key]) result[key] = [];
-    result[key].push(item);
-    return result;
-  }, {} as Record<K, T[]>);
+
 
 export const RepresentativeDetails: React.FC<{
   open: boolean;
@@ -91,15 +80,7 @@ export const RepresentativeDetails: React.FC<{
     }
   }, [selectedRepresentative]);
 
-  const VOTES_PER_PAGE = 10;
 
-  const [votePages, setVotePages] = React.useState<{ [key: string]: number }>(
-    {}
-  );
-
-  const handleVotePageChange = (groupTitle: string, page: number) => {
-    setVotePages((prev) => ({ ...prev, [groupTitle]: page }));
-  };
 
   const calculateAge = (birthDate: string, deathDate?: string | null) => {
     const birth = new Date(birthDate);
@@ -156,13 +137,6 @@ export const RepresentativeDetails: React.FC<{
   };
 
   const timelineEvents = getTimelineEvents();
-
-  const groupedVotes = React.useMemo(() => {
-    return groupBy(
-      details?.votes ?? [],
-      (v) => `${v.section_title}: ${v.section_processing_phase}`
-    );
-  }, [details]);
 
   if (!selectedRepresentative) return null;
 
@@ -432,79 +406,7 @@ export const RepresentativeDetails: React.FC<{
             )}
           </Grid>
 
-          {/* Voting History */}
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="h6">Äänestyshistoria</Typography>
 
-            {details?.votes === undefined ? (
-              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-                <CircularProgress />
-              </Box>
-            ) : Object.entries(groupedVotes).length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                Ei äänestyksiä saatavilla.
-              </Typography>
-            ) : (
-              Object.entries(groupedVotes).map(([groupTitle, votes]) => {
-                const page = votePages[groupTitle] ?? 1;
-                const startIndex = (page - 1) * VOTES_PER_PAGE;
-                const paginatedVotes = votes.slice(
-                  startIndex,
-                  startIndex + VOTES_PER_PAGE
-                );
-                const pageCount = Math.ceil(votes.length / VOTES_PER_PAGE);
-
-                return (
-                  <Accordion key={groupTitle}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Typography>{groupTitle}</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      {paginatedVotes.length > 0 ? (
-                        <>
-                          <List dense>
-                            {paginatedVotes.map((v) => (
-                              <ListItem key={`${v.id}-${page}`}>
-                                <ListItemText
-                                  primary={`${v.vote} ${displayDate(
-                                    v.start_time
-                                  )}: ${v.title}`}
-                                />
-                              </ListItem>
-                            ))}
-                          </List>
-
-                          {pageCount > 1 && (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                justifyContent: "center",
-                                mt: 2,
-                              }}
-                            >
-                              <Pagination
-                                count={pageCount}
-                                page={page}
-                                onChange={(_, p) =>
-                                  handleVotePageChange(groupTitle, p)
-                                }
-                                size="small"
-                                color="primary"
-                              />
-                            </Box>
-                          )}
-                        </>
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">
-                          Ei äänestyksiä tällä sivulla.
-                        </Typography>
-                      )}
-                    </AccordionDetails>
-                  </Accordion>
-                );
-              })
-            )}
-          </Grid>
         </Grid>
       </DialogContent>
     </Dialog>
