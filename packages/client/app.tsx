@@ -9,7 +9,6 @@ import {
   Toolbar,
   Typography,
   ThemeProvider,
-  createTheme,
   GlobalStyles,
 } from "@mui/material";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
@@ -18,6 +17,7 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import VotingsPage from "./Votings";
 import EdustajatPage from "./Edustajat";
 import AdminPage from "./Admin";
+import { theme, gradients, commonStyles, spacing, borderRadius } from "./theme";
 
 const Pages = Object.freeze({
   Votings: "votings",
@@ -32,30 +32,6 @@ const PageComponents = {
   [Pages.Composition]: EdustajatPage,
   [Pages.Admin]: AdminPage,
 } satisfies Record<Page, React.FC<Record<string, never>>>;
-
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#667eea",
-    },
-    secondary: {
-      main: "#764ba2",
-    },
-    background: {
-      default: "#f5f7fa",
-    },
-  },
-  typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h4: {
-      fontWeight: 700,
-      letterSpacing: "-0.5px",
-    },
-  },
-  shape: {
-    borderRadius: 12,
-  },
-});
 
 export const App: React.FC = () => {
   // Initialize from URL path
@@ -107,7 +83,7 @@ export const App: React.FC = () => {
       <GlobalStyles
         styles={{
           body: {
-            background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+            background: gradients.background,
             minHeight: "100vh",
           },
         }}
@@ -118,17 +94,16 @@ export const App: React.FC = () => {
         position="static"
         elevation={0}
         sx={{
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          background: gradients.primary,
           borderBottom: "1px solid rgba(255,255,255,0.1)",
         }}
       >
-        <Toolbar sx={{ py: 1 }}>
+        <Toolbar sx={{ py: spacing.xs }}>
           <Typography
             variant="h4"
             sx={{
               flexGrow: 1,
-              fontWeight: 700,
-              letterSpacing: "-0.5px",
+              ...commonStyles.gradientText,
               background: "rgba(255,255,255,0.95)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
@@ -139,16 +114,12 @@ export const App: React.FC = () => {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="xl" sx={{ mt: 4, pb: 6 }}>
+      <Container maxWidth="xl" sx={{ mt: spacing.lg, pb: spacing.xl }}>
         {/* Modern Tabs */}
         <Box
           sx={{
-            mb: 4,
-            borderRadius: 3,
-            background: "rgba(255,255,255,0.9)",
-            backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255,255,255,0.6)",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            mb: spacing.lg,
+            ...commonStyles.glassCard,
             overflow: "hidden",
           }}
         >
@@ -160,19 +131,19 @@ export const App: React.FC = () => {
               "& .MuiTab-root": {
                 fontWeight: 600,
                 fontSize: "1rem",
-                py: 2,
+                py: spacing.sm,
                 transition: "all 0.3s ease",
                 "&:hover": {
                   background: "rgba(102, 126, 234, 0.05)",
                 },
               },
               "& .Mui-selected": {
-                color: "#667eea !important",
+                color: `${theme.palette.primary.main} !important`,
               },
               "& .MuiTabs-indicator": {
                 height: 3,
                 borderRadius: "3px 3px 0 0",
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                background: gradients.primary,
               },
             }}
           >
