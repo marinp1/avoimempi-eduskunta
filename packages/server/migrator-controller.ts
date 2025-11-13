@@ -26,6 +26,7 @@ const IMPORT_ORDER: Partial<Record<string, number>> = {
   MemberOfParliament: 0,
   SaliDBIstunto: 10,
   SaliDBKohta: 15,
+  SaliDBPuheenvuoro: 16,
   SaliDBAanestys: 20,
   SaliDBKohtaAanestys: 21,
   SaliDBAanestysEdustaja: 30,

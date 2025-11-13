@@ -1,0 +1,25 @@
+declare global {
+  export namespace DatabaseTables {
+    export type Speech = {
+      id: number;
+      key: string; // unique
+      session_key: string; // Session.key
+      section_key: string; // Section.key
+      ordinal: number;
+      ordinal_number: number;
+      speech_type: string; // PVTyyppi (T = normal speech)
+      request_method: string; // PyyntoTapa (I = interrupt, etc)
+      request_time: Modules.Common.DateString;
+      person_id: number; // Representative.person_id
+      first_name: string;
+      last_name: string;
+      gender: string;
+      party_abbreviation: string;
+      has_spoken: boolean; // Puhunut (0 = hasn't spoken yet, 1 = has spoken, 2 = speaking)
+      ministry: string;
+      modified_datetime: Modules.Common.DateString;
+    };
+  }
+}
+
+export {};

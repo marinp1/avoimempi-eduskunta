@@ -1,0 +1,22 @@
+CREATE TABLE Speech (
+  id INTEGER PRIMARY KEY,
+  key TEXT UNIQUE,
+  session_key TEXT,
+  section_key TEXT,
+  ordinal INTEGER,
+  ordinal_number INTEGER,
+  speech_type TEXT,
+  request_method TEXT,
+  request_time TEXT,
+  person_id INTEGER,
+  first_name TEXT,
+  last_name TEXT,
+  gender TEXT,
+  party_abbreviation TEXT,
+  has_spoken INTEGER,
+  ministry TEXT,
+  modified_datetime TEXT,
+  FOREIGN KEY (session_key) REFERENCES Session(key),
+  FOREIGN KEY (section_key) REFERENCES Section(key),
+  FOREIGN KEY (person_id) REFERENCES Representative(person_id)
+);
