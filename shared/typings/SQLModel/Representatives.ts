@@ -157,6 +157,10 @@ declare global {
       birth_place: string;
       death_place: string;
       profession: string;
+      start_date: string;
+      end_date: string;
+      party_name: string;
+      is_in_government: 1 | 0;
     };
 
     export type VotesByPerson = DatabaseTables.Voting &
