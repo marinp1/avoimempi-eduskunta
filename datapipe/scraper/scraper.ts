@@ -156,8 +156,32 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
   console.log();
 
   let currentPage = startPage;
-  let totalRowsScraped = 0;
   let loopCount = 0;
+
+  // Calculate total rows already scraped (for progress calculation)
+  let totalRowsScraped = 0;
+
+  if (startPage > 1) {
+    // Count rows from all previously scraped pages
+    for (let page = 1; page < startPage; page++) {
+      const pageKey = StorageKeyBuilder.forPage(stage, tableName, page);
+      const pageData = await storage.get(pageKey);
+
+      if (pageData) {
+        try {
+          const pageContent = JSON.parse(pageData) as EduskuntaApiResponse;
+          totalRowsScraped += pageContent.rowCount;
+        } catch (error) {
+          console.warn(`⚠️  Could not read page ${page} for progress calculation`);
+        }
+      }
+    }
+
+    if (totalRowsScraped > 0) {
+      const percentComplete = totalRows > 0 ? (totalRowsScraped / totalRows) * 100 : 0;
+      console.log(`📊 Already scraped: ${totalRowsScraped.toLocaleString()} rows (${percentComplete.toFixed(1)}%)`);
+    }
+  }
 
   // Determine starting primary key value
   let pkStartValue: number;
