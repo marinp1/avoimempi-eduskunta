@@ -477,6 +477,7 @@ export default function App() {
         open={dialogOpen}
         onClose={handleCloseDialog}
         selectedRepresentative={selectedRepresentative}
+        selectedDate={date}
       />
 
       {/* Footer */}
