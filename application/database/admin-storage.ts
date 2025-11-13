@@ -57,7 +57,7 @@ export class AdminStorageService {
     const prefix = StorageKeyBuilder.listPrefixForTable(stage, tableName);
 
     try {
-      const result = await storage.list({ prefix });
+      const result = await storage.list({ prefix, maxKeys: 100000 });
       return result.keys;
     } catch (error) {
       console.error(`Error listing files for ${stage}/${tableName}:`, error);
@@ -79,29 +79,55 @@ export class AdminStorageService {
   }
 
   /**
-   * Get exact row count by reading rowCount from all page files
+   * Get exact row count by reading only the last page file
+   * Formula: (pageCount - 1) * 100 + lastPageRowCount
    */
   private async getExactRowCount(stage: DataStage, tableName: string, files: StorageMetadata[]): Promise<number> {
     if (files.length === 0) return 0;
-
-    const storage = getStorage();
-    let totalRows = 0;
-
-    for (const file of files) {
+    if (files.length === 1) {
+      // Just one page, read it to get exact count
+      const storage = getStorage();
       try {
-        const data = await storage.get(file.key);
+        const data = await storage.get(files[0].key);
         if (data) {
           const pageData = JSON.parse(data) as { rowCount: number };
-          totalRows += pageData.rowCount || 0;
+          return pageData.rowCount || 0;
         }
       } catch (error) {
-        console.error(`Error reading ${file.key}:`, error);
-        // If we can't read a file, estimate it as 100 rows
-        totalRows += 100;
+        console.error(`Error reading ${files[0].key}:`, error);
+        return 100; // Fallback estimate
       }
     }
 
-    return totalRows;
+    const storage = getStorage();
+
+    // Find the last page (highest page number)
+    const sortedFiles = files
+      .map(f => ({ file: f, parsed: StorageKeyBuilder.parseKey(f.key) }))
+      .filter(f => f.parsed !== null)
+      .sort((a, b) => (b.parsed?.page || 0) - (a.parsed?.page || 0));
+
+    if (sortedFiles.length === 0) {
+      // Fallback: estimate all pages as 100 rows
+      return files.length * 100;
+    }
+
+    const lastFile = sortedFiles[0].file;
+
+    try {
+      const data = await storage.get(lastFile.key);
+      if (data) {
+        const pageData = JSON.parse(data) as { rowCount: number };
+        const lastPageRows = pageData.rowCount || 0;
+        // (pageCount - 1) * 100 + lastPageRows
+        return (files.length - 1) * 100 + lastPageRows;
+      }
+    } catch (error) {
+      console.error(`Error reading last page ${lastFile.key}:`, error);
+    }
+
+    // Fallback to estimation
+    return files.length * 100;
   }
 
   /**
