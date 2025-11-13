@@ -1,26 +1,35 @@
+// VoteResults.tsx
 import React from "react";
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Box,
+  TableContainer,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Paper,
+  Link,
+  Typography,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 let cache = new Map<string, ReturnType<typeof getVotings>>();
 
-const getVotings = async (
-  query: string
-): Promise<
-  Partial<{
-    [x: string]: DatabaseTables.Voting[];
-  }>
-> => {
+const getVotings = async (query: string) => {
   if (!query.trim() || query.trim().length < 3) return {};
   const qp = new URLSearchParams({ q: query.trim() });
-  return await fetch<DatabaseTables.Voting[]>(
-    `/api/votings/search?${qp.toString()}`
-  )
-    .then((val) => {
-      if (val.status !== 200) {
-        throw new Error(`${val.status}: ${val.statusText}`);
-      }
-      return val.json();
+  return fetch(`/api/votings/search?${qp.toString()}`)
+    .then((res) => {
+      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
+      return res.json();
     })
-    .then((data) => Object.groupBy(data, (d) => d.section_title));
+    .then((data: DatabaseTables.Voting[]) =>
+      Object.groupBy(data, (d) => d.section_title)
+    );
 };
 
 export function fetchData(query: string) {
@@ -38,63 +47,68 @@ const eduskuntaLink = (href: string) => {
   return `https://www.eduskunta.fi${href}`;
 };
 
-export const VoteResults: React.FC<{
-  query: string;
-}> = ({ query }) => {
+export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
   const results = React.use(fetchData(query?.trim()));
+
   return (
-    <div>
-      {Object.entries(results).map(([k, v]) => {
-        return (
-          <React.Fragment key={k}>
-            <details>
-              <summary>
-                <strong>{k}</strong>
-              </summary>
-              <table>
-                <thead>
-                  <tr>
-                    <td>Aika</td>
-                    <td>Vaihe</td>
-                    <td>Otsikko</td>
-                    <td>Jaa</td>
-                    <td>Ei</td>
-                    <td>Tyhjää</td>
-                    <td>Poissa</td>
-                    <td>Yht</td>
-                    <td>Viralliset linkit</td>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(v ?? []).map((res) => (
-                    <tr key={res.id}>
-                      <td>{res.start_time}</td>
-                      <td>{res.section_processing_phase}</td>
-                      <td>{res.title}</td>
-                      <td>{res.n_yes}</td>
-                      <td>{res.n_no}</td>
-                      <td>{res.n_abstain}</td>
-                      <td>{res.n_absent}</td>
-                      <td>{res.n_total}</td>
-                      <td className="votings-links">
-                        <a target="_blank" href={eduskuntaLink(res.result_url)}>
+    <Box>
+      {Object.entries(results).map(([sectionTitle, votes]) => (
+        <Accordion key={sectionTitle}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="subtitle1" fontWeight="bold">
+              {sectionTitle}
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Aika</TableCell>
+                    <TableCell>Vaihe</TableCell>
+                    <TableCell>Otsikko</TableCell>
+                    <TableCell>Jaa</TableCell>
+                    <TableCell>Ei</TableCell>
+                    <TableCell>Tyhjää</TableCell>
+                    <TableCell>Poissa</TableCell>
+                    <TableCell>Yht</TableCell>
+                    <TableCell>Viralliset linkit</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {(votes ?? []).map((res) => (
+                    <TableRow key={res.id} hover>
+                      <TableCell>{res.start_time}</TableCell>
+                      <TableCell>{res.section_processing_phase}</TableCell>
+                      <TableCell>{res.title}</TableCell>
+                      <TableCell>{res.n_yes}</TableCell>
+                      <TableCell>{res.n_no}</TableCell>
+                      <TableCell>{res.n_abstain}</TableCell>
+                      <TableCell>{res.n_absent}</TableCell>
+                      <TableCell>{res.n_total}</TableCell>
+                      <TableCell>
+                        <Link
+                          target="_blank"
+                          href={eduskuntaLink(res.result_url)}
+                          sx={{ mr: 1 }}
+                        >
                           Tulokset
-                        </a>
-                        <a
+                        </Link>
+                        <Link
                           target="_blank"
                           href={eduskuntaLink(res.proceedings_url)}
                         >
                           Pöytäkirja
-                        </a>
-                      </td>
-                    </tr>
+                        </Link>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </details>
-          </React.Fragment>
-        );
-      })}
-    </div>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </AccordionDetails>
+        </Accordion>
+      ))}
+    </Box>
   );
 };

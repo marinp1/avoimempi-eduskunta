@@ -1,5 +1,6 @@
+// VotingsPage.tsx
 import React, { Suspense } from "react";
-// import "./VotingsPage.css";
+import { TextField, Box, CircularProgress } from "@mui/material";
 import { VoteResults } from "./VoteResults";
 
 const VotingsPage = () => {
@@ -8,37 +9,35 @@ const VotingsPage = () => {
   const isStale = search !== deferredQuery;
 
   return (
-    <div>
-      <input
-        type="text"
-        placeholder="hae äänestyksiä otsikolla"
-        value={search}
-        onInput={(ev) => {
-          const val = (ev.target as HTMLInputElement).value ?? "";
-          setSearch(val);
-        }}
-      />
-      <div>
-        <Suspense
-          fallback={
-            <div>
-              <strong>Loading...</strong>
-            </div>
-          }
+    <Box sx={{ p: 2 }}>
+      <Box sx={{ mb: 2, maxWidth: 400 }}>
+        <TextField
+          fullWidth
+          label="Hae äänestyksiä otsikolla"
+          value={search}
+          onChange={(ev) => setSearch(ev.target.value ?? "")}
+        />
+      </Box>
+
+      <Suspense
+        fallback={
+          <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+            <CircularProgress />
+          </Box>
+        }
+      >
+        <Box
+          sx={{
+            opacity: isStale ? 0.5 : 1,
+            transition: isStale
+              ? "opacity 0.2s 0.2s linear"
+              : "opacity 0s 0s linear",
+          }}
         >
-          <div
-            style={{
-              opacity: isStale ? 0.5 : 1,
-              transition: isStale
-                ? "opacity 0.2s 0.2s linear"
-                : "opacity 0s 0s linear",
-            }}
-          >
-            <VoteResults query={deferredQuery} />
-          </div>
-        </Suspense>
-      </div>
-    </div>
+          <VoteResults query={deferredQuery} />
+        </Box>
+      </Suspense>
+    </Box>
   );
 };
 
