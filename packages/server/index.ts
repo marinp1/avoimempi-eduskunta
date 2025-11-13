@@ -18,6 +18,7 @@ const server = Bun.serve({
     "/": homepage,
     "/composition": homepage,
     "/votings": homepage,
+    "/sessions": homepage,
     "/admin": homepage,
 
     "/api/status": new Response("OK"),
@@ -96,7 +97,7 @@ const server = Bun.serve({
 
     "/api/person/:id/government-memberships": {
       GET: async (
-        req: BunRequest<"/api/person/:id/government-memberships">
+        req: BunRequest<"/api/person/:id/government-memberships">,
       ) => {
         const memberships = await db.fetchGovernmentMemberships(req.params);
         return new Response(JSON.stringify(memberships), {
@@ -112,15 +113,35 @@ const server = Bun.serve({
         if (!q)
           return Response.json(
             { message: "Missing query parameter" },
-            { status: 400 }
+            { status: 400 },
           );
         if (q.length < 3)
           return Response.json(
             { message: "Query paramter requires at least three characters" },
-            { status: 400 }
+            { status: 400 },
           );
         const titles = await db.queryVotings({ q });
         return new Response(JSON.stringify(titles), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
+    "/api/sessions": {
+      GET: async () => {
+        const sessions = await db.fetchSessions();
+        return new Response(JSON.stringify(sessions), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
+    "/api/sections/:sectionKey/speeches": {
+      GET: async (req: BunRequest<"/api/sections/:sectionKey/speeches">) => {
+        const speeches = await db.fetchSectionSpeeches({
+          sectionKey: req.params.sectionKey,
+        });
+        return new Response(JSON.stringify(speeches), {
           headers: { "Content-Type": "application/json" },
         });
       },
@@ -149,14 +170,19 @@ const server = Bun.serve({
     "/api/scraper/start": {
       POST: async (req: Request) => {
         try {
-          const body = await req.json() as { tableName: string; mode?: any };
+          const body = (await req.json()) as { tableName: string; mode?: any };
 
           if (!body.tableName) {
-            return Response.json({ error: "tableName is required" }, { status: 400 });
+            return Response.json(
+              { error: "tableName is required" },
+              { status: 400 },
+            );
           }
 
           // Start scraping in background
-          scraperController.startScraping(body.tableName, body.mode).catch(console.error);
+          scraperController
+            .startScraping(body.tableName, body.mode)
+            .catch(console.error);
 
           return Response.json({ success: true, message: "Scraping started" });
         } catch (error: any) {
@@ -169,7 +195,10 @@ const server = Bun.serve({
       POST: async () => {
         try {
           scraperController.stopScraping();
-          return Response.json({ success: true, message: "Scraper stop requested" });
+          return Response.json({
+            success: true,
+            message: "Scraper stop requested",
+          });
         } catch (error: any) {
           return Response.json({ error: error.message }, { status: 400 });
         }
@@ -186,10 +215,13 @@ const server = Bun.serve({
     "/api/parser/start": {
       POST: async (req: Request) => {
         try {
-          const body = await req.json() as { tableName: string };
+          const body = (await req.json()) as { tableName: string };
 
           if (!body.tableName) {
-            return Response.json({ error: "tableName is required" }, { status: 400 });
+            return Response.json(
+              { error: "tableName is required" },
+              { status: 400 },
+            );
           }
 
           // Start parsing in background
@@ -206,7 +238,10 @@ const server = Bun.serve({
       POST: async () => {
         try {
           parserController.stopParsing();
-          return Response.json({ success: true, message: "Parser stop requested" });
+          return Response.json({
+            success: true,
+            message: "Parser stop requested",
+          });
         } catch (error: any) {
           return Response.json({ error: error.message }, { status: 400 });
         }
@@ -237,7 +272,10 @@ const server = Bun.serve({
       POST: async () => {
         try {
           migratorController.stopMigration();
-          return Response.json({ success: true, message: "Migration stop requested" });
+          return Response.json({
+            success: true,
+            message: "Migration stop requested",
+          });
         } catch (error: any) {
           return Response.json({ error: error.message }, { status: 400 });
         }
@@ -322,7 +360,7 @@ const server = Bun.serve({
 });
 
 console.log(
-  `Listening on ${server.url} ${server.development ? "(development)" : ""}`
+  `Listening on ${server.url} ${server.development ? "(development)" : ""}`,
 );
 
 export {};

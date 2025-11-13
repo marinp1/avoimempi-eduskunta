@@ -118,3 +118,80 @@ WHERE
     gm.person_id = $personId
 ORDER BY gm.start_date DESC
 `;
+
+export const sessions = sql`
+SELECT
+    s.id,
+    s.number,
+    s.key,
+    s.date,
+    s.year,
+    s.type,
+    s.state,
+    s.description,
+    s.start_time_actual,
+    s.start_time_reported,
+    s.agenda_key,
+    a.title as agenda_title,
+    a.state as agenda_state
+FROM
+    Session s
+LEFT JOIN
+    Agenda a ON s.agenda_key = a.key
+ORDER BY s.date DESC, s.number DESC
+LIMIT 100
+`;
+
+export const sessionSections = sql`
+SELECT
+    sec.id,
+    sec.key,
+    sec.identifier,
+    sec.title,
+    sec.ordinal,
+    sec.note,
+    sec.processing_title,
+    sec.resolution,
+    sec.session_key,
+    sec.agenda_key,
+    sec.modified_datetime,
+    sec.vaski_id
+FROM
+    Section sec
+WHERE
+    sec.session_key = $sessionKey
+ORDER BY sec.ordinal ASC
+`;
+
+export const sectionSpeeches = sql`
+SELECT
+    sp.id,
+    sp.key,
+    sp.session_key,
+    sp.section_key,
+    sp.ordinal,
+    sp.ordinal_number,
+    sp.speech_type,
+    sp.request_method,
+    sp.request_time,
+    sp.person_id,
+    sp.first_name,
+    sp.last_name,
+    sp.gender,
+    sp.party_abbreviation,
+    sp.has_spoken,
+    sp.ministry,
+    sp.modified_datetime,
+    sp.excel_key,
+    es.content,
+    es.start_time,
+    es.end_time,
+    es.minutes_url
+FROM
+    Speech sp
+LEFT JOIN
+    ExcelSpeech es ON sp.excel_key = es.excel_id
+WHERE
+    sp.section_key = $sectionKey
+ORDER BY sp.ordinal ASC
+`;

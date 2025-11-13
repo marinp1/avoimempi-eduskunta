@@ -133,6 +133,42 @@ export class DatabaseConnection {
     return data;
   }
 
+  public async fetchSessions() {
+    const stmt = this.db.query<
+      DatabaseTables.Session & { agenda_title?: string; agenda_state?: string },
+      []
+    >(queries.sessions);
+    const sessions = stmt.all();
+    stmt.finalize();
+
+    // Fetch sections for each session
+    const sectionsStmt = this.db.prepare<
+      DatabaseTables.Section,
+      { $sessionKey: string }
+    >(queries.sessionSections);
+
+    const sessionsWithSections = sessions.map((session) => {
+      const sections = sectionsStmt.all({ $sessionKey: session.key });
+      return {
+        ...session,
+        sections,
+      };
+    });
+
+    sectionsStmt.finalize();
+    return sessionsWithSections;
+  }
+
+  public async fetchSectionSpeeches(params: { sectionKey: string }) {
+    const stmt = this.db.prepare<
+      DatabaseTables.Speech,
+      { $sectionKey: string }
+    >(queries.sectionSpeeches);
+    const speeches = stmt.all({ $sectionKey: params.sectionKey });
+    stmt.finalize();
+    return speeches;
+  }
+
   #connectToDatabase() {
     const databasePath = getDatabasePath();
     this.#database = new Database(databasePath, {
