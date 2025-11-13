@@ -55,7 +55,7 @@ const DatabaseTables = Object.freeze({
   District: "District",
   RepresentativeDistrict: "RepresentativeDistrict",
   Term: "Term",
-  LeavingParliament: "LeavingParliament",
+  PeopleLeavingParliament: "PeopleLeavingParliament",
   PeopleJoiningParliament: "PeopleJoiningParliament",
   TemporaryAbsence: "TemporaryAbsence",
   ParliamentaryGroupAssignment: "ParliamentaryGroupAssignment",
@@ -102,7 +102,7 @@ export default (db: Database) =>
     const electoralDistrictRows: DatabaseTables.RepresentativeDistrict[] =
       mergeArrays(
         XmlDataFi.Henkilo.Vaalipiirit.EdellisetVaalipiirit?.VaaliPiiri,
-        XmlDataFi.Henkilo.Vaalipiirit.NykyinenVaalipiiri
+        XmlDataFi.Henkilo.Vaalipiirit.NykyinenVaalipiiri,
       ).map((v) => {
         if (!districtRows.find((r) => r.code === v.Tunnus)) {
           districtRows.push({ code: v.Tunnus, name: v.Nimi || v.Tunnus });
@@ -116,7 +116,7 @@ export default (db: Database) =>
       });
 
     const termRows: DatabaseTables.Term[] = mergeArrays(
-      XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi
+      XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi,
     ).map((v) => ({
       person_id: +dataToImport.personId,
       start_date: parseDate(v.AlkuPvm)!,
@@ -125,14 +125,14 @@ export default (db: Database) =>
 
     type ParsedAbsence = {
       absenceRows: DatabaseTables.TemporaryAbsence[];
-      joiningRows: DatabaseTables.JoiningParliament[];
-      leavingRows: DatabaseTables.LeavingParliament[];
+      joiningRows: DatabaseTables.PeopleJoiningParliament[];
+      leavingRows: DatabaseTables.PeopleLeavingParliament[];
     };
 
     const { absenceRows, joiningRows, leavingRows }: ParsedAbsence =
       mergeArrays(
         XmlDataFi.Henkilo.EdustajatoimiKeskeytynyt?.ToimenKeskeytys,
-        XmlDataFi.Henkilo.Kansanedustajana?.Keskeytys
+        XmlDataFi.Henkilo.Kansanedustajana?.Keskeytys,
       )
         .map((v) => ({
           person_id: +dataToImport.personId,
@@ -157,7 +157,7 @@ export default (db: Database) =>
                     replacement_person: cur.replacement_person,
                     end_date: cur.end_date,
                   },
-                ] satisfies DatabaseTables.LeavingParliament[],
+                ] satisfies DatabaseTables.PeopleLeavingParliament[],
               };
             }
             if (cur.replacement_person?.startsWith("Edeltäjä ")) {
@@ -171,7 +171,7 @@ export default (db: Database) =>
                     replacement_person: cur.replacement_person,
                     start_date: cur.end_date,
                   },
-                ] satisfies DatabaseTables.JoiningParliament[],
+                ] satisfies DatabaseTables.PeopleJoiningParliament[],
               };
             }
             return {
@@ -179,28 +179,28 @@ export default (db: Database) =>
               absenceRows: [
                 ...prev.absenceRows,
                 cur,
-              ] satisfies DatabaseTables.LeavingParliament[],
+              ] satisfies DatabaseTables.PeopleLeavingParliament[],
             };
           },
           {
             absenceRows: [],
             joiningRows: [],
             leavingRows: [],
-          }
+          },
         );
 
     const trustPositionRows: DatabaseTables.TrustPosition[] = [
       ...mergeArrays(
-        XmlDataFi.Henkilo.ValtiollisetLuottamustehtavat?.Tehtava
+        XmlDataFi.Henkilo.ValtiollisetLuottamustehtavat?.Tehtava,
       ).map((s) => ({ ...s, type: "national" as const })),
       ...mergeArrays(
-        XmlDataFi.Henkilo.KunnallisetLuottamustehtavat?.Tehtava
+        XmlDataFi.Henkilo.KunnallisetLuottamustehtavat?.Tehtava,
       ).map((s) => ({ ...s, type: "municapility" as const })),
       ...mergeArrays(XmlDataFi.Henkilo.MuutLuottamustehtavat?.Tehtava).map(
-        (s) => ({ ...s, type: "other" as const })
+        (s) => ({ ...s, type: "other" as const }),
       ),
       ...mergeArrays(
-        XmlDataFi.Henkilo.KansanvalisetLuottamustehtavat?.Tehtava
+        XmlDataFi.Henkilo.KansanvalisetLuottamustehtavat?.Tehtava,
       ).map((s) => ({ ...s, type: "international" as const })),
     ].map((v) => ({
       person_id: +dataToImport.personId,
@@ -214,9 +214,9 @@ export default (db: Database) =>
     const committeeMembershipRows: DatabaseTables.CommitteeMembership[] = [
       ...mergeArrays(
         XmlDataFi.Henkilo.NykyisetToimielinjasenyydet?.Toimielin,
-        XmlDataFi.Henkilo.AiemmatToimielinjasenyydet?.Toimielin
+        XmlDataFi.Henkilo.AiemmatToimielinjasenyydet?.Toimielin,
       ).flatMap((s) =>
-        mergeArrays(s.Jasenyys).map((j) => ({ ...j, __parent__: s }))
+        mergeArrays(s.Jasenyys).map((j) => ({ ...j, __parent__: s })),
       ),
     ].map((v) => {
       const committee_code =
@@ -253,15 +253,15 @@ export default (db: Database) =>
       [
         ...mergeArrays(
           XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat
-            ?.Eduskuntaryhma
+            ?.Eduskuntaryhma,
         ).flatMap((s) =>
           mergeArrays(s.Jasenyys).map((j) => ({
             ...j,
             __parent__: s,
-          }))
+          })),
         ),
         ...mergeArrays(
-          XmlDataFi.Henkilo.Eduskuntaryhmat.NykyinenEduskuntaryhma
+          XmlDataFi.Henkilo.Eduskuntaryhmat.NykyinenEduskuntaryhma,
         ).map((s) => ({
           ...s,
           LoppuPvm: null,
@@ -286,14 +286,14 @@ export default (db: Database) =>
           XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatAiemmissaEduskuntaryhmissa
             ?.Eduskuntaryhma,
           XmlDataFi.Henkilo.Eduskuntaryhmat.TehtavatEduskuntaryhmassa
-            ?.Eduskuntaryhma
+            ?.Eduskuntaryhma,
         ),
       ]
         .flatMap((s) =>
           mergeArrays(s.Tehtava).map((t) => ({
             ...t,
             __parent__: s,
-          }))
+          })),
         )
         .map((v) => {
           const groupCode = addParliamentGroupRow({
@@ -319,11 +319,11 @@ export default (db: Database) =>
           government: v.Hallitus,
           start_date: parseDate(v.AlkuPvm)!,
           end_date: parseDate(v.LoppuPvm),
-        })
+        }),
       );
 
     const workRows: DatabaseTables.WorkExperience[] = mergeArrays(
-      XmlDataFi.Henkilo.TyoUra?.Tyo
+      XmlDataFi.Henkilo.TyoUra?.Tyo,
     ).map((v) => ({
       person_id: +dataToImport.personId,
       position: v.Nimi,
@@ -331,7 +331,7 @@ export default (db: Database) =>
     }));
 
     const educationRows: DatabaseTables.Education[] = mergeArrays(
-      XmlDataFi.Henkilo.Koulutukset?.Koulutus
+      XmlDataFi.Henkilo.Koulutukset?.Koulutus,
     ).map((v) => ({
       person_id: +dataToImport.personId,
       name: v.Nimi,
@@ -352,18 +352,18 @@ export default (db: Database) =>
             (row) =>
               `(${row
                 .map(
-                  (value) => `'${String(value || "").replaceAll("'", "''")}'`
+                  (value) => `'${String(value || "").replaceAll("'", "''")}'`,
                 )
-                .join(", ")})`
+                .join(", ")})`,
           )
           .join(", ");
         if (process.env.DEBUG) {
           console.log(
-            `INSERT OR IGNORE INTO ${table} (${columnsString}) VALUES ${valuesString}`
+            `INSERT OR IGNORE INTO ${table} (${columnsString}) VALUES ${valuesString}`,
           );
         }
         db.run(
-          `INSERT OR IGNORE INTO ${table} (${columnsString}) VALUES ${valuesString}`
+          `INSERT OR IGNORE INTO ${table} (${columnsString}) VALUES ${valuesString}`,
         );
       }
     };
@@ -372,30 +372,30 @@ export default (db: Database) =>
     await insertRows(DatabaseTables.District, districtRows);
     await insertRows(
       DatabaseTables.RepresentativeDistrict,
-      electoralDistrictRows
+      electoralDistrictRows,
     );
     await insertRows(DatabaseTables.Term, termRows);
     await insertRows(DatabaseTables.TemporaryAbsence, absenceRows);
-    await insertRows(DatabaseTables.LeavingParliament, leavingRows);
+    await insertRows(DatabaseTables.PeopleLeavingParliament, leavingRows);
     await insertRows(DatabaseTables.PeopleJoiningParliament, joiningRows);
     await insertRows(DatabaseTables.TrustPosition, trustPositionRows);
     await insertRows(DatabaseTables.Committee, committeeRows);
     await insertRows(
       DatabaseTables.CommitteeMembership,
-      committeeMembershipRows
+      committeeMembershipRows,
     );
     await insertRows(DatabaseTables.ParliamentaryGroup, parliamentGroupRows);
     await insertRows(
       DatabaseTables.ParliamentaryGroupMembership,
-      parliamentGroupMembershipRows
+      parliamentGroupMembershipRows,
     );
     await insertRows(
       DatabaseTables.ParliamentaryGroupAssignment,
-      parliamentGroupAssignmentRows
+      parliamentGroupAssignmentRows,
     );
     await insertRows(
       DatabaseTables.GovernmentMembership,
-      governmentMembershipRows
+      governmentMembershipRows,
     );
     await insertRows(DatabaseTables.WorkHistory, workRows);
     await insertRows(DatabaseTables.Education, educationRows);

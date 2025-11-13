@@ -65,21 +65,24 @@ export default function App() {
     const inOpposition = totalMembers - inGovernment;
 
     // Group by party
-    const partyGroups = members.reduce((acc, m) => {
-      const party = m.party_name || "Ei tiedossa";
-      if (!acc[party]) {
-        acc[party] = { total: 0, inGovernment: 0 };
-      }
-      acc[party].total++;
-      if (m.is_in_government === 1) {
-        acc[party].inGovernment++;
-      }
-      return acc;
-    }, {} as Record<string, { total: number; inGovernment: number }>);
+    const partyGroups = members.reduce(
+      (acc, m) => {
+        const party = m.party_name || "Ei tiedossa";
+        if (!acc[party]) {
+          acc[party] = { total: 0, inGovernment: 0 };
+        }
+        acc[party].total++;
+        if (m.is_in_government === 1) {
+          acc[party].inGovernment++;
+        }
+        return acc;
+      },
+      {} as Record<string, { total: number; inGovernment: number }>,
+    );
 
     // Sort parties by size
     const sortedParties = Object.entries(partyGroups).sort(
-      ([, a], [, b]) => b.total - a.total
+      ([, a], [, b]) => b.total - a.total,
     );
 
     return {
@@ -114,7 +117,7 @@ export default function App() {
   useEffect(() => {
     const personId = getInitialPersonId();
     if (personId && members.length > 0) {
-      const member = members.find(m => m.person_id === personId);
+      const member = members.find((m) => m.person_id === personId);
       if (member) {
         setSelectedRepresentative(member);
         setDialogOpen(true);
@@ -131,7 +134,7 @@ export default function App() {
       setDate(newDate);
 
       if (personId && members.length > 0) {
-        const member = members.find(m => m.person_id === personId);
+        const member = members.find((m) => m.person_id === personId);
         if (member) {
           setSelectedRepresentative(member);
           setDialogOpen(true);
@@ -322,7 +325,10 @@ export default function App() {
                     Hallituksessa
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    ({((stats.inGovernment / stats.totalMembers) * 100).toFixed(1)}
+                    (
+                    {((stats.inGovernment / stats.totalMembers) * 100).toFixed(
+                      1,
+                    )}
                     %)
                   </Typography>
                 </Box>
@@ -336,7 +342,9 @@ export default function App() {
                     background: "rgba(255, 152, 0, 0.1)",
                   }}
                 >
-                  <PieChartIcon sx={{ fontSize: 40, color: "#ff9800", mb: 1 }} />
+                  <PieChartIcon
+                    sx={{ fontSize: 40, color: "#ff9800", mb: 1 }}
+                  />
                   <Typography variant="h3" fontWeight="700" color="#ff9800">
                     {stats.inOpposition}
                   </Typography>
@@ -344,7 +352,10 @@ export default function App() {
                     Oppositiossa
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    ({((stats.inOpposition / stats.totalMembers) * 100).toFixed(1)}
+                    (
+                    {((stats.inOpposition / stats.totalMembers) * 100).toFixed(
+                      1,
+                    )}
                     %)
                   </Typography>
                 </Box>
@@ -394,9 +405,7 @@ export default function App() {
                     <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
                       {data.inGovernment > 0 && (
                         <Chip
-                          icon={
-                            <AccountBalanceIcon sx={{ fontSize: 16 }} />
-                          }
+                          icon={<AccountBalanceIcon sx={{ fontSize: 16 }} />}
                           label={`Hallitus: ${data.inGovernment}`}
                           size="small"
                           sx={{
@@ -441,113 +450,114 @@ export default function App() {
             overflow: "hidden",
           }}
         >
-        {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-            <CircularProgress />
-          </Box>
-        ) : error ? (
-          <Alert severity="error" sx={{ py: 2, textAlign: "center" }}>
-            {error}
-          </Alert>
-        ) : (
-          <Table>
-            <TableHead>
-              <TableRow
-                sx={{
-                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                }}
-              >
-                <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                  Nimi
-                </TableCell>
-                <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                  Puolue
-                </TableCell>
-                <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                  Hallitus
-                </TableCell>
-                <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                  Sukupuoli
-                </TableCell>
-                <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                  Syntymäaika
-                </TableCell>
-                <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                  Syntymäpaikka
-                </TableCell>
-                <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                  Ammatti
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {members.map((m, index) => (
+          {loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+              <CircularProgress />
+            </Box>
+          ) : error ? (
+            <Alert severity="error" sx={{ py: 2, textAlign: "center" }}>
+              {error}
+            </Alert>
+          ) : (
+            <Table>
+              <TableHead>
                 <TableRow
-                  key={m.person_id}
-                  hover
                   sx={{
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    "&:hover": {
-                      background: "rgba(102, 126, 234, 0.08)",
-                      transform: "scale(1.005)",
-                    },
-                    animation: `fadeIn 0.5s ease-in-out ${index * 0.05}s both`,
-                    "@keyframes fadeIn": {
-                      from: {
-                        opacity: 0,
-                        transform: "translateY(10px)",
-                      },
-                      to: {
-                        opacity: 1,
-                        transform: "translateY(0)",
-                      },
-                    },
+                    background:
+                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                   }}
-                  onClick={() => handleRowClick(m)}
                 >
-                  <TableCell sx={{ fontWeight: 500 }}>
-                    {m.first_name} {m.last_name}
+                  <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    Nimi
                   </TableCell>
-                  <TableCell>
-                    {(m as any).party_name ? (
-                      <Chip
-                        label={(m as any).party_name}
-                        size="small"
-                        sx={{
-                          background: "rgba(102, 126, 234, 0.15)",
-                          color: "#667eea",
-                          fontWeight: 600,
-                          fontSize: "0.75rem",
-                        }}
-                      />
-                    ) : (
-                      "-"
-                    )}
+                  <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    Puolue
                   </TableCell>
-                  <TableCell align="center">
-                    {(m as any).is_in_government === 1 ? (
-                      <CheckCircleIcon
-                        sx={{
-                          color: "#4caf50",
-                          fontSize: 24,
-                        }}
-                        titleAccess="Hallituksessa"
-                      />
-                    ) : (
-                      "-"
-                    )}
+                  <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    Hallitus
                   </TableCell>
-                  <TableCell>{m.gender}</TableCell>
-                  <TableCell>{m.birth_date}</TableCell>
-                  <TableCell>{m.birth_place}</TableCell>
-                  <TableCell>{m.profession}</TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    Sukupuoli
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    Syntymäaika
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    Syntymäpaikka
+                  </TableCell>
+                  <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    Ammatti
+                  </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </TableContainer>
+              </TableHead>
+              <TableBody>
+                {members.map((m, index) => (
+                  <TableRow
+                    key={m.person_id}
+                    hover
+                    sx={{
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      "&:hover": {
+                        background: "rgba(102, 126, 234, 0.08)",
+                        transform: "scale(1.005)",
+                      },
+                      animation: `fadeIn 0.5s ease-in-out ${index * 0.05}s both`,
+                      "@keyframes fadeIn": {
+                        from: {
+                          opacity: 0,
+                          transform: "translateY(10px)",
+                        },
+                        to: {
+                          opacity: 1,
+                          transform: "translateY(0)",
+                        },
+                      },
+                    }}
+                    onClick={() => handleRowClick(m)}
+                  >
+                    <TableCell sx={{ fontWeight: 500 }}>
+                      {m.first_name} {m.last_name}
+                    </TableCell>
+                    <TableCell>
+                      {(m as any).party_name ? (
+                        <Chip
+                          label={(m as any).party_name}
+                          size="small"
+                          sx={{
+                            background: "rgba(102, 126, 234, 0.15)",
+                            color: "#667eea",
+                            fontWeight: 600,
+                            fontSize: "0.75rem",
+                          }}
+                        />
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell align="center">
+                      {(m as any).is_in_government === 1 ? (
+                        <CheckCircleIcon
+                          sx={{
+                            color: "#4caf50",
+                            fontSize: 24,
+                          }}
+                          titleAccess="Hallituksessa"
+                        />
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell>{m.gender}</TableCell>
+                    <TableCell>{m.birth_date}</TableCell>
+                    <TableCell>{m.birth_place}</TableCell>
+                    <TableCell>{m.profession}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </TableContainer>
       </Fade>
 
       {/* Dialog */}

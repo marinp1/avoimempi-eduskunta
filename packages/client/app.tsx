@@ -62,7 +62,8 @@ export const App: React.FC = () => {
   const getInitialTab = (): Page => {
     const path = window.location.pathname;
     if (path === "/votings") return Pages.Votings;
-    if (path === "/composition" || path === "/composition/") return Pages.Composition;
+    if (path === "/composition" || path === "/composition/")
+      return Pages.Composition;
     if (path === "/admin") return Pages.Admin;
     // Default to composition
     return Pages.Composition;

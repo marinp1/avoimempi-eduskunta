@@ -4,7 +4,12 @@ import { parseTable } from "./parser";
 async function main() {
   const args = process.argv.slice(2);
 
-  if (args.length === 0 || args[0] === "help" || args[0] === "--help" || args[0] === "-h") {
+  if (
+    args.length === 0 ||
+    args[0] === "help" ||
+    args[0] === "--help" ||
+    args[0] === "-h"
+  ) {
     printHelp();
     process.exit(0);
   }
@@ -26,9 +31,7 @@ async function main() {
 }
 
 async function showStatus() {
-  const { getStorage, StorageKeyBuilder } = await import(
-    "../../shared/storage"
-  );
+  const { getStorage, StorageKeyBuilder } = await import("#storage");
   const storage = getStorage();
 
   console.log("📊 Parser Status\n");
@@ -68,7 +71,12 @@ async function showStatus() {
     return;
   }
 
-  console.log("Table".padEnd(35) + "Raw Pages".padEnd(15) + "Parsed Pages".padEnd(15) + "Status");
+  console.log(
+    "Table".padEnd(35) +
+      "Raw Pages".padEnd(15) +
+      "Parsed Pages".padEnd(15) +
+      "Status",
+  );
   console.log("─".repeat(80));
 
   for (const table of sortedTables) {
@@ -92,7 +100,7 @@ async function showStatus() {
       table.padEnd(35) +
         rawPages.toString().padEnd(15) +
         parsedPages.toString().padEnd(15) +
-        status
+        status,
     );
   }
 

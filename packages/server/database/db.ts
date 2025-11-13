@@ -42,7 +42,7 @@ export class DatabaseConnection {
       DatabaseTables.ParliamentGroupMembership,
       { $personId: number }
     >(
-      queries.sql`SELECT pgm.* FROM Representative r JOIN ParliamentaryGroupMembership pgm ON r.person_id = pgm.person_id WHERE r.person_id = $personId ORDER BY start_date ASC;`
+      queries.sql`SELECT pgm.* FROM Representative r JOIN ParliamentaryGroupMembership pgm ON r.person_id = pgm.person_id WHERE r.person_id = $personId ORDER BY start_date ASC;`,
     );
     const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
@@ -51,7 +51,7 @@ export class DatabaseConnection {
 
   public async fetchPersonTerms(params: { id: string }) {
     const stmt = this.db.prepare<DatabaseTables.Term, { $personId: number }>(
-      queries.sql`SELECT t.* FROM Representative r JOIN term t ON r.person_id = t.person_id WHERE r.person_id = $personId ORDER BY t.start_date ASC;`
+      queries.sql`SELECT t.* FROM Representative r JOIN term t ON r.person_id = t.person_id WHERE r.person_id = $personId ORDER BY t.start_date ASC;`,
     );
     const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
@@ -96,7 +96,7 @@ export class DatabaseConnection {
 
   public async fetchLeavingParliamentRecords(params: { id: string }) {
     const stmt = this.db.prepare<
-      DatabaseTables.LeavingParliament,
+      DatabaseTables.PeopleLeavingParliament,
       { $personId: number }
     >(queries.leavingParliamentRecords);
     const data = stmt.all({ $personId: +params.id });
@@ -126,7 +126,7 @@ export class DatabaseConnection {
 
   public async queryVotings(params: { q: string }) {
     const stmt = this.db.prepare<DatabaseTables.Voting, []>(
-      queries.sql`SELECT v.* FROM voting v WHERE v.section_title LIKE '%${params.q}%' ORDER BY start_time ASC LIMIT 100`
+      queries.sql`SELECT v.* FROM voting v WHERE v.section_title LIKE '%${params.q}%' ORDER BY start_time ASC LIMIT 100`,
     );
     const data = stmt.all();
     stmt.finalize();

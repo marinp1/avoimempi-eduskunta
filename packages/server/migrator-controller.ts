@@ -77,7 +77,7 @@ export class MigratorController {
     return allTables.sort(
       (a, b) =>
         (IMPORT_ORDER[a] ?? Number.MAX_SAFE_INTEGER) -
-        (IMPORT_ORDER[b] ?? Number.MAX_SAFE_INTEGER)
+        (IMPORT_ORDER[b] ?? Number.MAX_SAFE_INTEGER),
     );
   }
 
@@ -171,19 +171,23 @@ export class MigratorController {
       // Run migrations
       const migrationsPath = path.resolve(
         import.meta.dirname,
-        "../../datapipe/migrator/migrations"
+        "../datapipe/migrator/migrations",
       );
       migrate(targetDatabase, getMigrations(migrationsPath));
 
       // Clear all tables
       const tables = targetDatabase
-        .query<{ name: string }, []>(
-          "SELECT name FROM sqlite_master WHERE type='table';"
-        )
+        .query<
+          { name: string },
+          []
+        >("SELECT name FROM sqlite_master WHERE type='table';")
         .all();
 
       for (const table of tables) {
-        if (table.name !== "sqlite_sequence" && table.name !== "_bun_migrations") {
+        if (
+          table.name !== "sqlite_sequence" &&
+          table.name !== "_bun_migrations"
+        ) {
           targetDatabase.run(`DELETE FROM ${table.name};`);
         }
       }
@@ -211,7 +215,7 @@ export class MigratorController {
         // Check if migrator exists
         const migratorPath = path.resolve(
           import.meta.dirname,
-          `../../datapipe/migrator/${tableName}/migrator.ts`
+          `../datapipe/migrator/${tableName}/migrator.ts`,
         );
 
         if (fs.existsSync(migratorPath)) {
@@ -235,8 +239,13 @@ export class MigratorController {
               const rowForMigrator = { ...row };
 
               // Handle XmlDataFi field specifically (used in MemberOfParliament)
-              if (rowForMigrator.XmlDataFi && typeof rowForMigrator.XmlDataFi === 'object') {
-                rowForMigrator.XmlDataFi = JSON.stringify(rowForMigrator.XmlDataFi);
+              if (
+                rowForMigrator.XmlDataFi &&
+                typeof rowForMigrator.XmlDataFi === "object"
+              ) {
+                rowForMigrator.XmlDataFi = JSON.stringify(
+                  rowForMigrator.XmlDataFi,
+                );
               }
 
               targetDatabase.exec("BEGIN TRANSACTION;");
@@ -267,11 +276,11 @@ export class MigratorController {
       // Update database timestamp
       const timestamp = new Date().toISOString();
       targetDatabase.run(
-        `CREATE TABLE IF NOT EXISTS _migration_info (key TEXT PRIMARY KEY, value TEXT);`
+        `CREATE TABLE IF NOT EXISTS _migration_info (key TEXT PRIMARY KEY, value TEXT);`,
       );
       targetDatabase.run(
         `INSERT OR REPLACE INTO _migration_info (key, value) VALUES ('last_migration', ?);`,
-        [timestamp]
+        [timestamp],
       );
 
       targetDatabase.close();
@@ -330,9 +339,10 @@ export class MigratorController {
     try {
       const db = sqlite.open(getDatabasePath(), { readonly: true });
       const result = db
-        .query<{ value: string }, []>(
-          `SELECT value FROM _migration_info WHERE key = 'last_migration'`
-        )
+        .query<
+          { value: string },
+          []
+        >(`SELECT value FROM _migration_info WHERE key = 'last_migration'`)
         .get();
       db.close();
       return result?.value || null;

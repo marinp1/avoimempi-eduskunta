@@ -46,25 +46,25 @@ const fetchPersonDetails = async (personId: number) => {
     governmentMemberships,
   ] = await Promise.all([
     fetch<DatabaseTables.ParliamentGroupMembership[]>(
-      `/api/person/${personId}/group-memberships`
+      `/api/person/${personId}/group-memberships`,
     ).then((res) => res.json()),
     fetch<DatabaseTables.Term[]>(`/api/person/${personId}/terms`).then((res) =>
-      res.json()
+      res.json(),
     ),
-    fetch<RepresentativeDetailsType>(
-      `/api/person/${personId}/details`
-    ).then((res) => res.json()),
+    fetch<RepresentativeDetailsType>(`/api/person/${personId}/details`).then(
+      (res) => res.json(),
+    ),
     fetch<DistrictHistoryType[]>(`/api/person/${personId}/districts`).then(
-      (res) => zres.json()
+      (res) => res.json(),
     ),
-    fetch<DatabaseTables.LeavingParliament[]>(
-      `/api/person/${personId}/leaving-records`
+    fetch<DatabaseTables.PeopleLeavingParliament[]>(
+      `/api/person/${personId}/leaving-records`,
     ).then((res) => res.json()),
     fetch<DatabaseTables.TrustPosition[]>(
-      `/api/person/${personId}/trust-positions`
+      `/api/person/${personId}/trust-positions`,
     ).then((res) => res.json()),
     fetch<DatabaseTables.GovernmentMembership[]>(
-      `/api/person/${personId}/government-memberships`
+      `/api/person/${personId}/government-memberships`,
     ).then((res) => res.json()),
   ]);
   return {
@@ -116,7 +116,11 @@ const ExpandableSection: React.FC<{
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           {icon}
-          <Typography variant="body1" fontWeight="600" sx={{ color: "#1a1a1a" }}>
+          <Typography
+            variant="body1"
+            fontWeight="600"
+            sx={{ color: "#1a1a1a" }}
+          >
             {title}
           </Typography>
         </Box>
@@ -172,16 +176,23 @@ export const RepresentativeDetails: React.FC<{
 
   if (!selectedRepresentative) return null;
 
-  const currentParty = details?.groupMemberships?.[0]?.group_name || "Ei tiedossa";
-  const currentDistrict = details?.districts?.[0]?.district_name || "Ei tiedossa";
+  const currentParty =
+    details?.groupMemberships?.[0]?.group_name || "Ei tiedossa";
+  const currentDistrict =
+    details?.districts?.[0]?.district_name || "Ei tiedossa";
 
   // Check if person was alive on selected date
   const selectedDateObj = new Date(selectedDate);
-  const deathDateObj = selectedRepresentative.death_date ? new Date(selectedRepresentative.death_date) : null;
-  const wasAliveOnSelectedDate = !deathDateObj || selectedDateObj <= deathDateObj;
+  const deathDateObj = selectedRepresentative.death_date
+    ? new Date(selectedRepresentative.death_date)
+    : null;
+  const wasAliveOnSelectedDate =
+    !deathDateObj || selectedDateObj <= deathDateObj;
 
   // Calculate age as of selected date (or death date if they died before selected date)
-  const effectiveDate = wasAliveOnSelectedDate ? selectedDate : selectedRepresentative.death_date!;
+  const effectiveDate = wasAliveOnSelectedDate
+    ? selectedDate
+    : selectedRepresentative.death_date!;
   const age = selectedRepresentative.birth_date
     ? calculateAge(selectedRepresentative.birth_date, effectiveDate)
     : null;
@@ -189,20 +200,25 @@ export const RepresentativeDetails: React.FC<{
   const ageDisclaimer = displayDate(effectiveDate);
 
   // Find active government positions on selected date
-  const activeGovernmentPositions = details?.governmentMemberships?.filter((gm) => {
-    const startDate = new Date(gm.start_date);
-    const endDate = gm.end_date && gm.end_date.trim() !== '' ? new Date(gm.end_date) : null;
-    const isActive = startDate <= selectedDateObj && (!endDate || selectedDateObj <= endDate);
-    return isActive;
-  }) || [];
+  const activeGovernmentPositions =
+    details?.governmentMemberships?.filter((gm) => {
+      const startDate = new Date(gm.start_date);
+      const endDate =
+        gm.end_date && gm.end_date.trim() !== "" ? new Date(gm.end_date) : null;
+      const isActive =
+        startDate <= selectedDateObj &&
+        (!endDate || selectedDateObj <= endDate);
+      return isActive;
+    }) || [];
 
   // Find active trust positions on selected date (only if not in government)
-  const activeTrustPositions = details?.trustPositions?.filter((tp) => {
-    // Trust positions use "period" field which is a string like "2019-2023"
-    // We'll do a simple check if the period contains years around the selected year
-    const selectedYear = selectedDateObj.getFullYear();
-    return tp.period && tp.period.includes(selectedYear.toString());
-  }) || [];
+  const activeTrustPositions =
+    details?.trustPositions?.filter((tp) => {
+      // Trust positions use "period" field which is a string like "2019-2023"
+      // We'll do a simple check if the period contains years around the selected year
+      const selectedYear = selectedDateObj.getFullYear();
+      return tp.period && tp.period.includes(selectedYear.toString());
+    }) || [];
 
   return (
     <Dialog
@@ -290,7 +306,8 @@ export const RepresentativeDetails: React.FC<{
                       mb: 0.5,
                     }}
                   >
-                    {selectedRepresentative.first_name} {selectedRepresentative.last_name}
+                    {selectedRepresentative.first_name}{" "}
+                    {selectedRepresentative.last_name}
                   </Typography>
 
                   {details.representativeDetails?.profession && (
@@ -327,7 +344,9 @@ export const RepresentativeDetails: React.FC<{
                       >
                         Puolue
                       </Typography>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
                         <Typography
                           variant="body2"
                           sx={{ color: "white", fontWeight: 600 }}
@@ -340,12 +359,14 @@ export const RepresentativeDetails: React.FC<{
                             px: 1,
                             py: 0.25,
                             borderRadius: 1,
-                            bgcolor: selectedRepresentative.is_in_government === 1
-                              ? "rgba(76, 175, 80, 0.3)"
-                              : "rgba(255, 152, 0, 0.3)",
-                            border: selectedRepresentative.is_in_government === 1
-                              ? "1px solid rgba(76, 175, 80, 0.6)"
-                              : "1px solid rgba(255, 152, 0, 0.6)",
+                            bgcolor:
+                              selectedRepresentative.is_in_government === 1
+                                ? "rgba(76, 175, 80, 0.3)"
+                                : "rgba(255, 152, 0, 0.3)",
+                            border:
+                              selectedRepresentative.is_in_government === 1
+                                ? "1px solid rgba(76, 175, 80, 0.6)"
+                                : "1px solid rgba(255, 152, 0, 0.6)",
                           }}
                         >
                           <Typography
@@ -358,7 +379,9 @@ export const RepresentativeDetails: React.FC<{
                               letterSpacing: 0.5,
                             }}
                           >
-                            {selectedRepresentative.is_in_government === 1 ? "Hallitus" : "Oppositio"}
+                            {selectedRepresentative.is_in_government === 1
+                              ? "Hallitus"
+                              : "Oppositio"}
                           </Typography>
                         </Box>
                       </Box>
@@ -433,7 +456,9 @@ export const RepresentativeDetails: React.FC<{
                           border: "1px solid rgba(255,255,255,0.3)",
                         }}
                       >
-                        <AccountBalanceIcon sx={{ fontSize: 18, color: "white" }} />
+                        <AccountBalanceIcon
+                          sx={{ fontSize: 18, color: "white" }}
+                        />
                         <Box>
                           <Typography
                             variant="caption"
@@ -449,18 +474,28 @@ export const RepresentativeDetails: React.FC<{
                           </Typography>
                           <Typography
                             variant="body2"
-                            sx={{ color: "white", fontWeight: 600, lineHeight: 1.2 }}
+                            sx={{
+                              color: "white",
+                              fontWeight: 600,
+                              lineHeight: 1.2,
+                            }}
                           >
                             {activeGovernmentPositions[0].name}
                           </Typography>
-                          {activeGovernmentPositions[0].ministry && activeGovernmentPositions[0].ministry.trim() !== '' && (
-                            <Typography
-                              variant="caption"
-                              sx={{ color: "rgba(255,255,255,0.85)", fontSize: "0.7rem", display: "block" }}
-                            >
-                              {activeGovernmentPositions[0].ministry}
-                            </Typography>
-                          )}
+                          {activeGovernmentPositions[0].ministry &&
+                            activeGovernmentPositions[0].ministry.trim() !==
+                              "" && (
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  color: "rgba(255,255,255,0.85)",
+                                  fontSize: "0.7rem",
+                                  display: "block",
+                                }}
+                              >
+                                {activeGovernmentPositions[0].ministry}
+                              </Typography>
+                            )}
                         </Box>
                       </Box>
                     </Box>
@@ -494,10 +529,18 @@ export const RepresentativeDetails: React.FC<{
                           </Typography>
                           <Typography
                             variant="body2"
-                            sx={{ color: "white", fontWeight: 600, lineHeight: 1.2 }}
+                            sx={{
+                              color: "white",
+                              fontWeight: 600,
+                              lineHeight: 1.2,
+                            }}
                           >
-                            {activeTrustPositions.slice(0, 2).map(tp => tp.name).join(", ")}
-                            {activeTrustPositions.length > 2 && ` +${activeTrustPositions.length - 2}`}
+                            {activeTrustPositions
+                              .slice(0, 2)
+                              .map((tp) => tp.name)
+                              .join(", ")}
+                            {activeTrustPositions.length > 2 &&
+                              ` +${activeTrustPositions.length - 2}`}
                           </Typography>
                         </Box>
                       </Box>
@@ -524,36 +567,69 @@ export const RepresentativeDetails: React.FC<{
                   icon={<PersonIcon sx={{ color: "#667eea", fontSize: 22 }} />}
                   defaultExpanded={false}
                 >
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}
+                  >
                     {details.representativeDetails.gender && (
-                      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
                         <Typography variant="body2" sx={{ color: "#666" }}>
                           Sukupuoli
                         </Typography>
-                        <Typography variant="body2" fontWeight="600" sx={{ color: "#1a1a1a" }}>
+                        <Typography
+                          variant="body2"
+                          fontWeight="600"
+                          sx={{ color: "#1a1a1a" }}
+                        >
                           {details.representativeDetails.gender}
                         </Typography>
                       </Box>
                     )}
                     {details.representativeDetails.birth_date && (
-                      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
                         <Typography variant="body2" sx={{ color: "#666" }}>
                           Syntymäaika
                         </Typography>
-                        <Typography variant="body2" fontWeight="600" sx={{ color: "#1a1a1a" }}>
-                          {displayDate(details.representativeDetails.birth_date)}
+                        <Typography
+                          variant="body2"
+                          fontWeight="600"
+                          sx={{ color: "#1a1a1a" }}
+                        >
+                          {displayDate(
+                            details.representativeDetails.birth_date,
+                          )}
                           {details.representativeDetails.birth_place &&
                             ` (${details.representativeDetails.birth_place})`}
                         </Typography>
                       </Box>
                     )}
                     {details.representativeDetails.death_date && (
-                      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
                         <Typography variant="body2" sx={{ color: "#666" }}>
                           Kuolinaika
                         </Typography>
-                        <Typography variant="body2" fontWeight="600" sx={{ color: "#1a1a1a" }}>
-                          {displayDate(details.representativeDetails.death_date)}
+                        <Typography
+                          variant="body2"
+                          fontWeight="600"
+                          sx={{ color: "#1a1a1a" }}
+                        >
+                          {displayDate(
+                            details.representativeDetails.death_date,
+                          )}
                           {details.representativeDetails.death_place &&
                             ` (${details.representativeDetails.death_place})`}
                           {details.representativeDetails.birth_date &&
@@ -572,26 +648,48 @@ export const RepresentativeDetails: React.FC<{
                     title="Yhteystiedot"
                     icon={<EmailIcon sx={{ color: "#667eea", fontSize: 22 }} />}
                   >
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 1.5,
+                      }}
+                    >
                       {details.representativeDetails.email && (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
                           <EmailIcon sx={{ color: "#667eea", fontSize: 18 }} />
-                          <Typography variant="body2" fontWeight="500" sx={{ color: "#1a1a1a" }}>
+                          <Typography
+                            variant="body2"
+                            fontWeight="500"
+                            sx={{ color: "#1a1a1a" }}
+                          >
                             {details.representativeDetails.email}
                           </Typography>
                         </Box>
                       )}
                       {details.representativeDetails.phone && (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
                           <PhoneIcon sx={{ color: "#667eea", fontSize: 18 }} />
-                          <Typography variant="body2" fontWeight="500" sx={{ color: "#1a1a1a" }}>
+                          <Typography
+                            variant="body2"
+                            fontWeight="500"
+                            sx={{ color: "#1a1a1a" }}
+                          >
                             {details.representativeDetails.phone}
                           </Typography>
                         </Box>
                       )}
                       {details.representativeDetails.website && (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                          <LanguageIcon sx={{ color: "#667eea", fontSize: 18 }} />
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <LanguageIcon
+                            sx={{ color: "#667eea", fontSize: 18 }}
+                          />
                           <a
                             href={details.representativeDetails.website}
                             target="_blank"
@@ -615,19 +713,28 @@ export const RepresentativeDetails: React.FC<{
                 {details.districts && details.districts.length > 0 && (
                   <ExpandableSection
                     title="Vaalipiirit"
-                    icon={<LocationOnIcon sx={{ color: "#667eea", fontSize: 22 }} />}
+                    icon={
+                      <LocationOnIcon sx={{ color: "#667eea", fontSize: 22 }} />
+                    }
                   >
                     <List dense sx={{ p: 0 }}>
                       {details.districts.map((district) => (
                         <ListItem key={district.id} sx={{ px: 0, py: 1 }}>
                           <ListItemText
                             primary={
-                              <Typography variant="body2" fontWeight="600" sx={{ color: "#1a1a1a" }}>
+                              <Typography
+                                variant="body2"
+                                fontWeight="600"
+                                sx={{ color: "#1a1a1a" }}
+                              >
                                 {district.district_name}
                               </Typography>
                             }
                             secondary={
-                              <Typography variant="caption" sx={{ color: "#666" }}>
+                              <Typography
+                                variant="caption"
+                                sx={{ color: "#666" }}
+                              >
                                 {displayDate(district.start_date)} -{" "}
                                 {displayDate(district.end_date)}
                               </Typography>
@@ -640,76 +747,108 @@ export const RepresentativeDetails: React.FC<{
                 )}
 
                 {/* Parliamentary Membership */}
-                {details.groupMemberships && details.groupMemberships.length > 0 && (
-                  <ExpandableSection
-                    title="Eduskuntajäsenyys"
-                    icon={<HowToVoteIcon sx={{ color: "#667eea", fontSize: 22 }} />}
-                  >
-                    <List dense sx={{ p: 0 }}>
-                      {details.groupMemberships.map((membership) => {
-                        const leavingRecord = details.leavingRecords?.find((record) => {
-                          const recordDate = new Date(record.end_date);
-                          const membershipEndDate = new Date(membership.end_date || "");
-                          const diffDays = Math.abs(
-                            (recordDate.getTime() - membershipEndDate.getTime()) /
-                              (1000 * 60 * 60 * 24)
+                {details.groupMemberships &&
+                  details.groupMemberships.length > 0 && (
+                    <ExpandableSection
+                      title="Eduskuntajäsenyys"
+                      icon={
+                        <HowToVoteIcon
+                          sx={{ color: "#667eea", fontSize: 22 }}
+                        />
+                      }
+                    >
+                      <List dense sx={{ p: 0 }}>
+                        {details.groupMemberships.map((membership, id) => {
+                          const leavingRecord = details.leavingRecords?.find(
+                            (record) => {
+                              const recordDate = new Date(record.end_date);
+                              const membershipEndDate = new Date(
+                                membership.end_date || "",
+                              );
+                              const diffDays = Math.abs(
+                                (recordDate.getTime() -
+                                  membershipEndDate.getTime()) /
+                                  (1000 * 60 * 60 * 24),
+                              );
+                              return diffDays < 30 && membership.end_date;
+                            },
                           );
-                          return diffDays < 30 && membership.end_date;
-                        });
 
-                        return (
-                          <ListItem key={membership.id} sx={{ px: 0, py: 1 }}>
-                            <ListItemText
-                              primary={
-                                <Typography variant="body2" fontWeight="600" sx={{ color: "#1a1a1a" }}>
-                                  {membership.group_name}
-                                </Typography>
-                              }
-                              secondary={
-                                <Box>
-                                  <Typography variant="caption" sx={{ color: "#666" }}>
-                                    {displayDate(membership.start_date)} -{" "}
-                                    {displayDate(membership.end_date)}
-                                    {leavingRecord?.replacement_person &&
-                                      ` (Seuraaja: ${leavingRecord.replacement_person})`}
+                          return (
+                            <ListItem key={id} sx={{ px: 0, py: 1 }}>
+                              <ListItemText
+                                primary={
+                                  <Typography
+                                    variant="body2"
+                                    fontWeight="600"
+                                    sx={{ color: "#1a1a1a" }}
+                                  >
+                                    {membership.group_name}
                                   </Typography>
-                                  {leavingRecord?.description && (
+                                }
+                                secondary={
+                                  <Box>
                                     <Typography
                                       variant="caption"
-                                      display="block"
-                                      sx={{ color: "#888", fontStyle: "italic", mt: 0.5 }}
+                                      sx={{ color: "#666" }}
                                     >
-                                      {leavingRecord.description}
+                                      {displayDate(membership.start_date)} -{" "}
+                                      {displayDate(membership.end_date)}
+                                      {leavingRecord?.replacement_person &&
+                                        ` (Seuraaja: ${leavingRecord.replacement_person})`}
                                     </Typography>
-                                  )}
-                                </Box>
-                              }
-                            />
-                          </ListItem>
-                        );
-                      })}
-                    </List>
-                  </ExpandableSection>
-                )}
+                                    {leavingRecord?.description && (
+                                      <Typography
+                                        variant="caption"
+                                        display="block"
+                                        sx={{
+                                          color: "#888",
+                                          fontStyle: "italic",
+                                          mt: 0.5,
+                                        }}
+                                      >
+                                        {leavingRecord.description}
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                }
+                              />
+                            </ListItem>
+                          );
+                        })}
+                      </List>
+                    </ExpandableSection>
+                  )}
 
                 {/* Government Memberships */}
                 {details.governmentMemberships &&
                   details.governmentMemberships.length > 0 && (
                     <ExpandableSection
                       title="Hallituskoalitioon osallistuminen"
-                      icon={<AccountBalanceIcon sx={{ color: "#667eea", fontSize: 22 }} />}
+                      icon={
+                        <AccountBalanceIcon
+                          sx={{ color: "#667eea", fontSize: 22 }}
+                        />
+                      }
                     >
                       <List dense sx={{ p: 0 }}>
-                        {details.governmentMemberships.map((membership) => (
-                          <ListItem key={membership.id} sx={{ px: 0, py: 1 }}>
+                        {details.governmentMemberships.map((membership, id) => (
+                          <ListItem key={id} sx={{ px: 0, py: 1 }}>
                             <ListItemText
                               primary={
                                 <Box>
-                                  <Typography variant="body2" fontWeight="600" sx={{ color: "#1a1a1a" }}>
+                                  <Typography
+                                    variant="body2"
+                                    fontWeight="600"
+                                    sx={{ color: "#1a1a1a" }}
+                                  >
                                     {membership.government}
                                   </Typography>
                                   {membership.ministry && (
-                                    <Typography variant="body2" sx={{ color: "#555" }}>
+                                    <Typography
+                                      variant="body2"
+                                      sx={{ color: "#555" }}
+                                    >
                                       {membership.ministry}
                                     </Typography>
                                   )}
@@ -717,10 +856,18 @@ export const RepresentativeDetails: React.FC<{
                               }
                               secondary={
                                 <Box sx={{ mt: 0.5 }}>
-                                  <Typography variant="caption" fontWeight="600" sx={{ color: "#667eea" }}>
+                                  <Typography
+                                    variant="caption"
+                                    fontWeight="600"
+                                    sx={{ color: "#667eea" }}
+                                  >
                                     {membership.name}
                                   </Typography>
-                                  <Typography variant="caption" display="block" sx={{ color: "#666" }}>
+                                  <Typography
+                                    variant="caption"
+                                    display="block"
+                                    sx={{ color: "#666" }}
+                                  >
                                     {displayDate(membership.start_date)} -{" "}
                                     {displayDate(membership.end_date)}
                                   </Typography>
@@ -734,40 +881,50 @@ export const RepresentativeDetails: React.FC<{
                   )}
 
                 {/* Trust Positions */}
-                {details.trustPositions && details.trustPositions.length > 0 && (
-                  <ExpandableSection
-                    title="Luottamustehtävät"
-                    icon={<WorkIcon sx={{ color: "#667eea", fontSize: 22 }} />}
-                  >
-                    <List dense sx={{ p: 0 }}>
-                      {details.trustPositions.map((position) => (
-                        <ListItem key={position.id} sx={{ px: 0, py: 1 }}>
-                          <ListItemText
-                            primary={
-                              <Typography variant="body2" fontWeight="600" sx={{ color: "#1a1a1a" }}>
-                                {position.name}
-                                {position.position_type && (
-                                  <Typography
-                                    component="span"
-                                    variant="body2"
-                                    sx={{ color: "#666", ml: 1 }}
-                                  >
-                                    ({position.position_type})
-                                  </Typography>
-                                )}
-                              </Typography>
-                            }
-                            secondary={
-                              <Typography variant="caption" sx={{ color: "#666" }}>
-                                {position.period}
-                              </Typography>
-                            }
-                          />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </ExpandableSection>
-                )}
+                {details.trustPositions &&
+                  details.trustPositions.length > 0 && (
+                    <ExpandableSection
+                      title="Luottamustehtävät"
+                      icon={
+                        <WorkIcon sx={{ color: "#667eea", fontSize: 22 }} />
+                      }
+                    >
+                      <List dense sx={{ p: 0 }}>
+                        {details.trustPositions.map((position, id) => (
+                          <ListItem key={id} sx={{ px: 0, py: 1 }}>
+                            <ListItemText
+                              primary={
+                                <Typography
+                                  variant="body2"
+                                  fontWeight="600"
+                                  sx={{ color: "#1a1a1a" }}
+                                >
+                                  {position.name}
+                                  {position.position_type && (
+                                    <Typography
+                                      component="span"
+                                      variant="body2"
+                                      sx={{ color: "#666", ml: 1 }}
+                                    >
+                                      ({position.position_type})
+                                    </Typography>
+                                  )}
+                                </Typography>
+                              }
+                              secondary={
+                                <Typography
+                                  variant="caption"
+                                  sx={{ color: "#666" }}
+                                >
+                                  {position.period}
+                                </Typography>
+                              }
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </ExpandableSection>
+                  )}
               </Box>
             </Fade>
           </DialogContent>

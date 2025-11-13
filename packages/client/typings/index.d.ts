@@ -4,5 +4,5 @@ interface TypedResponse<T> extends Omit<Response, "json"> {
 
 declare function fetch<T>(
   input: string | URL | globalThis.Request,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<TypedResponse<T>>;

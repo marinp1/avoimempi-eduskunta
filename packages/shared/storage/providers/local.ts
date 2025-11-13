@@ -4,10 +4,10 @@ import type {
   StorageMetadata,
   StorageListOptions,
   StorageListResult,
-  StoragePutOptions
+  StoragePutOptions,
 } from "../types";
 import { mkdir, readFile, writeFile, unlink, stat, readdir } from "fs/promises";
-import { existsSync, statSync } from "fs";
+import { existsSync } from "fs";
 import path from "path";
 
 /**
@@ -26,7 +26,11 @@ export class LocalStorageProvider implements IStorageProvider {
     return path.join(this.baseDir, key);
   }
 
-  async put(key: StorageKey, data: string | Buffer, options?: StoragePutOptions): Promise<void> {
+  async put(
+    key: StorageKey,
+    data: string | Buffer,
+    options?: StoragePutOptions,
+  ): Promise<void> {
     const filePath = this.keyToPath(key);
     const dir = path.dirname(filePath);
 
@@ -68,7 +72,14 @@ export class LocalStorageProvider implements IStorageProvider {
     const keys: StorageMetadata[] = [];
 
     try {
-      await this.listRecursive(searchDir, this.baseDir, prefix, startAfter, maxKeys, keys);
+      await this.listRecursive(
+        searchDir,
+        this.baseDir,
+        prefix,
+        startAfter,
+        maxKeys,
+        keys,
+      );
     } catch (error: any) {
       if (error.code !== "ENOENT") {
         throw error;
@@ -79,7 +90,8 @@ export class LocalStorageProvider implements IStorageProvider {
     return {
       keys: keys.slice(0, maxKeys),
       isTruncated: keys.length > maxKeys,
-      nextContinuationToken: keys.length > maxKeys ? keys[maxKeys].key : undefined,
+      nextContinuationToken:
+        keys.length > maxKeys ? keys[maxKeys].key : undefined,
     };
   }
 
@@ -89,7 +101,7 @@ export class LocalStorageProvider implements IStorageProvider {
     prefix: string,
     startAfter: string,
     maxKeys: number,
-    results: StorageMetadata[]
+    results: StorageMetadata[],
   ): Promise<void> {
     if (results.length >= maxKeys) return;
 
@@ -100,10 +112,19 @@ export class LocalStorageProvider implements IStorageProvider {
         if (results.length >= maxKeys) break;
 
         const fullPath = path.join(dir, entry.name);
-        const relativePath = path.relative(baseDir, fullPath).replace(/\\/g, "/");
+        const relativePath = path
+          .relative(baseDir, fullPath)
+          .replace(/\\/g, "/");
 
         if (entry.isDirectory()) {
-          await this.listRecursive(fullPath, baseDir, prefix, startAfter, maxKeys, results);
+          await this.listRecursive(
+            fullPath,
+            baseDir,
+            prefix,
+            startAfter,
+            maxKeys,
+            results,
+          );
         } else if (entry.isFile()) {
           // Check if matches prefix and is after startAfter
           if (relativePath.startsWith(prefix) && relativePath > startAfter) {

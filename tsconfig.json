@@ -20,7 +20,8 @@
       "#constants/*": ["./packages/shared/constants/*"],
       "#database": ["./packages/shared/database/index.ts"],
       "#storage": ["./packages/shared/storage/index.ts"],
-      "#storage/*": ["./packages/shared/storage/*"]
+      "#storage/*": ["./packages/shared/storage/*"],
+      "react": ["./node_modules/@types/react"]
     }
   },
   "include": ["packages/**/*.ts", "packages/**/*.tsx"],

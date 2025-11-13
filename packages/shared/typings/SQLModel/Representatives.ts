@@ -34,14 +34,14 @@ declare global {
       replacement_person: string | null;
     };
 
-    export type JoiningParliament = {
+    export type PeopleJoiningParliament = {
       person_id: number;
       description: string;
       start_date: DateString | null;
       replacement_person: string | null;
     };
 
-    export type LeavingParliament = {
+    export type PeopleLeavingParliament = {
       person_id: number;
       description: string;
       end_date: DateString | null;
