@@ -55,7 +55,7 @@ const DatabaseTables = Object.freeze({
   District: "District",
   RepresentativeDistrict: "RepresentativeDistrict",
   Term: "Term",
-  PeopleLeavingParliament: "PeopleLeavingParliament",
+  LeavingParliament: "LeavingParliament",
   PeopleJoiningParliament: "PeopleJoiningParliament",
   TemporaryAbsence: "TemporaryAbsence",
   ParliamentaryGroupAssignment: "ParliamentaryGroupAssignment",
@@ -376,7 +376,7 @@ export default (db: Database) =>
     );
     await insertRows(DatabaseTables.Term, termRows);
     await insertRows(DatabaseTables.TemporaryAbsence, absenceRows);
-    await insertRows(DatabaseTables.PeopleLeavingParliament, leavingRows);
+    await insertRows(DatabaseTables.LeavingParliament, leavingRows);
     await insertRows(DatabaseTables.PeopleJoiningParliament, joiningRows);
     await insertRows(DatabaseTables.TrustPosition, trustPositionRows);
     await insertRows(DatabaseTables.Committee, committeeRows);

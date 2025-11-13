@@ -1,9 +1,9 @@
 // modules/server/server.ts
-import homepage from "../public/index.html";
+import homepage from "./public/index.html";
 import type { BunRequest, ServerWebSocket } from "bun";
 
-import { DatabaseConnection } from "../database/db";
-import { AdminStorageService } from "../database/admin-storage";
+import { DatabaseConnection } from "./database/db";
+import { AdminStorageService } from "./database/admin-storage";
 import { ScraperController } from "./scraper-controller";
 import { ParserController } from "./parser-controller";
 import { MigratorController } from "./migrator-controller";

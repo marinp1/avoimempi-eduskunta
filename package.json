@@ -1,20 +1,33 @@
 {
-  "name": "avoimempi-eduskunta",
+  "name": "eduskunta-forum",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
+  "private": true,
   "author": "",
   "license": "ISC",
-  "description": "",
-  "workspaces": [
-    "application",
-    "functions/*"
-  ],
+  "description": "Data aggregation and analysis platform for Finnish Parliament",
+  "dependencies": {
+    "@emotion/react": "11.14.0",
+    "@emotion/styled": "11.14.1",
+    "@mui/icons-material": "7.3.4",
+    "@mui/material": "7.3.4",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "bun-sqlite-migrations": "1.0.2",
+    "fast-xml-parser": "5.0.9",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "xml-js": "1.6.11"
+  },
   "devDependencies": {
     "@types/bun": "^1.2.2",
     "@types/node": "^22.13.4",
     "typescript": "5.7.3"
   },
   "scripts": {
-    "typecheck": "bun run --filter \"*\" typecheck"
+    "typecheck": "tsc --noEmit",
+    "start": "cd packages/server && bun run index.ts",
+    "scrape": "cd packages/datapipe && bun run scraper/cli.ts",
+    "parse": "cd packages/datapipe && bun run parser/cli.ts"
   }
 }

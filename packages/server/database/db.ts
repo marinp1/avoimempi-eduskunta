@@ -96,7 +96,7 @@ export class DatabaseConnection {
 
   public async fetchLeavingParliamentRecords(params: { id: string }) {
     const stmt = this.db.prepare<
-      DatabaseTables.PeopleLeavingParliament,
+      DatabaseTables.LeavingParliament,
       { $personId: number }
     >(queries.leavingParliamentRecords);
     const data = stmt.all({ $personId: +params.id });

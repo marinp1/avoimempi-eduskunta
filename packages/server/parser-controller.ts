@@ -1,7 +1,7 @@
-import { scrapeTable, type ScrapeMode } from "../../datapipe/scraper/scraper";
+import { parseTable } from "../datapipe/parser/parser";
 import type { ServerWebSocket } from "bun";
 
-export interface ScraperStatus {
+export interface ParserStatus {
   isRunning: boolean;
   currentTable: string | null;
   currentPage: number;
@@ -9,16 +9,16 @@ export interface ScraperStatus {
   percentComplete: number;
 }
 
-export interface ScraperMessage {
+export interface ParserMessage {
   type: "status" | "progress" | "complete" | "error" | "stopped";
   data?: any;
 }
 
 /**
- * Controller for managing scraper processes with WebSocket communication
+ * Controller for managing parser processes with WebSocket communication
  */
-export class ScraperController {
-  private static instance: ScraperController | null = null;
+export class ParserController {
+  private static instance: ParserController | null = null;
   private isRunning = false;
   private shouldStop = false;
   private currentTable: string | null = null;
@@ -26,9 +26,9 @@ export class ScraperController {
 
   private constructor() {}
 
-  static getInstance(): ScraperController {
+  static getInstance(): ParserController {
     if (!this.instance) {
-      this.instance = new ScraperController();
+      this.instance = new ParserController();
     }
     return this.instance;
   }
@@ -37,7 +37,7 @@ export class ScraperController {
     this.ws = ws;
   }
 
-  getStatus(): ScraperStatus {
+  getStatus(): ParserStatus {
     return {
       isRunning: this.isRunning,
       currentTable: this.currentTable,
@@ -47,15 +47,15 @@ export class ScraperController {
     };
   }
 
-  private sendMessage(message: ScraperMessage) {
+  private sendMessage(message: ParserMessage) {
     if (this.ws && this.ws.readyState === 1) {
       this.ws.send(JSON.stringify(message));
     }
   }
 
-  async startScraping(tableName: string, mode: ScrapeMode = { type: "auto-resume" }) {
+  async startParsing(tableName: string) {
     if (this.isRunning) {
-      throw new Error("Scraper is already running");
+      throw new Error("Parser is already running");
     }
 
     this.isRunning = true;
@@ -67,19 +67,18 @@ export class ScraperController {
       data: {
         status: "started",
         tableName,
-        mode,
       },
     });
 
     try {
-      await scrapeTable({
+      await parseTable({
         tableName,
-        mode,
-        stage: "raw",
+        sourceStage: "raw",
+        targetStage: "parsed",
         onProgress: (progress) => {
           // Check if we should stop
           if (this.shouldStop) {
-            throw new Error("Scraping stopped by user");
+            throw new Error("Parsing stopped by user");
           }
 
           // Send progress update
@@ -88,20 +87,20 @@ export class ScraperController {
             data: {
               tableName,
               page: progress.page,
-              rowCount: progress.rowCount,
-              totalRows: progress.totalRows,
+              rowsParsed: progress.rowsParsed,
+              totalPages: progress.totalPages,
               percentComplete: progress.percentComplete,
             },
           });
         },
       });
 
-      // Scraping completed successfully
+      // Parsing completed successfully
       this.sendMessage({
         type: "complete",
         data: {
           tableName,
-          message: `Successfully scraped ${tableName}`,
+          message: `Successfully parsed ${tableName}`,
         },
       });
     } catch (error: any) {
@@ -110,7 +109,7 @@ export class ScraperController {
           type: "stopped",
           data: {
             tableName,
-            message: "Scraping stopped by user",
+            message: "Parsing stopped by user",
           },
         });
       } else {
@@ -129,9 +128,9 @@ export class ScraperController {
     }
   }
 
-  stopScraping() {
+  stopParsing() {
     if (!this.isRunning) {
-      throw new Error("No scraper is currently running");
+      throw new Error("No parser is currently running");
     }
 
     this.shouldStop = true;
@@ -139,7 +138,7 @@ export class ScraperController {
       type: "status",
       data: {
         status: "stopping",
-        message: "Stopping scraper...",
+        message: "Stopping parser...",
       },
     });
   }

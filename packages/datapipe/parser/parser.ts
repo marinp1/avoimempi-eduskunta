@@ -1,4 +1,4 @@
-import { getStorage, StorageKeyBuilder, type DataStage } from "../../shared/storage";
+import { getStorage, StorageKeyBuilder, type DataStage } from "#storage";
 
 /**
  * API Response structure from storage (created by scraper)

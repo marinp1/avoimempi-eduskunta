@@ -55,9 +55,9 @@ const fetchPersonDetails = async (personId: number) => {
       `/api/person/${personId}/details`
     ).then((res) => res.json()),
     fetch<DistrictHistoryType[]>(`/api/person/${personId}/districts`).then(
-      (res) => res.json()
+      (res) => zres.json()
     ),
-    fetch<DatabaseTables.PeopleLeavingParliament[]>(
+    fetch<DatabaseTables.LeavingParliament[]>(
       `/api/person/${personId}/leaving-records`
     ).then((res) => res.json()),
     fetch<DatabaseTables.TrustPosition[]>(

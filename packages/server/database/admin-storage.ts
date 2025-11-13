@@ -1,5 +1,5 @@
-import { getStorage } from "../../shared/storage/factory";
-import { StorageKeyBuilder, type DataStage, type StorageMetadata } from "../../shared/storage/types";
+import { getStorage } from "#storage/factory";
+import { StorageKeyBuilder, type DataStage, type StorageMetadata } from "#storage/types";
 import { TableName } from "#constants/index";
 
 export interface TableStorageStatus {
@@ -196,8 +196,8 @@ export class AdminStorageService {
       has_parsed_data: hasParsed,
       raw_last_updated: this.getMostRecentTimestamp(rawFiles),
       parsed_last_updated: this.getMostRecentTimestamp(parsedFiles),
-      raw_estimated_rows: this.estimateRowCount(rawFiles.length),
-      parsed_estimated_rows: this.estimateRowCount(parsedFiles.length),
+      raw_estimated_rows: 0,
+      parsed_estimated_rows: 0,
     };
   }
 
