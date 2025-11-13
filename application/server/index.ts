@@ -3,6 +3,8 @@ import homepage from "../public/index.html";
 import type { BunRequest } from "bun";
 
 import { DatabaseConnection } from "../database/db";
+import { AdminDatabaseConnection } from "../database/admin-db";
+
 const db = new DatabaseConnection();
 
 const server = Bun.serve({
@@ -10,6 +12,7 @@ const server = Bun.serve({
     "/": homepage,
     "/composition": homepage,
     "/votings": homepage,
+    "/admin": homepage,
 
     "/api/status": new Response("OK"),
 
@@ -114,6 +117,20 @@ const server = Bun.serve({
         return new Response(JSON.stringify(titles), {
           headers: { "Content-Type": "application/json" },
         });
+      },
+    },
+
+    "/api/admin/status": {
+      GET: async () => {
+        const adminDb = new AdminDatabaseConnection();
+        try {
+          const status = await adminDb.getStatus();
+          return new Response(JSON.stringify(status), {
+            headers: { "Content-Type": "application/json" },
+          });
+        } finally {
+          adminDb.close();
+        }
       },
     },
 
