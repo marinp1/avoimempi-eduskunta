@@ -48,19 +48,27 @@ ORDER BY vs.start_time DESC
 
 export const representativeDetails = sql`
 SELECT
-    r.*,
-    d.name as district_name,
-    rd.start_date as district_start_date,
-    rd.end_date as district_end_date
+    r.*
 FROM
     Representative r
-LEFT JOIN
-    RepresentativeDistrict rd ON r.person_id = rd.person_id
-    AND rd.end_date = ''
-LEFT JOIN
-    District d ON rd.district_code = d.code
 WHERE
     r.person_id = $personId
+`;
+
+export const representativeDistricts = sql`
+SELECT
+    rd.id,
+    rd.person_id,
+    d.name as district_name,
+    rd.start_date,
+    rd.end_date
+FROM
+    RepresentativeDistrict rd
+JOIN
+    District d ON rd.district_code = d.code
+WHERE
+    rd.person_id = $personId
+ORDER BY rd.start_date DESC
 `;
 
 export const leavingParliamentRecords = sql`
