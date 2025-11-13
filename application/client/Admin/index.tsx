@@ -50,6 +50,9 @@ type ScrapingOverview = {
   total_api_rows: number;
   total_scraped_rows: number;
   overall_progress_percent: number;
+  tables_with_parsed_data: number;
+  tables_fully_parsed: number;
+  total_parsed_rows: number;
 };
 
 export default function AdminPage() {
@@ -64,7 +67,14 @@ export default function AdminPage() {
   const [scraperProgress, setScraperProgress] = useState<string>("");
   const [scraperPercent, setScraperPercent] = useState<number>(0);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
+  const scraperWsRef = useRef<WebSocket | null>(null);
+
+  // Parser control state
+  const [parserRunning, setParserRunning] = useState<boolean>(false);
+  const [currentParsingTable, setCurrentParsingTable] = useState<string | null>(null);
+  const [parserProgress, setParserProgress] = useState<string>("");
+  const [parserPercent, setParserPercent] = useState<number>(0);
+  const parserWsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -95,15 +105,15 @@ export default function AdminPage() {
     };
     fetchData();
 
-    // Setup WebSocket connection
+    // Setup Scraper WebSocket connection
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws/scraper`);
+    const scraperWs = new WebSocket(`${protocol}//${window.location.host}/ws/scraper`);
 
-    ws.onopen = () => {
-      console.log("WebSocket connected");
+    scraperWs.onopen = () => {
+      console.log("Scraper WebSocket connected");
     };
 
-    ws.onmessage = (event) => {
+    scraperWs.onmessage = (event) => {
       const message = JSON.parse(event.data) as { type: string; data?: any };
 
       switch (message.type) {
@@ -150,18 +160,83 @@ export default function AdminPage() {
       }
     };
 
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
+    scraperWs.onerror = (error) => {
+      console.error("Scraper WebSocket error:", error);
     };
 
-    ws.onclose = () => {
-      console.log("WebSocket disconnected");
+    scraperWs.onclose = () => {
+      console.log("Scraper WebSocket disconnected");
     };
 
-    wsRef.current = ws;
+    scraperWsRef.current = scraperWs;
+
+    // Setup Parser WebSocket connection
+    const parserWs = new WebSocket(`${protocol}//${window.location.host}/ws/parser`);
+
+    parserWs.onopen = () => {
+      console.log("Parser WebSocket connected");
+    };
+
+    parserWs.onmessage = (event) => {
+      const message = JSON.parse(event.data) as { type: string; data?: any };
+
+      switch (message.type) {
+        case "status":
+          if (message.data.status === "started") {
+            setParserRunning(true);
+            setCurrentParsingTable(message.data.tableName);
+            setParserProgress(`Starting parse...`);
+            setParserPercent(0);
+          } else if (message.data.status === "stopping") {
+            setParserProgress("Stopping...");
+          }
+          break;
+
+        case "progress":
+          setParserProgress(
+            `${message.data.tableName}: Page ${message.data.page}/${message.data.totalPages} - ${message.data.rowsParsed.toLocaleString()} rows (${message.data.percentComplete.toFixed(1)}%)`
+          );
+          setParserPercent(message.data.percentComplete);
+          break;
+
+        case "complete":
+          setParserRunning(false);
+          setCurrentParsingTable(null);
+          setParserProgress(`Completed successfully`);
+          setParserPercent(100);
+          // Refresh data after completion
+          setTimeout(() => fetchData(), 1000);
+          break;
+
+        case "error":
+          setParserRunning(false);
+          setCurrentParsingTable(null);
+          setParserProgress(`Error: ${message.data.error}`);
+          setParserPercent(0);
+          break;
+
+        case "stopped":
+          setParserRunning(false);
+          setCurrentParsingTable(null);
+          setParserProgress(`Stopped`);
+          setParserPercent(0);
+          break;
+      }
+    };
+
+    parserWs.onerror = (error) => {
+      console.error("Parser WebSocket error:", error);
+    };
+
+    parserWs.onclose = () => {
+      console.log("Parser WebSocket disconnected");
+    };
+
+    parserWsRef.current = parserWs;
 
     return () => {
-      ws.close();
+      scraperWs.close();
+      parserWs.close();
     };
   }, []);
 
@@ -201,6 +276,42 @@ export default function AdminPage() {
     } catch (err: any) {
       console.error(err);
       alert(`Failed to stop scraping: ${err.message}`);
+    }
+  };
+
+  const handleStartParsing = async (tableName: string) => {
+    try {
+      const res = await fetch("/api/parser/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tableName }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error);
+      }
+
+      setExpandedRow(tableName);
+    } catch (err: any) {
+      console.error(err);
+      alert(`Failed to start parsing: ${err.message}`);
+    }
+  };
+
+  const handleStopParsing = async () => {
+    try {
+      const res = await fetch("/api/parser/stop", {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(`Failed to stop parsing: ${err.message}`);
     }
   };
 
@@ -338,6 +449,68 @@ export default function AdminPage() {
                 </Typography>
               </CardContent>
             </Card>
+
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                border: "1px solid rgba(0,0,0,0.1)",
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h3" fontWeight="700" sx={{ mb: 1, color: "#f093fb" }}>
+                  {overview.tables_with_parsed_data}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Tables Parsed
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+                  out of {overview.total_tables} total
+                </Typography>
+              </CardContent>
+            </Card>
+
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                border: "1px solid rgba(0,0,0,0.1)",
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h3" fontWeight="700" sx={{ mb: 1, color: "#f5576c" }}>
+                  {overview.tables_fully_parsed}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Fully Parsed
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+                  all pages parsed
+                </Typography>
+              </CardContent>
+            </Card>
+
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                border: "1px solid rgba(0,0,0,0.1)",
+                background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                color: "white",
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h3" fontWeight="700" sx={{ mb: 1 }}>
+                  {overview.total_parsed_rows.toLocaleString()}
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Total Parsed Rows
+                </Typography>
+                <Typography variant="caption" sx={{ opacity: 0.8, mt: 1, display: "block" }}>
+                  across all tables
+                </Typography>
+              </CardContent>
+            </Card>
             </Box>
           </Box>
         </Fade>
@@ -429,6 +602,7 @@ export default function AdminPage() {
                 {status.map((row, index) => {
                   const isExpanded = expandedRow === row.table_name;
                   const isThisTableScraping = currentScrapingTable === row.table_name;
+                  const isThisTableParsing = currentParsingTable === row.table_name;
 
                   return (
                   <React.Fragment key={row.table_name}>
@@ -515,7 +689,7 @@ export default function AdminPage() {
                             fontWeight: 500,
                           }}
                         >
-                          {row.has_parsed_data ? `~${row.parsed_estimated_rows.toLocaleString()}` : "N/A"}
+                          {row.has_parsed_data ? `${row.parsed_estimated_rows.toLocaleString()}` : "N/A"}
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
@@ -540,11 +714,16 @@ export default function AdminPage() {
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={10}>
+                      <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={11}>
                         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                           <Box sx={{ py: 3, px: 2 }}>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-                              {isThisTableScraping ? (
+                            {/* Scraper Controls */}
+                            <Box sx={{ mb: 3 }}>
+                              <Typography variant="subtitle2" fontWeight="600" sx={{ mb: 1.5 }}>
+                                Scraper
+                              </Typography>
+                              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                                {isThisTableScraping ? (
                                 <>
                                   <Button
                                     variant="outlined"
@@ -553,7 +732,7 @@ export default function AdminPage() {
                                     onClick={handleStopScraping}
                                     size="small"
                                   >
-                                    Cancel
+                                    Cancel Scrape
                                   </Button>
                                   <Chip
                                     label="Scraping..."
@@ -571,7 +750,7 @@ export default function AdminPage() {
                                     variant="contained"
                                     startIcon={<PlayArrowIcon />}
                                     onClick={() => handleStartScraping(row.table_name)}
-                                    disabled={scraperRunning}
+                                    disabled={scraperRunning || parserRunning}
                                     size="small"
                                     sx={{
                                       background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
@@ -592,25 +771,106 @@ export default function AdminPage() {
                                 </>
                               )}
                             </Box>
-                            {isThisTableScraping && (
-                              <Box>
-                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                  {scraperProgress}
-                                </Typography>
-                                <LinearProgress
-                                  variant="determinate"
-                                  value={scraperPercent}
-                                  sx={{
-                                    height: 6,
-                                    borderRadius: 3,
-                                    bgcolor: "rgba(102, 126, 234, 0.1)",
-                                    "& .MuiLinearProgress-bar": {
-                                      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                                    }
-                                  }}
-                                />
+                              {isThisTableScraping && (
+                                <Box sx={{ mt: 2 }}>
+                                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                    {scraperProgress}
+                                  </Typography>
+                                  <LinearProgress
+                                    variant="determinate"
+                                    value={scraperPercent}
+                                    sx={{
+                                      height: 6,
+                                      borderRadius: 3,
+                                      bgcolor: "rgba(102, 126, 234, 0.1)",
+                                      "& .MuiLinearProgress-bar": {
+                                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                      }
+                                    }}
+                                  />
+                                </Box>
+                              )}
+                            </Box>
+
+                            {/* Parser Controls */}
+                            <Box>
+                              <Typography variant="subtitle2" fontWeight="600" sx={{ mb: 1.5 }}>
+                                Parser
+                              </Typography>
+                              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                                {isThisTableParsing ? (
+                                  <>
+                                    <Button
+                                      variant="outlined"
+                                      color="error"
+                                      startIcon={<StopIcon />}
+                                      onClick={handleStopParsing}
+                                      size="small"
+                                    >
+                                      Cancel Parse
+                                    </Button>
+                                    <Chip
+                                      label="Parsing..."
+                                      color="secondary"
+                                      size="small"
+                                      sx={{
+                                        background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                                        color: "white"
+                                      }}
+                                    />
+                                  </>
+                                ) : (
+                                  <>
+                                    <Button
+                                      variant="contained"
+                                      startIcon={<PlayArrowIcon />}
+                                      onClick={() => handleStartParsing(row.table_name)}
+                                      disabled={!row.has_raw_data || scraperRunning || parserRunning}
+                                      size="small"
+                                      sx={{
+                                        background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                                        "&:hover": {
+                                          background: "linear-gradient(135deg, #e082ea 0%, #e4465b 100%)",
+                                        },
+                                      }}
+                                    >
+                                      Parse
+                                    </Button>
+                                    {row.has_parsed_data && (
+                                      <Chip
+                                        label={`${row.parsed_page_count} pages - ${row.parsed_estimated_rows.toLocaleString()} rows`}
+                                        size="small"
+                                        color="success"
+                                      />
+                                    )}
+                                    {!row.has_raw_data && (
+                                      <Typography variant="caption" color="text.secondary">
+                                        (Scrape data first)
+                                      </Typography>
+                                    )}
+                                  </>
+                                )}
                               </Box>
-                            )}
+                              {isThisTableParsing && (
+                                <Box sx={{ mt: 2 }}>
+                                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                    {parserProgress}
+                                  </Typography>
+                                  <LinearProgress
+                                    variant="determinate"
+                                    value={parserPercent}
+                                    sx={{
+                                      height: 6,
+                                      borderRadius: 3,
+                                      bgcolor: "rgba(240, 147, 251, 0.1)",
+                                      "& .MuiLinearProgress-bar": {
+                                        background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                                      }
+                                    }}
+                                  />
+                                </Box>
+                              )}
+                            </Box>
                           </Box>
                         </Collapse>
                       </TableCell>

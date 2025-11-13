@@ -5,9 +5,11 @@ import type { BunRequest, ServerWebSocket } from "bun";
 import { DatabaseConnection } from "../database/db";
 import { AdminStorageService } from "../database/admin-storage";
 import { ScraperController } from "./scraper-controller";
+import { ParserController } from "./parser-controller";
 
 const db = new DatabaseConnection();
 const scraperController = ScraperController.getInstance();
+const parserController = ParserController.getInstance();
 
 const server = Bun.serve({
   routes: {
@@ -179,6 +181,43 @@ const server = Bun.serve({
       },
     },
 
+    "/api/parser/start": {
+      POST: async (req: Request) => {
+        try {
+          const body = await req.json() as { tableName: string };
+
+          if (!body.tableName) {
+            return Response.json({ error: "tableName is required" }, { status: 400 });
+          }
+
+          // Start parsing in background
+          parserController.startParsing(body.tableName).catch(console.error);
+
+          return Response.json({ success: true, message: "Parsing started" });
+        } catch (error: any) {
+          return Response.json({ error: error.message }, { status: 500 });
+        }
+      },
+    },
+
+    "/api/parser/stop": {
+      POST: async () => {
+        try {
+          parserController.stopParsing();
+          return Response.json({ success: true, message: "Parser stop requested" });
+        } catch (error: any) {
+          return Response.json({ error: error.message }, { status: 400 });
+        }
+      },
+    },
+
+    "/api/parser/status": {
+      GET: async () => {
+        const status = parserController.getStatus();
+        return Response.json(status);
+      },
+    },
+
     "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
 
@@ -187,10 +226,16 @@ const server = Bun.serve({
   },
 
   fetch(req, server) {
-    // Handle WebSocket upgrade for scraper
+    // Handle WebSocket upgrades
     const url = new URL(req.url);
     if (url.pathname === "/ws/scraper") {
-      if (server.upgrade(req)) {
+      if (server.upgrade(req, { data: { type: "scraper" } })) {
+        return; // WebSocket upgrade successful
+      }
+      return new Response("WebSocket upgrade failed", { status: 400 });
+    }
+    if (url.pathname === "/ws/parser") {
+      if (server.upgrade(req, { data: { type: "parser" } })) {
         return; // WebSocket upgrade successful
       }
       return new Response("WebSocket upgrade failed", { status: 400 });
@@ -200,16 +245,20 @@ const server = Bun.serve({
   },
 
   websocket: {
-    open(ws: ServerWebSocket<unknown>) {
-      console.log("WebSocket connection opened");
-      scraperController.setWebSocket(ws);
+    open(ws: ServerWebSocket<{ type: string }>) {
+      console.log(`WebSocket connection opened: ${ws.data.type}`);
+      if (ws.data.type === "scraper") {
+        scraperController.setWebSocket(ws);
+      } else if (ws.data.type === "parser") {
+        parserController.setWebSocket(ws);
+      }
     },
-    message(ws: ServerWebSocket<unknown>, message: string | Buffer) {
-      console.log("WebSocket message received:", message);
+    message(ws: ServerWebSocket<{ type: string }>, message: string | Buffer) {
+      console.log(`WebSocket message received (${ws.data.type}):`, message);
       // Handle incoming WebSocket messages if needed
     },
-    close(ws: ServerWebSocket<unknown>) {
-      console.log("WebSocket connection closed");
+    close(ws: ServerWebSocket<{ type: string }>) {
+      console.log(`WebSocket connection closed: ${ws.data.type}`);
     },
   },
 

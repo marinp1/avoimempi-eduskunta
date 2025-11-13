@@ -102,9 +102,9 @@ export async function parseTable(options: ParseOptions): Promise<void> {
   // Get parser function
   const parseData = await getParser(tableName);
 
-  // List all pages for this table
+  // List all pages for this table (use high maxKeys to get all pages)
   const prefix = StorageKeyBuilder.listPrefixForTable(sourceStage, tableName);
-  const listResult = await storage.list({ prefix });
+  const listResult = await storage.list({ prefix, maxKeys: 100000 });
 
   if (listResult.keys.length === 0) {
     console.log(`⚠️  No data found for ${tableName} in ${sourceStage} stage`);
