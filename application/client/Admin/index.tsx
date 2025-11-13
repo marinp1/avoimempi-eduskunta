@@ -31,29 +31,53 @@ type TableStatus = {
   parsed_last_updated: string | null;
   raw_estimated_rows: number;
   parsed_estimated_rows: number;
+  total_rows_in_api?: number;
+  scrape_progress_percent?: number;
+};
+
+type ScrapingOverview = {
+  total_tables: number;
+  tables_with_data: number;
+  tables_completed: number;
+  total_api_rows: number;
+  total_scraped_rows: number;
+  overall_progress_percent: number;
 };
 
 export default function AdminPage() {
   const [status, setStatus] = useState<TableStatus[]>([]);
+  const [overview, setOverview] = useState<ScrapingOverview | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchStatus = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const res = await fetch("/api/admin/status");
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data: TableStatus[] = await res.json();
-        setStatus(data);
+
+        // Fetch both status and overview
+        const [statusRes, overviewRes] = await Promise.all([
+          fetch("/api/admin/status"),
+          fetch("/api/admin/overview"),
+        ]);
+
+        if (!statusRes.ok || !overviewRes.ok) {
+          throw new Error(`HTTP error`);
+        }
+
+        const statusData: TableStatus[] = await statusRes.json();
+        const overviewData: ScrapingOverview = await overviewRes.json();
+
+        setStatus(statusData);
+        setOverview(overviewData);
       } catch (err) {
         console.error(err);
-        setError("Failed to load admin status.");
+        setError("Failed to load admin data.");
       } finally {
         setLoading(false);
       }
     };
-    fetchStatus();
+    fetchData();
   }, []);
 
   const getStatusIcon = (hasData: boolean, count: number) => {
@@ -116,6 +140,74 @@ export default function AdminPage() {
           <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
             {error}
           </Alert>
+        </Fade>
+      )}
+
+      {overview && (
+        <Fade in timeout={500}>
+          <Box sx={{ mb: 3, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 2 }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                border: "1px solid rgba(0,0,0,0.1)",
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                color: "white",
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h3" fontWeight="700" sx={{ mb: 1 }}>
+                  {overview.overall_progress_percent.toFixed(1)}%
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Overall Progress
+                </Typography>
+                <Typography variant="caption" sx={{ opacity: 0.8, mt: 1, display: "block" }}>
+                  {overview.total_scraped_rows.toLocaleString()} / {overview.total_api_rows.toLocaleString()} rows
+                </Typography>
+              </CardContent>
+            </Card>
+
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                border: "1px solid rgba(0,0,0,0.1)",
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h3" fontWeight="700" sx={{ mb: 1, color: "#667eea" }}>
+                  {overview.tables_with_data}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Tables with Data
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+                  out of {overview.total_tables} total
+                </Typography>
+              </CardContent>
+            </Card>
+
+            <Card
+              elevation={0}
+              sx={{
+                borderRadius: 3,
+                border: "1px solid rgba(0,0,0,0.1)",
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h3" fontWeight="700" sx={{ mb: 1, color: "#4caf50" }}>
+                  {overview.tables_completed}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Fully Scraped
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+                  100% complete
+                </Typography>
+              </CardContent>
+            </Card>
+          </Box>
         </Fade>
       )}
 

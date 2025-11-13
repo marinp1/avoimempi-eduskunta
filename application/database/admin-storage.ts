@@ -12,9 +12,43 @@ export interface TableStorageStatus {
   parsed_last_updated: string | null;
   raw_estimated_rows: number;
   parsed_estimated_rows: number;
+  total_rows_in_api?: number;
+  scrape_progress_percent?: number;
+}
+
+export interface ScrapingOverview {
+  total_tables: number;
+  tables_with_data: number;
+  tables_completed: number;
+  total_api_rows: number;
+  total_scraped_rows: number;
+  overall_progress_percent: number;
 }
 
 export class AdminStorageService {
+  private apiTableCounts: Record<string, number> | null = null;
+
+  /**
+   * Fetch table row counts from Eduskunta API
+   */
+  private async fetchApiTableCounts(): Promise<Record<string, number>> {
+    if (this.apiTableCounts) {
+      return this.apiTableCounts;
+    }
+
+    try {
+      const resp = await fetch("https://avoindata.eduskunta.fi/api/v1/tables/counts");
+      const data = (await resp.json()) as { tableName: string; rowCount: number }[];
+      this.apiTableCounts = Object.fromEntries(
+        data.map((v) => [v.tableName, Math.ceil(v.rowCount)])
+      );
+      return this.apiTableCounts;
+    } catch (error) {
+      console.error("Error fetching API table counts:", error);
+      return {};
+    }
+  }
+
   /**
    * Get all files for a specific stage and table
    */
@@ -57,6 +91,7 @@ export class AdminStorageService {
    */
   async getStatus(): Promise<TableStorageStatus[]> {
     const tables = (Object.values(TableName) as string[]).sort();
+    const apiCounts = await this.fetchApiTableCounts();
     const status: TableStorageStatus[] = [];
 
     for (const tableName of tables) {
@@ -66,6 +101,9 @@ export class AdminStorageService {
 
       const hasRaw = rawFiles.length > 0;
       const hasParsed = parsedFiles.length > 0;
+      const rawEstimatedRows = this.estimateRowCount(rawFiles.length);
+      const totalRowsInApi = apiCounts[tableName] || 0;
+      const scrapeProgressPercent = totalRowsInApi > 0 ? (rawEstimatedRows / totalRowsInApi) * 100 : 0;
 
       status.push({
         table_name: tableName,
@@ -75,8 +113,10 @@ export class AdminStorageService {
         has_parsed_data: hasParsed,
         raw_last_updated: this.getMostRecentTimestamp(rawFiles),
         parsed_last_updated: this.getMostRecentTimestamp(parsedFiles),
-        raw_estimated_rows: this.estimateRowCount(rawFiles.length),
+        raw_estimated_rows: rawEstimatedRows,
         parsed_estimated_rows: this.estimateRowCount(parsedFiles.length),
+        total_rows_in_api: totalRowsInApi,
+        scrape_progress_percent: scrapeProgressPercent,
       });
     }
 
@@ -125,5 +165,31 @@ export class AdminStorageService {
     }
 
     return pageNumbers.sort((a, b) => a - b);
+  }
+
+  /**
+   * Get overall scraping progress overview
+   */
+  async getScrapingOverview(): Promise<ScrapingOverview> {
+    const status = await this.getStatus();
+
+    const totalTables = status.length;
+    const tablesWithData = status.filter(s => s.has_raw_data).length;
+    const tablesCompleted = status.filter(s =>
+      s.total_rows_in_api && s.scrape_progress_percent && s.scrape_progress_percent >= 99.9
+    ).length;
+
+    const totalApiRows = status.reduce((sum, s) => sum + (s.total_rows_in_api || 0), 0);
+    const totalScrapedRows = status.reduce((sum, s) => sum + s.raw_estimated_rows, 0);
+    const overallProgressPercent = totalApiRows > 0 ? (totalScrapedRows / totalApiRows) * 100 : 0;
+
+    return {
+      total_tables: totalTables,
+      tables_with_data: tablesWithData,
+      tables_completed: tablesCompleted,
+      total_api_rows: totalApiRows,
+      total_scraped_rows: totalScrapedRows,
+      overall_progress_percent: overallProgressPercent,
+    };
   }
 }
