@@ -1,11 +1,13 @@
 // modules/server/server.ts
 import homepage from "../public/index.html";
-import type { BunRequest } from "bun";
+import type { BunRequest, ServerWebSocket } from "bun";
 
 import { DatabaseConnection } from "../database/db";
 import { AdminStorageService } from "../database/admin-storage";
+import { ScraperController } from "./scraper-controller";
 
 const db = new DatabaseConnection();
+const scraperController = ScraperController.getInstance();
 
 const server = Bun.serve({
   routes: {
@@ -140,6 +142,43 @@ const server = Bun.serve({
       },
     },
 
+    "/api/scraper/start": {
+      POST: async (req: Request) => {
+        try {
+          const body = await req.json() as { tableName: string; mode?: any };
+
+          if (!body.tableName) {
+            return Response.json({ error: "tableName is required" }, { status: 400 });
+          }
+
+          // Start scraping in background
+          scraperController.startScraping(body.tableName, body.mode).catch(console.error);
+
+          return Response.json({ success: true, message: "Scraping started" });
+        } catch (error: any) {
+          return Response.json({ error: error.message }, { status: 500 });
+        }
+      },
+    },
+
+    "/api/scraper/stop": {
+      POST: async () => {
+        try {
+          scraperController.stopScraping();
+          return Response.json({ success: true, message: "Scraper stop requested" });
+        } catch (error: any) {
+          return Response.json({ error: error.message }, { status: 400 });
+        }
+      },
+    },
+
+    "/api/scraper/status": {
+      GET: async () => {
+        const status = scraperController.getStatus();
+        return Response.json(status);
+      },
+    },
+
     "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
 
@@ -147,8 +186,31 @@ const server = Bun.serve({
     hmr: true,
   },
 
-  fetch(req) {
+  fetch(req, server) {
+    // Handle WebSocket upgrade for scraper
+    const url = new URL(req.url);
+    if (url.pathname === "/ws/scraper") {
+      if (server.upgrade(req)) {
+        return; // WebSocket upgrade successful
+      }
+      return new Response("WebSocket upgrade failed", { status: 400 });
+    }
+
     return new Response("Not Found", { status: 404 });
+  },
+
+  websocket: {
+    open(ws: ServerWebSocket<unknown>) {
+      console.log("WebSocket connection opened");
+      scraperController.setWebSocket(ws);
+    },
+    message(ws: ServerWebSocket<unknown>, message: string | Buffer) {
+      console.log("WebSocket message received:", message);
+      // Handle incoming WebSocket messages if needed
+    },
+    close(ws: ServerWebSocket<unknown>) {
+      console.log("WebSocket connection closed");
+    },
   },
 
   error(error) {

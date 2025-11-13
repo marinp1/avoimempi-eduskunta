@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Box,
   Card,
@@ -15,11 +15,23 @@ import {
   Chip,
   Alert,
   Fade,
+  Button,
+  LinearProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import StorageIcon from "@mui/icons-material/Storage";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import WarningIcon from "@mui/icons-material/Warning";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import StopIcon from "@mui/icons-material/Stop";
 
 type TableStatus = {
   table_name: string;
@@ -50,6 +62,14 @@ export default function AdminPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Scraper control state
+  const [scraperRunning, setScraperRunning] = useState<boolean>(false);
+  const [scraperProgress, setScraperProgress] = useState<string>("");
+  const [scraperPercent, setScraperPercent] = useState<number>(0);
+  const [showStartDialog, setShowStartDialog] = useState<boolean>(false);
+  const [selectedTable, setSelectedTable] = useState<string>("");
+  const wsRef = useRef<WebSocket | null>(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -78,7 +98,113 @@ export default function AdminPage() {
       }
     };
     fetchData();
+
+    // Setup WebSocket connection
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const ws = new WebSocket(`${protocol}//${window.location.host}/ws/scraper`);
+
+    ws.onopen = () => {
+      console.log("WebSocket connected");
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data) as { type: string; data?: any };
+
+      switch (message.type) {
+        case "status":
+          if (message.data.status === "started") {
+            setScraperRunning(true);
+            setScraperProgress(`Starting scrape of ${message.data.tableName}...`);
+            setScraperPercent(0);
+          } else if (message.data.status === "stopping") {
+            setScraperProgress("Stopping...");
+          }
+          break;
+
+        case "progress":
+          setScraperProgress(
+            `${message.data.tableName}: Page ${message.data.page} - ${message.data.totalRows.toLocaleString()} rows (${message.data.percentComplete.toFixed(1)}%)`
+          );
+          setScraperPercent(message.data.percentComplete);
+          break;
+
+        case "complete":
+          setScraperRunning(false);
+          setScraperProgress(`✅ ${message.data.message}`);
+          setScraperPercent(100);
+          // Refresh data after completion
+          fetchData();
+          break;
+
+        case "error":
+          setScraperRunning(false);
+          setScraperProgress(`❌ Error: ${message.data.error}`);
+          setScraperPercent(0);
+          break;
+
+        case "stopped":
+          setScraperRunning(false);
+          setScraperProgress(`⏹️ ${message.data.message}`);
+          setScraperPercent(0);
+          break;
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    ws.onclose = () => {
+      console.log("WebSocket disconnected");
+    };
+
+    wsRef.current = ws;
+
+    return () => {
+      ws.close();
+    };
   }, []);
+
+  const handleStartScraping = async () => {
+    if (!selectedTable) return;
+
+    try {
+      const res = await fetch("/api/scraper/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tableName: selectedTable,
+          mode: { type: "auto-resume" }
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error);
+      }
+
+      setShowStartDialog(false);
+    } catch (err: any) {
+      console.error(err);
+      alert(`Failed to start scraping: ${err.message}`);
+    }
+  };
+
+  const handleStopScraping = async () => {
+    try {
+      const res = await fetch("/api/scraper/stop", {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(`Failed to stop scraping: ${err.message}`);
+    }
+  };
 
   const getStatusIcon = (hasData: boolean, count: number) => {
     if (!hasData) {
@@ -143,9 +269,67 @@ export default function AdminPage() {
         </Fade>
       )}
 
+      {scraperRunning && (
+        <Fade in timeout={300}>
+          <Card elevation={0} sx={{ mb: 3, borderRadius: 3, border: "1px solid rgba(102, 126, 234, 0.3)" }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                <Typography variant="h6" fontWeight="600">
+                  Scraper Running
+                </Typography>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<StopIcon />}
+                  onClick={handleStopScraping}
+                  size="small"
+                >
+                  Stop
+                </Button>
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                {scraperProgress}
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={scraperPercent}
+                sx={{
+                  height: 8,
+                  borderRadius: 4,
+                  bgcolor: "rgba(102, 126, 234, 0.1)",
+                  "& .MuiLinearProgress-bar": {
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  }
+                }}
+              />
+            </CardContent>
+          </Card>
+        </Fade>
+      )}
+
       {overview && (
         <Fade in timeout={500}>
-          <Box sx={{ mb: 3, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 2 }}>
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+              <Typography variant="h6" fontWeight="600">
+                Overview
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<PlayArrowIcon />}
+                onClick={() => setShowStartDialog(true)}
+                disabled={scraperRunning}
+                sx={{
+                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  "&:hover": {
+                    background: "linear-gradient(135deg, #5568d3 0%, #63408d 100%)",
+                  },
+                }}
+              >
+                Start Scraping
+              </Button>
+            </Box>
+            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 2 }}>
             <Card
               elevation={0}
               sx={{
@@ -207,6 +391,7 @@ export default function AdminPage() {
                 </Typography>
               </CardContent>
             </Card>
+            </Box>
           </Box>
         </Fade>
       )}
@@ -397,6 +582,44 @@ export default function AdminPage() {
           </TableContainer>
         </Fade>
       )}
+
+      <Dialog open={showStartDialog} onClose={() => setShowStartDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Start Scraping</DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel>Table</InputLabel>
+            <Select
+              value={selectedTable}
+              label="Table"
+              onChange={(e) => setSelectedTable(e.target.value)}
+            >
+              {status
+                .filter(s => s.total_rows_in_api && s.scrape_progress_percent !== undefined && s.scrape_progress_percent < 100)
+                .map((table) => (
+                  <MenuItem key={table.table_name} value={table.table_name}>
+                    {table.table_name} ({table.scrape_progress_percent?.toFixed(1)}% complete)
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+            Select a table to scrape. The scraper will automatically resume from where it left off.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowStartDialog(false)}>Cancel</Button>
+          <Button
+            onClick={handleStartScraping}
+            variant="contained"
+            disabled={!selectedTable}
+            sx={{
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            }}
+          >
+            Start
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

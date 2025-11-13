@@ -210,7 +210,9 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
       const indexOfPrimaryKey = prevContent.columnNames.indexOf(primaryColumn);
       const lastRow = prevContent.rowData[prevContent.rowData.length - 1];
       if (lastRow && lastRow[indexOfPrimaryKey] !== undefined) {
-        pkStartValue = lastRow[indexOfPrimaryKey] + 1;
+        // Convert to number if it's a string, then add 1
+        const lastPkValue = lastRow[indexOfPrimaryKey];
+        pkStartValue = (typeof lastPkValue === 'string' ? parseInt(lastPkValue, 10) : lastPkValue) + 1;
       } else {
         throw new Error(`Cannot determine primary key from page ${prevPage}`);
       }
@@ -300,7 +302,9 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
       const indexOfPrimaryKey = content.columnNames.indexOf(primaryColumn);
       const lastRow = content.rowData[content.rowData.length - 1];
       if (lastRow && lastRow[indexOfPrimaryKey] !== undefined) {
-        pkStartValue = lastRow[indexOfPrimaryKey] + 1;
+        // Convert to number if it's a string, then add 1
+        const lastPkValue = lastRow[indexOfPrimaryKey];
+        pkStartValue = (typeof lastPkValue === 'string' ? parseInt(lastPkValue, 10) : lastPkValue) + 1;
       } else {
         console.error("❌ Could not determine next primary key value");
         break;
