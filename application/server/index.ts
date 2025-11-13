@@ -8,6 +8,8 @@ const db = new DatabaseConnection();
 const server = Bun.serve({
   routes: {
     "/": homepage,
+    "/composition": homepage,
+    "/votings": homepage,
 
     "/api/status": new Response("OK"),
 
