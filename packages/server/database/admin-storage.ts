@@ -1,6 +1,11 @@
 import { getStorage } from "#storage/factory";
-import { StorageKeyBuilder, type DataStage, type StorageMetadata } from "#storage/types";
+import {
+  StorageKeyBuilder,
+  type DataStage,
+  type StorageMetadata,
+} from "#storage/types";
 import { TableName } from "#constants/index";
+import { scheduler } from "node:timers/promises";
 
 export interface TableStorageStatus {
   table_name: string;
@@ -40,10 +45,15 @@ export class AdminStorageService {
     }
 
     try {
-      const resp = await fetch("https://avoindata.eduskunta.fi/api/v1/tables/counts");
-      const data = (await resp.json()) as { tableName: string; rowCount: number }[];
+      const resp = await fetch(
+        "https://avoindata.eduskunta.fi/api/v1/tables/counts",
+      );
+      const data = (await resp.json()) as {
+        tableName: string;
+        rowCount: number;
+      }[];
       this.apiTableCounts = Object.fromEntries(
-        data.map((v) => [v.tableName, Math.ceil(v.rowCount)])
+        data.map((v) => [v.tableName, Math.ceil(v.rowCount)]),
       );
       return this.apiTableCounts;
     } catch (error) {
@@ -55,7 +65,10 @@ export class AdminStorageService {
   /**
    * Get all files for a specific stage and table
    */
-  private async getTableFiles(stage: DataStage, tableName: string): Promise<StorageMetadata[]> {
+  private async getTableFiles(
+    stage: DataStage,
+    tableName: string,
+  ): Promise<StorageMetadata[]> {
     const storage = getStorage();
     const prefix = StorageKeyBuilder.listPrefixForTable(stage, tableName);
 
@@ -85,7 +98,11 @@ export class AdminStorageService {
    * Get exact row count by reading only the last page file
    * Formula: (pageCount - 1) * 100 + lastPageRowCount
    */
-  private async getExactRowCount(stage: DataStage, tableName: string, files: StorageMetadata[]): Promise<number> {
+  private async getExactRowCount(
+    stage: DataStage,
+    tableName: string,
+    files: StorageMetadata[],
+  ): Promise<number> {
     if (files.length === 0) return 0;
     if (files.length === 1) {
       // Just one page, read it to get exact count
@@ -106,8 +123,8 @@ export class AdminStorageService {
 
     // Find the last page (highest page number)
     const sortedFiles = files
-      .map(f => ({ file: f, parsed: StorageKeyBuilder.parseKey(f.key) }))
-      .filter(f => f.parsed !== null)
+      .map((f) => ({ file: f, parsed: StorageKeyBuilder.parseKey(f.key) }))
+      .filter((f) => f.parsed !== null)
       .sort((a, b) => (b.parsed?.page || 0) - (a.parsed?.page || 0));
 
     if (sortedFiles.length === 0) {
@@ -150,11 +167,20 @@ export class AdminStorageService {
       const hasParsed = parsedFiles.length > 0;
 
       // Get exact row counts by reading the files
-      const rawExactRows = await this.getExactRowCount("raw", tableName, rawFiles);
-      const parsedExactRows = await this.getExactRowCount("parsed", tableName, parsedFiles);
+      const rawExactRows = await this.getExactRowCount(
+        "raw",
+        tableName,
+        rawFiles,
+      );
+      const parsedExactRows = await this.getExactRowCount(
+        "parsed",
+        tableName,
+        parsedFiles,
+      );
 
       const totalRowsInApi = apiCounts[tableName] || 0;
-      const scrapeProgressPercent = totalRowsInApi > 0 ? (rawExactRows / totalRowsInApi) * 100 : 0;
+      const scrapeProgressPercent =
+        totalRowsInApi > 0 ? (rawExactRows / totalRowsInApi) * 100 : 0;
 
       status.push({
         table_name: tableName,
@@ -225,21 +251,37 @@ export class AdminStorageService {
     const status = await this.getStatus();
 
     const totalTables = status.length;
-    const tablesWithData = status.filter(s => s.has_raw_data).length;
-    const tablesCompleted = status.filter(s =>
-      s.total_rows_in_api && s.scrape_progress_percent && s.scrape_progress_percent >= 99.9
+    const tablesWithData = status.filter((s) => s.has_raw_data).length;
+    const tablesCompleted = status.filter(
+      (s) =>
+        s.total_rows_in_api &&
+        s.scrape_progress_percent &&
+        s.scrape_progress_percent >= 99.9,
     ).length;
 
-    const totalApiRows = status.reduce((sum, s) => sum + (s.total_rows_in_api || 0), 0);
-    const totalScrapedRows = status.reduce((sum, s) => sum + s.raw_estimated_rows, 0);
-    const overallProgressPercent = totalApiRows > 0 ? (totalScrapedRows / totalApiRows) * 100 : 0;
+    const totalApiRows = status.reduce(
+      (sum, s) => sum + (s.total_rows_in_api || 0),
+      0,
+    );
+    const totalScrapedRows = status.reduce(
+      (sum, s) => sum + s.raw_estimated_rows,
+      0,
+    );
+    const overallProgressPercent =
+      totalApiRows > 0 ? (totalScrapedRows / totalApiRows) * 100 : 0;
 
     // Parsed data statistics
-    const tablesWithParsedData = status.filter(s => s.has_parsed_data).length;
-    const tablesFullyParsed = status.filter(s =>
-      s.has_raw_data && s.has_parsed_data && s.parsed_page_count >= s.raw_page_count
+    const tablesWithParsedData = status.filter((s) => s.has_parsed_data).length;
+    const tablesFullyParsed = status.filter(
+      (s) =>
+        s.has_raw_data &&
+        s.has_parsed_data &&
+        s.parsed_page_count >= s.raw_page_count,
     ).length;
-    const totalParsedRows = status.reduce((sum, s) => sum + s.parsed_estimated_rows, 0);
+    const totalParsedRows = status.reduce(
+      (sum, s) => sum + s.parsed_estimated_rows,
+      0,
+    );
 
     return {
       total_tables: totalTables,
