@@ -47,6 +47,44 @@ const server = Bun.serve({
       },
     },
 
+    "/api/person/:id/details": {
+      GET: async (req: BunRequest<"/api/person/:id/details">) => {
+        const details = await db.fetchRepresentativeDetails(req.params);
+        return new Response(JSON.stringify(details), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
+    "/api/person/:id/leaving-records": {
+      GET: async (req: BunRequest<"/api/person/:id/leaving-records">) => {
+        const records = await db.fetchLeavingParliamentRecords(req.params);
+        return new Response(JSON.stringify(records), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
+    "/api/person/:id/trust-positions": {
+      GET: async (req: BunRequest<"/api/person/:id/trust-positions">) => {
+        const positions = await db.fetchTrustPositions(req.params);
+        return new Response(JSON.stringify(positions), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
+    "/api/person/:id/government-memberships": {
+      GET: async (
+        req: BunRequest<"/api/person/:id/government-memberships">
+      ) => {
+        const memberships = await db.fetchGovernmentMemberships(req.params);
+        return new Response(JSON.stringify(memberships), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
     "/api/votings/search": {
       GET: async (req: BunRequest<"/api/votings/search">) => {
         const { searchParams } = new URL(req.url);
