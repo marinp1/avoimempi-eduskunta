@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Tabs,
@@ -19,14 +19,14 @@ import EdustajatPage from "./Edustajat";
 
 const Pages = Object.freeze({
   Votings: "votings",
-  Edustajat: "edustajat",
+  Composition: "composition",
 });
 
 type Page = (typeof Pages)[keyof typeof Pages];
 
 const PageComponents = {
   [Pages.Votings]: VotingsPage,
-  [Pages.Edustajat]: EdustajatPage,
+  [Pages.Composition]: EdustajatPage,
 } satisfies Record<Page, React.FC<Record<string, never>>>;
 
 const theme = createTheme({
@@ -54,11 +54,44 @@ const theme = createTheme({
 });
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Page>(Pages.Edustajat);
+  // Initialize from URL path
+  const getInitialTab = (): Page => {
+    const path = window.location.pathname;
+    if (path === "/votings") return Pages.Votings;
+    if (path === "/composition" || path === "/composition/") return Pages.Composition;
+    // Default to composition
+    return Pages.Composition;
+  };
 
+  const [activeTab, setActiveTab] = useState<Page>(getInitialTab());
+
+  // Handle initial redirect from / to /composition
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path === "/" || path === "") {
+      const search = window.location.search;
+      window.history.replaceState({}, "", `/composition${search}`);
+      setActiveTab(Pages.Composition);
+    }
+  }, []);
+
+  // Update URL when tab changes
   const handleChange = (event: React.SyntheticEvent, newValue: Page) => {
     setActiveTab(newValue);
+    const search = window.location.search;
+    const newPath = `/${newValue}${search}`;
+    window.history.pushState({}, "", newPath);
   };
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const handlePopState = () => {
+      setActiveTab(getInitialTab());
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   const ActivePage = PageComponents[activeTab];
 
@@ -147,7 +180,7 @@ export const App: React.FC = () => {
               icon={<PeopleIcon />}
               iconPosition="start"
               label="Edustajat"
-              value={Pages.Edustajat}
+              value={Pages.Composition}
             />
           </Tabs>
         </Box>

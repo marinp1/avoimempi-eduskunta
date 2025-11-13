@@ -32,11 +32,25 @@ type MemberWithExtras = DatabaseQueries.GetParliamentComposition & {
 };
 
 export default function App() {
+  // Initialize from URL
+  const getInitialDate = (): string => {
+    const params = new URLSearchParams(window.location.search);
+    const dateParam = params.get("date");
+    if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+      return dateParam;
+    }
+    return new Date().toISOString().split("T")[0];
+  };
+
+  const getInitialPersonId = (): number | null => {
+    const params = new URLSearchParams(window.location.search);
+    const personIdParam = params.get("person");
+    return personIdParam ? parseInt(personIdParam, 10) : null;
+  };
+
   const [members, setMembers] = useState<MemberWithExtras[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [date, setDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
-  );
+  const [date, setDate] = useState<string>(getInitialDate());
   const [error, setError] = useState<string | null>(null);
 
   // New state for dialog
@@ -76,6 +90,7 @@ export default function App() {
     };
   }, [members]);
 
+  // Fetch members when date changes
   useEffect(() => {
     const fetchMembers = async () => {
       try {
@@ -95,14 +110,77 @@ export default function App() {
     fetchMembers();
   }, [date]);
 
+  // Open dialog for person in URL on initial load
+  useEffect(() => {
+    const personId = getInitialPersonId();
+    if (personId && members.length > 0) {
+      const member = members.find(m => m.person_id === personId);
+      if (member) {
+        setSelectedRepresentative(member);
+        setDialogOpen(true);
+      }
+    }
+  }, [members]);
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const handlePopState = () => {
+      const newDate = getInitialDate();
+      const personId = getInitialPersonId();
+
+      setDate(newDate);
+
+      if (personId && members.length > 0) {
+        const member = members.find(m => m.person_id === personId);
+        if (member) {
+          setSelectedRepresentative(member);
+          setDialogOpen(true);
+        }
+      } else {
+        setDialogOpen(false);
+        setSelectedRepresentative(null);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [members]);
+
+  // Update URL function
+  const updateURL = (newDate?: string, personId?: number | null) => {
+    const url = new URL(window.location.href);
+    const params = url.searchParams;
+
+    if (newDate !== undefined) {
+      params.set("date", newDate);
+    }
+
+    if (personId !== undefined) {
+      if (personId === null) {
+        params.delete("person");
+      } else {
+        params.set("person", personId.toString());
+      }
+    }
+
+    window.history.pushState({}, "", url.toString());
+  };
+
+  const handleDateChange = (newDate: string) => {
+    setDate(newDate);
+    updateURL(newDate);
+  };
+
   const handleRowClick = (member: DatabaseQueries.GetParliamentComposition) => {
     setSelectedRepresentative(member);
     setDialogOpen(true);
+    updateURL(undefined, member.person_id);
   };
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
     setSelectedRepresentative(null);
+    updateURL(undefined, null);
   };
 
   return (
@@ -139,7 +217,7 @@ export default function App() {
               label="Valitse päivämäärä"
               type="date"
               value={date}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={(e) => handleDateChange(e.target.value)}
               InputLabelProps={{ shrink: true }}
               InputProps={{
                 startAdornment: (
