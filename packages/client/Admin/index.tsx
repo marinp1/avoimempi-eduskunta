@@ -1,8 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   Table,
   TableBody,
@@ -20,7 +18,6 @@ import {
   Collapse,
   IconButton,
 } from "@mui/material";
-import StorageIcon from "@mui/icons-material/Storage";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import WarningIcon from "@mui/icons-material/Warning";
@@ -28,6 +25,8 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import StopIcon from "@mui/icons-material/Stop";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import { gradients } from "../theme";
+import { AdminHeader, AdminOverview, ControlPanel } from "./components";
 
 type TableStatus = {
   table_name: string;
@@ -454,36 +453,7 @@ export default function AdminPage() {
 
   return (
     <Box>
-      <Fade in timeout={400}>
-        <Card
-          elevation={0}
-          sx={{
-            mb: 3,
-            borderRadius: 3,
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            color: "white",
-            boxShadow: "0 4px 20px rgba(102, 126, 234, 0.3)",
-          }}
-        >
-          <CardContent sx={{ p: 3 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <StorageIcon sx={{ fontSize: 40 }} />
-              <Box>
-                <Typography
-                  variant="h4"
-                  fontWeight="700"
-                  letterSpacing="-0.5px"
-                >
-                  Admin Dashboard
-                </Typography>
-                <Typography variant="body1" sx={{ opacity: 0.9, mt: 0.5 }}>
-                  Database scraping and parsing status
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-      </Fade>
+      <AdminHeader />
 
       {error && (
         <Fade in timeout={500}>
@@ -493,289 +463,25 @@ export default function AdminPage() {
         </Fade>
       )}
 
-      {overview && (
-        <Fade in timeout={500}>
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" fontWeight="600" sx={{ mb: 2 }}>
-              Overview
-            </Typography>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                gap: 2,
-              }}
-            >
-              <Card
-                elevation={0}
-                sx={{
-                  borderRadius: 3,
-                  border: "1px solid rgba(0,0,0,0.1)",
-                  background:
-                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                  color: "white",
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h3" fontWeight="700" sx={{ mb: 1 }}>
-                    {overview.overall_progress_percent.toFixed(1)}%
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Overall Progress
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{ opacity: 0.8, mt: 1, display: "block" }}
-                  >
-                    {overview.total_scraped_rows.toLocaleString()} /{" "}
-                    {overview.total_api_rows.toLocaleString()} rows
-                  </Typography>
-                </CardContent>
-              </Card>
-
-              <Card
-                elevation={0}
-                sx={{
-                  borderRadius: 3,
-                  border: "1px solid rgba(0,0,0,0.1)",
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Typography
-                    variant="h3"
-                    fontWeight="700"
-                    sx={{ mb: 1, color: "#667eea" }}
-                  >
-                    {overview.tables_with_data}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Tables with Data
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 1, display: "block" }}
-                  >
-                    out of {overview.total_tables} total
-                  </Typography>
-                </CardContent>
-              </Card>
-
-              <Card
-                elevation={0}
-                sx={{
-                  borderRadius: 3,
-                  border: "1px solid rgba(0,0,0,0.1)",
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Typography
-                    variant="h3"
-                    fontWeight="700"
-                    sx={{ mb: 1, color: "#4caf50" }}
-                  >
-                    {overview.tables_completed}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Fully Scraped
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 1, display: "block" }}
-                  >
-                    100% complete
-                  </Typography>
-                </CardContent>
-              </Card>
-
-              <Card
-                elevation={0}
-                sx={{
-                  borderRadius: 3,
-                  border: "1px solid rgba(0,0,0,0.1)",
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Typography
-                    variant="h3"
-                    fontWeight="700"
-                    sx={{ mb: 1, color: "#f093fb" }}
-                  >
-                    {overview.tables_with_parsed_data}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Tables Parsed
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 1, display: "block" }}
-                  >
-                    out of {overview.total_tables} total
-                  </Typography>
-                </CardContent>
-              </Card>
-
-              <Card
-                elevation={0}
-                sx={{
-                  borderRadius: 3,
-                  border: "1px solid rgba(0,0,0,0.1)",
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Typography
-                    variant="h3"
-                    fontWeight="700"
-                    sx={{ mb: 1, color: "#f5576c" }}
-                  >
-                    {overview.tables_fully_parsed}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Fully Parsed
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 1, display: "block" }}
-                  >
-                    all pages parsed
-                  </Typography>
-                </CardContent>
-              </Card>
-
-              <Card
-                elevation={0}
-                sx={{
-                  borderRadius: 3,
-                  border: "1px solid rgba(0,0,0,0.1)",
-                  background:
-                    "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                  color: "white",
-                }}
-              >
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h3" fontWeight="700" sx={{ mb: 1 }}>
-                    {overview.total_parsed_rows.toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                    Total Parsed Rows
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{ opacity: 0.8, mt: 1, display: "block" }}
-                  >
-                    across all tables
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Box>
-          </Box>
-        </Fade>
-      )}
+      <AdminOverview overview={overview} />
 
       {/* Database Migration Section */}
-      <Fade in timeout={600}>
-        <Card
-          elevation={0}
-          sx={{
-            mb: 3,
-            borderRadius: 3,
-            border: "1px solid rgba(0,0,0,0.1)",
-          }}
-        >
-          <CardContent sx={{ p: 3 }}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                mb: 2,
-              }}
-            >
-              <Box>
-                <Typography variant="h6" fontWeight="600" sx={{ mb: 0.5 }}>
-                  Database Migration
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Build final SQLite database from parsed data
-                </Typography>
-              </Box>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                {lastMigrationTimestamp && (
-                  <Box sx={{ textAlign: "right" }}>
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      display="block"
-                    >
-                      Last Built
-                    </Typography>
-                    <Typography variant="body2" fontWeight="600">
-                      {formatTimestamp(lastMigrationTimestamp)}
-                    </Typography>
-                  </Box>
-                )}
-                {migratorRunning ? (
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    startIcon={<StopIcon />}
-                    onClick={handleStopMigration}
-                    size="medium"
-                  >
-                    Cancel
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    startIcon={<PlayArrowIcon />}
-                    onClick={handleStartMigration}
-                    disabled={
-                      scraperRunning || parserRunning || migratorRunning
-                    }
-                    size="medium"
-                    sx={{
-                      background:
-                        "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
-                      "&:hover": {
-                        background:
-                          "linear-gradient(135deg, #0e8577 0%, #2dd46a 100%)",
-                      },
-                    }}
-                  >
-                    Rebuild Database
-                  </Button>
-                )}
-              </Box>
-            </Box>
-            {migratorRunning && (
-              <Box>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 1 }}
-                >
-                  {migratorProgress}
-                </Typography>
-                <LinearProgress
-                  sx={{
-                    height: 6,
-                    borderRadius: 3,
-                    bgcolor: "rgba(17, 153, 142, 0.1)",
-                    "& .MuiLinearProgress-bar": {
-                      background:
-                        "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
-                    },
-                  }}
-                />
-              </Box>
-            )}
-          </CardContent>
-        </Card>
-      </Fade>
-
+      <ControlPanel
+        title="Database Migration"
+        description="Build final SQLite database from parsed data"
+        isRunning={migratorRunning}
+        progress={migratorProgress}
+        progressPercent={0}
+        onStart={handleStartMigration}
+        onStop={handleStopMigration}
+        gradient={gradients.success}
+        disabled={scraperRunning || parserRunning || migratorRunning}
+        lastUpdate={
+          lastMigrationTimestamp
+            ? formatTimestamp(lastMigrationTimestamp)
+            : undefined
+        }
+      />
       {loading ? (
         <Box
           sx={{
