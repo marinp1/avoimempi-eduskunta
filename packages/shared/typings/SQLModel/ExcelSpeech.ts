@@ -1,7 +1,7 @@
 declare global {
   export namespace DatabaseTables {
     export type ExcelSpeech = {
-      id: number;
+      excel_id: string; // Format: YYYYMMDDHHmmss_<document>_<processing_phase>_<order>_<person_id>
       processing_phase: string | null;
       document: string | null;
       ordinal: number;

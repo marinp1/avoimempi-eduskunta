@@ -203,6 +203,31 @@ function getExcelFilePath(filename: string): string {
 }
 
 /**
+ * Merge duplicate speeches that have the same metadata
+ * Key: id + processing_phase + document + order + start_time
+ */
+function mergeDuplicateSpeeches(speeches: ParsedSpeech[]): ParsedSpeech[] {
+  const merged = new Map<string, ParsedSpeech>();
+
+  for (const speech of speeches) {
+    // Create a unique key from the speech metadata
+    const key = `${speech.id}_${speech.processing_phase}_${speech.document}_${speech.order}_${speech.start_time}`;
+
+    if (merged.has(key)) {
+      // Merge content with existing speech
+      const existing = merged.get(key)!;
+      existing.content =
+        (existing.content || "") + " " + (speech.content || "");
+    } else {
+      // First occurrence, add to map
+      merged.set(key, { ...speech });
+    }
+  }
+
+  return Array.from(merged.values());
+}
+
+/**
  * Scrape Excel speeches from all Excel files in the raw data folder
  *
  * This function:
@@ -267,14 +292,20 @@ export async function scrapeExcelSpeeches(
         }
       }
 
+      // Merge duplicate speeches (same person, date, document, order, start_time)
+      const mergedSpeeches = mergeDuplicateSpeeches(parsedSpeeches);
+      console.log(
+        `   Merged ${parsedSpeeches.length} rows into ${mergedSpeeches.length} unique speeches`,
+      );
+
       // Save in chunks (1000 rows per file, similar to API pagination)
       const chunkSize = 1000;
-      const chunks = Math.ceil(parsedSpeeches.length / chunkSize);
+      const chunks = Math.ceil(mergedSpeeches.length / chunkSize);
 
       for (let i = 0; i < chunks; i++) {
         const start = i * chunkSize;
-        const end = Math.min(start + chunkSize, parsedSpeeches.length);
-        const chunk = parsedSpeeches.slice(start, end);
+        const end = Math.min(start + chunkSize, mergedSpeeches.length);
+        const chunk = mergedSpeeches.slice(start, end);
 
         const key = StorageKeyBuilder.forPage(
           outputStage,
@@ -294,7 +325,7 @@ export async function scrapeExcelSpeeches(
       }
 
       console.log(
-        `   ✅ Extracted ${parsedSpeeches.length} speeches (${chunks} page(s))\n`,
+        `   ✅ Extracted ${mergedSpeeches.length} speeches (${chunks} page(s))\n`,
       );
 
       // Call progress callback
