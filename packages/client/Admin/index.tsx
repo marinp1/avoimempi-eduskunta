@@ -63,7 +63,9 @@ export default function AdminPage() {
 
   // Scraper control state
   const [scraperRunning, setScraperRunning] = useState<boolean>(false);
-  const [currentScrapingTable, setCurrentScrapingTable] = useState<string | null>(null);
+  const [currentScrapingTable, setCurrentScrapingTable] = useState<
+    string | null
+  >(null);
   const [scraperProgress, setScraperProgress] = useState<string>("");
   const [scraperPercent, setScraperPercent] = useState<number>(0);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
@@ -71,7 +73,9 @@ export default function AdminPage() {
 
   // Parser control state
   const [parserRunning, setParserRunning] = useState<boolean>(false);
-  const [currentParsingTable, setCurrentParsingTable] = useState<string | null>(null);
+  const [currentParsingTable, setCurrentParsingTable] = useState<string | null>(
+    null,
+  );
   const [parserProgress, setParserProgress] = useState<string>("");
   const [parserPercent, setParserPercent] = useState<number>(0);
   const parserWsRef = useRef<WebSocket | null>(null);
@@ -79,7 +83,9 @@ export default function AdminPage() {
   // Migrator control state
   const [migratorRunning, setMigratorRunning] = useState<boolean>(false);
   const [migratorProgress, setMigratorProgress] = useState<string>("");
-  const [lastMigrationTimestamp, setLastMigrationTimestamp] = useState<string | null>(null);
+  const [lastMigrationTimestamp, setLastMigrationTimestamp] = useState<
+    string | null
+  >(null);
   const migratorWsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -116,7 +122,9 @@ export default function AdminPage() {
 
     // Setup Scraper WebSocket connection
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const scraperWs = new WebSocket(`${protocol}//${window.location.host}/ws/scraper`);
+    const scraperWs = new WebSocket(
+      `${protocol}//${window.location.host}/ws/scraper`,
+    );
 
     scraperWs.onopen = () => {
       console.log("Scraper WebSocket connected");
@@ -139,7 +147,7 @@ export default function AdminPage() {
 
         case "progress":
           setScraperProgress(
-            `${message.data.tableName}: Page ${message.data.page} - ${message.data.totalRows.toLocaleString()} rows (${message.data.percentComplete.toFixed(1)}%)`
+            `${message.data.tableName}: Page ${message.data.page} - ${message.data.totalRows.toLocaleString()} rows (${message.data.percentComplete.toFixed(1)}%)`,
           );
           setScraperPercent(message.data.percentComplete);
           break;
@@ -180,7 +188,9 @@ export default function AdminPage() {
     scraperWsRef.current = scraperWs;
 
     // Setup Parser WebSocket connection
-    const parserWs = new WebSocket(`${protocol}//${window.location.host}/ws/parser`);
+    const parserWs = new WebSocket(
+      `${protocol}//${window.location.host}/ws/parser`,
+    );
 
     parserWs.onopen = () => {
       console.log("Parser WebSocket connected");
@@ -203,7 +213,7 @@ export default function AdminPage() {
 
         case "progress":
           setParserProgress(
-            `${message.data.tableName}: Page ${message.data.page}/${message.data.totalPages} - ${message.data.rowsParsed.toLocaleString()} rows (${message.data.percentComplete.toFixed(1)}%)`
+            `${message.data.tableName}: Page ${message.data.page}/${message.data.totalPages} - ${message.data.rowsParsed.toLocaleString()} rows (${message.data.percentComplete.toFixed(1)}%)`,
           );
           setParserPercent(message.data.percentComplete);
           break;
@@ -244,7 +254,9 @@ export default function AdminPage() {
     parserWsRef.current = parserWs;
 
     // Setup Migrator WebSocket connection
-    const migratorWs = new WebSocket(`${protocol}//${window.location.host}/ws/migrator`);
+    const migratorWs = new WebSocket(
+      `${protocol}//${window.location.host}/ws/migrator`,
+    );
 
     migratorWs.onopen = () => {
       console.log("Migrator WebSocket connected");
@@ -311,7 +323,7 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tableName,
-          mode: { type: "auto-resume" }
+          mode: { type: "auto-resume" },
         }),
       });
 
@@ -457,7 +469,11 @@ export default function AdminPage() {
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <StorageIcon sx={{ fontSize: 40 }} />
               <Box>
-                <Typography variant="h4" fontWeight="700" letterSpacing="-0.5px">
+                <Typography
+                  variant="h4"
+                  fontWeight="700"
+                  letterSpacing="-0.5px"
+                >
                   Admin Dashboard
                 </Typography>
                 <Typography variant="body1" sx={{ opacity: 0.9, mt: 0.5 }}>
@@ -483,130 +499,177 @@ export default function AdminPage() {
             <Typography variant="h6" fontWeight="600" sx={{ mb: 2 }}>
               Overview
             </Typography>
-            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 2 }}>
-            <Card
-              elevation={0}
+            <Box
               sx={{
-                borderRadius: 3,
-                border: "1px solid rgba(0,0,0,0.1)",
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                color: "white",
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                gap: 2,
               }}
             >
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h3" fontWeight="700" sx={{ mb: 1 }}>
-                  {overview.overall_progress_percent.toFixed(1)}%
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Overall Progress
-                </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.8, mt: 1, display: "block" }}>
-                  {overview.total_scraped_rows.toLocaleString()} / {overview.total_api_rows.toLocaleString()} rows
-                </Typography>
-              </CardContent>
-            </Card>
+              <Card
+                elevation={0}
+                sx={{
+                  borderRadius: 3,
+                  border: "1px solid rgba(0,0,0,0.1)",
+                  background:
+                    "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                  color: "white",
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Typography variant="h3" fontWeight="700" sx={{ mb: 1 }}>
+                    {overview.overall_progress_percent.toFixed(1)}%
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    Overall Progress
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{ opacity: 0.8, mt: 1, display: "block" }}
+                  >
+                    {overview.total_scraped_rows.toLocaleString()} /{" "}
+                    {overview.total_api_rows.toLocaleString()} rows
+                  </Typography>
+                </CardContent>
+              </Card>
 
-            <Card
-              elevation={0}
-              sx={{
-                borderRadius: 3,
-                border: "1px solid rgba(0,0,0,0.1)",
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h3" fontWeight="700" sx={{ mb: 1, color: "#667eea" }}>
-                  {overview.tables_with_data}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Tables with Data
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-                  out of {overview.total_tables} total
-                </Typography>
-              </CardContent>
-            </Card>
+              <Card
+                elevation={0}
+                sx={{
+                  borderRadius: 3,
+                  border: "1px solid rgba(0,0,0,0.1)",
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Typography
+                    variant="h3"
+                    fontWeight="700"
+                    sx={{ mb: 1, color: "#667eea" }}
+                  >
+                    {overview.tables_with_data}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Tables with Data
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mt: 1, display: "block" }}
+                  >
+                    out of {overview.total_tables} total
+                  </Typography>
+                </CardContent>
+              </Card>
 
-            <Card
-              elevation={0}
-              sx={{
-                borderRadius: 3,
-                border: "1px solid rgba(0,0,0,0.1)",
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h3" fontWeight="700" sx={{ mb: 1, color: "#4caf50" }}>
-                  {overview.tables_completed}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Fully Scraped
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-                  100% complete
-                </Typography>
-              </CardContent>
-            </Card>
+              <Card
+                elevation={0}
+                sx={{
+                  borderRadius: 3,
+                  border: "1px solid rgba(0,0,0,0.1)",
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Typography
+                    variant="h3"
+                    fontWeight="700"
+                    sx={{ mb: 1, color: "#4caf50" }}
+                  >
+                    {overview.tables_completed}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Fully Scraped
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mt: 1, display: "block" }}
+                  >
+                    100% complete
+                  </Typography>
+                </CardContent>
+              </Card>
 
-            <Card
-              elevation={0}
-              sx={{
-                borderRadius: 3,
-                border: "1px solid rgba(0,0,0,0.1)",
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h3" fontWeight="700" sx={{ mb: 1, color: "#f093fb" }}>
-                  {overview.tables_with_parsed_data}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Tables Parsed
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-                  out of {overview.total_tables} total
-                </Typography>
-              </CardContent>
-            </Card>
+              <Card
+                elevation={0}
+                sx={{
+                  borderRadius: 3,
+                  border: "1px solid rgba(0,0,0,0.1)",
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Typography
+                    variant="h3"
+                    fontWeight="700"
+                    sx={{ mb: 1, color: "#f093fb" }}
+                  >
+                    {overview.tables_with_parsed_data}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Tables Parsed
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mt: 1, display: "block" }}
+                  >
+                    out of {overview.total_tables} total
+                  </Typography>
+                </CardContent>
+              </Card>
 
-            <Card
-              elevation={0}
-              sx={{
-                borderRadius: 3,
-                border: "1px solid rgba(0,0,0,0.1)",
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h3" fontWeight="700" sx={{ mb: 1, color: "#f5576c" }}>
-                  {overview.tables_fully_parsed}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Fully Parsed
-                </Typography>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-                  all pages parsed
-                </Typography>
-              </CardContent>
-            </Card>
+              <Card
+                elevation={0}
+                sx={{
+                  borderRadius: 3,
+                  border: "1px solid rgba(0,0,0,0.1)",
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Typography
+                    variant="h3"
+                    fontWeight="700"
+                    sx={{ mb: 1, color: "#f5576c" }}
+                  >
+                    {overview.tables_fully_parsed}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Fully Parsed
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mt: 1, display: "block" }}
+                  >
+                    all pages parsed
+                  </Typography>
+                </CardContent>
+              </Card>
 
-            <Card
-              elevation={0}
-              sx={{
-                borderRadius: 3,
-                border: "1px solid rgba(0,0,0,0.1)",
-                background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                color: "white",
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Typography variant="h3" fontWeight="700" sx={{ mb: 1 }}>
-                  {overview.total_parsed_rows.toLocaleString()}
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Total Parsed Rows
-                </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.8, mt: 1, display: "block" }}>
-                  across all tables
-                </Typography>
-              </CardContent>
-            </Card>
+              <Card
+                elevation={0}
+                sx={{
+                  borderRadius: 3,
+                  border: "1px solid rgba(0,0,0,0.1)",
+                  background:
+                    "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                  color: "white",
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Typography variant="h3" fontWeight="700" sx={{ mb: 1 }}>
+                    {overview.total_parsed_rows.toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    Total Parsed Rows
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{ opacity: 0.8, mt: 1, display: "block" }}
+                  >
+                    across all tables
+                  </Typography>
+                </CardContent>
+              </Card>
             </Box>
           </Box>
         </Fade>
@@ -623,7 +686,14 @@ export default function AdminPage() {
           }}
         >
           <CardContent sx={{ p: 3 }}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                mb: 2,
+              }}
+            >
               <Box>
                 <Typography variant="h6" fontWeight="600" sx={{ mb: 0.5 }}>
                   Database Migration
@@ -635,7 +705,11 @@ export default function AdminPage() {
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 {lastMigrationTimestamp && (
                   <Box sx={{ textAlign: "right" }}>
-                    <Typography variant="caption" color="text.secondary" display="block">
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                    >
                       Last Built
                     </Typography>
                     <Typography variant="body2" fontWeight="600">
@@ -658,12 +732,16 @@ export default function AdminPage() {
                     variant="contained"
                     startIcon={<PlayArrowIcon />}
                     onClick={handleStartMigration}
-                    disabled={scraperRunning || parserRunning || migratorRunning}
+                    disabled={
+                      scraperRunning || parserRunning || migratorRunning
+                    }
                     size="medium"
                     sx={{
-                      background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+                      background:
+                        "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
                       "&:hover": {
-                        background: "linear-gradient(135deg, #0e8577 0%, #2dd46a 100%)",
+                        background:
+                          "linear-gradient(135deg, #0e8577 0%, #2dd46a 100%)",
                       },
                     }}
                   >
@@ -674,7 +752,11 @@ export default function AdminPage() {
             </Box>
             {migratorRunning && (
               <Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mb: 1 }}
+                >
                   {migratorProgress}
                 </Typography>
                 <LinearProgress
@@ -683,8 +765,9 @@ export default function AdminPage() {
                     borderRadius: 3,
                     bgcolor: "rgba(17, 153, 142, 0.1)",
                     "& .MuiLinearProgress-bar": {
-                      background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
-                    }
+                      background:
+                        "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+                    },
                   }}
                 />
               </Box>
@@ -719,7 +802,8 @@ export default function AdminPage() {
               <TableHead>
                 <TableRow
                   sx={{
-                    background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+                    background:
+                      "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
                   }}
                 >
                   <TableCell sx={{ width: 50 }} />
@@ -778,283 +862,379 @@ export default function AdminPage() {
               <TableBody>
                 {status.map((row, index) => {
                   const isExpanded = expandedRow === row.table_name;
-                  const isThisTableScraping = currentScrapingTable === row.table_name;
-                  const isThisTableParsing = currentParsingTable === row.table_name;
+                  const isThisTableScraping =
+                    currentScrapingTable === row.table_name;
+                  const isThisTableParsing =
+                    currentParsingTable === row.table_name;
 
                   return (
-                  <React.Fragment key={row.table_name}>
-                    <TableRow
-                      sx={{
-                        "&:hover": {
-                          bgcolor: "rgba(102, 126, 234, 0.04)",
-                        },
-                        transition: "background-color 0.2s",
-                      }}
-                    >
-                      <TableCell>
-                        <IconButton
-                          size="small"
-                          onClick={() => setExpandedRow(isExpanded ? null : row.table_name)}
-                        >
-                          {isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                        </IconButton>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight="600">
-                          {row.table_name}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        {getStatusIcon(row.scrape_progress_percent)}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: row.has_raw_data ? "#1a1a1a" : "#999",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {row.total_rows_in_api ? (
-                            `${row.raw_page_count} / ${Math.ceil(row.total_rows_in_api / 100)}`
+                    <React.Fragment key={row.table_name}>
+                      <TableRow
+                        sx={{
+                          "&:hover": {
+                            bgcolor: "rgba(102, 126, 234, 0.04)",
+                          },
+                          transition: "background-color 0.2s",
+                        }}
+                      >
+                        <TableCell>
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              setExpandedRow(isExpanded ? null : row.table_name)
+                            }
+                          >
+                            {isExpanded ? (
+                              <KeyboardArrowUpIcon />
+                            ) : (
+                              <KeyboardArrowDownIcon />
+                            )}
+                          </IconButton>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="600">
+                            {row.table_name}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          {getStatusIcon(row.scrape_progress_percent)}
+                        </TableCell>
+                        <TableCell align="center">
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: row.has_raw_data ? "#1a1a1a" : "#999",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {row.total_rows_in_api
+                              ? `${row.raw_page_count} / ${Math.ceil(row.total_rows_in_api / 100)}`
+                              : row.has_raw_data
+                                ? row.raw_page_count.toLocaleString()
+                                : "N/A"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: row.has_raw_data ? "#1a1a1a" : "#999",
+                              fontWeight: 500,
+                            }}
+                          >
+                            {row.has_raw_data
+                              ? `${row.raw_estimated_rows.toLocaleString()}`
+                              : "N/A"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: row.raw_last_updated ? "#555" : "#999",
+                              fontFamily: "monospace",
+                            }}
+                          >
+                            {formatTimestamp(row.raw_last_updated)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          {getStatusIcon(row.has_parsed_data ? 100 : 0)}
+                        </TableCell>
+                        <TableCell align="center">
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: row.has_parsed_data ? "#1a1a1a" : "#999",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {row.has_parsed_data
+                              ? row.parsed_page_count.toLocaleString()
+                              : "N/A"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: row.has_parsed_data ? "#1a1a1a" : "#999",
+                              fontWeight: 500,
+                            }}
+                          >
+                            {row.has_parsed_data
+                              ? `${row.parsed_estimated_rows.toLocaleString()}`
+                              : "N/A"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: row.parsed_last_updated ? "#555" : "#999",
+                              fontFamily: "monospace",
+                            }}
+                          >
+                            {formatTimestamp(row.parsed_last_updated)}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                          {row.has_raw_data &&
+                          row.has_parsed_data &&
+                          row.parsed_page_count >= row.raw_page_count ? (
+                            <Chip
+                              label="Complete"
+                              size="small"
+                              color="success"
+                            />
+                          ) : row.has_raw_data &&
+                            row.has_parsed_data &&
+                            row.parsed_page_count < row.raw_page_count ? (
+                            <Chip
+                              label="Needs Re-parsing"
+                              size="small"
+                              color="warning"
+                            />
+                          ) : row.has_raw_data ? (
+                            <Chip
+                              label="Needs Parsing"
+                              size="small"
+                              color="warning"
+                            />
                           ) : (
-                            row.has_raw_data ? row.raw_page_count.toLocaleString() : "N/A"
+                            <Chip
+                              label="Needs Scraping"
+                              size="small"
+                              color="error"
+                            />
                           )}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: row.has_raw_data ? "#1a1a1a" : "#999",
-                            fontWeight: 500,
-                          }}
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell
+                          style={{ paddingBottom: 0, paddingTop: 0 }}
+                          colSpan={11}
                         >
-                          {row.has_raw_data ? `${row.raw_estimated_rows.toLocaleString()}` : "N/A"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: row.raw_last_updated ? "#555" : "#999",
-                            fontFamily: "monospace",
-                          }}
-                        >
-                          {formatTimestamp(row.raw_last_updated)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        {getStatusIcon(row.has_parsed_data ? 100 : 0)}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: row.has_parsed_data ? "#1a1a1a" : "#999",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {row.has_parsed_data ? row.parsed_page_count.toLocaleString() : "N/A"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: row.has_parsed_data ? "#1a1a1a" : "#999",
-                            fontWeight: 500,
-                          }}
-                        >
-                          {row.has_parsed_data ? `${row.parsed_estimated_rows.toLocaleString()}` : "N/A"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: row.parsed_last_updated ? "#555" : "#999",
-                            fontFamily: "monospace",
-                          }}
-                        >
-                          {formatTimestamp(row.parsed_last_updated)}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        {row.has_raw_data && row.has_parsed_data && row.parsed_page_count >= row.raw_page_count ? (
-                          <Chip label="Complete" size="small" color="success" />
-                        ) : row.has_raw_data && row.has_parsed_data && row.parsed_page_count < row.raw_page_count ? (
-                          <Chip label="Needs Re-parsing" size="small" color="warning" />
-                        ) : row.has_raw_data ? (
-                          <Chip label="Needs Parsing" size="small" color="warning" />
-                        ) : (
-                          <Chip label="Needs Scraping" size="small" color="error" />
-                        )}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={11}>
-                        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                          <Box sx={{ py: 3, px: 2 }}>
-                            {/* Scraper Controls */}
-                            <Box sx={{ mb: 3 }}>
-                              <Typography variant="subtitle2" fontWeight="600" sx={{ mb: 1.5 }}>
-                                Scraper
-                              </Typography>
-                              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                                {isThisTableScraping ? (
-                                <>
-                                  <Button
-                                    variant="outlined"
-                                    color="error"
-                                    startIcon={<StopIcon />}
-                                    onClick={handleStopScraping}
-                                    size="small"
-                                  >
-                                    Cancel Scrape
-                                  </Button>
-                                  <Chip
-                                    label="Scraping..."
-                                    color="primary"
-                                    size="small"
-                                    sx={{
-                                      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                                      color: "white"
-                                    }}
-                                  />
-                                </>
-                              ) : (
-                                <>
-                                  <Button
-                                    variant="contained"
-                                    startIcon={<PlayArrowIcon />}
-                                    onClick={() => handleStartScraping(row.table_name)}
-                                    disabled={scraperRunning || parserRunning}
-                                    size="small"
-                                    sx={{
-                                      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                                      "&:hover": {
-                                        background: "linear-gradient(135deg, #5568d3 0%, #63408d 100%)",
-                                      },
-                                    }}
-                                  >
-                                    Scrape
-                                  </Button>
-                                  {row.scrape_progress_percent !== undefined && row.total_rows_in_api && (
-                                    <Chip
-                                      label={`${row.scrape_progress_percent.toFixed(1)}% - ${row.raw_estimated_rows.toLocaleString()} / ${row.total_rows_in_api.toLocaleString()} rows`}
-                                      size="small"
-                                      color={row.scrape_progress_percent >= 100 ? "success" : "default"}
-                                    />
+                          <Collapse
+                            in={isExpanded}
+                            timeout="auto"
+                            unmountOnExit
+                          >
+                            <Box sx={{ py: 3, px: 2 }}>
+                              {/* Scraper Controls */}
+                              <Box sx={{ mb: 3 }}>
+                                <Typography
+                                  variant="subtitle2"
+                                  fontWeight="600"
+                                  sx={{ mb: 1.5 }}
+                                >
+                                  Scraper
+                                </Typography>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 2,
+                                  }}
+                                >
+                                  {isThisTableScraping ? (
+                                    <>
+                                      <Button
+                                        variant="outlined"
+                                        color="error"
+                                        startIcon={<StopIcon />}
+                                        onClick={handleStopScraping}
+                                        size="small"
+                                      >
+                                        Cancel Scrape
+                                      </Button>
+                                      <Chip
+                                        label="Scraping..."
+                                        color="primary"
+                                        size="small"
+                                        sx={{
+                                          background:
+                                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                          color: "white",
+                                        }}
+                                      />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Button
+                                        variant="contained"
+                                        startIcon={<PlayArrowIcon />}
+                                        onClick={() =>
+                                          handleStartScraping(row.table_name)
+                                        }
+                                        disabled={
+                                          scraperRunning || parserRunning
+                                        }
+                                        size="small"
+                                        sx={{
+                                          background:
+                                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                          "&:hover": {
+                                            background:
+                                              "linear-gradient(135deg, #5568d3 0%, #63408d 100%)",
+                                          },
+                                        }}
+                                      >
+                                        Scrape
+                                      </Button>
+                                      {row.scrape_progress_percent !==
+                                        undefined &&
+                                        row.total_rows_in_api && (
+                                          <Chip
+                                            label={`${row.scrape_progress_percent.toFixed(1)}% - ${row.raw_estimated_rows.toLocaleString()} / ${row.total_rows_in_api.toLocaleString()} rows`}
+                                            size="small"
+                                            color={
+                                              row.scrape_progress_percent >= 100
+                                                ? "success"
+                                                : "default"
+                                            }
+                                          />
+                                        )}
+                                    </>
                                   )}
-                                </>
-                              )}
-                            </Box>
-                              {isThisTableScraping && (
-                                <Box sx={{ mt: 2 }}>
-                                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                    {scraperProgress}
-                                  </Typography>
-                                  <LinearProgress
-                                    variant="determinate"
-                                    value={scraperPercent}
-                                    sx={{
-                                      height: 6,
-                                      borderRadius: 3,
-                                      bgcolor: "rgba(102, 126, 234, 0.1)",
-                                      "& .MuiLinearProgress-bar": {
-                                        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                                      }
-                                    }}
-                                  />
                                 </Box>
-                              )}
-                            </Box>
-
-                            {/* Parser Controls */}
-                            <Box>
-                              <Typography variant="subtitle2" fontWeight="600" sx={{ mb: 1.5 }}>
-                                Parser
-                              </Typography>
-                              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                                {isThisTableParsing ? (
-                                  <>
-                                    <Button
-                                      variant="outlined"
-                                      color="error"
-                                      startIcon={<StopIcon />}
-                                      onClick={handleStopParsing}
-                                      size="small"
+                                {isThisTableScraping && (
+                                  <Box sx={{ mt: 2 }}>
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                      sx={{ mb: 1 }}
                                     >
-                                      Cancel Parse
-                                    </Button>
-                                    <Chip
-                                      label="Parsing..."
-                                      color="secondary"
-                                      size="small"
+                                      {scraperProgress}
+                                    </Typography>
+                                    <LinearProgress
+                                      variant="determinate"
+                                      value={scraperPercent}
                                       sx={{
-                                        background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                                        color: "white"
-                                      }}
-                                    />
-                                  </>
-                                ) : (
-                                  <>
-                                    <Button
-                                      variant="contained"
-                                      startIcon={<PlayArrowIcon />}
-                                      onClick={() => handleStartParsing(row.table_name)}
-                                      disabled={!row.has_raw_data || scraperRunning || parserRunning}
-                                      size="small"
-                                      sx={{
-                                        background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                                        "&:hover": {
-                                          background: "linear-gradient(135deg, #e082ea 0%, #e4465b 100%)",
+                                        height: 6,
+                                        borderRadius: 3,
+                                        bgcolor: "rgba(102, 126, 234, 0.1)",
+                                        "& .MuiLinearProgress-bar": {
+                                          background:
+                                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                                         },
                                       }}
-                                    >
-                                      Parse
-                                    </Button>
-                                    {row.has_parsed_data && (
-                                      <Chip
-                                        label={`${row.parsed_page_count} pages - ${row.parsed_estimated_rows.toLocaleString()} rows`}
-                                        size="small"
-                                        color="success"
-                                      />
-                                    )}
-                                    {!row.has_raw_data && (
-                                      <Typography variant="caption" color="text.secondary">
-                                        (Scrape data first)
-                                      </Typography>
-                                    )}
-                                  </>
+                                    />
+                                  </Box>
                                 )}
                               </Box>
-                              {isThisTableParsing && (
-                                <Box sx={{ mt: 2 }}>
-                                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                    {parserProgress}
-                                  </Typography>
-                                  <LinearProgress
-                                    variant="determinate"
-                                    value={parserPercent}
-                                    sx={{
-                                      height: 6,
-                                      borderRadius: 3,
-                                      bgcolor: "rgba(240, 147, 251, 0.1)",
-                                      "& .MuiLinearProgress-bar": {
-                                        background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                                      }
-                                    }}
-                                  />
+
+                              {/* Parser Controls */}
+                              <Box>
+                                <Typography
+                                  variant="subtitle2"
+                                  fontWeight="600"
+                                  sx={{ mb: 1.5 }}
+                                >
+                                  Parser
+                                </Typography>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 2,
+                                  }}
+                                >
+                                  {isThisTableParsing ? (
+                                    <>
+                                      <Button
+                                        variant="outlined"
+                                        color="error"
+                                        startIcon={<StopIcon />}
+                                        onClick={handleStopParsing}
+                                        size="small"
+                                      >
+                                        Cancel Parse
+                                      </Button>
+                                      <Chip
+                                        label="Parsing..."
+                                        color="secondary"
+                                        size="small"
+                                        sx={{
+                                          background:
+                                            "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                                          color: "white",
+                                        }}
+                                      />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Button
+                                        variant="contained"
+                                        startIcon={<PlayArrowIcon />}
+                                        onClick={() =>
+                                          handleStartParsing(row.table_name)
+                                        }
+                                        disabled={
+                                          !row.has_raw_data ||
+                                          scraperRunning ||
+                                          parserRunning
+                                        }
+                                        size="small"
+                                        sx={{
+                                          background:
+                                            "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                                          "&:hover": {
+                                            background:
+                                              "linear-gradient(135deg, #e082ea 0%, #e4465b 100%)",
+                                          },
+                                        }}
+                                      >
+                                        Parse
+                                      </Button>
+                                      {row.has_parsed_data && (
+                                        <Chip
+                                          label={`${row.parsed_page_count} pages - ${row.parsed_estimated_rows.toLocaleString()} rows`}
+                                          size="small"
+                                          color="success"
+                                        />
+                                      )}
+                                      {!row.has_raw_data && (
+                                        <Typography
+                                          variant="caption"
+                                          color="text.secondary"
+                                        >
+                                          (Scrape data first)
+                                        </Typography>
+                                      )}
+                                    </>
+                                  )}
                                 </Box>
-                              )}
+                                {isThisTableParsing && (
+                                  <Box sx={{ mt: 2 }}>
+                                    <Typography
+                                      variant="body2"
+                                      color="text.secondary"
+                                      sx={{ mb: 1 }}
+                                    >
+                                      {parserProgress}
+                                    </Typography>
+                                    <LinearProgress
+                                      variant="determinate"
+                                      value={parserPercent}
+                                      sx={{
+                                        height: 6,
+                                        borderRadius: 3,
+                                        bgcolor: "rgba(240, 147, 251, 0.1)",
+                                        "& .MuiLinearProgress-bar": {
+                                          background:
+                                            "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                                        },
+                                      }}
+                                    />
+                                  </Box>
+                                )}
+                              </Box>
                             </Box>
-                          </Box>
-                        </Collapse>
-                      </TableCell>
-                    </TableRow>
-                  </React.Fragment>
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    </React.Fragment>
                   );
                 })}
               </TableBody>

@@ -4,7 +4,12 @@ import { scrapeTable, type ScrapeMode } from "./scraper";
 async function main() {
   const args = process.argv.slice(2);
 
-  if (args.length === 0 || args[0] === "help" || args[0] === "--help" || args[0] === "-h") {
+  if (
+    args.length === 0 ||
+    args[0] === "help" ||
+    args[0] === "--help" ||
+    args[0] === "-h"
+  ) {
     printHelp();
     process.exit(0);
   }
@@ -60,15 +65,13 @@ async function main() {
 }
 
 async function showStatus() {
-  const { getStorage, StorageKeyBuilder } = await import(
-    "../../shared/storage"
-  );
+  const { getStorage, StorageKeyBuilder } = await import("#storage");
   const storage = getStorage();
 
   console.log("📊 Scraping Status\n");
 
   const response = await fetch(
-    "https://avoindata.eduskunta.fi/api/v1/tables/counts"
+    "https://avoindata.eduskunta.fi/api/v1/tables/counts",
   );
   const data = (await response.json()) as {
     tableName: string;
@@ -76,10 +79,7 @@ async function showStatus() {
   }[];
 
   for (const table of data) {
-    const prefix = StorageKeyBuilder.listPrefixForTable(
-      "raw",
-      table.tableName
-    );
+    const prefix = StorageKeyBuilder.listPrefixForTable("raw", table.tableName);
     const result = await storage.list({ prefix });
 
     const pageCount = result.keys.length;
@@ -91,11 +91,11 @@ async function showStatus() {
       pageCount === 0
         ? "❌ Not started"
         : percentComplete >= 95
-        ? "✅ Complete"
-        : "⏳ In progress";
+          ? "✅ Complete"
+          : "⏳ In progress";
 
     console.log(
-      `${status} ${table.tableName.padEnd(30)} - ${pageCount} pages (${percentComplete.toFixed(1)}%)`
+      `${status} ${table.tableName.padEnd(30)} - ${pageCount} pages (${percentComplete.toFixed(1)}%)`,
     );
   }
 }

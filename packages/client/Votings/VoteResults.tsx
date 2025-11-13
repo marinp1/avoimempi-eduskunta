@@ -34,7 +34,7 @@ const getVotings = async (query: string) => {
       return res.json();
     })
     .then((data: DatabaseTables.Voting[]) =>
-      Object.groupBy(data, (d) => d.section_title)
+      Object.groupBy(data, (d) => d.section_title),
     );
 };
 
@@ -166,7 +166,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                         <TableCell sx={{ fontSize: "0.875rem" }}>
                           {res.start_time
                             ? new Date(res.start_time).toLocaleDateString(
-                                "fi-FI"
+                                "fi-FI",
                               )
                             : "-"}
                         </TableCell>
@@ -260,7 +260,11 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                         </TableCell>
                         <TableCell>
                           <Box
-                            sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
+                            sx={{
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 0.5,
+                            }}
                           >
                             <Link
                               target="_blank"

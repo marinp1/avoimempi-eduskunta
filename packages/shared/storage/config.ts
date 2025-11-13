@@ -20,23 +20,38 @@ export interface StorageConfig {
  * Get storage configuration from environment variables or defaults
  */
 export function getStorageConfig(): StorageConfig {
-  const provider = (process.env.STORAGE_PROVIDER || "local") as StorageProviderType;
+  const provider = (process.env.STORAGE_PROVIDER ||
+    "local") as StorageProviderType;
 
   const config: StorageConfig = {
     provider,
   };
 
   if (provider === "local") {
-    // Find the repository root by looking for package.json with workspaces
+    // Find the repository root by looking for indicators of repo root
     const findRepoRoot = (): string => {
+      const fs = require("fs");
       let currentDir = process.cwd();
-      const maxLevels = 5;
+      const maxLevels = 10;
 
       for (let i = 0; i < maxLevels; i++) {
+        // Check for .git directory (most reliable indicator of repo root)
+        const gitPath = path.join(currentDir, ".git");
+        if (fs.existsSync(gitPath)) {
+          return currentDir;
+        }
+
+        // Check for packages/ directory + package.json (monorepo pattern)
+        const packagesPath = path.join(currentDir, "packages");
         const pkgPath = path.join(currentDir, "package.json");
+        if (fs.existsSync(packagesPath) && fs.existsSync(pkgPath)) {
+          return currentDir;
+        }
+
+        // Check for workspace configuration
         try {
           const pkg = require(pkgPath);
-          if (pkg.workspaces) {
+          if (pkg.workspaces && Array.isArray(pkg.workspaces)) {
             return currentDir;
           }
         } catch {
@@ -44,11 +59,11 @@ export function getStorageConfig(): StorageConfig {
         }
 
         const parent = path.dirname(currentDir);
-        if (parent === currentDir) break; // Reached root
+        if (parent === currentDir) break; // Reached filesystem root
         currentDir = parent;
       }
 
-      // Fallback to cwd
+      // Fallback to cwd if no repo root found
       return process.cwd();
     };
 
