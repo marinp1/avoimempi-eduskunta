@@ -17,14 +17,8 @@ import {
   Fade,
   Button,
   LinearProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
+  Collapse,
+  IconButton,
 } from "@mui/material";
 import StorageIcon from "@mui/icons-material/Storage";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -32,6 +26,8 @@ import ErrorIcon from "@mui/icons-material/Error";
 import WarningIcon from "@mui/icons-material/Warning";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import StopIcon from "@mui/icons-material/Stop";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
 type TableStatus = {
   table_name: string;
@@ -64,10 +60,10 @@ export default function AdminPage() {
 
   // Scraper control state
   const [scraperRunning, setScraperRunning] = useState<boolean>(false);
+  const [currentScrapingTable, setCurrentScrapingTable] = useState<string | null>(null);
   const [scraperProgress, setScraperProgress] = useState<string>("");
   const [scraperPercent, setScraperPercent] = useState<number>(0);
-  const [showStartDialog, setShowStartDialog] = useState<boolean>(false);
-  const [selectedTable, setSelectedTable] = useState<string>("");
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -114,7 +110,8 @@ export default function AdminPage() {
         case "status":
           if (message.data.status === "started") {
             setScraperRunning(true);
-            setScraperProgress(`Starting scrape of ${message.data.tableName}...`);
+            setCurrentScrapingTable(message.data.tableName);
+            setScraperProgress(`Starting scrape...`);
             setScraperPercent(0);
           } else if (message.data.status === "stopping") {
             setScraperProgress("Stopping...");
@@ -130,21 +127,24 @@ export default function AdminPage() {
 
         case "complete":
           setScraperRunning(false);
-          setScraperProgress(`✅ ${message.data.message}`);
+          setCurrentScrapingTable(null);
+          setScraperProgress(`Completed successfully`);
           setScraperPercent(100);
           // Refresh data after completion
-          fetchData();
+          setTimeout(() => fetchData(), 1000);
           break;
 
         case "error":
           setScraperRunning(false);
-          setScraperProgress(`❌ Error: ${message.data.error}`);
+          setCurrentScrapingTable(null);
+          setScraperProgress(`Error: ${message.data.error}`);
           setScraperPercent(0);
           break;
 
         case "stopped":
           setScraperRunning(false);
-          setScraperProgress(`⏹️ ${message.data.message}`);
+          setCurrentScrapingTable(null);
+          setScraperProgress(`Stopped`);
           setScraperPercent(0);
           break;
       }
@@ -165,15 +165,13 @@ export default function AdminPage() {
     };
   }, []);
 
-  const handleStartScraping = async () => {
-    if (!selectedTable) return;
-
+  const handleStartScraping = async (tableName: string) => {
     try {
       const res = await fetch("/api/scraper/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          tableName: selectedTable,
+          tableName,
           mode: { type: "auto-resume" }
         }),
       });
@@ -183,7 +181,7 @@ export default function AdminPage() {
         throw new Error(error.error);
       }
 
-      setShowStartDialog(false);
+      setExpandedRow(tableName);
     } catch (err: any) {
       console.error(err);
       alert(`Failed to start scraping: ${err.message}`);
@@ -206,14 +204,17 @@ export default function AdminPage() {
     }
   };
 
-  const getStatusIcon = (hasData: boolean, count: number) => {
-    if (!hasData) {
+  const getStatusIcon = (progressPercent?: number) => {
+    if (progressPercent === undefined || progressPercent === 0) {
+      // Unstarted
       return <ErrorIcon sx={{ color: "#f44336", fontSize: 20 }} />;
     }
-    if (count === 0) {
-      return <WarningIcon sx={{ color: "#ff9800", fontSize: 20 }} />;
+    if (progressPercent >= 100) {
+      // Complete
+      return <CheckCircleIcon sx={{ color: "#4caf50", fontSize: 20 }} />;
     }
-    return <CheckCircleIcon sx={{ color: "#4caf50", fontSize: 20 }} />;
+    // Incomplete
+    return <WarningIcon sx={{ color: "#ff9800", fontSize: 20 }} />;
   };
 
   const formatTimestamp = (timestamp: string | null) => {
@@ -269,66 +270,12 @@ export default function AdminPage() {
         </Fade>
       )}
 
-      {scraperRunning && (
-        <Fade in timeout={300}>
-          <Card elevation={0} sx={{ mb: 3, borderRadius: 3, border: "1px solid rgba(102, 126, 234, 0.3)" }}>
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                <Typography variant="h6" fontWeight="600">
-                  Scraper Running
-                </Typography>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  startIcon={<StopIcon />}
-                  onClick={handleStopScraping}
-                  size="small"
-                >
-                  Stop
-                </Button>
-              </Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {scraperProgress}
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={scraperPercent}
-                sx={{
-                  height: 8,
-                  borderRadius: 4,
-                  bgcolor: "rgba(102, 126, 234, 0.1)",
-                  "& .MuiLinearProgress-bar": {
-                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                  }
-                }}
-              />
-            </CardContent>
-          </Card>
-        </Fade>
-      )}
-
       {overview && (
         <Fade in timeout={500}>
           <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-              <Typography variant="h6" fontWeight="600">
-                Overview
-              </Typography>
-              <Button
-                variant="contained"
-                startIcon={<PlayArrowIcon />}
-                onClick={() => setShowStartDialog(true)}
-                disabled={scraperRunning}
-                sx={{
-                  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                  "&:hover": {
-                    background: "linear-gradient(135deg, #5568d3 0%, #63408d 100%)",
-                  },
-                }}
-              >
-                Start Scraping
-              </Button>
-            </Box>
+            <Typography variant="h6" fontWeight="600" sx={{ mb: 2 }}>
+              Overview
+            </Typography>
             <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 2 }}>
             <Card
               elevation={0}
@@ -425,6 +372,7 @@ export default function AdminPage() {
                     background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
                   }}
                 >
+                  <TableCell sx={{ width: 50 }} />
                   <TableCell>
                     <Typography variant="body2" fontWeight="700">
                       Table Name
@@ -478,8 +426,12 @@ export default function AdminPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {status.map((row, index) => (
-                  <Fade in timeout={700 + index * 50} key={row.table_name}>
+                {status.map((row, index) => {
+                  const isExpanded = expandedRow === row.table_name;
+                  const isThisTableScraping = currentScrapingTable === row.table_name;
+
+                  return (
+                  <React.Fragment key={row.table_name}>
                     <TableRow
                       sx={{
                         "&:hover": {
@@ -489,12 +441,20 @@ export default function AdminPage() {
                       }}
                     >
                       <TableCell>
+                        <IconButton
+                          size="small"
+                          onClick={() => setExpandedRow(isExpanded ? null : row.table_name)}
+                        >
+                          {isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                        </IconButton>
+                      </TableCell>
+                      <TableCell>
                         <Typography variant="body2" fontWeight="600">
                           {row.table_name}
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        {getStatusIcon(row.has_raw_data, row.raw_page_count)}
+                        {getStatusIcon(row.scrape_progress_percent)}
                       </TableCell>
                       <TableCell align="center">
                         <Typography
@@ -504,7 +464,11 @@ export default function AdminPage() {
                             fontWeight: 600,
                           }}
                         >
-                          {row.has_raw_data ? row.raw_page_count.toLocaleString() : "N/A"}
+                          {row.total_rows_in_api ? (
+                            `${row.raw_page_count} / ${Math.ceil(row.total_rows_in_api / 100)}`
+                          ) : (
+                            row.has_raw_data ? row.raw_page_count.toLocaleString() : "N/A"
+                          )}
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
@@ -530,7 +494,7 @@ export default function AdminPage() {
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        {getStatusIcon(row.has_parsed_data, row.parsed_page_count)}
+                        {getStatusIcon(row.has_parsed_data ? 100 : 0)}
                       </TableCell>
                       <TableCell align="center">
                         <Typography
@@ -575,51 +539,90 @@ export default function AdminPage() {
                         )}
                       </TableCell>
                     </TableRow>
-                  </Fade>
-                ))}
+                    <TableRow>
+                      <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={10}>
+                        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                          <Box sx={{ py: 3, px: 2 }}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+                              {isThisTableScraping ? (
+                                <>
+                                  <Button
+                                    variant="outlined"
+                                    color="error"
+                                    startIcon={<StopIcon />}
+                                    onClick={handleStopScraping}
+                                    size="small"
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Chip
+                                    label="Scraping..."
+                                    color="primary"
+                                    size="small"
+                                    sx={{
+                                      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                      color: "white"
+                                    }}
+                                  />
+                                </>
+                              ) : (
+                                <>
+                                  <Button
+                                    variant="contained"
+                                    startIcon={<PlayArrowIcon />}
+                                    onClick={() => handleStartScraping(row.table_name)}
+                                    disabled={scraperRunning}
+                                    size="small"
+                                    sx={{
+                                      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                      "&:hover": {
+                                        background: "linear-gradient(135deg, #5568d3 0%, #63408d 100%)",
+                                      },
+                                    }}
+                                  >
+                                    Scrape
+                                  </Button>
+                                  {row.scrape_progress_percent !== undefined && row.total_rows_in_api && (
+                                    <Chip
+                                      label={`${row.scrape_progress_percent.toFixed(1)}% - ${row.raw_estimated_rows.toLocaleString()} / ${row.total_rows_in_api.toLocaleString()} rows`}
+                                      size="small"
+                                      color={row.scrape_progress_percent >= 100 ? "success" : "default"}
+                                    />
+                                  )}
+                                </>
+                              )}
+                            </Box>
+                            {isThisTableScraping && (
+                              <Box>
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                  {scraperProgress}
+                                </Typography>
+                                <LinearProgress
+                                  variant="determinate"
+                                  value={scraperPercent}
+                                  sx={{
+                                    height: 6,
+                                    borderRadius: 3,
+                                    bgcolor: "rgba(102, 126, 234, 0.1)",
+                                    "& .MuiLinearProgress-bar": {
+                                      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                    }
+                                  }}
+                                />
+                              </Box>
+                            )}
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                    </TableRow>
+                  </React.Fragment>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>
         </Fade>
       )}
-
-      <Dialog open={showStartDialog} onClose={() => setShowStartDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Start Scraping</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth sx={{ mt: 2 }}>
-            <InputLabel>Table</InputLabel>
-            <Select
-              value={selectedTable}
-              label="Table"
-              onChange={(e) => setSelectedTable(e.target.value)}
-            >
-              {status
-                .filter(s => s.total_rows_in_api && s.scrape_progress_percent !== undefined && s.scrape_progress_percent < 100)
-                .map((table) => (
-                  <MenuItem key={table.table_name} value={table.table_name}>
-                    {table.table_name} ({table.scrape_progress_percent?.toFixed(1)}% complete)
-                  </MenuItem>
-                ))}
-            </Select>
-          </FormControl>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-            Select a table to scrape. The scraper will automatically resume from where it left off.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowStartDialog(false)}>Cancel</Button>
-          <Button
-            onClick={handleStartScraping}
-            variant="contained"
-            disabled={!selectedTable}
-            sx={{
-              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }}
-          >
-            Start
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }
