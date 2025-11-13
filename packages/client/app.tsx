@@ -13,15 +13,18 @@ import {
 } from "@mui/material";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import PeopleIcon from "@mui/icons-material/People";
+import EventIcon from "@mui/icons-material/Event";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import VotingsPage from "./Votings";
 import EdustajatPage from "./Edustajat";
+import IstunnotPage from "./Istunnot";
 import AdminPage from "./Admin";
 import { theme, gradients, commonStyles, spacing, borderRadius } from "./theme";
 
 const Pages = Object.freeze({
   Votings: "votings",
   Composition: "composition",
+  Sessions: "sessions",
   Admin: "admin",
 });
 
@@ -30,6 +33,7 @@ type Page = (typeof Pages)[keyof typeof Pages];
 const PageComponents = {
   [Pages.Votings]: VotingsPage,
   [Pages.Composition]: EdustajatPage,
+  [Pages.Sessions]: IstunnotPage,
   [Pages.Admin]: AdminPage,
 } satisfies Record<Page, React.FC<Record<string, never>>>;
 
@@ -40,6 +44,7 @@ export const App: React.FC = () => {
     if (path === "/votings") return Pages.Votings;
     if (path === "/composition" || path === "/composition/")
       return Pages.Composition;
+    if (path === "/sessions") return Pages.Sessions;
     if (path === "/admin") return Pages.Admin;
     // Default to composition
     return Pages.Composition;
@@ -158,6 +163,12 @@ export const App: React.FC = () => {
               iconPosition="start"
               label="Edustajat"
               value={Pages.Composition}
+            />
+            <Tab
+              icon={<EventIcon />}
+              iconPosition="start"
+              label="Istunnot"
+              value={Pages.Sessions}
             />
             <Tab
               icon={<AdminPanelSettingsIcon />}
