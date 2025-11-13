@@ -23,12 +23,14 @@ import WarningIcon from "@mui/icons-material/Warning";
 
 type TableStatus = {
   table_name: string;
-  raw_count: number;
-  parsed_count: number;
+  raw_page_count: number;
+  parsed_page_count: number;
   has_raw_data: boolean;
   has_parsed_data: boolean;
   raw_last_updated: string | null;
   parsed_last_updated: string | null;
+  raw_estimated_rows: number;
+  parsed_estimated_rows: number;
 };
 
 export default function AdminPage() {
@@ -158,7 +160,12 @@ export default function AdminPage() {
                   </TableCell>
                   <TableCell align="center">
                     <Typography variant="body2" fontWeight="700">
-                      Raw Count
+                      Raw Pages
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Typography variant="body2" fontWeight="700">
+                      Raw Est. Rows
                     </Typography>
                   </TableCell>
                   <TableCell align="center">
@@ -173,7 +180,12 @@ export default function AdminPage() {
                   </TableCell>
                   <TableCell align="center">
                     <Typography variant="body2" fontWeight="700">
-                      Parsed Count
+                      Parsed Pages
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Typography variant="body2" fontWeight="700">
+                      Parsed Est. Rows
                     </Typography>
                   </TableCell>
                   <TableCell align="center">
@@ -205,7 +217,7 @@ export default function AdminPage() {
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        {getStatusIcon(row.has_raw_data, row.raw_count)}
+                        {getStatusIcon(row.has_raw_data, row.raw_page_count)}
                       </TableCell>
                       <TableCell align="center">
                         <Typography
@@ -215,7 +227,18 @@ export default function AdminPage() {
                             fontWeight: 600,
                           }}
                         >
-                          {row.has_raw_data ? row.raw_count.toLocaleString() : "N/A"}
+                          {row.has_raw_data ? row.raw_page_count.toLocaleString() : "N/A"}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: row.has_raw_data ? "#1a1a1a" : "#999",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {row.has_raw_data ? `~${row.raw_estimated_rows.toLocaleString()}` : "N/A"}
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
@@ -230,7 +253,7 @@ export default function AdminPage() {
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        {getStatusIcon(row.has_parsed_data, row.parsed_count)}
+                        {getStatusIcon(row.has_parsed_data, row.parsed_page_count)}
                       </TableCell>
                       <TableCell align="center">
                         <Typography
@@ -240,7 +263,18 @@ export default function AdminPage() {
                             fontWeight: 600,
                           }}
                         >
-                          {row.has_parsed_data ? row.parsed_count.toLocaleString() : "N/A"}
+                          {row.has_parsed_data ? row.parsed_page_count.toLocaleString() : "N/A"}
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: row.has_parsed_data ? "#1a1a1a" : "#999",
+                            fontWeight: 500,
+                          }}
+                        >
+                          {row.has_parsed_data ? `~${row.parsed_estimated_rows.toLocaleString()}` : "N/A"}
                         </Typography>
                       </TableCell>
                       <TableCell align="center">

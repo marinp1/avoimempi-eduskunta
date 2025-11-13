@@ -3,7 +3,7 @@ import homepage from "../public/index.html";
 import type { BunRequest } from "bun";
 
 import { DatabaseConnection } from "../database/db";
-import { AdminDatabaseConnection } from "../database/admin-db";
+import { AdminStorageService } from "../database/admin-storage";
 
 const db = new DatabaseConnection();
 
@@ -122,15 +122,11 @@ const server = Bun.serve({
 
     "/api/admin/status": {
       GET: async () => {
-        const adminDb = new AdminDatabaseConnection();
-        try {
-          const status = await adminDb.getStatus();
-          return new Response(JSON.stringify(status), {
-            headers: { "Content-Type": "application/json" },
-          });
-        } finally {
-          adminDb.close();
-        }
+        const adminService = new AdminStorageService();
+        const status = await adminService.getStatus();
+        return new Response(JSON.stringify(status), {
+          headers: { "Content-Type": "application/json" },
+        });
       },
     },
 

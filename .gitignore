@@ -11,3 +11,5 @@ db_dump.sql
 *.db-*
 
 application/public/output.css
+
+datapipe/*/data
