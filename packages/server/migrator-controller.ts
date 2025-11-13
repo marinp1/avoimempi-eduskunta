@@ -1,9 +1,9 @@
 import path from "path";
 import sqlite, { type Database } from "bun:sqlite";
 import type { ServerWebSocket } from "bun";
-import { getStorage, StorageKeyBuilder } from "../../shared/storage";
+import { getStorage, StorageKeyBuilder } from "../shared/storage";
 import { TableName } from "#constants/index";
-import { getDatabasePath } from "../../shared/database";
+import { getDatabasePath } from "../shared/database";
 import { getMigrations, migrate } from "bun-sqlite-migrations";
 import fs from "fs";
 

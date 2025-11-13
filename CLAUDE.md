@@ -11,6 +11,7 @@ Avoimempi Eduskunta (More Open Parliament) is a data aggregation and analysis pl
 - **Runtime**: Bun v1.2.2 (required)
 - **Language**: TypeScript with ESM modules
 - **Database**: SQLite with WAL mode
+- **Storage**: Offline-first storage abstraction (JSON files on local filesystem)
 - **Frontend**: React 19 with Material-UI (MUI) and Emotion styling
 - **Container**: Podman or Docker
 
@@ -19,26 +20,25 @@ Avoimempi Eduskunta (More Open Parliament) is a data aggregation and analysis pl
 This is a Bun workspace monorepo with the following structure:
 
 ```
-functions/
-  scraper/     - Fetches raw data from Eduskunta API
-  parser/      - Parses raw data into structured format
-  migrator/    - Imports parsed data into final database schema
-application/   - React web application with Bun server
-shared/        - Shared constants, types, and utilities
+packages/
+  client/      - React frontend (browser)
+  server/      - Bun backend API (node)
+  datapipe/    - Data pipeline CLIs (node)
+  shared/      - Shared types & utilities
 ```
 
-## Database Architecture
+## Storage Architecture
 
-The project uses three SQLite databases in a data pipeline:
+The project uses an offline-first storage abstraction that writes to local filesystem:
 
-1. **eduskunta-raw-data.db** - Raw API responses (created by scraper)
-2. **eduskunta-parsed-data.db** - Parsed/transformed data (created by parser)
-3. **avoimempi-eduskunta.db** - Final normalized schema (created by migrator)
+1. **data/raw/{TableName}/page_*.json** - Raw API responses (created by scraper)
+2. **data/parsed/{TableName}/page_*.json** - Parsed/transformed data (created by parser)
+3. **avoimempi-eduskunta.db** - Final normalized SQLite schema (created by migrator)
 
-Database paths are managed through `shared/database/index.ts` which exports:
-- `getRawDatabasePath()`
-- `getParsedDatabasePath()`
-- `getDatabasePath()` (final database)
+Storage abstraction is managed through `packages/shared/storage/index.ts` which provides:
+- `storage.put(key, data)` - Write data to storage
+- `storage.get(key)` - Read data from storage
+- `storage.list(prefix)` - List keys with prefix
 
 ## Common Commands
 
@@ -48,16 +48,19 @@ Database paths are managed through `shared/database/index.ts` which exports:
 bun run typecheck
 
 # Check specific workspace
-cd functions/scraper && bun run typecheck
-cd functions/parser && bun run typecheck
-cd functions/migrator && bun run typecheck
-cd application && bun run typecheck
+cd packages/client && bun run typecheck
+cd packages/server && bun run typecheck
+cd packages/datapipe && bun run typecheck
+cd packages/shared && bun run typecheck
 ```
 
 ### Application Development
 ```bash
-# Start the web application server
-cd application && bun run start
+# Start the web application server (from root)
+bun run start
+
+# Or directly from server package
+cd packages/server && bun run start
 # Server runs with HMR in development mode
 ```
 
@@ -67,24 +70,28 @@ The data pipeline follows this order: scrape → parse → migrate
 
 **1. Scraping (fetch raw data from API)**
 ```bash
-cd functions/scraper
-bun run scrape-table.ts <TableName>           # Scrape specific table
-bun run scrape-table.ts <TableName> <startId> # Resume from specific ID
-bun run scrape-table.ts all-tables            # Scrape all tables
+# From root
+bun run scrape <TableName>
+
+# Or directly from datapipe
+cd packages/datapipe
+bun run scrape <TableName>           # Scrape specific table
+bun run scrape:status                # Check scraping status
 ```
 
 **2. Parsing (transform raw data)**
 ```bash
-cd functions/parser
-bun run parse-data.ts <TableName>
+# From root
+bun run parse <TableName>
+
+# Or directly from datapipe
+cd packages/datapipe
+bun run parse <TableName>            # Parse specific table
+bun run parse:status                 # Check parsing status
 ```
 
 **3. Migration (import to final schema)**
-```bash
-cd functions/migrator
-bun run import-data.ts
-# Imports all tables in predefined order (see IMPORT_ORDER constant)
-```
+Use the Admin UI (`/admin` route) to trigger database rebuild from parsed data.
 
 ## Key Architecture Patterns
 
@@ -92,56 +99,63 @@ bun run import-data.ts
 
 Each table goes through a three-stage ETL process:
 
-1. **Scraper** (`functions/scraper/`):
+1. **Scraper** (`packages/datapipe/scraper/`):
    - Fetches paginated data from `https://avoindata.eduskunta.fi/api/v1/tables/{TableName}/batch`
-   - Stores raw responses in `eduskunta-raw-data.db`
+   - Stores raw responses to `data/raw/{TableName}/page_*.json` using storage abstraction
    - Uses primary key-based pagination (`pkStartValue`)
    - Rate-limited with 10ms between requests
+   - Controlled via Admin UI with WebSocket progress updates
 
-2. **Parser** (`functions/parser/`):
-   - Reads from raw database table by table
+2. **Parser** (`packages/datapipe/parser/`):
+   - Reads from raw storage table by table
    - Applies custom parser functions from `fn/{TableName}.ts` if available
    - Falls back to default parser if no custom parser exists
-   - Writes transformed data to `eduskunta-parsed-data.db`
-   - Can output sample JSON files when `DEBUG=true`
+   - Writes transformed data to `data/parsed/{TableName}/page_*.json`
+   - Controlled via Admin UI with WebSocket progress updates
 
-3. **Migrator** (`functions/migrator/`):
+3. **Migrator** (`packages/datapipe/migrator/`):
    - Uses `bun-sqlite-migrations` for schema management
-   - Migrations stored in `functions/migrator/migrations/`
+   - Migrations stored in `packages/datapipe/migrator/migrations/`
    - Each table has a migrator function in `{TableName}/migrator.ts`
    - Imports occur in specific order (defined in `IMPORT_ORDER`)
    - Clears all tables before importing to ensure clean state
+   - Triggered via Admin UI "Rebuild Database" button
 
 ### Application Architecture
 
-The web application (`application/`) has a simple structure:
+The web application is split into clear client/server separation:
 
-- **server/** - Bun HTTP server with type-safe routing
-  - Uses Bun's built-in routing with typed request params
-  - Database queries through `DatabaseConnection` class
-  - Read-only SQLite connection with WAL mode
+- **packages/server/** - Bun HTTP server
+  - `index.ts` - Main server with type-safe routing
+  - `database/` - Database access layer with `DatabaseConnection` class
+  - `public/` - Static assets and HTML entry point
+  - Controllers: `scraper-controller.ts`, `parser-controller.ts`, `migrator-controller.ts`
+  - WebSocket support for real-time progress updates
 
-- **client/** - React SPA
-  - Pages: `About/`, `Edustajat/`, `Votings/`
+- **packages/client/** - React SPA
+  - Pages: `About/`, `Edustajat/`, `Votings/`, `Admin/`
   - Entry point: `root.tsx` → `app.tsx`
   - Material-UI components with Emotion styling
+  - Admin UI with real-time progress tracking
 
-- **database/** - Database access layer
-  - `db.ts` exports `DatabaseConnection` class
-  - `queries.ts` contains SQL query strings
-  - All queries use prepared statements for safety
+- **packages/shared/** - Shared code
+  - `constants/` - Table names, primary keys, etc.
+  - `database/` - Database path utilities
+  - `storage/` - Storage abstraction layer
+  - `types/` - Shared TypeScript types
 
 ### Path Aliasing
 
 TypeScript path aliases are configured per workspace. Common pattern:
-- `#database` → `shared/database/index.ts`
-- `#constants` → `shared/constants/index.ts`
+- `#database` → `../shared/database/index.ts`
+- `#constants` → `../shared/constants/index.ts`
+- `#storage` → `../shared/storage/index.ts`
 
 Check each workspace's `tsconfig.json` for specific path mappings.
 
 ### Table Names and Constants
 
-All supported table names are defined in `shared/constants/TableNames.ts`. Primary keys for each table are in `shared/constants/PrimaryKeys.ts`.
+All supported table names are defined in `packages/shared/constants/TableNames.ts`. Primary keys for each table are in `packages/shared/constants/PrimaryKeys.ts`.
 
 Common tables:
 - `MemberOfParliament` - Representative data
@@ -154,12 +168,12 @@ Common tables:
 
 ### Adding Support for a New Table
 
-1. Ensure table name exists in `shared/constants/TableNames.ts`
-2. (Optional) Create custom parser: `functions/parser/fn/{TableName}.ts`
-3. Create migrator: `functions/migrator/{TableName}/migrator.ts`
-4. Add migration SQL if needed: `functions/migrator/migrations/V*.sql`
-5. Update `IMPORT_ORDER` in `functions/migrator/import-data.ts` if dependencies exist
-6. Run the pipeline: scrape → parse → migrate
+1. Ensure table name exists in `packages/shared/constants/TableNames.ts`
+2. (Optional) Create custom parser: `packages/datapipe/parser/fn/{TableName}.ts`
+3. Create migrator: `packages/datapipe/migrator/{TableName}/migrator.ts`
+4. Add migration SQL if needed: `packages/datapipe/migrator/migrations/V*.sql`
+5. Update `IMPORT_ORDER` in `packages/datapipe/migrator/import-data.ts` if dependencies exist
+6. Run the pipeline: scrape → parse → migrate (via CLI or Admin UI)
 
 ### SQLite WAL Mode
 
@@ -169,6 +183,23 @@ All database connections use `PRAGMA journal_mode = WAL;` for better concurrency
 
 All packages use ESM modules (`"type": "module"` in package.json). Import statements must include file extensions in some contexts. TypeScript is configured with `"module": "preserve"` and `"allowImportingTsExtensions": true`.
 
+### Storage Abstraction
+
+The storage layer is designed to be cloud-agnostic and offline-first:
+- Current implementation uses local filesystem (`LocalFilesystemStorage`)
+- Can be swapped for S3, Azure Blob, etc. by implementing the `Storage` interface
+- All datapipe operations go through the storage abstraction
+
 ### Error Handling in Scraper
 
 The scraper has a safety limit (`MAX_LOOP_LIMIT = 10_000`) to prevent infinite loops. If this limit is reached, it throws a "Sanity check error". This can be adjusted for large tables.
+
+### Admin UI
+
+The Admin UI (`/admin` route) provides:
+- Overview of scraping, parsing, and migration status
+- Table-by-table status tracking
+- Control buttons to start/stop scraper and parser
+- Real-time progress updates via WebSocket
+- "Rebuild Database" button to trigger migration
+- Color-coded UI: Purple/blue (scraper), Pink/red (parser), Green/teal (migrator)

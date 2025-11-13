@@ -1,6 +1,6 @@
 import { scheduler } from "node:timers/promises";
-import { getStorage, StorageKeyBuilder } from "../../shared/storage";
-import type { DataStage } from "../../shared/storage";
+import { getStorage, StorageKeyBuilder } from "#storage";
+import type { DataStage } from "#storage";
 
 /** Time to wait (in ms) between API calls. */
 const TIME_BETWEEN_QUERIES = 10;

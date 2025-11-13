@@ -1,15 +1,28 @@
 {
-  "extends": "./tsconfig.common.json",
   "compilerOptions": {
-    "composite": false,
+    "target": "ESNext",
+    "module": "preserve",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "noEmit": true,
-    "declaration": false,
-    "emitDeclarationOnly": false
+    "strict": false,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "types": ["bun-types"],
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noImplicitAny": false,
+    "paths": {
+      "#constants": ["./packages/shared/constants/index.ts"],
+      "#constants/*": ["./packages/shared/constants/*"],
+      "#database": ["./packages/shared/database/index.ts"],
+      "#storage": ["./packages/shared/storage/index.ts"],
+      "#storage/*": ["./packages/shared/storage/*"]
+    }
   },
-  "references": [
-    { "path": "./functions/migrator" },
-    { "path": "./functions/parser" },
-    { "path": "./functions/scraper" },
-    { "path": "./application" }
-  ]
+  "include": ["packages/**/*.ts", "packages/**/*.tsx"],
+  "exclude": ["node_modules"]
 }
