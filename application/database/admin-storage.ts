@@ -23,6 +23,9 @@ export interface ScrapingOverview {
   total_api_rows: number;
   total_scraped_rows: number;
   overall_progress_percent: number;
+  tables_with_parsed_data: number;
+  tables_fully_parsed: number;
+  total_parsed_rows: number;
 }
 
 export class AdminStorageService {
@@ -216,7 +219,7 @@ export class AdminStorageService {
   }
 
   /**
-   * Get overall scraping progress overview
+   * Get overall scraping and parsing progress overview
    */
   async getScrapingOverview(): Promise<ScrapingOverview> {
     const status = await this.getStatus();
@@ -231,6 +234,13 @@ export class AdminStorageService {
     const totalScrapedRows = status.reduce((sum, s) => sum + s.raw_estimated_rows, 0);
     const overallProgressPercent = totalApiRows > 0 ? (totalScrapedRows / totalApiRows) * 100 : 0;
 
+    // Parsed data statistics
+    const tablesWithParsedData = status.filter(s => s.has_parsed_data).length;
+    const tablesFullyParsed = status.filter(s =>
+      s.has_raw_data && s.has_parsed_data && s.parsed_page_count >= s.raw_page_count
+    ).length;
+    const totalParsedRows = status.reduce((sum, s) => sum + s.parsed_estimated_rows, 0);
+
     return {
       total_tables: totalTables,
       tables_with_data: tablesWithData,
@@ -238,6 +248,9 @@ export class AdminStorageService {
       total_api_rows: totalApiRows,
       total_scraped_rows: totalScrapedRows,
       overall_progress_percent: overallProgressPercent,
+      tables_with_parsed_data: tablesWithParsedData,
+      tables_fully_parsed: tablesFullyParsed,
+      total_parsed_rows: totalParsedRows,
     };
   }
 }
