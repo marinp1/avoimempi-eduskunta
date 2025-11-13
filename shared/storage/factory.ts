@@ -1,6 +1,6 @@
-import { IStorageProvider } from "./types";
+import type { IStorageProvider } from "./types";
 import { LocalStorageProvider } from "./providers/local";
-import { getStorageConfig, StorageConfig } from "./config";
+import { getStorageConfig, type StorageConfig } from "./config";
 
 /**
  * Storage factory - creates the appropriate storage provider based on config

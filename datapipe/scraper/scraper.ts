@@ -156,9 +156,44 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
   console.log();
 
   let currentPage = startPage;
-  let pkStartValue = currentPage > 1 ? (currentPage - 1) * 100 : 0; // Assuming 100 rows per page
-  let totalRowsScraped = (currentPage - 1) * 100;
+  let totalRowsScraped = 0;
   let loopCount = 0;
+
+  // Determine starting primary key value
+  let pkStartValue: number;
+
+  if (startPage === 1) {
+    // Starting from beginning
+    pkStartValue = 0;
+  } else {
+    // Need to read the last primary key from the previous page
+    const prevPage = startPage - 1;
+    const prevPageKey = StorageKeyBuilder.forPage(stage, tableName, prevPage);
+    const prevPageData = await storage.get(prevPageKey);
+
+    if (!prevPageData) {
+      console.error(`⚠️  Cannot find page ${prevPage}, required to start from page ${startPage}`);
+      console.error(`⚠️  Please scrape from page 1 or use auto-resume mode`);
+      throw new Error(`Missing page ${prevPage} - cannot determine starting primary key`);
+    }
+
+    const prevContent = JSON.parse(prevPageData) as EduskuntaApiResponse;
+
+    if (prevContent.pkLastValue !== null) {
+      pkStartValue = prevContent.pkLastValue + 1;
+    } else {
+      // Fallback: use last row's primary key
+      const indexOfPrimaryKey = prevContent.columnNames.indexOf(primaryColumn);
+      const lastRow = prevContent.rowData[prevContent.rowData.length - 1];
+      if (lastRow && lastRow[indexOfPrimaryKey] !== undefined) {
+        pkStartValue = lastRow[indexOfPrimaryKey] + 1;
+      } else {
+        throw new Error(`Cannot determine primary key from page ${prevPage}`);
+      }
+    }
+
+    console.log(`📌 Starting from primary key: ${pkStartValue} (from previous page)`);
+  }
 
   const baseUrl = new URL(
     `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/batch`
