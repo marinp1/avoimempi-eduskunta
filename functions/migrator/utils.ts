@@ -28,11 +28,13 @@ export const insertRows = (db: Database) => (table: string, rows: any[]) => {
   }
 };
 
-export const parseDate = (date: string) => {
+export const parseDate = (date: string | null | undefined) => {
+  if (!date) return null;
   return date.substring(0, 10);
 };
 
-export const parseDateTime = (date: string) => {
+export const parseDateTime = (date: string | null | undefined) => {
+  if (!date) return null;
   return date.substring(0, 10) + "T" + date.substring(11);
 };
 
