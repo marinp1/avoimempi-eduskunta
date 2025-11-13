@@ -188,6 +188,22 @@ export const RepresentativeDetails: React.FC<{
 
   const ageDisclaimer = displayDate(effectiveDate);
 
+  // Find active government positions on selected date
+  const activeGovernmentPositions = details?.governmentMemberships?.filter((gm) => {
+    const startDate = new Date(gm.start_date);
+    const endDate = gm.end_date && gm.end_date.trim() !== '' ? new Date(gm.end_date) : null;
+    const isActive = startDate <= selectedDateObj && (!endDate || selectedDateObj <= endDate);
+    return isActive;
+  }) || [];
+
+  // Find active trust positions on selected date (only if not in government)
+  const activeTrustPositions = details?.trustPositions?.filter((tp) => {
+    // Trust positions use "period" field which is a string like "2019-2023"
+    // We'll do a simple check if the period contains years around the selected year
+    const selectedYear = selectedDateObj.getFullYear();
+    return tp.period && tp.period.includes(selectedYear.toString());
+  }) || [];
+
   return (
     <Dialog
       open={open}
@@ -295,6 +311,7 @@ export const RepresentativeDetails: React.FC<{
                       display: "flex",
                       gap: 3,
                       flexWrap: "wrap",
+                      alignItems: "flex-end",
                     }}
                   >
                     <Box>
@@ -310,12 +327,41 @@ export const RepresentativeDetails: React.FC<{
                       >
                         Puolue
                       </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "white", fontWeight: 600 }}
-                      >
-                        {currentParty}
-                      </Typography>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "white", fontWeight: 600 }}
+                        >
+                          {currentParty}
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: "inline-block",
+                            px: 1,
+                            py: 0.25,
+                            borderRadius: 1,
+                            bgcolor: selectedRepresentative.is_in_government === 1
+                              ? "rgba(76, 175, 80, 0.3)"
+                              : "rgba(255, 152, 0, 0.3)",
+                            border: selectedRepresentative.is_in_government === 1
+                              ? "1px solid rgba(76, 175, 80, 0.6)"
+                              : "1px solid rgba(255, 152, 0, 0.6)",
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: "white",
+                              fontSize: "0.65rem",
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                              letterSpacing: 0.5,
+                            }}
+                          >
+                            {selectedRepresentative.is_in_government === 1 ? "Hallitus" : "Oppositio"}
+                          </Typography>
+                        </Box>
+                      </Box>
                     </Box>
                     <Box>
                       <Typography
@@ -371,6 +417,92 @@ export const RepresentativeDetails: React.FC<{
                       </Box>
                     )}
                   </Box>
+
+                  {/* Government Position or Trust Positions */}
+                  {details && activeGovernmentPositions.length > 0 ? (
+                    <Box sx={{ mt: 2 }}>
+                      <Box
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 1,
+                          bgcolor: "rgba(255,255,255,0.2)",
+                          px: 2,
+                          py: 1,
+                          borderRadius: 2,
+                          border: "1px solid rgba(255,255,255,0.3)",
+                        }}
+                      >
+                        <AccountBalanceIcon sx={{ fontSize: 18, color: "white" }} />
+                        <Box>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: "rgba(255,255,255,0.9)",
+                              fontSize: "0.65rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              display: "block",
+                            }}
+                          >
+                            Hallituksessa
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "white", fontWeight: 600, lineHeight: 1.2 }}
+                          >
+                            {activeGovernmentPositions[0].name}
+                          </Typography>
+                          {activeGovernmentPositions[0].ministry && activeGovernmentPositions[0].ministry.trim() !== '' && (
+                            <Typography
+                              variant="caption"
+                              sx={{ color: "rgba(255,255,255,0.85)", fontSize: "0.7rem", display: "block" }}
+                            >
+                              {activeGovernmentPositions[0].ministry}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                    </Box>
+                  ) : details && activeTrustPositions.length > 0 ? (
+                    <Box sx={{ mt: 2 }}>
+                      <Box
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 1,
+                          bgcolor: "rgba(255,255,255,0.15)",
+                          px: 2,
+                          py: 1,
+                          borderRadius: 2,
+                          border: "1px solid rgba(255,255,255,0.25)",
+                        }}
+                      >
+                        <WorkIcon sx={{ fontSize: 18, color: "white" }} />
+                        <Box>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: "rgba(255,255,255,0.9)",
+                              fontSize: "0.65rem",
+                              fontWeight: 600,
+                              textTransform: "uppercase",
+                              display: "block",
+                            }}
+                          >
+                            Luottamustehtävät
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "white", fontWeight: 600, lineHeight: 1.2 }}
+                          >
+                            {activeTrustPositions.slice(0, 2).map(tp => tp.name).join(", ")}
+                            {activeTrustPositions.length > 2 && ` +${activeTrustPositions.length - 2}`}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  ) : null}
                 </Box>
               </Box>
             </Box>
