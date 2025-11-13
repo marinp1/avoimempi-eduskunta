@@ -27,8 +27,35 @@ export function getStorageConfig(): StorageConfig {
   };
 
   if (provider === "local") {
+    // Find the repository root by looking for package.json with workspaces
+    const findRepoRoot = (): string => {
+      let currentDir = process.cwd();
+      const maxLevels = 5;
+
+      for (let i = 0; i < maxLevels; i++) {
+        const pkgPath = path.join(currentDir, "package.json");
+        try {
+          const pkg = require(pkgPath);
+          if (pkg.workspaces) {
+            return currentDir;
+          }
+        } catch {
+          // package.json doesn't exist or can't be read
+        }
+
+        const parent = path.dirname(currentDir);
+        if (parent === currentDir) break; // Reached root
+        currentDir = parent;
+      }
+
+      // Fallback to cwd
+      return process.cwd();
+    };
+
+    const defaultBaseDir = path.join(findRepoRoot(), "data");
+
     config.local = {
-      baseDir: process.env.STORAGE_LOCAL_DIR || path.join(process.cwd(), "data"),
+      baseDir: process.env.STORAGE_LOCAL_DIR || defaultBaseDir,
     };
   } else if (provider === "s3" || provider === "r2" || provider === "minio") {
     config.s3 = {
