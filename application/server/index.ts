@@ -130,6 +130,16 @@ const server = Bun.serve({
       },
     },
 
+    "/api/admin/overview": {
+      GET: async () => {
+        const adminService = new AdminStorageService();
+        const overview = await adminService.getScrapingOverview();
+        return new Response(JSON.stringify(overview), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
     "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
 
