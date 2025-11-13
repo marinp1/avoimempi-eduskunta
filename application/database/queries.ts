@@ -45,3 +45,50 @@ WHERE
     r.person_id = $personId
 ORDER BY vs.start_time DESC
 `;
+
+export const representativeDetails = sql`
+SELECT
+    r.*,
+    d.name as district_name,
+    rd.start_date as district_start_date,
+    rd.end_date as district_end_date
+FROM
+    Representative r
+LEFT JOIN
+    RepresentativeDistrict rd ON r.person_id = rd.person_id
+    AND rd.end_date = ''
+LEFT JOIN
+    District d ON rd.district_code = d.code
+WHERE
+    r.person_id = $personId
+`;
+
+export const leavingParliamentRecords = sql`
+SELECT
+    plp.*
+FROM
+    PeopleLeavingParliament plp
+WHERE
+    plp.person_id = $personId
+ORDER BY plp.end_date DESC
+`;
+
+export const trustPositions = sql`
+SELECT
+    tp.*
+FROM
+    TrustPosition tp
+WHERE
+    tp.person_id = $personId
+ORDER BY tp.period ASC
+`;
+
+export const governmentMemberships = sql`
+SELECT
+    gm.*
+FROM
+    GovernmentMembership gm
+WHERE
+    gm.person_id = $personId
+ORDER BY gm.start_date DESC
+`;

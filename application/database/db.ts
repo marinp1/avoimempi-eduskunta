@@ -68,6 +68,50 @@ export class DatabaseConnection {
     return data;
   }
 
+  public async fetchRepresentativeDetails(params: { id: string }) {
+    const stmt = this.db.prepare<
+      DatabaseTables.Representative & {
+        district_name: string | null;
+        district_start_date: string | null;
+        district_end_date: string | null;
+      },
+      { $personId: number }
+    >(queries.representativeDetails);
+    const data = stmt.get({ $personId: +params.id });
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchLeavingParliamentRecords(params: { id: string }) {
+    const stmt = this.db.prepare<
+      DatabaseTables.PeopleLeavingParliament,
+      { $personId: number }
+    >(queries.leavingParliamentRecords);
+    const data = stmt.all({ $personId: +params.id });
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchTrustPositions(params: { id: string }) {
+    const stmt = this.db.prepare<
+      DatabaseTables.TrustPosition,
+      { $personId: number }
+    >(queries.trustPositions);
+    const data = stmt.all({ $personId: +params.id });
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchGovernmentMemberships(params: { id: string }) {
+    const stmt = this.db.prepare<
+      DatabaseTables.GovernmentMembership,
+      { $personId: number }
+    >(queries.governmentMemberships);
+    const data = stmt.all({ $personId: +params.id });
+    stmt.finalize();
+    return data;
+  }
+
   public async queryVotings(params: { q: string }) {
     const stmt = this.db.prepare<DatabaseTables.Voting, []>(
       queries.sql`SELECT v.* FROM voting v WHERE v.section_title LIKE '%${params.q}%' ORDER BY start_time ASC LIMIT 100`
