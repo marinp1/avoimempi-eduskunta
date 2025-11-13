@@ -134,6 +134,31 @@ declare global {
       KohtaTekninenAvain: string;
       Modified: StringifiedDate;
     };
+    [TableName.SaliDBPuheenvuoro]: {
+      Id: StringifiedNumber;
+      IstuntoTekninenAvain: string;
+      KohtaTekninenAvain: string;
+      TekninenAvain: string;
+      Jarjestys: StringifiedDate;
+      PVTyyppi: string;
+      henkilonumero: StringifiedNumber;
+      Etunimi: string;
+      Sukunimi: string;
+      Sukupuoli: string;
+      PyyntoTapa: string;
+      PyyntoAika: StringifiedDate;
+      XmlData: string;
+      Created: StringifiedDate;
+      Modified: StringifiedDate;
+      RyhmaLyhenneFI: string;
+      RyhmaLyhenneSV: string;
+      Puhunut: StringifiedBoolean;
+      JarjestysNro: StringifiedNumber;
+      ADtunnus: string;
+      MinisteriysFI: string;
+      MinisteriysSV: string;
+      Imported: StringifiedDate;
+    };
   }
 
   export type RawDataModel<T extends Modules.Common.TableName> =
