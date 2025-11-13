@@ -6,10 +6,13 @@
   "scripts": {
     "scrape": "bun scraper/cli.ts",
     "scrape:status": "bun scraper/cli.ts status",
+    "parse": "bun parser/cli.ts",
+    "parse:status": "bun parser/cli.ts status",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "bun": "^1.2.0"
+    "fast-xml-parser": "5.0.9",
+    "xml-js": "1.6.11"
   },
   "devDependencies": {
     "@types/bun": "latest",
