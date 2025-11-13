@@ -1,22 +1,18 @@
 import React from "react";
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
-  Grid,
   Typography,
   List,
   ListItem,
   ListItemText,
   Box,
   CircularProgress,
-  Card,
-  CardContent,
   Divider,
-  Chip,
   IconButton,
   Fade,
-  Slide,
+  Collapse,
+  Avatar,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonIcon from "@mui/icons-material/Person";
@@ -27,7 +23,7 @@ import LanguageIcon from "@mui/icons-material/Language";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import WorkIcon from "@mui/icons-material/Work";
-import PublicIcon from "@mui/icons-material/Public";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 type RepresentativeDetailsType = DatabaseTables.Representative;
 
@@ -82,13 +78,72 @@ const fetchPersonDetails = async (personId: number) => {
   };
 };
 
+const ExpandableSection: React.FC<{
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  defaultExpanded?: boolean;
+}> = ({ title, icon, children, defaultExpanded = false }) => {
+  const [expanded, setExpanded] = React.useState(defaultExpanded);
 
+  return (
+    <Box
+      sx={{
+        mb: 2,
+        borderRadius: 2,
+        background: "white",
+        border: "1px solid rgba(0,0,0,0.12)",
+        overflow: "hidden",
+        transition: "all 0.2s ease",
+        "&:hover": {
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+        },
+      }}
+    >
+      <Box
+        onClick={() => setExpanded(!expanded)}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          p: 2,
+          cursor: "pointer",
+          userSelect: "none",
+          "&:hover": {
+            bgcolor: "rgba(102, 126, 234, 0.04)",
+          },
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          {icon}
+          <Typography variant="body1" fontWeight="600" sx={{ color: "#1a1a1a" }}>
+            {title}
+          </Typography>
+        </Box>
+        <ExpandMoreIcon
+          sx={{
+            color: "#667eea",
+            transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "transform 0.2s ease",
+          }}
+        />
+      </Box>
+      <Collapse in={expanded}>
+        <Box sx={{ px: 2, pb: 2, pt: 0 }}>
+          <Divider sx={{ mb: 2 }} />
+          {children}
+        </Box>
+      </Collapse>
+    </Box>
+  );
+};
 
 export const RepresentativeDetails: React.FC<{
   open: boolean;
   onClose: () => void;
   selectedRepresentative: DatabaseQueries.GetParliamentComposition | null;
-}> = ({ open, onClose, selectedRepresentative }) => {
+  selectedDate: string;
+}> = ({ open, onClose, selectedRepresentative, selectedDate }) => {
   const [details, setDetails] =
     React.useState<Awaited<ReturnType<typeof fetchPersonDetails>>>();
 
@@ -101,14 +156,12 @@ export const RepresentativeDetails: React.FC<{
     }
   }, [selectedRepresentative]);
 
-
-
-  const calculateAge = (birthDate: string, deathDate?: string | null) => {
+  const calculateAge = (birthDate: string, asOfDate: string) => {
     const birth = new Date(birthDate);
-    const death = deathDate ? new Date(deathDate) : new Date();
-    let age = death.getFullYear() - birth.getFullYear();
-    const m = death.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && death.getDate() < birth.getDate())) age--;
+    const asOf = new Date(asOfDate);
+    let age = asOf.getFullYear() - birth.getFullYear();
+    const m = asOf.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && asOf.getDate() < birth.getDate())) age--;
     return age;
   };
 
@@ -117,677 +170,477 @@ export const RepresentativeDetails: React.FC<{
     return new Date(date).toLocaleDateString("fi-FI");
   };
 
-  const getTimelineEvents = () => {
-    if (!selectedRepresentative) return [];
-    const events: { date: string; description: string }[] = [];
-
-    events.push({
-      date: selectedRepresentative.birth_date,
-      description: `syntyi paikkakunnalla ${selectedRepresentative.birth_place}`,
-    });
-
-    details?.terms.forEach((term, index) => {
-      events.push({
-        date: term.start_date,
-        description: `aloitti eduskunnassa ryhmässä ${details.groupMemberships[index]?.group_name}`,
-      });
-      if (term.end_date?.trim()) {
-        events.push({ date: term.end_date, description: "lähti eduskunnasta" });
-      }
-    });
-
-    details?.groupMemberships.forEach((membership, index) => {
-      if (index > 0) {
-        events.push({
-          date: membership.start_date,
-          description: `aloitti eduskuntaryhmässä ${membership.group_name}`,
-        });
-      }
-    });
-
-    if (selectedRepresentative.death_date) {
-      events.push({
-        date: selectedRepresentative.death_date,
-        description: `kuoli paikkakunnalla ${selectedRepresentative.death_place}`,
-      });
-    }
-
-    return events.sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-  };
-
-  const timelineEvents = getTimelineEvents();
-
   if (!selectedRepresentative) return null;
+
+  const currentParty = details?.groupMemberships?.[0]?.group_name || "Ei tiedossa";
+  const currentDistrict = details?.districts?.[0]?.district_name || "Ei tiedossa";
+
+  // Check if person was alive on selected date
+  const selectedDateObj = new Date(selectedDate);
+  const deathDateObj = selectedRepresentative.death_date ? new Date(selectedRepresentative.death_date) : null;
+  const wasAliveOnSelectedDate = !deathDateObj || selectedDateObj <= deathDateObj;
+
+  // Calculate age as of selected date (or death date if they died before selected date)
+  const effectiveDate = wasAliveOnSelectedDate ? selectedDate : selectedRepresentative.death_date!;
+  const age = selectedRepresentative.birth_date
+    ? calculateAge(selectedRepresentative.birth_date, effectiveDate)
+    : null;
+
+  const ageDisclaimer = displayDate(effectiveDate);
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
+      maxWidth="md"
       fullWidth
-      maxWidth="lg"
-      TransitionComponent={Slide}
-      TransitionProps={{ direction: "up" } as any}
       PaperProps={{
         sx: {
           borderRadius: 3,
-          background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+          maxHeight: "90vh",
         },
       }}
     >
-      <DialogTitle
-        sx={{
-          pb: 2,
-          pt: 3,
-          px: 4,
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          color: "white",
-          position: "relative",
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+      {details?.representativeDetails === undefined ? (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: 400,
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          {/* Fixed Header */}
           <Box
             sx={{
-              width: 56,
-              height: 56,
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.2)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backdropFilter: "blur(10px)",
+              position: "sticky",
+              top: 0,
+              zIndex: 10,
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              borderRadius: "12px 12px 0 0",
             }}
           >
-            <PersonIcon sx={{ fontSize: 32, color: "white" }} />
-          </Box>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h4" fontWeight="700" letterSpacing="-0.5px">
-              {selectedRepresentative.first_name}{" "}
-              {selectedRepresentative.last_name}
-            </Typography>
-            {details?.representativeDetails?.profession && (
-              <Typography
-                variant="body1"
-                sx={{ opacity: 0.9, mt: 0.5, fontWeight: 300 }}
+            <Box sx={{ position: "relative", p: 3 }}>
+              {/* Close Button */}
+              <IconButton
+                onClick={onClose}
+                sx={{
+                  position: "absolute",
+                  top: 16,
+                  right: 16,
+                  color: "white",
+                  bgcolor: "rgba(0,0,0,0.2)",
+                  "&:hover": { bgcolor: "rgba(0,0,0,0.3)" },
+                }}
               >
-                {details.representativeDetails.profession}
-              </Typography>
-            )}
-          </Box>
-          <IconButton
-            onClick={onClose}
-            sx={{
-              color: "white",
-              bgcolor: "rgba(255,255,255,0.1)",
-              "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </Box>
-      </DialogTitle>
-      <DialogContent sx={{ bgcolor: "transparent", pt: 3, px: 4, pb: 4 }}>
-        {details?.representativeDetails === undefined ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <Grid container spacing={3}>
-            {/* Basic Info Card */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Fade in timeout={600}>
-                <Card
-                  elevation={0}
+                <CloseIcon />
+              </IconButton>
+
+              {/* Header Content */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 3,
+                }}
+              >
+                {/* Avatar */}
+                <Avatar
                   sx={{
-                    borderRadius: 3,
-                    background: "rgba(255,255,255,0.9)",
-                    backdropFilter: "blur(20px)",
-                    border: "1px solid rgba(255,255,255,0.6)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateY(-4px)",
-                      boxShadow: "0 12px 24px rgba(0,0,0,0.15)",
-                    },
+                    width: 80,
+                    height: 80,
+                    background: "white",
+                    color: "#667eea",
+                    fontSize: 32,
+                    fontWeight: 700,
+                    border: "3px solid rgba(255,255,255,0.3)",
                   }}
                 >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box
+                  {selectedRepresentative.first_name[0]}
+                  {selectedRepresentative.last_name[0]}
+                </Avatar>
+
+                {/* Name and Stats */}
+                <Box sx={{ flex: 1 }}>
+                  <Typography
+                    variant="h5"
+                    fontWeight="700"
+                    sx={{
+                      color: "white",
+                      mb: 0.5,
+                    }}
+                  >
+                    {selectedRepresentative.first_name} {selectedRepresentative.last_name}
+                  </Typography>
+
+                  {details.representativeDetails?.profession && (
+                    <Typography
+                      variant="body2"
                       sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1.5,
+                        color: "rgba(255,255,255,0.95)",
                         mb: 2,
                       }}
                     >
-                      <PersonIcon sx={{ color: "#667eea", fontSize: 28 }} />
+                      {details.representativeDetails.profession}
+                    </Typography>
+                  )}
+
+                  {/* Quick Stats */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 3,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Box>
                       <Typography
-                        variant="h6"
-                        fontWeight="600"
+                        variant="caption"
                         sx={{
-                          background:
-                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                          WebkitBackgroundClip: "text",
-                          WebkitTextFillColor: "transparent",
+                          color: "rgba(255,255,255,0.8)",
+                          textTransform: "uppercase",
+                          fontSize: "0.65rem",
+                          fontWeight: 600,
+                          display: "block",
                         }}
                       >
-                        Perustiedot
+                        Puolue
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "white", fontWeight: 600 }}
+                      >
+                        {currentParty}
                       </Typography>
                     </Box>
-                    <Divider sx={{ mb: 2, opacity: 0.6 }} />
-                  <Grid container spacing={2}>
-                  {details.representativeDetails.gender && (
-                    <Grid size={{ xs: 12, sm: 6 }}>
+                    <Box>
                       <Typography
                         variant="caption"
                         sx={{
+                          color: "rgba(255,255,255,0.8)",
                           textTransform: "uppercase",
-                          letterSpacing: 1,
+                          fontSize: "0.65rem",
                           fontWeight: 600,
-                          color: "#667eea",
-                          mb: 0.5,
                           display: "block",
                         }}
                       >
-                        Sukupuoli
+                        Vaalipiiri
                       </Typography>
-                      <Typography variant="body1" fontWeight="500">
-                        {details.representativeDetails.gender}
-                      </Typography>
-                    </Grid>
-                  )}
-                  {details.representativeDetails.birth_date && (
-                    <Grid size={{ xs: 12, sm: 6 }}>
                       <Typography
-                        variant="caption"
-                        sx={{
-                          textTransform: "uppercase",
-                          letterSpacing: 1,
-                          fontWeight: 600,
-                          color: "#667eea",
-                          mb: 0.5,
-                          display: "block",
-                        }}
+                        variant="body2"
+                        sx={{ color: "white", fontWeight: 600 }}
                       >
-                        Syntymäaika
+                        {currentDistrict}
                       </Typography>
-                      <Typography variant="body1" fontWeight="500">
-                        {displayDate(details.representativeDetails.birth_date)}
-                        {details.representativeDetails.birth_place &&
-                          ` (${details.representativeDetails.birth_place})`}
-                      </Typography>
-                    </Grid>
-                  )}
-                  {details.representativeDetails.profession && (
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          textTransform: "uppercase",
-                          letterSpacing: 1,
-                          fontWeight: 600,
-                          color: "#667eea",
-                          mb: 0.5,
-                          display: "block",
-                        }}
-                      >
-                        Ammatti
-                      </Typography>
-                      <Typography variant="body1" fontWeight="500">
-                        {details.representativeDetails.profession}
-                      </Typography>
-                    </Grid>
-                  )}
-                  {details.representativeDetails.website && (
-                    <Grid size={{ xs: 12 }}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                          mt: 2,
-                        }}
-                      >
-                        <LanguageIcon
-                          sx={{ color: "#667eea", fontSize: 20 }}
-                        />
-                        <a
-                          href={details.representativeDetails.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          style={{
-                            color: "#667eea",
-                            textDecoration: "none",
-                            fontWeight: 500,
-                            transition: "all 0.2s",
+                    </Box>
+                    {age && (
+                      <Box>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: "rgba(255,255,255,0.8)",
+                            textTransform: "uppercase",
+                            fontSize: "0.65rem",
+                            fontWeight: 600,
+                            display: "block",
                           }}
                         >
-                          {details.representativeDetails.website}
-                        </a>
+                          Ikä
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "white", fontWeight: 600 }}
+                        >
+                          {age} v
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: "rgba(255,255,255,0.7)",
+                            fontSize: "0.6rem",
+                            display: "block",
+                            mt: 0.25,
+                          }}
+                        >
+                          ({ageDisclaimer})
+                        </Typography>
                       </Box>
-                    </Grid>
-                  )}
-                </Grid>
-              </CardContent>
-            </Card>
-              </Fade>
-          </Grid>
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
 
-          {/* Contact Info Card */}
-          {(details.representativeDetails.email ||
-            details.representativeDetails.phone) && (
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Fade in timeout={700}>
-                <Card
-                  elevation={0}
-                  sx={{
-                    borderRadius: 3,
-                    background: "rgba(255,255,255,0.9)",
-                    backdropFilter: "blur(20px)",
-                    border: "1px solid rgba(255,255,255,0.6)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateY(-4px)",
-                      boxShadow: "0 12px 24px rgba(0,0,0,0.15)",
-                    },
-                  }}
+          {/* Scrollable Content */}
+          <DialogContent
+            sx={{
+              p: 3,
+              bgcolor: "#f5f7fa",
+              overflowY: "auto",
+            }}
+          >
+            <Fade in timeout={300}>
+              <Box>
+                {/* Basic Info */}
+                <ExpandableSection
+                  title="Perustiedot"
+                  icon={<PersonIcon sx={{ color: "#667eea", fontSize: 22 }} />}
+                  defaultExpanded={false}
                 >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1.5,
-                        mb: 2,
-                      }}
-                    >
-                      <EmailIcon sx={{ color: "#667eea", fontSize: 28 }} />
-                      <Typography
-                        variant="h6"
-                        fontWeight="600"
-                        sx={{
-                          background:
-                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                          WebkitBackgroundClip: "text",
-                          WebkitTextFillColor: "transparent",
-                        }}
-                      >
-                        Yhteystiedot
-                      </Typography>
-                    </Box>
-                    <Divider sx={{ mb: 2, opacity: 0.6 }} />
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                    {details.representativeDetails.gender && (
+                      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                        <Typography variant="body2" sx={{ color: "#666" }}>
+                          Sukupuoli
+                        </Typography>
+                        <Typography variant="body2" fontWeight="600" sx={{ color: "#1a1a1a" }}>
+                          {details.representativeDetails.gender}
+                        </Typography>
+                      </Box>
+                    )}
+                    {details.representativeDetails.birth_date && (
+                      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                        <Typography variant="body2" sx={{ color: "#666" }}>
+                          Syntymäaika
+                        </Typography>
+                        <Typography variant="body2" fontWeight="600" sx={{ color: "#1a1a1a" }}>
+                          {displayDate(details.representativeDetails.birth_date)}
+                          {details.representativeDetails.birth_place &&
+                            ` (${details.representativeDetails.birth_place})`}
+                        </Typography>
+                      </Box>
+                    )}
+                    {details.representativeDetails.death_date && (
+                      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                        <Typography variant="body2" sx={{ color: "#666" }}>
+                          Kuolinaika
+                        </Typography>
+                        <Typography variant="body2" fontWeight="600" sx={{ color: "#1a1a1a" }}>
+                          {displayDate(details.representativeDetails.death_date)}
+                          {details.representativeDetails.death_place &&
+                            ` (${details.representativeDetails.death_place})`}
+                          {details.representativeDetails.birth_date &&
+                            ` - ${calculateAge(details.representativeDetails.birth_date, details.representativeDetails.death_date)} v`}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </ExpandableSection>
+
+                {/* Contact Info */}
+                {(details.representativeDetails.email ||
+                  details.representativeDetails.phone ||
+                  details.representativeDetails.website) && (
+                  <ExpandableSection
+                    title="Yhteystiedot"
+                    icon={<EmailIcon sx={{ color: "#667eea", fontSize: 22 }} />}
+                  >
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
                       {details.representativeDetails.email && (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                          <EmailIcon sx={{ color: "#667eea", fontSize: 20 }} />
-                          <Typography variant="body1" fontWeight="500">
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <EmailIcon sx={{ color: "#667eea", fontSize: 18 }} />
+                          <Typography variant="body2" fontWeight="500" sx={{ color: "#1a1a1a" }}>
                             {details.representativeDetails.email}
                           </Typography>
                         </Box>
                       )}
                       {details.representativeDetails.phone && (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                          <PhoneIcon sx={{ color: "#667eea", fontSize: 20 }} />
-                          <Typography variant="body1" fontWeight="500">
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <PhoneIcon sx={{ color: "#667eea", fontSize: 18 }} />
+                          <Typography variant="body2" fontWeight="500" sx={{ color: "#1a1a1a" }}>
                             {details.representativeDetails.phone}
                           </Typography>
                         </Box>
                       )}
+                      {details.representativeDetails.website && (
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <LanguageIcon sx={{ color: "#667eea", fontSize: 18 }} />
+                          <a
+                            href={details.representativeDetails.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              color: "#667eea",
+                              textDecoration: "none",
+                              fontWeight: 500,
+                              fontSize: "0.875rem",
+                            }}
+                          >
+                            {details.representativeDetails.website}
+                          </a>
+                        </Box>
+                      )}
                     </Box>
-                  </CardContent>
-                </Card>
-              </Fade>
-            </Grid>
-          )}
+                  </ExpandableSection>
+                )}
 
-          {/* Districts Card */}
-          {details.districts && details.districts.length > 0 && (
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Fade in timeout={800}>
-                <Card
-                  elevation={0}
-                  sx={{
-                    borderRadius: 3,
-                    background: "rgba(255,255,255,0.9)",
-                    backdropFilter: "blur(20px)",
-                    border: "1px solid rgba(255,255,255,0.6)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateY(-4px)",
-                      boxShadow: "0 12px 24px rgba(0,0,0,0.15)",
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1.5,
-                        mb: 2,
-                      }}
-                    >
-                      <LocationOnIcon sx={{ color: "#667eea", fontSize: 28 }} />
-                      <Typography
-                        variant="h6"
-                        fontWeight="600"
-                        sx={{
-                          background:
-                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                          WebkitBackgroundClip: "text",
-                          WebkitTextFillColor: "transparent",
-                        }}
-                      >
-                        Vaalipiirit
-                      </Typography>
-                    </Box>
-                    <Divider sx={{ mb: 2, opacity: 0.6 }} />
-                    <List dense sx={{ pt: 0 }}>
-                    {details.districts.map((district) => (
-                      <ListItem key={district.id} sx={{ px: 0, py: 0.5 }}>
-                        <ListItemText
-                          primary={
-                            <Typography
-                              variant="body2"
-                              component="span"
-                              fontWeight="medium"
-                            >
-                              {district.district_name}
-                            </Typography>
-                          }
-                          secondary={`${displayDate(
-                            district.start_date
-                          )} - ${displayDate(district.end_date)}`}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </CardContent>
-              </Card>
-              </Fade>
-            </Grid>
-          )}
-
-          {/* Parliamentary Membership Card */}
-          {details.groupMemberships && details.groupMemberships.length > 0 && (
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Fade in timeout={900}>
-                <Card
-                  elevation={0}
-                  sx={{
-                    borderRadius: 3,
-                    background: "rgba(255,255,255,0.9)",
-                    backdropFilter: "blur(20px)",
-                    border: "1px solid rgba(255,255,255,0.6)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateY(-4px)",
-                      boxShadow: "0 12px 24px rgba(0,0,0,0.15)",
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1.5,
-                        mb: 2,
-                      }}
-                    >
-                      <HowToVoteIcon sx={{ color: "#667eea", fontSize: 28 }} />
-                      <Typography
-                        variant="h6"
-                        fontWeight="600"
-                        sx={{
-                          background:
-                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                          WebkitBackgroundClip: "text",
-                          WebkitTextFillColor: "transparent",
-                        }}
-                      >
-                        Eduskuntajäsenyys
-                      </Typography>
-                    </Box>
-                    <Divider sx={{ mb: 2, opacity: 0.6 }} />
-                  <List dense sx={{ pt: 0 }}>
-                    {details.groupMemberships.map((membership) => {
-                      // Find matching leaving record for this membership period
-                      const leavingRecord = details.leavingRecords?.find(
-                        (record) => {
-                          const recordDate = new Date(record.end_date);
-                          const membershipEndDate = new Date(
-                            membership.end_date || ""
-                          );
-                          // Match if dates are close (within a few days)
-                          const diffDays = Math.abs(
-                            (recordDate.getTime() - membershipEndDate.getTime()) /
-                              (1000 * 60 * 60 * 24)
-                          );
-                          return diffDays < 30 && membership.end_date; // Only match if membership has ended
-                        }
-                      );
-
-                      return (
-                        <ListItem key={membership.id} sx={{ px: 0, py: 0.5 }}>
+                {/* Districts */}
+                {details.districts && details.districts.length > 0 && (
+                  <ExpandableSection
+                    title="Vaalipiirit"
+                    icon={<LocationOnIcon sx={{ color: "#667eea", fontSize: 22 }} />}
+                  >
+                    <List dense sx={{ p: 0 }}>
+                      {details.districts.map((district) => (
+                        <ListItem key={district.id} sx={{ px: 0, py: 1 }}>
                           <ListItemText
                             primary={
-                              <Typography
-                                variant="body2"
-                                component="span"
-                                fontWeight="medium"
-                              >
-                                {membership.group_name}
+                              <Typography variant="body2" fontWeight="600" sx={{ color: "#1a1a1a" }}>
+                                {district.district_name}
                               </Typography>
                             }
                             secondary={
-                              <Box>
-                                <Typography variant="caption">
-                                  {displayDate(membership.start_date)} -{" "}
-                                  {displayDate(membership.end_date)}
-                                  {leavingRecord?.replacement_person &&
-                                    ` (Seuraaja: ${leavingRecord.replacement_person})`}
-                                </Typography>
-                                {leavingRecord?.description && (
-                                  <Typography
-                                    variant="caption"
-                                    display="block"
-                                    color="text.secondary"
-                                    sx={{ fontStyle: "italic" }}
-                                  >
-                                    {leavingRecord.description}
-                                  </Typography>
-                                )}
-                              </Box>
-                            }
-                          />
-                        </ListItem>
-                      );
-                    })}
-                  </List>
-                </CardContent>
-              </Card>
-              </Fade>
-            </Grid>
-          )}
-
-          {/* Government Coalition Card */}
-          {details.governmentMemberships &&
-            details.governmentMemberships.length > 0 && (
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Fade in timeout={1000}>
-                  <Card
-                    elevation={0}
-                    sx={{
-                      borderRadius: 3,
-                      background: "rgba(255,255,255,0.9)",
-                      backdropFilter: "blur(20px)",
-                      border: "1px solid rgba(255,255,255,0.6)",
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        transform: "translateY(-4px)",
-                        boxShadow: "0 12px 24px rgba(0,0,0,0.15)",
-                      },
-                    }}
-                  >
-                    <CardContent sx={{ p: 3 }}>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1.5,
-                          mb: 2,
-                        }}
-                      >
-                        <AccountBalanceIcon sx={{ color: "#667eea", fontSize: 28 }} />
-                        <Typography
-                          variant="h6"
-                          fontWeight="600"
-                          sx={{
-                            background:
-                              "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                          }}
-                        >
-                          Hallituskoalitioon osallistuminen
-                        </Typography>
-                      </Box>
-                      <Divider sx={{ mb: 2, opacity: 0.6 }} />
-                    <List dense sx={{ pt: 0 }}>
-                      {details.governmentMemberships.map((membership) => (
-                        <ListItem key={membership.id} sx={{ px: 0, py: 0.5 }}>
-                          <ListItemText
-                            primary={
-                              <Box>
-                                <Typography
-                                  variant="body2"
-                                  component="span"
-                                  fontWeight="medium"
-                                >
-                                  {membership.government}
-                                </Typography>
-                                {membership.ministry && (
-                                  <Typography
-                                    variant="body2"
-                                    component="span"
-                                    color="text.secondary"
-                                  >
-                                    {" "}
-                                    - {membership.ministry}
-                                  </Typography>
-                                )}
-                              </Box>
-                            }
-                            secondary={
-                              <Box>
-                                <Typography variant="body2">
-                                  Virka: {membership.name}
-                                </Typography>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                >
-                                  {displayDate(membership.start_date)} -{" "}
-                                  {displayDate(membership.end_date)}
-                                </Typography>
-                              </Box>
+                              <Typography variant="caption" sx={{ color: "#666" }}>
+                                {displayDate(district.start_date)} -{" "}
+                                {displayDate(district.end_date)}
+                              </Typography>
                             }
                           />
                         </ListItem>
                       ))}
                     </List>
-                  </CardContent>
-                </Card>
-                </Fade>
-              </Grid>
-            )}
+                  </ExpandableSection>
+                )}
 
-          {/* Trust Positions Card */}
-          {details.trustPositions && details.trustPositions.length > 0 && (
-            <Grid size={{ xs: 12, md: 6 }}>
-              <Fade in timeout={1100}>
-                <Card
-                  elevation={0}
-                  sx={{
-                    borderRadius: 3,
-                    background: "rgba(255,255,255,0.9)",
-                    backdropFilter: "blur(20px)",
-                    border: "1px solid rgba(255,255,255,0.6)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateY(-4px)",
-                      boxShadow: "0 12px 24px rgba(0,0,0,0.15)",
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: 3 }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1.5,
-                        mb: 2,
-                      }}
-                    >
-                      <WorkIcon sx={{ color: "#667eea", fontSize: 28 }} />
-                      <Typography
-                        variant="h6"
-                        fontWeight="600"
-                        sx={{
-                          background:
-                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                          WebkitBackgroundClip: "text",
-                          WebkitTextFillColor: "transparent",
-                        }}
-                      >
-                        Luottamustehtävät ja muut toimet
-                      </Typography>
-                    </Box>
-                    <Divider sx={{ mb: 2, opacity: 0.6 }} />
-                  <List dense sx={{ pt: 0 }}>
-                    {details.trustPositions.map((position) => (
-                      <ListItem key={position.id} sx={{ px: 0, py: 0.5 }}>
-                        <ListItemText
-                          primary={
-                            <Box>
-                              <Typography
-                                variant="body2"
-                                component="span"
-                                fontWeight="medium"
-                              >
-                                {position.name}
-                              </Typography>
-                              {position.position_type && (
-                                <Typography
-                                  variant="body2"
-                                  component="span"
-                                  color="text.secondary"
-                                  sx={{ ml: 1 }}
-                                >
-                                  ({position.position_type})
+                {/* Parliamentary Membership */}
+                {details.groupMemberships && details.groupMemberships.length > 0 && (
+                  <ExpandableSection
+                    title="Eduskuntajäsenyys"
+                    icon={<HowToVoteIcon sx={{ color: "#667eea", fontSize: 22 }} />}
+                  >
+                    <List dense sx={{ p: 0 }}>
+                      {details.groupMemberships.map((membership) => {
+                        const leavingRecord = details.leavingRecords?.find((record) => {
+                          const recordDate = new Date(record.end_date);
+                          const membershipEndDate = new Date(membership.end_date || "");
+                          const diffDays = Math.abs(
+                            (recordDate.getTime() - membershipEndDate.getTime()) /
+                              (1000 * 60 * 60 * 24)
+                          );
+                          return diffDays < 30 && membership.end_date;
+                        });
+
+                        return (
+                          <ListItem key={membership.id} sx={{ px: 0, py: 1 }}>
+                            <ListItemText
+                              primary={
+                                <Typography variant="body2" fontWeight="600" sx={{ color: "#1a1a1a" }}>
+                                  {membership.group_name}
                                 </Typography>
-                              )}
-                            </Box>
-                          }
-                          secondary={
-                            <Typography variant="caption">
-                              {position.period}
-                            </Typography>
-                          }
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </CardContent>
-              </Card>
-              </Fade>
-            </Grid>
-          )}
-        </Grid>
-        )}
-      </DialogContent>
+                              }
+                              secondary={
+                                <Box>
+                                  <Typography variant="caption" sx={{ color: "#666" }}>
+                                    {displayDate(membership.start_date)} -{" "}
+                                    {displayDate(membership.end_date)}
+                                    {leavingRecord?.replacement_person &&
+                                      ` (Seuraaja: ${leavingRecord.replacement_person})`}
+                                  </Typography>
+                                  {leavingRecord?.description && (
+                                    <Typography
+                                      variant="caption"
+                                      display="block"
+                                      sx={{ color: "#888", fontStyle: "italic", mt: 0.5 }}
+                                    >
+                                      {leavingRecord.description}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              }
+                            />
+                          </ListItem>
+                        );
+                      })}
+                    </List>
+                  </ExpandableSection>
+                )}
+
+                {/* Government Memberships */}
+                {details.governmentMemberships &&
+                  details.governmentMemberships.length > 0 && (
+                    <ExpandableSection
+                      title="Hallituskoalitioon osallistuminen"
+                      icon={<AccountBalanceIcon sx={{ color: "#667eea", fontSize: 22 }} />}
+                    >
+                      <List dense sx={{ p: 0 }}>
+                        {details.governmentMemberships.map((membership) => (
+                          <ListItem key={membership.id} sx={{ px: 0, py: 1 }}>
+                            <ListItemText
+                              primary={
+                                <Box>
+                                  <Typography variant="body2" fontWeight="600" sx={{ color: "#1a1a1a" }}>
+                                    {membership.government}
+                                  </Typography>
+                                  {membership.ministry && (
+                                    <Typography variant="body2" sx={{ color: "#555" }}>
+                                      {membership.ministry}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              }
+                              secondary={
+                                <Box sx={{ mt: 0.5 }}>
+                                  <Typography variant="caption" fontWeight="600" sx={{ color: "#667eea" }}>
+                                    {membership.name}
+                                  </Typography>
+                                  <Typography variant="caption" display="block" sx={{ color: "#666" }}>
+                                    {displayDate(membership.start_date)} -{" "}
+                                    {displayDate(membership.end_date)}
+                                  </Typography>
+                                </Box>
+                              }
+                            />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </ExpandableSection>
+                  )}
+
+                {/* Trust Positions */}
+                {details.trustPositions && details.trustPositions.length > 0 && (
+                  <ExpandableSection
+                    title="Luottamustehtävät"
+                    icon={<WorkIcon sx={{ color: "#667eea", fontSize: 22 }} />}
+                  >
+                    <List dense sx={{ p: 0 }}>
+                      {details.trustPositions.map((position) => (
+                        <ListItem key={position.id} sx={{ px: 0, py: 1 }}>
+                          <ListItemText
+                            primary={
+                              <Typography variant="body2" fontWeight="600" sx={{ color: "#1a1a1a" }}>
+                                {position.name}
+                                {position.position_type && (
+                                  <Typography
+                                    component="span"
+                                    variant="body2"
+                                    sx={{ color: "#666", ml: 1 }}
+                                  >
+                                    ({position.position_type})
+                                  </Typography>
+                                )}
+                              </Typography>
+                            }
+                            secondary={
+                              <Typography variant="caption" sx={{ color: "#666" }}>
+                                {position.period}
+                              </Typography>
+                            }
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </ExpandableSection>
+                )}
+              </Box>
+            </Fade>
+          </DialogContent>
+        </>
+      )}
     </Dialog>
   );
 };
