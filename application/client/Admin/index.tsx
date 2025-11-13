@@ -704,8 +704,10 @@ export default function AdminPage() {
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        {row.has_raw_data && row.has_parsed_data ? (
+                        {row.has_raw_data && row.has_parsed_data && row.parsed_page_count >= row.raw_page_count ? (
                           <Chip label="Complete" size="small" color="success" />
+                        ) : row.has_raw_data && row.has_parsed_data && row.parsed_page_count < row.raw_page_count ? (
+                          <Chip label="Needs Re-parsing" size="small" color="warning" />
                         ) : row.has_raw_data ? (
                           <Chip label="Needs Parsing" size="small" color="warning" />
                         ) : (
