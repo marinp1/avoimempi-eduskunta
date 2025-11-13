@@ -70,14 +70,26 @@ export class DatabaseConnection {
 
   public async fetchRepresentativeDetails(params: { id: string }) {
     const stmt = this.db.prepare<
-      DatabaseTables.Representative & {
-        district_name: string | null;
-        district_start_date: string | null;
-        district_end_date: string | null;
-      },
+      DatabaseTables.Representative,
       { $personId: number }
     >(queries.representativeDetails);
     const data = stmt.get({ $personId: +params.id });
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchRepresentativeDistricts(params: { id: string }) {
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        person_id: number;
+        district_name: string;
+        start_date: string;
+        end_date: string;
+      },
+      { $personId: number }
+    >(queries.representativeDistricts);
+    const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
     return data;
   }

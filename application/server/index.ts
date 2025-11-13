@@ -56,6 +56,15 @@ const server = Bun.serve({
       },
     },
 
+    "/api/person/:id/districts": {
+      GET: async (req: BunRequest<"/api/person/:id/districts">) => {
+        const districts = await db.fetchRepresentativeDistricts(req.params);
+        return new Response(JSON.stringify(districts), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
     "/api/person/:id/leaving-records": {
       GET: async (req: BunRequest<"/api/person/:id/leaving-records">) => {
         const records = await db.fetchLeavingParliamentRecords(req.params);
