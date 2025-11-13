@@ -1,6 +1,6 @@
 import { type Database } from "bun:sqlite";
 
-import { parseDateTime } from "migrator/utils";
+import { parseDateTime } from "../utils";
 
 export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBKohtaAanestys"]) => {

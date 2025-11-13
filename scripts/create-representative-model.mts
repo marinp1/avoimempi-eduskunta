@@ -5,9 +5,10 @@ import jsonschema from "jsonschema";
 
 const tableName: Modules.Common.TableName = "MemberOfParliament";
 
+// New structure: data is in storage at data/parsed/TableName/page_*.json
 const dataDir = path.resolve(
   import.meta.dirname,
-  `../parser/data/${tableName}`
+  `../data/parsed/${tableName}`
 );
 
 if (!fs.existsSync(dataDir)) {
@@ -15,11 +16,12 @@ if (!fs.existsSync(dataDir)) {
 }
 
 /**
- * List of JSON filenames found in the data directory.
+ * List of JSON page files from the new parser structure.
+ * Each page file contains multiple rows in rowData array.
  */
-const entriesToImport = fs
+const pageFiles = fs
   .readdirSync(dataDir, { encoding: "utf8", withFileTypes: true })
-  .filter((s) => s.name.endsWith(".json") && s.name !== "meta.json")
+  .filter((s) => s.name.startsWith("page_") && s.name.endsWith(".json"))
   .map((s) => s.name);
 
 /**
@@ -42,11 +44,23 @@ const merge = deepmerge({
  */
 let result: Record<string, any> = {};
 
-for (const entry of entriesToImport) {
-  const { default: data } = await import(path.resolve(dataDir, entry), {
+// Read all page files and extract individual rows
+const allRows: any[] = [];
+for (const pageFile of pageFiles) {
+  const { default: pageData } = await import(path.resolve(dataDir, pageFile), {
     with: { type: "json" },
   });
-  result = merge(result, data);
+  // New format: { rowData: [...], columnNames: [...], ... }
+  if (pageData.rowData && Array.isArray(pageData.rowData)) {
+    allRows.push(...pageData.rowData);
+  }
+}
+
+console.log(`Found ${allRows.length} rows across ${pageFiles.length} pages`);
+
+// Merge all rows to create schema
+for (const row of allRows) {
+  result = merge(result, row);
 }
 
 /**
@@ -288,7 +302,7 @@ const schema = convertObjectIntoSchema(result, "$", true);
 const schemaFolder = path.resolve(
   import.meta.dirname,
   "../",
-  "migrator",
+  "schemas",
   "MemberOfParliament"
 );
 const schemaPath = path.join(schemaFolder, "schema.json");
@@ -296,7 +310,7 @@ fs.writeFileSync(schemaPath, JSON.stringify(schema, null, 2), {
   encoding: "utf8",
 });
 
-// VALIDATE ALL FILES AGAINST SCHEMA
+// VALIDATE ALL ROWS AGAINST SCHEMA
 
 const validator = new jsonschema.Validator();
 
@@ -306,12 +320,11 @@ let failureCount = 0;
 
 const baseUrl = `file://${schemaFolder}`;
 
-for (const entry of entriesToImport) {
-  const { default: data } = await import(path.resolve(dataDir, entry), {
-    with: { type: "json" },
-  });
-  validator.addSchema(schema, "/representative");
-  const response = validator.validate(data, schema, {
+validator.addSchema(schema, "/representative");
+
+// Validate each row from all pages
+for (const row of allRows) {
+  const response = validator.validate(row, schema, {
     allowUnknownAttributes: true,
     required: true,
     base: baseUrl,

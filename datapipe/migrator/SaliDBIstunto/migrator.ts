@@ -5,7 +5,7 @@ import {
   parseDate,
   parseDateTime,
   parseYear,
-} from "migrator/utils";
+} from "../utils";
 
 export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBIstunto"]) => {

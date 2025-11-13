@@ -1,6 +1,6 @@
 import { type Database } from "bun:sqlite";
 
-import { insertRows } from "migrator/utils";
+import { insertRows } from "../utils";
 
 export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBAanestysEdustaja"]) => {

@@ -1,7 +1,7 @@
 import { LanguageIds } from "#constants/index";
 import { type Database } from "bun:sqlite";
 
-import { insertRows, parseDateTime } from "migrator/utils";
+import { insertRows, parseDateTime } from "../utils";
 
 export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBAanestys"]) => {

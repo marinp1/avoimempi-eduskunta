@@ -171,7 +171,7 @@ export class MigratorController {
       // Run migrations
       const migrationsPath = path.resolve(
         import.meta.dirname,
-        "../../functions/migrator/migrations"
+        "../../datapipe/migrator/migrations"
       );
       migrate(targetDatabase, getMigrations(migrationsPath));
 
@@ -211,7 +211,7 @@ export class MigratorController {
         // Check if migrator exists
         const migratorPath = path.resolve(
           import.meta.dirname,
-          `../../functions/migrator/${tableName}/migrator.ts`
+          `../../datapipe/migrator/${tableName}/migrator.ts`
         );
 
         if (fs.existsSync(migratorPath)) {
