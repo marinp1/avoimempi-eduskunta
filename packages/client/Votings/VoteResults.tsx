@@ -22,6 +22,8 @@ import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import ThumbDownIcon from "@mui/icons-material/ThumbDown";
 import RemoveIcon from "@mui/icons-material/Remove";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
+import { commonStyles, colors, spacing, gradients, shadows } from "../theme";
+import { voteColors } from "../theme/vote-styles";
 
 let cache = new Map<string, ReturnType<typeof getVotings>>();
 
@@ -63,25 +65,22 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
           <Accordion
             elevation={0}
             sx={{
-              mb: 2,
-              borderRadius: 3,
-              background: "rgba(255,255,255,0.9)",
-              backdropFilter: "blur(20px)",
-              border: "1px solid rgba(255,255,255,0.6)",
+              mb: spacing.sm,
+              ...commonStyles.glassCard,
               overflow: "hidden",
               "&:before": {
                 display: "none",
               },
               "&.Mui-expanded": {
-                boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                boxShadow: shadows.card,
               },
             }}
           >
             <AccordionSummary
-              expandIcon={<ExpandMoreIcon sx={{ color: "#667eea" }} />}
+              expandIcon={<ExpandMoreIcon sx={{ color: colors.primary }} />}
               sx={{
-                py: 2,
-                px: 3,
+                py: spacing.sm,
+                px: spacing.md,
                 "&:hover": {
                   background: "rgba(102, 126, 234, 0.05)",
                 },
@@ -91,7 +90,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                 variant="h6"
                 sx={{
                   fontWeight: 600,
-                  color: "#667eea",
+                  color: colors.primary,
                 }}
               >
                 {sectionTitle}
@@ -103,8 +102,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                   <TableHead>
                     <TableRow
                       sx={{
-                        background:
-                          "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                        background: gradients.primary,
                       }}
                     >
                       <TableCell sx={{ color: "white", fontWeight: 600 }}>
@@ -156,12 +154,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                       <TableRow
                         key={res.id}
                         hover
-                        sx={{
-                          transition: "all 0.2s ease",
-                          "&:hover": {
-                            background: "rgba(102, 126, 234, 0.05)",
-                          },
-                        }}
+                        sx={commonStyles.interactiveHover}
                       >
                         <TableCell sx={{ fontSize: "0.875rem" }}>
                           {res.start_time
@@ -176,7 +169,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                             size="small"
                             sx={{
                               background: "rgba(102, 126, 234, 0.1)",
-                              color: "#667eea",
+                              color: colors.primary,
                               fontWeight: 500,
                               fontSize: "0.75rem",
                             }}
@@ -188,16 +181,14 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                         <TableCell align="center">
                           <Box
                             sx={{
-                              display: "flex",
-                              alignItems: "center",
+                              ...commonStyles.flexWithGap(0.5),
                               justifyContent: "center",
-                              gap: 0.5,
                             }}
                           >
                             <ThumbUpIcon
-                              sx={{ fontSize: 16, color: "#4caf50" }}
+                              sx={{ fontSize: 16, color: voteColors.yes }}
                             />
-                            <Typography fontWeight="600" color="#4caf50">
+                            <Typography fontWeight="600" color={voteColors.yes}>
                               {res.n_yes}
                             </Typography>
                           </Box>
@@ -205,16 +196,14 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                         <TableCell align="center">
                           <Box
                             sx={{
-                              display: "flex",
-                              alignItems: "center",
+                              ...commonStyles.flexWithGap(0.5),
                               justifyContent: "center",
-                              gap: 0.5,
                             }}
                           >
                             <ThumbDownIcon
-                              sx={{ fontSize: 16, color: "#f44336" }}
+                              sx={{ fontSize: 16, color: voteColors.no }}
                             />
-                            <Typography fontWeight="600" color="#f44336">
+                            <Typography fontWeight="600" color={voteColors.no}>
                               {res.n_no}
                             </Typography>
                           </Box>
@@ -222,16 +211,17 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                         <TableCell align="center">
                           <Box
                             sx={{
-                              display: "flex",
-                              alignItems: "center",
+                              ...commonStyles.flexWithGap(0.5),
                               justifyContent: "center",
-                              gap: 0.5,
                             }}
                           >
                             <RemoveIcon
-                              sx={{ fontSize: 16, color: "#ff9800" }}
+                              sx={{ fontSize: 16, color: voteColors.abstain }}
                             />
-                            <Typography fontWeight="600" color="#ff9800">
+                            <Typography
+                              fontWeight="600"
+                              color={voteColors.abstain}
+                            >
                               {res.n_abstain}
                             </Typography>
                           </Box>
@@ -239,16 +229,17 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                         <TableCell align="center">
                           <Box
                             sx={{
-                              display: "flex",
-                              alignItems: "center",
+                              ...commonStyles.flexWithGap(0.5),
                               justifyContent: "center",
-                              gap: 0.5,
                             }}
                           >
                             <PersonOffIcon
-                              sx={{ fontSize: 16, color: "#9e9e9e" }}
+                              sx={{ fontSize: 16, color: voteColors.absent }}
                             />
-                            <Typography fontWeight="600" color="#9e9e9e">
+                            <Typography
+                              fontWeight="600"
+                              color={voteColors.absent}
+                            >
                               {res.n_absent}
                             </Typography>
                           </Box>

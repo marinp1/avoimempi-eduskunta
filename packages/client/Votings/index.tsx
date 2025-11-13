@@ -4,7 +4,6 @@ import {
   TextField,
   Box,
   CircularProgress,
-  Card,
   CardContent,
   Typography,
   InputAdornment,
@@ -12,6 +11,8 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { VoteResults } from "./VoteResults";
+import { GlassCard } from "../theme/components";
+import { commonStyles, colors, spacing } from "../theme";
 
 const VotingsPage = () => {
   const [search, setSearch] = React.useState<string>("");
@@ -22,72 +23,62 @@ const VotingsPage = () => {
     <Box>
       {/* Search Header Card */}
       <Fade in timeout={500}>
-        <Card
-          elevation={0}
-          sx={{
-            mb: 4,
-            borderRadius: 3,
-            background: "rgba(255,255,255,0.9)",
-            backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255,255,255,0.6)",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-          }}
-        >
-          <CardContent sx={{ p: 4 }}>
-            <Typography
-              variant="h4"
-              component="h1"
-              gutterBottom
-              sx={{
-                fontWeight: 700,
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                mb: 3,
-                textAlign: "center",
-              }}
-            >
-              Eduskunnan äänestykset
-            </Typography>
-            <Box sx={{ maxWidth: 600, mx: "auto" }}>
-              <TextField
-                fullWidth
-                label="Hae äänestyksiä otsikolla"
-                value={search}
-                onChange={(ev) => setSearch(ev.target.value ?? "")}
-                placeholder="Kirjoita vähintään 3 merkkiä..."
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: "#667eea" }} />
-                    </InputAdornment>
-                  ),
-                }}
+        <Box>
+          <GlassCard sx={{ mb: spacing.lg }}>
+            <CardContent sx={{ p: spacing.lg }}>
+              <Typography
+                variant="h4"
+                component="h1"
+                gutterBottom
                 sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 3,
-                    background: "rgba(255,255,255,0.7)",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      background: "rgba(255,255,255,0.9)",
-                      boxShadow: "0 4px 12px rgba(102, 126, 234, 0.15)",
-                    },
-                    "&.Mui-focused": {
-                      background: "rgba(255,255,255,1)",
-                      boxShadow: "0 4px 16px rgba(102, 126, 234, 0.25)",
-                    },
-                  },
+                  ...commonStyles.gradientText,
+                  mb: spacing.md,
+                  textAlign: "center",
                 }}
-              />
-            </Box>
-          </CardContent>
-        </Card>
+              >
+                Eduskunnan äänestykset
+              </Typography>
+              <Box sx={{ maxWidth: 600, mx: "auto" }}>
+                <TextField
+                  fullWidth
+                  label="Hae äänestyksiä otsikolla"
+                  value={search}
+                  onChange={(ev) => setSearch(ev.target.value ?? "")}
+                  placeholder="Kirjoita vähintään 3 merkkiä..."
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon sx={{ color: colors.primary }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    ...commonStyles.styledTextField,
+                    "& .MuiOutlinedInput-root": {
+                      ...commonStyles.styledTextField[
+                        "& .MuiOutlinedInput-root"
+                      ],
+                      "&:hover": {
+                        background: "rgba(255,255,255,0.9)",
+                        boxShadow: "0 4px 12px rgba(102, 126, 234, 0.15)",
+                      },
+                      "&.Mui-focused": {
+                        background: "rgba(255,255,255,1)",
+                        boxShadow: "0 4px 16px rgba(102, 126, 234, 0.25)",
+                      },
+                    },
+                  }}
+                />
+              </Box>
+            </CardContent>
+          </GlassCard>
+        </Box>
       </Fade>
 
       <Suspense
         fallback={
-          <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-            <CircularProgress sx={{ color: "#667eea" }} />
+          <Box sx={{ ...commonStyles.centeredFlex, py: spacing.xl }}>
+            <CircularProgress sx={{ color: colors.primary }} />
           </Box>
         }
       >
