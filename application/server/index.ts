@@ -6,10 +6,12 @@ import { DatabaseConnection } from "../database/db";
 import { AdminStorageService } from "../database/admin-storage";
 import { ScraperController } from "./scraper-controller";
 import { ParserController } from "./parser-controller";
+import { MigratorController } from "./migrator-controller";
 
 const db = new DatabaseConnection();
 const scraperController = ScraperController.getInstance();
 const parserController = ParserController.getInstance();
+const migratorController = MigratorController.getInstance();
 
 const server = Bun.serve({
   routes: {
@@ -218,6 +220,44 @@ const server = Bun.serve({
       },
     },
 
+    "/api/migrator/start": {
+      POST: async () => {
+        try {
+          // Start migration in background
+          migratorController.startMigration().catch(console.error);
+
+          return Response.json({ success: true, message: "Migration started" });
+        } catch (error: any) {
+          return Response.json({ error: error.message }, { status: 500 });
+        }
+      },
+    },
+
+    "/api/migrator/stop": {
+      POST: async () => {
+        try {
+          migratorController.stopMigration();
+          return Response.json({ success: true, message: "Migration stop requested" });
+        } catch (error: any) {
+          return Response.json({ error: error.message }, { status: 400 });
+        }
+      },
+    },
+
+    "/api/migrator/status": {
+      GET: async () => {
+        const status = migratorController.getStatus();
+        return Response.json(status);
+      },
+    },
+
+    "/api/migrator/last-migration": {
+      GET: async () => {
+        const timestamp = MigratorController.getLastMigrationTimestamp();
+        return Response.json({ timestamp });
+      },
+    },
+
     "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
 
@@ -240,6 +280,12 @@ const server = Bun.serve({
       }
       return new Response("WebSocket upgrade failed", { status: 400 });
     }
+    if (url.pathname === "/ws/migrator") {
+      if (server.upgrade(req, { data: { type: "migrator" } })) {
+        return; // WebSocket upgrade successful
+      }
+      return new Response("WebSocket upgrade failed", { status: 400 });
+    }
 
     return new Response("Not Found", { status: 404 });
   },
@@ -251,6 +297,8 @@ const server = Bun.serve({
         scraperController.setWebSocket(ws);
       } else if (ws.data.type === "parser") {
         parserController.setWebSocket(ws);
+      } else if (ws.data.type === "migrator") {
+        migratorController.setWebSocket(ws);
       }
     },
     message(ws: ServerWebSocket<{ type: string }>, message: string | Buffer) {

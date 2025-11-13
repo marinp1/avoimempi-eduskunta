@@ -76,15 +76,22 @@ export default function AdminPage() {
   const [parserPercent, setParserPercent] = useState<number>(0);
   const parserWsRef = useRef<WebSocket | null>(null);
 
+  // Migrator control state
+  const [migratorRunning, setMigratorRunning] = useState<boolean>(false);
+  const [migratorProgress, setMigratorProgress] = useState<string>("");
+  const [lastMigrationTimestamp, setLastMigrationTimestamp] = useState<string | null>(null);
+  const migratorWsRef = useRef<WebSocket | null>(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        // Fetch both status and overview
-        const [statusRes, overviewRes] = await Promise.all([
+        // Fetch status, overview, and last migration timestamp
+        const [statusRes, overviewRes, migrationRes] = await Promise.all([
           fetch("/api/admin/status"),
           fetch("/api/admin/overview"),
+          fetch("/api/migrator/last-migration"),
         ]);
 
         if (!statusRes.ok || !overviewRes.ok) {
@@ -93,9 +100,11 @@ export default function AdminPage() {
 
         const statusData: TableStatus[] = await statusRes.json();
         const overviewData: ScrapingOverview = await overviewRes.json();
+        const migrationData = await migrationRes.json();
 
         setStatus(statusData);
         setOverview(overviewData);
+        setLastMigrationTimestamp(migrationData.timestamp);
       } catch (err) {
         console.error(err);
         setError("Failed to load admin data.");
@@ -234,9 +243,64 @@ export default function AdminPage() {
 
     parserWsRef.current = parserWs;
 
+    // Setup Migrator WebSocket connection
+    const migratorWs = new WebSocket(`${protocol}//${window.location.host}/ws/migrator`);
+
+    migratorWs.onopen = () => {
+      console.log("Migrator WebSocket connected");
+    };
+
+    migratorWs.onmessage = (event) => {
+      const message = JSON.parse(event.data) as { type: string; data?: any };
+
+      switch (message.type) {
+        case "status":
+          if (message.data.status === "started") {
+            setMigratorRunning(true);
+            setMigratorProgress("Starting database migration...");
+          } else if (message.data.status === "stopping") {
+            setMigratorProgress("Stopping...");
+          }
+          break;
+
+        case "progress":
+          setMigratorProgress(message.data.message || "Processing...");
+          break;
+
+        case "complete":
+          setMigratorRunning(false);
+          setMigratorProgress("Migration completed successfully");
+          setLastMigrationTimestamp(message.data.timestamp);
+          // Refresh data after completion
+          setTimeout(() => fetchData(), 1000);
+          break;
+
+        case "error":
+          setMigratorRunning(false);
+          setMigratorProgress(`Error: ${message.data.error}`);
+          break;
+
+        case "stopped":
+          setMigratorRunning(false);
+          setMigratorProgress("Migration stopped");
+          break;
+      }
+    };
+
+    migratorWs.onerror = (error) => {
+      console.error("Migrator WebSocket error:", error);
+    };
+
+    migratorWs.onclose = () => {
+      console.log("Migrator WebSocket disconnected");
+    };
+
+    migratorWsRef.current = migratorWs;
+
     return () => {
       scraperWs.close();
       parserWs.close();
+      migratorWs.close();
     };
   }, []);
 
@@ -312,6 +376,38 @@ export default function AdminPage() {
     } catch (err: any) {
       console.error(err);
       alert(`Failed to stop parsing: ${err.message}`);
+    }
+  };
+
+  const handleStartMigration = async () => {
+    try {
+      const res = await fetch("/api/migrator/start", {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(`Failed to start migration: ${err.message}`);
+    }
+  };
+
+  const handleStopMigration = async () => {
+    try {
+      const res = await fetch("/api/migrator/stop", {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(`Failed to stop migration: ${err.message}`);
     }
   };
 
@@ -515,6 +611,87 @@ export default function AdminPage() {
           </Box>
         </Fade>
       )}
+
+      {/* Database Migration Section */}
+      <Fade in timeout={600}>
+        <Card
+          elevation={0}
+          sx={{
+            mb: 3,
+            borderRadius: 3,
+            border: "1px solid rgba(0,0,0,0.1)",
+          }}
+        >
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+              <Box>
+                <Typography variant="h6" fontWeight="600" sx={{ mb: 0.5 }}>
+                  Database Migration
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Build final SQLite database from parsed data
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                {lastMigrationTimestamp && (
+                  <Box sx={{ textAlign: "right" }}>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      Last Built
+                    </Typography>
+                    <Typography variant="body2" fontWeight="600">
+                      {formatTimestamp(lastMigrationTimestamp)}
+                    </Typography>
+                  </Box>
+                )}
+                {migratorRunning ? (
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<StopIcon />}
+                    onClick={handleStopMigration}
+                    size="medium"
+                  >
+                    Cancel
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    startIcon={<PlayArrowIcon />}
+                    onClick={handleStartMigration}
+                    disabled={scraperRunning || parserRunning || migratorRunning}
+                    size="medium"
+                    sx={{
+                      background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+                      "&:hover": {
+                        background: "linear-gradient(135deg, #0e8577 0%, #2dd46a 100%)",
+                      },
+                    }}
+                  >
+                    Rebuild Database
+                  </Button>
+                )}
+              </Box>
+            </Box>
+            {migratorRunning && (
+              <Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  {migratorProgress}
+                </Typography>
+                <LinearProgress
+                  sx={{
+                    height: 6,
+                    borderRadius: 3,
+                    bgcolor: "rgba(17, 153, 142, 0.1)",
+                    "& .MuiLinearProgress-bar": {
+                      background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+                    }
+                  }}
+                />
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      </Fade>
 
       {loading ? (
         <Box
