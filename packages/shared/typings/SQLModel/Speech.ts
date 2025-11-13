@@ -18,6 +18,7 @@ declare global {
       has_spoken: boolean; // Puhunut (0 = hasn't spoken yet, 1 = has spoken, 2 = speaking)
       ministry: string;
       modified_datetime: Modules.Common.DateString;
+      excel_key: string | null; // Format: YYYYMMDD_<agenda_key>_<processing_title>_<ordinal_number> (for linking to ExcelSpeech)
     };
   }
 }

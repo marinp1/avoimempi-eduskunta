@@ -1,8 +1,9 @@
 -- ExcelSpeech table stores speech content from Excel files
--- Links to Speech table via: Section.agenda_key = ExcelSpeech.document AND Speech.ordinal_number = ExcelSpeech.ordinal
--- The relationship path is: ExcelSpeech -> Section (via agenda_key) -> Speech (via section_key + ordinal_number)
+-- Links to Speech table via: Speech.excel_key = ExcelSpeech.excel_id
+-- Example join: SELECT * FROM Speech s JOIN ExcelSpeech es ON s.excel_key = es.excel_id
 CREATE TABLE ExcelSpeech (
-  id INTEGER PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  excel_id TEXT UNIQUE,           -- Composite ID: YYYYMMDDHHmmss_<document>_<processing_phase>_<order>_<person_id>
   processing_phase TEXT,
   document TEXT,                  -- Matches Section.agenda_key
   ordinal INTEGER,                -- Matches Speech.ordinal_number
@@ -18,10 +19,8 @@ CREATE TABLE ExcelSpeech (
   source_file TEXT
 );
 
--- Indexes for efficient lookups
-CREATE INDEX idx_excel_speech_name ON ExcelSpeech(last_name, first_name);
-CREATE INDEX idx_excel_speech_party ON ExcelSpeech(party);
+-- Indexes for efficient lookups and joins
+CREATE INDEX idx_excel_speech_excel_id ON ExcelSpeech(excel_id); -- For joining with Speech.excel_key
 CREATE INDEX idx_excel_speech_document ON ExcelSpeech(document);
-CREATE INDEX idx_excel_speech_start_time ON ExcelSpeech(start_time);
--- Composite index for joining with Speech table via Section
-CREATE INDEX idx_excel_speech_document_ordinal ON ExcelSpeech(document, ordinal);
+CREATE INDEX idx_excel_speech_party ON ExcelSpeech(party);
+CREATE INDEX idx_excel_speech_name ON ExcelSpeech(last_name, first_name);
