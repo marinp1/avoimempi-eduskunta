@@ -3,14 +3,17 @@
   "version": "1.0.0",
   "type": "module",
   "dependencies": {
+    "@emotion/react": "11.14.0",
+    "@emotion/styled": "11.14.1",
+    "@mui/icons-material": "7.3.4",
+    "@mui/material": "7.3.4",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
-    "bun-plugin-tailwind": "^0.0.15",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "scripts": {
-    "start": "bun run server.ts",
+    "start": "bun run server/index.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
