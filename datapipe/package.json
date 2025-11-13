@@ -1,0 +1,18 @@
+{
+  "name": "eduskunta-datapipe",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Modern data pipeline for Eduskunta data with offline-first storage",
+  "scripts": {
+    "scrape": "bun scraper/cli.ts",
+    "scrape:status": "bun scraper/cli.ts status",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "bun": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  }
+}
