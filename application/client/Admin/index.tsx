@@ -390,7 +390,7 @@ export default function AdminPage() {
                   </TableCell>
                   <TableCell align="center">
                     <Typography variant="body2" fontWeight="700">
-                      Raw Est. Rows
+                      Raw Rows
                     </Typography>
                   </TableCell>
                   <TableCell align="center">
@@ -410,7 +410,7 @@ export default function AdminPage() {
                   </TableCell>
                   <TableCell align="center">
                     <Typography variant="body2" fontWeight="700">
-                      Parsed Est. Rows
+                      Parsed Rows
                     </Typography>
                   </TableCell>
                   <TableCell align="center">
@@ -479,7 +479,7 @@ export default function AdminPage() {
                             fontWeight: 500,
                           }}
                         >
-                          {row.has_raw_data ? `~${row.raw_estimated_rows.toLocaleString()}` : "N/A"}
+                          {row.has_raw_data ? `${row.raw_estimated_rows.toLocaleString()}` : "N/A"}
                         </Typography>
                       </TableCell>
                       <TableCell align="center">

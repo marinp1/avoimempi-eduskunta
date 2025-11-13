@@ -79,11 +79,29 @@ export class AdminStorageService {
   }
 
   /**
-   * Estimate row count based on page count
-   * Assumes ~100 rows per page (standard batch size from API)
+   * Get exact row count by reading rowCount from all page files
    */
-  private estimateRowCount(pageCount: number): number {
-    return pageCount * 100;
+  private async getExactRowCount(stage: DataStage, tableName: string, files: StorageMetadata[]): Promise<number> {
+    if (files.length === 0) return 0;
+
+    const storage = getStorage();
+    let totalRows = 0;
+
+    for (const file of files) {
+      try {
+        const data = await storage.get(file.key);
+        if (data) {
+          const pageData = JSON.parse(data) as { rowCount: number };
+          totalRows += pageData.rowCount || 0;
+        }
+      } catch (error) {
+        console.error(`Error reading ${file.key}:`, error);
+        // If we can't read a file, estimate it as 100 rows
+        totalRows += 100;
+      }
+    }
+
+    return totalRows;
   }
 
   /**
@@ -101,9 +119,13 @@ export class AdminStorageService {
 
       const hasRaw = rawFiles.length > 0;
       const hasParsed = parsedFiles.length > 0;
-      const rawEstimatedRows = this.estimateRowCount(rawFiles.length);
+
+      // Get exact row counts by reading the files
+      const rawExactRows = await this.getExactRowCount("raw", tableName, rawFiles);
+      const parsedExactRows = await this.getExactRowCount("parsed", tableName, parsedFiles);
+
       const totalRowsInApi = apiCounts[tableName] || 0;
-      const scrapeProgressPercent = totalRowsInApi > 0 ? (rawEstimatedRows / totalRowsInApi) * 100 : 0;
+      const scrapeProgressPercent = totalRowsInApi > 0 ? (rawExactRows / totalRowsInApi) * 100 : 0;
 
       status.push({
         table_name: tableName,
@@ -113,8 +135,8 @@ export class AdminStorageService {
         has_parsed_data: hasParsed,
         raw_last_updated: this.getMostRecentTimestamp(rawFiles),
         parsed_last_updated: this.getMostRecentTimestamp(parsedFiles),
-        raw_estimated_rows: rawEstimatedRows,
-        parsed_estimated_rows: this.estimateRowCount(parsedFiles.length),
+        raw_estimated_rows: rawExactRows,
+        parsed_estimated_rows: parsedExactRows,
         total_rows_in_api: totalRowsInApi,
         scrape_progress_percent: scrapeProgressPercent,
       });
