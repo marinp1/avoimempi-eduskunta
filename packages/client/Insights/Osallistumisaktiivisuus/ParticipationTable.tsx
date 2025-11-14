@@ -64,12 +64,6 @@ export function ParticipationTable({
     return colors.error;
   };
 
-  const formatTerm = (start: string, end: string): string => {
-    const startYear = new Date(start).getFullYear();
-    const endYear = end ? new Date(end).getFullYear() : "nykyinen";
-    return `${startYear}–${endYear}`;
-  };
-
   return (
     <GlassCard>
       <TableContainer>
@@ -98,9 +92,6 @@ export function ParticipationTable({
                 >
                   Edustaja
                 </TableSortLabel>
-              </TableCell>
-              <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                Vaalikausi
               </TableCell>
               <TableCell align="right" sx={{ color: "white", fontWeight: 600 }}>
                 <TableSortLabel
@@ -144,7 +135,7 @@ export function ParticipationTable({
           <TableBody>
             {sortedData.map((row, index) => (
               <TableRow
-                key={`${row.person_id}-${row.term_start}-${row.term_end || "current"}-${index}`}
+                key={`${row.person_id}-${index}`}
                 sx={{
                   ...commonStyles.interactiveHover,
                   cursor: onSelectPerson ? "pointer" : "default",
@@ -159,11 +150,6 @@ export function ParticipationTable({
                 <TableCell>
                   <Typography variant="body2" fontWeight={500}>
                     {row.first_name} {row.last_name}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="text.secondary">
-                    {formatTerm(row.term_start, row.term_end)}
                   </Typography>
                 </TableCell>
                 <TableCell align="right">

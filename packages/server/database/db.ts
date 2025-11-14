@@ -187,7 +187,6 @@ export class DatabaseConnection {
   }
 
   public async fetchVotingParticipation(params?: {
-    personId?: string;
     startDate?: string;
     endDate?: string;
   }) {
@@ -197,20 +196,49 @@ export class DatabaseConnection {
         first_name: string;
         last_name: string;
         sort_name: string;
-        term_start: string;
-        term_end: string;
         votes_cast: number;
         total_votings: number;
         participation_rate: number;
       },
       {
-        $personId: string;
         $startDate: string;
         $endDate: string;
       }
     >(queries.votingParticipation);
     const data = stmt.all({
-      $personId: params?.personId || "",
+      $startDate: params?.startDate || "",
+      $endDate: params?.endDate || "",
+    });
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchVotingParticipationByGovernment(params: {
+    personId: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const stmt = this.db.prepare<
+      {
+        person_id: number;
+        first_name: string;
+        last_name: string;
+        sort_name: string;
+        government: string;
+        government_start: string;
+        government_end: string | null;
+        votes_cast: number;
+        total_votings: number;
+        participation_rate: number;
+      },
+      {
+        $personId: number;
+        $startDate: string;
+        $endDate: string;
+      }
+    >(queries.votingParticipationByGovernment);
+    const data = stmt.all({
+      $personId: +params.personId,
       $startDate: params?.startDate || "",
       $endDate: params?.endDate || "",
     });

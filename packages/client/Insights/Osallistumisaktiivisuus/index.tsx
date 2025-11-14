@@ -99,20 +99,6 @@ export default function Osallistumisaktiivisuus({
     fetchData();
   }, [startDate, endDate]);
 
-  // Get unique terms for grouping
-  const uniqueTerms = React.useMemo(() => {
-    const terms = new Map<string, { start: string; end: string }>();
-    data.forEach((d) => {
-      const key = `${d.term_start}-${d.term_end}`;
-      if (!terms.has(key)) {
-        terms.set(key, { start: d.term_start, end: d.term_end });
-      }
-    });
-    return Array.from(terms.values()).sort((a, b) =>
-      b.start.localeCompare(a.start),
-    );
-  }, [data]);
-
   return (
     <Box
       sx={{
@@ -159,9 +145,8 @@ export default function Osallistumisaktiivisuus({
             </IconButton>
           </Box>
           <Typography variant="body1" color="text.secondary">
-            Seuraa kansanedustajien äänestysosallistumista eri vaalikausilla.
-            Tiedot perustuvat äänestystietoihin ja edustajiensa
-            toimikausitietoihin.
+            Seuraa kansanedustajien äänestysosallistumista eri hallitusten
+            aikana. Tiedot perustuvat äänestystietoihin ja ministeritietoihin.
           </Typography>
         </Box>
       </Box>
@@ -283,7 +268,8 @@ export default function Osallistumisaktiivisuus({
             <Box sx={{ mt: spacing.md }}>
               <HistoricalComparison
                 personId={selectedPersonId}
-                data={data.filter((d) => d.person_id === selectedPersonId)}
+                startDate={startDate}
+                endDate={endDate}
                 onClose={() => setSelectedPersonId(null)}
               />
             </Box>

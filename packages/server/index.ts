@@ -153,12 +153,29 @@ const server = Bun.serve({
     "/api/insights/participation": {
       GET: async (req: Request) => {
         const { searchParams } = new URL(req.url);
-        const personId = searchParams.get("personId") || undefined;
         const startDate = searchParams.get("startDate") || undefined;
         const endDate = searchParams.get("endDate") || undefined;
 
         const participation = await db.fetchVotingParticipation({
-          personId,
+          startDate,
+          endDate,
+        });
+        return new Response(JSON.stringify(participation), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
+    "/api/insights/participation/:personId/by-government": {
+      GET: async (
+        req: BunRequest<"/api/insights/participation/:personId/by-government">,
+      ) => {
+        const { searchParams } = new URL(req.url);
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
+
+        const participation = await db.fetchVotingParticipationByGovernment({
+          personId: req.params.personId,
           startDate,
           endDate,
         });
