@@ -99,37 +99,56 @@ export const App: React.FC = () => {
         }}
       />
 
-      {/* Modern Header */}
+      {/* Professional Header */}
       <AppBar
         position="static"
         elevation={0}
         sx={{
           background: gradients.primary,
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
+          borderBottom: "2px solid rgba(255,255,255,0.15)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
         }}
       >
-        <Toolbar sx={{ py: spacing.xs }}>
-          <Typography
-            variant="h4"
-            sx={{
-              flexGrow: 1,
-              ...commonStyles.gradientText,
-              background: "rgba(255,255,255,0.95)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            Avoimempi Eduskunta
-          </Typography>
+        <Toolbar sx={{ py: spacing.sm, px: spacing.lg }}>
+          <Box sx={{ flexGrow: 1 }}>
+            <Typography
+              variant="h4"
+              component="h1"
+              sx={{
+                color: "#ffffff",
+                fontWeight: 700,
+                letterSpacing: "-0.02em",
+                fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+                textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              }}
+            >
+              Avoimempi Eduskunta
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: "rgba(255,255,255,0.85)",
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                mt: 0.5,
+                letterSpacing: "0.02em",
+              }}
+            >
+              Suomen eduskunnan avoin data
+            </Typography>
+          </Box>
         </Toolbar>
       </AppBar>
 
       <Container maxWidth="xl" sx={{ mt: spacing.lg, pb: spacing.xl }}>
-        {/* Modern Tabs */}
+        {/* Professional Navigation Tabs */}
         <Box
           sx={{
             mb: spacing.lg,
-            ...commonStyles.glassCard,
+            borderRadius: 3,
+            background: "#ffffff",
+            border: "1px solid #e0e0e0",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             overflow: "hidden",
           }}
         >
@@ -138,51 +157,57 @@ export const App: React.FC = () => {
             onChange={handleChange}
             variant="fullWidth"
             sx={{
+              minHeight: 64,
               "& .MuiTab-root": {
                 fontWeight: 600,
-                fontSize: "1rem",
+                fontSize: "0.9375rem",
                 py: spacing.sm,
-                transition: "all 0.3s ease",
+                px: spacing.md,
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                color: "#606060",
+                minHeight: 64,
                 "&:hover": {
-                  background: "rgba(102, 126, 234, 0.05)",
+                  background: "rgba(0, 53, 128, 0.04)",
+                  color: "#003580",
                 },
               },
               "& .Mui-selected": {
-                color: `${theme.palette.primary.main} !important`,
+                color: "#003580 !important",
+                fontWeight: 700,
               },
               "& .MuiTabs-indicator": {
-                height: 3,
-                borderRadius: "3px 3px 0 0",
+                height: 4,
+                borderRadius: "4px 4px 0 0",
                 background: gradients.primary,
               },
             }}
           >
             <Tab
-              icon={<HowToVoteIcon />}
+              icon={<HowToVoteIcon sx={{ fontSize: 24 }} />}
               iconPosition="start"
               label="Äänestykset"
               value={Pages.Votings}
             />
             <Tab
-              icon={<PeopleIcon />}
+              icon={<PeopleIcon sx={{ fontSize: 24 }} />}
               iconPosition="start"
               label="Edustajat"
               value={Pages.Composition}
             />
             <Tab
-              icon={<EventIcon />}
+              icon={<EventIcon sx={{ fontSize: 24 }} />}
               iconPosition="start"
               label="Istunnot"
               value={Pages.Sessions}
             />
             <Tab
-              icon={<InsightsIcon />}
+              icon={<InsightsIcon sx={{ fontSize: 24 }} />}
               iconPosition="start"
               label="Analytiikka"
               value={Pages.Insights}
             />
             <Tab
-              icon={<AdminPanelSettingsIcon />}
+              icon={<AdminPanelSettingsIcon sx={{ fontSize: 24 }} />}
               iconPosition="start"
               label="Admin"
               value={Pages.Admin}

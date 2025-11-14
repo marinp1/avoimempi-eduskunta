@@ -24,21 +24,43 @@ const VotingsPage = () => {
       {/* Search Header Card */}
       <Fade in timeout={500}>
         <Box>
-          <GlassCard sx={{ mb: spacing.lg }}>
+          <Box
+            sx={{
+              mb: spacing.lg,
+              borderRadius: 3,
+              background: "#ffffff",
+              border: "1px solid #e0e0e0",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            }}
+          >
             <CardContent sx={{ p: spacing.lg }}>
               <Typography
                 variant="h4"
                 component="h1"
                 gutterBottom
                 sx={{
-                  ...commonStyles.gradientText,
+                  color: colors.primary,
+                  fontWeight: 700,
                   mb: spacing.md,
                   textAlign: "center",
+                  letterSpacing: "-0.01em",
                 }}
               >
                 Eduskunnan äänestykset
               </Typography>
-              <Box sx={{ maxWidth: 600, mx: "auto" }}>
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{
+                  mb: spacing.md,
+                  textAlign: "center",
+                  maxWidth: 600,
+                  mx: "auto",
+                }}
+              >
+                Etsi ja selaa eduskunnan äänestystietoja
+              </Typography>
+              <Box sx={{ maxWidth: 700, mx: "auto" }}>
                 <TextField
                   fullWidth
                   label="Hae äänestyksiä otsikolla"
@@ -53,25 +75,21 @@ const VotingsPage = () => {
                     ),
                   }}
                   sx={{
-                    ...commonStyles.styledTextField,
                     "& .MuiOutlinedInput-root": {
-                      ...commonStyles.styledTextField[
-                        "& .MuiOutlinedInput-root"
-                      ],
+                      background: "#ffffff",
+                      transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                       "&:hover": {
-                        background: "rgba(255,255,255,0.9)",
-                        boxShadow: "0 4px 12px rgba(102, 126, 234, 0.15)",
+                        boxShadow: "0 2px 8px rgba(0, 53, 128, 0.12)",
                       },
                       "&.Mui-focused": {
-                        background: "rgba(255,255,255,1)",
-                        boxShadow: "0 4px 16px rgba(102, 126, 234, 0.25)",
+                        boxShadow: "0 4px 12px rgba(0, 53, 128, 0.2)",
                       },
                     },
                   }}
                 />
               </Box>
             </CardContent>
-          </GlassCard>
+          </Box>
         </Box>
       </Fade>
 
