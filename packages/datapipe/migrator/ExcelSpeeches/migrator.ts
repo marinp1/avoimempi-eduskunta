@@ -6,35 +6,36 @@ import { insertRows } from "../utils";
  *
  * Maps parsed Excel speech data to the ExcelSpeech database table.
  * The parsed data comes from Excel files containing parliamentary speeches.
+ *
+ * Handles duplicate excel_id values by appending an index suffix (_2, _3, etc.)
+ * when the same person gives multiple speeches on the same day/document/phase.
  */
+
 /**
- * Generate a composite excel_id from the speech data
- * Format: YYYYMMDDHHmmss_<document>_<processing_phase>_<order>_<person_id>
+ * Generate a base composite excel_id from the speech data
+ * Format: YYYYMMDD_<document>_<processing_phase>_<person_id>_<order>
  */
-function generateExcelId(
+function generateBaseExcelId(
   startTime: string,
-  document: string,
-  processingPhase: string,
   order: number,
   personId: number,
 ): string {
-  // Extract YYYYMMDDHHmmss from ISO timestamp (e.g., "2021-05-14T16:26:04.000Z")
-  const timeMatch = startTime.match(
-    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/,
-  );
-  const yyyymmddhhmmss = timeMatch
-    ? `${timeMatch[1]}${timeMatch[2]}${timeMatch[3]}${timeMatch[4]}${timeMatch[5]}${timeMatch[6]}`
-    : "00000000000000";
-
-  // Sanitize document and processing_phase for use in ID (replace spaces and special chars)
-  const sanitizedDoc = (document || "").replace(/[^a-zA-Z0-9]/g, "_");
-  const sanitizedPhase = (processingPhase || "").replace(/[^a-zA-Z0-9]/g, "_");
-
-  return `${yyyymmddhhmmss}_${sanitizedDoc}_${sanitizedPhase}_${order}_${personId}`;
+  // Extract YYYYMMDD from ISO timestamp (e.g., "2021-05-14T16:26:04.000Z")
+  const timeMatch = startTime.match(/^(\d{4})-(\d{2})-(\d{2})T/);
+  const yyyymmdd = timeMatch
+    ? `${timeMatch[1]}${timeMatch[2]}${timeMatch[3]}`
+    : "00000000";
+  const excelKey = [yyyymmdd, String(personId), String(order)]
+    .map((s) => s.toLowerCase().replace(/[^0-9a-z]/g, ""))
+    .join("_");
+  return excelKey;
 }
 
-export default (db: Database) =>
-  async (dataToImport: {
+export default (db: Database) => {
+  // Closure to track seen excel_id values and their occurrence count
+  const excelIdCounts = new Map<string, number>();
+
+  return async (dataToImport: {
     id: number;
     processing_phase: string;
     document: string;
@@ -50,14 +51,24 @@ export default (db: Database) =>
     minutes_url: string;
     source_file: string;
   }) => {
+    // Generate base excel_id
+    const baseExcelId = generateBaseExcelId(
+      dataToImport.start_time,
+      dataToImport.order,
+      dataToImport.id,
+    );
+
+    // Check if we've seen this excel_id before
+    const currentCount = excelIdCounts.get(baseExcelId) || 0;
+    const newCount = currentCount + 1;
+    excelIdCounts.set(baseExcelId, newCount);
+
+    // If this is a duplicate, append the index suffix
+    const finalExcelId =
+      newCount === 1 ? baseExcelId : `${baseExcelId}_${newCount}`;
+
     const excelSpeechRow: DatabaseTables.ExcelSpeech = {
-      excel_id: generateExcelId(
-        dataToImport.start_time,
-        dataToImport.document,
-        dataToImport.processing_phase,
-        dataToImport.order,
-        dataToImport.id,
-      ),
+      excel_id: finalExcelId,
       processing_phase: dataToImport.processing_phase || null,
       document: dataToImport.document || null,
       ordinal: dataToImport.order || 0,
@@ -75,3 +86,4 @@ export default (db: Database) =>
 
     insertRows(db)("ExcelSpeech", [excelSpeechRow]);
   };
+};
