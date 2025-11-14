@@ -13,15 +13,19 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
+import TimelineIcon from "@mui/icons-material/Timeline";
 import { GlassCard } from "../theme/components";
 import { commonStyles, colors, spacing } from "../theme";
 import OsallistumisaktiivisuusPanel from "./Osallistumisaktiivisuus";
+import TimeSeriesStatistics from "./TimeSeriesStatistics";
 
 export default function InsightsPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const [initialPersonId, setInitialPersonId] = useState<number | null>(null);
+  const [timeSeriesDrawerOpen, setTimeSeriesDrawerOpen] =
+    useState<boolean>(false);
 
   // Update URL when drawer state changes
   const updateUrl = (open: boolean, personId?: number | null) => {
@@ -86,6 +90,14 @@ export default function InsightsPage() {
     updateUrl(false);
   };
 
+  const handleTimeSeriesDrawerOpen = () => {
+    setTimeSeriesDrawerOpen(true);
+  };
+
+  const handleTimeSeriesDrawerClose = () => {
+    setTimeSeriesDrawerOpen(false);
+  };
+
   return (
     <Box>
       {/* Header Card */}
@@ -116,52 +128,58 @@ export default function InsightsPage() {
       <Fade in timeout={600}>
         <Box>
           <Grid container spacing={spacing.md}>
-            {/* Voting Trends */}
+            {/* Time Series Statistics */}
             <Grid size={{ xs: 12, md: 6 }}>
-              <GlassCard
-                sx={{
-                  height: "100%",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    transform: "translateY(-4px)",
-                    boxShadow: "0 12px 24px rgba(102, 126, 234, 0.2)",
-                  },
-                }}
-              >
-                <CardContent sx={{ p: spacing.lg }}>
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    <TrendingUpIcon
-                      sx={{
-                        fontSize: 40,
-                        color: colors.primary,
-                        mr: spacing.sm,
-                      }}
-                    />
-                    <Typography
-                      variant="h5"
-                      sx={{ ...commonStyles.gradientText }}
-                    >
-                      Äänestystrendit
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Tulossa pian: Äänestystrendien analyysi ajanjaksolta
-                  </Typography>
-                  <Box
-                    sx={{
-                      mt: spacing.md,
-                      p: spacing.md,
-                      borderRadius: 2,
-                      background: "rgba(102, 126, 234, 0.1)",
-                      textAlign: "center",
-                    }}
-                  >
+              <Box onClick={handleTimeSeriesDrawerOpen} sx={{ height: "100%" }}>
+                <GlassCard
+                  sx={{
+                    height: "100%",
+                    transition: "all 0.3s ease",
+                    cursor: "pointer",
+                    "&:hover": {
+                      transform: "translateY(-4px)",
+                      boxShadow: "0 12px 24px rgba(102, 126, 234, 0.2)",
+                    },
+                  }}
+                >
+                  <CardContent sx={{ p: spacing.lg }}>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                      <TimelineIcon
+                        sx={{
+                          fontSize: 40,
+                          color: colors.primary,
+                          mr: spacing.sm,
+                        }}
+                      />
+                      <Typography
+                        variant="h5"
+                        sx={{ ...commonStyles.gradientText }}
+                      >
+                        Tilastot ajassa
+                      </Typography>
+                    </Box>
                     <Typography variant="body2" color="text.secondary">
-                      Ominaisuus kehitteillä
+                      Seuraa eduskunnan sukupuoli- ja ikäjakaumaa ajan mittaan
                     </Typography>
-                  </Box>
-                </CardContent>
-              </GlassCard>
+                    <Box
+                      sx={{
+                        mt: spacing.md,
+                        p: spacing.md,
+                        borderRadius: 2,
+                        background: "rgba(102, 126, 234, 0.1)",
+                        textAlign: "center",
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{ color: colors.primary, fontWeight: 600 }}
+                      >
+                        Katso tilastot →
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </GlassCard>
+              </Box>
             </Grid>
 
             {/* Party Performance */}
@@ -378,6 +396,21 @@ export default function InsightsPage() {
           onClose={handleDrawerClose}
           initialPersonId={initialPersonId}
         />
+      </Drawer>
+
+      {/* Time Series Statistics Drawer */}
+      <Drawer
+        anchor="right"
+        open={timeSeriesDrawerOpen}
+        onClose={handleTimeSeriesDrawerClose}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" },
+            maxWidth: "1400px",
+          },
+        }}
+      >
+        <TimeSeriesStatistics onClose={handleTimeSeriesDrawerClose} />
       </Drawer>
     </Box>
   );
