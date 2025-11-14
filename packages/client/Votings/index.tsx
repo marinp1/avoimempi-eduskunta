@@ -29,10 +29,11 @@ const VotingsPage = () => {
           <Box
             sx={{
               mb: spacing.lg,
-              borderRadius: 3,
+              borderRadius: 1,
               background: themedColors.backgroundPaper,
               border: `1px solid ${themedColors.dataBorder}`,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              boxShadow:
+                "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
             }}
           >
             <CardContent sx={{ p: spacing.lg }}>
@@ -42,10 +43,10 @@ const VotingsPage = () => {
                 gutterBottom
                 sx={{
                   color: colors.primary,
-                  fontWeight: 700,
+                  fontWeight: 600,
                   mb: spacing.md,
                   textAlign: "center",
-                  letterSpacing: "-0.01em",
+                  letterSpacing: "0",
                 }}
               >
                 Eduskunnan äänestykset
@@ -79,12 +80,12 @@ const VotingsPage = () => {
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       background: themedColors.backgroundPaper,
-                      transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                      transition: "all 0.2s ease-in-out",
                       "&:hover": {
-                        boxShadow: "0 2px 8px rgba(0, 53, 128, 0.12)",
+                        boxShadow: "0 1px 3px rgba(0, 53, 128, 0.15)",
                       },
                       "&.Mui-focused": {
-                        boxShadow: "0 4px 12px rgba(0, 53, 128, 0.2)",
+                        boxShadow: "0 2px 6px rgba(0, 53, 128, 0.2)",
                       },
                     },
                   }}

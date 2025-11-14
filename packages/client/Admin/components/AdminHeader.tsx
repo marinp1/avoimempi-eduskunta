@@ -12,22 +12,28 @@ export const AdminHeader: React.FC = () => {
           sx={{
             mb: spacing.md,
             background: gradients.primary,
-            color: "white",
+            color: "#FFFFFF",
             boxShadow: "0 4px 20px rgba(102, 126, 234, 0.3)",
           }}
         >
           <CardContent sx={{ p: spacing.md }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
-              <StorageIcon sx={{ fontSize: 40 }} />
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}
+            >
+              <StorageIcon sx={{ fontSize: 40, color: "#FFFFFF" }} />
               <Box>
                 <Typography
                   variant="h4"
                   fontWeight="700"
                   letterSpacing="-0.5px"
+                  sx={{ color: "#FFFFFF" }}
                 >
                   Admin Dashboard
                 </Typography>
-                <Typography variant="body1" sx={{ opacity: 0.9, mt: 0.5 }}>
+                <Typography
+                  variant="body1"
+                  sx={{ opacity: 0.9, mt: 0.5, color: "#FFFFFF" }}
+                >
                   Database scraping and parsing status
                 </Typography>
               </Box>
