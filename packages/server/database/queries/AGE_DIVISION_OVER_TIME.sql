@@ -12,16 +12,16 @@ ActiveRepsByYear AS (
         r.person_id,
         r.birth_date,
         CASE
-            WHEN r.birth_date != '' THEN
+            WHEN r.birth_date IS NOT NULL THEN
                 ys.year - CAST(SUBSTR(r.birth_date, 1, 4) AS INTEGER)
             ELSE NULL
         END AS age
     FROM YearSeries ys
     CROSS JOIN Representative r
     JOIN Term t ON r.person_id = t.person_id
-    WHERE CAST(SUBSTR(t.start_date, 1, 4) AS INTEGER) <= ys.year
-      AND (t.end_date = '' OR CAST(SUBSTR(t.end_date, 1, 4) AS INTEGER) >= ys.year)
-      AND r.birth_date != ''
+    WHERE t.start_year <= ys.year
+      AND (t.end_year IS NULL OR t.end_year >= ys.year)
+      AND r.birth_date IS NOT NULL
     GROUP BY ys.year, r.person_id
 )
 SELECT

@@ -1,4 +1,5 @@
 import { type Database } from "bun:sqlite";
+import { insertRows, parseYear } from "../utils";
 
 const parseDate = (date?: string | null): string | null => {
   if (!date) return null;
@@ -33,12 +34,6 @@ const parseDate = (date?: string | null): string | null => {
   }
   console.warn(`Unknown format for ${date}`);
   return null;
-};
-
-const parseYear = (year: string): number | null => {
-  const parsed = parseInt(year);
-  if (Number.isNaN(parsed)) return null;
-  return parsed;
 };
 
 const DatabaseTables = Object.freeze({
@@ -117,11 +112,17 @@ export default (db: Database) =>
 
     const termRows: DatabaseTables.Term[] = mergeArrays(
       XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi,
-    ).map((v) => ({
-      person_id: +dataToImport.personId,
-      start_date: parseDate(v.AlkuPvm)!,
-      end_date: parseDate(v.LoppuPvm),
-    }));
+    ).map((v) => {
+      const startDate = parseDate(v.AlkuPvm);
+      const endDate = parseDate(v.LoppuPvm);
+      return {
+        person_id: +dataToImport.personId,
+        start_date: startDate!,
+        end_date: endDate,
+        start_year: startDate ? parseYear(startDate.substring(0, 4)) : null,
+        end_year: endDate ? parseYear(endDate.substring(0, 4)) : null,
+      };
+    });
 
     type ParsedAbsence = {
       absenceRows: DatabaseTables.TemporaryAbsence[];
@@ -342,63 +343,30 @@ export default (db: Database) =>
     // TODO: Publications
     const publicationRows: DatabaseTables.Publication[] = [];
 
-    const insertRows = async (table: string, rows: any[]) => {
-      if (rows.length) {
-        const columns = Object.keys(rows[0]);
-        const values = rows.map((row) => Object.values(row));
-        const columnsString = columns.join(", ");
-        const valuesString = values
-          .map(
-            (row) =>
-              `(${row
-                .map(
-                  (value) => `'${String(value || "").replaceAll("'", "''")}'`,
-                )
-                .join(", ")})`,
-          )
-          .join(", ");
-        if (process.env.DEBUG) {
-          console.log(
-            `INSERT OR IGNORE INTO ${table} (${columnsString}) VALUES ${valuesString}`,
-          );
-        }
-        db.run(
-          `INSERT OR IGNORE INTO ${table} (${columnsString}) VALUES ${valuesString}`,
-        );
-      }
-    };
+    const insert = insertRows(db);
 
-    await insertRows(DatabaseTables.Representative, [representativeRow]);
-    await insertRows(DatabaseTables.District, districtRows);
-    await insertRows(
-      DatabaseTables.RepresentativeDistrict,
-      electoralDistrictRows,
-    );
-    await insertRows(DatabaseTables.Term, termRows);
-    await insertRows(DatabaseTables.TemporaryAbsence, absenceRows);
-    await insertRows(DatabaseTables.PeopleLeavingParliament, leavingRows);
-    await insertRows(DatabaseTables.PeopleJoiningParliament, joiningRows);
-    await insertRows(DatabaseTables.TrustPosition, trustPositionRows);
-    await insertRows(DatabaseTables.Committee, committeeRows);
-    await insertRows(
-      DatabaseTables.CommitteeMembership,
-      committeeMembershipRows,
-    );
-    await insertRows(DatabaseTables.ParliamentaryGroup, parliamentGroupRows);
-    await insertRows(
+    insert(DatabaseTables.Representative, [representativeRow]);
+    insert(DatabaseTables.District, districtRows);
+    insert(DatabaseTables.RepresentativeDistrict, electoralDistrictRows);
+    insert(DatabaseTables.Term, termRows);
+    insert(DatabaseTables.TemporaryAbsence, absenceRows);
+    insert(DatabaseTables.PeopleLeavingParliament, leavingRows);
+    insert(DatabaseTables.PeopleJoiningParliament, joiningRows);
+    insert(DatabaseTables.TrustPosition, trustPositionRows);
+    insert(DatabaseTables.Committee, committeeRows);
+    insert(DatabaseTables.CommitteeMembership, committeeMembershipRows);
+    insert(DatabaseTables.ParliamentaryGroup, parliamentGroupRows);
+    insert(
       DatabaseTables.ParliamentaryGroupMembership,
       parliamentGroupMembershipRows,
     );
-    await insertRows(
+    insert(
       DatabaseTables.ParliamentaryGroupAssignment,
       parliamentGroupAssignmentRows,
     );
-    await insertRows(
-      DatabaseTables.GovernmentMembership,
-      governmentMembershipRows,
-    );
-    await insertRows(DatabaseTables.WorkHistory, workRows);
-    await insertRows(DatabaseTables.Education, educationRows);
+    insert(DatabaseTables.GovernmentMembership, governmentMembershipRows);
+    insert(DatabaseTables.WorkHistory, workRows);
+    insert(DatabaseTables.Education, educationRows);
 
     // await insertRows(DatabaseTables.Publication, publicationRows); TODO: NOT IMPLEMENTED YET
 

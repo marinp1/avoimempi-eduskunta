@@ -120,6 +120,8 @@ declare global {
       person_id: number;
       start_date: DateString;
       end_date: DateString | null;
+      start_year: number | null;
+      end_year: number | null;
     };
 
     export type ParliamentGroup = {
