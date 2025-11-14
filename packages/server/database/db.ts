@@ -284,6 +284,35 @@ export class DatabaseConnection {
     return data;
   }
 
+  public async fetchPartyParticipationByGovernment(params?: {
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const stmt = this.db.prepare<
+      {
+        government: string;
+        government_start: string;
+        government_end: string | null;
+        party_name: string;
+        votes_cast: number;
+        total_votings: number;
+        participation_rate: number;
+        party_member_count: number;
+        was_in_coalition: number;
+      },
+      {
+        $startDate: string;
+        $endDate: string;
+      }
+    >(queries.partyParticipationByGovernment);
+    const data = stmt.all({
+      $startDate: params?.startDate || "",
+      $endDate: params?.endDate || "",
+    });
+    stmt.finalize();
+    return data;
+  }
+
   #connectToDatabase() {
     const databasePath = getDatabasePath();
     this.#database = new Database(databasePath, {

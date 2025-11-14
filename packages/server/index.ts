@@ -203,6 +203,24 @@ const server = Bun.serve({
       },
     },
 
+    "/api/insights/party-participation-by-government": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
+
+        const partyParticipation = await db.fetchPartyParticipationByGovernment(
+          {
+            startDate,
+            endDate,
+          },
+        );
+        return new Response(JSON.stringify(partyParticipation), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
     "/api/admin/status": {
       GET: async () => {
         const adminService = new AdminStorageService();
