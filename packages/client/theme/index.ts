@@ -2,51 +2,68 @@ import { createTheme, type Theme, type SxProps } from "@mui/material";
 
 /**
  * Color palette for the application
+ * Professional, official color scheme inspired by Finnish Parliament
  */
 export const colors = {
-  // Brand colors
-  primary: "#667eea",
-  primaryDark: "#5568d3",
-  secondary: "#764ba2",
-  secondaryDark: "#63408d",
+  // Brand colors - Deep blue for authority and trust
+  primary: "#003580",
+  primaryLight: "#0052CC",
+  primaryDark: "#002557",
+  secondary: "#005EB8",
+  secondaryLight: "#0078D4",
+  secondaryDark: "#004A94",
+
+  // Accent color for highlights
+  accent: "#667eea",
+  accentLight: "#8c9eff",
 
   // Semantic colors
-  success: "#4caf50",
-  successLight: "#81c784",
-  error: "#f44336",
-  errorLight: "#e57373",
-  warning: "#ff9800",
-  warningLight: "#ffb74d",
-  info: "#2196f3",
-  infoLight: "#64b5f6",
-  neutral: "#9e9e9e",
-  neutralLight: "#bdbdbd",
+  success: "#2e7d32",
+  successLight: "#4caf50",
+  error: "#c62828",
+  errorLight: "#ef5350",
+  warning: "#ef6c00",
+  warningLight: "#ff9800",
+  info: "#0277bd",
+  infoLight: "#03a9f4",
+  neutral: "#616161",
+  neutralLight: "#9e9e9e",
 
-  // Background colors
-  backgroundDefault: "#f5f7fa",
+  // Background colors - Clean, professional
+  backgroundDefault: "#f8f9fa",
   backgroundPaper: "#ffffff",
-  backgroundGradientStart: "#f5f7fa",
-  backgroundGradientEnd: "#c3cfe2",
+  backgroundGradientStart: "#f8f9fa",
+  backgroundGradientEnd: "#e9ecef",
+  backgroundSubtle: "#f0f2f5",
 
   // Glass-morphism colors
-  glassBackground: "rgba(255,255,255,0.9)",
-  glassBorder: "rgba(255,255,255,0.6)",
-  glassBackdrop: "blur(20px)",
+  glassBackground: "rgba(255,255,255,0.95)",
+  glassBorder: "rgba(0,53,128,0.15)",
+  glassBackdrop: "blur(24px)",
 
-  // Text colors
-  textPrimary: "#212121",
-  textSecondary: "#757575",
+  // Text colors - High contrast for readability
+  textPrimary: "#1a1a1a",
+  textSecondary: "#606060",
+  textTertiary: "#808080",
+
+  // Data display colors
+  dataHighlight: "#003580",
+  dataLabel: "#606060",
+  dataBorder: "#e0e0e0",
 } as const;
 
 /**
  * Common gradients used throughout the app
+ * Subtle, professional gradients
  */
 export const gradients = {
-  primary: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  primaryHover: "linear-gradient(135deg, #5568d3 0%, #63408d 100%)",
-  success: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
-  accent: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-  background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+  primary: "linear-gradient(135deg, #003580 0%, #005EB8 100%)",
+  primaryHover: "linear-gradient(135deg, #002557 0%, #004A94 100%)",
+  primarySubtle: "linear-gradient(135deg, #0052CC 0%, #0078D4 100%)",
+  success: "linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)",
+  accent: "linear-gradient(135deg, #667eea 0%, #8c9eff 100%)",
+  background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+  backgroundAlt: "linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%)",
 } as const;
 
 /**
@@ -71,11 +88,14 @@ export const borderRadius = {
 
 /**
  * Common shadow definitions
+ * Subtle, professional shadows
  */
 export const shadows = {
-  card: "0 8px 24px rgba(0,0,0,0.12)",
-  cardHover: "0 12px 32px rgba(0,0,0,0.16)",
-  subtle: "0 4px 12px rgba(0,0,0,0.1)",
+  card: "0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
+  cardHover: "0 4px 16px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.06)",
+  elevated: "0 8px 24px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06)",
+  subtle: "0 1px 3px rgba(0,0,0,0.06)",
+  inner: "inset 0 1px 3px rgba(0,0,0,0.08)",
   none: "none",
 } as const;
 
@@ -93,7 +113,7 @@ export const transitions = {
  */
 export const commonStyles = {
   /**
-   * Glass-morphism card style
+   * Glass-morphism card style - refined for professional look
    */
   glassCard: {
     borderRadius: borderRadius.md,
@@ -101,6 +121,22 @@ export const commonStyles = {
     backdropFilter: colors.glassBackdrop,
     border: `1px solid ${colors.glassBorder}`,
     boxShadow: shadows.card,
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  } satisfies SxProps<Theme>,
+
+  /**
+   * Data card - optimized for displaying metrics
+   */
+  dataCard: {
+    borderRadius: borderRadius.md,
+    background: colors.backgroundPaper,
+    border: `1px solid ${colors.dataBorder}`,
+    boxShadow: shadows.card,
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    "&:hover": {
+      boxShadow: shadows.cardHover,
+      borderColor: colors.primary,
+    },
   } satisfies SxProps<Theme>,
 
   /**
@@ -126,15 +162,64 @@ export const commonStyles = {
   } satisfies SxProps<Theme>,
 
   /**
-   * Interactive hover effect for cards/rows
+   * Interactive hover effect for cards/rows - refined for professional tables
    */
   interactiveHover: {
-    transition: "all 0.2s ease",
+    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
     cursor: "pointer",
     "&:hover": {
-      background: "rgba(102, 126, 234, 0.05)",
-      transform: "scale(1.005)",
+      background: "rgba(0, 53, 128, 0.04)",
+      transform: "translateX(2px)",
     },
+  } satisfies SxProps<Theme>,
+
+  /**
+   * Professional table row style
+   */
+  tableRow: {
+    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+    cursor: "pointer",
+    borderBottom: `1px solid ${colors.dataBorder}`,
+    "&:hover": {
+      background: "rgba(0, 53, 128, 0.04)",
+      boxShadow: shadows.subtle,
+    },
+    "&:last-child": {
+      borderBottom: "none",
+    },
+  } satisfies SxProps<Theme>,
+
+  /**
+   * Table header style - professional and prominent
+   */
+  tableHeader: {
+    background: gradients.primary,
+    color: "#ffffff",
+    fontWeight: 700,
+    fontSize: "0.875rem",
+    letterSpacing: "0.5px",
+    textTransform: "uppercase",
+    borderBottom: "none",
+    whiteSpace: "nowrap",
+  } satisfies SxProps<Theme>,
+
+  /**
+   * Data cell style - optimized for readability
+   */
+  dataCell: {
+    fontWeight: 600,
+    fontSize: "1rem",
+    color: colors.textPrimary,
+    letterSpacing: "-0.01em",
+  } satisfies SxProps<Theme>,
+
+  /**
+   * Label cell style
+   */
+  labelCell: {
+    fontWeight: 500,
+    fontSize: "0.875rem",
+    color: colors.textSecondary,
   } satisfies SxProps<Theme>,
 
   /**
@@ -259,15 +344,18 @@ export const commonStyles = {
 
 /**
  * MUI theme configuration
+ * Professional design system for data-driven application
  */
 export const theme = createTheme({
   palette: {
     primary: {
       main: colors.primary,
+      light: colors.primaryLight,
       dark: colors.primaryDark,
     },
     secondary: {
       main: colors.secondary,
+      light: colors.secondaryLight,
       dark: colors.secondaryDark,
     },
     success: {
@@ -296,16 +384,82 @@ export const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily:
+      '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
+    // Headings - professional and authoritative
+    h1: {
+      fontWeight: 700,
+      fontSize: "3rem",
+      letterSpacing: "-0.02em",
+      lineHeight: 1.2,
+    },
+    h2: {
+      fontWeight: 700,
+      fontSize: "2.5rem",
+      letterSpacing: "-0.02em",
+      lineHeight: 1.2,
+    },
+    h3: {
+      fontWeight: 700,
+      fontSize: "2rem",
+      letterSpacing: "-0.01em",
+      lineHeight: 1.3,
+    },
     h4: {
       fontWeight: 700,
-      letterSpacing: "-0.5px",
+      fontSize: "1.75rem",
+      letterSpacing: "-0.01em",
+      lineHeight: 1.3,
     },
     h5: {
       fontWeight: 600,
+      fontSize: "1.5rem",
+      letterSpacing: "-0.005em",
+      lineHeight: 1.4,
     },
     h6: {
       fontWeight: 600,
+      fontSize: "1.25rem",
+      letterSpacing: "0",
+      lineHeight: 1.4,
+    },
+    // Body text - optimized for readability
+    body1: {
+      fontSize: "1rem",
+      lineHeight: 1.6,
+      letterSpacing: "0",
+    },
+    body2: {
+      fontSize: "0.875rem",
+      lineHeight: 1.6,
+      letterSpacing: "0",
+    },
+    // Data display - prominent and clear
+    subtitle1: {
+      fontSize: "1rem",
+      fontWeight: 600,
+      lineHeight: 1.5,
+      letterSpacing: "0",
+    },
+    subtitle2: {
+      fontSize: "0.875rem",
+      fontWeight: 600,
+      lineHeight: 1.5,
+      letterSpacing: "0.01em",
+    },
+    // Small text
+    caption: {
+      fontSize: "0.75rem",
+      lineHeight: 1.4,
+      letterSpacing: "0.02em",
+      color: colors.textSecondary,
+    },
+    // Buttons
+    button: {
+      textTransform: "none",
+      fontWeight: 600,
+      fontSize: "0.875rem",
+      letterSpacing: "0.02em",
     },
   },
   shape: {
@@ -316,10 +470,21 @@ export const theme = createTheme({
       defaultProps: {
         elevation: 0,
       },
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          border: `1px solid ${colors.dataBorder}`,
+        },
+      },
     },
     MuiPaper: {
       defaultProps: {
         elevation: 0,
+      },
+      styleOverrides: {
+        root: {
+          backgroundImage: "none",
+        },
       },
     },
     MuiButton: {
@@ -327,6 +492,56 @@ export const theme = createTheme({
         root: {
           textTransform: "none",
           fontWeight: 600,
+          borderRadius: 8,
+          padding: "10px 24px",
+          boxShadow: "none",
+          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          "&:hover": {
+            boxShadow: shadows.subtle,
+          },
+        },
+        contained: {
+          "&:hover": {
+            boxShadow: shadows.card,
+          },
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          fontWeight: 600,
+          borderRadius: 8,
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          borderBottom: `1px solid ${colors.dataBorder}`,
+          padding: "16px",
+        },
+        head: {
+          fontWeight: 700,
+          fontSize: "0.875rem",
+          letterSpacing: "0.5px",
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          "& .MuiOutlinedInput-root": {
+            borderRadius: 12,
+            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+            "&:hover .MuiOutlinedInput-notchedOutline": {
+              borderColor: colors.primary,
+            },
+            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+              borderWidth: "2px",
+              borderColor: colors.primary,
+            },
+          },
         },
       },
     },

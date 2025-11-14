@@ -192,18 +192,35 @@ export default function App() {
       {/* Header Card */}
       <Fade in timeout={500}>
         <Box>
-          <GlassCard sx={{ mb: spacing.lg }}>
+          <Box
+            sx={{
+              mb: spacing.lg,
+              borderRadius: 3,
+              background: "#ffffff",
+              border: "1px solid #e0e0e0",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            }}
+          >
             <CardContent sx={{ p: spacing.lg, textAlign: "center" }}>
               <Typography
                 variant="h4"
                 component="h1"
                 gutterBottom
                 sx={{
-                  ...commonStyles.gradientText,
+                  color: colors.primary,
+                  fontWeight: 700,
                   mb: spacing.md,
+                  letterSpacing: "-0.01em",
                 }}
               >
                 Eduskunnan kokoonpano
+              </Typography>
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{ mb: spacing.md, maxWidth: 600, mx: "auto" }}
+              >
+                Selaa kansanedustajia ja heidän tietojaan
               </Typography>
               <TextField
                 label="Valitse päivämäärä"
@@ -218,10 +235,15 @@ export default function App() {
                     </InputAdornment>
                   ),
                 }}
-                sx={commonStyles.styledTextField}
+                sx={{
+                  maxWidth: 280,
+                  "& .MuiOutlinedInput-root": {
+                    background: "#ffffff",
+                  },
+                }}
               />
             </CardContent>
-          </GlassCard>
+          </Box>
         </Box>
       </Fade>
 
@@ -229,15 +251,25 @@ export default function App() {
       {!loading && !error && stats.totalMembers > 0 && (
         <Fade in timeout={600}>
           <Box>
-            <GlassCard sx={{ mb: spacing.lg }}>
+            <Box
+              sx={{
+                mb: spacing.lg,
+                borderRadius: 3,
+                background: "#ffffff",
+                border: "1px solid #e0e0e0",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              }}
+            >
               <CardContent sx={{ p: spacing.lg }}>
                 <Typography
                   variant="h5"
                   gutterBottom
                   sx={{
-                    ...commonStyles.gradientText,
+                    color: colors.primary,
+                    fontWeight: 700,
                     mb: spacing.md,
                     textAlign: "center",
+                    letterSpacing: "-0.01em",
                   }}
                 >
                   Eduskunnan jakauma
@@ -246,98 +278,143 @@ export default function App() {
                 {/* Summary Stats */}
                 <Box
                   sx={{
-                    display: "flex",
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "repeat(3, 1fr)",
+                    },
                     gap: spacing.md,
                     mb: spacing.lg,
-                    flexWrap: "wrap",
-                    justifyContent: "center",
                   }}
                 >
                   <Box
                     sx={{
-                      flex: "1 1 200px",
                       textAlign: "center",
-                      p: spacing.md,
-                      borderRadius: 3,
-                      background: "rgba(102, 126, 234, 0.1)",
+                      p: spacing.lg,
+                      borderRadius: 2,
+                      background: "rgba(0, 53, 128, 0.04)",
+                      border: "2px solid rgba(0, 53, 128, 0.15)",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                      "&:hover": {
+                        borderColor: colors.primary,
+                        boxShadow: "0 4px 12px rgba(0, 53, 128, 0.15)",
+                        transform: "translateY(-2px)",
+                      },
                     }}
                   >
                     <GroupsIcon
-                      sx={{ fontSize: 40, color: colors.primary, mb: 1 }}
+                      sx={{ fontSize: 48, color: colors.primary, mb: 1.5 }}
                     />
                     <Typography
-                      variant="h3"
-                      fontWeight="700"
-                      color={colors.primary}
+                      variant="h2"
+                      sx={{
+                        fontWeight: 700,
+                        color: colors.primary,
+                        fontSize: "3rem",
+                        mb: 0.5,
+                      }}
                     >
                       {stats.totalMembers}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ color: colors.textSecondary, fontWeight: 600 }}
+                    >
                       Jäsentä yhteensä
                     </Typography>
                   </Box>
 
                   <Box
                     sx={{
-                      flex: "1 1 200px",
                       textAlign: "center",
-                      p: spacing.md,
-                      borderRadius: 3,
-                      background: "rgba(76, 175, 80, 0.1)",
+                      p: spacing.lg,
+                      borderRadius: 2,
+                      background: "rgba(46, 125, 50, 0.04)",
+                      border: "2px solid rgba(46, 125, 50, 0.15)",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                      "&:hover": {
+                        borderColor: colors.success,
+                        boxShadow: "0 4px 12px rgba(46, 125, 50, 0.15)",
+                        transform: "translateY(-2px)",
+                      },
                     }}
                   >
                     <AccountBalanceIcon
-                      sx={{ fontSize: 40, color: colors.success, mb: 1 }}
+                      sx={{ fontSize: 48, color: colors.success, mb: 1.5 }}
                     />
                     <Typography
-                      variant="h3"
-                      fontWeight="700"
-                      color={colors.success}
+                      variant="h2"
+                      sx={{
+                        fontWeight: 700,
+                        color: colors.success,
+                        fontSize: "3rem",
+                        mb: 0.5,
+                      }}
                     >
                       {stats.inGovernment}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ color: colors.textSecondary, fontWeight: 600 }}
+                    >
                       Hallituksessa
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      (
+                    <Typography
+                      variant="caption"
+                      sx={{ color: colors.textTertiary, fontWeight: 500 }}
+                    >
                       {(
                         (stats.inGovernment / stats.totalMembers) *
                         100
                       ).toFixed(1)}
-                      %)
+                      % edustajista
                     </Typography>
                   </Box>
 
                   <Box
                     sx={{
-                      flex: "1 1 200px",
                       textAlign: "center",
-                      p: spacing.md,
-                      borderRadius: 3,
-                      background: "rgba(255, 152, 0, 0.1)",
+                      p: spacing.lg,
+                      borderRadius: 2,
+                      background: "rgba(239, 108, 0, 0.04)",
+                      border: "2px solid rgba(239, 108, 0, 0.15)",
+                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                      "&:hover": {
+                        borderColor: colors.warning,
+                        boxShadow: "0 4px 12px rgba(239, 108, 0, 0.15)",
+                        transform: "translateY(-2px)",
+                      },
                     }}
                   >
                     <PieChartIcon
-                      sx={{ fontSize: 40, color: colors.warning, mb: 1 }}
+                      sx={{ fontSize: 48, color: colors.warning, mb: 1.5 }}
                     />
                     <Typography
-                      variant="h3"
-                      fontWeight="700"
-                      color={colors.warning}
+                      variant="h2"
+                      sx={{
+                        fontWeight: 700,
+                        color: colors.warning,
+                        fontSize: "3rem",
+                        mb: 0.5,
+                      }}
                     >
                       {stats.inOpposition}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ color: colors.textSecondary, fontWeight: 600 }}
+                    >
                       Oppositiossa
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      (
+                    <Typography
+                      variant="caption"
+                      sx={{ color: colors.textTertiary, fontWeight: 500 }}
+                    >
                       {(
                         (stats.inOpposition / stats.totalMembers) *
                         100
                       ).toFixed(1)}
-                      %)
+                      % edustajista
                     </Typography>
                   </Box>
                 </Box>
@@ -346,7 +423,12 @@ export default function App() {
                 <Typography
                   variant="h6"
                   gutterBottom
-                  sx={{ fontWeight: 600, color: "#667eea", mb: 2 }}
+                  sx={{
+                    fontWeight: 700,
+                    color: colors.primary,
+                    mb: spacing.md,
+                    fontSize: "1.25rem",
+                  }}
                 >
                   Puolueiden jako
                 </Typography>
@@ -356,10 +438,15 @@ export default function App() {
                       key={party}
                       sx={{
                         flex: "1 1 300px",
-                        p: 2,
+                        p: spacing.md,
                         borderRadius: 2,
-                        background: "rgba(255,255,255,0.7)",
-                        border: "1px solid rgba(102, 126, 234, 0.2)",
+                        background: "#ffffff",
+                        border: "1px solid #e0e0e0",
+                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                        "&:hover": {
+                          borderColor: colors.primary,
+                          boxShadow: "0 2px 8px rgba(0, 53, 128, 0.1)",
+                        },
                       }}
                     >
                       <Box
@@ -367,32 +454,48 @@ export default function App() {
                           display: "flex",
                           justifyContent: "space-between",
                           alignItems: "center",
-                          mb: 1,
+                          mb: 1.5,
                         }}
                       >
-                        <Typography variant="body1" fontWeight="600">
+                        <Typography
+                          variant="subtitle1"
+                          sx={{ fontWeight: 700, color: colors.textPrimary }}
+                        >
                           {party}
                         </Typography>
                         <Chip
                           label={`${data.total} jäsentä`}
                           size="small"
                           sx={{
-                            background: "rgba(102, 126, 234, 0.15)",
-                            color: "#667eea",
-                            fontWeight: 600,
+                            background: colors.primary,
+                            color: "#ffffff",
+                            fontWeight: 700,
+                            fontSize: "0.75rem",
                           }}
                         />
                       </Box>
-                      <Box sx={{ display: "flex", gap: spacing.sm, mt: 1 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: spacing.sm,
+                          mt: spacing.sm,
+                          flexWrap: "wrap",
+                        }}
+                      >
                         {data.inGovernment > 0 && (
                           <Chip
-                            icon={<AccountBalanceIcon sx={{ fontSize: 16 }} />}
+                            icon={
+                              <AccountBalanceIcon
+                                sx={{ fontSize: 16, color: colors.success }}
+                              />
+                            }
                             label={`Hallitus: ${data.inGovernment}`}
                             size="small"
                             sx={{
-                              background: "rgba(76, 175, 80, 0.15)",
+                              background: "rgba(46, 125, 50, 0.1)",
                               color: colors.success,
-                              fontWeight: 500,
+                              fontWeight: 600,
+                              border: `1px solid ${colors.success}`,
                             }}
                           />
                         )}
@@ -401,9 +504,10 @@ export default function App() {
                             label={`Oppositio: ${data.total - data.inGovernment}`}
                             size="small"
                             sx={{
-                              background: "rgba(255, 152, 0, 0.15)",
+                              background: "rgba(239, 108, 0, 0.1)",
                               color: colors.warning,
-                              fontWeight: 500,
+                              fontWeight: 600,
+                              border: `1px solid ${colors.warning}`,
                             }}
                           />
                         )}
@@ -412,7 +516,7 @@ export default function App() {
                   ))}
                 </Box>
               </CardContent>
-            </GlassCard>
+            </Box>
           </Box>
         </Fade>
       )}
@@ -424,7 +528,10 @@ export default function App() {
             component={Paper}
             elevation={0}
             sx={{
-              ...commonStyles.glassCard,
+              borderRadius: 3,
+              background: "#ffffff",
+              border: "1px solid #e0e0e0",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
               mb: spacing.lg,
               overflow: "hidden",
             }}
@@ -448,25 +555,28 @@ export default function App() {
                       background: gradients.primary,
                     }}
                   >
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    <TableCell sx={{ ...commonStyles.tableHeader }}>
                       Nimi
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    <TableCell sx={{ ...commonStyles.tableHeader }}>
                       Puolue
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    <TableCell
+                      sx={{ ...commonStyles.tableHeader }}
+                      align="center"
+                    >
                       Hallitus
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    <TableCell sx={{ ...commonStyles.tableHeader }}>
                       Sukupuoli
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    <TableCell sx={{ ...commonStyles.tableHeader }}>
                       Syntymäaika
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    <TableCell sx={{ ...commonStyles.tableHeader }}>
                       Syntymäpaikka
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    <TableCell sx={{ ...commonStyles.tableHeader }}>
                       Ammatti
                     </TableCell>
                   </TableRow>
@@ -477,12 +587,12 @@ export default function App() {
                       key={m.person_id}
                       hover
                       sx={{
-                        ...commonStyles.interactiveHover,
-                        animation: `fadeIn 0.5s ease-in-out ${index * 0.05}s both`,
+                        ...commonStyles.tableRow,
+                        animation: `fadeIn 0.3s ease-out ${index * 0.02}s both`,
                         "@keyframes fadeIn": {
                           from: {
                             opacity: 0,
-                            transform: "translateY(10px)",
+                            transform: "translateY(8px)",
                           },
                           to: {
                             opacity: 1,
@@ -492,42 +602,63 @@ export default function App() {
                       }}
                       onClick={() => handleRowClick(m)}
                     >
-                      <TableCell sx={{ fontWeight: 500 }}>
+                      <TableCell sx={{ ...commonStyles.dataCell, py: 2.5 }}>
                         {m.first_name} {m.last_name}
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ py: 2.5 }}>
                         {(m as any).party_name ? (
                           <Chip
                             label={(m as any).party_name}
                             size="small"
                             sx={{
-                              background: "rgba(102, 126, 234, 0.15)",
-                              color: "#667eea",
-                              fontWeight: 600,
+                              background: colors.primary,
+                              color: "#ffffff",
+                              fontWeight: 700,
                               fontSize: "0.75rem",
+                              height: 28,
                             }}
                           />
                         ) : (
-                          "-"
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ fontWeight: 500 }}
+                          >
+                            -
+                          </Typography>
                         )}
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell align="center" sx={{ py: 2.5 }}>
                         {(m as any).is_in_government === 1 ? (
                           <CheckCircleIcon
                             sx={{
-                              color: "#4caf50",
-                              fontSize: 24,
+                              color: colors.success,
+                              fontSize: 28,
                             }}
                             titleAccess="Hallituksessa"
                           />
                         ) : (
-                          "-"
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ fontWeight: 500 }}
+                          >
+                            -
+                          </Typography>
                         )}
                       </TableCell>
-                      <TableCell>{m.gender}</TableCell>
-                      <TableCell>{m.birth_date}</TableCell>
-                      <TableCell>{m.birth_place}</TableCell>
-                      <TableCell>{m.profession}</TableCell>
+                      <TableCell sx={{ ...commonStyles.labelCell, py: 2.5 }}>
+                        {m.gender}
+                      </TableCell>
+                      <TableCell sx={{ ...commonStyles.labelCell, py: 2.5 }}>
+                        {m.birth_date}
+                      </TableCell>
+                      <TableCell sx={{ ...commonStyles.labelCell, py: 2.5 }}>
+                        {m.birth_place}
+                      </TableCell>
+                      <TableCell sx={{ ...commonStyles.labelCell, py: 2.5 }}>
+                        {m.profession}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

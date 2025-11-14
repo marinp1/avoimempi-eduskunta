@@ -61,36 +61,45 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
   return (
     <Box>
       {Object.entries(results).map(([sectionTitle, votes], index) => (
-        <Fade in timeout={600 + index * 100} key={sectionTitle}>
+        <Fade in timeout={500 + index * 50} key={sectionTitle}>
           <Accordion
             elevation={0}
             sx={{
-              mb: spacing.sm,
-              ...commonStyles.glassCard,
+              mb: spacing.md,
+              borderRadius: 3,
+              background: "#ffffff",
+              border: "1px solid #e0e0e0",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
               overflow: "hidden",
+              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
               "&:before": {
                 display: "none",
               },
               "&.Mui-expanded": {
-                boxShadow: shadows.card,
+                boxShadow: shadows.cardHover,
+                borderColor: colors.primary,
               },
             }}
           >
             <AccordionSummary
-              expandIcon={<ExpandMoreIcon sx={{ color: colors.primary }} />}
+              expandIcon={
+                <ExpandMoreIcon sx={{ color: colors.primary, fontSize: 28 }} />
+              }
               sx={{
-                py: spacing.sm,
-                px: spacing.md,
+                py: spacing.md,
+                px: spacing.lg,
                 "&:hover": {
-                  background: "rgba(102, 126, 234, 0.05)",
+                  background: "rgba(0, 53, 128, 0.04)",
                 },
               }}
             >
               <Typography
                 variant="h6"
                 sx={{
-                  fontWeight: 600,
+                  fontWeight: 700,
                   color: colors.primary,
+                  fontSize: "1.125rem",
+                  letterSpacing: "-0.01em",
                 }}
               >
                 {sectionTitle}
@@ -98,53 +107,53 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
             </AccordionSummary>
             <AccordionDetails sx={{ p: 0 }}>
               <TableContainer>
-                <Table size="small">
+                <Table>
                   <TableHead>
                     <TableRow
                       sx={{
                         background: gradients.primary,
                       }}
                     >
-                      <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                      <TableCell sx={{ ...commonStyles.tableHeader }}>
                         Aika
                       </TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                      <TableCell sx={{ ...commonStyles.tableHeader }}>
                         Vaihe
                       </TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                      <TableCell sx={{ ...commonStyles.tableHeader }}>
                         Otsikko
                       </TableCell>
                       <TableCell
                         align="center"
-                        sx={{ color: "white", fontWeight: 600 }}
+                        sx={{ ...commonStyles.tableHeader }}
                       >
                         Jaa
                       </TableCell>
                       <TableCell
                         align="center"
-                        sx={{ color: "white", fontWeight: 600 }}
+                        sx={{ ...commonStyles.tableHeader }}
                       >
                         Ei
                       </TableCell>
                       <TableCell
                         align="center"
-                        sx={{ color: "white", fontWeight: 600 }}
+                        sx={{ ...commonStyles.tableHeader }}
                       >
                         Tyhjää
                       </TableCell>
                       <TableCell
                         align="center"
-                        sx={{ color: "white", fontWeight: 600 }}
+                        sx={{ ...commonStyles.tableHeader }}
                       >
                         Poissa
                       </TableCell>
                       <TableCell
                         align="center"
-                        sx={{ color: "white", fontWeight: 600 }}
+                        sx={{ ...commonStyles.tableHeader }}
                       >
                         Yht
                       </TableCell>
-                      <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                      <TableCell sx={{ ...commonStyles.tableHeader }}>
                         Linkit
                       </TableCell>
                     </TableRow>
@@ -154,119 +163,155 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                       <TableRow
                         key={res.id}
                         hover
-                        sx={commonStyles.interactiveHover}
+                        sx={{
+                          ...commonStyles.tableRow,
+                          cursor: "default",
+                        }}
                       >
-                        <TableCell sx={{ fontSize: "0.875rem" }}>
+                        <TableCell sx={{ ...commonStyles.labelCell, py: 2.5 }}>
                           {res.start_time
                             ? new Date(res.start_time).toLocaleDateString(
                                 "fi-FI",
                               )
                             : "-"}
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ py: 2.5 }}>
                           <Chip
                             label={res.section_processing_phase}
                             size="small"
                             sx={{
-                              background: "rgba(102, 126, 234, 0.1)",
-                              color: colors.primary,
-                              fontWeight: 500,
+                              background: colors.primary,
+                              color: "#ffffff",
+                              fontWeight: 700,
                               fontSize: "0.75rem",
+                              height: 28,
                             }}
                           />
                         </TableCell>
-                        <TableCell sx={{ fontWeight: 500 }}>
+                        <TableCell sx={{ ...commonStyles.dataCell, py: 2.5 }}>
                           {res.title}
                         </TableCell>
-                        <TableCell align="center">
+                        <TableCell align="center" sx={{ py: 2.5 }}>
                           <Box
                             sx={{
-                              ...commonStyles.flexWithGap(0.5),
+                              ...commonStyles.flexWithGap(1),
                               justifyContent: "center",
                             }}
                           >
                             <ThumbUpIcon
-                              sx={{ fontSize: 16, color: voteColors.yes }}
+                              sx={{ fontSize: 20, color: voteColors.yes }}
                             />
-                            <Typography fontWeight="600" color={voteColors.yes}>
+                            <Typography
+                              sx={{
+                                fontWeight: 700,
+                                color: voteColors.yes,
+                                fontSize: "1rem",
+                              }}
+                            >
                               {res.n_yes}
                             </Typography>
                           </Box>
                         </TableCell>
-                        <TableCell align="center">
+                        <TableCell align="center" sx={{ py: 2.5 }}>
                           <Box
                             sx={{
-                              ...commonStyles.flexWithGap(0.5),
+                              ...commonStyles.flexWithGap(1),
                               justifyContent: "center",
                             }}
                           >
                             <ThumbDownIcon
-                              sx={{ fontSize: 16, color: voteColors.no }}
+                              sx={{ fontSize: 20, color: voteColors.no }}
                             />
-                            <Typography fontWeight="600" color={voteColors.no}>
+                            <Typography
+                              sx={{
+                                fontWeight: 700,
+                                color: voteColors.no,
+                                fontSize: "1rem",
+                              }}
+                            >
                               {res.n_no}
                             </Typography>
                           </Box>
                         </TableCell>
-                        <TableCell align="center">
+                        <TableCell align="center" sx={{ py: 2.5 }}>
                           <Box
                             sx={{
-                              ...commonStyles.flexWithGap(0.5),
+                              ...commonStyles.flexWithGap(1),
                               justifyContent: "center",
                             }}
                           >
                             <RemoveIcon
-                              sx={{ fontSize: 16, color: voteColors.abstain }}
+                              sx={{ fontSize: 20, color: voteColors.abstain }}
                             />
                             <Typography
-                              fontWeight="600"
-                              color={voteColors.abstain}
+                              sx={{
+                                fontWeight: 700,
+                                color: voteColors.abstain,
+                                fontSize: "1rem",
+                              }}
                             >
                               {res.n_abstain}
                             </Typography>
                           </Box>
                         </TableCell>
-                        <TableCell align="center">
+                        <TableCell align="center" sx={{ py: 2.5 }}>
                           <Box
                             sx={{
-                              ...commonStyles.flexWithGap(0.5),
+                              ...commonStyles.flexWithGap(1),
                               justifyContent: "center",
                             }}
                           >
                             <PersonOffIcon
-                              sx={{ fontSize: 16, color: voteColors.absent }}
+                              sx={{ fontSize: 20, color: voteColors.absent }}
                             />
                             <Typography
-                              fontWeight="600"
-                              color={voteColors.absent}
+                              sx={{
+                                fontWeight: 700,
+                                color: voteColors.absent,
+                                fontSize: "1rem",
+                              }}
                             >
                               {res.n_absent}
                             </Typography>
                           </Box>
                         </TableCell>
-                        <TableCell align="center">
-                          <Typography fontWeight="700">
+                        <TableCell align="center" sx={{ py: 2.5 }}>
+                          <Typography
+                            sx={{
+                              fontWeight: 700,
+                              fontSize: "1.125rem",
+                              color: colors.primary,
+                            }}
+                          >
                             {res.n_total}
                           </Typography>
                         </TableCell>
-                        <TableCell>
+                        <TableCell sx={{ py: 2.5 }}>
                           <Box
                             sx={{
                               display: "flex",
                               flexDirection: "column",
-                              gap: 0.5,
+                              gap: 1,
                             }}
                           >
                             <Link
                               target="_blank"
                               href={eduskuntaLink(res.result_url)}
                               sx={{
-                                color: "#667eea",
+                                color: colors.primary,
                                 textDecoration: "none",
-                                fontWeight: 500,
+                                fontWeight: 600,
                                 fontSize: "0.875rem",
+                                padding: "4px 12px",
+                                borderRadius: 2,
+                                border: `1px solid ${colors.primary}`,
+                                display: "inline-block",
+                                transition:
+                                  "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                 "&:hover": {
-                                  textDecoration: "underline",
+                                  background: colors.primary,
+                                  color: "#ffffff",
+                                  textDecoration: "none",
                                 },
                               }}
                             >
@@ -276,12 +321,20 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                               target="_blank"
                               href={eduskuntaLink(res.proceedings_url)}
                               sx={{
-                                color: "#667eea",
+                                color: colors.primary,
                                 textDecoration: "none",
-                                fontWeight: 500,
+                                fontWeight: 600,
                                 fontSize: "0.875rem",
+                                padding: "4px 12px",
+                                borderRadius: 2,
+                                border: `1px solid ${colors.primary}`,
+                                display: "inline-block",
+                                transition:
+                                  "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                 "&:hover": {
-                                  textDecoration: "underline",
+                                  background: colors.primary,
+                                  color: "#ffffff",
+                                  textDecoration: "none",
                                 },
                               }}
                             >
