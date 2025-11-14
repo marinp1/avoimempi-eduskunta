@@ -1,0 +1,31 @@
+WITH RECURSIVE YearSeries AS (
+    SELECT MIN(CAST(SUBSTR(start_date, 1, 4) AS INTEGER)) AS year
+    FROM Term
+    UNION ALL
+    SELECT year + 1
+    FROM YearSeries
+    WHERE year < (SELECT MAX(CAST(SUBSTR(start_date, 1, 4) AS INTEGER)) FROM Term)
+),
+ActiveRepsByYear AS (
+    SELECT
+        ys.year,
+        r.person_id,
+        r.gender
+    FROM YearSeries ys
+    CROSS JOIN Representative r
+    JOIN Term t ON r.person_id = t.person_id
+    WHERE CAST(SUBSTR(t.start_date, 1, 4) AS INTEGER) <= ys.year
+      AND (t.end_date = '' OR CAST(SUBSTR(t.end_date, 1, 4) AS INTEGER) >= ys.year)
+      AND r.gender IN ('Mies', 'Nainen')
+    GROUP BY ys.year, r.person_id
+)
+SELECT
+    year,
+    SUM(CASE WHEN gender = 'Nainen' THEN 1 ELSE 0 END) AS female_count,
+    SUM(CASE WHEN gender = 'Mies' THEN 1 ELSE 0 END) AS male_count,
+    COUNT(*) AS total_count,
+    ROUND(CAST(SUM(CASE WHEN gender = 'Nainen' THEN 1 ELSE 0 END) AS REAL) * 100.0 / COUNT(*), 2) AS female_percentage,
+    ROUND(CAST(SUM(CASE WHEN gender = 'Mies' THEN 1 ELSE 0 END) AS REAL) * 100.0 / COUNT(*), 2) AS male_percentage
+FROM ActiveRepsByYear
+GROUP BY year
+ORDER BY year ASC
