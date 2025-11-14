@@ -101,27 +101,26 @@ export const App: React.FC = () => {
         }}
       />
 
-      {/* Professional Header with Navigation */}
+      {/* Government-style Professional Header */}
       <AppBar
         position="static"
         elevation={0}
         sx={{
           background: gradients.primary,
-          borderBottom: "2px solid rgba(255,255,255,0.15)",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          borderBottom: "3px solid rgba(255,255,255,0.2)",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
         }}
       >
-        <Toolbar sx={{ py: spacing.sm, px: spacing.lg }}>
+        <Toolbar sx={{ py: spacing.md, px: spacing.lg }}>
           <Box sx={{ flexGrow: 0, mr: spacing.xl }}>
             <Typography
               variant="h5"
               component="h1"
               sx={{
                 color: "white",
-                fontWeight: 700,
-                letterSpacing: "-0.02em",
-                fontSize: { xs: "1.25rem", sm: "1.5rem" },
-                textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                fontWeight: 600,
+                letterSpacing: "0.01em",
+                fontSize: { xs: "1.125rem", sm: "1.375rem" },
                 whiteSpace: "nowrap",
               }}
             >
@@ -130,10 +129,11 @@ export const App: React.FC = () => {
             <Typography
               variant="body2"
               sx={{
-                color: "rgba(255,255,255,0.85)",
-                fontSize: "0.75rem",
-                fontWeight: 500,
+                color: "rgba(255,255,255,0.9)",
+                fontSize: "0.8125rem",
+                fontWeight: 400,
                 letterSpacing: "0.02em",
+                mt: 0.25,
               }}
             >
               Suomen eduskunnan avoin data
@@ -146,28 +146,30 @@ export const App: React.FC = () => {
               value={activeTab}
               onChange={handleChange}
               sx={{
-                minHeight: 48,
+                minHeight: 56,
                 "& .MuiTab-root": {
-                  fontWeight: 600,
-                  fontSize: "0.875rem",
-                  py: spacing.xs,
-                  px: spacing.md,
-                  minHeight: 48,
-                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                  color: "rgba(255,255,255,0.85)",
+                  fontWeight: 500,
+                  fontSize: "0.9375rem",
+                  py: spacing.sm,
+                  px: spacing.lg,
+                  minHeight: 56,
+                  transition: "all 0.2s ease-in-out",
+                  color: "rgba(255,255,255,0.9)",
+                  textTransform: "none",
                   "&:hover": {
-                    background: "rgba(255,255,255,0.1)",
+                    background: "rgba(255,255,255,0.12)",
                     color: "white",
                   },
                 },
                 "& .Mui-selected": {
                   color: "white !important",
-                  fontWeight: 700,
+                  fontWeight: 600,
+                  background: "rgba(255,255,255,0.08)",
                 },
                 "& .MuiTabs-indicator": {
-                  height: 3,
+                  height: 4,
                   background: "white",
-                  borderRadius: "3px 3px 0 0",
+                  borderRadius: 0,
                 },
               }}
             >
@@ -210,7 +212,7 @@ export const App: React.FC = () => {
           sx={{
             display: { xs: "block", md: "none" },
             px: spacing.md,
-            pb: spacing.xs,
+            pb: spacing.sm,
           }}
         >
           <Tabs
@@ -221,26 +223,28 @@ export const App: React.FC = () => {
             sx={{
               minHeight: 48,
               "& .MuiTab-root": {
-                fontWeight: 600,
+                fontWeight: 500,
                 fontSize: "0.875rem",
                 py: spacing.xs,
-                px: spacing.sm,
+                px: spacing.md,
                 minHeight: 48,
-                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                color: "rgba(255,255,255,0.85)",
+                transition: "all 0.2s ease-in-out",
+                color: "rgba(255,255,255,0.9)",
+                textTransform: "none",
                 "&:hover": {
-                  background: "rgba(255,255,255,0.1)",
+                  background: "rgba(255,255,255,0.12)",
                   color: "white",
                 },
               },
               "& .Mui-selected": {
                 color: "white !important",
-                fontWeight: 700,
+                fontWeight: 600,
+                background: "rgba(255,255,255,0.08)",
               },
               "& .MuiTabs-indicator": {
-                height: 3,
+                height: 4,
                 background: "white",
-                borderRadius: "3px 3px 0 0",
+                borderRadius: 0,
               },
             }}
           >

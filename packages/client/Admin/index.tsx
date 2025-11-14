@@ -26,7 +26,7 @@ import StopIcon from "@mui/icons-material/Stop";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { colors, gradients } from "../theme";
-import { useThemedColors } from "../theme/ThemeContext";
+import { useThemedColors, useTheme } from "../theme/ThemeContext";
 import { AdminHeader, AdminOverview, ControlPanel } from "./components";
 
 type TableStatus = {
@@ -57,6 +57,7 @@ type ScrapingOverview = {
 
 export default function AdminPage() {
   const themedColors = useThemedColors();
+  const { isDark } = useTheme();
   const [status, setStatus] = useState<TableStatus[]>([]);
   const [overview, setOverview] = useState<ScrapingOverview | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -579,7 +580,9 @@ export default function AdminPage() {
                       <TableRow
                         sx={{
                           "&:hover": {
-                            bgcolor: "rgba(0, 53, 128, 0.04)",
+                            bgcolor: isDark
+                              ? "rgba(102, 126, 234, 0.08)"
+                              : "rgba(0, 53, 128, 0.04)",
                           },
                           transition: "background-color 0.2s",
                         }}
@@ -773,7 +776,7 @@ export default function AdminPage() {
                                         size="small"
                                         sx={{
                                           background: gradients.scraper,
-                                          color: themedColors.backgroundPaper,
+                                          color: "#FFFFFF",
                                         }}
                                       />
                                     </>
@@ -830,7 +833,7 @@ export default function AdminPage() {
                                       sx={{
                                         height: 6,
                                         borderRadius: 3,
-                                        bgcolor: "rgba(102, 126, 234, 0.1)",
+                                        bgcolor: themedColors.backgroundSubtle,
                                         "& .MuiLinearProgress-bar": {
                                           background: gradients.scraper,
                                         },
@@ -873,7 +876,7 @@ export default function AdminPage() {
                                         size="small"
                                         sx={{
                                           background: gradients.parser,
-                                          color: themedColors.backgroundPaper,
+                                          color: "#FFFFFF",
                                         }}
                                       />
                                     </>
@@ -934,7 +937,7 @@ export default function AdminPage() {
                                       sx={{
                                         height: 6,
                                         borderRadius: 3,
-                                        bgcolor: "rgba(240, 147, 251, 0.1)",
+                                        bgcolor: themedColors.backgroundSubtle,
                                         "& .MuiLinearProgress-bar": {
                                           background: gradients.parser,
                                         },

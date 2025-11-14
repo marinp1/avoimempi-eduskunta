@@ -198,10 +198,11 @@ export default function App() {
           <Box
             sx={{
               mb: spacing.lg,
-              borderRadius: 3,
+              borderRadius: 1,
               background: themedColors.backgroundPaper,
               border: `1px solid ${themedColors.dataBorder}`,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              boxShadow:
+                "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
             }}
           >
             <CardContent sx={{ p: spacing.lg, textAlign: "center" }}>
@@ -211,9 +212,9 @@ export default function App() {
                 gutterBottom
                 sx={{
                   color: colors.primary,
-                  fontWeight: 700,
+                  fontWeight: 600,
                   mb: spacing.md,
-                  letterSpacing: "-0.01em",
+                  letterSpacing: "0",
                 }}
               >
                 Eduskunnan kokoonpano
@@ -257,10 +258,11 @@ export default function App() {
             <Box
               sx={{
                 mb: spacing.lg,
-                borderRadius: 3,
+                borderRadius: 1,
                 background: themedColors.backgroundPaper,
                 border: `1px solid ${themedColors.dataBorder}`,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                boxShadow:
+                  "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
               }}
             >
               <CardContent sx={{ p: spacing.lg }}>
@@ -269,10 +271,10 @@ export default function App() {
                   gutterBottom
                   sx={{
                     color: colors.primary,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     mb: spacing.md,
                     textAlign: "center",
-                    letterSpacing: "-0.01em",
+                    letterSpacing: "0",
                   }}
                 >
                   Eduskunnan jakauma
@@ -294,14 +296,13 @@ export default function App() {
                     sx={{
                       textAlign: "center",
                       p: spacing.lg,
-                      borderRadius: 2,
-                      background: "rgba(0, 53, 128, 0.04)",
-                      border: "2px solid rgba(0, 53, 128, 0.15)",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                      borderRadius: 1,
+                      background: "rgba(0, 53, 128, 0.02)",
+                      border: "1px solid rgba(0, 53, 128, 0.15)",
+                      transition: "all 0.2s ease-in-out",
                       "&:hover": {
                         borderColor: colors.primary,
-                        boxShadow: "0 4px 12px rgba(0, 53, 128, 0.15)",
-                        transform: "translateY(-2px)",
+                        boxShadow: "0 2px 6px rgba(0, 53, 128, 0.12)",
                       },
                     }}
                   >
@@ -311,9 +312,9 @@ export default function App() {
                     <Typography
                       variant="h2"
                       sx={{
-                        fontWeight: 700,
+                        fontWeight: 600,
                         color: colors.primary,
-                        fontSize: "3rem",
+                        fontSize: "2.5rem",
                         mb: 0.5,
                       }}
                     >
@@ -334,14 +335,13 @@ export default function App() {
                     sx={{
                       textAlign: "center",
                       p: spacing.lg,
-                      borderRadius: 2,
-                      background: "rgba(46, 125, 50, 0.04)",
-                      border: "2px solid rgba(46, 125, 50, 0.15)",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                      borderRadius: 1,
+                      background: "rgba(27, 94, 32, 0.02)",
+                      border: "1px solid rgba(27, 94, 32, 0.15)",
+                      transition: "all 0.2s ease-in-out",
                       "&:hover": {
                         borderColor: colors.success,
-                        boxShadow: "0 4px 12px rgba(46, 125, 50, 0.15)",
-                        transform: "translateY(-2px)",
+                        boxShadow: "0 2px 6px rgba(27, 94, 32, 0.12)",
                       },
                     }}
                   >
@@ -351,9 +351,9 @@ export default function App() {
                     <Typography
                       variant="h2"
                       sx={{
-                        fontWeight: 700,
+                        fontWeight: 600,
                         color: colors.success,
-                        fontSize: "3rem",
+                        fontSize: "2.5rem",
                         mb: 0.5,
                       }}
                     >
@@ -384,14 +384,13 @@ export default function App() {
                     sx={{
                       textAlign: "center",
                       p: spacing.lg,
-                      borderRadius: 2,
-                      background: "rgba(239, 108, 0, 0.04)",
-                      border: "2px solid rgba(239, 108, 0, 0.15)",
-                      transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                      borderRadius: 1,
+                      background: "rgba(230, 81, 0, 0.02)",
+                      border: "1px solid rgba(230, 81, 0, 0.15)",
+                      transition: "all 0.2s ease-in-out",
                       "&:hover": {
                         borderColor: colors.warning,
-                        boxShadow: "0 4px 12px rgba(239, 108, 0, 0.15)",
-                        transform: "translateY(-2px)",
+                        boxShadow: "0 2px 6px rgba(230, 81, 0, 0.12)",
                       },
                     }}
                   >
@@ -401,9 +400,9 @@ export default function App() {
                     <Typography
                       variant="h2"
                       sx={{
-                        fontWeight: 700,
+                        fontWeight: 600,
                         color: colors.warning,
-                        fontSize: "3rem",
+                        fontSize: "2.5rem",
                         mb: 0.5,
                       }}
                     >
@@ -436,10 +435,10 @@ export default function App() {
                   variant="h6"
                   gutterBottom
                   sx={{
-                    fontWeight: 700,
+                    fontWeight: 600,
                     color: colors.primary,
                     mb: spacing.md,
-                    fontSize: "1.25rem",
+                    fontSize: "1.125rem",
                   }}
                 >
                   Puolueiden jako
@@ -451,13 +450,13 @@ export default function App() {
                       sx={{
                         flex: "1 1 300px",
                         p: spacing.md,
-                        borderRadius: 2,
+                        borderRadius: 1,
                         background: themedColors.backgroundPaper,
                         border: `1px solid ${themedColors.dataBorder}`,
-                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                        transition: "all 0.2s ease-in-out",
                         "&:hover": {
                           borderColor: colors.primary,
-                          boxShadow: "0 2px 8px rgba(0, 53, 128, 0.1)",
+                          boxShadow: "0 2px 6px rgba(0, 53, 128, 0.10)",
                         },
                       }}
                     >
@@ -543,10 +542,11 @@ export default function App() {
             component={Paper}
             elevation={0}
             sx={{
-              borderRadius: 3,
+              borderRadius: 1,
               background: themedColors.backgroundPaper,
               border: `1px solid ${themedColors.dataBorder}`,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              boxShadow:
+                "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
               mb: spacing.lg,
               overflow: "hidden",
             }}

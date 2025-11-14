@@ -33,19 +33,26 @@ export const AdminOverview: React.FC<AdminOverviewProps> = ({ overview }) => {
           <GlassCard
             sx={{
               background: gradients.primary,
-              color: "white",
+              color: "#FFFFFF",
             }}
           >
             <CardContent sx={{ p: spacing.md }}>
-              <Typography variant="h3" fontWeight="700" sx={{ mb: 1 }}>
+              <Typography
+                variant="h3"
+                fontWeight="700"
+                sx={{ mb: 1, color: "#FFFFFF" }}
+              >
                 {overview.overall_progress_percent.toFixed(1)}%
               </Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>
+              <Typography
+                variant="body2"
+                sx={{ opacity: 0.9, color: "#FFFFFF" }}
+              >
                 Overall Progress
               </Typography>
               <Typography
                 variant="caption"
-                sx={{ opacity: 0.8, mt: 1, display: "block" }}
+                sx={{ opacity: 0.8, mt: 1, display: "block", color: "#FFFFFF" }}
               >
                 {overview.total_scraped_rows.toLocaleString()} /{" "}
                 {overview.total_api_rows.toLocaleString()} rows

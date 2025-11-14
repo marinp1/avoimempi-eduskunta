@@ -68,12 +68,13 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
             elevation={0}
             sx={{
               mb: spacing.md,
-              borderRadius: 3,
+              borderRadius: 1,
               background: themedColors.backgroundPaper,
               border: `1px solid ${themedColors.dataBorder}`,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              boxShadow:
+                "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
               overflow: "hidden",
-              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              transition: "all 0.2s ease-in-out",
               "&:before": {
                 display: "none",
               },
@@ -91,17 +92,17 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                 py: spacing.md,
                 px: spacing.lg,
                 "&:hover": {
-                  background: "rgba(0, 53, 128, 0.04)",
+                  background: "rgba(0, 53, 128, 0.03)",
                 },
               }}
             >
               <Typography
                 variant="h6"
                 sx={{
-                  fontWeight: 700,
+                  fontWeight: 600,
                   color: colors.primary,
                   fontSize: "1.125rem",
-                  letterSpacing: "-0.01em",
+                  letterSpacing: "0",
                 }}
               >
                 {sectionTitle}

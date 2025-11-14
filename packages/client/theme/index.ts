@@ -2,33 +2,34 @@ import { createTheme, type Theme, type SxProps } from "@mui/material";
 
 /**
  * Color palette for the application
- * Professional, official color scheme inspired by Finnish Parliament
+ * Professional, official government color scheme
+ * Inspired by Finnish Parliament and official government websites
  * Supports both light and dark modes
  */
 export const colors = {
-  // Brand colors - Deep blue for authority and trust (same for both modes)
-  primary: "#003580",
-  primaryLight: "#0052CC",
-  primaryDark: "#002557",
-  secondary: "#005EB8",
-  secondaryLight: "#0078D4",
-  secondaryDark: "#004A94",
+  // Brand colors - Official government blue (based on Finnish national colors)
+  primary: "#003580", // Deep navy blue - authority, trust, stability
+  primaryLight: "#1a4d99",
+  primaryDark: "#001f4d",
+  secondary: "#003580", // Keep consistent with primary for formal look
+  secondaryLight: "#1a4d99",
+  secondaryDark: "#001f4d",
 
-  // Accent color for highlights
-  accent: "#667eea",
-  accentLight: "#8c9eff",
+  // Accent color - subtle, professional
+  accent: "#005A9C", // Muted blue for highlights
+  accentLight: "#1976D2",
 
-  // Semantic colors (same for both modes)
-  success: "#2e7d32",
-  successLight: "#4caf50",
-  error: "#c62828",
-  errorLight: "#ef5350",
-  warning: "#ef6c00",
-  warningLight: "#ff9800",
-  info: "#0277bd",
-  infoLight: "#03a9f4",
-  neutral: "#616161",
-  neutralLight: "#9e9e9e",
+  // Semantic colors - professional and clear
+  success: "#1B5E20", // Dark green for success/completion
+  successLight: "#2E7D32",
+  error: "#B71C1C", // Dark red for errors
+  errorLight: "#C62828",
+  warning: "#E65100", // Dark orange for warnings
+  warningLight: "#EF6C00",
+  info: "#01579B", // Dark blue for information
+  infoLight: "#0277BD",
+  neutral: "#424242", // Dark gray for neutral states
+  neutralLight: "#757575",
 
   // Chart colors for data visualization
   chartPurple: "#9C27B0",
@@ -50,27 +51,27 @@ export const colors = {
   oppositionBackground: "rgba(158, 158, 158, 0.2)",
 
   // LIGHT MODE COLORS
-  // Background colors - Clean, professional
-  backgroundDefault: "#f8f9fa",
-  backgroundPaper: "#ffffff",
-  backgroundGradientStart: "#f8f9fa",
-  backgroundGradientEnd: "#e9ecef",
-  backgroundSubtle: "#f0f2f5",
+  // Background colors - Clean, minimal, professional
+  backgroundDefault: "#FAFAFA", // Very light gray, not pure white
+  backgroundPaper: "#FFFFFF",
+  backgroundGradientStart: "#FAFAFA",
+  backgroundGradientEnd: "#F5F5F5",
+  backgroundSubtle: "#F5F5F5", // Slightly darker for sections
 
-  // Glass-morphism colors
-  glassBackground: "rgba(255,255,255,0.95)",
-  glassBorder: "rgba(0,53,128,0.15)",
-  glassBackdrop: "blur(24px)",
+  // Glass-morphism colors (minimal use for government style)
+  glassBackground: "rgba(255,255,255,0.98)",
+  glassBorder: "rgba(0,53,128,0.12)",
+  glassBackdrop: "blur(16px)",
 
-  // Text colors - High contrast for readability
-  textPrimary: "#1a1a1a",
-  textSecondary: "#606060",
-  textTertiary: "#808080",
+  // Text colors - High contrast, clear hierarchy
+  textPrimary: "#212121", // Near black for main content
+  textSecondary: "#616161", // Medium gray for secondary
+  textTertiary: "#9E9E9E", // Light gray for tertiary
 
   // Data display colors
   dataHighlight: "#003580",
-  dataLabel: "#606060",
-  dataBorder: "#e0e0e0",
+  dataLabel: "#616161",
+  dataBorder: "#E0E0E0",
 
   // DARK MODE COLORS
   // Background colors - Deep, comfortable dark
@@ -97,33 +98,34 @@ export const colors = {
 
 /**
  * Common gradients used throughout the app
- * Subtle, professional gradients
+ * Minimal, professional gradients for government style
+ * Use solid colors where possible, gradients only for emphasis
  */
 export const gradients = {
-  // Light mode gradients
-  primary: "linear-gradient(135deg, #003580 0%, #005EB8 100%)",
-  primaryHover: "linear-gradient(135deg, #002557 0%, #004A94 100%)",
-  primarySubtle: "linear-gradient(135deg, #0052CC 0%, #0078D4 100%)",
-  success: "linear-gradient(135deg, #2e7d32 0%, #4caf50 100%)",
-  accent: "linear-gradient(135deg, #667eea 0%, #8c9eff 100%)",
-  background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
-  backgroundAlt: "linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%)",
+  // Light mode gradients - subtle, professional
+  primary: "linear-gradient(180deg, #003580 0%, #002557 100%)", // Vertical gradient, more formal
+  primaryHover: "linear-gradient(180deg, #002557 0%, #001f4d 100%)",
+  primarySubtle: "linear-gradient(180deg, #1a4d99 0%, #003580 100%)",
+  success: "linear-gradient(180deg, #1B5E20 0%, #2E7D32 100%)",
+  accent: "linear-gradient(180deg, #005A9C 0%, #1976D2 100%)",
+  background: "linear-gradient(180deg, #FAFAFA 0%, #F5F5F5 100%)",
+  backgroundAlt: "linear-gradient(to bottom, #FFFFFF 0%, #FAFAFA 100%)",
 
   // Dark mode gradients
-  darkPrimary: "linear-gradient(135deg, #667eea 0%, #8c9eff 100%)",
-  darkPrimaryHover: "linear-gradient(135deg, #5566d9 0%, #7a8eee 100%)",
-  darkBackground: "linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)",
+  darkPrimary: "linear-gradient(180deg, #1a4d99 0%, #003580 100%)",
+  darkPrimaryHover: "linear-gradient(180deg, #003580 0%, #002557 100%)",
+  darkBackground: "linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)",
   darkBackgroundAlt: "linear-gradient(to bottom, #1e1e1e 0%, #121212 100%)",
 
-  // Admin UI specific gradients (purple/pink)
-  scraper: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  parser: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-  migrator: "linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)",
+  // Admin UI specific gradients - more subdued
+  scraper: "linear-gradient(180deg, #1976D2 0%, #0D47A1 100%)", // Blue theme
+  parser: "linear-gradient(180deg, #7B1FA2 0%, #4A148C 100%)", // Purple theme
+  migrator: "linear-gradient(180deg, #1B5E20 0%, #2E7D32 100%)", // Green theme
 
-  // Semantic gradients
-  danger: "linear-gradient(135deg, #f44336 0%, #e91e63 100%)",
-  info: "linear-gradient(135deg, #2196f3 0%, #1976d2 100%)",
-  warning: "linear-gradient(135deg, #ff9800 0%, #f57c00 100%)",
+  // Semantic gradients - minimal
+  danger: "linear-gradient(180deg, #B71C1C 0%, #C62828 100%)",
+  info: "linear-gradient(180deg, #01579B 0%, #0277BD 100%)",
+  warning: "linear-gradient(180deg, #E65100 0%, #EF6C00 100%)",
 } as const;
 
 /**
@@ -139,23 +141,24 @@ export const spacing = {
 
 /**
  * Common border radius values
+ * Conservative values for government-style design
  */
 export const borderRadius = {
-  sm: 2, // 8px
-  md: 3, // 12px (default)
-  lg: 4, // 16px
+  sm: 1, // 4px - minimal rounding
+  md: 1, // 4px (default) - consistent, professional
+  lg: 2, // 8px - slightly rounded for larger elements
 } as const;
 
 /**
  * Common shadow definitions
- * Subtle, professional shadows
+ * Minimal, professional shadows for government style
  */
 export const shadows = {
-  card: "0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
-  cardHover: "0 4px 16px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.06)",
-  elevated: "0 8px 24px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06)",
-  subtle: "0 1px 3px rgba(0,0,0,0.06)",
-  inner: "inset 0 1px 3px rgba(0,0,0,0.08)",
+  card: "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)", // More defined, less blur
+  cardHover: "0 2px 6px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.08)",
+  elevated: "0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06)",
+  subtle: "0 1px 2px rgba(0,0,0,0.08)",
+  inner: "inset 0 1px 2px rgba(0,0,0,0.10)",
   none: "none",
 } as const;
 
@@ -173,7 +176,7 @@ export const transitions = {
  */
 export const commonStyles = {
   /**
-   * Glass-morphism card style - refined for professional look
+   * Glass-morphism card style - minimal for government look
    */
   glassCard: {
     borderRadius: borderRadius.md,
@@ -181,18 +184,18 @@ export const commonStyles = {
     backdropFilter: colors.glassBackdrop,
     border: `1px solid ${colors.glassBorder}`,
     boxShadow: shadows.card,
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    transition: "all 0.2s ease-in-out",
   } satisfies SxProps<Theme>,
 
   /**
-   * Data card - optimized for displaying metrics
+   * Data card - clean, professional styling
    */
   dataCard: {
     borderRadius: borderRadius.md,
     background: colors.backgroundPaper,
     border: `1px solid ${colors.dataBorder}`,
     boxShadow: shadows.card,
-    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    transition: "all 0.2s ease-in-out",
     "&:hover": {
       boxShadow: shadows.cardHover,
       borderColor: colors.primary,
@@ -222,26 +225,26 @@ export const commonStyles = {
   } satisfies SxProps<Theme>,
 
   /**
-   * Interactive hover effect for cards/rows - refined for professional tables
+   * Interactive hover effect for cards/rows - subtle for government style
    */
   interactiveHover: {
-    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+    transition: "all 0.2s ease-in-out",
     cursor: "pointer",
     "&:hover": {
-      background: "rgba(0, 53, 128, 0.04)",
-      transform: "translateX(2px)",
+      background: "rgba(0, 53, 128, 0.03)",
+      boxShadow: shadows.subtle,
     },
   } satisfies SxProps<Theme>,
 
   /**
-   * Professional table row style
+   * Professional table row style - clean and minimal
    */
   tableRow: {
-    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+    transition: "all 0.2s ease-in-out",
     cursor: "pointer",
     borderBottom: `1px solid ${colors.dataBorder}`,
     "&:hover": {
-      background: "rgba(0, 53, 128, 0.04)",
+      background: "rgba(0, 53, 128, 0.03)",
       boxShadow: shadows.subtle,
     },
     "&:last-child": {
@@ -250,14 +253,14 @@ export const commonStyles = {
   } satisfies SxProps<Theme>,
 
   /**
-   * Table header style - professional and prominent
+   * Table header style - formal government style
    */
   tableHeader: {
     background: gradients.primary,
     color: "#ffffff",
-    fontWeight: 700,
+    fontWeight: 600,
     fontSize: "0.875rem",
-    letterSpacing: "0.5px",
+    letterSpacing: "0.03em",
     textTransform: "uppercase",
     borderBottom: "none",
     whiteSpace: "nowrap",
@@ -340,24 +343,24 @@ export const commonStyles = {
   } satisfies SxProps<Theme>,
 
   /**
-   * Gradient header bar
+   * Gradient header bar - formal style
    */
   gradientHeader: {
     background: gradients.primary,
     color: "white",
-    borderRadius: `${borderRadius.md} ${borderRadius.md} 0 0`,
+    borderRadius: `${borderRadius.md}px ${borderRadius.md}px 0 0`,
   } satisfies SxProps<Theme>,
 
   /**
-   * Fade-in animation container
+   * Fade-in animation container - subtle for government style
    */
   fadeIn: (delay: number = 0) =>
     ({
-      animation: "fadeIn 0.5s ease-in-out",
+      animation: "fadeIn 0.4s ease-out",
       animationDelay: `${delay}ms`,
       animationFillMode: "both",
       "@keyframes fadeIn": {
-        from: { opacity: 0, transform: "translateY(10px)" },
+        from: { opacity: 0, transform: "translateY(6px)" },
         to: { opacity: 1, transform: "translateY(0)" },
       },
     }) satisfies SxProps<Theme>,
@@ -478,86 +481,93 @@ export const createThemeWithMode = (mode: "light" | "dark" = "light") => {
       mode,
     },
     typography: {
-      fontFamily:
-        '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Helvetica Neue", Arial, sans-serif',
-      // Headings - professional and authoritative
+      fontFamily: '"Roboto", "Helvetica Neue", Arial, sans-serif', // More formal, widely used in government sites
+      // Headings - formal, clear hierarchy
       h1: {
         fontWeight: 700,
-        fontSize: "3rem",
-        letterSpacing: "-0.02em",
+        fontSize: "2.5rem",
+        letterSpacing: "-0.01em",
         lineHeight: 1.2,
+        color: themedColors.textPrimary,
       },
       h2: {
         fontWeight: 700,
-        fontSize: "2.5rem",
-        letterSpacing: "-0.02em",
-        lineHeight: 1.2,
-      },
-      h3: {
-        fontWeight: 700,
         fontSize: "2rem",
         letterSpacing: "-0.01em",
+        lineHeight: 1.25,
+        color: themedColors.textPrimary,
+      },
+      h3: {
+        fontWeight: 600,
+        fontSize: "1.75rem",
+        letterSpacing: "0",
         lineHeight: 1.3,
+        color: themedColors.textPrimary,
       },
       h4: {
-        fontWeight: 700,
-        fontSize: "1.75rem",
-        letterSpacing: "-0.01em",
-        lineHeight: 1.3,
-      },
-      h5: {
         fontWeight: 600,
         fontSize: "1.5rem",
-        letterSpacing: "-0.005em",
-        lineHeight: 1.4,
+        letterSpacing: "0",
+        lineHeight: 1.35,
+        color: themedColors.textPrimary,
       },
-      h6: {
+      h5: {
         fontWeight: 600,
         fontSize: "1.25rem",
         letterSpacing: "0",
         lineHeight: 1.4,
+        color: themedColors.textPrimary,
       },
-      // Body text - optimized for readability
+      h6: {
+        fontWeight: 600,
+        fontSize: "1.125rem",
+        letterSpacing: "0",
+        lineHeight: 1.4,
+        color: themedColors.textPrimary,
+      },
+      // Body text - clear, readable
       body1: {
         fontSize: "1rem",
         lineHeight: 1.6,
-        letterSpacing: "0",
+        letterSpacing: "0.01em",
+        color: themedColors.textPrimary,
       },
       body2: {
         fontSize: "0.875rem",
         lineHeight: 1.6,
-        letterSpacing: "0",
+        letterSpacing: "0.01em",
+        color: themedColors.textSecondary,
       },
-      // Data display - prominent and clear
+      // Data display - clear and prominent
       subtitle1: {
         fontSize: "1rem",
-        fontWeight: 600,
+        fontWeight: 500,
         lineHeight: 1.5,
-        letterSpacing: "0",
+        letterSpacing: "0.01em",
       },
       subtitle2: {
         fontSize: "0.875rem",
-        fontWeight: 600,
+        fontWeight: 500,
         lineHeight: 1.5,
         letterSpacing: "0.01em",
       },
       // Small text
       caption: {
         fontSize: "0.75rem",
-        lineHeight: 1.4,
+        lineHeight: 1.5,
         letterSpacing: "0.02em",
-        color: colors.textSecondary,
+        color: themedColors.textTertiary,
       },
-      // Buttons
+      // Buttons - clear, professional
       button: {
         textTransform: "none",
-        fontWeight: 600,
-        fontSize: "0.875rem",
+        fontWeight: 500,
+        fontSize: "0.9375rem",
         letterSpacing: "0.02em",
       },
     },
     shape: {
-      borderRadius: 12, // Default border radius (corresponds to borderRadius.md)
+      borderRadius: 4, // More conservative border radius for government style
     },
     components: {
       MuiCard: {
@@ -566,8 +576,9 @@ export const createThemeWithMode = (mode: "light" | "dark" = "light") => {
         },
         styleOverrides: {
           root: {
-            borderRadius: 12,
+            borderRadius: 4,
             border: `1px solid ${themedColors.dataBorder}`,
+            boxShadow: shadows.card,
           },
         },
       },
@@ -578,6 +589,7 @@ export const createThemeWithMode = (mode: "light" | "dark" = "light") => {
         styleOverrides: {
           root: {
             backgroundImage: "none",
+            borderRadius: 4,
           },
         },
       },
@@ -585,11 +597,11 @@ export const createThemeWithMode = (mode: "light" | "dark" = "light") => {
         styleOverrides: {
           root: {
             textTransform: "none",
-            fontWeight: 600,
-            borderRadius: 8,
-            padding: "10px 24px",
+            fontWeight: 500,
+            borderRadius: 4,
+            padding: "8px 20px",
             boxShadow: "none",
-            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+            transition: "all 0.2s ease-in-out",
             "&:hover": {
               boxShadow: shadows.subtle,
             },
@@ -604,8 +616,8 @@ export const createThemeWithMode = (mode: "light" | "dark" = "light") => {
       MuiChip: {
         styleOverrides: {
           root: {
-            fontWeight: 600,
-            borderRadius: 8,
+            fontWeight: 500,
+            borderRadius: 4,
           },
         },
       },
@@ -613,12 +625,13 @@ export const createThemeWithMode = (mode: "light" | "dark" = "light") => {
         styleOverrides: {
           root: {
             borderBottom: `1px solid ${themedColors.dataBorder}`,
-            padding: "16px",
+            padding: "14px 16px",
           },
           head: {
-            fontWeight: 700,
+            fontWeight: 600,
             fontSize: "0.875rem",
-            letterSpacing: "0.5px",
+            letterSpacing: "0.03em",
+            textTransform: "uppercase",
           },
         },
       },
@@ -626,8 +639,8 @@ export const createThemeWithMode = (mode: "light" | "dark" = "light") => {
         styleOverrides: {
           root: {
             "& .MuiOutlinedInput-root": {
-              borderRadius: 12,
-              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              borderRadius: 4,
+              transition: "all 0.2s ease-in-out",
               "&:hover .MuiOutlinedInput-notchedOutline": {
                 borderColor: colors.primary,
               },
