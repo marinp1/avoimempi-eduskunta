@@ -2,7 +2,7 @@ WITH GovernmentPeriods AS (
     SELECT DISTINCT
         government,
         MIN(start_date) AS government_start,
-        MAX(CASE WHEN end_date = '' THEN NULL ELSE end_date END) AS government_end
+        MAX(end_date) AS government_end
     FROM GovernmentMembership
     GROUP BY government
 ),
@@ -14,7 +14,7 @@ CoalitionParties AS (
     FROM GovernmentMembership gm
     JOIN ParliamentaryGroupMembership pgm ON gm.person_id = pgm.person_id
     WHERE pgm.start_date <= gm.start_date
-        AND (pgm.end_date = '' OR pgm.end_date >= gm.start_date)
+        AND (pgm.end_date IS NULL OR pgm.end_date >= gm.start_date)
 ),
 -- Create a lookup table mapping each voting to its government (one correlated subquery per voting)
 VotingGovernment AS (
@@ -31,18 +31,18 @@ VotingGovernment AS (
         ) AS government
     FROM Voting vt
     WHERE
-        (CAST($startDate AS TEXT) = '' OR DATE(vt.start_time) >= $startDate)
-        AND (CAST($endDate AS TEXT) = '' OR DATE(vt.start_time) <= $endDate)
+        ($startDate IS NULL OR DATE(vt.start_time) >= $startDate)
+        AND ($endDate IS NULL OR DATE(vt.start_time) <= $endDate)
 ),
 -- Aggregate votes by government and party
 PartyVotingStats AS (
     SELECT
         vg.government,
         pgm.group_name AS party_name,
-        COUNT(CASE WHEN TRIM(v.vote) != 'Poissa' THEN 1 END) AS votes_cast,
+        COUNT(CASE WHEN v.vote != 'Poissa' THEN 1 END) AS votes_cast,
         COUNT(*) AS total_votings,
         ROUND(
-            CAST(COUNT(CASE WHEN TRIM(v.vote) != 'Poissa' THEN 1 END) AS REAL) * 100.0 /
+            CAST(COUNT(CASE WHEN v.vote != 'Poissa' THEN 1 END) AS REAL) * 100.0 /
             NULLIF(COUNT(*), 0),
             2
         ) AS participation_rate,
@@ -53,7 +53,7 @@ PartyVotingStats AS (
     WHERE
         vg.government IS NOT NULL
         AND pgm.start_date <= DATE(vg.start_time)
-        AND (pgm.end_date = '' OR pgm.end_date >= DATE(vg.start_time))
+        AND (pgm.end_date IS NULL OR pgm.end_date >= DATE(vg.start_time))
     GROUP BY
         vg.government, pgm.group_name
     HAVING

@@ -3,10 +3,10 @@ SELECT
     r.first_name,
     r.last_name,
     r.sort_name,
-    COUNT(CASE WHEN TRIM(v.vote) != 'Poissa' THEN 1 END) AS votes_cast,
+    COUNT(CASE WHEN v.vote != 'Poissa' THEN 1 END) AS votes_cast,
     COUNT(*) AS total_votings,
     ROUND(
-        CAST(COUNT(CASE WHEN TRIM(v.vote) != 'Poissa' THEN 1 END) AS REAL) * 100.0 /
+        CAST(COUNT(CASE WHEN v.vote != 'Poissa' THEN 1 END) AS REAL) * 100.0 /
         NULLIF(COUNT(*), 0),
         2
     ) AS participation_rate
@@ -17,8 +17,8 @@ JOIN
 JOIN
     Voting vt ON vt.id = v.voting_id
 WHERE
-    (CAST($startDate AS TEXT) = '' OR DATE(vt.start_time) >= $startDate)
-    AND (CAST($endDate AS TEXT) = '' OR DATE(vt.start_time) <= $endDate)
+    ($startDate IS NULL OR DATE(vt.start_time) >= $startDate)
+    AND ($endDate IS NULL OR DATE(vt.start_time) <= $endDate)
 GROUP BY
     r.person_id
 HAVING

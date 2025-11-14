@@ -14,8 +14,8 @@ ActiveRepsByYear AS (
     FROM YearSeries ys
     CROSS JOIN Representative r
     JOIN Term t ON r.person_id = t.person_id
-    WHERE CAST(SUBSTR(t.start_date, 1, 4) AS INTEGER) <= ys.year
-      AND (t.end_date = '' OR CAST(SUBSTR(t.end_date, 1, 4) AS INTEGER) >= ys.year)
+    WHERE t.start_year <= ys.year
+      AND (t.end_year IS NULL OR t.end_year >= ys.year)
       AND r.gender IN ('Mies', 'Nainen')
     GROUP BY ys.year, r.person_id
 )
