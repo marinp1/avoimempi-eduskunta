@@ -24,6 +24,7 @@ import RemoveIcon from "@mui/icons-material/Remove";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import { commonStyles, colors, spacing, gradients, shadows } from "../theme";
 import { voteColors } from "../theme/vote-styles";
+import { useThemedColors } from "../theme/ThemeContext";
 
 let cache = new Map<string, ReturnType<typeof getVotings>>();
 
@@ -56,6 +57,7 @@ const eduskuntaLink = (href: string) => {
 };
 
 export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
+  const themedColors = useThemedColors();
   const results = React.use(fetchData(query?.trim()));
 
   return (
@@ -67,8 +69,8 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
             sx={{
               mb: spacing.md,
               borderRadius: 3,
-              background: "#ffffff",
-              border: "1px solid #e0e0e0",
+              background: themedColors.backgroundPaper,
+              border: `1px solid ${themedColors.dataBorder}`,
               boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
               overflow: "hidden",
               transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -181,7 +183,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                             size="small"
                             sx={{
                               background: colors.primary,
-                              color: "#ffffff",
+                              color: "white",
                               fontWeight: 700,
                               fontSize: "0.75rem",
                               height: 28,
@@ -310,7 +312,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                                   "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                 "&:hover": {
                                   background: colors.primary,
-                                  color: "#ffffff",
+                                  color: "white",
                                   textDecoration: "none",
                                 },
                               }}
@@ -333,7 +335,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                                   "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                 "&:hover": {
                                   background: colors.primary,
-                                  color: "#ffffff",
+                                  color: "white",
                                   textDecoration: "none",
                                 },
                               }}

@@ -9,7 +9,8 @@ import {
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import StopIcon from "@mui/icons-material/Stop";
 import { GlassCard, GradientButton } from "../../theme/components";
-import { spacing } from "../../theme";
+import { spacing, gradients } from "../../theme";
+import { useThemedColors } from "../../theme/ThemeContext";
 
 interface ControlPanelProps {
   title: string;
@@ -36,6 +37,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   disabled = false,
   lastUpdate,
 }) => {
+  const themedColors = useThemedColors();
   return (
     <Fade in timeout={600}>
       <Box>
@@ -85,8 +87,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                   onClick={onStop}
                   startIcon={<StopIcon />}
                   sx={{
-                    background:
-                      "linear-gradient(135deg, #f44336 0%, #e91e63 100%)",
+                    background: gradients.danger,
                   }}
                 >
                   Stop
@@ -109,7 +110,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                   sx={{
                     height: 8,
                     borderRadius: 4,
-                    background: "rgba(0,0,0,0.1)",
+                    backgroundColor: themedColors.backgroundSubtle,
                     "& .MuiLinearProgress-bar": {
                       background: gradient,
                       borderRadius: 4,

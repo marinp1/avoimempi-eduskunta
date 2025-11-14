@@ -27,6 +27,7 @@ import {
 } from "recharts";
 import { GlassCard } from "../theme/components";
 import { colors, spacing, commonStyles } from "../theme";
+import { useThemedColors } from "../theme/ThemeContext";
 
 interface PartyParticipationData {
   government: string;
@@ -61,6 +62,7 @@ const PARTY_COLORS: Record<string, string> = {
 export default function PartyParticipation({
   onClose,
 }: PartyParticipationProps) {
+  const themedColors = useThemedColors();
   const [data, setData] = useState<PartyParticipationData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,7 +97,7 @@ export default function PartyParticipation({
       setData(result);
 
       // Initialize with all parties selected
-      const parties = new Set(result.map((d: any) => d.party_name));
+      const parties = new Set<string>(result.map((d: any) => d.party_name));
       setSelectedParties(parties);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error occurred");
@@ -155,10 +157,10 @@ export default function PartyParticipation({
       return (
         <Box
           sx={{
-            backgroundColor: "rgba(255, 255, 255, 0.98)",
+            backgroundColor: themedColors.backgroundPaper,
             padding: spacing.md,
             borderRadius: 2,
-            border: "1px solid rgba(102, 126, 234, 0.2)",
+            border: `1px solid ${themedColors.glassBorder}`,
             boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
             maxHeight: "400px",
             overflowY: "auto",
@@ -202,8 +204,7 @@ export default function PartyParticipation({
                       fontSize: "0.85rem",
                     }}
                   >
-                    {entry.dataKey}: {entry.value}%
-                    {isInCoalition && " ★"}
+                    {entry.dataKey}: {entry.value}%{isInCoalition && " ★"}
                   </Typography>
                 </Box>
               );
@@ -280,10 +281,7 @@ export default function PartyParticipation({
         <Box sx={{ mb: spacing.lg }}>
           <GlassCard>
             <CardContent sx={{ p: spacing.md }}>
-              <Typography
-                variant="h6"
-                sx={{ mb: spacing.sm, fontWeight: 600 }}
-              >
+              <Typography variant="h6" sx={{ mb: spacing.sm, fontWeight: 600 }}>
                 Suodattimet
               </Typography>
               <Grid container spacing={spacing.sm}>
@@ -320,10 +318,7 @@ export default function PartyParticipation({
         <Box sx={{ mb: spacing.lg }}>
           <GlassCard>
             <CardContent sx={{ p: spacing.md }}>
-              <Typography
-                variant="h6"
-                sx={{ mb: spacing.sm, fontWeight: 600 }}
-              >
+              <Typography variant="h6" sx={{ mb: spacing.sm, fontWeight: 600 }}>
                 Valitse puolueet
               </Typography>
               <FormGroup
@@ -376,10 +371,7 @@ export default function PartyParticipation({
         <Box>
           <GlassCard>
             <CardContent sx={{ p: spacing.lg }}>
-              <Typography
-                variant="h5"
-                sx={{ mb: spacing.sm, fontWeight: 600 }}
-              >
+              <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
                 Osallistumisprosentti hallituksittain
               </Typography>
               <Typography
@@ -404,12 +396,12 @@ export default function PartyParticipation({
                       height={100}
                       interval={0}
                       style={{ fontSize: "12px" }}
-                      tick={{ fill: "#666" }}
+                      tick={{ fill: themedColors.textSecondary }}
                     />
                     <YAxis
                       domain={[0, 100]}
                       style={{ fontSize: "14px" }}
-                      tick={{ fill: "#666" }}
+                      tick={{ fill: themedColors.textSecondary }}
                       label={{
                         value: "Osallistumisprosentti (%)",
                         angle: -90,
@@ -430,7 +422,10 @@ export default function PartyParticipation({
                           dataKey={party}
                           stroke={PARTY_COLORS[party] || PARTY_COLORS.default}
                           strokeWidth={2}
-                          dot={{ fill: PARTY_COLORS[party] || PARTY_COLORS.default, r: 4 }}
+                          dot={{
+                            fill: PARTY_COLORS[party] || PARTY_COLORS.default,
+                            r: 4,
+                          }}
                           activeDot={{ r: 6 }}
                           name={party}
                         />
@@ -474,7 +469,7 @@ export default function PartyParticipation({
                     sx={{
                       p: spacing.md,
                       borderRadius: 2,
-                      background: "rgba(102, 126, 234, 0.1)",
+                      background: themedColors.backgroundSubtle,
                     }}
                   >
                     <Typography variant="body2" color="text.secondary">
@@ -488,7 +483,7 @@ export default function PartyParticipation({
                     sx={{
                       p: spacing.md,
                       borderRadius: 2,
-                      background: "rgba(76, 175, 80, 0.1)",
+                      background: themedColors.backgroundSubtle,
                     }}
                   >
                     <Typography variant="body2" color="text.secondary">
@@ -502,7 +497,7 @@ export default function PartyParticipation({
                     sx={{
                       p: spacing.md,
                       borderRadius: 2,
-                      background: "rgba(255, 152, 0, 0.1)",
+                      background: themedColors.backgroundSubtle,
                     }}
                   >
                     <Typography variant="body2" color="text.secondary">
@@ -510,10 +505,8 @@ export default function PartyParticipation({
                     </Typography>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       {(
-                        data.reduce(
-                          (sum, d) => sum + d.participation_rate,
-                          0,
-                        ) / data.length
+                        data.reduce((sum, d) => sum + d.participation_rate, 0) /
+                        data.length
                       ).toFixed(1)}
                       %
                     </Typography>

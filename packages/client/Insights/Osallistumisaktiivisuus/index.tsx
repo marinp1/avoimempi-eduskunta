@@ -14,6 +14,7 @@ import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import CloseIcon from "@mui/icons-material/Close";
 import { GlassCard, StatCard } from "../../theme/components";
 import { commonStyles, colors, spacing, gradients } from "../../theme";
+import { useThemedColors } from "../../theme/ThemeContext";
 import { ParticipationData } from "./types";
 import { ParticipationTable } from "./ParticipationTable";
 import { HistoricalComparison } from "./HistoricalComparison";
@@ -27,6 +28,7 @@ export default function Osallistumisaktiivisuus({
   onClose,
   initialPersonId,
 }: OsallistumisaktiivisuusProps) {
+  const themedColors = useThemedColors();
   const [data, setData] = useState<ParticipationData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -169,7 +171,7 @@ export default function Osallistumisaktiivisuus({
                   <StatCard
                     title="Edustajia"
                     value={stats.totalRepresentatives.toString()}
-                    gradient="linear-gradient(135deg, #2196f3 0%, #1976d2 100%)"
+                    gradient={gradients.info}
                     icon="👥"
                   />
                 </Grid>
@@ -193,7 +195,7 @@ export default function Osallistumisaktiivisuus({
                   <StatCard
                     title="Matalin"
                     value={`${stats.lowestParticipation}%`}
-                    gradient="linear-gradient(135deg, #ff9800 0%, #f57c00 100%)"
+                    gradient={gradients.warning}
                     icon="⚠️"
                   />
                 </Grid>

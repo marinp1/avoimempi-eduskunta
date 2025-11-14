@@ -26,6 +26,7 @@ import PieChartIcon from "@mui/icons-material/PieChart";
 import { RepresentativeDetails } from "./Details";
 import { GlassCard, StatCard } from "../theme/components";
 import { commonStyles, colors, spacing, gradients } from "../theme";
+import { useThemedColors } from "../theme/ThemeContext";
 
 type MemberWithExtras = DatabaseQueries.GetParliamentComposition & {
   party_name?: string;
@@ -33,6 +34,8 @@ type MemberWithExtras = DatabaseQueries.GetParliamentComposition & {
 };
 
 export default function App() {
+  const themedColors = useThemedColors();
+
   // Initialize from URL
   const getInitialDate = (): string => {
     const params = new URLSearchParams(window.location.search);
@@ -196,8 +199,8 @@ export default function App() {
             sx={{
               mb: spacing.lg,
               borderRadius: 3,
-              background: "#ffffff",
-              border: "1px solid #e0e0e0",
+              background: themedColors.backgroundPaper,
+              border: `1px solid ${themedColors.dataBorder}`,
               boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             }}
           >
@@ -238,7 +241,7 @@ export default function App() {
                 sx={{
                   maxWidth: 280,
                   "& .MuiOutlinedInput-root": {
-                    background: "#ffffff",
+                    background: themedColors.backgroundPaper,
                   },
                 }}
               />
@@ -255,8 +258,8 @@ export default function App() {
               sx={{
                 mb: spacing.lg,
                 borderRadius: 3,
-                background: "#ffffff",
-                border: "1px solid #e0e0e0",
+                background: themedColors.backgroundPaper,
+                border: `1px solid ${themedColors.dataBorder}`,
                 boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
               }}
             >
@@ -318,7 +321,10 @@ export default function App() {
                     </Typography>
                     <Typography
                       variant="subtitle1"
-                      sx={{ color: colors.textSecondary, fontWeight: 600 }}
+                      sx={{
+                        color: themedColors.textSecondary,
+                        fontWeight: 600,
+                      }}
                     >
                       Jäsentä yhteensä
                     </Typography>
@@ -355,13 +361,16 @@ export default function App() {
                     </Typography>
                     <Typography
                       variant="subtitle1"
-                      sx={{ color: colors.textSecondary, fontWeight: 600 }}
+                      sx={{
+                        color: themedColors.textSecondary,
+                        fontWeight: 600,
+                      }}
                     >
                       Hallituksessa
                     </Typography>
                     <Typography
                       variant="caption"
-                      sx={{ color: colors.textTertiary, fontWeight: 500 }}
+                      sx={{ color: themedColors.textTertiary, fontWeight: 500 }}
                     >
                       {(
                         (stats.inGovernment / stats.totalMembers) *
@@ -402,13 +411,16 @@ export default function App() {
                     </Typography>
                     <Typography
                       variant="subtitle1"
-                      sx={{ color: colors.textSecondary, fontWeight: 600 }}
+                      sx={{
+                        color: themedColors.textSecondary,
+                        fontWeight: 600,
+                      }}
                     >
                       Oppositiossa
                     </Typography>
                     <Typography
                       variant="caption"
-                      sx={{ color: colors.textTertiary, fontWeight: 500 }}
+                      sx={{ color: themedColors.textTertiary, fontWeight: 500 }}
                     >
                       {(
                         (stats.inOpposition / stats.totalMembers) *
@@ -440,8 +452,8 @@ export default function App() {
                         flex: "1 1 300px",
                         p: spacing.md,
                         borderRadius: 2,
-                        background: "#ffffff",
-                        border: "1px solid #e0e0e0",
+                        background: themedColors.backgroundPaper,
+                        border: `1px solid ${themedColors.dataBorder}`,
                         transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                         "&:hover": {
                           borderColor: colors.primary,
@@ -459,7 +471,10 @@ export default function App() {
                       >
                         <Typography
                           variant="subtitle1"
-                          sx={{ fontWeight: 700, color: colors.textPrimary }}
+                          sx={{
+                            fontWeight: 700,
+                            color: themedColors.textPrimary,
+                          }}
                         >
                           {party}
                         </Typography>
@@ -468,7 +483,7 @@ export default function App() {
                           size="small"
                           sx={{
                             background: colors.primary,
-                            color: "#ffffff",
+                            color: "white",
                             fontWeight: 700,
                             fontSize: "0.75rem",
                           }}
@@ -529,8 +544,8 @@ export default function App() {
             elevation={0}
             sx={{
               borderRadius: 3,
-              background: "#ffffff",
-              border: "1px solid #e0e0e0",
+              background: themedColors.backgroundPaper,
+              border: `1px solid ${themedColors.dataBorder}`,
               boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
               mb: spacing.lg,
               overflow: "hidden",
@@ -612,7 +627,7 @@ export default function App() {
                             size="small"
                             sx={{
                               background: colors.primary,
-                              color: "#ffffff",
+                              color: "white",
                               fontWeight: 700,
                               fontSize: "0.75rem",
                               height: 28,
@@ -685,7 +700,7 @@ export default function App() {
               p: spacing.md,
               textAlign: "center",
               borderRadius: 3,
-              background: "rgba(255,255,255,0.7)",
+              background: themedColors.glassBackground,
               backdropFilter: "blur(10px)",
             }}
           >

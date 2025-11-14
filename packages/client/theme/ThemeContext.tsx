@@ -76,6 +76,14 @@ export const useThemedColors = () => {
     chartPurple: colors.chartPurple,
     chartBlue: colors.chartBlue,
     chartGray: colors.chartGray,
+
+    // Role colors
+    ministerColor: colors.ministerColor,
+    ministerBackground: colors.ministerBackground,
+    coalitionColor: colors.coalitionColor,
+    coalitionBackground: colors.coalitionBackground,
+    oppositionColor: colors.oppositionColor,
+    oppositionBackground: colors.oppositionBackground,
   };
 };
 
@@ -133,7 +141,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       return () => mediaQuery.removeEventListener("change", handleChange);
     }
     // Legacy browsers
-    else if (mediaQuery.addListener) {
+    else if ("addListener" in mediaQuery) {
       mediaQuery.addListener(handleChange);
       return () => mediaQuery.removeListener(handleChange);
     }

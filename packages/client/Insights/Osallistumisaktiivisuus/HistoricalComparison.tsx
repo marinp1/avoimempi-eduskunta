@@ -19,7 +19,8 @@ import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import TrendingFlatIcon from "@mui/icons-material/TrendingFlat";
 import { ParticipationByGovernmentData } from "./types";
 import { GlassCard } from "../../theme/components";
-import { colors, spacing } from "../../theme";
+import { colors, spacing, gradients } from "../../theme";
+import { useThemedColors } from "../../theme/ThemeContext";
 
 interface HistoricalComparisonProps {
   personId: number;
@@ -34,6 +35,7 @@ export function HistoricalComparison({
   startDate,
   endDate,
 }: HistoricalComparisonProps) {
+  const themedColors = useThemedColors();
   const [data, setData] = React.useState<ParticipationByGovernmentData[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -108,8 +110,8 @@ export function HistoricalComparison({
           label="Ministeri"
           size="small"
           sx={{
-            backgroundColor: "rgba(156, 39, 176, 0.2)",
-            color: "#9c27b0",
+            backgroundColor: themedColors.ministerBackground,
+            color: themedColors.ministerColor,
             fontWeight: 600,
           }}
         />
@@ -120,8 +122,8 @@ export function HistoricalComparison({
           label="Hallituspuolue"
           size="small"
           sx={{
-            backgroundColor: "rgba(33, 150, 243, 0.2)",
-            color: "#2196f3",
+            backgroundColor: themedColors.coalitionBackground,
+            color: themedColors.coalitionColor,
             fontWeight: 600,
           }}
         />
@@ -132,8 +134,8 @@ export function HistoricalComparison({
           label="Oppositio"
           size="small"
           sx={{
-            backgroundColor: "rgba(158, 158, 158, 0.2)",
-            color: "#616161",
+            backgroundColor: themedColors.oppositionBackground,
+            color: themedColors.oppositionColor,
             fontWeight: 600,
           }}
         />
@@ -188,8 +190,7 @@ export function HistoricalComparison({
               <TableHead>
                 <TableRow
                   sx={{
-                    background:
-                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    background: gradients.scraper,
                   }}
                 >
                   <TableCell sx={{ color: "white", fontWeight: 600 }}>
@@ -239,7 +240,7 @@ export function HistoricalComparison({
                       key={`${row.person_id}-${row.government}-${index}`}
                       sx={{
                         "&:hover": {
-                          background: "rgba(102, 126, 234, 0.05)",
+                          backgroundColor: `${themedColors.accent}0D`,
                         },
                       }}
                     >
@@ -302,7 +303,7 @@ export function HistoricalComparison({
             sx={{
               mt: spacing.sm,
               p: spacing.sm,
-              background: "rgba(33, 150, 243, 0.1)",
+              backgroundColor: `${themedColors.info}1A`,
               borderRadius: 1,
             }}
           >
