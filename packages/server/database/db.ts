@@ -133,12 +133,23 @@ export class DatabaseConnection {
     return data;
   }
 
-  public async fetchSessions() {
-    const stmt = this.db.query<
+  public async fetchSessions(params: { page: number; limit: number }) {
+    const offset = (params.page - 1) * params.limit;
+
+    // Get total count
+    const countStmt = this.db.prepare<{ count: number }, []>(
+      queries.sql`SELECT COUNT(*) as count FROM Session`,
+    );
+    const countResult = countStmt.get();
+    const totalCount = countResult?.count || 0;
+    countStmt.finalize();
+
+    // Get paginated sessions
+    const stmt = this.db.prepare<
       DatabaseTables.Session & { agenda_title?: string; agenda_state?: string },
-      []
-    >(queries.sessions);
-    const sessions = stmt.all();
+      { $limit: number; $offset: number }
+    >(queries.sessionsPaginated);
+    const sessions = stmt.all({ $limit: params.limit, $offset: offset });
     stmt.finalize();
 
     // Fetch sections for each session
@@ -156,7 +167,13 @@ export class DatabaseConnection {
     });
 
     sectionsStmt.finalize();
-    return sessionsWithSections;
+    return {
+      sessions: sessionsWithSections,
+      totalCount,
+      page: params.page,
+      limit: params.limit,
+      totalPages: Math.ceil(totalCount / params.limit),
+    };
   }
 
   public async fetchSectionSpeeches(params: { sectionKey: string }) {

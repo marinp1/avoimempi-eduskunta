@@ -128,8 +128,12 @@ const server = Bun.serve({
     },
 
     "/api/sessions": {
-      GET: async () => {
-        const sessions = await db.fetchSessions();
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const page = parseInt(searchParams.get("page") || "1", 10);
+        const limit = parseInt(searchParams.get("limit") || "20", 10);
+
+        const sessions = await db.fetchSessions({ page, limit });
         return new Response(JSON.stringify(sessions), {
           headers: { "Content-Type": "application/json" },
         });
