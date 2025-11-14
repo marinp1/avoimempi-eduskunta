@@ -313,6 +313,30 @@ export class DatabaseConnection {
     return data;
   }
 
+  public async fetchSessionByDate(params: { date: string }) {
+    const stmt = this.db.prepare<
+      DatabaseTables.Session & { agenda_title?: string; agenda_state?: string },
+      { $date: string }
+    >(queries.sessionByDate);
+    const data = stmt.all({ $date: params.date });
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchSpeechesByDate(params: { date: string }) {
+    const stmt = this.db.prepare<
+      DatabaseTables.ExcelSpeech & {
+        section_title?: string;
+        section_processing_title?: string;
+        section_ordinal?: number;
+      },
+      { $date: string }
+    >(queries.speechesByDate);
+    const data = stmt.all({ $date: params.date });
+    stmt.finalize();
+    return data;
+  }
+
   #connectToDatabase() {
     const databasePath = getDatabasePath();
     this.#database = new Database(databasePath, {

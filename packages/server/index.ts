@@ -19,6 +19,7 @@ const server = Bun.serve({
     "/composition": homepage,
     "/votings": homepage,
     "/sessions": homepage,
+    "/days": homepage,
     "/admin": homepage,
     "/insights": homepage,
     "/api/status": new Response("OK"),
@@ -216,6 +217,28 @@ const server = Bun.serve({
           },
         );
         return new Response(JSON.stringify(partyParticipation), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
+    "/api/day/:date/session": {
+      GET: async (req: BunRequest<"/api/day/:date/session">) => {
+        const sessions = await db.fetchSessionByDate({
+          date: req.params.date,
+        });
+        return new Response(JSON.stringify(sessions), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
+    "/api/day/:date/speeches": {
+      GET: async (req: BunRequest<"/api/day/:date/speeches">) => {
+        const speeches = await db.fetchSpeechesByDate({
+          date: req.params.date,
+        });
+        return new Response(JSON.stringify(speeches), {
           headers: { "Content-Type": "application/json" },
         });
       },
