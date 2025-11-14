@@ -18,6 +18,7 @@ import { GlassCard } from "../theme/components";
 import { commonStyles, colors, spacing } from "../theme";
 import OsallistumisaktiivisuusPanel from "./Osallistumisaktiivisuus";
 import TimeSeriesStatistics from "./TimeSeriesStatistics";
+import PartyParticipation from "./PartyParticipation";
 
 export default function InsightsPage() {
   const [loading, setLoading] = useState<boolean>(false);
@@ -25,6 +26,8 @@ export default function InsightsPage() {
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const [initialPersonId, setInitialPersonId] = useState<number | null>(null);
   const [timeSeriesDrawerOpen, setTimeSeriesDrawerOpen] =
+    useState<boolean>(false);
+  const [partyParticipationDrawerOpen, setPartyParticipationDrawerOpen] =
     useState<boolean>(false);
 
   // Update URL when drawer state changes
@@ -96,6 +99,14 @@ export default function InsightsPage() {
 
   const handleTimeSeriesDrawerClose = () => {
     setTimeSeriesDrawerOpen(false);
+  };
+
+  const handlePartyParticipationDrawerOpen = () => {
+    setPartyParticipationDrawerOpen(true);
+  };
+
+  const handlePartyParticipationDrawerClose = () => {
+    setPartyParticipationDrawerOpen(false);
   };
 
   return (
@@ -184,50 +195,60 @@ export default function InsightsPage() {
 
             {/* Party Performance */}
             <Grid size={{ xs: 12, md: 6 }}>
-              <GlassCard
-                sx={{
-                  height: "100%",
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    transform: "translateY(-4px)",
-                    boxShadow: "0 12px 24px rgba(102, 126, 234, 0.2)",
-                  },
-                }}
+              <Box
+                onClick={handlePartyParticipationDrawerOpen}
+                sx={{ height: "100%" }}
               >
-                <CardContent sx={{ p: spacing.lg }}>
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    <AssessmentIcon
-                      sx={{
-                        fontSize: 40,
-                        color: colors.success,
-                        mr: spacing.sm,
-                      }}
-                    />
-                    <Typography
-                      variant="h5"
-                      sx={{ ...commonStyles.gradientText }}
-                    >
-                      Puolueiden suorituskyky
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Tulossa pian: Puolueiden äänestysaktiivisuus ja linjakkuus
-                  </Typography>
-                  <Box
-                    sx={{
-                      mt: spacing.md,
-                      p: spacing.md,
-                      borderRadius: 2,
-                      background: "rgba(76, 175, 80, 0.1)",
-                      textAlign: "center",
-                    }}
-                  >
+                <GlassCard
+                  sx={{
+                    height: "100%",
+                    transition: "all 0.3s ease",
+                    cursor: "pointer",
+                    "&:hover": {
+                      transform: "translateY(-4px)",
+                      boxShadow: "0 12px 24px rgba(102, 126, 234, 0.2)",
+                    },
+                  }}
+                >
+                  <CardContent sx={{ p: spacing.lg }}>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                      <AssessmentIcon
+                        sx={{
+                          fontSize: 40,
+                          color: colors.success,
+                          mr: spacing.sm,
+                        }}
+                      />
+                      <Typography
+                        variant="h5"
+                        sx={{ ...commonStyles.gradientText }}
+                      >
+                        Puolueiden osallistuminen
+                      </Typography>
+                    </Box>
                     <Typography variant="body2" color="text.secondary">
-                      Ominaisuus kehitteillä
+                      Seuraa puolueiden äänestysosallistumista eri hallitusten
+                      aikana
                     </Typography>
-                  </Box>
-                </CardContent>
-              </GlassCard>
+                    <Box
+                      sx={{
+                        mt: spacing.md,
+                        p: spacing.md,
+                        borderRadius: 2,
+                        background: "rgba(76, 175, 80, 0.1)",
+                        textAlign: "center",
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{ color: colors.success, fontWeight: 600 }}
+                      >
+                        Katso analytiikka →
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </GlassCard>
+              </Box>
             </Grid>
 
             {/* Session Statistics */}
@@ -411,6 +432,21 @@ export default function InsightsPage() {
         }}
       >
         <TimeSeriesStatistics onClose={handleTimeSeriesDrawerClose} />
+      </Drawer>
+
+      {/* Party Participation Drawer */}
+      <Drawer
+        anchor="right"
+        open={partyParticipationDrawerOpen}
+        onClose={handlePartyParticipationDrawerClose}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" },
+            maxWidth: "1400px",
+          },
+        }}
+      >
+        <PartyParticipation onClose={handlePartyParticipationDrawerClose} />
       </Drawer>
     </Box>
   );
