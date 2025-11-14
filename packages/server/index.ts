@@ -185,6 +185,24 @@ const server = Bun.serve({
       },
     },
 
+    "/api/insights/gender-division": {
+      GET: async () => {
+        const genderDivision = await db.fetchGenderDivisionOverTime();
+        return new Response(JSON.stringify(genderDivision), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
+    "/api/insights/age-division": {
+      GET: async () => {
+        const ageDivision = await db.fetchAgeDivisionOverTime();
+        return new Response(JSON.stringify(ageDivision), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
     "/api/admin/status": {
       GET: async () => {
         const adminService = new AdminStorageService();

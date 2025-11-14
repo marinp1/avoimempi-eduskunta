@@ -246,6 +246,44 @@ export class DatabaseConnection {
     return data;
   }
 
+  public async fetchGenderDivisionOverTime() {
+    const stmt = this.db.prepare<
+      {
+        year: number;
+        female_count: number;
+        male_count: number;
+        total_count: number;
+        female_percentage: number;
+        male_percentage: number;
+      },
+      []
+    >(queries.genderDivisionOverTime);
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchAgeDivisionOverTime() {
+    const stmt = this.db.prepare<
+      {
+        year: number;
+        age_under_30: number;
+        age_30_39: number;
+        age_40_49: number;
+        age_50_59: number;
+        age_60_plus: number;
+        average_age: number;
+        min_age: number;
+        max_age: number;
+        total_count: number;
+      },
+      []
+    >(queries.ageDivisionOverTime);
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
   #connectToDatabase() {
     const databasePath = getDatabasePath();
     this.#database = new Database(databasePath, {
