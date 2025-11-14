@@ -197,7 +197,6 @@ export class DatabaseConnection {
         first_name: string;
         last_name: string;
         sort_name: string;
-        party_name: string | null;
         term_start: string;
         term_end: string;
         votes_cast: number;

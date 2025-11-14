@@ -100,22 +100,6 @@ export function ParticipationTable({
                 </TableSortLabel>
               </TableCell>
               <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                <TableSortLabel
-                  active={sortField === "party_name"}
-                  direction={sortField === "party_name" ? sortDirection : "asc"}
-                  onClick={() => handleSort("party_name")}
-                  sx={{
-                    color: "white !important",
-                    "&:hover": { color: "rgba(255,255,255,0.8) !important" },
-                    "& .MuiTableSortLabel-icon": {
-                      color: "white !important",
-                    },
-                  }}
-                >
-                  Puolue
-                </TableSortLabel>
-              </TableCell>
-              <TableCell sx={{ color: "white", fontWeight: 600 }}>
                 Vaalikausi
               </TableCell>
               <TableCell align="right" sx={{ color: "white", fontWeight: 600 }}>
@@ -176,17 +160,6 @@ export function ParticipationTable({
                   <Typography variant="body2" fontWeight={500}>
                     {row.first_name} {row.last_name}
                   </Typography>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={row.party_name || "Ei tiedossa"}
-                    size="small"
-                    sx={{
-                      background: "rgba(102, 126, 234, 0.1)",
-                      color: colors.primary,
-                      fontWeight: 500,
-                    }}
-                  />
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" color="text.secondary">

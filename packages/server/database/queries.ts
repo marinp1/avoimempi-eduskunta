@@ -225,52 +225,27 @@ SELECT
     r.first_name,
     r.last_name,
     r.sort_name,
-    pgm.group_name AS party_name,
     t.start_date AS term_start,
     t.end_date AS term_end,
-    COUNT(DISTINCT v.voting_id) AS votes_cast,
-    (
-        SELECT COUNT(DISTINCT vt.id)
-        FROM Voting vt
-        JOIN Session s ON vt.session_key = s.key
-        WHERE s.date >= t.start_date
-          AND (t.end_date = '' OR s.date <= t.end_date)
-          AND (CAST($startDate AS TEXT) = '' OR s.date >= $startDate)
-          AND (CAST($endDate AS TEXT) = '' OR s.date <= $endDate)
-    ) AS total_votings,
+    COUNT(CASE WHEN TRIM(v.vote) != 'Poissa' THEN 1 END) AS votes_cast,
+    COUNT(*) AS total_votings,
     ROUND(
-        CAST(COUNT(DISTINCT v.voting_id) AS REAL) * 100.0 /
-        NULLIF((
-            SELECT COUNT(DISTINCT vt.id)
-            FROM Voting vt
-            JOIN Session s ON vt.session_key = s.key
-            WHERE s.date >= t.start_date
-              AND (t.end_date = '' OR s.date <= t.end_date)
-              AND (CAST($startDate AS TEXT) = '' OR s.date >= $startDate)
-              AND (CAST($endDate AS TEXT) = '' OR s.date <= $endDate)
-        ), 0),
+        CAST(COUNT(CASE WHEN TRIM(v.vote) != 'Poissa' THEN 1 END) AS REAL) * 100.0 /
+        NULLIF(COUNT(*), 0),
         2
     ) AS participation_rate
 FROM
     Representative r
 JOIN
     Term t ON r.person_id = t.person_id
-LEFT JOIN
+JOIN
     Vote v ON r.person_id = v.person_id
-    AND EXISTS (
-        SELECT 1
-        FROM Voting vt2
-        JOIN Session s2 ON vt2.session_key = s2.key
-        WHERE vt2.id = v.voting_id
-          AND s2.date >= t.start_date
-          AND (t.end_date = '' OR s2.date <= t.end_date)
-          AND (CAST($startDate AS TEXT) = '' OR s2.date >= $startDate)
-          AND (CAST($endDate AS TEXT) = '' OR s2.date <= $endDate)
-    )
-LEFT JOIN
-    ParliamentaryGroupMembership pgm ON r.person_id = pgm.person_id
-    AND pgm.start_date <= COALESCE(t.end_date, DATE('now'))
-    AND (pgm.end_date = '' OR pgm.end_date >= t.start_date)
+JOIN
+    Voting vt ON vt.id = v.voting_id
+    AND DATE(vt.start_time) >= t.start_date
+    AND (t.end_date = '' OR DATE(vt.start_time) <= t.end_date)
+    AND (CAST($startDate AS TEXT) = '' OR DATE(vt.start_time) >= $startDate)
+    AND (CAST($endDate AS TEXT) = '' OR DATE(vt.start_time) <= $endDate)
 WHERE
     (CAST($personId AS TEXT) = '' OR r.person_id = $personId)
     AND (
@@ -279,9 +254,9 @@ WHERE
             AND (t.end_date = '' OR t.end_date >= COALESCE($startDate, t.start_date)))
     )
 GROUP BY
-    r.person_id, t.id, t.start_date, t.end_date, pgm.group_name
+    r.person_id, t.id, t.start_date, t.end_date
 HAVING
-    total_votings > 0
+    COUNT(*) > 0
 ORDER BY
     participation_rate DESC, votes_cast DESC
 `;
