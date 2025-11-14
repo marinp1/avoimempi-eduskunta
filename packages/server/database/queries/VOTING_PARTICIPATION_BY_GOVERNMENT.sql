@@ -65,15 +65,9 @@ JOIN
     AND ($endDate IS NULL OR DATE(vt.start_time) <= $endDate)
 WHERE
     r.person_id = $personId
-    AND (
-        ($startDate IS NULL AND $endDate IS NULL)
-        OR (gp.government_start <= COALESCE($endDate, DATE('now'))
-            AND (gp.government_end IS NULL OR gp.government_end >= COALESCE($startDate, gp.government_start)))
-    )
 GROUP BY
     r.person_id, gp.government
 HAVING
     COUNT(*) > 0
 ORDER BY
     gp.government_start DESC
-`;
