@@ -7,7 +7,7 @@ import {
   CircularProgress,
   Alert,
   Fade,
-  Dialog,
+  Drawer,
 } from "@mui/material";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import AssessmentIcon from "@mui/icons-material/Assessment";
@@ -20,7 +20,71 @@ import OsallistumisaktiivisuusPanel from "./Osallistumisaktiivisuus";
 export default function InsightsPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
+  const [initialPersonId, setInitialPersonId] = useState<number | null>(null);
+
+  // Update URL when drawer state changes
+  const updateUrl = (open: boolean, personId?: number | null) => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (open) {
+      params.set("participation", "true");
+      if (personId) {
+        params.set("personId", personId.toString());
+      } else {
+        params.delete("personId");
+      }
+    } else {
+      params.delete("participation");
+      params.delete("personId");
+    }
+
+    const newUrl = `${window.location.pathname}${params.toString() ? "?" + params.toString() : ""}`;
+    window.history.pushState({}, "", newUrl);
+  };
+
+  // Check URL parameters on mount and handle browser navigation
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const params = new URLSearchParams(window.location.search);
+      const participationParam = params.get("participation");
+      const personIdParam = params.get("personId");
+
+      if (participationParam === "true") {
+        setDrawerOpen(true);
+        if (personIdParam) {
+          const personId = parseInt(personIdParam, 10);
+          if (!isNaN(personId)) {
+            setInitialPersonId(personId);
+          }
+        }
+      } else {
+        setDrawerOpen(false);
+        setInitialPersonId(null);
+      }
+    };
+
+    // Handle initial load
+    handleUrlChange();
+
+    // Handle browser back/forward buttons
+    window.addEventListener("popstate", handleUrlChange);
+    return () => window.removeEventListener("popstate", handleUrlChange);
+  }, []);
+
+  const handleDrawerOpen = (personId?: number) => {
+    setDrawerOpen(true);
+    if (personId) {
+      setInitialPersonId(personId);
+    }
+    updateUrl(true, personId);
+  };
+
+  const handleDrawerClose = () => {
+    setDrawerOpen(false);
+    setInitialPersonId(null);
+    updateUrl(false);
+  };
 
   return (
     <Box>
@@ -198,7 +262,7 @@ export default function InsightsPage() {
 
             {/* Representative Activity */}
             <Grid size={{ xs: 12, md: 6 }}>
-              <Box onClick={() => setDialogOpen(true)} sx={{ height: "100%" }}>
+              <Box onClick={() => handleDrawerOpen()} sx={{ height: "100%" }}>
                 <GlassCard
                   sx={{
                     height: "100%",
@@ -298,28 +362,23 @@ export default function InsightsPage() {
         </Box>
       </Fade>
 
-      {/* Voting Participation Dialog */}
-      <Dialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        maxWidth={false}
-        fullWidth
-        TransitionProps={{
-          unmountOnExit: true,
-        }}
-        scroll="paper"
+      {/* Voting Participation Drawer */}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={handleDrawerClose}
         PaperProps={{
           sx: {
-            width: { xs: "100%", sm: "95%", md: "90%", lg: "85%" },
-            maxWidth: "1600px",
-            height: "90vh",
-            m: 2,
-            overflow: "hidden",
+            width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" },
+            maxWidth: "1400px",
           },
         }}
       >
-        <OsallistumisaktiivisuusPanel onClose={() => setDialogOpen(false)} />
-      </Dialog>
+        <OsallistumisaktiivisuusPanel
+          onClose={handleDrawerClose}
+          initialPersonId={initialPersonId}
+        />
+      </Drawer>
     </Box>
   );
 }

@@ -24,6 +24,8 @@ import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import WorkIcon from "@mui/icons-material/Work";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import InsightsIcon from "@mui/icons-material/Insights";
+import Button from "@mui/material/Button";
 
 type RepresentativeDetailsType = DatabaseTables.Representative;
 
@@ -148,6 +150,13 @@ export const RepresentativeDetails: React.FC<{
   selectedRepresentative: DatabaseQueries.GetParliamentComposition | null;
   selectedDate: string;
 }> = ({ open, onClose, selectedRepresentative, selectedDate }) => {
+  const handleViewParticipationInsights = () => {
+    // Navigate to insights page with participation insights open
+    const personId = selectedRepresentative?.person_id;
+    if (personId) {
+      window.location.href = `/insights?participation=true&personId=${personId}`;
+    }
+  };
   const [details, setDetails] =
     React.useState<Awaited<ReturnType<typeof fetchPersonDetails>>>();
 
@@ -439,6 +448,29 @@ export const RepresentativeDetails: React.FC<{
                         </Typography>
                       </Box>
                     )}
+                  </Box>
+
+                  {/* Participation Insights Button */}
+                  <Box sx={{ mt: 2 }}>
+                    <Button
+                      onClick={handleViewParticipationInsights}
+                      variant="contained"
+                      startIcon={<InsightsIcon />}
+                      sx={{
+                        bgcolor: "rgba(255,255,255,0.2)",
+                        color: "white",
+                        fontWeight: 600,
+                        textTransform: "none",
+                        px: 2,
+                        py: 1,
+                        border: "1px solid rgba(255,255,255,0.3)",
+                        "&:hover": {
+                          bgcolor: "rgba(255,255,255,0.3)",
+                        },
+                      }}
+                    >
+                      Näytä osallistumisaktiivisuus
+                    </Button>
                   </Box>
 
                   {/* Government Position or Trust Positions */}

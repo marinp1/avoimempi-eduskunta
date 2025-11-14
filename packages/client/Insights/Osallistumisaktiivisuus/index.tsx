@@ -20,17 +20,28 @@ import { HistoricalComparison } from "./HistoricalComparison";
 
 interface OsallistumisaktiivisuusProps {
   onClose: () => void;
+  initialPersonId?: number | null;
 }
 
 export default function Osallistumisaktiivisuus({
   onClose,
+  initialPersonId,
 }: OsallistumisaktiivisuusProps) {
   const [data, setData] = useState<ParticipationData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null);
+  const [selectedPersonId, setSelectedPersonId] = useState<number | null>(
+    initialPersonId || null,
+  );
+
+  // Set selectedPersonId when initialPersonId changes
+  useEffect(() => {
+    if (initialPersonId) {
+      setSelectedPersonId(initialPersonId);
+    }
+  }, [initialPersonId]);
 
   // Compute statistics
   const stats = React.useMemo(() => {
@@ -105,12 +116,57 @@ export default function Osallistumisaktiivisuus({
   return (
     <Box
       sx={{
-        height: "100%",
+        height: "100vh",
         display: "flex",
         flexDirection: "column",
         bgcolor: "background.default",
       }}
     >
+      {/* Fixed Header */}
+      <Box
+        sx={{
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          bgcolor: "background.default",
+          borderBottom: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Box sx={{ p: spacing.md }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: spacing.sm,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: spacing.sm,
+              }}
+            >
+              <HowToVoteIcon sx={{ fontSize: 32, color: colors.primary }} />
+              <Typography variant="h4" sx={commonStyles.gradientText}>
+                Äänestysosallistuminen
+              </Typography>
+            </Box>
+            <IconButton onClick={onClose} size="large">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          <Typography variant="body1" color="text.secondary">
+            Seuraa kansanedustajien äänestysosallistumista eri vaalikausilla.
+            Tiedot perustuvat äänestystietoihin ja edustajiensa
+            toimikausitietoihin.
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Scrollable Content */}
       <Box
         sx={{
           flex: 1,
@@ -120,41 +176,6 @@ export default function Osallistumisaktiivisuus({
         }}
       >
         <Box>
-          {/* Header */}
-          <GlassCard sx={{ mb: spacing.md }}>
-            <Box sx={{ p: spacing.md }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  mb: spacing.sm,
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: spacing.sm,
-                  }}
-                >
-                  <HowToVoteIcon sx={{ fontSize: 32, color: colors.primary }} />
-                  <Typography variant="h4" sx={commonStyles.gradientText}>
-                    Äänestysosallistuminen
-                  </Typography>
-                </Box>
-                <IconButton onClick={onClose} size="large">
-                  <CloseIcon />
-                </IconButton>
-              </Box>
-              <Typography variant="body1" color="text.secondary">
-                Seuraa kansanedustajien äänestysosallistumista eri
-                vaalikausilla. Tiedot perustuvat äänestystietoihin ja
-                edustajiensa toimikausitietoihin.
-              </Typography>
-            </Box>
-          </GlassCard>
-
           {/* Statistics */}
           {!loading && !error && data.length > 0 && (
             <Box>
