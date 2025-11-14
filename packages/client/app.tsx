@@ -99,7 +99,7 @@ export const App: React.FC = () => {
         }}
       />
 
-      {/* Professional Header */}
+      {/* Professional Header with Navigation */}
       <AppBar
         position="static"
         elevation={0}
@@ -110,16 +110,17 @@ export const App: React.FC = () => {
         }}
       >
         <Toolbar sx={{ py: spacing.sm, px: spacing.lg }}>
-          <Box sx={{ flexGrow: 1 }}>
+          <Box sx={{ flexGrow: 0, mr: spacing.xl }}>
             <Typography
-              variant="h4"
+              variant="h5"
               component="h1"
               sx={{
                 color: "#ffffff",
                 fontWeight: 700,
                 letterSpacing: "-0.02em",
-                fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2rem" },
+                fontSize: { xs: "1.25rem", sm: "1.5rem" },
                 textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                whiteSpace: "nowrap",
               }}
             >
               Avoimempi Eduskunta
@@ -128,93 +129,154 @@ export const App: React.FC = () => {
               variant="body2"
               sx={{
                 color: "rgba(255,255,255,0.85)",
-                fontSize: "0.875rem",
+                fontSize: "0.75rem",
                 fontWeight: 500,
-                mt: 0.5,
                 letterSpacing: "0.02em",
               }}
             >
               Suomen eduskunnan avoin data
             </Typography>
           </Box>
-        </Toolbar>
-      </AppBar>
 
-      <Container maxWidth="xl" sx={{ mt: spacing.lg, pb: spacing.xl }}>
-        {/* Professional Navigation Tabs */}
+          {/* Navigation Tabs in Header */}
+          <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
+            <Tabs
+              value={activeTab}
+              onChange={handleChange}
+              sx={{
+                minHeight: 48,
+                "& .MuiTab-root": {
+                  fontWeight: 600,
+                  fontSize: "0.875rem",
+                  py: spacing.xs,
+                  px: spacing.md,
+                  minHeight: 48,
+                  transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                  color: "rgba(255,255,255,0.85)",
+                  "&:hover": {
+                    background: "rgba(255,255,255,0.1)",
+                    color: "#ffffff",
+                  },
+                },
+                "& .Mui-selected": {
+                  color: "#ffffff !important",
+                  fontWeight: 700,
+                },
+                "& .MuiTabs-indicator": {
+                  height: 3,
+                  background: "#ffffff",
+                  borderRadius: "3px 3px 0 0",
+                },
+              }}
+            >
+              <Tab
+                icon={<HowToVoteIcon sx={{ fontSize: 20 }} />}
+                iconPosition="start"
+                label="Äänestykset"
+                value={Pages.Votings}
+              />
+              <Tab
+                icon={<PeopleIcon sx={{ fontSize: 20 }} />}
+                iconPosition="start"
+                label="Edustajat"
+                value={Pages.Composition}
+              />
+              <Tab
+                icon={<EventIcon sx={{ fontSize: 20 }} />}
+                iconPosition="start"
+                label="Istunnot"
+                value={Pages.Sessions}
+              />
+              <Tab
+                icon={<InsightsIcon sx={{ fontSize: 20 }} />}
+                iconPosition="start"
+                label="Analytiikka"
+                value={Pages.Insights}
+              />
+              <Tab
+                icon={<AdminPanelSettingsIcon sx={{ fontSize: 20 }} />}
+                iconPosition="start"
+                label="Admin"
+                value={Pages.Admin}
+              />
+            </Tabs>
+          </Box>
+        </Toolbar>
+
+        {/* Mobile Navigation - Below Header */}
         <Box
           sx={{
-            mb: spacing.lg,
-            borderRadius: 3,
-            background: "#ffffff",
-            border: "1px solid #e0e0e0",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-            overflow: "hidden",
+            display: { xs: "block", md: "none" },
+            px: spacing.md,
+            pb: spacing.xs,
           }}
         >
           <Tabs
             value={activeTab}
             onChange={handleChange}
-            variant="fullWidth"
+            variant="scrollable"
+            scrollButtons="auto"
             sx={{
-              minHeight: 64,
+              minHeight: 48,
               "& .MuiTab-root": {
                 fontWeight: 600,
-                fontSize: "0.9375rem",
-                py: spacing.sm,
-                px: spacing.md,
+                fontSize: "0.875rem",
+                py: spacing.xs,
+                px: spacing.sm,
+                minHeight: 48,
                 transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                color: "#606060",
-                minHeight: 64,
+                color: "rgba(255,255,255,0.85)",
                 "&:hover": {
-                  background: "rgba(0, 53, 128, 0.04)",
-                  color: "#003580",
+                  background: "rgba(255,255,255,0.1)",
+                  color: "#ffffff",
                 },
               },
               "& .Mui-selected": {
-                color: "#003580 !important",
+                color: "#ffffff !important",
                 fontWeight: 700,
               },
               "& .MuiTabs-indicator": {
-                height: 4,
-                borderRadius: "4px 4px 0 0",
-                background: gradients.primary,
+                height: 3,
+                background: "#ffffff",
+                borderRadius: "3px 3px 0 0",
               },
             }}
           >
             <Tab
-              icon={<HowToVoteIcon sx={{ fontSize: 24 }} />}
+              icon={<HowToVoteIcon sx={{ fontSize: 20 }} />}
               iconPosition="start"
               label="Äänestykset"
               value={Pages.Votings}
             />
             <Tab
-              icon={<PeopleIcon sx={{ fontSize: 24 }} />}
+              icon={<PeopleIcon sx={{ fontSize: 20 }} />}
               iconPosition="start"
               label="Edustajat"
               value={Pages.Composition}
             />
             <Tab
-              icon={<EventIcon sx={{ fontSize: 24 }} />}
+              icon={<EventIcon sx={{ fontSize: 20 }} />}
               iconPosition="start"
               label="Istunnot"
               value={Pages.Sessions}
             />
             <Tab
-              icon={<InsightsIcon sx={{ fontSize: 24 }} />}
+              icon={<InsightsIcon sx={{ fontSize: 20 }} />}
               iconPosition="start"
               label="Analytiikka"
               value={Pages.Insights}
             />
             <Tab
-              icon={<AdminPanelSettingsIcon sx={{ fontSize: 24 }} />}
+              icon={<AdminPanelSettingsIcon sx={{ fontSize: 20 }} />}
               iconPosition="start"
               label="Admin"
               value={Pages.Admin}
             />
           </Tabs>
         </Box>
+      </AppBar>
 
+      <Container maxWidth="xl" sx={{ mt: spacing.md, pb: spacing.xl }}>
         {/* Active page */}
         <Box>
           <ActivePage />
