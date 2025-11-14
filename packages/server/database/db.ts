@@ -201,13 +201,13 @@ export class DatabaseConnection {
         participation_rate: number;
       },
       {
-        $startDate: string;
-        $endDate: string;
+        $startDate: string | null;
+        $endDate: string | null;
       }
     >(queries.votingParticipation);
     const data = stmt.all({
-      $startDate: params?.startDate || "",
-      $endDate: params?.endDate || "",
+      $startDate: params?.startDate || null,
+      $endDate: params?.endDate || null,
     });
     stmt.finalize();
     return data;
@@ -233,14 +233,14 @@ export class DatabaseConnection {
       },
       {
         $personId: number;
-        $startDate: string;
-        $endDate: string;
+        $startDate: string | null;
+        $endDate: string | null;
       }
     >(queries.votingParticipationByGovernment);
     const data = stmt.all({
       $personId: +params.personId,
-      $startDate: params?.startDate || "",
-      $endDate: params?.endDate || "",
+      $startDate: params?.startDate || null,
+      $endDate: params?.endDate || null,
     });
     stmt.finalize();
     return data;
@@ -301,13 +301,13 @@ export class DatabaseConnection {
         was_in_coalition: number;
       },
       {
-        $startDate: string;
-        $endDate: string;
+        $startDate: string | null;
+        $endDate: string | null;
       }
     >(queries.partyParticipationByGovernment);
     const data = stmt.all({
-      $startDate: params?.startDate || "",
-      $endDate: params?.endDate || "",
+      $startDate: params?.startDate || null,
+      $endDate: params?.endDate || null,
     });
     stmt.finalize();
     return data;

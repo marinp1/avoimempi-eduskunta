@@ -175,6 +175,32 @@ Common tables:
 5. Update `IMPORT_ORDER` in `packages/datapipe/migrator/import-data.ts` if dependencies exist
 6. Run the pipeline: scrape → parse → migrate (via CLI or Admin UI)
 
+### Migration File Best Practices
+
+**IMPORTANT**: SQL migration files (`packages/datapipe/migrator/migrations/V*.sql`) must follow these rules:
+
+1. **No inline comments** - Comments on the same line as SQL statements break the migration parser
+2. **One statement per line** - Each SQL statement should be on its own line(s)
+3. **Separate statements with blank lines** - Improves readability and ensures proper parsing
+
+**Good Example:**
+```sql
+ALTER TABLE Term ADD COLUMN start_year INTEGER;
+
+ALTER TABLE Term ADD COLUMN end_year INTEGER;
+
+CREATE INDEX idx_term_start_year ON Term(start_year);
+```
+
+**Bad Example (will fail):**
+```sql
+-- Add year columns to Term table
+ALTER TABLE Term ADD COLUMN start_year INTEGER;  -- For optimization
+ALTER TABLE Term ADD COLUMN end_year INTEGER;
+```
+
+The migration system splits SQL files by semicolons and executes each statement individually. Comments on the same line as code or empty statements will cause "Query contained no valid SQL statement" errors.
+
 ### SQLite WAL Mode
 
 All database connections use `PRAGMA journal_mode = WAL;` for better concurrency and performance. This is critical for the application to work correctly.

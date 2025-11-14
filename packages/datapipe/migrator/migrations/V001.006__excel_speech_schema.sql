@@ -19,8 +19,10 @@ CREATE TABLE ExcelSpeech (
   source_file TEXT
 );
 
--- Indexes for efficient lookups and joins
-CREATE INDEX idx_excel_speech_excel_id ON ExcelSpeech(excel_id); -- For joining with Speech.excel_key
+CREATE INDEX idx_excel_speech_excel_id ON ExcelSpeech(excel_id);
+
 CREATE INDEX idx_excel_speech_document ON ExcelSpeech(document);
+
 CREATE INDEX idx_excel_speech_party ON ExcelSpeech(party);
+
 CREATE INDEX idx_excel_speech_name ON ExcelSpeech(last_name, first_name);
