@@ -1,55 +1,70 @@
 import { type SxProps, type Theme } from "@mui/material";
-import { colors } from "./index";
 
 /**
- * Vote result colors and styles
+ * Vote result colors - theme-aware
  */
-export const voteColors = {
-  yes: colors.success,
-  no: colors.error,
-  abstain: colors.warning,
-  absent: colors.neutral,
-} as const;
+export const getVoteColors = (themedColors: {
+  success: string;
+  error: string;
+  warning: string;
+}) => ({
+  yes: themedColors.success,
+  no: themedColors.error,
+  abstain: themedColors.warning,
+  absent: "#9e9e9e",
+});
 
 /**
- * Vote result box styles
+ * Vote result box styles - theme-aware
  */
-export const voteBoxStyles = {
+export const getVoteBoxStyles = (themedColors: {
+  success: string;
+  error: string;
+  warning: string;
+}) => ({
   yes: {
-    background: "rgba(76, 175, 80, 0.1)",
-    border: "1px solid rgba(76, 175, 80, 0.2)",
-    color: colors.success,
+    background: themedColors.success + "20",
+    border: `1px solid ${themedColors.success}60`,
+    color: themedColors.success,
   } satisfies SxProps<Theme>,
 
   no: {
-    background: "rgba(244, 67, 54, 0.1)",
-    border: "1px solid rgba(244, 67, 54, 0.2)",
-    color: colors.error,
+    background: themedColors.error + "20",
+    border: `1px solid ${themedColors.error}60`,
+    color: themedColors.error,
   } satisfies SxProps<Theme>,
 
   abstain: {
-    background: "rgba(255, 152, 0, 0.1)",
-    border: "1px solid rgba(255, 152, 0, 0.2)",
-    color: colors.warning,
+    background: themedColors.warning + "20",
+    border: `1px solid ${themedColors.warning}60`,
+    color: themedColors.warning,
   } satisfies SxProps<Theme>,
 
   absent: {
     background: "rgba(158, 158, 158, 0.1)",
     border: "1px solid rgba(158, 158, 158, 0.2)",
-    color: colors.neutral,
+    color: "#9e9e9e",
   } satisfies SxProps<Theme>,
-} as const;
+});
 
 /**
- * Get vote color by type
+ * Get vote color by type - theme-aware
  */
-export const getVoteColor = (voteType: "yes" | "no" | "abstain" | "absent"): string => {
-  return voteColors[voteType];
+export const getVoteColor = (
+  voteType: "yes" | "no" | "abstain" | "absent",
+  themedColors: { success: string; error: string; warning: string },
+): string => {
+  const colors = getVoteColors(themedColors);
+  return colors[voteType];
 };
 
 /**
- * Get vote box style by type
+ * Get vote box style by type - theme-aware
  */
-export const getVoteBoxStyle = (voteType: "yes" | "no" | "abstain" | "absent"): SxProps<Theme> => {
-  return voteBoxStyles[voteType];
+export const getVoteBoxStyle = (
+  voteType: "yes" | "no" | "abstain" | "absent",
+  themedColors: { success: string; error: string; warning: string },
+): SxProps<Theme> => {
+  const styles = getVoteBoxStyles(themedColors);
+  return styles[voteType];
 };

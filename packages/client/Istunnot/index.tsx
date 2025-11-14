@@ -182,7 +182,13 @@ export default function IstunnotPage() {
       {/* Header Card */}
       <Fade in timeout={500}>
         <Box>
-          <GlassCard sx={{ mb: spacing.lg }}>
+          <GlassCard
+            sx={{
+              mb: spacing.lg,
+              background: themedColors.glassBackground,
+              border: `1px solid ${themedColors.glassBorder}`,
+            }}
+          >
             <CardContent sx={{ p: spacing.lg, textAlign: "center" }}>
               <Box
                 sx={{
@@ -193,12 +199,15 @@ export default function IstunnotPage() {
                   mb: spacing.md,
                 }}
               >
-                <EventIcon sx={{ fontSize: 40, color: colors.primary }} />
+                <EventIcon sx={{ fontSize: 40, color: themedColors.primary }} />
                 <Typography
                   variant="h4"
                   component="h1"
                   sx={{
-                    ...commonStyles.gradientText,
+                    background: themedColors.primaryGradient,
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    fontWeight: 700,
                   }}
                 >
                   Eduskunnan istunnot
@@ -220,13 +229,15 @@ export default function IstunnotPage() {
             elevation={0}
             sx={{
               ...commonStyles.glassCard,
+              background: themedColors.glassBackground,
+              border: `1px solid ${themedColors.glassBorder}`,
               mb: spacing.lg,
               overflow: "hidden",
             }}
           >
             {loading ? (
               <Box sx={{ ...commonStyles.centeredFlex, py: spacing.xl }}>
-                <CircularProgress sx={{ color: colors.primary }} />
+                <CircularProgress sx={{ color: themedColors.primary }} />
               </Box>
             ) : error ? (
               <Alert
@@ -240,13 +251,23 @@ export default function IstunnotPage() {
                 <TableHead>
                   <TableRow
                     sx={{
-                      background: gradients.primary,
+                      background: themedColors.primaryGradient,
                     }}
                   >
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    <TableCell
+                      sx={{
+                        color: themedColors.backgroundPaper,
+                        fontWeight: 600,
+                      }}
+                    >
                       Istunto
                     </TableCell>
-                    <TableCell sx={{ color: "white", fontWeight: 600 }}>
+                    <TableCell
+                      sx={{
+                        color: themedColors.backgroundPaper,
+                        fontWeight: 600,
+                      }}
+                    >
                       Päiväjärjestys
                     </TableCell>
                   </TableRow>
@@ -288,7 +309,7 @@ export default function IstunnotPage() {
                                 <IconButton
                                   size="small"
                                   onClick={() => toggleRow(session.id)}
-                                  sx={{ color: colors.primary }}
+                                  sx={{ color: themedColors.primary }}
                                 >
                                   {isExpanded ? (
                                     <KeyboardArrowUpIcon />
@@ -298,7 +319,10 @@ export default function IstunnotPage() {
                                 </IconButton>
                               )}
                               <EventIcon
-                                sx={{ color: colors.primary, fontSize: 20 }}
+                                sx={{
+                                  color: themedColors.primary,
+                                  fontSize: 20,
+                                }}
                               />
                               <span>
                                 {session.year}/{session.number}
@@ -308,8 +332,10 @@ export default function IstunnotPage() {
                                   label={`${session.sections.length} kohtaa`}
                                   size="small"
                                   sx={{
-                                    background: "rgba(102, 126, 234, 0.1)",
-                                    color: colors.primary,
+                                    background: themedColors.isDark
+                                      ? "rgba(95, 163, 227, 0.2)"
+                                      : "rgba(102, 126, 234, 0.1)",
+                                    color: themedColors.primary,
                                     fontWeight: 500,
                                     fontSize: "0.7rem",
                                     height: 20,
@@ -337,8 +363,10 @@ export default function IstunnotPage() {
                                       label={session.agenda_state}
                                       size="small"
                                       sx={{
-                                        background: "rgba(76, 175, 80, 0.15)",
-                                        color: colors.success,
+                                        background: themedColors.isDark
+                                          ? "rgba(76, 175, 80, 0.25)"
+                                          : "rgba(76, 175, 80, 0.15)",
+                                        color: themedColors.success,
                                         fontWeight: 500,
                                         fontSize: "0.7rem",
                                         height: 20,
@@ -376,7 +404,7 @@ export default function IstunnotPage() {
                                     variant="subtitle2"
                                     sx={{
                                       fontWeight: 600,
-                                      color: colors.primary,
+                                      color: themedColors.primary,
                                       mb: spacing.sm,
                                     }}
                                   >
@@ -402,10 +430,12 @@ export default function IstunnotPage() {
                                           key={section.id}
                                           sx={{
                                             borderRadius: 2,
-                                            background:
-                                              "rgba(102, 126, 234, 0.05)",
-                                            border:
-                                              "1px solid rgba(102, 126, 234, 0.1)",
+                                            background: themedColors.isDark
+                                              ? "rgba(95, 163, 227, 0.1)"
+                                              : "rgba(102, 126, 234, 0.05)",
+                                            border: themedColors.isDark
+                                              ? "1px solid rgba(95, 163, 227, 0.2)"
+                                              : "1px solid rgba(102, 126, 234, 0.1)",
                                             overflow: "hidden",
                                           }}
                                         >
@@ -429,8 +459,10 @@ export default function IstunnotPage() {
                                                 label={section.ordinal}
                                                 size="small"
                                                 sx={{
-                                                  background: colors.primary,
-                                                  color: "white",
+                                                  background:
+                                                    themedColors.primary,
+                                                  color:
+                                                    themedColors.backgroundPaper,
                                                   fontWeight: 600,
                                                   fontSize: "0.7rem",
                                                   height: 22,
@@ -473,7 +505,9 @@ export default function IstunnotPage() {
                                                   section.key,
                                                 )
                                               }
-                                              sx={{ color: colors.primary }}
+                                              sx={{
+                                                color: themedColors.primary,
+                                              }}
                                             >
                                               {isSectionExpanded ? (
                                                 <KeyboardArrowUpIcon />
@@ -491,8 +525,9 @@ export default function IstunnotPage() {
                                               sx={{
                                                 p: spacing.sm,
                                                 pt: 0,
-                                                borderTop:
-                                                  "1px solid rgba(102, 126, 234, 0.1)",
+                                                borderTop: themedColors.isDark
+                                                  ? "1px solid rgba(95, 163, 227, 0.2)"
+                                                  : "1px solid rgba(102, 126, 234, 0.1)",
                                               }}
                                             >
                                               {isLoadingSpeeches ? (
@@ -505,7 +540,8 @@ export default function IstunnotPage() {
                                                   <CircularProgress
                                                     size={20}
                                                     sx={{
-                                                      color: colors.primary,
+                                                      color:
+                                                        themedColors.primary,
                                                     }}
                                                   />
                                                 </Box>
@@ -559,9 +595,11 @@ export default function IstunnotPage() {
                                                           size="small"
                                                           sx={{
                                                             background:
-                                                              "rgba(102, 126, 234, 0.2)",
+                                                              themedColors.isDark
+                                                                ? "rgba(95, 163, 227, 0.3)"
+                                                                : "rgba(102, 126, 234, 0.2)",
                                                             color:
-                                                              colors.primary,
+                                                              themedColors.primary,
                                                             fontWeight: 600,
                                                             fontSize: "0.65rem",
                                                             height: 18,
@@ -586,9 +624,11 @@ export default function IstunnotPage() {
                                                             size="small"
                                                             sx={{
                                                               background:
-                                                                "rgba(102, 126, 234, 0.1)",
+                                                                themedColors.isDark
+                                                                  ? "rgba(95, 163, 227, 0.2)"
+                                                                  : "rgba(102, 126, 234, 0.1)",
                                                               color:
-                                                                colors.primary,
+                                                                themedColors.primary,
                                                               fontSize:
                                                                 "0.65rem",
                                                               height: 18,
@@ -614,8 +654,10 @@ export default function IstunnotPage() {
                                                             p: spacing.sm,
                                                             borderRadius: 1,
                                                             background:
-                                                              "rgba(102, 126, 234, 0.03)",
-                                                            borderLeft: `3px solid ${colors.primary}`,
+                                                              themedColors.isDark
+                                                                ? "rgba(95, 163, 227, 0.08)"
+                                                                : "rgba(102, 126, 234, 0.03)",
+                                                            borderLeft: `3px solid ${themedColors.primary}`,
                                                           }}
                                                         >
                                                           <Typography
@@ -690,8 +732,8 @@ export default function IstunnotPage() {
                     fontWeight: 500,
                   },
                   "& .MuiPaginationItem-root.Mui-selected": {
-                    background: gradients.primary,
-                    color: "white",
+                    background: themedColors.primaryGradient,
+                    color: themedColors.backgroundPaper,
                     fontWeight: 600,
                   },
                 }}

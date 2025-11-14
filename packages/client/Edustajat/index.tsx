@@ -211,7 +211,7 @@ export default function App() {
                 component="h1"
                 gutterBottom
                 sx={{
-                  color: colors.primary,
+                  color: themedColors.primary,
                   fontWeight: 600,
                   mb: spacing.md,
                   letterSpacing: "0",
@@ -235,7 +235,7 @@ export default function App() {
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <CalendarTodayIcon sx={{ color: colors.primary }} />
+                      <CalendarTodayIcon sx={{ color: themedColors.primary }} />
                     </InputAdornment>
                   ),
                 }}
@@ -270,7 +270,7 @@ export default function App() {
                   variant="h5"
                   gutterBottom
                   sx={{
-                    color: colors.primary,
+                    color: themedColors.primary,
                     fontWeight: 600,
                     mb: spacing.md,
                     textAlign: "center",
@@ -297,23 +297,27 @@ export default function App() {
                       textAlign: "center",
                       p: spacing.lg,
                       borderRadius: 1,
-                      background: "rgba(0, 53, 128, 0.02)",
-                      border: "1px solid rgba(0, 53, 128, 0.15)",
+                      background: themedColors.primary + "10",
+                      border: `1px solid ${themedColors.primary}40`,
                       transition: "all 0.2s ease-in-out",
                       "&:hover": {
-                        borderColor: colors.primary,
-                        boxShadow: "0 2px 6px rgba(0, 53, 128, 0.12)",
+                        borderColor: themedColors.primary,
+                        boxShadow: `0 2px 6px ${themedColors.primary}30`,
                       },
                     }}
                   >
                     <GroupsIcon
-                      sx={{ fontSize: 48, color: colors.primary, mb: 1.5 }}
+                      sx={{
+                        fontSize: 48,
+                        color: themedColors.primary,
+                        mb: 1.5,
+                      }}
                     />
                     <Typography
                       variant="h2"
                       sx={{
                         fontWeight: 600,
-                        color: colors.primary,
+                        color: themedColors.primary,
                         fontSize: "2.5rem",
                         mb: 0.5,
                       }}
@@ -336,23 +340,27 @@ export default function App() {
                       textAlign: "center",
                       p: spacing.lg,
                       borderRadius: 1,
-                      background: "rgba(27, 94, 32, 0.02)",
-                      border: "1px solid rgba(27, 94, 32, 0.15)",
+                      background: themedColors.success + "10",
+                      border: `1px solid ${themedColors.success}40`,
                       transition: "all 0.2s ease-in-out",
                       "&:hover": {
-                        borderColor: colors.success,
-                        boxShadow: "0 2px 6px rgba(27, 94, 32, 0.12)",
+                        borderColor: themedColors.success,
+                        boxShadow: `0 2px 6px ${themedColors.success}30`,
                       },
                     }}
                   >
                     <AccountBalanceIcon
-                      sx={{ fontSize: 48, color: colors.success, mb: 1.5 }}
+                      sx={{
+                        fontSize: 48,
+                        color: themedColors.success,
+                        mb: 1.5,
+                      }}
                     />
                     <Typography
                       variant="h2"
                       sx={{
                         fontWeight: 600,
-                        color: colors.success,
+                        color: themedColors.success,
                         fontSize: "2.5rem",
                         mb: 0.5,
                       }}
@@ -385,23 +393,27 @@ export default function App() {
                       textAlign: "center",
                       p: spacing.lg,
                       borderRadius: 1,
-                      background: "rgba(230, 81, 0, 0.02)",
-                      border: "1px solid rgba(230, 81, 0, 0.15)",
+                      background: themedColors.warning + "10",
+                      border: `1px solid ${themedColors.warning}40`,
                       transition: "all 0.2s ease-in-out",
                       "&:hover": {
-                        borderColor: colors.warning,
-                        boxShadow: "0 2px 6px rgba(230, 81, 0, 0.12)",
+                        borderColor: themedColors.warning,
+                        boxShadow: `0 2px 6px ${themedColors.warning}30`,
                       },
                     }}
                   >
                     <PieChartIcon
-                      sx={{ fontSize: 48, color: colors.warning, mb: 1.5 }}
+                      sx={{
+                        fontSize: 48,
+                        color: themedColors.warning,
+                        mb: 1.5,
+                      }}
                     />
                     <Typography
                       variant="h2"
                       sx={{
                         fontWeight: 600,
-                        color: colors.warning,
+                        color: themedColors.warning,
                         fontSize: "2.5rem",
                         mb: 0.5,
                       }}
@@ -436,7 +448,7 @@ export default function App() {
                   gutterBottom
                   sx={{
                     fontWeight: 600,
-                    color: colors.primary,
+                    color: themedColors.primary,
                     mb: spacing.md,
                     fontSize: "1.125rem",
                   }}
@@ -455,8 +467,8 @@ export default function App() {
                         border: `1px solid ${themedColors.dataBorder}`,
                         transition: "all 0.2s ease-in-out",
                         "&:hover": {
-                          borderColor: colors.primary,
-                          boxShadow: "0 2px 6px rgba(0, 53, 128, 0.10)",
+                          borderColor: themedColors.primary,
+                          boxShadow: `0 2px 6px ${themedColors.primary}30`,
                         },
                       }}
                     >
@@ -481,7 +493,7 @@ export default function App() {
                           label={`${data.total} jäsentä`}
                           size="small"
                           sx={{
-                            background: colors.primary,
+                            background: themedColors.primary,
                             color: "white",
                             fontWeight: 700,
                             fontSize: "0.75rem",
@@ -500,16 +512,19 @@ export default function App() {
                           <Chip
                             icon={
                               <AccountBalanceIcon
-                                sx={{ fontSize: 16, color: colors.success }}
+                                sx={{
+                                  fontSize: 16,
+                                  color: themedColors.success,
+                                }}
                               />
                             }
                             label={`Hallitus: ${data.inGovernment}`}
                             size="small"
                             sx={{
-                              background: "rgba(46, 125, 50, 0.1)",
-                              color: colors.success,
+                              background: themedColors.success + "20",
+                              color: themedColors.success,
                               fontWeight: 600,
-                              border: `1px solid ${colors.success}`,
+                              border: `1px solid ${themedColors.success}`,
                             }}
                           />
                         )}
@@ -518,10 +533,10 @@ export default function App() {
                             label={`Oppositio: ${data.total - data.inGovernment}`}
                             size="small"
                             sx={{
-                              background: "rgba(239, 108, 0, 0.1)",
-                              color: colors.warning,
+                              background: themedColors.warning + "20",
+                              color: themedColors.warning,
                               fontWeight: 600,
-                              border: `1px solid ${colors.warning}`,
+                              border: `1px solid ${themedColors.warning}`,
                             }}
                           />
                         )}
@@ -553,7 +568,7 @@ export default function App() {
           >
             {loading ? (
               <Box sx={{ ...commonStyles.centeredFlex, py: spacing.xl }}>
-                <CircularProgress sx={{ color: colors.primary }} />
+                <CircularProgress sx={{ color: themedColors.primary }} />
               </Box>
             ) : error ? (
               <Alert
@@ -567,7 +582,7 @@ export default function App() {
                 <TableHead>
                   <TableRow
                     sx={{
-                      background: gradients.primary,
+                      background: themedColors.primaryGradient,
                     }}
                   >
                     <TableCell sx={{ ...commonStyles.tableHeader }}>
@@ -603,6 +618,11 @@ export default function App() {
                       hover
                       sx={{
                         ...commonStyles.tableRow,
+                        borderBottom: `1px solid ${themedColors.dataBorder}`,
+                        "&:hover": {
+                          background: themedColors.primary + "08",
+                          boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+                        },
                         animation: `fadeIn 0.3s ease-out ${index * 0.02}s both`,
                         "@keyframes fadeIn": {
                           from: {
@@ -617,7 +637,13 @@ export default function App() {
                       }}
                       onClick={() => handleRowClick(m)}
                     >
-                      <TableCell sx={{ ...commonStyles.dataCell, py: 2.5 }}>
+                      <TableCell
+                        sx={{
+                          ...commonStyles.dataCell,
+                          color: themedColors.textPrimary,
+                          py: 2.5,
+                        }}
+                      >
                         {m.first_name} {m.last_name}
                       </TableCell>
                       <TableCell sx={{ py: 2.5 }}>
@@ -626,7 +652,7 @@ export default function App() {
                             label={(m as any).party_name}
                             size="small"
                             sx={{
-                              background: colors.primary,
+                              background: themedColors.primary,
                               color: "white",
                               fontWeight: 700,
                               fontSize: "0.75rem",
@@ -647,7 +673,7 @@ export default function App() {
                         {(m as any).is_in_government === 1 ? (
                           <CheckCircleIcon
                             sx={{
-                              color: colors.success,
+                              color: themedColors.success,
                               fontSize: 28,
                             }}
                             titleAccess="Hallituksessa"
@@ -662,16 +688,40 @@ export default function App() {
                           </Typography>
                         )}
                       </TableCell>
-                      <TableCell sx={{ ...commonStyles.labelCell, py: 2.5 }}>
+                      <TableCell
+                        sx={{
+                          ...commonStyles.labelCell,
+                          color: themedColors.textSecondary,
+                          py: 2.5,
+                        }}
+                      >
                         {m.gender}
                       </TableCell>
-                      <TableCell sx={{ ...commonStyles.labelCell, py: 2.5 }}>
+                      <TableCell
+                        sx={{
+                          ...commonStyles.labelCell,
+                          color: themedColors.textSecondary,
+                          py: 2.5,
+                        }}
+                      >
                         {m.birth_date}
                       </TableCell>
-                      <TableCell sx={{ ...commonStyles.labelCell, py: 2.5 }}>
+                      <TableCell
+                        sx={{
+                          ...commonStyles.labelCell,
+                          color: themedColors.textSecondary,
+                          py: 2.5,
+                        }}
+                      >
                         {m.birth_place}
                       </TableCell>
-                      <TableCell sx={{ ...commonStyles.labelCell, py: 2.5 }}>
+                      <TableCell
+                        sx={{
+                          ...commonStyles.labelCell,
+                          color: themedColors.textSecondary,
+                          py: 2.5,
+                        }}
+                      >
                         {m.profession}
                       </TableCell>
                     </TableRow>

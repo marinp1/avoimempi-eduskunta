@@ -25,6 +25,7 @@ export const useThemedColors = () => {
   const isDark = mode === "dark";
 
   return {
+    isDark,
     // Background colors
     backgroundDefault: isDark
       ? colors.darkBackgroundDefault
@@ -57,20 +58,22 @@ export const useThemedColors = () => {
     backgroundAlt: isDark
       ? gradients.darkBackgroundAlt
       : gradients.backgroundAlt,
-    primary: isDark ? gradients.darkPrimary : gradients.primary,
+    primaryGradient: isDark ? gradients.darkPrimary : gradients.primary,
     primaryHover: isDark ? gradients.darkPrimaryHover : gradients.primaryHover,
 
-    // Brand colors (don't change with theme)
-    accent: colors.accent,
-    accentLight: colors.accentLight,
-    success: colors.success,
-    successLight: colors.successLight,
-    error: colors.error,
-    errorLight: colors.errorLight,
-    warning: colors.warning,
-    warningLight: colors.warningLight,
-    info: colors.info,
-    infoLight: colors.infoLight,
+    // Brand colors (theme-aware for better contrast)
+    primary: isDark ? "#5fa3e3" : colors.primary,
+    primaryLight: isDark ? "#8ec5f5" : colors.primaryLight,
+    accent: isDark ? "#5fa3e3" : colors.accent,
+    accentLight: isDark ? "#8ec5f5" : colors.accentLight,
+    success: isDark ? "#4caf50" : colors.success,
+    successLight: isDark ? "#81c784" : colors.successLight,
+    error: isDark ? "#ef5350" : colors.error,
+    errorLight: isDark ? "#e57373" : colors.errorLight,
+    warning: isDark ? "#ff9800" : colors.warning,
+    warningLight: isDark ? "#ffb74d" : colors.warningLight,
+    info: isDark ? "#29b6f6" : colors.info,
+    infoLight: isDark ? "#4fc3f7" : colors.infoLight,
 
     // Chart colors
     chartPurple: colors.chartPurple,

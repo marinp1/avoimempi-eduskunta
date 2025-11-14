@@ -9,19 +9,23 @@ import {
   Toolbar,
   Typography,
   GlobalStyles,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import PeopleIcon from "@mui/icons-material/People";
 import EventIcon from "@mui/icons-material/Event";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import InsightsIcon from "@mui/icons-material/Insights";
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";
 import VotingsPage from "./Votings";
 import EdustajatPage from "./Edustajat";
 import IstunnotPage from "./Istunnot";
 import AdminPage from "./Admin";
 import InsightsPage from "./Insights";
 import { gradients, commonStyles, spacing, borderRadius } from "./theme";
-import { useThemedColors } from "./theme/ThemeContext";
+import { useThemedColors, useTheme } from "./theme/ThemeContext";
 
 const Pages = Object.freeze({
   Votings: "votings",
@@ -43,6 +47,7 @@ const PageComponents = {
 
 export const App: React.FC = () => {
   const themedColors = useThemedColors();
+  const { mode, toggleTheme } = useTheme();
 
   // Initialize from URL path
   const getInitialTab = (): Page => {
@@ -205,80 +210,126 @@ export const App: React.FC = () => {
               />
             </Tabs>
           </Box>
+
+          {/* Theme Switcher */}
+          <Box sx={{ ml: spacing.md }}>
+            <Tooltip title={mode === "light" ? "Tumma teema" : "Vaalea teema"}>
+              <IconButton
+                onClick={toggleTheme}
+                sx={{
+                  color: "white",
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    background: "rgba(255,255,255,0.12)",
+                  },
+                }}
+              >
+                {mode === "light" ? (
+                  <Brightness4Icon sx={{ fontSize: 24 }} />
+                ) : (
+                  <Brightness7Icon sx={{ fontSize: 24 }} />
+                )}
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Toolbar>
 
         {/* Mobile Navigation - Below Header */}
         <Box
           sx={{
-            display: { xs: "block", md: "none" },
+            display: { xs: "flex", md: "none" },
+            alignItems: "center",
             px: spacing.md,
             pb: spacing.sm,
+            gap: spacing.sm,
           }}
         >
-          <Tabs
-            value={activeTab}
-            onChange={handleChange}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{
-              minHeight: 48,
-              "& .MuiTab-root": {
-                fontWeight: 500,
-                fontSize: "0.875rem",
-                py: spacing.xs,
-                px: spacing.md,
+          <Box sx={{ flexGrow: 1 }}>
+            <Tabs
+              value={activeTab}
+              onChange={handleChange}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
                 minHeight: 48,
+                "& .MuiTab-root": {
+                  fontWeight: 500,
+                  fontSize: "0.875rem",
+                  py: spacing.xs,
+                  px: spacing.md,
+                  minHeight: 48,
+                  transition: "all 0.2s ease-in-out",
+                  color: "rgba(255,255,255,0.9)",
+                  textTransform: "none",
+                  "&:hover": {
+                    background: "rgba(255,255,255,0.12)",
+                    color: "white",
+                  },
+                },
+                "& .Mui-selected": {
+                  color: "white !important",
+                  fontWeight: 600,
+                  background: "rgba(255,255,255,0.08)",
+                },
+                "& .MuiTabs-indicator": {
+                  height: 4,
+                  background: "white",
+                  borderRadius: 0,
+                },
+              }}
+            >
+              <Tab
+                icon={<HowToVoteIcon sx={{ fontSize: 20 }} />}
+                iconPosition="start"
+                label="Äänestykset"
+                value={Pages.Votings}
+              />
+              <Tab
+                icon={<PeopleIcon sx={{ fontSize: 20 }} />}
+                iconPosition="start"
+                label="Edustajat"
+                value={Pages.Composition}
+              />
+              <Tab
+                icon={<EventIcon sx={{ fontSize: 20 }} />}
+                iconPosition="start"
+                label="Istunnot"
+                value={Pages.Sessions}
+              />
+              <Tab
+                icon={<InsightsIcon sx={{ fontSize: 20 }} />}
+                iconPosition="start"
+                label="Analytiikka"
+                value={Pages.Insights}
+              />
+              <Tab
+                icon={<AdminPanelSettingsIcon sx={{ fontSize: 20 }} />}
+                iconPosition="start"
+                label="Admin"
+                value={Pages.Admin}
+              />
+            </Tabs>
+          </Box>
+
+          {/* Theme Switcher for Mobile */}
+          <Tooltip title={mode === "light" ? "Tumma teema" : "Vaalea teema"}>
+            <IconButton
+              onClick={toggleTheme}
+              sx={{
+                color: "white",
                 transition: "all 0.2s ease-in-out",
-                color: "rgba(255,255,255,0.9)",
-                textTransform: "none",
                 "&:hover": {
                   background: "rgba(255,255,255,0.12)",
-                  color: "white",
                 },
-              },
-              "& .Mui-selected": {
-                color: "white !important",
-                fontWeight: 600,
-                background: "rgba(255,255,255,0.08)",
-              },
-              "& .MuiTabs-indicator": {
-                height: 4,
-                background: "white",
-                borderRadius: 0,
-              },
-            }}
-          >
-            <Tab
-              icon={<HowToVoteIcon sx={{ fontSize: 20 }} />}
-              iconPosition="start"
-              label="Äänestykset"
-              value={Pages.Votings}
-            />
-            <Tab
-              icon={<PeopleIcon sx={{ fontSize: 20 }} />}
-              iconPosition="start"
-              label="Edustajat"
-              value={Pages.Composition}
-            />
-            <Tab
-              icon={<EventIcon sx={{ fontSize: 20 }} />}
-              iconPosition="start"
-              label="Istunnot"
-              value={Pages.Sessions}
-            />
-            <Tab
-              icon={<InsightsIcon sx={{ fontSize: 20 }} />}
-              iconPosition="start"
-              label="Analytiikka"
-              value={Pages.Insights}
-            />
-            <Tab
-              icon={<AdminPanelSettingsIcon sx={{ fontSize: 20 }} />}
-              iconPosition="start"
-              label="Admin"
-              value={Pages.Admin}
-            />
-          </Tabs>
+              }}
+            >
+              {mode === "light" ? (
+                <Brightness4Icon sx={{ fontSize: 24 }} />
+              ) : (
+                <Brightness7Icon sx={{ fontSize: 24 }} />
+              )}
+            </IconButton>
+          </Tooltip>
         </Box>
       </AppBar>
 

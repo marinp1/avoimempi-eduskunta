@@ -22,8 +22,8 @@ import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import ThumbDownIcon from "@mui/icons-material/ThumbDown";
 import RemoveIcon from "@mui/icons-material/Remove";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
-import { commonStyles, colors, spacing, gradients, shadows } from "../theme";
-import { voteColors } from "../theme/vote-styles";
+import { commonStyles, spacing, shadows } from "../theme";
+import { getVoteColors } from "../theme/vote-styles";
 import { useThemedColors } from "../theme/ThemeContext";
 
 let cache = new Map<string, ReturnType<typeof getVotings>>();
@@ -58,6 +58,7 @@ const eduskuntaLink = (href: string) => {
 
 export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
   const themedColors = useThemedColors();
+  const voteColors = getVoteColors(themedColors);
   const results = React.use(fetchData(query?.trim()));
 
   return (
@@ -80,19 +81,21 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
               },
               "&.Mui-expanded": {
                 boxShadow: shadows.cardHover,
-                borderColor: colors.primary,
+                borderColor: themedColors.primary,
               },
             }}
           >
             <AccordionSummary
               expandIcon={
-                <ExpandMoreIcon sx={{ color: colors.primary, fontSize: 28 }} />
+                <ExpandMoreIcon
+                  sx={{ color: themedColors.primary, fontSize: 28 }}
+                />
               }
               sx={{
                 py: spacing.md,
                 px: spacing.lg,
                 "&:hover": {
-                  background: "rgba(0, 53, 128, 0.03)",
+                  background: themedColors.primary + "08",
                 },
               }}
             >
@@ -100,7 +103,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                 variant="h6"
                 sx={{
                   fontWeight: 600,
-                  color: colors.primary,
+                  color: themedColors.primary,
                   fontSize: "1.125rem",
                   letterSpacing: "0",
                 }}
@@ -114,7 +117,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                   <TableHead>
                     <TableRow
                       sx={{
-                        background: gradients.primary,
+                        background: themedColors.primary,
                       }}
                     >
                       <TableCell sx={{ ...commonStyles.tableHeader }}>
@@ -168,10 +171,20 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                         hover
                         sx={{
                           ...commonStyles.tableRow,
+                          borderBottom: `1px solid ${themedColors.dataBorder}`,
+                          "&:hover": {
+                            background: themedColors.primary + "05",
+                          },
                           cursor: "default",
                         }}
                       >
-                        <TableCell sx={{ ...commonStyles.labelCell, py: 2.5 }}>
+                        <TableCell
+                          sx={{
+                            ...commonStyles.labelCell,
+                            color: themedColors.textSecondary,
+                            py: 2.5,
+                          }}
+                        >
                           {res.start_time
                             ? new Date(res.start_time).toLocaleDateString(
                                 "fi-FI",
@@ -183,7 +196,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                             label={res.section_processing_phase}
                             size="small"
                             sx={{
-                              background: colors.primary,
+                              background: themedColors.primary,
                               color: "white",
                               fontWeight: 700,
                               fontSize: "0.75rem",
@@ -191,7 +204,13 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                             }}
                           />
                         </TableCell>
-                        <TableCell sx={{ ...commonStyles.dataCell, py: 2.5 }}>
+                        <TableCell
+                          sx={{
+                            ...commonStyles.dataCell,
+                            color: themedColors.textPrimary,
+                            py: 2.5,
+                          }}
+                        >
                           {res.title}
                         </TableCell>
                         <TableCell align="center" sx={{ py: 2.5 }}>
@@ -283,7 +302,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                             sx={{
                               fontWeight: 700,
                               fontSize: "1.125rem",
-                              color: colors.primary,
+                              color: themedColors.primary,
                             }}
                           >
                             {res.n_total}
@@ -301,18 +320,18 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                               target="_blank"
                               href={eduskuntaLink(res.result_url)}
                               sx={{
-                                color: colors.primary,
+                                color: themedColors.primary,
                                 textDecoration: "none",
                                 fontWeight: 600,
                                 fontSize: "0.875rem",
                                 padding: "4px 12px",
                                 borderRadius: 2,
-                                border: `1px solid ${colors.primary}`,
+                                border: `1px solid ${themedColors.primary}`,
                                 display: "inline-block",
                                 transition:
                                   "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                 "&:hover": {
-                                  background: colors.primary,
+                                  background: themedColors.primary,
                                   color: "white",
                                   textDecoration: "none",
                                 },
@@ -324,18 +343,18 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                               target="_blank"
                               href={eduskuntaLink(res.proceedings_url)}
                               sx={{
-                                color: colors.primary,
+                                color: themedColors.primary,
                                 textDecoration: "none",
                                 fontWeight: 600,
                                 fontSize: "0.875rem",
                                 padding: "4px 12px",
                                 borderRadius: 2,
-                                border: `1px solid ${colors.primary}`,
+                                border: `1px solid ${themedColors.primary}`,
                                 display: "inline-block",
                                 transition:
                                   "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                 "&:hover": {
-                                  background: colors.primary,
+                                  background: themedColors.primary,
                                   color: "white",
                                   textDecoration: "none",
                                 },
