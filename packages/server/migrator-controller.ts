@@ -5,6 +5,7 @@ import { getStorage, StorageKeyBuilder } from "../shared/storage";
 import { TableName } from "#constants/index";
 import { getDatabasePath } from "../shared/database";
 import { getMigrations, migrate } from "bun-sqlite-migrations";
+import { clearStatementCache } from "../datapipe/migrator/utils";
 import fs from "fs";
 
 export interface MigratorStatus {
@@ -170,14 +171,24 @@ export class MigratorController {
 
       targetDatabase.exec("PRAGMA journal_mode = WAL;");
 
+      // Apply performance optimizations for bulk inserts
+      console.log("⚙️  Applying SQLite performance optimizations...");
+      targetDatabase.exec("PRAGMA synchronous = OFF;"); // Disable sync for speed (data can be regenerated)
+      targetDatabase.exec("PRAGMA cache_size = -64000;"); // 64MB cache
+      targetDatabase.exec("PRAGMA temp_store = MEMORY;"); // Keep temp data in memory
+      targetDatabase.exec("PRAGMA mmap_size = 30000000000;"); // Use memory-mapped I/O
+
       // Run migrations
       const migrationsPath = path.resolve(
         import.meta.dirname,
         "../datapipe/migrator/migrations",
       );
+      console.log("🔄 Running database migrations...");
       migrate(targetDatabase, getMigrations(migrationsPath));
+      console.log("✅ Migrations completed");
 
       // Clear all tables
+      console.log("🗑️  Clearing existing data...");
       const tables = targetDatabase
         .query<
           { name: string },
@@ -190,12 +201,18 @@ export class MigratorController {
           table.name !== "sqlite_sequence" &&
           table.name !== "_bun_migrations"
         ) {
+          console.log(`  Clearing ${table.name}...`);
           targetDatabase.run(`DELETE FROM ${table.name};`);
         }
       }
+      console.log("✅ Tables cleared");
+
+      // Clear prepared statement cache before starting
+      clearStatementCache();
 
       // Import each table
       let tablesCompleted = 0;
+      const startTime = Date.now();
 
       for (const tableName of tablesToImport) {
         if (this.shouldStop) {
@@ -203,7 +220,9 @@ export class MigratorController {
         }
 
         this.currentTable = tableName;
+        const tableStartTime = Date.now();
 
+        console.log(`\n📊 Importing ${tableName}...`);
         this.sendMessage({
           type: "progress",
           data: {
@@ -222,42 +241,88 @@ export class MigratorController {
 
         if (fs.existsSync(migratorPath)) {
           // Dynamic import the migrator
-          const { default: createMigrator } = (await import(migratorPath)) as {
+          const migratorModule = (await import(migratorPath)) as {
             default: (sql: Database) => (data: any) => Promise<void>;
+            flushVotes?: () => void;
           };
 
-          const migrator = createMigrator(targetDatabase);
+          const migrator = migratorModule.default(targetDatabase);
           let rowsImported = 0;
+          let pagesProcessed = 0;
 
-          // Read and import data
-          for await (const rows of this.readParsedData(tableName)) {
-            if (this.shouldStop) {
-              throw new Error("Migration stopped by user");
-            }
+          // Start a single transaction for the entire table
+          targetDatabase.exec("BEGIN TRANSACTION;");
 
-            for (const row of rows) {
-              // Convert parsed object fields back to JSON strings for the migrator
-              // The old migrator expects fields like XmlDataFi to be JSON strings
-              const rowForMigrator = { ...row };
-
-              // Handle XmlDataFi field specifically (used in MemberOfParliament)
-              if (
-                rowForMigrator.XmlDataFi &&
-                typeof rowForMigrator.XmlDataFi === "object"
-              ) {
-                rowForMigrator.XmlDataFi = JSON.stringify(
-                  rowForMigrator.XmlDataFi,
-                );
+          try {
+            // Read and import data
+            for await (const rows of this.readParsedData(tableName)) {
+              if (this.shouldStop) {
+                throw new Error("Migration stopped by user");
               }
 
-              targetDatabase.exec("BEGIN TRANSACTION;");
-              await migrator(rowForMigrator);
-              targetDatabase.exec("COMMIT;");
-              rowsImported++;
-            }
-          }
+              pagesProcessed++;
 
-          console.log(`✅ Imported ${rowsImported} rows from ${tableName}`);
+              for (const row of rows) {
+                // Convert parsed object fields back to JSON strings for the migrator
+                // The old migrator expects fields like XmlDataFi to be JSON strings
+                const rowForMigrator = { ...row };
+
+                // Handle XmlDataFi field specifically (used in MemberOfParliament)
+                if (
+                  rowForMigrator.XmlDataFi &&
+                  typeof rowForMigrator.XmlDataFi === "object"
+                ) {
+                  rowForMigrator.XmlDataFi = JSON.stringify(
+                    rowForMigrator.XmlDataFi,
+                  );
+                }
+
+                await migrator(rowForMigrator);
+                rowsImported++;
+
+                // Report progress every 5000 rows to reduce overhead
+                if (rowsImported % 5000 === 0) {
+                  this.sendMessage({
+                    type: "progress",
+                    data: {
+                      message: `Importing ${tableName}... (${rowsImported} rows)`,
+                      currentTable: tableName,
+                      tablesCompleted,
+                      totalTables: tablesToImport.length,
+                      rowsImported,
+                    },
+                  });
+                }
+              }
+
+              // Log progress every 20 pages to reduce console spam
+              if (pagesProcessed % 20 === 0) {
+                console.log(
+                  `  Processed ${pagesProcessed} pages (${rowsImported} rows total)`,
+                );
+              }
+            }
+
+            // Flush any remaining batched rows (if migrator has flush function)
+            if (migratorModule.flushVotes) {
+              migratorModule.flushVotes();
+            }
+
+            // Commit the transaction
+            targetDatabase.exec("COMMIT;");
+
+            const tableTime = ((Date.now() - tableStartTime) / 1000).toFixed(2);
+            const rowsPerSecond = (
+              rowsImported / parseFloat(tableTime)
+            ).toFixed(0);
+            console.log(
+              `✅ Imported ${rowsImported} rows from ${tableName} in ${tableTime}s (${rowsPerSecond} rows/s)`,
+            );
+          } catch (error) {
+            // Rollback on error
+            targetDatabase.exec("ROLLBACK;");
+            throw error;
+          }
         } else {
           console.warn(`⚠️  No migrator found for ${tableName}, skipping...`);
         }
@@ -285,14 +350,25 @@ export class MigratorController {
         [timestamp],
       );
 
+      // Re-enable safety features
+      console.log("\n⚙️  Re-enabling safety features...");
+      targetDatabase.exec("PRAGMA synchronous = FULL;");
+      console.log("✅ Safety features restored");
+
       targetDatabase.close();
+
+      const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
+      console.log(`\n🎉 Migration completed successfully in ${totalTime}s!`);
+      console.log(`   Tables imported: ${tablesToImport.length}`);
+      console.log(`   Timestamp: ${timestamp}`);
 
       this.sendMessage({
         type: "complete",
         data: {
-          message: `Migration completed successfully`,
+          message: `Migration completed successfully in ${totalTime}s`,
           tablesImported: tablesToImport.length,
           timestamp,
+          totalTime,
         },
       });
     } catch (error: any) {
