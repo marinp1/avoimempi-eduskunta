@@ -186,6 +186,39 @@ export class DatabaseConnection {
     return speeches;
   }
 
+  public async fetchVotingParticipation(params?: {
+    personId?: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const stmt = this.db.prepare<
+      {
+        person_id: number;
+        first_name: string;
+        last_name: string;
+        sort_name: string;
+        party_name: string | null;
+        term_start: string;
+        term_end: string;
+        votes_cast: number;
+        total_votings: number;
+        participation_rate: number;
+      },
+      {
+        $personId: string;
+        $startDate: string;
+        $endDate: string;
+      }
+    >(queries.votingParticipation);
+    const data = stmt.all({
+      $personId: params?.personId || "",
+      $startDate: params?.startDate || "",
+      $endDate: params?.endDate || "",
+    });
+    stmt.finalize();
+    return data;
+  }
+
   #connectToDatabase() {
     const databasePath = getDatabasePath();
     this.#database = new Database(databasePath, {

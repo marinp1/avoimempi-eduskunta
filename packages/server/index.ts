@@ -20,9 +20,8 @@ const server = Bun.serve({
     "/votings": homepage,
     "/sessions": homepage,
     "/admin": homepage,
-
+    "/insights": homepage,
     "/api/status": new Response("OK"),
-
     "/api/composition/:date": {
       GET: async (req: BunRequest<"/api/composition/:date">) => {
         const composition = await db.fetchParliamentComposition(req.params);
@@ -146,6 +145,24 @@ const server = Bun.serve({
           sectionKey: req.params.sectionKey,
         });
         return new Response(JSON.stringify(speeches), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
+    "/api/insights/participation": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const personId = searchParams.get("personId") || undefined;
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
+
+        const participation = await db.fetchVotingParticipation({
+          personId,
+          startDate,
+          endDate,
+        });
+        return new Response(JSON.stringify(participation), {
           headers: { "Content-Type": "application/json" },
         });
       },
