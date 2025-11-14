@@ -26,6 +26,8 @@ import WorkIcon from "@mui/icons-material/Work";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InsightsIcon from "@mui/icons-material/Insights";
 import Button from "@mui/material/Button";
+import { useThemedColors } from "../theme/ThemeContext";
+import { colors } from "../theme/index";
 
 type RepresentativeDetailsType = DatabaseTables.Representative;
 
@@ -87,14 +89,15 @@ const ExpandableSection: React.FC<{
   defaultExpanded?: boolean;
 }> = ({ title, icon, children, defaultExpanded = false }) => {
   const [expanded, setExpanded] = React.useState(defaultExpanded);
+  const themedColors = useThemedColors();
 
   return (
     <Box
       sx={{
         mb: 2,
         borderRadius: 2,
-        background: "white",
-        border: "1px solid rgba(0,0,0,0.12)",
+        background: themedColors.backgroundPaper,
+        border: `1px solid ${themedColors.dataBorder}`,
         overflow: "hidden",
         transition: "all 0.2s ease",
         "&:hover": {
@@ -112,7 +115,7 @@ const ExpandableSection: React.FC<{
           cursor: "pointer",
           userSelect: "none",
           "&:hover": {
-            bgcolor: "rgba(102, 126, 234, 0.04)",
+            bgcolor: `${colors.accent}0A`,
           },
         }}
       >
@@ -121,14 +124,14 @@ const ExpandableSection: React.FC<{
           <Typography
             variant="body1"
             fontWeight="600"
-            sx={{ color: "#1a1a1a" }}
+            sx={{ color: themedColors.textPrimary }}
           >
             {title}
           </Typography>
         </Box>
         <ExpandMoreIcon
           sx={{
-            color: "#667eea",
+            color: themedColors.dataHighlight,
             transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
             transition: "transform 0.2s ease",
           }}
@@ -150,6 +153,8 @@ export const RepresentativeDetails: React.FC<{
   selectedRepresentative: DatabaseQueries.GetParliamentComposition | null;
   selectedDate: string;
 }> = ({ open, onClose, selectedRepresentative, selectedDate }) => {
+  const themedColors = useThemedColors();
+
   const handleViewParticipationInsights = () => {
     // Navigate to insights page with participation insights open
     const personId = selectedRepresentative?.person_id;
@@ -294,11 +299,11 @@ export const RepresentativeDetails: React.FC<{
                   sx={{
                     width: 80,
                     height: 80,
-                    background: "white",
-                    color: "#667eea",
+                    background: themedColors.backgroundPaper,
+                    color: colors.accent,
                     fontSize: 32,
                     fontWeight: 700,
-                    border: "3px solid rgba(255,255,255,0.3)",
+                    border: `3px solid rgba(255,255,255,0.3)`,
                   }}
                 >
                   {selectedRepresentative.first_name[0]}
@@ -587,7 +592,7 @@ export const RepresentativeDetails: React.FC<{
           <DialogContent
             sx={{
               p: 3,
-              bgcolor: "#f5f7fa",
+              bgcolor: themedColors.backgroundSubtle,
               overflowY: "auto",
             }}
           >
@@ -596,7 +601,9 @@ export const RepresentativeDetails: React.FC<{
                 {/* Basic Info */}
                 <ExpandableSection
                   title="Perustiedot"
-                  icon={<PersonIcon sx={{ color: "#667eea", fontSize: 22 }} />}
+                  icon={
+                    <PersonIcon sx={{ color: colors.accent, fontSize: 22 }} />
+                  }
                   defaultExpanded={false}
                 >
                   <Box
@@ -609,13 +616,16 @@ export const RepresentativeDetails: React.FC<{
                           justifyContent: "space-between",
                         }}
                       >
-                        <Typography variant="body2" sx={{ color: "#666" }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: themedColors.textSecondary }}
+                        >
                           Sukupuoli
                         </Typography>
                         <Typography
                           variant="body2"
                           fontWeight="600"
-                          sx={{ color: "#1a1a1a" }}
+                          sx={{ color: themedColors.textPrimary }}
                         >
                           {details.representativeDetails.gender}
                         </Typography>
@@ -628,13 +638,16 @@ export const RepresentativeDetails: React.FC<{
                           justifyContent: "space-between",
                         }}
                       >
-                        <Typography variant="body2" sx={{ color: "#666" }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: themedColors.textSecondary }}
+                        >
                           Syntymäaika
                         </Typography>
                         <Typography
                           variant="body2"
                           fontWeight="600"
-                          sx={{ color: "#1a1a1a" }}
+                          sx={{ color: themedColors.textPrimary }}
                         >
                           {displayDate(
                             details.representativeDetails.birth_date,
@@ -651,13 +664,16 @@ export const RepresentativeDetails: React.FC<{
                           justifyContent: "space-between",
                         }}
                       >
-                        <Typography variant="body2" sx={{ color: "#666" }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: themedColors.textSecondary }}
+                        >
                           Kuolinaika
                         </Typography>
                         <Typography
                           variant="body2"
                           fontWeight="600"
-                          sx={{ color: "#1a1a1a" }}
+                          sx={{ color: themedColors.textPrimary }}
                         >
                           {displayDate(
                             details.representativeDetails.death_date,
@@ -678,7 +694,9 @@ export const RepresentativeDetails: React.FC<{
                   details.representativeDetails.website) && (
                   <ExpandableSection
                     title="Yhteystiedot"
-                    icon={<EmailIcon sx={{ color: "#667eea", fontSize: 22 }} />}
+                    icon={
+                      <EmailIcon sx={{ color: colors.accent, fontSize: 22 }} />
+                    }
                   >
                     <Box
                       sx={{
@@ -691,11 +709,13 @@ export const RepresentativeDetails: React.FC<{
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          <EmailIcon sx={{ color: "#667eea", fontSize: 18 }} />
+                          <EmailIcon
+                            sx={{ color: colors.accent, fontSize: 18 }}
+                          />
                           <Typography
                             variant="body2"
                             fontWeight="500"
-                            sx={{ color: "#1a1a1a" }}
+                            sx={{ color: themedColors.textPrimary }}
                           >
                             {details.representativeDetails.email}
                           </Typography>
@@ -705,11 +725,13 @@ export const RepresentativeDetails: React.FC<{
                         <Box
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
-                          <PhoneIcon sx={{ color: "#667eea", fontSize: 18 }} />
+                          <PhoneIcon
+                            sx={{ color: colors.accent, fontSize: 18 }}
+                          />
                           <Typography
                             variant="body2"
                             fontWeight="500"
-                            sx={{ color: "#1a1a1a" }}
+                            sx={{ color: themedColors.textPrimary }}
                           >
                             {details.representativeDetails.phone}
                           </Typography>
@@ -720,14 +742,14 @@ export const RepresentativeDetails: React.FC<{
                           sx={{ display: "flex", alignItems: "center", gap: 1 }}
                         >
                           <LanguageIcon
-                            sx={{ color: "#667eea", fontSize: 18 }}
+                            sx={{ color: colors.accent, fontSize: 18 }}
                           />
                           <a
                             href={details.representativeDetails.website}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
-                              color: "#667eea",
+                              color: colors.accent,
                               textDecoration: "none",
                               fontWeight: 500,
                               fontSize: "0.875rem",
@@ -746,7 +768,9 @@ export const RepresentativeDetails: React.FC<{
                   <ExpandableSection
                     title="Vaalipiirit"
                     icon={
-                      <LocationOnIcon sx={{ color: "#667eea", fontSize: 22 }} />
+                      <LocationOnIcon
+                        sx={{ color: colors.accent, fontSize: 22 }}
+                      />
                     }
                   >
                     <List dense sx={{ p: 0 }}>
@@ -757,7 +781,7 @@ export const RepresentativeDetails: React.FC<{
                               <Typography
                                 variant="body2"
                                 fontWeight="600"
-                                sx={{ color: "#1a1a1a" }}
+                                sx={{ color: themedColors.textPrimary }}
                               >
                                 {district.district_name}
                               </Typography>
@@ -765,7 +789,7 @@ export const RepresentativeDetails: React.FC<{
                             secondary={
                               <Typography
                                 variant="caption"
-                                sx={{ color: "#666" }}
+                                sx={{ color: themedColors.textSecondary }}
                               >
                                 {displayDate(district.start_date)} -{" "}
                                 {displayDate(district.end_date)}
@@ -785,7 +809,7 @@ export const RepresentativeDetails: React.FC<{
                       title="Eduskuntajäsenyys"
                       icon={
                         <HowToVoteIcon
-                          sx={{ color: "#667eea", fontSize: 22 }}
+                          sx={{ color: colors.accent, fontSize: 22 }}
                         />
                       }
                     >
@@ -813,7 +837,7 @@ export const RepresentativeDetails: React.FC<{
                                   <Typography
                                     variant="body2"
                                     fontWeight="600"
-                                    sx={{ color: "#1a1a1a" }}
+                                    sx={{ color: themedColors.textPrimary }}
                                   >
                                     {membership.group_name}
                                   </Typography>
@@ -822,7 +846,7 @@ export const RepresentativeDetails: React.FC<{
                                   <Box>
                                     <Typography
                                       variant="caption"
-                                      sx={{ color: "#666" }}
+                                      sx={{ color: themedColors.textSecondary }}
                                     >
                                       {displayDate(membership.start_date)} -{" "}
                                       {displayDate(membership.end_date)}
@@ -834,7 +858,7 @@ export const RepresentativeDetails: React.FC<{
                                         variant="caption"
                                         display="block"
                                         sx={{
-                                          color: "#888",
+                                          color: themedColors.textTertiary,
                                           fontStyle: "italic",
                                           mt: 0.5,
                                         }}
@@ -859,7 +883,7 @@ export const RepresentativeDetails: React.FC<{
                       title="Hallituskoalitioon osallistuminen"
                       icon={
                         <AccountBalanceIcon
-                          sx={{ color: "#667eea", fontSize: 22 }}
+                          sx={{ color: colors.accent, fontSize: 22 }}
                         />
                       }
                     >
@@ -872,14 +896,14 @@ export const RepresentativeDetails: React.FC<{
                                   <Typography
                                     variant="body2"
                                     fontWeight="600"
-                                    sx={{ color: "#1a1a1a" }}
+                                    sx={{ color: themedColors.textPrimary }}
                                   >
                                     {membership.government}
                                   </Typography>
                                   {membership.ministry && (
                                     <Typography
                                       variant="body2"
-                                      sx={{ color: "#555" }}
+                                      sx={{ color: themedColors.textSecondary }}
                                     >
                                       {membership.ministry}
                                     </Typography>
@@ -891,14 +915,14 @@ export const RepresentativeDetails: React.FC<{
                                   <Typography
                                     variant="caption"
                                     fontWeight="600"
-                                    sx={{ color: "#667eea" }}
+                                    sx={{ color: themedColors.dataHighlight }}
                                   >
                                     {membership.name}
                                   </Typography>
                                   <Typography
                                     variant="caption"
                                     display="block"
-                                    sx={{ color: "#666" }}
+                                    sx={{ color: themedColors.textSecondary }}
                                   >
                                     {displayDate(membership.start_date)} -{" "}
                                     {displayDate(membership.end_date)}
@@ -918,7 +942,7 @@ export const RepresentativeDetails: React.FC<{
                     <ExpandableSection
                       title="Luottamustehtävät"
                       icon={
-                        <WorkIcon sx={{ color: "#667eea", fontSize: 22 }} />
+                        <WorkIcon sx={{ color: colors.accent, fontSize: 22 }} />
                       }
                     >
                       <List dense sx={{ p: 0 }}>
@@ -929,14 +953,17 @@ export const RepresentativeDetails: React.FC<{
                                 <Typography
                                   variant="body2"
                                   fontWeight="600"
-                                  sx={{ color: "#1a1a1a" }}
+                                  sx={{ color: themedColors.textPrimary }}
                                 >
                                   {position.name}
                                   {position.position_type && (
                                     <Typography
                                       component="span"
                                       variant="body2"
-                                      sx={{ color: "#666", ml: 1 }}
+                                      sx={{
+                                        color: themedColors.textSecondary,
+                                        ml: 1,
+                                      }}
                                     >
                                       ({position.position_type})
                                     </Typography>
@@ -946,7 +973,7 @@ export const RepresentativeDetails: React.FC<{
                               secondary={
                                 <Typography
                                   variant="caption"
-                                  sx={{ color: "#666" }}
+                                  sx={{ color: themedColors.textSecondary }}
                                 >
                                   {position.period}
                                 </Typography>

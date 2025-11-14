@@ -25,7 +25,8 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import StopIcon from "@mui/icons-material/Stop";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
-import { gradients } from "../theme";
+import { colors, gradients } from "../theme";
+import { useThemedColors } from "../theme/ThemeContext";
 import { AdminHeader, AdminOverview, ControlPanel } from "./components";
 
 type TableStatus = {
@@ -55,6 +56,7 @@ type ScrapingOverview = {
 };
 
 export default function AdminPage() {
+  const themedColors = useThemedColors();
   const [status, setStatus] = useState<TableStatus[]>([]);
   const [overview, setOverview] = useState<ScrapingOverview | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -425,14 +427,14 @@ export default function AdminPage() {
   const getStatusIcon = (progressPercent?: number) => {
     if (progressPercent === undefined || progressPercent === 0) {
       // Unstarted
-      return <ErrorIcon sx={{ color: "#f44336", fontSize: 20 }} />;
+      return <ErrorIcon sx={{ color: colors.error, fontSize: 20 }} />;
     }
     if (progressPercent >= 100) {
       // Complete
-      return <CheckCircleIcon sx={{ color: "#4caf50", fontSize: 20 }} />;
+      return <CheckCircleIcon sx={{ color: colors.success, fontSize: 20 }} />;
     }
     // Incomplete
-    return <WarningIcon sx={{ color: "#ff9800", fontSize: 20 }} />;
+    return <WarningIcon sx={{ color: colors.warning, fontSize: 20 }} />;
   };
 
   const formatTimestamp = (timestamp: string | null) => {
@@ -500,7 +502,7 @@ export default function AdminPage() {
             elevation={0}
             sx={{
               borderRadius: 3,
-              border: "1px solid rgba(0,0,0,0.1)",
+              border: `1px solid ${themedColors.dataBorder}`,
               overflow: "hidden",
             }}
           >
@@ -508,8 +510,7 @@ export default function AdminPage() {
               <TableHead>
                 <TableRow
                   sx={{
-                    background:
-                      "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+                    background: themedColors.background,
                   }}
                 >
                   <TableCell sx={{ width: 50 }} />
@@ -578,7 +579,7 @@ export default function AdminPage() {
                       <TableRow
                         sx={{
                           "&:hover": {
-                            bgcolor: "rgba(102, 126, 234, 0.04)",
+                            bgcolor: "rgba(0, 53, 128, 0.04)",
                           },
                           transition: "background-color 0.2s",
                         }}
@@ -609,7 +610,9 @@ export default function AdminPage() {
                           <Typography
                             variant="body2"
                             sx={{
-                              color: row.has_raw_data ? "#1a1a1a" : "#999",
+                              color: row.has_raw_data
+                                ? themedColors.textPrimary
+                                : themedColors.textTertiary,
                               fontWeight: 600,
                             }}
                           >
@@ -624,7 +627,9 @@ export default function AdminPage() {
                           <Typography
                             variant="body2"
                             sx={{
-                              color: row.has_raw_data ? "#1a1a1a" : "#999",
+                              color: row.has_raw_data
+                                ? themedColors.textPrimary
+                                : themedColors.textTertiary,
                               fontWeight: 500,
                             }}
                           >
@@ -637,7 +642,9 @@ export default function AdminPage() {
                           <Typography
                             variant="caption"
                             sx={{
-                              color: row.raw_last_updated ? "#555" : "#999",
+                              color: row.raw_last_updated
+                                ? themedColors.textSecondary
+                                : themedColors.textTertiary,
                               fontFamily: "monospace",
                             }}
                           >
@@ -651,7 +658,9 @@ export default function AdminPage() {
                           <Typography
                             variant="body2"
                             sx={{
-                              color: row.has_parsed_data ? "#1a1a1a" : "#999",
+                              color: row.has_parsed_data
+                                ? themedColors.textPrimary
+                                : themedColors.textTertiary,
                               fontWeight: 600,
                             }}
                           >
@@ -664,7 +673,9 @@ export default function AdminPage() {
                           <Typography
                             variant="body2"
                             sx={{
-                              color: row.has_parsed_data ? "#1a1a1a" : "#999",
+                              color: row.has_parsed_data
+                                ? themedColors.textPrimary
+                                : themedColors.textTertiary,
                               fontWeight: 500,
                             }}
                           >
@@ -677,7 +688,9 @@ export default function AdminPage() {
                           <Typography
                             variant="caption"
                             sx={{
-                              color: row.parsed_last_updated ? "#555" : "#999",
+                              color: row.parsed_last_updated
+                                ? themedColors.textSecondary
+                                : themedColors.textTertiary,
                               fontFamily: "monospace",
                             }}
                           >
@@ -759,9 +772,8 @@ export default function AdminPage() {
                                         color="primary"
                                         size="small"
                                         sx={{
-                                          background:
-                                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                                          color: "white",
+                                          background: gradients.scraper,
+                                          color: themedColors.backgroundPaper,
                                         }}
                                       />
                                     </>
@@ -778,8 +790,7 @@ export default function AdminPage() {
                                         }
                                         size="small"
                                         sx={{
-                                          background:
-                                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                          background: gradients.scraper,
                                           "&:hover": {
                                             background:
                                               "linear-gradient(135deg, #5568d3 0%, #63408d 100%)",
@@ -821,8 +832,7 @@ export default function AdminPage() {
                                         borderRadius: 3,
                                         bgcolor: "rgba(102, 126, 234, 0.1)",
                                         "& .MuiLinearProgress-bar": {
-                                          background:
-                                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                          background: gradients.scraper,
                                         },
                                       }}
                                     />
@@ -862,9 +872,8 @@ export default function AdminPage() {
                                         color="secondary"
                                         size="small"
                                         sx={{
-                                          background:
-                                            "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                                          color: "white",
+                                          background: gradients.parser,
+                                          color: themedColors.backgroundPaper,
                                         }}
                                       />
                                     </>
@@ -883,8 +892,7 @@ export default function AdminPage() {
                                         }
                                         size="small"
                                         sx={{
-                                          background:
-                                            "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                                          background: gradients.parser,
                                           "&:hover": {
                                             background:
                                               "linear-gradient(135deg, #e082ea 0%, #e4465b 100%)",
@@ -928,8 +936,7 @@ export default function AdminPage() {
                                         borderRadius: 3,
                                         bgcolor: "rgba(240, 147, 251, 0.1)",
                                         "& .MuiLinearProgress-bar": {
-                                          background:
-                                            "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                                          background: gradients.parser,
                                         },
                                       }}
                                     />

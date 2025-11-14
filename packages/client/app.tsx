@@ -8,7 +8,6 @@ import {
   AppBar,
   Toolbar,
   Typography,
-  ThemeProvider,
   GlobalStyles,
 } from "@mui/material";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
@@ -21,7 +20,8 @@ import EdustajatPage from "./Edustajat";
 import IstunnotPage from "./Istunnot";
 import AdminPage from "./Admin";
 import InsightsPage from "./Insights";
-import { theme, gradients, commonStyles, spacing, borderRadius } from "./theme";
+import { gradients, commonStyles, spacing, borderRadius } from "./theme";
+import { useThemedColors } from "./theme/ThemeContext";
 
 const Pages = Object.freeze({
   Votings: "votings",
@@ -42,6 +42,8 @@ const PageComponents = {
 } satisfies Record<Page, React.FC<Record<string, never>>>;
 
 export const App: React.FC = () => {
+  const themedColors = useThemedColors();
+
   // Initialize from URL path
   const getInitialTab = (): Page => {
     const path = window.location.pathname;
@@ -88,12 +90,12 @@ export const App: React.FC = () => {
   const ActivePage = PageComponents[activeTab];
 
   return (
-    <ThemeProvider theme={theme}>
+    <>
       <CssBaseline />
       <GlobalStyles
         styles={{
           body: {
-            background: gradients.background,
+            background: themedColors.background,
             minHeight: "100vh",
           },
         }}
@@ -115,7 +117,7 @@ export const App: React.FC = () => {
               variant="h5"
               component="h1"
               sx={{
-                color: "#ffffff",
+                color: "white",
                 fontWeight: 700,
                 letterSpacing: "-0.02em",
                 fontSize: { xs: "1.25rem", sm: "1.5rem" },
@@ -155,16 +157,16 @@ export const App: React.FC = () => {
                   color: "rgba(255,255,255,0.85)",
                   "&:hover": {
                     background: "rgba(255,255,255,0.1)",
-                    color: "#ffffff",
+                    color: "white",
                   },
                 },
                 "& .Mui-selected": {
-                  color: "#ffffff !important",
+                  color: "white !important",
                   fontWeight: 700,
                 },
                 "& .MuiTabs-indicator": {
                   height: 3,
-                  background: "#ffffff",
+                  background: "white",
                   borderRadius: "3px 3px 0 0",
                 },
               }}
@@ -228,16 +230,16 @@ export const App: React.FC = () => {
                 color: "rgba(255,255,255,0.85)",
                 "&:hover": {
                   background: "rgba(255,255,255,0.1)",
-                  color: "#ffffff",
+                  color: "white",
                 },
               },
               "& .Mui-selected": {
-                color: "#ffffff !important",
+                color: "white !important",
                 fontWeight: 700,
               },
               "& .MuiTabs-indicator": {
                 height: 3,
-                background: "#ffffff",
+                background: "white",
                 borderRadius: "3px 3px 0 0",
               },
             }}
@@ -282,7 +284,7 @@ export const App: React.FC = () => {
           <ActivePage />
         </Box>
       </Container>
-    </ThemeProvider>
+    </>
   );
 };
 

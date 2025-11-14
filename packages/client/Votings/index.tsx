@@ -13,8 +13,10 @@ import SearchIcon from "@mui/icons-material/Search";
 import { VoteResults } from "./VoteResults";
 import { GlassCard } from "../theme/components";
 import { commonStyles, colors, spacing } from "../theme";
+import { useThemedColors } from "../theme/ThemeContext";
 
 const VotingsPage = () => {
+  const themedColors = useThemedColors();
   const [search, setSearch] = React.useState<string>("");
   const deferredQuery = React.useDeferredValue(search);
   const isStale = search !== deferredQuery;
@@ -28,8 +30,8 @@ const VotingsPage = () => {
             sx={{
               mb: spacing.lg,
               borderRadius: 3,
-              background: "#ffffff",
-              border: "1px solid #e0e0e0",
+              background: themedColors.backgroundPaper,
+              border: `1px solid ${themedColors.dataBorder}`,
               boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             }}
           >
@@ -76,7 +78,7 @@ const VotingsPage = () => {
                   }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
-                      background: "#ffffff",
+                      background: themedColors.backgroundPaper,
                       transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                       "&:hover": {
                         boxShadow: "0 2px 8px rgba(0, 53, 128, 0.12)",

@@ -23,6 +23,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { GlassCard } from "../theme/components";
 import { commonStyles, colors, spacing, gradients } from "../theme";
+import { useThemedColors } from "../theme/ThemeContext";
 
 type SessionWithAgenda = DatabaseTables.Session & {
   agenda_title?: string;
@@ -39,6 +40,7 @@ type SessionsResponse = {
 };
 
 export default function IstunnotPage() {
+  const themedColors = useThemedColors();
   const [sessions, setSessions] = useState<SessionWithAgenda[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -325,7 +327,7 @@ export default function IstunnotPage() {
                                     sx={{
                                       fontWeight: 500,
                                       mb: 0.5,
-                                      color: colors.textPrimary,
+                                      color: themedColors.textPrimary,
                                     }}
                                   >
                                     {session.agenda_title}
@@ -440,7 +442,8 @@ export default function IstunnotPage() {
                                                   variant="body2"
                                                   sx={{
                                                     fontWeight: 600,
-                                                    color: colors.textPrimary,
+                                                    color:
+                                                      themedColors.textPrimary,
                                                   }}
                                                 >
                                                   {section.title ||
@@ -452,7 +455,7 @@ export default function IstunnotPage() {
                                                     variant="caption"
                                                     sx={{
                                                       color:
-                                                        colors.textSecondary,
+                                                        themedColors.textSecondary,
                                                       display: "block",
                                                     }}
                                                   >
@@ -519,7 +522,7 @@ export default function IstunnotPage() {
                                                     sx={{
                                                       fontWeight: 600,
                                                       color:
-                                                        colors.textSecondary,
+                                                        themedColors.textSecondary,
                                                       textTransform:
                                                         "uppercase",
                                                       mt: 1,
@@ -538,7 +541,7 @@ export default function IstunnotPage() {
                                                         p: spacing.sm,
                                                         borderRadius: 1,
                                                         background:
-                                                          "rgba(255,255,255,0.7)",
+                                                          themedColors.backgroundPaper,
                                                       }}
                                                     >
                                                       <Box
@@ -597,7 +600,7 @@ export default function IstunnotPage() {
                                                             variant="caption"
                                                             sx={{
                                                               color:
-                                                                colors.textSecondary,
+                                                                themedColors.textSecondary,
                                                             }}
                                                           >
                                                             {speech.speech_type}
@@ -619,7 +622,7 @@ export default function IstunnotPage() {
                                                             variant="body2"
                                                             sx={{
                                                               color:
-                                                                colors.textPrimary,
+                                                                themedColors.textPrimary,
                                                               whiteSpace:
                                                                 "pre-wrap",
                                                               lineHeight: 1.6,
@@ -683,7 +686,7 @@ export default function IstunnotPage() {
                 size="large"
                 sx={{
                   "& .MuiPaginationItem-root": {
-                    color: colors.textPrimary,
+                    color: themedColors.textPrimary,
                     fontWeight: 500,
                   },
                   "& .MuiPaginationItem-root.Mui-selected": {
@@ -709,7 +712,7 @@ export default function IstunnotPage() {
               p: spacing.md,
               textAlign: "center",
               borderRadius: 3,
-              background: "rgba(255,255,255,0.7)",
+              background: themedColors.backgroundPaper,
               backdropFilter: "blur(10px)",
             }}
           >

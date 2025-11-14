@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Card, Button, type SxProps, type Theme } from "@mui/material";
 import { commonStyles, gradients, colors } from "./index";
+import { useThemedColors } from "./ThemeContext";
 
 /**
  * Reusable glass-morphism card component
@@ -82,9 +83,7 @@ export const GradientText: React.FC<{
   sx?: SxProps<Theme>;
   component?: React.ElementType;
 }> = ({ children, sx, component: Component = "span" }) => (
-  <Component sx={{ ...commonStyles.gradientText, ...sx }}>
-    {children}
-  </Component>
+  <Component sx={{ ...commonStyles.gradientText, ...sx }}>{children}</Component>
 );
 
 /**
@@ -96,36 +95,46 @@ export const StatCard: React.FC<{
   icon?: React.ReactNode;
   gradient?: string;
   sx?: SxProps<Theme>;
-}> = ({ title, value, icon, gradient = gradients.primary, sx }) => (
-  <Card
-    sx={{
-      ...commonStyles.glassCard,
-      p: 3,
-      ...sx,
-    }}
-  >
-    <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-      {icon && (
-        <Box
-          sx={{
-            p: 1,
-            borderRadius: 2,
-            background: gradient,
-            color: "white",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {icon}
+}> = ({ title, value, icon, gradient = gradients.primary, sx }) => {
+  const themedColors = useThemedColors();
+
+  return (
+    <Card
+      sx={{
+        ...commonStyles.glassCard,
+        p: 3,
+        ...sx,
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
+        {icon && (
+          <Box
+            sx={{
+              p: 1,
+              borderRadius: 2,
+              background: gradient,
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {icon}
+          </Box>
+        )}
+        <Box sx={{ fontSize: "0.875rem", color: themedColors.textSecondary }}>
+          {title}
         </Box>
-      )}
-      <Box sx={{ fontSize: "0.875rem", color: colors.textSecondary }}>
-        {title}
       </Box>
-    </Box>
-    <Box sx={{ fontSize: "1.75rem", fontWeight: 700, color: colors.textPrimary }}>
-      {value}
-    </Box>
-  </Card>
-);
+      <Box
+        sx={{
+          fontSize: "1.75rem",
+          fontWeight: 700,
+          color: themedColors.textPrimary,
+        }}
+      >
+        {value}
+      </Box>
+    </Card>
+  );
+};

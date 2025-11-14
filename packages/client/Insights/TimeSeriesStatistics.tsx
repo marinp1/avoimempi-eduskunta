@@ -23,6 +23,7 @@ import {
 } from "recharts";
 import { GlassCard } from "../theme/components";
 import { colors, spacing } from "../theme";
+import { useThemedColors } from "../theme/ThemeContext";
 
 interface GenderData {
   year: number;
@@ -53,6 +54,7 @@ interface TimeSeriesStatisticsProps {
 export default function TimeSeriesStatistics({
   onClose,
 }: TimeSeriesStatisticsProps) {
+  const themedColors = useThemedColors();
   const [genderData, setGenderData] = useState<GenderData[]>([]);
   const [ageData, setAgeData] = useState<AgeData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -93,10 +95,10 @@ export default function TimeSeriesStatistics({
       return (
         <Box
           sx={{
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
+            backgroundColor: themedColors.backgroundPaper,
             padding: spacing.sm,
             borderRadius: 2,
-            border: "1px solid rgba(102, 126, 234, 0.2)",
+            border: `1px solid ${themedColors.dataBorder}`,
             boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
           }}
         >
@@ -104,11 +106,7 @@ export default function TimeSeriesStatistics({
             {label}
           </Typography>
           {payload.map((entry: any, index: number) => (
-            <Typography
-              key={index}
-              variant="body2"
-              sx={{ color: entry.color }}
-            >
+            <Typography key={index} variant="body2" sx={{ color: entry.color }}>
               {entry.name}: {entry.value}
               {entry.name.includes("%") ? "" : ""}
             </Typography>
@@ -167,10 +165,7 @@ export default function TimeSeriesStatistics({
         <Box sx={{ mb: spacing.xl }}>
           <GlassCard>
             <CardContent sx={{ p: spacing.lg }}>
-              <Typography
-                variant="h5"
-                sx={{ mb: spacing.sm, fontWeight: 600 }}
-              >
+              <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
                 Sukupuolijakauma
               </Typography>
               <Typography
@@ -198,11 +193,11 @@ export default function TimeSeriesStatistics({
                     <XAxis
                       dataKey="year"
                       style={{ fontSize: "14px" }}
-                      tick={{ fill: "#666" }}
+                      tick={{ fill: themedColors.textSecondary }}
                     />
                     <YAxis
                       style={{ fontSize: "14px" }}
-                      tick={{ fill: "#666" }}
+                      tick={{ fill: themedColors.textSecondary }}
                       label={{
                         value: "Osuus (%)",
                         angle: -90,
@@ -215,8 +210,8 @@ export default function TimeSeriesStatistics({
                       type="monotone"
                       dataKey="female_percentage"
                       stackId="1"
-                      stroke="#E91E63"
-                      fill="#E91E63"
+                      stroke={colors.chartPink}
+                      fill={colors.chartPink}
                       fillOpacity={0.6}
                       name="Naiset %"
                     />
@@ -224,8 +219,8 @@ export default function TimeSeriesStatistics({
                       type="monotone"
                       dataKey="male_percentage"
                       stackId="1"
-                      stroke="#2196F3"
-                      fill="#2196F3"
+                      stroke={colors.chartBlue}
+                      fill={colors.chartBlue}
                       fillOpacity={0.6}
                       name="Miehet %"
                     />
@@ -250,11 +245,11 @@ export default function TimeSeriesStatistics({
                     <XAxis
                       dataKey="year"
                       style={{ fontSize: "14px" }}
-                      tick={{ fill: "#666" }}
+                      tick={{ fill: themedColors.textSecondary }}
                     />
                     <YAxis
                       style={{ fontSize: "14px" }}
-                      tick={{ fill: "#666" }}
+                      tick={{ fill: themedColors.textSecondary }}
                       label={{
                         value: "Lukumäärä",
                         angle: -90,
@@ -266,25 +261,25 @@ export default function TimeSeriesStatistics({
                     <Line
                       type="monotone"
                       dataKey="female_count"
-                      stroke="#E91E63"
+                      stroke={colors.chartPink}
                       strokeWidth={2}
-                      dot={{ fill: "#E91E63" }}
+                      dot={{ fill: colors.chartPink }}
                       name="Naiset"
                     />
                     <Line
                       type="monotone"
                       dataKey="male_count"
-                      stroke="#2196F3"
+                      stroke={colors.chartBlue}
                       strokeWidth={2}
-                      dot={{ fill: "#2196F3" }}
+                      dot={{ fill: colors.chartBlue }}
                       name="Miehet"
                     />
                     <Line
                       type="monotone"
                       dataKey="total_count"
-                      stroke="#4CAF50"
+                      stroke={colors.chartGreen}
                       strokeWidth={2}
-                      dot={{ fill: "#4CAF50" }}
+                      dot={{ fill: colors.chartGreen }}
                       strokeDasharray="5 5"
                       name="Yhteensä"
                     />
@@ -357,10 +352,7 @@ export default function TimeSeriesStatistics({
         <Box>
           <GlassCard>
             <CardContent sx={{ p: spacing.lg }}>
-              <Typography
-                variant="h5"
-                sx={{ mb: spacing.sm, fontWeight: 600 }}
-              >
+              <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
                 Ikäjakauma
               </Typography>
               <Typography
@@ -388,11 +380,11 @@ export default function TimeSeriesStatistics({
                     <XAxis
                       dataKey="year"
                       style={{ fontSize: "14px" }}
-                      tick={{ fill: "#666" }}
+                      tick={{ fill: themedColors.textSecondary }}
                     />
                     <YAxis
                       style={{ fontSize: "14px" }}
-                      tick={{ fill: "#666" }}
+                      tick={{ fill: themedColors.textSecondary }}
                       label={{
                         value: "Lukumäärä",
                         angle: -90,
@@ -405,8 +397,8 @@ export default function TimeSeriesStatistics({
                       type="monotone"
                       dataKey="age_under_30"
                       stackId="1"
-                      stroke="#9C27B0"
-                      fill="#9C27B0"
+                      stroke={colors.chartPurple}
+                      fill={colors.chartPurple}
                       fillOpacity={0.7}
                       name="< 30v"
                     />
@@ -414,8 +406,8 @@ export default function TimeSeriesStatistics({
                       type="monotone"
                       dataKey="age_30_39"
                       stackId="1"
-                      stroke="#2196F3"
-                      fill="#2196F3"
+                      stroke={colors.chartBlue}
+                      fill={colors.chartBlue}
                       fillOpacity={0.7}
                       name="30-39v"
                     />
@@ -423,8 +415,8 @@ export default function TimeSeriesStatistics({
                       type="monotone"
                       dataKey="age_40_49"
                       stackId="1"
-                      stroke="#4CAF50"
-                      fill="#4CAF50"
+                      stroke={colors.chartGreen}
+                      fill={colors.chartGreen}
                       fillOpacity={0.7}
                       name="40-49v"
                     />
@@ -432,8 +424,8 @@ export default function TimeSeriesStatistics({
                       type="monotone"
                       dataKey="age_50_59"
                       stackId="1"
-                      stroke="#FF9800"
-                      fill="#FF9800"
+                      stroke={colors.chartOrange}
+                      fill={colors.chartOrange}
                       fillOpacity={0.7}
                       name="50-59v"
                     />
@@ -441,8 +433,8 @@ export default function TimeSeriesStatistics({
                       type="monotone"
                       dataKey="age_60_plus"
                       stackId="1"
-                      stroke="#F44336"
-                      fill="#F44336"
+                      stroke={colors.chartRed}
+                      fill={colors.chartRed}
                       fillOpacity={0.7}
                       name="60+v"
                     />
@@ -467,12 +459,12 @@ export default function TimeSeriesStatistics({
                     <XAxis
                       dataKey="year"
                       style={{ fontSize: "14px" }}
-                      tick={{ fill: "#666" }}
+                      tick={{ fill: themedColors.textSecondary }}
                     />
                     <YAxis
                       domain={[40, 60]}
                       style={{ fontSize: "14px" }}
-                      tick={{ fill: "#666" }}
+                      tick={{ fill: themedColors.textSecondary }}
                       label={{
                         value: "Ikä (vuotta)",
                         angle: -90,

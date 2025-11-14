@@ -16,7 +16,8 @@ import {
 } from "@mui/material";
 import { ParticipationData, SortField, SortDirection } from "./types";
 import { GlassCard } from "../../theme/components";
-import { colors, commonStyles, spacing } from "../../theme";
+import { colors, commonStyles, spacing, gradients } from "../../theme";
+import { useThemedColors } from "../../theme/ThemeContext";
 
 interface ParticipationTableProps {
   data: ParticipationData[];
@@ -27,6 +28,7 @@ export function ParticipationTable({
   data,
   onSelectPerson,
 }: ParticipationTableProps) {
+  const themedColors = useThemedColors();
   const [sortField, setSortField] = useState<SortField>("participation_rate");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [page, setPage] = useState(0);
@@ -91,7 +93,7 @@ export function ParticipationTable({
           <TableHead>
             <TableRow
               sx={{
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                background: gradients.scraper,
               }}
             >
               <TableCell sx={{ color: "white", fontWeight: 600 }}>
