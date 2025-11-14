@@ -227,7 +227,7 @@ SELECT
     r.sort_name,
     t.start_date AS term_start,
     t.end_date AS term_end,
-    COUNT(CASE WHEN TRIM(v.vote) != 'Poissa' THEN 1 END) AS votes_cast,
+     COUNT(CASE WHEN TRIM(v.vote) != 'Poissa' THEN 1 END) AS votes_cast,
     COUNT(*) AS total_votings,
     ROUND(
         CAST(COUNT(CASE WHEN TRIM(v.vote) != 'Poissa' THEN 1 END) AS REAL) * 100.0 /
