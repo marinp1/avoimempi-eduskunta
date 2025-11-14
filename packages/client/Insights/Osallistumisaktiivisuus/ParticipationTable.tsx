@@ -7,6 +7,7 @@ import {
   TableHead,
   TableRow,
   TableSortLabel,
+  TablePagination,
   Paper,
   Box,
   Chip,
@@ -28,6 +29,19 @@ export function ParticipationTable({
 }: ParticipationTableProps) {
   const [sortField, setSortField] = useState<SortField>("participation_rate");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(25);
+
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -57,6 +71,12 @@ export function ParticipationTable({
       }
     });
   }, [data, sortField, sortDirection]);
+
+  // Paginate data
+  const paginatedData = React.useMemo(() => {
+    const startIndex = page * rowsPerPage;
+    return sortedData.slice(startIndex, startIndex + rowsPerPage);
+  }, [sortedData, page, rowsPerPage]);
 
   const getParticipationColor = (rate: number): string => {
     if (rate >= 90) return colors.success;
@@ -133,56 +153,76 @@ export function ParticipationTable({
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedData.map((row, index) => (
-              <TableRow
-                key={`${row.person_id}-${index}`}
-                sx={{
-                  ...commonStyles.interactiveHover,
-                  cursor: onSelectPerson ? "pointer" : "default",
-                }}
-                onClick={() => onSelectPerson?.(row.person_id)}
-              >
-                <TableCell>
-                  <Typography variant="body2" fontWeight={600}>
-                    #{index + 1}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2" fontWeight={500}>
-                    {row.first_name} {row.last_name}
-                  </Typography>
-                </TableCell>
-                <TableCell align="right">
-                  <Typography variant="body2">{row.votes_cast}</Typography>
-                </TableCell>
-                <TableCell align="right">
-                  <Typography variant="body2" color="text.secondary">
-                    {row.total_votings}
-                  </Typography>
-                </TableCell>
-                <TableCell align="right">
-                  <Tooltip
-                    title={`${row.votes_cast} / ${row.total_votings} äänestystä`}
-                  >
-                    <Box sx={{ display: "inline-flex", alignItems: "center" }}>
-                      <Chip
-                        label={`${row.participation_rate}%`}
-                        size="small"
-                        sx={{
-                          backgroundColor: `${getParticipationColor(row.participation_rate)}20`,
-                          color: getParticipationColor(row.participation_rate),
-                          fontWeight: 700,
-                          minWidth: 70,
-                        }}
-                      />
-                    </Box>
-                  </Tooltip>
-                </TableCell>
-              </TableRow>
-            ))}
+            {paginatedData.map((row, index) => {
+              const globalIndex = page * rowsPerPage + index;
+              return (
+                <TableRow
+                  key={`${row.person_id}-${index}`}
+                  sx={{
+                    ...commonStyles.interactiveHover,
+                    cursor: onSelectPerson ? "pointer" : "default",
+                  }}
+                  onClick={() => onSelectPerson?.(row.person_id)}
+                >
+                  <TableCell>
+                    <Typography variant="body2" fontWeight={600}>
+                      #{globalIndex + 1}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight={500}>
+                      {row.first_name} {row.last_name}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography variant="body2">{row.votes_cast}</Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography variant="body2" color="text.secondary">
+                      {row.total_votings}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Tooltip
+                      title={`${row.votes_cast} / ${row.total_votings} äänestystä`}
+                    >
+                      <Box
+                        sx={{ display: "inline-flex", alignItems: "center" }}
+                      >
+                        <Chip
+                          label={`${row.participation_rate}%`}
+                          size="small"
+                          sx={{
+                            backgroundColor: `${getParticipationColor(row.participation_rate)}20`,
+                            color: getParticipationColor(
+                              row.participation_rate,
+                            ),
+                            fontWeight: 700,
+                            minWidth: 70,
+                          }}
+                        />
+                      </Box>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        rowsPerPageOptions={[10, 25, 50, 100]}
+        component="div"
+        count={sortedData.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        labelRowsPerPage="Rivejä per sivu:"
+        labelDisplayedRows={({ from, to, count }) =>
+          `${from}-${to} / ${count !== -1 ? count : `enemmän kuin ${to}`}`
+        }
+      />
     </GlassCard>
   );
 }
