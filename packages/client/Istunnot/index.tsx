@@ -16,6 +16,7 @@ import {
   Chip,
   Collapse,
   IconButton,
+  Pagination,
 } from "@mui/material";
 import EventIcon from "@mui/icons-material/Event";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -27,6 +28,14 @@ type SessionWithAgenda = DatabaseTables.Session & {
   agenda_title?: string;
   agenda_state?: string;
   sections?: DatabaseTables.Section[];
+};
+
+type SessionsResponse = {
+  sessions: SessionWithAgenda[];
+  totalCount: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 };
 
 export default function IstunnotPage() {
@@ -43,16 +52,22 @@ export default function IstunnotPage() {
   const [loadingSpeeches, setLoadingSpeeches] = useState<Set<number>>(
     new Set(),
   );
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const limit = 20;
 
-  // Fetch sessions on mount
+  // Fetch sessions on mount or page change
   useEffect(() => {
     const fetchSessions = async () => {
       try {
         setLoading(true);
-        const res = await fetch("/api/sessions");
+        const res = await fetch(`/api/sessions?page=${page}&limit=${limit}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data: SessionWithAgenda[] = await res.json();
-        setSessions(data);
+        const data: SessionsResponse = await res.json();
+        setSessions(data.sessions);
+        setTotalPages(data.totalPages);
+        setTotalCount(data.totalCount);
       } catch (err) {
         console.error(err);
         setError("Istuntojen lataaminen epäonnistui.");
@@ -61,7 +76,7 @@ export default function IstunnotPage() {
       }
     };
     fetchSessions();
-  }, []);
+  }, [page]);
 
   // Format date to Finnish format
   const formatDate = (dateString: string) => {
@@ -145,6 +160,19 @@ export default function IstunnotPage() {
         });
       }
     }
+  };
+
+  // Handle page change
+  const handlePageChange = (
+    _event: React.ChangeEvent<unknown>,
+    value: number,
+  ) => {
+    setPage(value);
+    // Reset expanded rows when changing pages
+    setExpandedRows(new Set());
+    setExpandedSections(new Set());
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -637,6 +665,38 @@ export default function IstunnotPage() {
               </Table>
             )}
           </TableContainer>
+
+          {/* Pagination */}
+          {!loading && !error && totalPages > 1 && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                mt: spacing.lg,
+              }}
+            >
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+                size="large"
+                sx={{
+                  "& .MuiPaginationItem-root": {
+                    color: colors.textPrimary,
+                    fontWeight: 500,
+                  },
+                  "& .MuiPaginationItem-root.Mui-selected": {
+                    background: gradients.primary,
+                    color: "white",
+                    fontWeight: 600,
+                  },
+                }}
+                showFirstButton
+                showLastButton
+              />
+            </Box>
+          )}
         </Box>
       </Fade>
 
