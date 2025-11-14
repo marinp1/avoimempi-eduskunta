@@ -16,11 +16,13 @@ import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import { GlassCard } from "../theme/components";
 import { commonStyles, colors, spacing } from "../theme";
+import { useThemedColors } from "../theme/ThemeContext";
 import OsallistumisaktiivisuusPanel from "./Osallistumisaktiivisuus";
 import TimeSeriesStatistics from "./TimeSeriesStatistics";
 import PartyParticipation from "./PartyParticipation";
 
 export default function InsightsPage() {
+  const themedColors = useThemedColors();
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
@@ -114,14 +116,23 @@ export default function InsightsPage() {
       {/* Header Card */}
       <Fade in timeout={500}>
         <Box>
-          <GlassCard sx={{ mb: spacing.lg }}>
+          <GlassCard
+            sx={{
+              mb: spacing.lg,
+              background: themedColors.glassBackground,
+              border: `1px solid ${themedColors.glassBorder}`,
+            }}
+          >
             <CardContent sx={{ p: spacing.lg, textAlign: "center" }}>
               <Typography
                 variant="h4"
                 component="h1"
                 gutterBottom
                 sx={{
-                  ...commonStyles.gradientText,
+                  background: themedColors.primaryGradient,
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  fontWeight: 700,
                   mb: spacing.md,
                 }}
               >
@@ -145,11 +156,15 @@ export default function InsightsPage() {
                 <GlassCard
                   sx={{
                     height: "100%",
+                    background: themedColors.glassBackground,
+                    border: `1px solid ${themedColors.glassBorder}`,
                     transition: "all 0.3s ease",
                     cursor: "pointer",
                     "&:hover": {
                       transform: "translateY(-4px)",
-                      boxShadow: "0 12px 24px rgba(102, 126, 234, 0.2)",
+                      boxShadow: themedColors.isDark
+                        ? "0 12px 24px rgba(95, 163, 227, 0.3)"
+                        : "0 12px 24px rgba(102, 126, 234, 0.2)",
                     },
                   }}
                 >
@@ -158,13 +173,18 @@ export default function InsightsPage() {
                       <TimelineIcon
                         sx={{
                           fontSize: 40,
-                          color: colors.primary,
+                          color: themedColors.primary,
                           mr: spacing.sm,
                         }}
                       />
                       <Typography
                         variant="h5"
-                        sx={{ ...commonStyles.gradientText }}
+                        sx={{
+                          background: themedColors.primaryGradient,
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          fontWeight: 700,
+                        }}
                       >
                         Tilastot ajassa
                       </Typography>
@@ -177,13 +197,15 @@ export default function InsightsPage() {
                         mt: spacing.md,
                         p: spacing.md,
                         borderRadius: 2,
-                        background: "rgba(102, 126, 234, 0.1)",
+                        background: themedColors.isDark
+                          ? "rgba(95, 163, 227, 0.2)"
+                          : "rgba(102, 126, 234, 0.1)",
                         textAlign: "center",
                       }}
                     >
                       <Typography
                         variant="body2"
-                        sx={{ color: colors.primary, fontWeight: 600 }}
+                        sx={{ color: themedColors.primary, fontWeight: 600 }}
                       >
                         Katso tilastot →
                       </Typography>
@@ -202,11 +224,15 @@ export default function InsightsPage() {
                 <GlassCard
                   sx={{
                     height: "100%",
+                    background: themedColors.glassBackground,
+                    border: `1px solid ${themedColors.glassBorder}`,
                     transition: "all 0.3s ease",
                     cursor: "pointer",
                     "&:hover": {
                       transform: "translateY(-4px)",
-                      boxShadow: "0 12px 24px rgba(102, 126, 234, 0.2)",
+                      boxShadow: themedColors.isDark
+                        ? "0 12px 24px rgba(76, 175, 80, 0.3)"
+                        : "0 12px 24px rgba(102, 126, 234, 0.2)",
                     },
                   }}
                 >
@@ -215,13 +241,18 @@ export default function InsightsPage() {
                       <AssessmentIcon
                         sx={{
                           fontSize: 40,
-                          color: colors.success,
+                          color: themedColors.success,
                           mr: spacing.sm,
                         }}
                       />
                       <Typography
                         variant="h5"
-                        sx={{ ...commonStyles.gradientText }}
+                        sx={{
+                          background: themedColors.primaryGradient,
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          fontWeight: 700,
+                        }}
                       >
                         Puolueiden osallistuminen
                       </Typography>
@@ -235,13 +266,15 @@ export default function InsightsPage() {
                         mt: spacing.md,
                         p: spacing.md,
                         borderRadius: 2,
-                        background: "rgba(76, 175, 80, 0.1)",
+                        background: themedColors.isDark
+                          ? "rgba(76, 175, 80, 0.2)"
+                          : "rgba(76, 175, 80, 0.1)",
                         textAlign: "center",
                       }}
                     >
                       <Typography
                         variant="body2"
-                        sx={{ color: colors.success, fontWeight: 600 }}
+                        sx={{ color: themedColors.success, fontWeight: 600 }}
                       >
                         Katso analytiikka →
                       </Typography>
@@ -256,10 +289,14 @@ export default function InsightsPage() {
               <GlassCard
                 sx={{
                   height: "100%",
+                  background: themedColors.glassBackground,
+                  border: `1px solid ${themedColors.glassBorder}`,
                   transition: "all 0.3s ease",
                   "&:hover": {
                     transform: "translateY(-4px)",
-                    boxShadow: "0 12px 24px rgba(102, 126, 234, 0.2)",
+                    boxShadow: themedColors.isDark
+                      ? "0 12px 24px rgba(255, 152, 0, 0.3)"
+                      : "0 12px 24px rgba(102, 126, 234, 0.2)",
                   },
                 }}
               >
@@ -268,13 +305,18 @@ export default function InsightsPage() {
                     <BarChartIcon
                       sx={{
                         fontSize: 40,
-                        color: colors.warning,
+                        color: themedColors.warning,
                         mr: spacing.sm,
                       }}
                     />
                     <Typography
                       variant="h5"
-                      sx={{ ...commonStyles.gradientText }}
+                      sx={{
+                        background: themedColors.primaryGradient,
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        fontWeight: 700,
+                      }}
                     >
                       Istuntotilastot
                     </Typography>
@@ -287,7 +329,9 @@ export default function InsightsPage() {
                       mt: spacing.md,
                       p: spacing.md,
                       borderRadius: 2,
-                      background: "rgba(255, 152, 0, 0.1)",
+                      background: themedColors.isDark
+                        ? "rgba(255, 152, 0, 0.2)"
+                        : "rgba(255, 152, 0, 0.1)",
                       textAlign: "center",
                     }}
                   >
@@ -305,11 +349,15 @@ export default function InsightsPage() {
                 <GlassCard
                   sx={{
                     height: "100%",
+                    background: themedColors.glassBackground,
+                    border: `1px solid ${themedColors.glassBorder}`,
                     transition: "all 0.3s ease",
                     cursor: "pointer",
                     "&:hover": {
                       transform: "translateY(-4px)",
-                      boxShadow: "0 12px 24px rgba(102, 126, 234, 0.2)",
+                      boxShadow: themedColors.isDark
+                        ? "0 12px 24px rgba(76, 175, 80, 0.3)"
+                        : "0 12px 24px rgba(102, 126, 234, 0.2)",
                     },
                   }}
                 >
@@ -318,13 +366,18 @@ export default function InsightsPage() {
                       <HowToVoteIcon
                         sx={{
                           fontSize: 40,
-                          color: colors.success,
+                          color: themedColors.success,
                           mr: spacing.sm,
                         }}
                       />
                       <Typography
                         variant="h5"
-                        sx={{ ...commonStyles.gradientText }}
+                        sx={{
+                          background: themedColors.primaryGradient,
+                          WebkitBackgroundClip: "text",
+                          WebkitTextFillColor: "transparent",
+                          fontWeight: 700,
+                        }}
                       >
                         Äänestysosallistuminen
                       </Typography>
@@ -338,13 +391,15 @@ export default function InsightsPage() {
                         mt: spacing.md,
                         p: spacing.md,
                         borderRadius: 2,
-                        background: "rgba(76, 175, 80, 0.1)",
+                        background: themedColors.isDark
+                          ? "rgba(76, 175, 80, 0.2)"
+                          : "rgba(76, 175, 80, 0.1)",
                         textAlign: "center",
                       }}
                     >
                       <Typography
                         variant="body2"
-                        sx={{ color: colors.success, fontWeight: 600 }}
+                        sx={{ color: themedColors.success, fontWeight: 600 }}
                       >
                         Katso analytiikka →
                       </Typography>
@@ -360,12 +415,18 @@ export default function InsightsPage() {
       {/* Coming Soon Section */}
       <Fade in timeout={800}>
         <Box>
-          <GlassCard sx={{ mt: spacing.lg }}>
+          <GlassCard
+            sx={{
+              mt: spacing.lg,
+              background: themedColors.glassBackground,
+              border: `1px solid ${themedColors.glassBorder}`,
+            }}
+          >
             <CardContent sx={{ p: spacing.lg, textAlign: "center" }}>
               <Typography
                 variant="h6"
                 gutterBottom
-                sx={{ color: colors.primary, fontWeight: 600 }}
+                sx={{ color: themedColors.primary, fontWeight: 600 }}
               >
                 Lisää analytiikkaa tulossa pian
               </Typography>
@@ -387,7 +448,7 @@ export default function InsightsPage() {
               p: spacing.md,
               textAlign: "center",
               borderRadius: 3,
-              background: "rgba(255,255,255,0.7)",
+              background: themedColors.backgroundPaper,
               backdropFilter: "blur(10px)",
             }}
           >

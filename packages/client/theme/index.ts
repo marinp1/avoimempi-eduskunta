@@ -75,25 +75,25 @@ export const colors = {
 
   // DARK MODE COLORS
   // Background colors - Deep, comfortable dark
-  darkBackgroundDefault: "#121212",
-  darkBackgroundPaper: "#1e1e1e",
+  darkBackgroundDefault: "#0a0a0a",
+  darkBackgroundPaper: "#1a1a1a",
   darkBackgroundGradientStart: "#1a1a1a",
   darkBackgroundGradientEnd: "#0a0a0a",
-  darkBackgroundSubtle: "#2a2a2a",
+  darkBackgroundSubtle: "#252525",
 
   // Glass-morphism colors (dark)
-  darkGlassBackground: "rgba(30,30,30,0.95)",
-  darkGlassBorder: "rgba(102,126,234,0.25)",
+  darkGlassBackground: "rgba(26,26,26,0.95)",
+  darkGlassBorder: "rgba(102,126,234,0.3)",
 
-  // Text colors - High contrast for dark mode
-  darkTextPrimary: "#e0e0e0",
-  darkTextSecondary: "#b0b0b0",
-  darkTextTertiary: "#808080",
+  // Text colors - Much higher contrast for dark mode
+  darkTextPrimary: "#f5f5f5",
+  darkTextSecondary: "#d0d0d0",
+  darkTextTertiary: "#a0a0a0",
 
   // Data display colors (dark)
-  darkDataHighlight: "#667eea",
-  darkDataLabel: "#b0b0b0",
-  darkDataBorder: "#3a3a3a",
+  darkDataHighlight: "#8b9cff",
+  darkDataLabel: "#d0d0d0",
+  darkDataBorder: "#404040",
 } as const;
 
 /**
@@ -226,27 +226,23 @@ export const commonStyles = {
 
   /**
    * Interactive hover effect for cards/rows - subtle for government style
+   * NOTE: Use themedColors.primary for hover in component
    */
   interactiveHover: {
     transition: "all 0.2s ease-in-out",
     cursor: "pointer",
     "&:hover": {
-      background: "rgba(0, 53, 128, 0.03)",
       boxShadow: shadows.subtle,
     },
   } satisfies SxProps<Theme>,
 
   /**
    * Professional table row style - clean and minimal
+   * NOTE: Use with themedColors.dataBorder and themedColors.primary in component
    */
   tableRow: {
     transition: "all 0.2s ease-in-out",
     cursor: "pointer",
-    borderBottom: `1px solid ${colors.dataBorder}`,
-    "&:hover": {
-      background: "rgba(0, 53, 128, 0.03)",
-      boxShadow: shadows.subtle,
-    },
     "&:last-child": {
       borderBottom: "none",
     },
@@ -254,9 +250,9 @@ export const commonStyles = {
 
   /**
    * Table header style - formal government style
+   * NOTE: Use with themedColors.primary gradient in component
    */
   tableHeader: {
-    background: gradients.primary,
     color: "#ffffff",
     fontWeight: 600,
     fontSize: "0.875rem",
@@ -268,21 +264,21 @@ export const commonStyles = {
 
   /**
    * Data cell style - optimized for readability
+   * NOTE: Color should be set from themedColors.textPrimary in component
    */
   dataCell: {
     fontWeight: 600,
     fontSize: "1rem",
-    color: colors.textPrimary,
     letterSpacing: "-0.01em",
   } satisfies SxProps<Theme>,
 
   /**
    * Label cell style
+   * NOTE: Color should be set from themedColors.textSecondary in component
    */
   labelCell: {
     fontWeight: 500,
     fontSize: "0.875rem",
-    color: colors.textSecondary,
   } satisfies SxProps<Theme>,
 
   /**
