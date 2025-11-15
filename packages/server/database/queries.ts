@@ -40,3 +40,4 @@ export const partyParticipationByGovernment = await readSQL(
 );
 export const sessionByDate = await readSQL("SESSION_BY_DATE.sql");
 export const speechesByDate = await readSQL("SPEECHES_BY_DATE.sql");
+export const sessionDates = await readSQL("SESSION_DATES.sql");

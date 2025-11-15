@@ -244,6 +244,15 @@ const server = Bun.serve({
       },
     },
 
+    "/api/session-dates": {
+      GET: async () => {
+        const dates = await db.fetchSessionDates();
+        return new Response(JSON.stringify(dates), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
     "/api/admin/status": {
       GET: async () => {
         const adminService = new AdminStorageService();
