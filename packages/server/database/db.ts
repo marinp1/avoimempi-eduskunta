@@ -337,6 +337,13 @@ export class DatabaseConnection {
     return data;
   }
 
+  public async fetchSessionDates() {
+    const stmt = this.db.prepare<{ date: string }, []>(queries.sessionDates);
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
   #connectToDatabase() {
     const databasePath = getDatabasePath();
     this.#database = new Database(databasePath, {

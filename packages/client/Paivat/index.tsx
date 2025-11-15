@@ -56,6 +56,8 @@ export default function PaivatPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [date, setDate] = useState<string>(getInitialDate());
   const [error, setError] = useState<string | null>(null);
+  const [validDates, setValidDates] = useState<Set<string>>(new Set());
+  const [datesLoading, setDatesLoading] = useState<boolean>(true);
 
   // Fetch data when date changes
   useEffect(() => {
@@ -85,6 +87,25 @@ export default function PaivatPage() {
     fetchData();
   }, [date]);
 
+  // Fetch valid session dates on mount
+  useEffect(() => {
+    const fetchValidDates = async () => {
+      try {
+        setDatesLoading(true);
+        const response = await fetch("/api/session-dates");
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data: { date: string }[] = await response.json();
+        const dateSet = new Set(data.map((item) => item.date));
+        setValidDates(dateSet);
+      } catch (err) {
+        console.error("Failed to fetch valid dates:", err);
+      } finally {
+        setDatesLoading(false);
+      }
+    };
+    fetchValidDates();
+  }, []);
+
   // Handle browser back/forward
   useEffect(() => {
     const handlePopState = () => {
@@ -107,6 +128,34 @@ export default function PaivatPage() {
   const handleDateChange = (newDate: string) => {
     setDate(newDate);
     updateURL(newDate);
+  };
+
+  // Check if a date has valid sessions
+  const isValidDate = (dateString: string): boolean => {
+    return validDates.has(dateString);
+  };
+
+  // Find nearest valid dates (before and after)
+  const findNearestValidDates = (
+    targetDate: string,
+  ): { before: string | null; after: string | null } => {
+    const sortedDates = Array.from(validDates).sort();
+    const target = new Date(targetDate).getTime();
+
+    let before: string | null = null;
+    let after: string | null = null;
+
+    for (const dateStr of sortedDates) {
+      const dateTime = new Date(dateStr).getTime();
+      if (dateTime < target) {
+        before = dateStr;
+      } else if (dateTime > target && !after) {
+        after = dateStr;
+        break;
+      }
+    }
+
+    return { before, after };
   };
 
   // Format date to Finnish format
@@ -218,6 +267,12 @@ export default function PaivatPage() {
                     </InputAdornment>
                   ),
                 }}
+                helperText={
+                  !datesLoading && !isValidDate(date)
+                    ? "Valitulla päivällä ei ole istuntoja"
+                    : "Valitse päivä jonka istuntoja haluat tarkastella"
+                }
+                error={!datesLoading && !isValidDate(date)}
                 sx={{
                   maxWidth: 280,
                   "& .MuiOutlinedInput-root": {
@@ -240,9 +295,75 @@ export default function PaivatPage() {
         </Alert>
       ) : sessions.length === 0 ? (
         <Fade in timeout={600}>
-          <Alert severity="info" sx={{ py: spacing.sm }}>
-            Ei istuntoja valitulla päivämäärällä.
-          </Alert>
+          <Box>
+            <Alert severity="info" sx={{ py: spacing.sm, mb: spacing.md }}>
+              Ei istuntoja valitulla päivämäärällä.
+            </Alert>
+            {!datesLoading &&
+              validDates.size > 0 &&
+              (() => {
+                const { before, after } = findNearestValidDates(date);
+                return before || after ? (
+                  <GlassCard
+                    sx={{
+                      background: themedColors.backgroundPaper,
+                      border: `1px solid ${themedColors.dataBorder}`,
+                    }}
+                  >
+                    <CardContent sx={{ p: spacing.md }}>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          color: themedColors.textSecondary,
+                          mb: spacing.sm,
+                          fontWeight: 600,
+                        }}
+                      >
+                        Lähimmät istunnot:
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: spacing.sm,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {before && (
+                          <Chip
+                            label={formatDate(before)}
+                            onClick={() => handleDateChange(before)}
+                            sx={{
+                              background: themedColors.primary,
+                              color: themedColors.backgroundPaper,
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              "&:hover": {
+                                opacity: 0.9,
+                              },
+                            }}
+                          />
+                        )}
+                        {after && (
+                          <Chip
+                            label={formatDate(after)}
+                            onClick={() => handleDateChange(after)}
+                            sx={{
+                              background: themedColors.primary,
+                              color: themedColors.backgroundPaper,
+                              fontWeight: 600,
+                              cursor: "pointer",
+                              "&:hover": {
+                                opacity: 0.9,
+                              },
+                            }}
+                          />
+                        )}
+                      </Box>
+                    </CardContent>
+                  </GlassCard>
+                ) : null;
+              })()}
+          </Box>
         </Fade>
       ) : (
         <>
@@ -264,7 +385,7 @@ export default function PaivatPage() {
                       display: "flex",
                       alignItems: "center",
                       gap: spacing.sm,
-                      mb: spacing.md,
+                      mb: spacing.sm,
                     }}
                   >
                     <EventIcon
@@ -274,11 +395,11 @@ export default function PaivatPage() {
                       variant="h5"
                       sx={{
                         color: themedColors.primary,
-                        fontWeight: 600,
+                        fontWeight: 700,
                         letterSpacing: "0",
                       }}
                     >
-                      {sessionTitle || "Eduskunnan istunto"}
+                      {sessions[0]?.key || "Istunto"}
                     </Typography>
                   </Box>
                   <Typography
@@ -286,11 +407,23 @@ export default function PaivatPage() {
                     sx={{
                       color: themedColors.textSecondary,
                       fontWeight: 500,
-                      mb: spacing.sm,
+                      mb: spacing.md,
                     }}
                   >
                     {formatDate(date)}
                   </Typography>
+                  {sessionTitle && (
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        color: themedColors.textPrimary,
+                        fontWeight: 500,
+                        mb: spacing.md,
+                      }}
+                    >
+                      {sessionTitle}
+                    </Typography>
+                  )}
                   <Box
                     sx={{
                       display: "flex",
@@ -299,17 +432,19 @@ export default function PaivatPage() {
                       mt: spacing.md,
                     }}
                   >
-                    {sessions.map((session) => (
-                      <Chip
-                        key={session.id}
-                        label={`Istunto ${session.year}/${session.number}`}
-                        sx={{
-                          background: themedColors.primary,
-                          color: themedColors.backgroundPaper,
-                          fontWeight: 600,
-                        }}
-                      />
-                    ))}
+                    {sessions.length > 1 &&
+                      sessions.map((session) => (
+                        <Chip
+                          key={session.id}
+                          label={session.key}
+                          sx={{
+                            background: themedColors.primary,
+                            color: themedColors.backgroundPaper,
+                            fontWeight: 600,
+                            fontSize: "0.875rem",
+                          }}
+                        />
+                      ))}
                     {speeches.length > 0 && (
                       <Chip
                         icon={
@@ -358,6 +493,28 @@ export default function PaivatPage() {
                         background: themedColors.primaryGradient,
                       }}
                     >
+                      {/* Document Name - Prominent Display */}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: spacing.sm,
+                          mb: spacing.xs,
+                        }}
+                      >
+                        <Chip
+                          label={group.document}
+                          sx={{
+                            background: "rgba(255,255,255,0.95)",
+                            color: themedColors.primary,
+                            fontWeight: 700,
+                            fontSize: "0.9rem",
+                            height: 32,
+                            px: 1,
+                          }}
+                        />
+                      </Box>
+
                       <Typography
                         variant="h6"
                         sx={{
