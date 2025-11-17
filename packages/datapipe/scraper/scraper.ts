@@ -3,7 +3,7 @@ import { getStorage, StorageKeyBuilder } from "#storage";
 import type { DataStage } from "#storage";
 
 /** Time to wait (in ms) between API calls. */
-const TIME_BETWEEN_QUERIES = 10;
+const TIME_BETWEEN_QUERIES = 25;
 
 /** At most make these many requests to avoid infinite call loops. */
 const MAX_LOOP_LIMIT = 10_000; // Meaning ~ 1,000,000 rows
@@ -164,20 +164,37 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
   let totalRowsScraped = 0;
 
   if (startPage > 1) {
-    // Count rows from all previously scraped pages
-    for (let page = 1; page < startPage; page++) {
-      const pageKey = StorageKeyBuilder.forPage(stage, tableName, page);
-      const pageData = await storage.get(pageKey);
+    // Efficiently calculate rows already scraped:
+    // Most pages have 100 rows, only need to check the last page
+    const previousPageCount = startPage - 1;
 
-      if (pageData) {
+    if (previousPageCount > 0) {
+      // Read only the last scraped page to get its exact row count
+      const lastPageKey = StorageKeyBuilder.forPage(
+        stage,
+        tableName,
+        previousPageCount,
+      );
+      const lastPageData = await storage.get(lastPageKey);
+
+      if (lastPageData) {
         try {
-          const pageContent = JSON.parse(pageData) as EduskuntaApiResponse;
-          totalRowsScraped += pageContent.rowCount;
+          const lastPageContent = JSON.parse(
+            lastPageData,
+          ) as EduskuntaApiResponse;
+          // (n-1) pages with 100 rows + last page's actual row count
+          totalRowsScraped =
+            (previousPageCount - 1) * 100 + lastPageContent.rowCount;
         } catch (error) {
           console.warn(
-            `⚠️  Could not read page ${page} for progress calculation`,
+            `⚠️  Could not read last page ${previousPageCount} for progress calculation`,
           );
+          // Fallback: assume all pages have 100 rows
+          totalRowsScraped = previousPageCount * 100;
         }
+      } else {
+        // Fallback: assume all pages have 100 rows
+        totalRowsScraped = previousPageCount * 100;
       }
     }
 
