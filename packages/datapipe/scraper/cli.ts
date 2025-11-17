@@ -94,19 +94,54 @@ async function showStatus() {
     const result = await storage.list({ prefix });
 
     const pageCount = result.keys.length;
-    const estimatedRows = pageCount * 100; // Assuming 100 rows per page
+
+    // Calculate exact row count: ((pageCount - 1) * 100) + rows in last page
+    let exactRows = 0;
+    if (pageCount > 0) {
+      // Parse page numbers to find the highest page
+      const pageNumbers = result.keys
+        .map((key) => StorageKeyBuilder.parseKey(key.key))
+        .filter((ref) => ref !== null)
+        .map((ref) => ref!.page);
+
+      const lastPage = Math.max(...pageNumbers);
+
+      // Read the last page to get exact row count
+      const lastPageKey = StorageKeyBuilder.forPage(
+        "raw",
+        table.tableName,
+        lastPage,
+      );
+      const lastPageData = await storage.get(lastPageKey);
+
+      if (lastPageData) {
+        try {
+          const lastPageContent = JSON.parse(lastPageData) as {
+            rowCount: number;
+          };
+          exactRows = (pageCount - 1) * 100 + lastPageContent.rowCount;
+        } catch (error) {
+          // Fallback to estimate if parsing fails
+          exactRows = pageCount * 100;
+        }
+      } else {
+        // Fallback to estimate if reading fails
+        exactRows = pageCount * 100;
+      }
+    }
+
     const percentComplete =
-      table.rowCount > 0 ? (estimatedRows / table.rowCount) * 100 : 0;
+      table.rowCount > 0 ? (exactRows / table.rowCount) * 100 : 0;
 
     const status =
       pageCount === 0
         ? "❌ Not started"
-        : percentComplete >= 95
+        : percentComplete >= 99.9
           ? "✅ Complete"
           : "⏳ In progress";
 
     console.log(
-      `${status} ${table.tableName.padEnd(30)} - ${pageCount} pages (${percentComplete.toFixed(1)}%)`,
+      `${status} ${table.tableName.padEnd(30)} - ${pageCount} pages (${exactRows.toLocaleString()} / ${table.rowCount.toLocaleString()} rows, ${percentComplete.toFixed(1)}%)`,
     );
   }
 }

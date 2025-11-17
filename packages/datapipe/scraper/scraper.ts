@@ -132,10 +132,15 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
 
   switch (mode.type) {
     case "auto-resume":
-      startPage = lastScrapedPage + 1;
+      // Always re-scrape the last page in case it was incomplete
+      startPage = lastScrapedPage > 0 ? lastScrapedPage : 1;
       if (lastScrapedPage > 0) {
-        console.log(`✅ Already scraped: ${lastScrapedPage} pages`);
-        console.log(`🔄 Auto-resuming from page: ${startPage}`);
+        console.log(
+          `✅ Already scraped: ${lastScrapedPage - 1} pages (complete)`,
+        );
+        console.log(
+          `🔄 Re-scraping last page and continuing from page: ${startPage}`,
+        );
       } else {
         console.log(`🚀 Starting fresh from page: ${startPage}`);
       }
@@ -161,40 +166,40 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
   let loopCount = 0;
 
   // Calculate total rows already scraped (for progress calculation)
+  // Since we re-scrape the last page, count only complete pages (startPage - 1)
   let totalRowsScraped = 0;
 
   if (startPage > 1) {
-    // Efficiently calculate rows already scraped:
-    // Most pages have 100 rows, only need to check the last page
-    const previousPageCount = startPage - 1;
+    // Calculate rows from complete pages only (excluding the last page we're re-scraping)
+    const completePageCount = startPage - 1;
 
-    if (previousPageCount > 0) {
-      // Read only the last scraped page to get its exact row count
-      const lastPageKey = StorageKeyBuilder.forPage(
+    if (completePageCount > 0) {
+      // Read the page before the one we're re-scraping to get exact row count
+      const lastCompletePageKey = StorageKeyBuilder.forPage(
         stage,
         tableName,
-        previousPageCount,
+        completePageCount,
       );
-      const lastPageData = await storage.get(lastPageKey);
+      const lastCompletePageData = await storage.get(lastCompletePageKey);
 
-      if (lastPageData) {
+      if (lastCompletePageData) {
         try {
-          const lastPageContent = JSON.parse(
-            lastPageData,
+          const lastCompletePageContent = JSON.parse(
+            lastCompletePageData,
           ) as EduskuntaApiResponse;
-          // (n-1) pages with 100 rows + last page's actual row count
+          // (n-1) pages with 100 rows + last complete page's actual row count
           totalRowsScraped =
-            (previousPageCount - 1) * 100 + lastPageContent.rowCount;
+            (completePageCount - 1) * 100 + lastCompletePageContent.rowCount;
         } catch (error) {
           console.warn(
-            `⚠️  Could not read last page ${previousPageCount} for progress calculation`,
+            `⚠️  Could not read page ${completePageCount} for progress calculation`,
           );
           // Fallback: assume all pages have 100 rows
-          totalRowsScraped = previousPageCount * 100;
+          totalRowsScraped = completePageCount * 100;
         }
       } else {
         // Fallback: assume all pages have 100 rows
-        totalRowsScraped = previousPageCount * 100;
+        totalRowsScraped = completePageCount * 100;
       }
     }
 
