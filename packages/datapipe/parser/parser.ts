@@ -25,7 +25,7 @@ type ParsedRow = Record<string, any>;
  */
 export type ParserFunction = (
   row: ParsedRow,
-  primaryKey: string
+  primaryKey: string,
 ) => Promise<[identifier: string, data: ParsedRow]>;
 
 /**
@@ -33,7 +33,7 @@ export type ParserFunction = (
  */
 const defaultParser: ParserFunction = async (
   row: ParsedRow,
-  primaryKey: string
+  primaryKey: string,
 ): Promise<[string, ParsedRow]> => {
   return [`${row[primaryKey]}`, row];
 };
@@ -47,7 +47,9 @@ async function getParser(tableName: string): Promise<ParserFunction> {
     const module = await import(`./fn/${tableName}.ts`);
     return module.default as ParserFunction;
   } catch (e) {
-    console.warn(`⚠️  No custom parser found for ${tableName}, using default parser`);
+    console.warn(
+      `⚠️  No custom parser found for ${tableName}, using default parser`,
+    );
     return defaultParser;
   }
 }
@@ -55,10 +57,7 @@ async function getParser(tableName: string): Promise<ParserFunction> {
 /**
  * Convert raw API response row (array) to object with column names
  */
-function rowArrayToObject(
-  columnNames: string[],
-  rowData: any[]
-): ParsedRow {
+function rowArrayToObject(columnNames: string[], rowData: any[]): ParsedRow {
   const obj: ParsedRow = {};
   for (let i = 0; i < columnNames.length; i++) {
     obj[columnNames[i]] = rowData[i];
@@ -112,6 +111,52 @@ export async function parseTable(options: ParseOptions): Promise<void> {
   }
 
   console.log(`📋 Found ${listResult.keys.length} pages to parse`);
+
+  // Check which pages are already parsed
+  const targetPrefix = StorageKeyBuilder.listPrefixForTable(
+    targetStage,
+    tableName,
+  );
+  const targetListResult = await storage.list({
+    prefix: targetPrefix,
+    maxKeys: 100000,
+  });
+
+  const alreadyParsedPages = new Set(
+    targetListResult.keys
+      .map((key) => StorageKeyBuilder.parseKey(key.key))
+      .filter((ref) => ref !== null)
+      .map((ref) => ref!.page),
+  );
+
+  // Always re-parse the last page in case it was incomplete
+  const lastParsedPage =
+    alreadyParsedPages.size > 0 ? Math.max(...alreadyParsedPages) : 0;
+  if (lastParsedPage > 0) {
+    alreadyParsedPages.delete(lastParsedPage);
+  }
+
+  const pagesToParse = listResult.keys.filter((key) => {
+    const pageRef = StorageKeyBuilder.parseKey(key.key);
+    return pageRef && !alreadyParsedPages.has(pageRef.page);
+  });
+
+  if (alreadyParsedPages.size > 0) {
+    console.log(
+      `✅ Already parsed: ${alreadyParsedPages.size} pages (complete)`,
+    );
+    console.log(
+      `🔄 Re-parsing last page and continuing: ${pagesToParse.length} pages remaining`,
+    );
+  } else if (pagesToParse.length === listResult.keys.length) {
+    console.log(`🚀 Starting fresh: ${pagesToParse.length} pages to parse`);
+  }
+
+  if (pagesToParse.length === 0) {
+    console.log(`✅ All pages already parsed for ${tableName}`);
+    return;
+  }
+
   console.log();
 
   const totalPages = listResult.keys.length;
@@ -119,7 +164,7 @@ export async function parseTable(options: ParseOptions): Promise<void> {
   let totalRowsParsed = 0;
 
   // Process each page
-  for (const keyMetadata of listResult.keys) {
+  for (const keyMetadata of pagesToParse) {
     const pageRef = StorageKeyBuilder.parseKey(keyMetadata.key);
     if (!pageRef) {
       console.warn(`⚠️  Could not parse key: ${keyMetadata.key}`);
@@ -147,7 +192,7 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       // Apply parser
       const [identifier, parsedData] = await parseData(
         rowObject,
-        apiResponse.pkName
+        apiResponse.pkName,
       );
 
       parsedRows.push(parsedData);
@@ -168,15 +213,16 @@ export async function parseTable(options: ParseOptions): Promise<void> {
     const targetKey = StorageKeyBuilder.forPage(
       targetStage,
       tableName,
-      pageRef.page
+      pageRef.page,
     );
     await storage.put(targetKey, JSON.stringify(parsedPage, null, 2));
 
     pagesParsed++;
-    const percentComplete = (pagesParsed / totalPages) * 100;
+    const totalPagesParsed = alreadyParsedPages.size + pagesParsed;
+    const percentComplete = (totalPagesParsed / totalPages) * 100;
 
     console.log(
-      `✅ Parsed page ${pageRef.page} (${apiResponse.rowCount} rows) - ${percentComplete.toFixed(1)}% complete`
+      `✅ Parsed page ${pageRef.page} (${apiResponse.rowCount} rows) - ${percentComplete.toFixed(1)}% complete`,
     );
 
     // Call progress callback
@@ -200,7 +246,7 @@ export async function parseTable(options: ParseOptions): Promise<void> {
  */
 export async function parseTables(
   tableNames: string[],
-  options?: Omit<ParseOptions, "tableName">
+  options?: Omit<ParseOptions, "tableName">,
 ): Promise<void> {
   for (const tableName of tableNames) {
     try {
