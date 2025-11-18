@@ -13,3 +13,6 @@ db_dump.sql
 application/public/output.css
 
 data/
+
+vaski-data/
+vaski-*.json
