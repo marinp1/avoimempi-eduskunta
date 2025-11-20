@@ -20,6 +20,7 @@ switch (type) {
       ],
       define: {
         "process.env.DB_PATH": "../avoimempi-eduskunta.db",
+        "process.env.MODE": JSON.stringify(process.env.NODE_ENV ?? "production"),
       },
       target: 'bun'
     })
