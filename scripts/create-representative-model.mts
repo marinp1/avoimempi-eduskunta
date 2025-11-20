@@ -1,5 +1,5 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import { deepmerge } from "@fastify/deepmerge";
 import jsonschema from "jsonschema";
 
@@ -8,7 +8,7 @@ const tableName: Modules.Common.TableName = "MemberOfParliament";
 // New structure: data is in storage at data/parsed/TableName/page_*.json
 const dataDir = path.resolve(
   import.meta.dirname,
-  `../data/parsed/${tableName}`
+  `../data/parsed/${tableName}`,
 );
 
 if (!fs.existsSync(dataDir)) {
@@ -33,7 +33,7 @@ const merge = deepmerge({
    * Try to merge all arrays together to reduce the amount of data.
    * We do not care about the values, only keys.
    */
-  mergeArray: (opt) => (target, source) => {
+  mergeArray: (_opt) => (target, source) => {
     const [h, ...r] = [...target, ...source];
     return [r.reduce((acc, cur) => ({ ...acc, ...cur }), h)];
   },
@@ -189,7 +189,7 @@ const definitions = {
  */
 const createTypeWithDefinition = (
   definition: unknown,
-  p: SubDefinitionName
+  p: SubDefinitionName,
 ) => {
   if (!(p in definitions)) {
     definitions[p] = definition;
@@ -197,8 +197,8 @@ const createTypeWithDefinition = (
     const existingPropeties = Object.keys(definitions[p].properties);
     const missingProperties = Object.fromEntries(
       Object.entries((definition as any).properties).filter(
-        ([k, v]) => !existingPropeties.includes(k)
-      )
+        ([k, _v]) => !existingPropeties.includes(k),
+      ),
     );
     Object.assign(definitions[p].properties, missingProperties);
   }
@@ -234,7 +234,7 @@ const convertObjectIntoSchema = (cand: unknown, p = "", root = false): any => {
     if (p in ARRAY_OR_OBJECT_KEYS) {
       return createTypeWithDefinition(
         defType,
-        ARRAY_OR_OBJECT_KEYS[p as keyof typeof ARRAY_OR_OBJECT_KEYS]
+        ARRAY_OR_OBJECT_KEYS[p as keyof typeof ARRAY_OR_OBJECT_KEYS],
       );
     }
     return {
@@ -257,7 +257,7 @@ const convertObjectIntoSchema = (cand: unknown, p = "", root = false): any => {
         Object.entries(cand as any).map(([k, v]) => [
           k,
           convertObjectIntoSchema(v, `${p}.${k}`),
-        ])
+        ]),
       ),
       ...(root
         ? {
@@ -268,7 +268,7 @@ const convertObjectIntoSchema = (cand: unknown, p = "", root = false): any => {
     if (p in ARRAY_OR_OBJECT_KEYS) {
       return createTypeWithDefinition(
         defType,
-        ARRAY_OR_OBJECT_KEYS[p as keyof typeof ARRAY_OR_OBJECT_KEYS]
+        ARRAY_OR_OBJECT_KEYS[p as keyof typeof ARRAY_OR_OBJECT_KEYS],
       );
     }
     return defType;
@@ -303,7 +303,7 @@ const schemaFolder = path.resolve(
   import.meta.dirname,
   "../",
   "schemas",
-  "MemberOfParliament"
+  "MemberOfParliament",
 );
 const schemaPath = path.join(schemaFolder, "schema.json");
 fs.writeFileSync(schemaPath, JSON.stringify(schema, null, 2), {
@@ -348,5 +348,5 @@ console.log(
   successsCount,
   "/",
   successsCount + failureCount,
-  "OK!"
+  "OK!",
 );

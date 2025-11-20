@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from "react";
-import {
-  Typography,
-  CircularProgress,
-  Box,
-  Alert,
-  CardContent,
-  Fade,
-  Chip,
-  TextField,
-  InputAdornment,
-  Divider,
-  Paper,
-} from "@mui/material";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import EventIcon from "@mui/icons-material/Event";
 import RecordVoiceOverIcon from "@mui/icons-material/RecordVoiceOver";
-import { GlassCard } from "../theme/components";
+import {
+  Alert,
+  Box,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Divider,
+  Fade,
+  InputAdornment,
+  Paper,
+  TextField,
+  Typography,
+} from "@mui/material";
+import React, { useEffect, useState } from "react";
 import { commonStyles, spacing } from "../theme";
+import { GlassCard } from "../theme/components";
 import { useThemedColors } from "../theme/ThemeContext";
 
 type SessionWithAgenda = DatabaseTables.Session & {
@@ -31,6 +31,7 @@ type SpeechWithSection = DatabaseTables.ExcelSpeech & {
 };
 
 type GroupedSpeeches = {
+  key: string;
   document: string;
   processing_phase: string;
   section_title?: string;
@@ -38,18 +39,18 @@ type GroupedSpeeches = {
   speeches: SpeechWithSection[];
 };
 
+// Initialize from URL
+const getInitialDate = (): string => {
+  const params = new URLSearchParams(window.location.search);
+  const dateParam = params.get("date");
+  if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+    return dateParam;
+  }
+  return new Date().toISOString().split("T")[0];
+};
+
 export default function PaivatPage() {
   const themedColors = useThemedColors();
-
-  // Initialize from URL
-  const getInitialDate = (): string => {
-    const params = new URLSearchParams(window.location.search);
-    const dateParam = params.get("date");
-    if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
-      return dateParam;
-    }
-    return new Date().toISOString().split("T")[0];
-  };
 
   const [sessions, setSessions] = useState<SessionWithAgenda[]>([]);
   const [speeches, setSpeeches] = useState<SpeechWithSection[]>([]);
@@ -112,7 +113,6 @@ export default function PaivatPage() {
       const newDate = getInitialDate();
       setDate(newDate);
     };
-
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
@@ -175,7 +175,7 @@ export default function PaivatPage() {
     if (!timeString) return "-";
     try {
       const date = new Date(timeString);
-      if (isNaN(date.getTime())) return timeString;
+      if (Number.isNaN(date.getTime())) return timeString;
       return date.toLocaleTimeString("fi-FI", {
         hour: "2-digit",
         minute: "2-digit",
@@ -188,11 +188,11 @@ export default function PaivatPage() {
   // Group speeches by document and processing phase
   const groupedSpeeches: GroupedSpeeches[] = React.useMemo(() => {
     const groups = new Map<string, GroupedSpeeches>();
-
     speeches.forEach((speech) => {
       const key = `${speech.document}_${speech.processing_phase}`;
       if (!groups.has(key)) {
         groups.set(key, {
+          key: key,
           document: speech.document || "Ei dokumenttia",
           processing_phase: speech.processing_phase || "Ei vaihetta",
           section_title: speech.section_title,
@@ -200,9 +200,8 @@ export default function PaivatPage() {
           speeches: [],
         });
       }
-      groups.get(key)!.speeches.push(speech);
+      groups.get(key)?.speeches.push(speech);
     });
-
     return Array.from(groups.values());
   }, [speeches]);
 
@@ -472,7 +471,7 @@ export default function PaivatPage() {
           {/* Speeches grouped by document and processing phase */}
           {groupedSpeeches.length > 0 ? (
             groupedSpeeches.map((group, groupIndex) => (
-              <Fade in timeout={700 + groupIndex * 100} key={groupIndex}>
+              <Fade in timeout={700 + groupIndex * 100} key={group.key}>
                 <Box>
                   <Paper
                     elevation={0}

@@ -1,12 +1,12 @@
+import { ThemeProvider as MuiThemeProvider, type Theme } from "@mui/material";
 import React, {
   createContext,
-  useContext,
-  useState,
-  useEffect,
   type ReactNode,
+  useContext,
+  useEffect,
+  useState,
 } from "react";
-import { ThemeProvider as MuiThemeProvider, type Theme } from "@mui/material";
-import { createThemeWithMode, colors, gradients } from "./index";
+import { colors, createThemeWithMode, gradients } from "./index";
 
 type ThemeMode = "light" | "dark";
 
@@ -108,10 +108,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     }
 
     // Fall back to system preference
-    if (
-      window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-    ) {
+    if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
       return "dark";
     }
 

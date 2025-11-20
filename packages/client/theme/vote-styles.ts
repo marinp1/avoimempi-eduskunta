@@ -1,4 +1,4 @@
-import { type SxProps, type Theme } from "@mui/material";
+import type { SxProps, Theme } from "@mui/material";
 
 /**
  * Vote result colors - theme-aware
@@ -23,19 +23,19 @@ export const getVoteBoxStyles = (themedColors: {
   warning: string;
 }) => ({
   yes: {
-    background: themedColors.success + "20",
+    background: `${themedColors.success}20`,
     border: `1px solid ${themedColors.success}60`,
     color: themedColors.success,
   } satisfies SxProps<Theme>,
 
   no: {
-    background: themedColors.error + "20",
+    background: `${themedColors.error}20`,
     border: `1px solid ${themedColors.error}60`,
     color: themedColors.error,
   } satisfies SxProps<Theme>,
 
   abstain: {
-    background: themedColors.warning + "20",
+    background: `${themedColors.warning}20`,
     border: `1px solid ${themedColors.warning}60`,
     color: themedColors.warning,
   } satisfies SxProps<Theme>,

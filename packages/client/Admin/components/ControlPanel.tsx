@@ -1,15 +1,15 @@
-import React from "react";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import StopIcon from "@mui/icons-material/Stop";
 import {
   Box,
   CardContent,
-  Typography,
-  LinearProgress,
   Fade,
+  LinearProgress,
+  Typography,
 } from "@mui/material";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import StopIcon from "@mui/icons-material/Stop";
+import type React from "react";
+import { gradients, spacing } from "../../theme";
 import { GlassCard, GradientButton } from "../../theme/components";
-import { spacing, gradients } from "../../theme";
 import { useThemedColors } from "../../theme/ThemeContext";
 
 interface ControlPanelProps {

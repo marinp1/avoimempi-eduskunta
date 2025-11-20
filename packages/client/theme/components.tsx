@@ -1,6 +1,6 @@
-import React from "react";
-import { Box, Card, Button, type SxProps, type Theme } from "@mui/material";
-import { commonStyles, gradients, colors } from "./index";
+import { Box, Button, Card, type SxProps, type Theme } from "@mui/material";
+import type React from "react";
+import { commonStyles, gradients } from "./index";
 import { useThemedColors } from "./ThemeContext";
 
 /**

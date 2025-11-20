@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 
 export const TableName = Object.freeze({
   Attachment: "Attachment",

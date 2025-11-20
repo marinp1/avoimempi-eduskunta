@@ -33,7 +33,7 @@
  * - STORAGE_S3_ENDPOINT=https://xxx (for R2/MinIO)
  */
 
-export * from "./types";
 export * from "./config";
 export * from "./factory";
 export * from "./providers/local";
+export * from "./types";

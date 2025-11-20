@@ -1,32 +1,32 @@
 // VoteResults.tsx
-import React from "react";
+
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import PersonOffIcon from "@mui/icons-material/PersonOff";
+import RemoveIcon from "@mui/icons-material/Remove";
+import ThumbDownIcon from "@mui/icons-material/ThumbDown";
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import {
   Accordion,
-  AccordionSummary,
   AccordionDetails,
+  AccordionSummary,
   Box,
-  TableContainer,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableCell,
-  Paper,
-  Link,
-  Typography,
   Chip,
   Fade,
+  Link,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ThumbUpIcon from "@mui/icons-material/ThumbUp";
-import ThumbDownIcon from "@mui/icons-material/ThumbDown";
-import RemoveIcon from "@mui/icons-material/Remove";
-import PersonOffIcon from "@mui/icons-material/PersonOff";
-import { commonStyles, spacing, shadows } from "../theme";
-import { getVoteColors } from "../theme/vote-styles";
+import React from "react";
+import { commonStyles, shadows, spacing } from "../theme";
 import { useThemedColors } from "../theme/ThemeContext";
+import { getVoteColors } from "../theme/vote-styles";
 
-let cache = new Map<string, ReturnType<typeof getVotings>>();
+const cache = new Map<string, ReturnType<typeof getVotings>>();
 
 const getVotings = async (query: string) => {
   if (!query.trim() || query.trim().length < 3) return {};
@@ -52,7 +52,7 @@ export function fetchData(query: string) {
 }
 
 const eduskuntaLink = (href: string) => {
-  if (!href.startsWith("/")) href = "/" + href;
+  if (!href.startsWith("/")) href = `/${href}`;
   return `https://www.eduskunta.fi${href}`;
 };
 
@@ -95,7 +95,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                 py: spacing.md,
                 px: spacing.lg,
                 "&:hover": {
-                  background: themedColors.primary + "08",
+                  background: `${themedColors.primary}08`,
                 },
               }}
             >
@@ -173,7 +173,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                           ...commonStyles.tableRow,
                           borderBottom: `1px solid ${themedColors.dataBorder}`,
                           "&:hover": {
-                            background: themedColors.primary + "05",
+                            background: `${themedColors.primary}05`,
                           },
                           cursor: "default",
                         }}

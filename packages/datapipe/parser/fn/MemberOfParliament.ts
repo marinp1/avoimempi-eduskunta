@@ -1,6 +1,6 @@
 import { xml2json } from "xml-js";
-import type { XmlNode, XmlTree } from "../types";
 import type { ParserFunction } from "../parser";
+import type { XmlNode, XmlTree } from "../types";
 
 /**
  * Parses XML contents.
@@ -13,7 +13,7 @@ import type { ParserFunction } from "../parser";
 const parseElement = (
   element: XmlNode,
   removeNulls: boolean,
-  parent?: string
+  parent?: string,
 ): any => {
   switch (element.type) {
     // Handle element node
@@ -24,7 +24,7 @@ const parseElement = (
           // Since XML is parsed with `alwaysArray: true` option, data should always be in array format.
           const data =
             element.elements?.map((e) =>
-              parseElement(e, removeNulls, element.name)
+              parseElement(e, removeNulls, element.name),
             ) ?? [];
           // Return undefined if empty, this is then be removed during stringify
           if (!element.attributes && data.length === 0) return undefined;

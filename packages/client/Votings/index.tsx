@@ -1,19 +1,19 @@
 // VotingsPage.tsx
-import React, { Suspense } from "react";
-import {
-  TextField,
-  Box,
-  CircularProgress,
-  CardContent,
-  Typography,
-  InputAdornment,
-  Fade,
-} from "@mui/material";
+
 import SearchIcon from "@mui/icons-material/Search";
-import { VoteResults } from "./VoteResults";
-import { GlassCard } from "../theme/components";
-import { commonStyles, colors, spacing } from "../theme";
+import {
+  Box,
+  CardContent,
+  CircularProgress,
+  Fade,
+  InputAdornment,
+  TextField,
+  Typography,
+} from "@mui/material";
+import React, { Suspense } from "react";
+import { colors, commonStyles, spacing } from "../theme";
 import { useThemedColors } from "../theme/ThemeContext";
+import { VoteResults } from "./VoteResults";
 
 const VotingsPage = () => {
   const themedColors = useThemedColors();

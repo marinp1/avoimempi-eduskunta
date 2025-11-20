@@ -1,23 +1,21 @@
-import React, { useEffect, useState } from "react";
+import CloseIcon from "@mui/icons-material/Close";
+import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import {
-  Container,
-  Typography,
+  Alert,
   Box,
   CircularProgress,
-  Alert,
-  Fade,
-  TextField,
   Grid,
   IconButton,
+  TextField,
+  Typography,
 } from "@mui/material";
-import HowToVoteIcon from "@mui/icons-material/HowToVote";
-import CloseIcon from "@mui/icons-material/Close";
+import React, { useEffect, useState } from "react";
+import { colors, commonStyles, gradients, spacing } from "../../theme";
 import { GlassCard, StatCard } from "../../theme/components";
-import { commonStyles, colors, spacing, gradients } from "../../theme";
 import { useThemedColors } from "../../theme/ThemeContext";
-import { ParticipationData } from "./types";
-import { ParticipationTable } from "./ParticipationTable";
 import { HistoricalComparison } from "./HistoricalComparison";
+import { ParticipationTable } from "./ParticipationTable";
+import type { ParticipationData } from "./types";
 
 interface OsallistumisaktiivisuusProps {
   onClose: () => void;
@@ -28,7 +26,7 @@ export default function Osallistumisaktiivisuus({
   onClose,
   initialPersonId,
 }: OsallistumisaktiivisuusProps) {
-  const themedColors = useThemedColors();
+  const _themedColors = useThemedColors();
   const [data, setData] = useState<ParticipationData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

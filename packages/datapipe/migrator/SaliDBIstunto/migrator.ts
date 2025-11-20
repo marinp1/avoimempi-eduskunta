@@ -1,11 +1,6 @@
-import { type Database } from "bun:sqlite";
+import type { Database } from "bun:sqlite";
 
-import {
-  insertRows,
-  parseDate,
-  parseDateTime,
-  parseYear,
-} from "../utils";
+import { insertRows, parseDate, parseDateTime, parseYear } from "../utils";
 
 export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBIstunto"]) => {

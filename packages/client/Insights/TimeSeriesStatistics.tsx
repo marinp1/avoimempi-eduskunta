@@ -1,28 +1,28 @@
-import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  CardContent,
-  CircularProgress,
-  Alert,
-  Fade,
-  IconButton,
-} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import {
-  LineChart,
-  Line,
-  AreaChart,
+  Alert,
+  Box,
+  CardContent,
+  CircularProgress,
+  Fade,
+  IconButton,
+  Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import {
   Area,
+  AreaChart,
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from "recharts";
-import { GlassCard } from "../theme/components";
 import { colors, spacing } from "../theme";
+import { GlassCard } from "../theme/components";
 import { useThemedColors } from "../theme/ThemeContext";
 
 interface GenderData {
@@ -61,36 +61,44 @@ export default function TimeSeriesStatistics({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchData();
+    (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const [genderResponse, ageResponse] = await Promise.all([
+          fetch("/api/insights/gender-division"),
+          fetch("/api/insights/age-division"),
+        ]);
+
+        if (!genderResponse.ok || !ageResponse.ok) {
+          throw new Error("Failed to fetch data");
+        }
+
+        const genderResult = await genderResponse.json();
+        const ageResult = await ageResponse.json();
+
+        setGenderData(genderResult);
+        setAgeData(ageResult);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error occurred");
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const [genderResponse, ageResponse] = await Promise.all([
-        fetch("/api/insights/gender-division"),
-        fetch("/api/insights/age-division"),
-      ]);
-
-      if (!genderResponse.ok || !ageResponse.ok) {
-        throw new Error("Failed to fetch data");
-      }
-
-      const genderResult = await genderResponse.json();
-      const ageResult = await ageResponse.json();
-
-      setGenderData(genderResult);
-      setAgeData(ageResult);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = <
+    T extends { color: string; name: string; value: string },
+  >({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: T[];
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       return (
         <Box
@@ -105,8 +113,12 @@ export default function TimeSeriesStatistics({
           <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
             {label}
           </Typography>
-          {payload.map((entry: any, index: number) => (
-            <Typography key={index} variant="body2" sx={{ color: entry.color }}>
+          {payload.map((entry) => (
+            <Typography
+              key={entry.name}
+              variant="body2"
+              sx={{ color: entry.color }}
+            >
               {entry.name}: {entry.value}
               {entry.name.includes("%") ? "" : ""}
             </Typography>

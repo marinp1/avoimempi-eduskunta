@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { scrapeTable, type ScrapeMode } from "./scraper";
 import { scrapeExcelSpeeches } from "./excel-speeches-scraper";
+import { type ScrapeMode, scrapeTable } from "./scraper";
 
 async function main() {
   const args = process.argv.slice(2);
@@ -23,7 +23,7 @@ async function main() {
   // Handle ExcelSpeeches separately
   if (args[0] === "ExcelSpeeches") {
     await scrapeExcelSpeeches({
-      onProgress: (progress) => {
+      onProgress: (_progress) => {
         // Progress is already logged in scrapeExcelSpeeches
       },
     });
@@ -41,14 +41,14 @@ async function main() {
 
     if (flag === "--from" || flag === "-f") {
       const page = parseInt(value, 10);
-      if (isNaN(page) || page < 1) {
+      if (Number.isNaN(page) || page < 1) {
         console.error("❌ Error: Page number must be a positive integer");
         process.exit(1);
       }
       mode = { type: "start-from", page };
     } else if (flag === "--page" || flag === "-p") {
       const page = parseInt(value, 10);
-      if (isNaN(page) || page < 1) {
+      if (Number.isNaN(page) || page < 1) {
         console.error("❌ Error: Page number must be a positive integer");
         process.exit(1);
       }
@@ -56,7 +56,7 @@ async function main() {
     } else {
       // Backward compatibility: treat as page number for start-from
       const page = parseInt(flag, 10);
-      if (!isNaN(page) && page >= 1) {
+      if (!Number.isNaN(page) && page >= 1) {
         mode = { type: "start-from", page };
       } else {
         console.error(`❌ Error: Unknown flag: ${flag}`);
@@ -69,7 +69,7 @@ async function main() {
   await scrapeTable({
     tableName,
     mode,
-    onProgress: (progress) => {
+    onProgress: (_progress) => {
       // Progress is already logged in scrapeTable
     },
   });
@@ -102,7 +102,7 @@ async function showStatus() {
       const pageNumbers = result.keys
         .map((key) => StorageKeyBuilder.parseKey(key.key))
         .filter((ref) => ref !== null)
-        .map((ref) => ref!.page);
+        .map((ref) => ref?.page);
 
       const lastPage = Math.max(...pageNumbers);
 
@@ -120,7 +120,7 @@ async function showStatus() {
             rowCount: number;
           };
           exactRows = (pageCount - 1) * 100 + lastPageContent.rowCount;
-        } catch (error) {
+        } catch (_error) {
           // Fallback to estimate if parsing fails
           exactRows = pageCount * 100;
         }

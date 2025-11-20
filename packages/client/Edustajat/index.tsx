@@ -1,32 +1,30 @@
-import React, { useEffect, useState } from "react";
-import {
-  Container,
-  Typography,
-  TextField,
-  TableContainer,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Paper,
-  CircularProgress,
-  Box,
-  Alert,
-  CardContent,
-  InputAdornment,
-  Fade,
-  Chip,
-} from "@mui/material";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import GroupsIcon from "@mui/icons-material/Groups";
 import PieChartIcon from "@mui/icons-material/PieChart";
-import { RepresentativeDetails } from "./Details";
-import { GlassCard, StatCard } from "../theme/components";
-import { commonStyles, colors, spacing, gradients } from "../theme";
+import {
+  Alert,
+  Box,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Fade,
+  InputAdornment,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { commonStyles, spacing } from "../theme";
 import { useThemedColors } from "../theme/ThemeContext";
+import { RepresentativeDetails } from "./Details";
 
 type MemberWithExtras = DatabaseQueries.GetParliamentComposition & {
   party_name?: string;
@@ -127,7 +125,7 @@ export default function App() {
         setDialogOpen(true);
       }
     }
-  }, [members]);
+  }, [members, getInitialPersonId]);
 
   // Handle browser back/forward
   useEffect(() => {
@@ -151,7 +149,7 @@ export default function App() {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [members]);
+  }, [members, getInitialDate, getInitialPersonId]);
 
   // Update URL function
   const updateURL = (newDate?: string, personId?: number | null) => {
@@ -297,7 +295,7 @@ export default function App() {
                       textAlign: "center",
                       p: spacing.lg,
                       borderRadius: 1,
-                      background: themedColors.primary + "10",
+                      background: `${themedColors.primary}10`,
                       border: `1px solid ${themedColors.primary}40`,
                       transition: "all 0.2s ease-in-out",
                       "&:hover": {
@@ -340,7 +338,7 @@ export default function App() {
                       textAlign: "center",
                       p: spacing.lg,
                       borderRadius: 1,
-                      background: themedColors.success + "10",
+                      background: `${themedColors.success}10`,
                       border: `1px solid ${themedColors.success}40`,
                       transition: "all 0.2s ease-in-out",
                       "&:hover": {
@@ -393,7 +391,7 @@ export default function App() {
                       textAlign: "center",
                       p: spacing.lg,
                       borderRadius: 1,
-                      background: themedColors.warning + "10",
+                      background: `${themedColors.warning}10`,
                       border: `1px solid ${themedColors.warning}40`,
                       transition: "all 0.2s ease-in-out",
                       "&:hover": {
@@ -521,7 +519,7 @@ export default function App() {
                             label={`Hallitus: ${data.inGovernment}`}
                             size="small"
                             sx={{
-                              background: themedColors.success + "20",
+                              background: `${themedColors.success}20`,
                               color: themedColors.success,
                               fontWeight: 600,
                               border: `1px solid ${themedColors.success}`,
@@ -533,7 +531,7 @@ export default function App() {
                             label={`Oppositio: ${data.total - data.inGovernment}`}
                             size="small"
                             sx={{
-                              background: themedColors.warning + "20",
+                              background: `${themedColors.warning}20`,
                               color: themedColors.warning,
                               fontWeight: 600,
                               border: `1px solid ${themedColors.warning}`,
@@ -620,7 +618,7 @@ export default function App() {
                         ...commonStyles.tableRow,
                         borderBottom: `1px solid ${themedColors.dataBorder}`,
                         "&:hover": {
-                          background: themedColors.primary + "08",
+                          background: `${themedColors.primary}08`,
                           boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
                         },
                         animation: `fadeIn 0.3s ease-out ${index * 0.02}s both`,

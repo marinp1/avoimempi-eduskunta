@@ -24,7 +24,7 @@ async function main() {
 
   await parseTable({
     tableName,
-    onProgress: (progress) => {
+    onProgress: (_progress) => {
       // Progress is already logged in parseTable
     },
   });

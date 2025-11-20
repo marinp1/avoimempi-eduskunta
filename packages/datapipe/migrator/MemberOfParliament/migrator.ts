@@ -1,4 +1,4 @@
-import { type Database } from "bun:sqlite";
+import type { Database } from "bun:sqlite";
 import { insertRows, parseYear } from "../utils";
 
 const parseDate = (date?: string | null): string | null => {
@@ -12,7 +12,7 @@ const parseDate = (date?: string | null): string | null => {
   }
   if (/^\d{4} [A-z]+$/.test(date)) {
     const [y, param] = date.split(" ");
-    let month = (() => {
+    const month = (() => {
       switch (param.toUpperCase()) {
         case "I":
           return 1;
@@ -341,7 +341,7 @@ export default (db: Database) =>
     }));
 
     // TODO: Publications
-    const publicationRows: DatabaseTables.Publication[] = [];
+    const _publicationRows: DatabaseTables.Publication[] = [];
 
     const insert = insertRows(db);
 

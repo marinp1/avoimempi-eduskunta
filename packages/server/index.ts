@@ -1,7 +1,8 @@
 // modules/server/server.ts
-import homepage from "./public/index.html";
+
 import type { BunRequest } from "bun";
 import { DatabaseConnection } from "./database/db";
+import homepage from "./public/index.html";
 
 const db = new DatabaseConnection();
 const isDev = Bun.env.NODE_ENV === "development";
@@ -244,13 +245,15 @@ const server = Bun.serve({
         });
       },
     },
-    ...(isDev ? await import('./admin').then(def => def.routes) : {}),
+    ...(isDev ? await import("./admin").then((def) => def.routes) : {}),
     "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
 
-  development: isDev ? {
-    hmr: true,
-  } : false,
+  development: isDev
+    ? {
+        hmr: true,
+      }
+    : false,
 
   fetch(req, server) {
     // Handle WebSocket upgrades
@@ -276,7 +279,9 @@ const server = Bun.serve({
 
     return new Response("Not Found", { status: 404 });
   },
-  websocket: isDev ? await import('./admin').then(def => def.websocketHandler) : undefined,
+  websocket: isDev
+    ? await import("./admin").then((def) => def.websocketHandler)
+    : undefined,
   error(error) {
     console.error(error);
     return new Response(`Internal Error: ${error.message}`, {
@@ -291,5 +296,3 @@ const server = Bun.serve({
 console.log(
   `Listening on ${server.url} ${server.development ? "(development)" : ""}`,
 );
-
-export { };

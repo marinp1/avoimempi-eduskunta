@@ -1,5 +1,5 @@
-import { parseTable } from "../datapipe/parser/parser";
 import type { ServerWebSocket } from "bun";
+import { parseTable } from "../datapipe/parser/parser";
 
 export interface ParserStatus {
   isRunning: boolean;
@@ -18,7 +18,6 @@ export interface ParserMessage {
  * Controller for managing parser processes with WebSocket communication
  */
 export class ParserController {
-  private static instance: ParserController | null = null;
   private isRunning = false;
   private shouldStop = false;
   private currentTable: string | null = null;
@@ -27,10 +26,10 @@ export class ParserController {
   private constructor() {}
 
   static getInstance(): ParserController {
-    if (!this.instance) {
-      this.instance = new ParserController();
+    if (!ParserController.instance) {
+      ParserController.instance = new ParserController();
     }
-    return this.instance;
+    return ParserController.instance;
   }
 
   setWebSocket(ws: ServerWebSocket<unknown>) {
