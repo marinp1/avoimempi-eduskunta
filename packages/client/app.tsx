@@ -46,7 +46,7 @@ const PageComponents = {
   [Pages.Sessions]: IstunnotPage,
   [Pages.Days]: PaivatPage,
   [Pages.Insights]: InsightsPage,
-  [Pages.Admin]: AdminPage,
+  [Pages.Admin]: process.env.MODE !== 'production' ? AdminPage : () => {return null},
 } satisfies Record<Page, React.FC<Record<string, never>>>;
 
 export const App: React.FC = () => {
@@ -62,7 +62,7 @@ export const App: React.FC = () => {
     if (path === "/sessions") return Pages.Sessions;
     if (path === "/days") return Pages.Days;
     if (path === "/insights") return Pages.Insights;
-    if (path === "/admin") return Pages.Admin;
+    if (process.env.MODE !== "production" && path === "/admin") return Pages.Admin;
     // Default to composition
     return Pages.Composition;
   };
@@ -213,12 +213,13 @@ export const App: React.FC = () => {
                 label="Analytiikka"
                 value={Pages.Insights}
               />
-              <Tab
-                icon={<AdminPanelSettingsIcon sx={{ fontSize: 20 }} />}
-                iconPosition="start"
-                label="Admin"
-                value={Pages.Admin}
-              />
+              {process.env.MODE !== "production" &&
+                <Tab
+                  icon={<AdminPanelSettingsIcon sx={{ fontSize: 20 }} />}
+                  iconPosition="start"
+                  label="Admin"
+                  value={Pages.Admin}
+                />}
             </Tabs>
           </Box>
 
@@ -319,12 +320,14 @@ export const App: React.FC = () => {
                 label="Analytiikka"
                 value={Pages.Insights}
               />
-              <Tab
-                icon={<AdminPanelSettingsIcon sx={{ fontSize: 20 }} />}
-                iconPosition="start"
-                label="Admin"
-                value={Pages.Admin}
-              />
+              {process.env.MODE !== "production" &&
+                <Tab
+                  icon={<AdminPanelSettingsIcon sx={{ fontSize: 20 }} />}
+                  iconPosition="start"
+                  label="Admin"
+                  value={Pages.Admin}
+                />
+              }
             </Tabs>
           </Box>
 
