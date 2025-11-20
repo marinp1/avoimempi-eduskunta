@@ -1,8 +1,8 @@
-import React from "react";
-import { Box, CardContent, Typography, Fade } from "@mui/material";
 import StorageIcon from "@mui/icons-material/Storage";
+import { Box, CardContent, Fade, Typography } from "@mui/material";
+import type React from "react";
+import { gradients, spacing } from "../../theme";
 import { GlassCard } from "../../theme/components";
-import { spacing, gradients } from "../../theme";
 
 export const AdminHeader: React.FC = () => {
   return (

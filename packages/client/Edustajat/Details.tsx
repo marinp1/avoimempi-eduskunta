@@ -1,33 +1,33 @@
-import React from "react";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import CloseIcon from "@mui/icons-material/Close";
+import EmailIcon from "@mui/icons-material/Email";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import HowToVoteIcon from "@mui/icons-material/HowToVote";
+import InsightsIcon from "@mui/icons-material/Insights";
+import LanguageIcon from "@mui/icons-material/Language";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import PersonIcon from "@mui/icons-material/Person";
+import PhoneIcon from "@mui/icons-material/Phone";
+import WorkIcon from "@mui/icons-material/Work";
 import {
+  Avatar,
+  Box,
+  CircularProgress,
+  Collapse,
   Dialog,
   DialogContent,
-  Typography,
+  Divider,
+  Fade,
+  IconButton,
   List,
   ListItem,
   ListItemText,
-  Box,
-  CircularProgress,
-  Divider,
-  IconButton,
-  Fade,
-  Collapse,
-  Avatar,
+  Typography,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import PersonIcon from "@mui/icons-material/Person";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import EmailIcon from "@mui/icons-material/Email";
-import PhoneIcon from "@mui/icons-material/Phone";
-import LanguageIcon from "@mui/icons-material/Language";
-import HowToVoteIcon from "@mui/icons-material/HowToVote";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import WorkIcon from "@mui/icons-material/Work";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import InsightsIcon from "@mui/icons-material/Insights";
 import Button from "@mui/material/Button";
-import { useThemedColors } from "../theme/ThemeContext";
+import React from "react";
 import { colors } from "../theme/index";
+import { useThemedColors } from "../theme/ThemeContext";
 
 type RepresentativeDetailsType = DatabaseTables.Representative;
 
@@ -231,7 +231,7 @@ export const RepresentativeDetails: React.FC<{
       // Trust positions use "period" field which is a string like "2019-2023"
       // We'll do a simple check if the period contains years around the selected year
       const selectedYear = selectedDateObj.getFullYear();
-      return tp.period && tp.period.includes(selectedYear.toString());
+      return tp.period?.includes(selectedYear.toString());
     }) || [];
 
   return (

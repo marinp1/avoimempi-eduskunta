@@ -1,6 +1,5 @@
-import { Database } from "bun:sqlite";
+import type { Database } from "bun:sqlite";
 import * as queries from "./queries";
-import { getDatabasePath } from "#database";
 
 export class DatabaseConnection {
   #database: Database | null = null;
@@ -12,7 +11,7 @@ export class DatabaseConnection {
 
   public async fetchParliamentComposition(params: { date: string }) {
     const dateObj = new Date(params.date);
-    if (isNaN(dateObj.getTime())) throw new Error("Invalid date");
+    if (Number.isNaN(dateObj.getTime())) throw new Error("Invalid date");
     const $date = dateObj.toISOString();
     const stmt = this.db.query<
       DatabaseQueries.GetParliamentComposition,
@@ -342,21 +341,6 @@ export class DatabaseConnection {
     const data = stmt.all();
     stmt.finalize();
     return data;
-  }
-
-  #connectToDatabase() {
-    const databasePath = getDatabasePath();
-    console.log("Using", databasePath);
-    this.#database = new Database(databasePath, {
-      create: true,
-      readonly: true,
-    });
-    this.#database.exec("PRAGMA journal_mode = WAL;");
-    return this.#database;
-  }
-
-  #disconnect() {
-    this.#database?.close();
   }
 
   constructor() {

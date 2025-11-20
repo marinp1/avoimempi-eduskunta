@@ -36,7 +36,11 @@ export interface IStorageProvider {
   /**
    * Write data to storage
    */
-  put(key: StorageKey, data: string | Buffer, options?: StoragePutOptions): Promise<void>;
+  put(
+    key: StorageKey,
+    data: string | Buffer,
+    options?: StoragePutOptions,
+  ): Promise<void>;
 
   /**
    * Read data from storage
@@ -84,7 +88,11 @@ export interface PageReference {
  * Helper to construct storage keys
  */
 export class StorageKeyBuilder {
-  static forPage(stage: DataStage, tableName: string, pageNumber: number): StorageKey {
+  static forPage(
+    stage: DataStage,
+    tableName: string,
+    pageNumber: number,
+  ): StorageKey {
     return `${stage}/${tableName}/page_${pageNumber}.json`;
   }
 

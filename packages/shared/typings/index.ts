@@ -1,7 +1,7 @@
 import type {
+  LanguageIds,
   TableNames,
   VoteResults,
-  LanguageIds,
 } from "../constants/index.ts";
 
 declare global {

@@ -1,22 +1,20 @@
-import type { IStorageProvider } from "./types";
-import { LocalStorageProvider } from "./providers/local";
 import { getStorageConfig, type StorageConfig } from "./config";
+import { LocalStorageProvider } from "./providers/local";
+import type { IStorageProvider } from "./types";
 
 /**
  * Storage factory - creates the appropriate storage provider based on config
  */
 export class StorageFactory {
-  private static instance: IStorageProvider | null = null;
-
   /**
    * Get storage provider instance (singleton)
    */
   static getProvider(config?: StorageConfig): IStorageProvider {
-    if (!this.instance) {
+    if (!StorageFactory.instance) {
       const storageConfig = config || getStorageConfig();
-      this.instance = this.createProvider(storageConfig);
+      StorageFactory.instance = StorageFactory.createProvider(storageConfig);
     }
-    return this.instance;
+    return StorageFactory.instance;
   }
 
   /**
@@ -34,7 +32,9 @@ export class StorageFactory {
       case "r2":
       case "minio":
         // TODO: Implement S3-compatible provider
-        throw new Error(`Storage provider '${config.provider}' not yet implemented. Use 'local' for now.`);
+        throw new Error(
+          `Storage provider '${config.provider}' not yet implemented. Use 'local' for now.`,
+        );
 
       default:
         throw new Error(`Unknown storage provider: ${config.provider}`);
@@ -45,7 +45,7 @@ export class StorageFactory {
    * Reset singleton instance (useful for testing)
    */
   static reset(): void {
-    this.instance = null;
+    StorageFactory.instance = null;
   }
 }
 

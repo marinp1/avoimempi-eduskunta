@@ -1,33 +1,34 @@
-import React, { useState, useEffect } from "react";
-import {
-  Container,
-  Tabs,
-  Tab,
-  Box,
-  CssBaseline,
-  AppBar,
-  Toolbar,
-  Typography,
-  GlobalStyles,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
-import HowToVoteIcon from "@mui/icons-material/HowToVote";
-import PeopleIcon from "@mui/icons-material/People";
-import EventIcon from "@mui/icons-material/Event";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-import InsightsIcon from "@mui/icons-material/Insights";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
-import VotingsPage from "./Votings";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import EventIcon from "@mui/icons-material/Event";
+import HowToVoteIcon from "@mui/icons-material/HowToVote";
+import InsightsIcon from "@mui/icons-material/Insights";
+import PeopleIcon from "@mui/icons-material/People";
+import {
+  AppBar,
+  Box,
+  Container,
+  CssBaseline,
+  GlobalStyles,
+  IconButton,
+  Tab,
+  Tabs,
+  Toolbar,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import type React from "react";
+import { useEffect, useState } from "react";
+import AdminPage from "./Admin";
 import EdustajatPage from "./Edustajat";
+import InsightsPage from "./Insights";
 import IstunnotPage from "./Istunnot";
 import PaivatPage from "./Paivat";
-import AdminPage from "./Admin";
-import InsightsPage from "./Insights";
-import { gradients, commonStyles, spacing, borderRadius } from "./theme";
-import { useThemedColors, useTheme } from "./theme/ThemeContext";
+import { gradients, spacing } from "./theme";
+import { useTheme, useThemedColors } from "./theme/ThemeContext";
+import VotingsPage from "./Votings";
 
 const Pages = Object.freeze({
   Votings: "votings",
@@ -46,26 +47,32 @@ const PageComponents = {
   [Pages.Sessions]: IstunnotPage,
   [Pages.Days]: PaivatPage,
   [Pages.Insights]: InsightsPage,
-  [Pages.Admin]: process.env.MODE !== 'production' ? AdminPage : () => {return null},
+  [Pages.Admin]:
+    process.env.MODE !== "production"
+      ? AdminPage
+      : () => {
+          return null;
+        },
 } satisfies Record<Page, React.FC<Record<string, never>>>;
+
+// Initialize from URL path
+const getInitialTab = (): Page => {
+  const path = window.location.pathname;
+  if (path === "/votings") return Pages.Votings;
+  if (path === "/composition" || path === "/composition/")
+    return Pages.Composition;
+  if (path === "/sessions") return Pages.Sessions;
+  if (path === "/days") return Pages.Days;
+  if (path === "/insights") return Pages.Insights;
+  if (process.env.MODE !== "production" && path === "/admin")
+    return Pages.Admin;
+  // Default to composition
+  return Pages.Composition;
+};
 
 export const App: React.FC = () => {
   const themedColors = useThemedColors();
   const { mode, toggleTheme } = useTheme();
-
-  // Initialize from URL path
-  const getInitialTab = (): Page => {
-    const path = window.location.pathname;
-    if (path === "/votings") return Pages.Votings;
-    if (path === "/composition" || path === "/composition/")
-      return Pages.Composition;
-    if (path === "/sessions") return Pages.Sessions;
-    if (path === "/days") return Pages.Days;
-    if (path === "/insights") return Pages.Insights;
-    if (process.env.MODE !== "production" && path === "/admin") return Pages.Admin;
-    // Default to composition
-    return Pages.Composition;
-  };
 
   const [activeTab, setActiveTab] = useState<Page>(getInitialTab());
 
@@ -80,7 +87,7 @@ export const App: React.FC = () => {
   }, []);
 
   // Update URL when tab changes
-  const handleChange = (event: React.SyntheticEvent, newValue: Page) => {
+  const handleChange = (_event: React.SyntheticEvent, newValue: Page) => {
     setActiveTab(newValue);
     const search = window.location.search;
     const newPath = `/${newValue}${search}`;
@@ -92,7 +99,6 @@ export const App: React.FC = () => {
     const handlePopState = () => {
       setActiveTab(getInitialTab());
     };
-
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
@@ -213,13 +219,14 @@ export const App: React.FC = () => {
                 label="Analytiikka"
                 value={Pages.Insights}
               />
-              {process.env.MODE !== "production" &&
+              {process.env.MODE !== "production" && (
                 <Tab
                   icon={<AdminPanelSettingsIcon sx={{ fontSize: 20 }} />}
                   iconPosition="start"
                   label="Admin"
                   value={Pages.Admin}
-                />}
+                />
+              )}
             </Tabs>
           </Box>
 
@@ -320,14 +327,14 @@ export const App: React.FC = () => {
                 label="Analytiikka"
                 value={Pages.Insights}
               />
-              {process.env.MODE !== "production" &&
+              {process.env.MODE !== "production" && (
                 <Tab
                   icon={<AdminPanelSettingsIcon sx={{ fontSize: 20 }} />}
                   iconPosition="start"
                   label="Admin"
                   value={Pages.Admin}
                 />
-              }
+              )}
             </Tabs>
           </Box>
 

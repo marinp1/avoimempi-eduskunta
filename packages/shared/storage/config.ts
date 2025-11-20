@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 
 export type StorageProviderType = "local" | "s3" | "r2" | "minio";
 
@@ -30,7 +30,7 @@ export function getStorageConfig(): StorageConfig {
   if (provider === "local") {
     // Find the repository root by looking for indicators of repo root
     const findRepoRoot = (): string => {
-      const fs = require("fs");
+      const fs = require("node:fs");
       let currentDir = process.cwd();
       const maxLevels = 10;
 

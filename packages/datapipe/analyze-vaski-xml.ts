@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
+import { existsSync } from "node:fs";
+import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { XMLParser } from "fast-xml-parser";
-import { readdir, readFile, writeFile, mkdir, stat } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
 
 interface VaskiRecord {
   Id: string;
@@ -55,7 +55,7 @@ function removePrefix(key: string): string {
   if (key.startsWith("@_")) {
     const match = key.match(/^@_[^:]+:(.+)$/);
     if (match) {
-      return "@_" + match[1];
+      return `@_${match[1]}`;
     }
     return key;
   }
@@ -111,7 +111,7 @@ function cleanParsedXml(obj: any, path: string = "root"): any {
     if (!keyMapping.has(cleanKey)) {
       keyMapping.set(cleanKey, []);
     }
-    keyMapping.get(cleanKey)!.push(key);
+    keyMapping.get(cleanKey)?.push(key);
   }
 
   // Detect conflicts
@@ -124,7 +124,7 @@ function cleanParsedXml(obj: any, path: string = "root"): any {
       if (!keyConflicts.has(path)) {
         keyConflicts.set(path, []);
       }
-      keyConflicts.get(path)!.push({
+      keyConflicts.get(path)?.push({
         originalKeys: [...originalKeys],
         location: path,
       });
@@ -207,7 +207,7 @@ class ProgressBar {
     const line = `${this.label}: [${bar}] ${this.current}/${this.total} (${percentage.toFixed(1)}%)`;
 
     // Clear line and write progress
-    process.stdout.write("\r" + " ".repeat(100) + "\r");
+    process.stdout.write(`\r${" ".repeat(100)}\r`);
     process.stdout.write(line);
 
     if (this.current >= this.total) {
@@ -250,11 +250,11 @@ async function parseVaskiFile(
 
         // All namespace prefixes are now removed, so we can access directly
         let metatieto =
-          contents?.["Siirto"]?.["SiirtoMetatieto"] ??
-          contents?.["Siirto"]?.["JulkaisuMetatieto"];
+          contents?.Siirto?.SiirtoMetatieto ??
+          contents?.Siirto?.JulkaisuMetatieto;
 
-        if (metatieto?.["JulkaisuMetatieto"]) {
-          metatieto = metatieto["JulkaisuMetatieto"];
+        if (metatieto?.JulkaisuMetatieto) {
+          metatieto = metatieto.JulkaisuMetatieto;
         }
 
         // Skip entries with Swedish language code (sv)
@@ -264,8 +264,7 @@ async function parseVaskiFile(
           continue;
         }
 
-        const sanomaName =
-          contents?.["Siirto"]?.["Sanomavalitys"]?.["SanomatyyppiNimi"];
+        const sanomaName = contents?.Siirto?.Sanomavalitys?.SanomatyyppiNimi;
 
         if (sanomaName?.endsWith("_sv")) {
           console.log("Skipping due to name", sanomaName);
@@ -300,8 +299,8 @@ async function parseVaskiFile(
 
         // Extract YhteisoTeksti for first-level grouping
         // Path: Siirto.SiirtoMetatieto.JulkaisuMetatieto.KokousViite.YhteisoTeksti
-        const kokousViite = metatieto?.["KokousViite"];
-        let yhteisoTeksti = kokousViite?.["YhteisoTeksti"] || "no-yhteiso";
+        const kokousViite = metatieto?.KokousViite;
+        let yhteisoTeksti = kokousViite?.YhteisoTeksti || "no-yhteiso";
 
         // Sanitize yhteisoTeksti for use as folder name
         yhteisoTeksti = yhteisoTeksti
@@ -319,8 +318,8 @@ async function parseVaskiFile(
 
         // Extract AsiakirjatyyppiNimi for second-level grouping
         // Path: Siirto.SiirtoMetatieto.JulkaisuMetatieto.IdentifiointiOsa.AsiakirjatyyppiNimi
-        const siirtoAsiakirja = contents?.["Siirto"]?.["SiirtoAsiakirja"];
-        const rakenneAsiakirjaRaw = siirtoAsiakirja?.["RakenneAsiakirja"];
+        const siirtoAsiakirja = contents?.Siirto?.SiirtoAsiakirja;
+        const rakenneAsiakirjaRaw = siirtoAsiakirja?.RakenneAsiakirja;
         if (rakenneAsiakirjaRaw) {
           if (Object.keys(rakenneAsiakirjaRaw).length !== 1) {
             throw new Error("More than one key in RakenneAsiakirja");
@@ -349,9 +348,9 @@ async function parseVaskiFile(
         if (!asiakirjatyyppiNimi) {
           // Try different possible paths for the nested structure
           const kasittelytiedot =
-            rakenneAsiakirjaRaw?.["KasittelytiedotValtiopaivaasia"] ||
-            rakenneAsiakirjaRaw?.["Kasittelytiedot"] ||
-            rakenneAsiakirjaRaw?.["KasittelytiedotLausumaasia"] ||
+            rakenneAsiakirjaRaw?.KasittelytiedotValtiopaivaasia ||
+            rakenneAsiakirjaRaw?.Kasittelytiedot ||
+            rakenneAsiakirjaRaw?.KasittelytiedotLausumaasia ||
             rakenneAsiakirjaRaw;
           asiakirjatyyppiNimi = kasittelytiedot?.["@_asiakirjatyyppiNimi"];
         }
@@ -440,7 +439,7 @@ function extractFields(obj: any, prefix: string) {
     if (!schemaFields.has(fullPath)) {
       schemaFields.set(fullPath, new Set());
     }
-    schemaFields.get(fullPath)!.add(type);
+    schemaFields.get(fullPath)?.add(type);
 
     // Recurse into objects and arrays
     if (typeof value === "object" && value !== null) {
@@ -476,8 +475,7 @@ function generateSchema(fieldOccurrences: Map<string, number>) {
       types: Array.from(types).sort(),
       occurrences: occurrences,
       totalRecords: totalRecordsProcessed,
-      percentage:
-        ((occurrences / totalRecordsProcessed) * 100).toFixed(2) + "%",
+      percentage: `${((occurrences / totalRecordsProcessed) * 100).toFixed(2)}%`,
     };
   }
 
@@ -518,8 +516,8 @@ async function main() {
   const jsonFiles = files
     .filter((f) => f.endsWith(".json"))
     .sort((a, b) => {
-      const numA = parseInt(a.match(/page_(\d+)\.json/)?.[1] || "0");
-      const numB = parseInt(b.match(/page_(\d+)\.json/)?.[1] || "0");
+      const numA = parseInt(a.match(/page_(\d+)\.json/)?.[1] || "0", 10);
+      const numB = parseInt(b.match(/page_(\d+)\.json/)?.[1] || "0", 10);
       return numA - numB;
     });
 
@@ -638,7 +636,7 @@ async function main() {
     // Collect all unique conflict patterns
     const conflictPatterns = new Map<string, number>();
 
-    for (const [location, conflicts] of keyConflicts.entries()) {
+    for (const [_location, conflicts] of keyConflicts.entries()) {
       for (const conflict of conflicts) {
         const pattern = conflict.originalKeys.sort().join(" + ");
         conflictPatterns.set(pattern, (conflictPatterns.get(pattern) || 0) + 1);

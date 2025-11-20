@@ -4,7 +4,7 @@ declare global {
   interface JSON {
     parse<T>(
       text: Stringified<T>,
-      reviver?: (this: any, key: string, value: any) => any
+      reviver?: (this: any, key: string, value: any) => any,
     ): T;
   }
 

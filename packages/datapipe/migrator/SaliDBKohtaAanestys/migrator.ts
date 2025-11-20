@@ -1,4 +1,4 @@
-import { type Database } from "bun:sqlite";
+import type { Database } from "bun:sqlite";
 
 import { parseDateTime } from "../utils";
 
@@ -6,13 +6,13 @@ export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBKohtaAanestys"]) => {
     const { id } = db
       .prepare<Pick<DatabaseTables.Voting, "id">, { $key: string }>(
-        "SELECT id FROM Voting WHERE session_key = $key"
+        "SELECT id FROM Voting WHERE session_key = $key",
       )
       .get({ $key: dataToImport.IstuntoTekninenAvain }) ?? { id: null };
 
     if (id === null) {
       console.log(
-        `id is null for session_key = ${dataToImport.IstuntoTekninenAvain}`
+        `id is null for session_key = ${dataToImport.IstuntoTekninenAvain}`,
       );
       return;
     }

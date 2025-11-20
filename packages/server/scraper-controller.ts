@@ -1,5 +1,5 @@
-import { scrapeTable, type ScrapeMode } from "../datapipe/scraper/scraper";
 import type { ServerWebSocket } from "bun";
+import { type ScrapeMode, scrapeTable } from "../datapipe/scraper/scraper";
 
 export interface ScraperStatus {
   isRunning: boolean;
@@ -18,7 +18,6 @@ export interface ScraperMessage {
  * Controller for managing scraper processes with WebSocket communication
  */
 export class ScraperController {
-  private static instance: ScraperController | null = null;
   private isRunning = false;
   private shouldStop = false;
   private currentTable: string | null = null;
@@ -27,10 +26,10 @@ export class ScraperController {
   private constructor() {}
 
   static getInstance(): ScraperController {
-    if (!this.instance) {
-      this.instance = new ScraperController();
+    if (!ScraperController.instance) {
+      ScraperController.instance = new ScraperController();
     }
-    return this.instance;
+    return ScraperController.instance;
   }
 
   setWebSocket(ws: ServerWebSocket<unknown>) {
@@ -53,7 +52,10 @@ export class ScraperController {
     }
   }
 
-  async startScraping(tableName: string, mode: ScrapeMode = { type: "auto-resume" }) {
+  async startScraping(
+    tableName: string,
+    mode: ScrapeMode = { type: "auto-resume" },
+  ) {
     if (this.isRunning) {
       throw new Error("Scraper is already running");
     }

@@ -183,11 +183,11 @@ export const parseDate = (date: string | null | undefined) => {
 
 export const parseDateTime = (date: string | null | undefined) => {
   if (!date) return null;
-  return date.substring(0, 10) + "T" + date.substring(11);
+  return `${date.substring(0, 10)}T${date.substring(11)}`;
 };
 
 export const parseYear = (year: string): number | null => {
-  const parsed = parseInt(year);
+  const parsed = parseInt(year, 10);
   if (Number.isNaN(parsed)) return null;
   return parsed;
 };

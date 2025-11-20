@@ -8,11 +8,12 @@
  * reads Excel files that have been manually placed in data/raw/ExcelSpeeches/
  * and converts them to parsed JSON format.
  */
+
+import path from "node:path";
 import * as XLSX from "xlsx";
-import path from "path";
-import { getStorage, StorageKeyBuilder } from "#storage";
-import type { DataStage } from "#storage";
 import { getProjectRoot } from "#constants";
+import type { DataStage } from "#storage";
+import { getStorage, StorageKeyBuilder } from "#storage";
 
 type ExcelSpeech = {
   käsittelyvaihe?: string;
@@ -67,7 +68,7 @@ type ParsedSpeech = {
 function excelDateToISO(serial: number): string {
   try {
     // Validate input
-    if (typeof serial !== "number" || isNaN(serial) || serial <= 0) {
+    if (typeof serial !== "number" || Number.isNaN(serial) || serial <= 0) {
       return "";
     }
 
@@ -82,12 +83,12 @@ function excelDateToISO(serial: number): string {
     );
 
     // Validate resulting date
-    if (isNaN(date.getTime())) {
+    if (Number.isNaN(date.getTime())) {
       return "";
     }
 
     return date.toISOString();
-  } catch (error) {
+  } catch (_error) {
     return "";
   }
 }
@@ -216,8 +217,7 @@ function mergeDuplicateSpeeches(speeches: ParsedSpeech[]): ParsedSpeech[] {
     if (merged.has(key)) {
       // Merge content with existing speech
       const existing = merged.get(key)!;
-      existing.content =
-        (existing.content || "") + " " + (speech.content || "");
+      existing.content = `${existing.content || ""} ${speech.content || ""}`;
     } else {
       // First occurrence, add to map
       merged.set(key, { ...speech });
@@ -277,7 +277,7 @@ export async function scrapeExcelSpeeches(
         continue;
       }
 
-      const sheet = workbook.Sheets["Puheenvuorot"];
+      const sheet = workbook.Sheets.Puheenvuorot;
       const rows = XLSX.utils.sheet_to_json<ExcelSpeech>(sheet);
 
       console.log(`   Found ${rows.length} rows`);

@@ -1,6 +1,6 @@
 import { scheduler } from "node:timers/promises";
-import { getStorage, StorageKeyBuilder } from "#storage";
 import type { DataStage } from "#storage";
+import { getStorage, StorageKeyBuilder } from "#storage";
 
 /** Time to wait (in ms) between API calls. */
 const TIME_BETWEEN_QUERIES = 25;
@@ -72,7 +72,7 @@ async function getLastScrapedPage(
   const pageNumbers = result.keys
     .map((key) => StorageKeyBuilder.parseKey(key.key))
     .filter((ref) => ref !== null)
-    .map((ref) => ref!.page);
+    .map((ref) => ref?.page);
 
   return pageNumbers.length > 0 ? Math.max(...pageNumbers) : 0;
 }
@@ -190,7 +190,7 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
           // (n-1) pages with 100 rows + last complete page's actual row count
           totalRowsScraped =
             (completePageCount - 1) * 100 + lastCompletePageContent.rowCount;
-        } catch (error) {
+        } catch (_error) {
           console.warn(
             `⚠️  Could not read page ${completePageCount} for progress calculation`,
           );

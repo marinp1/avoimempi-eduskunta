@@ -1,4 +1,4 @@
-import { getStorage, StorageKeyBuilder, type DataStage } from "#storage";
+import { type DataStage, getStorage, StorageKeyBuilder } from "#storage";
 
 /**
  * API Response structure from storage (created by scraper)
@@ -46,7 +46,7 @@ async function getParser(tableName: string): Promise<ParserFunction> {
   try {
     const module = await import(`./fn/${tableName}.ts`);
     return module.default as ParserFunction;
-  } catch (e) {
+  } catch (_e) {
     console.warn(
       `⚠️  No custom parser found for ${tableName}, using default parser`,
     );
@@ -126,7 +126,7 @@ export async function parseTable(options: ParseOptions): Promise<void> {
     targetListResult.keys
       .map((key) => StorageKeyBuilder.parseKey(key.key))
       .filter((ref) => ref !== null)
-      .map((ref) => ref!.page),
+      .map((ref) => ref?.page),
   );
 
   // Always re-parse the last page in case it was incomplete
@@ -190,7 +190,7 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       const rowObject = rowArrayToObject(apiResponse.columnNames, rowData);
 
       // Apply parser
-      const [identifier, parsedData] = await parseData(
+      const [_identifier, parsedData] = await parseData(
         rowObject,
         apiResponse.pkName,
       );

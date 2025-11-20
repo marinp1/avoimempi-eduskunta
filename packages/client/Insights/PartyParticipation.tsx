@@ -1,32 +1,32 @@
-import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  CardContent,
-  CircularProgress,
-  Alert,
-  Fade,
-  IconButton,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
-  TextField,
-  Grid,
-} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import {
-  LineChart,
+  Alert,
+  Box,
+  CardContent,
+  Checkbox,
+  CircularProgress,
+  Fade,
+  FormControlLabel,
+  FormGroup,
+  Grid,
+  IconButton,
+  TextField,
+  Typography,
+} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import {
+  CartesianGrid,
+  Legend,
   Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
 } from "recharts";
+import { colors, commonStyles, spacing } from "../theme";
 import { GlassCard } from "../theme/components";
-import { colors, spacing, commonStyles } from "../theme";
 import { useThemedColors } from "../theme/ThemeContext";
 
 interface PartyParticipationData {
@@ -72,10 +72,6 @@ export default function PartyParticipation({
     new Set(),
   );
 
-  useEffect(() => {
-    fetchData();
-  }, [startDate, endDate]);
-
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -105,6 +101,10 @@ export default function PartyParticipation({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Transform data for chart
   const chartData = React.useMemo(() => {
@@ -152,7 +152,20 @@ export default function PartyParticipation({
     setSelectedParties(newSelected);
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: {
+      value: number;
+      dataKey: string;
+      payload: Record<string, number>;
+      color: string;
+    }[];
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       return (
         <Box
@@ -173,13 +186,13 @@ export default function PartyParticipation({
             {label}
           </Typography>
           {payload
-            .sort((a: any, b: any) => b.value - a.value)
-            .map((entry: any, index: number) => {
+            .sort((a, b) => b.value - a.value)
+            .map((entry) => {
               const isInCoalition =
                 entry.payload[`${entry.dataKey}_coalition`] === 1;
               return (
                 <Box
-                  key={index}
+                  key={entry.dataKey}
                   sx={{
                     display: "flex",
                     alignItems: "center",

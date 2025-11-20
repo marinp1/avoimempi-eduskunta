@@ -1,30 +1,27 @@
-import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Typography,
-  Grid,
-  CardContent,
-  CircularProgress,
-  Alert,
-  Fade,
-  Drawer,
-} from "@mui/material";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import TimelineIcon from "@mui/icons-material/Timeline";
+import {
+  Box,
+  CardContent,
+  Drawer,
+  Fade,
+  Grid,
+  Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import { spacing } from "../theme";
 import { GlassCard } from "../theme/components";
-import { commonStyles, colors, spacing } from "../theme";
 import { useThemedColors } from "../theme/ThemeContext";
 import OsallistumisaktiivisuusPanel from "./Osallistumisaktiivisuus";
-import TimeSeriesStatistics from "./TimeSeriesStatistics";
 import PartyParticipation from "./PartyParticipation";
+import TimeSeriesStatistics from "./TimeSeriesStatistics";
 
 export default function InsightsPage() {
   const themedColors = useThemedColors();
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [_loading, _setLoading] = useState<boolean>(false);
+  const [_error, _setError] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const [initialPersonId, setInitialPersonId] = useState<number | null>(null);
   const [timeSeriesDrawerOpen, setTimeSeriesDrawerOpen] =
@@ -48,7 +45,7 @@ export default function InsightsPage() {
       params.delete("personId");
     }
 
-    const newUrl = `${window.location.pathname}${params.toString() ? "?" + params.toString() : ""}`;
+    const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
     window.history.pushState({}, "", newUrl);
   };
 
@@ -63,7 +60,7 @@ export default function InsightsPage() {
         setDrawerOpen(true);
         if (personIdParam) {
           const personId = parseInt(personIdParam, 10);
-          if (!isNaN(personId)) {
+          if (!Number.isNaN(personId)) {
             setInitialPersonId(personId);
           }
         }

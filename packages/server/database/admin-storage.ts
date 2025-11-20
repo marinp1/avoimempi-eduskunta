@@ -1,11 +1,10 @@
+import { TableName } from "#constants/index";
 import { getStorage } from "#storage/factory";
 import {
-  StorageKeyBuilder,
   type DataStage,
+  StorageKeyBuilder,
   type StorageMetadata,
 } from "#storage/types";
-import { TableName } from "#constants/index";
-import { scheduler } from "node:timers/promises";
 
 export interface TableStorageStatus {
   table_name: string;
@@ -99,8 +98,8 @@ export class AdminStorageService {
    * Formula: (pageCount - 1) * 100 + lastPageRowCount
    */
   private async getExactRowCount(
-    stage: DataStage,
-    tableName: string,
+    _stage: DataStage,
+    _tableName: string,
     files: StorageMetadata[],
   ): Promise<number> {
     if (files.length === 0) return 0;

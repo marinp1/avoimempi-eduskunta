@@ -1,12 +1,12 @@
-import path from "path";
 import sqlite, { type Database } from "bun:sqlite";
+import fs from "node:fs";
+import path from "node:path";
 import type { ServerWebSocket } from "bun";
-import { getStorage, StorageKeyBuilder } from "../shared/storage";
-import { TableName } from "#constants/index";
-import { getDatabasePath } from "../shared/database";
 import { getMigrations, migrate } from "bun-sqlite-migrations";
+import { TableName } from "#constants/index";
 import { clearStatementCache } from "../datapipe/migrator/utils";
-import fs from "fs";
+import { getDatabasePath } from "../shared/database";
+import { getStorage, StorageKeyBuilder } from "../shared/storage";
 
 export interface MigratorStatus {
   isRunning: boolean;
@@ -38,7 +38,6 @@ const IMPORT_ORDER: Partial<Record<string, number>> = {
  * Controller for managing database migration from parsed storage
  */
 export class MigratorController {
-  private static instance: MigratorController | null = null;
   private isRunning = false;
   private shouldStop = false;
   private currentTable: string | null = null;
@@ -47,10 +46,10 @@ export class MigratorController {
   private constructor() {}
 
   static getInstance(): MigratorController {
-    if (!this.instance) {
-      this.instance = new MigratorController();
+    if (!MigratorController.instance) {
+      MigratorController.instance = new MigratorController();
     }
-    return this.instance;
+    return MigratorController.instance;
   }
 
   setWebSocket(ws: ServerWebSocket<unknown>) {
@@ -190,10 +189,9 @@ export class MigratorController {
       // Clear all tables
       console.log("🗑️  Clearing existing data...");
       const tables = targetDatabase
-        .query<
-          { name: string },
-          []
-        >("SELECT name FROM sqlite_master WHERE type='table';")
+        .query<{ name: string }, []>(
+          "SELECT name FROM sqlite_master WHERE type='table';",
+        )
         .all();
 
       for (const table of tables) {
@@ -417,14 +415,13 @@ export class MigratorController {
     try {
       const db = sqlite.open(getDatabasePath(), { readonly: true });
       const result = db
-        .query<
-          { value: string },
-          []
-        >(`SELECT value FROM _migration_info WHERE key = 'last_migration'`)
+        .query<{ value: string }, []>(
+          `SELECT value FROM _migration_info WHERE key = 'last_migration'`,
+        )
         .get();
       db.close();
       return result?.value || null;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }

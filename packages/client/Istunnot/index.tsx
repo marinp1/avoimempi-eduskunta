@@ -1,28 +1,28 @@
-import React, { useEffect, useState } from "react";
-import {
-  Typography,
-  TableContainer,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Paper,
-  CircularProgress,
-  Box,
-  Alert,
-  CardContent,
-  Fade,
-  Chip,
-  Collapse,
-  IconButton,
-  Pagination,
-} from "@mui/material";
 import EventIcon from "@mui/icons-material/Event";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import {
+  Alert,
+  Box,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Collapse,
+  Fade,
+  IconButton,
+  Pagination,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { colors, commonStyles, spacing } from "../theme";
 import { GlassCard } from "../theme/components";
-import { commonStyles, colors, spacing, gradients } from "../theme";
 import { useThemedColors } from "../theme/ThemeContext";
 
 type SessionWithAgenda = DatabaseTables.Session & {
@@ -56,7 +56,7 @@ export default function IstunnotPage() {
   );
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
-  const [totalCount, setTotalCount] = useState<number>(0);
+  const [_totalCount, setTotalCount] = useState<number>(0);
   const limit = 20;
 
   // Fetch sessions on mount or page change
@@ -81,7 +81,7 @@ export default function IstunnotPage() {
   }, [page]);
 
   // Format date to Finnish format
-  const formatDate = (dateString: string) => {
+  const _formatDate = (dateString: string) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
     return date.toLocaleDateString("fi-FI", {
@@ -92,7 +92,7 @@ export default function IstunnotPage() {
   };
 
   // Format time
-  const formatTime = (dateString: string) => {
+  const _formatTime = (dateString: string) => {
     if (!dateString) return "-";
     const date = new Date(dateString);
     return date.toLocaleTimeString("fi-FI", {
@@ -102,7 +102,7 @@ export default function IstunnotPage() {
   };
 
   // Get state chip color
-  const getStateColor = (state: string) => {
+  const _getStateColor = (state: string) => {
     switch (state?.toLowerCase()) {
       case "käsitelty":
       case "valmis":

@@ -1,14 +1,21 @@
+import { existsSync } from "node:fs";
+import {
+  mkdir,
+  readdir,
+  readFile,
+  stat,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
+import path from "node:path";
 import type {
   IStorageProvider,
   StorageKey,
-  StorageMetadata,
   StorageListOptions,
   StorageListResult,
+  StorageMetadata,
   StoragePutOptions,
 } from "../types";
-import { mkdir, readFile, writeFile, unlink, stat, readdir } from "fs/promises";
-import { existsSync } from "fs";
-import path from "path";
 
 /**
  * Local filesystem storage provider
@@ -29,7 +36,7 @@ export class LocalStorageProvider implements IStorageProvider {
   async put(
     key: StorageKey,
     data: string | Buffer,
-    options?: StoragePutOptions,
+    _options?: StoragePutOptions,
   ): Promise<void> {
     const filePath = this.keyToPath(key);
     const dir = path.dirname(filePath);

@@ -1,23 +1,22 @@
-import React, { useState } from "react";
 import {
+  Box,
+  Chip,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
+  TablePagination,
   TableRow,
   TableSortLabel,
-  TablePagination,
-  Paper,
-  Box,
-  Chip,
-  Typography,
   Tooltip,
+  Typography,
 } from "@mui/material";
-import { ParticipationData, SortField, SortDirection } from "./types";
+import React, { useState } from "react";
+import { colors, commonStyles, gradients } from "../../theme";
 import { GlassCard } from "../../theme/components";
-import { colors, commonStyles, spacing, gradients } from "../../theme";
 import { useThemedColors } from "../../theme/ThemeContext";
+import type { ParticipationData, SortDirection, SortField } from "./types";
 
 interface ParticipationTableProps {
   data: ParticipationData[];
@@ -28,7 +27,7 @@ export function ParticipationTable({
   data,
   onSelectPerson,
 }: ParticipationTableProps) {
-  const themedColors = useThemedColors();
+  const _themedColors = useThemedColors();
   const [sortField, setSortField] = useState<SortField>("participation_rate");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [page, setPage] = useState(0);

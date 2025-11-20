@@ -1,4 +1,4 @@
-import { createTheme, type Theme, type SxProps } from "@mui/material";
+import { createTheme, type SxProps, type Theme } from "@mui/material";
 
 /**
  * Color palette for the application

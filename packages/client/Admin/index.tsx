@@ -1,32 +1,32 @@
-import React, { useEffect, useState, useRef } from "react";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ErrorIcon from "@mui/icons-material/Error";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import StopIcon from "@mui/icons-material/Stop";
+import WarningIcon from "@mui/icons-material/Warning";
 import {
+  Alert,
   Box,
-  Typography,
+  Button,
+  Chip,
+  CircularProgress,
+  Collapse,
+  Fade,
+  IconButton,
+  LinearProgress,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
-  CircularProgress,
-  Chip,
-  Alert,
-  Fade,
-  Button,
-  LinearProgress,
-  Collapse,
-  IconButton,
+  Typography,
 } from "@mui/material";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ErrorIcon from "@mui/icons-material/Error";
-import WarningIcon from "@mui/icons-material/Warning";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import StopIcon from "@mui/icons-material/Stop";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import React, { useEffect, useRef, useState } from "react";
 import { colors, gradients } from "../theme";
-import { useThemedColors, useTheme } from "../theme/ThemeContext";
+import { useTheme, useThemedColors } from "../theme/ThemeContext";
 import { AdminHeader, AdminOverview, ControlPanel } from "./components";
 
 type TableStatus = {
@@ -568,7 +568,7 @@ export default function AdminPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {status.map((row, index) => {
+                {status.map((row, _index) => {
                   const isExpanded = expandedRow === row.table_name;
                   const isThisTableScraping =
                     currentScrapingTable === row.table_name;

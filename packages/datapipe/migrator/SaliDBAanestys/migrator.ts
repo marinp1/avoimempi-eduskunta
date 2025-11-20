@@ -1,5 +1,5 @@
+import type { Database } from "bun:sqlite";
 import { LanguageIds } from "#constants/index";
-import { type Database } from "bun:sqlite";
 
 import { insertRows, parseDateTime } from "../utils";
 

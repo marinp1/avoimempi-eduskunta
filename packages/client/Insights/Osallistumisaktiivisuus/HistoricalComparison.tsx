@@ -1,26 +1,26 @@
-import React from "react";
+import CloseIcon from "@mui/icons-material/Close";
+import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import TrendingFlatIcon from "@mui/icons-material/TrendingFlat";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import {
+  Alert,
   Box,
-  Typography,
+  Chip,
+  CircularProgress,
+  IconButton,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  IconButton,
-  Chip,
-  CircularProgress,
-  Alert,
+  Typography,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import TrendingDownIcon from "@mui/icons-material/TrendingDown";
-import TrendingFlatIcon from "@mui/icons-material/TrendingFlat";
-import { ParticipationByGovernmentData } from "./types";
+import React from "react";
+import { colors, gradients, spacing } from "../../theme";
 import { GlassCard } from "../../theme/components";
-import { colors, spacing, gradients } from "../../theme";
 import { useThemedColors } from "../../theme/ThemeContext";
+import type { ParticipationByGovernmentData } from "./types";
 
 interface HistoricalComparisonProps {
   personId: number;
