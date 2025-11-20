@@ -13,9 +13,9 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useState } from "react";
-import { colors, commonStyles, gradients } from "../../theme";
-import { GlassCard } from "../../theme/components";
-import { useThemedColors } from "../../theme/ThemeContext";
+import { colors, commonStyles, gradients } from "#client/theme";
+import { GlassCard } from "#client/theme/components";
+import { useThemedColors } from "#client/theme/ThemeContext";
 import type { ParticipationData, SortDirection, SortField } from "./types";
 
 interface ParticipationTableProps {

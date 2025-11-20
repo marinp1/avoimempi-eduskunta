@@ -22,9 +22,9 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { commonStyles, shadows, spacing } from "../theme";
-import { useThemedColors } from "../theme/ThemeContext";
-import { getVoteColors } from "../theme/vote-styles";
+import { commonStyles, shadows, spacing } from "#client/theme";
+import { useThemedColors } from "#client/theme/ThemeContext";
+import { getVoteColors } from "#client/theme/vote-styles";
 
 const cache = new Map<string, ReturnType<typeof getVotings>>();
 

@@ -10,9 +10,9 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { colors, commonStyles, gradients, spacing } from "../../theme";
-import { GlassCard, StatCard } from "../../theme/components";
-import { useThemedColors } from "../../theme/ThemeContext";
+import { colors, commonStyles, gradients, spacing } from "#client/theme";
+import { GlassCard, StatCard } from "#client/theme/components";
+import { useThemedColors } from "#client/theme/ThemeContext";
 import { HistoricalComparison } from "./HistoricalComparison";
 import { ParticipationTable } from "./ParticipationTable";
 import type { ParticipationData } from "./types";

@@ -97,7 +97,7 @@ import { commonStyles } from "../theme";
 ### 6. Using Reusable Components
 
 ```tsx
-import { GlassCard, GradientButton, GradientText, StatCard } from "../theme/components";
+import { GlassCard, GradientButton, GradientText, StatCard } from "#client/theme/components";
 
 // Glass-morphism card
 <GlassCard>
@@ -126,7 +126,7 @@ import { GlassCard, GradientButton, GradientText, StatCard } from "../theme/comp
 ### 7. Using Vote Styles
 
 ```tsx
-import { voteColors, getVoteBoxStyle } from "../theme/vote-styles";
+import { voteColors, getVoteBoxStyle } from "#client/theme/vote-styles";
 
 // Vote colors
 <ThumbUpIcon sx={{ color: voteColors.yes }} />

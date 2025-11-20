@@ -29,7 +29,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "start": "cd packages/server && bun run index.ts",
+    "start": "NODE_ENV=development cd packages/server && bun run index.ts",
     "scrape": "cd packages/datapipe && bun run scraper/cli.ts",
     "parse": "cd packages/datapipe && bun run parser/cli.ts",
     "lint": "bunx biome check",

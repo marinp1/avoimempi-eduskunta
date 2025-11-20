@@ -1,4 +1,5 @@
-import type { Database } from "bun:sqlite";
+import { Database } from "bun:sqlite";
+import { getDatabasePath } from "#database";
 import * as queries from "./queries";
 
 export class DatabaseConnection {
@@ -341,6 +342,17 @@ export class DatabaseConnection {
     const data = stmt.all();
     stmt.finalize();
     return data;
+  }
+
+  #connectToDatabase() {
+    const databasePath = getDatabasePath();
+    console.log("Using", databasePath);
+    this.#database = new Database(databasePath, {
+      create: true,
+      readonly: true,
+    });
+    this.#database.exec("PRAGMA journal_mode = WAL;");
+    return this.#database;
   }
 
   constructor() {

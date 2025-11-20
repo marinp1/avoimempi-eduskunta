@@ -22,8 +22,8 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { commonStyles, spacing } from "../theme";
-import { useThemedColors } from "../theme/ThemeContext";
+import { commonStyles, spacing } from "#client/theme";
+import { useThemedColors } from "#client/theme/ThemeContext";
 import { RepresentativeDetails } from "./Details";
 
 type MemberWithExtras = DatabaseQueries.GetParliamentComposition & {
@@ -31,7 +31,7 @@ type MemberWithExtras = DatabaseQueries.GetParliamentComposition & {
   is_in_government?: number;
 };
 
-export default function App() {
+export default () => {
   const themedColors = useThemedColors();
 
   // Initialize from URL
@@ -763,4 +763,4 @@ export default function App() {
       </Fade>
     </Box>
   );
-}
+};

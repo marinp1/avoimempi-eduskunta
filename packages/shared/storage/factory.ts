@@ -6,6 +6,7 @@ import type { IStorageProvider } from "./types";
  * Storage factory - creates the appropriate storage provider based on config
  */
 export class StorageFactory {
+  private static instance: IStorageProvider | null = null;
   /**
    * Get storage provider instance (singleton)
    */

@@ -18,6 +18,7 @@ export interface ParserMessage {
  * Controller for managing parser processes with WebSocket communication
  */
 export class ParserController {
+  private static instance: ParserController | null = null;
   private isRunning = false;
   private shouldStop = false;
   private currentTable: string | null = null;

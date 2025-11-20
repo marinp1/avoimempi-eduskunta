@@ -25,9 +25,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { colors, commonStyles, spacing } from "../theme";
-import { GlassCard } from "../theme/components";
-import { useThemedColors } from "../theme/ThemeContext";
+import { colors, commonStyles, spacing } from "#client/theme";
+import { GlassCard } from "#client/theme/components";
+import { useThemedColors } from "#client/theme/ThemeContext";
 
 interface PartyParticipationData {
   government: string;

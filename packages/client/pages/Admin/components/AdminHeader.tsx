@@ -1,8 +1,8 @@
 import StorageIcon from "@mui/icons-material/Storage";
 import { Box, CardContent, Fade, Typography } from "@mui/material";
 import type React from "react";
-import { gradients, spacing } from "../../theme";
-import { GlassCard } from "../../theme/components";
+import { gradients, spacing } from "#client/theme";
+import { GlassCard } from "#client/theme/components";
 
 export const AdminHeader: React.FC = () => {
   return (

@@ -8,9 +8,9 @@ import {
   Typography,
 } from "@mui/material";
 import type React from "react";
-import { gradients, spacing } from "../../theme";
-import { GlassCard, GradientButton } from "../../theme/components";
-import { useThemedColors } from "../../theme/ThemeContext";
+import { gradients, spacing } from "#client/theme";
+import { GlassCard, GradientButton } from "#client/theme/components";
+import { useThemedColors } from "#client/theme/ThemeContext";
 
 interface ControlPanelProps {
   title: string;

@@ -25,8 +25,8 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
-import { colors, gradients } from "../theme";
-import { useTheme, useThemedColors } from "../theme/ThemeContext";
+import { colors, gradients } from "#client/theme";
+import { useTheme, useThemedColors } from "#client/theme/ThemeContext";
 import { AdminHeader, AdminOverview, ControlPanel } from "./components";
 
 type TableStatus = {
@@ -55,7 +55,7 @@ type ScrapingOverview = {
   total_parsed_rows: number;
 };
 
-export default function AdminPage() {
+export default () => {
   const themedColors = useThemedColors();
   const { isDark } = useTheme();
   const [status, setStatus] = useState<TableStatus[]>([]);
@@ -960,4 +960,4 @@ export default function AdminPage() {
       )}
     </Box>
   );
-}
+};

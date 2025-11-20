@@ -15,9 +15,9 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { commonStyles, spacing } from "../theme";
-import { GlassCard } from "../theme/components";
-import { useThemedColors } from "../theme/ThemeContext";
+import { commonStyles, spacing } from "#client/theme";
+import { GlassCard } from "#client/theme/components";
+import { useThemedColors } from "#client/theme/ThemeContext";
 
 type SessionWithAgenda = DatabaseTables.Session & {
   agenda_title?: string;
@@ -49,7 +49,7 @@ const getInitialDate = (): string => {
   return new Date().toISOString().split("T")[0];
 };
 
-export default function PaivatPage() {
+export default () => {
   const themedColors = useThemedColors();
 
   const [sessions, setSessions] = useState<SessionWithAgenda[]>([]);
@@ -798,4 +798,4 @@ export default function PaivatPage() {
       </Fade>
     </Box>
   );
-}
+};
