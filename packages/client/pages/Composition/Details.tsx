@@ -26,8 +26,8 @@ import {
 } from "@mui/material";
 import Button from "@mui/material/Button";
 import React from "react";
-import { colors } from "../theme/index";
-import { useThemedColors } from "../theme/ThemeContext";
+import { colors } from "#client/theme";
+import { useThemedColors } from "#client/theme/ThemeContext";
 
 type RepresentativeDetailsType = DatabaseTables.Representative;
 

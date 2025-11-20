@@ -11,14 +11,14 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { spacing } from "../theme";
-import { GlassCard } from "../theme/components";
-import { useThemedColors } from "../theme/ThemeContext";
-import OsallistumisaktiivisuusPanel from "./Osallistumisaktiivisuus";
+import { spacing } from "#client/theme";
+import { GlassCard } from "#client/theme/components";
+import { useThemedColors } from "#client/theme/ThemeContext";
 import PartyParticipation from "./PartyParticipation";
 import TimeSeriesStatistics from "./TimeSeriesStatistics";
+import OsallistumisaktiivisuusPanel from "./VotingActivity";
 
-export default function InsightsPage() {
+export default () => {
   const themedColors = useThemedColors();
   const [_loading, _setLoading] = useState<boolean>(false);
   const [_error, _setError] = useState<string | null>(null);
@@ -508,4 +508,4 @@ export default function InsightsPage() {
       </Drawer>
     </Box>
   );
-}
+};

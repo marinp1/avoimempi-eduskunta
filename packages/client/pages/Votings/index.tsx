@@ -11,11 +11,11 @@ import {
   Typography,
 } from "@mui/material";
 import React, { Suspense } from "react";
-import { colors, commonStyles, spacing } from "../theme";
-import { useThemedColors } from "../theme/ThemeContext";
+import { colors, commonStyles, spacing } from "#client/theme";
+import { useThemedColors } from "#client/theme/ThemeContext";
 import { VoteResults } from "./VoteResults";
 
-const VotingsPage = () => {
+export default () => {
   const themedColors = useThemedColors();
   const [search, setSearch] = React.useState<string>("");
   const deferredQuery = React.useDeferredValue(search);
@@ -117,5 +117,3 @@ const VotingsPage = () => {
     </Box>
   );
 };
-
-export default VotingsPage;

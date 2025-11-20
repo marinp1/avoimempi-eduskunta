@@ -18,6 +18,7 @@ export interface ScraperMessage {
  * Controller for managing scraper processes with WebSocket communication
  */
 export class ScraperController {
+  private static instance: ScraperController | null = null;
   private isRunning = false;
   private shouldStop = false;
   private currentTable: string | null = null;

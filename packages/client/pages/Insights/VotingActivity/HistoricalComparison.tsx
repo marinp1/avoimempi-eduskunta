@@ -17,9 +17,9 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { colors, gradients, spacing } from "../../theme";
-import { GlassCard } from "../../theme/components";
-import { useThemedColors } from "../../theme/ThemeContext";
+import { colors, gradients, spacing } from "#client/theme";
+import { GlassCard } from "#client/theme/components";
+import { useThemedColors } from "#client/theme/ThemeContext";
 import type { ParticipationByGovernmentData } from "./types";
 
 interface HistoricalComparisonProps {

@@ -21,9 +21,9 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { colors, commonStyles, spacing } from "../theme";
-import { GlassCard } from "../theme/components";
-import { useThemedColors } from "../theme/ThemeContext";
+import { colors, commonStyles, spacing } from "#client/theme";
+import { GlassCard } from "#client/theme/components";
+import { useThemedColors } from "#client/theme/ThemeContext";
 
 type SessionWithAgenda = DatabaseTables.Session & {
   agenda_title?: string;
@@ -39,7 +39,7 @@ type SessionsResponse = {
   totalPages: number;
 };
 
-export default function IstunnotPage() {
+export default () => {
   const themedColors = useThemedColors();
   const [sessions, setSessions] = useState<SessionWithAgenda[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -769,4 +769,4 @@ export default function IstunnotPage() {
       </Fade>
     </Box>
   );
-}
+};

@@ -21,6 +21,7 @@
       "#database": ["./packages/shared/database/index.ts"],
       "#storage": ["./packages/shared/storage/index.ts"],
       "#storage/*": ["./packages/shared/storage/*"],
+      "#client/*": ["./packages/client/*"],
       "react": ["./node_modules/@types/react"]
     }
   },

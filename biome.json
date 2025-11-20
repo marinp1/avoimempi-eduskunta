@@ -27,7 +27,8 @@
       "correctness": {
         "useExhaustiveDependencies": "off",
         "noConstructorReturn": "off",
-        "noConstantCondition": "off"
+        "noConstantCondition": "off",
+        "noUnusedPrivateClassMembers": "off"
       },
       "style": {
         "noNonNullAssertion": "off"

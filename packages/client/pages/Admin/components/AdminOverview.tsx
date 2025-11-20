@@ -1,7 +1,7 @@
 import { Box, CardContent, Fade, Typography } from "@mui/material";
 import type React from "react";
-import { colors, commonStyles, gradients, spacing } from "../../theme";
-import { GlassCard } from "../../theme/components";
+import { colors, commonStyles, gradients, spacing } from "#client/theme";
+import { GlassCard } from "#client/theme/components";
 
 type ScrapingOverview = {
   total_tables: number;

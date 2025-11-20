@@ -5,7 +5,9 @@ import { DatabaseConnection } from "./database/db";
 import homepage from "./public/index.html";
 
 const db = new DatabaseConnection();
-const isDev = Bun.env.NODE_ENV === "development";
+const isDev = true;
+
+console.log("Starting in", isDev ? "dev" : "prod");
 
 const server = Bun.serve({
   routes: {

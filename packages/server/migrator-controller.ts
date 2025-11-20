@@ -38,6 +38,7 @@ const IMPORT_ORDER: Partial<Record<string, number>> = {
  * Controller for managing database migration from parsed storage
  */
 export class MigratorController {
+  private static instance: MigratorController | null = null;
   private isRunning = false;
   private shouldStop = false;
   private currentTable: string | null = null;
