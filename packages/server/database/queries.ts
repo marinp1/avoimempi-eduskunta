@@ -1,43 +1,22 @@
-import { file } from "bun";
-import { resolve } from "path";
-
 export const sql = String.raw;
 
-// Helper to read SQL file contents
-const readSQL = (filename: string) => {
-  const path = resolve(import.meta.dir, "queries", filename);
-  return file(path).text();
-};
-
 // Export SQL files as raw text strings
-export const currentComposition = await readSQL("CURRENT_COMPOSITION.sql");
-export const votesByPerson = await readSQL("VOTES_BY_PERSON.sql");
-export const representativeDetails = await readSQL(
-  "REPRESENTATIVE_DETAILS.sql",
-);
-export const representativeDistricts = await readSQL(
-  "REPRESENTATIVE_DISTRICTS.sql",
-);
-export const leavingParliamentRecords = await readSQL("LEAVING_PARLIAMENT.sql");
-export const trustPositions = await readSQL("TRUST_POSITIONS.sql");
-export const governmentMemberships = await readSQL(
-  "GOVERNMENT_MEMBERSHIPS.sql",
-);
-export const sessions = await readSQL("SESSIONS.sql");
-export const sessionsPaginated = await readSQL("SESSIONS_PAGINATED.sql");
-export const sessionSections = await readSQL("SESSION_SECTIONS.sql");
-export const sectionSpeeches = await readSQL("SECTION_SPEECHES.sql");
-export const votingParticipation = await readSQL("VOTING_PARTICIPATION.sql");
-export const votingParticipationByGovernment = await readSQL(
-  "VOTING_PARTICIPATION_BY_GOVERNMENT.sql",
-);
-export const genderDivisionOverTime = await readSQL(
-  "GENDER_DIVISION_OVER_TIME.sql",
-);
-export const ageDivisionOverTime = await readSQL("AGE_DIVISION_OVER_TIME.sql");
-export const partyParticipationByGovernment = await readSQL(
-  "PARTY_PARTICIPATION_BY_GOVERNMENT.sql",
-);
-export const sessionByDate = await readSQL("SESSION_BY_DATE.sql");
-export const speechesByDate = await readSQL("SPEECHES_BY_DATE.sql");
-export const sessionDates = await readSQL("SESSION_DATES.sql");
+export { default as currentComposition } from "./queries/CURRENT_COMPOSITION.sql";
+export { default as votesByPerson } from "./queries/VOTES_BY_PERSON.sql";
+export { default as representativeDetails } from "./queries/REPRESENTATIVE_DETAILS.sql";
+export { default as representativeDistricts } from "./queries/REPRESENTATIVE_DISTRICTS.sql";
+export { default as leavingParliamentRecords } from "./queries/LEAVING_PARLIAMENT.sql";
+export { default as trustPositions } from "./queries/TRUST_POSITIONS.sql";
+export { default as governmentMemberships } from "./queries/GOVERNMENT_MEMBERSHIPS.sql";
+export { default as sessions } from "./queries/SESSIONS.sql";
+export { default as sessionsPaginated } from "./queries/SESSIONS_PAGINATED.sql";
+export { default as sessionSections } from "./queries/SESSION_SECTIONS.sql";
+export { default as sectionSpeeches } from "./queries/SECTION_SPEECHES.sql";
+export { default as votingParticipation } from "./queries/VOTING_PARTICIPATION.sql";
+export { default as votingParticipationByGovernment } from "./queries/VOTING_PARTICIPATION_BY_GOVERNMENT.sql";
+export { default as genderDivisionOverTime } from "./queries/GENDER_DIVISION_OVER_TIME.sql";
+export { default as ageDivisionOverTime } from "./queries/AGE_DIVISION_OVER_TIME.sql";
+export { default as partyParticipationByGovernment } from "./queries/PARTY_PARTICIPATION_BY_GOVERNMENT.sql";
+export { default as sessionByDate } from "./queries/SESSION_BY_DATE.sql";
+export { default as speechesByDate } from "./queries/SPEECHES_BY_DATE.sql";
+export { default as sessionDates } from "./queries/SESSION_DATES.sql";

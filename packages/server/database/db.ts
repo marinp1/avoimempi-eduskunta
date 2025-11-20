@@ -346,6 +346,7 @@ export class DatabaseConnection {
 
   #connectToDatabase() {
     const databasePath = getDatabasePath();
+    console.log("Using", databasePath);
     this.#database = new Database(databasePath, {
       create: true,
       readonly: true,
