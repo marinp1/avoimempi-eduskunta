@@ -75,8 +75,8 @@ export const Navigation: React.FC<{
       position="static"
       elevation={0}
       sx={{
+        borderRadius: 0,
         background: gradients.primary,
-        borderBottom: "3px solid rgba(255,255,255,0.2)",
         boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
       }}
     >
