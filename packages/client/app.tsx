@@ -1,9 +1,9 @@
 import { Box, Container, CssBaseline, GlobalStyles } from "@mui/material";
 import React, { useEffect, useState } from "react";
+import { Navigation } from "./Navigation";
 import { type RouteName, routes } from "./pages";
 import { spacing } from "./theme";
 import { useThemedColors } from "./theme/ThemeContext";
-import { Navigation } from "./Navigation";
 
 const getInitialTab = (): RouteName => {
   const path = window.location.pathname;
