@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { type RouteName, routes } from "./pages";
 import { spacing } from "./theme";
 import { useThemedColors } from "./theme/ThemeContext";
+import { Navigation } from "./Navigation";
 
 const getInitialTab = (): RouteName => {
   const path = window.location.pathname;
@@ -47,7 +48,7 @@ export const App: React.FC = () => {
           },
         }}
       />
-
+      <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
       <Container maxWidth="xl" sx={{ mt: spacing.md, pb: spacing.xl }}>
         <Box>
           <React.Suspense fallback={<div>Loading...</div>}>
