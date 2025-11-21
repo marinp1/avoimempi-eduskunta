@@ -1,7 +1,23 @@
-import { AppBar, Box, Tab, Tabs, Toolbar, Typography } from "@mui/material";
+import { Menu as MenuIcon } from "@mui/icons-material";
+import {
+  AppBar,
+  Box,
+  Drawer,
+  IconButton,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Tab,
+  Tabs,
+  Toolbar,
+  Typography,
+} from "@mui/material";
 import type React from "react";
+import { useState } from "react";
 import { type RouteName, routes } from "./pages";
-import { gradients, spacing } from "./theme";
+import theme, { gradients, spacing } from "./theme";
 import { applicationMode } from "./utils";
 
 export const Navigation: React.FC<{
@@ -14,6 +30,45 @@ export const Navigation: React.FC<{
     const newPath = `/${newValue}${search}`;
     window.history.pushState({}, "", newPath);
   };
+
+  const [open, setOpen] = useState(false);
+
+  const toggleDrawer = (newOpen: boolean) => () => {
+    setOpen(newOpen);
+  };
+
+  const DrawerList = (
+    <Box sx={{ width: 250 }} role="presentation" onClick={toggleDrawer(false)}>
+      <List>
+        {Object.entries(routes).map(([path, { icon: Icon, title }]) => {
+          if (
+            applicationMode === "production" &&
+            (path as RouteName) === "admin"
+          ) {
+            return null;
+          }
+          return (
+            <ListItem key={path} disablePadding>
+              <ListItemButton
+                onClick={() => setActiveTab(path as RouteName)}
+                sx={{
+                  color:
+                    activeTab === path
+                      ? theme.palette.primary.light
+                      : "inherit",
+                }}
+              >
+                <ListItemIcon>
+                  <Icon />
+                </ListItemIcon>
+                <ListItemText primary={title} />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
+      </List>
+    </Box>
+  );
 
   return (
     <AppBar
@@ -54,8 +109,23 @@ export const Navigation: React.FC<{
           </Typography>
         </Box>
 
+        <Box
+          sx={{
+            justifyContent: "end",
+            flexGrow: 1,
+            display: { xs: "flex", lg: "none" },
+          }}
+        >
+          <IconButton aria-label="menu" onClick={toggleDrawer(true)}>
+            <MenuIcon></MenuIcon>
+          </IconButton>
+          <Drawer anchor="right" open={open} onClose={toggleDrawer(false)}>
+            {DrawerList}
+          </Drawer>
+        </Box>
+
         {/* Navigation Tabs in Header */}
-        <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "flex" } }}>
+        <Box sx={{ flexGrow: 1, display: { xs: "none", lg: "flex" } }}>
           <Tabs
             value={activeTab}
             onChange={handleChange}
