@@ -2,12 +2,13 @@ import { AppBar, Box, Tab, Tabs, Toolbar, Typography } from "@mui/material";
 import type React from "react";
 import { type RouteName, routes } from "./pages";
 import { gradients, spacing } from "./theme";
+import { applicationMode } from "./utils";
 
 export const Navigation: React.FC<{
   activeTab: string;
-  setActiveTab: (tab: string) => void;
+  setActiveTab: (tab: RouteName) => void;
 }> = ({ activeTab, setActiveTab }) => {
-  const handleChange = (_event: React.SyntheticEvent, newValue: string) => {
+  const handleChange = (_event: React.SyntheticEvent, newValue: RouteName) => {
     setActiveTab(newValue);
     const search = window.location.search;
     const newPath = `/${newValue}${search}`;
@@ -88,7 +89,7 @@ export const Navigation: React.FC<{
           >
             {Object.entries(routes).map(([key, { icon: Icon, title }]) => {
               if (
-                process.env.MODE !== "production" &&
+                applicationMode === "production" &&
                 (key as RouteName) === "admin"
               ) {
                 // FIXME: Retain admin in prod
