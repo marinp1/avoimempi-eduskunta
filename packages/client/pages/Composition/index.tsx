@@ -6,12 +6,15 @@ import PieChartIcon from "@mui/icons-material/PieChart";
 import {
   Alert,
   Box,
+  Card,
   CardContent,
   Chip,
   CircularProgress,
   Fade,
   InputAdornment,
+  List,
   Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -551,6 +554,38 @@ export default () => {
       {/* Main Table */}
       <Fade in timeout={700}>
         <Box>
+          <List sx={{ display: { sm: "block", lg: "none" } }}>
+            {members.map((m) => (
+              <Card
+                key={m.person_id}
+                onClick={() => handleRowClick(m)}
+                sx={{ mb: 2 }}
+              >
+                <CardContent>
+                  <Typography variant="h6">
+                    {m.first_name} {m.last_name}
+                  </Typography>
+
+                  <Stack spacing={1} mt={1}>
+                    <Chip label={m.party_name} size="small" />
+                    <Typography variant="body2">
+                      Sukupuoli: {m.gender}
+                    </Typography>
+                    <Typography variant="body2">
+                      Syntymäaika: {m.birth_date}
+                    </Typography>
+                    <Typography variant="body2">
+                      Syntymäpaikka: {m.birth_place}
+                    </Typography>
+                    <Typography variant="body2">
+                      Ammatti: {m.profession}
+                    </Typography>
+                  </Stack>
+                </CardContent>
+              </Card>
+            ))}
+          </List>
+
           <TableContainer
             component={Paper}
             elevation={0}
@@ -562,6 +597,10 @@ export default () => {
                 "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
               mb: spacing.lg,
               overflow: "hidden",
+              display: {
+                sm: "none",
+                lg: "block",
+              },
             }}
           >
             {loading ? (

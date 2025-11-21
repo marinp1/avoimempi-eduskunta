@@ -45,7 +45,7 @@ export const routes = {
   string,
   {
     title: string;
-    icon: OverridableComponent<SvgIconTypeMap<{}, "svg">>;
+    icon: OverridableComponent<SvgIconTypeMap<Record<string, never>, "svg">>;
     Component: LazyExoticComponent<() => ReactNode>;
   }
 >;
