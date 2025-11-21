@@ -1,7 +1,6 @@
 export const sql = String.raw;
 
 export { default as ageDivisionOverTime } from "./queries/AGE_DIVISION_OVER_TIME.sql";
-// Export SQL files as raw text strings
 export { default as currentComposition } from "./queries/CURRENT_COMPOSITION.sql";
 export { default as genderDivisionOverTime } from "./queries/GENDER_DIVISION_OVER_TIME.sql";
 export { default as governmentMemberships } from "./queries/GOVERNMENT_MEMBERSHIPS.sql";
