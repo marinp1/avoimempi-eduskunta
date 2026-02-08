@@ -12,7 +12,6 @@ import {
   CircularProgress,
   Fade,
   InputAdornment,
-  List,
   Paper,
   Stack,
   Table,
@@ -206,7 +205,7 @@ export default () => {
                 "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
             }}
           >
-            <CardContent sx={{ p: spacing.lg, textAlign: "center" }}>
+            <CardContent sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}>
               <Typography
                 variant="h4"
                 component="h1"
@@ -216,6 +215,7 @@ export default () => {
                   fontWeight: 600,
                   mb: spacing.md,
                   letterSpacing: "0",
+                  fontSize: { xs: "1.5rem", sm: "2.125rem" },
                 }}
               >
                 Eduskunnan kokoonpano
@@ -266,7 +266,7 @@ export default () => {
                   "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
               }}
             >
-              <CardContent sx={{ p: spacing.lg }}>
+              <CardContent sx={{ p: { xs: 2, sm: spacing.lg } }}>
                 <Typography
                   variant="h5"
                   gutterBottom
@@ -276,6 +276,7 @@ export default () => {
                     mb: spacing.md,
                     textAlign: "center",
                     letterSpacing: "0",
+                    fontSize: { xs: "1.25rem", sm: "1.5rem" },
                   }}
                 >
                   Eduskunnan jakauma
@@ -289,14 +290,14 @@ export default () => {
                       xs: "1fr",
                       sm: "repeat(3, 1fr)",
                     },
-                    gap: spacing.md,
+                    gap: { xs: spacing.sm, sm: spacing.md },
                     mb: spacing.lg,
                   }}
                 >
                   <Box
                     sx={{
                       textAlign: "center",
-                      p: spacing.lg,
+                      p: { xs: spacing.md, sm: spacing.lg },
                       borderRadius: 1,
                       background: `${themedColors.primary}10`,
                       border: `1px solid ${themedColors.primary}40`,
@@ -309,9 +310,9 @@ export default () => {
                   >
                     <GroupsIcon
                       sx={{
-                        fontSize: 48,
+                        fontSize: { xs: 36, sm: 48 },
                         color: themedColors.primary,
-                        mb: 1.5,
+                        mb: 1,
                       }}
                     />
                     <Typography
@@ -319,7 +320,7 @@ export default () => {
                       sx={{
                         fontWeight: 600,
                         color: themedColors.primary,
-                        fontSize: "2.5rem",
+                        fontSize: { xs: "2rem", sm: "2.5rem" },
                         mb: 0.5,
                       }}
                     >
@@ -339,7 +340,7 @@ export default () => {
                   <Box
                     sx={{
                       textAlign: "center",
-                      p: spacing.lg,
+                      p: { xs: spacing.md, sm: spacing.lg },
                       borderRadius: 1,
                       background: `${themedColors.success}10`,
                       border: `1px solid ${themedColors.success}40`,
@@ -352,9 +353,9 @@ export default () => {
                   >
                     <AccountBalanceIcon
                       sx={{
-                        fontSize: 48,
+                        fontSize: { xs: 36, sm: 48 },
                         color: themedColors.success,
-                        mb: 1.5,
+                        mb: 1,
                       }}
                     />
                     <Typography
@@ -362,7 +363,7 @@ export default () => {
                       sx={{
                         fontWeight: 600,
                         color: themedColors.success,
-                        fontSize: "2.5rem",
+                        fontSize: { xs: "2rem", sm: "2.5rem" },
                         mb: 0.5,
                       }}
                     >
@@ -392,7 +393,7 @@ export default () => {
                   <Box
                     sx={{
                       textAlign: "center",
-                      p: spacing.lg,
+                      p: { xs: spacing.md, sm: spacing.lg },
                       borderRadius: 1,
                       background: `${themedColors.warning}10`,
                       border: `1px solid ${themedColors.warning}40`,
@@ -405,9 +406,9 @@ export default () => {
                   >
                     <PieChartIcon
                       sx={{
-                        fontSize: 48,
+                        fontSize: { xs: 36, sm: 48 },
                         color: themedColors.warning,
-                        mb: 1.5,
+                        mb: 1,
                       }}
                     />
                     <Typography
@@ -415,7 +416,7 @@ export default () => {
                       sx={{
                         fontWeight: 600,
                         color: themedColors.warning,
-                        fontSize: "2.5rem",
+                        fontSize: { xs: "2rem", sm: "2.5rem" },
                         mb: 0.5,
                       }}
                     >
@@ -461,8 +462,8 @@ export default () => {
                     <Box
                       key={party}
                       sx={{
-                        flex: "1 1 300px",
-                        p: spacing.md,
+                        flex: { xs: "1 1 100%", sm: "1 1 300px" },
+                        p: { xs: spacing.sm, sm: spacing.md },
                         borderRadius: 1,
                         background: themedColors.backgroundPaper,
                         border: `1px solid ${themedColors.dataBorder}`,
@@ -551,70 +552,113 @@ export default () => {
         </Fade>
       )}
 
-      {/* Main Table */}
-      <Fade in timeout={700}>
-        <Box>
-          <List sx={{ display: { sm: "block", lg: "none" } }}>
-            {members.map((m) => (
-              <Card
-                key={m.person_id}
-                onClick={() => handleRowClick(m)}
-                sx={{ mb: 2 }}
-              >
-                <CardContent>
-                  <Typography variant="h6">
-                    {m.first_name} {m.last_name}
-                  </Typography>
+      {/* Loading / Error states */}
+      {loading && (
+        <Box sx={{ ...commonStyles.centeredFlex, py: spacing.xl }}>
+          <CircularProgress sx={{ color: themedColors.primary }} />
+        </Box>
+      )}
+      {!loading && error && (
+        <Alert
+          severity="error"
+          sx={{ py: spacing.sm, textAlign: "center", mb: spacing.lg }}
+        >
+          {error}
+        </Alert>
+      )}
 
-                  <Stack spacing={1} mt={1}>
-                    <Chip label={m.party_name} size="small" />
-                    <Typography variant="body2">
-                      Sukupuoli: {m.gender}
-                    </Typography>
-                    <Typography variant="body2">
-                      Syntymäaika: {m.birth_date}
-                    </Typography>
-                    <Typography variant="body2">
-                      Syntymäpaikka: {m.birth_place}
-                    </Typography>
-                    <Typography variant="body2">
-                      Ammatti: {m.profession}
-                    </Typography>
-                  </Stack>
-                </CardContent>
-              </Card>
-            ))}
-          </List>
+      {/* Mobile Card List */}
+      {!loading && !error && (
+        <Fade in timeout={700}>
+          <Box>
+            <Box sx={{ display: { xs: "block", lg: "none" } }}>
+              {members.map((m) => (
+                <Card
+                  key={m.person_id}
+                  onClick={() => handleRowClick(m)}
+                  sx={{
+                    mb: 1.5,
+                    cursor: "pointer",
+                    border: `1px solid ${themedColors.dataBorder}`,
+                    transition: "all 0.2s ease-in-out",
+                    "&:active": {
+                      transform: "scale(0.99)",
+                    },
+                  }}
+                >
+                  <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "flex-start",
+                        mb: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: 600, color: themedColors.textPrimary }}
+                      >
+                        {m.first_name} {m.last_name}
+                      </Typography>
+                      {m.is_in_government === 1 && (
+                        <CheckCircleIcon
+                          sx={{
+                            color: themedColors.success,
+                            fontSize: 20,
+                            ml: 1,
+                            flexShrink: 0,
+                          }}
+                          titleAccess="Hallituksessa"
+                        />
+                      )}
+                    </Box>
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      {m.party_name && (
+                        <Chip
+                          label={m.party_name}
+                          size="small"
+                          sx={{
+                            background: themedColors.primary,
+                            color: "white",
+                            fontWeight: 600,
+                            fontSize: "0.75rem",
+                            height: 26,
+                          }}
+                        />
+                      )}
+                      {m.profession && (
+                        <Chip
+                          label={m.profession}
+                          size="small"
+                          variant="outlined"
+                          sx={{
+                            fontSize: "0.75rem",
+                            height: 26,
+                          }}
+                        />
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
 
-          <TableContainer
-            component={Paper}
-            elevation={0}
-            sx={{
-              borderRadius: 1,
-              background: themedColors.backgroundPaper,
-              border: `1px solid ${themedColors.dataBorder}`,
-              boxShadow:
-                "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
-              mb: spacing.lg,
-              overflow: "hidden",
-              display: {
-                sm: "none",
-                lg: "block",
-              },
-            }}
-          >
-            {loading ? (
-              <Box sx={{ ...commonStyles.centeredFlex, py: spacing.xl }}>
-                <CircularProgress sx={{ color: themedColors.primary }} />
-              </Box>
-            ) : error ? (
-              <Alert
-                severity="error"
-                sx={{ py: spacing.sm, textAlign: "center" }}
-              >
-                {error}
-              </Alert>
-            ) : (
+            {/* Desktop Table */}
+            <TableContainer
+              component={Paper}
+              elevation={0}
+              sx={{
+                borderRadius: 1,
+                background: themedColors.backgroundPaper,
+                border: `1px solid ${themedColors.dataBorder}`,
+                boxShadow:
+                  "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
+                mb: spacing.lg,
+                overflow: "hidden",
+                display: { xs: "none", lg: "block" },
+              }}
+            >
               <Table>
                 <TableHead>
                   <TableRow
@@ -765,10 +809,10 @@ export default () => {
                   ))}
                 </TableBody>
               </Table>
-            )}
-          </TableContainer>
-        </Box>
-      </Fade>
+            </TableContainer>
+          </Box>
+        </Fade>
+      )}
 
       {/* Dialog */}
       <RepresentativeDetails
@@ -777,29 +821,6 @@ export default () => {
         selectedRepresentative={selectedRepresentative}
         selectedDate={date}
       />
-
-      {/* Footer */}
-      <Fade in timeout={900}>
-        <Box>
-          <Box
-            sx={{
-              mt: spacing.lg,
-              p: spacing.md,
-              textAlign: "center",
-              borderRadius: 3,
-              background: themedColors.glassBackground,
-              backdropFilter: "blur(10px)",
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{ color: "text.secondary", fontWeight: 500 }}
-            >
-              Tietolähde: Eduskunnan avoin data
-            </Typography>
-          </Box>
-        </Box>
-      </Fade>
     </Box>
   );
 };

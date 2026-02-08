@@ -80,40 +80,6 @@ export default () => {
     fetchSessions();
   }, [page]);
 
-  // Format date to Finnish format
-  const _formatDate = (dateString: string) => {
-    if (!dateString) return "-";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("fi-FI", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  // Format time
-  const _formatTime = (dateString: string) => {
-    if (!dateString) return "-";
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("fi-FI", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  // Get state chip color
-  const _getStateColor = (state: string) => {
-    switch (state?.toLowerCase()) {
-      case "käsitelty":
-      case "valmis":
-        return colors.success;
-      case "käsittelyssä":
-        return colors.warning;
-      default:
-        return colors.primary;
-    }
-  };
-
   // Toggle row expansion
   const toggleRow = (sessionId: number) => {
     setExpandedRows((prev) => {
@@ -177,6 +143,256 @@ export default () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  /** Shared expanded sections content */
+  const renderSections = (session: SessionWithAgenda) => {
+    if (!session.sections || session.sections.length === 0) return null;
+
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: spacing.sm,
+        }}
+      >
+        {session.sections.map((section) => {
+          const isSectionExpanded = expandedSections.has(section.id);
+          const speeches = sectionSpeeches[section.id] || [];
+          const isLoadingSpeeches = loadingSpeeches.has(section.id);
+
+          return (
+            <Box
+              key={section.id}
+              sx={{
+                borderRadius: 1,
+                background: themedColors.isDark
+                  ? "rgba(95, 163, 227, 0.1)"
+                  : "rgba(102, 126, 234, 0.05)",
+                border: themedColors.isDark
+                  ? "1px solid rgba(95, 163, 227, 0.2)"
+                  : "1px solid rgba(102, 126, 234, 0.1)",
+                overflow: "hidden",
+              }}
+            >
+              <Box
+                sx={{
+                  p: { xs: 1.5, sm: spacing.sm },
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: { xs: 1, sm: spacing.sm },
+                    flex: 1,
+                    minWidth: 0,
+                  }}
+                >
+                  <Chip
+                    label={section.ordinal}
+                    size="small"
+                    sx={{
+                      background: themedColors.primary,
+                      color: themedColors.backgroundPaper,
+                      fontWeight: 600,
+                      fontSize: "0.7rem",
+                      height: 22,
+                      minWidth: 30,
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight: 600,
+                        color: themedColors.textPrimary,
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {section.title ||
+                        section.processing_title ||
+                        "Ei otsikkoa"}
+                    </Typography>
+                    {section.identifier && (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: themedColors.textSecondary,
+                          display: "block",
+                        }}
+                      >
+                        Tunniste: {section.identifier}
+                      </Typography>
+                    )}
+                  </Box>
+                </Box>
+                <IconButton
+                  size="small"
+                  onClick={() => toggleSection(section.id, section.key)}
+                  sx={{ color: themedColors.primary, flexShrink: 0 }}
+                >
+                  {isSectionExpanded ? (
+                    <KeyboardArrowUpIcon />
+                  ) : (
+                    <KeyboardArrowDownIcon />
+                  )}
+                </IconButton>
+              </Box>
+              <Collapse in={isSectionExpanded} timeout="auto" unmountOnExit>
+                <Box
+                  sx={{
+                    p: { xs: 1.5, sm: spacing.sm },
+                    pt: 0,
+                    borderTop: themedColors.isDark
+                      ? "1px solid rgba(95, 163, 227, 0.2)"
+                      : "1px solid rgba(102, 126, 234, 0.1)",
+                  }}
+                >
+                  {isLoadingSpeeches ? (
+                    <Box sx={{ py: spacing.sm, textAlign: "center" }}>
+                      <CircularProgress
+                        size={20}
+                        sx={{ color: themedColors.primary }}
+                      />
+                    </Box>
+                  ) : speeches.length > 0 ? (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontWeight: 600,
+                          color: themedColors.textSecondary,
+                          textTransform: "uppercase",
+                          mt: 1,
+                        }}
+                      >
+                        Puheenvuorot ({speeches.length})
+                      </Typography>
+                      {speeches.map((speech) => (
+                        <Box
+                          key={speech.id}
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 1,
+                            p: { xs: 1.5, sm: spacing.sm },
+                            borderRadius: 1,
+                            background: themedColors.backgroundPaper,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <Chip
+                              label={speech.ordinal_number || speech.ordinal}
+                              size="small"
+                              sx={{
+                                background: themedColors.isDark
+                                  ? "rgba(95, 163, 227, 0.3)"
+                                  : "rgba(102, 126, 234, 0.2)",
+                                color: themedColors.primary,
+                                fontWeight: 600,
+                                fontSize: "0.65rem",
+                                height: 18,
+                                minWidth: 24,
+                              }}
+                            />
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: 600,
+                                flex: 1,
+                                minWidth: 0,
+                              }}
+                            >
+                              {speech.first_name} {speech.last_name}
+                            </Typography>
+                            {speech.party_abbreviation && (
+                              <Chip
+                                label={speech.party_abbreviation}
+                                size="small"
+                                sx={{
+                                  background: themedColors.isDark
+                                    ? "rgba(95, 163, 227, 0.2)"
+                                    : "rgba(102, 126, 234, 0.1)",
+                                  color: themedColors.primary,
+                                  fontSize: "0.65rem",
+                                  height: 18,
+                                }}
+                              />
+                            )}
+                            {speech.speech_type && (
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  color: themedColors.textSecondary,
+                                }}
+                              >
+                                {speech.speech_type}
+                              </Typography>
+                            )}
+                          </Box>
+                          {(speech as any).content && (
+                            <Box
+                              sx={{
+                                p: { xs: 1.5, sm: spacing.sm },
+                                borderRadius: 1,
+                                background: themedColors.isDark
+                                  ? "rgba(95, 163, 227, 0.08)"
+                                  : "rgba(102, 126, 234, 0.03)",
+                                borderLeft: `3px solid ${themedColors.primary}`,
+                              }}
+                            >
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  color: themedColors.textPrimary,
+                                  whiteSpace: "pre-wrap",
+                                  lineHeight: 1.6,
+                                  fontSize: { xs: "0.8125rem", sm: "0.875rem" },
+                                }}
+                              >
+                                {(speech as any).content}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ py: spacing.sm, textAlign: "center" }}
+                    >
+                      Ei puheenvuoroja
+                    </Typography>
+                  )}
+                </Box>
+              </Collapse>
+            </Box>
+          );
+        })}
+      </Box>
+    );
+  };
+
   return (
     <Box>
       {/* Header Card */}
@@ -189,7 +405,7 @@ export default () => {
               border: `1px solid ${themedColors.glassBorder}`,
             }}
           >
-            <CardContent sx={{ p: spacing.lg, textAlign: "center" }}>
+            <CardContent sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}>
               <Box
                 sx={{
                   display: "flex",
@@ -199,7 +415,7 @@ export default () => {
                   mb: spacing.md,
                 }}
               >
-                <EventIcon sx={{ fontSize: 40, color: themedColors.primary }} />
+                <EventIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: themedColors.primary }} />
                 <Typography
                   variant="h4"
                   component="h1"
@@ -208,6 +424,7 @@ export default () => {
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                     fontWeight: 700,
+                    fontSize: { xs: "1.5rem", sm: "2.125rem" },
                   }}
                 >
                   Eduskunnan istunnot
@@ -221,495 +438,359 @@ export default () => {
         </Box>
       </Fade>
 
-      {/* Main Table */}
+      {/* Main Content */}
       <Fade in timeout={700}>
         <Box>
-          <TableContainer
-            component={Paper}
-            elevation={0}
-            sx={{
-              ...commonStyles.glassCard,
-              background: themedColors.glassBackground,
-              border: `1px solid ${themedColors.glassBorder}`,
-              mb: spacing.lg,
-              overflow: "hidden",
-            }}
-          >
-            {loading ? (
-              <Box sx={{ ...commonStyles.centeredFlex, py: spacing.xl }}>
-                <CircularProgress sx={{ color: themedColors.primary }} />
-              </Box>
-            ) : error ? (
-              <Alert
-                severity="error"
-                sx={{ py: spacing.sm, textAlign: "center" }}
-              >
-                {error}
-              </Alert>
-            ) : (
-              <Table>
-                <TableHead>
-                  <TableRow
-                    sx={{
-                      background: themedColors.primaryGradient,
-                    }}
-                  >
-                    <TableCell
-                      sx={{
-                        color: themedColors.backgroundPaper,
-                        fontWeight: 600,
-                      }}
-                    >
-                      Istunto
-                    </TableCell>
-                    <TableCell
-                      sx={{
-                        color: themedColors.backgroundPaper,
-                        fontWeight: 600,
-                      }}
-                    >
-                      Päiväjärjestys
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {sessions.map((session, index) => {
-                    const isExpanded = expandedRows.has(session.id);
-                    const hasSections =
-                      session.sections && session.sections.length > 0;
+          {loading ? (
+            <Box sx={{ ...commonStyles.centeredFlex, py: spacing.xl }}>
+              <CircularProgress sx={{ color: themedColors.primary }} />
+            </Box>
+          ) : error ? (
+            <Alert
+              severity="error"
+              sx={{ py: spacing.sm, textAlign: "center" }}
+            >
+              {error}
+            </Alert>
+          ) : (
+            <>
+              {/* Mobile card layout */}
+              <Box sx={{ display: { xs: "block", md: "none" } }}>
+                {sessions.map((session, index) => {
+                  const isExpanded = expandedRows.has(session.id);
+                  const hasSections =
+                    session.sections && session.sections.length > 0;
 
-                    return (
-                      <React.Fragment key={session.id}>
-                        <TableRow
-                          hover
-                          sx={{
-                            ...commonStyles.interactiveHover,
-                            animation: `fadeIn 0.5s ease-in-out ${index * 0.03}s both`,
-                            "@keyframes fadeIn": {
-                              from: {
-                                opacity: 0,
-                                transform: "translateY(10px)",
-                              },
-                              to: {
-                                opacity: 1,
-                                transform: "translateY(0)",
-                              },
-                            },
-                          }}
-                        >
-                          <TableCell sx={{ fontWeight: 600 }}>
-                            <Box
+                  return (
+                    <Paper
+                      key={session.id}
+                      elevation={0}
+                      sx={{
+                        mb: 1.5,
+                        borderRadius: 1,
+                        background: themedColors.backgroundPaper,
+                        border: `1px solid ${themedColors.dataBorder}`,
+                        overflow: "hidden",
+                        animation: `fadeIn 0.4s ease-in-out ${index * 0.03}s both`,
+                        "@keyframes fadeIn": {
+                          from: { opacity: 0, transform: "translateY(8px)" },
+                          to: { opacity: 1, transform: "translateY(0)" },
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          p: 2,
+                          display: "flex",
+                          alignItems: "flex-start",
+                          justifyContent: "space-between",
+                          gap: 1,
+                          cursor: hasSections ? "pointer" : "default",
+                        }}
+                        onClick={hasSections ? () => toggleRow(session.id) : undefined}
+                      >
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                              mb: 0.75,
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <EventIcon
                               sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
+                                color: themedColors.primary,
+                                fontSize: 18,
+                                flexShrink: 0,
                               }}
+                            />
+                            <Typography
+                              variant="subtitle2"
+                              sx={{ fontWeight: 600 }}
                             >
-                              {hasSections && (
-                                <IconButton
-                                  size="small"
-                                  onClick={() => toggleRow(session.id)}
-                                  sx={{ color: themedColors.primary }}
-                                >
-                                  {isExpanded ? (
-                                    <KeyboardArrowUpIcon />
-                                  ) : (
-                                    <KeyboardArrowDownIcon />
-                                  )}
-                                </IconButton>
-                              )}
-                              <EventIcon
+                              {session.year}/{session.number}
+                            </Typography>
+                            {hasSections && (
+                              <Chip
+                                label={`${session.sections.length} kohtaa`}
+                                size="small"
                                 sx={{
+                                  background: themedColors.isDark
+                                    ? "rgba(95, 163, 227, 0.2)"
+                                    : "rgba(102, 126, 234, 0.1)",
                                   color: themedColors.primary,
-                                  fontSize: 20,
+                                  fontWeight: 500,
+                                  fontSize: "0.65rem",
+                                  height: 20,
                                 }}
                               />
-                              <span>
-                                {session.year}/{session.number}
-                              </span>
-                              {hasSections && (
+                            )}
+                          </Box>
+                          {session.agenda_title ? (
+                            <Box>
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  fontWeight: 500,
+                                  color: themedColors.textPrimary,
+                                  mb: 0.5,
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                {session.agenda_title}
+                              </Typography>
+                              {session.agenda_state && (
                                 <Chip
-                                  label={`${session.sections.length} kohtaa`}
+                                  label={session.agenda_state}
                                   size="small"
                                   sx={{
                                     background: themedColors.isDark
-                                      ? "rgba(95, 163, 227, 0.2)"
-                                      : "rgba(102, 126, 234, 0.1)",
-                                    color: themedColors.primary,
+                                      ? "rgba(76, 175, 80, 0.25)"
+                                      : "rgba(76, 175, 80, 0.15)",
+                                    color: themedColors.success,
                                     fontWeight: 500,
-                                    fontSize: "0.7rem",
+                                    fontSize: "0.65rem",
                                     height: 20,
                                   }}
                                 />
                               )}
                             </Box>
-                          </TableCell>
-                          <TableCell>
-                            <Box>
-                              {session.agenda_title ? (
-                                <>
-                                  <Typography
-                                    variant="body2"
-                                    sx={{
-                                      fontWeight: 500,
-                                      mb: 0.5,
-                                      color: themedColors.textPrimary,
-                                    }}
-                                  >
-                                    {session.agenda_title}
-                                  </Typography>
-                                  {session.agenda_state && (
-                                    <Chip
-                                      label={session.agenda_state}
-                                      size="small"
-                                      sx={{
-                                        background: themedColors.isDark
-                                          ? "rgba(76, 175, 80, 0.25)"
-                                          : "rgba(76, 175, 80, 0.15)",
-                                        color: themedColors.success,
-                                        fontWeight: 500,
-                                        fontSize: "0.7rem",
-                                        height: 20,
-                                      }}
-                                    />
-                                  )}
-                                </>
-                              ) : (
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                >
-                                  Ei päiväjärjestystä
-                                </Typography>
-                              )}
-                            </Box>
-                          </TableCell>
-                        </TableRow>
+                          ) : (
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                            >
+                              Ei päiväjärjestystä
+                            </Typography>
+                          )}
+                        </Box>
                         {hasSections && (
-                          <TableRow>
-                            <TableCell
-                              colSpan={2}
+                          <IconButton
+                            size="small"
+                            sx={{ color: themedColors.primary, flexShrink: 0, mt: -0.5 }}
+                          >
+                            {isExpanded ? (
+                              <KeyboardArrowUpIcon />
+                            ) : (
+                              <KeyboardArrowDownIcon />
+                            )}
+                          </IconButton>
+                        )}
+                      </Box>
+                      {hasSections && (
+                        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                          <Box sx={{ px: 2, pb: 2 }}>
+                            <Typography
+                              variant="subtitle2"
                               sx={{
-                                py: 0,
-                                borderBottom: isExpanded ? undefined : 0,
+                                fontWeight: 600,
+                                color: themedColors.primary,
+                                mb: spacing.sm,
                               }}
                             >
-                              <Collapse
-                                in={isExpanded}
-                                timeout="auto"
-                                unmountOnExit
-                              >
-                                <Box sx={{ py: spacing.md, pl: spacing.xl }}>
-                                  <Typography
-                                    variant="subtitle2"
-                                    sx={{
-                                      fontWeight: 600,
-                                      color: themedColors.primary,
-                                      mb: spacing.sm,
-                                    }}
-                                  >
-                                    Istunnon kohdat:
-                                  </Typography>
-                                  <Box
-                                    sx={{
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      gap: spacing.sm,
-                                    }}
-                                  >
-                                    {session.sections.map((section) => {
-                                      const isSectionExpanded =
-                                        expandedSections.has(section.id);
-                                      const speeches =
-                                        sectionSpeeches[section.id] || [];
-                                      const isLoadingSpeeches =
-                                        loadingSpeeches.has(section.id);
+                              Istunnon kohdat:
+                            </Typography>
+                            {renderSections(session)}
+                          </Box>
+                        </Collapse>
+                      )}
+                    </Paper>
+                  );
+                })}
+              </Box>
 
-                                      return (
-                                        <Box
-                                          key={section.id}
-                                          sx={{
-                                            borderRadius: 2,
-                                            background: themedColors.isDark
-                                              ? "rgba(95, 163, 227, 0.1)"
-                                              : "rgba(102, 126, 234, 0.05)",
-                                            border: themedColors.isDark
-                                              ? "1px solid rgba(95, 163, 227, 0.2)"
-                                              : "1px solid rgba(102, 126, 234, 0.1)",
-                                            overflow: "hidden",
-                                          }}
-                                        >
-                                          <Box
-                                            sx={{
-                                              p: spacing.sm,
-                                              display: "flex",
-                                              alignItems: "center",
-                                              justifyContent: "space-between",
-                                            }}
-                                          >
-                                            <Box
-                                              sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: spacing.sm,
-                                                flex: 1,
-                                              }}
-                                            >
-                                              <Chip
-                                                label={section.ordinal}
-                                                size="small"
-                                                sx={{
-                                                  background:
-                                                    themedColors.primary,
-                                                  color:
-                                                    themedColors.backgroundPaper,
-                                                  fontWeight: 600,
-                                                  fontSize: "0.7rem",
-                                                  height: 22,
-                                                  minWidth: 30,
-                                                }}
-                                              />
-                                              <Box sx={{ flex: 1 }}>
-                                                <Typography
-                                                  variant="body2"
-                                                  sx={{
-                                                    fontWeight: 600,
-                                                    color:
-                                                      themedColors.textPrimary,
-                                                  }}
-                                                >
-                                                  {section.title ||
-                                                    section.processing_title ||
-                                                    "Ei otsikkoa"}
-                                                </Typography>
-                                                {section.identifier && (
-                                                  <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                      color:
-                                                        themedColors.textSecondary,
-                                                      display: "block",
-                                                    }}
-                                                  >
-                                                    Tunniste:{" "}
-                                                    {section.identifier}
-                                                  </Typography>
-                                                )}
-                                              </Box>
-                                            </Box>
-                                            <IconButton
-                                              size="small"
-                                              onClick={() =>
-                                                toggleSection(
-                                                  section.id,
-                                                  section.key,
-                                                )
-                                              }
-                                              sx={{
-                                                color: themedColors.primary,
-                                              }}
-                                            >
-                                              {isSectionExpanded ? (
-                                                <KeyboardArrowUpIcon />
-                                              ) : (
-                                                <KeyboardArrowDownIcon />
-                                              )}
-                                            </IconButton>
-                                          </Box>
-                                          <Collapse
-                                            in={isSectionExpanded}
-                                            timeout="auto"
-                                            unmountOnExit
-                                          >
-                                            <Box
-                                              sx={{
-                                                p: spacing.sm,
-                                                pt: 0,
-                                                borderTop: themedColors.isDark
-                                                  ? "1px solid rgba(95, 163, 227, 0.2)"
-                                                  : "1px solid rgba(102, 126, 234, 0.1)",
-                                              }}
-                                            >
-                                              {isLoadingSpeeches ? (
-                                                <Box
-                                                  sx={{
-                                                    py: spacing.sm,
-                                                    textAlign: "center",
-                                                  }}
-                                                >
-                                                  <CircularProgress
-                                                    size={20}
-                                                    sx={{
-                                                      color:
-                                                        themedColors.primary,
-                                                    }}
-                                                  />
-                                                </Box>
-                                              ) : speeches.length > 0 ? (
-                                                <Box
-                                                  sx={{
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    gap: 1,
-                                                  }}
-                                                >
-                                                  <Typography
-                                                    variant="caption"
-                                                    sx={{
-                                                      fontWeight: 600,
-                                                      color:
-                                                        themedColors.textSecondary,
-                                                      textTransform:
-                                                        "uppercase",
-                                                      mt: 1,
-                                                    }}
-                                                  >
-                                                    Puheenvuorot (
-                                                    {speeches.length})
-                                                  </Typography>
-                                                  {speeches.map((speech) => (
-                                                    <Box
-                                                      key={speech.id}
-                                                      sx={{
-                                                        display: "flex",
-                                                        flexDirection: "column",
-                                                        gap: 1,
-                                                        p: spacing.sm,
-                                                        borderRadius: 1,
-                                                        background:
-                                                          themedColors.backgroundPaper,
-                                                      }}
-                                                    >
-                                                      <Box
-                                                        sx={{
-                                                          display: "flex",
-                                                          alignItems: "center",
-                                                          gap: spacing.sm,
-                                                        }}
-                                                      >
-                                                        <Chip
-                                                          label={
-                                                            speech.ordinal_number ||
-                                                            speech.ordinal
-                                                          }
-                                                          size="small"
-                                                          sx={{
-                                                            background:
-                                                              themedColors.isDark
-                                                                ? "rgba(95, 163, 227, 0.3)"
-                                                                : "rgba(102, 126, 234, 0.2)",
-                                                            color:
-                                                              themedColors.primary,
-                                                            fontWeight: 600,
-                                                            fontSize: "0.65rem",
-                                                            height: 18,
-                                                            minWidth: 24,
-                                                          }}
-                                                        />
-                                                        <Typography
-                                                          variant="body2"
-                                                          sx={{
-                                                            fontWeight: 600,
-                                                            flex: 1,
-                                                          }}
-                                                        >
-                                                          {speech.first_name}{" "}
-                                                          {speech.last_name}
-                                                        </Typography>
-                                                        {speech.party_abbreviation && (
-                                                          <Chip
-                                                            label={
-                                                              speech.party_abbreviation
-                                                            }
-                                                            size="small"
-                                                            sx={{
-                                                              background:
-                                                                themedColors.isDark
-                                                                  ? "rgba(95, 163, 227, 0.2)"
-                                                                  : "rgba(102, 126, 234, 0.1)",
-                                                              color:
-                                                                themedColors.primary,
-                                                              fontSize:
-                                                                "0.65rem",
-                                                              height: 18,
-                                                            }}
-                                                          />
-                                                        )}
-                                                        {speech.speech_type && (
-                                                          <Typography
-                                                            variant="caption"
-                                                            sx={{
-                                                              color:
-                                                                themedColors.textSecondary,
-                                                            }}
-                                                          >
-                                                            {speech.speech_type}
-                                                          </Typography>
-                                                        )}
-                                                      </Box>
-                                                      {(speech as any)
-                                                        .content && (
-                                                        <Box
-                                                          sx={{
-                                                            p: spacing.sm,
-                                                            borderRadius: 1,
-                                                            background:
-                                                              themedColors.isDark
-                                                                ? "rgba(95, 163, 227, 0.08)"
-                                                                : "rgba(102, 126, 234, 0.03)",
-                                                            borderLeft: `3px solid ${themedColors.primary}`,
-                                                          }}
-                                                        >
-                                                          <Typography
-                                                            variant="body2"
-                                                            sx={{
-                                                              color:
-                                                                themedColors.textPrimary,
-                                                              whiteSpace:
-                                                                "pre-wrap",
-                                                              lineHeight: 1.6,
-                                                            }}
-                                                          >
-                                                            {
-                                                              (speech as any)
-                                                                .content
-                                                            }
-                                                          </Typography>
-                                                        </Box>
-                                                      )}
-                                                    </Box>
-                                                  ))}
-                                                </Box>
-                                              ) : (
-                                                <Typography
-                                                  variant="body2"
-                                                  color="text.secondary"
-                                                  sx={{
-                                                    py: spacing.sm,
-                                                    textAlign: "center",
-                                                  }}
-                                                >
-                                                  Ei puheenvuoroja
-                                                </Typography>
-                                              )}
-                                            </Box>
-                                          </Collapse>
-                                        </Box>
-                                      );
-                                    })}
-                                  </Box>
-                                </Box>
-                              </Collapse>
+              {/* Desktop table layout */}
+              <TableContainer
+                component={Paper}
+                elevation={0}
+                sx={{
+                  ...commonStyles.glassCard,
+                  background: themedColors.glassBackground,
+                  border: `1px solid ${themedColors.glassBorder}`,
+                  mb: spacing.lg,
+                  overflow: "hidden",
+                  display: { xs: "none", md: "block" },
+                }}
+              >
+                <Table>
+                  <TableHead>
+                    <TableRow
+                      sx={{
+                        background: themedColors.primaryGradient,
+                      }}
+                    >
+                      <TableCell
+                        sx={{
+                          color: themedColors.backgroundPaper,
+                          fontWeight: 600,
+                        }}
+                      >
+                        Istunto
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          color: themedColors.backgroundPaper,
+                          fontWeight: 600,
+                        }}
+                      >
+                        Päiväjärjestys
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {sessions.map((session, index) => {
+                      const isExpanded = expandedRows.has(session.id);
+                      const hasSections =
+                        session.sections && session.sections.length > 0;
+
+                      return (
+                        <React.Fragment key={session.id}>
+                          <TableRow
+                            hover
+                            sx={{
+                              ...commonStyles.interactiveHover,
+                              animation: `fadeIn 0.5s ease-in-out ${index * 0.03}s both`,
+                              "@keyframes fadeIn": {
+                                from: {
+                                  opacity: 0,
+                                  transform: "translateY(10px)",
+                                },
+                                to: {
+                                  opacity: 1,
+                                  transform: "translateY(0)",
+                                },
+                              },
+                            }}
+                          >
+                            <TableCell sx={{ fontWeight: 600 }}>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 1,
+                                }}
+                              >
+                                {hasSections && (
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => toggleRow(session.id)}
+                                    sx={{ color: themedColors.primary }}
+                                  >
+                                    {isExpanded ? (
+                                      <KeyboardArrowUpIcon />
+                                    ) : (
+                                      <KeyboardArrowDownIcon />
+                                    )}
+                                  </IconButton>
+                                )}
+                                <EventIcon
+                                  sx={{
+                                    color: themedColors.primary,
+                                    fontSize: 20,
+                                  }}
+                                />
+                                <span>
+                                  {session.year}/{session.number}
+                                </span>
+                                {hasSections && (
+                                  <Chip
+                                    label={`${session.sections.length} kohtaa`}
+                                    size="small"
+                                    sx={{
+                                      background: themedColors.isDark
+                                        ? "rgba(95, 163, 227, 0.2)"
+                                        : "rgba(102, 126, 234, 0.1)",
+                                      color: themedColors.primary,
+                                      fontWeight: 500,
+                                      fontSize: "0.7rem",
+                                      height: 20,
+                                    }}
+                                  />
+                                )}
+                              </Box>
+                            </TableCell>
+                            <TableCell>
+                              <Box>
+                                {session.agenda_title ? (
+                                  <>
+                                    <Typography
+                                      variant="body2"
+                                      sx={{
+                                        fontWeight: 500,
+                                        mb: 0.5,
+                                        color: themedColors.textPrimary,
+                                      }}
+                                    >
+                                      {session.agenda_title}
+                                    </Typography>
+                                    {session.agenda_state && (
+                                      <Chip
+                                        label={session.agenda_state}
+                                        size="small"
+                                        sx={{
+                                          background: themedColors.isDark
+                                            ? "rgba(76, 175, 80, 0.25)"
+                                            : "rgba(76, 175, 80, 0.15)",
+                                          color: themedColors.success,
+                                          fontWeight: 500,
+                                          fontSize: "0.7rem",
+                                          height: 20,
+                                        }}
+                                      />
+                                    )}
+                                  </>
+                                ) : (
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    Ei päiväjärjestystä
+                                  </Typography>
+                                )}
+                              </Box>
                             </TableCell>
                           </TableRow>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </TableContainer>
+                          {hasSections && (
+                            <TableRow>
+                              <TableCell
+                                colSpan={2}
+                                sx={{
+                                  py: 0,
+                                  borderBottom: isExpanded ? undefined : 0,
+                                }}
+                              >
+                                <Collapse
+                                  in={isExpanded}
+                                  timeout="auto"
+                                  unmountOnExit
+                                >
+                                  <Box sx={{ py: spacing.md, pl: spacing.xl }}>
+                                    <Typography
+                                      variant="subtitle2"
+                                      sx={{
+                                        fontWeight: 600,
+                                        color: themedColors.primary,
+                                        mb: spacing.sm,
+                                      }}
+                                    >
+                                      Istunnon kohdat:
+                                    </Typography>
+                                    {renderSections(session)}
+                                  </Box>
+                                </Collapse>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
+          )}
 
           {/* Pagination */}
           {!loading && !error && totalPages > 1 && (
@@ -725,7 +806,7 @@ export default () => {
                 page={page}
                 onChange={handlePageChange}
                 color="primary"
-                size="large"
+                size="medium"
                 sx={{
                   "& .MuiPaginationItem-root": {
                     color: themedColors.textPrimary,
@@ -742,29 +823,6 @@ export default () => {
               />
             </Box>
           )}
-        </Box>
-      </Fade>
-
-      {/* Footer */}
-      <Fade in timeout={900}>
-        <Box>
-          <Box
-            sx={{
-              mt: spacing.lg,
-              p: spacing.md,
-              textAlign: "center",
-              borderRadius: 3,
-              background: themedColors.backgroundPaper,
-              backdropFilter: "blur(10px)",
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{ color: "text.secondary", fontWeight: 500 }}
-            >
-              Tietolähde: Eduskunnan avoin data
-            </Typography>
-          </Box>
         </Box>
       </Fade>
     </Box>

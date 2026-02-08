@@ -56,6 +56,160 @@ const eduskuntaLink = (href: string) => {
   return `https://www.eduskunta.fi${href}`;
 };
 
+/** Mobile card for a single vote result */
+const VoteCard: React.FC<{
+  res: DatabaseTables.Voting;
+  themedColors: ReturnType<typeof useThemedColors>;
+  voteColors: ReturnType<typeof getVoteColors>;
+}> = ({ res, themedColors, voteColors }) => (
+  <Box
+    sx={{
+      p: 2,
+      borderBottom: `1px solid ${themedColors.dataBorder}`,
+      "&:last-child": { borderBottom: "none" },
+    }}
+  >
+    <Box sx={{ mb: 1.5 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+        <Typography
+          variant="caption"
+          sx={{ color: themedColors.textSecondary }}
+        >
+          {res.start_time
+            ? new Date(res.start_time).toLocaleDateString("fi-FI")
+            : "-"}
+        </Typography>
+        <Chip
+          label={res.section_processing_phase}
+          size="small"
+          sx={{
+            background: themedColors.primary,
+            color: "white",
+            fontWeight: 700,
+            fontSize: "0.65rem",
+            height: 22,
+          }}
+        />
+      </Box>
+      <Typography
+        variant="body2"
+        sx={{
+          fontWeight: 600,
+          color: themedColors.textPrimary,
+          mb: 1.5,
+        }}
+      >
+        {res.title}
+      </Typography>
+    </Box>
+
+    {/* Vote counts in a compact grid */}
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: "repeat(4, 1fr)",
+        gap: 1,
+        mb: 1.5,
+      }}
+    >
+      <Box sx={{ textAlign: "center" }}>
+        <ThumbUpIcon sx={{ fontSize: 16, color: voteColors.yes, mb: 0.25 }} />
+        <Typography
+          variant="body2"
+          sx={{ fontWeight: 700, color: voteColors.yes, fontSize: "0.875rem" }}
+        >
+          {res.n_yes}
+        </Typography>
+        <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
+          Jaa
+        </Typography>
+      </Box>
+      <Box sx={{ textAlign: "center" }}>
+        <ThumbDownIcon sx={{ fontSize: 16, color: voteColors.no, mb: 0.25 }} />
+        <Typography
+          variant="body2"
+          sx={{ fontWeight: 700, color: voteColors.no, fontSize: "0.875rem" }}
+        >
+          {res.n_no}
+        </Typography>
+        <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
+          Ei
+        </Typography>
+      </Box>
+      <Box sx={{ textAlign: "center" }}>
+        <RemoveIcon sx={{ fontSize: 16, color: voteColors.abstain, mb: 0.25 }} />
+        <Typography
+          variant="body2"
+          sx={{ fontWeight: 700, color: voteColors.abstain, fontSize: "0.875rem" }}
+        >
+          {res.n_abstain}
+        </Typography>
+        <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
+          Tyhjää
+        </Typography>
+      </Box>
+      <Box sx={{ textAlign: "center" }}>
+        <PersonOffIcon sx={{ fontSize: 16, color: voteColors.absent, mb: 0.25 }} />
+        <Typography
+          variant="body2"
+          sx={{ fontWeight: 700, color: voteColors.absent, fontSize: "0.875rem" }}
+        >
+          {res.n_absent}
+        </Typography>
+        <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
+          Poissa
+        </Typography>
+      </Box>
+    </Box>
+
+    {/* Links */}
+    <Box sx={{ display: "flex", gap: 1 }}>
+      <Link
+        target="_blank"
+        href={eduskuntaLink(res.result_url)}
+        sx={{
+          color: themedColors.primary,
+          textDecoration: "none",
+          fontWeight: 600,
+          fontSize: "0.8125rem",
+          padding: "4px 10px",
+          borderRadius: 1,
+          border: `1px solid ${themedColors.primary}`,
+          transition: "all 0.2s ease",
+          "&:hover": {
+            background: themedColors.primary,
+            color: "white",
+            textDecoration: "none",
+          },
+        }}
+      >
+        Tulokset
+      </Link>
+      <Link
+        target="_blank"
+        href={eduskuntaLink(res.proceedings_url)}
+        sx={{
+          color: themedColors.primary,
+          textDecoration: "none",
+          fontWeight: 600,
+          fontSize: "0.8125rem",
+          padding: "4px 10px",
+          borderRadius: 1,
+          border: `1px solid ${themedColors.primary}`,
+          transition: "all 0.2s ease",
+          "&:hover": {
+            background: themedColors.primary,
+            color: "white",
+            textDecoration: "none",
+          },
+        }}
+      >
+        Pöytäkirja
+      </Link>
+    </Box>
+  </Box>
+);
+
 export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
   const themedColors = useThemedColors();
   const voteColors = getVoteColors(themedColors);
@@ -92,8 +246,8 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                 />
               }
               sx={{
-                py: spacing.md,
-                px: spacing.lg,
+                py: { xs: 1, sm: spacing.md },
+                px: { xs: 2, sm: spacing.lg },
                 "&:hover": {
                   background: `${themedColors.primary}08`,
                 },
@@ -104,7 +258,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                 sx={{
                   fontWeight: 600,
                   color: themedColors.primary,
-                  fontSize: "1.125rem",
+                  fontSize: { xs: "0.9375rem", sm: "1.125rem" },
                   letterSpacing: "0",
                 }}
               >
@@ -112,7 +266,20 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
               </Typography>
             </AccordionSummary>
             <AccordionDetails sx={{ p: 0 }}>
-              <TableContainer>
+              {/* Mobile card layout */}
+              <Box sx={{ display: { xs: "block", md: "none" } }}>
+                {(votes ?? []).map((res) => (
+                  <VoteCard
+                    key={res.id}
+                    res={res}
+                    themedColors={themedColors}
+                    voteColors={voteColors}
+                  />
+                ))}
+              </Box>
+
+              {/* Desktop table layout */}
+              <TableContainer sx={{ display: { xs: "none", md: "block" } }}>
                 <Table>
                   <TableHead>
                     <TableRow

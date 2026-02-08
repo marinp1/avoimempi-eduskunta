@@ -36,7 +36,7 @@ export default () => {
                 "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
             }}
           >
-            <CardContent sx={{ p: spacing.lg }}>
+            <CardContent sx={{ p: { xs: 2, sm: spacing.lg } }}>
               <Typography
                 variant="h4"
                 component="h1"
@@ -47,6 +47,7 @@ export default () => {
                   mb: spacing.md,
                   textAlign: "center",
                   letterSpacing: "0",
+                  fontSize: { xs: "1.5rem", sm: "2.125rem" },
                 }}
               >
                 Eduskunnan äänestykset

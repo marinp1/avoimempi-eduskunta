@@ -220,7 +220,7 @@ export default () => {
               border: `1px solid ${themedColors.glassBorder}`,
             }}
           >
-            <CardContent sx={{ p: spacing.lg, textAlign: "center" }}>
+            <CardContent sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}>
               <Box
                 sx={{
                   display: "flex",
@@ -231,7 +231,7 @@ export default () => {
                 }}
               >
                 <CalendarTodayIcon
-                  sx={{ fontSize: 40, color: themedColors.primary }}
+                  sx={{ fontSize: { xs: 32, sm: 40 }, color: themedColors.primary }}
                 />
                 <Typography
                   variant="h4"
@@ -241,6 +241,7 @@ export default () => {
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                     fontWeight: 700,
+                    fontSize: { xs: "1.5rem", sm: "2.125rem" },
                   }}
                 >
                   Päivät
@@ -378,7 +379,7 @@ export default () => {
                     "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
                 }}
               >
-                <CardContent sx={{ p: spacing.lg }}>
+                <CardContent sx={{ p: { xs: 2, sm: spacing.lg } }}>
                   <Box
                     sx={{
                       display: "flex",
@@ -388,7 +389,7 @@ export default () => {
                     }}
                   >
                     <EventIcon
-                      sx={{ fontSize: 32, color: themedColors.primary }}
+                      sx={{ fontSize: { xs: 24, sm: 32 }, color: themedColors.primary }}
                     />
                     <Typography
                       variant="h5"
@@ -774,28 +775,6 @@ export default () => {
         </>
       )}
 
-      {/* Footer */}
-      <Fade in timeout={900}>
-        <Box>
-          <Box
-            sx={{
-              mt: spacing.lg,
-              p: spacing.md,
-              textAlign: "center",
-              borderRadius: 3,
-              background: themedColors.backgroundPaper,
-              backdropFilter: "blur(10px)",
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{ color: "text.secondary", fontWeight: 500 }}
-            >
-              Tietolähde: Eduskunnan avoin data
-            </Typography>
-          </Box>
-        </Box>
-      </Fade>
     </Box>
   );
 };
