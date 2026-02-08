@@ -32,6 +32,7 @@
     "start": "NODE_ENV=development bun run packages/server/index.ts",
     "scrape": "cd packages/datapipe && bun run scraper/cli.ts",
     "parse": "cd packages/datapipe && bun run parser/cli.ts",
+    "test": "bun test",
     "lint": "bunx biome check",
     "lint:fix": "bunx biome check --write"
   }
