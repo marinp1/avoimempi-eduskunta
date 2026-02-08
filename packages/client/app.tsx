@@ -1,4 +1,4 @@
-import { Box, Container, CssBaseline, GlobalStyles } from "@mui/material";
+import { Box, Container, CssBaseline, GlobalStyles, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { Navigation } from "./Navigation";
 import { type RouteName, routes } from "./pages";
@@ -49,11 +49,54 @@ export const App: React.FC = () => {
         }}
       />
       <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
-      <Container maxWidth="xl" sx={{ mt: spacing.md, pb: spacing.xl }}>
+      <Container
+        maxWidth="xl"
+        sx={{
+          mt: { xs: 2, sm: spacing.md },
+          px: { xs: 1.5, sm: 3 },
+          pb: spacing.xl,
+        }}
+      >
         <Box>
           <React.Suspense fallback={<div>Loading...</div>}>
             <ActivePage.Component />
           </React.Suspense>
+        </Box>
+
+        {/* Disclaimer footer */}
+        <Box
+          component="footer"
+          sx={{
+            mt: spacing.lg,
+            pt: spacing.md,
+            pb: spacing.sm,
+            textAlign: "center",
+            borderTop: `1px solid ${themedColors.dataBorder}`,
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              color: themedColors.textTertiary,
+              display: "block",
+              lineHeight: 1.6,
+            }}
+          >
+            Tietolähde: Eduskunnan avoin data (avoindata.eduskunta.fi)
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{
+              color: themedColors.textTertiary,
+              display: "block",
+              mt: 0.5,
+              lineHeight: 1.6,
+            }}
+          >
+            Tämä on epävirallinen palvelu eikä liity eduskuntaan tai
+            valtionhallintoon. Tiedot voivat olla puutteellisia tai
+            viiveellisiä.
+          </Typography>
         </Box>
       </Container>
     </>

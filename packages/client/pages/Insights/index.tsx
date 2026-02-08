@@ -120,7 +120,7 @@ export default () => {
               border: `1px solid ${themedColors.glassBorder}`,
             }}
           >
-            <CardContent sx={{ p: spacing.lg, textAlign: "center" }}>
+            <CardContent sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}>
               <Typography
                 variant="h4"
                 component="h1"
@@ -131,6 +131,7 @@ export default () => {
                   WebkitTextFillColor: "transparent",
                   fontWeight: 700,
                   mb: spacing.md,
+                  fontSize: { xs: "1.5rem", sm: "2.125rem" },
                 }}
               >
                 Eduskunnan analytiikka
@@ -433,29 +434,6 @@ export default () => {
               </Typography>
             </CardContent>
           </GlassCard>
-        </Box>
-      </Fade>
-
-      {/* Footer */}
-      <Fade in timeout={900}>
-        <Box>
-          <Box
-            sx={{
-              mt: spacing.lg,
-              p: spacing.md,
-              textAlign: "center",
-              borderRadius: 3,
-              background: themedColors.backgroundPaper,
-              backdropFilter: "blur(10px)",
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{ color: "text.secondary", fontWeight: 500 }}
-            >
-              Tietolähde: Eduskunnan avoin data
-            </Typography>
-          </Box>
         </Box>
       </Fade>
 

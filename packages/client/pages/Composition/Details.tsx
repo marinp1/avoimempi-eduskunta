@@ -23,11 +23,13 @@ import {
   ListItem,
   ListItemText,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import Button from "@mui/material/Button";
 import React from "react";
 import { colors } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import theme from "#client/theme";
 
 type RepresentativeDetailsType = DatabaseTables.Representative;
 
@@ -154,6 +156,7 @@ export const RepresentativeDetails: React.FC<{
   selectedDate: string;
 }> = ({ open, onClose, selectedRepresentative, selectedDate }) => {
   const themedColors = useThemedColors();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const handleViewParticipationInsights = () => {
     // Navigate to insights page with participation insights open
@@ -240,10 +243,11 @@ export const RepresentativeDetails: React.FC<{
       onClose={onClose}
       maxWidth="md"
       fullWidth
+      fullScreen={isMobile}
       PaperProps={{
         sx: {
-          borderRadius: 3,
-          maxHeight: "90vh",
+          borderRadius: isMobile ? 0 : 3,
+          maxHeight: isMobile ? "100vh" : "90vh",
         },
       }}
     >
@@ -267,17 +271,17 @@ export const RepresentativeDetails: React.FC<{
               top: 0,
               zIndex: 10,
               background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              borderRadius: "12px 12px 0 0",
+              borderRadius: isMobile ? 0 : "12px 12px 0 0",
             }}
           >
-            <Box sx={{ position: "relative", p: 3 }}>
+            <Box sx={{ position: "relative", p: { xs: 2, sm: 3 } }}>
               {/* Close Button */}
               <IconButton
                 onClick={onClose}
                 sx={{
                   position: "absolute",
-                  top: 16,
-                  right: 16,
+                  top: { xs: 8, sm: 16 },
+                  right: { xs: 8, sm: 16 },
                   color: "white",
                   bgcolor: "rgba(0,0,0,0.2)",
                   "&:hover": { bgcolor: "rgba(0,0,0,0.3)" },
@@ -290,20 +294,23 @@ export const RepresentativeDetails: React.FC<{
               <Box
                 sx={{
                   display: "flex",
-                  alignItems: "center",
-                  gap: 3,
+                  flexDirection: { xs: "column", sm: "row" },
+                  alignItems: { xs: "flex-start", sm: "center" },
+                  gap: { xs: 2, sm: 3 },
+                  pr: { xs: 4, sm: 0 },
                 }}
               >
                 {/* Avatar */}
                 <Avatar
                   sx={{
-                    width: 80,
-                    height: 80,
+                    width: { xs: 56, sm: 80 },
+                    height: { xs: 56, sm: 80 },
                     background: themedColors.backgroundPaper,
                     color: colors.accent,
-                    fontSize: 32,
+                    fontSize: { xs: 22, sm: 32 },
                     fontWeight: 700,
                     border: `3px solid rgba(255,255,255,0.3)`,
+                    flexShrink: 0,
                   }}
                 >
                   {selectedRepresentative.first_name[0]}
@@ -311,7 +318,7 @@ export const RepresentativeDetails: React.FC<{
                 </Avatar>
 
                 {/* Name and Stats */}
-                <Box sx={{ flex: 1 }}>
+                <Box sx={{ flex: 1, minWidth: 0, width: "100%" }}>
                   <Typography
                     variant="h5"
                     fontWeight="700"

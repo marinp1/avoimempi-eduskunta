@@ -37,9 +37,44 @@ export const Navigation: React.FC<{
     setOpen(newOpen);
   };
 
+  const handleMobileNavClick = (path: RouteName) => {
+    setActiveTab(path);
+    const search = window.location.search;
+    const newPath = `/${path}${search}`;
+    window.history.pushState({}, "", newPath);
+    setOpen(false);
+  };
+
   const DrawerList = (
-    <Box sx={{ width: 250 }} role="presentation" onClick={toggleDrawer(false)}>
-      <List>
+    <Box sx={{ width: 280 }} role="presentation">
+      <Box
+        sx={{
+          p: 2.5,
+          background: gradients.primary,
+        }}
+      >
+        <Typography
+          variant="h6"
+          sx={{
+            color: "white",
+            fontWeight: 600,
+            fontSize: "1.125rem",
+          }}
+        >
+          Avoimempi Eduskunta
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{
+            color: "rgba(255,255,255,0.8)",
+            display: "block",
+            mt: 0.5,
+          }}
+        >
+          Suomen eduskunnan avoin data
+        </Typography>
+      </Box>
+      <List sx={{ pt: 1 }}>
         {Object.entries(routes).map(([path, { icon: Icon, title }]) => {
           if (
             applicationMode === "production" &&
@@ -47,21 +82,45 @@ export const Navigation: React.FC<{
           ) {
             return null;
           }
+          const isActive = activeTab === path;
           return (
             <ListItem key={path} disablePadding>
               <ListItemButton
-                onClick={() => setActiveTab(path as RouteName)}
+                onClick={() => handleMobileNavClick(path as RouteName)}
                 sx={{
-                  color:
-                    activeTab === path
-                      ? theme.palette.primary.light
-                      : "inherit",
+                  py: 1.5,
+                  px: 2.5,
+                  color: isActive
+                    ? theme.palette.primary.main
+                    : "text.primary",
+                  bgcolor: isActive
+                    ? `${theme.palette.primary.main}0A`
+                    : "transparent",
+                  borderRight: isActive
+                    ? `3px solid ${theme.palette.primary.main}`
+                    : "3px solid transparent",
+                  "&:hover": {
+                    bgcolor: `${theme.palette.primary.main}0A`,
+                  },
                 }}
               >
-                <ListItemIcon>
+                <ListItemIcon
+                  sx={{
+                    color: isActive
+                      ? theme.palette.primary.main
+                      : "text.secondary",
+                    minWidth: 40,
+                  }}
+                >
                   <Icon />
                 </ListItemIcon>
-                <ListItemText primary={title} />
+                <ListItemText
+                  primary={title}
+                  primaryTypographyProps={{
+                    fontWeight: isActive ? 600 : 500,
+                    fontSize: "0.9375rem",
+                  }}
+                />
               </ListItemButton>
             </ListItem>
           );
@@ -72,7 +131,7 @@ export const Navigation: React.FC<{
 
   return (
     <AppBar
-      position="static"
+      position="sticky"
       elevation={0}
       sx={{
         borderRadius: 0,
@@ -80,8 +139,14 @@ export const Navigation: React.FC<{
         boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
       }}
     >
-      <Toolbar sx={{ py: spacing.md, px: spacing.lg }}>
-        <Box sx={{ flexGrow: 0, mr: spacing.xl }}>
+      <Toolbar
+        sx={{
+          py: { xs: 1.5, sm: spacing.md },
+          px: { xs: 2, sm: spacing.lg },
+          minHeight: { xs: 56, sm: 64 },
+        }}
+      >
+        <Box sx={{ flexGrow: 0, mr: { xs: 0, lg: spacing.xl } }}>
           <Typography
             variant="h5"
             component="h1"
@@ -89,7 +154,7 @@ export const Navigation: React.FC<{
               color: "white",
               fontWeight: 600,
               letterSpacing: "0.01em",
-              fontSize: { xs: "1.125rem", sm: "1.375rem" },
+              fontSize: { xs: "1rem", sm: "1.375rem" },
               whiteSpace: "nowrap",
             }}
           >
@@ -99,10 +164,11 @@ export const Navigation: React.FC<{
             variant="body2"
             sx={{
               color: "rgba(255,255,255,0.9)",
-              fontSize: "0.8125rem",
+              fontSize: { xs: "0.6875rem", sm: "0.8125rem" },
               fontWeight: 400,
               letterSpacing: "0.02em",
               mt: 0.25,
+              display: { xs: "none", sm: "block" },
             }}
           >
             Suomen eduskunnan avoin data
@@ -116,8 +182,15 @@ export const Navigation: React.FC<{
             display: { xs: "flex", lg: "none" },
           }}
         >
-          <IconButton aria-label="menu" onClick={toggleDrawer(true)}>
-            <MenuIcon></MenuIcon>
+          <IconButton
+            aria-label="Avaa valikko"
+            onClick={toggleDrawer(true)}
+            sx={{
+              color: "white",
+              p: 1,
+            }}
+          >
+            <MenuIcon />
           </IconButton>
           <Drawer anchor="right" open={open} onClose={toggleDrawer(false)}>
             {DrawerList}
