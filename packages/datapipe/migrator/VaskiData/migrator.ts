@@ -2,7 +2,7 @@ import type { Database } from "bun:sqlite";
 import path from "node:path";
 
 import { createBatchingInserter } from "../utils";
-import { extractDocument, extractRelationships, extractSubjects } from "./extractors";
+import { assignExcelIds, extractDocument, extractRelationships, extractSpeeches, extractSubjects } from "./extractors";
 import { readVaskiFiles } from "./reader";
 
 const TARGET_DOCUMENT_TYPES = new Set([
@@ -13,6 +13,10 @@ const TARGET_DOCUMENT_TYPES = new Set([
   "Valiokunnan lausunto",
   "Lakialoite",
   "Talousarvioaloite",
+]);
+
+const SPEECH_DOCUMENT_TYPES = new Set([
+  "Pöytäkirjan asiakohta",
 ]);
 
 /**
@@ -53,8 +57,29 @@ export async function migrateVaskiData(db: Database) {
 
   batcher.flushAll();
 
-  console.log(`  Vaski migration complete:`);
+  console.log(`  Vaski document migration complete:`);
   console.log(`    Documents: ${docCount}`);
   console.log(`    Subjects: ${subjectCount}`);
   console.log(`    Relationships: ${relationshipCount}`);
+
+  // Second pass: extract speeches from Pöytäkirjan asiakohta entries
+  console.log(`\n  Extracting speeches from vaski Pöytäkirjan asiakohta entries...`);
+
+  const speechBatcher = createBatchingInserter(db, 500);
+  const excelIdCounts = new Map<string, number>();
+  let speechCount = 0;
+
+  for await (const entry of readVaskiFiles(baseDir, SPEECH_DOCUMENT_TYPES)) {
+    const rawSpeeches = extractSpeeches(entry);
+    if (rawSpeeches.length === 0) continue;
+
+    const speeches = assignExcelIds(rawSpeeches, excelIdCounts);
+    speechBatcher.insertRows("ExcelSpeech", speeches);
+    speechCount += speeches.length;
+  }
+
+  speechBatcher.flushAll();
+
+  console.log(`  Vaski speech migration complete:`);
+  console.log(`    Speeches: ${speechCount}`);
 }

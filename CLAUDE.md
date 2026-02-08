@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Avoimempi Eduskunta (More Open Parliament) is a data aggregation and analysis platform for Finnish Parliament (Eduskunta) data. The project fetches, parses, and imports data from the Eduskunta Open API into a normalized SQLite database, then serves it through a React-based web application.
 
+## Issues
+
+Issues are tracked locally in .issues folder.
+
 ## Technology Stack
 
 - **Runtime**: Bun v1.2.2 (required)

@@ -378,6 +378,3 @@ export async function scrapeTables(
     }
   }
 }
-
-// Re-export Excel speeches scraper for convenience
-export { scrapeExcelSpeeches } from "./excel-speeches-scraper";
