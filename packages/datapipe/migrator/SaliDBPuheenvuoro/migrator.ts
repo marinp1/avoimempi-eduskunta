@@ -17,7 +17,6 @@ export default (db: Database) => {
     const baseExcelKey = [
       String(ordinal).substring(0, 8),
       dataToImport.henkilonumero,
-      String(ordinalNumber),
     ]
       .map((s) => s.toLowerCase().replace(/[^0-9a-z]/g, ""))
       .join("_");

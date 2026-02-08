@@ -163,14 +163,18 @@ export function flushVotes() {
   const excelIdCounts = new Map<string, number>();
   let speechCount = 0;
 
+  // Collect all speeches first, then sort chronologically so dedup counters
+  // match the chronological ordering used by SaliDBPuheenvuoro
+  const allRawSpeeches: any[] = [];
   for (const entry of speechEntries) {
     const rawSpeeches = extractSpeeches(entry);
-    if (rawSpeeches.length === 0) continue;
-
-    const speeches = assignExcelIds(rawSpeeches, excelIdCounts);
-    speechBatcher.insertRows("ExcelSpeech", speeches);
-    speechCount += speeches.length;
+    allRawSpeeches.push(...rawSpeeches);
   }
+  allRawSpeeches.sort((a, b) => (a._startTime ?? "").localeCompare(b._startTime ?? ""));
+
+  const speeches = assignExcelIds(allRawSpeeches, excelIdCounts);
+  speechBatcher.insertRows("ExcelSpeech", speeches);
+  speechCount = speeches.length;
 
   speechBatcher.flushAll();
 
