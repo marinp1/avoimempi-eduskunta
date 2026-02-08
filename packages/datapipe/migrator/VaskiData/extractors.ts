@@ -206,3 +206,118 @@ export function extractRelationships(
 
   return relationships;
 }
+
+/**
+ * Generate an excel_id matching the format used by SaliDBPuheenvuoro and ExcelSpeeches migrators.
+ * Format: YYYYMMDD_personId_ordinal (with _2, _3 suffixes handled externally)
+ */
+function generateExcelId(startTime: string, personId: string, ordinal: string): string {
+  const timeMatch = startTime.match(/^(\d{4})-(\d{2})-(\d{2})T/);
+  const yyyymmdd = timeMatch ? `${timeMatch[1]}${timeMatch[2]}${timeMatch[3]}` : "00000000";
+  return [yyyymmdd, personId, ordinal]
+    .map((s) => s.toLowerCase().replace(/[^0-9a-z]/g, ""))
+    .join("_");
+}
+
+/**
+ * Extract speeches from a Pöytäkirjan asiakohta vaski entry.
+ *
+ * Speeches are nested inside:
+ *   RakenneAsiakirja.PoytakirjaAsiakohta.Asiakohta.KeskusteluToimenpide.PuheenvuoroToimenpide[]
+ *
+ * Each PuheenvuoroToimenpide contains speaker info, timestamps, and full speech text.
+ */
+export function extractSpeeches(entry: VaskiEntry): Omit<DatabaseTables.ExcelSpeech, "excel_id">[] {
+  const pka = dig(entry, "contents", "Siirto", "SiirtoAsiakirja", "RakenneAsiakirja", "PoytakirjaAsiakohta");
+  if (!pka) return [];
+
+  const speeches: Omit<DatabaseTables.ExcelSpeech, "excel_id">[] = [];
+
+  // Asiakohta can be a single object or array
+  const asiakohdat = pka.Asiakohta;
+  if (!asiakohdat) return [];
+  const items = Array.isArray(asiakohdat) ? asiakohdat : [asiakohdat];
+
+  for (const asiakohta of items) {
+    // KeskusteluToimenpide can be at top level or nested under Toimenpide
+    const keskustelu = asiakohta?.KeskusteluToimenpide;
+    if (!keskustelu) continue;
+
+    const keskustelut = Array.isArray(keskustelu) ? keskustelu : [keskustelu];
+
+    for (const kesk of keskustelut) {
+      const pvt = kesk?.PuheenvuoroToimenpide;
+      if (!pvt) continue;
+
+      const puheenvuorot = Array.isArray(pvt) ? pvt : [pvt];
+
+      for (const pv of puheenvuorot) {
+        const henkilo = pv?.Toimija?.Henkilo;
+        if (!henkilo) continue;
+
+        const puheenvuoroOsa = pv?.PuheenvuoroOsa;
+        const kohtaSisalto = puheenvuoroOsa?.KohtaSisalto;
+        if (!kohtaSisalto) continue;
+
+        const personId = strOrNull(henkilo["@_muuTunnus"]);
+        if (!personId) continue;
+
+        // Timestamps and ordinal are on PuheenvuoroOsa, with fallback to the outer element
+        const startTime = strOrNull(puheenvuoroOsa?.["@_puheenvuoroAloitusHetki"]) ??
+                          strOrNull(pv["@_puheenvuoroAloitusHetki"]);
+        const endTime = strOrNull(puheenvuoroOsa?.["@_puheenvuoroLopetusHetki"]) ??
+                        strOrNull(pv["@_puheenvuoroLopetusHetki"]);
+        const ordinal = strOrNull(puheenvuoroOsa?.["@_puheenvuoroJNro"]) ?? "0";
+
+        const content = flattenKappaleKooste(kohtaSisalto.KappaleKooste);
+        if (!content) continue;
+
+        speeches.push({
+          processing_phase: null,
+          document: null,
+          ordinal: parseInt(ordinal, 10) || 0,
+          position: strOrNull(henkilo.AsemaTeksti),
+          first_name: strOrNull(henkilo.EtuNimi),
+          last_name: strOrNull(henkilo.SukuNimi),
+          party: strOrNull(henkilo.LisatietoTeksti),
+          speech_type: strOrNull(pv.TarkenneTeksti),
+          start_time: startTime,
+          end_time: endTime,
+          content,
+          minutes_url: null,
+          source_file: "vaski",
+          _personId: personId,
+          _startTime: startTime,
+          _ordinal: ordinal,
+        } as any);
+      }
+    }
+  }
+
+  return speeches;
+}
+
+/**
+ * Assign excel_id values to extracted speeches, handling duplicates with suffixes.
+ */
+export function assignExcelIds(
+  speeches: any[],
+  excelIdCounts: Map<string, number>,
+): DatabaseTables.ExcelSpeech[] {
+  return speeches.map((speech) => {
+    const baseId = generateExcelId(
+      speech._startTime ?? "",
+      speech._personId ?? "0",
+      speech._ordinal ?? "0",
+    );
+
+    const currentCount = excelIdCounts.get(baseId) || 0;
+    const newCount = currentCount + 1;
+    excelIdCounts.set(baseId, newCount);
+    const finalId = newCount === 1 ? baseId : `${baseId}_${newCount}`;
+
+    // Remove internal fields and add excel_id
+    const { _personId, _startTime, _ordinal, ...row } = speech;
+    return { ...row, excel_id: finalId } as DatabaseTables.ExcelSpeech;
+  });
+}

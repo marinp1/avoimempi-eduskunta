@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-import { scrapeExcelSpeeches } from "./excel-speeches-scraper";
 import { type ScrapeMode, scrapeTable } from "./scraper";
 
 async function main() {
@@ -19,17 +18,6 @@ async function main() {
     await showStatus();
     return;
   }
-
-  // Handle ExcelSpeeches separately
-  if (args[0] === "ExcelSpeeches") {
-    await scrapeExcelSpeeches({
-      onProgress: (_progress) => {
-        // Progress is already logged in scrapeExcelSpeeches
-      },
-    });
-    return;
-  }
-
   // Parse arguments
   const tableName = args[0];
   let mode: ScrapeMode = { type: "auto-resume" };
@@ -191,15 +179,12 @@ Common Tables:
   SaliDBAanestysEdustaja
   SaliDBIstunto
   SaliDBKohta
-  ExcelSpeeches            (Special: reads from local Excel files)
 
 Notes:
   - Auto-resume is the default behavior
   - Use --from to re-scrape from a specific point
   - Use --page to scrape/re-scrape a single page (useful for debugging)
   - Each page contains ~100 rows from the API
-  - ExcelSpeeches is special: it reads .xlsx files from data/raw/ExcelSpeeches/
-    and converts them to parsed format (no API fetching)
 
 For more information, see: shared/storage/README.md
 `);
