@@ -5,7 +5,6 @@ import type { ServerWebSocket } from "bun";
 import { getMigrations, migrate } from "bun-sqlite-migrations";
 import { TableName } from "#constants/index";
 import { clearStatementCache } from "../datapipe/migrator/utils";
-import { migrateVaskiData } from "../datapipe/migrator/VaskiData/migrator";
 import { getDatabasePath } from "../shared/database";
 import { getStorage, StorageKeyBuilder } from "../shared/storage";
 
@@ -32,6 +31,7 @@ const IMPORT_ORDER: Partial<Record<string, number>> = {
   SaliDBAanestys: 20,
   SaliDBKohtaAanestys: 21,
   SaliDBAanestysEdustaja: 30,
+  VaskiData: 40,
 };
 
 /**
@@ -214,7 +214,6 @@ export class MigratorController {
       const startTime = Date.now();
 
       for (const tableName of tablesToImport) {
-        if (tableName === "VaskiData") continue;
         if (this.shouldStop) {
           throw new Error("Migration stopped by user");
         }
@@ -338,31 +337,6 @@ export class MigratorController {
             totalTables: tablesToImport.length,
           },
         });
-      }
-
-      // Import VaskiData from parsed JSON files on disk
-      if (!this.shouldStop) {
-        this.currentTable = "VaskiData";
-        console.log("\n📊 Importing VaskiData (from vaski-data/ folder)...");
-        this.sendMessage({
-          type: "progress",
-          data: {
-            message: "Importing VaskiData...",
-            currentTable: "VaskiData",
-            tablesCompleted,
-            totalTables: tablesToImport.length + 1,
-          },
-        });
-
-        targetDatabase.exec("BEGIN TRANSACTION;");
-        try {
-          await migrateVaskiData(targetDatabase);
-          targetDatabase.exec("COMMIT;");
-          console.log("✅ VaskiData import complete");
-        } catch (error) {
-          targetDatabase.exec("ROLLBACK;");
-          throw error;
-        }
       }
 
       // Update database timestamp
