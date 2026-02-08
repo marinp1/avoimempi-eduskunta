@@ -208,13 +208,13 @@ export function extractRelationships(
 }
 
 /**
- * Generate an excel_id matching the format used by SaliDBPuheenvuoro and ExcelSpeeches migrators.
- * Format: YYYYMMDD_personId_ordinal (with _2, _3 suffixes handled externally)
+ * Generate an excel_id matching the format used by SaliDBPuheenvuoro migrator.
+ * Format: YYYYMMDD_personId (with _2, _3 suffixes handled externally for dedup)
  */
-function generateExcelId(startTime: string, personId: string, ordinal: string): string {
+function generateExcelId(startTime: string, personId: string): string {
   const timeMatch = startTime.match(/^(\d{4})-(\d{2})-(\d{2})T/);
   const yyyymmdd = timeMatch ? `${timeMatch[1]}${timeMatch[2]}${timeMatch[3]}` : "00000000";
-  return [yyyymmdd, personId, ordinal]
+  return [yyyymmdd, personId]
     .map((s) => s.toLowerCase().replace(/[^0-9a-z]/g, ""))
     .join("_");
 }
@@ -308,7 +308,6 @@ export function assignExcelIds(
     const baseId = generateExcelId(
       speech._startTime ?? "",
       speech._personId ?? "0",
-      speech._ordinal ?? "0",
     );
 
     const currentCount = excelIdCounts.get(baseId) || 0;

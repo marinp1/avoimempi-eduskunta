@@ -21,9 +21,11 @@ async function main() {
 
   // Parse a single table
   const tableName = args[0];
+  const force = args.includes("--force");
 
   await parseTable({
     tableName,
+    force,
     onProgress: (_progress) => {
       // Progress is already logged in parseTable
     },

@@ -53,7 +53,7 @@ export class ParserController {
     }
   }
 
-  async startParsing(tableName: string) {
+  async startParsing(tableName: string, force = false) {
     if (this.isRunning) {
       throw new Error("Parser is already running");
     }
@@ -75,6 +75,7 @@ export class ParserController {
         tableName,
         sourceStage: "raw",
         targetStage: "parsed",
+        force,
         onProgress: (progress) => {
           // Check if we should stop
           if (this.shouldStop) {

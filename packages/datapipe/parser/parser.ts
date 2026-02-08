@@ -72,6 +72,7 @@ export interface ParseOptions {
   tableName: string;
   sourceStage?: DataStage;
   targetStage?: DataStage;
+  force?: boolean;
   onProgress?: (progress: {
     page: number;
     rowsParsed: number;
@@ -88,6 +89,7 @@ export async function parseTable(options: ParseOptions): Promise<void> {
     tableName,
     sourceStage = "raw",
     targetStage = "parsed",
+    force = false,
     onProgress,
   } = options;
 
@@ -112,49 +114,57 @@ export async function parseTable(options: ParseOptions): Promise<void> {
 
   console.log(`📋 Found ${listResult.keys.length} pages to parse`);
 
-  // Check which pages are already parsed
-  const targetPrefix = StorageKeyBuilder.listPrefixForTable(
-    targetStage,
-    tableName,
-  );
-  const targetListResult = await storage.list({
-    prefix: targetPrefix,
-    maxKeys: 100000,
-  });
+  let pagesToParse: typeof listResult.keys;
+  let alreadyParsedPages = new Set<number>();
 
-  const alreadyParsedPages = new Set(
-    targetListResult.keys
-      .map((key) => StorageKeyBuilder.parseKey(key.key))
-      .filter((ref) => ref !== null)
-      .map((ref) => ref?.page),
-  );
-
-  // Always re-parse the last page in case it was incomplete
-  const lastParsedPage =
-    alreadyParsedPages.size > 0 ? Math.max(...alreadyParsedPages) : 0;
-  if (lastParsedPage > 0) {
-    alreadyParsedPages.delete(lastParsedPage);
-  }
-
-  const pagesToParse = listResult.keys.filter((key) => {
-    const pageRef = StorageKeyBuilder.parseKey(key.key);
-    return pageRef && !alreadyParsedPages.has(pageRef.page);
-  });
-
-  if (alreadyParsedPages.size > 0) {
-    console.log(
-      `✅ Already parsed: ${alreadyParsedPages.size} pages (complete)`,
+  if (force) {
+    console.log(`🔄 Force mode: re-parsing all ${listResult.keys.length} pages`);
+    pagesToParse = listResult.keys;
+  } else {
+    // Check which pages are already parsed
+    const targetPrefix = StorageKeyBuilder.listPrefixForTable(
+      targetStage,
+      tableName,
     );
-    console.log(
-      `🔄 Re-parsing last page and continuing: ${pagesToParse.length} pages remaining`,
-    );
-  } else if (pagesToParse.length === listResult.keys.length) {
-    console.log(`🚀 Starting fresh: ${pagesToParse.length} pages to parse`);
-  }
+    const targetListResult = await storage.list({
+      prefix: targetPrefix,
+      maxKeys: 100000,
+    });
 
-  if (pagesToParse.length === 0) {
-    console.log(`✅ All pages already parsed for ${tableName}`);
-    return;
+    alreadyParsedPages = new Set(
+      targetListResult.keys
+        .map((key) => StorageKeyBuilder.parseKey(key.key))
+        .filter((ref) => ref !== null)
+        .map((ref) => ref?.page),
+    );
+
+    // Always re-parse the last page in case it was incomplete
+    const lastParsedPage =
+      alreadyParsedPages.size > 0 ? Math.max(...alreadyParsedPages) : 0;
+    if (lastParsedPage > 0) {
+      alreadyParsedPages.delete(lastParsedPage);
+    }
+
+    pagesToParse = listResult.keys.filter((key) => {
+      const pageRef = StorageKeyBuilder.parseKey(key.key);
+      return pageRef && !alreadyParsedPages.has(pageRef.page);
+    });
+
+    if (alreadyParsedPages.size > 0) {
+      console.log(
+        `✅ Already parsed: ${alreadyParsedPages.size} pages (complete)`,
+      );
+      console.log(
+        `🔄 Re-parsing last page and continuing: ${pagesToParse.length} pages remaining`,
+      );
+    } else if (pagesToParse.length === listResult.keys.length) {
+      console.log(`🚀 Starting fresh: ${pagesToParse.length} pages to parse`);
+    }
+
+    if (pagesToParse.length === 0) {
+      console.log(`✅ All pages already parsed for ${tableName}`);
+      return;
+    }
   }
 
   console.log();
