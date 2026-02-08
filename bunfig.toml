@@ -1,2 +1,4 @@
 [loader]
 ".sql" = "text"
+[install]
+exact = true
