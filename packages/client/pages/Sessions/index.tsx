@@ -165,12 +165,8 @@ export default () => {
               key={section.id}
               sx={{
                 borderRadius: 1,
-                background: themedColors.isDark
-                  ? "rgba(95, 163, 227, 0.1)"
-                  : "rgba(102, 126, 234, 0.05)",
-                border: themedColors.isDark
-                  ? "1px solid rgba(95, 163, 227, 0.2)"
-                  : "1px solid rgba(102, 126, 234, 0.1)",
+                background: "rgba(102, 126, 234, 0.05)",
+                border: "1px solid rgba(102, 126, 234, 0.1)",
                 overflow: "hidden",
               }}
             >
@@ -248,9 +244,7 @@ export default () => {
                   sx={{
                     p: { xs: 1.5, sm: spacing.sm },
                     pt: 0,
-                    borderTop: themedColors.isDark
-                      ? "1px solid rgba(95, 163, 227, 0.2)"
-                      : "1px solid rgba(102, 126, 234, 0.1)",
+                    borderTop: "1px solid rgba(102, 126, 234, 0.1)",
                   }}
                 >
                   {isLoadingSpeeches ? (
@@ -303,9 +297,7 @@ export default () => {
                               label={speech.ordinal_number || speech.ordinal}
                               size="small"
                               sx={{
-                                background: themedColors.isDark
-                                  ? "rgba(95, 163, 227, 0.3)"
-                                  : "rgba(102, 126, 234, 0.2)",
+                                background: "rgba(102, 126, 234, 0.2)",
                                 color: themedColors.primary,
                                 fontWeight: 600,
                                 fontSize: "0.65rem",
@@ -328,9 +320,7 @@ export default () => {
                                 label={speech.party_abbreviation}
                                 size="small"
                                 sx={{
-                                  background: themedColors.isDark
-                                    ? "rgba(95, 163, 227, 0.2)"
-                                    : "rgba(102, 126, 234, 0.1)",
+                                  background: "rgba(102, 126, 234, 0.1)",
                                   color: themedColors.primary,
                                   fontSize: "0.65rem",
                                   height: 18,
@@ -353,9 +343,7 @@ export default () => {
                               sx={{
                                 p: { xs: 1.5, sm: spacing.sm },
                                 borderRadius: 1,
-                                background: themedColors.isDark
-                                  ? "rgba(95, 163, 227, 0.08)"
-                                  : "rgba(102, 126, 234, 0.03)",
+                                background: "rgba(102, 126, 234, 0.03)",
                                 borderLeft: `3px solid ${themedColors.primary}`,
                               }}
                             >
@@ -405,7 +393,9 @@ export default () => {
               border: `1px solid ${themedColors.glassBorder}`,
             }}
           >
-            <CardContent sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}>
+            <CardContent
+              sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}
+            >
               <Box
                 sx={{
                   display: "flex",
@@ -415,7 +405,12 @@ export default () => {
                   mb: spacing.md,
                 }}
               >
-                <EventIcon sx={{ fontSize: { xs: 32, sm: 40 }, color: themedColors.primary }} />
+                <EventIcon
+                  sx={{
+                    fontSize: { xs: 32, sm: 40 },
+                    color: themedColors.primary,
+                  }}
+                />
                 <Typography
                   variant="h4"
                   component="h1"
@@ -487,7 +482,9 @@ export default () => {
                           gap: 1,
                           cursor: hasSections ? "pointer" : "default",
                         }}
-                        onClick={hasSections ? () => toggleRow(session.id) : undefined}
+                        onClick={
+                          hasSections ? () => toggleRow(session.id) : undefined
+                        }
                       >
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Box
@@ -517,9 +514,7 @@ export default () => {
                                 label={`${session.sections.length} kohtaa`}
                                 size="small"
                                 sx={{
-                                  background: themedColors.isDark
-                                    ? "rgba(95, 163, 227, 0.2)"
-                                    : "rgba(102, 126, 234, 0.1)",
+                                  background: "rgba(102, 126, 234, 0.1)",
                                   color: themedColors.primary,
                                   fontWeight: 500,
                                   fontSize: "0.65rem",
@@ -546,9 +541,7 @@ export default () => {
                                   label={session.agenda_state}
                                   size="small"
                                   sx={{
-                                    background: themedColors.isDark
-                                      ? "rgba(76, 175, 80, 0.25)"
-                                      : "rgba(76, 175, 80, 0.15)",
+                                    background: "rgba(76, 175, 80, 0.15)",
                                     color: themedColors.success,
                                     fontWeight: 500,
                                     fontSize: "0.65rem",
@@ -558,10 +551,7 @@ export default () => {
                               )}
                             </Box>
                           ) : (
-                            <Typography
-                              variant="body2"
-                              color="text.secondary"
-                            >
+                            <Typography variant="body2" color="text.secondary">
                               Ei päiväjärjestystä
                             </Typography>
                           )}
@@ -569,7 +559,11 @@ export default () => {
                         {hasSections && (
                           <IconButton
                             size="small"
-                            sx={{ color: themedColors.primary, flexShrink: 0, mt: -0.5 }}
+                            sx={{
+                              color: themedColors.primary,
+                              flexShrink: 0,
+                              mt: -0.5,
+                            }}
                           >
                             {isExpanded ? (
                               <KeyboardArrowUpIcon />
@@ -699,9 +693,7 @@ export default () => {
                                     label={`${session.sections.length} kohtaa`}
                                     size="small"
                                     sx={{
-                                      background: themedColors.isDark
-                                        ? "rgba(95, 163, 227, 0.2)"
-                                        : "rgba(102, 126, 234, 0.1)",
+                                      background: "rgba(102, 126, 234, 0.1)",
                                       color: themedColors.primary,
                                       fontWeight: 500,
                                       fontSize: "0.7rem",
@@ -730,9 +722,7 @@ export default () => {
                                         label={session.agenda_state}
                                         size="small"
                                         sx={{
-                                          background: themedColors.isDark
-                                            ? "rgba(76, 175, 80, 0.25)"
-                                            : "rgba(76, 175, 80, 0.15)",
+                                          background: "rgba(76, 175, 80, 0.15)",
                                           color: themedColors.success,
                                           fontWeight: 500,
                                           fontSize: "0.7rem",

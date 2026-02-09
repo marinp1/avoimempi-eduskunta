@@ -220,7 +220,9 @@ export default () => {
               border: `1px solid ${themedColors.glassBorder}`,
             }}
           >
-            <CardContent sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}>
+            <CardContent
+              sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}
+            >
               <Box
                 sx={{
                   display: "flex",
@@ -231,7 +233,10 @@ export default () => {
                 }}
               >
                 <CalendarTodayIcon
-                  sx={{ fontSize: { xs: 32, sm: 40 }, color: themedColors.primary }}
+                  sx={{
+                    fontSize: { xs: 32, sm: 40 },
+                    color: themedColors.primary,
+                  }}
                 />
                 <Typography
                   variant="h4"
@@ -389,7 +394,10 @@ export default () => {
                     }}
                   >
                     <EventIcon
-                      sx={{ fontSize: { xs: 24, sm: 32 }, color: themedColors.primary }}
+                      sx={{
+                        fontSize: { xs: 24, sm: 32 },
+                        color: themedColors.primary,
+                      }}
                     />
                     <Typography
                       variant="h5"
@@ -575,14 +583,10 @@ export default () => {
                             sx={{
                               p: spacing.md,
                               borderRadius: 1,
-                              background: themedColors.isDark
-                                ? "rgba(95, 163, 227, 0.08)"
-                                : "rgba(102, 126, 234, 0.03)",
+                              background: "rgba(102, 126, 234, 0.03)",
                               transition: "all 0.2s ease-in-out",
                               "&:hover": {
-                                background: themedColors.isDark
-                                  ? "rgba(95, 163, 227, 0.12)"
-                                  : "rgba(102, 126, 234, 0.06)",
+                                background: "rgba(102, 126, 234, 0.06)",
                                 boxShadow:
                                   "0 2px 4px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)",
                               },
@@ -632,9 +636,7 @@ export default () => {
                                     label={speech.party}
                                     size="small"
                                     sx={{
-                                      background: themedColors.isDark
-                                        ? "rgba(95, 163, 227, 0.3)"
-                                        : "rgba(102, 126, 234, 0.2)",
+                                      background: "rgba(102, 126, 234, 0.2)",
                                       color: themedColors.primary,
                                       fontWeight: 600,
                                       fontSize: "0.7rem",
@@ -679,9 +681,7 @@ export default () => {
                                   label={speech.speech_type}
                                   size="small"
                                   sx={{
-                                    background: themedColors.isDark
-                                      ? "rgba(76, 175, 80, 0.2)"
-                                      : "rgba(76, 175, 80, 0.15)",
+                                    background: "rgba(76, 175, 80, 0.15)",
                                     color: themedColors.success,
                                     fontWeight: 500,
                                     fontSize: "0.7rem",
@@ -694,9 +694,7 @@ export default () => {
                                   label={speech.position}
                                   size="small"
                                   sx={{
-                                    background: themedColors.isDark
-                                      ? "rgba(255, 152, 0, 0.2)"
-                                      : "rgba(255, 152, 0, 0.15)",
+                                    background: "rgba(255, 152, 0, 0.15)",
                                     color: themedColors.warning,
                                     fontWeight: 500,
                                     fontSize: "0.7rem",
@@ -774,7 +772,6 @@ export default () => {
           )}
         </>
       )}
-
     </Box>
   );
 };

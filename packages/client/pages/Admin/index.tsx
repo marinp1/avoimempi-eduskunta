@@ -26,7 +26,7 @@ import {
 } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import { colors, gradients } from "#client/theme";
-import { useTheme, useThemedColors } from "#client/theme/ThemeContext";
+import { useThemedColors } from "#client/theme/ThemeContext";
 import {
   AdminHeader,
   AdminOverview,
@@ -62,7 +62,6 @@ type ScrapingOverview = {
 
 export default () => {
   const themedColors = useThemedColors();
-  const { isDark } = useTheme();
   const [status, setStatus] = useState<TableStatus[]>([]);
   const [overview, setOverview] = useState<ScrapingOverview | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -757,9 +756,7 @@ export default () => {
                       <TableRow
                         sx={{
                           "&:hover": {
-                            bgcolor: isDark
-                              ? "rgba(102, 126, 234, 0.08)"
-                              : "rgba(0, 53, 128, 0.04)",
+                            bgcolor: "rgba(0, 53, 128, 0.04)",
                           },
                           transition: "background-color 0.2s",
                         }}
