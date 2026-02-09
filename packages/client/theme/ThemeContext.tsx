@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { colors, createLightTheme, gradients } from "./index";
 
 /**
- * Get colors for light theme
+ * Get colors for the current theme
  */
 export const useThemedColors = () => {
   return {
@@ -23,7 +23,7 @@ export const useThemedColors = () => {
     dataLabel: colors.dataLabel,
     dataBorder: colors.dataBorder,
 
-    // Glass morphism
+    // Glass morphism (deprecated)
     glassBackground: colors.glassBackground,
     glassBorder: colors.glassBorder,
 

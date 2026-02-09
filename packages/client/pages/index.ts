@@ -1,43 +1,61 @@
 import {
   AdminPanelSettings,
+  Assessment,
+  Article,
   Event,
+  Groups,
+  Home,
   HowToVote,
   Insights,
   People,
-  Assessment,
 } from "@mui/icons-material";
 import type { SvgIconTypeMap } from "@mui/material";
 import type { OverridableComponent } from "@mui/material/OverridableComponent";
 import React, { type LazyExoticComponent, type ReactNode } from "react";
 
 export const routes = {
-  sessions: {
-    title: "Sessions", // Translated via navigation.routes.sessions
-    icon: Event,
-    Component: React.lazy(() => import("./Sessions")),
+  "": {
+    title: "Etusivu",
+    icon: Home,
+    Component: React.lazy(() => import("./Home")),
   },
-  composition: {
-    title: "Composition", // Translated via navigation.routes.composition
+  edustajat: {
+    title: "Edustajat",
     icon: People,
     Component: React.lazy(() => import("./Composition")),
   },
-  votings: {
-    title: "Votings", // Translated via navigation.routes.votings
+  puolueet: {
+    title: "Puolueet",
+    icon: Groups,
+    Component: React.lazy(() => import("./Parties")),
+  },
+  istunnot: {
+    title: "Istunnot",
+    icon: Event,
+    Component: React.lazy(() => import("./Sessions")),
+  },
+  aanestykset: {
+    title: "Aanestykset",
     icon: HowToVote,
     Component: React.lazy(() => import("./Votings")),
   },
-  insights: {
-    title: "Insights", // Translated via navigation.routes.insights
+  asiakirjat: {
+    title: "Asiakirjat",
+    icon: Article,
+    Component: React.lazy(() => import("./Documents")),
+  },
+  analytiikka: {
+    title: "Analytiikka",
     icon: Insights,
     Component: React.lazy(() => import("./Insights")),
   },
-  status: {
-    title: "Status", // Translated via navigation.routes.status
+  tila: {
+    title: "Tila",
     icon: Assessment,
     Component: React.lazy(() => import("./Status")),
   },
   admin: {
-    title: "Admin", // Translated via navigation.routes.admin
+    title: "Yllapito",
     icon: AdminPanelSettings,
     Component: React.lazy(() => import("./Admin")),
   },

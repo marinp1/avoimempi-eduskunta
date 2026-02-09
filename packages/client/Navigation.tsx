@@ -1,4 +1,12 @@
-import { Menu as MenuIcon } from "@mui/icons-material";
+import {
+  Home,
+  HowToVote,
+  Event,
+  MoreHoriz,
+  People,
+  Menu as MenuIcon,
+  Close as CloseIcon,
+} from "@mui/icons-material";
 import {
   AppBar,
   Box,
@@ -18,108 +26,151 @@ import type React from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { type RouteName, routes } from "./pages";
-import theme, { gradients, spacing } from "./theme";
+import { colors, spacing } from "./theme";
 import { applicationMode } from "./utils";
+
+/** Routes to show in the main desktop navigation */
+const mainNavRoutes: RouteName[] = [
+  "",
+  "edustajat",
+  "puolueet",
+  "istunnot",
+  "aanestykset",
+  "asiakirjat",
+  "analytiikka",
+];
+
+/** Routes that are dev-only */
+const devRoutes: RouteName[] = ["tila", "admin"];
+
+/** Routes for mobile bottom tabs */
+const mobileTabRoutes: { key: RouteName; icon: React.ElementType }[] = [
+  { key: "", icon: Home },
+  { key: "edustajat", icon: People },
+  { key: "aanestykset", icon: HowToVote },
+  { key: "istunnot", icon: Event },
+];
 
 export const Navigation: React.FC<{
   activeTab: string;
   setActiveTab: (tab: RouteName) => void;
 }> = ({ activeTab, setActiveTab }) => {
   const { t } = useTranslation();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const handleChange = (_event: React.SyntheticEvent, newValue: RouteName) => {
-    setActiveTab(newValue);
-    const search = window.location.search;
-    const newPath = `/${newValue}${search}`;
-    window.history.pushState({}, "", newPath);
-  };
-
-  const [open, setOpen] = useState(false);
-
-  const toggleDrawer = (newOpen: boolean) => () => {
-    setOpen(newOpen);
-  };
-
-  const handleMobileNavClick = (path: RouteName) => {
+  const navigate = (path: RouteName) => {
     setActiveTab(path);
     const search = window.location.search;
-    const newPath = `/${path}${search}`;
+    const newPath = path === "" ? `/${search}` : `/${path}${search}`;
     window.history.pushState({}, "", newPath);
-    setOpen(false);
   };
 
-  const DrawerList = (
+  const handleDesktopTabChange = (
+    _event: React.SyntheticEvent,
+    newValue: RouteName,
+  ) => {
+    navigate(newValue);
+  };
+
+  const handleMobileTabChange = (
+    _event: React.SyntheticEvent,
+    newValue: RouteName,
+  ) => {
+    navigate(newValue);
+  };
+
+  const handleDrawerNavClick = (path: RouteName) => {
+    navigate(path);
+    setDrawerOpen(false);
+  };
+
+  const visibleRoutes =
+    applicationMode === "production"
+      ? mainNavRoutes
+      : [...mainNavRoutes, ...devRoutes];
+
+  const allDrawerRoutes =
+    applicationMode === "production"
+      ? Object.keys(routes).filter(
+          (k) => !devRoutes.includes(k as RouteName),
+        )
+      : Object.keys(routes);
+
+  const DrawerContent = (
     <Box sx={{ width: 280 }} role="presentation">
       <Box
         sx={{
           p: 2.5,
-          background: gradients.primary,
+          background: colors.primary,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
         }}
       >
-        <Typography
-          variant="h6"
-          sx={{
-            color: "white",
-            fontWeight: 600,
-            fontSize: "1.125rem",
-          }}
+        <Box>
+          <Typography
+            variant="h6"
+            sx={{
+              color: "white",
+              fontWeight: 600,
+              fontSize: "1.0625rem",
+            }}
+          >
+            {t("app.title")}
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "rgba(255,255,255,0.7)",
+              display: "block",
+              mt: 0.25,
+            }}
+          >
+            {t("app.subtitle")}
+          </Typography>
+        </Box>
+        <IconButton
+          onClick={() => setDrawerOpen(false)}
+          sx={{ color: "rgba(255,255,255,0.7)" }}
         >
-          {t("app.title")}
-        </Typography>
-        <Typography
-          variant="caption"
-          sx={{
-            color: "rgba(255,255,255,0.8)",
-            display: "block",
-            mt: 0.5,
-          }}
-        >
-          {t("app.subtitle")}
-        </Typography>
+          <CloseIcon fontSize="small" />
+        </IconButton>
       </Box>
-      <List sx={{ pt: 1 }}>
-        {Object.entries(routes).map(([path, { icon: Icon }]) => {
-          if (
-            applicationMode === "production" &&
-            (path as RouteName) === "admin"
-          ) {
-            return null;
-          }
+      <List sx={{ pt: 0.5 }}>
+        {allDrawerRoutes.map((path) => {
+          const route = routes[path as RouteName];
+          const Icon = route.icon;
           const isActive = activeTab === path;
           return (
             <ListItem key={path} disablePadding>
               <ListItemButton
-                onClick={() => handleMobileNavClick(path as RouteName)}
+                onClick={() => handleDrawerNavClick(path as RouteName)}
                 sx={{
-                  py: 1.5,
+                  py: 1.25,
                   px: 2.5,
-                  color: isActive ? theme.palette.primary.main : "text.primary",
-                  bgcolor: isActive
-                    ? `${theme.palette.primary.main}0A`
-                    : "transparent",
-                  borderRight: isActive
-                    ? `3px solid ${theme.palette.primary.main}`
+                  color: isActive ? colors.primary : colors.textPrimary,
+                  bgcolor: isActive ? `${colors.primary}08` : "transparent",
+                  borderLeft: isActive
+                    ? `3px solid ${colors.primary}`
                     : "3px solid transparent",
                   "&:hover": {
-                    bgcolor: `${theme.palette.primary.main}0A`,
+                    bgcolor: `${colors.primary}08`,
                   },
                 }}
               >
                 <ListItemIcon
                   sx={{
-                    color: isActive
-                      ? theme.palette.primary.main
-                      : "text.secondary",
-                    minWidth: 40,
+                    color: isActive ? colors.primary : colors.textSecondary,
+                    minWidth: 36,
                   }}
                 >
-                  <Icon />
+                  <Icon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText
                   primary={t(`navigation.routes.${path}`)}
                   primaryTypographyProps={{
-                    fontWeight: isActive ? 600 : 500,
-                    fontSize: "0.9375rem",
+                    fontWeight: isActive ? 600 : 400,
+                    fontSize: "0.875rem",
                   }}
                 />
               </ListItemButton>
@@ -131,127 +182,201 @@ export const Navigation: React.FC<{
   );
 
   return (
-    <AppBar
-      position="sticky"
-      elevation={0}
-      sx={{
-        borderRadius: 0,
-        background: gradients.primary,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
-      }}
-    >
-      <Toolbar
+    <>
+      {/* Desktop Header */}
+      <AppBar
+        position="sticky"
+        elevation={0}
         sx={{
-          py: { xs: 1.5, sm: spacing.md },
-          px: { xs: 2, sm: spacing.lg },
-          minHeight: { xs: 56, sm: 64 },
+          borderRadius: 0,
+          background: colors.primary,
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          display: { xs: "none", lg: "flex" },
         }}
       >
-        <Box sx={{ flexGrow: 0, mr: { xs: 0, lg: spacing.xl } }}>
+        <Toolbar
+          sx={{
+            py: 0,
+            px: { sm: spacing.lg },
+            minHeight: { sm: 56 },
+            justifyContent: "space-between",
+          }}
+        >
+          <Box sx={{ flexShrink: 0, mr: spacing.lg }}>
+            <Typography
+              variant="h6"
+              component="h1"
+              sx={{
+                color: "white",
+                fontWeight: 600,
+                fontSize: "1.0625rem",
+                letterSpacing: "-0.01em",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {t("app.title")}
+            </Typography>
+          </Box>
+
+          <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
+            <Tabs
+              value={activeTab}
+              onChange={handleDesktopTabChange}
+              sx={{
+                minHeight: 56,
+                "& .MuiTab-root": {
+                  fontWeight: 400,
+                  fontSize: "0.8125rem",
+                  py: 0,
+                  px: 2,
+                  minHeight: 56,
+                  transition: "all 0.15s ease-in-out",
+                  color: "rgba(255,255,255,0.7)",
+                  textTransform: "none",
+                  letterSpacing: "0",
+                  "&:hover": {
+                    color: "white",
+                  },
+                },
+                "& .Mui-selected": {
+                  color: "white !important",
+                  fontWeight: 500,
+                },
+                "& .MuiTabs-indicator": {
+                  height: 2,
+                  background: "white",
+                  borderRadius: "1px 1px 0 0",
+                },
+              }}
+            >
+              {visibleRoutes.map((key) => (
+                <Tab
+                  key={key}
+                  label={t(`navigation.routes.${key}`)}
+                  value={key}
+                />
+              ))}
+            </Tabs>
+          </Box>
+
+          <Box sx={{ flexShrink: 0, width: 100 }} />
+        </Toolbar>
+      </AppBar>
+
+      {/* Mobile Top Bar */}
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          borderRadius: 0,
+          background: colors.primary,
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          display: { xs: "flex", lg: "none" },
+        }}
+      >
+        <Toolbar
+          sx={{
+            py: 0,
+            px: 2,
+            minHeight: 48,
+            justifyContent: "space-between",
+          }}
+        >
           <Typography
-            variant="h5"
+            variant="h6"
             component="h1"
             sx={{
               color: "white",
               fontWeight: 600,
-              letterSpacing: "0.01em",
-              fontSize: { xs: "1rem", sm: "1.375rem" },
-              whiteSpace: "nowrap",
+              fontSize: "0.9375rem",
+              letterSpacing: "-0.01em",
             }}
           >
             {t("app.title")}
           </Typography>
-          <Typography
-            variant="body2"
-            sx={{
-              color: "rgba(255,255,255,0.9)",
-              fontSize: { xs: "0.6875rem", sm: "0.8125rem" },
-              fontWeight: 400,
-              letterSpacing: "0.02em",
-              mt: 0.25,
-              display: { xs: "none", sm: "block" },
-            }}
-          >
-            {t("app.subtitle")}
-          </Typography>
-        </Box>
-
-        <Box
-          sx={{
-            justifyContent: "end",
-            flexGrow: 1,
-            display: { xs: "flex", lg: "none" },
-          }}
-        >
           <IconButton
             aria-label={t("navigation.openMenu")}
-            onClick={toggleDrawer(true)}
-            sx={{
-              color: "white",
-              p: 1,
-            }}
+            onClick={() => setDrawerOpen(true)}
+            sx={{ color: "rgba(255,255,255,0.8)", p: 0.75 }}
           >
-            <MenuIcon />
+            <MenuIcon fontSize="small" />
           </IconButton>
-          <Drawer anchor="right" open={open} onClose={toggleDrawer(false)}>
-            {DrawerList}
-          </Drawer>
-        </Box>
+        </Toolbar>
+      </AppBar>
 
-        {/* Navigation Tabs in Header */}
-        <Box sx={{ flexGrow: 1, display: { xs: "none", lg: "flex" } }}>
-          <Tabs
-            value={activeTab}
-            onChange={handleChange}
-            sx={{
+      {/* Mobile Drawer */}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      >
+        {DrawerContent}
+      </Drawer>
+
+      {/* Mobile Bottom Tab Bar */}
+      <AppBar
+        position="fixed"
+        elevation={0}
+        sx={{
+          top: "auto",
+          bottom: 0,
+          borderRadius: 0,
+          background: colors.backgroundPaper,
+          borderTop: `1px solid ${colors.dataBorder}`,
+          display: { xs: "flex", lg: "none" },
+        }}
+      >
+        <Tabs
+          value={
+            mobileTabRoutes.some((r) => r.key === activeTab)
+              ? activeTab
+              : false
+          }
+          onChange={handleMobileTabChange}
+          variant="fullWidth"
+          sx={{
+            minHeight: 56,
+            "& .MuiTab-root": {
               minHeight: 56,
-              "& .MuiTab-root": {
+              py: 1,
+              px: 0,
+              fontSize: "0.6875rem",
+              fontWeight: 400,
+              color: colors.textTertiary,
+              textTransform: "none",
+              letterSpacing: "0",
+              "&.Mui-selected": {
+                color: colors.primary,
                 fontWeight: 500,
-                fontSize: "0.9375rem",
-                py: spacing.sm,
-                px: spacing.lg,
-                minHeight: 56,
-                transition: "all 0.2s ease-in-out",
-                color: "rgba(255,255,255,0.9)",
-                textTransform: "none",
-                "&:hover": {
-                  background: "rgba(255,255,255,0.12)",
-                  color: "white",
-                },
               },
-              "& .Mui-selected": {
-                color: "white !important",
-                fontWeight: 600,
-                background: "rgba(255,255,255,0.08)",
-              },
-              "& .MuiTabs-indicator": {
-                height: 4,
-                background: "white",
-                borderRadius: 0,
-              },
+            },
+            "& .MuiTabs-indicator": {
+              top: 0,
+              bottom: "auto",
+              height: 2,
+              background: colors.primary,
+            },
+          }}
+        >
+          {mobileTabRoutes.map(({ key, icon: Icon }) => (
+            <Tab
+              key={key}
+              icon={<Icon sx={{ fontSize: 22 }} />}
+              label={t(`navigation.routes.${key}`)}
+              value={key}
+            />
+          ))}
+          <Tab
+            icon={<MoreHoriz sx={{ fontSize: 22 }} />}
+            label={t("navigation.more")}
+            value="__more__"
+            onClick={(e) => {
+              e.preventDefault();
+              setDrawerOpen(true);
             }}
-          >
-            {Object.entries(routes).map(([key, { icon: Icon }]) => {
-              if (
-                applicationMode === "production" &&
-                (key as RouteName) === "admin"
-              ) {
-                // FIXME: Retain admin in prod
-                return;
-              }
-              return (
-                <Tab
-                  key={key}
-                  icon={<Icon sx={{ fontSize: 20 }} />}
-                  iconPosition="start"
-                  label={t(`navigation.routes.${key}`)}
-                  value={key}
-                />
-              );
-            })}
-          </Tabs>
-        </Box>
-      </Toolbar>
-    </AppBar>
+          />
+        </Tabs>
+      </AppBar>
+    </>
   );
 };

@@ -14,6 +14,13 @@ const server = Bun.serve<{
 }>({
   routes: {
     "/": homepage,
+    "/edustajat": homepage,
+    "/puolueet": homepage,
+    "/istunnot": homepage,
+    "/aanestykset": homepage,
+    "/asiakirjat": homepage,
+    "/analytiikka": homepage,
+    "/tila": homepage,
     "/composition": homepage,
     "/votings": homepage,
     "/sessions": homepage,
