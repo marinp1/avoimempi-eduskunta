@@ -21,6 +21,8 @@ export interface DataOverview {
 
 export class StatusController {
   private sanityCheckService: SanityCheckService;
+  private cachedOverview: DataOverview | null = null;
+  private cachedSanityChecks: SanityCheckResult | null = null;
 
   constructor(private db: DatabaseConnection) {
     this.sanityCheckService = new SanityCheckService(this.database);
@@ -31,11 +33,26 @@ export class StatusController {
     return (this.db as any)["db"] as import("bun:sqlite").Database;
   }
 
+  /** Clear cached results. Call after database rebuild. */
+  invalidateCache(): void {
+    this.cachedOverview = null;
+    this.cachedSanityChecks = null;
+    this.sanityCheckService = new SanityCheckService(this.database);
+  }
+
   async getSanityChecks(): Promise<SanityCheckResult> {
-    return this.sanityCheckService.runAllChecks();
+    if (!this.cachedSanityChecks) {
+      this.cachedSanityChecks =
+        await this.sanityCheckService.runAllChecks();
+    }
+    return this.cachedSanityChecks;
   }
 
   async getOverview(): Promise<DataOverview> {
+    if (this.cachedOverview) {
+      return this.cachedOverview;
+    }
+
     // Get row counts for all major tables
     const tables = [
       "Representative",
@@ -88,12 +105,14 @@ export class StatusController {
 
     const tablesWithData = tableStatuses.filter((t) => t.hasData).length;
 
-    return {
+    this.cachedOverview = {
       tables: tableStatuses,
       totalTables: tables.length,
       tablesWithData,
       lastUpdated: new Date().toISOString(),
     };
+
+    return this.cachedOverview;
   }
 
   async getTableDetails(tableName: string) {

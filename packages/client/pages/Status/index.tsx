@@ -14,6 +14,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
   Chip,
   Alert,
@@ -24,6 +25,7 @@ import {
   Error as ErrorIcon,
   Storage as StorageIcon,
   Assessment as AssessmentIcon,
+  OpenInNew as OpenInNewIcon,
 } from "@mui/icons-material";
 
 interface TableStatus {
@@ -39,6 +41,20 @@ interface DataOverview {
   lastUpdated: string;
 }
 
+interface AffectedRow {
+  id: number;
+  label: string;
+  sourceUrl: string;
+}
+
+interface KnownDataException {
+  id: string;
+  checkName: string;
+  description: string;
+  reason: string;
+  affectedRows: AffectedRow[];
+}
+
 interface SanityCheck {
   category: string;
   name: string;
@@ -46,12 +62,14 @@ interface SanityCheck {
   passed: boolean;
   details?: string;
   errorMessage?: string;
+  knownExceptions?: KnownDataException[];
 }
 
 interface SanityCheckResult {
   totalChecks: number;
   passedChecks: number;
   failedChecks: number;
+  knownExceptionCount: number;
   checks: SanityCheck[];
   lastRun: string;
 }
@@ -331,7 +349,7 @@ export default function Status() {
           </Typography>
 
           <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid size={{ xs: 12, sm: 4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Card>
                 <CardContent>
                   <Box display="flex" alignItems="center" mb={1}>
@@ -346,7 +364,7 @@ export default function Status() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Card>
                 <CardContent>
                   <Box display="flex" alignItems="center" mb={1}>
@@ -361,7 +379,7 @@ export default function Status() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid size={{ xs: 12, sm: 4 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Card>
                 <CardContent>
                   <Box display="flex" alignItems="center" mb={1}>
@@ -381,6 +399,28 @@ export default function Status() {
                 </CardContent>
               </Card>
             </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Card>
+                <CardContent>
+                  <Box display="flex" alignItems="center" mb={1}>
+                    <WarningIcon
+                      color={
+                        sanityChecks.knownExceptionCount === 0
+                          ? "disabled"
+                          : "warning"
+                      }
+                      sx={{ mr: 1 }}
+                    />
+                    <Typography variant="h6">
+                      {sanityChecks.knownExceptionCount}
+                    </Typography>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Tunnetut poikkeamat
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
           </Grid>
 
           {/* Group checks by category */}
@@ -392,6 +432,12 @@ export default function Status() {
               const failedCount = categoryChecks.filter(
                 (c) => !c.passed,
               ).length;
+              const exceptionCount = categoryChecks.filter(
+                (c) =>
+                  c.passed &&
+                  c.knownExceptions &&
+                  c.knownExceptions.length > 0,
+              ).length;
 
               return (
                 <Box key={category} sx={{ mb: 3 }}>
@@ -402,6 +448,13 @@ export default function Status() {
                         label={`${failedCount} epäonnistui`}
                         size="small"
                         color="error"
+                      />
+                    )}
+                    {exceptionCount > 0 && (
+                      <Chip
+                        label={`${exceptionCount} poikkeama`}
+                        size="small"
+                        color="warning"
                       />
                     )}
                   </Box>
@@ -416,49 +469,126 @@ export default function Status() {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {categoryChecks.map((check, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell>
-                              {check.passed ? (
-                                <CheckCircleIcon
-                                  color="success"
-                                  fontSize="small"
-                                />
-                              ) : (
-                                <ErrorIcon color="error" fontSize="small" />
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <Typography variant="body2" fontWeight="medium">
-                                {check.name}
-                              </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                {check.description}
-                              </Typography>
-                            </TableCell>
-                            <TableCell>
-                              {check.errorMessage ? (
-                                <Typography variant="body2" color="error">
-                                  Virhe: {check.errorMessage}
+                        {categoryChecks.map((check, idx) => {
+                          const hasExceptions =
+                            check.knownExceptions &&
+                            check.knownExceptions.length > 0;
+
+                          return (
+                            <TableRow key={idx}>
+                              <TableCell>
+                                {hasExceptions && check.passed ? (
+                                  <Tooltip title="Läpäisty tunnetuilla poikkeamilla">
+                                    <WarningIcon
+                                      color="warning"
+                                      fontSize="small"
+                                    />
+                                  </Tooltip>
+                                ) : check.passed ? (
+                                  <CheckCircleIcon
+                                    color="success"
+                                    fontSize="small"
+                                  />
+                                ) : (
+                                  <ErrorIcon color="error" fontSize="small" />
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="medium">
+                                  {check.name}
                                 </Typography>
-                              ) : check.details ? (
+                              </TableCell>
+                              <TableCell>
                                 <Typography
                                   variant="body2"
-                                  color={
-                                    check.passed ? "text.secondary" : "error"
-                                  }
+                                  color="text.secondary"
                                 >
-                                  {check.details}
+                                  {check.description}
                                 </Typography>
-                              ) : null}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                              </TableCell>
+                              <TableCell>
+                                {check.errorMessage ? (
+                                  <Typography variant="body2" color="error">
+                                    Virhe: {check.errorMessage}
+                                  </Typography>
+                                ) : (
+                                  <>
+                                    {check.details && (
+                                      <Typography
+                                        variant="body2"
+                                        color={
+                                          hasExceptions && check.passed
+                                            ? "warning.main"
+                                            : check.passed
+                                              ? "text.secondary"
+                                              : "error"
+                                        }
+                                      >
+                                        {check.details}
+                                      </Typography>
+                                    )}
+                                    {hasExceptions &&
+                                      check.knownExceptions!.map((exc) => (
+                                        <Box
+                                          key={exc.id}
+                                          sx={{
+                                            mt: 1,
+                                            p: 1,
+                                            bgcolor: "warning.50",
+                                            borderLeft: 3,
+                                            borderColor: "warning.main",
+                                            borderRadius: 1,
+                                          }}
+                                        >
+                                          <Typography
+                                            variant="caption"
+                                            fontWeight="bold"
+                                            display="block"
+                                          >
+                                            {exc.id}: {exc.description}
+                                          </Typography>
+                                          <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: 0.5 }}>
+                                            {exc.reason}
+                                          </Typography>
+                                          <Box
+                                            sx={{
+                                              maxHeight: 200,
+                                              overflowY: "auto",
+                                              mt: 0.5,
+                                            }}
+                                          >
+                                            {exc.affectedRows.map((row) => (
+                                              <Box
+                                                key={row.id}
+                                                sx={{
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                  gap: 0.5,
+                                                  py: 0.25,
+                                                }}
+                                              >
+                                                <Typography variant="caption">
+                                                  {row.label}
+                                                </Typography>
+                                                <a
+                                                  href={row.sourceUrl}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  style={{ display: "inline-flex", alignItems: "center" }}
+                                                >
+                                                  <OpenInNewIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+                                                </a>
+                                              </Box>
+                                            ))}
+                                          </Box>
+                                        </Box>
+                                      ))}
+                                  </>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </TableContainer>

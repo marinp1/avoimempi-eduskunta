@@ -122,4 +122,5 @@ Issue requirement "NEVER exceeds 199" is imprecise - means "typically 199, but 2
 
 ## See Also
 - `session-agenda-structure.md` - Full documentation of session/section/speech data structure
+- `sanity-checks.md` - Comprehensive data validation rules (40+ implemented, 20 recommended)
 - `vaski-schema.md` - Detailed schema design notes (to be created)
