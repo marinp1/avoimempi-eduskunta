@@ -187,9 +187,10 @@ const Home = () => {
       if (!sectionSpeeches[sectionId]) {
         setLoadingSpeeches((prev) => new Set(prev).add(sectionId));
         try {
-          const res = await fetch(`/api/sections/${sectionKey}/speeches`);
+          const res = await fetch(`/api/sections/${sectionKey}/speeches?limit=100`);
           if (res.ok) {
-            const speeches: Speech[] = await res.json();
+            const data = await res.json();
+            const speeches: Speech[] = data.speeches ?? data;
             setSectionSpeeches((prev) => ({ ...prev, [sectionId]: speeches }));
           }
         } finally {

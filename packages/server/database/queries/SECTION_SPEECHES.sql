@@ -28,3 +28,4 @@ LEFT JOIN
 WHERE
     sp.section_key = $sectionKey
 ORDER BY sp.ordinal ASC
+LIMIT $limit OFFSET $offset

@@ -176,14 +176,41 @@ export class DatabaseConnection {
     };
   }
 
-  public async fetchSectionSpeeches(params: { sectionKey: string }) {
+  public async fetchSectionSpeeches(params: {
+    sectionKey: string;
+    limit?: number;
+    offset?: number;
+  }) {
+    const limit = params.limit ?? 20;
+    const offset = params.offset ?? 0;
+
+    const countStmt = this.db.prepare<
+      { count: number },
+      { $sectionKey: string }
+    >(
+      queries.sql`SELECT COUNT(*) as count FROM Speech WHERE section_key = $sectionKey`,
+    );
+    const countResult = countStmt.get({ $sectionKey: params.sectionKey });
+    const total = countResult?.count || 0;
+    countStmt.finalize();
+
     const stmt = this.db.prepare<
       DatabaseTables.Speech,
-      { $sectionKey: string }
+      { $sectionKey: string; $limit: number; $offset: number }
     >(queries.sectionSpeeches);
-    const speeches = stmt.all({ $sectionKey: params.sectionKey });
+    const speeches = stmt.all({
+      $sectionKey: params.sectionKey,
+      $limit: limit,
+      $offset: offset,
+    });
     stmt.finalize();
-    return speeches;
+
+    return {
+      speeches,
+      total,
+      page: Math.floor(offset / limit) + 1,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   public async fetchSectionVotings(params: { sectionKey: string }) {
