@@ -1,10 +1,15 @@
+import RefreshIcon from "@mui/icons-material/Refresh";
 import StorageIcon from "@mui/icons-material/Storage";
-import { Box, CardContent, Fade, Typography } from "@mui/material";
+import { Box, CardContent, Fade, IconButton, Typography } from "@mui/material";
 import type React from "react";
 import { gradients, spacing } from "#client/theme";
 import { GlassCard } from "#client/theme/components";
 
-export const AdminHeader: React.FC = () => {
+type AdminHeaderProps = {
+  onRefresh?: () => void;
+};
+
+export const AdminHeader: React.FC<AdminHeaderProps> = ({ onRefresh }) => {
   return (
     <Fade in timeout={400}>
       <Box>
@@ -18,25 +23,47 @@ export const AdminHeader: React.FC = () => {
         >
           <CardContent sx={{ p: spacing.md }}>
             <Box
-              sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
             >
-              <StorageIcon sx={{ fontSize: 40, color: "#FFFFFF" }} />
-              <Box>
-                <Typography
-                  variant="h4"
-                  fontWeight="700"
-                  letterSpacing="-0.5px"
-                  sx={{ color: "#FFFFFF" }}
-                >
-                  Admin Dashboard
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{ opacity: 0.9, mt: 0.5, color: "#FFFFFF" }}
-                >
-                  Database scraping and parsing status
-                </Typography>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}
+              >
+                <StorageIcon sx={{ fontSize: 40, color: "#FFFFFF" }} />
+                <Box>
+                  <Typography
+                    variant="h4"
+                    fontWeight="700"
+                    letterSpacing="-0.5px"
+                    sx={{ color: "#FFFFFF" }}
+                  >
+                    Admin Dashboard
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    sx={{ opacity: 0.9, mt: 0.5, color: "#FFFFFF" }}
+                  >
+                    Database scraping and parsing status
+                  </Typography>
+                </Box>
               </Box>
+              {onRefresh && (
+                <IconButton
+                  onClick={onRefresh}
+                  sx={{
+                    color: "#FFFFFF",
+                    "&:hover": {
+                      bgcolor: "rgba(255, 255, 255, 0.15)",
+                    },
+                  }}
+                  title="Refresh status"
+                >
+                  <RefreshIcon />
+                </IconButton>
+              )}
             </Box>
           </CardContent>
         </GlassCard>

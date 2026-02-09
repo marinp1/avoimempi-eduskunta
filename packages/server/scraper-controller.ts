@@ -146,4 +146,147 @@ export class ScraperController {
       },
     });
   }
+
+  async startBulkScraping(
+    tableNames: string[],
+    mode: ScrapeMode = { type: "auto-resume" },
+  ) {
+    if (this.isRunning) {
+      throw new Error("Scraper is already running");
+    }
+
+    this.isRunning = true;
+    this.shouldStop = false;
+
+    const totalTables = tableNames.length;
+    let completedTables = 0;
+    let failedTables: Array<{ table: string; error: string }> = [];
+
+    this.sendMessage({
+      type: "status",
+      data: {
+        status: "started",
+        mode: "bulk",
+        totalTables,
+      },
+    });
+
+    try {
+      for (const tableName of tableNames) {
+        if (this.shouldStop) {
+          break;
+        }
+
+        this.currentTable = tableName;
+
+        this.sendMessage({
+          type: "progress",
+          data: {
+            mode: "bulk",
+            tableName,
+            currentTableIndex: completedTables + 1,
+            totalTables,
+            percentComplete: (completedTables / totalTables) * 100,
+          },
+        });
+
+        try {
+          await scrapeTable({
+            tableName,
+            mode,
+            stage: "raw",
+            onProgress: (progress) => {
+              if (this.shouldStop) {
+                throw new Error("Scraping stopped by user");
+              }
+
+              this.sendMessage({
+                type: "progress",
+                data: {
+                  mode: "bulk",
+                  tableName,
+                  currentTableIndex: completedTables + 1,
+                  totalTables,
+                  page: progress.page,
+                  rowCount: progress.rowCount,
+                  totalRows: progress.totalRows,
+                  tablePercentComplete: progress.percentComplete,
+                  overallPercentComplete:
+                    ((completedTables + progress.percentComplete / 100) /
+                      totalTables) *
+                    100,
+                },
+              });
+            },
+          });
+
+          completedTables++;
+
+          this.sendMessage({
+            type: "progress",
+            data: {
+              mode: "bulk",
+              tableName,
+              status: "completed",
+              currentTableIndex: completedTables,
+              totalTables,
+              percentComplete: (completedTables / totalTables) * 100,
+            },
+          });
+        } catch (error: any) {
+          failedTables.push({ table: tableName, error: error.message });
+
+          this.sendMessage({
+            type: "progress",
+            data: {
+              mode: "bulk",
+              tableName,
+              status: "failed",
+              error: error.message,
+              currentTableIndex: completedTables + 1,
+              totalTables,
+            },
+          });
+
+          completedTables++;
+        }
+      }
+
+      if (this.shouldStop) {
+        this.sendMessage({
+          type: "stopped",
+          data: {
+            message: "Bulk scraping stopped by user",
+            completedTables,
+            totalTables,
+            failedTables,
+          },
+        });
+      } else {
+        this.sendMessage({
+          type: "complete",
+          data: {
+            message: `Bulk scraping completed`,
+            completedTables,
+            totalTables,
+            failedTables,
+          },
+        });
+      }
+    } catch (error: any) {
+      this.sendMessage({
+        type: "error",
+        data: {
+          error: error.message,
+          completedTables,
+          totalTables,
+          failedTables,
+        },
+      });
+    } finally {
+      this.isRunning = false;
+      this.currentTable = null;
+      this.shouldStop = false;
+    }
+  }
 }

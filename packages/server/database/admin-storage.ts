@@ -52,7 +52,7 @@ export class AdminStorageService {
         rowCount: number;
       }[];
       this.apiTableCounts = Object.fromEntries(
-        data.map((v) => [v.tableName, Math.ceil(v.rowCount)]),
+        data.map((v) => [v.tableName, v.rowCount]),
       );
       return this.apiTableCounts;
     } catch (error) {
@@ -178,8 +178,14 @@ export class AdminStorageService {
       );
 
       const totalRowsInApi = apiCounts[tableName] || 0;
+
+      // If we've scraped more rows than the API reports, the API count is stale
+      // Use the actual scraped count as the total instead
+      const effectiveTotal = Math.max(totalRowsInApi, rawExactRows);
       const scrapeProgressPercent =
-        totalRowsInApi > 0 ? (rawExactRows / totalRowsInApi) * 100 : 0;
+        effectiveTotal > 0
+          ? Math.min((rawExactRows / effectiveTotal) * 100, 100)
+          : 0;
 
       status.push({
         table_name: tableName,
@@ -267,7 +273,9 @@ export class AdminStorageService {
       0,
     );
     const overallProgressPercent =
-      totalApiRows > 0 ? (totalScrapedRows / totalApiRows) * 100 : 0;
+      totalApiRows > 0
+        ? Math.min((totalScrapedRows / totalApiRows) * 100, 100)
+        : 0;
 
     // Parsed data statistics
     const tablesWithParsedData = status.filter((s) => s.has_parsed_data).length;

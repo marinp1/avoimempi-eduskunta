@@ -31,9 +31,7 @@ async function getTableCounts(): Promise<Record<string, number>> {
     tableName: string;
     rowCount: number;
   }[];
-  return Object.fromEntries(
-    data.map((v) => [v.tableName, Math.ceil(v.rowCount)]),
-  );
+  return Object.fromEntries(data.map((v) => [v.tableName, v.rowCount]));
 }
 
 /**
@@ -205,7 +203,7 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
 
     if (totalRowsScraped > 0) {
       const percentComplete =
-        totalRows > 0 ? (totalRowsScraped / totalRows) * 100 : 0;
+        totalRows > 0 ? Math.min((totalRowsScraped / totalRows) * 100, 100) : 0;
       console.log(
         `📊 Already scraped: ${totalRowsScraped.toLocaleString()} rows (${percentComplete.toFixed(1)}%)`,
       );
@@ -301,8 +299,14 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     await storage.put(key, data);
 
     totalRowsScraped += content.rowCount;
+
+    // Dynamically adjust total if we've exceeded the API's initial estimate
+    // This handles cases where the API count is stale
+    const adjustedTotal = Math.max(totalRows, totalRowsScraped);
     const percentComplete =
-      totalRows > 0 ? (totalRowsScraped / totalRows) * 100 : 0;
+      adjustedTotal > 0
+        ? Math.min((totalRowsScraped / adjustedTotal) * 100, 100)
+        : 0;
 
     console.log(
       `✅ Saved page ${currentPage} (${content.rowCount} rows) - ${percentComplete.toFixed(1)}% complete`,
