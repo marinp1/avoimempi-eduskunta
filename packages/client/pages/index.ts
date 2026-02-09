@@ -1,6 +1,5 @@
 import {
   AdminPanelSettings,
-  CalendarToday,
   Event,
   HowToVote,
   Insights,
@@ -12,11 +11,6 @@ import type { OverridableComponent } from "@mui/material/OverridableComponent";
 import React, { type LazyExoticComponent, type ReactNode } from "react";
 
 export const routes = {
-  agenda: {
-    title: "Agenda", // Translated via navigation.routes.agenda
-    icon: CalendarToday,
-    Component: React.lazy(() => import("./Agenda")),
-  },
   sessions: {
     title: "Sessions", // Translated via navigation.routes.sessions
     icon: Event,

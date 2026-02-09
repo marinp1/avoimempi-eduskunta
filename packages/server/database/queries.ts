@@ -9,6 +9,7 @@ export { default as partyParticipationByGovernment } from "./queries/PARTY_PARTI
 export { default as representativeDetails } from "./queries/REPRESENTATIVE_DETAILS.sql";
 export { default as representativeDistricts } from "./queries/REPRESENTATIVE_DISTRICTS.sql";
 export { default as sectionSpeeches } from "./queries/SECTION_SPEECHES.sql";
+export { default as sectionVotings } from "./queries/SECTION_VOTINGS.sql";
 export { default as sessionByDate } from "./queries/SESSION_BY_DATE.sql";
 export { default as sessionDates } from "./queries/SESSION_DATES.sql";
 export { default as sessionSections } from "./queries/SESSION_SECTIONS.sql";

@@ -186,6 +186,16 @@ export class DatabaseConnection {
     return speeches;
   }
 
+  public async fetchSectionVotings(params: { sectionKey: string }) {
+    const stmt = this.db.prepare<
+      DatabaseTables.Voting,
+      { $sectionKey: string }
+    >(queries.sectionVotings);
+    const votings = stmt.all({ $sectionKey: params.sectionKey });
+    stmt.finalize();
+    return votings;
+  }
+
   public async fetchVotingParticipation(params?: {
     startDate?: string;
     endDate?: string;
@@ -321,6 +331,39 @@ export class DatabaseConnection {
     const data = stmt.all({ $date: params.date });
     stmt.finalize();
     return data;
+  }
+
+  public async fetchSessionWithSectionsByDate(params: { date: string }) {
+    const sessions = await this.fetchSessionByDate(params);
+
+    const sectionsStmt = this.db.prepare<
+      DatabaseTables.Section,
+      { $sessionKey: string }
+    >(queries.sessionSections);
+
+    const votingCountStmt = this.db.prepare<
+      { voting_count: number },
+      { $sessionKey: string }
+    >(
+      queries.sql`SELECT COUNT(*) as voting_count FROM Voting v JOIN Section sec ON v.section_key = sec.key WHERE sec.session_key = $sessionKey`,
+    );
+
+    const sessionsWithSections = sessions.map((session) => {
+      const sections = sectionsStmt.all({ $sessionKey: session.key });
+      const votingCountResult = votingCountStmt.get({
+        $sessionKey: session.key,
+      });
+      return {
+        ...session,
+        sections,
+        section_count: sections.length,
+        voting_count: votingCountResult?.voting_count || 0,
+      };
+    });
+
+    sectionsStmt.finalize();
+    votingCountStmt.finalize();
+    return sessionsWithSections;
   }
 
   public async fetchSpeechesByDate(params: { date: string }) {

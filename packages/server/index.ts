@@ -17,7 +17,6 @@ const server = Bun.serve<{
     "/composition": homepage,
     "/votings": homepage,
     "/sessions": homepage,
-    "/days": homepage,
     "/insights": homepage,
     "/status": homepage,
     "/api/health": new Response("OK"),
@@ -165,6 +164,17 @@ const server = Bun.serve<{
       },
     },
 
+    "/api/sections/:sectionKey/votings": {
+      GET: async (req: BunRequest<"/api/sections/:sectionKey/votings">) => {
+        const votings = await db.fetchSectionVotings({
+          sectionKey: req.params.sectionKey,
+        });
+        return new Response(JSON.stringify(votings), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
     "/api/insights/participation": {
       GET: async (req: Request) => {
         const { searchParams } = new URL(req.url);
@@ -239,6 +249,17 @@ const server = Bun.serve<{
     "/api/day/:date/session": {
       GET: async (req: BunRequest<"/api/day/:date/session">) => {
         const sessions = await db.fetchSessionByDate({
+          date: req.params.date,
+        });
+        return new Response(JSON.stringify(sessions), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
+    "/api/day/:date/sessions": {
+      GET: async (req: BunRequest<"/api/day/:date/sessions">) => {
+        const sessions = await db.fetchSessionWithSectionsByDate({
           date: req.params.date,
         });
         return new Response(JSON.stringify(sessions), {
