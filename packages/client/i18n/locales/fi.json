@@ -1,0 +1,260 @@
+{
+  "app": {
+    "title": "Avoimempi Eduskunta",
+    "subtitle": "Suomen eduskunnan avoin data",
+    "loading": "Ladataan...",
+    "disclaimer": {
+      "source": "Tietolähde: Eduskunnan avoin data (avoindata.eduskunta.fi)",
+      "unofficial": "Tämä on epävirallinen palvelu eikä liity eduskuntaan tai valtionhallintoon. Tiedot voivat olla puutteellisia tai viiveellisiä."
+    }
+  },
+  "navigation": {
+    "openMenu": "Avaa valikko",
+    "routes": {
+      "agenda": "Päivät",
+      "sessions": "Istunnot",
+      "composition": "Kokoonpano",
+      "votings": "Äänestykset",
+      "insights": "Analytiikka",
+      "admin": "Ylläpito"
+    }
+  },
+  "common": {
+    "date": "Päivämäärä",
+    "selectDate": "Valitse päivämäärä",
+    "start": "Aloita",
+    "stop": "Pysäytä",
+    "cancel": "Peruuta",
+    "configure": "Määritä",
+    "refresh": "Päivitä",
+    "select": "Valitse",
+    "selectAll": "Valitse kaikki",
+    "deselectAll": "Poista valinnat",
+    "name": "Nimi",
+    "party": "Puolue",
+    "status": "Tila",
+    "total": "Yhteensä",
+    "average": "Keskiarvo",
+    "highest": "Korkein",
+    "lowest": "Matalin",
+    "none": "-",
+    "yes": "Jaa",
+    "no": "Ei",
+    "empty": "Tyhjää",
+    "absent": "Poissa",
+    "share": "Jaa"
+  },
+  "errors": {
+    "loadFailed": "Tietojen lataaminen epäonnistui.",
+    "loadMembersFailed": "Jäsenten lataaminen epäonnistui.",
+    "loadSessionFailed": "Istunnon lataaminen epäonnistui.",
+    "loadAdminFailed": "Ylläpitotietojen lataaminen epäonnistui.",
+    "httpError": "HTTP-virhe",
+    "unknownError": "Tuntematon virhe",
+    "fetchParticipationFailed": "Osallistumistietojen haku epäonnistui",
+    "fetchPartyParticipationFailed": "Puolueiden osallistumistietojen haku epäonnistui"
+  },
+  "composition": {
+    "title": "Eduskunnan kokoonpano",
+    "subtitle": "Selaa kansanedustajia ja heidän tietojaan",
+    "distribution": {
+      "title": "Eduskunnan jakauma",
+      "totalMembers": "Jäsentä yhteensä",
+      "inGovernment": "Hallituksessa",
+      "percentOfMembers": "% edustajista",
+      "inOpposition": "Oppositiossa"
+    },
+    "partyBreakdown": {
+      "title": "Puolueiden jako",
+      "members": "jäsentä",
+      "government": "Hallitus:",
+      "opposition": "Oppositio:"
+    },
+    "table": {
+      "name": "Nimi",
+      "party": "Puolue",
+      "government": "Hallitus",
+      "gender": "Sukupuoli",
+      "birthDate": "Syntymäaika",
+      "birthPlace": "Syntymäpaikka",
+      "occupation": "Ammatti"
+    },
+    "details": {
+      "showParticipation": "Näytä osallistumisaktiivisuus",
+      "inGovernment": "Hallituksessa",
+      "inOpposition": "Oppositio",
+      "electoralDistrict": "Vaalipiiri",
+      "age": "Ikä",
+      "years": "v",
+      "basicInfo": "Perustiedot",
+      "gender": "Sukupuoli",
+      "birthDate": "Syntymäaika",
+      "deathDate": "Kuolinaika",
+      "contactInfo": "Yhteystiedot",
+      "electoralDistricts": "Vaalipiirit",
+      "membership": "Eduskuntajäsenyys",
+      "governmentParticipation": "Hallituskoalitioon osallistuminen",
+      "positions": "Luottamustehtävät",
+      "party": "Puolue",
+      "successor": "Seuraaja:",
+      "ongoing": "edelleen"
+    }
+  },
+  "votings": {
+    "title": "Eduskunnan äänestykset",
+    "subtitle": "Etsi ja selaa eduskunnan äänestystietoja",
+    "search": "Hae äänestyksiä otsikolla",
+    "searchPlaceholder": "Kirjoita vähintään 3 merkkiä...",
+    "results": {
+      "time": "Aika",
+      "stage": "Vaihe",
+      "title": "Otsikko",
+      "yes": "Jaa",
+      "no": "Ei",
+      "empty": "Tyhjää",
+      "absent": "Poissa",
+      "total": "Yht",
+      "links": "Linkit",
+      "results": "Tulokset",
+      "minutes": "Pöytäkirja"
+    }
+  },
+  "sessions": {
+    "title": "Eduskunnan istunnot",
+    "subtitle": "Katsaus eduskunnan täysistuntoihin",
+    "session": "Istunto",
+    "agenda": "Päiväjärjestys",
+    "agendaItems": "Istunnon kohdat:",
+    "items": "kohtaa",
+    "noAgenda": "Ei päiväjärjestystä",
+    "identifier": "Tunniste:",
+    "speeches": "Puheenvuorot",
+    "noSpeeches": "Ei puheenvuoroja"
+  },
+  "agenda": {
+    "title": "Päivät",
+    "subtitle": "Selaa eduskunnan istuntoja päivittäin",
+    "selectDate": "Valitse päivämäärä",
+    "noSessionsSelected": "Valitulla päivällä ei ole istuntoja",
+    "selectDay": "Valitse päivä jonka istuntoja haluat tarkastella",
+    "noSessionsForDate": "Ei istuntoja valitulla päivämäärällä.",
+    "nearestSessions": "Lähimmät istunnot:",
+    "sessionInfo": "Istunnon tiedot",
+    "session": "Istunto",
+    "openMinutes": "Avaa pöytäkirja →"
+  },
+  "insights": {
+    "title": "Eduskunnan analytiikka",
+    "subtitle": "Syvällisiä näkemyksiä eduskunnan toiminnasta",
+    "cards": {
+      "timeSeriesStats": {
+        "title": "Tilastot ajassa",
+        "description": "Seuraa eduskunnan sukupuoli- ja ikäjakaumaa ajan mittain",
+        "action": "Katso tilastot →"
+      },
+      "partyParticipation": {
+        "title": "Puolueiden osallistuminen",
+        "description": "Seuraa puolueiden äänestysosallistumista eri hallitusten aikana",
+        "action": "Katso analytiikka →"
+      },
+      "sessionStats": {
+        "title": "Istuntotilastot",
+        "description": "Tulossa pian: Istuntojen kesto, osallistuminen ja tehokkuus",
+        "comingSoon": "Ominaisuus kehitteillä"
+      },
+      "votingActivity": {
+        "title": "Äänestysosallistuminen",
+        "description": "Seuraa kansanedustajien äänestysosallistumista eri vaalikausilla",
+        "comingSoon": "Lisää analytiikkaa tulossa pian"
+      }
+    },
+    "comingSoon": "Työskentelemme tuodaksemme sinulle kattavia näkemyksiä eduskunnan toiminnasta. Tarkista takaisin pian!",
+    "votingActivity": {
+      "title": "Äänestysosallistuminen",
+      "description": "Seuraa kansanedustajien äänestysosallistumista eri hallitusten aikana. Tiedot perustuvat äänestystietoihin ja ministeritietoihin.",
+      "members": "Edustajia",
+      "average": "Keskiarvo",
+      "highest": "Korkein",
+      "lowest": "Matalin",
+      "filters": "Suodattimet",
+      "startDate": "Aloituspäivä",
+      "endDate": "Lopetuspäivä",
+      "noData": "Ei äänestystietoja valitulle aikavälille.",
+      "source": "Lähde: Eduskunnan avoin data API"
+    },
+    "partyParticipation": {
+      "title": "Puolueiden äänestysosallistuminen",
+      "description": "Seuraa puolueiden äänestysosallistumista eri hallitusten aikana. Hallituspuolueet merkitty tähdellä (★).",
+      "filters": "Suodattimet",
+      "startDate": "Aloituspäivä",
+      "endDate": "Lopetuspäivä",
+      "selectParties": "Valitse puolueet",
+      "chartTitle": "Osallistumisprosentti hallituksittain",
+      "chartSubtitle": "Puolueiden äänestysosallistuminen eri hallitusten aikana",
+      "yAxisLabel": "Osallistumisprosentti (%)",
+      "governmentPartyIndicator": "★ = Hallituspuolue",
+      "noData": "Ei dataa valitulle aikavälille tai puolueille.",
+      "summary": "Yhteenveto",
+      "totalGovernments": "Hallituksia yhteensä",
+      "totalParties": "Puolueita yhteensä",
+      "averageParticipation": "Keskimääräinen osallistuminen"
+    }
+  },
+  "admin": {
+    "title": "Ylläpidon hallintapaneeli",
+    "subtitle": "Tietokannan tietojen noutamisen ja jäsennyksen tila",
+    "refreshStatus": "Päivitä tila",
+    "overview": {
+      "title": "Yleiskatsaus",
+      "overallProgress": "Yleinen edistyminen",
+      "tablesWithData": "Tauluja, joissa on dataa",
+      "outOf": "/ {{total}} yhteensä",
+      "completedTables": "Valmiit taulut",
+      "scraped100": "100% noudettu",
+      "tablesParsed": "Tauluja jäsennetty",
+      "parsedRows": "jäsennettyä riviä"
+    },
+    "table": {
+      "tableName": "Taulun nimi",
+      "rawData": "Raakadata",
+      "rawPages": "Raakasivu",
+      "rawRows": "Raakarivit",
+      "rawLastUpdated": "Raaka päivitetty",
+      "parsedData": "Jäsennetty data",
+      "parsedPages": "Jäsennetyt sivut",
+      "parsedRows": "Jäsennetyt rivit",
+      "parsedLastUpdated": "Jäsennetty päivitetty",
+      "status": "Tila"
+    },
+    "status": {
+      "complete": "Valmis",
+      "needsReparsing": "Vaatii uudelleenjäsennystä",
+      "needsParsing": "Vaatii jäsennystä",
+      "needsScraping": "Vaatii noutamista"
+    },
+    "actions": {
+      "scraper": "Nouto",
+      "cancelScrape": "Peruuta nouto",
+      "scraping": "Noudetaan...",
+      "scrape": "Nouda",
+      "parser": "Jäsennys",
+      "cancelParse": "Peruuta jäsennys",
+      "parsing": "Jäsennetään...",
+      "parse": "Jäsennä",
+      "scrapeFirst": "(Nouda data ensin)"
+    },
+    "bulkOperations": {
+      "selectTables": "Valitse taulut",
+      "selectAll": "Valitse kaikki",
+      "deselectAll": "Poista valinnat",
+      "selectAtLeastOne": "Valitse vähintään yksi taulu",
+      "tablesSelected": "taulu(a) valittu",
+      "current": "Nykyinen:"
+    },
+    "controlPanel": {
+      "start": "Aloita",
+      "stop": "Pysäytä",
+      "lastUpdate": "Viimeisin päivitys:"
+    }
+  }
+}

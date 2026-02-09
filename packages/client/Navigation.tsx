@@ -16,6 +16,7 @@ import {
 } from "@mui/material";
 import type React from "react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { type RouteName, routes } from "./pages";
 import theme, { gradients, spacing } from "./theme";
 import { applicationMode } from "./utils";
@@ -24,6 +25,8 @@ export const Navigation: React.FC<{
   activeTab: string;
   setActiveTab: (tab: RouteName) => void;
 }> = ({ activeTab, setActiveTab }) => {
+  const { t } = useTranslation();
+
   const handleChange = (_event: React.SyntheticEvent, newValue: RouteName) => {
     setActiveTab(newValue);
     const search = window.location.search;
@@ -61,7 +64,7 @@ export const Navigation: React.FC<{
             fontSize: "1.125rem",
           }}
         >
-          Avoimempi Eduskunta
+          {t("app.title")}
         </Typography>
         <Typography
           variant="caption"
@@ -71,11 +74,11 @@ export const Navigation: React.FC<{
             mt: 0.5,
           }}
         >
-          Suomen eduskunnan avoin data
+          {t("app.subtitle")}
         </Typography>
       </Box>
       <List sx={{ pt: 1 }}>
-        {Object.entries(routes).map(([path, { icon: Icon, title }]) => {
+        {Object.entries(routes).map(([path, { icon: Icon }]) => {
           if (
             applicationMode === "production" &&
             (path as RouteName) === "admin"
@@ -90,9 +93,7 @@ export const Navigation: React.FC<{
                 sx={{
                   py: 1.5,
                   px: 2.5,
-                  color: isActive
-                    ? theme.palette.primary.main
-                    : "text.primary",
+                  color: isActive ? theme.palette.primary.main : "text.primary",
                   bgcolor: isActive
                     ? `${theme.palette.primary.main}0A`
                     : "transparent",
@@ -115,7 +116,7 @@ export const Navigation: React.FC<{
                   <Icon />
                 </ListItemIcon>
                 <ListItemText
-                  primary={title}
+                  primary={t(`navigation.routes.${path}`)}
                   primaryTypographyProps={{
                     fontWeight: isActive ? 600 : 500,
                     fontSize: "0.9375rem",
@@ -158,7 +159,7 @@ export const Navigation: React.FC<{
               whiteSpace: "nowrap",
             }}
           >
-            Avoimempi Eduskunta
+            {t("app.title")}
           </Typography>
           <Typography
             variant="body2"
@@ -171,7 +172,7 @@ export const Navigation: React.FC<{
               display: { xs: "none", sm: "block" },
             }}
           >
-            Suomen eduskunnan avoin data
+            {t("app.subtitle")}
           </Typography>
         </Box>
 
@@ -183,7 +184,7 @@ export const Navigation: React.FC<{
           }}
         >
           <IconButton
-            aria-label="Avaa valikko"
+            aria-label={t("navigation.openMenu")}
             onClick={toggleDrawer(true)}
             sx={{
               color: "white",
@@ -230,7 +231,7 @@ export const Navigation: React.FC<{
               },
             }}
           >
-            {Object.entries(routes).map(([key, { icon: Icon, title }]) => {
+            {Object.entries(routes).map(([key, { icon: Icon }]) => {
               if (
                 applicationMode === "production" &&
                 (key as RouteName) === "admin"
@@ -243,7 +244,7 @@ export const Navigation: React.FC<{
                   key={key}
                   icon={<Icon sx={{ fontSize: 20 }} />}
                   iconPosition="start"
-                  label={title}
+                  label={t(`navigation.routes.${key}`)}
                   value={key}
                 />
               );
