@@ -1,5 +1,12 @@
 # Parliament Domain Expert Memory
 
+## Session Agenda Structure
+See `session-agenda-structure.md` for complete details on:
+- Session → Section → Speech/Voting hierarchy
+- Database table relationships and key fields
+- Query patterns for session detail views
+- Finnish terminology (täysistunto, asiakohta, puheenvuoro, äänestys)
+
 ## Vaski Document System
 
 ### Document Type Priorities
@@ -114,5 +121,5 @@ Issue requirement "NEVER exceeds 199" is imprecise - means "typically 199, but 2
 - Terms without group membership: <2%
 
 ## See Also
+- `session-agenda-structure.md` - Full documentation of session/section/speech data structure
 - `vaski-schema.md` - Detailed schema design notes (to be created)
-- See main response for full sanity test implementation examples

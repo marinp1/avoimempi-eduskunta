@@ -11,7 +11,6 @@
   "navigation": {
     "openMenu": "Avaa valikko",
     "routes": {
-      "agenda": "Päivät",
       "sessions": "Istunnot",
       "composition": "Kokoonpano",
       "votings": "Äänestykset",
@@ -121,8 +120,8 @@
     }
   },
   "sessions": {
-    "title": "Eduskunnan istunnot",
-    "subtitle": "Katsaus eduskunnan täysistuntoihin",
+    "title": "Istunnot",
+    "subtitle": "Selaa eduskunnan täysistuntoja",
     "session": "Istunto",
     "agenda": "Päiväjärjestys",
     "agendaItems": "Istunnon kohdat:",
@@ -130,19 +129,12 @@
     "noAgenda": "Ei päiväjärjestystä",
     "identifier": "Tunniste:",
     "speeches": "Puheenvuorot",
-    "noSpeeches": "Ei puheenvuoroja"
-  },
-  "agenda": {
-    "title": "Päivät",
-    "subtitle": "Selaa eduskunnan istuntoja päivittäin",
+    "noSpeeches": "Ei puheenvuoroja",
     "selectDate": "Valitse päivämäärä",
     "noSessionsSelected": "Valitulla päivällä ei ole istuntoja",
     "selectDay": "Valitse päivä jonka istuntoja haluat tarkastella",
     "noSessionsForDate": "Ei istuntoja valitulla päivämäärällä.",
-    "nearestSessions": "Lähimmät istunnot:",
-    "sessionInfo": "Istunnon tiedot",
-    "session": "Istunto",
-    "openMinutes": "Avaa pöytäkirja →"
+    "nearestSessions": "Lähimmät istunnot:"
   },
   "insights": {
     "title": "Eduskunnan analytiikka",
