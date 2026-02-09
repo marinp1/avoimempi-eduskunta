@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import type React from "react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { gradients, spacing } from "#client/theme";
 import { GlassCard, GradientButton } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -51,6 +52,7 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
   disabled = false,
   filterCondition,
 }) => {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
   const [selectedTables, setSelectedTables] = useState<Set<string>>(new Set());
   const [showSelection, setShowSelection] = useState(false);
@@ -79,7 +81,7 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
 
   const handleStart = () => {
     if (selectedTables.size === 0) {
-      alert("Please select at least one table");
+      alert(t("admin.bulkOperations.selectAtLeastOne"));
       return;
     }
     onStart(Array.from(selectedTables));
@@ -91,14 +93,13 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
   return (
     <Fade in timeout={600}>
       <Box>
-        <GlassCard sx={{ mb: spacing.md }}>
-          <CardContent sx={{ p: spacing.md }}>
+        <GlassCard sx={{ mb: spacing.sm }}>
+          <CardContent sx={{ p: spacing.sm, "&:last-child": { pb: spacing.sm } }}>
             <Box
               sx={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                mb: spacing.sm,
               }}
             >
               <Box>
@@ -113,12 +114,16 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                 >
                   {title}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="caption" color="text.secondary">
                   {description}
                 </Typography>
                 {selectedTables.size > 0 && !isRunning && (
-                  <Typography variant="caption" color="text.secondary">
-                    {selectedTables.size} table(s) selected
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: "block" }}
+                  >
+                    {selectedTables.size} {t("admin.bulkOperations.tablesSelected")}
                   </Typography>
                 )}
               </Box>
@@ -129,7 +134,6 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                     <GradientButton
                       onClick={() => {
                         setShowSelection(true);
-                        // Pre-select all eligible tables
                         setSelectedTables(
                           new Set(filteredTables.map((t) => t.table_name)),
                         );
@@ -138,7 +142,7 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                       disabled={disabled || filteredTables.length === 0}
                       sx={{ background: gradient }}
                     >
-                      Configure
+                      {t("common.configure")}
                     </GradientButton>
                   ) : (
                     <>
@@ -149,7 +153,7 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                         }}
                         size="small"
                       >
-                        Cancel
+                        {t("common.cancel")}
                       </Button>
                       <GradientButton
                         onClick={handleStart}
@@ -157,7 +161,7 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                         disabled={selectedTables.size === 0}
                         sx={{ background: gradient }}
                       >
-                        Start ({selectedTables.size})
+                        {t("common.start")} ({selectedTables.size})
                       </GradientButton>
                     </>
                   )}
@@ -170,7 +174,7 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                     background: gradients.danger,
                   }}
                 >
-                  Stop
+                  {t("common.stop")}
                 </GradientButton>
               )}
             </Box>
@@ -195,39 +199,52 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                   }}
                 >
                   <Typography variant="subtitle2" fontWeight="600">
-                    Select Tables
+                    {t("admin.bulkOperations.selectTables")}
                   </Typography>
                   <Button size="small" onClick={handleToggleAll}>
-                    {isAllSelected ? "Deselect All" : "Select All"}
+                    {isAllSelected
+                      ? t("common.deselectAll")
+                      : t("common.selectAll")}
                   </Button>
                 </Box>
-                {filteredTables.map((table) => (
-                  <FormControlLabel
-                    key={table.table_name}
-                    control={
-                      <Checkbox
-                        checked={selectedTables.has(table.table_name)}
-                        onChange={() => handleToggleTable(table.table_name)}
-                        size="small"
-                      />
-                    }
-                    label={
-                      <Typography variant="body2">
-                        {table.table_name}
-                      </Typography>
-                    }
-                    sx={{ display: "flex", width: "100%" }}
-                  />
-                ))}
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "1fr 1fr",
+                      md: "1fr 1fr 1fr",
+                    },
+                    gap: 0,
+                  }}
+                >
+                  {filteredTables.map((table) => (
+                    <FormControlLabel
+                      key={table.table_name}
+                      control={
+                        <Checkbox
+                          checked={selectedTables.has(table.table_name)}
+                          onChange={() => handleToggleTable(table.table_name)}
+                          size="small"
+                        />
+                      }
+                      label={
+                        <Typography variant="body2" fontFamily="monospace" fontSize="0.75rem">
+                          {table.table_name}
+                        </Typography>
+                      }
+                    />
+                  ))}
+                </Box>
               </Box>
             )}
 
             {isRunning && (
               <Box sx={{ mt: spacing.sm }}>
                 <Typography
-                  variant="body2"
+                  variant="caption"
                   color="text.secondary"
-                  sx={{ mb: 1 }}
+                  sx={{ mb: 0.5, display: "block" }}
                 >
                   {progress}
                 </Typography>
@@ -235,21 +252,22 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                   <Typography
                     variant="body2"
                     fontWeight="600"
-                    sx={{ mb: 1, color: themedColors.textPrimary }}
+                    fontFamily="monospace"
+                    sx={{ mb: 1, color: themedColors.textPrimary, fontSize: "0.8125rem" }}
                   >
-                    Current: {currentTable}
+                    {t("admin.bulkOperations.current")} {currentTable}
                   </Typography>
                 )}
                 <LinearProgress
                   variant="determinate"
                   value={progressPercent}
                   sx={{
-                    height: 8,
-                    borderRadius: 4,
+                    height: 6,
+                    borderRadius: 3,
                     backgroundColor: themedColors.backgroundSubtle,
                     "& .MuiLinearProgress-bar": {
                       background: gradient,
-                      borderRadius: 4,
+                      borderRadius: 3,
                     },
                   }}
                 />

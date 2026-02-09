@@ -8,6 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import type React from "react";
+import { useTranslation } from "react-i18next";
 import { gradients, spacing } from "#client/theme";
 import { GlassCard, GradientButton } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -37,18 +38,18 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   disabled = false,
   lastUpdate,
 }) => {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
   return (
     <Fade in timeout={600}>
       <Box>
-        <GlassCard sx={{ mb: spacing.md }}>
-          <CardContent sx={{ p: spacing.md }}>
+        <GlassCard sx={{ mb: spacing.sm }}>
+          <CardContent sx={{ p: spacing.sm, "&:last-child": { pb: spacing.sm } }}>
             <Box
               sx={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                mb: spacing.sm,
               }}
             >
               <Box>
@@ -63,12 +64,16 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                 >
                   {title}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="caption" color="text.secondary">
                   {description}
                 </Typography>
                 {lastUpdate && (
-                  <Typography variant="caption" color="text.secondary">
-                    Last update: {lastUpdate}
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: "block" }}
+                  >
+                    {t("admin.controlPanel.lastUpdate")} {lastUpdate}
                   </Typography>
                 )}
               </Box>
@@ -80,7 +85,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                   disabled={disabled}
                   sx={{ background: gradient }}
                 >
-                  Start
+                  {t("admin.controlPanel.start")}
                 </GradientButton>
               ) : (
                 <GradientButton
@@ -90,7 +95,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                     background: gradients.danger,
                   }}
                 >
-                  Stop
+                  {t("admin.controlPanel.stop")}
                 </GradientButton>
               )}
             </Box>
@@ -98,9 +103,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
             {isRunning && (
               <Box sx={{ mt: spacing.sm }}>
                 <Typography
-                  variant="body2"
+                  variant="caption"
                   color="text.secondary"
-                  sx={{ mb: 1 }}
+                  sx={{ mb: 0.5, display: "block" }}
                 >
                   {progress}
                 </Typography>
@@ -108,12 +113,12 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                   variant="determinate"
                   value={progressPercent}
                   sx={{
-                    height: 8,
-                    borderRadius: 4,
+                    height: 6,
+                    borderRadius: 3,
                     backgroundColor: themedColors.backgroundSubtle,
                     "& .MuiLinearProgress-bar": {
                       background: gradient,
-                      borderRadius: 4,
+                      borderRadius: 3,
                     },
                   }}
                 />

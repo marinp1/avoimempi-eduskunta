@@ -3,6 +3,7 @@ import ErrorIcon from "@mui/icons-material/Error";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import StopIcon from "@mui/icons-material/Stop";
 import WarningIcon from "@mui/icons-material/Warning";
 import {
@@ -25,14 +26,11 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
-import { colors, gradients } from "#client/theme";
+import { useTranslation } from "react-i18next";
+import { colors, commonStyles, gradients, spacing } from "#client/theme";
+import { GlassCard, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
-import {
-  AdminHeader,
-  AdminOverview,
-  BulkOperationsPanel,
-  ControlPanel,
-} from "./components";
+import { BulkOperationsPanel, ControlPanel } from "./components";
 
 type TableStatus = {
   table_name: string;
@@ -61,6 +59,7 @@ type ScrapingOverview = {
 };
 
 export default () => {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
   const [status, setStatus] = useState<TableStatus[]>([]);
   const [overview, setOverview] = useState<ScrapingOverview | null>(null);
@@ -102,7 +101,6 @@ export default () => {
         setLoading(true);
       }
 
-      // Fetch status, overview, and last migration timestamp
       const [statusRes, overviewRes, migrationRes] = await Promise.all([
         fetch("/api/admin/status"),
         fetch("/api/admin/overview"),
@@ -133,7 +131,6 @@ export default () => {
   useEffect(() => {
     fetchData();
 
-    // Setup Scraper WebSocket connection
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const scraperWs = new WebSocket(
       `${protocol}//${window.location.host}/ws/scraper`,
@@ -214,7 +211,6 @@ export default () => {
           }
           setScraperPercent(100);
           setScraperMode("single");
-          // Refresh data without showing loading spinner
           setTimeout(() => fetchData(false), 500);
           break;
 
@@ -326,7 +322,6 @@ export default () => {
           }
           setParserPercent(100);
           setParserMode("single");
-          // Refresh data without showing loading spinner
           setTimeout(() => fetchData(false), 500);
           break;
 
@@ -388,7 +383,6 @@ export default () => {
           setMigratorRunning(false);
           setMigratorProgress("Migration completed successfully");
           setLastMigrationTimestamp(message.data.timestamp);
-          // Refresh data without showing loading spinner
           setTimeout(() => fetchData(false), 500);
           break;
 
@@ -572,19 +566,16 @@ export default () => {
 
   const getStatusIcon = (progressPercent?: number) => {
     if (progressPercent === undefined || progressPercent === 0) {
-      // Unstarted
-      return <ErrorIcon sx={{ color: colors.error, fontSize: 20 }} />;
+      return <ErrorIcon sx={{ color: colors.error, fontSize: 18 }} />;
     }
     if (progressPercent >= 100) {
-      // Complete
-      return <CheckCircleIcon sx={{ color: colors.success, fontSize: 20 }} />;
+      return <CheckCircleIcon sx={{ color: colors.success, fontSize: 18 }} />;
     }
-    // Incomplete
-    return <WarningIcon sx={{ color: colors.warning, fontSize: 20 }} />;
+    return <WarningIcon sx={{ color: colors.warning, fontSize: 18 }} />;
   };
 
   const formatTimestamp = (timestamp: string | null) => {
-    if (!timestamp) return "N/A";
+    if (!timestamp) return "-";
     try {
       const date = new Date(timestamp);
       return date.toLocaleString("fi-FI", {
@@ -599,23 +590,156 @@ export default () => {
     }
   };
 
+  const getStatusChip = (row: TableStatus) => {
+    if (
+      row.has_raw_data &&
+      row.has_parsed_data &&
+      row.parsed_page_count >= row.raw_page_count
+    ) {
+      return (
+        <Chip
+          label={t("admin.status.complete")}
+          size="small"
+          color="success"
+          variant="outlined"
+        />
+      );
+    }
+    if (
+      row.has_raw_data &&
+      row.has_parsed_data &&
+      row.parsed_page_count < row.raw_page_count
+    ) {
+      return (
+        <Chip
+          label={t("admin.status.needsReparsing")}
+          size="small"
+          color="warning"
+          variant="outlined"
+        />
+      );
+    }
+    if (row.has_raw_data) {
+      return (
+        <Chip
+          label={t("admin.status.needsParsing")}
+          size="small"
+          color="warning"
+          variant="outlined"
+        />
+      );
+    }
+    return (
+      <Chip
+        label={t("admin.status.needsScraping")}
+        size="small"
+        color="error"
+        variant="outlined"
+      />
+    );
+  };
+
   return (
     <Box>
-      <AdminHeader onRefresh={() => fetchData(true)} />
+      <PageHeader
+        title={t("admin.title")}
+        subtitle={t("admin.subtitle")}
+        actions={
+          <IconButton
+            onClick={() => fetchData(true)}
+            title={t("admin.refreshStatus")}
+            sx={{
+              border: `1px solid ${themedColors.dataBorder}`,
+              "&:hover": {
+                borderColor: themedColors.primary,
+                bgcolor: `${themedColors.primary}08`,
+              },
+            }}
+          >
+            <RefreshIcon />
+          </IconButton>
+        }
+      />
 
       {error && (
         <Fade in timeout={500}>
-          <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+          <Alert severity="error" sx={{ mb: spacing.md, borderRadius: 2 }}>
             {error}
           </Alert>
         </Fade>
       )}
 
-      <AdminOverview overview={overview} />
+      {overview && (
+        <Fade in timeout={500}>
+          <Box sx={{ mb: spacing.md }}>
+            <Box sx={commonStyles.responsiveGrid(200)}>
+              <GlassCard sx={{ p: 2.5 }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: themedColors.textSecondary, fontWeight: 500, fontSize: "0.8125rem", mb: 0.75 }}
+                >
+                  {t("admin.overview.overallProgress")}
+                </Typography>
+                <Typography sx={{ fontSize: "1.75rem", fontWeight: 700, color: themedColors.textPrimary, lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+                  {overview.overall_progress_percent.toFixed(1)}%
+                </Typography>
+                <Typography sx={{ fontSize: "0.75rem", color: themedColors.textTertiary, mt: 0.75 }}>
+                  {overview.total_scraped_rows.toLocaleString("fi-FI")} / {overview.total_api_rows.toLocaleString("fi-FI")}
+                </Typography>
+              </GlassCard>
+
+              <GlassCard sx={{ p: 2.5 }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: themedColors.textSecondary, fontWeight: 500, fontSize: "0.8125rem", mb: 0.75 }}
+                >
+                  {t("admin.overview.tablesWithData")}
+                </Typography>
+                <Typography sx={{ fontSize: "1.75rem", fontWeight: 700, color: themedColors.textPrimary, lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+                  {overview.tables_with_data}
+                </Typography>
+                <Typography sx={{ fontSize: "0.75rem", color: themedColors.textTertiary, mt: 0.75 }}>
+                  / {overview.total_tables} {t("common.total").toLowerCase()}
+                </Typography>
+              </GlassCard>
+
+              <GlassCard sx={{ p: 2.5 }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: themedColors.textSecondary, fontWeight: 500, fontSize: "0.8125rem", mb: 0.75 }}
+                >
+                  {t("admin.overview.completedTables")}
+                </Typography>
+                <Typography sx={{ fontSize: "1.75rem", fontWeight: 700, color: themedColors.textPrimary, lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+                  {overview.tables_completed}
+                </Typography>
+                <Typography sx={{ fontSize: "0.75rem", color: themedColors.textTertiary, mt: 0.75 }}>
+                  {t("admin.overview.scraped100")}
+                </Typography>
+              </GlassCard>
+
+              <GlassCard sx={{ p: 2.5 }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: themedColors.textSecondary, fontWeight: 500, fontSize: "0.8125rem", mb: 0.75 }}
+                >
+                  {t("admin.overview.tablesParsed")}
+                </Typography>
+                <Typography sx={{ fontSize: "1.75rem", fontWeight: 700, color: themedColors.textPrimary, lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+                  {overview.tables_with_parsed_data}
+                </Typography>
+                <Typography sx={{ fontSize: "0.75rem", color: themedColors.textTertiary, mt: 0.75 }}>
+                  {overview.total_parsed_rows.toLocaleString("fi-FI")} {t("admin.overview.parsedRows")}
+                </Typography>
+              </GlassCard>
+            </Box>
+          </Box>
+        </Fade>
+      )}
 
       {/* Bulk Scraper Section */}
       <BulkOperationsPanel
-        title="Bulk Scraper"
+        title={t("admin.actions.scraper")}
         description="Scrape multiple tables sequentially"
         tableStatuses={status}
         isRunning={scraperRunning && scraperMode === "bulk"}
@@ -630,7 +754,7 @@ export default () => {
 
       {/* Bulk Parser Section */}
       <BulkOperationsPanel
-        title="Bulk Parser"
+        title={t("admin.actions.parser")}
         description="Parse multiple tables sequentially"
         tableStatuses={status}
         isRunning={parserRunning && parserMode === "bulk"}
@@ -661,13 +785,14 @@ export default () => {
             : undefined
         }
       />
+
       {loading ? (
         <Box
           sx={{
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            minHeight: 400,
+            minHeight: 300,
           }}
         >
           <CircularProgress />
@@ -683,68 +808,57 @@ export default () => {
               overflow: "hidden",
             }}
           >
-            <Table>
+            <Table size="small">
               <TableHead>
                 <TableRow
                   sx={{
-                    background: themedColors.background,
+                    background: colors.primary,
                   }}
                 >
-                  <TableCell sx={{ width: 50 }} />
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="700">
-                      Table Name
-                    </Typography>
+                  <TableCell sx={{ ...commonStyles.tableHeader, width: 40 }} />
+                  <TableCell sx={commonStyles.tableHeader}>
+                    {t("admin.table.tableName")}
                   </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="body2" fontWeight="700">
-                      Raw Data
-                    </Typography>
+                  <TableCell sx={commonStyles.tableHeader} align="center">
+                    {t("admin.table.rawData")}
                   </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="body2" fontWeight="700">
-                      Raw Pages
-                    </Typography>
+                  <TableCell
+                    sx={{
+                      ...commonStyles.tableHeader,
+                      display: { xs: "none", md: "table-cell" },
+                    }}
+                    align="right"
+                  >
+                    {t("admin.table.rawPages")}
                   </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="body2" fontWeight="700">
-                      Raw Rows
-                    </Typography>
+                  <TableCell
+                    sx={{
+                      ...commonStyles.tableHeader,
+                      display: { xs: "none", sm: "table-cell" },
+                    }}
+                    align="right"
+                  >
+                    {t("admin.table.rawRows")}
                   </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="body2" fontWeight="700">
-                      Raw Last Updated
-                    </Typography>
+                  <TableCell sx={commonStyles.tableHeader} align="center">
+                    {t("admin.table.parsedData")}
                   </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="body2" fontWeight="700">
-                      Parsed Data
-                    </Typography>
+                  <TableCell
+                    sx={{
+                      ...commonStyles.tableHeader,
+                      display: { xs: "none", sm: "table-cell" },
+                    }}
+                    align="right"
+                  >
+                    {t("admin.table.parsedRows")}
                   </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="body2" fontWeight="700">
-                      Parsed Pages
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="body2" fontWeight="700">
-                      Parsed Rows
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="body2" fontWeight="700">
-                      Parsed Last Updated
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Typography variant="body2" fontWeight="700">
-                      Status
-                    </Typography>
+                  <TableCell sx={commonStyles.tableHeader} align="center">
+                    {t("admin.table.status")}
                   </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {status.map((row, _index) => {
+                {status.map((row, index) => {
                   const isExpanded = expandedRow === row.table_name;
                   const isThisTableScraping =
                     currentScrapingTable === row.table_name;
@@ -754,36 +868,46 @@ export default () => {
                   return (
                     <React.Fragment key={row.table_name}>
                       <TableRow
+                        onClick={() =>
+                          setExpandedRow(isExpanded ? null : row.table_name)
+                        }
                         sx={{
+                          ...commonStyles.tableRow,
+                          ...commonStyles.fadeIn(index * 15),
                           "&:hover": {
-                            bgcolor: "rgba(0, 53, 128, 0.04)",
+                            bgcolor: `${colors.primary}06`,
                           },
-                          transition: "background-color 0.2s",
                         }}
                       >
-                        <TableCell>
-                          <IconButton
-                            size="small"
-                            onClick={() =>
-                              setExpandedRow(isExpanded ? null : row.table_name)
-                            }
-                          >
+                        <TableCell sx={{ py: 1 }}>
+                          <IconButton size="small" tabIndex={-1}>
                             {isExpanded ? (
-                              <KeyboardArrowUpIcon />
+                              <KeyboardArrowUpIcon fontSize="small" />
                             ) : (
-                              <KeyboardArrowDownIcon />
+                              <KeyboardArrowDownIcon fontSize="small" />
                             )}
                           </IconButton>
                         </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" fontWeight="600">
+                        <TableCell sx={{ py: 1 }}>
+                          <Typography
+                            variant="body2"
+                            fontWeight="600"
+                            fontFamily="monospace"
+                            sx={{ color: themedColors.textPrimary }}
+                          >
                             {row.table_name}
                           </Typography>
                         </TableCell>
-                        <TableCell align="center">
+                        <TableCell align="center" sx={{ py: 1 }}>
                           {getStatusIcon(row.scrape_progress_percent)}
                         </TableCell>
-                        <TableCell align="center">
+                        <TableCell
+                          align="right"
+                          sx={{
+                            py: 1,
+                            display: { xs: "none", md: "table-cell" },
+                          }}
+                        >
                           <Typography
                             variant="body2"
                             sx={{
@@ -791,16 +915,24 @@ export default () => {
                                 ? themedColors.textPrimary
                                 : themedColors.textTertiary,
                               fontWeight: 600,
+                              fontFamily: "monospace",
+                              fontSize: "0.75rem",
                             }}
                           >
                             {row.total_rows_in_api
                               ? `${row.raw_page_count} / ${Math.ceil(row.total_rows_in_api / 100)}`
                               : row.has_raw_data
-                                ? row.raw_page_count.toLocaleString()
-                                : "N/A"}
+                                ? row.raw_page_count.toLocaleString("fi-FI")
+                                : "-"}
                           </Typography>
                         </TableCell>
-                        <TableCell align="center">
+                        <TableCell
+                          align="right"
+                          sx={{
+                            py: 1,
+                            display: { xs: "none", sm: "table-cell" },
+                          }}
+                        >
                           <Typography
                             variant="body2"
                             sx={{
@@ -808,45 +940,25 @@ export default () => {
                                 ? themedColors.textPrimary
                                 : themedColors.textTertiary,
                               fontWeight: 500,
+                              fontFamily: "monospace",
+                              fontSize: "0.75rem",
                             }}
                           >
                             {row.has_raw_data
-                              ? `${row.raw_estimated_rows.toLocaleString()}`
-                              : "N/A"}
+                              ? row.raw_estimated_rows.toLocaleString("fi-FI")
+                              : "-"}
                           </Typography>
                         </TableCell>
-                        <TableCell align="center">
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              color: row.raw_last_updated
-                                ? themedColors.textSecondary
-                                : themedColors.textTertiary,
-                              fontFamily: "monospace",
-                            }}
-                          >
-                            {formatTimestamp(row.raw_last_updated)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
+                        <TableCell align="center" sx={{ py: 1 }}>
                           {getStatusIcon(row.has_parsed_data ? 100 : 0)}
                         </TableCell>
-                        <TableCell align="center">
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: row.has_parsed_data
-                                ? themedColors.textPrimary
-                                : themedColors.textTertiary,
-                              fontWeight: 600,
-                            }}
-                          >
-                            {row.has_parsed_data
-                              ? row.parsed_page_count.toLocaleString()
-                              : "N/A"}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
+                        <TableCell
+                          align="right"
+                          sx={{
+                            py: 1,
+                            display: { xs: "none", sm: "table-cell" },
+                          }}
+                        >
                           <Typography
                             variant="body2"
                             sx={{
@@ -854,83 +966,61 @@ export default () => {
                                 ? themedColors.textPrimary
                                 : themedColors.textTertiary,
                               fontWeight: 500,
+                              fontFamily: "monospace",
+                              fontSize: "0.75rem",
                             }}
                           >
                             {row.has_parsed_data
-                              ? `${row.parsed_estimated_rows.toLocaleString()}`
-                              : "N/A"}
+                              ? row.parsed_estimated_rows.toLocaleString(
+                                  "fi-FI",
+                                )
+                              : "-"}
                           </Typography>
                         </TableCell>
-                        <TableCell align="center">
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              color: row.parsed_last_updated
-                                ? themedColors.textSecondary
-                                : themedColors.textTertiary,
-                              fontFamily: "monospace",
-                            }}
-                          >
-                            {formatTimestamp(row.parsed_last_updated)}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="center">
-                          {row.has_raw_data &&
-                          row.has_parsed_data &&
-                          row.parsed_page_count >= row.raw_page_count ? (
-                            <Chip
-                              label="Complete"
-                              size="small"
-                              color="success"
-                            />
-                          ) : row.has_raw_data &&
-                            row.has_parsed_data &&
-                            row.parsed_page_count < row.raw_page_count ? (
-                            <Chip
-                              label="Needs Re-parsing"
-                              size="small"
-                              color="warning"
-                            />
-                          ) : row.has_raw_data ? (
-                            <Chip
-                              label="Needs Parsing"
-                              size="small"
-                              color="warning"
-                            />
-                          ) : (
-                            <Chip
-                              label="Needs Scraping"
-                              size="small"
-                              color="error"
-                            />
-                          )}
+                        <TableCell align="center" sx={{ py: 1 }}>
+                          {getStatusChip(row)}
                         </TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell
                           style={{ paddingBottom: 0, paddingTop: 0 }}
-                          colSpan={11}
+                          colSpan={8}
                         >
                           <Collapse
                             in={isExpanded}
                             timeout="auto"
                             unmountOnExit
                           >
-                            <Box sx={{ py: 3, px: 2 }}>
+                            <Box
+                              sx={{
+                                py: spacing.sm,
+                                px: spacing.sm,
+                                display: "flex",
+                                flexDirection: { xs: "column", sm: "row" },
+                                gap: spacing.md,
+                              }}
+                            >
                               {/* Scraper Controls */}
-                              <Box sx={{ mb: 3 }}>
+                              <Box sx={{ flex: 1 }}>
                                 <Typography
                                   variant="subtitle2"
                                   fontWeight="600"
-                                  sx={{ mb: 1.5 }}
+                                  sx={{
+                                    mb: 1,
+                                    color: colors.info,
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.04em",
+                                    fontSize: "0.75rem",
+                                  }}
                                 >
-                                  Scraper
+                                  {t("admin.actions.scraper")}
                                 </Typography>
                                 <Box
                                   sx={{
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: 2,
+                                    gap: 1.5,
+                                    flexWrap: "wrap",
                                   }}
                                 >
                                   {isThisTableScraping ? (
@@ -939,14 +1029,16 @@ export default () => {
                                         variant="outlined"
                                         color="error"
                                         startIcon={<StopIcon />}
-                                        onClick={handleStopScraping}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleStopScraping();
+                                        }}
                                         size="small"
                                       >
-                                        Cancel Scrape
+                                        {t("admin.actions.cancelScrape")}
                                       </Button>
                                       <Chip
-                                        label="Scraping..."
-                                        color="primary"
+                                        label={t("admin.actions.scraping")}
                                         size="small"
                                         sx={{
                                           background: gradients.scraper,
@@ -959,9 +1051,10 @@ export default () => {
                                       <Button
                                         variant="contained"
                                         startIcon={<PlayArrowIcon />}
-                                        onClick={() =>
-                                          handleStartScraping(row.table_name)
-                                        }
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleStartScraping(row.table_name);
+                                        }}
                                         disabled={
                                           scraperRunning || parserRunning
                                         }
@@ -970,18 +1063,19 @@ export default () => {
                                           background: gradients.scraper,
                                           "&:hover": {
                                             background:
-                                              "linear-gradient(135deg, #5568d3 0%, #63408d 100%)",
+                                              "linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%)",
                                           },
                                         }}
                                       >
-                                        Scrape
+                                        {t("admin.actions.scrape")}
                                       </Button>
                                       {row.scrape_progress_percent !==
                                         undefined &&
                                         row.total_rows_in_api && (
                                           <Chip
-                                            label={`${row.scrape_progress_percent.toFixed(1)}% - ${row.raw_estimated_rows.toLocaleString()} / ${Math.max(row.total_rows_in_api, row.raw_estimated_rows).toLocaleString()} rows`}
+                                            label={`${row.scrape_progress_percent.toFixed(1)}% - ${row.raw_estimated_rows.toLocaleString("fi-FI")} / ${Math.max(row.total_rows_in_api, row.raw_estimated_rows).toLocaleString("fi-FI")}`}
                                             size="small"
+                                            variant="outlined"
                                             color={
                                               row.scrape_progress_percent >= 100
                                                 ? "success"
@@ -993,11 +1087,11 @@ export default () => {
                                   )}
                                 </Box>
                                 {isThisTableScraping && (
-                                  <Box sx={{ mt: 2 }}>
+                                  <Box sx={{ mt: 1.5 }}>
                                     <Typography
-                                      variant="body2"
+                                      variant="caption"
                                       color="text.secondary"
-                                      sx={{ mb: 1 }}
+                                      sx={{ mb: 0.5, display: "block" }}
                                     >
                                       {scraperProgress}
                                     </Typography>
@@ -1005,8 +1099,8 @@ export default () => {
                                       variant="determinate"
                                       value={scraperPercent}
                                       sx={{
-                                        height: 6,
-                                        borderRadius: 3,
+                                        height: 4,
+                                        borderRadius: 2,
                                         bgcolor: themedColors.backgroundSubtle,
                                         "& .MuiLinearProgress-bar": {
                                           background: gradients.scraper,
@@ -1018,19 +1112,26 @@ export default () => {
                               </Box>
 
                               {/* Parser Controls */}
-                              <Box>
+                              <Box sx={{ flex: 1 }}>
                                 <Typography
                                   variant="subtitle2"
                                   fontWeight="600"
-                                  sx={{ mb: 1.5 }}
+                                  sx={{
+                                    mb: 1,
+                                    color: colors.chartPurple,
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.04em",
+                                    fontSize: "0.75rem",
+                                  }}
                                 >
-                                  Parser
+                                  {t("admin.actions.parser")}
                                 </Typography>
                                 <Box
                                   sx={{
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: 2,
+                                    gap: 1.5,
+                                    flexWrap: "wrap",
                                   }}
                                 >
                                   {isThisTableParsing ? (
@@ -1039,14 +1140,16 @@ export default () => {
                                         variant="outlined"
                                         color="error"
                                         startIcon={<StopIcon />}
-                                        onClick={handleStopParsing}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleStopParsing();
+                                        }}
                                         size="small"
                                       >
-                                        Cancel Parse
+                                        {t("admin.actions.cancelParse")}
                                       </Button>
                                       <Chip
-                                        label="Parsing..."
-                                        color="secondary"
+                                        label={t("admin.actions.parsing")}
                                         size="small"
                                         sx={{
                                           background: gradients.parser,
@@ -1059,9 +1162,10 @@ export default () => {
                                       <Button
                                         variant="contained"
                                         startIcon={<PlayArrowIcon />}
-                                        onClick={() =>
-                                          handleStartParsing(row.table_name)
-                                        }
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleStartParsing(row.table_name);
+                                        }}
                                         disabled={
                                           !row.has_raw_data ||
                                           scraperRunning ||
@@ -1072,16 +1176,17 @@ export default () => {
                                           background: gradients.parser,
                                           "&:hover": {
                                             background:
-                                              "linear-gradient(135deg, #e082ea 0%, #e4465b 100%)",
+                                              "linear-gradient(180deg, #6D28D9 0%, #5B21B6 100%)",
                                           },
                                         }}
                                       >
-                                        Parse
+                                        {t("admin.actions.parse")}
                                       </Button>
                                       {row.has_parsed_data && (
                                         <Chip
-                                          label={`${row.parsed_page_count} pages - ${row.parsed_estimated_rows.toLocaleString()} rows`}
+                                          label={`${row.parsed_page_count} pages - ${row.parsed_estimated_rows.toLocaleString("fi-FI")}`}
                                           size="small"
+                                          variant="outlined"
                                           color="success"
                                         />
                                       )}
@@ -1090,18 +1195,18 @@ export default () => {
                                           variant="caption"
                                           color="text.secondary"
                                         >
-                                          (Scrape data first)
+                                          {t("admin.actions.scrapeFirst")}
                                         </Typography>
                                       )}
                                     </>
                                   )}
                                 </Box>
                                 {isThisTableParsing && (
-                                  <Box sx={{ mt: 2 }}>
+                                  <Box sx={{ mt: 1.5 }}>
                                     <Typography
-                                      variant="body2"
+                                      variant="caption"
                                       color="text.secondary"
-                                      sx={{ mb: 1 }}
+                                      sx={{ mb: 0.5, display: "block" }}
                                     >
                                       {parserProgress}
                                     </Typography>
@@ -1109,8 +1214,8 @@ export default () => {
                                       variant="determinate"
                                       value={parserPercent}
                                       sx={{
-                                        height: 6,
-                                        borderRadius: 3,
+                                        height: 4,
+                                        borderRadius: 2,
                                         bgcolor: themedColors.backgroundSubtle,
                                         "& .MuiLinearProgress-bar": {
                                           background: gradients.parser,
@@ -1120,6 +1225,33 @@ export default () => {
                                   </Box>
                                 )}
                               </Box>
+                            </Box>
+
+                            {/* Timestamps row */}
+                            <Box
+                              sx={{
+                                px: spacing.sm,
+                                pb: spacing.sm,
+                                display: "flex",
+                                gap: spacing.md,
+                              }}
+                            >
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ fontFamily: "monospace" }}
+                              >
+                                {t("admin.table.rawLastUpdated")}:{" "}
+                                {formatTimestamp(row.raw_last_updated)}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ fontFamily: "monospace" }}
+                              >
+                                {t("admin.table.parsedLastUpdated")}:{" "}
+                                {formatTimestamp(row.parsed_last_updated)}
+                              </Typography>
                             </Box>
                           </Collapse>
                         </TableCell>
