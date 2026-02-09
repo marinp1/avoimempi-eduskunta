@@ -1,5 +1,12 @@
-import { Box, Container, CssBaseline, GlobalStyles, Typography } from "@mui/material";
+import {
+  Box,
+  Container,
+  CssBaseline,
+  GlobalStyles,
+  Typography,
+} from "@mui/material";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Navigation } from "./Navigation";
 import { type RouteName, routes } from "./pages";
 import { spacing } from "./theme";
@@ -13,6 +20,7 @@ const getInitialTab = (): RouteName => {
 
 export const App: React.FC = () => {
   const themedColors = useThemedColors();
+  const { t } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<RouteName>(getInitialTab());
 
@@ -58,7 +66,7 @@ export const App: React.FC = () => {
         }}
       >
         <Box>
-          <React.Suspense fallback={<div>Loading...</div>}>
+          <React.Suspense fallback={<div>{t("app.loading")}</div>}>
             <ActivePage.Component />
           </React.Suspense>
         </Box>
@@ -82,7 +90,7 @@ export const App: React.FC = () => {
               lineHeight: 1.6,
             }}
           >
-            Tietolähde: Eduskunnan avoin data (avoindata.eduskunta.fi)
+            {t("app.disclaimer.source")}
           </Typography>
           <Typography
             variant="caption"
@@ -93,9 +101,7 @@ export const App: React.FC = () => {
               lineHeight: 1.6,
             }}
           >
-            Tämä on epävirallinen palvelu eikä liity eduskuntaan tai
-            valtionhallintoon. Tiedot voivat olla puutteellisia tai
-            viiveellisiä.
+            {t("app.disclaimer.unofficial")}
           </Typography>
         </Box>
       </Container>
