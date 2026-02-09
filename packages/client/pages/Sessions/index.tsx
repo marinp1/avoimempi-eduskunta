@@ -6,28 +6,74 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import {
   Alert,
   Box,
-  CardContent,
+  Button,
   Chip,
   CircularProgress,
   Collapse,
-  Fade,
   IconButton,
   InputAdornment,
   TextField,
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { commonStyles, spacing } from "#client/theme";
-import { GlassCard } from "#client/theme/components";
+import { useTranslation } from "react-i18next";
+import { colors } from "#client/theme/index";
+import { commonStyles } from "#client/theme";
+import { DataCard, PageHeader, VoteMarginBar } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 
-type SessionWithSections = DatabaseTables.Session & {
+type SessionWithSections = {
+  id: number;
+  key: string;
+  date: string;
+  description?: string;
   agenda_title?: string;
   agenda_state?: string;
-  sections?: DatabaseTables.Section[];
   section_count: number;
   voting_count: number;
+  sections?: Section[];
 };
+
+type Section = {
+  id: number;
+  key: string;
+  ordinal: number;
+  title: string;
+  processing_title?: string;
+  identifier?: string;
+  resolution?: string;
+};
+
+type Speech = {
+  id: number;
+  ordinal: number;
+  ordinal_number?: number;
+  first_name: string;
+  last_name: string;
+  party_abbreviation?: string;
+  speech_type?: string;
+  content?: string;
+};
+
+type Voting = {
+  id: number;
+  number: number;
+  title: string;
+  n_yes: number;
+  n_no: number;
+  n_abstain: number;
+  n_absent: number;
+  n_total: number;
+};
+
+type SpeechData = {
+  speeches: Speech[];
+  total: number;
+  page: number;
+  totalPages: number;
+};
+
+const SPEECH_PAGE_SIZE = 20;
 
 const getInitialDate = (): string => {
   const params = new URLSearchParams(window.location.search);
@@ -39,54 +85,42 @@ const getInitialDate = (): string => {
 };
 
 export default () => {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
 
   const [sessions, setSessions] = useState<SessionWithSections[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [date, setDate] = useState<string>(getInitialDate());
   const [error, setError] = useState<string | null>(null);
   const [validDates, setValidDates] = useState<Set<string>>(new Set());
-  const [datesLoading, setDatesLoading] = useState<boolean>(true);
+  const [datesLoading, setDatesLoading] = useState(true);
 
-  const [expandedSections, setExpandedSections] = useState<Set<number>>(
-    new Set(),
-  );
-  const [sectionSpeeches, setSectionSpeeches] = useState<
-    Record<number, DatabaseTables.Speech[]>
-  >({});
-  const [loadingSpeeches, setLoadingSpeeches] = useState<Set<number>>(
-    new Set(),
-  );
-  const [sectionVotings, setSectionVotings] = useState<
-    Record<number, DatabaseTables.Voting[]>
-  >({});
-  const [loadingVotings, setLoadingVotings] = useState<Set<number>>(
-    new Set(),
-  );
+  const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
+  const [sectionSpeechData, setSectionSpeechData] = useState<Record<number, SpeechData>>({});
+  const [sectionVotings, setSectionVotings] = useState<Record<number, Voting[]>>({});
+  const [loadingSpeeches, setLoadingSpeeches] = useState<Set<number>>(new Set());
+  const [loadingVotings, setLoadingVotings] = useState<Set<number>>(new Set());
+  const [loadingMoreSpeeches, setLoadingMoreSpeeches] = useState<Set<number>>(new Set());
 
-  // Fetch sessions with sections when date changes
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
         setExpandedSections(new Set());
-
         const res = await fetch(`/api/day/${date}/sessions`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: SessionWithSections[] = await res.json();
         setSessions(data);
-      } catch (err) {
-        console.error(err);
-        setError("Tietojen lataaminen epäonnistui.");
+      } catch {
+        setError(t("errors.loadSessionFailed"));
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [date]);
+  }, [date, t]);
 
-  // Fetch valid session dates on mount
   useEffect(() => {
     const fetchValidDates = async () => {
       try {
@@ -95,8 +129,8 @@ export default () => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: { date: string }[] = await response.json();
         setValidDates(new Set(data.map((item) => item.date)));
-      } catch (err) {
-        console.error("Failed to fetch valid dates:", err);
+      } catch {
+        // non-critical
       } finally {
         setDatesLoading(false);
       }
@@ -104,7 +138,6 @@ export default () => {
     fetchValidDates();
   }, []);
 
-  // Handle browser back/forward
   useEffect(() => {
     const handlePopState = () => setDate(getInitialDate());
     window.addEventListener("popstate", handlePopState);
@@ -122,12 +155,9 @@ export default () => {
     updateURL(newDate);
   };
 
-  const isValidDate = (dateString: string): boolean =>
-    validDates.has(dateString);
+  const isValidDate = (dateString: string): boolean => validDates.has(dateString);
 
-  const findNearestValidDates = (
-    targetDate: string,
-  ): { before: string | null; after: string | null } => {
+  const findNearestValidDates = (targetDate: string) => {
     const sortedDates = Array.from(validDates).sort();
     const target = new Date(targetDate).getTime();
     let before: string | null = null;
@@ -155,35 +185,35 @@ export default () => {
     });
   };
 
-  // Toggle section expansion and lazy-load speeches/votings
+  const fetchSpeeches = async (sectionId: number, sectionKey: string, offset = 0) => {
+    const res = await fetch(
+      `/api/sections/${sectionKey}/speeches?limit=${SPEECH_PAGE_SIZE}&offset=${offset}`,
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()) as SpeechData;
+  };
+
   const toggleSection = async (sectionId: number, sectionKey: string) => {
     const isExpanding = !expandedSections.has(sectionId);
 
     setExpandedSections((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(sectionId)) {
-        newSet.delete(sectionId);
-      } else {
-        newSet.add(sectionId);
-      }
-      return newSet;
+      const next = new Set(prev);
+      if (next.has(sectionId)) next.delete(sectionId);
+      else next.add(sectionId);
+      return next;
     });
 
     if (isExpanding) {
-      if (!sectionSpeeches[sectionId]) {
+      if (!sectionSpeechData[sectionId]) {
         setLoadingSpeeches((prev) => new Set(prev).add(sectionId));
         try {
-          const res = await fetch(`/api/sections/${sectionKey}/speeches`);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const speeches: DatabaseTables.Speech[] = await res.json();
-          setSectionSpeeches((prev) => ({ ...prev, [sectionId]: speeches }));
-        } catch (err) {
-          console.error("Failed to fetch speeches:", err);
+          const data = await fetchSpeeches(sectionId, sectionKey);
+          setSectionSpeechData((prev) => ({ ...prev, [sectionId]: data }));
         } finally {
           setLoadingSpeeches((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(sectionId);
-            return newSet;
+            const next = new Set(prev);
+            next.delete(sectionId);
+            return next;
           });
         }
       }
@@ -192,724 +222,428 @@ export default () => {
         setLoadingVotings((prev) => new Set(prev).add(sectionId));
         try {
           const res = await fetch(`/api/sections/${sectionKey}/votings`);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const votings: DatabaseTables.Voting[] = await res.json();
-          setSectionVotings((prev) => ({ ...prev, [sectionId]: votings }));
-        } catch (err) {
-          console.error("Failed to fetch votings:", err);
+          if (res.ok) {
+            const votings: Voting[] = await res.json();
+            setSectionVotings((prev) => ({ ...prev, [sectionId]: votings }));
+          }
         } finally {
           setLoadingVotings((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(sectionId);
-            return newSet;
+            const next = new Set(prev);
+            next.delete(sectionId);
+            return next;
           });
         }
       }
     }
   };
 
-  const renderSections = (session: SessionWithSections) => {
-    if (!session.sections || session.sections.length === 0) return null;
+  const loadMoreSpeeches = async (sectionId: number, sectionKey: string) => {
+    const current = sectionSpeechData[sectionId];
+    if (!current || current.page >= current.totalPages) return;
 
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: spacing.sm,
-        }}
-      >
-        {session.sections.map((section) => {
-          const isSectionExpanded = expandedSections.has(section.id);
-          const speeches = sectionSpeeches[section.id] || [];
-          const votings = sectionVotings[section.id] || [];
-          const isLoadingSpeechesForSection = loadingSpeeches.has(section.id);
-          const isLoadingVotingsForSection = loadingVotings.has(section.id);
-
-          return (
-            <Box
-              key={section.id}
-              sx={{
-                borderRadius: 1,
-                background: "rgba(102, 126, 234, 0.05)",
-                border: "1px solid rgba(102, 126, 234, 0.1)",
-                overflow: "hidden",
-              }}
-            >
-              <Box
-                sx={{
-                  p: { xs: 1.5, sm: spacing.sm },
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 1,
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: { xs: 1, sm: spacing.sm },
-                    flex: 1,
-                    minWidth: 0,
-                  }}
-                >
-                  <Chip
-                    label={section.ordinal}
-                    size="small"
-                    sx={{
-                      background: themedColors.primary,
-                      color: themedColors.backgroundPaper,
-                      fontWeight: 600,
-                      fontSize: "0.7rem",
-                      height: 22,
-                      minWidth: 30,
-                      flexShrink: 0,
-                    }}
-                  />
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontWeight: 600,
-                        color: themedColors.textPrimary,
-                        wordBreak: "break-word",
-                      }}
-                    >
-                      {section.title ||
-                        section.processing_title ||
-                        "Ei otsikkoa"}
-                    </Typography>
-                    {section.identifier && (
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color: themedColors.textSecondary,
-                          display: "block",
-                        }}
-                      >
-                        Tunniste: {section.identifier}
-                      </Typography>
-                    )}
-                    {section.processing_title &&
-                      section.processing_title !== section.title && (
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: themedColors.textSecondary,
-                            display: "block",
-                          }}
-                        >
-                          Käsittely: {section.processing_title}
-                        </Typography>
-                      )}
-                    {section.resolution && (
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          color: themedColors.textSecondary,
-                          display: "block",
-                          mt: 0.5,
-                        }}
-                      >
-                        Päätös: {section.resolution}
-                      </Typography>
-                    )}
-                  </Box>
-                </Box>
-                <IconButton
-                  size="small"
-                  onClick={() => toggleSection(section.id, section.key)}
-                  sx={{ color: themedColors.primary, flexShrink: 0 }}
-                >
-                  {isSectionExpanded ? (
-                    <KeyboardArrowUpIcon />
-                  ) : (
-                    <KeyboardArrowDownIcon />
-                  )}
-                </IconButton>
-              </Box>
-              <Collapse in={isSectionExpanded} timeout="auto" unmountOnExit>
-                <Box
-                  sx={{
-                    p: { xs: 1.5, sm: spacing.sm },
-                    pt: 0,
-                    borderTop: "1px solid rgba(102, 126, 234, 0.1)",
-                  }}
-                >
-                  {/* Votings */}
-                  {isLoadingVotingsForSection ? (
-                    <Box sx={{ py: spacing.sm, textAlign: "center" }}>
-                      <CircularProgress
-                        size={20}
-                        sx={{ color: themedColors.primary }}
-                      />
-                    </Box>
-                  ) : votings.length > 0 ? (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 1,
-                        mb: speeches.length > 0 ? spacing.md : 0,
-                      }}
-                    >
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontWeight: 600,
-                          color: themedColors.textSecondary,
-                          textTransform: "uppercase",
-                          mt: 1,
-                        }}
-                      >
-                        Äänestykset ({votings.length})
-                      </Typography>
-                      {votings.map((voting) => {
-                        const isPassed = voting.n_yes > voting.n_no;
-                        return (
-                          <Box
-                            key={voting.id}
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: 1,
-                              p: { xs: 1.5, sm: spacing.sm },
-                              borderRadius: 1,
-                              background: themedColors.backgroundPaper,
-                              border: `1px solid ${isPassed ? "rgba(76, 175, 80, 0.3)" : "rgba(244, 67, 54, 0.3)"}`,
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                                flexWrap: "wrap",
-                              }}
-                            >
-                              <HowToVoteIcon
-                                sx={{
-                                  color: isPassed
-                                    ? themedColors.success
-                                    : themedColors.error,
-                                  fontSize: 18,
-                                }}
-                              />
-                              <Chip
-                                label={voting.number}
-                                size="small"
-                                sx={{
-                                  background: "rgba(102, 126, 234, 0.2)",
-                                  color: themedColors.primary,
-                                  fontWeight: 600,
-                                  fontSize: "0.65rem",
-                                  height: 18,
-                                  minWidth: 24,
-                                }}
-                              />
-                              <Typography
-                                variant="body2"
-                                sx={{
-                                  fontWeight: 600,
-                                  flex: 1,
-                                  minWidth: 0,
-                                }}
-                              >
-                                {voting.title}
-                              </Typography>
-                              <Chip
-                                label={isPassed ? "Hyväksytty" : "Hylätty"}
-                                size="small"
-                                sx={{
-                                  background: isPassed
-                                    ? "rgba(76, 175, 80, 0.15)"
-                                    : "rgba(244, 67, 54, 0.15)",
-                                  color: isPassed
-                                    ? themedColors.success
-                                    : themedColors.error,
-                                  fontWeight: 600,
-                                  fontSize: "0.65rem",
-                                  height: 20,
-                                }}
-                              />
-                            </Box>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                gap: { xs: 1, sm: 2 },
-                                flexWrap: "wrap",
-                              }}
-                            >
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  color: themedColors.success,
-                                  fontWeight: 600,
-                                }}
-                              >
-                                Kyllä: {voting.n_yes}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  color: themedColors.error,
-                                  fontWeight: 600,
-                                }}
-                              >
-                                Ei: {voting.n_no}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  color: themedColors.textSecondary,
-                                  fontWeight: 600,
-                                }}
-                              >
-                                Tyhjä: {voting.n_abstain}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  color: themedColors.textSecondary,
-                                  fontWeight: 600,
-                                }}
-                              >
-                                Poissa: {voting.n_absent}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  color: themedColors.textSecondary,
-                                  fontWeight: 600,
-                                }}
-                              >
-                                Yhteensä: {voting.n_total}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        );
-                      })}
-                    </Box>
-                  ) : null}
-
-                  {/* Speeches */}
-                  {isLoadingSpeechesForSection ? (
-                    <Box sx={{ py: spacing.sm, textAlign: "center" }}>
-                      <CircularProgress
-                        size={20}
-                        sx={{ color: themedColors.primary }}
-                      />
-                    </Box>
-                  ) : speeches.length > 0 ? (
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 1,
-                      }}
-                    >
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontWeight: 600,
-                          color: themedColors.textSecondary,
-                          textTransform: "uppercase",
-                          mt: 1,
-                        }}
-                      >
-                        Puheenvuorot ({speeches.length})
-                      </Typography>
-                      {speeches.map((speech) => (
-                        <Box
-                          key={speech.id}
-                          sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 1,
-                            p: { xs: 1.5, sm: spacing.sm },
-                            borderRadius: 1,
-                            background: themedColors.backgroundPaper,
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            <Chip
-                              label={speech.ordinal_number || speech.ordinal}
-                              size="small"
-                              sx={{
-                                background: "rgba(102, 126, 234, 0.2)",
-                                color: themedColors.primary,
-                                fontWeight: 600,
-                                fontSize: "0.65rem",
-                                height: 18,
-                                minWidth: 24,
-                              }}
-                            />
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                fontWeight: 600,
-                                flex: 1,
-                                minWidth: 0,
-                              }}
-                            >
-                              {speech.first_name} {speech.last_name}
-                            </Typography>
-                            {speech.party_abbreviation && (
-                              <Chip
-                                label={speech.party_abbreviation}
-                                size="small"
-                                sx={{
-                                  background: "rgba(102, 126, 234, 0.1)",
-                                  color: themedColors.primary,
-                                  fontSize: "0.65rem",
-                                  height: 18,
-                                }}
-                              />
-                            )}
-                            {speech.speech_type && (
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  color: themedColors.textSecondary,
-                                }}
-                              >
-                                {speech.speech_type}
-                              </Typography>
-                            )}
-                          </Box>
-                          {(speech as any).content && (
-                            <Box
-                              sx={{
-                                p: { xs: 1.5, sm: spacing.sm },
-                                borderRadius: 1,
-                                background: "rgba(102, 126, 234, 0.03)",
-                                borderLeft: `3px solid ${themedColors.primary}`,
-                              }}
-                            >
-                              <Typography
-                                variant="body2"
-                                sx={{
-                                  color: themedColors.textPrimary,
-                                  whiteSpace: "pre-wrap",
-                                  lineHeight: 1.6,
-                                  fontSize: {
-                                    xs: "0.8125rem",
-                                    sm: "0.875rem",
-                                  },
-                                }}
-                              >
-                                {(speech as any).content}
-                              </Typography>
-                            </Box>
-                          )}
-                        </Box>
-                      ))}
-                    </Box>
-                  ) : null}
-
-                  {/* No content message */}
-                  {!isLoadingSpeechesForSection &&
-                    !isLoadingVotingsForSection &&
-                    speeches.length === 0 &&
-                    votings.length === 0 && (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ py: spacing.sm, textAlign: "center", mt: 1 }}
-                      >
-                        Ei puheenvuoroja tai äänestyksiä
-                      </Typography>
-                    )}
-                </Box>
-              </Collapse>
-            </Box>
-          );
-        })}
-      </Box>
-    );
+    setLoadingMoreSpeeches((prev) => new Set(prev).add(sectionId));
+    try {
+      const nextOffset = current.page * SPEECH_PAGE_SIZE;
+      const data = await fetchSpeeches(sectionId, sectionKey, nextOffset);
+      setSectionSpeechData((prev) => ({
+        ...prev,
+        [sectionId]: {
+          ...data,
+          speeches: [...(prev[sectionId]?.speeches || []), ...data.speeches],
+        },
+      }));
+    } finally {
+      setLoadingMoreSpeeches((prev) => {
+        const next = new Set(prev);
+        next.delete(sectionId);
+        return next;
+      });
+    }
   };
 
   return (
     <Box>
-      {/* Header Card with Date Picker */}
-      <Fade in timeout={500}>
-        <Box>
-          <GlassCard
-            sx={{
-              mb: spacing.lg,
-              background: themedColors.glassBackground,
-              border: `1px solid ${themedColors.glassBorder}`,
+      <PageHeader
+        title={t("sessions.title")}
+        subtitle={t("sessions.subtitle")}
+        actions={
+          <TextField
+            type="date"
+            value={date}
+            onChange={(e) => handleDateChange(e.target.value)}
+            size="small"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <CalendarTodayIcon sx={{ fontSize: 16, color: colors.primaryLight }} />
+                </InputAdornment>
+              ),
             }}
-          >
-            <CardContent
-              sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: spacing.sm,
-                  mb: spacing.md,
-                }}
-              >
-                <EventIcon
-                  sx={{
-                    fontSize: { xs: 32, sm: 40 },
-                    color: themedColors.primary,
-                  }}
-                />
-                <Typography
-                  variant="h4"
-                  component="h1"
-                  sx={{
-                    background: themedColors.primaryGradient,
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    fontWeight: 700,
-                    fontSize: { xs: "1.5rem", sm: "2.125rem" },
-                  }}
-                >
-                  Istunnot
-                </Typography>
-              </Box>
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                sx={{ mb: spacing.md }}
-              >
-                Selaa eduskunnan täysistuntoja
-              </Typography>
-              <TextField
-                label="Valitse päivämäärä"
-                type="date"
-                value={date}
-                onChange={(e) => handleDateChange(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <CalendarTodayIcon sx={{ color: themedColors.primary }} />
-                    </InputAdornment>
-                  ),
-                }}
-                helperText={
-                  !datesLoading && !isValidDate(date)
-                    ? "Valitulla päivällä ei ole istuntoja"
-                    : "Valitse päivä jonka istuntoja haluat tarkastella"
-                }
-                error={!datesLoading && !isValidDate(date)}
-                sx={{
-                  maxWidth: 280,
-                  "& .MuiOutlinedInput-root": {
-                    background: themedColors.backgroundPaper,
-                  },
-                }}
-              />
-            </CardContent>
-          </GlassCard>
-        </Box>
-      </Fade>
+            error={!datesLoading && !isValidDate(date)}
+            helperText={
+              !datesLoading && !isValidDate(date)
+                ? t("sessions.noSessionsSelected")
+                : undefined
+            }
+            sx={{
+              minWidth: 200,
+              "& .MuiOutlinedInput-root": {
+                background: "#fff",
+              },
+            }}
+          />
+        }
+      />
 
       {loading ? (
-        <Box sx={{ ...commonStyles.centeredFlex, py: spacing.xl }}>
-          <CircularProgress sx={{ color: themedColors.primary }} />
+        <Box sx={{ ...commonStyles.centeredFlex, py: 4 }}>
+          <CircularProgress size={28} sx={{ color: themedColors.primary }} />
         </Box>
       ) : error ? (
-        <Alert severity="error" sx={{ py: spacing.sm }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       ) : sessions.length === 0 ? (
-        <Fade in timeout={600}>
-          <Box>
-            <Alert severity="info" sx={{ py: spacing.sm, mb: spacing.md }}>
-              Ei istuntoja valitulla päivämäärällä.
-            </Alert>
-            {!datesLoading &&
-              validDates.size > 0 &&
-              (() => {
-                const { before, after } = findNearestValidDates(date);
-                return before || after ? (
-                  <GlassCard
-                    sx={{
-                      background: themedColors.backgroundPaper,
-                      border: `1px solid ${themedColors.dataBorder}`,
-                    }}
-                  >
-                    <CardContent sx={{ p: spacing.md }}>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{
-                          color: themedColors.textSecondary,
-                          mb: spacing.sm,
-                          fontWeight: 600,
-                        }}
-                      >
-                        Lähimmät istunnot:
-                      </Typography>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          gap: spacing.sm,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        {before && (
-                          <Chip
-                            label={formatDate(before)}
-                            onClick={() => handleDateChange(before)}
-                            sx={{
-                              background: themedColors.primary,
-                              color: themedColors.backgroundPaper,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              "&:hover": { opacity: 0.9 },
-                            }}
-                          />
-                        )}
-                        {after && (
-                          <Chip
-                            label={formatDate(after)}
-                            onClick={() => handleDateChange(after)}
-                            sx={{
-                              background: themedColors.primary,
-                              color: themedColors.backgroundPaper,
-                              fontWeight: 600,
-                              cursor: "pointer",
-                              "&:hover": { opacity: 0.9 },
-                            }}
-                          />
-                        )}
-                      </Box>
-                    </CardContent>
-                  </GlassCard>
-                ) : null;
-              })()}
-          </Box>
-        </Fade>
-      ) : (
-        <>
-          {sessions.map((session, sessionIndex) => (
-            <Fade in timeout={600 + sessionIndex * 100} key={session.id}>
-              <Box>
-                <GlassCard
-                  sx={{
-                    mb: spacing.lg,
-                    background: themedColors.backgroundPaper,
-                    border: `1px solid ${themedColors.dataBorder}`,
-                    boxShadow:
-                      "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
-                  }}
+        <Box>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            {t("sessions.noSessionsForDate")}
+          </Alert>
+          {!datesLoading && validDates.size > 0 && (() => {
+            const { before, after } = findNearestValidDates(date);
+            return before || after ? (
+              <DataCard sx={{ p: 2.5 }}>
+                <Typography
+                  sx={{ fontSize: "0.8125rem", fontWeight: 600, color: colors.textSecondary, mb: 1.5 }}
                 >
-                  <CardContent sx={{ p: { xs: 2, sm: spacing.lg } }}>
-                    {/* Session header */}
+                  {t("sessions.nearestSessions")}
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                  {before && (
+                    <Chip
+                      label={formatDate(before)}
+                      onClick={() => handleDateChange(before)}
+                      sx={{
+                        background: colors.primary,
+                        color: "#fff",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        "&:hover": { opacity: 0.9 },
+                      }}
+                    />
+                  )}
+                  {after && (
+                    <Chip
+                      label={formatDate(after)}
+                      onClick={() => handleDateChange(after)}
+                      sx={{
+                        background: colors.primary,
+                        color: "#fff",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        "&:hover": { opacity: 0.9 },
+                      }}
+                    />
+                  )}
+                </Box>
+              </DataCard>
+            ) : null;
+          })()}
+        </Box>
+      ) : (
+        <DataCard sx={{ p: 0, overflow: "hidden" }}>
+          {/* Date banner */}
+          <Box sx={{ p: 2.5, borderBottom: `1px solid ${colors.dataBorder}` }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.25 }}>
+              <EventIcon sx={{ fontSize: 20, color: colors.primaryLight }} />
+              <Typography sx={{ fontWeight: 600, fontSize: "1rem", color: colors.textPrimary }}>
+                {formatDate(date)}
+              </Typography>
+            </Box>
+          </Box>
+
+          {sessions.map((session) => (
+            <Box key={session.id}>
+              {/* Session header */}
+              <Box
+                sx={{
+                  p: 2,
+                  borderBottom: `1px solid ${colors.dataBorder}`,
+                  background: colors.backgroundSubtle,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                  flexWrap: "wrap",
+                }}
+              >
+                <Typography sx={{ fontWeight: 700, fontSize: "0.9375rem", color: colors.textPrimary }}>
+                  {session.key || t("sessions.session")}
+                </Typography>
+                {session.section_count > 0 && (
+                  <Chip
+                    label={`${session.section_count} ${t("home.sections")}`}
+                    size="small"
+                    sx={{ fontSize: "0.6875rem", height: 22, background: `${colors.primaryLight}20`, color: colors.primaryLight }}
+                  />
+                )}
+                {session.voting_count > 0 && (
+                  <Chip
+                    icon={<HowToVoteIcon sx={{ fontSize: 14 }} />}
+                    label={`${session.voting_count} ${t("home.votings")}`}
+                    size="small"
+                    sx={{ fontSize: "0.6875rem", height: 22, background: `${themedColors.success}15`, color: themedColors.success }}
+                  />
+                )}
+                {session.agenda_title && (
+                  <Typography sx={{ fontSize: "0.8125rem", color: colors.textSecondary, flex: "1 1 100%" }}>
+                    {session.agenda_title}
+                  </Typography>
+                )}
+              </Box>
+
+              {/* Sections list */}
+              {session.sections?.map((section) => {
+                const isExpanded = expandedSections.has(section.id);
+                const speechData = sectionSpeechData[section.id];
+                const speeches = speechData?.speeches || [];
+                const votings = sectionVotings[section.id] || [];
+
+                return (
+                  <Box key={section.id} sx={{ borderBottom: `1px solid ${colors.dataBorder}` }}>
                     <Box
                       sx={{
+                        p: 2,
                         display: "flex",
                         alignItems: "center",
-                        gap: spacing.sm,
-                        mb: spacing.sm,
+                        gap: 1,
+                        cursor: "pointer",
+                        "&:hover": { background: colors.backgroundSubtle },
+                        transition: "background 0.15s",
                       }}
+                      onClick={() => toggleSection(section.id, section.key)}
                     >
-                      <EventIcon
+                      <Chip
+                        label={section.ordinal}
+                        size="small"
                         sx={{
-                          fontSize: { xs: 24, sm: 32 },
-                          color: themedColors.primary,
+                          background: colors.primary,
+                          color: "#fff",
+                          fontWeight: 600,
+                          fontSize: "0.7rem",
+                          height: 22,
+                          minWidth: 28,
+                          flexShrink: 0,
                         }}
                       />
-                      <Typography
-                        variant="h5"
-                        sx={{
-                          color: themedColors.primary,
-                          fontWeight: 700,
-                        }}
-                      >
-                        {session.key || "Istunto"}
-                      </Typography>
-                    </Box>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: themedColors.textSecondary,
-                        fontWeight: 500,
-                        mb: spacing.sm,
-                      }}
-                    >
-                      {formatDate(date)}
-                    </Typography>
-                    {session.agenda_title && (
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          color: themedColors.textPrimary,
-                          fontWeight: 500,
-                          mb: spacing.sm,
-                        }}
-                      >
-                        {session.agenda_title}
-                      </Typography>
-                    )}
-
-                    {/* Summary chips */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: spacing.sm,
-                        mb:
-                          session.sections && session.sections.length > 0
-                            ? spacing.md
-                            : 0,
-                      }}
-                    >
-                      {session.section_count > 0 && (
-                        <Chip
-                          label={`${session.section_count} kohtaa`}
-                          size="small"
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
                           sx={{
-                            background: "rgba(102, 126, 234, 0.1)",
-                            color: themedColors.primary,
                             fontWeight: 600,
+                            fontSize: "0.875rem",
+                            color: colors.textPrimary,
+                            wordBreak: "break-word",
                           }}
-                        />
-                      )}
-                      {session.voting_count > 0 && (
-                        <Chip
-                          icon={
-                            <HowToVoteIcon
-                              sx={{
-                                fontSize: 16,
-                                color: themedColors.success,
-                              }}
-                            />
-                          }
-                          label={`${session.voting_count} äänestystä`}
-                          size="small"
-                          sx={{
-                            background: "rgba(76, 175, 80, 0.1)",
-                            color: themedColors.success,
-                            fontWeight: 600,
-                          }}
-                        />
-                      )}
+                        >
+                          {section.title || section.processing_title || t("sessions.noTitle")}
+                        </Typography>
+                        {section.identifier && (
+                          <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                            {section.identifier}
+                          </Typography>
+                        )}
+                        {section.processing_title && section.processing_title !== section.title && (
+                          <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                            {t("sessions.processing")}: {section.processing_title}
+                          </Typography>
+                        )}
+                        {section.resolution && (
+                          <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                            {t("sessions.resolution")}: {section.resolution}
+                          </Typography>
+                        )}
+                      </Box>
+                      <IconButton size="small" sx={{ color: colors.primaryLight, flexShrink: 0 }}>
+                        {isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                      </IconButton>
                     </Box>
 
-                    {/* Sections */}
-                    {renderSections(session)}
-                  </CardContent>
-                </GlassCard>
-              </Box>
-            </Fade>
+                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                      <Box sx={{ px: 2, pb: 2, borderTop: `1px solid ${colors.dataBorder}` }}>
+                        {/* Votings */}
+                        {loadingVotings.has(section.id) ? (
+                          <Box sx={{ py: 2, textAlign: "center" }}>
+                            <CircularProgress size={20} sx={{ color: themedColors.primary }} />
+                          </Box>
+                        ) : votings.length > 0 ? (
+                          <Box sx={{ mt: 1.5, display: "flex", flexDirection: "column", gap: 1 }}>
+                            <Typography
+                              sx={{ fontSize: "0.75rem", fontWeight: 600, color: colors.textSecondary, textTransform: "uppercase" }}
+                            >
+                              {t("sessions.votings")} ({votings.length})
+                            </Typography>
+                            {votings.map((voting) => {
+                              const isPassed = voting.n_yes > voting.n_no;
+                              return (
+                                <Box
+                                  key={voting.id}
+                                  sx={{
+                                    p: 1.5,
+                                    borderRadius: 1,
+                                    border: `1px solid ${isPassed ? `${themedColors.success}40` : `${themedColors.error}40`}`,
+                                    background: isPassed ? `${themedColors.success}08` : `${themedColors.error}08`,
+                                  }}
+                                >
+                                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, flexWrap: "wrap" }}>
+                                    <HowToVoteIcon sx={{ fontSize: 16, color: isPassed ? themedColors.success : themedColors.error }} />
+                                    <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", flex: 1, minWidth: 0 }}>
+                                      {voting.title}
+                                    </Typography>
+                                    <Chip
+                                      label={isPassed ? t("sessions.passed") : t("sessions.rejected")}
+                                      size="small"
+                                      sx={{
+                                        fontSize: "0.625rem",
+                                        height: 20,
+                                        background: isPassed ? `${themedColors.success}20` : `${themedColors.error}20`,
+                                        color: isPassed ? themedColors.success : themedColors.error,
+                                        fontWeight: 600,
+                                      }}
+                                    />
+                                  </Box>
+                                  <VoteMarginBar yes={voting.n_yes} no={voting.n_no} empty={voting.n_abstain} absent={voting.n_absent} height={8} />
+                                  <Box sx={{ display: "flex", gap: 1.5, mt: 0.75 }}>
+                                    <Typography sx={{ fontSize: "0.6875rem", color: themedColors.success, fontWeight: 600 }}>
+                                      {t("common.yes")} {voting.n_yes}
+                                    </Typography>
+                                    <Typography sx={{ fontSize: "0.6875rem", color: themedColors.error, fontWeight: 600 }}>
+                                      {t("common.no")} {voting.n_no}
+                                    </Typography>
+                                    <Typography sx={{ fontSize: "0.6875rem", color: colors.textTertiary }}>
+                                      {t("common.empty")} {voting.n_abstain}
+                                    </Typography>
+                                    <Typography sx={{ fontSize: "0.6875rem", color: colors.textTertiary }}>
+                                      {t("common.absent")} {voting.n_absent}
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                              );
+                            })}
+                          </Box>
+                        ) : null}
+
+                        {/* Speeches */}
+                        {loadingSpeeches.has(section.id) ? (
+                          <Box sx={{ py: 2, textAlign: "center" }}>
+                            <CircularProgress size={20} sx={{ color: themedColors.primary }} />
+                          </Box>
+                        ) : speeches.length > 0 ? (
+                          <Box sx={{ mt: 1.5, display: "flex", flexDirection: "column", gap: 0.75 }}>
+                            <Typography
+                              sx={{ fontSize: "0.75rem", fontWeight: 600, color: colors.textSecondary, textTransform: "uppercase" }}
+                            >
+                              {t("sessions.speeches")} ({speechData?.total ?? speeches.length})
+                            </Typography>
+                            {speeches.map((speech) => (
+                              <Box
+                                key={speech.id}
+                                sx={{ p: 1.5, borderRadius: 1, background: colors.backgroundSubtle }}
+                              >
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: speech.content ? 1 : 0 }}>
+                                  <Chip
+                                    label={speech.ordinal_number || speech.ordinal}
+                                    size="small"
+                                    sx={{
+                                      background: `${colors.primaryLight}30`,
+                                      color: colors.primaryLight,
+                                      fontWeight: 600,
+                                      fontSize: "0.625rem",
+                                      height: 18,
+                                      minWidth: 24,
+                                    }}
+                                  />
+                                  <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", flex: 1 }}>
+                                    {speech.first_name} {speech.last_name}
+                                  </Typography>
+                                  {speech.party_abbreviation && (
+                                    <Chip
+                                      label={speech.party_abbreviation}
+                                      size="small"
+                                      sx={{ fontSize: "0.625rem", height: 18 }}
+                                    />
+                                  )}
+                                  {speech.speech_type && (
+                                    <Typography sx={{ fontSize: "0.6875rem", color: colors.textTertiary }}>
+                                      {speech.speech_type}
+                                    </Typography>
+                                  )}
+                                </Box>
+                                {speech.content && (
+                                  <Box
+                                    sx={{
+                                      p: 1.5,
+                                      borderRadius: 1,
+                                      borderLeft: `3px solid ${colors.primaryLight}`,
+                                      background: colors.backgroundDefault,
+                                    }}
+                                  >
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.8125rem",
+                                        color: colors.textPrimary,
+                                        whiteSpace: "pre-wrap",
+                                        lineHeight: 1.6,
+                                      }}
+                                    >
+                                      {speech.content}
+                                    </Typography>
+                                  </Box>
+                                )}
+                              </Box>
+                            ))}
+                            {/* Load more button */}
+                            {speechData && speechData.page < speechData.totalPages && (
+                              <Box sx={{ textAlign: "center", mt: 1 }}>
+                                <Button
+                                  size="small"
+                                  variant="outlined"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    loadMoreSpeeches(section.id, section.key);
+                                  }}
+                                  disabled={loadingMoreSpeeches.has(section.id)}
+                                  sx={{
+                                    textTransform: "none",
+                                    borderColor: colors.primaryLight,
+                                    color: colors.primaryLight,
+                                    fontSize: "0.8125rem",
+                                  }}
+                                >
+                                  {loadingMoreSpeeches.has(section.id) ? (
+                                    <CircularProgress size={16} sx={{ mr: 1 }} />
+                                  ) : null}
+                                  {t("sessions.loadMore")} ({speeches.length}/{speechData.total})
+                                </Button>
+                              </Box>
+                            )}
+                          </Box>
+                        ) : null}
+
+                        {/* No content */}
+                        {!loadingSpeeches.has(section.id) &&
+                          !loadingVotings.has(section.id) &&
+                          speeches.length === 0 &&
+                          votings.length === 0 && (
+                            <Typography sx={{ py: 2, textAlign: "center", fontSize: "0.8125rem", color: colors.textTertiary }}>
+                              {t("sessions.noContent")}
+                            </Typography>
+                          )}
+                      </Box>
+                    </Collapse>
+                  </Box>
+                );
+              })}
+            </Box>
           ))}
-        </>
+        </DataCard>
       )}
     </Box>
   );

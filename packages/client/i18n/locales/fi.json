@@ -171,7 +171,15 @@
     "noSessionsSelected": "Valitulla päivällä ei ole istuntoja",
     "selectDay": "Valitse päivä jonka istuntoja haluat tarkastella",
     "noSessionsForDate": "Ei istuntoja valitulla päivämäärällä.",
-    "nearestSessions": "Lähimmät istunnot:"
+    "nearestSessions": "Lähimmät istunnot:",
+    "votings": "Äänestykset",
+    "processing": "Käsittely",
+    "resolution": "Päätös",
+    "noTitle": "Ei otsikkoa",
+    "noContent": "Ei puheenvuoroja tai äänestyksiä",
+    "loadMore": "Näytä lisää",
+    "passed": "Hyväksytty",
+    "rejected": "Hylätty"
   },
   "insights": {
     "title": "Eduskunnan analytiikka",

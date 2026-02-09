@@ -162,12 +162,15 @@ const server = Bun.serve<{
 
     "/api/sections/:sectionKey/speeches": {
       GET: async (req: BunRequest<"/api/sections/:sectionKey/speeches">) => {
-        const speeches = await db.fetchSectionSpeeches({
+        const { searchParams } = new URL(req.url);
+        const limit = parseInt(searchParams.get("limit") || "20", 10);
+        const offset = parseInt(searchParams.get("offset") || "0", 10);
+        const result = await db.fetchSectionSpeeches({
           sectionKey: req.params.sectionKey,
+          limit,
+          offset,
         });
-        return new Response(JSON.stringify(speeches), {
-          headers: { "Content-Type": "application/json" },
-        });
+        return Response.json(result);
       },
     },
 
