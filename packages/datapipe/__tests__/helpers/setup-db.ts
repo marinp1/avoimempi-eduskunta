@@ -15,6 +15,7 @@ const MIGRATION_FILES = [
   "V001.008__performance_indexes.sql",
   "V001.009__add_term_year_columns.sql",
   "V001.010__vaski_document_schema.sql",
+  "V001.011__analytics_indexes.sql",
 ];
 
 /**
@@ -38,7 +39,7 @@ function stripInlineComments(sql: string): string {
  * Apply migration SQL files up to and including the given version number.
  * e.g. upToVersion = 4 applies V001.001 through V001.004
  */
-export function applyMigrations(db: Database, upToVersion = 10) {
+export function applyMigrations(db: Database, upToVersion = 11) {
   for (const file of MIGRATION_FILES) {
     const versionMatch = file.match(/V001\.(\d+)/);
     if (!versionMatch) continue;
@@ -62,7 +63,7 @@ export function applyMigrations(db: Database, upToVersion = 10) {
  * Create an in-memory SQLite database with schema applied.
  */
 export function createTestDb(
-  upToVersion = 10,
+  upToVersion = 11,
   options?: { foreignKeys?: boolean },
 ): Database {
   const db = new Database(":memory:");
@@ -233,7 +234,7 @@ export function seedVote(
     voting_id: number;
     person_id: number;
     vote: string;
-    group_abbrviation: string;
+    group_abbreviation: string;
   }> = {},
 ) {
   const defaults = {
@@ -241,14 +242,14 @@ export function seedVote(
     voting_id: 100,
     person_id: 1000,
     vote: "Jaa",
-    group_abbrviation: "kesk",
+    group_abbreviation: "kesk",
   };
   const row = { ...defaults, ...overrides };
 
   db.run(
-    `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbrviation)
+    `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbreviation)
      VALUES (?, ?, ?, ?, ?)`,
-    [row.id, row.voting_id, row.person_id, row.vote, row.group_abbrviation],
+    [row.id, row.voting_id, row.person_id, row.vote, row.group_abbreviation],
   );
   return row;
 }

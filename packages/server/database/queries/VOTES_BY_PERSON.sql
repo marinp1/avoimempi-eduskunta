@@ -1,7 +1,7 @@
 SELECT
     vs.*,
     v.vote,
-    v.group_abbrviation
+    v.group_abbreviation
 FROM
     Voting vs
 JOIN

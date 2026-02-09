@@ -44,9 +44,9 @@ export default (db: Database) => {
       first_name: dataToImport.Etunimi,
       last_name: dataToImport.Sukunimi,
       gender: dataToImport.Sukupuoli,
-      party_abbreviation: dataToImport.RyhmaLyhenneFI,
+      party_abbreviation: dataToImport.RyhmaLyhenneFI?.toLowerCase() || null,
       has_spoken: !!+dataToImport.Puhunut,
-      ministry: dataToImport.MinisteriysFI,
+      ministry: dataToImport.MinisteriysFI || null,
       modified_datetime: parseDateTime(dataToImport.Modified),
       excel_key: finalExcelKey,
     };

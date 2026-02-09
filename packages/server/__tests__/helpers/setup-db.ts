@@ -18,6 +18,7 @@ const MIGRATION_FILES = [
   "V001.008__performance_indexes.sql",
   "V001.009__add_term_year_columns.sql",
   "V001.010__vaski_document_schema.sql",
+  "V001.011__analytics_indexes.sql",
 ];
 
 /**
@@ -63,17 +64,17 @@ export function seedFullDataset(db: Database) {
   db.run(
     `INSERT INTO Representative (person_id, last_name, first_name, sort_name, party, gender, birth_date, minister)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [1000, "Meikäläinen", "Matti", "Meikäläinen Matti", "kesk", "mies", "1970-01-15", 0],
+    [1000, "Meikäläinen", "Matti", "Meikäläinen Matti", "kesk", "Mies", "1970-01-15", 0],
   );
   db.run(
     `INSERT INTO Representative (person_id, last_name, first_name, sort_name, party, gender, birth_date, minister)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [1001, "Virtanen", "Maija", "Virtanen Maija", "sd", "nainen", "1985-06-20", 0],
+    [1001, "Virtanen", "Maija", "Virtanen Maija", "sd", "Nainen", "1985-06-20", 0],
   );
   db.run(
     `INSERT INTO Representative (person_id, last_name, first_name, sort_name, party, gender, birth_date, minister)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [1002, "Korhonen", "Pekka", "Korhonen Pekka", "kok", "mies", "1960-03-10", 1],
+    [1002, "Korhonen", "Pekka", "Korhonen Pekka", "kok", "Mies", "1960-03-10", 1],
   );
 
   // Terms
@@ -159,32 +160,141 @@ export function seedFullDataset(db: Database) {
   db.run(
     `INSERT INTO Voting (id, number, start_time, annulled, title, n_yes, n_no, n_abstain, n_absent, n_total, section_title, session_key)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [101, 2, "2024-01-15T11:00:00", 0, "Äänestys 2", 120, 30, 10, 40, 200, "Välikysymys", "2024/1"],
+    [101, 2, "2024-01-15T11:00:00", 0, "Äänestys 2", 102, 98, 0, 0, 200, "Välikysymys", "2024/1"],
+  );
+
+  // Speeches (linked to sections)
+  db.run(
+    `INSERT INTO Speech (id, key, session_key, section_key, ordinal, ordinal_number, speech_type, person_id,
+      first_name, last_name, gender, party_abbreviation, has_spoken, excel_key)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [200, "speech_200", "2024/1", "2024/1/3", 20240115100000, 1, "Puheenvuoro", 1000,
+      "Matti", "Meikäläinen", "Mies", "kesk", 1, "20240115_1000"],
+  );
+  db.run(
+    `INSERT INTO Speech (id, key, session_key, section_key, ordinal, ordinal_number, speech_type, person_id,
+      first_name, last_name, gender, party_abbreviation, has_spoken, excel_key)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [201, "speech_201", "2024/1", "2024/1/3", 20240115100100, 2, "Puheenvuoro", 1001,
+      "Maija", "Virtanen", "Nainen", "sd", 1, "20240115_1001"],
+  );
+
+  // ExcelSpeeches (content for speeches)
+  db.run(
+    `INSERT INTO ExcelSpeech (excel_id, processing_phase, document, ordinal, first_name, last_name, party,
+      speech_type, start_time, end_time, content, source_file)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ["20240115_1000", "Ainoa käsittely", "PJ_2024_1", 1, "Matti", "Meikäläinen", "kesk",
+      "(vastauspuheenvuoro)", "2024-01-15T10:00:00", "2024-01-15T10:05:00",
+      "Arvoisa puhemies tämä on testipuheenvuoro kansanedustajalta", "vaski"],
+  );
+  db.run(
+    `INSERT INTO ExcelSpeech (excel_id, processing_phase, document, ordinal, first_name, last_name, party,
+      speech_type, start_time, end_time, content, source_file)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ["20240115_1001", "Ainoa käsittely", "PJ_2024_1", 2, "Maija", "Virtanen", "sd",
+      "(esittelypuheenvuoro)", "2024-01-15T10:05:00", "2024-01-15T10:10:00",
+      "Arvoisa puhemies esittelen tämän asian eduskunnalle", "vaski"],
+  );
+
+  // Government memberships (Pekka is a minister in current government)
+  db.run(
+    `INSERT INTO GovernmentMembership (id, person_id, ministry, name, government, start_date, end_date)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [1, 1002, "Valtiovarainministeriö", "Valtiovarainministeri", "Orpon hallitus", "2023-06-20", null],
+  );
+
+  // Committees
+  db.run(`INSERT INTO Committee (code, name) VALUES (?, ?)`, ["VaV", "Valtiovarainvaliokunta"]);
+  db.run(`INSERT INTO Committee (code, name) VALUES (?, ?)`, ["SuV", "Suuri valiokunta"]);
+
+  // Committee memberships
+  db.run(
+    `INSERT INTO CommitteeMembership (id, person_id, committee_code, role, start_date, end_date)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [1, 1000, "VaV", "jäsen", "2023-04-01", null],
+  );
+  db.run(
+    `INSERT INTO CommitteeMembership (id, person_id, committee_code, role, start_date, end_date)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [2, 1002, "VaV", "puheenjohtaja", "2023-04-01", null],
+  );
+
+  // Trust positions
+  db.run(
+    `INSERT INTO TrustPosition (id, person_id, position_type, name, period)
+     VALUES (?, ?, ?, ?, ?)`,
+    [1, 1000, "national", "Kunnanvaltuuston jäsen", "2017-2021"],
+  );
+
+  // Districts
+  db.run(`INSERT INTO District (code, name) VALUES (?, ?)`, ["HEL", "Helsingin vaalipiiri"]);
+  db.run(
+    `INSERT INTO RepresentativeDistrict (id, person_id, district_code, start_date, end_date)
+     VALUES (?, ?, ?, ?, ?)`,
+    [1, 1000, "HEL", "2023-04-01", null],
+  );
+
+  // VaskiDocuments
+  db.run(
+    `INSERT INTO VaskiDocument (id, eduskunta_tunnus, document_type_code, document_type_name,
+      document_number, parliamentary_year, title, author_first_name, author_last_name,
+      author_role, creation_date, status, summary)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [1, "HE 1/2024", "HE", "Hallituksen esitys", 1, "2024", "Hallituksen esitys laiksi",
+      "Pekka", "Korhonen", "valtiovarainministeri", "2024-01-10", "Valmis",
+      "Esitys koskee verotusta"],
+  );
+  db.run(
+    `INSERT INTO VaskiDocument (id, eduskunta_tunnus, document_type_code, document_type_name,
+      document_number, parliamentary_year, title, author_first_name, author_last_name,
+      author_role, creation_date, status, summary)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [2, "KK 100/2024", "KK", "Kirjallinen kysymys", 100, "2024", "Kysymys verotuksesta",
+      "Matti", "Meikäläinen", "kansanedustaja", "2024-01-12", "Valmis",
+      "Kysymys koskee tuloverotusta"],
+  );
+
+  // Document subjects
+  db.run(
+    `INSERT INTO DocumentSubject (document_id, subject_text) VALUES (?, ?)`,
+    [1, "verotus"],
+  );
+  db.run(
+    `INSERT INTO DocumentSubject (document_id, subject_text) VALUES (?, ?)`,
+    [1, "talous"],
+  );
+
+  // Leaving parliament records
+  db.run(
+    `INSERT INTO PeopleLeavingParliament (person_id, description, end_date)
+     VALUES (?, ?, ?)`,
+    [1000, "Eroilmoitus", null],
   );
 
   // Votes
   db.run(
-    `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbrviation) VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbreviation) VALUES (?, ?, ?, ?, ?)`,
     [5000, 100, 1000, "Jaa", "kesk"],
   );
   db.run(
-    `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbrviation) VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbreviation) VALUES (?, ?, ?, ?, ?)`,
     [5001, 100, 1001, "Ei", "sd"],
   );
   db.run(
-    `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbrviation) VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbreviation) VALUES (?, ?, ?, ?, ?)`,
     [5002, 100, 1002, "Poissa", "kok"],
   );
   db.run(
-    `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbrviation) VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbreviation) VALUES (?, ?, ?, ?, ?)`,
     [5003, 101, 1000, "Jaa", "kesk"],
   );
   db.run(
-    `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbrviation) VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbreviation) VALUES (?, ?, ?, ?, ?)`,
     [5004, 101, 1001, "Jaa", "sd"],
   );
   db.run(
-    `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbrviation) VALUES (?, ?, ?, ?, ?)`,
+    `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbreviation) VALUES (?, ?, ?, ?, ?)`,
     [5005, 101, 1002, "Poissa", "kok"],
   );
 }

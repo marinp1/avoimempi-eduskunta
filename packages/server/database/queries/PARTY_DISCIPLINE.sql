@@ -1,13 +1,13 @@
 WITH party_vote_counts AS (
   SELECT
     v.voting_id,
-    TRIM(v.group_abbrviation) AS party,
+    v.group_abbreviation AS party,
     SUM(CASE WHEN v.vote = 'Jaa' THEN 1 ELSE 0 END) AS n_jaa,
     SUM(CASE WHEN v.vote = 'Ei' THEN 1 ELSE 0 END) AS n_ei,
     SUM(CASE WHEN v.vote = 'Tyhjää' THEN 1 ELSE 0 END) AS n_tyhjaa
   FROM Vote v
   WHERE v.vote IN ('Jaa', 'Ei', 'Tyhjää')
-  GROUP BY v.voting_id, TRIM(v.group_abbrviation)
+  GROUP BY v.voting_id, v.group_abbreviation
 ),
 discipline_stats AS (
   SELECT
