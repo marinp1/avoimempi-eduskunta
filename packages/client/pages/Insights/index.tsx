@@ -120,7 +120,9 @@ export default () => {
               border: `1px solid ${themedColors.glassBorder}`,
             }}
           >
-            <CardContent sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}>
+            <CardContent
+              sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}
+            >
               <Typography
                 variant="h4"
                 component="h1"
@@ -160,9 +162,7 @@ export default () => {
                     cursor: "pointer",
                     "&:hover": {
                       transform: "translateY(-4px)",
-                      boxShadow: themedColors.isDark
-                        ? "0 12px 24px rgba(95, 163, 227, 0.3)"
-                        : "0 12px 24px rgba(102, 126, 234, 0.2)",
+                      boxShadow: "0 12px 24px rgba(102, 126, 234, 0.2)",
                     },
                   }}
                 >
@@ -195,9 +195,7 @@ export default () => {
                         mt: spacing.md,
                         p: spacing.md,
                         borderRadius: 2,
-                        background: themedColors.isDark
-                          ? "rgba(95, 163, 227, 0.2)"
-                          : "rgba(102, 126, 234, 0.1)",
+                        background: "rgba(102, 126, 234, 0.1)",
                         textAlign: "center",
                       }}
                     >
@@ -228,9 +226,7 @@ export default () => {
                     cursor: "pointer",
                     "&:hover": {
                       transform: "translateY(-4px)",
-                      boxShadow: themedColors.isDark
-                        ? "0 12px 24px rgba(76, 175, 80, 0.3)"
-                        : "0 12px 24px rgba(102, 126, 234, 0.2)",
+                      boxShadow: "0 12px 24px rgba(102, 126, 234, 0.2)",
                     },
                   }}
                 >
@@ -264,9 +260,7 @@ export default () => {
                         mt: spacing.md,
                         p: spacing.md,
                         borderRadius: 2,
-                        background: themedColors.isDark
-                          ? "rgba(76, 175, 80, 0.2)"
-                          : "rgba(76, 175, 80, 0.1)",
+                        background: "rgba(76, 175, 80, 0.1)",
                         textAlign: "center",
                       }}
                     >
@@ -292,9 +286,7 @@ export default () => {
                   transition: "all 0.3s ease",
                   "&:hover": {
                     transform: "translateY(-4px)",
-                    boxShadow: themedColors.isDark
-                      ? "0 12px 24px rgba(255, 152, 0, 0.3)"
-                      : "0 12px 24px rgba(102, 126, 234, 0.2)",
+                    boxShadow: "0 12px 24px rgba(102, 126, 234, 0.2)",
                   },
                 }}
               >
@@ -327,9 +319,7 @@ export default () => {
                       mt: spacing.md,
                       p: spacing.md,
                       borderRadius: 2,
-                      background: themedColors.isDark
-                        ? "rgba(255, 152, 0, 0.2)"
-                        : "rgba(255, 152, 0, 0.1)",
+                      background: "rgba(255, 152, 0, 0.1)",
                       textAlign: "center",
                     }}
                   >
@@ -353,9 +343,7 @@ export default () => {
                     cursor: "pointer",
                     "&:hover": {
                       transform: "translateY(-4px)",
-                      boxShadow: themedColors.isDark
-                        ? "0 12px 24px rgba(76, 175, 80, 0.3)"
-                        : "0 12px 24px rgba(102, 126, 234, 0.2)",
+                      boxShadow: "0 12px 24px rgba(102, 126, 234, 0.2)",
                     },
                   }}
                 >
@@ -389,9 +377,7 @@ export default () => {
                         mt: spacing.md,
                         p: spacing.md,
                         borderRadius: 2,
-                        background: themedColors.isDark
-                          ? "rgba(76, 175, 80, 0.2)"
-                          : "rgba(76, 175, 80, 0.1)",
+                        background: "rgba(76, 175, 80, 0.1)",
                         textAlign: "center",
                       }}
                     >

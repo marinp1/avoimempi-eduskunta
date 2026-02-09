@@ -4,7 +4,6 @@ import { createTheme, type SxProps, type Theme } from "@mui/material";
  * Color palette for the application
  * Professional, official government color scheme
  * Inspired by Finnish Parliament and official government websites
- * Supports both light and dark modes
  */
 export const colors = {
   // Brand colors - Official government blue (based on Finnish national colors)
@@ -50,7 +49,6 @@ export const colors = {
   oppositionColor: "#616161",
   oppositionBackground: "rgba(158, 158, 158, 0.2)",
 
-  // LIGHT MODE COLORS
   // Background colors - Clean, minimal, professional
   backgroundDefault: "#FAFAFA", // Very light gray, not pure white
   backgroundPaper: "#FFFFFF",
@@ -72,28 +70,6 @@ export const colors = {
   dataHighlight: "#003580",
   dataLabel: "#616161",
   dataBorder: "#E0E0E0",
-
-  // DARK MODE COLORS
-  // Background colors - Deep, comfortable dark
-  darkBackgroundDefault: "#0a0a0a",
-  darkBackgroundPaper: "#1a1a1a",
-  darkBackgroundGradientStart: "#1a1a1a",
-  darkBackgroundGradientEnd: "#0a0a0a",
-  darkBackgroundSubtle: "#252525",
-
-  // Glass-morphism colors (dark)
-  darkGlassBackground: "rgba(26,26,26,0.95)",
-  darkGlassBorder: "rgba(102,126,234,0.3)",
-
-  // Text colors - Much higher contrast for dark mode
-  darkTextPrimary: "#f5f5f5",
-  darkTextSecondary: "#d0d0d0",
-  darkTextTertiary: "#a0a0a0",
-
-  // Data display colors (dark)
-  darkDataHighlight: "#8b9cff",
-  darkDataLabel: "#d0d0d0",
-  darkDataBorder: "#404040",
 } as const;
 
 /**
@@ -110,12 +86,6 @@ export const gradients = {
   accent: "linear-gradient(180deg, #005A9C 0%, #1976D2 100%)",
   background: "linear-gradient(180deg, #FAFAFA 0%, #F5F5F5 100%)",
   backgroundAlt: "linear-gradient(to bottom, #FFFFFF 0%, #FAFAFA 100%)",
-
-  // Dark mode gradients
-  darkPrimary: "linear-gradient(180deg, #1a4d99 0%, #003580 100%)",
-  darkPrimaryHover: "linear-gradient(180deg, #003580 0%, #002557 100%)",
-  darkBackground: "linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%)",
-  darkBackgroundAlt: "linear-gradient(to bottom, #1e1e1e 0%, #121212 100%)",
 
   // Admin UI specific gradients - more subdued
   scraper: "linear-gradient(180deg, #1976D2 0%, #0D47A1 100%)", // Blue theme
@@ -226,7 +196,6 @@ export const commonStyles = {
 
   /**
    * Interactive hover effect for cards/rows - subtle for government style
-   * NOTE: Use themedColors.primary for hover in component
    */
   interactiveHover: {
     transition: "all 0.2s ease-in-out",
@@ -238,7 +207,6 @@ export const commonStyles = {
 
   /**
    * Professional table row style - clean and minimal
-   * NOTE: Use with themedColors.dataBorder and themedColors.primary in component
    */
   tableRow: {
     transition: "all 0.2s ease-in-out",
@@ -250,7 +218,6 @@ export const commonStyles = {
 
   /**
    * Table header style - formal government style
-   * NOTE: Use with themedColors.primary gradient in component
    */
   tableHeader: {
     color: "#ffffff",
@@ -264,7 +231,6 @@ export const commonStyles = {
 
   /**
    * Data cell style - optimized for readability
-   * NOTE: Color should be set from themedColors.textPrimary in component
    */
   dataCell: {
     fontWeight: 600,
@@ -274,7 +240,6 @@ export const commonStyles = {
 
   /**
    * Label cell style
-   * NOTE: Color should be set from themedColors.textSecondary in component
    */
   labelCell: {
     fontWeight: 500,
@@ -402,42 +367,10 @@ export const commonStyles = {
 } as const;
 
 /**
- * Helper function to get theme-aware colors based on mode
- */
-export const getThemedColors = (mode: "light" | "dark") => ({
-  backgroundDefault:
-    mode === "dark" ? colors.darkBackgroundDefault : colors.backgroundDefault,
-  backgroundPaper:
-    mode === "dark" ? colors.darkBackgroundPaper : colors.backgroundPaper,
-  backgroundSubtle:
-    mode === "dark" ? colors.darkBackgroundSubtle : colors.backgroundSubtle,
-  glassBackground:
-    mode === "dark" ? colors.darkGlassBackground : colors.glassBackground,
-  glassBorder: mode === "dark" ? colors.darkGlassBorder : colors.glassBorder,
-  textPrimary: mode === "dark" ? colors.darkTextPrimary : colors.textPrimary,
-  textSecondary:
-    mode === "dark" ? colors.darkTextSecondary : colors.textSecondary,
-  textTertiary: mode === "dark" ? colors.darkTextTertiary : colors.textTertiary,
-  dataHighlight:
-    mode === "dark" ? colors.darkDataHighlight : colors.dataHighlight,
-  dataLabel: mode === "dark" ? colors.darkDataLabel : colors.dataLabel,
-  dataBorder: mode === "dark" ? colors.darkDataBorder : colors.dataBorder,
-  gradientPrimary: mode === "dark" ? gradients.darkPrimary : gradients.primary,
-  gradientPrimaryHover:
-    mode === "dark" ? gradients.darkPrimaryHover : gradients.primaryHover,
-  gradientBackground:
-    mode === "dark" ? gradients.darkBackground : gradients.background,
-  gradientBackgroundAlt:
-    mode === "dark" ? gradients.darkBackgroundAlt : gradients.backgroundAlt,
-});
-
-/**
  * MUI theme configuration
  * Professional design system for data-driven application
  */
-export const createThemeWithMode = (mode: "light" | "dark" = "light") => {
-  const themedColors = getThemedColors(mode);
-
+export const createLightTheme = () => {
   return createTheme({
     palette: {
       primary: {
@@ -467,14 +400,14 @@ export const createThemeWithMode = (mode: "light" | "dark" = "light") => {
         light: colors.infoLight,
       },
       background: {
-        default: themedColors.backgroundDefault,
-        paper: themedColors.backgroundPaper,
+        default: colors.backgroundDefault,
+        paper: colors.backgroundPaper,
       },
       text: {
-        primary: themedColors.textPrimary,
-        secondary: themedColors.textSecondary,
+        primary: colors.textPrimary,
+        secondary: colors.textSecondary,
       },
-      mode,
+      mode: "light",
     },
     typography: {
       fontFamily: '"Roboto", "Helvetica Neue", Arial, sans-serif', // More formal, widely used in government sites
@@ -484,55 +417,55 @@ export const createThemeWithMode = (mode: "light" | "dark" = "light") => {
         fontSize: "2.5rem",
         letterSpacing: "-0.01em",
         lineHeight: 1.2,
-        color: themedColors.textPrimary,
+        color: colors.textPrimary,
       },
       h2: {
         fontWeight: 700,
         fontSize: "2rem",
         letterSpacing: "-0.01em",
         lineHeight: 1.25,
-        color: themedColors.textPrimary,
+        color: colors.textPrimary,
       },
       h3: {
         fontWeight: 600,
         fontSize: "1.75rem",
         letterSpacing: "0",
         lineHeight: 1.3,
-        color: themedColors.textPrimary,
+        color: colors.textPrimary,
       },
       h4: {
         fontWeight: 600,
         fontSize: "1.5rem",
         letterSpacing: "0",
         lineHeight: 1.35,
-        color: themedColors.textPrimary,
+        color: colors.textPrimary,
       },
       h5: {
         fontWeight: 600,
         fontSize: "1.25rem",
         letterSpacing: "0",
         lineHeight: 1.4,
-        color: themedColors.textPrimary,
+        color: colors.textPrimary,
       },
       h6: {
         fontWeight: 600,
         fontSize: "1.125rem",
         letterSpacing: "0",
         lineHeight: 1.4,
-        color: themedColors.textPrimary,
+        color: colors.textPrimary,
       },
       // Body text - clear, readable
       body1: {
         fontSize: "1rem",
         lineHeight: 1.6,
         letterSpacing: "0.01em",
-        color: themedColors.textPrimary,
+        color: colors.textPrimary,
       },
       body2: {
         fontSize: "0.875rem",
         lineHeight: 1.6,
         letterSpacing: "0.01em",
-        color: themedColors.textSecondary,
+        color: colors.textSecondary,
       },
       // Data display - clear and prominent
       subtitle1: {
@@ -552,7 +485,7 @@ export const createThemeWithMode = (mode: "light" | "dark" = "light") => {
         fontSize: "0.75rem",
         lineHeight: 1.5,
         letterSpacing: "0.02em",
-        color: themedColors.textTertiary,
+        color: colors.textTertiary,
       },
       // Buttons - clear, professional
       button: {
@@ -573,7 +506,7 @@ export const createThemeWithMode = (mode: "light" | "dark" = "light") => {
         styleOverrides: {
           root: {
             borderRadius: 4,
-            border: `1px solid ${themedColors.dataBorder}`,
+            border: `1px solid ${colors.dataBorder}`,
             boxShadow: shadows.card,
           },
         },
@@ -620,7 +553,7 @@ export const createThemeWithMode = (mode: "light" | "dark" = "light") => {
       MuiTableCell: {
         styleOverrides: {
           root: {
-            borderBottom: `1px solid ${themedColors.dataBorder}`,
+            borderBottom: `1px solid ${colors.dataBorder}`,
             padding: "14px 16px",
           },
           head: {
@@ -653,6 +586,6 @@ export const createThemeWithMode = (mode: "light" | "dark" = "light") => {
 };
 
 // Default theme (light mode)
-export const theme = createThemeWithMode("light");
+export const theme = createLightTheme();
 
 export default theme;
