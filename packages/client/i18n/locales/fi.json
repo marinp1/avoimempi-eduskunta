@@ -31,8 +31,18 @@
   "home": {
     "title": "Eduskunnan seuranta",
     "subtitle": "Reaaliaikainen katsaus Suomen eduskunnan toimintaan",
-    "placeholder": "Etusivu rakenteilla",
-    "placeholderDescription": "Täällä näytetään pian eduskunnan yhteenveto, viimeaikaiset äänestykset ja aktiivisimmat edustajat."
+    "totalMPs": "Edustajia",
+    "government": "Hallituksessa",
+    "opposition": "Oppositiossa",
+    "partyBreakdown": "Puolueiden paikat",
+    "governmentChip": "Hallitus",
+    "oppositionChip": "Oppositio",
+    "seats": "paikkaa",
+    "latestSession": "Viimeisin istunto",
+    "sections": "kohtaa",
+    "votings": "äänestystä",
+    "noData": "Tietoja ei saatavilla",
+    "loadingError": "Tietojen lataaminen epäonnistui"
   },
   "parties": {
     "title": "Puolueet",
