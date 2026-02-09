@@ -5,6 +5,7 @@ import {
   HowToVote,
   Insights,
   People,
+  Assessment,
 } from "@mui/icons-material";
 import type { SvgIconTypeMap } from "@mui/material";
 import type { OverridableComponent } from "@mui/material/OverridableComponent";
@@ -35,6 +36,11 @@ export const routes = {
     title: "Insights", // Translated via navigation.routes.insights
     icon: Insights,
     Component: React.lazy(() => import("./Insights")),
+  },
+  status: {
+    title: "Status", // Translated via navigation.routes.status
+    icon: Assessment,
+    Component: React.lazy(() => import("./Status")),
   },
   admin: {
     title: "Admin", // Translated via navigation.routes.admin

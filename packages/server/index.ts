@@ -2,9 +2,11 @@
 
 import type { BunRequest } from "bun";
 import { DatabaseConnection } from "./database/db";
+import { StatusController } from "./controllers/status-controller";
 import homepage from "./public/index.html";
 
 const db = new DatabaseConnection();
+const statusController = new StatusController(db);
 const isDev = process.env.NODE_ENV === "development";
 
 const server = Bun.serve<{
@@ -17,7 +19,24 @@ const server = Bun.serve<{
     "/sessions": homepage,
     "/days": homepage,
     "/insights": homepage,
-    "/api/status": new Response("OK"),
+    "/status": homepage,
+    "/api/health": new Response("OK"),
+    "/api/status/overview": {
+      GET: async () => {
+        const overview = await statusController.getOverview();
+        return new Response(JSON.stringify(overview), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+    "/api/status/sanity-checks": {
+      GET: async () => {
+        const checks = await statusController.getSanityChecks();
+        return new Response(JSON.stringify(checks), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
     "/api/composition/:date": {
       GET: async (req: BunRequest<"/api/composition/:date">) => {
         const composition = await db.fetchParliamentComposition(req.params);

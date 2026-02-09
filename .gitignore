@@ -18,3 +18,5 @@ vaski-data/
 vaski-*.json
 
 dist
+
+.claude/settings.local.json
