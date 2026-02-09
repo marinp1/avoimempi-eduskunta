@@ -294,6 +294,186 @@ const server = Bun.serve<{
         });
       },
     },
+
+    // ─── Analytics endpoints ───
+
+    "/api/analytics/party-discipline": {
+      GET: async () => {
+        const data = await db.fetchPartyDiscipline();
+        return Response.json(data);
+      },
+    },
+
+    "/api/analytics/close-votes": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const threshold = parseInt(searchParams.get("threshold") || "10", 10);
+        const limit = parseInt(searchParams.get("limit") || "50", 10);
+        const data = await db.fetchCloseVotes({ threshold, limit });
+        return Response.json(data);
+      },
+    },
+
+    "/api/analytics/mp-activity": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const limit = parseInt(searchParams.get("limit") || "50", 10);
+        const data = await db.fetchMpActivityRanking({ limit });
+        return Response.json(data);
+      },
+    },
+
+    "/api/analytics/coalition-opposition": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const limit = parseInt(searchParams.get("limit") || "50", 10);
+        const data = await db.fetchCoalitionVsOpposition({ limit });
+        return Response.json(data);
+      },
+    },
+
+    "/api/analytics/dissent": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const personId = searchParams.get("personId");
+        const limit = parseInt(searchParams.get("limit") || "100", 10);
+        const data = await db.fetchDissentTracking({
+          personId: personId ? +personId : undefined,
+          limit,
+        });
+        return Response.json(data);
+      },
+    },
+
+    "/api/analytics/speech-activity": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const limit = parseInt(searchParams.get("limit") || "50", 10);
+        const data = await db.fetchSpeechActivity({ limit });
+        return Response.json(data);
+      },
+    },
+
+    "/api/analytics/committees": {
+      GET: async () => {
+        const data = await db.fetchCommitteeOverview();
+        return Response.json(data);
+      },
+    },
+
+    "/api/analytics/recent-activity": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const limit = parseInt(searchParams.get("limit") || "20", 10);
+        const data = await db.fetchRecentActivity({ limit });
+        return Response.json(data);
+      },
+    },
+
+    // ─── Party endpoints ───
+
+    "/api/parties/summary": {
+      GET: async () => {
+        const data = await db.fetchPartySummary();
+        return Response.json(data);
+      },
+    },
+
+    "/api/parties/:code/members": {
+      GET: async (req: BunRequest<"/api/parties/:code/members">) => {
+        const data = await db.fetchPartyMembers({
+          partyCode: req.params.code,
+        });
+        return Response.json(data);
+      },
+    },
+
+    // ─── Document endpoints ───
+
+    "/api/documents/search": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const data = await db.searchDocuments({
+          q: searchParams.get("q") || undefined,
+          type: searchParams.get("type") || undefined,
+          year: searchParams.get("year") || undefined,
+          limit: parseInt(searchParams.get("limit") || "50", 10),
+          offset: parseInt(searchParams.get("offset") || "0", 10),
+        });
+        return Response.json(data);
+      },
+    },
+
+    "/api/documents/by-type": {
+      GET: async () => {
+        const data = await db.fetchDocumentsByType();
+        return Response.json(data);
+      },
+    },
+
+    "/api/documents/:id": {
+      GET: async (req: BunRequest<"/api/documents/:id">) => {
+        const data = await db.fetchDocumentDetail({ id: req.params.id });
+        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        return Response.json(data);
+      },
+    },
+
+    // ─── Person analytics endpoints ───
+
+    "/api/person/:id/speeches": {
+      GET: async (req: BunRequest<"/api/person/:id/speeches">) => {
+        const { searchParams } = new URL(req.url);
+        const data = await db.fetchPersonSpeeches({
+          personId: req.params.id,
+          limit: parseInt(searchParams.get("limit") || "50", 10),
+          offset: parseInt(searchParams.get("offset") || "0", 10),
+        });
+        return Response.json(data);
+      },
+    },
+
+    "/api/person/:id/committees": {
+      GET: async (req: BunRequest<"/api/person/:id/committees">) => {
+        const data = await db.fetchPersonCommittees({
+          personId: req.params.id,
+        });
+        return Response.json(data);
+      },
+    },
+
+    "/api/person/:id/dissents": {
+      GET: async (req: BunRequest<"/api/person/:id/dissents">) => {
+        const { searchParams } = new URL(req.url);
+        const limit = parseInt(searchParams.get("limit") || "100", 10);
+        const data = await db.fetchPersonDissents({
+          personId: req.params.id,
+          limit,
+        });
+        return Response.json(data);
+      },
+    },
+
+    // ─── Federated search ───
+
+    "/api/search": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const q = searchParams.get("q")?.trim() || "";
+        if (!q || q.length < 2) {
+          return Response.json(
+            { message: "Query must be at least 2 characters" },
+            { status: 400 },
+          );
+        }
+        const data = await db.federatedSearch({
+          q,
+          limit: parseInt(searchParams.get("limit") || "30", 10),
+        });
+        return Response.json(data);
+      },
+    },
+
     ...(isDev ? await import("./admin").then((def) => def.routes) : {}),
     "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
