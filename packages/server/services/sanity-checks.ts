@@ -1,4 +1,9 @@
 import type { Database } from "bun:sqlite";
+import {
+  buildKnownDataExceptions,
+  getExceptionsForCheck,
+  type KnownDataException,
+} from "./known-data-exceptions";
 
 export interface SanityCheck {
   category: string;
@@ -7,18 +12,24 @@ export interface SanityCheck {
   passed: boolean;
   details?: string;
   errorMessage?: string;
+  knownExceptions?: KnownDataException[];
 }
 
 export interface SanityCheckResult {
   totalChecks: number;
   passedChecks: number;
   failedChecks: number;
+  knownExceptionCount: number;
   checks: SanityCheck[];
   lastRun: string;
 }
 
 export class SanityCheckService {
-  constructor(private db: Database) {}
+  private knownExceptions: KnownDataException[];
+
+  constructor(private db: Database) {
+    this.knownExceptions = buildKnownDataExceptions(db);
+  }
 
   async runAllChecks(): Promise<SanityCheckResult> {
     const checks: SanityCheck[] = [];
@@ -39,14 +50,28 @@ export class SanityCheckService {
     checks.push(...this.checkSpeechIntegrity());
     checks.push(...this.checkReferentialIntegrity());
     checks.push(...this.checkSchemaIntegrity());
+    checks.push(...this.checkVoteAggregation());
+    checks.push(...this.checkVotingTemporalConsistency());
+    checks.push(...this.checkVotingSectionLinkage());
+    checks.push(...this.checkCommitteeMembershipDates());
+    checks.push(...this.checkGovernmentMembershipIntegrity());
+    checks.push(...this.checkDistrictIntegrity());
+    checks.push(...this.checkAuxiliaryTableRefs());
+    checks.push(...this.checkSessionDatePlausibility());
+    checks.push(...this.checkMPGroupMembership());
+    checks.push(...this.checkActiveGroupMembersCount());
 
     const passedChecks = checks.filter((c) => c.passed).length;
     const failedChecks = checks.filter((c) => !c.passed).length;
+    const knownExceptionCount = checks.filter(
+      (c) => c.knownExceptions && c.knownExceptions.length > 0,
+    ).length;
 
     return {
       totalChecks: checks.length,
       passedChecks,
       failedChecks,
+      knownExceptionCount,
       checks,
       lastRun: new Date().toISOString(),
     };
@@ -461,24 +486,38 @@ export class SanityCheckService {
     }
 
     try {
-      const countMismatch = this.db
+      const mismatchedVotings = this.db
         .query(
-          `SELECT COUNT(*) as c FROM (
-             SELECT v.id, v.n_total, COUNT(vo.id) as actual_votes
-             FROM Voting v
-             JOIN Vote vo ON v.id = vo.voting_id
-             GROUP BY v.id
-             HAVING actual_votes != v.n_total
-           )`,
+          `SELECT v.id, v.n_total, COUNT(vo.id) as actual_votes
+           FROM Voting v
+           JOIN Vote vo ON v.id = vo.voting_id
+           GROUP BY v.id
+           HAVING actual_votes != v.n_total`,
         )
-        .get() as any;
+        .all() as { id: number; n_total: number; actual_votes: number }[];
+
+      const checkExceptions = getExceptionsForCheck(
+        this.knownExceptions,
+        "Individual vote count matches",
+      );
+      const knownIds = new Set(checkExceptions.flatMap((e) => e.affectedRows.map((r) => r.id)));
+      const unexplained = mismatchedVotings.filter((v) => !knownIds.has(v.id));
+      const explained = mismatchedVotings.filter((v) => knownIds.has(v.id));
+
+      const allExplained = unexplained.length === 0 && explained.length > 0;
 
       checks.push({
         category: "Data Integrity",
         name: "Individual vote count matches",
         description: "Individual vote records must match n_total",
-        passed: countMismatch.c === 0,
-        details: countMismatch.c === 0 ? "All vote counts match" : `${countMismatch.c} count mismatches`,
+        passed: mismatchedVotings.length === 0 || allExplained,
+        details:
+          mismatchedVotings.length === 0
+            ? "All vote counts match"
+            : allExplained
+              ? `${explained.length} tunnettu poikkeama (kaikki selitetty)`
+              : `${unexplained.length} selittämätöntä, ${explained.length} tunnettua poikkeamaa`,
+        knownExceptions: checkExceptions.length > 0 ? checkExceptions : undefined,
       });
     } catch (error) {
       checks.push({
@@ -832,6 +871,462 @@ export class SanityCheckService {
         category: "Schema",
         name: "Performance indexes present",
         description: "Critical performance indexes must exist",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
+    return checks;
+  }
+
+  private checkVoteAggregation(): SanityCheck[] {
+    const checks: SanityCheck[] = [];
+
+    try {
+      const mismatchedVotings = this.db
+        .query(
+          `SELECT v.id
+           FROM Voting v
+           JOIN Vote vo ON v.id = vo.voting_id
+           GROUP BY v.id
+           HAVING SUM(CASE WHEN vo.vote = 'Jaa' THEN 1 ELSE 0 END) != v.n_yes
+              OR SUM(CASE WHEN vo.vote = 'Ei' THEN 1 ELSE 0 END) != v.n_no
+              OR SUM(CASE WHEN vo.vote = 'Tyhjää' THEN 1 ELSE 0 END) != v.n_abstain
+              OR SUM(CASE WHEN vo.vote = 'Poissa' THEN 1 ELSE 0 END) != v.n_absent`,
+        )
+        .all() as { id: number }[];
+
+      const checkExceptions = getExceptionsForCheck(
+        this.knownExceptions,
+        "Vote aggregation per type",
+      );
+      const knownIds = new Set(checkExceptions.flatMap((e) => e.affectedRows.map((r) => r.id)));
+      const unexplained = mismatchedVotings.filter((v) => !knownIds.has(v.id));
+      const explained = mismatchedVotings.filter((v) => knownIds.has(v.id));
+
+      const allExplained = unexplained.length === 0 && explained.length > 0;
+
+      checks.push({
+        category: "Data Integrity",
+        name: "Vote aggregation per type",
+        description: "Per-type vote counts must match individual vote records",
+        passed: mismatchedVotings.length === 0 || allExplained,
+        details:
+          mismatchedVotings.length === 0
+            ? "All per-type counts match"
+            : allExplained
+              ? `${explained.length} tunnettu poikkeama (kaikki selitetty)`
+              : `${unexplained.length} selittämätöntä, ${explained.length} tunnettua poikkeamaa`,
+        knownExceptions: checkExceptions.length > 0 ? checkExceptions : undefined,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Data Integrity",
+        name: "Vote aggregation per type",
+        description: "Per-type vote counts must match individual vote records",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
+    return checks;
+  }
+
+  private checkVotingTemporalConsistency(): SanityCheck[] {
+    const checks: SanityCheck[] = [];
+
+    try {
+      const mismatches = this.db
+        .query(
+          `SELECT COUNT(*) as c FROM Voting v
+           JOIN Session s ON s.key = v.session_key
+           WHERE v.start_time IS NOT NULL
+             AND s.date IS NOT NULL
+             AND ABS(JULIANDAY(SUBSTR(v.start_time, 1, 10)) - JULIANDAY(s.date)) > 1`,
+        )
+        .get() as any;
+
+      checks.push({
+        category: "Business Logic",
+        name: "Voting date within 1 day of session date",
+        description: "Voting start_time should be within 1 day of session date (sessions can span overnight)",
+        passed: mismatches.c === 0,
+        details: mismatches.c === 0 ? "All voting dates within range" : `${mismatches.c} votings with >1 day offset from session`,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Business Logic",
+        name: "Voting date within 1 day of session date",
+        description: "Voting start_time should be within 1 day of session date (sessions can span overnight)",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
+    return checks;
+  }
+
+  private checkVotingSectionLinkage(): SanityCheck[] {
+    const checks: SanityCheck[] = [];
+
+    try {
+      const orphans = this.db
+        .query(
+          `SELECT COUNT(*) as c FROM Voting v
+           WHERE v.section_key IS NOT NULL AND v.section_key != ''
+             AND NOT EXISTS (SELECT 1 FROM Section sec WHERE sec.key = v.section_key)`,
+        )
+        .get() as any;
+
+      checks.push({
+        category: "Referential Integrity",
+        name: "Voting → Section links",
+        description: "Votings with section_key must reference existing sections",
+        passed: orphans.c === 0,
+        details: orphans.c === 0 ? "All voting-section links valid" : `${orphans.c} orphaned voting-section links`,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Referential Integrity",
+        name: "Voting → Section links",
+        description: "Votings with section_key must reference existing sections",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
+    return checks;
+  }
+
+  private checkCommitteeMembershipDates(): SanityCheck[] {
+    const checks: SanityCheck[] = [];
+
+    try {
+      const invalid = this.db
+        .query(
+          `SELECT COUNT(*) as c FROM CommitteeMembership
+           WHERE end_date IS NOT NULL AND start_date > end_date`,
+        )
+        .get() as any;
+
+      checks.push({
+        category: "Data Integrity",
+        name: "Committee membership dates valid",
+        description: "Committee membership start_date must be ≤ end_date",
+        passed: invalid.c === 0,
+        details: invalid.c === 0 ? "All committee membership dates valid" : `${invalid.c} invalid committee membership dates`,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Data Integrity",
+        name: "Committee membership dates valid",
+        description: "Committee membership start_date must be ≤ end_date",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
+    return checks;
+  }
+
+  private checkGovernmentMembershipIntegrity(): SanityCheck[] {
+    const checks: SanityCheck[] = [];
+
+    try {
+      const invalid = this.db
+        .query(
+          `SELECT COUNT(*) as c FROM GovernmentMembership
+           WHERE end_date IS NOT NULL AND start_date > end_date`,
+        )
+        .get() as any;
+
+      checks.push({
+        category: "Data Integrity",
+        name: "Government membership dates valid",
+        description: "Government membership start_date must be ≤ end_date",
+        passed: invalid.c === 0,
+        details: invalid.c === 0 ? "All government membership dates valid" : `${invalid.c} invalid government membership dates`,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Data Integrity",
+        name: "Government membership dates valid",
+        description: "Government membership start_date must be ≤ end_date",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
+    try {
+      const empty = this.db
+        .query(
+          `SELECT COUNT(*) as c FROM GovernmentMembership
+           WHERE government IS NULL OR TRIM(government) = ''`,
+        )
+        .get() as any;
+
+      checks.push({
+        category: "Data Quality",
+        name: "Government name present",
+        description: "All government memberships must have a government name",
+        passed: empty.c === 0,
+        details: empty.c === 0 ? "All government names present" : `${empty.c} missing government names`,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Data Quality",
+        name: "Government name present",
+        description: "All government memberships must have a government name",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
+    return checks;
+  }
+
+  private checkDistrictIntegrity(): SanityCheck[] {
+    const checks: SanityCheck[] = [];
+
+    try {
+      const { c } = this.db
+        .query("SELECT COUNT(*) as c FROM District")
+        .get() as any;
+
+      checks.push({
+        category: "Business Logic",
+        name: "District count plausible",
+        description: "Finland has 13 current + historical electoral districts (expect 10-50)",
+        passed: c >= 10 && c <= 50,
+        details: `${c} districts found`,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Business Logic",
+        name: "District count plausible",
+        description: "Finland has 13 current + historical electoral districts (expect 10-50)",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
+    try {
+      const overlaps = this.db
+        .query(
+          `SELECT COUNT(*) as c FROM RepresentativeDistrict rd1
+           JOIN RepresentativeDistrict rd2
+             ON rd1.person_id = rd2.person_id AND rd1.id < rd2.id
+           WHERE rd1.district_code != rd2.district_code
+             AND rd1.start_date <= COALESCE(rd2.end_date, '9999-12-31')
+             AND rd2.start_date <= COALESCE(rd1.end_date, '9999-12-31')`,
+        )
+        .get() as any;
+
+      checks.push({
+        category: "Data Integrity",
+        name: "No overlapping district assignments",
+        description: "Same representative should not have overlapping district assignments",
+        passed: overlaps.c === 0,
+        details: overlaps.c === 0 ? "No overlapping districts" : `${overlaps.c} overlapping district assignments`,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Data Integrity",
+        name: "No overlapping district assignments",
+        description: "Same representative should not have overlapping district assignments",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
+    return checks;
+  }
+
+  private checkAuxiliaryTableRefs(): SanityCheck[] {
+    const checks: SanityCheck[] = [];
+
+    const tables = [
+      { table: "Education", label: "Education" },
+      { table: "WorkHistory", label: "WorkHistory" },
+      { table: "TrustPosition", label: "TrustPosition" },
+    ];
+
+    for (const { table, label } of tables) {
+      try {
+        const orphans = this.db
+          .query(
+            `SELECT COUNT(*) as c FROM ${table} t
+             WHERE NOT EXISTS (SELECT 1 FROM Representative r WHERE r.person_id = t.person_id)`,
+          )
+          .get() as any;
+
+        checks.push({
+          category: "Referential Integrity",
+          name: `${label} → Representative links`,
+          description: `All ${label.toLowerCase()} records must reference existing representatives`,
+          passed: orphans.c === 0,
+          details: orphans.c === 0 ? `All ${label.toLowerCase()} records properly linked` : `${orphans.c} orphaned ${label.toLowerCase()} records`,
+        });
+      } catch (error) {
+        checks.push({
+          category: "Referential Integrity",
+          name: `${label} → Representative links`,
+          description: `All ${label.toLowerCase()} records must reference existing representatives`,
+          passed: false,
+          errorMessage: String(error),
+        });
+      }
+    }
+
+    return checks;
+  }
+
+  private checkSessionDatePlausibility(): SanityCheck[] {
+    const checks: SanityCheck[] = [];
+
+    try {
+      const tooOld = this.db
+        .query(
+          `SELECT COUNT(*) as c FROM Session
+           WHERE date IS NOT NULL AND date < '1907-01-01'`,
+        )
+        .get() as any;
+
+      checks.push({
+        category: "Business Logic",
+        name: "Session dates after 1907",
+        description: "Finnish parliament founded in 1907, no earlier sessions",
+        passed: tooOld.c === 0,
+        details: tooOld.c === 0 ? "All session dates after 1907" : `${tooOld.c} sessions before 1907`,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Business Logic",
+        name: "Session dates after 1907",
+        description: "Finnish parliament founded in 1907, no earlier sessions",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
+    try {
+      const future = this.db
+        .query(
+          `SELECT COUNT(*) as c FROM Session
+           WHERE date IS NOT NULL AND date > DATE('now')`,
+        )
+        .get() as any;
+
+      checks.push({
+        category: "Business Logic",
+        name: "No future session dates",
+        description: "Session dates should not be in the future",
+        passed: future.c === 0,
+        details: future.c === 0 ? "No future session dates" : `${future.c} future session dates`,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Business Logic",
+        name: "No future session dates",
+        description: "Session dates should not be in the future",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
+    return checks;
+  }
+
+  private checkMPGroupMembership(): SanityCheck[] {
+    const checks: SanityCheck[] = [];
+
+    try {
+      const mpsWithoutGroup = this.db
+        .query(
+          `SELECT COUNT(*) as c FROM (
+             SELECT DISTINCT s.date, t.person_id
+             FROM Session s
+             JOIN Term t ON t.start_date <= s.date AND (t.end_date IS NULL OR t.end_date >= s.date)
+             WHERE NOT EXISTS (
+               SELECT 1 FROM TemporaryAbsence ta
+               WHERE ta.person_id = t.person_id
+                 AND ta.start_date <= s.date
+                 AND (ta.end_date IS NULL OR ta.end_date >= s.date)
+             )
+             AND NOT EXISTS (
+               SELECT 1 FROM ParliamentaryGroupMembership pgm
+               WHERE pgm.person_id = t.person_id
+                 AND pgm.start_date <= s.date
+                 AND (pgm.end_date IS NULL OR pgm.end_date >= s.date)
+             )
+           )`,
+        )
+        .get() as any;
+
+      checks.push({
+        category: "Business Logic",
+        name: "Active MPs have group membership",
+        description: "Every active MP should belong to a parliamentary group",
+        passed: mpsWithoutGroup.c === 0,
+        details: mpsWithoutGroup.c === 0 ? "All active MPs have group memberships" : `${mpsWithoutGroup.c} active MP-date combinations without a group`,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Business Logic",
+        name: "Active MPs have group membership",
+        description: "Every active MP should belong to a parliamentary group",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
+    return checks;
+  }
+
+  private checkActiveGroupMembersCount(): SanityCheck[] {
+    const checks: SanityCheck[] = [];
+
+    try {
+      const mismatches = this.db
+        .query(
+          `SELECT COUNT(*) as c FROM (
+             SELECT s.date,
+               (SELECT COUNT(DISTINCT t.person_id) FROM Term t
+                WHERE t.start_date <= s.date AND (t.end_date IS NULL OR t.end_date >= s.date)
+                AND NOT EXISTS (
+                  SELECT 1 FROM TemporaryAbsence ta
+                  WHERE ta.person_id = t.person_id
+                    AND ta.start_date <= s.date
+                    AND (ta.end_date IS NULL OR ta.end_date >= s.date)
+                )) as term_count,
+               (SELECT COUNT(DISTINCT pgm.person_id) FROM ParliamentaryGroupMembership pgm
+                WHERE pgm.start_date <= s.date AND (pgm.end_date IS NULL OR pgm.end_date >= s.date)
+                AND NOT EXISTS (
+                  SELECT 1 FROM TemporaryAbsence ta
+                  WHERE ta.person_id = pgm.person_id
+                    AND ta.start_date <= s.date
+                    AND (ta.end_date IS NULL OR ta.end_date >= s.date)
+                )) as group_count
+             FROM Session s
+             WHERE s.date IS NOT NULL
+             GROUP BY s.date
+             HAVING term_count != group_count
+           )`,
+        )
+        .get() as any;
+
+      checks.push({
+        category: "Business Logic",
+        name: "Group member count matches active MPs",
+        description: "Active group members count should equal active parliament members count per date",
+        passed: mismatches.c === 0,
+        details: mismatches.c === 0 ? "Counts match on all dates" : `${mismatches.c} dates with mismatched counts`,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Business Logic",
+        name: "Group member count matches active MPs",
+        description: "Active group members count should equal active parliament members count per date",
         passed: false,
         errorMessage: String(error),
       });

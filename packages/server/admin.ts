@@ -1,5 +1,6 @@
 import type { ServerWebSocket, WebSocketHandler } from "bun";
 import { AdminStorageService } from "./database/admin-storage";
+import { statusController } from "./index";
 import { MigratorController } from "./migrator-controller";
 import { ParserController } from "./parser-controller";
 import homepage from "./public/index.html";
@@ -198,8 +199,11 @@ export const routes = {
   "/api/migrator/start": {
     POST: async () => {
       try {
-        // Start migration in background
-        migratorController.startMigration().catch(console.error);
+        // Start migration in background, invalidate status cache on completion
+        migratorController
+          .startMigration()
+          .then(() => statusController.invalidateCache())
+          .catch(console.error);
 
         return Response.json({ success: true, message: "Migration started" });
       } catch (error: any) {

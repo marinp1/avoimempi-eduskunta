@@ -6,7 +6,7 @@ import { StatusController } from "./controllers/status-controller";
 import homepage from "./public/index.html";
 
 const db = new DatabaseConnection();
-const statusController = new StatusController(db);
+export const statusController = new StatusController(db);
 const isDev = process.env.NODE_ENV === "development";
 
 const server = Bun.serve<{

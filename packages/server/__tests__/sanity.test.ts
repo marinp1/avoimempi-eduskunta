@@ -665,6 +665,247 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
     });
   });
 
+  // ─── VOTE AGGREGATION PER TYPE ────────────────────────────
+
+  describe("Vote aggregation per type", () => {
+    test("per-type vote counts match individual vote records", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c FROM (
+             SELECT v.id,
+               v.n_yes, v.n_no, v.n_abstain, v.n_absent,
+               SUM(CASE WHEN vo.vote = 'Jaa' THEN 1 ELSE 0 END) as actual_yes,
+               SUM(CASE WHEN vo.vote = 'Ei' THEN 1 ELSE 0 END) as actual_no,
+               SUM(CASE WHEN vo.vote = 'Tyhjää' THEN 1 ELSE 0 END) as actual_abstain,
+               SUM(CASE WHEN vo.vote = 'Poissa' THEN 1 ELSE 0 END) as actual_absent
+             FROM Voting v
+             JOIN Vote vo ON v.id = vo.voting_id
+             GROUP BY v.id
+             HAVING actual_yes != v.n_yes
+                OR actual_no != v.n_no
+                OR actual_abstain != v.n_abstain
+                OR actual_absent != v.n_absent
+           )`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+  });
+
+  // ─── VOTING TEMPORAL CONSISTENCY ────────────────────────────
+
+  describe("Voting temporal consistency", () => {
+    test("voting start_time is within 1 day of session date (sessions can span overnight)", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c FROM Voting v
+           JOIN Session s ON s.key = v.session_key
+           WHERE v.start_time IS NOT NULL
+             AND s.date IS NOT NULL
+             AND ABS(JULIANDAY(SUBSTR(v.start_time, 1, 10)) - JULIANDAY(s.date)) > 1`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+  });
+
+  // ─── VOTING → SECTION LINKAGE ──────────────────────────────
+
+  describe("Voting → Section linkage", () => {
+    test("votings with section_key reference existing sections", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c FROM Voting v
+           WHERE v.section_key IS NOT NULL AND v.section_key != ''
+             AND NOT EXISTS (SELECT 1 FROM Section sec WHERE sec.key = v.section_key)`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+  });
+
+  // ─── COMMITTEE MEMBERSHIP DATE VALIDITY ─────────────────────
+
+  describe("Committee membership integrity", () => {
+    test("committee membership start_date <= end_date", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c FROM CommitteeMembership
+           WHERE end_date IS NOT NULL AND start_date > end_date`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+  });
+
+  // ─── GOVERNMENT MEMBERSHIP INTEGRITY ────────────────────────
+
+  describe("Government membership integrity", () => {
+    test("government membership start_date <= end_date", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c FROM GovernmentMembership
+           WHERE end_date IS NOT NULL AND start_date > end_date`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+
+    test("all government memberships have a government name", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c FROM GovernmentMembership
+           WHERE government IS NULL OR TRIM(government) = ''`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+  });
+
+  // ─── DISTRICT INTEGRITY ─────────────────────────────────────
+
+  describe("District integrity", () => {
+    test("district count is plausible (10-50, includes historical districts since 1907)", () => {
+      const { c } = db
+        .query("SELECT COUNT(*) as c FROM District")
+        .get() as any;
+      expect(c).toBeGreaterThanOrEqual(10);
+      expect(c).toBeLessThanOrEqual(50);
+    });
+
+    test("no overlapping district assignments for same representative", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c FROM RepresentativeDistrict rd1
+           JOIN RepresentativeDistrict rd2
+             ON rd1.person_id = rd2.person_id AND rd1.id < rd2.id
+           WHERE rd1.district_code != rd2.district_code
+             AND rd1.start_date <= COALESCE(rd2.end_date, '9999-12-31')
+             AND rd2.start_date <= COALESCE(rd1.end_date, '9999-12-31')`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+  });
+
+  // ─── AUXILIARY TABLE REFERENTIAL INTEGRITY ──────────────────
+
+  describe("Auxiliary table referential integrity", () => {
+    test("all education records reference existing representatives", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c FROM Education e
+           WHERE NOT EXISTS (SELECT 1 FROM Representative r WHERE r.person_id = e.person_id)`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+
+    test("all work history records reference existing representatives", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c FROM WorkHistory w
+           WHERE NOT EXISTS (SELECT 1 FROM Representative r WHERE r.person_id = w.person_id)`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+
+    test("all trust position records reference existing representatives", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c FROM TrustPosition tp
+           WHERE NOT EXISTS (SELECT 1 FROM Representative r WHERE r.person_id = tp.person_id)`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+  });
+
+  // ─── SESSION DATE PLAUSIBILITY ──────────────────────────────
+
+  describe("Session date plausibility", () => {
+    test("no session dates before 1907 (parliament founded)", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c FROM Session
+           WHERE date IS NOT NULL AND date < '1907-01-01'`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+
+    test("no future session dates", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c FROM Session
+           WHERE date IS NOT NULL AND date > DATE('now')`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+  });
+
+  // ─── PARLIAMENTARY GROUP MEMBERSHIP CHECKS ─────────────────
+
+  describe("Parliamentary group membership completeness", () => {
+    test("every active MP has a parliamentary group membership", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c FROM (
+             SELECT DISTINCT s.date, t.person_id
+             FROM Session s
+             JOIN Term t ON t.start_date <= s.date AND (t.end_date IS NULL OR t.end_date >= s.date)
+             WHERE NOT EXISTS (
+               SELECT 1 FROM TemporaryAbsence ta
+               WHERE ta.person_id = t.person_id
+                 AND ta.start_date <= s.date
+                 AND (ta.end_date IS NULL OR ta.end_date >= s.date)
+             )
+             AND NOT EXISTS (
+               SELECT 1 FROM ParliamentaryGroupMembership pgm
+               WHERE pgm.person_id = t.person_id
+                 AND pgm.start_date <= s.date
+                 AND (pgm.end_date IS NULL OR pgm.end_date >= s.date)
+             )
+           )`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+
+    test("active group members count equals active parliament members count per date", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c FROM (
+             SELECT s.date,
+               (SELECT COUNT(DISTINCT t.person_id) FROM Term t
+                WHERE t.start_date <= s.date AND (t.end_date IS NULL OR t.end_date >= s.date)
+                AND NOT EXISTS (
+                  SELECT 1 FROM TemporaryAbsence ta
+                  WHERE ta.person_id = t.person_id
+                    AND ta.start_date <= s.date
+                    AND (ta.end_date IS NULL OR ta.end_date >= s.date)
+                )) as term_count,
+               (SELECT COUNT(DISTINCT pgm.person_id) FROM ParliamentaryGroupMembership pgm
+                WHERE pgm.start_date <= s.date AND (pgm.end_date IS NULL OR pgm.end_date >= s.date)
+                AND NOT EXISTS (
+                  SELECT 1 FROM TemporaryAbsence ta
+                  WHERE ta.person_id = pgm.person_id
+                    AND ta.start_date <= s.date
+                    AND (ta.end_date IS NULL OR ta.end_date >= s.date)
+                )) as group_count
+             FROM Session s
+             WHERE s.date IS NOT NULL
+             GROUP BY s.date
+             HAVING term_count != group_count
+           )`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+  });
+
   // ─── QUERY CORRECTNESS ────────────────────────────────────
 
   describe("Query correctness", () => {
