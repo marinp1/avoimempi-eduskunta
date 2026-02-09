@@ -166,7 +166,7 @@ declare global {
     };
 
     export type VotesByPerson = DatabaseTables.Voting &
-      Pick<DatabaseTables.Vote, "vote" | "group_abbrviation">;
+      Pick<DatabaseTables.Vote, "vote" | "group_abbreviation">;
   }
 }
 

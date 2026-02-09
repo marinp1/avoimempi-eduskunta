@@ -1,8 +1,10 @@
-CREATE INDEX IF NOT EXISTS idx_vote_group ON Vote(group_abbrviation);
+ALTER TABLE Vote RENAME COLUMN group_abbrviation TO group_abbreviation;
+
+CREATE INDEX IF NOT EXISTS idx_vote_group ON Vote(group_abbreviation);
 
 CREATE INDEX IF NOT EXISTS idx_vote_vote ON Vote(vote);
 
-CREATE INDEX IF NOT EXISTS idx_vote_group_vote ON Vote(group_abbrviation, vote);
+CREATE INDEX IF NOT EXISTS idx_vote_group_vote ON Vote(group_abbreviation, vote);
 
 CREATE INDEX IF NOT EXISTS idx_excel_speech_start ON ExcelSpeech(start_time);
 

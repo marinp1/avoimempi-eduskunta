@@ -22,9 +22,10 @@ export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBAanestysEdustaja"]) => {
     currentDb = db;
 
-    // Filter out Swedish votes
-    const swedishVotes = ["Ja", "Nej", "Blank", "Frånvarande"];
-    if (swedishVotes.includes(dataToImport.EdustajaAanestys?.trim())) {
+    // Filter out Swedish duplicate votes (Finnish versions exist separately)
+    const vote = dataToImport.EdustajaAanestys?.trim();
+    const swedishVotesToDrop = ["Ja", "Nej", "Blank", "Frånvarande", "Avstår"];
+    if (swedishVotesToDrop.includes(vote)) {
       return;
     }
 
@@ -32,8 +33,9 @@ export default (db: Database) =>
       id: +dataToImport.EdustajaId,
       voting_id: +dataToImport.AanestysId,
       person_id: +dataToImport.EdustajaHenkiloNumero,
-      vote: dataToImport.EdustajaAanestys.trim(),
-      group_abbrviation: dataToImport.EdustajaRyhmaLyhenne,
+      vote,
+      group_abbreviation:
+        dataToImport.EdustajaRyhmaLyhenne?.trim().toLowerCase(),
     };
 
     rowBatch.push(voteRow);

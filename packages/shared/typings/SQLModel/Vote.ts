@@ -5,7 +5,7 @@ declare global {
       voting_id: number; // Voting.id
       person_id: number; // Representative.person_id
       vote: string;
-      group_abbrviation: string;
+      group_abbreviation: string;
     };
   }
 }

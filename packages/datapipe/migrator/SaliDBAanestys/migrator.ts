@@ -13,7 +13,7 @@ export default (db: Database) =>
       number: +dataToImport.AanestysNumero,
       start_time: parseDateTime(dataToImport.AanestysAlkuaika),
       annulled: !!+dataToImport.AanestysMitatoitu,
-      title: dataToImport.AanestysOtsikko,
+      title: dataToImport.AanestysOtsikko || null,
       proceedings_name: dataToImport.AanestysPoytakirja,
       proceedings_url: dataToImport.AanestysPoytakirjaUrl,
       result_url: dataToImport.Url,

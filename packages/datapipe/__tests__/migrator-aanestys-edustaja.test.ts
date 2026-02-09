@@ -14,7 +14,7 @@ describe("SaliDBAanestysEdustaja migrator", () => {
 
   beforeEach(() => {
     clearStatementCache();
-    db = createTestDb(4); // Up to V001.004 (includes Vote table)
+    db = createTestDb(11); // Up to V001.011 (includes Vote table + column rename)
     // Seed prerequisites
     seedRepresentative(db, { person_id: 1000 });
     seedRepresentative(db, { person_id: 1001, first_name: "Maija", last_name: "Virtanen" });
@@ -61,7 +61,7 @@ describe("SaliDBAanestysEdustaja migrator", () => {
     expect(rows[0].voting_id).toBe(100);
     expect(rows[0].person_id).toBe(1000);
     expect(rows[0].vote).toBe("Jaa");
-    expect(rows[0].group_abbrviation).toBe("kesk");
+    expect(rows[0].group_abbreviation).toBe("kesk");
   });
 
   test("skips Swedish vote 'Ja'", async () => {

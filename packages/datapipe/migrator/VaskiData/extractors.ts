@@ -116,6 +116,45 @@ function extractAuthor(entry: VaskiEntry) {
 }
 
 /**
+ * Map numeric tilaKoodi values to Finnish text equivalents.
+ * Source: Eduskunta API internal status codes.
+ */
+const STATUS_CODE_MAP: Record<string, string> = {
+  "5": "Valmis",
+  "8": "Hyväksytty",
+  "1234": "Valmis",
+};
+
+/**
+ * Normalize author role formatting:
+ * - "kunta-ja alueministeri" -> "kunta- ja alueministeri" (missing space after hyphen)
+ * - "Kulttuuri- ja asuntoministeri" -> "kulttuuri- ja asuntoministeri" (lowercase)
+ * - "urheilu-, ja nuorisoministeri" -> "urheilu- ja nuorisoministeri" (extra comma)
+ */
+function normalizeAuthorRole(role: string | null): string | null {
+  if (!role) return null;
+  let result = role;
+  // Fix missing space after hyphen before "ja"
+  result = result.replace(/-ja /g, "- ja ");
+  // Remove extra comma before "ja" (e.g. "urheilu-, ja" -> "urheilu- ja")
+  result = result.replace(/-, ja /g, "- ja ");
+  // Lowercase first letter (except "Valiokunta" which is a proper noun usage)
+  if (result !== "Valiokunta" && result[0] >= "A" && result[0] <= "Z") {
+    result = result[0].toLowerCase() + result.slice(1);
+  }
+  return result;
+}
+
+/**
+ * Normalize document_type_code: fix known bad variants.
+ */
+function normalizeDocTypeCode(code: string): string {
+  if (code === "Kk") return "KK";
+  if (code === "kkb") return "KK";
+  return code;
+}
+
+/**
  * Extract the core metadata from a VaskiEntry into a VaskiDocument row.
  */
 export function extractDocument(entry: VaskiEntry): DatabaseTables.VaskiDocument {
@@ -131,17 +170,17 @@ export function extractDocument(entry: VaskiEntry): DatabaseTables.VaskiDocument
   return {
     id: parseInt(entry.id, 10),
     eduskunta_tunnus: entry.eduskuntaTunnus,
-    document_type_code: strOrNull(tunniste?.AsiakirjatyyppiKoodi) ?? "",
+    document_type_code: normalizeDocTypeCode(strOrNull(tunniste?.AsiakirjatyyppiKoodi) ?? ""),
     document_type_name: strOrNull(ident?.AsiakirjatyyppiNimi) ?? "",
     document_number: Number.isNaN(docNumber) ? null : docNumber,
     parliamentary_year: strOrNull(tunniste?.ValtiopaivavuosiTeksti),
     title: strOrNull(ident?.Nimeke?.NimekeTeksti),
     author_first_name: author.firstName,
     author_last_name: author.lastName,
-    author_role: author.role,
+    author_role: normalizeAuthorRole(author.role),
     author_organization: author.organization,
     creation_date: meta?.["@_laadintaPvm"] ?? null,
-    status: meta?.["@_tilaKoodi"] ?? entry.status,
+    status: STATUS_CODE_MAP[meta?.["@_tilaKoodi"]] ?? meta?.["@_tilaKoodi"] ?? STATUS_CODE_MAP[entry.status] ?? entry.status,
     language_code: meta?.["@_kieliKoodi"] ?? "fi",
     publicity_code: meta?.["@_julkisuusKoodi"] ?? null,
     source_reference: ident?.Vireilletulo?.EduskuntaTunnus ?? null,
@@ -205,6 +244,34 @@ export function extractRelationships(
   }
 
   return relationships;
+}
+
+/**
+ * Normalize speech_type by fixing OCR hyphenation artifacts and extra whitespace.
+ * Known bad values from the data:
+ *   "(vastauspuheenvuo-ro)" -> "(vastauspuheenvuoro)"
+ *   "(vastauspuheenvuo--ro)" -> "(vastauspuheenvuoro)"
+ *   "(vastauspuheenvuo- ro)" -> "(vastauspuheenvuoro)"
+ *   "(vastauspuheenvu-ro)" -> "(vastauspuheenvuoro)"  (OCR also dropped a letter)
+ *   "(vastauspuheen-- vuoro)" -> "(vastauspuheenvuoro)"  (OCR dropped letters)
+ *   "(esittelypuheenvuo-ro)" -> "(esittelypuheenvuoro)"
+ *   "( vastauspuheenvuoro)" -> "(vastauspuheenvuoro)"
+ *   "(esittelypuheenvuoro )" -> "(esittelypuheenvuoro)"
+ */
+const SPEECH_TYPE_NORMALIZATIONS: Record<string, string> = {
+  "(vastauspuheenvuo-ro)": "(vastauspuheenvuoro)",
+  "(vastauspuheenvuo--ro)": "(vastauspuheenvuoro)",
+  "(vastauspuheenvuo- ro)": "(vastauspuheenvuoro)",
+  "(vastauspuheenvu-ro)": "(vastauspuheenvuoro)",
+  "(vastauspuheen-- vuoro)": "(vastauspuheenvuoro)",
+  "(esittelypuheenvuo-ro)": "(esittelypuheenvuoro)",
+  "( vastauspuheenvuoro)": "(vastauspuheenvuoro)",
+  "(esittelypuheenvuoro )": "(esittelypuheenvuoro)",
+};
+
+function normalizeSpeechType(val: string | null): string | null {
+  if (!val) return null;
+  return SPEECH_TYPE_NORMALIZATIONS[val] ?? val;
 }
 
 /**
@@ -279,8 +346,8 @@ export function extractSpeeches(entry: VaskiEntry): Omit<DatabaseTables.ExcelSpe
           position: strOrNull(henkilo.AsemaTeksti),
           first_name: strOrNull(henkilo.EtuNimi),
           last_name: strOrNull(henkilo.SukuNimi),
-          party: strOrNull(henkilo.LisatietoTeksti),
-          speech_type: strOrNull(pv.TarkenneTeksti),
+          party: strOrNull(henkilo.LisatietoTeksti)?.toLowerCase() ?? null,
+          speech_type: normalizeSpeechType(strOrNull(pv.TarkenneTeksti)),
           start_time: startTime,
           end_time: endTime,
           content,

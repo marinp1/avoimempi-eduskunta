@@ -23,12 +23,12 @@ LEFT JOIN (
 ) gov ON pgm.group_code = gov.group_code
 LEFT JOIN (
   SELECT
-    TRIM(v.group_abbrviation) AS party,
+    v.group_abbreviation AS party,
     ROUND(100.0 * COUNT(CASE WHEN v.vote IN ('Jaa', 'Ei', 'Tyhjää') THEN 1 END) / COUNT(*), 1) AS participation_rate
   FROM Vote v
   JOIN Voting vt ON v.voting_id = vt.id
   WHERE vt.start_time >= DATE('now', '-6 months')
-  GROUP BY TRIM(v.group_abbrviation)
+  GROUP BY v.group_abbreviation
 ) vote_stats ON pgm.group_code LIKE vote_stats.party || '%'
 LEFT JOIN (
   SELECT
