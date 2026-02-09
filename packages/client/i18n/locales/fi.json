@@ -10,14 +10,41 @@
   },
   "navigation": {
     "openMenu": "Avaa valikko",
+    "more": "Lisää",
     "routes": {
+      "": "Etusivu",
+      "edustajat": "Edustajat",
+      "puolueet": "Puolueet",
+      "istunnot": "Istunnot",
+      "aanestykset": "Äänestykset",
+      "asiakirjat": "Asiakirjat",
+      "analytiikka": "Analytiikka",
+      "tila": "Tila",
+      "admin": "Ylläpito",
       "sessions": "Istunnot",
       "composition": "Kokoonpano",
       "votings": "Äänestykset",
       "insights": "Analytiikka",
-      "status": "Tila",
-      "admin": "Ylläpito"
+      "status": "Tila"
     }
+  },
+  "home": {
+    "title": "Eduskunnan seuranta",
+    "subtitle": "Reaaliaikainen katsaus Suomen eduskunnan toimintaan",
+    "placeholder": "Etusivu rakenteilla",
+    "placeholderDescription": "Täällä näytetään pian eduskunnan yhteenveto, viimeaikaiset äänestykset ja aktiivisimmat edustajat."
+  },
+  "parties": {
+    "title": "Puolueet",
+    "subtitle": "Eduskuntapuolueiden profiilit ja tilastot",
+    "placeholder": "Puoluesivu rakenteilla",
+    "placeholderDescription": "Täällä näytetään pian puolueiden jäsenmäärät, osallistumisaste ja puoluekuri."
+  },
+  "documents": {
+    "title": "Asiakirjat",
+    "subtitle": "Selaa eduskunnan asiakirjoja",
+    "placeholder": "Asiakirjasivu rakenteilla",
+    "placeholderDescription": "Täällä voi pian hakea ja selata eduskunnan asiakirjoja aiheittain ja tyypeittäin."
   },
   "common": {
     "date": "Päivämäärä",

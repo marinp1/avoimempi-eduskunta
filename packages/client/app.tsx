@@ -9,13 +9,13 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigation } from "./Navigation";
 import { type RouteName, routes } from "./pages";
-import { spacing } from "./theme";
+import { colors, spacing } from "./theme";
 import { useThemedColors } from "./theme/ThemeContext";
 
 const getInitialTab = (): RouteName => {
-  const path = window.location.pathname;
-  if (Object.keys(routes).includes(path)) return path as RouteName;
-  return "composition";
+  const path = window.location.pathname.replace(/^\//, "");
+  if (path in routes) return path as RouteName;
+  return "";
 };
 
 export const App: React.FC = () => {
@@ -23,16 +23,6 @@ export const App: React.FC = () => {
   const { t } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<RouteName>(getInitialTab());
-
-  // Handle initial redirect from / to /composition
-  useEffect(() => {
-    const path = window.location.pathname;
-    if (path === "/" || path === "") {
-      const search = window.location.search;
-      window.history.replaceState({}, "", `/composition${search}`);
-      setActiveTab("composition");
-    }
-  }, []);
 
   // Handle browser back/forward
   useEffect(() => {
@@ -51,7 +41,7 @@ export const App: React.FC = () => {
       <GlobalStyles
         styles={{
           body: {
-            background: themedColors.background,
+            background: colors.backgroundDefault,
             minHeight: "100vh",
           },
         }}
@@ -62,7 +52,7 @@ export const App: React.FC = () => {
         sx={{
           mt: { xs: 2, sm: spacing.md },
           px: { xs: 1.5, sm: 3 },
-          pb: spacing.xl,
+          pb: { xs: 10, lg: spacing.xl },
         }}
       >
         <Box>
@@ -71,7 +61,6 @@ export const App: React.FC = () => {
           </React.Suspense>
         </Box>
 
-        {/* Disclaimer footer */}
         <Box
           component="footer"
           sx={{
