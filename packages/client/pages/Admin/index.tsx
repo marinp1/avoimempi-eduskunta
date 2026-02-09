@@ -27,7 +27,12 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { colors, gradients } from "#client/theme";
 import { useTheme, useThemedColors } from "#client/theme/ThemeContext";
-import { AdminHeader, AdminOverview, ControlPanel } from "./components";
+import {
+  AdminHeader,
+  AdminOverview,
+  BulkOperationsPanel,
+  ControlPanel,
+} from "./components";
 
 type TableStatus = {
   table_name: string;
@@ -70,6 +75,7 @@ export default () => {
   >(null);
   const [scraperProgress, setScraperProgress] = useState<string>("");
   const [scraperPercent, setScraperPercent] = useState<number>(0);
+  const [scraperMode, setScraperMode] = useState<"single" | "bulk">("single");
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const scraperWsRef = useRef<WebSocket | null>(null);
 
@@ -80,6 +86,7 @@ export default () => {
   );
   const [parserProgress, setParserProgress] = useState<string>("");
   const [parserPercent, setParserPercent] = useState<number>(0);
+  const [parserMode, setParserMode] = useState<"single" | "bulk">("single");
   const parserWsRef = useRef<WebSocket | null>(null);
 
   // Migrator control state
@@ -90,36 +97,41 @@ export default () => {
   >(null);
   const migratorWsRef = useRef<WebSocket | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
+  const fetchData = async (showLoading = true) => {
+    try {
+      if (showLoading) {
         setLoading(true);
+      }
 
-        // Fetch status, overview, and last migration timestamp
-        const [statusRes, overviewRes, migrationRes] = await Promise.all([
-          fetch("/api/admin/status"),
-          fetch("/api/admin/overview"),
-          fetch("/api/migrator/last-migration"),
-        ]);
+      // Fetch status, overview, and last migration timestamp
+      const [statusRes, overviewRes, migrationRes] = await Promise.all([
+        fetch("/api/admin/status"),
+        fetch("/api/admin/overview"),
+        fetch("/api/migrator/last-migration"),
+      ]);
 
-        if (!statusRes.ok || !overviewRes.ok) {
-          throw new Error(`HTTP error`);
-        }
+      if (!statusRes.ok || !overviewRes.ok) {
+        throw new Error(`HTTP error`);
+      }
 
-        const statusData: TableStatus[] = await statusRes.json();
-        const overviewData: ScrapingOverview = await overviewRes.json();
-        const migrationData = await migrationRes.json();
+      const statusData: TableStatus[] = await statusRes.json();
+      const overviewData: ScrapingOverview = await overviewRes.json();
+      const migrationData = await migrationRes.json();
 
-        setStatus(statusData);
-        setOverview(overviewData);
-        setLastMigrationTimestamp(migrationData.timestamp);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load admin data.");
-      } finally {
+      setStatus(statusData);
+      setOverview(overviewData);
+      setLastMigrationTimestamp(migrationData.timestamp);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load admin data.");
+    } finally {
+      if (showLoading) {
         setLoading(false);
       }
-    };
+    }
+  };
+
+  useEffect(() => {
     fetchData();
 
     // Setup Scraper WebSocket connection
@@ -139,28 +151,72 @@ export default () => {
         case "status":
           if (message.data.status === "started") {
             setScraperRunning(true);
-            setCurrentScrapingTable(message.data.tableName);
-            setScraperProgress(`Starting scrape...`);
-            setScraperPercent(0);
+            setScraperMode(message.data.mode === "bulk" ? "bulk" : "single");
+            if (message.data.mode === "bulk") {
+              setCurrentScrapingTable(null);
+              setScraperProgress(
+                `Starting bulk scrape of ${message.data.totalTables} tables...`,
+              );
+              setScraperPercent(0);
+            } else {
+              setCurrentScrapingTable(message.data.tableName);
+              setScraperProgress(`Starting scrape...`);
+              setScraperPercent(0);
+            }
           } else if (message.data.status === "stopping") {
             setScraperProgress("Stopping...");
           }
           break;
 
         case "progress":
-          setScraperProgress(
-            `${message.data.tableName}: Page ${message.data.page} - ${message.data.totalRows.toLocaleString()} rows (${message.data.percentComplete.toFixed(1)}%)`,
-          );
-          setScraperPercent(message.data.percentComplete);
+          if (message.data.mode === "bulk") {
+            setCurrentScrapingTable(message.data.tableName);
+            if (message.data.status === "completed") {
+              setScraperProgress(
+                `Completed ${message.data.tableName} (${message.data.currentTableIndex}/${message.data.totalTables})`,
+              );
+            } else if (message.data.status === "failed") {
+              setScraperProgress(
+                `Failed ${message.data.tableName}: ${message.data.error}`,
+              );
+            } else if (message.data.page) {
+              setScraperProgress(
+                `[${message.data.currentTableIndex}/${message.data.totalTables}] ${message.data.tableName}: Page ${message.data.page} - ${message.data.totalRows?.toLocaleString() || "N/A"} rows`,
+              );
+            } else {
+              setScraperProgress(
+                `Processing ${message.data.tableName} (${message.data.currentTableIndex}/${message.data.totalTables})`,
+              );
+            }
+            setScraperPercent(
+              message.data.overallPercentComplete ||
+                message.data.percentComplete,
+            );
+          } else {
+            setScraperProgress(
+              `${message.data.tableName}: Page ${message.data.page} - ${message.data.totalRows.toLocaleString()} rows (${message.data.percentComplete.toFixed(1)}%)`,
+            );
+            setScraperPercent(message.data.percentComplete);
+          }
           break;
 
         case "complete":
           setScraperRunning(false);
           setCurrentScrapingTable(null);
-          setScraperProgress(`Completed successfully`);
+          if (
+            message.data.failedTables &&
+            message.data.failedTables.length > 0
+          ) {
+            setScraperProgress(
+              `Completed with ${message.data.failedTables.length} error(s)`,
+            );
+          } else {
+            setScraperProgress(`Completed successfully`);
+          }
           setScraperPercent(100);
-          // Refresh data after completion
-          setTimeout(() => fetchData(), 1000);
+          setScraperMode("single");
+          // Refresh data without showing loading spinner
+          setTimeout(() => fetchData(false), 500);
           break;
 
         case "error":
@@ -168,6 +224,7 @@ export default () => {
           setCurrentScrapingTable(null);
           setScraperProgress(`Error: ${message.data.error}`);
           setScraperPercent(0);
+          setScraperMode("single");
           break;
 
         case "stopped":
@@ -175,6 +232,7 @@ export default () => {
           setCurrentScrapingTable(null);
           setScraperProgress(`Stopped`);
           setScraperPercent(0);
+          setScraperMode("single");
           break;
       }
     };
@@ -205,28 +263,72 @@ export default () => {
         case "status":
           if (message.data.status === "started") {
             setParserRunning(true);
-            setCurrentParsingTable(message.data.tableName);
-            setParserProgress(`Starting parse...`);
-            setParserPercent(0);
+            setParserMode(message.data.mode === "bulk" ? "bulk" : "single");
+            if (message.data.mode === "bulk") {
+              setCurrentParsingTable(null);
+              setParserProgress(
+                `Starting bulk parse of ${message.data.totalTables} tables...`,
+              );
+              setParserPercent(0);
+            } else {
+              setCurrentParsingTable(message.data.tableName);
+              setParserProgress(`Starting parse...`);
+              setParserPercent(0);
+            }
           } else if (message.data.status === "stopping") {
             setParserProgress("Stopping...");
           }
           break;
 
         case "progress":
-          setParserProgress(
-            `${message.data.tableName}: Page ${message.data.page}/${message.data.totalPages} - ${message.data.rowsParsed.toLocaleString()} rows (${message.data.percentComplete.toFixed(1)}%)`,
-          );
-          setParserPercent(message.data.percentComplete);
+          if (message.data.mode === "bulk") {
+            setCurrentParsingTable(message.data.tableName);
+            if (message.data.status === "completed") {
+              setParserProgress(
+                `Completed ${message.data.tableName} (${message.data.currentTableIndex}/${message.data.totalTables})`,
+              );
+            } else if (message.data.status === "failed") {
+              setParserProgress(
+                `Failed ${message.data.tableName}: ${message.data.error}`,
+              );
+            } else if (message.data.page) {
+              setParserProgress(
+                `[${message.data.currentTableIndex}/${message.data.totalTables}] ${message.data.tableName}: Page ${message.data.page}/${message.data.totalPages} - ${message.data.rowsParsed?.toLocaleString() || "N/A"} rows`,
+              );
+            } else {
+              setParserProgress(
+                `Processing ${message.data.tableName} (${message.data.currentTableIndex}/${message.data.totalTables})`,
+              );
+            }
+            setParserPercent(
+              message.data.overallPercentComplete ||
+                message.data.percentComplete,
+            );
+          } else {
+            setParserProgress(
+              `${message.data.tableName}: Page ${message.data.page}/${message.data.totalPages} - ${message.data.rowsParsed.toLocaleString()} rows (${message.data.percentComplete.toFixed(1)}%)`,
+            );
+            setParserPercent(message.data.percentComplete);
+          }
           break;
 
         case "complete":
           setParserRunning(false);
           setCurrentParsingTable(null);
-          setParserProgress(`Completed successfully`);
+          if (
+            message.data.failedTables &&
+            message.data.failedTables.length > 0
+          ) {
+            setParserProgress(
+              `Completed with ${message.data.failedTables.length} error(s)`,
+            );
+          } else {
+            setParserProgress(`Completed successfully`);
+          }
           setParserPercent(100);
-          // Refresh data after completion
-          setTimeout(() => fetchData(), 1000);
+          setParserMode("single");
+          // Refresh data without showing loading spinner
+          setTimeout(() => fetchData(false), 500);
           break;
 
         case "error":
@@ -234,6 +336,7 @@ export default () => {
           setCurrentParsingTable(null);
           setParserProgress(`Error: ${message.data.error}`);
           setParserPercent(0);
+          setParserMode("single");
           break;
 
         case "stopped":
@@ -241,6 +344,7 @@ export default () => {
           setCurrentParsingTable(null);
           setParserProgress(`Stopped`);
           setParserPercent(0);
+          setParserMode("single");
           break;
       }
     };
@@ -285,8 +389,8 @@ export default () => {
           setMigratorRunning(false);
           setMigratorProgress("Migration completed successfully");
           setLastMigrationTimestamp(message.data.timestamp);
-          // Refresh data after completion
-          setTimeout(() => fetchData(), 1000);
+          // Refresh data without showing loading spinner
+          setTimeout(() => fetchData(false), 500);
           break;
 
         case "error":
@@ -393,6 +497,48 @@ export default () => {
     }
   };
 
+  const handleBulkStartScraping = async (selectedTables: string[]) => {
+    try {
+      const res = await fetch("/api/scraper/bulk-start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tableNames: selectedTables,
+          mode: { type: "auto-resume" },
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(`Failed to start bulk scraping: ${err.message}`);
+    }
+  };
+
+  const handleBulkStartParsing = async (selectedTables: string[]) => {
+    try {
+      const res = await fetch("/api/parser/bulk-start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tableNames: selectedTables,
+          force: false,
+        }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error);
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(`Failed to start bulk parsing: ${err.message}`);
+    }
+  };
+
   const handleStartMigration = async () => {
     try {
       const res = await fetch("/api/migrator/start", {
@@ -456,7 +602,7 @@ export default () => {
 
   return (
     <Box>
-      <AdminHeader />
+      <AdminHeader onRefresh={() => fetchData(true)} />
 
       {error && (
         <Fade in timeout={500}>
@@ -467,6 +613,37 @@ export default () => {
       )}
 
       <AdminOverview overview={overview} />
+
+      {/* Bulk Scraper Section */}
+      <BulkOperationsPanel
+        title="Bulk Scraper"
+        description="Scrape multiple tables sequentially"
+        tableStatuses={status}
+        isRunning={scraperRunning && scraperMode === "bulk"}
+        progress={scraperProgress}
+        progressPercent={scraperPercent}
+        currentTable={currentScrapingTable}
+        onStart={handleBulkStartScraping}
+        onStop={handleStopScraping}
+        gradient={gradients.scraper}
+        disabled={scraperRunning || parserRunning || migratorRunning}
+      />
+
+      {/* Bulk Parser Section */}
+      <BulkOperationsPanel
+        title="Bulk Parser"
+        description="Parse multiple tables sequentially"
+        tableStatuses={status}
+        isRunning={parserRunning && parserMode === "bulk"}
+        progress={parserProgress}
+        progressPercent={parserPercent}
+        currentTable={currentParsingTable}
+        onStart={handleBulkStartParsing}
+        onStop={handleStopParsing}
+        gradient={gradients.parser}
+        disabled={scraperRunning || parserRunning || migratorRunning}
+        filterCondition={(table) => table.has_raw_data}
+      />
 
       {/* Database Migration Section */}
       <ControlPanel
@@ -806,7 +983,7 @@ export default () => {
                                         undefined &&
                                         row.total_rows_in_api && (
                                           <Chip
-                                            label={`${row.scrape_progress_percent.toFixed(1)}% - ${row.raw_estimated_rows.toLocaleString()} / ${row.total_rows_in_api.toLocaleString()} rows`}
+                                            label={`${row.scrape_progress_percent.toFixed(1)}% - ${row.raw_estimated_rows.toLocaleString()} / ${Math.max(row.total_rows_in_api, row.raw_estimated_rows).toLocaleString()} rows`}
                                             size="small"
                                             color={
                                               row.scrape_progress_percent >= 100

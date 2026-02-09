@@ -69,6 +69,44 @@ export const routes = {
     },
   },
 
+  "/api/scraper/bulk-start": {
+    POST: async (req: Request) => {
+      try {
+        const body = (await req.json()) as {
+          tableNames: string[];
+          mode?: any;
+        };
+
+        if (!body.tableNames || !Array.isArray(body.tableNames)) {
+          return Response.json(
+            { error: "tableNames array is required" },
+            { status: 400 },
+          );
+        }
+
+        if (body.tableNames.length === 0) {
+          return Response.json(
+            { error: "tableNames array cannot be empty" },
+            { status: 400 },
+          );
+        }
+
+        // Start bulk scraping in background
+        scraperController
+          .startBulkScraping(body.tableNames, body.mode)
+          .catch(console.error);
+
+        return Response.json({
+          success: true,
+          message: "Bulk scraping started",
+          tableCount: body.tableNames.length,
+        });
+      } catch (error: any) {
+        return Response.json({ error: error.message }, { status: 500 });
+      }
+    },
+  },
+
   "/api/scraper/status": {
     GET: async () => {
       const status = scraperController.getStatus();
@@ -108,6 +146,44 @@ export const routes = {
         });
       } catch (error: any) {
         return Response.json({ error: error.message }, { status: 400 });
+      }
+    },
+  },
+
+  "/api/parser/bulk-start": {
+    POST: async (req: Request) => {
+      try {
+        const body = (await req.json()) as {
+          tableNames: string[];
+          force?: boolean;
+        };
+
+        if (!body.tableNames || !Array.isArray(body.tableNames)) {
+          return Response.json(
+            { error: "tableNames array is required" },
+            { status: 400 },
+          );
+        }
+
+        if (body.tableNames.length === 0) {
+          return Response.json(
+            { error: "tableNames array cannot be empty" },
+            { status: 400 },
+          );
+        }
+
+        // Start bulk parsing in background
+        parserController
+          .startBulkParsing(body.tableNames, body.force)
+          .catch(console.error);
+
+        return Response.json({
+          success: true,
+          message: "Bulk parsing started",
+          tableCount: body.tableNames.length,
+        });
+      } catch (error: any) {
+        return Response.json({ error: error.message }, { status: 500 });
       }
     },
   },
@@ -161,7 +237,7 @@ export const routes = {
   },
 };
 
-export const websocketHandler: WebSocketHandler = {
+export const websocketHandler: WebSocketHandler<undefined> = {
   open(ws: ServerWebSocket<{ type: string }>) {
     console.log(`WebSocket connection opened: ${ws.data.type}`);
     if (ws.data.type === "scraper") {

@@ -7,7 +7,9 @@ import homepage from "./public/index.html";
 const db = new DatabaseConnection();
 const isDev = process.env.NODE_ENV === "development";
 
-const server = Bun.serve({
+const server = Bun.serve<{
+  type: "parser" | "scraper" | "migrator";
+}>({
   routes: {
     "/": homepage,
     "/composition": homepage,
