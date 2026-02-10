@@ -17,14 +17,14 @@ SELECT
     sp.ministry,
     sp.modified_datetime,
     sp.excel_key,
-    es.content,
-    es.start_time,
-    es.end_time,
-    es.minutes_url
+    vms.content,
+    vms.start_time,
+    vms.end_time,
+    NULL AS minutes_url
 FROM
     Speech sp
 LEFT JOIN
-    ExcelSpeech es ON sp.excel_key = es.excel_id
+    VaskiMinutesSpeech vms ON sp.excel_key = vms.link_key COLLATE NOCASE
 WHERE
     sp.section_key = $sectionKey
 ORDER BY sp.ordinal ASC

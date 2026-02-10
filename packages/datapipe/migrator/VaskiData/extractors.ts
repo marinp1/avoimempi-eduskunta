@@ -125,6 +125,11 @@ const STATUS_CODE_MAP: Record<string, string> = {
   "1234": "Valmis",
 };
 
+function normalizeStatus(code: string | null): string | null {
+  if (!code) return null;
+  return STATUS_CODE_MAP[code] ?? code;
+}
+
 /**
  * Normalize author role formatting:
  * - "kunta-ja alueministeri" -> "kunta- ja alueministeri" (missing space after hyphen)
@@ -148,7 +153,7 @@ function normalizeAuthorRole(role: string | null): string | null {
 /**
  * Normalize document_type_code: fix known bad variants.
  */
-function normalizeDocTypeCode(code: string): string {
+export function normalizeDocTypeCode(code: string): string {
   if (code === "Kk") return "KK";
   if (code === "kkb") return "KK";
   return code;
@@ -161,30 +166,31 @@ export function extractDocument(entry: VaskiEntry): DatabaseTables.VaskiDocument
   const ident = getIdentification(entry);
   const meta = getMetadata(entry);
   const tunniste = ident?.EduskuntaTunniste;
-  const author = extractAuthor(entry);
-
-  const docNumber = tunniste?.AsiakirjaNroTeksti
-    ? parseInt(tunniste.AsiakirjaNroTeksti, 10)
-    : null;
 
   return {
     id: parseInt(entry.id, 10),
     eduskunta_tunnus: entry.eduskuntaTunnus,
     document_type_code: normalizeDocTypeCode(strOrNull(tunniste?.AsiakirjatyyppiKoodi) ?? ""),
     document_type_name: strOrNull(ident?.AsiakirjatyyppiNimi) ?? "",
-    document_number: Number.isNaN(docNumber) ? null : docNumber,
+    document_number: strOrNull(tunniste?.AsiakirjaNroTeksti),
     parliamentary_year: strOrNull(tunniste?.ValtiopaivavuosiTeksti),
     title: strOrNull(ident?.Nimeke?.NimekeTeksti),
-    author_first_name: author.firstName,
-    author_last_name: author.lastName,
-    author_role: normalizeAuthorRole(author.role),
-    author_organization: author.organization,
-    creation_date: meta?.["@_laadintaPvm"] ?? null,
+    alternative_title: strOrNull(ident?.Nimeke?.["@_vaihtoehtoinenNimekeTeksti"]),
+    version_text: null,
+    laadinta_pvm: meta?.["@_laadintaPvm"] ?? null,
+    muu_tunnus: strOrNull(meta?.["@_muuTunnus"]),
+    paatehtava_koodi: strOrNull(meta?.["@_paatehtavaKoodi"]),
+    rakennemaarittely_nimi: strOrNull(meta?.["@_rakennemaarittelyNimi"]),
+    message_type: null,
+    message_id: null,
+    message_created: null,
+    transfer_code: null,
+    meeting_id: null,
+    meeting_org: null,
     status: STATUS_CODE_MAP[meta?.["@_tilaKoodi"]] ?? meta?.["@_tilaKoodi"] ?? STATUS_CODE_MAP[entry.status] ?? entry.status,
     language_code: meta?.["@_kieliKoodi"] ?? "fi",
     publicity_code: meta?.["@_julkisuusKoodi"] ?? null,
-    source_reference: ident?.Vireilletulo?.EduskuntaTunnus ?? null,
-    summary: extractSummaryFromContent(entry),
+    summary_text: extractSummaryFromContent(entry),
     attachment_group_id: entry.attachmentGroupId ? parseInt(entry.attachmentGroupId, 10) : null,
     created: entry.created,
   };
@@ -196,7 +202,7 @@ export function extractDocument(entry: VaskiEntry): DatabaseTables.VaskiDocument
 export function extractSubjects(
   entry: VaskiEntry,
   documentId: number,
-): DatabaseTables.DocumentSubject[] {
+): DatabaseTables.VaskiSubject[] {
   const meta = getMetadata(entry);
   const aiheet = meta?.Aihe;
   if (!aiheet) return [];
@@ -217,8 +223,8 @@ export function extractSubjects(
 export function extractRelationships(
   entry: VaskiEntry,
   documentId: number,
-): DatabaseTables.DocumentRelationship[] {
-  const relationships: DatabaseTables.DocumentRelationship[] = [];
+): DatabaseTables.VaskiRelationship[] {
+  const relationships: DatabaseTables.VaskiRelationship[] = [];
   const ident = getIdentification(entry);
   const typeName = ident?.AsiakirjatyyppiNimi;
   const vireilletulo = ident?.Vireilletulo?.EduskuntaTunnus;
@@ -228,7 +234,7 @@ export function extractRelationships(
   // Committee reports/opinions reference the proposal they're about
   if (typeName === "Valiokunnan mietintö" || typeName === "Valiokunnan lausunto") {
     relationships.push({
-      source_document_id: documentId,
+      document_id: documentId,
       target_eduskunta_tunnus: vireilletulo,
       relationship_type: "source_proposal",
     });
@@ -237,7 +243,7 @@ export function extractRelationships(
   // Answers reference the question they're answering
   if (typeName === "Vastaus kirjalliseen kysymykseen") {
     relationships.push({
-      source_document_id: documentId,
+      document_id: documentId,
       target_eduskunta_tunnus: vireilletulo,
       relationship_type: "answer_to",
     });
@@ -269,10 +275,21 @@ const SPEECH_TYPE_NORMALIZATIONS: Record<string, string> = {
   "(esittelypuheenvuoro )": "(esittelypuheenvuoro)",
 };
 
-function normalizeSpeechType(val: string | null): string | null {
+export function normalizeSpeechType(val: string | null): string | null {
   if (!val) return null;
-  return SPEECH_TYPE_NORMALIZATIONS[val] ?? val;
+  let result = val;
+  result = SPEECH_TYPE_NORMALIZATIONS[result] ?? result;
+  result = result.trim();
+  if (!result) return null;
+  // Remove spacing inside parentheses and collapse whitespace.
+  result = result.replace(/\(\s+/g, "(").replace(/\s+\)/g, ")");
+  result = result.replace(/\s+/g, " ");
+  // Remove hyphenated word breaks and any remaining hyphens.
+  result = result.replace(/-\s*/g, "");
+  return result;
 }
+
+export { normalizeStatus };
 
 /**
  * Generate an excel_id matching the format used by SaliDBPuheenvuoro migrator.

@@ -29,12 +29,12 @@ LEFT JOIN (
 ) vote_stats ON r.person_id = vote_stats.person_id
 LEFT JOIN (
   SELECT
-    r2.person_id,
+    sp.person_id,
     COUNT(*) AS speech_count
-  FROM ExcelSpeech es
-  JOIN Representative r2 ON es.first_name = r2.first_name AND es.last_name = r2.last_name
-  WHERE es.start_time >= DATE('now', '-1 year')
-  GROUP BY r2.person_id
+  FROM Speech sp
+  LEFT JOIN VaskiMinutesSpeech vms ON sp.excel_key = vms.link_key COLLATE NOCASE
+  WHERE vms.start_time >= DATE('now', '-1 year')
+  GROUP BY sp.person_id
 ) speech_stats ON r.person_id = speech_stats.person_id
 LEFT JOIN (
   SELECT

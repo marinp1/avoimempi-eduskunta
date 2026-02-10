@@ -117,7 +117,25 @@ export const insertRows = (db: Database) => (table: string, rows: any[]) => {
     const batchValues: any[] = [];
     for (const row of batch) {
       for (const col of columns) {
-        batchValues.push(normalizeValue(row[col]));
+        const normalized = normalizeValue(row[col]);
+        const t = typeof normalized;
+        if (
+          normalized !== null &&
+          t !== "string" &&
+          t !== "number" &&
+          t !== "boolean" &&
+          t !== "bigint" &&
+          !(normalized instanceof Uint8Array)
+        ) {
+          const preview =
+            normalized && typeof normalized === "object"
+              ? JSON.stringify(normalized, null, 0)?.slice(0, 200)
+              : String(normalized);
+          throw new Error(
+            `Invalid bind value for ${table}.${col} (type=${t}): ${preview}`,
+          );
+        }
+        batchValues.push(normalized);
       }
     }
 

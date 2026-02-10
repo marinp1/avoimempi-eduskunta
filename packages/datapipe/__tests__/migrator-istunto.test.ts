@@ -10,7 +10,7 @@ describe("SaliDBIstunto migrator", () => {
 
   beforeEach(() => {
     clearStatementCache();
-    db = createTestDb(2); // Up to V001.002 (includes Session + Agenda)
+    db = createTestDb(); // Use latest schema
     migrate = createMigrator(db);
   });
 

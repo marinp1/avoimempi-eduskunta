@@ -47,6 +47,9 @@ type Section = {
   processing_title?: string;
   identifier?: string;
   resolution?: string;
+  vaski_title?: string | null;
+  vaski_summary?: string | null;
+  vaski_document_type_name?: string | null;
 };
 
 type Speech = {
@@ -90,6 +93,7 @@ const Home = () => {
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [loadingComposition, setLoadingComposition] = useState(true);
   const [latestDate, setLatestDate] = useState<string | null>(null);
+  const [vaskiLatestSpeechDate, setVaskiLatestSpeechDate] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [expandedSections, setExpandedSections] = useState<Set<number>>(
@@ -125,8 +129,10 @@ const Home = () => {
 
         const sessionsRes = await fetch(`/api/day/${latest}/sessions`);
         if (!sessionsRes.ok) throw new Error("Failed to fetch sessions");
-        const sessionsData: SessionWithSections[] = await sessionsRes.json();
-        setSessions(sessionsData);
+        const payload: { sessions: SessionWithSections[]; vaskiLatestSpeechDate?: string | null } =
+          await sessionsRes.json();
+        setSessions(payload.sessions || []);
+        setVaskiLatestSpeechDate(payload.vaskiLatestSpeechDate ?? null);
       } catch {
         setError(t("home.loadingError"));
       } finally {
@@ -458,6 +464,23 @@ const Home = () => {
                 )}
               </Box>
 
+              {vaskiLatestSpeechDate &&
+                new Date(session.date).getTime() > new Date(vaskiLatestSpeechDate).getTime() && (
+                  <Box sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}>
+                    <Alert severity="info" sx={{ alignItems: "center" }}>
+                      <Typography sx={{ fontSize: "0.8125rem" }}>
+                        {t("sessions.speechContentPending")}
+                      </Typography>
+                      <Typography sx={{ fontSize: "0.8125rem" }}>
+                        {t("sessions.speechContentLatest", {
+                          date: formatDate(vaskiLatestSpeechDate),
+                          defaultValue: "",
+                        })}
+                      </Typography>
+                    </Alert>
+                  </Box>
+                )}
+
               {/* Sections list */}
               {session.sections?.map((section) => {
                 const isExpanded = expandedSections.has(section.id);
@@ -516,6 +539,39 @@ const Home = () => {
                             }}
                           >
                             {section.identifier}
+                          </Typography>
+                        )}
+                        {section.vaski_document_type_name && (
+                          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+                            {section.vaski_document_type_name}
+                          </Typography>
+                        )}
+                        {section.vaski_title && (
+                          <Typography
+                            sx={{
+                              fontSize: "0.8125rem",
+                              color: colors.textSecondary,
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                            }}
+                          >
+                            {section.vaski_title}
+                          </Typography>
+                        )}
+                        {section.vaski_summary && (
+                          <Typography
+                            sx={{
+                              fontSize: "0.75rem",
+                              color: colors.textTertiary,
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                            }}
+                          >
+                            {section.vaski_summary}
                           </Typography>
                         )}
                       </Box>
@@ -708,6 +764,14 @@ const Home = () => {
                                 sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
                               >
                                 {t("sessions.speechContentPending")}
+                              </Typography>
+                            )}
+                            {!hasSpeechContent && vaskiLatestSpeechDate && (
+                              <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                                {t("sessions.speechContentLatest", {
+                                  date: formatDate(vaskiLatestSpeechDate),
+                                  defaultValue: "",
+                                })}
                               </Typography>
                             )}
                             {speeches.map((speech) => (

@@ -67,8 +67,8 @@ const VoteCard: React.FC<{
   res: DatabaseTables.Voting;
   themedColors: ReturnType<typeof useThemedColors>;
   voteColors: ReturnType<typeof getVoteColors>;
-  t: (key: string) => string;
-}> = ({ res, themedColors, voteColors, t }) => {
+}> = ({ res, themedColors, voteColors }) => {
+  const { t } = useTranslation();
   const close = isCloseVote(res);
 
   return (
@@ -324,7 +324,6 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                     res={res}
                     themedColors={themedColors}
                     voteColors={voteColors}
-                    t={t}
                   />
                 ))}
               </Box>

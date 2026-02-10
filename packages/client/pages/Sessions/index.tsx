@@ -129,8 +129,24 @@ const CalendarGrid: React.FC<{
   const { t } = useTranslation();
   const themedColors = useThemedColors();
 
-  const monthNames: string[] = t("sessions.monthNames", { returnObjects: true }) as unknown as string[];
-  const weekDays: string[] = t("sessions.weekDays", { returnObjects: true }) as unknown as string[];
+  const monthNames = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, monthIndex) =>
+        new Intl.DateTimeFormat("fi-FI", { month: "short" })
+          .format(new Date(2020, monthIndex, 1))
+          .replace(".", ""),
+      ),
+    [],
+  );
+  const weekDays = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, dayIndex) =>
+        new Intl.DateTimeFormat("fi-FI", { weekday: "short" })
+          .format(new Date(2020, 0, dayIndex + 6))
+          .replace(".", ""),
+      ),
+    [],
+  );
 
   const [viewYear, setViewYear] = useState(() => parseInt(selectedDate.slice(0, 4)));
   const [viewMonth, setViewMonth] = useState(() => parseInt(selectedDate.slice(5, 7)) - 1);
@@ -308,6 +324,7 @@ export default () => {
   const themedColors = useThemedColors();
 
   const [sessions, setSessions] = useState<SessionWithSections[]>([]);
+  const [vaskiLatestSpeechDate, setVaskiLatestSpeechDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState<string>(getInitialDate());
   const [error, setError] = useState<string | null>(null);
@@ -330,8 +347,10 @@ export default () => {
         setExpandedSections(new Set());
         const res = await fetch(`/api/day/${date}/sessions`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data: SessionWithSections[] = await res.json();
-        setSessions(data);
+        const payload: { sessions: SessionWithSections[]; vaskiLatestSpeechDate?: string | null } =
+          await res.json();
+        setSessions(payload.sessions || []);
+        setVaskiLatestSpeechDate(payload.vaskiLatestSpeechDate ?? null);
       } catch {
         setError(t("errors.loadSessionFailed"));
       } finally {
@@ -876,6 +895,23 @@ export default () => {
                 )}
               </Box>
 
+              {vaskiLatestSpeechDate &&
+                new Date(session.date).getTime() > new Date(vaskiLatestSpeechDate).getTime() && (
+                  <Box sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}>
+                    <Alert severity="info" sx={{ alignItems: "center" }}>
+                      <Typography sx={{ fontSize: "0.8125rem" }}>
+                        {t("sessions.speechContentPending")}
+                      </Typography>
+                      <Typography sx={{ fontSize: "0.8125rem" }}>
+                        {t("sessions.speechContentLatest", {
+                          date: formatDate(vaskiLatestSpeechDate),
+                          defaultValue: "",
+                        })}
+                      </Typography>
+                    </Alert>
+                  </Box>
+                )}
+
               {/* Sections list */}
               {viewMode !== "timeline" &&
                 session.sections?.map((section) => {
@@ -1069,6 +1105,14 @@ export default () => {
                             {!hasSpeechContent && (
                               <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
                                 {t("sessions.speechContentPending")}
+                              </Typography>
+                            )}
+                            {!hasSpeechContent && vaskiLatestSpeechDate && (
+                              <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                                {t("sessions.speechContentLatest", {
+                                  date: formatDate(vaskiLatestSpeechDate),
+                                  defaultValue: "",
+                                })}
                               </Typography>
                             )}
                             {speeches.map((speech) => (
@@ -1272,6 +1316,14 @@ export default () => {
                                   {t("sessions.speechContentPending")}
                                 </Typography>
                               )}
+                              {!hasSpeechContent && speeches.length > 0 && vaskiLatestSpeechDate && (
+                                <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                                  {t("sessions.speechContentLatest", {
+                                    date: formatDate(vaskiLatestSpeechDate),
+                                    defaultValue: "",
+                                  })}
+                                </Typography>
+                              )}
                             </Box>
                             <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mt: 0.75 }}>
                               {section.agenda_key && (
@@ -1347,6 +1399,19 @@ export default () => {
                                   </Box>
                                 ) : speeches.length > 0 ? (
                                   <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 0.75 }}>
+                                    {!hasSpeechContent && (
+                                      <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                                        {t("sessions.speechContentPending")}
+                                      </Typography>
+                                    )}
+                                    {!hasSpeechContent && vaskiLatestSpeechDate && (
+                                      <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                                        {t("sessions.speechContentLatest", {
+                                          date: formatDate(vaskiLatestSpeechDate),
+                                          defaultValue: "",
+                                        })}
+                                      </Typography>
+                                    )}
                                     {speeches.map((speech) => (
                                       <Box key={speech.id} sx={{ p: 1.25, borderRadius: 1, background: "#fff" }}>
                                         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: speech.content ? 0.75 : 0 }}>

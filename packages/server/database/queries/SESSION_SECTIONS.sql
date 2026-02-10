@@ -17,17 +17,20 @@ SELECT
     vd.document_number AS vaski_document_number,
     vd.parliamentary_year AS vaski_parliamentary_year,
     vd.title AS vaski_title,
-    vd.summary AS vaski_summary,
-    vd.author_first_name AS vaski_author_first_name,
-    vd.author_last_name AS vaski_author_last_name,
-    vd.author_role AS vaski_author_role,
-    vd.author_organization AS vaski_author_organization,
-    vd.creation_date AS vaski_creation_date,
+    vd.summary_text AS vaski_summary,
+    (SELECT first_name FROM VaskiDocumentActor va WHERE va.document_id = vd.id AND va.role_code = 'laatija' LIMIT 1) AS vaski_author_first_name,
+    (SELECT last_name FROM VaskiDocumentActor va WHERE va.document_id = vd.id AND va.role_code = 'laatija' LIMIT 1) AS vaski_author_last_name,
+    (SELECT position_text FROM VaskiDocumentActor va WHERE va.document_id = vd.id AND va.role_code = 'laatija' LIMIT 1) AS vaski_author_role,
+    (SELECT organization_text FROM VaskiDocumentActor va WHERE va.document_id = vd.id AND va.role_code = 'laatija' LIMIT 1) AS vaski_author_organization,
+    vd.created AS vaski_creation_date,
     vd.status AS vaski_status,
-    vd.source_reference AS vaski_source_reference,
-    (SELECT group_concat(DISTINCT ds.subject_text, ' | ')
-     FROM DocumentSubject ds
-     WHERE ds.document_id = vd.id) AS vaski_subjects,
+    (SELECT target_eduskunta_tunnus FROM VaskiRelationship vr WHERE vr.document_id = vd.id AND vr.relationship_type = 'vireilletulo' LIMIT 1) AS vaski_source_reference,
+    (SELECT group_concat(subject_text, ' | ')
+     FROM (
+       SELECT DISTINCT ds.subject_text
+       FROM VaskiSubject ds
+       WHERE ds.document_id = vd.id
+     )) AS vaski_subjects,
     (SELECT COUNT(*) FROM Voting v WHERE v.section_key = sec.key) AS voting_count,
     (SELECT COUNT(*) FROM Speech sp WHERE sp.section_key = sec.key) AS speech_count,
     (SELECT COUNT(DISTINCT sp.person_id) FROM Speech sp WHERE sp.section_key = sec.key) AS speaker_count,

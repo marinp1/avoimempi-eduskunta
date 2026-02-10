@@ -2,6 +2,12 @@
 
 import { DatabaseConnection } from "../database/db";
 import {
+  STATUS_TABLES,
+  getStatusTableCountQuery,
+  getStatusTableInfoQuery,
+  isStatusTableName,
+} from "../database/status-queries";
+import {
   SanityCheckService,
   type SanityCheckResult,
 } from "../services/sanity-checks";
@@ -53,40 +59,12 @@ export class StatusController {
       return this.cachedOverview;
     }
 
-    // Get row counts for all major tables
-    const tables = [
-      "Representative",
-      "Term",
-      "Session",
-      "Agenda",
-      "Section",
-      "Voting",
-      "Vote",
-      "Speech",
-      "VotingDocumentLink",
-      "SectionDocumentLink",
-      "SessionNotice",
-      "VotingDistribution",
-      "SaliDBDocumentReference",
-      "ParliamentaryGroup",
-      "ParliamentaryGroupMembership",
-      "Committee",
-      "CommitteeMembership",
-      "GovernmentMembership",
-      "TrustPosition",
-      "District",
-      "RepresentativeDistrict",
-      "VaskiDocument",
-      "DocumentSubject",
-      "DocumentRelationship",
-    ];
-
     const tableStatuses: TableStatus[] = [];
 
-    for (const tableName of tables) {
+    for (const tableName of STATUS_TABLES) {
       try {
         const stmt = this.database.prepare<{ count: number }, []>(
-          `SELECT COUNT(*) as count FROM ${tableName}`,
+          getStatusTableCountQuery(tableName),
         );
         const row = stmt.get();
         stmt.finalize();
@@ -111,7 +89,7 @@ export class StatusController {
 
     this.cachedOverview = {
       tables: tableStatuses,
-      totalTables: tables.length,
+      totalTables: STATUS_TABLES.length,
       tablesWithData,
       lastUpdated: new Date().toISOString(),
     };
@@ -120,40 +98,12 @@ export class StatusController {
   }
 
   async getTableDetails(tableName: string) {
-    // Validate table name to prevent SQL injection
-    const allowedTables = [
-      "Representative",
-      "Term",
-      "Session",
-      "Agenda",
-      "Section",
-      "Voting",
-      "Vote",
-      "Speech",
-      "VotingDocumentLink",
-      "SectionDocumentLink",
-      "SessionNotice",
-      "VotingDistribution",
-      "SaliDBDocumentReference",
-      "ParliamentaryGroup",
-      "ParliamentaryGroupMembership",
-      "Committee",
-      "CommitteeMembership",
-      "GovernmentMembership",
-      "TrustPosition",
-      "District",
-      "RepresentativeDistrict",
-      "VaskiDocument",
-      "DocumentSubject",
-      "DocumentRelationship",
-    ];
-
-    if (!allowedTables.includes(tableName)) {
+    if (!isStatusTableName(tableName)) {
       throw new Error(`Invalid table name: ${tableName}`);
     }
 
     const countStmt = this.database.prepare<{ count: number }, []>(
-      `SELECT COUNT(*) as count FROM ${tableName}`,
+      getStatusTableCountQuery(tableName),
     );
     const countRow = countStmt.get();
     countStmt.finalize();
@@ -167,7 +117,7 @@ export class StatusController {
         notnull: number;
       },
       []
-    >(`PRAGMA table_info(${tableName})`);
+    >(getStatusTableInfoQuery(tableName));
     const columns = columnsStmt.all();
     columnsStmt.finalize();
 

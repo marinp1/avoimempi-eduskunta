@@ -140,11 +140,10 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
       expect(c).toBe(0);
     });
 
-    test("ExcelSpeech.party values are all lowercase", () => {
-      // KNOWN ISSUE: PV (5 rows), TV (1 row) are uppercase vs tv (31 rows) lowercase
+    test("VaskiMinutesSpeech.party values are all lowercase", () => {
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM ExcelSpeech
+          `SELECT COUNT(*) as c FROM VaskiMinutesSpeech
            WHERE party IS NOT NULL
              AND party != LOWER(party)`,
         )
@@ -168,15 +167,11 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
 
   // ─── SPEECH TYPE NORMALIZATION ────────────────────────────
 
-  describe("ExcelSpeech.speech_type: OCR/formatting artifacts cleaned", () => {
+  describe("VaskiMinutesSpeech.speech_type: formatting artifacts cleaned", () => {
     test("no hyphenated word breaks in speech_type", () => {
-      // KNOWN ISSUE: OCR artifacts like "(vastauspuheenvuo-ro)" (123 rows),
-      // "(esittelypuheenvuo-ro)" (8), "(vastauspuheenvuo--ro)" (3),
-      // "(vastauspuheenvuo- ro)" (3), "(vastauspuheenvu-ro)" (1),
-      // "(vastauspuheen-- vuoro)" (1)
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM ExcelSpeech
+          `SELECT COUNT(*) as c FROM VaskiMinutesSpeech
            WHERE speech_type LIKE '%-%'
              AND speech_type NOT LIKE '%(nopeatahtinen puheenvuoro)%'`,
         )
@@ -185,10 +180,9 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
     });
 
     test("no leading/trailing whitespace in speech_type", () => {
-      // KNOWN ISSUE: "( vastauspuheenvuoro)" (1 row), "(esittelypuheenvuoro )" (1 row)
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM ExcelSpeech
+          `SELECT COUNT(*) as c FROM VaskiMinutesSpeech
            WHERE speech_type IS NOT NULL
              AND (speech_type LIKE '( %' OR speech_type LIKE '% )')`,
         )
@@ -232,13 +226,14 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
 
   // ─── AUTHOR ROLE NORMALIZATION ────────────────────────────
 
-  describe("VaskiDocument.author_role: consistent formatting", () => {
+  describe("VaskiDocumentActor.position_text: consistent formatting", () => {
     test("no missing spaces after hyphens (kunta-ja vs kunta- ja)", () => {
       // KNOWN ISSUE: "kunta-ja alueministeri" (4 rows) vs "kunta- ja alueministeri" (36 rows)
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM VaskiDocument
-           WHERE author_role = 'kunta-ja alueministeri'`,
+          `SELECT COUNT(*) as c FROM VaskiDocumentActor
+           WHERE role_code = 'laatija'
+             AND position_text = 'kunta-ja alueministeri'`,
         )
         .get() as any;
       expect(c).toBe(0);
@@ -248,10 +243,11 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
       // KNOWN ISSUE: "Kulttuuri- ja asuntoministeri" (1 row) starts with uppercase
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM VaskiDocument
-           WHERE author_role IS NOT NULL
-             AND author_role != 'Valiokunta'
-             AND UNICODE(author_role) BETWEEN 65 AND 90`,
+          `SELECT COUNT(*) as c FROM VaskiDocumentActor
+           WHERE role_code = 'laatija'
+             AND position_text IS NOT NULL
+             AND position_text != 'Valiokunta'
+             AND UNICODE(position_text) BETWEEN 65 AND 90`,
         )
         .get() as any;
       expect(c).toBe(0);
@@ -262,8 +258,9 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
       // vs "liikunta-, urheilu- ja nuorisoministeri" (16 rows)
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM VaskiDocument
-           WHERE author_role LIKE '%, ja %'`,
+          `SELECT COUNT(*) as c FROM VaskiDocumentActor
+           WHERE role_code = 'laatija'
+             AND position_text LIKE '%, ja %'`,
         )
         .get() as any;
       expect(c).toBe(0);
