@@ -30,6 +30,10 @@ const IMPORT_ORDER: Partial<Record<string, number>> = {
   SaliDBPuheenvuoro: 16,
   SaliDBAanestys: 20,
   SaliDBKohtaAanestys: 21,
+  SaliDBKohtaAsiakirja: 22,
+  SaliDBTiedote: 23,
+  SaliDBAanestysAsiakirja: 24,
+  SaliDBAanestysJakauma: 25,
   SaliDBAanestysEdustaja: 30,
   VaskiData: 40,
 };

@@ -19,6 +19,10 @@ declare global {
       ministry: string;
       modified_datetime: Modules.Common.DateString;
       excel_key: string | null; // Format: YYYYMMDD_<agenda_key>_<processing_title>_<ordinal_number> (for linking to ExcelSpeech)
+      created_datetime: Modules.Common.DateString | null;
+      imported_datetime: Modules.Common.DateString | null;
+      ad_tunnus: string | null;
+      order_raw: string | null;
     };
   }
 }

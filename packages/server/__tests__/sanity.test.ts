@@ -60,6 +60,11 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
         "Vote",
         "Speech",
         "ExcelSpeech",
+        "VotingDocumentLink",
+        "SectionDocumentLink",
+        "SessionNotice",
+        "VotingDistribution",
+        "SaliDBDocumentReference",
         "VaskiDocument",
       ];
       for (const expected of expectedTables) {
@@ -372,6 +377,93 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
         )
         .get() as any;
       expect(orphans).toBe(0);
+    });
+  });
+
+  // ─── SALIDB LINKAGE ──────────────────────────────────────
+
+  describe("SaliDB linkage", () => {
+    test("VotingDocumentLink references existing Voting", () => {
+      const { orphans } = db
+        .query(
+          `SELECT COUNT(*) as orphans FROM VotingDocumentLink vdl
+           WHERE NOT EXISTS (SELECT 1 FROM Voting v WHERE v.id = vdl.voting_id)`,
+        )
+        .get() as any;
+      expect(orphans).toBe(0);
+    });
+
+    test("VotingDistribution references existing Voting", () => {
+      const { orphans } = db
+        .query(
+          `SELECT COUNT(*) as orphans FROM VotingDistribution vd
+           WHERE NOT EXISTS (SELECT 1 FROM Voting v WHERE v.id = vd.voting_id)`,
+        )
+        .get() as any;
+      expect(orphans).toBe(0);
+    });
+
+    test("SectionDocumentLink references existing Section", () => {
+      const { orphans } = db
+        .query(
+          `SELECT COUNT(*) as orphans FROM SectionDocumentLink sdl
+           WHERE NOT EXISTS (SELECT 1 FROM Section s WHERE s.key = sdl.section_key)`,
+        )
+        .get() as any;
+      expect(orphans).toBe(0);
+    });
+
+    test("SessionNotice references existing Session", () => {
+      const { orphans } = db
+        .query(
+          `SELECT COUNT(*) as orphans FROM SessionNotice sn
+           WHERE NOT EXISTS (SELECT 1 FROM Session s WHERE s.key = sn.session_key)`,
+        )
+        .get() as any;
+      expect(orphans).toBe(0);
+    });
+
+    test("SessionNotice.section_key references existing Section", () => {
+      const { orphans } = db
+        .query(
+          `SELECT COUNT(*) as orphans FROM SessionNotice sn
+           WHERE sn.section_key IS NOT NULL
+             AND NOT EXISTS (SELECT 1 FROM Section s WHERE s.key = sn.section_key)`,
+        )
+        .get() as any;
+      expect(orphans).toBe(0);
+    });
+
+    test("SaliDBDocumentReference references existing Voting when voting_id is set", () => {
+      const { orphans } = db
+        .query(
+          `SELECT COUNT(*) as orphans FROM SaliDBDocumentReference dr
+           WHERE dr.voting_id IS NOT NULL
+             AND NOT EXISTS (SELECT 1 FROM Voting v WHERE v.id = dr.voting_id)`,
+        )
+        .get() as any;
+      expect(orphans).toBe(0);
+    });
+
+    test("SaliDBDocumentReference references existing Section when section_key is set", () => {
+      const { orphans } = db
+        .query(
+          `SELECT COUNT(*) as orphans FROM SaliDBDocumentReference dr
+           WHERE dr.section_key IS NOT NULL
+             AND NOT EXISTS (SELECT 1 FROM Section s WHERE s.key = dr.section_key)`,
+        )
+        .get() as any;
+      expect(orphans).toBe(0);
+    });
+
+    test("SaliDBDocumentReference has a basic tunnus format", () => {
+      const { bad } = db
+        .query(
+          `SELECT COUNT(*) as bad FROM SaliDBDocumentReference
+           WHERE document_tunnus NOT LIKE '%/%'`,
+        )
+        .get() as any;
+      expect(bad).toBe(0);
     });
   });
 

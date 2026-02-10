@@ -154,7 +154,27 @@ export class DatabaseConnection {
 
     // Fetch sections for each session
     const sectionsStmt = this.db.prepare<
-      DatabaseTables.Section,
+      DatabaseTables.Section & {
+        voting_count: number;
+        speech_count: number;
+        speaker_count: number;
+        party_count: number;
+        vaski_document_type_name?: string | null;
+        vaski_document_type_code?: string | null;
+        vaski_eduskunta_tunnus?: string | null;
+        vaski_document_number?: number | null;
+        vaski_parliamentary_year?: string | null;
+        vaski_title?: string | null;
+        vaski_summary?: string | null;
+        vaski_author_first_name?: string | null;
+        vaski_author_last_name?: string | null;
+        vaski_author_role?: string | null;
+        vaski_author_organization?: string | null;
+        vaski_creation_date?: string | null;
+        vaski_status?: string | null;
+        vaski_source_reference?: string | null;
+        vaski_subjects?: string | null;
+      },
       { $sessionKey: string }
     >(queries.sessionSections);
 
@@ -364,7 +384,27 @@ export class DatabaseConnection {
     const sessions = await this.fetchSessionByDate(params);
 
     const sectionsStmt = this.db.prepare<
-      DatabaseTables.Section,
+      DatabaseTables.Section & {
+        voting_count: number;
+        speech_count: number;
+        speaker_count: number;
+        party_count: number;
+        vaski_document_type_name?: string | null;
+        vaski_document_type_code?: string | null;
+        vaski_eduskunta_tunnus?: string | null;
+        vaski_document_number?: number | null;
+        vaski_parliamentary_year?: string | null;
+        vaski_title?: string | null;
+        vaski_summary?: string | null;
+        vaski_author_first_name?: string | null;
+        vaski_author_last_name?: string | null;
+        vaski_author_role?: string | null;
+        vaski_author_organization?: string | null;
+        vaski_creation_date?: string | null;
+        vaski_status?: string | null;
+        vaski_source_reference?: string | null;
+        vaski_subjects?: string | null;
+      },
       { $sessionKey: string }
     >(queries.sessionSections);
 

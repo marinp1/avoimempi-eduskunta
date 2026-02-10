@@ -462,6 +462,7 @@ const Home = () => {
               {session.sections?.map((section) => {
                 const isExpanded = expandedSections.has(section.id);
                 const speeches = sectionSpeeches[section.id] || [];
+                const hasSpeechContent = speeches.some((speech) => speech.content);
                 const votings = sectionVotings[section.id] || [];
 
                 return (
@@ -702,6 +703,13 @@ const Home = () => {
                             >
                               {t("sessions.speeches")} ({speeches.length})
                             </Typography>
+                            {!hasSpeechContent && (
+                              <Typography
+                                sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                              >
+                                {t("sessions.speechContentPending")}
+                              </Typography>
+                            )}
                             {speeches.map((speech) => (
                               <Box
                                 key={speech.id}

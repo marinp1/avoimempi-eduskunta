@@ -6,6 +6,7 @@ import EventIcon from "@mui/icons-material/Event";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import TimelineIcon from "@mui/icons-material/Timeline";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import {
   Alert,
@@ -30,9 +31,15 @@ import { useThemedColors } from "#client/theme/ThemeContext";
 
 type SessionWithSections = {
   id: number;
+  number?: number;
   key: string;
   date: string;
+  year?: number;
+  type?: string;
+  state?: string;
   description?: string;
+  start_time_actual?: string;
+  start_time_reported?: string;
   agenda_title?: string;
   agenda_state?: string;
   section_count: number;
@@ -45,9 +52,32 @@ type Section = {
   key: string;
   ordinal: number;
   title: string;
+  note?: string | null;
   processing_title?: string;
   identifier?: string;
   resolution?: string;
+  agenda_key?: string;
+  modified_datetime?: string;
+  vaski_id?: number;
+  voting_count?: number;
+  speech_count?: number;
+  speaker_count?: number;
+  party_count?: number;
+  vaski_document_type_name?: string | null;
+  vaski_document_type_code?: string | null;
+  vaski_eduskunta_tunnus?: string | null;
+  vaski_document_number?: number | null;
+  vaski_parliamentary_year?: string | null;
+  vaski_title?: string | null;
+  vaski_summary?: string | null;
+  vaski_author_first_name?: string | null;
+  vaski_author_last_name?: string | null;
+  vaski_author_role?: string | null;
+  vaski_author_organization?: string | null;
+  vaski_creation_date?: string | null;
+  vaski_status?: string | null;
+  vaski_source_reference?: string | null;
+  vaski_subjects?: string | null;
 };
 
 type Speech = {
@@ -283,7 +313,7 @@ export default () => {
   const [error, setError] = useState<string | null>(null);
   const [validDates, setValidDates] = useState<Set<string>>(new Set());
   const [datesLoading, setDatesLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [viewMode, setViewMode] = useState<"list" | "calendar" | "timeline">("list");
 
   const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
   const [sectionSpeechData, setSectionSpeechData] = useState<Record<number, SpeechData>>({});
@@ -373,6 +403,164 @@ export default () => {
       month: "long",
       day: "numeric",
     });
+  };
+
+  const formatTime = (dateTime?: string) => {
+    if (!dateTime) return "-";
+    const normalized = dateTime.includes("T") ? dateTime : dateTime.replace(" ", "T");
+    const parsed = new Date(normalized);
+    if (Number.isNaN(parsed.getTime())) return "-";
+    return parsed.toLocaleTimeString("fi-FI", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const formatDateTime = (dateTime?: string) => {
+    if (!dateTime) return "-";
+    const normalized = dateTime.includes("T") ? dateTime : dateTime.replace(" ", "T");
+    const parsed = new Date(normalized);
+    if (Number.isNaN(parsed.getTime())) return "-";
+    return parsed.toLocaleString("fi-FI", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const parseVaskiSubjects = (subjects?: string | null) => {
+    if (!subjects) return [];
+    return subjects
+      .split(" | ")
+      .map((subject) => subject.trim())
+      .filter(Boolean);
+  };
+
+  const formatVaskiAuthor = (section: Section) => {
+    const name = [section.vaski_author_first_name, section.vaski_author_last_name]
+      .filter(Boolean)
+      .join(" ");
+    const parts = [name, section.vaski_author_role, section.vaski_author_organization]
+      .filter(Boolean);
+    return parts.length > 0 ? parts.join(" • ") : null;
+  };
+
+  const renderVaskiInfo = (section: Section, compact = false) => {
+    const hasAny =
+      section.vaski_title ||
+      section.vaski_document_type_name ||
+      section.vaski_summary ||
+      section.vaski_subjects ||
+      section.vaski_author_first_name ||
+      section.vaski_author_last_name ||
+      section.vaski_eduskunta_tunnus;
+
+    if (!hasAny) return null;
+
+    const authorLine = formatVaskiAuthor(section);
+    const subjects = parseVaskiSubjects(section.vaski_subjects);
+    const docNumber =
+      typeof section.vaski_document_number === "number" &&
+      !Number.isNaN(section.vaski_document_number) &&
+      section.vaski_parliamentary_year
+        ? `${section.vaski_document_number}/${section.vaski_parliamentary_year}`
+        : null;
+
+    return (
+      <Box
+        sx={{
+          mt: 0.75,
+          p: 1,
+          borderRadius: 1,
+          border: `1px solid ${colors.primaryLight}25`,
+          background: `${colors.primaryLight}08`,
+        }}
+      >
+        <Typography sx={{ fontSize: "0.7rem", fontWeight: 700, color: colors.textTertiary, textTransform: "uppercase" }}>
+          {t("sessions.vaskiDocument")}
+        </Typography>
+        {(section.vaski_document_type_name ||
+          section.vaski_document_type_code ||
+          section.vaski_eduskunta_tunnus ||
+          docNumber ||
+          section.vaski_status ||
+          section.vaski_creation_date) && (
+          <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mt: 0.5 }}>
+            {(section.vaski_document_type_name || section.vaski_document_type_code) && (
+              <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+                {t("sessions.vaskiType")}: {section.vaski_document_type_name || section.vaski_document_type_code}
+              </Typography>
+            )}
+            {section.vaski_eduskunta_tunnus && (
+              <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+                {t("sessions.vaskiTunnus")}: {section.vaski_eduskunta_tunnus}
+              </Typography>
+            )}
+            {docNumber && (
+              <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+                {t("sessions.vaskiDocNumber")}: {docNumber}
+              </Typography>
+            )}
+            {section.vaski_status && (
+              <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+                {t("sessions.vaskiStatus")}: {section.vaski_status}
+              </Typography>
+            )}
+            {section.vaski_creation_date && (
+              <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+                {t("sessions.vaskiCreated")}: {section.vaski_creation_date}
+              </Typography>
+            )}
+          </Box>
+        )}
+        {section.vaski_title && (
+          <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600, color: colors.textPrimary, mt: 0.5 }}>
+            {section.vaski_title}
+          </Typography>
+        )}
+        {authorLine && (
+          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary, mt: 0.25 }}>
+            {t("sessions.vaskiAuthor")}: {authorLine}
+          </Typography>
+        )}
+        {section.vaski_source_reference && (
+          <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary, mt: 0.25 }}>
+            {t("sessions.vaskiSourceReference")}: {section.vaski_source_reference}
+          </Typography>
+        )}
+        {section.vaski_summary && (
+          <Typography
+            sx={{
+              fontSize: "0.75rem",
+              color: colors.textSecondary,
+              mt: 0.5,
+              ...(compact
+                ? {
+                    display: "-webkit-box",
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }
+                : {}),
+            }}
+          >
+            {t("sessions.vaskiSummary")}: {section.vaski_summary}
+          </Typography>
+        )}
+        {subjects.length > 0 && (
+          <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.5 }}>
+            <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary, mr: 0.5 }}>
+              {t("sessions.vaskiSubjects")}:
+            </Typography>
+            {subjects.map((subject) => (
+              <Chip key={subject} label={subject} size="small" sx={{ fontSize: "0.625rem", height: 20 }} />
+            ))}
+          </Box>
+        )}
+      </Box>
+    );
   };
 
   const fetchSpeeches = async (sectionId: number, sectionKey: string, offset = 0) => {
@@ -475,14 +663,17 @@ export default () => {
                 },
               }}
             >
-              <ToggleButton value="list">
-                <ViewListIcon sx={{ fontSize: 18 }} />
-              </ToggleButton>
-              <ToggleButton value="calendar">
-                <CalendarMonthIcon sx={{ fontSize: 18 }} />
-              </ToggleButton>
-            </ToggleButtonGroup>
-            {viewMode === "list" && (
+            <ToggleButton value="list">
+              <ViewListIcon sx={{ fontSize: 18 }} />
+            </ToggleButton>
+            <ToggleButton value="timeline">
+              <TimelineIcon sx={{ fontSize: 18 }} />
+            </ToggleButton>
+            <ToggleButton value="calendar">
+              <CalendarMonthIcon sx={{ fontSize: 18 }} />
+            </ToggleButton>
+          </ToggleButtonGroup>
+            {viewMode !== "calendar" && (
               <TextField
                 type="date"
                 value={date}
@@ -605,33 +796,93 @@ export default () => {
                 <Typography sx={{ fontWeight: 700, fontSize: "0.9375rem", color: colors.textPrimary }}>
                   {session.key || t("sessions.session")}
                 </Typography>
-                {session.section_count > 0 && (
+                {session.number !== undefined && (
                   <Chip
-                    label={`${session.section_count} ${t("home.sections")}`}
+                    label={`${t("sessions.sessionNumber")}: ${session.number}`}
                     size="small"
-                    sx={{ fontSize: "0.6875rem", height: 22, background: `${colors.primaryLight}20`, color: colors.primaryLight }}
+                    sx={{ fontSize: "0.6875rem", height: 22, background: "#fff", color: colors.textSecondary }}
                   />
                 )}
-                {session.voting_count > 0 && (
+                {session.type && (
                   <Chip
-                    icon={<HowToVoteIcon sx={{ fontSize: 14 }} />}
-                    label={`${session.voting_count} ${t("home.votings")}`}
+                    label={`${t("sessions.sessionType")}: ${session.type}`}
                     size="small"
-                    sx={{ fontSize: "0.6875rem", height: 22, background: `${themedColors.success}15`, color: themedColors.success }}
+                    sx={{ fontSize: "0.6875rem", height: 22, background: "#fff", color: colors.textSecondary }}
                   />
                 )}
-                {session.agenda_title && (
-                  <Typography sx={{ fontSize: "0.8125rem", color: colors.textSecondary, flex: "1 1 100%" }}>
-                    {session.agenda_title}
+                {session.state && (
+                  <Chip
+                    label={`${t("sessions.sessionState")}: ${session.state}`}
+                    size="small"
+                    sx={{ fontSize: "0.6875rem", height: 22, background: "#fff", color: colors.textSecondary }}
+                  />
+                )}
+                <Box sx={{ flex: "1 1 100%", display: "flex", flexDirection: "column", gap: 0.5 }}>
+                  {session.agenda_title && (
+                    <Typography sx={{ fontSize: "0.8125rem", color: colors.textSecondary }}>
+                      {session.agenda_title}
+                    </Typography>
+                  )}
+                  {session.description && (
+                    <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                      {session.description}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+
+              {/* Session summary */}
+              <Box
+                sx={{
+                  p: 2,
+                  borderBottom: `1px solid ${colors.dataBorder}`,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 2,
+                  alignItems: "center",
+                  background: "#fff",
+                }}
+              >
+                <Chip
+                  label={`${session.section_count} ${t("home.sections")}`}
+                  size="small"
+                  sx={{ fontSize: "0.6875rem", height: 22, background: `${colors.primaryLight}20`, color: colors.primaryLight }}
+                />
+                <Chip
+                  icon={<HowToVoteIcon sx={{ fontSize: 14 }} />}
+                  label={`${session.voting_count} ${t("home.votings")}`}
+                  size="small"
+                  sx={{ fontSize: "0.6875rem", height: 22, background: `${themedColors.success}15`, color: themedColors.success }}
+                />
+                {session.start_time_reported && (
+                  <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+                    {t("sessions.startReported")}: {formatTime(session.start_time_reported)}
+                  </Typography>
+                )}
+                {session.start_time_actual && (
+                  <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+                    {t("sessions.startActual")}: {formatTime(session.start_time_actual)}
+                  </Typography>
+                )}
+                {session.agenda_state && (
+                  <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+                    {t("sessions.agendaState")}: {session.agenda_state}
+                  </Typography>
+                )}
+                {session.year !== undefined && (
+                  <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+                    {t("sessions.sessionYear")}: {session.year}
                   </Typography>
                 )}
               </Box>
 
               {/* Sections list */}
-              {session.sections?.map((section) => {
+              {viewMode !== "timeline" &&
+                session.sections?.map((section) => {
                 const isExpanded = expandedSections.has(section.id);
                 const speechData = sectionSpeechData[section.id];
                 const speeches = speechData?.speeches || [];
+                const hasSpeechContent = speeches.some((speech) => speech.content);
                 const votings = sectionVotings[section.id] || [];
 
                 return (
@@ -677,6 +928,11 @@ export default () => {
                             {section.identifier}
                           </Typography>
                         )}
+                        {section.note && (
+                          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+                            {section.note}
+                          </Typography>
+                        )}
                         {section.processing_title && section.processing_title !== section.title && (
                           <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
                             {t("sessions.processing")}: {section.processing_title}
@@ -687,6 +943,46 @@ export default () => {
                             {t("sessions.resolution")}: {section.resolution}
                           </Typography>
                         )}
+                        {renderVaskiInfo(section, true)}
+                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 0.75 }}>
+                          <Chip
+                            label={`${t("sessions.votings")}: ${section.voting_count ?? 0}`}
+                            size="small"
+                            sx={{ fontSize: "0.6875rem", height: 20, background: `${themedColors.success}15`, color: themedColors.success }}
+                          />
+                          <Chip
+                            label={`${t("sessions.speeches")}: ${section.speech_count ?? 0}`}
+                            size="small"
+                            sx={{ fontSize: "0.6875rem", height: 20, background: `${colors.primaryLight}20`, color: colors.primaryLight }}
+                          />
+                          <Chip
+                            label={`${t("sessions.speakers")}: ${section.speaker_count ?? 0}`}
+                            size="small"
+                            sx={{ fontSize: "0.6875rem", height: 20 }}
+                          />
+                          <Chip
+                            label={`${t("sessions.parties")}: ${section.party_count ?? 0}`}
+                            size="small"
+                            sx={{ fontSize: "0.6875rem", height: 20 }}
+                          />
+                        </Box>
+                        <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mt: 0.5 }}>
+                          {section.agenda_key && (
+                            <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                              {t("sessions.agendaKey")}: {section.agenda_key}
+                            </Typography>
+                          )}
+                          {section.vaski_id !== undefined && section.vaski_id !== null && (
+                            <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                              {t("sessions.vaskiId")}: {section.vaski_id}
+                            </Typography>
+                          )}
+                          {section.modified_datetime && (
+                            <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                              {t("sessions.sectionUpdated")}: {formatDateTime(section.modified_datetime)}
+                            </Typography>
+                          )}
+                        </Box>
                       </Box>
                       <IconButton size="small" sx={{ color: colors.primaryLight, flexShrink: 0 }}>
                         {isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
@@ -695,6 +991,7 @@ export default () => {
 
                     <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                       <Box sx={{ px: 2, pb: 2, borderTop: `1px solid ${colors.dataBorder}` }}>
+                        {renderVaskiInfo(section, false)}
                         {/* Votings */}
                         {loadingVotings.has(section.id) ? (
                           <Box sx={{ py: 2, textAlign: "center" }}>
@@ -769,6 +1066,11 @@ export default () => {
                             >
                               {t("sessions.speeches")} ({speechData?.total ?? speeches.length})
                             </Typography>
+                            {!hasSpeechContent && (
+                              <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                                {t("sessions.speechContentPending")}
+                              </Typography>
+                            )}
                             {speeches.map((speech) => (
                               <Box
                                 key={speech.id}
@@ -868,6 +1170,230 @@ export default () => {
                   </Box>
                 );
               })}
+
+              {viewMode === "timeline" && (
+                <Box sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}>
+                  <Box sx={{ position: "relative", pl: 2.5 }}>
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        left: 8,
+                        top: 4,
+                        bottom: 4,
+                        width: 2,
+                        background: `${colors.primaryLight}35`,
+                      }}
+                    />
+                    {session.sections?.map((section) => {
+                      const isExpanded = expandedSections.has(section.id);
+                      const speechData = sectionSpeechData[section.id];
+                      const speeches = speechData?.speeches || [];
+                      const hasSpeechContent = speeches.some((speech) => speech.content);
+                      const votings = sectionVotings[section.id] || [];
+                      const votingCount = section.voting_count ?? votings.length;
+                      const speechCount = section.speech_count ?? (speechData?.total ?? speeches.length);
+
+                      return (
+                        <Box key={section.id} sx={{ position: "relative", pl: 2, mb: 2 }}>
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              left: -2,
+                              top: 2,
+                              width: 16,
+                              height: 16,
+                              borderRadius: "50%",
+                              background: colors.primary,
+                              boxShadow: `0 0 0 3px ${colors.primaryLight}20`,
+                            }}
+                          />
+                          <Box sx={{ p: 1.5, borderRadius: 1, background: colors.backgroundSubtle }}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                              <Chip
+                                label={section.ordinal}
+                                size="small"
+                                sx={{
+                                  background: "#fff",
+                                  color: colors.textSecondary,
+                                  fontWeight: 600,
+                                  fontSize: "0.7rem",
+                                  height: 22,
+                                }}
+                              />
+                              <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: colors.textPrimary }}>
+                                {section.title || section.processing_title || t("sessions.noTitle")}
+                              </Typography>
+                            </Box>
+                            {section.identifier && (
+                              <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary, mt: 0.25 }}>
+                                {section.identifier}
+                              </Typography>
+                            )}
+                            {section.note && (
+                              <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary, mt: 0.25 }}>
+                                {section.note}
+                              </Typography>
+                            )}
+                            {section.processing_title && section.processing_title !== section.title && (
+                              <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary, mt: 0.25 }}>
+                                {t("sessions.processing")}: {section.processing_title}
+                              </Typography>
+                            )}
+                            {section.resolution && (
+                              <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary, mt: 0.25 }}>
+                                {t("sessions.resolution")}: {section.resolution}
+                              </Typography>
+                            )}
+                            {renderVaskiInfo(section, true)}
+
+                            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
+                              <Chip
+                                label={`${t("sessions.votings")}: ${votingCount}`}
+                                size="small"
+                                sx={{ fontSize: "0.6875rem", height: 22, background: `${themedColors.success}15`, color: themedColors.success }}
+                              />
+                              <Chip
+                                label={`${t("sessions.speeches")}: ${speechCount}`}
+                                size="small"
+                                sx={{ fontSize: "0.6875rem", height: 22, background: `${colors.primaryLight}20`, color: colors.primaryLight }}
+                              />
+                              <Chip
+                                label={`${t("sessions.speakers")}: ${section.speaker_count ?? 0}`}
+                                size="small"
+                                sx={{ fontSize: "0.6875rem", height: 22 }}
+                              />
+                              <Chip
+                                label={`${t("sessions.parties")}: ${section.party_count ?? 0}`}
+                                size="small"
+                                sx={{ fontSize: "0.6875rem", height: 22 }}
+                              />
+                              {!hasSpeechContent && speeches.length > 0 && (
+                                <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                                  {t("sessions.speechContentPending")}
+                                </Typography>
+                              )}
+                            </Box>
+                            <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mt: 0.75 }}>
+                              {section.agenda_key && (
+                                <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                                  {t("sessions.agendaKey")}: {section.agenda_key}
+                                </Typography>
+                              )}
+                              {section.vaski_id !== undefined && section.vaski_id !== null && (
+                                <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                                  {t("sessions.vaskiId")}: {section.vaski_id}
+                                </Typography>
+                              )}
+                              {section.modified_datetime && (
+                                <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                                  {t("sessions.sectionUpdated")}: {formatDateTime(section.modified_datetime)}
+                                </Typography>
+                              )}
+                            </Box>
+
+                            <Box sx={{ mt: 1 }}>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() => toggleSection(section.id, section.key)}
+                                sx={{
+                                  textTransform: "none",
+                                  borderColor: colors.primaryLight,
+                                  color: colors.primaryLight,
+                                  fontSize: "0.75rem",
+                                }}
+                              >
+                                {isExpanded ? t("sessions.hideDetails") : t("sessions.showDetails")}
+                              </Button>
+                            </Box>
+
+                            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                              <Box sx={{ mt: 1.5 }}>
+                                {renderVaskiInfo(section, false)}
+                                {loadingVotings.has(section.id) ? (
+                                  <Box sx={{ py: 1, textAlign: "center" }}>
+                                    <CircularProgress size={20} sx={{ color: themedColors.primary }} />
+                                  </Box>
+                                ) : votings.length > 0 ? (
+                                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                                    {votings.map((voting) => {
+                                      const isPassed = voting.n_yes > voting.n_no;
+                                      return (
+                                        <Box
+                                          key={voting.id}
+                                          sx={{
+                                            p: 1.25,
+                                            borderRadius: 1,
+                                            border: `1px solid ${isPassed ? `${themedColors.success}40` : `${themedColors.error}40`}`,
+                                            background: isPassed ? `${themedColors.success}08` : `${themedColors.error}08`,
+                                          }}
+                                        >
+                                          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.75, flexWrap: "wrap" }}>
+                                            <HowToVoteIcon sx={{ fontSize: 16, color: isPassed ? themedColors.success : themedColors.error }} />
+                                            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", flex: 1, minWidth: 0 }}>
+                                              {voting.title}
+                                            </Typography>
+                                          </Box>
+                                          <VoteMarginBar yes={voting.n_yes} no={voting.n_no} empty={voting.n_abstain} absent={voting.n_absent} height={8} />
+                                        </Box>
+                                      );
+                                    })}
+                                  </Box>
+                                ) : null}
+
+                                {loadingSpeeches.has(section.id) ? (
+                                  <Box sx={{ py: 1, textAlign: "center" }}>
+                                    <CircularProgress size={20} sx={{ color: themedColors.primary }} />
+                                  </Box>
+                                ) : speeches.length > 0 ? (
+                                  <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 0.75 }}>
+                                    {speeches.map((speech) => (
+                                      <Box key={speech.id} sx={{ p: 1.25, borderRadius: 1, background: "#fff" }}>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: speech.content ? 0.75 : 0 }}>
+                                          <Chip
+                                            label={speech.ordinal_number || speech.ordinal}
+                                            size="small"
+                                            sx={{
+                                              background: `${colors.primaryLight}30`,
+                                              color: colors.primaryLight,
+                                              fontWeight: 600,
+                                              fontSize: "0.625rem",
+                                              height: 18,
+                                              minWidth: 24,
+                                            }}
+                                          />
+                                          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", flex: 1 }}>
+                                            {speech.first_name} {speech.last_name}
+                                          </Typography>
+                                          {speech.party_abbreviation && (
+                                            <Chip label={speech.party_abbreviation} size="small" sx={{ fontSize: "0.625rem", height: 18 }} />
+                                          )}
+                                        </Box>
+                                        {speech.content && (
+                                          <Typography
+                                            sx={{
+                                              fontSize: "0.8125rem",
+                                              color: colors.textPrimary,
+                                              whiteSpace: "pre-wrap",
+                                              lineHeight: 1.6,
+                                            }}
+                                          >
+                                            {speech.content}
+                                          </Typography>
+                                        )}
+                                      </Box>
+                                    ))}
+                                  </Box>
+                                ) : null}
+                              </Box>
+                            </Collapse>
+                          </Box>
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                </Box>
+              )}
             </Box>
           ))}
         </DataCard>

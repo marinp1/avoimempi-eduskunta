@@ -13,6 +13,10 @@ declare global {
       agenda_key: string; // Agenga.key
       modified_datetime: Modules.Common.DateString;
       vaski_id: number;
+      default_speech_type: string | null;
+      can_request_speech: boolean;
+      created_datetime: Modules.Common.DateString | null;
+      imported_datetime: Modules.Common.DateString | null;
     };
   }
 }

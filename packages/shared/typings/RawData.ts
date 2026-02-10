@@ -56,6 +56,13 @@ declare global {
       PaaKohtaTunniste: string;
       Url: string;
     };
+    [TableName.SaliDBAanestysAsiakirja]: {
+      AsiakirjaId: StringifiedNumber;
+      AanestysId: StringifiedNumber;
+      Asiakirja: string;
+      AsiakirjaUrl: string;
+      Imported: StringifiedDate;
+    };
     [TableName.SaliDBAanestysEdustaja]: {
       EdustajaId: StringifiedNumber;
       AanestysId: StringifiedNumber;
@@ -64,6 +71,18 @@ declare global {
       EdustajaHenkiloNumero: StringifiedNumber;
       EdustajaRyhmaLyhenne: string;
       EdustajaSukunimi: string;
+      Imported: StringifiedDate;
+    };
+    [TableName.SaliDBAanestysJakauma]: {
+      JakaumaId: StringifiedNumber;
+      AanestysId: StringifiedNumber;
+      Ryhma: string;
+      Jaa: StringifiedNumber;
+      Ei: StringifiedNumber;
+      Tyhjia: StringifiedNumber;
+      Poissa: StringifiedNumber;
+      Yhteensa: StringifiedNumber;
+      Tyyppi: string;
       Imported: StringifiedDate;
     };
     [TableName.VaskiData]: {
@@ -125,6 +144,20 @@ declare global {
       VoikoPyytaaPV: StringifiedBoolean;
       XmlData: string;
     };
+    [TableName.SaliDBKohtaAsiakirja]: {
+      Id: StringifiedNumber;
+      KohtaTekninenAvain: string;
+      TekninenAvain: string;
+      NimiFI: string;
+      LinkkiTekstiFI: string;
+      LinkkiUrlFI: string;
+      NimiSV: string;
+      LinkkiTekstiSV: string;
+      LinkkiUrlSV: string;
+      Created: StringifiedDate;
+      Modified: StringifiedDate;
+      Imported: StringifiedDate;
+    };
     [TableName.SaliDBKohtaAanestys]: {
       Id: StringifiedNumber;
       Aanestysnumero: StringifiedNumber;
@@ -157,6 +190,20 @@ declare global {
       ADtunnus: string;
       MinisteriysFI: string;
       MinisteriysSV: string;
+      Imported: StringifiedDate;
+    };
+    [TableName.SaliDBTiedote]: {
+      Id: StringifiedNumber;
+      TekninenAvain: string;
+      IstuntoTekninenAvain: string;
+      KohtaTekninenAvain: string | null;
+      TiedoteTyyppi: string;
+      TiedoteTekstiFI: string;
+      TiedoteTekstiSV: string | null;
+      TiedoteVoimassaolo: StringifiedDate | null;
+      TiedoteLahetetty: StringifiedDate | null;
+      Created: StringifiedDate;
+      Modified: StringifiedDate;
       Imported: StringifiedDate;
     };
   }

@@ -17,6 +17,10 @@ export default (db: Database) =>
       session_key: dataToImport.IstuntoTekninenAvain,
       vaski_id: +dataToImport.VaskiID,
       modified_datetime: parseDateTime(dataToImport.Modified),
+      default_speech_type: dataToImport.PuheenvuoroTyyppiOletus || null,
+      can_request_speech: !!+dataToImport.VoikoPyytaaPV,
+      created_datetime: parseDateTime(dataToImport.Created),
+      imported_datetime: parseDateTime(dataToImport.Imported),
     };
     insertRows(db)("Section", [sectionRow]);
   };
