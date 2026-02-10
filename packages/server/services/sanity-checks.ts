@@ -60,6 +60,7 @@ export class SanityCheckService {
     checks.push(...this.checkSessionDatePlausibility());
     checks.push(...this.checkMPGroupMembership());
     checks.push(...this.checkActiveGroupMembersCount());
+    checks.push(...this.checkSaliDbLinkage());
 
     const passedChecks = checks.filter((c) => c.passed).length;
     const failedChecks = checks.filter((c) => !c.passed).length;
@@ -105,7 +106,12 @@ export class SanityCheckService {
         "Voting",
         "Vote",
         "Speech",
-        "ExcelSpeech",
+        "VaskiMinutesSpeech",
+        "VotingDocumentLink",
+        "SectionDocumentLink",
+        "SessionNotice",
+        "VotingDistribution",
+        "SaliDBDocumentReference",
         "VaskiDocument",
       ];
 
@@ -1330,6 +1336,77 @@ export class SanityCheckService {
         passed: false,
         errorMessage: String(error),
       });
+    }
+
+    return checks;
+  }
+
+  private checkSaliDbLinkage(): SanityCheck[] {
+    const checks: SanityCheck[] = [];
+
+    const linkageChecks = [
+      {
+        name: "VotingDocumentLink -> Voting",
+        description: "All voting document links should reference an existing voting",
+        sql: `SELECT COUNT(*) as c FROM VotingDocumentLink vdl LEFT JOIN Voting v ON vdl.voting_id = v.id WHERE v.id IS NULL`,
+      },
+      {
+        name: "VotingDistribution -> Voting",
+        description: "All voting distributions should reference an existing voting",
+        sql: `SELECT COUNT(*) as c FROM VotingDistribution vd LEFT JOIN Voting v ON vd.voting_id = v.id WHERE v.id IS NULL`,
+      },
+      {
+        name: "SectionDocumentLink -> Section",
+        description: "All section document links should reference an existing section",
+        sql: `SELECT COUNT(*) as c FROM SectionDocumentLink sdl LEFT JOIN Section s ON sdl.section_key = s.key WHERE s.key IS NULL`,
+      },
+      {
+        name: "SessionNotice -> Session",
+        description: "All session notices should reference an existing session",
+        sql: `SELECT COUNT(*) as c FROM SessionNotice sn LEFT JOIN Session s ON sn.session_key = s.key WHERE s.key IS NULL`,
+      },
+      {
+        name: "SessionNotice.section_key -> Section",
+        description: "Session notices with a section key should reference an existing section",
+        sql: `SELECT COUNT(*) as c FROM SessionNotice sn LEFT JOIN Section s ON sn.section_key = s.key WHERE sn.section_key IS NOT NULL AND s.key IS NULL`,
+      },
+      {
+        name: "SaliDBDocumentReference -> Voting",
+        description: "Document references with voting_id should reference an existing voting",
+        sql: `SELECT COUNT(*) as c FROM SaliDBDocumentReference dr LEFT JOIN Voting v ON dr.voting_id = v.id WHERE dr.voting_id IS NOT NULL AND v.id IS NULL`,
+      },
+      {
+        name: "SaliDBDocumentReference -> Section",
+        description: "Document references with section_key should reference an existing section",
+        sql: `SELECT COUNT(*) as c FROM SaliDBDocumentReference dr LEFT JOIN Section s ON dr.section_key = s.key WHERE dr.section_key IS NOT NULL AND s.key IS NULL`,
+      },
+      {
+        name: "SaliDBDocumentReference tunnus format",
+        description: "Document references should have a basic tunnus format (e.g., HE 1/2024 vp)",
+        sql: `SELECT COUNT(*) as c FROM SaliDBDocumentReference WHERE document_tunnus NOT LIKE '%/%'`,
+      },
+    ];
+
+    for (const check of linkageChecks) {
+      try {
+        const result = this.db.query(check.sql).get() as any;
+        const count = result?.c ?? 0;
+        checks.push({
+          category: "SaliDB Linkage",
+          name: check.name,
+          description: check.description,
+          passed: count === 0,
+          details: `Orphans: ${count}`,
+        });
+      } catch (error) {
+        checks.push({
+          category: "SaliDB Linkage",
+          name: check.name,
+          description: check.description,
+          passed: false,
+          errorMessage: String(error),
+        });
+      }
     }
 
     return checks;

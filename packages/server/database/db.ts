@@ -435,7 +435,22 @@ export class DatabaseConnection {
 
   public async fetchSpeechesByDate(params: { date: string }) {
     const stmt = this.db.prepare<
-      DatabaseTables.ExcelSpeech & {
+      {
+        id: number;
+        excel_id?: string | null;
+        processing_phase?: string | null;
+        document?: string | null;
+        ordinal?: number | null;
+        position?: string | null;
+        first_name?: string | null;
+        last_name?: string | null;
+        party?: string | null;
+        speech_type?: string | null;
+        start_time?: string | null;
+        end_time?: string | null;
+        content?: string | null;
+        minutes_url?: string | null;
+        source_file?: string | null;
         section_title?: string;
         section_processing_title?: string;
         section_ordinal?: number;
@@ -445,6 +460,19 @@ export class DatabaseConnection {
     const data = stmt.all({ $date: params.date });
     stmt.finalize();
     return data;
+  }
+
+  public async fetchLatestVaskiMinutesDate() {
+    try {
+      const stmt = this.db.prepare<{ max: string | null }, []>(
+        queries.sql`SELECT MAX(start_time) as max FROM VaskiMinutesSpeech`,
+      );
+      const result = stmt.get();
+      stmt.finalize();
+      return result?.max ?? null;
+    } catch {
+      return null;
+    }
   }
 
   public async fetchSessionDates() {

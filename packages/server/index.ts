@@ -272,7 +272,8 @@ const server = Bun.serve<{
         const sessions = await db.fetchSessionWithSectionsByDate({
           date: req.params.date,
         });
-        return new Response(JSON.stringify(sessions), {
+        const vaskiLatestSpeechDate = await db.fetchLatestVaskiMinutesDate();
+        return new Response(JSON.stringify({ sessions, vaskiLatestSpeechDate }), {
           headers: { "Content-Type": "application/json" },
         });
       },

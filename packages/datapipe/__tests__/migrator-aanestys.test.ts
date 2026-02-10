@@ -10,7 +10,7 @@ describe("SaliDBAanestys migrator", () => {
 
   beforeEach(() => {
     clearStatementCache();
-    db = createTestDb(3); // Up to V001.003 (includes Voting table)
+    db = createTestDb(); // Use latest schema
     migrate = createMigrator(db);
   });
 

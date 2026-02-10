@@ -59,7 +59,7 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
         "Voting",
         "Vote",
         "Speech",
-        "ExcelSpeech",
+        "VaskiMinutesSpeech",
         "VotingDocumentLink",
         "SectionDocumentLink",
         "SessionNotice",

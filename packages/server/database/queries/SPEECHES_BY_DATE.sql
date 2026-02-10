@@ -1,32 +1,33 @@
 SELECT
-    es.id,
-    es.excel_id,
-    es.processing_phase,
-    es.document,
-    es.ordinal,
-    es.position,
-    es.first_name,
-    es.last_name,
-    es.party,
-    es.speech_type,
-    es.start_time,
-    es.end_time,
-    es.content,
-    es.minutes_url,
-    es.source_file,
+    sp.id,
+    vms.link_key AS excel_id,
+    sec.processing_title AS processing_phase,
+    COALESCE(sec.identifier, sec.title, sec.processing_title, sp.section_key) AS document,
+    sp.ordinal,
+    sp.ministry AS position,
+    sp.first_name,
+    sp.last_name,
+    sp.party_abbreviation AS party,
+    sp.speech_type,
+    vms.start_time,
+    vms.end_time,
+    vms.content,
+    NULL AS minutes_url,
+    NULL AS source_file,
     sec.title as section_title,
     sec.processing_title as section_processing_title,
     sec.ordinal as section_ordinal
 FROM
-    ExcelSpeech es
+    Speech sp
 LEFT JOIN
-    Section sec ON es.document = sec.agenda_key COLLATE NOCASE
+    VaskiMinutesSpeech vms ON sp.excel_key = vms.link_key COLLATE NOCASE
 LEFT JOIN
-    Session s ON sec.session_key = s.key
+    Section sec ON sp.section_key = sec.key
+LEFT JOIN
+    Session s ON sp.session_key = s.key
 WHERE
     s.date = $date
 ORDER BY
-    es.start_time ASC,
-    es.document ASC,
-    es.processing_phase ASC,
-    es.ordinal ASC
+    vms.start_time ASC,
+    sec.key ASC,
+    sp.ordinal ASC

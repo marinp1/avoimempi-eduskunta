@@ -16,6 +16,7 @@ const MIGRATION_FILES = [
   "V001.009__add_term_year_columns.sql",
   "V001.010__vaski_document_schema.sql",
   "V001.011__analytics_indexes.sql",
+  "V001.012__salidb_extensions.sql",
 ];
 
 /**
@@ -39,7 +40,7 @@ function stripInlineComments(sql: string): string {
  * Apply migration SQL files up to and including the given version number.
  * e.g. upToVersion = 4 applies V001.001 through V001.004
  */
-export function applyMigrations(db: Database, upToVersion = 11) {
+export function applyMigrations(db: Database, upToVersion = 12) {
   for (const file of MIGRATION_FILES) {
     const versionMatch = file.match(/V001\.(\d+)/);
     if (!versionMatch) continue;
@@ -63,7 +64,7 @@ export function applyMigrations(db: Database, upToVersion = 11) {
  * Create an in-memory SQLite database with schema applied.
  */
 export function createTestDb(
-  upToVersion = 11,
+  upToVersion = 12,
   options?: { foreignKeys?: boolean },
 ): Database {
   const db = new Database(":memory:");

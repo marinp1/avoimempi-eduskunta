@@ -160,7 +160,7 @@ export default function Status() {
         "Voting",
         "Vote",
       ],
-      Puheenvuorot: ["Speech", "ExcelSpeech"],
+      Puheenvuorot: ["Speech", "VaskiMinutesSpeech"],
       "Ryhmät ja valiokunt": [
         "ParliamentaryGroup",
         "ParliamentaryGroupMembership",
@@ -168,7 +168,7 @@ export default function Status() {
         "CommitteeMembership",
       ],
       "Tehtävät ja virat": ["GovernmentMembership", "TrustPosition"],
-      Asiakirjat: ["VaskiDocument", "DocumentSubject", "DocumentRelationship"],
+      Asiakirjat: ["VaskiDocument", "VaskiSubject", "VaskiRelationship"],
     };
 
     const tableNames = categories[category] || [];

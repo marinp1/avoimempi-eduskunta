@@ -19,6 +19,32 @@ afterAll(() => {
   db.close();
 });
 
+describe("Query compilation", () => {
+  test("all SQL queries prepare without errors", () => {
+    const queryEntries = Object.entries(queries).filter(
+      ([, value]) => typeof value === "string",
+    ) as Array<[string, string]>;
+
+    for (const [name, sql] of queryEntries) {
+      const stmt = db.prepare(sql);
+      stmt.finalize();
+      expect(sql.length).toBeGreaterThan(0);
+      expect(name.length).toBeGreaterThan(0);
+    }
+  });
+
+  test("no GROUP_CONCAT(DISTINCT ...) uses a separator argument", () => {
+    const queryEntries = Object.values(queries).filter(
+      (value) => typeof value === "string",
+    ) as string[];
+    const invalid = queryEntries.filter((sql) =>
+      /group_concat\s*\(\s*distinct[^)]*,/i.test(sql),
+    );
+
+    expect(invalid).toHaveLength(0);
+  });
+});
+
 // ─── REPRESENTATIVE QUERIES ─────────────────────────────────
 
 describe("Representative queries", () => {
@@ -199,9 +225,13 @@ describe("Session queries", () => {
 // ─── SPEECH QUERIES ─────────────────────────────────────────
 
 describe("Speech queries", () => {
-  test("SECTION_SPEECHES returns speeches with content from ExcelSpeech join", () => {
+  test("SECTION_SPEECHES returns speeches with content from VaskiMinutesSpeech join", () => {
     const stmt = db.prepare(queries.sectionSpeeches);
-    const rows = stmt.all({ $sectionKey: "2024/1/3" }) as any[];
+    const rows = stmt.all({
+      $sectionKey: "2024/1/3",
+      $limit: 20,
+      $offset: 0,
+    }) as any[];
     stmt.finalize();
 
     expect(rows).toHaveLength(2);
@@ -212,7 +242,11 @@ describe("Speech queries", () => {
 
   test("SECTION_SPEECHES returns empty for non-existent section", () => {
     const stmt = db.prepare(queries.sectionSpeeches);
-    const rows = stmt.all({ $sectionKey: "nonexistent" }) as any[];
+    const rows = stmt.all({
+      $sectionKey: "nonexistent",
+      $limit: 20,
+      $offset: 0,
+    }) as any[];
     stmt.finalize();
 
     expect(rows).toHaveLength(0);
@@ -779,7 +813,7 @@ describe("Schema integrity", () => {
     expect(tableNames).toContain("Voting");
     expect(tableNames).toContain("Vote");
     expect(tableNames).toContain("Speech");
-    expect(tableNames).toContain("ExcelSpeech");
+    expect(tableNames).toContain("VaskiMinutesSpeech");
     expect(tableNames).toContain("Term");
     expect(tableNames).toContain("ParliamentaryGroup");
     expect(tableNames).toContain("ParliamentaryGroupMembership");
@@ -790,8 +824,8 @@ describe("Schema integrity", () => {
     expect(tableNames).toContain("District");
     expect(tableNames).toContain("RepresentativeDistrict");
     expect(tableNames).toContain("VaskiDocument");
-    expect(tableNames).toContain("DocumentSubject");
-    expect(tableNames).toContain("DocumentRelationship");
+    expect(tableNames).toContain("VaskiSubject");
+    expect(tableNames).toContain("VaskiRelationship");
   });
 
   test("foreign key constraints are enforced", () => {

@@ -252,6 +252,7 @@
     "noTitle": "Ei otsikkoa",
     "noContent": "Ei puheenvuoroja tai äänestyksiä",
     "speechContentPending": "Puheenvuorojen sisältö ei ole vielä saatavilla lähdedatassa.",
+    "speechContentLatest": "Viimeisin pöytäkirja puheenvuoroineen: {{date}}.",
     "sessionNumber": "Istunto",
     "sessionType": "Tyyppi",
     "sessionState": "Tila",

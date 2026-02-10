@@ -19,6 +19,13 @@ const MIGRATION_FILES = [
   "V001.009__add_term_year_columns.sql",
   "V001.010__vaski_document_schema.sql",
   "V001.011__analytics_indexes.sql",
+  "V001.012__salidb_extensions.sql",
+  "V001.013__salidb_link_indexes.sql",
+  "V001.014__vaski_schema.sql",
+  "V001.015__vaski_indexes.sql",
+  "V001.016__vaski_base_ext.sql",
+  "V001.017__vaski_minutes_link.sql",
+  "V001.018__vaski_document_summary.sql",
 ];
 
 /**
@@ -141,14 +148,14 @@ export function seedFullDataset(db: Database) {
 
   // Sections
   db.run(
-    `INSERT INTO Section (id, key, identifier, title, ordinal, processing_title, session_key, agenda_key)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [10, "2024/1/3", "3", "Hallituksen esitys", 3, "Ainoa käsittely", "2024/1", "PJ_2024_1"],
+    `INSERT INTO Section (id, key, identifier, title, ordinal, processing_title, session_key, agenda_key, vaski_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [10, "2024/1/3", "3", "Hallituksen esitys", 3, "Ainoa käsittely", "2024/1", "PJ_2024_1", 1],
   );
   db.run(
-    `INSERT INTO Section (id, key, identifier, title, ordinal, processing_title, session_key, agenda_key)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [11, "2024/1/4", "4", "Välikysymys", 4, "Palautekeskustelu", "2024/1", "PJ_2024_1"],
+    `INSERT INTO Section (id, key, identifier, title, ordinal, processing_title, session_key, agenda_key, vaski_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [11, "2024/1/4", "4", "Välikysymys", 4, "Palautekeskustelu", "2024/1", "PJ_2024_1", 2],
   );
 
   // Votings
@@ -177,24 +184,6 @@ export function seedFullDataset(db: Database) {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [201, "speech_201", "2024/1", "2024/1/3", 20240115100100, 2, "Puheenvuoro", 1001,
       "Maija", "Virtanen", "Nainen", "sd", 1, "20240115_1001"],
-  );
-
-  // ExcelSpeeches (content for speeches)
-  db.run(
-    `INSERT INTO ExcelSpeech (excel_id, processing_phase, document, ordinal, first_name, last_name, party,
-      speech_type, start_time, end_time, content, source_file)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    ["20240115_1000", "Ainoa käsittely", "PJ_2024_1", 1, "Matti", "Meikäläinen", "kesk",
-      "(vastauspuheenvuoro)", "2024-01-15T10:00:00", "2024-01-15T10:05:00",
-      "Arvoisa puhemies tämä on testipuheenvuoro kansanedustajalta", "vaski"],
-  );
-  db.run(
-    `INSERT INTO ExcelSpeech (excel_id, processing_phase, document, ordinal, first_name, last_name, party,
-      speech_type, start_time, end_time, content, source_file)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    ["20240115_1001", "Ainoa käsittely", "PJ_2024_1", 2, "Maija", "Virtanen", "sd",
-      "(esittelypuheenvuoro)", "2024-01-15T10:05:00", "2024-01-15T10:10:00",
-      "Arvoisa puhemies esittelen tämän asian eduskunnalle", "vaski"],
   );
 
   // Government memberships (Pekka is a minister in current government)
@@ -238,31 +227,57 @@ export function seedFullDataset(db: Database) {
   // VaskiDocuments
   db.run(
     `INSERT INTO VaskiDocument (id, eduskunta_tunnus, document_type_code, document_type_name,
-      document_number, parliamentary_year, title, author_first_name, author_last_name,
-      author_role, creation_date, status, summary)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [1, "HE 1/2024", "HE", "Hallituksen esitys", 1, "2024", "Hallituksen esitys laiksi",
-      "Pekka", "Korhonen", "valtiovarainministeri", "2024-01-10", "Valmis",
-      "Esitys koskee verotusta"],
+      title, document_number, parliamentary_year, created, status, summary_text)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [1, "HE 1/2024", "HE", "Hallituksen esitys", "Hallituksen esitys laiksi", "1", "2024",
+      "2024-01-10", "Valmis", "Esitys koskee verotusta"],
   );
   db.run(
     `INSERT INTO VaskiDocument (id, eduskunta_tunnus, document_type_code, document_type_name,
-      document_number, parliamentary_year, title, author_first_name, author_last_name,
-      author_role, creation_date, status, summary)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [2, "KK 100/2024", "KK", "Kirjallinen kysymys", 100, "2024", "Kysymys verotuksesta",
-      "Matti", "Meikäläinen", "kansanedustaja", "2024-01-12", "Valmis",
-      "Kysymys koskee tuloverotusta"],
+      title, document_number, parliamentary_year, created, status, summary_text)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [2, "KK 100/2024", "KK", "Kirjallinen kysymys", "Kysymys verotuksesta", "100", "2024",
+      "2024-01-12", "Valmis", "Kysymys koskee tuloverotusta"],
   );
 
-  // Document subjects
+  // Vaski document actors
   db.run(
-    `INSERT INTO DocumentSubject (document_id, subject_text) VALUES (?, ?)`,
+    `INSERT INTO VaskiDocumentActor (document_id, role_code, first_name, last_name, position_text)
+     VALUES (?, ?, ?, ?, ?)`,
+    [1, "laatija", "Pekka", "Korhonen", "valtiovarainministeri"],
+  );
+  db.run(
+    `INSERT INTO VaskiDocumentActor (document_id, role_code, first_name, last_name, position_text)
+     VALUES (?, ?, ?, ?, ?)`,
+    [2, "laatija", "Matti", "Meikäläinen", "kansanedustaja"],
+  );
+
+  // Vaski subjects
+  db.run(
+    `INSERT INTO VaskiSubject (document_id, subject_text) VALUES (?, ?)`,
     [1, "verotus"],
   );
   db.run(
-    `INSERT INTO DocumentSubject (document_id, subject_text) VALUES (?, ?)`,
+    `INSERT INTO VaskiSubject (document_id, subject_text) VALUES (?, ?)`,
     [1, "talous"],
+  );
+
+  // VaskiMinutesSpeech (content for speeches)
+  db.run(
+    `INSERT INTO VaskiMinutesSpeech (document_id, section_ordinal, ordinal, person_id, first_name, last_name, party,
+      speech_type, start_time, end_time, content, link_key)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [1, 1, 1, 1000, "Matti", "Meikäläinen", "kesk",
+      "(vastauspuheenvuoro)", "2024-01-15T10:00:00", "2024-01-15T10:05:00",
+      "Arvoisa puhemies tämä on testipuheenvuoro kansanedustajalta", "20240115_1000"],
+  );
+  db.run(
+    `INSERT INTO VaskiMinutesSpeech (document_id, section_ordinal, ordinal, person_id, first_name, last_name, party,
+      speech_type, start_time, end_time, content, link_key)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [1, 1, 2, 1001, "Maija", "Virtanen", "sd",
+      "(esittelypuheenvuoro)", "2024-01-15T10:05:00", "2024-01-15T10:10:00",
+      "Arvoisa puhemies esittelen tämän asian eduskunnalle", "20240115_1001"],
   );
 
   // Leaving parliament records
