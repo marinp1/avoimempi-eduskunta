@@ -676,44 +676,102 @@ export default () => {
               <GlassCard sx={{ p: 2.5 }}>
                 <Typography
                   variant="body2"
-                  sx={{ color: themedColors.textSecondary, fontWeight: 500, fontSize: "0.8125rem", mb: 0.75 }}
+                  sx={{
+                    color: themedColors.textSecondary,
+                    fontWeight: 500,
+                    fontSize: "0.8125rem",
+                    mb: 0.75,
+                  }}
                 >
                   {t("admin.overview.overallProgress")}
                 </Typography>
-                <Typography sx={{ fontSize: "1.75rem", fontWeight: 700, color: themedColors.textPrimary, lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+                <Typography
+                  sx={{
+                    fontSize: "1.75rem",
+                    fontWeight: 700,
+                    color: themedColors.textPrimary,
+                    lineHeight: 1.2,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
                   {overview.overall_progress_percent.toFixed(1)}%
                 </Typography>
-                <Typography sx={{ fontSize: "0.75rem", color: themedColors.textTertiary, mt: 0.75 }}>
-                  {overview.total_scraped_rows.toLocaleString("fi-FI")} / {overview.total_api_rows.toLocaleString("fi-FI")}
+                <Typography
+                  sx={{
+                    fontSize: "0.75rem",
+                    color: themedColors.textTertiary,
+                    mt: 0.75,
+                  }}
+                >
+                  {overview.total_scraped_rows.toLocaleString("fi-FI")} /{" "}
+                  {overview.total_api_rows.toLocaleString("fi-FI")}
                 </Typography>
               </GlassCard>
 
               <GlassCard sx={{ p: 2.5 }}>
                 <Typography
                   variant="body2"
-                  sx={{ color: themedColors.textSecondary, fontWeight: 500, fontSize: "0.8125rem", mb: 0.75 }}
+                  sx={{
+                    color: themedColors.textSecondary,
+                    fontWeight: 500,
+                    fontSize: "0.8125rem",
+                    mb: 0.75,
+                  }}
                 >
                   {t("admin.overview.tablesWithData")}
                 </Typography>
-                <Typography sx={{ fontSize: "1.75rem", fontWeight: 700, color: themedColors.textPrimary, lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+                <Typography
+                  sx={{
+                    fontSize: "1.75rem",
+                    fontWeight: 700,
+                    color: themedColors.textPrimary,
+                    lineHeight: 1.2,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
                   {overview.tables_with_data}
                 </Typography>
-                <Typography sx={{ fontSize: "0.75rem", color: themedColors.textTertiary, mt: 0.75 }}>
-                  / {overview.total_tables} {t("common.total").toLowerCase()}
+                <Typography
+                  sx={{
+                    fontSize: "0.75rem",
+                    color: themedColors.textTertiary,
+                    mt: 0.75,
+                  }}
+                >
+                  / {overview.total_tables} {t("common.total")}
                 </Typography>
               </GlassCard>
 
               <GlassCard sx={{ p: 2.5 }}>
                 <Typography
                   variant="body2"
-                  sx={{ color: themedColors.textSecondary, fontWeight: 500, fontSize: "0.8125rem", mb: 0.75 }}
+                  sx={{
+                    color: themedColors.textSecondary,
+                    fontWeight: 500,
+                    fontSize: "0.8125rem",
+                    mb: 0.75,
+                  }}
                 >
                   {t("admin.overview.completedTables")}
                 </Typography>
-                <Typography sx={{ fontSize: "1.75rem", fontWeight: 700, color: themedColors.textPrimary, lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+                <Typography
+                  sx={{
+                    fontSize: "1.75rem",
+                    fontWeight: 700,
+                    color: themedColors.textPrimary,
+                    lineHeight: 1.2,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
                   {overview.tables_completed}
                 </Typography>
-                <Typography sx={{ fontSize: "0.75rem", color: themedColors.textTertiary, mt: 0.75 }}>
+                <Typography
+                  sx={{
+                    fontSize: "0.75rem",
+                    color: themedColors.textTertiary,
+                    mt: 0.75,
+                  }}
+                >
                   {t("admin.overview.scraped100")}
                 </Typography>
               </GlassCard>
@@ -721,15 +779,35 @@ export default () => {
               <GlassCard sx={{ p: 2.5 }}>
                 <Typography
                   variant="body2"
-                  sx={{ color: themedColors.textSecondary, fontWeight: 500, fontSize: "0.8125rem", mb: 0.75 }}
+                  sx={{
+                    color: themedColors.textSecondary,
+                    fontWeight: 500,
+                    fontSize: "0.8125rem",
+                    mb: 0.75,
+                  }}
                 >
                   {t("admin.overview.tablesParsed")}
                 </Typography>
-                <Typography sx={{ fontSize: "1.75rem", fontWeight: 700, color: themedColors.textPrimary, lineHeight: 1.2, letterSpacing: "-0.02em" }}>
+                <Typography
+                  sx={{
+                    fontSize: "1.75rem",
+                    fontWeight: 700,
+                    color: themedColors.textPrimary,
+                    lineHeight: 1.2,
+                    letterSpacing: "-0.02em",
+                  }}
+                >
                   {overview.tables_with_parsed_data}
                 </Typography>
-                <Typography sx={{ fontSize: "0.75rem", color: themedColors.textTertiary, mt: 0.75 }}>
-                  {overview.total_parsed_rows.toLocaleString("fi-FI")} {t("admin.overview.parsedRows")}
+                <Typography
+                  sx={{
+                    fontSize: "0.75rem",
+                    color: themedColors.textTertiary,
+                    mt: 0.75,
+                  }}
+                >
+                  {overview.total_parsed_rows.toLocaleString("fi-FI")}{" "}
+                  {t("admin.overview.parsedRows")}
                 </Typography>
               </GlassCard>
             </Box>

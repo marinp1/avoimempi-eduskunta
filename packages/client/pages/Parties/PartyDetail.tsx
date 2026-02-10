@@ -139,7 +139,12 @@ const MembersTab: React.FC<{ partyCode: string }> = ({ partyCode }) => {
             <TableCell sx={{ fontWeight: 600 }}>
               {t("parties.detail.municipality")}
             </TableCell>
-            <TableCell sx={{ fontWeight: 600, display: { xs: "none", sm: "table-cell" } }}>
+            <TableCell
+              sx={{
+                fontWeight: 600,
+                display: { xs: "none", sm: "table-cell" },
+              }}
+            >
               {t("parties.detail.profession")}
             </TableCell>
             <TableCell sx={{ fontWeight: 600 }} />
@@ -232,7 +237,10 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({ isGovernment }) => {
         {t("parties.detail.coalitionVoting")}
       </Typography>
       <ResponsiveContainer width="100%" height={350}>
-        <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 60 }}>
+        <BarChart
+          data={chartData}
+          margin={{ top: 10, right: 20, left: 0, bottom: 60 }}
+        >
           <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
           <XAxis
             dataKey="title"
@@ -278,7 +286,8 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
 }) => {
   const themedColors = useThemedColors();
   const { t } = useTranslation();
-  const [disciplineData, setDisciplineData] = useState<PartyDisciplineRow | null>(null);
+  const [disciplineData, setDisciplineData] =
+    useState<PartyDisciplineRow | null>(null);
   const [dissents, setDissents] = useState<DissentRow[] | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -319,10 +328,7 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
     );
 
   // Group dissents by person to find top dissenters
-  const dissentsByPerson = new Map<
-    number,
-    { name: string; count: number }
-  >();
+  const dissentsByPerson = new Map<number, { name: string; count: number }>();
   dissents?.forEach((d) => {
     const existing = dissentsByPerson.get(d.person_id);
     if (existing) {
@@ -351,14 +357,20 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
           border: `1px solid ${themedColors.dataBorder}`,
         }}
       >
-        <Typography variant="body2" sx={{ color: themedColors.textSecondary, mb: 1 }}>
+        <Typography
+          variant="body2"
+          sx={{ color: themedColors.textSecondary, mb: 1 }}
+        >
           {t("parties.detail.disciplineScore")} - {partyName}
         </Typography>
         <Typography
           sx={{
             fontSize: "3rem",
             fontWeight: 700,
-            color: disciplineData.discipline_rate >= 90 ? colors.success : colors.warning,
+            color:
+              disciplineData.discipline_rate >= 90
+                ? colors.success
+                : colors.warning,
           }}
         >
           {disciplineData.discipline_rate.toFixed(1)}%
@@ -391,7 +403,7 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
                   {person.name}
                 </Typography>
                 <Chip
-                  label={`${person.count} ${t("parties.detail.dissentCount").toLowerCase()}`}
+                  label={`${person.count} ${t("parties.detail.dissentCount")}`}
                   size="small"
                   sx={{
                     height: 22,
@@ -467,12 +479,26 @@ export const PartyDetail: React.FC<{
           </IconButton>
 
           <Box sx={{ pr: { xs: 4, sm: 0 } }}>
-            <Typography variant="h5" fontWeight={700} sx={{ color: "white", mb: 0.5 }}>
+            <Typography
+              variant="h5"
+              fontWeight={700}
+              sx={{ color: "white", mb: 0.5 }}
+            >
               {party.party_name}
             </Typography>
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center" }}>
-              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.85)" }}>
-                {party.member_count} {t("parties.members").toLowerCase()}
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1,
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{ color: "rgba(255,255,255,0.85)" }}
+              >
+                {party.member_count} {t("parties.members")}
               </Typography>
               <Chip
                 label={
@@ -550,7 +576,10 @@ export const PartyDetail: React.FC<{
           <VotingTab isGovernment={party.is_in_government === 1} />
         )}
         {tabIndex === 2 && (
-          <DisciplineTab partyCode={party.party_code} partyName={party.party_name} />
+          <DisciplineTab
+            partyCode={party.party_code}
+            partyName={party.party_name}
+          />
         )}
       </DialogContent>
     </Dialog>

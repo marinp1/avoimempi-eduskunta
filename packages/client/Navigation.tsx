@@ -91,10 +91,10 @@ export const Navigation: React.FC<{
 
   const allDrawerRoutes =
     applicationMode === "production"
-      ? Object.keys(routes).filter(
+      ? (Object.keys(routes).filter(
           (k) => !devRoutes.includes(k as RouteName),
-        )
-      : Object.keys(routes);
+        ) as RouteName[])
+      : (Object.keys(routes) as RouteName[]);
 
   const DrawerContent = (
     <Box sx={{ width: 280 }} role="presentation">
@@ -328,9 +328,7 @@ export const Navigation: React.FC<{
       >
         <Tabs
           value={
-            mobileTabRoutes.some((r) => r.key === activeTab)
-              ? activeTab
-              : false
+            mobileTabRoutes.some((r) => r.key === activeTab) ? activeTab : false
           }
           onChange={handleMobileTabChange}
           variant="fullWidth"

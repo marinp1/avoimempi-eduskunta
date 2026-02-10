@@ -4,9 +4,7 @@ import fi from "./locales/fi.json";
 
 i18n.use(initReactI18next).init({
   resources: {
-    fi: {
-      translation: fi,
-    },
+    fi: fi,
   },
   lng: "fi", // Default language
   fallbackLng: "fi",

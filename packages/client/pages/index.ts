@@ -59,7 +59,7 @@ export const routes = {
     icon: AdminPanelSettings,
     Component: React.lazy(() => import("./Admin")),
   },
-} satisfies Record<
+} as const satisfies Record<
   string,
   {
     title: string;

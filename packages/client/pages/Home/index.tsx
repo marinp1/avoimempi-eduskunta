@@ -19,7 +19,12 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { colors } from "#client/theme/index";
 import { commonStyles, spacing } from "#client/theme";
-import { DataCard, PageHeader, MetricCard, VoteMarginBar } from "#client/theme/components";
+import {
+  DataCard,
+  PageHeader,
+  MetricCard,
+  VoteMarginBar,
+} from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 
 type SessionWithSections = {
@@ -87,10 +92,18 @@ const Home = () => {
   const [latestDate, setLatestDate] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
-  const [sectionSpeeches, setSectionSpeeches] = useState<Record<number, Speech[]>>({});
-  const [sectionVotings, setSectionVotings] = useState<Record<number, Voting[]>>({});
-  const [loadingSpeeches, setLoadingSpeeches] = useState<Set<number>>(new Set());
+  const [expandedSections, setExpandedSections] = useState<Set<number>>(
+    new Set(),
+  );
+  const [sectionSpeeches, setSectionSpeeches] = useState<
+    Record<number, Speech[]>
+  >({});
+  const [sectionVotings, setSectionVotings] = useState<
+    Record<number, Voting[]>
+  >({});
+  const [loadingSpeeches, setLoadingSpeeches] = useState<Set<number>>(
+    new Set(),
+  );
   const [loadingVotings, setLoadingVotings] = useState<Set<number>>(new Set());
 
   // Fetch latest session date, then load that session
@@ -106,7 +119,8 @@ const Home = () => {
           setLoadingSessions(false);
           return;
         }
-        const latest = dates.sort((a, b) => b.date.localeCompare(a.date))[0].date;
+        const latest = dates.sort((a, b) => b.date.localeCompare(a.date))[0]
+          .date;
         setLatestDate(latest);
 
         const sessionsRes = await fetch(`/api/day/${latest}/sessions`);
@@ -158,9 +172,16 @@ const Home = () => {
       {} as Record<string, { total: number; inGovernment: number }>,
     );
 
-    const sortedParties = Object.entries(partyGroups).sort(([, a], [, b]) => b.total - a.total);
+    const sortedParties = Object.entries(partyGroups).sort(
+      ([, a], [, b]) => b.total - a.total,
+    );
 
-    return { totalMembers, inGovernment, inOpposition, partyGroups: sortedParties };
+    return {
+      totalMembers,
+      inGovernment,
+      inOpposition,
+      partyGroups: sortedParties,
+    };
   }, [members]);
 
   const formatDate = (dateString: string) => {
@@ -187,7 +208,9 @@ const Home = () => {
       if (!sectionSpeeches[sectionId]) {
         setLoadingSpeeches((prev) => new Set(prev).add(sectionId));
         try {
-          const res = await fetch(`/api/sections/${sectionKey}/speeches?limit=100`);
+          const res = await fetch(
+            `/api/sections/${sectionKey}/speeches?limit=100`,
+          );
           if (res.ok) {
             const data = await res.json();
             const speeches: Speech[] = data.speeches ?? data;
@@ -236,100 +259,117 @@ const Home = () => {
         <Box sx={{ ...commonStyles.centeredFlex, py: 4 }}>
           <CircularProgress size={28} sx={{ color: themedColors.primary }} />
         </Box>
-      ) : stats.totalMembers > 0 && (
-        <Box sx={{ mb: 4 }}>
-          {/* Summary row */}
-          <Grid container spacing={2} sx={{ mb: 2.5 }}>
-            <Grid size={{ xs: 4 }}>
-              <MetricCard
-                label={t("home.totalMPs")}
-                value={stats.totalMembers}
-                icon={<GroupsIcon fontSize="small" />}
-              />
+      ) : (
+        stats.totalMembers > 0 && (
+          <Box sx={{ mb: 4 }}>
+            {/* Summary row */}
+            <Grid container spacing={2} sx={{ mb: 2.5 }}>
+              <Grid size={{ xs: 4 }}>
+                <MetricCard
+                  label={t("home.totalMPs")}
+                  value={stats.totalMembers}
+                  icon={<GroupsIcon fontSize="small" />}
+                />
+              </Grid>
+              <Grid size={{ xs: 4 }}>
+                <MetricCard
+                  label={t("home.government")}
+                  value={stats.inGovernment}
+                  icon={<AccountBalanceIcon fontSize="small" />}
+                />
+              </Grid>
+              <Grid size={{ xs: 4 }}>
+                <MetricCard
+                  label={t("home.opposition")}
+                  value={stats.inOpposition}
+                  icon={<PieChartIcon fontSize="small" />}
+                />
+              </Grid>
             </Grid>
-            <Grid size={{ xs: 4 }}>
-              <MetricCard
-                label={t("home.government")}
-                value={stats.inGovernment}
-                icon={<AccountBalanceIcon fontSize="small" />}
-              />
-            </Grid>
-            <Grid size={{ xs: 4 }}>
-              <MetricCard
-                label={t("home.opposition")}
-                value={stats.inOpposition}
-                icon={<PieChartIcon fontSize="small" />}
-              />
-            </Grid>
-          </Grid>
 
-          {/* Party breakdown */}
-          <DataCard sx={{ p: 0, overflow: "hidden" }}>
-            <Box sx={{ p: 2.5, borderBottom: `1px solid ${colors.dataBorder}` }}>
-              <Typography variant="h6" sx={{ fontWeight: 600, color: colors.textPrimary, fontSize: "1rem" }}>
-                {t("home.partyBreakdown")}
-              </Typography>
-            </Box>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0 }}>
-              {stats.partyGroups.map(([party, data]) => (
-                <Box
-                  key={party}
+            {/* Party breakdown */}
+            <DataCard sx={{ p: 0, overflow: "hidden" }}>
+              <Box
+                sx={{ p: 2.5, borderBottom: `1px solid ${colors.dataBorder}` }}
+              >
+                <Typography
+                  variant="h6"
                   sx={{
-                    flex: { xs: "1 1 100%", sm: "1 1 calc(50% - 1px)" },
-                    p: 2,
-                    borderBottom: `1px solid ${colors.dataBorder}`,
-                    borderRight: { sm: `1px solid ${colors.dataBorder}` },
-                    "&:nth-of-type(2n)": { borderRight: { sm: "none" } },
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
+                    fontWeight: 600,
+                    color: colors.textPrimary,
+                    fontSize: "1rem",
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: colors.textPrimary }}>
-                      {party}
-                    </Typography>
-                    {data.inGovernment > 0 ? (
-                      <Chip
-                        label={t("home.governmentChip")}
-                        size="small"
-                        sx={{
-                          fontSize: "0.625rem",
-                          height: 18,
-                          background: `${themedColors.success}20`,
-                          color: themedColors.success,
-                          fontWeight: 600,
-                        }}
-                      />
-                    ) : (
-                      <Chip
-                        label={t("home.oppositionChip")}
-                        size="small"
-                        sx={{
-                          fontSize: "0.625rem",
-                          height: 18,
-                          background: `${themedColors.warning}20`,
-                          color: themedColors.warning,
-                          fontWeight: 600,
-                        }}
-                      />
-                    )}
-                  </Box>
-                  <Chip
-                    label={`${data.total} ${t("home.seats")}`}
-                    size="small"
+                  {t("home.partyBreakdown")}
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0 }}>
+                {stats.partyGroups.map(([party, data]) => (
+                  <Box
+                    key={party}
                     sx={{
-                      background: colors.primaryLight,
-                      color: "#fff",
-                      fontWeight: 700,
-                      fontSize: "0.75rem",
+                      flex: { xs: "1 1 100%", sm: "1 1 calc(50% - 1px)" },
+                      p: 2,
+                      borderBottom: `1px solid ${colors.dataBorder}`,
+                      borderRight: { sm: `1px solid ${colors.dataBorder}` },
+                      "&:nth-of-type(2n)": { borderRight: { sm: "none" } },
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
                     }}
-                  />
-                </Box>
-              ))}
-            </Box>
-          </DataCard>
-        </Box>
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Typography
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: "0.875rem",
+                          color: colors.textPrimary,
+                        }}
+                      >
+                        {party}
+                      </Typography>
+                      {data.inGovernment > 0 ? (
+                        <Chip
+                          label={t("home.governmentChip")}
+                          size="small"
+                          sx={{
+                            fontSize: "0.625rem",
+                            height: 18,
+                            background: `${themedColors.success}20`,
+                            color: themedColors.success,
+                            fontWeight: 600,
+                          }}
+                        />
+                      ) : (
+                        <Chip
+                          label={t("home.oppositionChip")}
+                          size="small"
+                          sx={{
+                            fontSize: "0.625rem",
+                            height: 18,
+                            background: `${themedColors.warning}20`,
+                            color: themedColors.warning,
+                            fontWeight: 600,
+                          }}
+                        />
+                      )}
+                    </Box>
+                    <Chip
+                      label={`${data.total} ${t("home.seats")}`}
+                      size="small"
+                      sx={{
+                        background: colors.primaryLight,
+                        color: "#fff",
+                        fontWeight: 700,
+                        fontSize: "0.75rem",
+                      }}
+                    />
+                  </Box>
+                ))}
+              </Box>
+            </DataCard>
+          </Box>
+        )
       )}
 
       {/* ─── Latest Session ─── */}
@@ -337,12 +377,21 @@ const Home = () => {
         <Box sx={{ p: 2.5, borderBottom: `1px solid ${colors.dataBorder}` }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.25 }}>
             <EventIcon sx={{ fontSize: 20, color: colors.primaryLight }} />
-            <Typography variant="h6" sx={{ fontWeight: 600, color: colors.textPrimary, fontSize: "1rem" }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 600,
+                color: colors.textPrimary,
+                fontSize: "1rem",
+              }}
+            >
               {t("home.latestSession")}
             </Typography>
           </Box>
           {latestDate && (
-            <Typography sx={{ fontSize: "0.8125rem", color: colors.textSecondary }}>
+            <Typography
+              sx={{ fontSize: "0.8125rem", color: colors.textSecondary }}
+            >
               {formatDate(latestDate)}
             </Typography>
           )}
@@ -354,7 +403,9 @@ const Home = () => {
           </Box>
         ) : sessions.length === 0 ? (
           <Box sx={{ p: 3, textAlign: "center" }}>
-            <Typography sx={{ color: colors.textSecondary }}>{t("home.noData")}</Typography>
+            <Typography sx={{ color: colors.textSecondary }}>
+              {t("home.noData")}
+            </Typography>
           </Box>
         ) : (
           sessions.map((session) => (
@@ -371,14 +422,25 @@ const Home = () => {
                   flexWrap: "wrap",
                 }}
               >
-                <Typography sx={{ fontWeight: 700, fontSize: "0.9375rem", color: colors.textPrimary }}>
+                <Typography
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: "0.9375rem",
+                    color: colors.textPrimary,
+                  }}
+                >
                   {session.key}
                 </Typography>
                 {session.section_count > 0 && (
                   <Chip
                     label={`${session.section_count} ${t("home.sections")}`}
                     size="small"
-                    sx={{ fontSize: "0.6875rem", height: 22, background: `${colors.primaryLight}20`, color: colors.primaryLight }}
+                    sx={{
+                      fontSize: "0.6875rem",
+                      height: 22,
+                      background: `${colors.primaryLight}20`,
+                      color: colors.primaryLight,
+                    }}
                   />
                 )}
                 {session.voting_count > 0 && (
@@ -386,7 +448,12 @@ const Home = () => {
                     icon={<HowToVoteIcon sx={{ fontSize: 14 }} />}
                     label={`${session.voting_count} ${t("home.votings")}`}
                     size="small"
-                    sx={{ fontSize: "0.6875rem", height: 22, background: `${themedColors.success}15`, color: themedColors.success }}
+                    sx={{
+                      fontSize: "0.6875rem",
+                      height: 22,
+                      background: `${themedColors.success}15`,
+                      color: themedColors.success,
+                    }}
                   />
                 )}
               </Box>
@@ -398,7 +465,10 @@ const Home = () => {
                 const votings = sectionVotings[section.id] || [];
 
                 return (
-                  <Box key={section.id} sx={{ borderBottom: `1px solid ${colors.dataBorder}` }}>
+                  <Box
+                    key={section.id}
+                    sx={{ borderBottom: `1px solid ${colors.dataBorder}` }}
+                  >
                     <Box
                       sx={{
                         p: 2,
@@ -433,32 +503,67 @@ const Home = () => {
                             wordBreak: "break-word",
                           }}
                         >
-                          {section.title || section.processing_title || "Ei otsikkoa"}
+                          {section.title ||
+                            section.processing_title ||
+                            "Ei otsikkoa"}
                         </Typography>
                         {section.identifier && (
-                          <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                          <Typography
+                            sx={{
+                              fontSize: "0.75rem",
+                              color: colors.textTertiary,
+                            }}
+                          >
                             {section.identifier}
                           </Typography>
                         )}
                       </Box>
-                      <IconButton size="small" sx={{ color: colors.primaryLight, flexShrink: 0 }}>
-                        {isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                      <IconButton
+                        size="small"
+                        sx={{ color: colors.primaryLight, flexShrink: 0 }}
+                      >
+                        {isExpanded ? (
+                          <KeyboardArrowUpIcon />
+                        ) : (
+                          <KeyboardArrowDownIcon />
+                        )}
                       </IconButton>
                     </Box>
 
                     <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                      <Box sx={{ px: 2, pb: 2, borderTop: `1px solid ${colors.dataBorder}` }}>
+                      <Box
+                        sx={{
+                          px: 2,
+                          pb: 2,
+                          borderTop: `1px solid ${colors.dataBorder}`,
+                        }}
+                      >
                         {/* Votings */}
                         {loadingVotings.has(section.id) ? (
                           <Box sx={{ py: 2, textAlign: "center" }}>
-                            <CircularProgress size={20} sx={{ color: themedColors.primary }} />
+                            <CircularProgress
+                              size={20}
+                              sx={{ color: themedColors.primary }}
+                            />
                           </Box>
                         ) : votings.length > 0 ? (
-                          <Box sx={{ mt: 1.5, display: "flex", flexDirection: "column", gap: 1 }}>
+                          <Box
+                            sx={{
+                              mt: 1.5,
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 1,
+                            }}
+                          >
                             <Typography
-                              sx={{ fontSize: "0.75rem", fontWeight: 600, color: colors.textSecondary, textTransform: "uppercase" }}
+                              sx={{
+                                fontSize: "0.75rem",
+                                fontWeight: 600,
+                                color: colors.textSecondary,
+                                textTransform: "uppercase",
+                              }}
                             >
-                              {t("sessions.speeches").replace("Puheenvuorot", "Äänestykset")} ({votings.length})
+                              {t("sessions.votings")} ({votings.length})
                             </Typography>
                             {votings.map((voting) => {
                               const isPassed = voting.n_yes > voting.n_no;
@@ -469,38 +574,98 @@ const Home = () => {
                                     p: 1.5,
                                     borderRadius: 1,
                                     border: `1px solid ${isPassed ? `${themedColors.success}40` : `${themedColors.error}40`}`,
-                                    background: isPassed ? `${themedColors.success}08` : `${themedColors.error}08`,
+                                    background: isPassed
+                                      ? `${themedColors.success}08`
+                                      : `${themedColors.error}08`,
                                   }}
                                 >
-                                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, flexWrap: "wrap" }}>
-                                    <HowToVoteIcon sx={{ fontSize: 16, color: isPassed ? themedColors.success : themedColors.error }} />
-                                    <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", flex: 1, minWidth: 0 }}>
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 1,
+                                      mb: 1,
+                                      flexWrap: "wrap",
+                                    }}
+                                  >
+                                    <HowToVoteIcon
+                                      sx={{
+                                        fontSize: 16,
+                                        color: isPassed
+                                          ? themedColors.success
+                                          : themedColors.error,
+                                      }}
+                                    />
+                                    <Typography
+                                      sx={{
+                                        fontWeight: 600,
+                                        fontSize: "0.8125rem",
+                                        flex: 1,
+                                        minWidth: 0,
+                                      }}
+                                    >
                                       {voting.title}
                                     </Typography>
                                     <Chip
-                                      label={isPassed ? "Hyväksytty" : "Hylätty"}
+                                      label={
+                                        isPassed ? "Hyväksytty" : "Hylätty"
+                                      }
                                       size="small"
                                       sx={{
                                         fontSize: "0.625rem",
                                         height: 20,
-                                        background: isPassed ? `${themedColors.success}20` : `${themedColors.error}20`,
-                                        color: isPassed ? themedColors.success : themedColors.error,
+                                        background: isPassed
+                                          ? `${themedColors.success}20`
+                                          : `${themedColors.error}20`,
+                                        color: isPassed
+                                          ? themedColors.success
+                                          : themedColors.error,
                                         fontWeight: 600,
                                       }}
                                     />
                                   </Box>
-                                  <VoteMarginBar yes={voting.n_yes} no={voting.n_no} empty={voting.n_abstain} absent={voting.n_absent} height={8} />
-                                  <Box sx={{ display: "flex", gap: 1.5, mt: 0.75 }}>
-                                    <Typography sx={{ fontSize: "0.6875rem", color: themedColors.success, fontWeight: 600 }}>
+                                  <VoteMarginBar
+                                    yes={voting.n_yes}
+                                    no={voting.n_no}
+                                    empty={voting.n_abstain}
+                                    absent={voting.n_absent}
+                                    height={8}
+                                  />
+                                  <Box
+                                    sx={{ display: "flex", gap: 1.5, mt: 0.75 }}
+                                  >
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.6875rem",
+                                        color: themedColors.success,
+                                        fontWeight: 600,
+                                      }}
+                                    >
                                       {t("common.yes")} {voting.n_yes}
                                     </Typography>
-                                    <Typography sx={{ fontSize: "0.6875rem", color: themedColors.error, fontWeight: 600 }}>
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.6875rem",
+                                        color: themedColors.error,
+                                        fontWeight: 600,
+                                      }}
+                                    >
                                       {t("common.no")} {voting.n_no}
                                     </Typography>
-                                    <Typography sx={{ fontSize: "0.6875rem", color: colors.textTertiary }}>
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.6875rem",
+                                        color: colors.textTertiary,
+                                      }}
+                                    >
                                       {t("common.empty")} {voting.n_abstain}
                                     </Typography>
-                                    <Typography sx={{ fontSize: "0.6875rem", color: colors.textTertiary }}>
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.6875rem",
+                                        color: colors.textTertiary,
+                                      }}
+                                    >
                                       {t("common.absent")} {voting.n_absent}
                                     </Typography>
                                   </Box>
@@ -513,23 +678,51 @@ const Home = () => {
                         {/* Speeches */}
                         {loadingSpeeches.has(section.id) ? (
                           <Box sx={{ py: 2, textAlign: "center" }}>
-                            <CircularProgress size={20} sx={{ color: themedColors.primary }} />
+                            <CircularProgress
+                              size={20}
+                              sx={{ color: themedColors.primary }}
+                            />
                           </Box>
                         ) : speeches.length > 0 ? (
-                          <Box sx={{ mt: 1.5, display: "flex", flexDirection: "column", gap: 0.75 }}>
+                          <Box
+                            sx={{
+                              mt: 1.5,
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 0.75,
+                            }}
+                          >
                             <Typography
-                              sx={{ fontSize: "0.75rem", fontWeight: 600, color: colors.textSecondary, textTransform: "uppercase" }}
+                              sx={{
+                                fontSize: "0.75rem",
+                                fontWeight: 600,
+                                color: colors.textSecondary,
+                                textTransform: "uppercase",
+                              }}
                             >
                               {t("sessions.speeches")} ({speeches.length})
                             </Typography>
                             {speeches.map((speech) => (
                               <Box
                                 key={speech.id}
-                                sx={{ p: 1.5, borderRadius: 1, background: colors.backgroundSubtle }}
+                                sx={{
+                                  p: 1.5,
+                                  borderRadius: 1,
+                                  background: colors.backgroundSubtle,
+                                }}
                               >
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: speech.content ? 1 : 0 }}>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    mb: speech.content ? 1 : 0,
+                                  }}
+                                >
                                   <Chip
-                                    label={speech.ordinal_number || speech.ordinal}
+                                    label={
+                                      speech.ordinal_number || speech.ordinal
+                                    }
                                     size="small"
                                     sx={{
                                       background: `${colors.primaryLight}30`,
@@ -540,7 +733,13 @@ const Home = () => {
                                       minWidth: 24,
                                     }}
                                   />
-                                  <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", flex: 1 }}>
+                                  <Typography
+                                    sx={{
+                                      fontWeight: 600,
+                                      fontSize: "0.8125rem",
+                                      flex: 1,
+                                    }}
+                                  >
                                     {speech.first_name} {speech.last_name}
                                   </Typography>
                                   {speech.party_abbreviation && (
@@ -551,7 +750,12 @@ const Home = () => {
                                     />
                                   )}
                                   {speech.speech_type && (
-                                    <Typography sx={{ fontSize: "0.6875rem", color: colors.textTertiary }}>
+                                    <Typography
+                                      sx={{
+                                        fontSize: "0.6875rem",
+                                        color: colors.textTertiary,
+                                      }}
+                                    >
                                       {speech.speech_type}
                                     </Typography>
                                   )}
@@ -586,7 +790,14 @@ const Home = () => {
                           !loadingVotings.has(section.id) &&
                           speeches.length === 0 &&
                           votings.length === 0 && (
-                            <Typography sx={{ py: 2, textAlign: "center", fontSize: "0.8125rem", color: colors.textTertiary }}>
+                            <Typography
+                              sx={{
+                                py: 2,
+                                textAlign: "center",
+                                fontSize: "0.8125rem",
+                                color: colors.textTertiary,
+                              }}
+                            >
                               {t("sessions.noSpeeches")}
                             </Typography>
                           )}
