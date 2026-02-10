@@ -1,10 +1,9 @@
-// VoteResults.tsx
-
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import RemoveIcon from "@mui/icons-material/Remove";
 import ThumbDownIcon from "@mui/icons-material/ThumbDown";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import {
   Accordion,
   AccordionDetails,
@@ -22,9 +21,13 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { commonStyles, shadows, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { VoteMarginBar } from "#client/theme/components";
 import { getVoteColors } from "#client/theme/vote-styles";
+
+const CLOSE_VOTE_THRESHOLD = 10;
 
 const cache = new Map<string, ReturnType<typeof getVotings>>();
 
@@ -56,161 +59,208 @@ const eduskuntaLink = (href: string) => {
   return `https://www.eduskunta.fi${href}`;
 };
 
+const isCloseVote = (res: DatabaseTables.Voting) =>
+  Math.abs(res.n_yes - res.n_no) <= CLOSE_VOTE_THRESHOLD;
+
 /** Mobile card for a single vote result */
 const VoteCard: React.FC<{
   res: DatabaseTables.Voting;
   themedColors: ReturnType<typeof useThemedColors>;
   voteColors: ReturnType<typeof getVoteColors>;
-}> = ({ res, themedColors, voteColors }) => (
-  <Box
-    sx={{
-      p: 2,
-      borderBottom: `1px solid ${themedColors.dataBorder}`,
-      "&:last-child": { borderBottom: "none" },
-    }}
-  >
-    <Box sx={{ mb: 1.5 }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+  t: (key: string) => string;
+}> = ({ res, themedColors, voteColors, t }) => {
+  const close = isCloseVote(res);
+
+  return (
+    <Box
+      sx={{
+        p: 2,
+        borderBottom: `1px solid ${themedColors.dataBorder}`,
+        "&:last-child": { borderBottom: "none" },
+      }}
+    >
+      <Box sx={{ mb: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, flexWrap: "wrap" }}>
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary }}
+          >
+            {res.start_time
+              ? new Date(res.start_time).toLocaleDateString("fi-FI")
+              : "-"}
+          </Typography>
+          <Chip
+            label={res.section_processing_phase}
+            size="small"
+            sx={{
+              background: themedColors.primary,
+              color: "white",
+              fontWeight: 700,
+              fontSize: "0.65rem",
+              height: 22,
+            }}
+          />
+          {close && (
+            <Chip
+              icon={<WarningAmberIcon sx={{ fontSize: 14 }} />}
+              label={t("votings.closeVote")}
+              size="small"
+              sx={{
+                background: `${themedColors.warning}18`,
+                color: themedColors.warning,
+                fontWeight: 700,
+                fontSize: "0.65rem",
+                height: 22,
+                "& .MuiChip-icon": { color: themedColors.warning },
+              }}
+            />
+          )}
+        </Box>
         <Typography
-          variant="caption"
-          sx={{ color: themedColors.textSecondary }}
-        >
-          {res.start_time
-            ? new Date(res.start_time).toLocaleDateString("fi-FI")
-            : "-"}
-        </Typography>
-        <Chip
-          label={res.section_processing_phase}
-          size="small"
+          variant="body2"
           sx={{
-            background: themedColors.primary,
-            color: "white",
-            fontWeight: 700,
-            fontSize: "0.65rem",
-            height: 22,
+            fontWeight: 600,
+            color: themedColors.textPrimary,
+            mb: 1,
           }}
+        >
+          {res.title}
+        </Typography>
+
+        {/* Vote margin bar */}
+        <VoteMarginBar
+          yes={res.n_yes}
+          no={res.n_no}
+          empty={res.n_abstain}
+          absent={res.n_absent}
+          height={6}
+          sx={{ mb: 1 }}
         />
       </Box>
-      <Typography
-        variant="body2"
+
+      {/* Vote counts in a compact grid */}
+      <Box
         sx={{
-          fontWeight: 600,
-          color: themedColors.textPrimary,
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: 1,
           mb: 1.5,
         }}
       >
-        {res.title}
-      </Typography>
-    </Box>
+        <Box sx={{ textAlign: "center" }}>
+          <ThumbUpIcon sx={{ fontSize: 16, color: voteColors.yes, mb: 0.25 }} />
+          <Typography
+            variant="body2"
+            sx={{ fontWeight: 700, color: voteColors.yes, fontSize: "0.875rem" }}
+          >
+            {res.n_yes}
+          </Typography>
+          <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
+            {t("votings.results.yes")}
+          </Typography>
+        </Box>
+        <Box sx={{ textAlign: "center" }}>
+          <ThumbDownIcon sx={{ fontSize: 16, color: voteColors.no, mb: 0.25 }} />
+          <Typography
+            variant="body2"
+            sx={{ fontWeight: 700, color: voteColors.no, fontSize: "0.875rem" }}
+          >
+            {res.n_no}
+          </Typography>
+          <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
+            {t("votings.results.no")}
+          </Typography>
+        </Box>
+        <Box sx={{ textAlign: "center" }}>
+          <RemoveIcon sx={{ fontSize: 16, color: voteColors.abstain, mb: 0.25 }} />
+          <Typography
+            variant="body2"
+            sx={{ fontWeight: 700, color: voteColors.abstain, fontSize: "0.875rem" }}
+          >
+            {res.n_abstain}
+          </Typography>
+          <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
+            {t("votings.results.empty")}
+          </Typography>
+        </Box>
+        <Box sx={{ textAlign: "center" }}>
+          <PersonOffIcon sx={{ fontSize: 16, color: voteColors.absent, mb: 0.25 }} />
+          <Typography
+            variant="body2"
+            sx={{ fontWeight: 700, color: voteColors.absent, fontSize: "0.875rem" }}
+          >
+            {res.n_absent}
+          </Typography>
+          <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
+            {t("votings.results.absent")}
+          </Typography>
+        </Box>
+      </Box>
 
-    {/* Vote counts in a compact grid */}
-    <Box
-      sx={{
-        display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
-        gap: 1,
-        mb: 1.5,
-      }}
-    >
-      <Box sx={{ textAlign: "center" }}>
-        <ThumbUpIcon sx={{ fontSize: 16, color: voteColors.yes, mb: 0.25 }} />
+      {close && (
         <Typography
-          variant="body2"
-          sx={{ fontWeight: 700, color: voteColors.yes, fontSize: "0.875rem" }}
+          sx={{
+            fontSize: "0.6875rem",
+            color: themedColors.warning,
+            fontWeight: 600,
+            mb: 1,
+          }}
         >
-          {res.n_yes}
+          {t("votings.margin")}: {Math.abs(res.n_yes - res.n_no)}
         </Typography>
-        <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
-          Jaa
-        </Typography>
-      </Box>
-      <Box sx={{ textAlign: "center" }}>
-        <ThumbDownIcon sx={{ fontSize: 16, color: voteColors.no, mb: 0.25 }} />
-        <Typography
-          variant="body2"
-          sx={{ fontWeight: 700, color: voteColors.no, fontSize: "0.875rem" }}
-        >
-          {res.n_no}
-        </Typography>
-        <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
-          Ei
-        </Typography>
-      </Box>
-      <Box sx={{ textAlign: "center" }}>
-        <RemoveIcon sx={{ fontSize: 16, color: voteColors.abstain, mb: 0.25 }} />
-        <Typography
-          variant="body2"
-          sx={{ fontWeight: 700, color: voteColors.abstain, fontSize: "0.875rem" }}
-        >
-          {res.n_abstain}
-        </Typography>
-        <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
-          Tyhjää
-        </Typography>
-      </Box>
-      <Box sx={{ textAlign: "center" }}>
-        <PersonOffIcon sx={{ fontSize: 16, color: voteColors.absent, mb: 0.25 }} />
-        <Typography
-          variant="body2"
-          sx={{ fontWeight: 700, color: voteColors.absent, fontSize: "0.875rem" }}
-        >
-          {res.n_absent}
-        </Typography>
-        <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
-          Poissa
-        </Typography>
-      </Box>
-    </Box>
+      )}
 
-    {/* Links */}
-    <Box sx={{ display: "flex", gap: 1 }}>
-      <Link
-        target="_blank"
-        href={eduskuntaLink(res.result_url)}
-        sx={{
-          color: themedColors.primary,
-          textDecoration: "none",
-          fontWeight: 600,
-          fontSize: "0.8125rem",
-          padding: "4px 10px",
-          borderRadius: 1,
-          border: `1px solid ${themedColors.primary}`,
-          transition: "all 0.2s ease",
-          "&:hover": {
-            background: themedColors.primary,
-            color: "white",
+      {/* Links */}
+      <Box sx={{ display: "flex", gap: 1 }}>
+        <Link
+          target="_blank"
+          href={eduskuntaLink(res.result_url)}
+          sx={{
+            color: themedColors.primary,
             textDecoration: "none",
-          },
-        }}
-      >
-        Tulokset
-      </Link>
-      <Link
-        target="_blank"
-        href={eduskuntaLink(res.proceedings_url)}
-        sx={{
-          color: themedColors.primary,
-          textDecoration: "none",
-          fontWeight: 600,
-          fontSize: "0.8125rem",
-          padding: "4px 10px",
-          borderRadius: 1,
-          border: `1px solid ${themedColors.primary}`,
-          transition: "all 0.2s ease",
-          "&:hover": {
-            background: themedColors.primary,
-            color: "white",
+            fontWeight: 600,
+            fontSize: "0.8125rem",
+            padding: "4px 10px",
+            borderRadius: 1,
+            border: `1px solid ${themedColors.primary}`,
+            transition: "all 0.2s ease",
+            "&:hover": {
+              background: themedColors.primary,
+              color: "white",
+              textDecoration: "none",
+            },
+          }}
+        >
+          {t("votings.results.results")}
+        </Link>
+        <Link
+          target="_blank"
+          href={eduskuntaLink(res.proceedings_url)}
+          sx={{
+            color: themedColors.primary,
             textDecoration: "none",
-          },
-        }}
-      >
-        Pöytäkirja
-      </Link>
+            fontWeight: 600,
+            fontSize: "0.8125rem",
+            padding: "4px 10px",
+            borderRadius: 1,
+            border: `1px solid ${themedColors.primary}`,
+            transition: "all 0.2s ease",
+            "&:hover": {
+              background: themedColors.primary,
+              color: "white",
+              textDecoration: "none",
+            },
+          }}
+        >
+          {t("votings.results.minutes")}
+        </Link>
+      </Box>
     </Box>
-  </Box>
-);
+  );
+};
 
 export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
   const voteColors = getVoteColors(themedColors);
   const results = React.use(fetchData(query?.trim()));
@@ -274,6 +324,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                     res={res}
                     themedColors={themedColors}
                     voteColors={voteColors}
+                    t={t}
                   />
                 ))}
               </Box>
@@ -288,251 +339,296 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                       }}
                     >
                       <TableCell sx={{ ...commonStyles.tableHeader }}>
-                        Aika
+                        {t("votings.results.time")}
                       </TableCell>
                       <TableCell sx={{ ...commonStyles.tableHeader }}>
-                        Vaihe
+                        {t("votings.results.stage")}
                       </TableCell>
                       <TableCell sx={{ ...commonStyles.tableHeader }}>
-                        Otsikko
+                        {t("votings.results.title")}
+                      </TableCell>
+                      <TableCell sx={{ ...commonStyles.tableHeader, minWidth: 160 }}>
+                        {/* margin bar header - empty */}
                       </TableCell>
                       <TableCell
                         align="center"
                         sx={{ ...commonStyles.tableHeader }}
                       >
-                        Jaa
+                        {t("votings.results.yes")}
                       </TableCell>
                       <TableCell
                         align="center"
                         sx={{ ...commonStyles.tableHeader }}
                       >
-                        Ei
+                        {t("votings.results.no")}
                       </TableCell>
                       <TableCell
                         align="center"
                         sx={{ ...commonStyles.tableHeader }}
                       >
-                        Tyhjää
+                        {t("votings.results.empty")}
                       </TableCell>
                       <TableCell
                         align="center"
                         sx={{ ...commonStyles.tableHeader }}
                       >
-                        Poissa
+                        {t("votings.results.absent")}
                       </TableCell>
                       <TableCell
                         align="center"
                         sx={{ ...commonStyles.tableHeader }}
                       >
-                        Yht
+                        {t("votings.results.total")}
                       </TableCell>
                       <TableCell sx={{ ...commonStyles.tableHeader }}>
-                        Linkit
+                        {t("votings.results.links")}
                       </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {(votes ?? []).map((res) => (
-                      <TableRow
-                        key={res.id}
-                        hover
-                        sx={{
-                          ...commonStyles.tableRow,
-                          borderBottom: `1px solid ${themedColors.dataBorder}`,
-                          "&:hover": {
-                            background: `${themedColors.primary}05`,
-                          },
-                          cursor: "default",
-                        }}
-                      >
-                        <TableCell
+                    {(votes ?? []).map((res) => {
+                      const close = isCloseVote(res);
+                      return (
+                        <TableRow
+                          key={res.id}
+                          hover
                           sx={{
-                            ...commonStyles.labelCell,
-                            color: themedColors.textSecondary,
-                            py: 2.5,
+                            ...commonStyles.tableRow,
+                            borderBottom: `1px solid ${themedColors.dataBorder}`,
+                            "&:hover": {
+                              background: `${themedColors.primary}05`,
+                            },
+                            cursor: "default",
                           }}
                         >
-                          {res.start_time
-                            ? new Date(res.start_time).toLocaleDateString(
-                                "fi-FI",
-                              )
-                            : "-"}
-                        </TableCell>
-                        <TableCell sx={{ py: 2.5 }}>
-                          <Chip
-                            label={res.section_processing_phase}
-                            size="small"
+                          <TableCell
                             sx={{
-                              background: themedColors.primary,
-                              color: "white",
-                              fontWeight: 700,
-                              fontSize: "0.75rem",
-                              height: 28,
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell
-                          sx={{
-                            ...commonStyles.dataCell,
-                            color: themedColors.textPrimary,
-                            py: 2.5,
-                          }}
-                        >
-                          {res.title}
-                        </TableCell>
-                        <TableCell align="center" sx={{ py: 2.5 }}>
-                          <Box
-                            sx={{
-                              ...commonStyles.flexWithGap(1),
-                              justifyContent: "center",
+                              ...commonStyles.labelCell,
+                              color: themedColors.textSecondary,
+                              py: 2.5,
                             }}
                           >
-                            <ThumbUpIcon
-                              sx={{ fontSize: 20, color: voteColors.yes }}
-                            />
-                            <Typography
-                              sx={{
-                                fontWeight: 700,
-                                color: voteColors.yes,
-                                fontSize: "1rem",
-                              }}
-                            >
-                              {res.n_yes}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center" sx={{ py: 2.5 }}>
-                          <Box
-                            sx={{
-                              ...commonStyles.flexWithGap(1),
-                              justifyContent: "center",
-                            }}
-                          >
-                            <ThumbDownIcon
-                              sx={{ fontSize: 20, color: voteColors.no }}
-                            />
-                            <Typography
-                              sx={{
-                                fontWeight: 700,
-                                color: voteColors.no,
-                                fontSize: "1rem",
-                              }}
-                            >
-                              {res.n_no}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center" sx={{ py: 2.5 }}>
-                          <Box
-                            sx={{
-                              ...commonStyles.flexWithGap(1),
-                              justifyContent: "center",
-                            }}
-                          >
-                            <RemoveIcon
-                              sx={{ fontSize: 20, color: voteColors.abstain }}
-                            />
-                            <Typography
-                              sx={{
-                                fontWeight: 700,
-                                color: voteColors.abstain,
-                                fontSize: "1rem",
-                              }}
-                            >
-                              {res.n_abstain}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center" sx={{ py: 2.5 }}>
-                          <Box
-                            sx={{
-                              ...commonStyles.flexWithGap(1),
-                              justifyContent: "center",
-                            }}
-                          >
-                            <PersonOffIcon
-                              sx={{ fontSize: 20, color: voteColors.absent }}
-                            />
-                            <Typography
-                              sx={{
-                                fontWeight: 700,
-                                color: voteColors.absent,
-                                fontSize: "1rem",
-                              }}
-                            >
-                              {res.n_absent}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="center" sx={{ py: 2.5 }}>
-                          <Typography
-                            sx={{
-                              fontWeight: 700,
-                              fontSize: "1.125rem",
-                              color: themedColors.primary,
-                            }}
-                          >
-                            {res.n_total}
-                          </Typography>
-                        </TableCell>
-                        <TableCell sx={{ py: 2.5 }}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: 1,
-                            }}
-                          >
-                            <Link
-                              target="_blank"
-                              href={eduskuntaLink(res.result_url)}
-                              sx={{
-                                color: themedColors.primary,
-                                textDecoration: "none",
-                                fontWeight: 600,
-                                fontSize: "0.875rem",
-                                padding: "4px 12px",
-                                borderRadius: 2,
-                                border: `1px solid ${themedColors.primary}`,
-                                display: "inline-block",
-                                transition:
-                                  "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                "&:hover": {
+                            {res.start_time
+                              ? new Date(res.start_time).toLocaleDateString(
+                                  "fi-FI",
+                                )
+                              : "-"}
+                          </TableCell>
+                          <TableCell sx={{ py: 2.5 }}>
+                            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                              <Chip
+                                label={res.section_processing_phase}
+                                size="small"
+                                sx={{
                                   background: themedColors.primary,
                                   color: "white",
-                                  textDecoration: "none",
-                                },
-                              }}
-                            >
-                              Tulokset →
-                            </Link>
-                            <Link
-                              target="_blank"
-                              href={eduskuntaLink(res.proceedings_url)}
+                                  fontWeight: 700,
+                                  fontSize: "0.75rem",
+                                  height: 28,
+                                }}
+                              />
+                              {close && (
+                                <Chip
+                                  icon={<WarningAmberIcon sx={{ fontSize: 14 }} />}
+                                  label={t("votings.closeVote")}
+                                  size="small"
+                                  sx={{
+                                    background: `${themedColors.warning}18`,
+                                    color: themedColors.warning,
+                                    fontWeight: 700,
+                                    fontSize: "0.7rem",
+                                    height: 28,
+                                    "& .MuiChip-icon": { color: themedColors.warning },
+                                  }}
+                                />
+                              )}
+                            </Box>
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              ...commonStyles.dataCell,
+                              color: themedColors.textPrimary,
+                              py: 2.5,
+                            }}
+                          >
+                            {res.title}
+                          </TableCell>
+                          <TableCell sx={{ py: 2.5, minWidth: 160 }}>
+                            <VoteMarginBar
+                              yes={res.n_yes}
+                              no={res.n_no}
+                              empty={res.n_abstain}
+                              absent={res.n_absent}
+                              height={8}
+                            />
+                            {close && (
+                              <Typography
+                                sx={{
+                                  fontSize: "0.625rem",
+                                  color: themedColors.warning,
+                                  fontWeight: 600,
+                                  mt: 0.5,
+                                  textAlign: "center",
+                                }}
+                              >
+                                {t("votings.margin")}: {Math.abs(res.n_yes - res.n_no)}
+                              </Typography>
+                            )}
+                          </TableCell>
+                          <TableCell align="center" sx={{ py: 2.5 }}>
+                            <Box
                               sx={{
-                                color: themedColors.primary,
-                                textDecoration: "none",
-                                fontWeight: 600,
-                                fontSize: "0.875rem",
-                                padding: "4px 12px",
-                                borderRadius: 2,
-                                border: `1px solid ${themedColors.primary}`,
-                                display: "inline-block",
-                                transition:
-                                  "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                "&:hover": {
-                                  background: themedColors.primary,
-                                  color: "white",
-                                  textDecoration: "none",
-                                },
+                                ...commonStyles.flexWithGap(1),
+                                justifyContent: "center",
                               }}
                             >
-                              Pöytäkirja →
-                            </Link>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              <ThumbUpIcon
+                                sx={{ fontSize: 20, color: voteColors.yes }}
+                              />
+                              <Typography
+                                sx={{
+                                  fontWeight: 700,
+                                  color: voteColors.yes,
+                                  fontSize: "1rem",
+                                }}
+                              >
+                                {res.n_yes}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center" sx={{ py: 2.5 }}>
+                            <Box
+                              sx={{
+                                ...commonStyles.flexWithGap(1),
+                                justifyContent: "center",
+                              }}
+                            >
+                              <ThumbDownIcon
+                                sx={{ fontSize: 20, color: voteColors.no }}
+                              />
+                              <Typography
+                                sx={{
+                                  fontWeight: 700,
+                                  color: voteColors.no,
+                                  fontSize: "1rem",
+                                }}
+                              >
+                                {res.n_no}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center" sx={{ py: 2.5 }}>
+                            <Box
+                              sx={{
+                                ...commonStyles.flexWithGap(1),
+                                justifyContent: "center",
+                              }}
+                            >
+                              <RemoveIcon
+                                sx={{ fontSize: 20, color: voteColors.abstain }}
+                              />
+                              <Typography
+                                sx={{
+                                  fontWeight: 700,
+                                  color: voteColors.abstain,
+                                  fontSize: "1rem",
+                                }}
+                              >
+                                {res.n_abstain}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center" sx={{ py: 2.5 }}>
+                            <Box
+                              sx={{
+                                ...commonStyles.flexWithGap(1),
+                                justifyContent: "center",
+                              }}
+                            >
+                              <PersonOffIcon
+                                sx={{ fontSize: 20, color: voteColors.absent }}
+                              />
+                              <Typography
+                                sx={{
+                                  fontWeight: 700,
+                                  color: voteColors.absent,
+                                  fontSize: "1rem",
+                                }}
+                              >
+                                {res.n_absent}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="center" sx={{ py: 2.5 }}>
+                            <Typography
+                              sx={{
+                                fontWeight: 700,
+                                fontSize: "1.125rem",
+                                color: themedColors.primary,
+                              }}
+                            >
+                              {res.n_total}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ py: 2.5 }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 1,
+                              }}
+                            >
+                              <Link
+                                target="_blank"
+                                href={eduskuntaLink(res.result_url)}
+                                sx={{
+                                  color: themedColors.primary,
+                                  textDecoration: "none",
+                                  fontWeight: 600,
+                                  fontSize: "0.875rem",
+                                  padding: "4px 12px",
+                                  borderRadius: 2,
+                                  border: `1px solid ${themedColors.primary}`,
+                                  display: "inline-block",
+                                  transition:
+                                    "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                  "&:hover": {
+                                    background: themedColors.primary,
+                                    color: "white",
+                                    textDecoration: "none",
+                                  },
+                                }}
+                              >
+                                {t("votings.results.results")}
+                              </Link>
+                              <Link
+                                target="_blank"
+                                href={eduskuntaLink(res.proceedings_url)}
+                                sx={{
+                                  color: themedColors.primary,
+                                  textDecoration: "none",
+                                  fontWeight: 600,
+                                  fontSize: "0.875rem",
+                                  padding: "4px 12px",
+                                  borderRadius: 2,
+                                  border: `1px solid ${themedColors.primary}`,
+                                  display: "inline-block",
+                                  transition:
+                                    "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                  "&:hover": {
+                                    background: themedColors.primary,
+                                    color: "white",
+                                    textDecoration: "none",
+                                  },
+                                }}
+                              >
+                                {t("votings.results.minutes")}
+                              </Link>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>
