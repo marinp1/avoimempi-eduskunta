@@ -1,7 +1,6 @@
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import BalanceIcon from "@mui/icons-material/Balance";
-import BarChartIcon from "@mui/icons-material/BarChart";
 import GavelIcon from "@mui/icons-material/Gavel";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import MicIcon from "@mui/icons-material/Mic";
@@ -91,16 +90,7 @@ export default () => {
     setActiveDrawer(null);
   };
 
-  const cards: {
-    key: DrawerType;
-    icon: React.ReactNode;
-    iconColor: string;
-    titleKey: string;
-    descriptionKey: string;
-    actionKey: string;
-    actionColor: string;
-    actionBg: string;
-  }[] = [
+  const cards = [
     {
       key: "timeSeries",
       icon: <TimelineIcon sx={{ fontSize: 40 }} />,
@@ -171,7 +161,16 @@ export default () => {
       actionColor: themedColors.warning,
       actionBg: "rgba(255, 152, 0, 0.1)",
     },
-  ];
+  ] as const satisfies {
+    key: DrawerType;
+    icon: React.ReactNode;
+    iconColor: string;
+    titleKey: string;
+    descriptionKey: string;
+    actionKey: string;
+    actionColor: string;
+    actionBg: string;
+  }[];
 
   const drawerPaperProps = {
     sx: {
@@ -192,7 +191,9 @@ export default () => {
               border: `1px solid ${themedColors.glassBorder}`,
             }}
           >
-            <CardContent sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}>
+            <CardContent
+              sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}
+            >
               <Typography
                 variant="h4"
                 component="h1"
@@ -222,7 +223,10 @@ export default () => {
           <Grid container spacing={spacing.md}>
             {cards.map((card) => (
               <Grid key={card.key} size={{ xs: 12, md: 6 }}>
-                <Box onClick={() => openDrawer(card.key!)} sx={{ height: "100%" }}>
+                <Box
+                  onClick={() => openDrawer(card.key!)}
+                  sx={{ height: "100%" }}
+                >
                   <GlassCard
                     sx={{
                       height: "100%",
@@ -237,7 +241,9 @@ export default () => {
                     }}
                   >
                     <CardContent sx={{ p: spacing.lg }}>
-                      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", mb: 2 }}
+                      >
                         <Box sx={{ color: card.iconColor, mr: spacing.sm }}>
                           {card.icon}
                         </Box>
@@ -282,31 +288,69 @@ export default () => {
       </Fade>
 
       {/* Drawers */}
-      <Drawer anchor="right" open={activeDrawer === "votingActivity"} onClose={closeDrawer} PaperProps={drawerPaperProps}>
-        <OsallistumisaktiivisuusPanel onClose={closeDrawer} initialPersonId={initialPersonId} />
+      <Drawer
+        anchor="right"
+        open={activeDrawer === "votingActivity"}
+        onClose={closeDrawer}
+        PaperProps={drawerPaperProps}
+      >
+        <OsallistumisaktiivisuusPanel
+          onClose={closeDrawer}
+          initialPersonId={initialPersonId}
+        />
       </Drawer>
 
-      <Drawer anchor="right" open={activeDrawer === "timeSeries"} onClose={closeDrawer} PaperProps={drawerPaperProps}>
+      <Drawer
+        anchor="right"
+        open={activeDrawer === "timeSeries"}
+        onClose={closeDrawer}
+        PaperProps={drawerPaperProps}
+      >
         <TimeSeriesStatistics onClose={closeDrawer} />
       </Drawer>
 
-      <Drawer anchor="right" open={activeDrawer === "partyParticipation"} onClose={closeDrawer} PaperProps={drawerPaperProps}>
+      <Drawer
+        anchor="right"
+        open={activeDrawer === "partyParticipation"}
+        onClose={closeDrawer}
+        PaperProps={drawerPaperProps}
+      >
         <PartyParticipation onClose={closeDrawer} />
       </Drawer>
 
-      <Drawer anchor="right" open={activeDrawer === "partyDiscipline"} onClose={closeDrawer} PaperProps={drawerPaperProps}>
+      <Drawer
+        anchor="right"
+        open={activeDrawer === "partyDiscipline"}
+        onClose={closeDrawer}
+        PaperProps={drawerPaperProps}
+      >
         <PartyDiscipline onClose={closeDrawer} />
       </Drawer>
 
-      <Drawer anchor="right" open={activeDrawer === "closeVotes"} onClose={closeDrawer} PaperProps={drawerPaperProps}>
+      <Drawer
+        anchor="right"
+        open={activeDrawer === "closeVotes"}
+        onClose={closeDrawer}
+        PaperProps={drawerPaperProps}
+      >
         <CloseVotes onClose={closeDrawer} />
       </Drawer>
 
-      <Drawer anchor="right" open={activeDrawer === "coalitionOpposition"} onClose={closeDrawer} PaperProps={drawerPaperProps}>
+      <Drawer
+        anchor="right"
+        open={activeDrawer === "coalitionOpposition"}
+        onClose={closeDrawer}
+        PaperProps={drawerPaperProps}
+      >
         <CoalitionOpposition onClose={closeDrawer} />
       </Drawer>
 
-      <Drawer anchor="right" open={activeDrawer === "speechActivity"} onClose={closeDrawer} PaperProps={drawerPaperProps}>
+      <Drawer
+        anchor="right"
+        open={activeDrawer === "speechActivity"}
+        onClose={closeDrawer}
+        PaperProps={drawerPaperProps}
+      >
         <SpeechActivity onClose={closeDrawer} />
       </Drawer>
     </Box>
