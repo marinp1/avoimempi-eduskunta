@@ -61,6 +61,8 @@ export default () => {
   const [selectedRepresentative, setSelectedRepresentative] =
     useState<DatabaseQueries.GetParliamentComposition | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [partyFilter, setPartyFilter] = useState<string | null>(null);
+  const [govFilter, setGovFilter] = useState<"all" | "government" | "opposition">("all");
 
   // Compute statistics
   const stats = React.useMemo(() => {
@@ -189,6 +191,26 @@ export default () => {
     setSelectedRepresentative(null);
     updateURL(undefined, null);
   };
+
+  // Get unique parties for filter
+  const uniqueParties = React.useMemo(() => {
+    const parties = new Set(members.map((m) => m.party_name).filter(Boolean));
+    return Array.from(parties).sort() as string[];
+  }, [members]);
+
+  // Filtered members
+  const filteredMembers = React.useMemo(() => {
+    let result = members;
+    if (partyFilter) {
+      result = result.filter((m) => m.party_name === partyFilter);
+    }
+    if (govFilter === "government") {
+      result = result.filter((m) => m.is_in_government === 1);
+    } else if (govFilter === "opposition") {
+      result = result.filter((m) => m.is_in_government !== 1);
+    }
+    return result;
+  }, [members, partyFilter, govFilter]);
 
   return (
     <Box>
@@ -552,6 +574,84 @@ export default () => {
         </Fade>
       )}
 
+      {/* Filter Chips */}
+      {!loading && !error && members.length > 0 && (
+        <Fade in timeout={650}>
+          <Box
+            sx={{
+              mb: spacing.lg,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 1,
+              alignItems: "center",
+            }}
+          >
+            {/* Government/Opposition filter */}
+            {(["all", "government", "opposition"] as const).map((g) => (
+              <Chip
+                key={g}
+                label={g === "all" ? "Kaikki" : g === "government" ? "Hallitus" : "Oppositio"}
+                size="small"
+                onClick={() => setGovFilter(g)}
+                sx={{
+                  fontWeight: 600,
+                  fontSize: "0.8rem",
+                  height: 32,
+                  bgcolor: govFilter === g ? themedColors.primary : themedColors.backgroundPaper,
+                  color: govFilter === g ? "white" : themedColors.textSecondary,
+                  border: `1px solid ${govFilter === g ? themedColors.primary : themedColors.dataBorder}`,
+                  "&:hover": {
+                    bgcolor: govFilter === g ? themedColors.primary : `${themedColors.primary}10`,
+                  },
+                }}
+              />
+            ))}
+
+            <Box sx={{ width: 1, height: 24, borderLeft: `1px solid ${themedColors.dataBorder}`, mx: 0.5 }} />
+
+            {/* Party filter */}
+            {partyFilter && (
+              <Chip
+                label={`${partyFilter} ✕`}
+                size="small"
+                onClick={() => setPartyFilter(null)}
+                sx={{
+                  fontWeight: 600,
+                  fontSize: "0.8rem",
+                  height: 32,
+                  bgcolor: themedColors.primary,
+                  color: "white",
+                  "&:hover": { bgcolor: themedColors.primary },
+                }}
+              />
+            )}
+            {!partyFilter &&
+              uniqueParties.map((p) => (
+                <Chip
+                  key={p}
+                  label={p}
+                  size="small"
+                  onClick={() => setPartyFilter(p)}
+                  sx={{
+                    fontWeight: 500,
+                    fontSize: "0.75rem",
+                    height: 28,
+                    bgcolor: themedColors.backgroundPaper,
+                    color: themedColors.textSecondary,
+                    border: `1px solid ${themedColors.dataBorder}`,
+                    "&:hover": { bgcolor: `${themedColors.primary}10` },
+                  }}
+                />
+              ))}
+
+            {/* Result count */}
+            <Typography variant="caption" sx={{ color: themedColors.textTertiary, ml: "auto" }}>
+              {filteredMembers.length} / {members.length} edustajaa
+            </Typography>
+          </Box>
+        </Fade>
+      )}
+
       {/* Loading / Error states */}
       {loading && (
         <Box sx={{ ...commonStyles.centeredFlex, py: spacing.xl }}>
@@ -572,7 +672,7 @@ export default () => {
         <Fade in timeout={700}>
           <Box>
             <Box sx={{ display: { xs: "block", lg: "none" } }}>
-              {members.map((m) => (
+              {filteredMembers.map((m) => (
                 <Card
                   key={m.person_id}
                   onClick={() => handleRowClick(m)}
@@ -693,7 +793,7 @@ export default () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {members.map((m, index) => (
+                  {filteredMembers.map((m, index) => (
                     <TableRow
                       key={m.person_id}
                       hover
