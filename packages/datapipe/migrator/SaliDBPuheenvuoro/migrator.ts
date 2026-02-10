@@ -49,6 +49,10 @@ export default (db: Database) => {
       ministry: dataToImport.MinisteriysFI || null,
       modified_datetime: parseDateTime(dataToImport.Modified),
       excel_key: finalExcelKey,
+      created_datetime: parseDateTime(dataToImport.Created),
+      imported_datetime: parseDateTime(dataToImport.Imported),
+      ad_tunnus: dataToImport.ADtunnus || null,
+      order_raw: dataToImport.Jarjestys || null,
     };
     insertRows(db)("Speech", [speechRow]);
   };

@@ -81,11 +81,16 @@ describe("SaliDBIstunto migrator", () => {
     expect(agenda.state).toBe("Valmis");
   });
 
-  test("parses date correctly", async () => {
-    await migrate(makeSession({ IstuntoPvm: "2024-03-20T00:00:00" }));
+  test("parses date from reported start time when available", async () => {
+    await migrate(
+      makeSession({
+        IstuntoPvm: "2024-03-20T00:00:00",
+        IstuntoIlmoitettuAlkuaika: "2024-03-21T14:00:00.000",
+      }),
+    );
 
     const session = db.query("SELECT date FROM Session").get() as any;
-    expect(session.date).toBe("2024-03-20");
+    expect(session.date).toBe("2024-03-21");
   });
 
   test("parses year correctly", async () => {
