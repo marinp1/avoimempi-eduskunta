@@ -134,7 +134,39 @@
       "positions": "Luottamustehtävät",
       "party": "Puolue",
       "successor": "Seuraaja:",
-      "ongoing": "edelleen"
+      "ongoing": "edelleen",
+      "tabs": {
+        "overview": "Yleistiedot",
+        "votes": "Äänestykset",
+        "speeches": "Puheenvuorot",
+        "positions": "Luottamustehtävät"
+      },
+      "votes": {
+        "participation": "Osallistuminen",
+        "totalVotes": "Äänestyksiä",
+        "dissents": "Poikkeamia",
+        "dissentList": "Puolue-enemmistöstä poikenneet äänestykset",
+        "recentVotes": "Viimeisimmät äänestykset",
+        "noData": "Ei äänestystietoja."
+      },
+      "speeches": {
+        "count": "Puheenvuoroja",
+        "totalWords": "Sanaa yhteensä",
+        "noData": "Ei puheenvuoroja.",
+        "words": "sanaa"
+      },
+      "positions": {
+        "committees": "Valiokunnat",
+        "governmentPositions": "Hallitustehtävät",
+        "otherPositions": "Muut luottamustehtävät",
+        "noData": "Ei luottamustehtäviä."
+      },
+      "filters": {
+        "all": "Kaikki",
+        "government": "Hallitus",
+        "opposition": "Oppositio",
+        "representatives": "edustajaa"
+      }
     }
   },
   "votings": {
