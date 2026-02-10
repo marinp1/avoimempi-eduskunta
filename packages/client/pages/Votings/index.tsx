@@ -1,21 +1,20 @@
-// VotingsPage.tsx
-
 import SearchIcon from "@mui/icons-material/Search";
 import {
   Box,
-  CardContent,
   CircularProgress,
-  Fade,
   InputAdornment,
   TextField,
   Typography,
 } from "@mui/material";
 import React, { Suspense } from "react";
-import { colors, commonStyles, spacing } from "#client/theme";
+import { useTranslation } from "react-i18next";
+import { commonStyles, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { DataCard, PageHeader } from "#client/theme/components";
 import { VoteResults } from "./VoteResults";
 
 export default () => {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
   const [search, setSearch] = React.useState<string>("");
   const deferredQuery = React.useDeferredValue(search);
@@ -23,84 +22,41 @@ export default () => {
 
   return (
     <Box>
-      {/* Search Header Card */}
-      <Fade in timeout={500}>
-        <Box>
-          <Box
-            sx={{
-              mb: spacing.lg,
-              borderRadius: 1,
-              background: themedColors.backgroundPaper,
-              border: `1px solid ${themedColors.dataBorder}`,
-              boxShadow:
-                "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
+      <PageHeader
+        title={t("votings.title")}
+        subtitle={t("votings.subtitle")}
+      />
+
+      {/* Search Card */}
+      <DataCard sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
+        <Box sx={{ maxWidth: 700, mx: "auto" }}>
+          <TextField
+            fullWidth
+            label={t("votings.search")}
+            value={search}
+            onChange={(ev) => setSearch(ev.target.value ?? "")}
+            placeholder={t("votings.searchPlaceholder")}
+            size="small"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: themedColors.primary, fontSize: 20 }} />
+                </InputAdornment>
+              ),
             }}
-          >
-            <CardContent sx={{ p: { xs: 2, sm: spacing.lg } }}>
-              <Typography
-                variant="h4"
-                component="h1"
-                gutterBottom
-                sx={{
-                  color: colors.primary,
-                  fontWeight: 600,
-                  mb: spacing.md,
-                  textAlign: "center",
-                  letterSpacing: "0",
-                  fontSize: { xs: "1.5rem", sm: "2.125rem" },
-                }}
-              >
-                Eduskunnan äänestykset
-              </Typography>
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                sx={{
-                  mb: spacing.md,
-                  textAlign: "center",
-                  maxWidth: 600,
-                  mx: "auto",
-                }}
-              >
-                Etsi ja selaa eduskunnan äänestystietoja
-              </Typography>
-              <Box sx={{ maxWidth: 700, mx: "auto" }}>
-                <TextField
-                  fullWidth
-                  label="Hae äänestyksiä otsikolla"
-                  value={search}
-                  onChange={(ev) => setSearch(ev.target.value ?? "")}
-                  placeholder="Kirjoita vähintään 3 merkkiä..."
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon sx={{ color: colors.primary }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      background: themedColors.backgroundPaper,
-                      transition: "all 0.2s ease-in-out",
-                      "&:hover": {
-                        boxShadow: "0 1px 3px rgba(0, 53, 128, 0.15)",
-                      },
-                      "&.Mui-focused": {
-                        boxShadow: "0 2px 6px rgba(0, 53, 128, 0.2)",
-                      },
-                    },
-                  }}
-                />
-              </Box>
-            </CardContent>
-          </Box>
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                background: "#fff",
+              },
+            }}
+          />
         </Box>
-      </Fade>
+      </DataCard>
 
       <Suspense
         fallback={
           <Box sx={{ ...commonStyles.centeredFlex, py: spacing.xl }}>
-            <CircularProgress sx={{ color: colors.primary }} />
+            <CircularProgress sx={{ color: themedColors.primary }} />
           </Box>
         }
       >

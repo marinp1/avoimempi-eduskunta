@@ -74,8 +74,28 @@
   "documents": {
     "title": "Asiakirjat",
     "subtitle": "Selaa eduskunnan asiakirjoja",
-    "placeholder": "Asiakirjasivu rakenteilla",
-    "placeholderDescription": "Täällä voi pian hakea ja selata eduskunnan asiakirjoja aiheittain ja tyypeittäin."
+    "search": "Hae asiakirjoja...",
+    "searchPlaceholder": "Hae otsikolla tai tunnuksella...",
+    "allTypes": "Kaikki tyypit",
+    "allYears": "Kaikki vuodet",
+    "noResults": "Ei hakutuloksia.",
+    "noResultsDescription": "Kokeile muuttaa hakuehtoja.",
+    "loadMore": "Näytä lisää",
+    "showing": "Näytetään",
+    "of": "/",
+    "author": "Tekijä",
+    "created": "Luotu",
+    "subjects": "Aiheet",
+    "summary": "Tiivistelmä",
+    "details": "Tiedot",
+    "type": "Tyyppi",
+    "year": "Vuosi",
+    "identifier": "Tunnus",
+    "status": "Tila",
+    "language": "Kieli",
+    "source": "Lähde",
+    "close": "Sulje",
+    "totalDocuments": "asiakirjaa"
   },
   "common": {
     "date": "Päivämäärä",
@@ -194,6 +214,8 @@
     "subtitle": "Etsi ja selaa eduskunnan äänestystietoja",
     "search": "Hae äänestyksiä otsikolla",
     "searchPlaceholder": "Kirjoita vähintään 3 merkkiä...",
+    "closeVote": "Tiukka äänestys",
+    "margin": "Marginaali",
     "results": {
       "time": "Aika",
       "stage": "Vaihe",
@@ -231,7 +253,12 @@
     "noContent": "Ei puheenvuoroja tai äänestyksiä",
     "loadMore": "Näytä lisää",
     "passed": "Hyväksytty",
-    "rejected": "Hylätty"
+    "rejected": "Hylätty",
+    "calendarView": "Kalenteri",
+    "listView": "Lista",
+    "monthNames": ["Tammikuu", "Helmikuu", "Maaliskuu", "Huhtikuu", "Toukokuu", "Kesäkuu", "Heinäkuu", "Elokuu", "Syyskuu", "Lokakuu", "Marraskuu", "Joulukuu"],
+    "weekDays": ["Ma", "Ti", "Ke", "To", "Pe", "La", "Su"],
+    "sessionsOnDay": "istuntoa"
   },
   "insights": {
     "title": "Eduskunnan analytiikka",
