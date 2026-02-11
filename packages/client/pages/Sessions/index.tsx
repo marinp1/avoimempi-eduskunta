@@ -17,6 +17,7 @@ import {
   Collapse,
   IconButton,
   InputAdornment,
+  Link,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -24,6 +25,7 @@ import {
 } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { refs } from "#client/references";
 import { colors } from "#client/theme/index";
 import { commonStyles } from "#client/theme";
 import { DataCard, PageHeader, VoteMarginBar } from "#client/theme/components";
@@ -118,6 +120,16 @@ const getInitialDate = (): string => {
     return dateParam;
   }
   return new Date().toISOString().split("T")[0];
+};
+
+const getInitialSessionKey = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("session");
+};
+
+const getInitialSectionKey = (): string | null => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("section");
 };
 
 /** Calendar month grid component */
@@ -338,6 +350,8 @@ export default () => {
   const [loadingSpeeches, setLoadingSpeeches] = useState<Set<number>>(new Set());
   const [loadingVotings, setLoadingVotings] = useState<Set<number>>(new Set());
   const [loadingMoreSpeeches, setLoadingMoreSpeeches] = useState<Set<number>>(new Set());
+  const [focusedSessionKey, setFocusedSessionKey] = useState<string | null>(getInitialSessionKey());
+  const [focusedSectionKey, setFocusedSectionKey] = useState<string | null>(getInitialSectionKey());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -378,7 +392,11 @@ export default () => {
   }, []);
 
   useEffect(() => {
-    const handlePopState = () => setDate(getInitialDate());
+    const handlePopState = () => {
+      setDate(getInitialDate());
+      setFocusedSessionKey(getInitialSessionKey());
+      setFocusedSectionKey(getInitialSectionKey());
+    };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
@@ -798,23 +816,35 @@ export default () => {
             </Box>
           </Box>
 
-          {sessions.map((session) => (
-            <Box key={session.id}>
+          {sessions.map((session) => {
+            const isFocusedSession = focusedSessionKey === session.key;
+            return (
+            <Box
+              key={session.id}
+              sx={{
+                outline: isFocusedSession ? `2px solid ${colors.primaryLight}` : "none",
+                outlineOffset: isFocusedSession ? "-2px" : 0,
+              }}
+            >
               {/* Session header */}
               <Box
                 sx={{
                   p: 2,
                   borderBottom: `1px solid ${colors.dataBorder}`,
-                  background: colors.backgroundSubtle,
+                  background: isFocusedSession ? `${colors.primaryLight}14` : colors.backgroundSubtle,
                   display: "flex",
                   alignItems: "center",
                   gap: 1.5,
                   flexWrap: "wrap",
                 }}
               >
-                <Typography sx={{ fontWeight: 700, fontSize: "0.9375rem", color: colors.textPrimary }}>
+                <Link
+                  href={refs.session(session.key, session.date)}
+                  underline="hover"
+                  sx={{ fontWeight: 700, fontSize: "0.9375rem", color: colors.textPrimary }}
+                >
                   {session.key || t("sessions.session")}
-                </Typography>
+                </Link>
                 {session.number !== undefined && (
                   <Chip
                     label={`${t("sessions.sessionNumber")}: ${session.number}`}
@@ -916,13 +946,20 @@ export default () => {
               {viewMode !== "timeline" &&
                 session.sections?.map((section) => {
                 const isExpanded = expandedSections.has(section.id);
+                const isFocusedSection = focusedSectionKey === section.key;
                 const speechData = sectionSpeechData[section.id];
                 const speeches = speechData?.speeches || [];
                 const hasSpeechContent = speeches.some((speech) => speech.content);
                 const votings = sectionVotings[section.id] || [];
 
                 return (
-                  <Box key={section.id} sx={{ borderBottom: `1px solid ${colors.dataBorder}` }}>
+                  <Box
+                    key={section.id}
+                    sx={{
+                      borderBottom: `1px solid ${colors.dataBorder}`,
+                      background: isFocusedSection ? `${colors.primaryLight}10` : "transparent",
+                    }}
+                  >
                     <Box
                       sx={{
                         p: 2,
@@ -1054,9 +1091,19 @@ export default () => {
                                 >
                                   <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, flexWrap: "wrap" }}>
                                     <HowToVoteIcon sx={{ fontSize: 16, color: isPassed ? themedColors.success : themedColors.error }} />
-                                    <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", flex: 1, minWidth: 0 }}>
+                                    <Link
+                                      href={refs.voting(voting.id, session.key, session.date)}
+                                      underline="hover"
+                                      sx={{
+                                        fontWeight: 600,
+                                        fontSize: "0.8125rem",
+                                        flex: 1,
+                                        minWidth: 0,
+                                        color: colors.textPrimary,
+                                      }}
+                                    >
                                       {voting.title}
-                                    </Typography>
+                                    </Link>
                                     <Chip
                                       label={isPassed ? t("sessions.passed") : t("sessions.rejected")}
                                       size="small"
@@ -1382,9 +1429,13 @@ export default () => {
                                         >
                                           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.75, flexWrap: "wrap" }}>
                                             <HowToVoteIcon sx={{ fontSize: 16, color: isPassed ? themedColors.success : themedColors.error }} />
-                                            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", flex: 1, minWidth: 0 }}>
+                                            <Link
+                                              href={refs.voting(voting.id, session.key, session.date)}
+                                              underline="hover"
+                                              sx={{ fontWeight: 600, fontSize: "0.8125rem", flex: 1, minWidth: 0, color: colors.textPrimary }}
+                                            >
                                               {voting.title}
-                                            </Typography>
+                                            </Link>
                                           </Box>
                                           <VoteMarginBar yes={voting.n_yes} no={voting.n_no} empty={voting.n_abstain} absent={voting.n_absent} height={8} />
                                         </Box>
@@ -1460,7 +1511,7 @@ export default () => {
                 </Box>
               )}
             </Box>
-          ))}
+          )})}
         </DataCard>
       )}
     </Box>
