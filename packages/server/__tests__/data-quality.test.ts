@@ -140,10 +140,10 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
       expect(c).toBe(0);
     });
 
-    test("VaskiMinutesSpeech.party values are all lowercase", () => {
+    test("SessionSectionSpeech.party values are all lowercase", () => {
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM VaskiMinutesSpeech
+          `SELECT COUNT(*) as c FROM SessionSectionSpeech
            WHERE party IS NOT NULL
              AND party != LOWER(party)`,
         )
@@ -151,13 +151,13 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
       expect(c).toBe(0);
     });
 
-    test("VaskiDocument.document_type_code has no lowercase variants", () => {
+    test("Document.document_type_code has no lowercase variants", () => {
       // KNOWN ISSUE: "Kk" (16 rows) should be "KK", "kkb" (1 row) is anomalous
       // Note: document_type_codes use a specific convention (e.g. KK, HE, PeVL)
       // so we check for known bad variants rather than enforcing all-caps
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM VaskiDocument
+          `SELECT COUNT(*) as c FROM Document
            WHERE document_type_code IN ('Kk', 'kkb')`,
         )
         .get() as any;
@@ -167,11 +167,11 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
 
   // ─── SPEECH TYPE NORMALIZATION ────────────────────────────
 
-  describe("VaskiMinutesSpeech.speech_type: formatting artifacts cleaned", () => {
+  describe("SessionSectionSpeech.speech_type: formatting artifacts cleaned", () => {
     test("no hyphenated word breaks in speech_type", () => {
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM VaskiMinutesSpeech
+          `SELECT COUNT(*) as c FROM SessionSectionSpeech
            WHERE speech_type LIKE '%-%'
              AND speech_type NOT LIKE '%(nopeatahtinen puheenvuoro)%'`,
         )
@@ -182,7 +182,7 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
     test("no leading/trailing whitespace in speech_type", () => {
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM VaskiMinutesSpeech
+          `SELECT COUNT(*) as c FROM SessionSectionSpeech
            WHERE speech_type IS NOT NULL
              AND (speech_type LIKE '( %' OR speech_type LIKE '% )')`,
         )
@@ -210,14 +210,14 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
 
   // ─── DOCUMENT STATUS CONSISTENCY ──────────────────────────
 
-  describe("VaskiDocument.status: human-readable values", () => {
+  describe("Document.status_text: human-readable values", () => {
     test("no numeric status codes", () => {
       // KNOWN ISSUE: status "5" (10,921 rows), "8" (139 rows), "1234" (2 rows)
       // These should be mapped to their Finnish text equivalents
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM VaskiDocument
-           WHERE status GLOB '[0-9]*'`,
+          `SELECT COUNT(*) as c FROM Document
+           WHERE status_text GLOB '[0-9]*'`,
         )
         .get() as any;
       expect(c).toBe(0);
@@ -226,12 +226,12 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
 
   // ─── AUTHOR ROLE NORMALIZATION ────────────────────────────
 
-  describe("VaskiDocumentActor.position_text: consistent formatting", () => {
+  describe("DocumentActor.position_text: consistent formatting", () => {
     test("no missing spaces after hyphens (kunta-ja vs kunta- ja)", () => {
       // KNOWN ISSUE: "kunta-ja alueministeri" (4 rows) vs "kunta- ja alueministeri" (36 rows)
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM VaskiDocumentActor
+          `SELECT COUNT(*) as c FROM DocumentActor
            WHERE role_code = 'laatija'
              AND position_text = 'kunta-ja alueministeri'`,
         )
@@ -243,7 +243,7 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
       // KNOWN ISSUE: "Kulttuuri- ja asuntoministeri" (1 row) starts with uppercase
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM VaskiDocumentActor
+          `SELECT COUNT(*) as c FROM DocumentActor
            WHERE role_code = 'laatija'
              AND position_text IS NOT NULL
              AND position_text != 'Valiokunta'
@@ -258,7 +258,7 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
       // vs "liikunta-, urheilu- ja nuorisoministeri" (16 rows)
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM VaskiDocumentActor
+          `SELECT COUNT(*) as c FROM DocumentActor
            WHERE role_code = 'laatija'
              AND position_text LIKE '%, ja %'`,
         )

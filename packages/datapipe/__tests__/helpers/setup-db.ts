@@ -17,6 +17,18 @@ const MIGRATION_FILES = [
   "V001.010__vaski_document_schema.sql",
   "V001.011__analytics_indexes.sql",
   "V001.012__salidb_extensions.sql",
+  "V001.013__salidb_link_indexes.sql",
+  "V001.014__vaski_schema.sql",
+  "V001.015__vaski_indexes.sql",
+  "V001.016__vaski_base_ext.sql",
+  "V001.017__vaski_minutes_link.sql",
+  "V001.018__vaski_document_summary.sql",
+  "V001.019__query_performance_indexes.sql",
+  "V001.020__vaski_minutes_section_linking.sql",
+  "V001.021__vaski_relational_links.sql",
+  "V001.022__document_v2_schema.sql",
+  "V001.023__drop_legacy_vaski_tables.sql",
+  "V001.024__rebuild_doc_type_tables.sql",
 ];
 
 /**

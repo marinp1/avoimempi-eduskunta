@@ -60,6 +60,11 @@ function cleanParsedXml(obj: any): any {
 const parser: ParserFunction = async (row, primaryKey) => {
   const parsed = xmlParser.parse(row.XmlData);
   const contents = cleanParsedXml(parsed);
+  const rootType =
+    contents?.Siirto?.SiirtoAsiakirja?.RakenneAsiakirja &&
+    typeof contents.Siirto.SiirtoAsiakirja.RakenneAsiakirja === "object"
+      ? Object.keys(contents.Siirto.SiirtoAsiakirja.RakenneAsiakirja)[0] ?? null
+      : null;
 
   // Check for Swedish language - skip these entries
   let metatieto =
@@ -86,6 +91,7 @@ const parser: ParserFunction = async (row, primaryKey) => {
       status: row.Status,
       created: row.Created,
       attachmentGroupId: row.AttachmentGroupId,
+      rootType,
       contents,
     },
   ];

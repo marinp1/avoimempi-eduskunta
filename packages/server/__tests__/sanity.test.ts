@@ -59,13 +59,17 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
         "Voting",
         "Vote",
         "Speech",
-        "VaskiMinutesSpeech",
+        "SessionSectionSpeech",
         "VotingDocumentLink",
         "SectionDocumentLink",
         "SessionNotice",
         "VotingDistribution",
         "SaliDBDocumentReference",
-        "VaskiDocument",
+        "Document",
+        "DocumentActor",
+        "DocumentSubject",
+        "DocumentRelation",
+        "SessionMinutesItem",
       ];
       for (const expected of expectedTables) {
         expect(tableNames).toContain(expected);

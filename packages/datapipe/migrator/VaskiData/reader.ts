@@ -4,6 +4,7 @@ export interface VaskiEntry {
   status: string;
   created: string;
   attachmentGroupId: string | null;
+  rootType?: string | null;
   contents: {
     Siirto: {
       Sanomavalitys?: Record<string, any>;

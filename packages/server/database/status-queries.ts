@@ -22,9 +22,15 @@ export const STATUS_TABLES = [
   "TrustPosition",
   "District",
   "RepresentativeDistrict",
-  "VaskiDocument",
-  "VaskiSubject",
-  "VaskiRelationship",
+  "Document",
+  "DocumentActor",
+  "DocumentSubject",
+  "DocumentAttachment",
+  "DocumentRelation",
+  "CommitteeSession",
+  "SessionMinutesItem",
+  "SessionMinutesAttachment",
+  "SessionSectionSpeech",
 ] as const;
 
 export type StatusTableName = (typeof STATUS_TABLES)[number];

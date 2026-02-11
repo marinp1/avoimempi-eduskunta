@@ -12,8 +12,8 @@ WHERE v.section_title LIKE '%' || $q || '%' OR v.title LIKE '%' || $q || '%'
 
 UNION ALL
 
-SELECT 'document' AS type, CAST(d.id AS TEXT) AS id, d.title AS title, d.eduskunta_tunnus AS subtitle, d.created AS date
-FROM VaskiDocument d
+SELECT 'document' AS type, CAST(d.id AS TEXT) AS id, d.title AS title, d.eduskunta_tunnus AS subtitle, d.created_at AS date
+FROM Document d
 WHERE d.title LIKE '%' || $q || '%' OR d.eduskunta_tunnus LIKE '%' || $q || '%'
 
 ORDER BY date DESC

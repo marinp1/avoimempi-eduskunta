@@ -46,8 +46,8 @@ describe("status query helpers", () => {
   });
 
   test("type guard validates known and unknown table names", () => {
-    expect(isStatusTableName("VaskiSubject")).toBe(true);
-    expect(isStatusTableName("DocumentSubject")).toBe(false);
+    expect(isStatusTableName("DocumentSubject")).toBe(true);
+    expect(isStatusTableName("VaskiSubject")).toBe(false);
     expect(isStatusTableName("NotATable")).toBe(false);
   });
 });

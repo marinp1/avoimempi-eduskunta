@@ -26,6 +26,7 @@ declare global {
       document_number: string | null;
       parliamentary_year: string | null;
       summary_text: string | null;
+      content_root_type: string | null;
     };
 
     export type VaskiIdentifier = {
@@ -89,6 +90,21 @@ declare global {
       end_time: string | null;
       content: string | null;
       link_key?: string | null;
+    };
+
+    export type VaskiSectionLink = {
+      id?: number;
+      section_key: string;
+      document_id: number;
+      link_type: string;
+      source_section_id: number | null;
+    };
+
+    export type VaskiSessionLink = {
+      id?: number;
+      session_key: string;
+      document_id: number;
+      link_type: string;
     };
   }
 }

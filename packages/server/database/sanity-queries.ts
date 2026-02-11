@@ -19,13 +19,20 @@ export const EXPECTED_SANITY_TABLES = [
   "Voting",
   "Vote",
   "Speech",
-  "VaskiMinutesSpeech",
+  "SessionSectionSpeech",
   "VotingDocumentLink",
   "SectionDocumentLink",
   "SessionNotice",
   "VotingDistribution",
   "SaliDBDocumentReference",
-  "VaskiDocument",
+  "Document",
+  "DocumentActor",
+  "DocumentSubject",
+  "DocumentAttachment",
+  "DocumentRelation",
+  "CommitteeSession",
+  "SessionMinutesItem",
+  "SessionMinutesAttachment",
 ] as const;
 
 export const EXPECTED_SANITY_INDEXES = [
