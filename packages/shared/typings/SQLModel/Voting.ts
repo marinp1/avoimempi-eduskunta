@@ -36,6 +36,12 @@ declare global {
       session_key: string; // Session.key
     };
   }
+
+  export namespace DatabaseQueries {
+    export type VotingSearchResult = DatabaseTables.Voting & {
+      context_title: string;
+    };
+  }
 }
 
 export {};

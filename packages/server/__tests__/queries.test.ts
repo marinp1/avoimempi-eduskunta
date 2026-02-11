@@ -267,6 +267,20 @@ describe("Speech queries", () => {
 // ─── VOTING QUERIES ─────────────────────────────────────────
 
 describe("Voting queries", () => {
+  test("VOTINGS_SEARCH returns computed context_title", () => {
+    const stmt = db.prepare(queries.votingsSearch);
+    const rows = stmt.all({ $query: "%Äänestys 1%" }) as Array<
+      DatabaseQueries.VotingSearchResult
+    >;
+    stmt.finalize();
+
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows[0]).toHaveProperty("context_title");
+    const row100 = rows.find((row) => row.id === 100);
+    expect(row100).toBeDefined();
+    expect(row100?.context_title).toBe("Hallituksen esitys");
+  });
+
   test("SECTION_VOTINGS returns votings for a section key", () => {
     const stmt = db.prepare(queries.sectionVotings);
     const rows = stmt.all({ $sectionKey: "2024/1/3" }) as any[];

@@ -38,3 +38,4 @@ export { default as personCommittees } from "./queries/PERSON_COMMITTEES.sql";
 export { default as personDissents } from "./queries/PERSON_DISSENTS.sql";
 export { default as partyMembers } from "./queries/PARTY_MEMBERS.sql";
 export { default as federatedSearch } from "./queries/FEDERATED_SEARCH.sql";
+export { default as votingsSearch } from "./queries/VOTINGS_SEARCH.sql";
