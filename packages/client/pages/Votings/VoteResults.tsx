@@ -1,17 +1,19 @@
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import InsightsIcon from "@mui/icons-material/Insights";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import RemoveIcon from "@mui/icons-material/Remove";
 import ThumbDownIcon from "@mui/icons-material/ThumbDown";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
+  Alert,
   Box,
   Chip,
-  Fade,
+  CircularProgress,
+  InputLabel,
   Link,
+  MenuItem,
+  Select,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -22,619 +24,472 @@ import {
 } from "@mui/material";
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { commonStyles, shadows, spacing } from "#client/theme";
+import { colors, commonStyles } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
-import { VoteMarginBar } from "#client/theme/components";
+import { DataCard, MetricCard, VoteMarginBar } from "#client/theme/components";
 import { getVoteColors } from "#client/theme/vote-styles";
 
 const CLOSE_VOTE_THRESHOLD = 10;
 
-const cache = new Map<string, ReturnType<typeof getVotings>>();
+type SortMode = "newest" | "oldest" | "closest" | "largest";
+type VotingSearchRow = DatabaseQueries.VotingSearchResult;
 
-const getVotings = async (query: string) => {
-  if (!query.trim() || query.trim().length < 3) return {};
-  const qp = new URLSearchParams({ q: query.trim() });
-  return fetch(`/api/votings/search?${qp.toString()}`)
-    .then((res) => {
-      if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
-      return res.json();
-    })
-    .then((data: DatabaseTables.Voting[]) =>
-      Object.groupBy(data, (d) => d.section_title),
-    );
+type SearchState = {
+  loading: boolean;
+  error: string | null;
+  rows: VotingSearchRow[];
 };
 
-export function fetchData(query: string) {
-  if (!cache.has(query)) {
-    cache.set(query, getVotings(query));
-  }
-  return (
-    cache.get(query) ??
-    Promise.resolve({} as Record<string, DatabaseTables.Voting[]>)
-  );
-}
+const emptyState: SearchState = {
+  loading: false,
+  error: null,
+  rows: [],
+};
 
 const eduskuntaLink = (href: string) => {
-  if (!href.startsWith("/")) href = `/${href}`;
+  if (!href.startsWith("/")) return `https://www.eduskunta.fi/${href}`;
   return `https://www.eduskunta.fi${href}`;
 };
 
-const isCloseVote = (res: DatabaseTables.Voting) =>
-  Math.abs(res.n_yes - res.n_no) <= CLOSE_VOTE_THRESHOLD;
+const voteMargin = (vote: VotingSearchRow) => Math.abs(vote.n_yes - vote.n_no);
 
-/** Mobile card for a single vote result */
-const VoteCard: React.FC<{
-  res: DatabaseTables.Voting;
-  themedColors: ReturnType<typeof useThemedColors>;
-  voteColors: ReturnType<typeof getVoteColors>;
-}> = ({ res, themedColors, voteColors }) => {
-  const { t } = useTranslation();
-  const close = isCloseVote(res);
+const isCloseVote = (vote: VotingSearchRow) => voteMargin(vote) <= CLOSE_VOTE_THRESHOLD;
 
-  return (
-    <Box
-      sx={{
-        p: 2,
-        borderBottom: `1px solid ${themedColors.dataBorder}`,
-        "&:last-child": { borderBottom: "none" },
-      }}
-    >
-      <Box sx={{ mb: 1.5 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1, flexWrap: "wrap" }}>
-          <Typography
-            variant="caption"
-            sx={{ color: themedColors.textSecondary }}
-          >
-            {res.start_time
-              ? new Date(res.start_time).toLocaleDateString("fi-FI")
-              : "-"}
-          </Typography>
-          <Chip
-            label={res.section_processing_phase}
-            size="small"
-            sx={{
-              background: themedColors.primary,
-              color: "white",
-              fontWeight: 700,
-              fontSize: "0.65rem",
-              height: 22,
-            }}
-          />
-          {close && (
-            <Chip
-              icon={<WarningAmberIcon sx={{ fontSize: 14 }} />}
-              label={t("votings.closeVote")}
-              size="small"
-              sx={{
-                background: `${themedColors.warning}18`,
-                color: themedColors.warning,
-                fontWeight: 700,
-                fontSize: "0.65rem",
-                height: 22,
-                "& .MuiChip-icon": { color: themedColors.warning },
-              }}
-            />
-          )}
-        </Box>
-        <Typography
-          variant="body2"
-          sx={{
-            fontWeight: 600,
-            color: themedColors.textPrimary,
-            mb: 1,
-          }}
-        >
-          {res.title}
-        </Typography>
+const isVotePassed = (vote: VotingSearchRow) => vote.n_yes > vote.n_no;
 
-        {/* Vote margin bar */}
-        <VoteMarginBar
-          yes={res.n_yes}
-          no={res.n_no}
-          empty={res.n_abstain}
-          absent={res.n_absent}
-          height={6}
-          sx={{ mb: 1 }}
-        />
-      </Box>
+const getPrimaryTitle = (vote: VotingSearchRow) =>
+  vote.context_title || vote.section_title || vote.main_section_title || vote.agenda_title || vote.title;
 
-      {/* Vote counts in a compact grid */}
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: 1,
-          mb: 1.5,
-        }}
-      >
-        <Box sx={{ textAlign: "center" }}>
-          <ThumbUpIcon sx={{ fontSize: 16, color: voteColors.yes, mb: 0.25 }} />
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: 700, color: voteColors.yes, fontSize: "0.875rem" }}
-          >
-            {res.n_yes}
-          </Typography>
-          <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
-            {t("votings.results.yes")}
-          </Typography>
-        </Box>
-        <Box sx={{ textAlign: "center" }}>
-          <ThumbDownIcon sx={{ fontSize: 16, color: voteColors.no, mb: 0.25 }} />
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: 700, color: voteColors.no, fontSize: "0.875rem" }}
-          >
-            {res.n_no}
-          </Typography>
-          <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
-            {t("votings.results.no")}
-          </Typography>
-        </Box>
-        <Box sx={{ textAlign: "center" }}>
-          <RemoveIcon sx={{ fontSize: 16, color: voteColors.abstain, mb: 0.25 }} />
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: 700, color: voteColors.abstain, fontSize: "0.875rem" }}
-          >
-            {res.n_abstain}
-          </Typography>
-          <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
-            {t("votings.results.empty")}
-          </Typography>
-        </Box>
-        <Box sx={{ textAlign: "center" }}>
-          <PersonOffIcon sx={{ fontSize: 16, color: voteColors.absent, mb: 0.25 }} />
-          <Typography
-            variant="body2"
-            sx={{ fontWeight: 700, color: voteColors.absent, fontSize: "0.875rem" }}
-          >
-            {res.n_absent}
-          </Typography>
-          <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontSize: "0.625rem" }}>
-            {t("votings.results.absent")}
-          </Typography>
-        </Box>
-      </Box>
+const getSecondaryTitle = (vote: VotingSearchRow) => {
+  if (!vote.title || vote.title === getPrimaryTitle(vote)) return null;
+  return vote.title;
+};
 
-      {close && (
-        <Typography
-          sx={{
-            fontSize: "0.6875rem",
-            color: themedColors.warning,
-            fontWeight: 600,
-            mb: 1,
-          }}
-        >
-          {t("votings.margin")}: {Math.abs(res.n_yes - res.n_no)}
-        </Typography>
-      )}
+const getContextTokens = (vote: VotingSearchRow) =>
+  [
+    vote.agenda_title,
+    vote.section_processing_title,
+    vote.section_key ? `section ${vote.section_key}` : null,
+    Number.isFinite(vote.number) ? `#${vote.number}` : null,
+  ].filter((value): value is string => Boolean(value));
 
-      {/* Links */}
-      <Box sx={{ display: "flex", gap: 1 }}>
-        <Link
-          target="_blank"
-          href={eduskuntaLink(res.result_url)}
-          sx={{
-            color: themedColors.primary,
-            textDecoration: "none",
-            fontWeight: 600,
-            fontSize: "0.8125rem",
-            padding: "4px 10px",
-            borderRadius: 1,
-            border: `1px solid ${themedColors.primary}`,
-            transition: "all 0.2s ease",
-            "&:hover": {
-              background: themedColors.primary,
-              color: "white",
-              textDecoration: "none",
-            },
-          }}
-        >
-          {t("votings.results.results")}
-        </Link>
-        <Link
-          target="_blank"
-          href={eduskuntaLink(res.proceedings_url)}
-          sx={{
-            color: themedColors.primary,
-            textDecoration: "none",
-            fontWeight: 600,
-            fontSize: "0.8125rem",
-            padding: "4px 10px",
-            borderRadius: 1,
-            border: `1px solid ${themedColors.primary}`,
-            transition: "all 0.2s ease",
-            "&:hover": {
-              background: themedColors.primary,
-              color: "white",
-              textDecoration: "none",
-            },
-          }}
-        >
-          {t("votings.results.minutes")}
-        </Link>
-      </Box>
-    </Box>
-  );
+const sortRows = (rows: VotingSearchRow[], sortMode: SortMode) => {
+  const copy = [...rows];
+  switch (sortMode) {
+    case "oldest":
+      return copy.sort((a, b) => (a.start_time ?? "").localeCompare(b.start_time ?? ""));
+    case "closest":
+      return copy.sort((a, b) => voteMargin(a) - voteMargin(b));
+    case "largest":
+      return copy.sort((a, b) => b.n_total - a.n_total);
+    case "newest":
+    default:
+      return copy.sort((a, b) => (b.start_time ?? "").localeCompare(a.start_time ?? ""));
+  }
 };
 
 export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
   const { t } = useTranslation();
   const themedColors = useThemedColors();
   const voteColors = getVoteColors(themedColors);
-  const results = React.use(fetchData(query?.trim()));
+
+  const [state, setState] = React.useState<SearchState>(emptyState);
+  const [phaseFilter, setPhaseFilter] = React.useState<string>("all");
+  const [sessionFilter, setSessionFilter] = React.useState<string>("all");
+  const [sortMode, setSortMode] = React.useState<SortMode>("newest");
+
+  const normalizedQuery = query.trim();
+
+  React.useEffect(() => {
+    if (!normalizedQuery || normalizedQuery.length < 3) {
+      setState(emptyState);
+      return;
+    }
+
+    const ac = new AbortController();
+
+    const run = async () => {
+      setState((prev) => ({ ...prev, loading: true, error: null }));
+      try {
+        const params = new URLSearchParams({ q: normalizedQuery });
+        const res = await fetch(`/api/votings/search?${params.toString()}`, {
+          signal: ac.signal,
+        });
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        const rows: VotingSearchRow[] = await res.json();
+        setState({ loading: false, error: null, rows });
+      } catch (error) {
+        if (ac.signal.aborted) return;
+        setState({
+          loading: false,
+          error: error instanceof Error ? error.message : t("errors.unknownError"),
+          rows: [],
+        });
+      }
+    };
+
+    run();
+    return () => ac.abort();
+  }, [normalizedQuery, t]);
+
+  const phases = React.useMemo(
+    () => Array.from(new Set(state.rows.map((row) => row.section_processing_phase))).sort(),
+    [state.rows],
+  );
+
+  const sessions = React.useMemo(
+    () => Array.from(new Set(state.rows.map((row) => row.session_key))).sort().reverse(),
+    [state.rows],
+  );
+
+  const filtered = React.useMemo(() => {
+    const rows = state.rows.filter((row) => {
+      if (phaseFilter !== "all" && row.section_processing_phase !== phaseFilter) return false;
+      if (sessionFilter !== "all" && row.session_key !== sessionFilter) return false;
+      return true;
+    });
+    return sortRows(rows, sortMode);
+  }, [state.rows, phaseFilter, sessionFilter, sortMode]);
+
+  const aggregate = React.useMemo(() => {
+    const total = filtered.length;
+    const yes = filtered.reduce((sum, row) => sum + row.n_yes, 0);
+    const no = filtered.reduce((sum, row) => sum + row.n_no, 0);
+    const abstain = filtered.reduce((sum, row) => sum + row.n_abstain, 0);
+    const absent = filtered.reduce((sum, row) => sum + row.n_absent, 0);
+    const votesCast = yes + no + abstain;
+    const possibleVotes = filtered.reduce((sum, row) => sum + row.n_total, 0);
+    const closeVotes = filtered.filter(isCloseVote).length;
+    const passedVotes = filtered.filter(isVotePassed).length;
+    const avgMargin =
+      total > 0 ? filtered.reduce((sum, row) => sum + voteMargin(row), 0) / total : 0;
+    const participationPct =
+      possibleVotes > 0 ? (votesCast / possibleVotes) * 100 : 0;
+
+    return {
+      total,
+      yes,
+      no,
+      abstain,
+      absent,
+      closeVotes,
+      passedVotes,
+      avgMargin,
+      participationPct,
+    };
+  }, [filtered]);
+
+  const closestVotes = React.useMemo(() => sortRows(filtered, "closest").slice(0, 5), [filtered]);
+
+  const noSearch = normalizedQuery.length < 3;
 
   return (
     <Box>
-      {Object.entries(results).map(([sectionTitle, votes], index) => (
-        <Fade in timeout={500 + index * 50} key={sectionTitle}>
-          <Accordion
-            elevation={0}
-            sx={{
-              mb: spacing.md,
-              borderRadius: 1,
-              background: themedColors.backgroundPaper,
-              border: `1px solid ${themedColors.dataBorder}`,
-              boxShadow:
-                "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
-              overflow: "hidden",
-              transition: "all 0.2s ease-in-out",
-              "&:before": {
-                display: "none",
-              },
-              "&.Mui-expanded": {
-                boxShadow: shadows.cardHover,
-                borderColor: themedColors.primary,
-              },
-            }}
-          >
-            <AccordionSummary
-              expandIcon={
-                <ExpandMoreIcon
-                  sx={{ color: themedColors.primary, fontSize: 28 }}
-                />
-              }
+      {noSearch && (
+        <DataCard sx={{ p: 4, textAlign: "center" }}>
+          <InsightsIcon sx={{ fontSize: 36, color: themedColors.textTertiary, mb: 1 }} />
+          <Typography variant="h6" sx={{ color: themedColors.textSecondary }}>
+            {t("votings.startSearch")}
+          </Typography>
+          <Typography variant="body2" sx={{ color: themedColors.textTertiary, mt: 0.5 }}>
+            {t("votings.startSearchHint")}
+          </Typography>
+        </DataCard>
+      )}
+
+      {!noSearch && state.loading && (
+        <Box sx={{ ...commonStyles.centeredFlex, py: 5 }}>
+          <CircularProgress size={28} sx={{ color: themedColors.primary }} />
+        </Box>
+      )}
+
+      {!noSearch && !state.loading && state.error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {t("errors.loadFailed")}: {state.error}
+        </Alert>
+      )}
+
+      {!noSearch && !state.loading && !state.error && (
+        <Stack spacing={3}>
+          <DataCard sx={{ p: 2.5 }}>
+            <Box
               sx={{
-                py: { xs: 1, sm: spacing.md },
-                px: { xs: 2, sm: spacing.lg },
-                "&:hover": {
-                  background: `${themedColors.primary}08`,
-                },
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0, 1fr))" },
+                gap: 2,
               }}
             >
-              <Typography
-                variant="h6"
+              <Box>
+                <InputLabel sx={{ mb: 0.5, fontSize: "0.75rem" }}>
+                  {t("votings.filters.phase")}
+                </InputLabel>
+                <Select
+                  value={phaseFilter}
+                  size="small"
+                  onChange={(event) => setPhaseFilter(event.target.value)}
+                  fullWidth
+                >
+                  <MenuItem value="all">{t("votings.filters.all")}</MenuItem>
+                  {phases.map((phase) => (
+                    <MenuItem key={phase} value={phase}>
+                      {phase}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </Box>
+              <Box>
+                <InputLabel sx={{ mb: 0.5, fontSize: "0.75rem" }}>
+                  {t("votings.filters.session")}
+                </InputLabel>
+                <Select
+                  value={sessionFilter}
+                  size="small"
+                  onChange={(event) => setSessionFilter(event.target.value)}
+                  fullWidth
+                >
+                  <MenuItem value="all">{t("votings.filters.all")}</MenuItem>
+                  {sessions.map((session) => (
+                    <MenuItem key={session} value={session}>
+                      {session}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </Box>
+              <Box>
+                <InputLabel sx={{ mb: 0.5, fontSize: "0.75rem" }}>
+                  {t("votings.filters.sort")}
+                </InputLabel>
+                <Select
+                  value={sortMode}
+                  size="small"
+                  onChange={(event) => setSortMode(event.target.value as SortMode)}
+                  fullWidth
+                >
+                  <MenuItem value="newest">{t("votings.sort.newest")}</MenuItem>
+                  <MenuItem value="oldest">{t("votings.sort.oldest")}</MenuItem>
+                  <MenuItem value="closest">{t("votings.sort.closest")}</MenuItem>
+                  <MenuItem value="largest">{t("votings.sort.largest")}</MenuItem>
+                </Select>
+              </Box>
+            </Box>
+          </DataCard>
+
+          {filtered.length === 0 ? (
+            <DataCard sx={{ p: 4, textAlign: "center" }}>
+              <Typography variant="h6" sx={{ color: themedColors.textSecondary, mb: 0.5 }}>
+                {t("votings.noResults")}
+              </Typography>
+              <Typography variant="body2" sx={{ color: themedColors.textTertiary }}>
+                {t("votings.noResultsHint")}
+              </Typography>
+            </DataCard>
+          ) : (
+            <>
+              <Box
                 sx={{
-                  fontWeight: 600,
-                  color: themedColors.primary,
-                  fontSize: { xs: "0.9375rem", sm: "1.125rem" },
-                  letterSpacing: "0",
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    sm: "repeat(2, minmax(0, 1fr))",
+                    lg: "repeat(4, minmax(0, 1fr))",
+                  },
+                  gap: 2,
                 }}
               >
-                {sectionTitle}
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails sx={{ p: 0 }}>
-              {/* Mobile card layout */}
-              <Box sx={{ display: { xs: "block", md: "none" } }}>
-                {(votes ?? []).map((res) => (
-                  <VoteCard
-                    key={res.id}
-                    res={res}
-                    themedColors={themedColors}
-                    voteColors={voteColors}
-                  />
-                ))}
+                <MetricCard
+                  label={t("votings.analysis.total")}
+                  value={aggregate.total}
+                  icon={<InsightsIcon sx={{ fontSize: 20 }} />}
+                />
+                <MetricCard
+                  label={t("votings.analysis.participation")}
+                  value={`${aggregate.participationPct.toFixed(1)}%`}
+                  icon={<ThumbUpIcon sx={{ fontSize: 20 }} />}
+                />
+                <MetricCard
+                  label={t("votings.analysis.closeVotes")}
+                  value={aggregate.closeVotes}
+                  icon={<WarningAmberIcon sx={{ fontSize: 20 }} />}
+                />
+                <MetricCard
+                  label={t("votings.analysis.passed")}
+                  value={`${aggregate.passedVotes}/${aggregate.total}`}
+                  icon={<ThumbDownIcon sx={{ fontSize: 20 }} />}
+                />
               </Box>
 
-              {/* Desktop table layout */}
-              <TableContainer sx={{ display: { xs: "none", md: "block" } }}>
-                <Table>
-                  <TableHead>
-                    <TableRow
+              <DataCard sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ color: themedColors.textPrimary, mb: 1.5 }}>
+                  {t("votings.analysis.aggregateDistribution")}
+                </Typography>
+                <VoteMarginBar
+                  yes={aggregate.yes}
+                  no={aggregate.no}
+                  empty={aggregate.abstain}
+                  absent={aggregate.absent}
+                  height={12}
+                  sx={{ mb: 1.5 }}
+                />
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: { xs: "repeat(2, 1fr)", md: "repeat(4, 1fr)" },
+                    gap: 1.5,
+                  }}
+                >
+                  <Chip icon={<ThumbUpIcon />} label={`${t("votings.results.yes")}: ${aggregate.yes}`} />
+                  <Chip icon={<ThumbDownIcon />} label={`${t("votings.results.no")}: ${aggregate.no}`} />
+                  <Chip icon={<RemoveIcon />} label={`${t("votings.results.empty")}: ${aggregate.abstain}`} />
+                  <Chip icon={<PersonOffIcon />} label={`${t("votings.results.absent")}: ${aggregate.absent}`} />
+                </Box>
+                <Typography variant="body2" sx={{ color: themedColors.textSecondary, mt: 1.5 }}>
+                  {t("votings.analysis.avgMargin")}: {aggregate.avgMargin.toFixed(1)}
+                </Typography>
+              </DataCard>
+
+              <DataCard sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ color: themedColors.textPrimary, mb: 1.5 }}>
+                  {t("votings.analysis.closestVotes")}
+                </Typography>
+                <Stack spacing={1.25}>
+                  {closestVotes.map((vote) => (
+                    <Box
+                      key={vote.id}
                       sx={{
-                        background: themedColors.primary,
+                        p: 1.5,
+                        borderRadius: 1,
+                        border: `1px solid ${themedColors.dataBorder}`,
+                        background: colors.backgroundSubtle,
                       }}
                     >
-                      <TableCell sx={{ ...commonStyles.tableHeader }}>
-                        {t("votings.results.time")}
-                      </TableCell>
-                      <TableCell sx={{ ...commonStyles.tableHeader }}>
-                        {t("votings.results.stage")}
-                      </TableCell>
-                      <TableCell sx={{ ...commonStyles.tableHeader }}>
-                        {t("votings.results.title")}
-                      </TableCell>
-                      <TableCell sx={{ ...commonStyles.tableHeader, minWidth: 160 }}>
-                        {/* margin bar header - empty */}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ ...commonStyles.tableHeader }}
-                      >
-                        {t("votings.results.yes")}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ ...commonStyles.tableHeader }}
-                      >
-                        {t("votings.results.no")}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ ...commonStyles.tableHeader }}
-                      >
-                        {t("votings.results.empty")}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ ...commonStyles.tableHeader }}
-                      >
-                        {t("votings.results.absent")}
-                      </TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ ...commonStyles.tableHeader }}
-                      >
-                        {t("votings.results.total")}
-                      </TableCell>
-                      <TableCell sx={{ ...commonStyles.tableHeader }}>
-                        {t("votings.results.links")}
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {(votes ?? []).map((res) => {
-                      const close = isCloseVote(res);
-                      return (
-                        <TableRow
-                          key={res.id}
-                          hover
-                          sx={{
-                            ...commonStyles.tableRow,
-                            borderBottom: `1px solid ${themedColors.dataBorder}`,
-                            "&:hover": {
-                              background: `${themedColors.primary}05`,
-                            },
-                            cursor: "default",
-                          }}
-                        >
-                          <TableCell
+                      <Typography sx={{ fontWeight: 600, color: themedColors.textPrimary }}>
+                        {getPrimaryTitle(vote)}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+                        {vote.session_key} | {t("votings.margin")}: {voteMargin(vote)} | {vote.n_yes} - {vote.n_no}
+                      </Typography>
+                      {getSecondaryTitle(vote) && (
+                        <Typography variant="caption" sx={{ color: themedColors.textTertiary }}>
+                          {getSecondaryTitle(vote)}
+                        </Typography>
+                      )}
+                    </Box>
+                  ))}
+                </Stack>
+              </DataCard>
+
+              <DataCard sx={{ p: 0, overflow: "hidden" }}>
+                <TableContainer>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ background: themedColors.primary }}>
+                        <TableCell sx={commonStyles.tableHeader}>{t("votings.results.time")}</TableCell>
+                        <TableCell sx={commonStyles.tableHeader}>{t("votings.results.session")}</TableCell>
+                        <TableCell sx={commonStyles.tableHeader}>{t("votings.results.stage")}</TableCell>
+                        <TableCell sx={commonStyles.tableHeader}>{t("votings.results.title")}</TableCell>
+                        <TableCell sx={commonStyles.tableHeader}>{t("votings.results.context")}</TableCell>
+                        <TableCell sx={commonStyles.tableHeader}>{t("votings.results.votes")}</TableCell>
+                        <TableCell sx={commonStyles.tableHeader}>{t("votings.results.links")}</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {filtered.map((vote) => {
+                        const close = isCloseVote(vote);
+                        return (
+                          <TableRow
+                            key={vote.id}
+                            hover
                             sx={{
-                              ...commonStyles.labelCell,
-                              color: themedColors.textSecondary,
-                              py: 2.5,
+                              "&:hover": { background: `${themedColors.primary}07` },
                             }}
                           >
-                            {res.start_time
-                              ? new Date(res.start_time).toLocaleDateString(
-                                  "fi-FI",
-                                )
-                              : "-"}
-                          </TableCell>
-                          <TableCell sx={{ py: 2.5 }}>
-                            <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                              <Chip
-                                label={res.section_processing_phase}
-                                size="small"
-                                sx={{
-                                  background: themedColors.primary,
-                                  color: "white",
-                                  fontWeight: 700,
-                                  fontSize: "0.75rem",
-                                  height: 28,
-                                }}
-                              />
-                              {close && (
-                                <Chip
-                                  icon={<WarningAmberIcon sx={{ fontSize: 14 }} />}
-                                  label={t("votings.closeVote")}
-                                  size="small"
-                                  sx={{
-                                    background: `${themedColors.warning}18`,
-                                    color: themedColors.warning,
-                                    fontWeight: 700,
-                                    fontSize: "0.7rem",
-                                    height: 28,
-                                    "& .MuiChip-icon": { color: themedColors.warning },
-                                  }}
-                                />
+                            <TableCell sx={{ color: themedColors.textSecondary }}>
+                              {vote.start_time
+                                ? new Date(vote.start_time).toLocaleDateString("fi-FI")
+                                : "-"}
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>{vote.session_key}</TableCell>
+                            <TableCell>
+                              <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap" }}>
+                                <Chip size="small" label={vote.section_processing_phase} />
+                                {close && (
+                                  <Chip
+                                    size="small"
+                                    label={t("votings.closeVote")}
+                                    sx={{
+                                      color: themedColors.warning,
+                                      borderColor: `${themedColors.warning}66`,
+                                    }}
+                                    variant="outlined"
+                                  />
+                                )}
+                              </Stack>
+                            </TableCell>
+                            <TableCell sx={{ maxWidth: 500 }}>
+                              <Typography sx={{ fontWeight: 600 }}>
+                                {getPrimaryTitle(vote) || t("common.none")}
+                              </Typography>
+                              {getSecondaryTitle(vote) && (
+                                <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                                  {getSecondaryTitle(vote)}
+                                </Typography>
                               )}
-                            </Box>
-                          </TableCell>
-                          <TableCell
-                            sx={{
-                              ...commonStyles.dataCell,
-                              color: themedColors.textPrimary,
-                              py: 2.5,
-                            }}
-                          >
-                            {res.title}
-                          </TableCell>
-                          <TableCell sx={{ py: 2.5, minWidth: 160 }}>
-                            <VoteMarginBar
-                              yes={res.n_yes}
-                              no={res.n_no}
-                              empty={res.n_abstain}
-                              absent={res.n_absent}
-                              height={8}
-                            />
-                            {close && (
-                              <Typography
-                                sx={{
-                                  fontSize: "0.625rem",
-                                  color: themedColors.warning,
-                                  fontWeight: 600,
-                                  mt: 0.5,
-                                  textAlign: "center",
-                                }}
-                              >
-                                {t("votings.margin")}: {Math.abs(res.n_yes - res.n_no)}
-                              </Typography>
-                            )}
-                          </TableCell>
-                          <TableCell align="center" sx={{ py: 2.5 }}>
-                            <Box
-                              sx={{
-                                ...commonStyles.flexWithGap(1),
-                                justifyContent: "center",
-                              }}
-                            >
-                              <ThumbUpIcon
-                                sx={{ fontSize: 20, color: voteColors.yes }}
-                              />
-                              <Typography
-                                sx={{
-                                  fontWeight: 700,
-                                  color: voteColors.yes,
-                                  fontSize: "1rem",
-                                }}
-                              >
-                                {res.n_yes}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell align="center" sx={{ py: 2.5 }}>
-                            <Box
-                              sx={{
-                                ...commonStyles.flexWithGap(1),
-                                justifyContent: "center",
-                              }}
-                            >
-                              <ThumbDownIcon
-                                sx={{ fontSize: 20, color: voteColors.no }}
-                              />
-                              <Typography
-                                sx={{
-                                  fontWeight: 700,
-                                  color: voteColors.no,
-                                  fontSize: "1rem",
-                                }}
-                              >
-                                {res.n_no}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell align="center" sx={{ py: 2.5 }}>
-                            <Box
-                              sx={{
-                                ...commonStyles.flexWithGap(1),
-                                justifyContent: "center",
-                              }}
-                            >
-                              <RemoveIcon
-                                sx={{ fontSize: 20, color: voteColors.abstain }}
-                              />
-                              <Typography
-                                sx={{
-                                  fontWeight: 700,
-                                  color: voteColors.abstain,
-                                  fontSize: "1rem",
-                                }}
-                              >
-                                {res.n_abstain}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell align="center" sx={{ py: 2.5 }}>
-                            <Box
-                              sx={{
-                                ...commonStyles.flexWithGap(1),
-                                justifyContent: "center",
-                              }}
-                            >
-                              <PersonOffIcon
-                                sx={{ fontSize: 20, color: voteColors.absent }}
-                              />
-                              <Typography
-                                sx={{
-                                  fontWeight: 700,
-                                  color: voteColors.absent,
-                                  fontSize: "1rem",
-                                }}
-                              >
-                                {res.n_absent}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell align="center" sx={{ py: 2.5 }}>
-                            <Typography
-                              sx={{
-                                fontWeight: 700,
-                                fontSize: "1.125rem",
-                                color: themedColors.primary,
-                              }}
-                            >
-                              {res.n_total}
-                            </Typography>
-                          </TableCell>
-                          <TableCell sx={{ py: 2.5 }}>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 1,
-                              }}
-                            >
-                              <Link
-                                target="_blank"
-                                href={eduskuntaLink(res.result_url)}
-                                sx={{
-                                  color: themedColors.primary,
-                                  textDecoration: "none",
-                                  fontWeight: 600,
-                                  fontSize: "0.875rem",
-                                  padding: "4px 12px",
-                                  borderRadius: 2,
-                                  border: `1px solid ${themedColors.primary}`,
-                                  display: "inline-block",
-                                  transition:
-                                    "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                  "&:hover": {
-                                    background: themedColors.primary,
-                                    color: "white",
-                                    textDecoration: "none",
-                                  },
-                                }}
-                              >
-                                {t("votings.results.results")}
-                              </Link>
-                              <Link
-                                target="_blank"
-                                href={eduskuntaLink(res.proceedings_url)}
-                                sx={{
-                                  color: themedColors.primary,
-                                  textDecoration: "none",
-                                  fontWeight: 600,
-                                  fontSize: "0.875rem",
-                                  padding: "4px 12px",
-                                  borderRadius: 2,
-                                  border: `1px solid ${themedColors.primary}`,
-                                  display: "inline-block",
-                                  transition:
-                                    "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                  "&:hover": {
-                                    background: themedColors.primary,
-                                    color: "white",
-                                    textDecoration: "none",
-                                  },
-                                }}
-                              >
-                                {t("votings.results.minutes")}
-                              </Link>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </AccordionDetails>
-          </Accordion>
-        </Fade>
-      ))}
+                            </TableCell>
+                            <TableCell sx={{ maxWidth: 360 }}>
+                              <Stack direction="row" spacing={0.75} sx={{ flexWrap: "wrap" }}>
+                                {getContextTokens(vote).map((token) => (
+                                  <Chip key={`${vote.id}-${token}`} size="small" label={token} variant="outlined" />
+                                ))}
+                              </Stack>
+                            </TableCell>
+                            <TableCell>
+                              <Stack spacing={0.5}>
+                                <VoteMarginBar
+                                  yes={vote.n_yes}
+                                  no={vote.n_no}
+                                  empty={vote.n_abstain}
+                                  absent={vote.n_absent}
+                                  height={8}
+                                />
+                                <Typography
+                                  variant="caption"
+                                  sx={{ color: themedColors.textSecondary }}
+                                >
+                                  {vote.n_yes} / {vote.n_no} / {vote.n_abstain} / {vote.n_absent}
+                                </Typography>
+                              </Stack>
+                            </TableCell>
+                            <TableCell>
+                              <Stack direction="row" spacing={1}>
+                                <Link
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  href={eduskuntaLink(vote.result_url)}
+                                  sx={{ color: voteColors.yes, fontWeight: 600 }}
+                                >
+                                  {t("votings.results.results")}
+                                </Link>
+                                <Link
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  href={eduskuntaLink(vote.proceedings_url)}
+                                  sx={{ color: themedColors.primary, fontWeight: 600 }}
+                                >
+                                  {t("votings.results.minutes")}
+                                </Link>
+                              </Stack>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </DataCard>
+            </>
+          )}
+        </Stack>
+      )}
     </Box>
   );
 };

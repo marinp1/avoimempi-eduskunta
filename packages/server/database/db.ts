@@ -125,10 +125,13 @@ export class DatabaseConnection {
   }
 
   public async queryVotings(params: { q: string }) {
-    const stmt = this.db.prepare<DatabaseTables.Voting, []>(
-      queries.sql`SELECT v.* FROM voting v WHERE v.section_title LIKE '%${params.q}%' ORDER BY start_time ASC LIMIT 100`,
+    const stmt = this.db.prepare<
+      DatabaseQueries.VotingSearchResult,
+      { $query: string }
+    >(
+      queries.votingsSearch,
     );
-    const data = stmt.all();
+    const data = stmt.all({ $query: `%${params.q}%` });
     stmt.finalize();
     return data;
   }

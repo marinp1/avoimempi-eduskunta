@@ -214,12 +214,41 @@
     "subtitle": "Etsi ja selaa eduskunnan äänestystietoja",
     "search": "Hae äänestyksiä otsikolla",
     "searchPlaceholder": "Kirjoita vähintään 3 merkkiä...",
+    "searchHelp": "Haku kohdistuu otsikoihin ja tukee analyysiä suoraan tulosjoukosta.",
+    "startSearch": "Aloita kirjoittamalla hakusana",
+    "startSearchHint": "Näytämme analyysin, kun hakuehto on vähintään 3 merkkiä.",
+    "noResults": "Ei äänestyksiä tällä haulla.",
+    "noResultsHint": "Kokeile toista hakusanaa tai poista suodattimia.",
     "closeVote": "Tiukka äänestys",
     "margin": "Marginaali",
+    "filters": {
+      "all": "Kaikki",
+      "phase": "Vaihe",
+      "session": "Istunto",
+      "sort": "Järjestys"
+    },
+    "sort": {
+      "newest": "Uusimmat ensin",
+      "oldest": "Vanhimmat ensin",
+      "closest": "Tiukimmat ensin",
+      "largest": "Suurin osallistujamäärä ensin"
+    },
+    "analysis": {
+      "total": "Äänestyksiä yhteensä",
+      "participation": "Äänestysaktiivisuus",
+      "closeVotes": "Tiukkoja äänestyksiä",
+      "passed": "Hyväksyttyjä äänestyksiä",
+      "aggregateDistribution": "Kooste äänijakaumasta",
+      "closestVotes": "Tiukimmat äänestykset",
+      "avgMargin": "Keskimääräinen marginaali"
+    },
     "results": {
       "time": "Aika",
+      "session": "Istunto",
       "stage": "Vaihe",
       "title": "Otsikko",
+      "context": "Konteksti",
+      "votes": "Äänijakauma",
       "yes": "Jaa",
       "no": "Ei",
       "empty": "Tyhjää",
