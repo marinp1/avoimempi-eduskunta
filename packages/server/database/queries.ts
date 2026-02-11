@@ -1,5 +1,12 @@
 export const sql = String.raw;
 
+// Future query ideas (not implemented yet):
+// 1) Session-level document timeline (agenda -> minutes -> attachments by creation time)
+// 2) Committee session feed with linked documents and participant stats
+// 3) Speaker-level document references (which documents each speech explicitly discussed)
+// 4) Document relation graph traversal (multi-hop links from HE -> committee docs -> votes)
+// 5) Per-document full-text search across typed DocType_* columns
+
 export { default as ageDivisionOverTime } from "./queries/AGE_DIVISION_OVER_TIME.sql";
 export { default as currentComposition } from "./queries/CURRENT_COMPOSITION.sql";
 export { default as genderDivisionOverTime } from "./queries/GENDER_DIVISION_OVER_TIME.sql";

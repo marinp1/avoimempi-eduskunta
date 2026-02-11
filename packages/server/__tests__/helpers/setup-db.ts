@@ -26,6 +26,10 @@ const MIGRATION_FILES = [
   "V001.016__vaski_base_ext.sql",
   "V001.017__vaski_minutes_link.sql",
   "V001.018__vaski_document_summary.sql",
+  "V001.019__query_performance_indexes.sql",
+  "V001.020__vaski_minutes_section_linking.sql",
+  "V001.021__vaski_relational_links.sql",
+  "V001.022__document_v2_schema.sql",
 ];
 
 /**
@@ -224,61 +228,73 @@ export function seedFullDataset(db: Database) {
     [1, 1000, "HEL", "2023-04-01", null],
   );
 
-  // VaskiDocuments
+  // Documents
   db.run(
-    `INSERT INTO VaskiDocument (id, eduskunta_tunnus, document_type_code, document_type_name,
-      title, document_number, parliamentary_year, created, status, summary_text)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [1, "HE 1/2024", "HE", "Hallituksen esitys", "Hallituksen esitys laiksi", "1", "2024",
-      "2024-01-10", "Valmis", "Esitys koskee verotusta"],
+    `INSERT INTO Document (id, type_slug, type_name_fi, root_family, eduskunta_tunnus, document_type_code,
+      document_number_text, parliamentary_year_text, title, status_text, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [1, "hallituksen_esitys", "Hallituksen esitys", "HallituksenEsitys", "HE 1/2024", "HE", "1", "2024",
+      "Hallituksen esitys laiksi", "Valmis", "2024-01-10"],
   );
   db.run(
-    `INSERT INTO VaskiDocument (id, eduskunta_tunnus, document_type_code, document_type_name,
-      title, document_number, parliamentary_year, created, status, summary_text)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [2, "KK 100/2024", "KK", "Kirjallinen kysymys", "Kysymys verotuksesta", "100", "2024",
-      "2024-01-12", "Valmis", "Kysymys koskee tuloverotusta"],
+    `INSERT INTO Document (id, type_slug, type_name_fi, root_family, eduskunta_tunnus, document_type_code,
+      document_number_text, parliamentary_year_text, title, status_text, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [2, "kirjallinen_kysymys", "Kirjallinen kysymys", "Kysymys", "KK 100/2024", "KK", "100", "2024",
+      "Kysymys verotuksesta", "Valmis", "2024-01-12"],
   );
 
-  // Vaski document actors
+  // Document actors
   db.run(
-    `INSERT INTO VaskiDocumentActor (document_id, role_code, first_name, last_name, position_text)
+    `INSERT INTO DocumentActor (document_id, role_code, first_name, last_name, position_text)
      VALUES (?, ?, ?, ?, ?)`,
     [1, "laatija", "Pekka", "Korhonen", "valtiovarainministeri"],
   );
   db.run(
-    `INSERT INTO VaskiDocumentActor (document_id, role_code, first_name, last_name, position_text)
+    `INSERT INTO DocumentActor (document_id, role_code, first_name, last_name, position_text)
      VALUES (?, ?, ?, ?, ?)`,
     [2, "laatija", "Matti", "Meikäläinen", "kansanedustaja"],
   );
 
-  // Vaski subjects
+  // Document subjects
   db.run(
-    `INSERT INTO VaskiSubject (document_id, subject_text) VALUES (?, ?)`,
+    `INSERT INTO DocumentSubject (document_id, subject_text) VALUES (?, ?)`,
     [1, "verotus"],
   );
   db.run(
-    `INSERT INTO VaskiSubject (document_id, subject_text) VALUES (?, ?)`,
+    `INSERT INTO DocumentSubject (document_id, subject_text) VALUES (?, ?)`,
     [1, "talous"],
   );
 
-  // VaskiMinutesSpeech (content for speeches)
+  // Document relations
   db.run(
-    `INSERT INTO VaskiMinutesSpeech (document_id, section_ordinal, ordinal, person_id, first_name, last_name, party,
-      speech_type, start_time, end_time, content, link_key)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [1, 1, 1, 1000, "Matti", "Meikäläinen", "kesk",
+    `INSERT INTO DocumentRelation (document_id, relation_type, target_tunnus)
+     VALUES (?, ?, ?)`,
+    [1, "vireilletulo", "HE 1/2024 vp"],
+  );
+
+  // SessionSectionSpeech (content for speeches)
+  db.run(
+    `INSERT INTO SessionSectionSpeech (session_key, section_key, source_document_id, section_ordinal, speech_ordinal,
+      person_id, first_name, last_name, party, speech_type, start_time, end_time, content, link_key, source_item_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ["2024/1", "2024/1/3", 1, 1, 1, 1000, "Matti", "Meikäläinen", "kesk",
       "(vastauspuheenvuoro)", "2024-01-15T10:00:00", "2024-01-15T10:05:00",
-      "Arvoisa puhemies tämä on testipuheenvuoro kansanedustajalta", "20240115_1000"],
+      "Arvoisa puhemies tämä on testipuheenvuoro kansanedustajalta", "20240115_1000", null],
   );
   db.run(
-    `INSERT INTO VaskiMinutesSpeech (document_id, section_ordinal, ordinal, person_id, first_name, last_name, party,
-      speech_type, start_time, end_time, content, link_key)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [1, 1, 2, 1001, "Maija", "Virtanen", "sd",
+    `INSERT INTO SessionSectionSpeech (session_key, section_key, source_document_id, section_ordinal, speech_ordinal,
+      person_id, first_name, last_name, party, speech_type, start_time, end_time, content, link_key, source_item_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ["2024/1", "2024/1/3", 1, 1, 2, 1001, "Maija", "Virtanen", "sd",
       "(esittelypuheenvuoro)", "2024-01-15T10:05:00", "2024-01-15T10:10:00",
-      "Arvoisa puhemies esittelen tämän asian eduskunnalle", "20240115_1001"],
+      "Arvoisa puhemies esittelen tämän asian eduskunnalle", "20240115_1001", null],
   );
+
+  // Link sections and session to their source documents via direct FKs
+  db.run(`UPDATE Section SET document_id = ? WHERE key = ?`, [1, "2024/1/3"]);
+  db.run(`UPDATE Section SET document_id = ? WHERE key = ?`, [2, "2024/1/4"]);
+  db.run(`UPDATE Session SET minutes_document_id = ? WHERE key = ?`, [1, "2024/1"]);
 
   // Leaving parliament records
   db.run(

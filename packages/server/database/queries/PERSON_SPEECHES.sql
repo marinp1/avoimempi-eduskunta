@@ -13,7 +13,7 @@ SELECT
     ELSE 0
   END AS word_count
 FROM Speech sp
-LEFT JOIN VaskiMinutesSpeech vms ON sp.excel_key = vms.link_key COLLATE NOCASE
+LEFT JOIN SessionSectionSpeech vms ON sp.excel_key = vms.link_key COLLATE NOCASE
 LEFT JOIN Section sec ON sp.section_key = sec.key
 WHERE sp.person_id = $personId
 ORDER BY vms.start_time DESC

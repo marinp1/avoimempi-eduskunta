@@ -195,6 +195,95 @@ describe("Session queries", () => {
     expect(rows).toHaveLength(0);
   });
 
+  test("SESSION_SECTIONS prefers Section.document_id over Session.minutes_document_id", () => {
+    try {
+      db.run(
+        `INSERT INTO Agenda (key, title, state) VALUES (?, ?, ?)`,
+        ["PJ_2025_133", "Täysistunnon päiväjärjestys 133/2025", "Valmis"],
+      );
+      db.run(
+        `INSERT INTO Session (id, number, key, date, year, type, state, agenda_key)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [3133, 133, "2025/133", "2025-12-19", 2025, "varsinainen", "Päättynyt", "PJ_2025_133"],
+      );
+      db.run(
+        `INSERT INTO Section (id, key, identifier, title, ordinal, processing_title, session_key, agenda_key, document_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [31330, "2025/133/1", "1", "Nimenhuuto", 1, "Kokous", "2025/133", "PJ_2025_133", 9002],
+      );
+
+      db.run(
+        `INSERT INTO Document (id, type_slug, type_name_fi, root_family, eduskunta_tunnus, document_type_code,
+          document_number_text, parliamentary_year_text, title, status_text, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [9001, "taysistunnon_poytakirjan_paasivu", "Täysistunnon pöytäkirjan pääsivu", "Poytakirja",
+          "PTK 133/2025 vp", "PTK", "133", "2025", "Pääsivu", "Valmis", "2025-12-19T10:00:00"],
+      );
+      db.run(
+        `INSERT INTO Document (id, type_slug, type_name_fi, root_family, eduskunta_tunnus, document_type_code,
+          document_number_text, parliamentary_year_text, title, status_text, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [9002, "poytakirja", "Pöytäkirja", "Poytakirja",
+          "PTK 133/2025 vp", "PTK", "133", "2025", "Pöytäkirja", "Valmis", "2025-12-19T10:01:00"],
+      );
+
+      db.run(`UPDATE Session SET minutes_document_id = ? WHERE key = ?`, [9001, "2025/133"]);
+
+      const stmt = db.prepare(queries.sessionSections);
+      const rows = stmt.all({ $sessionKey: "2025/133" }) as any[];
+      stmt.finalize();
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0].vaski_title).toBe("Pöytäkirja");
+      expect(rows[0].vaski_document_type_name).toBe("Pöytäkirja");
+    } finally {
+      db.run(`DELETE FROM Document WHERE id IN (9001, 9002)`);
+      db.run(`DELETE FROM Section WHERE id = 31330`);
+      db.run(`DELETE FROM Session WHERE id = 3133`);
+      db.run(`DELETE FROM Agenda WHERE key = 'PJ_2025_133'`);
+    }
+  });
+
+  test("SESSION_SECTIONS uses Session.minutes_document_id when Section.document_id is null", () => {
+    try {
+      db.run(
+        `INSERT INTO Agenda (key, title, state) VALUES (?, ?, ?)`,
+        ["PJ_2025_134", "Täysistunnon päiväjärjestys 134/2025", "Valmis"],
+      );
+      db.run(
+        `INSERT INTO Session (id, number, key, date, year, type, state, agenda_key)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [3134, 134, "2025/134", "2025-12-20", 2025, "varsinainen", "Päättynyt", "PJ_2025_134"],
+      );
+      db.run(
+        `INSERT INTO Section (id, key, identifier, title, ordinal, processing_title, session_key, agenda_key, vaski_id, document_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [31340, "2025/134/1", "1", "Hallituksen esitys", 1, "Ainoa käsittely", "2025/134", "PJ_2025_134", 999999, null],
+      );
+      db.run(
+        `INSERT INTO Document (id, type_slug, type_name_fi, root_family, eduskunta_tunnus, document_type_code,
+          document_number_text, parliamentary_year_text, title, status_text, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [9003, "hallituksen_esitys", "Hallituksen esitys", "HallituksenEsitys", "HE 194/2025 vp", "HE",
+          "194", "2025", "HE 194", "Valmis", "2025-12-18T08:00:00"],
+      );
+      db.run(`UPDATE Session SET minutes_document_id = ? WHERE key = ?`, [9003, "2025/134"]);
+
+      const stmt = db.prepare(queries.sessionSections);
+      const rows = stmt.all({ $sessionKey: "2025/134" }) as any[];
+      stmt.finalize();
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0].vaski_eduskunta_tunnus).toBe("HE 194/2025 vp");
+      expect(rows[0].vaski_title).toBe("HE 194");
+    } finally {
+      db.run(`DELETE FROM Section WHERE id = 31340`);
+      db.run(`DELETE FROM Document WHERE id = 9003`);
+      db.run(`DELETE FROM Session WHERE id = 3134`);
+      db.run(`DELETE FROM Agenda WHERE key = 'PJ_2025_134'`);
+    }
+  });
+
   test("SESSION_BY_DATE returns sessions on a specific date", () => {
     const stmt = db.prepare(queries.sessionByDate);
     const rows = stmt.all({ $date: "2024-01-15" }) as any[];
@@ -235,7 +324,7 @@ describe("Speech queries", () => {
     expect(row.count).toBe(2);
   });
 
-  test("SECTION_SPEECHES returns speeches with content from VaskiMinutesSpeech join", () => {
+  test("SECTION_SPEECHES returns speeches with content from SessionSectionSpeech join", () => {
     const stmt = db.prepare(queries.sectionSpeeches);
     const rows = stmt.all({
       $sectionKey: "2024/1/3",
@@ -545,7 +634,7 @@ describe("Speech activity query", () => {
   });
 });
 
-describe("Vaski helpers", () => {
+describe("Minutes helpers", () => {
   test("LATEST_VASKI_MINUTES_DATE returns max start_time", () => {
     const stmt = db.prepare(queries.latestVaskiMinutesDate);
     const row = stmt.get() as any;
@@ -856,7 +945,7 @@ describe("Schema integrity", () => {
     expect(tableNames).toContain("Voting");
     expect(tableNames).toContain("Vote");
     expect(tableNames).toContain("Speech");
-    expect(tableNames).toContain("VaskiMinutesSpeech");
+    expect(tableNames).toContain("SessionSectionSpeech");
     expect(tableNames).toContain("Term");
     expect(tableNames).toContain("ParliamentaryGroup");
     expect(tableNames).toContain("ParliamentaryGroupMembership");
@@ -866,9 +955,9 @@ describe("Schema integrity", () => {
     expect(tableNames).toContain("TrustPosition");
     expect(tableNames).toContain("District");
     expect(tableNames).toContain("RepresentativeDistrict");
-    expect(tableNames).toContain("VaskiDocument");
-    expect(tableNames).toContain("VaskiSubject");
-    expect(tableNames).toContain("VaskiRelationship");
+    expect(tableNames).toContain("Document");
+    expect(tableNames).toContain("DocumentSubject");
+    expect(tableNames).toContain("DocumentRelation");
   });
 
   test("foreign key constraints are enforced", () => {

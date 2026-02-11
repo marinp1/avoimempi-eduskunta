@@ -24,7 +24,7 @@ SELECT
 FROM
     Speech sp
 LEFT JOIN
-    VaskiMinutesSpeech vms ON sp.excel_key = vms.link_key COLLATE NOCASE
+    SessionSectionSpeech vms ON sp.excel_key = vms.link_key COLLATE NOCASE
 WHERE
     sp.section_key = $sectionKey
 ORDER BY sp.ordinal ASC

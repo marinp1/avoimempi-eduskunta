@@ -15,7 +15,7 @@ SELECT
   MIN(vms.start_time) AS first_speech,
   MAX(vms.start_time) AS last_speech
 FROM Speech sp
-LEFT JOIN VaskiMinutesSpeech vms ON sp.excel_key = vms.link_key COLLATE NOCASE
+LEFT JOIN SessionSectionSpeech vms ON sp.excel_key = vms.link_key COLLATE NOCASE
 JOIN Representative r ON sp.person_id = r.person_id
 JOIN Term t ON r.person_id = t.person_id AND t.end_date IS NULL
 GROUP BY r.person_id, r.first_name, r.last_name, r.party

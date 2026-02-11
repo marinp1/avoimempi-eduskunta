@@ -5,13 +5,20 @@ import { join } from "node:path";
 import { XMLParser } from "fast-xml-parser";
 
 interface VaskiRecord {
-  Id: string;
-  XmlData: string;
-  Status: string;
-  Created: string;
-  Eduskuntatunnus: string;
-  AttachmentGroupId: string;
-  Imported: string;
+  Id?: string;
+  XmlData?: string;
+  Status?: string;
+  Created?: string;
+  Eduskuntatunnus?: string;
+  AttachmentGroupId?: string | null;
+  Imported?: string;
+  id?: string;
+  status?: string;
+  created?: string;
+  eduskuntaTunnus?: string;
+  attachmentGroupId?: string | null;
+  contents?: any;
+  _skip?: boolean;
 }
 
 interface VaskiDataFile {
@@ -24,10 +31,7 @@ interface VaskiDataFile {
 // Store parsed data in batches to avoid memory issues
 const schemaFields = new Map<string, Set<string>>();
 let totalRecordsProcessed = 0;
-const documentTypeCounters = new Map<
-  string,
-  Map<string, Map<string, Map<string, number>>>
->(); // Counter per yhteisoTeksti -> kokousTunnus -> rakenneAsiakirja -> documentType
+const documentTypeCounters = new Map<string, Map<string, Map<string, number>>>(); // Counter per yhteisoTeksti -> kokousTunnus -> documentType
 const documentTypeStats = new Map<string, Map<string, number>>(); // Track count per rakenneAsiakirja -> documentType
 const rakenneAsiakirjaStats = new Map<string, number>(); // Track count per rakenneAsiakirja type
 
@@ -240,13 +244,22 @@ async function parseVaskiFile(
 
     for (const record of data.rowData) {
       try {
-        // Parse XML to JSON
-        const parsed = parser.parse(record.XmlData);
-
-        // Clean XML parser artifacts (remove @_xmlns:ns, convert #text)
-        const cleanedParsed = cleanParsedXml(parsed);
-
-        const contents = cleanedParsed;
+        // Parsed files can contain either:
+        // 1) canonical parser output with `contents`
+        // 2) legacy rows with `XmlData`
+        // 3) filtered rows with `_skip` and no XML payload
+        let contents: any;
+        if (record?.contents && typeof record.contents === "object") {
+          contents = record.contents;
+        } else if (typeof record?.XmlData === "string" && record.XmlData.length > 0) {
+          const parsed = parser.parse(record.XmlData);
+          contents = cleanParsedXml(parsed);
+        } else {
+          // Legacy parsed rows may have neither XmlData nor contents
+          // (e.g. pre-filtered records). Keep them in output as metadata-only
+          // records so analysis does not silently drop them.
+          contents = {};
+        }
 
         // All namespace prefixes are now removed, so we can access directly
         let metatieto =
@@ -273,12 +286,12 @@ async function parseVaskiFile(
         }
 
         const parsedRecord = {
-          id: record.Id,
-          eduskuntaTunnus: record.Eduskuntatunnus,
-          status: record.Status,
-          created: record.Created,
-          attachmentGroupId: record.AttachmentGroupId,
-          contents: contents,
+          id: record.id ?? record.Id,
+          eduskuntaTunnus: record.eduskuntaTunnus ?? record.Eduskuntatunnus,
+          status: record.status ?? record.Status,
+          created: record.created ?? record.Created,
+          attachmentGroupId: record.attachmentGroupId ?? record.AttachmentGroupId,
+          contents,
         };
 
         totalRecordsProcessed++;
@@ -371,7 +384,7 @@ async function parseVaskiFile(
         const docTypeMap = documentTypeStats.get(rakenneAsiakirjaType)!;
         docTypeMap.set(documentType, (docTypeMap.get(documentType) || 0) + 1);
 
-        // Get or initialize counter for this yhteisoTeksti -> kokousTunnus -> rakenneAsiakirja -> document type
+        // Get or initialize counter for this yhteisoTeksti -> kokousTunnus -> document type
         if (!documentTypeCounters.has(yhteisoTeksti)) {
           documentTypeCounters.set(yhteisoTeksti, new Map());
         }
@@ -379,20 +392,15 @@ async function parseVaskiFile(
         if (!yhteisoCounters.has(kokousTunnus)) {
           yhteisoCounters.set(kokousTunnus, new Map());
         }
-        const kokousCounters = yhteisoCounters.get(kokousTunnus)!;
-        if (!kokousCounters.has(rakenneAsiakirjaType)) {
-          kokousCounters.set(rakenneAsiakirjaType, new Map());
-        }
-        const counterMap = kokousCounters.get(rakenneAsiakirjaType)!;
+        const counterMap = yhteisoCounters.get(kokousTunnus)!;
         const currentCounter = counterMap.get(documentType) || 0;
         counterMap.set(documentType, currentCounter + 1);
 
-        // Write individual file to subdirectory: yhteisoTeksti/kokousTunnus/rakenneAsiakirjaType/documentType/
+        // Write individual file to subdirectory: yhteisoTeksti/kokousTunnus/documentType/
         const subdirPath = join(
           outputDir,
           yhteisoTeksti,
           kokousTunnus,
-          rakenneAsiakirjaType,
           documentType,
         );
 
@@ -410,7 +418,11 @@ async function parseVaskiFile(
 
         progressBar.increment();
       } catch (error) {
-        console.error(`\nError parsing XML for record ${record.Id}:`, error);
+        console.error(
+          `\nError parsing XML for record ${record?.id ?? record?.Id ?? "unknown-id"}:`,
+          error,
+        );
+        progressBar.increment();
       }
     }
   } catch (error) {

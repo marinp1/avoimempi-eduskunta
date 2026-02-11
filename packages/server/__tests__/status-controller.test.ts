@@ -22,14 +22,14 @@ describe("StatusController", () => {
     const tableNames = overview.tables.map((t) => t.tableName);
 
     expect(overview.totalTables).toBeGreaterThan(0);
-    expect(tableNames).toContain("VaskiSubject");
-    expect(tableNames).toContain("VaskiRelationship");
-    expect(tableNames).not.toContain("DocumentSubject");
-    expect(tableNames).not.toContain("DocumentRelationship");
+    expect(tableNames).toContain("DocumentSubject");
+    expect(tableNames).toContain("DocumentRelation");
+    expect(tableNames).not.toContain("VaskiSubject");
+    expect(tableNames).not.toContain("VaskiRelationship");
   });
 
   test("getTableDetails rejects invalid table name", async () => {
-    expect(controller.getTableDetails("DocumentSubject")).rejects.toThrow(
+    expect(controller.getTableDetails("VaskiSubject")).rejects.toThrow(
       "Invalid table name",
     );
   });

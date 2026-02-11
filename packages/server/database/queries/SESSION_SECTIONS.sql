@@ -11,7 +11,9 @@ WITH session_sections AS (
     sec.session_key,
     sec.agenda_key,
     sec.modified_datetime,
-    sec.vaski_id
+    sec.vaski_id,
+    sec.document_id,
+    sec.document_tunnus
   FROM Section sec
   WHERE sec.session_key = $sessionKey
 ),
@@ -33,10 +35,17 @@ voting_stats AS (
   JOIN session_sections ss ON ss.key = v.section_key
   GROUP BY v.section_key
 ),
+selected_docs AS (
+  SELECT
+    ss.id AS section_id,
+    COALESCE(ss.document_id, s.minutes_document_id) AS document_id
+  FROM session_sections ss
+  JOIN Session s ON s.key = ss.session_key
+),
 doc_ids AS (
-  SELECT DISTINCT vaski_id AS id
-  FROM session_sections
-  WHERE vaski_id IS NOT NULL
+  SELECT DISTINCT document_id AS id
+  FROM selected_docs
+  WHERE document_id IS NOT NULL
 ),
 authors AS (
   SELECT
@@ -47,30 +56,30 @@ authors AS (
     ranked.organization_text
   FROM (
     SELECT
-      va.document_id,
-      va.first_name,
-      va.last_name,
-      va.position_text,
-      va.organization_text,
-      ROW_NUMBER() OVER (PARTITION BY va.document_id ORDER BY va.id ASC) AS rn
-    FROM VaskiDocumentActor va
-    WHERE va.role_code = 'laatija'
-      AND va.document_id IN (SELECT id FROM doc_ids)
+      da.document_id,
+      da.first_name,
+      da.last_name,
+      da.position_text,
+      da.organization_text,
+      ROW_NUMBER() OVER (PARTITION BY da.document_id ORDER BY da.id ASC) AS rn
+    FROM DocumentActor da
+    WHERE LOWER(da.role_code) = 'laatija'
+      AND da.document_id IN (SELECT id FROM doc_ids)
   ) ranked
   WHERE ranked.rn = 1
 ),
 source_refs AS (
   SELECT
     ranked.document_id,
-    ranked.target_eduskunta_tunnus
+    ranked.target_tunnus AS target_eduskunta_tunnus
   FROM (
     SELECT
-      vr.document_id,
-      vr.target_eduskunta_tunnus,
-      ROW_NUMBER() OVER (PARTITION BY vr.document_id ORDER BY vr.id ASC) AS rn
-    FROM VaskiRelationship vr
-    WHERE vr.relationship_type = 'vireilletulo'
-      AND vr.document_id IN (SELECT id FROM doc_ids)
+      dr.document_id,
+      dr.target_tunnus,
+      ROW_NUMBER() OVER (PARTITION BY dr.document_id ORDER BY dr.id ASC) AS rn
+    FROM DocumentRelation dr
+    WHERE dr.relation_type = 'vireilletulo'
+      AND dr.document_id IN (SELECT id FROM doc_ids)
   ) ranked
   WHERE ranked.rn = 1
 ),
@@ -82,7 +91,7 @@ subjects AS (
     SELECT DISTINCT
       ds.document_id,
       ds.subject_text
-    FROM VaskiSubject ds
+    FROM DocumentSubject ds
     WHERE ds.document_id IN (SELECT id FROM doc_ids)
   ) src
   GROUP BY src.document_id
@@ -100,19 +109,22 @@ SELECT
   ss.agenda_key,
   ss.modified_datetime,
   ss.vaski_id,
-  vd.document_type_name AS vaski_document_type_name,
-  vd.document_type_code AS vaski_document_type_code,
-  vd.eduskunta_tunnus AS vaski_eduskunta_tunnus,
-  vd.document_number AS vaski_document_number,
-  vd.parliamentary_year AS vaski_parliamentary_year,
-  vd.title AS vaski_title,
-  vd.summary_text AS vaski_summary,
+  d.type_name_fi AS vaski_document_type_name,
+  d.document_type_code AS vaski_document_type_code,
+  d.eduskunta_tunnus AS vaski_eduskunta_tunnus,
+  CASE
+    WHEN d.document_number_text GLOB '[0-9]*' THEN CAST(d.document_number_text AS INTEGER)
+    ELSE NULL
+  END AS vaski_document_number,
+  d.parliamentary_year_text AS vaski_parliamentary_year,
+  d.title AS vaski_title,
+  NULL AS vaski_summary,
   a.first_name AS vaski_author_first_name,
   a.last_name AS vaski_author_last_name,
   a.position_text AS vaski_author_role,
   a.organization_text AS vaski_author_organization,
-  vd.created AS vaski_creation_date,
-  vd.status AS vaski_status,
+  d.created_at AS vaski_creation_date,
+  d.status_text AS vaski_status,
   sr.target_eduskunta_tunnus AS vaski_source_reference,
   sub.vaski_subjects,
   COALESCE(vs.voting_count, 0) AS voting_count,
@@ -120,10 +132,11 @@ SELECT
   COALESCE(sps.speaker_count, 0) AS speaker_count,
   COALESCE(sps.party_count, 0) AS party_count
 FROM session_sections ss
-LEFT JOIN VaskiDocument vd ON vd.id = ss.vaski_id
-LEFT JOIN authors a ON a.document_id = vd.id
-LEFT JOIN source_refs sr ON sr.document_id = vd.id
-LEFT JOIN subjects sub ON sub.document_id = vd.id
+LEFT JOIN selected_docs sd ON sd.section_id = ss.id
+LEFT JOIN Document d ON d.id = sd.document_id
+LEFT JOIN authors a ON a.document_id = d.id
+LEFT JOIN source_refs sr ON sr.document_id = d.id
+LEFT JOIN subjects sub ON sub.document_id = d.id
 LEFT JOIN voting_stats vs ON vs.section_key = ss.key
 LEFT JOIN speech_stats sps ON sps.section_key = ss.key
 ORDER BY ss.ordinal ASC

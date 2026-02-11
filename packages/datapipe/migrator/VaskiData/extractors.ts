@@ -191,6 +191,7 @@ export function extractDocument(entry: VaskiEntry): DatabaseTables.VaskiDocument
     language_code: meta?.["@_kieliKoodi"] ?? "fi",
     publicity_code: meta?.["@_julkisuusKoodi"] ?? null,
     summary_text: extractSummaryFromContent(entry),
+    content_root_type: null,
     attachment_group_id: entry.attachmentGroupId ? parseInt(entry.attachmentGroupId, 10) : null,
     created: entry.created,
   };
