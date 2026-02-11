@@ -147,6 +147,18 @@ const server = Bun.serve<{
       },
     },
 
+    "/api/votings/:id": {
+      GET: async (req: BunRequest<"/api/votings/:id">) => {
+        const voting = await db.fetchVotingById(req.params);
+        if (!voting) {
+          return Response.json({ message: "Voting not found" }, { status: 404 });
+        }
+        return new Response(JSON.stringify(voting), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
     "/api/sessions": {
       GET: async (req: Request) => {
         const { searchParams } = new URL(req.url);

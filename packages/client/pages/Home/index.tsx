@@ -13,10 +13,12 @@ import {
   Collapse,
   Grid,
   IconButton,
+  Link,
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { refs } from "#client/references";
 import { colors } from "#client/theme/index";
 import { commonStyles, spacing } from "#client/theme";
 import {
@@ -428,7 +430,9 @@ const Home = () => {
                   flexWrap: "wrap",
                 }}
               >
-                <Typography
+                <Link
+                  href={refs.session(session.key, session.date)}
+                  underline="hover"
                   sx={{
                     fontWeight: 700,
                     fontSize: "0.9375rem",
@@ -436,7 +440,7 @@ const Home = () => {
                   }}
                 >
                   {session.key}
-                </Typography>
+                </Link>
                 {session.section_count > 0 && (
                   <Chip
                     label={`${session.section_count} ${t("home.sections")}`}
@@ -653,16 +657,19 @@ const Home = () => {
                                           : themedColors.error,
                                       }}
                                     />
-                                    <Typography
+                                    <Link
+                                      href={refs.voting(voting.id, session.key, session.date)}
+                                      underline="hover"
                                       sx={{
                                         fontWeight: 600,
                                         fontSize: "0.8125rem",
                                         flex: 1,
                                         minWidth: 0,
+                                        color: colors.textPrimary,
                                       }}
                                     >
                                       {voting.title}
-                                    </Typography>
+                                    </Link>
                                     <Chip
                                       label={
                                         isPassed ? "Hyväksytty" : "Hylätty"

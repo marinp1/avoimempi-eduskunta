@@ -16,9 +16,37 @@ import { VoteResults } from "./VoteResults";
 export default () => {
   const { t } = useTranslation();
   const themedColors = useThemedColors();
-  const [search, setSearch] = React.useState("");
+  const getInitialParams = React.useCallback(() => {
+    const params = new URLSearchParams(window.location.search);
+    const votingRaw = params.get("voting");
+    const voting = votingRaw ? Number(votingRaw) : null;
+    return {
+      query: params.get("q") ?? "",
+      session: params.get("session"),
+      voting: Number.isFinite(voting) ? voting : null,
+    };
+  }, []);
+
+  const [search, setSearch] = React.useState(() => getInitialParams().query);
+  const [focusVotingId, setFocusVotingId] = React.useState<number | null>(
+    () => getInitialParams().voting,
+  );
+  const [focusSessionKey, setFocusSessionKey] = React.useState<string | null>(
+    () => getInitialParams().session,
+  );
   const deferredQuery = React.useDeferredValue(search);
   const isStale = search !== deferredQuery;
+
+  React.useEffect(() => {
+    const handlePopState = () => {
+      const next = getInitialParams();
+      setSearch(next.query);
+      setFocusVotingId(next.voting);
+      setFocusSessionKey(next.session);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [getInitialParams]);
 
   return (
     <Box>
@@ -74,7 +102,11 @@ export default () => {
               : "opacity 0s 0s linear",
           }}
         >
-          <VoteResults query={deferredQuery} />
+          <VoteResults
+            query={deferredQuery}
+            focusVotingId={focusVotingId}
+            initialSessionFilter={focusSessionKey}
+          />
         </Box>
       </React.Suspense>
     </Box>

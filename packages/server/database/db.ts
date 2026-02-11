@@ -135,6 +135,16 @@ export class DatabaseConnection {
     return data;
   }
 
+  public async fetchVotingById(params: { id: string }) {
+    const stmt = this.db.prepare<
+      DatabaseQueries.VotingSearchResult,
+      { $id: number }
+    >(queries.votingById);
+    const data = stmt.get({ $id: +params.id });
+    stmt.finalize();
+    return data ?? null;
+  }
+
   public async fetchSessions(params: { page: number; limit: number }) {
     const offset = (params.page - 1) * params.limit;
 

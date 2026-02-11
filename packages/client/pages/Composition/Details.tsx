@@ -16,6 +16,7 @@ import {
   Dialog,
   DialogContent,
   IconButton,
+  Link,
   List,
   ListItem,
   ListItemText,
@@ -25,6 +26,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import React from "react";
+import { refs } from "#client/references";
 import { colors } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import theme from "#client/theme";
@@ -492,7 +494,9 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1 }}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography variant="body2" fontWeight="600" sx={{ color: themedColors.textPrimary }} noWrap>
-                      {d.title || d.section_title}
+                      <Link href={refs.voting(d.voting_id, undefined, d.start_time)} underline="hover" color="inherit">
+                        {d.title || d.section_title}
+                      </Link>
                     </Typography>
                     <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
                       {new Date(d.start_time).toLocaleDateString("fi-FI")}
@@ -553,7 +557,9 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
               >
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography variant="body2" sx={{ color: themedColors.textPrimary }} noWrap>
-                    {v.title || v.section_title}
+                    <Link href={refs.voting(v.id, undefined, v.start_time)} underline="hover" color="inherit">
+                      {v.title || v.section_title}
+                    </Link>
                   </Typography>
                   <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
                     {new Date(v.start_time).toLocaleDateString("fi-FI")}

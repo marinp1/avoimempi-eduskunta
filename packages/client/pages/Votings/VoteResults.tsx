@@ -24,6 +24,7 @@ import {
 } from "@mui/material";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { refs } from "#client/references";
 import { colors, commonStyles } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { DataCard, MetricCard, VoteMarginBar } from "#client/theme/components";
@@ -40,10 +41,22 @@ type SearchState = {
   rows: VotingSearchRow[];
 };
 
+type FocusVotingState = {
+  loading: boolean;
+  error: string | null;
+  row: VotingSearchRow | null;
+};
+
 const emptyState: SearchState = {
   loading: false,
   error: null,
   rows: [],
+};
+
+const emptyFocusState: FocusVotingState = {
+  loading: false,
+  error: null,
+  row: null,
 };
 
 const eduskuntaLink = (href: string) => {
@@ -58,20 +71,16 @@ const isCloseVote = (vote: VotingSearchRow) => voteMargin(vote) <= CLOSE_VOTE_TH
 const isVotePassed = (vote: VotingSearchRow) => vote.n_yes > vote.n_no;
 
 const getPrimaryTitle = (vote: VotingSearchRow) =>
-  vote.context_title || vote.section_title || vote.main_section_title || vote.agenda_title || vote.title;
+  vote.context_title ||
+  vote.section_title ||
+  vote.main_section_title ||
+  vote.agenda_title ||
+  vote.title;
 
 const getSecondaryTitle = (vote: VotingSearchRow) => {
   if (!vote.title || vote.title === getPrimaryTitle(vote)) return null;
   return vote.title;
 };
-
-const getContextTokens = (vote: VotingSearchRow) =>
-  [
-    vote.agenda_title,
-    vote.section_processing_title,
-    vote.section_key ? `section ${vote.section_key}` : null,
-    Number.isFinite(vote.number) ? `#${vote.number}` : null,
-  ].filter((value): value is string => Boolean(value));
 
 const sortRows = (rows: VotingSearchRow[], sortMode: SortMode) => {
   const copy = [...rows];
@@ -88,17 +97,28 @@ const sortRows = (rows: VotingSearchRow[], sortMode: SortMode) => {
   }
 };
 
-export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
+export const VoteResults: React.FC<{
+  query: string;
+  focusVotingId?: number | null;
+  initialSessionFilter?: string | null;
+}> = ({ query, focusVotingId, initialSessionFilter }) => {
   const { t } = useTranslation();
   const themedColors = useThemedColors();
   const voteColors = getVoteColors(themedColors);
 
   const [state, setState] = React.useState<SearchState>(emptyState);
+  const [focusVoting, setFocusVoting] = React.useState<FocusVotingState>(emptyFocusState);
   const [phaseFilter, setPhaseFilter] = React.useState<string>("all");
-  const [sessionFilter, setSessionFilter] = React.useState<string>("all");
+  const [sessionFilter, setSessionFilter] = React.useState<string>(
+    initialSessionFilter || "all",
+  );
   const [sortMode, setSortMode] = React.useState<SortMode>("newest");
 
   const normalizedQuery = query.trim();
+
+  React.useEffect(() => {
+    setSessionFilter(initialSessionFilter || "all");
+  }, [initialSessionFilter]);
 
   React.useEffect(() => {
     if (!normalizedQuery || normalizedQuery.length < 3) {
@@ -132,24 +152,71 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
     return () => ac.abort();
   }, [normalizedQuery, t]);
 
+  React.useEffect(() => {
+    if (!focusVotingId) {
+      setFocusVoting(emptyFocusState);
+      return;
+    }
+
+    const ac = new AbortController();
+
+    const run = async () => {
+      setFocusVoting({ loading: true, error: null, row: null });
+      try {
+        const res = await fetch(`/api/votings/${focusVotingId}`, {
+          signal: ac.signal,
+        });
+        if (res.status === 404) {
+          setFocusVoting({
+            loading: false,
+            error: `${t("errors.loadFailed")}: ${t("common.none")}`,
+            row: null,
+          });
+          return;
+        }
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        const row: VotingSearchRow = await res.json();
+        setFocusVoting({ loading: false, error: null, row });
+      } catch (error) {
+        if (ac.signal.aborted) return;
+        setFocusVoting({
+          loading: false,
+          error: error instanceof Error ? error.message : t("errors.unknownError"),
+          row: null,
+        });
+      }
+    };
+
+    run();
+    return () => ac.abort();
+  }, [focusVotingId, t]);
+
+  const combinedRows = React.useMemo(() => {
+    const rows = [...state.rows];
+    if (focusVoting.row && !rows.some((row) => row.id === focusVoting.row?.id)) {
+      rows.unshift(focusVoting.row);
+    }
+    return rows;
+  }, [state.rows, focusVoting.row]);
+
   const phases = React.useMemo(
-    () => Array.from(new Set(state.rows.map((row) => row.section_processing_phase))).sort(),
-    [state.rows],
+    () => Array.from(new Set(combinedRows.map((row) => row.section_processing_phase))).sort(),
+    [combinedRows],
   );
 
   const sessions = React.useMemo(
-    () => Array.from(new Set(state.rows.map((row) => row.session_key))).sort().reverse(),
-    [state.rows],
+    () => Array.from(new Set(combinedRows.map((row) => row.session_key))).sort().reverse(),
+    [combinedRows],
   );
 
   const filtered = React.useMemo(() => {
-    const rows = state.rows.filter((row) => {
+    const rows = combinedRows.filter((row) => {
       if (phaseFilter !== "all" && row.section_processing_phase !== phaseFilter) return false;
       if (sessionFilter !== "all" && row.session_key !== sessionFilter) return false;
       return true;
     });
     return sortRows(rows, sortMode);
-  }, [state.rows, phaseFilter, sessionFilter, sortMode]);
+  }, [combinedRows, phaseFilter, sessionFilter, sortMode]);
 
   const aggregate = React.useMemo(() => {
     const total = filtered.length;
@@ -163,8 +230,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
     const passedVotes = filtered.filter(isVotePassed).length;
     const avgMargin =
       total > 0 ? filtered.reduce((sum, row) => sum + voteMargin(row), 0) / total : 0;
-    const participationPct =
-      possibleVotes > 0 ? (votesCast / possibleVotes) * 100 : 0;
+    const participationPct = possibleVotes > 0 ? (votesCast / possibleVotes) * 100 : 0;
 
     return {
       total,
@@ -181,7 +247,7 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
 
   const closestVotes = React.useMemo(() => sortRows(filtered, "closest").slice(0, 5), [filtered]);
 
-  const noSearch = normalizedQuery.length < 3;
+  const noSearch = normalizedQuery.length < 3 && !focusVotingId;
 
   return (
     <Box>
@@ -197,19 +263,19 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
         </DataCard>
       )}
 
-      {!noSearch && state.loading && (
+      {!noSearch && (state.loading || focusVoting.loading) && (
         <Box sx={{ ...commonStyles.centeredFlex, py: 5 }}>
           <CircularProgress size={28} sx={{ color: themedColors.primary }} />
         </Box>
       )}
 
-      {!noSearch && !state.loading && state.error && (
+      {!noSearch && !state.loading && !focusVoting.loading && (state.error || focusVoting.error) && (
         <Alert severity="error" sx={{ mb: 3 }}>
-          {t("errors.loadFailed")}: {state.error}
+          {t("errors.loadFailed")}: {state.error || focusVoting.error}
         </Alert>
       )}
 
-      {!noSearch && !state.loading && !state.error && (
+      {!noSearch && !state.loading && !focusVoting.loading && !state.error && !focusVoting.error && (
         <Stack spacing={3}>
           <DataCard sx={{ p: 2.5 }}>
             <Box
@@ -366,7 +432,10 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                         {getPrimaryTitle(vote)}
                       </Typography>
                       <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
-                        {vote.session_key} | {t("votings.margin")}: {voteMargin(vote)} | {vote.n_yes} - {vote.n_no}
+                        <Link href={refs.session(vote.session_key, vote.start_time)} underline="hover" color="inherit">
+                          {vote.session_key}
+                        </Link>{" "}
+                        | {t("votings.margin")}: {voteMargin(vote)} | {vote.n_yes} - {vote.n_no}
                       </Typography>
                       {getSecondaryTitle(vote) && (
                         <Typography variant="caption" sx={{ color: themedColors.textTertiary }}>
@@ -408,7 +477,11 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                                 ? new Date(vote.start_time).toLocaleDateString("fi-FI")
                                 : "-"}
                             </TableCell>
-                            <TableCell sx={{ fontWeight: 600 }}>{vote.session_key}</TableCell>
+                            <TableCell sx={{ fontWeight: 600 }}>
+                              <Link href={refs.session(vote.session_key, vote.start_time)} underline="hover" color="inherit">
+                                {vote.session_key}
+                              </Link>
+                            </TableCell>
                             <TableCell>
                               <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap" }}>
                                 <Chip size="small" label={vote.section_processing_phase} />
@@ -437,9 +510,20 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                             </TableCell>
                             <TableCell sx={{ maxWidth: 360 }}>
                               <Stack direction="row" spacing={0.75} sx={{ flexWrap: "wrap" }}>
-                                {getContextTokens(vote).map((token) => (
-                                  <Chip key={`${vote.id}-${token}`} size="small" label={token} variant="outlined" />
-                                ))}
+                                {vote.agenda_title && (
+                                  <Chip size="small" label={vote.agenda_title} variant="outlined" />
+                                )}
+                                {vote.section_processing_title && (
+                                  <Chip size="small" label={vote.section_processing_title} variant="outlined" />
+                                )}
+                                {vote.section_key && (
+                                  <Link href={refs.section(vote.section_key, vote.start_time, vote.session_key)} underline="none">
+                                    <Chip size="small" label={`section ${vote.section_key}`} variant="outlined" clickable />
+                                  </Link>
+                                )}
+                                {Number.isFinite(vote.number) && (
+                                  <Chip size="small" label={`#${vote.number}`} variant="outlined" />
+                                )}
                               </Stack>
                             </TableCell>
                             <TableCell>
@@ -460,7 +544,13 @@ export const VoteResults: React.FC<{ query: string }> = ({ query }) => {
                               </Stack>
                             </TableCell>
                             <TableCell>
-                              <Stack direction="row" spacing={1}>
+                              <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
+                                <Link
+                                  href={refs.voting(vote.id, vote.session_key, vote.start_time)}
+                                  sx={{ color: themedColors.primary, fontWeight: 600 }}
+                                >
+                                  #{vote.id}
+                                </Link>
                                 <Link
                                   target="_blank"
                                   rel="noreferrer"

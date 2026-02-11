@@ -45,4 +45,5 @@ export { default as personDissents } from "./queries/PERSON_DISSENTS.sql";
 export { default as partyMembers } from "./queries/PARTY_MEMBERS.sql";
 export { default as federatedSearch } from "./queries/FEDERATED_SEARCH.sql";
 export { default as votingsSearch } from "./queries/VOTINGS_SEARCH.sql";
+export { default as votingById } from "./queries/VOTING_BY_ID.sql";
 export { default as latestVaskiMinutesDate } from "./queries/LATEST_VASKI_MINUTES_DATE.sql";

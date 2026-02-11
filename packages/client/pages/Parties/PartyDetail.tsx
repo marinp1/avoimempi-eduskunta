@@ -9,6 +9,7 @@ import {
   Dialog,
   DialogContent,
   IconButton,
+  Link,
   Tab,
   Table,
   TableBody,
@@ -21,6 +22,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
+import { refs } from "#client/references";
 import {
   Bar,
   BarChart,
@@ -155,7 +157,9 @@ const MembersTab: React.FC<{ partyCode: string }> = ({ partyCode }) => {
             <TableRow key={m.person_id}>
               <TableCell>
                 <Typography variant="body2" fontWeight={600}>
-                  {m.last_name}, {m.first_name}
+                  <Link href={refs.member(m.person_id)} underline="hover" color="inherit">
+                    {m.last_name}, {m.first_name}
+                  </Link>
                 </Typography>
               </TableCell>
               <TableCell>
