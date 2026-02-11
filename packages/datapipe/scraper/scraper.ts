@@ -60,7 +60,7 @@ async function getLastScrapedPage(
   stage: DataStage,
 ): Promise<number> {
   const prefix = StorageKeyBuilder.listPrefixForTable(stage, tableName);
-  const result = await storage.list({ prefix });
+  const result = await storage.list({ prefix, maxKeys: 10_000_000 });
 
   if (result.keys.length === 0) {
     return 0;
