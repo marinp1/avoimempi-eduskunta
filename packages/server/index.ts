@@ -1,8 +1,8 @@
 // modules/server/server.ts
 
 import type { BunRequest } from "bun";
-import { DatabaseConnection } from "./database/db";
 import { StatusController } from "./controllers/status-controller";
+import { DatabaseConnection } from "./database/db";
 import homepage from "./public/index.html";
 
 const db = new DatabaseConnection();
@@ -151,7 +151,10 @@ const server = Bun.serve<{
       GET: async (req: BunRequest<"/api/votings/:id">) => {
         const voting = await db.fetchVotingById(req.params);
         if (!voting) {
-          return Response.json({ message: "Voting not found" }, { status: 404 });
+          return Response.json(
+            { message: "Voting not found" },
+            { status: 404 },
+          );
         }
         return new Response(JSON.stringify(voting), {
           headers: { "Content-Type": "application/json" },
@@ -284,8 +287,20 @@ const server = Bun.serve<{
         const sessions = await db.fetchSessionWithSectionsByDate({
           date: req.params.date,
         });
-        const vaskiLatestSpeechDate = await db.fetchLatestVaskiMinutesDate();
-        return new Response(JSON.stringify({ sessions, vaskiLatestSpeechDate }), {
+        const sessionsWithDocs = await Promise.all(
+          sessions.map(async (session) => {
+            const [documents, notices] = await Promise.all([
+              db.fetchSessionDocuments({ sessionKey: session.key }),
+              db.fetchSessionNotices({ sessionKey: session.key }),
+            ]);
+            return {
+              ...session,
+              documents,
+              notices,
+            };
+          }),
+        );
+        return new Response(JSON.stringify({ sessions: sessionsWithDocs }), {
           headers: { "Content-Type": "application/json" },
         });
       },
@@ -306,6 +321,17 @@ const server = Bun.serve<{
       GET: async () => {
         const dates = await db.fetchSessionDates();
         return new Response(JSON.stringify(dates), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
+    "/api/sections/:sectionKey/links": {
+      GET: async (req: BunRequest<"/api/sections/:sectionKey/links">) => {
+        const links = await db.fetchSectionDocumentLinks({
+          sectionKey: req.params.sectionKey,
+        });
+        return new Response(JSON.stringify(links), {
           headers: { "Content-Type": "application/json" },
         });
       },
@@ -400,37 +426,6 @@ const server = Bun.serve<{
         const data = await db.fetchPartyMembers({
           partyCode: req.params.code,
         });
-        return Response.json(data);
-      },
-    },
-
-    // ─── Document endpoints ───
-
-    "/api/documents/search": {
-      GET: async (req: Request) => {
-        const { searchParams } = new URL(req.url);
-        const data = await db.searchDocuments({
-          q: searchParams.get("q") || undefined,
-          type: searchParams.get("type") || undefined,
-          year: searchParams.get("year") || undefined,
-          limit: parseInt(searchParams.get("limit") || "50", 10),
-          offset: parseInt(searchParams.get("offset") || "0", 10),
-        });
-        return Response.json(data);
-      },
-    },
-
-    "/api/documents/by-type": {
-      GET: async () => {
-        const data = await db.fetchDocumentsByType();
-        return Response.json(data);
-      },
-    },
-
-    "/api/documents/:id": {
-      GET: async (req: BunRequest<"/api/documents/:id">) => {
-        const data = await db.fetchDocumentDetail({ id: req.params.id });
-        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
         return Response.json(data);
       },
     },

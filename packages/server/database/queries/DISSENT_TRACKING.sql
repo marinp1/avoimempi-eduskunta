@@ -1,5 +1,5 @@
 WITH recent_votings AS (
-  SELECT id, start_time, title, section_title
+  SELECT id, start_time, start_date, title, section_title
   FROM Voting
   WHERE annulled = 0
   ORDER BY start_time DESC
@@ -41,9 +41,9 @@ JOIN Representative r ON v.person_id = r.person_id
 JOIN party_majority pm ON v.voting_id = pm.voting_id AND v.group_abbreviation = pm.party
 LEFT JOIN ParliamentaryGroupMembership pgm
   ON v.person_id = pgm.person_id
-  AND pgm.group_code LIKE pm.party || '%'
-  AND DATE(rv.start_time) >= pgm.start_date
-  AND (pgm.end_date IS NULL OR DATE(rv.start_time) <= pgm.end_date)
+  AND pgm.group_abbreviation = pm.party
+  AND rv.start_date >= pgm.start_date
+  AND (pgm.end_date IS NULL OR rv.start_date <= pgm.end_date)
 WHERE v.vote IN ('Jaa', 'Ei', 'Tyhjää')
   AND v.vote != pm.majority_vote
   AND ($personId IS NULL OR r.person_id = $personId)

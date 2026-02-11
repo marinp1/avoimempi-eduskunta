@@ -1,11 +1,11 @@
 import {
+  Close as CloseIcon,
+  Event,
   Home,
   HowToVote,
-  Event,
+  Menu as MenuIcon,
   MoreHoriz,
   People,
-  Menu as MenuIcon,
-  Close as CloseIcon,
 } from "@mui/icons-material";
 import {
   AppBar,
@@ -36,7 +36,6 @@ const mainNavRoutes: RouteName[] = [
   "puolueet",
   "istunnot",
   "aanestykset",
-  "asiakirjat",
   "analytiikka",
 ];
 

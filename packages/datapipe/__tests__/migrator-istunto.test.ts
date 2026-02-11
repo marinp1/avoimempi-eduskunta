@@ -1,8 +1,8 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { Database } from "bun:sqlite";
-import { createTestDb } from "./helpers/setup-db";
-import { clearStatementCache } from "../migrator/utils";
+import type { Database } from "bun:sqlite";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import createMigrator from "../migrator/SaliDBIstunto/migrator";
+import { clearStatementCache } from "../migrator/utils";
+import { createTestDb } from "./helpers/setup-db";
 
 describe("SaliDBIstunto migrator", () => {
   let db: Database;

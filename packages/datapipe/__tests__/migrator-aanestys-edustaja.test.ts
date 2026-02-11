@@ -1,23 +1,29 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { Database } from "bun:sqlite";
-import { createTestDb, seedRepresentative, seedVoting } from "./helpers/setup-db";
-import { clearStatementCache } from "../migrator/utils";
+import type { Database } from "bun:sqlite";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import createMigrator, {
   flushVotes,
 } from "../migrator/SaliDBAanestysEdustaja/migrator";
+import { clearStatementCache } from "../migrator/utils";
+import {
+  createTestDb,
+  seedRepresentative,
+  seedVoting,
+} from "./helpers/setup-db";
 
 describe("SaliDBAanestysEdustaja migrator", () => {
   let db: Database;
-  let migrate: (
-    data: RawDataModels["SaliDBAanestysEdustaja"],
-  ) => Promise<void>;
+  let migrate: (data: RawDataModels["SaliDBAanestysEdustaja"]) => Promise<void>;
 
   beforeEach(() => {
     clearStatementCache();
     db = createTestDb(11); // Up to V001.011 (includes Vote table + column rename)
     // Seed prerequisites
     seedRepresentative(db, { person_id: 1000 });
-    seedRepresentative(db, { person_id: 1001, first_name: "Maija", last_name: "Virtanen" });
+    seedRepresentative(db, {
+      person_id: 1001,
+      first_name: "Maija",
+      last_name: "Virtanen",
+    });
     // Need a session+agenda first for voting FK
     db.run("INSERT INTO Agenda (key, title, state) VALUES (?, ?, ?)", [
       "PJ_2024_1",
@@ -26,7 +32,16 @@ describe("SaliDBAanestysEdustaja migrator", () => {
     ]);
     db.run(
       "INSERT INTO Session (id, number, key, date, year, type, state, agenda_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      [1, 1, "2024/1", "2024-01-15", 2024, "varsinainen", "Päättynyt", "PJ_2024_1"],
+      [
+        1,
+        1,
+        "2024/1",
+        "2024-01-15",
+        2024,
+        "varsinainen",
+        "Päättynyt",
+        "PJ_2024_1",
+      ],
     );
     seedVoting(db, { id: 100, session_key: "2024/1" });
     migrate = createMigrator(db);
@@ -124,8 +139,16 @@ describe("SaliDBAanestysEdustaja migrator", () => {
   });
 
   test("inserts multiple votes", async () => {
-    await migrate(makeFinnishVote({ EdustajaId: "5000", EdustajaHenkiloNumero: "1000" }));
-    await migrate(makeFinnishVote({ EdustajaId: "5001", EdustajaHenkiloNumero: "1001", EdustajaAanestys: "Ei" as any }));
+    await migrate(
+      makeFinnishVote({ EdustajaId: "5000", EdustajaHenkiloNumero: "1000" }),
+    );
+    await migrate(
+      makeFinnishVote({
+        EdustajaId: "5001",
+        EdustajaHenkiloNumero: "1001",
+        EdustajaAanestys: "Ei" as any,
+      }),
+    );
     flushVotes();
 
     const rows = db.query("SELECT * FROM Vote ORDER BY id").all() as any[];

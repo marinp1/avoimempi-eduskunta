@@ -53,16 +53,16 @@ SELECT
     END AS was_in_coalition
 FROM
     Representative r
-CROSS JOIN
+JOIN
     GovernmentPeriods gp
 JOIN
     Vote v ON r.person_id = v.person_id
 JOIN
     Voting vt ON vt.id = v.voting_id
-    AND DATE(vt.start_time) >= gp.government_start
-    AND (gp.government_end IS NULL OR DATE(vt.start_time) <= gp.government_end)
-    AND ($startDate IS NULL OR DATE(vt.start_time) >= $startDate)
-    AND ($endDate IS NULL OR DATE(vt.start_time) <= $endDate)
+    AND vt.start_date >= gp.government_start
+    AND (gp.government_end IS NULL OR vt.start_date <= gp.government_end)
+    AND ($startDate IS NULL OR vt.start_date >= $startDate)
+    AND ($endDateExclusive IS NULL OR vt.start_date < $endDateExclusive)
 WHERE
     r.person_id = $personId
 GROUP BY

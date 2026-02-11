@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { Database } from "bun:sqlite";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { existsSync } from "fs";
 import { join } from "path";
 
@@ -65,9 +65,7 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
       // KNOWN ISSUE: 122,463 empty strings + 161 NULLs
       // FIX: Coerce '' to NULL in SaliDBPuheenvuoro migrator
       const { c } = db
-        .query(
-          `SELECT COUNT(*) as c FROM Speech WHERE ministry = ''`,
-        )
+        .query(`SELECT COUNT(*) as c FROM Speech WHERE ministry = ''`)
         .get() as any;
       expect(c).toBe(0);
     });
@@ -75,9 +73,7 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
     test("Section.note uses NULL (not empty string) for missing notes", () => {
       // KNOWN ISSUE: 15,456 empty strings + 4,506 NULLs
       const { c } = db
-        .query(
-          `SELECT COUNT(*) as c FROM Section WHERE note = ''`,
-        )
+        .query(`SELECT COUNT(*) as c FROM Section WHERE note = ''`)
         .get() as any;
       expect(c).toBe(0);
     });
@@ -96,9 +92,7 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
     test("Section.resolution uses NULL (not empty string) when absent", () => {
       // KNOWN ISSUE: 14,313 empty strings + 170 NULLs
       const { c } = db
-        .query(
-          `SELECT COUNT(*) as c FROM Section WHERE resolution = ''`,
-        )
+        .query(`SELECT COUNT(*) as c FROM Section WHERE resolution = ''`)
         .get() as any;
       expect(c).toBe(0);
     });
@@ -106,9 +100,7 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
     test("Voting.title uses NULL (not empty string) when absent", () => {
       // KNOWN ISSUE: 8 empty strings + 6 NULLs
       const { c } = db
-        .query(
-          `SELECT COUNT(*) as c FROM Voting WHERE title = ''`,
-        )
+        .query(`SELECT COUNT(*) as c FROM Voting WHERE title = ''`)
         .get() as any;
       expect(c).toBe(0);
     });
@@ -271,9 +263,7 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
 
   describe("Schema: column naming", () => {
     test("Vote table has column 'group_abbreviation' (not typo 'group_abbrviation')", () => {
-      const cols = db
-        .query(`PRAGMA table_info(Vote)`)
-        .all() as any[];
+      const cols = db.query(`PRAGMA table_info(Vote)`).all() as any[];
       const colNames = cols.map((c: any) => c.name);
       expect(colNames).toContain("group_abbreviation");
       expect(colNames).not.toContain("group_abbrviation");

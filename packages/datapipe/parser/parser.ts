@@ -118,7 +118,9 @@ export async function parseTable(options: ParseOptions): Promise<void> {
   let alreadyParsedPages = new Set<number>();
 
   if (force) {
-    console.log(`🔄 Force mode: re-parsing all ${listResult.keys.length} pages`);
+    console.log(
+      `🔄 Force mode: re-parsing all ${listResult.keys.length} pages`,
+    );
     pagesToParse = listResult.keys;
   } else {
     // Check which pages are already parsed

@@ -45,7 +45,11 @@ function asBooleanNumeric(value: unknown): number | null {
   return null;
 }
 
-function isEquivalentValue(key: string, before: unknown, after: unknown): boolean {
+function isEquivalentValue(
+  key: string,
+  before: unknown,
+  after: unknown,
+): boolean {
   if (before === after) return true;
   if (key === "can_request_speech") {
     const b = asBooleanNumeric(before);
@@ -128,7 +132,10 @@ export default (db: Database) =>
       note: dataToImport.HuomautusFI || null,
       ordinal: +dataToImport.Jarjestysnumero,
       processing_title: dataToImport.KasittelyotsikkoFI || null,
-      title: withSwedishFallback(dataToImport.OtsikkoFI, dataToImport.OtsikkoSV),
+      title: withSwedishFallback(
+        dataToImport.OtsikkoFI,
+        dataToImport.OtsikkoSV,
+      ),
       resolution: dataToImport.PaatosFI || null,
       agenda_key: dataToImport.PJKohtaTunnus,
       session_key: sessionKey,
@@ -142,11 +149,12 @@ export default (db: Database) =>
 
     // Revisions for the same agenda item arrive as new rows with new IDs.
     // We keep only the latest row for a (session_key, vaski_id) pair.
-    const overwrittenRows = db
-      .query("SELECT * FROM Section WHERE session_key = ? AND vaski_id = ?")
-      .all(sessionKey, vaskiId) as Record<string, unknown>[];
-    if (overwrittenRows.length > 0) {
-      const previousRow = overwrittenRows[overwrittenRows.length - 1];
+    const previousRow = db
+      .query(
+        "SELECT * FROM Section WHERE session_key = ? AND vaski_id = ? ORDER BY modified_datetime DESC, id DESC LIMIT 1",
+      )
+      .get(sessionKey, vaskiId) as Record<string, unknown> | undefined;
+    if (previousRow) {
       const mergedRow = mergeRowPreservingNonEmptyFields(
         previousRow,
         sectionRow as unknown as Record<string, unknown>,

@@ -32,7 +32,12 @@ export function buildKnownDataExceptions(db: Database): KnownDataException[] {
   try {
     const mismatchedVotings = db
       .query(KNOWN_EXCEPTION_QUERIES.mismatchedVotings)
-      .all() as { id: number; number: number; session_key: string; result_url: string | null }[];
+      .all() as {
+      id: number;
+      number: number;
+      session_key: string;
+      result_url: string | null;
+    }[];
 
     if (mismatchedVotings.length > 0) {
       const affectedRows: AffectedRow[] = mismatchedVotings.map((v) => ({

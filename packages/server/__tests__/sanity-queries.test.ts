@@ -1,15 +1,15 @@
-import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { Database } from "bun:sqlite";
-import { createTestDb, seedFullDataset } from "./helpers/setup-db";
+import type { Database } from "bun:sqlite";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import {
   AUXILIARY_REF_TABLES,
-  ROW_COUNT_TABLES,
-  SALIDB_LINKAGE_CHECKS,
   getAuxiliaryRepresentativeOrphanQuery,
   getRowCountQuery,
-  sanityQueries,
   KNOWN_EXCEPTION_QUERIES,
+  ROW_COUNT_TABLES,
+  SALIDB_LINKAGE_CHECKS,
+  sanityQueries,
 } from "../database/sanity-queries";
+import { createTestDb, seedFullDataset } from "./helpers/setup-db";
 
 let db: Database;
 

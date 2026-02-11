@@ -1,15 +1,15 @@
 // Status controller for public-facing data quality dashboard
 
-import { DatabaseConnection } from "../database/db";
+import type { DatabaseConnection } from "../database/db";
 import {
-  STATUS_TABLES,
   getStatusTableCountQuery,
   getStatusTableInfoQuery,
   isStatusTableName,
+  STATUS_TABLES,
 } from "../database/status-queries";
 import {
-  SanityCheckService,
   type SanityCheckResult,
+  SanityCheckService,
 } from "../services/sanity-checks";
 
 export interface TableStatus {
@@ -48,8 +48,7 @@ export class StatusController {
 
   async getSanityChecks(): Promise<SanityCheckResult> {
     if (!this.cachedSanityChecks) {
-      this.cachedSanityChecks =
-        await this.sanityCheckService.runAllChecks();
+      this.cachedSanityChecks = await this.sanityCheckService.runAllChecks();
     }
     return this.cachedSanityChecks;
   }

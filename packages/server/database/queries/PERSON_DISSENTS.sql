@@ -37,9 +37,9 @@ JOIN Voting vt ON v.voting_id = vt.id
 JOIN party_majority pm ON v.voting_id = pm.voting_id AND v.group_abbreviation = pm.party
 LEFT JOIN ParliamentaryGroupMembership pgm
   ON v.person_id = pgm.person_id
-  AND pgm.group_code LIKE pm.party || '%'
-  AND DATE(vt.start_time) >= pgm.start_date
-  AND (pgm.end_date IS NULL OR DATE(vt.start_time) <= pgm.end_date)
+  AND pgm.group_abbreviation = pm.party
+  AND vt.start_date >= pgm.start_date
+  AND (pgm.end_date IS NULL OR vt.start_date <= pgm.end_date)
 WHERE v.person_id = $personId
   AND v.vote IN ('Jaa', 'Ei', 'Tyhjää')
   AND v.vote != pm.majority_vote

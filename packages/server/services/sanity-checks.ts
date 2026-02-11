@@ -1,18 +1,18 @@
 import type { Database } from "bun:sqlite";
 import {
+  EXPECTED_SANITY_INDEXES,
+  EXPECTED_SANITY_TABLES,
+  getAuxiliaryRepresentativeOrphanQuery,
+  getRowCountQuery,
+  type ROW_COUNT_TABLES,
+  SALIDB_LINKAGE_CHECKS,
+  sanityQueries,
+} from "../database/sanity-queries";
+import {
   buildKnownDataExceptions,
   getExceptionsForCheck,
   type KnownDataException,
 } from "./known-data-exceptions";
-import {
-  EXPECTED_SANITY_INDEXES,
-  EXPECTED_SANITY_TABLES,
-  ROW_COUNT_TABLES,
-  SALIDB_LINKAGE_CHECKS,
-  getAuxiliaryRepresentativeOrphanQuery,
-  getRowCountQuery,
-  sanityQueries,
-} from "../database/sanity-queries";
 
 export interface SanityCheck {
   category: string;
@@ -91,9 +91,9 @@ export class SanityCheckService {
     const checks: SanityCheck[] = [];
 
     try {
-      const tables = this.db
-        .query(sanityQueries.tableNames)
-        .all() as { name: string }[];
+      const tables = this.db.query(sanityQueries.tableNames).all() as {
+        name: string;
+      }[];
       const tableNames = tables.map((t) => t.name);
 
       const missingTables = EXPECTED_SANITY_TABLES.filter(
@@ -105,7 +105,10 @@ export class SanityCheckService {
         name: "Core tables exist",
         description: "All expected database tables are present",
         passed: missingTables.length === 0,
-        details: missingTables.length > 0 ? `Missing: ${missingTables.join(", ")}` : `All ${EXPECTED_SANITY_TABLES.length} core tables present`,
+        details:
+          missingTables.length > 0
+            ? `Missing: ${missingTables.join(", ")}`
+            : `All ${EXPECTED_SANITY_TABLES.length} core tables present`,
       });
     } catch (error) {
       checks.push({
@@ -129,20 +132,53 @@ export class SanityCheckService {
       description: string;
       minCount: number;
     }[] = [
-      { table: "Representative", name: "Representative count", description: "Should have >1000 MPs historically", minCount: 1000 },
-      { table: "Session", name: "Session count", description: "Should have >100 sessions", minCount: 100 },
-      { table: "Voting", name: "Voting count", description: "Should have >1000 votings", minCount: 1000 },
-      { table: "Vote", name: "Vote count", description: "Should have >100,000 individual votes", minCount: 100000 },
-      { table: "Section", name: "Section count", description: "Should have >1000 sections", minCount: 1000 },
-      { table: "Speech", name: "Speech count", description: "Should have >10,000 speeches", minCount: 10000 },
-      { table: "Term", name: "Term count", description: "Should have >1000 terms", minCount: 1000 },
+      {
+        table: "Representative",
+        name: "Representative count",
+        description: "Should have >1000 MPs historically",
+        minCount: 1000,
+      },
+      {
+        table: "Session",
+        name: "Session count",
+        description: "Should have >100 sessions",
+        minCount: 100,
+      },
+      {
+        table: "Voting",
+        name: "Voting count",
+        description: "Should have >1000 votings",
+        minCount: 1000,
+      },
+      {
+        table: "Vote",
+        name: "Vote count",
+        description: "Should have >100,000 individual votes",
+        minCount: 100000,
+      },
+      {
+        table: "Section",
+        name: "Section count",
+        description: "Should have >1000 sections",
+        minCount: 1000,
+      },
+      {
+        table: "Speech",
+        name: "Speech count",
+        description: "Should have >10,000 speeches",
+        minCount: 10000,
+      },
+      {
+        table: "Term",
+        name: "Term count",
+        description: "Should have >1000 terms",
+        minCount: 1000,
+      },
     ];
 
     for (const test of countTests) {
       try {
-        const result = this.db
-          .query(getRowCountQuery(test.table))
-          .get() as any;
+        const result = this.db.query(getRowCountQuery(test.table)).get() as any;
         const count = result?.c ?? 0;
         const passed = count > test.minCount;
 
@@ -180,7 +216,10 @@ export class SanityCheckService {
         name: "Unique person IDs",
         description: "Each person should have a unique person_id",
         passed: dupes.dupes === 0,
-        details: dupes.dupes === 0 ? "All person IDs are unique" : `${dupes.dupes} duplicate person IDs found`,
+        details:
+          dupes.dupes === 0
+            ? "All person IDs are unique"
+            : `${dupes.dupes} duplicate person IDs found`,
       });
     } catch (error) {
       checks.push({
@@ -202,7 +241,10 @@ export class SanityCheckService {
         name: "No NULL person IDs",
         description: "All representatives must have a person_id",
         passed: nullIds.c === 0,
-        details: nullIds.c === 0 ? "All person IDs are present" : `${nullIds.c} NULL person IDs found`,
+        details:
+          nullIds.c === 0
+            ? "All person IDs are present"
+            : `${nullIds.c} NULL person IDs found`,
       });
     } catch (error) {
       checks.push({
@@ -224,7 +266,10 @@ export class SanityCheckService {
         name: "Complete names",
         description: "All representatives must have first and last names",
         passed: missingNames.c === 0,
-        details: missingNames.c === 0 ? "All names are present" : `${missingNames.c} missing names`,
+        details:
+          missingNames.c === 0
+            ? "All names are present"
+            : `${missingNames.c} missing names`,
       });
     } catch (error) {
       checks.push({
@@ -252,7 +297,10 @@ export class SanityCheckService {
         name: "Session keys present",
         description: "All sessions must have a non-empty key",
         passed: emptyKeys.c === 0,
-        details: emptyKeys.c === 0 ? "All session keys present" : `${emptyKeys.c} empty session keys`,
+        details:
+          emptyKeys.c === 0
+            ? "All session keys present"
+            : `${emptyKeys.c} empty session keys`,
       });
     } catch (error) {
       checks.push({
@@ -274,7 +322,10 @@ export class SanityCheckService {
         name: "Session dates present",
         description: "All sessions must have a date",
         passed: emptyDates.c === 0,
-        details: emptyDates.c === 0 ? "All session dates present" : `${emptyDates.c} missing session dates`,
+        details:
+          emptyDates.c === 0
+            ? "All session dates present"
+            : `${emptyDates.c} missing session dates`,
       });
     } catch (error) {
       checks.push({
@@ -287,8 +338,12 @@ export class SanityCheckService {
     }
 
     try {
-      const total = (this.db.query(sanityQueries.sessionTotalCount).get() as any).total;
-      const unique = (this.db.query(sanityQueries.sessionUniqueKeyCount).get() as any).unique_count;
+      const total = (
+        this.db.query(sanityQueries.sessionTotalCount).get() as any
+      ).total;
+      const unique = (
+        this.db.query(sanityQueries.sessionUniqueKeyCount).get() as any
+      ).unique_count;
 
       checks.push({
         category: "Data Integrity",
@@ -323,7 +378,10 @@ export class SanityCheckService {
         name: "Section → Session links",
         description: "All sections must reference existing sessions",
         passed: orphans.orphans === 0,
-        details: orphans.orphans === 0 ? "All sections properly linked" : `${orphans.orphans} orphaned sections`,
+        details:
+          orphans.orphans === 0
+            ? "All sections properly linked"
+            : `${orphans.orphans} orphaned sections`,
       });
     } catch (error) {
       checks.push({
@@ -351,7 +409,10 @@ export class SanityCheckService {
         name: "Parliament size limit",
         description: "Active MPs should never exceed 200 on any date",
         passed: oversized.length === 0,
-        details: oversized.length === 0 ? "Parliament size always ≤200" : `${oversized.length} dates with >200 MPs`,
+        details:
+          oversized.length === 0
+            ? "Parliament size always ≤200"
+            : `${oversized.length} dates with >200 MPs`,
       });
     } catch (error) {
       checks.push({
@@ -379,7 +440,10 @@ export class SanityCheckService {
         name: "Voting total ≤200",
         description: "Vote totals should never exceed 200",
         passed: oversized.c === 0,
-        details: oversized.c === 0 ? "All vote totals ≤200" : `${oversized.c} votings with >200 votes`,
+        details:
+          oversized.c === 0
+            ? "All vote totals ≤200"
+            : `${oversized.c} votings with >200 votes`,
       });
     } catch (error) {
       checks.push({
@@ -401,7 +465,10 @@ export class SanityCheckService {
         name: "Voting count sums",
         description: "Vote counts must sum to n_total",
         passed: sumMismatch.c === 0,
-        details: sumMismatch.c === 0 ? "All vote counts sum correctly" : `${sumMismatch.c} mismatched vote sums`,
+        details:
+          sumMismatch.c === 0
+            ? "All vote counts sum correctly"
+            : `${sumMismatch.c} mismatched vote sums`,
       });
     } catch (error) {
       checks.push({
@@ -422,7 +489,9 @@ export class SanityCheckService {
         this.knownExceptions,
         "Individual vote count matches",
       );
-      const knownIds = new Set(checkExceptions.flatMap((e) => e.affectedRows.map((r) => r.id)));
+      const knownIds = new Set(
+        checkExceptions.flatMap((e) => e.affectedRows.map((r) => r.id)),
+      );
       const unexplained = mismatchedVotings.filter((v) => !knownIds.has(v.id));
       const explained = mismatchedVotings.filter((v) => knownIds.has(v.id));
 
@@ -439,7 +508,8 @@ export class SanityCheckService {
             : allExplained
               ? `${explained.length} tunnettu poikkeama (kaikki selitetty)`
               : `${unexplained.length} selittämätöntä, ${explained.length} tunnettua poikkeamaa`,
-        knownExceptions: checkExceptions.length > 0 ? checkExceptions : undefined,
+        knownExceptions:
+          checkExceptions.length > 0 ? checkExceptions : undefined,
       });
     } catch (error) {
       checks.push({
@@ -461,7 +531,10 @@ export class SanityCheckService {
         name: "Unique voting numbers",
         description: "Voting numbers must be unique within sessions",
         passed: duplicateNumbers.dupes === 0,
-        details: duplicateNumbers.dupes === 0 ? "All voting numbers unique" : `${duplicateNumbers.dupes} duplicate voting numbers`,
+        details:
+          duplicateNumbers.dupes === 0
+            ? "All voting numbers unique"
+            : `${duplicateNumbers.dupes} duplicate voting numbers`,
       });
     } catch (error) {
       checks.push({
@@ -489,7 +562,10 @@ export class SanityCheckService {
         name: "Voting → Session links",
         description: "All votings must reference existing sessions",
         passed: orphans.orphans === 0,
-        details: orphans.orphans === 0 ? "All votings properly linked" : `${orphans.orphans} orphaned votings`,
+        details:
+          orphans.orphans === 0
+            ? "All votings properly linked"
+            : `${orphans.orphans} orphaned votings`,
       });
     } catch (error) {
       checks.push({
@@ -517,7 +593,10 @@ export class SanityCheckService {
         name: "Valid vote values",
         description: "Vote values must be Jaa, Ei, Tyhjää, or Poissa",
         passed: invalidVotes.c === 0,
-        details: invalidVotes.c === 0 ? "All vote values valid" : `${invalidVotes.c} invalid vote values`,
+        details:
+          invalidVotes.c === 0
+            ? "All vote values valid"
+            : `${invalidVotes.c} invalid vote values`,
       });
     } catch (error) {
       checks.push({
@@ -539,7 +618,10 @@ export class SanityCheckService {
         name: "No duplicate votes",
         description: "Each person can only vote once per voting",
         passed: duplicateVotes.dupes === 0,
-        details: duplicateVotes.dupes === 0 ? "No duplicate votes" : `${duplicateVotes.dupes} duplicate votes found`,
+        details:
+          duplicateVotes.dupes === 0
+            ? "No duplicate votes"
+            : `${duplicateVotes.dupes} duplicate votes found`,
       });
     } catch (error) {
       checks.push({
@@ -567,7 +649,10 @@ export class SanityCheckService {
         name: "Valid gender values",
         description: "Gender must be 'Mies' or 'Nainen'",
         passed: invalidGender.c === 0,
-        details: invalidGender.c === 0 ? "All gender values valid" : `${invalidGender.c} invalid gender values`,
+        details:
+          invalidGender.c === 0
+            ? "All gender values valid"
+            : `${invalidGender.c} invalid gender values`,
       });
     } catch (error) {
       checks.push({
@@ -589,7 +674,10 @@ export class SanityCheckService {
         name: "Representatives have terms",
         description: "All representatives must have at least one term",
         passed: noTerms.c === 0,
-        details: noTerms.c === 0 ? "All representatives have terms" : `${noTerms.c} representatives without terms`,
+        details:
+          noTerms.c === 0
+            ? "All representatives have terms"
+            : `${noTerms.c} representatives without terms`,
       });
     } catch (error) {
       checks.push({
@@ -617,7 +705,10 @@ export class SanityCheckService {
         name: "Term dates valid",
         description: "Term start_date must be ≤ end_date",
         passed: invalidDates.c === 0,
-        details: invalidDates.c === 0 ? "All term dates valid" : `${invalidDates.c} invalid term dates`,
+        details:
+          invalidDates.c === 0
+            ? "All term dates valid"
+            : `${invalidDates.c} invalid term dates`,
       });
     } catch (error) {
       checks.push({
@@ -645,7 +736,10 @@ export class SanityCheckService {
         name: "Group membership dates valid",
         description: "Membership start_date must be ≤ end_date",
         passed: invalidDates.c === 0,
-        details: invalidDates.c === 0 ? "All membership dates valid" : `${invalidDates.c} invalid dates`,
+        details:
+          invalidDates.c === 0
+            ? "All membership dates valid"
+            : `${invalidDates.c} invalid dates`,
       });
     } catch (error) {
       checks.push({
@@ -673,7 +767,10 @@ export class SanityCheckService {
         name: "Speech → Session links",
         description: "All speeches must reference existing sessions",
         passed: orphans.orphans === 0,
-        details: orphans.orphans === 0 ? "All speeches properly linked" : `${orphans.orphans} orphaned speeches`,
+        details:
+          orphans.orphans === 0
+            ? "All speeches properly linked"
+            : `${orphans.orphans} orphaned speeches`,
       });
     } catch (error) {
       checks.push({
@@ -701,7 +798,10 @@ export class SanityCheckService {
         name: "Vote → Representative links",
         description: "All votes must reference existing representatives",
         passed: orphans.c === 0,
-        details: orphans.c === 0 ? "All votes properly linked" : `${orphans.c} orphaned votes`,
+        details:
+          orphans.c === 0
+            ? "All votes properly linked"
+            : `${orphans.c} orphaned votes`,
       });
     } catch (error) {
       checks.push({
@@ -720,9 +820,9 @@ export class SanityCheckService {
     const checks: SanityCheck[] = [];
 
     try {
-      const indexes = this.db
-        .query(sanityQueries.schemaIndexes)
-        .all() as { name: string }[];
+      const indexes = this.db.query(sanityQueries.schemaIndexes).all() as {
+        name: string;
+      }[];
       const indexNames = indexes.map((i) => i.name);
 
       const missingIndexes = EXPECTED_SANITY_INDEXES.filter(
@@ -734,7 +834,10 @@ export class SanityCheckService {
         name: "Performance indexes present",
         description: "Critical performance indexes must exist",
         passed: missingIndexes.length === 0,
-        details: missingIndexes.length === 0 ? `All ${EXPECTED_SANITY_INDEXES.length} indexes present` : `Missing: ${missingIndexes.join(", ")}`,
+        details:
+          missingIndexes.length === 0
+            ? `All ${EXPECTED_SANITY_INDEXES.length} indexes present`
+            : `Missing: ${missingIndexes.join(", ")}`,
       });
     } catch (error) {
       checks.push({
@@ -761,7 +864,9 @@ export class SanityCheckService {
         this.knownExceptions,
         "Vote aggregation per type",
       );
-      const knownIds = new Set(checkExceptions.flatMap((e) => e.affectedRows.map((r) => r.id)));
+      const knownIds = new Set(
+        checkExceptions.flatMap((e) => e.affectedRows.map((r) => r.id)),
+      );
       const unexplained = mismatchedVotings.filter((v) => !knownIds.has(v.id));
       const explained = mismatchedVotings.filter((v) => knownIds.has(v.id));
 
@@ -778,7 +883,8 @@ export class SanityCheckService {
             : allExplained
               ? `${explained.length} tunnettu poikkeama (kaikki selitetty)`
               : `${unexplained.length} selittämätöntä, ${explained.length} tunnettua poikkeamaa`,
-        knownExceptions: checkExceptions.length > 0 ? checkExceptions : undefined,
+        knownExceptions:
+          checkExceptions.length > 0 ? checkExceptions : undefined,
       });
     } catch (error) {
       checks.push({
@@ -804,15 +910,20 @@ export class SanityCheckService {
       checks.push({
         category: "Business Logic",
         name: "Voting date within 1 day of session date",
-        description: "Voting start_time should be within 1 day of session date (sessions can span overnight)",
+        description:
+          "Voting start_time should be within 1 day of session date (sessions can span overnight)",
         passed: mismatches.c === 0,
-        details: mismatches.c === 0 ? "All voting dates within range" : `${mismatches.c} votings with >1 day offset from session`,
+        details:
+          mismatches.c === 0
+            ? "All voting dates within range"
+            : `${mismatches.c} votings with >1 day offset from session`,
       });
     } catch (error) {
       checks.push({
         category: "Business Logic",
         name: "Voting date within 1 day of session date",
-        description: "Voting start_time should be within 1 day of session date (sessions can span overnight)",
+        description:
+          "Voting start_time should be within 1 day of session date (sessions can span overnight)",
         passed: false,
         errorMessage: String(error),
       });
@@ -832,15 +943,20 @@ export class SanityCheckService {
       checks.push({
         category: "Referential Integrity",
         name: "Voting → Section links",
-        description: "Votings with section_key must reference existing sections",
+        description:
+          "Votings with section_key must reference existing sections",
         passed: orphans.c === 0,
-        details: orphans.c === 0 ? "All voting-section links valid" : `${orphans.c} orphaned voting-section links`,
+        details:
+          orphans.c === 0
+            ? "All voting-section links valid"
+            : `${orphans.c} orphaned voting-section links`,
       });
     } catch (error) {
       checks.push({
         category: "Referential Integrity",
         name: "Voting → Section links",
-        description: "Votings with section_key must reference existing sections",
+        description:
+          "Votings with section_key must reference existing sections",
         passed: false,
         errorMessage: String(error),
       });
@@ -862,7 +978,10 @@ export class SanityCheckService {
         name: "Committee membership dates valid",
         description: "Committee membership start_date must be ≤ end_date",
         passed: invalid.c === 0,
-        details: invalid.c === 0 ? "All committee membership dates valid" : `${invalid.c} invalid committee membership dates`,
+        details:
+          invalid.c === 0
+            ? "All committee membership dates valid"
+            : `${invalid.c} invalid committee membership dates`,
       });
     } catch (error) {
       checks.push({
@@ -890,7 +1009,10 @@ export class SanityCheckService {
         name: "Government membership dates valid",
         description: "Government membership start_date must be ≤ end_date",
         passed: invalid.c === 0,
-        details: invalid.c === 0 ? "All government membership dates valid" : `${invalid.c} invalid government membership dates`,
+        details:
+          invalid.c === 0
+            ? "All government membership dates valid"
+            : `${invalid.c} invalid government membership dates`,
       });
     } catch (error) {
       checks.push({
@@ -912,7 +1034,10 @@ export class SanityCheckService {
         name: "Government name present",
         description: "All government memberships must have a government name",
         passed: empty.c === 0,
-        details: empty.c === 0 ? "All government names present" : `${empty.c} missing government names`,
+        details:
+          empty.c === 0
+            ? "All government names present"
+            : `${empty.c} missing government names`,
       });
     } catch (error) {
       checks.push({
@@ -931,14 +1056,13 @@ export class SanityCheckService {
     const checks: SanityCheck[] = [];
 
     try {
-      const { c } = this.db
-        .query(sanityQueries.districtCount)
-        .get() as any;
+      const { c } = this.db.query(sanityQueries.districtCount).get() as any;
 
       checks.push({
         category: "Business Logic",
         name: "District count plausible",
-        description: "Finland has 13 current + historical electoral districts (expect 10-50)",
+        description:
+          "Finland has 13 current + historical electoral districts (expect 10-50)",
         passed: c >= 10 && c <= 50,
         details: `${c} districts found`,
       });
@@ -946,7 +1070,8 @@ export class SanityCheckService {
       checks.push({
         category: "Business Logic",
         name: "District count plausible",
-        description: "Finland has 13 current + historical electoral districts (expect 10-50)",
+        description:
+          "Finland has 13 current + historical electoral districts (expect 10-50)",
         passed: false,
         errorMessage: String(error),
       });
@@ -960,15 +1085,20 @@ export class SanityCheckService {
       checks.push({
         category: "Data Integrity",
         name: "No overlapping district assignments",
-        description: "Same representative should not have overlapping district assignments",
+        description:
+          "Same representative should not have overlapping district assignments",
         passed: overlaps.c === 0,
-        details: overlaps.c === 0 ? "No overlapping districts" : `${overlaps.c} overlapping district assignments`,
+        details:
+          overlaps.c === 0
+            ? "No overlapping districts"
+            : `${overlaps.c} overlapping district assignments`,
       });
     } catch (error) {
       checks.push({
         category: "Data Integrity",
         name: "No overlapping district assignments",
-        description: "Same representative should not have overlapping district assignments",
+        description:
+          "Same representative should not have overlapping district assignments",
         passed: false,
         errorMessage: String(error),
       });
@@ -997,7 +1127,10 @@ export class SanityCheckService {
           name: `${label} → Representative links`,
           description: `All ${label.toLowerCase()} records must reference existing representatives`,
           passed: orphans.c === 0,
-          details: orphans.c === 0 ? `All ${label.toLowerCase()} records properly linked` : `${orphans.c} orphaned ${label.toLowerCase()} records`,
+          details:
+            orphans.c === 0
+              ? `All ${label.toLowerCase()} records properly linked`
+              : `${orphans.c} orphaned ${label.toLowerCase()} records`,
         });
       } catch (error) {
         checks.push({
@@ -1017,16 +1150,17 @@ export class SanityCheckService {
     const checks: SanityCheck[] = [];
 
     try {
-      const tooOld = this.db
-        .query(sanityQueries.sessionTooOld)
-        .get() as any;
+      const tooOld = this.db.query(sanityQueries.sessionTooOld).get() as any;
 
       checks.push({
         category: "Business Logic",
         name: "Session dates after 1907",
         description: "Finnish parliament founded in 1907, no earlier sessions",
         passed: tooOld.c === 0,
-        details: tooOld.c === 0 ? "All session dates after 1907" : `${tooOld.c} sessions before 1907`,
+        details:
+          tooOld.c === 0
+            ? "All session dates after 1907"
+            : `${tooOld.c} sessions before 1907`,
       });
     } catch (error) {
       checks.push({
@@ -1039,16 +1173,17 @@ export class SanityCheckService {
     }
 
     try {
-      const future = this.db
-        .query(sanityQueries.sessionInFuture)
-        .get() as any;
+      const future = this.db.query(sanityQueries.sessionInFuture).get() as any;
 
       checks.push({
         category: "Business Logic",
         name: "No future session dates",
         description: "Session dates should not be in the future",
         passed: future.c === 0,
-        details: future.c === 0 ? "No future session dates" : `${future.c} future session dates`,
+        details:
+          future.c === 0
+            ? "No future session dates"
+            : `${future.c} future session dates`,
       });
     } catch (error) {
       checks.push({
@@ -1076,7 +1211,10 @@ export class SanityCheckService {
         name: "Active MPs have group membership",
         description: "Every active MP should belong to a parliamentary group",
         passed: mpsWithoutGroup.c === 0,
-        details: mpsWithoutGroup.c === 0 ? "All active MPs have group memberships" : `${mpsWithoutGroup.c} active MP-date combinations without a group`,
+        details:
+          mpsWithoutGroup.c === 0
+            ? "All active MPs have group memberships"
+            : `${mpsWithoutGroup.c} active MP-date combinations without a group`,
       });
     } catch (error) {
       checks.push({
@@ -1102,15 +1240,20 @@ export class SanityCheckService {
       checks.push({
         category: "Business Logic",
         name: "Group member count matches active MPs",
-        description: "Active group members count should equal active parliament members count per date",
+        description:
+          "Active group members count should equal active parliament members count per date",
         passed: mismatches.c === 0,
-        details: mismatches.c === 0 ? "Counts match on all dates" : `${mismatches.c} dates with mismatched counts`,
+        details:
+          mismatches.c === 0
+            ? "Counts match on all dates"
+            : `${mismatches.c} dates with mismatched counts`,
       });
     } catch (error) {
       checks.push({
         category: "Business Logic",
         name: "Group member count matches active MPs",
-        description: "Active group members count should equal active parliament members count per date",
+        description:
+          "Active group members count should equal active parliament members count per date",
         passed: false,
         errorMessage: String(error),
       });

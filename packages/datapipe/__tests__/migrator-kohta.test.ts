@@ -1,11 +1,11 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { Database } from "bun:sqlite";
+import type { Database } from "bun:sqlite";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
-import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { createTestDb } from "./helpers/setup-db";
-import { clearStatementCache } from "../migrator/utils";
+import { join } from "node:path";
 import createMigrator from "../migrator/SaliDBKohta/migrator";
+import { clearStatementCache } from "../migrator/utils";
+import { createTestDb } from "./helpers/setup-db";
 
 describe("SaliDBKohta migrator", () => {
   let db: Database;
@@ -76,7 +76,9 @@ describe("SaliDBKohta migrator", () => {
   test("parses modified datetime", async () => {
     await migrate(makeSection({ Modified: "2024-03-20T14:15:30.000" }));
 
-    const section = db.query("SELECT modified_datetime FROM Section").get() as any;
+    const section = db
+      .query("SELECT modified_datetime FROM Section")
+      .get() as any;
     expect(section.modified_datetime).toBe("2024-03-20T14:15:30.000");
   });
 
@@ -94,7 +96,9 @@ describe("SaliDBKohta migrator", () => {
       }),
     );
 
-    const section = db.query("SELECT title, processing_title, note, resolution FROM Section").get() as any;
+    const section = db
+      .query("SELECT title, processing_title, note, resolution FROM Section")
+      .get() as any;
     expect(section.title).toBe("Suomeksi");
     expect(section.processing_title).toBe("Käsittely");
     expect(section.note).toBe("Huomautus");
@@ -114,9 +118,15 @@ describe("SaliDBKohta migrator", () => {
   });
 
   test("inserts multiple sections", async () => {
-    await migrate(makeSection({ Id: "10", TekninenAvain: "2024/1/3", VaskiID: "999" }));
-    await migrate(makeSection({ Id: "11", TekninenAvain: "2024/1/4", VaskiID: "1000" }));
-    await migrate(makeSection({ Id: "12", TekninenAvain: "2024/1/5", VaskiID: "1001" }));
+    await migrate(
+      makeSection({ Id: "10", TekninenAvain: "2024/1/3", VaskiID: "999" }),
+    );
+    await migrate(
+      makeSection({ Id: "11", TekninenAvain: "2024/1/4", VaskiID: "1000" }),
+    );
+    await migrate(
+      makeSection({ Id: "12", TekninenAvain: "2024/1/5", VaskiID: "1001" }),
+    );
 
     const rows = db.query("SELECT * FROM Section").all();
     expect(rows).toHaveLength(3);
@@ -145,13 +155,19 @@ describe("SaliDBKohta migrator", () => {
       }),
     );
 
-    const rows = db.query("SELECT * FROM Section WHERE session_key = '2024/1' AND vaski_id = 999").all() as any[];
+    const rows = db
+      .query(
+        "SELECT * FROM Section WHERE session_key = '2024/1' AND vaski_id = 999",
+      )
+      .all() as any[];
     expect(rows).toHaveLength(1);
     expect(rows[0].id).toBe(11);
     expect(rows[0].title).toBe("Uusi otsikko");
     expect(rows[0].key).toBe("2024/1/new");
 
-    const files = readdirSync(overwriteLogDir).filter((f) => f.endsWith(".json"));
+    const files = readdirSync(overwriteLogDir).filter((f) =>
+      f.endsWith(".json"),
+    );
     expect(files).toHaveLength(1);
 
     const payload = JSON.parse(
@@ -198,9 +214,13 @@ describe("SaliDBKohta migrator", () => {
     expect(row.resolution).toBe("Vanha päätös");
     expect(row.processing_title).toBe("Vanha käsittely");
 
-    const files = readdirSync(overwriteLogDir).filter((f) => f.endsWith(".json"));
+    const files = readdirSync(overwriteLogDir).filter((f) =>
+      f.endsWith(".json"),
+    );
     expect(files).toHaveLength(1);
-    const payload = JSON.parse(readFileSync(join(overwriteLogDir, files[0]), "utf8")) as any;
+    const payload = JSON.parse(
+      readFileSync(join(overwriteLogDir, files[0]), "utf8"),
+    ) as any;
     expect(payload.incoming_row.resolution).toBeNull();
     expect(payload.new_row.resolution).toBe("Vanha päätös");
     expect(payload.incoming_row.processing_title).toBeNull();
@@ -226,9 +246,13 @@ describe("SaliDBKohta migrator", () => {
       }),
     );
 
-    const files = readdirSync(overwriteLogDir).filter((f) => f.endsWith(".json"));
+    const files = readdirSync(overwriteLogDir).filter((f) =>
+      f.endsWith(".json"),
+    );
     expect(files).toHaveLength(1);
-    const payload = JSON.parse(readFileSync(join(overwriteLogDir, files[0]), "utf8")) as any;
+    const payload = JSON.parse(
+      readFileSync(join(overwriteLogDir, files[0]), "utf8"),
+    ) as any;
     expect(payload.old_row.can_request_speech).toBe(1);
     expect(payload.new_row.can_request_speech).toBe(true);
     expect(payload.changed_fields.can_request_speech).toBeUndefined();

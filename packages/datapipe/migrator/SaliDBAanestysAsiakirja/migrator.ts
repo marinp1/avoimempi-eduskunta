@@ -1,20 +1,9 @@
 import type { Database } from "bun:sqlite";
-
-import { insertRows, parseDateTime } from "../utils";
 import { extractDocumentTunnusCandidates } from "../salidb-document-ref";
+import { insertRows, parseDateTime } from "../utils";
 
 export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBAanestysAsiakirja"]) => {
-    const row: DatabaseTables.VotingDocumentLink = {
-      id: +dataToImport.AsiakirjaId,
-      voting_id: +dataToImport.AanestysId,
-      document_label: dataToImport.Asiakirja || null,
-      document_url: dataToImport.AsiakirjaUrl || null,
-      imported_datetime: parseDateTime(dataToImport.Imported),
-    };
-
-    insertRows(db)("VotingDocumentLink", [row]);
-
     const tunnusList = [
       ...extractDocumentTunnusCandidates(dataToImport.Asiakirja),
       ...extractDocumentTunnusCandidates(dataToImport.AsiakirjaUrl),

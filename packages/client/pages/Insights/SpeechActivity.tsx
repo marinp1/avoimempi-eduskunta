@@ -14,6 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Bar,
   BarChart,
@@ -25,7 +26,6 @@ import {
 } from "recharts";
 import { colors, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
-import { useTranslation } from "react-i18next";
 
 interface SpeechActivityData {
   person_id: number;
@@ -68,7 +68,15 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
 
   if (loading)
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", p: spacing.lg }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          p: spacing.lg,
+        }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -88,7 +96,14 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
 
   return (
     <Box sx={{ p: spacing.lg, minHeight: "100vh" }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: spacing.lg }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: spacing.lg,
+        }}
+      >
         <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
           <MicIcon sx={{ fontSize: 36, color: colors.primary }} />
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
@@ -100,7 +115,11 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
         </IconButton>
       </Box>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: spacing.lg }}>
+      <Typography
+        variant="body1"
+        color="text.secondary"
+        sx={{ mb: spacing.lg }}
+      >
         {t("insights.speechActivity.description")}
       </Typography>
 
@@ -116,7 +135,10 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
                 margin={{ top: 10, right: 30, left: 80, bottom: 10 }}
               >
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                <XAxis type="number" tick={{ fill: themedColors.textSecondary }} />
+                <XAxis
+                  type="number"
+                  tick={{ fill: themedColors.textSecondary }}
+                />
                 <YAxis
                   type="category"
                   dataKey="name"
@@ -124,9 +146,16 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
                   width={70}
                 />
                 <Tooltip
-                  formatter={(value: number) => [value.toLocaleString("fi-FI"), t("insights.speechActivity.speechCount")]}
+                  formatter={(value: number) => [
+                    value.toLocaleString("fi-FI"),
+                    t("insights.speechActivity.speechCount"),
+                  ]}
                 />
-                <Bar dataKey="speeches" fill={colors.primaryLight} radius={[0, 4, 4, 0]} />
+                <Bar
+                  dataKey="speeches"
+                  fill={colors.primaryLight}
+                  radius={[0, 4, 4, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </Box>
@@ -135,15 +164,31 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 600 }}>{t("common.name")}</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>{t("common.party")}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>
+                    {t("common.name")}
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>
+                    {t("common.party")}
+                  </TableCell>
                   <TableCell sx={{ fontWeight: 600 }} align="right">
                     {t("insights.speechActivity.speechCount")}
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 600, display: { xs: "none", sm: "table-cell" } }} align="right">
+                  <TableCell
+                    sx={{
+                      fontWeight: 600,
+                      display: { xs: "none", sm: "table-cell" },
+                    }}
+                    align="right"
+                  >
                     {t("insights.speechActivity.totalWords")}
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 600, display: { xs: "none", sm: "table-cell" } }} align="right">
+                  <TableCell
+                    sx={{
+                      fontWeight: 600,
+                      display: { xs: "none", sm: "table-cell" },
+                    }}
+                    align="right"
+                  >
                     {t("insights.speechActivity.avgWords")}
                   </TableCell>
                 </TableRow>
@@ -164,14 +209,22 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
                         {d.speech_count.toLocaleString("fi-FI")}
                       </Typography>
                     </TableCell>
-                    <TableCell align="right" sx={{ display: { xs: "none", sm: "table-cell" } }}>
+                    <TableCell
+                      align="right"
+                      sx={{ display: { xs: "none", sm: "table-cell" } }}
+                    >
                       <Typography variant="body2">
                         {d.total_words.toLocaleString("fi-FI")}
                       </Typography>
                     </TableCell>
-                    <TableCell align="right" sx={{ display: { xs: "none", sm: "table-cell" } }}>
+                    <TableCell
+                      align="right"
+                      sx={{ display: { xs: "none", sm: "table-cell" } }}
+                    >
                       <Typography variant="body2">
-                        {Math.round(d.avg_words_per_speech).toLocaleString("fi-FI")}
+                        {Math.round(d.avg_words_per_speech).toLocaleString(
+                          "fi-FI",
+                        )}
                       </Typography>
                     </TableCell>
                   </TableRow>

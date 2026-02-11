@@ -9,12 +9,12 @@ WITH GovernmentPeriods AS (
 CoalitionParties AS (
     SELECT
         gm.government,
-        LOWER(RTRIM(pgm.group_code, '0123456789')) AS party
+        pgm.group_abbreviation AS party
     FROM GovernmentMembership gm
     JOIN ParliamentaryGroupMembership pgm ON gm.person_id = pgm.person_id
     WHERE pgm.start_date <= gm.start_date
         AND (pgm.end_date IS NULL OR pgm.end_date >= gm.start_date)
-    GROUP BY gm.government, LOWER(RTRIM(pgm.group_code, '0123456789'))
+    GROUP BY gm.government, pgm.group_abbreviation
 ),
 GroupMap AS (
     SELECT
@@ -22,10 +22,10 @@ GroupMap AS (
         ranked.group_name
     FROM (
         SELECT
-            LOWER(RTRIM(pgm.group_code, '0123456789')) AS party,
+            pgm.group_abbreviation AS party,
             pgm.group_name,
             ROW_NUMBER() OVER (
-                PARTITION BY LOWER(RTRIM(pgm.group_code, '0123456789'))
+                PARTITION BY pgm.group_abbreviation
                 ORDER BY
                     CASE WHEN pgm.end_date IS NULL THEN 0 ELSE 1 END,
                     pgm.end_date DESC,
@@ -39,11 +39,11 @@ GroupMap AS (
 VotingBase AS (
     SELECT
         vt.id AS voting_id,
-        SUBSTR(vt.start_time, 1, 10) AS voting_date
+        vt.start_date AS voting_date
     FROM Voting vt
     WHERE
-        ($startDate IS NULL OR SUBSTR(vt.start_time, 1, 10) >= $startDate)
-        AND ($endDate IS NULL OR SUBSTR(vt.start_time, 1, 10) <= $endDate)
+        ($startDate IS NULL OR vt.start_date >= $startDate)
+        AND ($endDateExclusive IS NULL OR vt.start_date < $endDateExclusive)
 ),
 VotingDates AS (
     SELECT DISTINCT voting_date

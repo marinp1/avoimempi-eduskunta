@@ -19,14 +19,14 @@ import {
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { refs } from "#client/references";
-import { colors } from "#client/theme/index";
 import { commonStyles, spacing } from "#client/theme";
 import {
   DataCard,
-  PageHeader,
   MetricCard,
+  PageHeader,
   VoteMarginBar,
 } from "#client/theme/components";
+import { colors } from "#client/theme/index";
 import { useThemedColors } from "#client/theme/ThemeContext";
 
 type SessionWithSections = {
@@ -95,7 +95,9 @@ const Home = () => {
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [loadingComposition, setLoadingComposition] = useState(true);
   const [latestDate, setLatestDate] = useState<string | null>(null);
-  const [vaskiLatestSpeechDate, setVaskiLatestSpeechDate] = useState<string | null>(null);
+  const [vaskiLatestSpeechDate, setVaskiLatestSpeechDate] = useState<
+    string | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
 
   const [expandedSections, setExpandedSections] = useState<Set<number>>(
@@ -131,8 +133,10 @@ const Home = () => {
 
         const sessionsRes = await fetch(`/api/day/${latest}/sessions`);
         if (!sessionsRes.ok) throw new Error("Failed to fetch sessions");
-        const payload: { sessions: SessionWithSections[]; vaskiLatestSpeechDate?: string | null } =
-          await sessionsRes.json();
+        const payload: {
+          sessions: SessionWithSections[];
+          vaskiLatestSpeechDate?: string | null;
+        } = await sessionsRes.json();
         setSessions(payload.sessions || []);
         setVaskiLatestSpeechDate(payload.vaskiLatestSpeechDate ?? null);
       } catch {
@@ -469,8 +473,14 @@ const Home = () => {
               </Box>
 
               {vaskiLatestSpeechDate &&
-                new Date(session.date).getTime() > new Date(vaskiLatestSpeechDate).getTime() && (
-                  <Box sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}>
+                new Date(session.date).getTime() >
+                  new Date(vaskiLatestSpeechDate).getTime() && (
+                  <Box
+                    sx={{
+                      p: 2,
+                      borderBottom: `1px solid ${colors.dataBorder}`,
+                    }}
+                  >
                     <Alert severity="info" sx={{ alignItems: "center" }}>
                       <Typography sx={{ fontSize: "0.8125rem" }}>
                         {t("sessions.speechContentPending")}
@@ -489,7 +499,9 @@ const Home = () => {
               {session.sections?.map((section) => {
                 const isExpanded = expandedSections.has(section.id);
                 const speeches = sectionSpeeches[section.id] || [];
-                const hasSpeechContent = speeches.some((speech) => speech.content);
+                const hasSpeechContent = speeches.some(
+                  (speech) => speech.content,
+                );
                 const votings = sectionVotings[section.id] || [];
 
                 return (
@@ -546,7 +558,12 @@ const Home = () => {
                           </Typography>
                         )}
                         {section.vaski_document_type_name && (
-                          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+                          <Typography
+                            sx={{
+                              fontSize: "0.75rem",
+                              color: colors.textSecondary,
+                            }}
+                          >
                             {section.vaski_document_type_name}
                           </Typography>
                         )}
@@ -658,7 +675,11 @@ const Home = () => {
                                       }}
                                     />
                                     <Link
-                                      href={refs.voting(voting.id, session.key, session.date)}
+                                      href={refs.voting(
+                                        voting.id,
+                                        session.key,
+                                        session.date,
+                                      )}
                                       underline="hover"
                                       sx={{
                                         fontWeight: 600,
@@ -768,13 +789,21 @@ const Home = () => {
                             </Typography>
                             {!hasSpeechContent && (
                               <Typography
-                                sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                                sx={{
+                                  fontSize: "0.75rem",
+                                  color: colors.textTertiary,
+                                }}
                               >
                                 {t("sessions.speechContentPending")}
                               </Typography>
                             )}
                             {!hasSpeechContent && vaskiLatestSpeechDate && (
-                              <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+                              <Typography
+                                sx={{
+                                  fontSize: "0.75rem",
+                                  color: colors.textTertiary,
+                                }}
+                              >
                                 {t("sessions.speechContentLatest", {
                                   date: formatDate(vaskiLatestSpeechDate),
                                   defaultValue: "",

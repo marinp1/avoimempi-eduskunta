@@ -71,7 +71,11 @@ export default (db: Database) =>
     if (process.env.DEBUG)
       console.log("Mapping", dataToImport.lastname, dataToImport.personId);
 
-    const representativeRow: DatabaseTables.Representative = {
+    type RepresentativeInsert = Omit<
+      DatabaseTables.Representative,
+      "birth_year"
+    >;
+    const representativeRow: RepresentativeInsert = {
       person_id: Number(dataToImport.personId),
       first_name: dataToImport.firstname,
       last_name: dataToImport.lastname,
@@ -250,36 +254,39 @@ export default (db: Database) =>
       }
       return group_code;
     };
-    const parliamentGroupMembershipRows: DatabaseTables.ParliamentGroupMembership[] =
-      [
-        ...mergeArrays(
-          XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat
-            ?.Eduskuntaryhma,
-        ).flatMap((s) =>
-          mergeArrays(s.Jasenyys).map((j) => ({
-            ...j,
-            __parent__: s,
-          })),
-        ),
-        ...mergeArrays(
-          XmlDataFi.Henkilo.Eduskuntaryhmat.NykyinenEduskuntaryhma,
-        ).map((s) => ({
-          ...s,
-          LoppuPvm: null,
+    type ParliamentGroupMembershipInsert = Omit<
+      DatabaseTables.ParliamentGroupMembership,
+      "group_abbreviation"
+    >;
+    const parliamentGroupMembershipRows: ParliamentGroupMembershipInsert[] = [
+      ...mergeArrays(
+        XmlDataFi.Henkilo.Eduskuntaryhmat.EdellisetEduskuntaryhmat
+          ?.Eduskuntaryhma,
+      ).flatMap((s) =>
+        mergeArrays(s.Jasenyys).map((j) => ({
+          ...j,
           __parent__: s,
         })),
-      ].map((v) => {
-        const groupCode = addParliamentGroupRow({
-          code: v.__parent__.Tunnus,
-        });
-        return {
-          person_id: +dataToImport.personId,
-          group_code: groupCode,
-          group_name: v.__parent__.Nimi,
-          start_date: parseDate(v.AlkuPvm)!,
-          end_date: parseDate(v.LoppuPvm),
-        };
+      ),
+      ...mergeArrays(
+        XmlDataFi.Henkilo.Eduskuntaryhmat.NykyinenEduskuntaryhma,
+      ).map((s) => ({
+        ...s,
+        LoppuPvm: null,
+        __parent__: s,
+      })),
+    ].map((v) => {
+      const groupCode = addParliamentGroupRow({
+        code: v.__parent__.Tunnus,
       });
+      return {
+        person_id: +dataToImport.personId,
+        group_code: groupCode,
+        group_name: v.__parent__.Nimi,
+        start_date: parseDate(v.AlkuPvm)!,
+        end_date: parseDate(v.LoppuPvm),
+      };
+    });
 
     const parliamentGroupAssignmentRows: DatabaseTables.ParliamentGroupAssignment[] =
       [

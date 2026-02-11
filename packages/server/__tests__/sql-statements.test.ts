@@ -1,8 +1,8 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import {
+  getDeleteAllRowsQuery,
   MIGRATOR_SQL,
   SQLITE_PRAGMAS,
-  getDeleteAllRowsQuery,
 } from "../database/sql-statements";
 
 describe("SQL statements centralization", () => {

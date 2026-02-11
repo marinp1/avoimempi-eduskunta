@@ -62,7 +62,9 @@ export default () => {
     useState<DatabaseQueries.GetParliamentComposition | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [partyFilter, setPartyFilter] = useState<string | null>(null);
-  const [govFilter, setGovFilter] = useState<"all" | "government" | "opposition">("all");
+  const [govFilter, setGovFilter] = useState<
+    "all" | "government" | "opposition"
+  >("all");
 
   // Compute statistics
   const stats = React.useMemo(() => {
@@ -227,7 +229,9 @@ export default () => {
                 "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
             }}
           >
-            <CardContent sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}>
+            <CardContent
+              sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}
+            >
               <Typography
                 variant="h4"
                 component="h1"
@@ -590,24 +594,43 @@ export default () => {
             {(["all", "government", "opposition"] as const).map((g) => (
               <Chip
                 key={g}
-                label={g === "all" ? "Kaikki" : g === "government" ? "Hallitus" : "Oppositio"}
+                label={
+                  g === "all"
+                    ? "Kaikki"
+                    : g === "government"
+                      ? "Hallitus"
+                      : "Oppositio"
+                }
                 size="small"
                 onClick={() => setGovFilter(g)}
                 sx={{
                   fontWeight: 600,
                   fontSize: "0.8rem",
                   height: 32,
-                  bgcolor: govFilter === g ? themedColors.primary : themedColors.backgroundPaper,
+                  bgcolor:
+                    govFilter === g
+                      ? themedColors.primary
+                      : themedColors.backgroundPaper,
                   color: govFilter === g ? "white" : themedColors.textSecondary,
                   border: `1px solid ${govFilter === g ? themedColors.primary : themedColors.dataBorder}`,
                   "&:hover": {
-                    bgcolor: govFilter === g ? themedColors.primary : `${themedColors.primary}10`,
+                    bgcolor:
+                      govFilter === g
+                        ? themedColors.primary
+                        : `${themedColors.primary}10`,
                   },
                 }}
               />
             ))}
 
-            <Box sx={{ width: 1, height: 24, borderLeft: `1px solid ${themedColors.dataBorder}`, mx: 0.5 }} />
+            <Box
+              sx={{
+                width: 1,
+                height: 24,
+                borderLeft: `1px solid ${themedColors.dataBorder}`,
+                mx: 0.5,
+              }}
+            />
 
             {/* Party filter */}
             {partyFilter && (
@@ -645,7 +668,10 @@ export default () => {
               ))}
 
             {/* Result count */}
-            <Typography variant="caption" sx={{ color: themedColors.textTertiary, ml: "auto" }}>
+            <Typography
+              variant="caption"
+              sx={{ color: themedColors.textTertiary, ml: "auto" }}
+            >
               {filteredMembers.length} / {members.length} edustajaa
             </Typography>
           </Box>
@@ -697,7 +723,10 @@ export default () => {
                     >
                       <Typography
                         variant="subtitle1"
-                        sx={{ fontWeight: 600, color: themedColors.textPrimary }}
+                        sx={{
+                          fontWeight: 600,
+                          color: themedColors.textPrimary,
+                        }}
                       >
                         {m.first_name} {m.last_name}
                       </Typography>
@@ -713,7 +742,12 @@ export default () => {
                         />
                       )}
                     </Box>
-                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      flexWrap="wrap"
+                      useFlexGap
+                    >
                       {m.party_name && (
                         <Chip
                           label={m.party_name}

@@ -1,7 +1,6 @@
 import type { Database } from "bun:sqlite";
-
-import { insertRows, parseDateTime } from "../utils";
 import { extractDocumentTunnusCandidates } from "../salidb-document-ref";
+import { insertRows, parseDateTime } from "../utils";
 
 export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBKohtaAsiakirja"]) => {

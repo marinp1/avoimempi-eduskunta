@@ -1,12 +1,12 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { Database } from "bun:sqlite";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
+  clearStatementCache,
+  createBatchingInserter,
+  insertRows,
   parseDate,
   parseDateTime,
   parseYear,
-  insertRows,
-  createBatchingInserter,
-  clearStatementCache,
 } from "../migrator/utils";
 
 describe("parseDate", () => {
@@ -191,9 +191,7 @@ describe("createBatchingInserter", () => {
   });
 
   test("flushes specific table", () => {
-    db.exec(
-      "CREATE TABLE other_table (id INTEGER PRIMARY KEY, data TEXT)",
-    );
+    db.exec("CREATE TABLE other_table (id INTEGER PRIMARY KEY, data TEXT)");
     const batcher = createBatchingInserter(db, 100);
 
     batcher.insertRows("test_table", [{ id: 1, name: "a", value: 10 }]);

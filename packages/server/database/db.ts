@@ -11,6 +11,25 @@ export class DatabaseConnection {
     return this.#database;
   }
 
+  private buildFtsQuery(raw: string | null | undefined): string | null {
+    if (!raw) return null;
+    const tokens = raw
+      .trim()
+      .split(/\s+/)
+      .map((token) => token.replace(/"/g, '""'))
+      .filter((token) => token.length > 0);
+    if (tokens.length === 0) return null;
+    return tokens.map((token) => `${token}*`).join(" ");
+  }
+
+  private endDateExclusive(endDate: string | null | undefined): string | null {
+    if (!endDate) return null;
+    const parsed = new Date(`${endDate}T00:00:00Z`);
+    if (Number.isNaN(parsed.getTime())) return null;
+    parsed.setUTCDate(parsed.getUTCDate() + 1);
+    return parsed.toISOString().substring(0, 10);
+  }
+
   public async fetchParliamentComposition(params: { date: string }) {
     const dateObj = new Date(params.date);
     if (Number.isNaN(dateObj.getTime())) throw new Error("Invalid date");
@@ -124,13 +143,13 @@ export class DatabaseConnection {
   }
 
   public async queryVotings(params: { q: string }) {
+    const ftsQuery = this.buildFtsQuery(params.q);
+    if (!ftsQuery) return [];
     const stmt = this.db.prepare<
       DatabaseQueries.VotingSearchResult,
       { $query: string }
-    >(
-      queries.votingsSearch,
-    );
-    const data = stmt.all({ $query: `%${params.q}%` });
+    >(queries.votingsSearch);
+    const data = stmt.all({ $query: ftsQuery });
     stmt.finalize();
     return data;
   }
@@ -171,6 +190,7 @@ export class DatabaseConnection {
         speech_count: number;
         speaker_count: number;
         party_count: number;
+        vaski_document_id?: number | null;
         vaski_document_type_name?: string | null;
         vaski_document_type_code?: string | null;
         vaski_eduskunta_tunnus?: string | null;
@@ -257,6 +277,7 @@ export class DatabaseConnection {
     startDate?: string;
     endDate?: string;
   }) {
+    const endDateExclusive = this.endDateExclusive(params?.endDate);
     const stmt = this.db.prepare<
       {
         person_id: number;
@@ -269,12 +290,12 @@ export class DatabaseConnection {
       },
       {
         $startDate: string | null;
-        $endDate: string | null;
+        $endDateExclusive: string | null;
       }
     >(queries.votingParticipation);
     const data = stmt.all({
       $startDate: params?.startDate || null,
-      $endDate: params?.endDate || null,
+      $endDateExclusive: endDateExclusive,
     });
     stmt.finalize();
     return data;
@@ -285,6 +306,7 @@ export class DatabaseConnection {
     startDate?: string;
     endDate?: string;
   }) {
+    const endDateExclusive = this.endDateExclusive(params?.endDate);
     const stmt = this.db.prepare<
       {
         person_id: number;
@@ -301,13 +323,13 @@ export class DatabaseConnection {
       {
         $personId: number;
         $startDate: string | null;
-        $endDate: string | null;
+        $endDateExclusive: string | null;
       }
     >(queries.votingParticipationByGovernment);
     const data = stmt.all({
       $personId: +params.personId,
       $startDate: params?.startDate || null,
-      $endDate: params?.endDate || null,
+      $endDateExclusive: endDateExclusive,
     });
     stmt.finalize();
     return data;
@@ -355,6 +377,7 @@ export class DatabaseConnection {
     startDate?: string;
     endDate?: string;
   }) {
+    const endDateExclusive = this.endDateExclusive(params?.endDate);
     const stmt = this.db.prepare<
       {
         government: string;
@@ -369,12 +392,12 @@ export class DatabaseConnection {
       },
       {
         $startDate: string | null;
-        $endDate: string | null;
+        $endDateExclusive: string | null;
       }
     >(queries.partyParticipationByGovernment);
     const data = stmt.all({
       $startDate: params?.startDate || null,
-      $endDate: params?.endDate || null,
+      $endDateExclusive: endDateExclusive,
     });
     stmt.finalize();
     return data;
@@ -399,6 +422,7 @@ export class DatabaseConnection {
         speech_count: number;
         speaker_count: number;
         party_count: number;
+        vaski_document_id?: number | null;
         vaski_document_type_name?: string | null;
         vaski_document_type_code?: string | null;
         vaski_eduskunta_tunnus?: string | null;
@@ -441,6 +465,61 @@ export class DatabaseConnection {
     return sessionsWithSections;
   }
 
+  public async fetchSessionDocuments(params: { sessionKey: string }) {
+    const stmt = this.db.prepare<
+      {
+        document_kind: "agenda" | "minutes" | "roll_call";
+        id: number;
+        type_slug: string;
+        type_name_fi: string | null;
+        root_family: string | null;
+        eduskunta_tunnus: string | null;
+        document_type_code: string | null;
+        document_number_text: string | null;
+        parliamentary_year_text: string | null;
+        title: string | null;
+        status_text: string | null;
+        created_at: string | null;
+      },
+      { $sessionKey: string }
+    >(queries.sessionDocuments);
+    const data = stmt.all({ $sessionKey: params.sessionKey });
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchSessionNotices(params: { sessionKey: string }) {
+    const stmt = this.db.prepare<
+      DatabaseTables.SessionNotice,
+      { $sessionKey: string }
+    >(queries.sessionNotices);
+    const data = stmt.all({ $sessionKey: params.sessionKey });
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchSectionDocumentLinks(params: { sectionKey: string }) {
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        section_key: string;
+        label: string | null;
+        url: string | null;
+        document_tunnus: string | null;
+        document_id: number | null;
+        document_type_name: string | null;
+        document_type_code: string | null;
+        document_title: string | null;
+        document_created_at: string | null;
+        source_type: string | null;
+      },
+      { $sectionKey: string }
+    >(queries.sectionDocumentLinks);
+    const data = stmt.all({ $sectionKey: params.sectionKey });
+    stmt.finalize();
+    return data;
+  }
+
   public async fetchSpeechesByDate(params: { date: string }) {
     const stmt = this.db.prepare<
       {
@@ -468,19 +547,6 @@ export class DatabaseConnection {
     const data = stmt.all({ $date: params.date });
     stmt.finalize();
     return data;
-  }
-
-  public async fetchLatestVaskiMinutesDate() {
-    try {
-      const stmt = this.db.prepare<{ max: string | null }, []>(
-        queries.latestVaskiMinutesDate,
-      );
-      const result = stmt.get();
-      stmt.finalize();
-      return result?.max ?? null;
-    } catch {
-      return null;
-    }
   }
 
   public async fetchSessionDates() {
@@ -702,94 +768,6 @@ export class DatabaseConnection {
     return data;
   }
 
-  public async searchDocuments(params: {
-    q?: string;
-    type?: string;
-    year?: string;
-    limit?: number;
-    offset?: number;
-  }) {
-    const stmt = this.db.prepare<
-      {
-        id: number;
-        eduskunta_tunnus: string;
-        document_type_code: string;
-        document_type_name: string;
-        document_number: number;
-        parliamentary_year: string;
-        title: string;
-        author_first_name: string;
-        author_last_name: string;
-        author_role: string;
-        creation_date: string;
-        status: string;
-        summary: string;
-        subjects: string | null;
-      },
-      {
-        $q: string | null;
-        $type: string | null;
-        $year: string | null;
-        $limit: number;
-        $offset: number;
-      }
-    >(queries.documentsSearch);
-    const data = stmt.all({
-      $q: params.q || null,
-      $type: params.type || null,
-      $year: params.year || null,
-      $limit: params.limit ?? 50,
-      $offset: params.offset ?? 0,
-    });
-    stmt.finalize();
-    return data;
-  }
-
-  public async fetchDocumentsByType() {
-    const stmt = this.db.prepare<
-      {
-        document_type_code: string;
-        document_type_name: string;
-        document_count: number;
-        earliest: string;
-        latest: string;
-      },
-      []
-    >(queries.documentsByType);
-    const data = stmt.all();
-    stmt.finalize();
-    return data;
-  }
-
-  public async fetchDocumentDetail(params: { id: string }) {
-    const stmt = this.db.prepare<
-      {
-        id: number;
-        eduskunta_tunnus: string;
-        document_type_code: string;
-        document_type_name: string;
-        document_number: number;
-        parliamentary_year: string;
-        title: string;
-        author_first_name: string;
-        author_last_name: string;
-        author_role: string;
-        author_organization: string;
-        creation_date: string;
-        status: string;
-        language_code: string;
-        publicity_code: string;
-        source_reference: string;
-        summary: string;
-        subjects: string | null;
-      },
-      { $id: number }
-    >(queries.documentDetail);
-    const data = stmt.get({ $id: +params.id });
-    stmt.finalize();
-    return data;
-  }
-
   public async fetchPersonSpeeches(params: {
     personId: string;
     limit?: number;
@@ -861,6 +839,8 @@ export class DatabaseConnection {
   }
 
   public async federatedSearch(params: { q: string; limit?: number }) {
+    const ftsQuery = this.buildFtsQuery(params.q);
+    if (!ftsQuery) return [];
     const stmt = this.db.prepare<
       {
         type: string;
@@ -872,7 +852,7 @@ export class DatabaseConnection {
       { $q: string; $limit: number }
     >(queries.federatedSearch);
     const data = stmt.all({
-      $q: params.q,
+      $q: ftsQuery,
       $limit: params.limit ?? 30,
     });
     stmt.finalize();

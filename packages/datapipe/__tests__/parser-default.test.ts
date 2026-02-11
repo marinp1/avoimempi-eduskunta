@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 
 // We test the parser logic by importing the module and testing its exported function type
 // The default parser and rowArrayToObject are internal, so we test via the parseTable integration

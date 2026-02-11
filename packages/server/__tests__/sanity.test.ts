@@ -1,5 +1,5 @@
-import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { Database } from "bun:sqlite";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { existsSync } from "fs";
 import { join } from "path";
 
@@ -60,10 +60,8 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
         "Vote",
         "Speech",
         "SessionSectionSpeech",
-        "VotingDocumentLink",
         "SectionDocumentLink",
         "SessionNotice",
-        "VotingDistribution",
         "SaliDBDocumentReference",
         "Document",
         "DocumentActor",
@@ -84,44 +82,32 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
     });
 
     test("Session table has >100 sessions", () => {
-      const { c } = db
-        .query("SELECT COUNT(*) as c FROM Session")
-        .get() as any;
+      const { c } = db.query("SELECT COUNT(*) as c FROM Session").get() as any;
       expect(c).toBeGreaterThan(100);
     });
 
     test("Voting table has >1000 votings", () => {
-      const { c } = db
-        .query("SELECT COUNT(*) as c FROM Voting")
-        .get() as any;
+      const { c } = db.query("SELECT COUNT(*) as c FROM Voting").get() as any;
       expect(c).toBeGreaterThan(1000);
     });
 
     test("Vote table has individual vote records", () => {
-      const { c } = db
-        .query("SELECT COUNT(*) as c FROM Vote")
-        .get() as any;
+      const { c } = db.query("SELECT COUNT(*) as c FROM Vote").get() as any;
       expect(c).toBeGreaterThan(100000);
     });
 
     test("Section table has >1000 sections", () => {
-      const { c } = db
-        .query("SELECT COUNT(*) as c FROM Section")
-        .get() as any;
+      const { c } = db.query("SELECT COUNT(*) as c FROM Section").get() as any;
       expect(c).toBeGreaterThan(1000);
     });
 
     test("Speech table has >10000 speeches", () => {
-      const { c } = db
-        .query("SELECT COUNT(*) as c FROM Speech")
-        .get() as any;
+      const { c } = db.query("SELECT COUNT(*) as c FROM Speech").get() as any;
       expect(c).toBeGreaterThan(10000);
     });
 
     test("Term table has >1000 terms", () => {
-      const { c } = db
-        .query("SELECT COUNT(*) as c FROM Term")
-        .get() as any;
+      const { c } = db.query("SELECT COUNT(*) as c FROM Term").get() as any;
       expect(c).toBeGreaterThan(1000);
     });
   });
@@ -338,9 +324,7 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
 
     test("no votings with NULL start_time", () => {
       const { c } = db
-        .query(
-          "SELECT COUNT(*) as c FROM Voting WHERE start_time IS NULL",
-        )
+        .query("SELECT COUNT(*) as c FROM Voting WHERE start_time IS NULL")
         .get() as any;
       expect(c).toBe(0);
     });
@@ -387,26 +371,6 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
   // ─── SALIDB LINKAGE ──────────────────────────────────────
 
   describe("SaliDB linkage", () => {
-    test("VotingDocumentLink references existing Voting", () => {
-      const { orphans } = db
-        .query(
-          `SELECT COUNT(*) as orphans FROM VotingDocumentLink vdl
-           WHERE NOT EXISTS (SELECT 1 FROM Voting v WHERE v.id = vdl.voting_id)`,
-        )
-        .get() as any;
-      expect(orphans).toBe(0);
-    });
-
-    test("VotingDistribution references existing Voting", () => {
-      const { orphans } = db
-        .query(
-          `SELECT COUNT(*) as orphans FROM VotingDistribution vd
-           WHERE NOT EXISTS (SELECT 1 FROM Voting v WHERE v.id = vd.voting_id)`,
-        )
-        .get() as any;
-      expect(orphans).toBe(0);
-    });
-
     test("SectionDocumentLink references existing Section", () => {
       const { orphans } = db
         .query(
@@ -862,9 +826,7 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
 
   describe("District integrity", () => {
     test("district count is plausible (10-50, includes historical districts since 1907)", () => {
-      const { c } = db
-        .query("SELECT COUNT(*) as c FROM District")
-        .get() as any;
+      const { c } = db.query("SELECT COUNT(*) as c FROM District").get() as any;
       expect(c).toBeGreaterThanOrEqual(10);
       expect(c).toBeLessThanOrEqual(50);
     });
@@ -1007,10 +969,14 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
   describe("Query correctness", () => {
     test("pagination returns correct page sizes with no overlap", () => {
       const page1 = db
-        .query("SELECT person_id FROM Representative LIMIT $limit OFFSET $offset")
+        .query(
+          "SELECT person_id FROM Representative LIMIT $limit OFFSET $offset",
+        )
         .all({ $limit: 25, $offset: 0 }) as any[];
       const page2 = db
-        .query("SELECT person_id FROM Representative LIMIT $limit OFFSET $offset")
+        .query(
+          "SELECT person_id FROM Representative LIMIT $limit OFFSET $offset",
+        )
         .all({ $limit: 25, $offset: 25 }) as any[];
 
       expect(page1).toHaveLength(25);

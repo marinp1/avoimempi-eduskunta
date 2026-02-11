@@ -26,8 +26,8 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { refs } from "#client/references";
 import { colors, commonStyles } from "#client/theme";
-import { useThemedColors } from "#client/theme/ThemeContext";
 import { DataCard, MetricCard, VoteMarginBar } from "#client/theme/components";
+import { useThemedColors } from "#client/theme/ThemeContext";
 import { getVoteColors } from "#client/theme/vote-styles";
 
 const CLOSE_VOTE_THRESHOLD = 10;
@@ -66,7 +66,8 @@ const eduskuntaLink = (href: string) => {
 
 const voteMargin = (vote: VotingSearchRow) => Math.abs(vote.n_yes - vote.n_no);
 
-const isCloseVote = (vote: VotingSearchRow) => voteMargin(vote) <= CLOSE_VOTE_THRESHOLD;
+const isCloseVote = (vote: VotingSearchRow) =>
+  voteMargin(vote) <= CLOSE_VOTE_THRESHOLD;
 
 const isVotePassed = (vote: VotingSearchRow) => vote.n_yes > vote.n_no;
 
@@ -86,14 +87,18 @@ const sortRows = (rows: VotingSearchRow[], sortMode: SortMode) => {
   const copy = [...rows];
   switch (sortMode) {
     case "oldest":
-      return copy.sort((a, b) => (a.start_time ?? "").localeCompare(b.start_time ?? ""));
+      return copy.sort((a, b) =>
+        (a.start_time ?? "").localeCompare(b.start_time ?? ""),
+      );
     case "closest":
       return copy.sort((a, b) => voteMargin(a) - voteMargin(b));
     case "largest":
       return copy.sort((a, b) => b.n_total - a.n_total);
     case "newest":
     default:
-      return copy.sort((a, b) => (b.start_time ?? "").localeCompare(a.start_time ?? ""));
+      return copy.sort((a, b) =>
+        (b.start_time ?? "").localeCompare(a.start_time ?? ""),
+      );
   }
 };
 
@@ -107,7 +112,8 @@ export const VoteResults: React.FC<{
   const voteColors = getVoteColors(themedColors);
 
   const [state, setState] = React.useState<SearchState>(emptyState);
-  const [focusVoting, setFocusVoting] = React.useState<FocusVotingState>(emptyFocusState);
+  const [focusVoting, setFocusVoting] =
+    React.useState<FocusVotingState>(emptyFocusState);
   const [phaseFilter, setPhaseFilter] = React.useState<string>("all");
   const [sessionFilter, setSessionFilter] = React.useState<string>(
     initialSessionFilter || "all",
@@ -142,7 +148,8 @@ export const VoteResults: React.FC<{
         if (ac.signal.aborted) return;
         setState({
           loading: false,
-          error: error instanceof Error ? error.message : t("errors.unknownError"),
+          error:
+            error instanceof Error ? error.message : t("errors.unknownError"),
           rows: [],
         });
       }
@@ -181,7 +188,8 @@ export const VoteResults: React.FC<{
         if (ac.signal.aborted) return;
         setFocusVoting({
           loading: false,
-          error: error instanceof Error ? error.message : t("errors.unknownError"),
+          error:
+            error instanceof Error ? error.message : t("errors.unknownError"),
           row: null,
         });
       }
@@ -193,26 +201,37 @@ export const VoteResults: React.FC<{
 
   const combinedRows = React.useMemo(() => {
     const rows = [...state.rows];
-    if (focusVoting.row && !rows.some((row) => row.id === focusVoting.row?.id)) {
+    if (
+      focusVoting.row &&
+      !rows.some((row) => row.id === focusVoting.row?.id)
+    ) {
       rows.unshift(focusVoting.row);
     }
     return rows;
   }, [state.rows, focusVoting.row]);
 
   const phases = React.useMemo(
-    () => Array.from(new Set(combinedRows.map((row) => row.section_processing_phase))).sort(),
+    () =>
+      Array.from(
+        new Set(combinedRows.map((row) => row.section_processing_phase)),
+      ).sort(),
     [combinedRows],
   );
 
   const sessions = React.useMemo(
-    () => Array.from(new Set(combinedRows.map((row) => row.session_key))).sort().reverse(),
+    () =>
+      Array.from(new Set(combinedRows.map((row) => row.session_key)))
+        .sort()
+        .reverse(),
     [combinedRows],
   );
 
   const filtered = React.useMemo(() => {
     const rows = combinedRows.filter((row) => {
-      if (phaseFilter !== "all" && row.section_processing_phase !== phaseFilter) return false;
-      if (sessionFilter !== "all" && row.session_key !== sessionFilter) return false;
+      if (phaseFilter !== "all" && row.section_processing_phase !== phaseFilter)
+        return false;
+      if (sessionFilter !== "all" && row.session_key !== sessionFilter)
+        return false;
       return true;
     });
     return sortRows(rows, sortMode);
@@ -229,8 +248,11 @@ export const VoteResults: React.FC<{
     const closeVotes = filtered.filter(isCloseVote).length;
     const passedVotes = filtered.filter(isVotePassed).length;
     const avgMargin =
-      total > 0 ? filtered.reduce((sum, row) => sum + voteMargin(row), 0) / total : 0;
-    const participationPct = possibleVotes > 0 ? (votesCast / possibleVotes) * 100 : 0;
+      total > 0
+        ? filtered.reduce((sum, row) => sum + voteMargin(row), 0) / total
+        : 0;
+    const participationPct =
+      possibleVotes > 0 ? (votesCast / possibleVotes) * 100 : 0;
 
     return {
       total,
@@ -245,7 +267,10 @@ export const VoteResults: React.FC<{
     };
   }, [filtered]);
 
-  const closestVotes = React.useMemo(() => sortRows(filtered, "closest").slice(0, 5), [filtered]);
+  const closestVotes = React.useMemo(
+    () => sortRows(filtered, "closest").slice(0, 5),
+    [filtered],
+  );
 
   const noSearch = normalizedQuery.length < 3 && !focusVotingId;
 
@@ -253,11 +278,16 @@ export const VoteResults: React.FC<{
     <Box>
       {noSearch && (
         <DataCard sx={{ p: 4, textAlign: "center" }}>
-          <InsightsIcon sx={{ fontSize: 36, color: themedColors.textTertiary, mb: 1 }} />
+          <InsightsIcon
+            sx={{ fontSize: 36, color: themedColors.textTertiary, mb: 1 }}
+          />
           <Typography variant="h6" sx={{ color: themedColors.textSecondary }}>
             {t("votings.startSearch")}
           </Typography>
-          <Typography variant="body2" sx={{ color: themedColors.textTertiary, mt: 0.5 }}>
+          <Typography
+            variant="body2"
+            sx={{ color: themedColors.textTertiary, mt: 0.5 }}
+          >
             {t("votings.startSearchHint")}
           </Typography>
         </DataCard>
@@ -269,317 +299,470 @@ export const VoteResults: React.FC<{
         </Box>
       )}
 
-      {!noSearch && !state.loading && !focusVoting.loading && (state.error || focusVoting.error) && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {t("errors.loadFailed")}: {state.error || focusVoting.error}
-        </Alert>
-      )}
+      {!noSearch &&
+        !state.loading &&
+        !focusVoting.loading &&
+        (state.error || focusVoting.error) && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {t("errors.loadFailed")}: {state.error || focusVoting.error}
+          </Alert>
+        )}
 
-      {!noSearch && !state.loading && !focusVoting.loading && !state.error && !focusVoting.error && (
-        <Stack spacing={3}>
-          <DataCard sx={{ p: 2.5 }}>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "repeat(3, minmax(0, 1fr))" },
-                gap: 2,
-              }}
-            >
-              <Box>
-                <InputLabel sx={{ mb: 0.5, fontSize: "0.75rem" }}>
-                  {t("votings.filters.phase")}
-                </InputLabel>
-                <Select
-                  value={phaseFilter}
-                  size="small"
-                  onChange={(event) => setPhaseFilter(event.target.value)}
-                  fullWidth
-                >
-                  <MenuItem value="all">{t("votings.filters.all")}</MenuItem>
-                  {phases.map((phase) => (
-                    <MenuItem key={phase} value={phase}>
-                      {phase}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Box>
-              <Box>
-                <InputLabel sx={{ mb: 0.5, fontSize: "0.75rem" }}>
-                  {t("votings.filters.session")}
-                </InputLabel>
-                <Select
-                  value={sessionFilter}
-                  size="small"
-                  onChange={(event) => setSessionFilter(event.target.value)}
-                  fullWidth
-                >
-                  <MenuItem value="all">{t("votings.filters.all")}</MenuItem>
-                  {sessions.map((session) => (
-                    <MenuItem key={session} value={session}>
-                      {session}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </Box>
-              <Box>
-                <InputLabel sx={{ mb: 0.5, fontSize: "0.75rem" }}>
-                  {t("votings.filters.sort")}
-                </InputLabel>
-                <Select
-                  value={sortMode}
-                  size="small"
-                  onChange={(event) => setSortMode(event.target.value as SortMode)}
-                  fullWidth
-                >
-                  <MenuItem value="newest">{t("votings.sort.newest")}</MenuItem>
-                  <MenuItem value="oldest">{t("votings.sort.oldest")}</MenuItem>
-                  <MenuItem value="closest">{t("votings.sort.closest")}</MenuItem>
-                  <MenuItem value="largest">{t("votings.sort.largest")}</MenuItem>
-                </Select>
-              </Box>
-            </Box>
-          </DataCard>
-
-          {filtered.length === 0 ? (
-            <DataCard sx={{ p: 4, textAlign: "center" }}>
-              <Typography variant="h6" sx={{ color: themedColors.textSecondary, mb: 0.5 }}>
-                {t("votings.noResults")}
-              </Typography>
-              <Typography variant="body2" sx={{ color: themedColors.textTertiary }}>
-                {t("votings.noResultsHint")}
-              </Typography>
-            </DataCard>
-          ) : (
-            <>
+      {!noSearch &&
+        !state.loading &&
+        !focusVoting.loading &&
+        !state.error &&
+        !focusVoting.error && (
+          <Stack spacing={3}>
+            <DataCard sx={{ p: 2.5 }}>
               <Box
                 sx={{
                   display: "grid",
                   gridTemplateColumns: {
                     xs: "1fr",
-                    sm: "repeat(2, minmax(0, 1fr))",
-                    lg: "repeat(4, minmax(0, 1fr))",
+                    sm: "repeat(3, minmax(0, 1fr))",
                   },
                   gap: 2,
                 }}
               >
-                <MetricCard
-                  label={t("votings.analysis.total")}
-                  value={aggregate.total}
-                  icon={<InsightsIcon sx={{ fontSize: 20 }} />}
-                />
-                <MetricCard
-                  label={t("votings.analysis.participation")}
-                  value={`${aggregate.participationPct.toFixed(1)}%`}
-                  icon={<ThumbUpIcon sx={{ fontSize: 20 }} />}
-                />
-                <MetricCard
-                  label={t("votings.analysis.closeVotes")}
-                  value={aggregate.closeVotes}
-                  icon={<WarningAmberIcon sx={{ fontSize: 20 }} />}
-                />
-                <MetricCard
-                  label={t("votings.analysis.passed")}
-                  value={`${aggregate.passedVotes}/${aggregate.total}`}
-                  icon={<ThumbDownIcon sx={{ fontSize: 20 }} />}
-                />
+                <Box>
+                  <InputLabel sx={{ mb: 0.5, fontSize: "0.75rem" }}>
+                    {t("votings.filters.phase")}
+                  </InputLabel>
+                  <Select
+                    value={phaseFilter}
+                    size="small"
+                    onChange={(event) => setPhaseFilter(event.target.value)}
+                    fullWidth
+                  >
+                    <MenuItem value="all">{t("votings.filters.all")}</MenuItem>
+                    {phases.map((phase) => (
+                      <MenuItem key={phase} value={phase}>
+                        {phase}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </Box>
+                <Box>
+                  <InputLabel sx={{ mb: 0.5, fontSize: "0.75rem" }}>
+                    {t("votings.filters.session")}
+                  </InputLabel>
+                  <Select
+                    value={sessionFilter}
+                    size="small"
+                    onChange={(event) => setSessionFilter(event.target.value)}
+                    fullWidth
+                  >
+                    <MenuItem value="all">{t("votings.filters.all")}</MenuItem>
+                    {sessions.map((session) => (
+                      <MenuItem key={session} value={session}>
+                        {session}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </Box>
+                <Box>
+                  <InputLabel sx={{ mb: 0.5, fontSize: "0.75rem" }}>
+                    {t("votings.filters.sort")}
+                  </InputLabel>
+                  <Select
+                    value={sortMode}
+                    size="small"
+                    onChange={(event) =>
+                      setSortMode(event.target.value as SortMode)
+                    }
+                    fullWidth
+                  >
+                    <MenuItem value="newest">
+                      {t("votings.sort.newest")}
+                    </MenuItem>
+                    <MenuItem value="oldest">
+                      {t("votings.sort.oldest")}
+                    </MenuItem>
+                    <MenuItem value="closest">
+                      {t("votings.sort.closest")}
+                    </MenuItem>
+                    <MenuItem value="largest">
+                      {t("votings.sort.largest")}
+                    </MenuItem>
+                  </Select>
+                </Box>
               </Box>
+            </DataCard>
 
-              <DataCard sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ color: themedColors.textPrimary, mb: 1.5 }}>
-                  {t("votings.analysis.aggregateDistribution")}
+            {filtered.length === 0 ? (
+              <DataCard sx={{ p: 4, textAlign: "center" }}>
+                <Typography
+                  variant="h6"
+                  sx={{ color: themedColors.textSecondary, mb: 0.5 }}
+                >
+                  {t("votings.noResults")}
                 </Typography>
-                <VoteMarginBar
-                  yes={aggregate.yes}
-                  no={aggregate.no}
-                  empty={aggregate.abstain}
-                  absent={aggregate.absent}
-                  height={12}
-                  sx={{ mb: 1.5 }}
-                />
+                <Typography
+                  variant="body2"
+                  sx={{ color: themedColors.textTertiary }}
+                >
+                  {t("votings.noResultsHint")}
+                </Typography>
+              </DataCard>
+            ) : (
+              <>
                 <Box
                   sx={{
                     display: "grid",
-                    gridTemplateColumns: { xs: "repeat(2, 1fr)", md: "repeat(4, 1fr)" },
-                    gap: 1.5,
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "repeat(2, minmax(0, 1fr))",
+                      lg: "repeat(4, minmax(0, 1fr))",
+                    },
+                    gap: 2,
                   }}
                 >
-                  <Chip icon={<ThumbUpIcon />} label={`${t("votings.results.yes")}: ${aggregate.yes}`} />
-                  <Chip icon={<ThumbDownIcon />} label={`${t("votings.results.no")}: ${aggregate.no}`} />
-                  <Chip icon={<RemoveIcon />} label={`${t("votings.results.empty")}: ${aggregate.abstain}`} />
-                  <Chip icon={<PersonOffIcon />} label={`${t("votings.results.absent")}: ${aggregate.absent}`} />
+                  <MetricCard
+                    label={t("votings.analysis.total")}
+                    value={aggregate.total}
+                    icon={<InsightsIcon sx={{ fontSize: 20 }} />}
+                  />
+                  <MetricCard
+                    label={t("votings.analysis.participation")}
+                    value={`${aggregate.participationPct.toFixed(1)}%`}
+                    icon={<ThumbUpIcon sx={{ fontSize: 20 }} />}
+                  />
+                  <MetricCard
+                    label={t("votings.analysis.closeVotes")}
+                    value={aggregate.closeVotes}
+                    icon={<WarningAmberIcon sx={{ fontSize: 20 }} />}
+                  />
+                  <MetricCard
+                    label={t("votings.analysis.passed")}
+                    value={`${aggregate.passedVotes}/${aggregate.total}`}
+                    icon={<ThumbDownIcon sx={{ fontSize: 20 }} />}
+                  />
                 </Box>
-                <Typography variant="body2" sx={{ color: themedColors.textSecondary, mt: 1.5 }}>
-                  {t("votings.analysis.avgMargin")}: {aggregate.avgMargin.toFixed(1)}
-                </Typography>
-              </DataCard>
 
-              <DataCard sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ color: themedColors.textPrimary, mb: 1.5 }}>
-                  {t("votings.analysis.closestVotes")}
-                </Typography>
-                <Stack spacing={1.25}>
-                  {closestVotes.map((vote) => (
-                    <Box
-                      key={vote.id}
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 1,
-                        border: `1px solid ${themedColors.dataBorder}`,
-                        background: colors.backgroundSubtle,
-                      }}
-                    >
-                      <Typography sx={{ fontWeight: 600, color: themedColors.textPrimary }}>
-                        {getPrimaryTitle(vote)}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
-                        <Link href={refs.session(vote.session_key, vote.start_time)} underline="hover" color="inherit">
-                          {vote.session_key}
-                        </Link>{" "}
-                        | {t("votings.margin")}: {voteMargin(vote)} | {vote.n_yes} - {vote.n_no}
-                      </Typography>
-                      {getSecondaryTitle(vote) && (
-                        <Typography variant="caption" sx={{ color: themedColors.textTertiary }}>
-                          {getSecondaryTitle(vote)}
+                <DataCard sx={{ p: 3 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{ color: themedColors.textPrimary, mb: 1.5 }}
+                  >
+                    {t("votings.analysis.aggregateDistribution")}
+                  </Typography>
+                  <VoteMarginBar
+                    yes={aggregate.yes}
+                    no={aggregate.no}
+                    empty={aggregate.abstain}
+                    absent={aggregate.absent}
+                    height={12}
+                    sx={{ mb: 1.5 }}
+                  />
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: {
+                        xs: "repeat(2, 1fr)",
+                        md: "repeat(4, 1fr)",
+                      },
+                      gap: 1.5,
+                    }}
+                  >
+                    <Chip
+                      icon={<ThumbUpIcon />}
+                      label={`${t("votings.results.yes")}: ${aggregate.yes}`}
+                    />
+                    <Chip
+                      icon={<ThumbDownIcon />}
+                      label={`${t("votings.results.no")}: ${aggregate.no}`}
+                    />
+                    <Chip
+                      icon={<RemoveIcon />}
+                      label={`${t("votings.results.empty")}: ${aggregate.abstain}`}
+                    />
+                    <Chip
+                      icon={<PersonOffIcon />}
+                      label={`${t("votings.results.absent")}: ${aggregate.absent}`}
+                    />
+                  </Box>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: themedColors.textSecondary, mt: 1.5 }}
+                  >
+                    {t("votings.analysis.avgMargin")}:{" "}
+                    {aggregate.avgMargin.toFixed(1)}
+                  </Typography>
+                </DataCard>
+
+                <DataCard sx={{ p: 3 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{ color: themedColors.textPrimary, mb: 1.5 }}
+                  >
+                    {t("votings.analysis.closestVotes")}
+                  </Typography>
+                  <Stack spacing={1.25}>
+                    {closestVotes.map((vote) => (
+                      <Box
+                        key={vote.id}
+                        sx={{
+                          p: 1.5,
+                          borderRadius: 1,
+                          border: `1px solid ${themedColors.dataBorder}`,
+                          background: colors.backgroundSubtle,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontWeight: 600,
+                            color: themedColors.textPrimary,
+                          }}
+                        >
+                          {getPrimaryTitle(vote)}
                         </Typography>
-                      )}
-                    </Box>
-                  ))}
-                </Stack>
-              </DataCard>
-
-              <DataCard sx={{ p: 0, overflow: "hidden" }}>
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow sx={{ background: themedColors.primary }}>
-                        <TableCell sx={commonStyles.tableHeader}>{t("votings.results.time")}</TableCell>
-                        <TableCell sx={commonStyles.tableHeader}>{t("votings.results.session")}</TableCell>
-                        <TableCell sx={commonStyles.tableHeader}>{t("votings.results.stage")}</TableCell>
-                        <TableCell sx={commonStyles.tableHeader}>{t("votings.results.title")}</TableCell>
-                        <TableCell sx={commonStyles.tableHeader}>{t("votings.results.context")}</TableCell>
-                        <TableCell sx={commonStyles.tableHeader}>{t("votings.results.votes")}</TableCell>
-                        <TableCell sx={commonStyles.tableHeader}>{t("votings.results.links")}</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {filtered.map((vote) => {
-                        const close = isCloseVote(vote);
-                        return (
-                          <TableRow
-                            key={vote.id}
-                            hover
-                            sx={{
-                              "&:hover": { background: `${themedColors.primary}07` },
-                            }}
+                        <Typography
+                          variant="body2"
+                          sx={{ color: themedColors.textSecondary }}
+                        >
+                          <Link
+                            href={refs.session(
+                              vote.session_key,
+                              vote.start_time,
+                            )}
+                            underline="hover"
+                            color="inherit"
                           >
-                            <TableCell sx={{ color: themedColors.textSecondary }}>
-                              {vote.start_time
-                                ? new Date(vote.start_time).toLocaleDateString("fi-FI")
-                                : "-"}
-                            </TableCell>
-                            <TableCell sx={{ fontWeight: 600 }}>
-                              <Link href={refs.session(vote.session_key, vote.start_time)} underline="hover" color="inherit">
-                                {vote.session_key}
-                              </Link>
-                            </TableCell>
-                            <TableCell>
-                              <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap" }}>
-                                <Chip size="small" label={vote.section_processing_phase} />
-                                {close && (
+                            {vote.session_key}
+                          </Link>{" "}
+                          | {t("votings.margin")}: {voteMargin(vote)} |{" "}
+                          {vote.n_yes} - {vote.n_no}
+                        </Typography>
+                        {getSecondaryTitle(vote) && (
+                          <Typography
+                            variant="caption"
+                            sx={{ color: themedColors.textTertiary }}
+                          >
+                            {getSecondaryTitle(vote)}
+                          </Typography>
+                        )}
+                      </Box>
+                    ))}
+                  </Stack>
+                </DataCard>
+
+                <DataCard sx={{ p: 0, overflow: "hidden" }}>
+                  <TableContainer>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow sx={{ background: themedColors.primary }}>
+                          <TableCell sx={commonStyles.tableHeader}>
+                            {t("votings.results.time")}
+                          </TableCell>
+                          <TableCell sx={commonStyles.tableHeader}>
+                            {t("votings.results.session")}
+                          </TableCell>
+                          <TableCell sx={commonStyles.tableHeader}>
+                            {t("votings.results.stage")}
+                          </TableCell>
+                          <TableCell sx={commonStyles.tableHeader}>
+                            {t("votings.results.title")}
+                          </TableCell>
+                          <TableCell sx={commonStyles.tableHeader}>
+                            {t("votings.results.context")}
+                          </TableCell>
+                          <TableCell sx={commonStyles.tableHeader}>
+                            {t("votings.results.votes")}
+                          </TableCell>
+                          <TableCell sx={commonStyles.tableHeader}>
+                            {t("votings.results.links")}
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {filtered.map((vote) => {
+                          const close = isCloseVote(vote);
+                          return (
+                            <TableRow
+                              key={vote.id}
+                              hover
+                              sx={{
+                                "&:hover": {
+                                  background: `${themedColors.primary}07`,
+                                },
+                              }}
+                            >
+                              <TableCell
+                                sx={{ color: themedColors.textSecondary }}
+                              >
+                                {vote.start_time
+                                  ? new Date(
+                                      vote.start_time,
+                                    ).toLocaleDateString("fi-FI")
+                                  : "-"}
+                              </TableCell>
+                              <TableCell sx={{ fontWeight: 600 }}>
+                                <Link
+                                  href={refs.session(
+                                    vote.session_key,
+                                    vote.start_time,
+                                  )}
+                                  underline="hover"
+                                  color="inherit"
+                                >
+                                  {vote.session_key}
+                                </Link>
+                              </TableCell>
+                              <TableCell>
+                                <Stack
+                                  direction="row"
+                                  spacing={0.5}
+                                  sx={{ flexWrap: "wrap" }}
+                                >
                                   <Chip
                                     size="small"
-                                    label={t("votings.closeVote")}
-                                    sx={{
-                                      color: themedColors.warning,
-                                      borderColor: `${themedColors.warning}66`,
-                                    }}
-                                    variant="outlined"
+                                    label={vote.section_processing_phase}
                                   />
-                                )}
-                              </Stack>
-                            </TableCell>
-                            <TableCell sx={{ maxWidth: 500 }}>
-                              <Typography sx={{ fontWeight: 600 }}>
-                                {getPrimaryTitle(vote) || t("common.none")}
-                              </Typography>
-                              {getSecondaryTitle(vote) && (
-                                <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-                                  {getSecondaryTitle(vote)}
+                                  {close && (
+                                    <Chip
+                                      size="small"
+                                      label={t("votings.closeVote")}
+                                      sx={{
+                                        color: themedColors.warning,
+                                        borderColor: `${themedColors.warning}66`,
+                                      }}
+                                      variant="outlined"
+                                    />
+                                  )}
+                                </Stack>
+                              </TableCell>
+                              <TableCell sx={{ maxWidth: 500 }}>
+                                <Typography sx={{ fontWeight: 600 }}>
+                                  {getPrimaryTitle(vote) || t("common.none")}
                                 </Typography>
-                              )}
-                            </TableCell>
-                            <TableCell sx={{ maxWidth: 360 }}>
-                              <Stack direction="row" spacing={0.75} sx={{ flexWrap: "wrap" }}>
-                                {vote.agenda_title && (
-                                  <Chip size="small" label={vote.agenda_title} variant="outlined" />
+                                {getSecondaryTitle(vote) && (
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ color: themedColors.textSecondary }}
+                                  >
+                                    {getSecondaryTitle(vote)}
+                                  </Typography>
                                 )}
-                                {vote.section_processing_title && (
-                                  <Chip size="small" label={vote.section_processing_title} variant="outlined" />
-                                )}
-                                {vote.section_key && (
-                                  <Link href={refs.section(vote.section_key, vote.start_time, vote.session_key)} underline="none">
-                                    <Chip size="small" label={`section ${vote.section_key}`} variant="outlined" clickable />
+                              </TableCell>
+                              <TableCell sx={{ maxWidth: 360 }}>
+                                <Stack
+                                  direction="row"
+                                  spacing={0.75}
+                                  sx={{ flexWrap: "wrap" }}
+                                >
+                                  {vote.agenda_title && (
+                                    <Chip
+                                      size="small"
+                                      label={vote.agenda_title}
+                                      variant="outlined"
+                                    />
+                                  )}
+                                  {vote.section_processing_title && (
+                                    <Chip
+                                      size="small"
+                                      label={vote.section_processing_title}
+                                      variant="outlined"
+                                    />
+                                  )}
+                                  {vote.section_key && (
+                                    <Link
+                                      href={refs.section(
+                                        vote.section_key,
+                                        vote.start_time,
+                                        vote.session_key,
+                                      )}
+                                      underline="none"
+                                    >
+                                      <Chip
+                                        size="small"
+                                        label={`section ${vote.section_key}`}
+                                        variant="outlined"
+                                        clickable
+                                      />
+                                    </Link>
+                                  )}
+                                  {Number.isFinite(vote.number) && (
+                                    <Chip
+                                      size="small"
+                                      label={`#${vote.number}`}
+                                      variant="outlined"
+                                    />
+                                  )}
+                                </Stack>
+                              </TableCell>
+                              <TableCell>
+                                <Stack spacing={0.5}>
+                                  <VoteMarginBar
+                                    yes={vote.n_yes}
+                                    no={vote.n_no}
+                                    empty={vote.n_abstain}
+                                    absent={vote.n_absent}
+                                    height={8}
+                                  />
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ color: themedColors.textSecondary }}
+                                  >
+                                    {vote.n_yes} / {vote.n_no} /{" "}
+                                    {vote.n_abstain} / {vote.n_absent}
+                                  </Typography>
+                                </Stack>
+                              </TableCell>
+                              <TableCell>
+                                <Stack
+                                  direction="row"
+                                  spacing={1}
+                                  sx={{ flexWrap: "wrap" }}
+                                >
+                                  <Link
+                                    href={refs.voting(
+                                      vote.id,
+                                      vote.session_key,
+                                      vote.start_time,
+                                    )}
+                                    sx={{
+                                      color: themedColors.primary,
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    #{vote.id}
                                   </Link>
-                                )}
-                                {Number.isFinite(vote.number) && (
-                                  <Chip size="small" label={`#${vote.number}`} variant="outlined" />
-                                )}
-                              </Stack>
-                            </TableCell>
-                            <TableCell>
-                              <Stack spacing={0.5}>
-                                <VoteMarginBar
-                                  yes={vote.n_yes}
-                                  no={vote.n_no}
-                                  empty={vote.n_abstain}
-                                  absent={vote.n_absent}
-                                  height={8}
-                                />
-                                <Typography
-                                  variant="caption"
-                                  sx={{ color: themedColors.textSecondary }}
-                                >
-                                  {vote.n_yes} / {vote.n_no} / {vote.n_abstain} / {vote.n_absent}
-                                </Typography>
-                              </Stack>
-                            </TableCell>
-                            <TableCell>
-                              <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
-                                <Link
-                                  href={refs.voting(vote.id, vote.session_key, vote.start_time)}
-                                  sx={{ color: themedColors.primary, fontWeight: 600 }}
-                                >
-                                  #{vote.id}
-                                </Link>
-                                <Link
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  href={eduskuntaLink(vote.result_url)}
-                                  sx={{ color: voteColors.yes, fontWeight: 600 }}
-                                >
-                                  {t("votings.results.results")}
-                                </Link>
-                                <Link
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  href={eduskuntaLink(vote.proceedings_url)}
-                                  sx={{ color: themedColors.primary, fontWeight: 600 }}
-                                >
-                                  {t("votings.results.minutes")}
-                                </Link>
-                              </Stack>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </DataCard>
-            </>
-          )}
-        </Stack>
-      )}
+                                  <Link
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    href={eduskuntaLink(vote.result_url)}
+                                    sx={{
+                                      color: voteColors.yes,
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    {t("votings.results.results")}
+                                  </Link>
+                                  <Link
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    href={eduskuntaLink(vote.proceedings_url)}
+                                    sx={{
+                                      color: themedColors.primary,
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    {t("votings.results.minutes")}
+                                  </Link>
+                                </Stack>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </DataCard>
+              </>
+            )}
+          </Stack>
+        )}
     </Box>
   );
 };

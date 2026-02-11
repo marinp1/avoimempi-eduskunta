@@ -63,7 +63,8 @@ const parser: ParserFunction = async (row, primaryKey) => {
   const rootType =
     contents?.Siirto?.SiirtoAsiakirja?.RakenneAsiakirja &&
     typeof contents.Siirto.SiirtoAsiakirja.RakenneAsiakirja === "object"
-      ? Object.keys(contents.Siirto.SiirtoAsiakirja.RakenneAsiakirja)[0] ?? null
+      ? (Object.keys(contents.Siirto.SiirtoAsiakirja.RakenneAsiakirja)[0] ??
+        null)
       : null;
 
   // Check for Swedish language - skip these entries
@@ -77,10 +78,7 @@ const parser: ParserFunction = async (row, primaryKey) => {
 
   if (languageCode === "sv" || sanomaName?.endsWith("_sv")) {
     // Return with a _skip flag so the migrator can skip it
-    return [
-      `${row[primaryKey]}`,
-      { ...row, XmlData: undefined, _skip: true },
-    ];
+    return [`${row[primaryKey]}`, { ...row, XmlData: undefined, _skip: true }];
   }
 
   return [

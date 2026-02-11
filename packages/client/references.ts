@@ -32,17 +32,24 @@ export const refs = {
       session: sessionKey,
       date: dateOnly(date),
     }),
-  section: (sectionKey: string, date?: string | null, sessionKey?: string | null) =>
+  section: (
+    sectionKey: string,
+    date?: string | null,
+    sessionKey?: string | null,
+  ) =>
     buildPath("/istunnot", {
       section: sectionKey,
       session: sessionKey ?? undefined,
       date: dateOnly(date),
     }),
-  voting: (votingId: number, sessionKey?: string | null, date?: string | null) =>
+  voting: (
+    votingId: number,
+    sessionKey?: string | null,
+    date?: string | null,
+  ) =>
     buildPath("/aanestykset", {
       voting: votingId,
       session: sessionKey ?? undefined,
       date: dateOnly(date),
     }),
 };
-

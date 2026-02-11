@@ -18,7 +18,6 @@ declare global {
       has_spoken: boolean; // Puhunut (0 = hasn't spoken yet, 1 = has spoken, 2 = speaking)
       ministry: string;
       modified_datetime: Modules.Common.DateString;
-      excel_key: string | null; // Format: YYYYMMDD_<person_id>_<n> (for linking to VaskiMinutesSpeech.link_key)
       created_datetime: Modules.Common.DateString | null;
       imported_datetime: Modules.Common.DateString | null;
       ad_tunnus: string | null;

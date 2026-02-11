@@ -2,16 +2,22 @@ import sqlite, { type Database } from "bun:sqlite";
 import fs from "node:fs";
 import path from "node:path";
 import type { ServerWebSocket } from "bun";
-import { getMigrations, migrate } from "bun-sqlite-migrations";
+import { getMigrations } from "bun-sqlite-migrations";
 import { TableName } from "#constants/index";
 import { clearStatementCache } from "../datapipe/migrator/utils";
 import { getDatabasePath } from "../shared/database";
 import { getStorage, StorageKeyBuilder } from "../shared/storage";
 import {
+  getDeleteAllRowsQuery,
   MIGRATOR_SQL,
   SQLITE_PRAGMAS,
-  getDeleteAllRowsQuery,
 } from "./database/sql-statements";
+
+type SqlMigration = {
+  version: number;
+  up: string[];
+  down: string;
+};
 
 export interface MigratorStatus {
   isRunning: boolean;
@@ -37,10 +43,221 @@ const IMPORT_ORDER: Partial<Record<string, number>> = {
   SaliDBKohtaAanestys: 21,
   SaliDBKohtaAsiakirja: 22,
   SaliDBTiedote: 23,
-  SaliDBAanestysAsiakirja: 24,
-  SaliDBAanestysJakauma: 25,
   SaliDBAanestysEdustaja: 30,
-  VaskiData: 40,
+};
+
+const DISABLED_IMPORT_TABLES = new Set<string>([
+  "VaskiData",
+  "SaliDBAanestysAsiakirja",
+  "SaliDBAanestysJakauma",
+]);
+
+const getDatabaseVersion = (db: Database): number => {
+  const row = db.query("PRAGMA user_version;").get() as
+    | { user_version?: number }
+    | undefined;
+  return row?.user_version ?? 0;
+};
+
+const setDatabaseVersion = (db: Database, version: number): void => {
+  db.exec(`PRAGMA user_version = ${version}`);
+};
+
+const unquoteIdentifier = (identifier: string): string => {
+  const trimmed = identifier.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("`") && trimmed.endsWith("`")) ||
+    (trimmed.startsWith("[") && trimmed.endsWith("]"))
+  ) {
+    return trimmed.substring(1, trimmed.length - 1);
+  }
+  return trimmed;
+};
+
+const hasColumn = (
+  db: Database,
+  tableName: string,
+  columnName: string,
+): boolean => {
+  const escaped = tableName.replace(/'/g, "''");
+  const rows = db.query(`PRAGMA table_info('${escaped}')`).all() as Array<{
+    name?: string;
+  }>;
+  return rows.some((row) => row.name === columnName);
+};
+
+const objectExists = (
+  db: Database,
+  type: "table" | "index" | "trigger",
+  name: string,
+): boolean => {
+  const row = db
+    .query(
+      "SELECT 1 AS exists_flag FROM sqlite_master WHERE type = $type AND name = $name LIMIT 1",
+    )
+    .get({
+      $type: type,
+      $name: name,
+    }) as { exists_flag?: number } | undefined;
+  return !!row?.exists_flag;
+};
+
+const shouldSkipStatement = (
+  db: Database,
+  statement: string,
+): { skip: boolean; reason?: string } => {
+  const sql = statement.trim();
+  if (!sql) return { skip: true, reason: "empty statement" };
+
+  const normalized = sql.replace(/\s+/g, " ").trim();
+
+  const alterAddColumn = normalized.match(
+    /^ALTER TABLE\s+([`"[\]\w.]+)\s+ADD COLUMN\s+([`"[\]\w.]+)/i,
+  );
+  if (alterAddColumn) {
+    const tableName = unquoteIdentifier(alterAddColumn[1]);
+    const columnName = unquoteIdentifier(alterAddColumn[2]);
+    if (hasColumn(db, tableName, columnName)) {
+      return {
+        skip: true,
+        reason: `column ${tableName}.${columnName} already exists`,
+      };
+    }
+    return { skip: false };
+  }
+
+  const createVirtualTable = normalized.match(
+    /^CREATE VIRTUAL TABLE(?: IF NOT EXISTS)?\s+([`"[\]\w.]+)/i,
+  );
+  if (createVirtualTable) {
+    const tableName = unquoteIdentifier(createVirtualTable[1]);
+    if (objectExists(db, "table", tableName)) {
+      return {
+        skip: true,
+        reason: `virtual table ${tableName} already exists`,
+      };
+    }
+    return { skip: false };
+  }
+
+  const createTrigger = normalized.match(
+    /^CREATE TRIGGER(?: IF NOT EXISTS)?\s+([`"[\]\w.]+)/i,
+  );
+  if (createTrigger) {
+    const triggerName = unquoteIdentifier(createTrigger[1]);
+    if (objectExists(db, "trigger", triggerName)) {
+      return {
+        skip: true,
+        reason: `trigger ${triggerName} already exists`,
+      };
+    }
+    return { skip: false };
+  }
+
+  const createIndex = normalized.match(
+    /^CREATE INDEX(?: IF NOT EXISTS)?\s+([`"[\]\w.]+)/i,
+  );
+  if (createIndex) {
+    const indexName = unquoteIdentifier(createIndex[1]);
+    if (objectExists(db, "index", indexName)) {
+      return {
+        skip: true,
+        reason: `index ${indexName} already exists`,
+      };
+    }
+    return { skip: false };
+  }
+
+  return { skip: false };
+};
+
+const applyMigrationsSafely = (
+  db: Database,
+  migrations: SqlMigration[],
+): void => {
+  const orderedMigrations = [...migrations].sort((a, b) => a.version - b.version);
+  if (orderedMigrations.length === 0) {
+    return;
+  }
+
+  const maxVersion = orderedMigrations[orderedMigrations.length - 1].version;
+  let currentVersion = getDatabaseVersion(db);
+
+  if (currentVersion > maxVersion) {
+    throw new Error(
+      `Database version ${currentVersion} is newer than available migrations (${maxVersion})`,
+    );
+  }
+
+  for (const migration of orderedMigrations) {
+    if (migration.version <= currentVersion) {
+      continue;
+    }
+
+    const runUpgrade = db.transaction(() => {
+      for (const statement of migration.up) {
+        const skipCheck = shouldSkipStatement(db, statement);
+        if (skipCheck.skip) {
+          console.log(
+            `  Skipping v${migration.version} statement: ${skipCheck.reason ?? "already applied"}`,
+          );
+          continue;
+        }
+
+        try {
+          db.run(statement);
+        } catch (error) {
+          const snippet =
+            statement
+              .split("\n")
+              .map((line) => line.trim())
+              .find(Boolean) ?? statement;
+          throw new Error(
+            `Migration v${migration.version} failed on statement "${snippet}": ${String(error)}`,
+          );
+        }
+      }
+      setDatabaseVersion(db, migration.version);
+    });
+
+    runUpgrade.immediate();
+    currentVersion = migration.version;
+  }
+};
+
+const getVirtualTableNames = (db: Database): Set<string> => {
+  const rows = db
+    .query<{ name: string }, []>(
+      "SELECT name FROM sqlite_master WHERE type='table' AND sql LIKE 'CREATE VIRTUAL TABLE%';",
+    )
+    .all();
+  return new Set(rows.map((row) => row.name));
+};
+
+const shouldSkipTableClear = (
+  tableName: string,
+  virtualTableNames: Set<string>,
+): boolean => {
+  if (tableName === "sqlite_sequence" || tableName === "_bun_migrations") {
+    return true;
+  }
+
+  if (tableName.startsWith("sqlite_")) {
+    return true;
+  }
+
+  if (virtualTableNames.has(tableName)) {
+    return true;
+  }
+
+  for (const virtualName of virtualTableNames) {
+    if (tableName.startsWith(`${virtualName}_`)) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 /**
@@ -98,7 +315,9 @@ export class MigratorController {
    */
   private async getTablesWithParsedData(): Promise<string[]> {
     const storage = getStorage();
-    const allTables = this.getOrderedTables();
+    const allTables = this.getOrderedTables().filter(
+      (tableName) => !DISABLED_IMPORT_TABLES.has(tableName),
+    );
     const tablesWithData: string[] = [];
 
     for (const tableName of allTables) {
@@ -193,25 +412,26 @@ export class MigratorController {
         "../datapipe/migrator/migrations",
       );
       console.log("🔄 Running database migrations...");
-      migrate(targetDatabase, getMigrations(migrationsPath));
+      applyMigrationsSafely(
+        targetDatabase,
+        getMigrations(migrationsPath) as SqlMigration[],
+      );
       console.log("✅ Migrations completed");
 
       // Clear all tables
       console.log("🗑️  Clearing existing data...");
       const tables = targetDatabase
-        .query<{ name: string }, []>(
-          MIGRATOR_SQL.listTables,
-        )
+        .query<{ name: string }, []>(MIGRATOR_SQL.listTables)
         .all();
+      const virtualTableNames = getVirtualTableNames(targetDatabase);
 
       for (const table of tables) {
-        if (
-          table.name !== "sqlite_sequence" &&
-          table.name !== "_bun_migrations"
-        ) {
-          console.log(`  Clearing ${table.name}...`);
-          targetDatabase.run(getDeleteAllRowsQuery(table.name));
+        if (shouldSkipTableClear(table.name, virtualTableNames)) {
+          continue;
         }
+
+        console.log(`  Clearing ${table.name}...`);
+        targetDatabase.run(getDeleteAllRowsQuery(table.name));
       }
       console.log("✅ Tables cleared");
 

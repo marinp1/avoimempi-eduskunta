@@ -1,4 +1,11 @@
-import { Box, Button, Card, Typography, type SxProps, type Theme } from "@mui/material";
+import {
+  Box,
+  Button,
+  Card,
+  type SxProps,
+  type Theme,
+  Typography,
+} from "@mui/material";
 import type React from "react";
 import { colors, commonStyles } from "./index";
 import { useThemedColors } from "./ThemeContext";
@@ -85,7 +92,13 @@ export const MetricCard: React.FC<{
         ...sx,
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+        }}
+      >
         <Box>
           <Typography
             variant="body2"
@@ -110,7 +123,9 @@ export const MetricCard: React.FC<{
             {value}
           </Typography>
           {trend && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.75 }}>
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.75 }}
+            >
               <Typography
                 sx={{
                   fontSize: "0.75rem",

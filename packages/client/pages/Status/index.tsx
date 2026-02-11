@@ -1,8 +1,17 @@
-import { useEffect, useState } from "react";
 import {
+  Assessment as AssessmentIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
+  OpenInNew as OpenInNewIcon,
+  Storage as StorageIcon,
+  Warning as WarningIcon,
+} from "@mui/icons-material";
+import {
+  Alert,
   Box,
   Card,
   CardContent,
+  Chip,
   CircularProgress,
   Container,
   Grid,
@@ -16,17 +25,8 @@ import {
   TableRow,
   Tooltip,
   Typography,
-  Chip,
-  Alert,
 } from "@mui/material";
-import {
-  CheckCircle as CheckCircleIcon,
-  Warning as WarningIcon,
-  Error as ErrorIcon,
-  Storage as StorageIcon,
-  Assessment as AssessmentIcon,
-  OpenInNew as OpenInNewIcon,
-} from "@mui/icons-material";
+import { useEffect, useState } from "react";
 
 interface TableStatus {
   tableName: string;
@@ -434,9 +434,7 @@ export default function Status() {
               ).length;
               const exceptionCount = categoryChecks.filter(
                 (c) =>
-                  c.passed &&
-                  c.knownExceptions &&
-                  c.knownExceptions.length > 0,
+                  c.passed && c.knownExceptions && c.knownExceptions.length > 0,
               ).length;
 
               return (
@@ -547,7 +545,12 @@ export default function Status() {
                                           >
                                             {exc.id}: {exc.description}
                                           </Typography>
-                                          <Typography variant="caption" display="block" color="text.secondary" sx={{ mb: 0.5 }}>
+                                          <Typography
+                                            variant="caption"
+                                            display="block"
+                                            color="text.secondary"
+                                            sx={{ mb: 0.5 }}
+                                          >
                                             {exc.reason}
                                           </Typography>
                                           <Box
@@ -574,9 +577,17 @@ export default function Status() {
                                                   href={row.sourceUrl}
                                                   target="_blank"
                                                   rel="noopener noreferrer"
-                                                  style={{ display: "inline-flex", alignItems: "center" }}
+                                                  style={{
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                  }}
                                                 >
-                                                  <OpenInNewIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+                                                  <OpenInNewIcon
+                                                    sx={{
+                                                      fontSize: 14,
+                                                      color: "text.secondary",
+                                                    }}
+                                                  />
                                                 </a>
                                               </Box>
                                             ))}

@@ -1,7 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
+import GavelIcon from "@mui/icons-material/Gavel";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
-import GavelIcon from "@mui/icons-material/Gavel";
 import {
   Box,
   Chip,
@@ -21,8 +21,9 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { refs } from "#client/references";
+import type React from "react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Bar,
   BarChart,
@@ -32,10 +33,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { colors } from "#client/theme";
-import theme from "#client/theme";
+import { refs } from "#client/references";
+import theme, { colors } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
-import { useTranslation } from "react-i18next";
 
 interface PartySummary {
   party_code: string;
@@ -157,7 +157,11 @@ const MembersTab: React.FC<{ partyCode: string }> = ({ partyCode }) => {
             <TableRow key={m.person_id}>
               <TableCell>
                 <Typography variant="body2" fontWeight={600}>
-                  <Link href={refs.member(m.person_id)} underline="hover" color="inherit">
+                  <Link
+                    href={refs.member(m.person_id)}
+                    underline="hover"
+                    color="inherit"
+                  >
                     {m.last_name}, {m.first_name}
                   </Link>
                 </Typography>
