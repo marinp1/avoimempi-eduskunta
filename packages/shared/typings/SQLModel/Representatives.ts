@@ -19,6 +19,7 @@ declare global {
       website: string | null;
       additional_info: string;
       birth_date: DateString;
+      birth_year: number | null;
       birth_place: string;
       death_date: DateString | null;
       death_place: string | null;
@@ -131,6 +132,7 @@ declare global {
     export type ParliamentGroupMembership = {
       person_id: number;
       group_code: string;
+      group_abbreviation: string | null;
       group_name: string | null;
       start_date: DateString;
       end_date: DateString | null;

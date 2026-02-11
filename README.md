@@ -58,9 +58,9 @@ Status of data import.
 | API    | MemberOfParliament      | Representatives and their related data. | imported  | partial support |
 | API    | PrimaryKeys             | TBD                                     | unstarted |
 | API    | SaliDBAanestys          | Voting sessions in parliament.          | parsed    |
-| API    | SaliDBAanestysAsiakirja | TBD                                     | unstarted |
+| API    | SaliDBAanestysAsiakirja | Document refs extracted only (no dedicated table) | imported |
 | API    | SaliDBAanestysEdustaja  | Votes by representatives.               | parsed    |
-| API    | SaliDBAanestysJakauma   | TBD                                     | unstarted |
+| API    | SaliDBAanestysJakauma   | Removed from DB (redundant with Vote aggregates) | skipped |
 | API    | SaliDBAanestysKieli     | TBD                                     | unstarted |
 | API    | SaliDBIstunto           | TBD                                     | unstarted |
 | API    | SaliDBKohta             | TBD                                     | unstarted |

@@ -44,7 +44,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     <Fade in timeout={600}>
       <Box>
         <GlassCard sx={{ mb: spacing.sm }}>
-          <CardContent sx={{ p: spacing.sm, "&:last-child": { pb: spacing.sm } }}>
+          <CardContent
+            sx={{ p: spacing.sm, "&:last-child": { pb: spacing.sm } }}
+          >
             <Box
               sx={{
                 display: "flex",

@@ -1,20 +1,16 @@
 SELECT
   sp.id,
-  vms.start_time,
-  vms.end_time,
+  COALESCE(sp.request_time, sp.modified_datetime) AS start_time,
+  NULL AS end_time,
   sp.speech_type,
   sec.processing_title AS processing_phase,
   COALESCE(sec.title, sec.processing_title, sec.identifier, sp.section_key) AS document,
-  vms.content,
+  NULL AS content,
   sp.party_abbreviation AS party,
   NULL AS minutes_url,
-  CASE
-    WHEN vms.content IS NOT NULL THEN LENGTH(vms.content) - LENGTH(REPLACE(vms.content, ' ', '')) + 1
-    ELSE 0
-  END AS word_count
+  0 AS word_count
 FROM Speech sp
-LEFT JOIN SessionSectionSpeech vms ON sp.excel_key = vms.link_key COLLATE NOCASE
 LEFT JOIN Section sec ON sp.section_key = sec.key
 WHERE sp.person_id = $personId
-ORDER BY vms.start_time DESC
+ORDER BY COALESCE(sp.request_time, sp.modified_datetime) DESC
 LIMIT $limit OFFSET $offset;

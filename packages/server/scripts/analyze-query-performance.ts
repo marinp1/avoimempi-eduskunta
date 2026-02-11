@@ -41,7 +41,12 @@ function buildParams(sql: string): Record<string, unknown> {
   return params;
 }
 
-function analyzeQuery(db: Database, domain: string, name: string, sql: string): Row {
+function analyzeQuery(
+  db: Database,
+  domain: string,
+  name: string,
+  sql: string,
+): Row {
   const params = buildParams(sql);
 
   try {
@@ -52,10 +57,13 @@ function analyzeQuery(db: Database, domain: string, name: string, sql: string): 
     const end = performance.now();
 
     const plan = planRows.map((p) => p.detail);
-    const fullScanOps = plan.filter((detail) =>
-      /SCAN\s+/i.test(detail) && !/USING\s+(COVERING\s+)?INDEX/i.test(detail),
+    const fullScanOps = plan.filter(
+      (detail) =>
+        /SCAN\s+/i.test(detail) && !/USING\s+(COVERING\s+)?INDEX/i.test(detail),
     ).length;
-    const usesTempBtree = plan.some((detail) => /USE TEMP B-TREE/i.test(detail));
+    const usesTempBtree = plan.some((detail) =>
+      /USE TEMP B-TREE/i.test(detail),
+    );
 
     return {
       domain,
@@ -96,7 +104,11 @@ for (const [name, value] of Object.entries(sanityQueries)) {
 const failed = results.filter((r) => !r.ok);
 const ok = results.filter((r) => r.ok);
 
-ok.sort((a, b) => b.fullScanOps - a.fullScanOps || Number(b.usesTempBtree) - Number(a.usesTempBtree));
+ok.sort(
+  (a, b) =>
+    b.fullScanOps - a.fullScanOps ||
+    Number(b.usesTempBtree) - Number(a.usesTempBtree),
+);
 
 const problematic = ok.filter((r) => r.fullScanOps > 0 || r.usesTempBtree);
 
@@ -111,14 +123,21 @@ lines.push(`Failed: ${failed.length}`);
 lines.push("");
 lines.push("## Potentially problematic queries");
 lines.push("");
-lines.push("Heuristics: query plan contains unindexed table scan and/or temp B-tree usage.");
+lines.push(
+  "Heuristics: query plan contains unindexed table scan and/or temp B-tree usage.",
+);
 lines.push("");
-lines.push("| Domain | Query | Explain (ms) | Full scans | Temp B-tree | Note |");
+lines.push(
+  "| Domain | Query | Explain (ms) | Full scans | Temp B-tree | Note |",
+);
 lines.push("|---|---|---:|---:|---:|---|");
 
 for (const row of problematic) {
-  const note = row.fullScanOps > 0 ? "Plan has scan" : "Sort/group temp structure";
-  lines.push(`| ${row.domain} | ${row.name} | ${row.explainMs.toFixed(3)} | ${row.fullScanOps} | ${row.usesTempBtree ? "yes" : "no"} | ${note} |`);
+  const note =
+    row.fullScanOps > 0 ? "Plan has scan" : "Sort/group temp structure";
+  lines.push(
+    `| ${row.domain} | ${row.name} | ${row.explainMs.toFixed(3)} | ${row.fullScanOps} | ${row.usesTempBtree ? "yes" : "no"} | ${note} |`,
+  );
 }
 
 if (problematic.length === 0) {
@@ -131,7 +150,9 @@ lines.push("");
 lines.push("| Domain | Query | Explain (ms) | Full scans | Temp B-tree |");
 lines.push("|---|---|---:|---:|---:|");
 for (const row of ok.slice(0, 20)) {
-  lines.push(`| ${row.domain} | ${row.name} | ${row.explainMs.toFixed(3)} | ${row.fullScanOps} | ${row.usesTempBtree ? "yes" : "no"} |`);
+  lines.push(
+    `| ${row.domain} | ${row.name} | ${row.explainMs.toFixed(3)} | ${row.fullScanOps} | ${row.usesTempBtree ? "yes" : "no"} |`,
+  );
 }
 
 lines.push("");
@@ -148,12 +169,18 @@ if (failed.length === 0) {
 lines.push("");
 lines.push("## Notes");
 lines.push("");
-lines.push("- Full-scan count is derived from `EXPLAIN QUERY PLAN` detail rows containing `SCAN` without `USING INDEX`.");
-lines.push("- This report is plan-based and does not execute full queries on data rows.");
+lines.push(
+  "- Full-scan count is derived from `EXPLAIN QUERY PLAN` detail rows containing `SCAN` without `USING INDEX`.",
+);
+lines.push(
+  "- This report is plan-based and does not execute full queries on data rows.",
+);
 
 await Bun.write("QUERY_PERFORMANCE_ANALYSIS.md", `${lines.join("\n")}\n`);
 
-console.log(`Wrote QUERY_PERFORMANCE_ANALYSIS.md with ${results.length} query analyses.`);
+console.log(
+  `Wrote QUERY_PERFORMANCE_ANALYSIS.md with ${results.length} query analyses.`,
+);
 console.log(`Potentially problematic: ${problematic.length}`);
 if (failed.length > 0) {
   console.log(`Failed analyses: ${failed.length}`);

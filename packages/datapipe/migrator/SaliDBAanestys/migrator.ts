@@ -1,18 +1,19 @@
 import type { Database } from "bun:sqlite";
 import { LanguageIds } from "#constants/index";
-
-import { insertRows, parseDateTime } from "../utils";
 import { extractDocumentTunnusCandidates } from "../salidb-document-ref";
+import { insertRows, parseDateTime } from "../utils";
 
 export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBAanestys"]) => {
     if (dataToImport.KieliId !== LanguageIds.Finnish) {
       return;
     }
-    const annulledRaw = (dataToImport as any).AanestysMitatoitu ??
+    const annulledRaw =
+      (dataToImport as any).AanestysMitatoitu ??
       (dataToImport as any).AanestysMitatoity ??
       dataToImport.AanestysMitatoitu;
-    const votingRow: DatabaseTables.Voting = {
+    type VotingInsert = Omit<DatabaseTables.Voting, "start_date">;
+    const votingRow: VotingInsert = {
       id: +dataToImport.AanestysId,
       number: +dataToImport.AanestysNumero,
       start_time: parseDateTime(dataToImport.AanestysAlkuaika),
@@ -32,7 +33,9 @@ export default (db: Database) =>
       n_total: +dataToImport.AanestysTulosYhteensa,
       language_id: dataToImport.KieliId || null,
       section_note: dataToImport.KohtaHuomautus || null,
-      section_order: dataToImport.KohtaJarjestys ? +dataToImport.KohtaJarjestys : null,
+      section_order: dataToImport.KohtaJarjestys
+        ? +dataToImport.KohtaJarjestys
+        : null,
       section_processing_title: dataToImport.KohtaKasittelyOtsikko || null,
       section_processing_phase: dataToImport.KohtaKasittelyVaihe,
       section_title: dataToImport.KohtaOtsikko,
@@ -51,7 +54,9 @@ export default (db: Database) =>
 
     const tunnusList = [
       ...extractDocumentTunnusCandidates(dataToImport.AanestysValtiopaivaasia),
-      ...extractDocumentTunnusCandidates(dataToImport.AanestysValtiopaivaasiaUrl),
+      ...extractDocumentTunnusCandidates(
+        dataToImport.AanestysValtiopaivaasiaUrl,
+      ),
     ];
     if (tunnusList.length > 0) {
       const refs: DatabaseTables.SaliDBDocumentReference[] = tunnusList.map(

@@ -1,5 +1,5 @@
-import CloseIcon from "@mui/icons-material/Close";
 import BalanceIcon from "@mui/icons-material/Balance";
+import CloseIcon from "@mui/icons-material/Close";
 import {
   Alert,
   Box,
@@ -9,10 +9,10 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { colors, spacing } from "#client/theme";
-import { useThemedColors } from "#client/theme/ThemeContext";
-import { VoteMarginBar } from "#client/theme/components";
 import { useTranslation } from "react-i18next";
+import { colors, spacing } from "#client/theme";
+import { VoteMarginBar } from "#client/theme/components";
+import { useThemedColors } from "#client/theme/ThemeContext";
 
 interface CloseVoteData {
   id: number;
@@ -60,7 +60,15 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
 
   if (loading)
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", p: spacing.lg }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          p: spacing.lg,
+        }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -74,7 +82,14 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
 
   return (
     <Box sx={{ p: spacing.lg, minHeight: "100vh" }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: spacing.lg }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: spacing.lg,
+        }}
+      >
         <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
           <BalanceIcon sx={{ fontSize: 36, color: colors.primary }} />
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
@@ -86,7 +101,11 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
         </IconButton>
       </Box>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: spacing.lg }}>
+      <Typography
+        variant="body1"
+        color="text.secondary"
+        sx={{ mb: spacing.lg }}
+      >
         {t("insights.closeVotes.description")}
       </Typography>
 
@@ -105,12 +124,27 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
                   "&:last-child": { borderBottom: "none" },
                 }}
               >
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1, mb: 1 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    gap: 1,
+                    mb: 1,
+                  }}
+                >
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight={600} sx={{ color: themedColors.textPrimary }}>
+                    <Typography
+                      variant="body2"
+                      fontWeight={600}
+                      sx={{ color: themedColors.textPrimary }}
+                    >
                       {vote.title || vote.section_title}
                     </Typography>
-                    <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: themedColors.textSecondary }}
+                    >
                       {new Date(vote.start_time).toLocaleDateString("fi-FI")}
                     </Typography>
                   </Box>
@@ -147,8 +181,12 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
                   height={6}
                   sx={{ mb: 0.5 }}
                 />
-                <Typography variant="caption" sx={{ color: themedColors.textTertiary }}>
-                  {vote.n_yes} jaa / {vote.n_no} ei / {vote.n_abstain} tyhjää / {vote.n_absent} poissa
+                <Typography
+                  variant="caption"
+                  sx={{ color: themedColors.textTertiary }}
+                >
+                  {vote.n_yes} jaa / {vote.n_no} ei / {vote.n_abstain} tyhjää /{" "}
+                  {vote.n_absent} poissa
                 </Typography>
               </Box>
             );

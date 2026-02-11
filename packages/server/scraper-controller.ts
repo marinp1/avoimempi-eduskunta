@@ -160,7 +160,7 @@ export class ScraperController {
 
     const totalTables = tableNames.length;
     let completedTables = 0;
-    let failedTables: Array<{ table: string; error: string }> = [];
+    const failedTables: Array<{ table: string; error: string }> = [];
 
     this.sendMessage({
       type: "status",

@@ -32,8 +32,6 @@ LEFT JOIN (
     sp.person_id,
     COUNT(*) AS speech_count
   FROM Speech sp
-  LEFT JOIN SessionSectionSpeech vms ON sp.excel_key = vms.link_key COLLATE NOCASE
-  WHERE vms.start_time >= DATE('now', '-1 year')
   GROUP BY sp.person_id
 ) speech_stats ON r.person_id = speech_stats.person_id
 LEFT JOIN (

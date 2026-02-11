@@ -1,13 +1,5 @@
 declare global {
   export namespace DatabaseTables {
-    export type VotingDocumentLink = {
-      id: number;
-      voting_id: number;
-      document_label: string | null;
-      document_url: string | null;
-      imported_datetime: Modules.Common.DateString | null;
-    };
-
     export type SectionDocumentLink = {
       id: number;
       section_key: string;
@@ -31,19 +23,6 @@ declare global {
       sent_at: Modules.Common.DateString | null;
       created_datetime: Modules.Common.DateString | null;
       modified_datetime: Modules.Common.DateString | null;
-      imported_datetime: Modules.Common.DateString | null;
-    };
-
-    export type VotingDistribution = {
-      id: number;
-      voting_id: number;
-      group_name: string | null;
-      yes: number | null;
-      no: number | null;
-      abstain: number | null;
-      absent: number | null;
-      total: number | null;
-      distribution_type: string | null;
       imported_datetime: Modules.Common.DateString | null;
     };
 

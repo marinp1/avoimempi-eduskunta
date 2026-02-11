@@ -94,7 +94,9 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
     <Fade in timeout={600}>
       <Box>
         <GlassCard sx={{ mb: spacing.sm }}>
-          <CardContent sx={{ p: spacing.sm, "&:last-child": { pb: spacing.sm } }}>
+          <CardContent
+            sx={{ p: spacing.sm, "&:last-child": { pb: spacing.sm } }}
+          >
             <Box
               sx={{
                 display: "flex",
@@ -123,7 +125,8 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                     color="text.secondary"
                     sx={{ display: "block" }}
                   >
-                    {selectedTables.size} {t("admin.bulkOperations.tablesSelected")}
+                    {selectedTables.size}{" "}
+                    {t("admin.bulkOperations.tablesSelected")}
                   </Typography>
                 )}
               </Box>
@@ -229,7 +232,11 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                         />
                       }
                       label={
-                        <Typography variant="body2" fontFamily="monospace" fontSize="0.75rem">
+                        <Typography
+                          variant="body2"
+                          fontFamily="monospace"
+                          fontSize="0.75rem"
+                        >
                           {table.table_name}
                         </Typography>
                       }
@@ -253,7 +260,11 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                     variant="body2"
                     fontWeight="600"
                     fontFamily="monospace"
-                    sx={{ mb: 1, color: themedColors.textPrimary, fontSize: "0.8125rem" }}
+                    sx={{
+                      mb: 1,
+                      color: themedColors.textPrimary,
+                      fontSize: "0.8125rem",
+                    }}
                   >
                     {t("admin.bulkOperations.current")} {currentTable}
                   </Typography>

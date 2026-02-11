@@ -1,12 +1,12 @@
+import type { Database } from "bun:sqlite";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { Database } from "bun:sqlite";
-import { createTestDb, seedFullDataset } from "./helpers/setup-db";
 import {
-  STATUS_TABLES,
   getStatusTableCountQuery,
   getStatusTableInfoQuery,
   isStatusTableName,
+  STATUS_TABLES,
 } from "../database/status-queries";
+import { createTestDb, seedFullDataset } from "./helpers/setup-db";
 
 let db: Database;
 

@@ -9,10 +9,8 @@ export const STATUS_TABLES = [
   "Voting",
   "Vote",
   "Speech",
-  "VotingDocumentLink",
   "SectionDocumentLink",
   "SessionNotice",
-  "VotingDistribution",
   "SaliDBDocumentReference",
   "ParliamentaryGroup",
   "ParliamentaryGroupMembership",
@@ -22,22 +20,15 @@ export const STATUS_TABLES = [
   "TrustPosition",
   "District",
   "RepresentativeDistrict",
-  "Document",
-  "DocumentActor",
-  "DocumentSubject",
-  "DocumentAttachment",
-  "DocumentRelation",
-  "CommitteeSession",
-  "SessionMinutesItem",
-  "SessionMinutesAttachment",
-  "SessionSectionSpeech",
 ] as const;
 
 export type StatusTableName = (typeof STATUS_TABLES)[number];
 
 const statusTableNameSet = new Set<string>(STATUS_TABLES);
 
-export function isStatusTableName(tableName: string): tableName is StatusTableName {
+export function isStatusTableName(
+  tableName: string,
+): tableName is StatusTableName {
   return statusTableNameSet.has(tableName);
 }
 

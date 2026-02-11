@@ -2,6 +2,7 @@ WITH active_members AS (
   SELECT DISTINCT
     pgm.group_code,
     pgm.group_name,
+    pgm.group_abbreviation,
     pgm.person_id
   FROM ParliamentaryGroupMembership pgm
   JOIN Term t ON t.person_id = pgm.person_id
@@ -12,9 +13,9 @@ active_groups AS (
   SELECT
     am.group_code,
     am.group_name,
-    LOWER(RTRIM(am.group_code, '0123456789')) AS group_abbreviation
+    am.group_abbreviation AS group_abbreviation
   FROM active_members am
-  GROUP BY am.group_code, am.group_name
+  GROUP BY am.group_code, am.group_name, am.group_abbreviation
 ),
 member_stats AS (
   SELECT

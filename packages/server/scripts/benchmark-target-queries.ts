@@ -8,31 +8,41 @@ type Target = {
 };
 
 const targets: Target[] = [
-  { name: "sessionSections", sql: q.sessionSections, params: { $sessionKey: "2021/129" } },
-  { name: "documentDetail", sql: q.documentDetail, params: { $id: 329327 } },
+  {
+    name: "sessionSections",
+    sql: q.sessionSections,
+    params: { $sessionKey: "2021/129" },
+  },
   { name: "partySummary", sql: q.partySummary, params: {} },
   { name: "partyDiscipline", sql: q.partyDiscipline, params: {} },
   {
     name: "partyParticipationByGovernment",
     sql: q.partyParticipationByGovernment,
-    params: { $startDate: null, $endDate: null },
+    params: { $startDate: null, $endDateExclusive: null },
   },
   { name: "ageDivisionOverTime", sql: q.ageDivisionOverTime, params: {} },
 ];
 
-const db = new Database("/workspaces/avoimempi-eduskunta/avoimempi-eduskunta.db", {
-  readonly: true,
-});
+const db = new Database(
+  "/workspaces/avoimempi-eduskunta/avoimempi-eduskunta.db",
+  {
+    readonly: true,
+  },
+);
 db.exec("PRAGMA temp_store = MEMORY;");
 
 for (const target of targets) {
   try {
     const explainStmt = db.prepare(`EXPLAIN QUERY PLAN ${target.sql}`);
-    const planRows = explainStmt.all(target.params as any) as Array<{ detail: string }>;
+    const planRows = explainStmt.all(target.params as any) as Array<{
+      detail: string;
+    }>;
     explainStmt.finalize();
 
     const fullScans = planRows.filter(
-      (row) => /SCAN\s+/i.test(row.detail) && !/USING\s+(COVERING\s+)?INDEX/i.test(row.detail),
+      (row) =>
+        /SCAN\s+/i.test(row.detail) &&
+        !/USING\s+(COVERING\s+)?INDEX/i.test(row.detail),
     ).length;
 
     const stmt = db.prepare(target.sql);

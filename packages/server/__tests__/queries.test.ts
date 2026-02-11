@@ -1,7 +1,7 @@
-import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { Database } from "bun:sqlite";
-import { createTestDb, seedFullDataset } from "./helpers/setup-db";
+import type { Database } from "bun:sqlite";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import * as queries from "../database/queries";
+import { createTestDb, seedFullDataset } from "./helpers/setup-db";
 
 /**
  * These tests validate that all SQL queries execute without errors
@@ -195,92 +195,282 @@ describe("Session queries", () => {
     expect(rows).toHaveLength(0);
   });
 
-  test("SESSION_SECTIONS prefers Section.document_id over Session.minutes_document_id", () => {
+  test("SESSION_SECTIONS keeps legacy document fields null", () => {
     try {
-      db.run(
-        `INSERT INTO Agenda (key, title, state) VALUES (?, ?, ?)`,
-        ["PJ_2025_133", "Täysistunnon päiväjärjestys 133/2025", "Valmis"],
-      );
+      db.run(`INSERT INTO Agenda (key, title, state) VALUES (?, ?, ?)`, [
+        "PJ_2025_136",
+        "Täysistunnon päiväjärjestys 136/2025",
+        "Valmis",
+      ]);
       db.run(
         `INSERT INTO Session (id, number, key, date, year, type, state, agenda_key)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [3133, 133, "2025/133", "2025-12-19", 2025, "varsinainen", "Päättynyt", "PJ_2025_133"],
+        [
+          3136,
+          136,
+          "2025/136",
+          "2025-12-21",
+          2025,
+          "varsinainen",
+          "Päättynyt",
+          "PJ_2025_136",
+        ],
       );
       db.run(
         `INSERT INTO Section (id, key, identifier, title, ordinal, processing_title, session_key, agenda_key, document_id)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [31330, "2025/133/1", "1", "Nimenhuuto", 1, "Kokous", "2025/133", "PJ_2025_133", 9002],
+        [
+          31360,
+          "2025/136/1",
+          "1",
+          "Nimenhuuto",
+          1,
+          "Kokous",
+          "2025/136",
+          "PJ_2025_136",
+          9010,
+        ],
       );
-
-      db.run(
-        `INSERT INTO Document (id, type_slug, type_name_fi, root_family, eduskunta_tunnus, document_type_code,
-          document_number_text, parliamentary_year_text, title, status_text, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [9001, "taysistunnon_poytakirjan_paasivu", "Täysistunnon pöytäkirjan pääsivu", "Poytakirja",
-          "PTK 133/2025 vp", "PTK", "133", "2025", "Pääsivu", "Valmis", "2025-12-19T10:00:00"],
-      );
-      db.run(
-        `INSERT INTO Document (id, type_slug, type_name_fi, root_family, eduskunta_tunnus, document_type_code,
-          document_number_text, parliamentary_year_text, title, status_text, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [9002, "poytakirja", "Pöytäkirja", "Poytakirja",
-          "PTK 133/2025 vp", "PTK", "133", "2025", "Pöytäkirja", "Valmis", "2025-12-19T10:01:00"],
-      );
-
-      db.run(`UPDATE Session SET minutes_document_id = ? WHERE key = ?`, [9001, "2025/133"]);
+      db.run(`UPDATE Session SET minutes_document_id = ? WHERE key = ?`, [
+        9011,
+        "2025/136",
+      ]);
 
       const stmt = db.prepare(queries.sessionSections);
-      const rows = stmt.all({ $sessionKey: "2025/133" }) as any[];
+      const rows = stmt.all({ $sessionKey: "2025/136" }) as any[];
       stmt.finalize();
 
       expect(rows).toHaveLength(1);
-      expect(rows[0].vaski_title).toBe("Pöytäkirja");
-      expect(rows[0].vaski_document_type_name).toBe("Pöytäkirja");
+      expect(rows[0].vaski_document_type_name).toBeNull();
+      expect(rows[0].vaski_title).toBeNull();
+      expect(rows[0].vaski_eduskunta_tunnus).toBeNull();
     } finally {
-      db.run(`DELETE FROM Document WHERE id IN (9001, 9002)`);
-      db.run(`DELETE FROM Section WHERE id = 31330`);
-      db.run(`DELETE FROM Session WHERE id = 3133`);
-      db.run(`DELETE FROM Agenda WHERE key = 'PJ_2025_133'`);
+      db.run(`DELETE FROM Section WHERE id = 31360`);
+      db.run(`DELETE FROM Session WHERE id = 3136`);
+      db.run(`DELETE FROM Agenda WHERE key = 'PJ_2025_136'`);
     }
   });
 
-  test("SESSION_SECTIONS uses Session.minutes_document_id when Section.document_id is null", () => {
+  test("SESSION_DOCUMENTS returns agenda, minutes, and roll call documents", () => {
     try {
       db.run(
-        `INSERT INTO Agenda (key, title, state) VALUES (?, ?, ?)`,
-        ["PJ_2025_134", "Täysistunnon päiväjärjestys 134/2025", "Valmis"],
+        `INSERT INTO Session (id, number, key, date, year, type, state)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [3140, 140, "2025/140", "2025-12-22", 2025, "varsinainen", "Päättynyt"],
       );
       db.run(
-        `INSERT INTO Session (id, number, key, date, year, type, state, agenda_key)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [3134, 134, "2025/134", "2025-12-20", 2025, "varsinainen", "Päättynyt", "PJ_2025_134"],
+        `UPDATE Session SET agenda_document_id = ?, minutes_document_id = ?, roll_call_document_id = ? WHERE key = ?`,
+        [9100, 9101, 9102, "2025/140"],
       );
-      db.run(
-        `INSERT INTO Section (id, key, identifier, title, ordinal, processing_title, session_key, agenda_key, vaski_id, document_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [31340, "2025/134/1", "1", "Hallituksen esitys", 1, "Ainoa käsittely", "2025/134", "PJ_2025_134", 999999, null],
-      );
-      db.run(
-        `INSERT INTO Document (id, type_slug, type_name_fi, root_family, eduskunta_tunnus, document_type_code,
-          document_number_text, parliamentary_year_text, title, status_text, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [9003, "hallituksen_esitys", "Hallituksen esitys", "HallituksenEsitys", "HE 194/2025 vp", "HE",
-          "194", "2025", "HE 194", "Valmis", "2025-12-18T08:00:00"],
-      );
-      db.run(`UPDATE Session SET minutes_document_id = ? WHERE key = ?`, [9003, "2025/134"]);
 
-      const stmt = db.prepare(queries.sessionSections);
-      const rows = stmt.all({ $sessionKey: "2025/134" }) as any[];
+      const stmt = db.prepare(queries.sessionDocuments);
+      const rows = stmt.all({ $sessionKey: "2025/140" }) as any[];
+      stmt.finalize();
+
+      const kinds = rows.map((r) => r.document_kind).sort();
+      expect(kinds).toEqual(["agenda", "minutes", "roll_call"]);
+      const ids = rows.map((r) => r.id).sort();
+      expect(ids).toEqual([9100, 9101, 9102]);
+      expect(rows[0].eduskunta_tunnus).toBeNull();
+    } finally {
+      db.run(`DELETE FROM Session WHERE id = 3140`);
+    }
+  });
+
+  test("SESSION_DOCUMENTS uses roll_call_document_id when available", () => {
+    try {
+      db.run(
+        `INSERT INTO Session (id, number, key, date, year, type, state)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [3141, 141, "2025/141", "2025-12-28", 2025, "varsinainen", "Päättynyt"],
+      );
+      db.run(`UPDATE Session SET roll_call_document_id = ? WHERE key = ?`, [
+        9103,
+        "2025/141",
+      ]);
+
+      const stmt = db.prepare(queries.sessionDocuments);
+      const rows = stmt.all({ $sessionKey: "2025/141" }) as any[];
+      stmt.finalize();
+
+      const rollCall = rows.find((r) => r.document_kind === "roll_call");
+      expect(rollCall).toBeDefined();
+      expect(rollCall?.id).toBe(9103);
+      expect(rollCall?.eduskunta_tunnus).toBeNull();
+    } finally {
+      db.run(`DELETE FROM Session WHERE id = 3141`);
+    }
+  });
+
+  test("SESSION_NOTICES returns notices for a session", () => {
+    try {
+      db.run(
+        `INSERT INTO Session (id, number, key, date, year, type, state)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [3142, 142, "2025/142", "2025-12-23", 2025, "varsinainen", "Päättynyt"],
+      );
+      db.run(
+        `INSERT INTO SessionNotice (id, session_key, notice_type, text_fi, sent_at)
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          7001,
+          "2025/142",
+          "Tiedote",
+          "Istunto keskeytetty",
+          "2025-12-23T12:00:00",
+        ],
+      );
+
+      const stmt = db.prepare(queries.sessionNotices);
+      const rows = stmt.all({ $sessionKey: "2025/142" }) as any[];
       stmt.finalize();
 
       expect(rows).toHaveLength(1);
-      expect(rows[0].vaski_eduskunta_tunnus).toBe("HE 194/2025 vp");
-      expect(rows[0].vaski_title).toBe("HE 194");
+      expect(rows[0].text_fi).toBe("Istunto keskeytetty");
     } finally {
-      db.run(`DELETE FROM Section WHERE id = 31340`);
-      db.run(`DELETE FROM Document WHERE id = 9003`);
-      db.run(`DELETE FROM Session WHERE id = 3134`);
-      db.run(`DELETE FROM Agenda WHERE key = 'PJ_2025_134'`);
+      db.run(`DELETE FROM SessionNotice WHERE id = 7001`);
+      db.run(`DELETE FROM Session WHERE id = 3142`);
+    }
+  });
+
+  test("SECTION_DOCUMENT_LINKS returns section links and salidb references", () => {
+    try {
+      db.run(
+        `INSERT INTO Session (id, number, key, date, year, type, state)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [3144, 144, "2025/144", "2025-12-26", 2025, "varsinainen", "Päättynyt"],
+      );
+      db.run(
+        `INSERT INTO Section (id, key, title, session_key, ordinal)
+         VALUES (?, ?, ?, ?, ?)`,
+        [51430, "2025/144/1", "Esityslista", "2025/144", 1],
+      );
+      db.run(
+        `INSERT INTO SectionDocumentLink (id, section_key, name_fi, link_url_fi)
+         VALUES (?, ?, ?, ?)`,
+        [8010, "2025/144/1", "HE 10/2025 vp", "https://example.com/doc"],
+      );
+      db.run(
+        `INSERT INTO SaliDBDocumentReference (source_type, section_key, document_tunnus, source_url)
+         VALUES (?, ?, ?, ?)`,
+        [
+          "section_document",
+          "2025/144/1",
+          "HE 10/2025 vp",
+          "https://example.com/ref",
+        ],
+      );
+
+      const stmt = db.prepare(queries.sectionDocumentLinks);
+      const rows = stmt.all({ $sectionKey: "2025/144/1" }) as any[];
+      stmt.finalize();
+
+      expect(rows).toHaveLength(2);
+      const refRow = rows.find((row) => row.source_type === "section_document");
+      expect(refRow?.document_tunnus).toBe("HE 10/2025 vp");
+      expect(refRow?.document_type_code).toBeNull();
+    } finally {
+      db.run(`DELETE FROM SectionDocumentLink WHERE id = 8010`);
+      db.run(
+        `DELETE FROM SaliDBDocumentReference WHERE section_key = '2025/144/1'`,
+      );
+      db.run(`DELETE FROM Section WHERE id = 51430`);
+      db.run(`DELETE FROM Session WHERE id = 3144`);
+    }
+  });
+
+  test("SECTION_DOCUMENT_LINKS does not inject session roll call into section links", () => {
+    try {
+      db.run(
+        `INSERT INTO Session (id, number, key, date, year, type, state, roll_call_document_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          3145,
+          145,
+          "2025/145",
+          "2025-12-27",
+          2025,
+          "varsinainen",
+          "Päättynyt",
+          9400,
+        ],
+      );
+      db.run(
+        `INSERT INTO Section (id, key, title, session_key, ordinal)
+         VALUES (?, ?, ?, ?, ?)`,
+        [51450, "2025/145/1", "Nimenhuuto", "2025/145", 1],
+      );
+
+      const stmt = db.prepare(queries.sectionDocumentLinks);
+      const rows = stmt.all({ $sectionKey: "2025/145/1" }) as any[];
+      stmt.finalize();
+
+      const rollCall = rows.find(
+        (row) => row.source_type === "session_roll_call",
+      );
+      expect(rollCall).toBeUndefined();
+      expect(rows).toHaveLength(0);
+    } finally {
+      db.run(`DELETE FROM Section WHERE id = 51450`);
+      db.run(`DELETE FROM Session WHERE id = 3145`);
+    }
+  });
+
+  test("SECTION_DOCUMENT_LINKS deduplicates repeated references", () => {
+    try {
+      db.run(
+        `INSERT INTO Session (id, number, key, date, year, type, state)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [3146, 146, "2025/146", "2025-12-28", 2025, "varsinainen", "Päättynyt"],
+      );
+      db.run(
+        `INSERT INTO Section (id, key, title, session_key, ordinal)
+         VALUES (?, ?, ?, ?, ?)`,
+        [51460, "2025/146/1", "Esityslista", "2025/146", 1],
+      );
+      db.run(
+        `INSERT INTO SectionDocumentLink (id, section_key, name_fi, link_url_fi)
+         VALUES (?, ?, ?, ?)`,
+        [8060, "2025/146/1", "HE 11/2025 vp", "https://example.com/he-11"],
+      );
+      db.run(
+        `INSERT INTO SaliDBDocumentReference (source_type, section_key, document_tunnus, source_url, source_text)
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          "section_document",
+          "2025/146/1",
+          "HE 11/2025 vp",
+          "https://example.com/he-11",
+          "HE 11/2025 vp",
+        ],
+      );
+      db.run(
+        `INSERT INTO SaliDBDocumentReference (source_type, section_key, document_tunnus, source_url, source_text)
+         VALUES (?, ?, ?, ?, ?)`,
+        [
+          "section_document",
+          "2025/146/1",
+          "HE 11/2025 vp",
+          "https://example.com/he-11",
+          "HE 11/2025 vp",
+        ],
+      );
+
+      const stmt = db.prepare(queries.sectionDocumentLinks);
+      const rows = stmt.all({ $sectionKey: "2025/146/1" }) as any[];
+      stmt.finalize();
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0].source_type).toBe("section_document");
+      expect(rows[0].document_tunnus).toBe("HE 11/2025 vp");
+      expect(rows[0].document_id).toBeNull();
+    } finally {
+      db.run(
+        `DELETE FROM SaliDBDocumentReference WHERE section_key = '2025/146/1'`,
+      );
+      db.run(`DELETE FROM SectionDocumentLink WHERE id = 8060`);
+      db.run(`DELETE FROM Section WHERE id = 51460`);
+      db.run(`DELETE FROM Session WHERE id = 3146`);
     }
   });
 
@@ -324,7 +514,7 @@ describe("Speech queries", () => {
     expect(row.count).toBe(2);
   });
 
-  test("SECTION_SPEECHES returns speeches with content from SessionSectionSpeech join", () => {
+  test("SECTION_SPEECHES returns speeches with nullable content fields", () => {
     const stmt = db.prepare(queries.sectionSpeeches);
     const rows = stmt.all({
       $sectionKey: "2024/1/3",
@@ -358,8 +548,9 @@ describe("Speech queries", () => {
 
     expect(rows).toHaveLength(1);
     expect(rows[0]).toHaveProperty("word_count");
-    expect(rows[0].word_count).toBeGreaterThan(0);
+    expect(rows[0].word_count).toBe(0);
     expect(rows[0]).toHaveProperty("content");
+    expect(rows[0].content).toBeNull();
   });
 });
 
@@ -377,9 +568,9 @@ describe("Voting queries", () => {
 
   test("VOTINGS_SEARCH returns computed context_title", () => {
     const stmt = db.prepare(queries.votingsSearch);
-    const rows = stmt.all({ $query: "%Äänestys 1%" }) as Array<
-      DatabaseQueries.VotingSearchResult
-    >;
+    const rows = stmt.all({
+      $query: "Äänestys",
+    }) as Array<DatabaseQueries.VotingSearchResult>;
     stmt.finalize();
 
     expect(rows.length).toBeGreaterThan(0);
@@ -429,7 +620,10 @@ describe("Voting queries", () => {
 describe("Voting participation queries", () => {
   test("VOTING_PARTICIPATION returns participation rates", () => {
     const stmt = db.prepare(queries.votingParticipation);
-    const rows = stmt.all({ $startDate: null, $endDate: null }) as any[];
+    const rows = stmt.all({
+      $startDate: null,
+      $endDateExclusive: null,
+    }) as any[];
     stmt.finalize();
 
     expect(rows.length).toBeGreaterThan(0);
@@ -448,7 +642,10 @@ describe("Voting participation queries", () => {
 
   test("VOTING_PARTICIPATION filters by date range", () => {
     const stmt = db.prepare(queries.votingParticipation);
-    const rows = stmt.all({ $startDate: "2024-01-15", $endDate: "2024-01-15" }) as any[];
+    const rows = stmt.all({
+      $startDate: "2024-01-15",
+      $endDateExclusive: "2024-01-16",
+    }) as any[];
     stmt.finalize();
 
     expect(rows.length).toBeGreaterThan(0);
@@ -456,7 +653,10 @@ describe("Voting participation queries", () => {
 
   test("VOTING_PARTICIPATION returns empty for date range with no votings", () => {
     const stmt = db.prepare(queries.votingParticipation);
-    const rows = stmt.all({ $startDate: "2099-01-01", $endDate: "2099-12-31" }) as any[];
+    const rows = stmt.all({
+      $startDate: "2099-01-01",
+      $endDateExclusive: "2100-01-01",
+    }) as any[];
     stmt.finalize();
 
     expect(rows).toHaveLength(0);
@@ -468,7 +668,9 @@ describe("Voting participation queries", () => {
 describe("Parliament composition query", () => {
   test("CURRENT_COMPOSITION returns active representatives on date", () => {
     const stmt = db.prepare(queries.currentComposition);
-    const rows = stmt.all({ $date: new Date("2024-01-15").toISOString() }) as any[];
+    const rows = stmt.all({
+      $date: new Date("2024-01-15").toISOString(),
+    }) as any[];
     stmt.finalize();
 
     expect(rows.length).toBeGreaterThan(0);
@@ -480,7 +682,9 @@ describe("Parliament composition query", () => {
 
   test("CURRENT_COMPOSITION returns empty before term start", () => {
     const stmt = db.prepare(queries.currentComposition);
-    const rows = stmt.all({ $date: new Date("2020-01-01").toISOString() }) as any[];
+    const rows = stmt.all({
+      $date: new Date("2020-01-01").toISOString(),
+    }) as any[];
     stmt.finalize();
 
     expect(rows).toHaveLength(0);
@@ -634,16 +838,6 @@ describe("Speech activity query", () => {
   });
 });
 
-describe("Minutes helpers", () => {
-  test("LATEST_VASKI_MINUTES_DATE returns max start_time", () => {
-    const stmt = db.prepare(queries.latestVaskiMinutesDate);
-    const row = stmt.get() as any;
-    stmt.finalize();
-
-    expect(row.max).toBe("2024-01-15T10:05:00");
-  });
-});
-
 // ─── ANALYTICS: MP ACTIVITY RANKING ─────────────────────────
 
 describe("MP activity ranking query", () => {
@@ -662,7 +856,9 @@ describe("MP activity ranking query", () => {
 
     // Should be sorted by activity_score DESC
     for (let i = 1; i < rows.length; i++) {
-      expect(rows[i].activity_score).toBeLessThanOrEqual(rows[i - 1].activity_score);
+      expect(rows[i].activity_score).toBeLessThanOrEqual(
+        rows[i - 1].activity_score,
+      );
     }
   });
 });
@@ -721,77 +917,6 @@ describe("Party queries", () => {
   });
 });
 
-// ─── DOCUMENT QUERIES ───────────────────────────────────────
-
-describe("Document queries", () => {
-  test("DOCUMENTS_SEARCH returns documents with subjects", () => {
-    const stmt = db.prepare(queries.documentsSearch);
-    const rows = stmt.all({
-      $q: null, $type: null, $year: null, $limit: 50, $offset: 0,
-    }) as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(2);
-    const he = rows.find((r: any) => r.document_type_code === "HE");
-    expect(he).toBeDefined();
-    expect(he.subjects).toContain("verotus");
-  });
-
-  test("DOCUMENTS_SEARCH filters by query string", () => {
-    const stmt = db.prepare(queries.documentsSearch);
-    const rows = stmt.all({
-      $q: "laiksi", $type: null, $year: null, $limit: 50, $offset: 0,
-    }) as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(1);
-    expect(rows[0].title).toContain("laiksi");
-  });
-
-  test("DOCUMENTS_SEARCH filters by type", () => {
-    const stmt = db.prepare(queries.documentsSearch);
-    const rows = stmt.all({
-      $q: null, $type: "HE", $year: null, $limit: 50, $offset: 0,
-    }) as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(1);
-    expect(rows[0].document_type_code).toBe("HE");
-  });
-
-  test("DOCUMENTS_BY_TYPE returns type counts", () => {
-    const stmt = db.prepare(queries.documentsByType);
-    const rows = stmt.all() as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(2);
-    for (const row of rows) {
-      expect(row).toHaveProperty("document_type_code");
-      expect(row).toHaveProperty("document_count");
-      expect(row.document_count).toBeGreaterThan(0);
-    }
-  });
-
-  test("DOCUMENT_DETAIL returns full document with subjects", () => {
-    const stmt = db.prepare(queries.documentDetail);
-    const row = stmt.get({ $id: 1 }) as any;
-    stmt.finalize();
-
-    expect(row).not.toBeNull();
-    expect(row.eduskunta_tunnus).toBe("HE 1/2024");
-    expect(row.subjects).toContain("verotus");
-    expect(row.subjects).toContain("talous");
-  });
-
-  test("DOCUMENT_DETAIL returns null for non-existent id", () => {
-    const stmt = db.prepare(queries.documentDetail);
-    const row = stmt.get({ $id: 9999 });
-    stmt.finalize();
-
-    expect(row).toBeNull();
-  });
-});
-
 // ─── FEDERATED SEARCH ───────────────────────────────────────
 
 describe("Federated search query", () => {
@@ -803,15 +928,6 @@ describe("Federated search query", () => {
     const mpResults = rows.filter((r: any) => r.type === "mp");
     expect(mpResults.length).toBeGreaterThan(0);
     expect(mpResults[0].title).toContain("Meikäläinen");
-  });
-
-  test("FEDERATED_SEARCH finds documents by title", () => {
-    const stmt = db.prepare(queries.federatedSearch);
-    const rows = stmt.all({ $q: "laiksi", $limit: 30 }) as any[];
-    stmt.finalize();
-
-    const docResults = rows.filter((r: any) => r.type === "document");
-    expect(docResults.length).toBeGreaterThan(0);
   });
 
   test("FEDERATED_SEARCH finds votings by section title", () => {
@@ -876,7 +992,10 @@ describe("Demographic queries", () => {
 describe("Government-period queries", () => {
   test("PARTY_PARTICIPATION_BY_GOVERNMENT returns participation by gov period", () => {
     const stmt = db.prepare(queries.partyParticipationByGovernment);
-    const rows = stmt.all({ $startDate: null, $endDate: null }) as any[];
+    const rows = stmt.all({
+      $startDate: null,
+      $endDateExclusive: null,
+    }) as any[];
     stmt.finalize();
 
     expect(Array.isArray(rows)).toBe(true);
@@ -891,7 +1010,9 @@ describe("Government-period queries", () => {
   test("VOTING_PARTICIPATION_BY_GOVERNMENT returns per-person gov breakdown", () => {
     const stmt = db.prepare(queries.votingParticipationByGovernment);
     const rows = stmt.all({
-      $personId: 1000, $startDate: null, $endDate: null,
+      $personId: 1000,
+      $startDate: null,
+      $endDateExclusive: null,
     }) as any[];
     stmt.finalize();
 
@@ -945,7 +1066,6 @@ describe("Schema integrity", () => {
     expect(tableNames).toContain("Voting");
     expect(tableNames).toContain("Vote");
     expect(tableNames).toContain("Speech");
-    expect(tableNames).toContain("SessionSectionSpeech");
     expect(tableNames).toContain("Term");
     expect(tableNames).toContain("ParliamentaryGroup");
     expect(tableNames).toContain("ParliamentaryGroupMembership");
@@ -955,9 +1075,9 @@ describe("Schema integrity", () => {
     expect(tableNames).toContain("TrustPosition");
     expect(tableNames).toContain("District");
     expect(tableNames).toContain("RepresentativeDistrict");
-    expect(tableNames).toContain("Document");
-    expect(tableNames).toContain("DocumentSubject");
-    expect(tableNames).toContain("DocumentRelation");
+    expect(tableNames).toContain("SectionDocumentLink");
+    expect(tableNames).toContain("SessionNotice");
+    expect(tableNames).toContain("SaliDBDocumentReference");
   });
 
   test("foreign key constraints are enforced", () => {
@@ -967,7 +1087,9 @@ describe("Schema integrity", () => {
 
   test("analytics indexes exist", () => {
     const indexes = db
-      .query("SELECT name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%' ORDER BY name")
+      .query(
+        "SELECT name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%' ORDER BY name",
+      )
       .all() as { name: string }[];
     const indexNames = indexes.map((i) => i.name);
 

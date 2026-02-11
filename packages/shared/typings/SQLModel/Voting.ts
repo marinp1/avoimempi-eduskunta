@@ -4,6 +4,7 @@ declare global {
       id: number; // unique
       number: number; // unique
       start_time: Modules.Common.DateString;
+      start_date: Modules.Common.DateString | null;
       end_time: Modules.Common.DateString | null;
       annulled: boolean;
       title: string;

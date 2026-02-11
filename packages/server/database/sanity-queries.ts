@@ -19,20 +19,9 @@ export const EXPECTED_SANITY_TABLES = [
   "Voting",
   "Vote",
   "Speech",
-  "SessionSectionSpeech",
-  "VotingDocumentLink",
   "SectionDocumentLink",
   "SessionNotice",
-  "VotingDistribution",
   "SaliDBDocumentReference",
-  "Document",
-  "DocumentActor",
-  "DocumentSubject",
-  "DocumentAttachment",
-  "DocumentRelation",
-  "CommitteeSession",
-  "SessionMinutesItem",
-  "SessionMinutesAttachment",
 ] as const;
 
 export const EXPECTED_SANITY_INDEXES = [
@@ -70,24 +59,17 @@ export const AUXILIARY_REF_TABLES = [
 
 export type AuxiliaryRefTable = (typeof AUXILIARY_REF_TABLES)[number];
 
-export function getAuxiliaryRepresentativeOrphanQuery(table: AuxiliaryRefTable): string {
+export function getAuxiliaryRepresentativeOrphanQuery(
+  table: AuxiliaryRefTable,
+): string {
   return sql`SELECT COUNT(*) as c FROM ${table} t WHERE NOT EXISTS (SELECT 1 FROM Representative r WHERE r.person_id = t.person_id)`;
 }
 
 export const SALIDB_LINKAGE_CHECKS = [
   {
-    name: "VotingDocumentLink -> Voting",
-    description: "All voting document links should reference an existing voting",
-    sql: sql`SELECT COUNT(*) as c FROM VotingDocumentLink vdl LEFT JOIN Voting v ON vdl.voting_id = v.id WHERE v.id IS NULL`,
-  },
-  {
-    name: "VotingDistribution -> Voting",
-    description: "All voting distributions should reference an existing voting",
-    sql: sql`SELECT COUNT(*) as c FROM VotingDistribution vd LEFT JOIN Voting v ON vd.voting_id = v.id WHERE v.id IS NULL`,
-  },
-  {
     name: "SectionDocumentLink -> Section",
-    description: "All section document links should reference an existing section",
+    description:
+      "All section document links should reference an existing section",
     sql: sql`SELECT COUNT(*) as c FROM SectionDocumentLink sdl LEFT JOIN Section s ON sdl.section_key = s.key WHERE s.key IS NULL`,
   },
   {
@@ -97,22 +79,26 @@ export const SALIDB_LINKAGE_CHECKS = [
   },
   {
     name: "SessionNotice.section_key -> Section",
-    description: "Session notices with a section key should reference an existing section",
+    description:
+      "Session notices with a section key should reference an existing section",
     sql: sql`SELECT COUNT(*) as c FROM SessionNotice sn LEFT JOIN Section s ON sn.section_key = s.key WHERE sn.section_key IS NOT NULL AND s.key IS NULL`,
   },
   {
     name: "SaliDBDocumentReference -> Voting",
-    description: "Document references with voting_id should reference an existing voting",
+    description:
+      "Document references with voting_id should reference an existing voting",
     sql: sql`SELECT COUNT(*) as c FROM SaliDBDocumentReference dr LEFT JOIN Voting v ON dr.voting_id = v.id WHERE dr.voting_id IS NOT NULL AND v.id IS NULL`,
   },
   {
     name: "SaliDBDocumentReference -> Section",
-    description: "Document references with section_key should reference an existing section",
+    description:
+      "Document references with section_key should reference an existing section",
     sql: sql`SELECT COUNT(*) as c FROM SaliDBDocumentReference dr LEFT JOIN Section s ON dr.section_key = s.key WHERE dr.section_key IS NOT NULL AND s.key IS NULL`,
   },
   {
     name: "SaliDBDocumentReference tunnus format",
-    description: "Document references should have a basic tunnus format (e.g., HE 1/2024 vp)",
+    description:
+      "Document references should have a basic tunnus format (e.g., HE 1/2024 vp)",
     sql: sql`SELECT COUNT(*) as c FROM SaliDBDocumentReference WHERE document_tunnus NOT LIKE '%/%'`,
   },
 ] as const;

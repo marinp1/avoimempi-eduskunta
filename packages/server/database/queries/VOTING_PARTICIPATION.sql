@@ -17,8 +17,8 @@ JOIN
 JOIN
     Voting vt ON vt.id = v.voting_id
 WHERE
-    ($startDate IS NULL OR DATE(vt.start_time) >= $startDate)
-    AND ($endDate IS NULL OR DATE(vt.start_time) <= $endDate)
+    ($startDate IS NULL OR vt.start_date >= $startDate)
+    AND ($endDateExclusive IS NULL OR vt.start_date < $endDateExclusive)
 GROUP BY
     r.person_id
 HAVING

@@ -14,6 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Bar,
   BarChart,
@@ -26,7 +27,6 @@ import {
 } from "recharts";
 import { colors, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
-import { useTranslation } from "react-i18next";
 
 const PARTY_COLORS: Record<string, string> = {
   KOK: "#0066CC",
@@ -66,7 +66,12 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
         return res.json();
       })
       .then((result) => {
-        setData(result.sort((a: PartyDisciplineData, b: PartyDisciplineData) => b.discipline_rate - a.discipline_rate));
+        setData(
+          result.sort(
+            (a: PartyDisciplineData, b: PartyDisciplineData) =>
+              b.discipline_rate - a.discipline_rate,
+          ),
+        );
         setLoading(false);
       })
       .catch((err) => {
@@ -77,7 +82,15 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
 
   if (loading)
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", p: spacing.lg }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          p: spacing.lg,
+        }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -97,7 +110,14 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
 
   return (
     <Box sx={{ p: spacing.lg, minHeight: "100vh" }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: spacing.lg }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: spacing.lg,
+        }}
+      >
         <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
           <GavelIcon sx={{ fontSize: 36, color: colors.primary }} />
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
@@ -109,7 +129,11 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
         </IconButton>
       </Box>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: spacing.lg }}>
+      <Typography
+        variant="body1"
+        color="text.secondary"
+        sx={{ mb: spacing.lg }}
+      >
         {t("insights.partyDiscipline.description")}
       </Typography>
 
@@ -138,7 +162,10 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
                   width={50}
                 />
                 <Tooltip
-                  formatter={(value: number) => [`${value.toFixed(1)}%`, t("insights.partyDiscipline.disciplineRate")]}
+                  formatter={(value: number) => [
+                    `${value.toFixed(1)}%`,
+                    t("insights.partyDiscipline.disciplineRate"),
+                  ]}
                   labelFormatter={(label) => {
                     const item = chartData.find((d) => d.name === label);
                     return item?.fullName || label;
@@ -160,7 +187,9 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 600 }}>{t("common.party")}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>
+                    {t("common.party")}
+                  </TableCell>
                   <TableCell sx={{ fontWeight: 600 }} align="right">
                     {t("insights.partyDiscipline.disciplineRate")}
                   </TableCell>
@@ -176,13 +205,16 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
                 {data.map((d) => (
                   <TableRow key={d.party_code}>
                     <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
                         <Box
                           sx={{
                             width: 12,
                             height: 12,
                             borderRadius: "50%",
-                            bgcolor: PARTY_COLORS[d.party_code] || colors.neutral,
+                            bgcolor:
+                              PARTY_COLORS[d.party_code] || colors.neutral,
                             flexShrink: 0,
                           }}
                         />
@@ -195,16 +227,25 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
                       <Typography
                         variant="body2"
                         fontWeight={700}
-                        sx={{ color: d.discipline_rate >= 90 ? colors.success : colors.warning }}
+                        sx={{
+                          color:
+                            d.discipline_rate >= 90
+                              ? colors.success
+                              : colors.warning,
+                        }}
                       >
                         {d.discipline_rate.toFixed(1)}%
                       </Typography>
                     </TableCell>
                     <TableCell align="right">
-                      <Typography variant="body2">{d.votes_with_majority.toLocaleString("fi-FI")}</Typography>
+                      <Typography variant="body2">
+                        {d.votes_with_majority.toLocaleString("fi-FI")}
+                      </Typography>
                     </TableCell>
                     <TableCell align="right">
-                      <Typography variant="body2">{d.total_votes.toLocaleString("fi-FI")}</Typography>
+                      <Typography variant="body2">
+                        {d.total_votes.toLocaleString("fi-FI")}
+                      </Typography>
                     </TableCell>
                   </TableRow>
                 ))}

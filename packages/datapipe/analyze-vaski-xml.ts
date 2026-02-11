@@ -31,7 +31,10 @@ interface VaskiDataFile {
 // Store parsed data in batches to avoid memory issues
 const schemaFields = new Map<string, Set<string>>();
 let totalRecordsProcessed = 0;
-const documentTypeCounters = new Map<string, Map<string, Map<string, number>>>(); // Counter per yhteisoTeksti -> kokousTunnus -> documentType
+const documentTypeCounters = new Map<
+  string,
+  Map<string, Map<string, number>>
+>(); // Counter per yhteisoTeksti -> kokousTunnus -> documentType
 const documentTypeStats = new Map<string, Map<string, number>>(); // Track count per rakenneAsiakirja -> documentType
 const rakenneAsiakirjaStats = new Map<string, number>(); // Track count per rakenneAsiakirja type
 
@@ -251,7 +254,10 @@ async function parseVaskiFile(
         let contents: any;
         if (record?.contents && typeof record.contents === "object") {
           contents = record.contents;
-        } else if (typeof record?.XmlData === "string" && record.XmlData.length > 0) {
+        } else if (
+          typeof record?.XmlData === "string" &&
+          record.XmlData.length > 0
+        ) {
           const parsed = parser.parse(record.XmlData);
           contents = cleanParsedXml(parsed);
         } else {
@@ -290,7 +296,8 @@ async function parseVaskiFile(
           eduskuntaTunnus: record.eduskuntaTunnus ?? record.Eduskuntatunnus,
           status: record.status ?? record.Status,
           created: record.created ?? record.Created,
-          attachmentGroupId: record.attachmentGroupId ?? record.AttachmentGroupId,
+          attachmentGroupId:
+            record.attachmentGroupId ?? record.AttachmentGroupId,
           contents,
         };
 

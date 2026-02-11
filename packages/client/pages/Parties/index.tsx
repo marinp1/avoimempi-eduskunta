@@ -52,7 +52,12 @@ const Parties = () => {
         return res.json();
       })
       .then((data) => {
-        setParties(data.sort((a: PartySummary, b: PartySummary) => b.member_count - a.member_count));
+        setParties(
+          data.sort(
+            (a: PartySummary, b: PartySummary) =>
+              b.member_count - a.member_count,
+          ),
+        );
         setLoading(false);
       })
       .catch((err) => {
@@ -81,7 +86,10 @@ const Parties = () => {
   if (error)
     return (
       <Box>
-        <PageHeader title={t("parties.title")} subtitle={t("parties.subtitle")} />
+        <PageHeader
+          title={t("parties.title")}
+          subtitle={t("parties.subtitle")}
+        />
         <Alert severity="error">{error}</Alert>
       </Box>
     );
@@ -107,7 +115,14 @@ const Parties = () => {
               >
                 <Box onClick={() => handleCardClick(party)} sx={{ p: 2.5 }}>
                   {/* Header: party name + gov/opp badge */}
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-start",
+                      mb: 2,
+                    }}
+                  >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Box
                         sx={{
@@ -154,18 +169,36 @@ const Parties = () => {
                     }}
                   >
                     <Box>
-                      <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: themedColors.textSecondary }}
+                      >
                         {t("parties.members")}
                       </Typography>
-                      <Typography sx={{ fontSize: "1.25rem", fontWeight: 700, color: themedColors.textPrimary }}>
+                      <Typography
+                        sx={{
+                          fontSize: "1.25rem",
+                          fontWeight: 700,
+                          color: themedColors.textPrimary,
+                        }}
+                      >
                         {party.member_count}
                       </Typography>
                     </Box>
                     <Box>
-                      <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: themedColors.textSecondary }}
+                      >
                         {t("parties.participation")}
                       </Typography>
-                      <Typography sx={{ fontSize: "1.25rem", fontWeight: 700, color: themedColors.textPrimary }}>
+                      <Typography
+                        sx={{
+                          fontSize: "1.25rem",
+                          fontWeight: 700,
+                          color: themedColors.textPrimary,
+                        }}
+                      >
                         {party.participation_rate != null
                           ? `${party.participation_rate.toFixed(1)}%`
                           : "-"}

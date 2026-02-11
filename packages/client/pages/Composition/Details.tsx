@@ -27,10 +27,9 @@ import {
 } from "@mui/material";
 import React from "react";
 import { refs } from "#client/references";
-import { colors } from "#client/theme";
-import { useThemedColors } from "#client/theme/ThemeContext";
-import theme from "#client/theme";
+import theme, { colors } from "#client/theme";
 import { VoteMarginBar } from "#client/theme/components";
+import { useThemedColors } from "#client/theme/ThemeContext";
 
 type RepresentativeDetailsType = DatabaseTables.Representative;
 
@@ -211,9 +210,22 @@ const SectionLabel: React.FC<{
 }> = ({ icon, label }) => {
   const themedColors = useThemedColors();
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5, mt: 2.5, "&:first-of-type": { mt: 0 } }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+        mb: 1.5,
+        mt: 2.5,
+        "&:first-of-type": { mt: 0 },
+      }}
+    >
       {icon}
-      <Typography variant="subtitle2" fontWeight="700" sx={{ color: themedColors.textPrimary }}>
+      <Typography
+        variant="subtitle2"
+        fontWeight="700"
+        sx={{ color: themedColors.textPrimary }}
+      >
         {label}
       </Typography>
     </Box>
@@ -236,7 +248,10 @@ const OverviewTab: React.FC<{
       />
       <Box sx={{ mb: 2 }}>
         {details.representativeDetails?.gender && (
-          <InfoRow label="Sukupuoli" value={details.representativeDetails.gender} />
+          <InfoRow
+            label="Sukupuoli"
+            value={details.representativeDetails.gender}
+          />
         )}
         {details.representativeDetails?.birth_date && (
           <InfoRow
@@ -265,7 +280,10 @@ const OverviewTab: React.FC<{
           />
         )}
         {details.representativeDetails?.profession && (
-          <InfoRow label="Ammatti" value={details.representativeDetails.profession} />
+          <InfoRow
+            label="Ammatti"
+            value={details.representativeDetails.profession}
+          />
         )}
       </Box>
 
@@ -275,15 +293,23 @@ const OverviewTab: React.FC<{
         details.representativeDetails?.website) && (
         <>
           <SectionLabel
-            icon={<EmailIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
+            icon={
+              <EmailIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />
+            }
             label="Yhteystiedot"
           />
           <Box sx={{ mb: 2 }}>
             {details.representativeDetails.email && (
-              <InfoRow label="Sahkoposti" value={details.representativeDetails.email} />
+              <InfoRow
+                label="Sahkoposti"
+                value={details.representativeDetails.email}
+              />
             )}
             {details.representativeDetails.phone && (
-              <InfoRow label="Puhelin" value={details.representativeDetails.phone} />
+              <InfoRow
+                label="Puhelin"
+                value={details.representativeDetails.phone}
+              />
             )}
             {details.representativeDetails.website && (
               <InfoRow
@@ -293,7 +319,11 @@ const OverviewTab: React.FC<{
                     href={details.representativeDetails.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ color: colors.primaryLight, textDecoration: "none", fontWeight: 600 }}
+                    style={{
+                      color: colors.primaryLight,
+                      textDecoration: "none",
+                      fontWeight: 600,
+                    }}
                   >
                     {details.representativeDetails.website}
                   </a>
@@ -308,7 +338,11 @@ const OverviewTab: React.FC<{
       {details.districts && details.districts.length > 0 && (
         <>
           <SectionLabel
-            icon={<LocationOnIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
+            icon={
+              <LocationOnIcon
+                sx={{ color: colors.primaryLight, fontSize: 20 }}
+              />
+            }
             label="Vaalipiirit"
           />
           <List dense sx={{ p: 0, mb: 2 }}>
@@ -316,13 +350,21 @@ const OverviewTab: React.FC<{
               <ListItem key={district.id} sx={{ px: 0, py: 0.5 }}>
                 <ListItemText
                   primary={
-                    <Typography variant="body2" fontWeight="600" sx={{ color: themedColors.textPrimary }}>
+                    <Typography
+                      variant="body2"
+                      fontWeight="600"
+                      sx={{ color: themedColors.textPrimary }}
+                    >
                       {district.district_name}
                     </Typography>
                   }
                   secondary={
-                    <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-                      {displayDate(district.start_date)} - {displayDate(district.end_date)}
+                    <Typography
+                      variant="caption"
+                      sx={{ color: themedColors.textSecondary }}
+                    >
+                      {displayDate(district.start_date)} -{" "}
+                      {displayDate(district.end_date)}
                     </Typography>
                   }
                 />
@@ -336,7 +378,11 @@ const OverviewTab: React.FC<{
       {details.groupMemberships && details.groupMemberships.length > 0 && (
         <>
           <SectionLabel
-            icon={<HowToVoteIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
+            icon={
+              <HowToVoteIcon
+                sx={{ color: colors.primaryLight, fontSize: 20 }}
+              />
+            }
             label="Eduskuntajasenyys"
           />
           <List dense sx={{ p: 0, mb: 2 }}>
@@ -345,7 +391,8 @@ const OverviewTab: React.FC<{
                 const recordDate = new Date(record.end_date);
                 const membershipEndDate = new Date(membership.end_date || "");
                 const diffDays = Math.abs(
-                  (recordDate.getTime() - membershipEndDate.getTime()) / (1000 * 60 * 60 * 24),
+                  (recordDate.getTime() - membershipEndDate.getTime()) /
+                    (1000 * 60 * 60 * 24),
                 );
                 return diffDays < 30 && membership.end_date;
               });
@@ -353,18 +400,35 @@ const OverviewTab: React.FC<{
                 <ListItem key={i} sx={{ px: 0, py: 0.5 }}>
                   <ListItemText
                     primary={
-                      <Typography variant="body2" fontWeight="600" sx={{ color: themedColors.textPrimary }}>
+                      <Typography
+                        variant="body2"
+                        fontWeight="600"
+                        sx={{ color: themedColors.textPrimary }}
+                      >
                         {membership.group_name}
                       </Typography>
                     }
                     secondary={
                       <Box>
-                        <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-                          {displayDate(membership.start_date)} - {displayDate(membership.end_date)}
-                          {leavingRecord?.replacement_person && ` (Seuraaja: ${leavingRecord.replacement_person})`}
+                        <Typography
+                          variant="caption"
+                          sx={{ color: themedColors.textSecondary }}
+                        >
+                          {displayDate(membership.start_date)} -{" "}
+                          {displayDate(membership.end_date)}
+                          {leavingRecord?.replacement_person &&
+                            ` (Seuraaja: ${leavingRecord.replacement_person})`}
                         </Typography>
                         {leavingRecord?.description && (
-                          <Typography variant="caption" display="block" sx={{ color: themedColors.textTertiary, fontStyle: "italic", mt: 0.25 }}>
+                          <Typography
+                            variant="caption"
+                            display="block"
+                            sx={{
+                              color: themedColors.textTertiary,
+                              fontStyle: "italic",
+                              mt: 0.25,
+                            }}
+                          >
                             {leavingRecord.description}
                           </Typography>
                         )}
@@ -379,44 +443,65 @@ const OverviewTab: React.FC<{
       )}
 
       {/* Government Memberships */}
-      {details.governmentMemberships && details.governmentMemberships.length > 0 && (
-        <>
-          <SectionLabel
-            icon={<AccountBalanceIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
-            label="Hallituskoalitioon osallistuminen"
-          />
-          <List dense sx={{ p: 0 }}>
-            {details.governmentMemberships.map((membership, i) => (
-              <ListItem key={i} sx={{ px: 0, py: 0.5 }}>
-                <ListItemText
-                  primary={
-                    <Box>
-                      <Typography variant="body2" fontWeight="600" sx={{ color: themedColors.textPrimary }}>
-                        {membership.government}
-                      </Typography>
-                      {membership.ministry && (
-                        <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
-                          {membership.ministry}
-                        </Typography>
-                      )}
-                    </Box>
-                  }
-                  secondary={
-                    <Box sx={{ mt: 0.25 }}>
-                      <Typography variant="caption" fontWeight="600" sx={{ color: colors.primaryLight }}>
-                        {membership.name}
-                      </Typography>
-                      <Typography variant="caption" display="block" sx={{ color: themedColors.textSecondary }}>
-                        {displayDate(membership.start_date)} - {displayDate(membership.end_date)}
-                      </Typography>
-                    </Box>
-                  }
+      {details.governmentMemberships &&
+        details.governmentMemberships.length > 0 && (
+          <>
+            <SectionLabel
+              icon={
+                <AccountBalanceIcon
+                  sx={{ color: colors.primaryLight, fontSize: 20 }}
                 />
-              </ListItem>
-            ))}
-          </List>
-        </>
-      )}
+              }
+              label="Hallituskoalitioon osallistuminen"
+            />
+            <List dense sx={{ p: 0 }}>
+              {details.governmentMemberships.map((membership, i) => (
+                <ListItem key={i} sx={{ px: 0, py: 0.5 }}>
+                  <ListItemText
+                    primary={
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          fontWeight="600"
+                          sx={{ color: themedColors.textPrimary }}
+                        >
+                          {membership.government}
+                        </Typography>
+                        {membership.ministry && (
+                          <Typography
+                            variant="body2"
+                            sx={{ color: themedColors.textSecondary }}
+                          >
+                            {membership.ministry}
+                          </Typography>
+                        )}
+                      </Box>
+                    }
+                    secondary={
+                      <Box sx={{ mt: 0.25 }}>
+                        <Typography
+                          variant="caption"
+                          fontWeight="600"
+                          sx={{ color: colors.primaryLight }}
+                        >
+                          {membership.name}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          display="block"
+                          sx={{ color: themedColors.textSecondary }}
+                        >
+                          {displayDate(membership.start_date)} -{" "}
+                          {displayDate(membership.end_date)}
+                        </Typography>
+                      </Box>
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </>
+        )}
     </Box>
   );
 };
@@ -431,44 +516,133 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
 
   React.useEffect(() => {
     setLoading(true);
-    Promise.all([fetchPersonVotes(personId), fetchPersonDissents(personId)]).then(
-      ([v, d]) => {
-        setVotes(v);
-        setDissents(d);
-        setLoading(false);
-      },
-    );
+    Promise.all([
+      fetchPersonVotes(personId),
+      fetchPersonDissents(personId),
+    ]).then(([v, d]) => {
+      setVotes(v);
+      setDissents(d);
+      setLoading(false);
+    });
   }, [personId]);
 
-  if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}><CircularProgress size={28} /></Box>;
+  if (loading)
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+        <CircularProgress size={28} />
+      </Box>
+    );
 
   const totalVotes = votes?.length || 0;
   const yesVotes = votes?.filter((v) => v.vote === "Jaa").length || 0;
   const noVotes = votes?.filter((v) => v.vote === "Ei").length || 0;
   const emptyVotes = votes?.filter((v) => v.vote === "Tyhjää").length || 0;
   const absentVotes = votes?.filter((v) => v.vote === "Poissa").length || 0;
-  const participationRate = totalVotes > 0 ? (((totalVotes - absentVotes) / totalVotes) * 100).toFixed(1) : "0";
+  const participationRate =
+    totalVotes > 0
+      ? (((totalVotes - absentVotes) / totalVotes) * 100).toFixed(1)
+      : "0";
   const dissentCount = dissents?.length || 0;
 
   return (
     <Box>
       {/* Metrics row */}
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(4, 1fr)" }, gap: 1.5, mb: 3 }}>
-        <Box sx={{ p: 1.5, borderRadius: 2, border: `1px solid ${themedColors.dataBorder}`, textAlign: "center" }}>
-          <Typography sx={{ fontSize: "1.25rem", fontWeight: 700, color: themedColors.textPrimary }}>{participationRate}%</Typography>
-          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>Osallistuminen</Typography>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(4, 1fr)" },
+          gap: 1.5,
+          mb: 3,
+        }}
+      >
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 2,
+            border: `1px solid ${themedColors.dataBorder}`,
+            textAlign: "center",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: "1.25rem",
+              fontWeight: 700,
+              color: themedColors.textPrimary,
+            }}
+          >
+            {participationRate}%
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary }}
+          >
+            Osallistuminen
+          </Typography>
         </Box>
-        <Box sx={{ p: 1.5, borderRadius: 2, border: `1px solid ${themedColors.dataBorder}`, textAlign: "center" }}>
-          <Typography sx={{ fontSize: "1.25rem", fontWeight: 700, color: themedColors.textPrimary }}>{totalVotes}</Typography>
-          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>Aanestyksia</Typography>
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 2,
+            border: `1px solid ${themedColors.dataBorder}`,
+            textAlign: "center",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: "1.25rem",
+              fontWeight: 700,
+              color: themedColors.textPrimary,
+            }}
+          >
+            {totalVotes}
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary }}
+          >
+            Aanestyksia
+          </Typography>
         </Box>
-        <Box sx={{ p: 1.5, borderRadius: 2, border: `1px solid ${themedColors.dataBorder}`, textAlign: "center" }}>
-          <Typography sx={{ fontSize: "1.25rem", fontWeight: 700, color: colors.error }}>{dissentCount}</Typography>
-          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>Poikkeamia</Typography>
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 2,
+            border: `1px solid ${themedColors.dataBorder}`,
+            textAlign: "center",
+          }}
+        >
+          <Typography
+            sx={{ fontSize: "1.25rem", fontWeight: 700, color: colors.error }}
+          >
+            {dissentCount}
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary }}
+          >
+            Poikkeamia
+          </Typography>
         </Box>
-        <Box sx={{ p: 1.5, borderRadius: 2, border: `1px solid ${themedColors.dataBorder}`, textAlign: "center" }}>
-          <VoteMarginBar yes={yesVotes} no={noVotes} empty={emptyVotes} absent={absentVotes} height={6} sx={{ mb: 0.5, mt: 0.5 }} />
-          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 2,
+            border: `1px solid ${themedColors.dataBorder}`,
+            textAlign: "center",
+          }}
+        >
+          <VoteMarginBar
+            yes={yesVotes}
+            no={noVotes}
+            empty={emptyVotes}
+            absent={absentVotes}
+            height={6}
+            sx={{ mb: 0.5, mt: 0.5 }}
+          />
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary }}
+          >
             {yesVotes} jaa / {noVotes} ei / {emptyVotes} tyhj.
           </Typography>
         </Box>
@@ -491,14 +665,33 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   "&:last-child": { borderBottom: "none" },
                 }}
               >
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    gap: 1,
+                  }}
+                >
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" fontWeight="600" sx={{ color: themedColors.textPrimary }} noWrap>
-                      <Link href={refs.voting(d.voting_id, undefined, d.start_time)} underline="hover" color="inherit">
+                    <Typography
+                      variant="body2"
+                      fontWeight="600"
+                      sx={{ color: themedColors.textPrimary }}
+                      noWrap
+                    >
+                      <Link
+                        href={refs.voting(d.voting_id, undefined, d.start_time)}
+                        underline="hover"
+                        color="inherit"
+                      >
                         {d.title || d.section_title}
                       </Link>
                     </Typography>
-                    <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: themedColors.textSecondary }}
+                    >
                       {new Date(d.start_time).toLocaleDateString("fi-FI")}
                     </Typography>
                   </Box>
@@ -510,11 +703,29 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                         height: 22,
                         fontSize: "0.7rem",
                         fontWeight: 700,
-                        bgcolor: d.mp_vote === "Jaa" ? "#22C55E20" : d.mp_vote === "Ei" ? "#EF444420" : "#F59E0B20",
-                        color: d.mp_vote === "Jaa" ? "#16A34A" : d.mp_vote === "Ei" ? "#DC2626" : "#D97706",
+                        bgcolor:
+                          d.mp_vote === "Jaa"
+                            ? "#22C55E20"
+                            : d.mp_vote === "Ei"
+                              ? "#EF444420"
+                              : "#F59E0B20",
+                        color:
+                          d.mp_vote === "Jaa"
+                            ? "#16A34A"
+                            : d.mp_vote === "Ei"
+                              ? "#DC2626"
+                              : "#D97706",
                       }}
                     />
-                    <Typography variant="caption" sx={{ color: themedColors.textTertiary, alignSelf: "center" }}>vs</Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: themedColors.textTertiary,
+                        alignSelf: "center",
+                      }}
+                    >
+                      vs
+                    </Typography>
                     <Chip
                       label={d.majority_vote}
                       size="small"
@@ -538,7 +749,11 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
       {votes && votes.length > 0 && (
         <>
           <SectionLabel
-            icon={<HowToVoteIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
+            icon={
+              <HowToVoteIcon
+                sx={{ color: colors.primaryLight, fontSize: 20 }}
+              />
+            }
             label="Viimeisimmat aanestykset"
           />
           <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
@@ -556,12 +771,23 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                 }}
               >
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="body2" sx={{ color: themedColors.textPrimary }} noWrap>
-                    <Link href={refs.voting(v.id, undefined, v.start_time)} underline="hover" color="inherit">
+                  <Typography
+                    variant="body2"
+                    sx={{ color: themedColors.textPrimary }}
+                    noWrap
+                  >
+                    <Link
+                      href={refs.voting(v.id, undefined, v.start_time)}
+                      underline="hover"
+                      color="inherit"
+                    >
                       {v.title || v.section_title}
                     </Link>
                   </Typography>
-                  <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: themedColors.textSecondary }}
+                  >
                     {new Date(v.start_time).toLocaleDateString("fi-FI")}
                   </Typography>
                 </Box>
@@ -574,15 +800,21 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     fontWeight: 700,
                     flexShrink: 0,
                     bgcolor:
-                      v.vote === "Jaa" ? "#22C55E20" :
-                      v.vote === "Ei" ? "#EF444420" :
-                      v.vote === "Poissa" ? `${colors.neutral}20` :
-                      "#F59E0B20",
+                      v.vote === "Jaa"
+                        ? "#22C55E20"
+                        : v.vote === "Ei"
+                          ? "#EF444420"
+                          : v.vote === "Poissa"
+                            ? `${colors.neutral}20`
+                            : "#F59E0B20",
                     color:
-                      v.vote === "Jaa" ? "#16A34A" :
-                      v.vote === "Ei" ? "#DC2626" :
-                      v.vote === "Poissa" ? colors.neutral :
-                      "#D97706",
+                      v.vote === "Jaa"
+                        ? "#16A34A"
+                        : v.vote === "Ei"
+                          ? "#DC2626"
+                          : v.vote === "Poissa"
+                            ? colors.neutral
+                            : "#D97706",
                   }}
                 />
               </Box>
@@ -592,7 +824,10 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
       )}
 
       {totalVotes === 0 && (
-        <Typography variant="body2" sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4 }}>
+        <Typography
+          variant="body2"
+          sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4 }}
+        >
           Ei aanestystietoja.
         </Typography>
       )}
@@ -615,23 +850,76 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
     });
   }, [personId]);
 
-  if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}><CircularProgress size={28} /></Box>;
+  if (loading)
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+        <CircularProgress size={28} />
+      </Box>
+    );
 
-  const totalWords = speeches?.reduce((sum, s) => sum + (s.word_count || 0), 0) || 0;
+  const totalWords =
+    speeches?.reduce((sum, s) => sum + (s.word_count || 0), 0) || 0;
 
   return (
     <Box>
       {/* Metrics */}
-      <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5, mb: 3 }}>
-        <Box sx={{ p: 1.5, borderRadius: 2, border: `1px solid ${themedColors.dataBorder}`, textAlign: "center" }}>
-          <Typography sx={{ fontSize: "1.25rem", fontWeight: 700, color: themedColors.textPrimary }}>{speeches?.length || 0}</Typography>
-          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>Puheenvuoroja</Typography>
-        </Box>
-        <Box sx={{ p: 1.5, borderRadius: 2, border: `1px solid ${themedColors.dataBorder}`, textAlign: "center" }}>
-          <Typography sx={{ fontSize: "1.25rem", fontWeight: 700, color: themedColors.textPrimary }}>
-            {totalWords > 1000 ? `${(totalWords / 1000).toFixed(1)}k` : totalWords}
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 1.5,
+          mb: 3,
+        }}
+      >
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 2,
+            border: `1px solid ${themedColors.dataBorder}`,
+            textAlign: "center",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: "1.25rem",
+              fontWeight: 700,
+              color: themedColors.textPrimary,
+            }}
+          >
+            {speeches?.length || 0}
           </Typography>
-          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>Sanaa yhteensa</Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary }}
+          >
+            Puheenvuoroja
+          </Typography>
+        </Box>
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 2,
+            border: `1px solid ${themedColors.dataBorder}`,
+            textAlign: "center",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: "1.25rem",
+              fontWeight: 700,
+              color: themedColors.textPrimary,
+            }}
+          >
+            {totalWords > 1000
+              ? `${(totalWords / 1000).toFixed(1)}k`
+              : totalWords}
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary }}
+          >
+            Sanaa yhteensa
+          </Typography>
         </Box>
       </Box>
 
@@ -647,20 +935,39 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                 "&:last-child": { borderBottom: "none" },
               }}
             >
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 0.5 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  mb: 0.5,
+                }}
+              >
                 <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                  <Typography variant="caption" fontWeight="600" sx={{ color: themedColors.textSecondary }}>
+                  <Typography
+                    variant="caption"
+                    fontWeight="600"
+                    sx={{ color: themedColors.textSecondary }}
+                  >
                     {new Date(s.start_time).toLocaleDateString("fi-FI")}
                   </Typography>
                   {s.speech_type && (
                     <Chip
                       label={s.speech_type}
                       size="small"
-                      sx={{ height: 20, fontSize: "0.65rem", bgcolor: `${colors.primaryLight}15`, color: colors.primaryLight }}
+                      sx={{
+                        height: 20,
+                        fontSize: "0.65rem",
+                        bgcolor: `${colors.primaryLight}15`,
+                        color: colors.primaryLight,
+                      }}
                     />
                   )}
                 </Box>
-                <Typography variant="caption" sx={{ color: themedColors.textTertiary }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: themedColors.textTertiary }}
+                >
                   {s.word_count} sanaa
                 </Typography>
               </Box>
@@ -680,7 +987,14 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                 </Typography>
               )}
               {s.document && (
-                <Typography variant="caption" sx={{ color: themedColors.textTertiary, mt: 0.25, display: "block" }}>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: themedColors.textTertiary,
+                    mt: 0.25,
+                    display: "block",
+                  }}
+                >
                   {s.document}
                 </Typography>
               )}
@@ -688,7 +1002,10 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
           ))}
         </Box>
       ) : (
-        <Typography variant="body2" sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4 }}>
+        <Typography
+          variant="body2"
+          sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4 }}
+        >
           Ei puheenvuoroja.
         </Typography>
       )}
@@ -704,7 +1021,9 @@ const PositionsTab: React.FC<{
   governmentMemberships: DatabaseTables.GovernmentMembership[];
 }> = ({ personId, trustPositions, governmentMemberships }) => {
   const themedColors = useThemedColors();
-  const [committees, setCommittees] = React.useState<CommitteeType[] | null>(null);
+  const [committees, setCommittees] = React.useState<CommitteeType[] | null>(
+    null,
+  );
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -715,7 +1034,12 @@ const PositionsTab: React.FC<{
     });
   }, [personId]);
 
-  if (loading) return <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}><CircularProgress size={28} /></Box>;
+  if (loading)
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+        <CircularProgress size={28} />
+      </Box>
+    );
 
   return (
     <Box>
@@ -723,7 +1047,9 @@ const PositionsTab: React.FC<{
       {committees && committees.length > 0 && (
         <>
           <SectionLabel
-            icon={<GroupsIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
+            icon={
+              <GroupsIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />
+            }
             label={`Valiokunnat (${committees.length})`}
           />
           <List dense sx={{ p: 0, mb: 2 }}>
@@ -732,20 +1058,32 @@ const PositionsTab: React.FC<{
                 <ListItemText
                   primary={
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Typography variant="body2" fontWeight="600" sx={{ color: themedColors.textPrimary }}>
+                      <Typography
+                        variant="body2"
+                        fontWeight="600"
+                        sx={{ color: themedColors.textPrimary }}
+                      >
                         {c.committee_name}
                       </Typography>
                       {c.role && (
                         <Chip
                           label={c.role}
                           size="small"
-                          sx={{ height: 20, fontSize: "0.65rem", bgcolor: `${colors.primaryLight}15`, color: colors.primaryLight }}
+                          sx={{
+                            height: 20,
+                            fontSize: "0.65rem",
+                            bgcolor: `${colors.primaryLight}15`,
+                            color: colors.primaryLight,
+                          }}
                         />
                       )}
                     </Box>
                   }
                   secondary={
-                    <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: themedColors.textSecondary }}
+                    >
                       {displayDate(c.start_date)} - {displayDate(c.end_date)}
                     </Typography>
                   }
@@ -760,7 +1098,11 @@ const PositionsTab: React.FC<{
       {governmentMemberships && governmentMemberships.length > 0 && (
         <>
           <SectionLabel
-            icon={<AccountBalanceIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
+            icon={
+              <AccountBalanceIcon
+                sx={{ color: colors.primaryLight, fontSize: 20 }}
+              />
+            }
             label={`Hallitustehtavat (${governmentMemberships.length})`}
           />
           <List dense sx={{ p: 0, mb: 2 }}>
@@ -769,17 +1111,27 @@ const PositionsTab: React.FC<{
                 <ListItemText
                   primary={
                     <Box>
-                      <Typography variant="body2" fontWeight="600" sx={{ color: themedColors.textPrimary }}>
+                      <Typography
+                        variant="body2"
+                        fontWeight="600"
+                        sx={{ color: themedColors.textPrimary }}
+                      >
                         {gm.name}
                       </Typography>
-                      <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: themedColors.textSecondary }}
+                      >
                         {gm.government}
                         {gm.ministry && ` - ${gm.ministry}`}
                       </Typography>
                     </Box>
                   }
                   secondary={
-                    <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: themedColors.textSecondary }}
+                    >
                       {displayDate(gm.start_date)} - {displayDate(gm.end_date)}
                     </Typography>
                   }
@@ -794,7 +1146,9 @@ const PositionsTab: React.FC<{
       {trustPositions && trustPositions.length > 0 && (
         <>
           <SectionLabel
-            icon={<WorkIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
+            icon={
+              <WorkIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />
+            }
             label={`Muut luottamustehtavat (${trustPositions.length})`}
           />
           <List dense sx={{ p: 0 }}>
@@ -802,17 +1156,28 @@ const PositionsTab: React.FC<{
               <ListItem key={i} sx={{ px: 0, py: 0.5 }}>
                 <ListItemText
                   primary={
-                    <Typography variant="body2" fontWeight="600" sx={{ color: themedColors.textPrimary }}>
+                    <Typography
+                      variant="body2"
+                      fontWeight="600"
+                      sx={{ color: themedColors.textPrimary }}
+                    >
                       {tp.name}
                       {tp.position_type && (
-                        <Typography component="span" variant="body2" sx={{ color: themedColors.textSecondary, ml: 1 }}>
+                        <Typography
+                          component="span"
+                          variant="body2"
+                          sx={{ color: themedColors.textSecondary, ml: 1 }}
+                        >
                           ({tp.position_type})
                         </Typography>
                       )}
                     </Typography>
                   }
                   secondary={
-                    <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: themedColors.textSecondary }}
+                    >
                       {tp.period}
                     </Typography>
                   }
@@ -826,7 +1191,14 @@ const PositionsTab: React.FC<{
       {(!committees || committees.length === 0) &&
         (!governmentMemberships || governmentMemberships.length === 0) &&
         (!trustPositions || trustPositions.length === 0) && (
-          <Typography variant="body2" sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: themedColors.textTertiary,
+              textAlign: "center",
+              py: 4,
+            }}
+          >
             Ei luottamustehtavia.
           </Typography>
         )}
@@ -965,36 +1337,69 @@ export const RepresentativeDetails: React.FC<{
                     {selectedRepresentative.last_name}
                   </Typography>
 
-                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", alignItems: "center", mt: 0.5 }}>
-                    <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.85)" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 1,
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      mt: 0.5,
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "rgba(255,255,255,0.85)" }}
+                    >
                       {currentParty}
                     </Typography>
-                    <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.5)" }}>|</Typography>
-                    <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.85)" }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "rgba(255,255,255,0.5)" }}
+                    >
+                      |
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "rgba(255,255,255,0.85)" }}
+                    >
                       {currentDistrict}
                     </Typography>
                     {age && (
                       <>
-                        <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.5)" }}>|</Typography>
-                        <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.85)" }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "rgba(255,255,255,0.5)" }}
+                        >
+                          |
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "rgba(255,255,255,0.85)" }}
+                        >
                           {age} v
                         </Typography>
                       </>
                     )}
                     <Chip
-                      label={selectedRepresentative.is_in_government === 1 ? "Hallitus" : "Oppositio"}
+                      label={
+                        selectedRepresentative.is_in_government === 1
+                          ? "Hallitus"
+                          : "Oppositio"
+                      }
                       size="small"
                       sx={{
                         height: 20,
                         fontSize: "0.65rem",
                         fontWeight: 700,
-                        bgcolor: selectedRepresentative.is_in_government === 1
-                          ? "rgba(76, 175, 80, 0.25)"
-                          : "rgba(255, 152, 0, 0.25)",
+                        bgcolor:
+                          selectedRepresentative.is_in_government === 1
+                            ? "rgba(76, 175, 80, 0.25)"
+                            : "rgba(255, 152, 0, 0.25)",
                         color: "white",
-                        border: selectedRepresentative.is_in_government === 1
-                          ? "1px solid rgba(76, 175, 80, 0.5)"
-                          : "1px solid rgba(255, 152, 0, 0.5)",
+                        border:
+                          selectedRepresentative.is_in_government === 1
+                            ? "1px solid rgba(76, 175, 80, 0.5)"
+                            : "1px solid rgba(255, 152, 0, 0.5)",
                       }}
                     />
                   </Box>
@@ -1026,10 +1431,26 @@ export const RepresentativeDetails: React.FC<{
                 },
               }}
             >
-              <Tab label="Yleistiedot" icon={<PersonIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
-              <Tab label="Aanestykset" icon={<HowToVoteIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
-              <Tab label="Puheenvuorot" icon={<MicIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
-              <Tab label="Luottamustehtavat" icon={<WorkIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
+              <Tab
+                label="Yleistiedot"
+                icon={<PersonIcon sx={{ fontSize: 18 }} />}
+                iconPosition="start"
+              />
+              <Tab
+                label="Aanestykset"
+                icon={<HowToVoteIcon sx={{ fontSize: 18 }} />}
+                iconPosition="start"
+              />
+              <Tab
+                label="Puheenvuorot"
+                icon={<MicIcon sx={{ fontSize: 18 }} />}
+                iconPosition="start"
+              />
+              <Tab
+                label="Luottamustehtavat"
+                icon={<WorkIcon sx={{ fontSize: 18 }} />}
+                iconPosition="start"
+              />
             </Tabs>
           </Box>
 
@@ -1041,9 +1462,7 @@ export const RepresentativeDetails: React.FC<{
               overflowY: "auto",
             }}
           >
-            {tabIndex === 0 && details && (
-              <OverviewTab details={details} />
-            )}
+            {tabIndex === 0 && details && <OverviewTab details={details} />}
             {tabIndex === 1 && (
               <VotesTab personId={selectedRepresentative.person_id} />
             )}

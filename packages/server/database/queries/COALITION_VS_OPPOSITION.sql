@@ -22,8 +22,8 @@ FROM recent_votings vt
 JOIN Vote v ON vt.id = v.voting_id
 LEFT JOIN GovernmentMembership gm
   ON v.person_id = gm.person_id
-  AND DATE(vt.start_time) >= gm.start_date
-  AND (gm.end_date IS NULL OR DATE(vt.start_time) <= gm.end_date)
+  AND SUBSTR(vt.start_time, 1, 10) >= gm.start_date
+  AND (gm.end_date IS NULL OR SUBSTR(vt.start_time, 1, 10) <= gm.end_date)
 WHERE v.vote IN ('Jaa', 'Ei', 'Tyhjää')
 GROUP BY vt.id, vt.start_time, vt.title, vt.section_title, vt.n_yes, vt.n_no
 ORDER BY vt.start_time DESC;

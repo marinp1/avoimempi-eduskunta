@@ -1,35 +1,17 @@
 import { Database } from "bun:sqlite";
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
 const MIGRATIONS_DIR = join(import.meta.dirname, "../../migrator/migrations");
 
-const MIGRATION_FILES = [
-  "V001.001__representatives_schema.sql",
-  "V001.002__session_agenda_schema.sql",
-  "V001.003__sections_and_votings_schema.sql",
-  "V001.004__vote_schema.sql",
-  "V001.005__speech_schema.sql",
-  "V001.006__excel_speech_schema.sql",
-  "V001.007__government_coalition_schema.sql",
-  "V001.008__performance_indexes.sql",
-  "V001.009__add_term_year_columns.sql",
-  "V001.010__vaski_document_schema.sql",
-  "V001.011__analytics_indexes.sql",
-  "V001.012__salidb_extensions.sql",
-  "V001.013__salidb_link_indexes.sql",
-  "V001.014__vaski_schema.sql",
-  "V001.015__vaski_indexes.sql",
-  "V001.016__vaski_base_ext.sql",
-  "V001.017__vaski_minutes_link.sql",
-  "V001.018__vaski_document_summary.sql",
-  "V001.019__query_performance_indexes.sql",
-  "V001.020__vaski_minutes_section_linking.sql",
-  "V001.021__vaski_relational_links.sql",
-  "V001.022__document_v2_schema.sql",
-  "V001.023__drop_legacy_vaski_tables.sql",
-  "V001.024__rebuild_doc_type_tables.sql",
-];
+const getMigrationFiles = () =>
+  readdirSync(MIGRATIONS_DIR)
+    .filter((file) => /^V001\.\d+__.+\.sql$/.test(file))
+    .sort((a, b) => {
+      const aVersion = parseInt(a.match(/^V001\.(\d+)__/)?.[1] || "0", 10);
+      const bVersion = parseInt(b.match(/^V001\.(\d+)__/)?.[1] || "0", 10);
+      return aVersion - bVersion;
+    });
 
 /**
  * Strip SQL inline comments (-- ...) from a line, preserving string literals.
@@ -50,10 +32,11 @@ function stripInlineComments(sql: string): string {
 
 /**
  * Apply migration SQL files up to and including the given version number.
- * e.g. upToVersion = 4 applies V001.001 through V001.004
+ * Note: migration versions can be non-contiguous after consolidation.
+ * e.g. upToVersion = 11 applies all migrations with version <= 11.
  */
 export function applyMigrations(db: Database, upToVersion = 12) {
-  for (const file of MIGRATION_FILES) {
+  for (const file of getMigrationFiles()) {
     const versionMatch = file.match(/V001\.(\d+)/);
     if (!versionMatch) continue;
     const version = parseInt(versionMatch[1], 10);
@@ -61,14 +44,7 @@ export function applyMigrations(db: Database, upToVersion = 12) {
 
     const raw = readFileSync(join(MIGRATIONS_DIR, file), "utf-8");
     const sql = stripInlineComments(raw);
-    const statements = sql
-      .split(";")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
-    for (const stmt of statements) {
-      db.exec(stmt);
-    }
+    db.exec(sql);
   }
 }
 
@@ -329,10 +305,9 @@ export function seedGroupMembership(
   };
   const row = { ...defaults, ...overrides };
 
-  db.run(
-    `INSERT OR IGNORE INTO ParliamentaryGroup (code) VALUES (?)`,
-    [row.group_code],
-  );
+  db.run(`INSERT OR IGNORE INTO ParliamentaryGroup (code) VALUES (?)`, [
+    row.group_code,
+  ]);
   db.run(
     `INSERT INTO ParliamentaryGroupMembership (id, person_id, group_code, group_name, start_date, end_date)
      VALUES (?, ?, ?, ?, ?, ?)`,

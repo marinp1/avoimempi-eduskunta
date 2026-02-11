@@ -6,7 +6,7 @@ export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBKohtaAanestys"]) => {
     const { id } = db
       .prepare<Pick<DatabaseTables.Voting, "id">, { $key: string }>(
-        "SELECT id FROM Voting WHERE session_key = $key",
+        "SELECT id FROM Voting WHERE session_key = $key ORDER BY start_time DESC, id DESC LIMIT 1",
       )
       .get({ $key: dataToImport.IstuntoTekninenAvain }) ?? { id: null };
 

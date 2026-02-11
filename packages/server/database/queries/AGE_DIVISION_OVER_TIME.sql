@@ -25,10 +25,10 @@ ActiveRepsByYear AS (
     SELECT
         aty.year,
         r.person_id,
-        aty.year - CAST(SUBSTR(r.birth_date, 1, 4) AS INTEGER) AS age
+        aty.year - r.birth_year AS age
     FROM ActiveTermsByYear aty
     JOIN Representative r ON r.person_id = aty.person_id
-    WHERE r.birth_date IS NOT NULL
+    WHERE r.birth_year IS NOT NULL
 )
 SELECT
     year,

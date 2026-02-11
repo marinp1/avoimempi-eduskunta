@@ -9,8 +9,8 @@ import {
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { commonStyles, spacing } from "#client/theme";
-import { useThemedColors } from "#client/theme/ThemeContext";
 import { DataCard, PageHeader } from "#client/theme/components";
+import { useThemedColors } from "#client/theme/ThemeContext";
 import { VoteResults } from "./VoteResults";
 
 export default () => {
@@ -64,7 +64,9 @@ export default () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: themedColors.primary, fontSize: 20 }} />
+                  <SearchIcon
+                    sx={{ color: themedColors.primary, fontSize: 20 }}
+                  />
                 </InputAdornment>
               ),
             }}

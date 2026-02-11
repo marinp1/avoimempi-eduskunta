@@ -26,11 +26,11 @@ discipline_stats AS (
 ),
 group_map AS (
   SELECT
-    LOWER(RTRIM(pgm.group_code, '0123456789')) AS party,
+    pgm.group_abbreviation AS party,
     MAX(pgm.group_name) AS group_name
   FROM ParliamentaryGroupMembership pgm
   WHERE pgm.end_date IS NULL
-  GROUP BY LOWER(RTRIM(pgm.group_code, '0123456789'))
+  GROUP BY pgm.group_abbreviation
 )
 SELECT
   gm.group_name AS party_name,
