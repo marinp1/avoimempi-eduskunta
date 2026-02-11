@@ -1,28 +1,34 @@
-WITH RECURSIVE YearSeries AS (
-    SELECT MIN(CAST(SUBSTR(start_date, 1, 4) AS INTEGER)) AS year
+WITH RECURSIVE bounds AS (
+    SELECT
+        MIN(start_year) AS min_year,
+        MAX(start_year) AS max_year
     FROM Term
+),
+YearSeries AS (
+    SELECT min_year AS year
+    FROM bounds
     UNION ALL
     SELECT year + 1
     FROM YearSeries
-    WHERE year < (SELECT MAX(CAST(SUBSTR(start_date, 1, 4) AS INTEGER)) FROM Term)
+    WHERE year < (SELECT max_year FROM bounds)
+),
+ActiveTermsByYear AS (
+    SELECT
+        ys.year,
+        t.person_id
+    FROM YearSeries ys
+    JOIN Term t ON t.start_year <= ys.year
+      AND (t.end_year IS NULL OR t.end_year >= ys.year)
+    GROUP BY ys.year, t.person_id
 ),
 ActiveRepsByYear AS (
     SELECT
-        ys.year,
+        aty.year,
         r.person_id,
-        r.birth_date,
-        CASE
-            WHEN r.birth_date IS NOT NULL THEN
-                ys.year - CAST(SUBSTR(r.birth_date, 1, 4) AS INTEGER)
-            ELSE NULL
-        END AS age
-    FROM YearSeries ys
-    CROSS JOIN Representative r
-    JOIN Term t ON r.person_id = t.person_id
-    WHERE t.start_year <= ys.year
-      AND (t.end_year IS NULL OR t.end_year >= ys.year)
-      AND r.birth_date IS NOT NULL
-    GROUP BY ys.year, r.person_id
+        aty.year - CAST(SUBSTR(r.birth_date, 1, 4) AS INTEGER) AS age
+    FROM ActiveTermsByYear aty
+    JOIN Representative r ON r.person_id = aty.person_id
+    WHERE r.birth_date IS NOT NULL
 )
 SELECT
     year,

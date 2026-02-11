@@ -4,6 +4,15 @@ import {
   getExceptionsForCheck,
   type KnownDataException,
 } from "./known-data-exceptions";
+import {
+  EXPECTED_SANITY_INDEXES,
+  EXPECTED_SANITY_TABLES,
+  ROW_COUNT_TABLES,
+  SALIDB_LINKAGE_CHECKS,
+  getAuxiliaryRepresentativeOrphanQuery,
+  getRowCountQuery,
+  sanityQueries,
+} from "../database/sanity-queries";
 
 export interface SanityCheck {
   category: string;
@@ -83,39 +92,11 @@ export class SanityCheckService {
 
     try {
       const tables = this.db
-        .query("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
+        .query(sanityQueries.tableNames)
         .all() as { name: string }[];
       const tableNames = tables.map((t) => t.name);
 
-      const expectedTables = [
-        "Representative",
-        "Term",
-        "ParliamentaryGroup",
-        "ParliamentaryGroupMembership",
-        "GovernmentMembership",
-        "Committee",
-        "CommitteeMembership",
-        "District",
-        "RepresentativeDistrict",
-        "Education",
-        "WorkHistory",
-        "TrustPosition",
-        "Agenda",
-        "Session",
-        "Section",
-        "Voting",
-        "Vote",
-        "Speech",
-        "VaskiMinutesSpeech",
-        "VotingDocumentLink",
-        "SectionDocumentLink",
-        "SessionNotice",
-        "VotingDistribution",
-        "SaliDBDocumentReference",
-        "VaskiDocument",
-      ];
-
-      const missingTables = expectedTables.filter(
+      const missingTables = EXPECTED_SANITY_TABLES.filter(
         (t) => !tableNames.includes(t),
       );
 
@@ -124,7 +105,7 @@ export class SanityCheckService {
         name: "Core tables exist",
         description: "All expected database tables are present",
         passed: missingTables.length === 0,
-        details: missingTables.length > 0 ? `Missing: ${missingTables.join(", ")}` : `All ${expectedTables.length} core tables present`,
+        details: missingTables.length > 0 ? `Missing: ${missingTables.join(", ")}` : `All ${EXPECTED_SANITY_TABLES.length} core tables present`,
       });
     } catch (error) {
       checks.push({
@@ -142,55 +123,25 @@ export class SanityCheckService {
   private checkRowCounts(): SanityCheck[] {
     const checks: SanityCheck[] = [];
 
-    const countTests = [
-      {
-        table: "Representative",
-        name: "Representative count",
-        description: "Should have >1000 MPs historically",
-        minCount: 1000,
-      },
-      {
-        table: "Session",
-        name: "Session count",
-        description: "Should have >100 sessions",
-        minCount: 100,
-      },
-      {
-        table: "Voting",
-        name: "Voting count",
-        description: "Should have >1000 votings",
-        minCount: 1000,
-      },
-      {
-        table: "Vote",
-        name: "Vote count",
-        description: "Should have >100,000 individual votes",
-        minCount: 100000,
-      },
-      {
-        table: "Section",
-        name: "Section count",
-        description: "Should have >1000 sections",
-        minCount: 1000,
-      },
-      {
-        table: "Speech",
-        name: "Speech count",
-        description: "Should have >10,000 speeches",
-        minCount: 10000,
-      },
-      {
-        table: "Term",
-        name: "Term count",
-        description: "Should have >1000 terms",
-        minCount: 1000,
-      },
+    const countTests: {
+      table: (typeof ROW_COUNT_TABLES)[number];
+      name: string;
+      description: string;
+      minCount: number;
+    }[] = [
+      { table: "Representative", name: "Representative count", description: "Should have >1000 MPs historically", minCount: 1000 },
+      { table: "Session", name: "Session count", description: "Should have >100 sessions", minCount: 100 },
+      { table: "Voting", name: "Voting count", description: "Should have >1000 votings", minCount: 1000 },
+      { table: "Vote", name: "Vote count", description: "Should have >100,000 individual votes", minCount: 100000 },
+      { table: "Section", name: "Section count", description: "Should have >1000 sections", minCount: 1000 },
+      { table: "Speech", name: "Speech count", description: "Should have >10,000 speeches", minCount: 10000 },
+      { table: "Term", name: "Term count", description: "Should have >1000 terms", minCount: 1000 },
     ];
 
     for (const test of countTests) {
       try {
         const result = this.db
-          .query(`SELECT COUNT(*) as c FROM ${test.table}`)
+          .query(getRowCountQuery(test.table))
           .get() as any;
         const count = result?.c ?? 0;
         const passed = count > test.minCount;
@@ -221,12 +172,7 @@ export class SanityCheckService {
 
     try {
       const dupes = this.db
-        .query(
-          `SELECT COUNT(*) as dupes FROM (
-             SELECT person_id FROM Representative
-             GROUP BY person_id HAVING COUNT(*) > 1
-           )`,
-        )
+        .query(sanityQueries.personIdDuplicates)
         .get() as any;
 
       checks.push({
@@ -248,7 +194,7 @@ export class SanityCheckService {
 
     try {
       const nullIds = this.db
-        .query("SELECT COUNT(*) as c FROM Representative WHERE person_id IS NULL")
+        .query(sanityQueries.representativeNullPersonId)
         .get() as any;
 
       checks.push({
@@ -270,11 +216,7 @@ export class SanityCheckService {
 
     try {
       const missingNames = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM Representative
-           WHERE first_name IS NULL OR last_name IS NULL
-              OR TRIM(first_name) = '' OR TRIM(last_name) = ''`,
-        )
+        .query(sanityQueries.representativeMissingNames)
         .get() as any;
 
       checks.push({
@@ -302,7 +244,7 @@ export class SanityCheckService {
 
     try {
       const emptyKeys = this.db
-        .query("SELECT COUNT(*) as c FROM Session WHERE key IS NULL OR key = ''")
+        .query(sanityQueries.sessionEmptyKeys)
         .get() as any;
 
       checks.push({
@@ -324,7 +266,7 @@ export class SanityCheckService {
 
     try {
       const emptyDates = this.db
-        .query("SELECT COUNT(*) as c FROM Session WHERE date IS NULL OR date = ''")
+        .query(sanityQueries.sessionEmptyDates)
         .get() as any;
 
       checks.push({
@@ -345,8 +287,8 @@ export class SanityCheckService {
     }
 
     try {
-      const total = (this.db.query("SELECT COUNT(*) as total FROM Session").get() as any).total;
-      const unique = (this.db.query("SELECT COUNT(DISTINCT key) as unique_count FROM Session").get() as any).unique_count;
+      const total = (this.db.query(sanityQueries.sessionTotalCount).get() as any).total;
+      const unique = (this.db.query(sanityQueries.sessionUniqueKeyCount).get() as any).unique_count;
 
       checks.push({
         category: "Data Integrity",
@@ -373,10 +315,7 @@ export class SanityCheckService {
 
     try {
       const orphans = this.db
-        .query(
-          `SELECT COUNT(*) as orphans FROM Section sec
-           WHERE NOT EXISTS (SELECT 1 FROM Session s WHERE s.key = sec.session_key)`,
-        )
+        .query(sanityQueries.sectionSessionOrphans)
         .get() as any;
 
       checks.push({
@@ -404,20 +343,7 @@ export class SanityCheckService {
 
     try {
       const oversized = this.db
-        .query(
-          `SELECT s.date, COUNT(DISTINCT r.person_id) as mp_count
-           FROM Session s
-           JOIN Term t ON t.start_date <= s.date AND (t.end_date IS NULL OR t.end_date >= s.date)
-           JOIN Representative r ON r.person_id = t.person_id
-           WHERE NOT EXISTS (
-             SELECT 1 FROM TemporaryAbsence ta
-             WHERE ta.person_id = r.person_id
-               AND ta.start_date <= s.date
-               AND (ta.end_date IS NULL OR ta.end_date >= s.date)
-           )
-           GROUP BY s.date
-           HAVING mp_count > 200`,
-        )
+        .query(sanityQueries.parliamentOversizedDates)
         .all() as any[];
 
       checks.push({
@@ -445,7 +371,7 @@ export class SanityCheckService {
 
     try {
       const oversized = this.db
-        .query("SELECT COUNT(*) as c FROM Voting WHERE n_total > 200")
+        .query(sanityQueries.votingTotalOver200)
         .get() as any;
 
       checks.push({
@@ -467,11 +393,7 @@ export class SanityCheckService {
 
     try {
       const sumMismatch = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM Voting
-           WHERE n_total > 0
-             AND n_yes + n_no + n_abstain + n_absent != n_total`,
-        )
+        .query(sanityQueries.votingSumMismatch)
         .get() as any;
 
       checks.push({
@@ -493,13 +415,7 @@ export class SanityCheckService {
 
     try {
       const mismatchedVotings = this.db
-        .query(
-          `SELECT v.id, v.n_total, COUNT(vo.id) as actual_votes
-           FROM Voting v
-           JOIN Vote vo ON v.id = vo.voting_id
-           GROUP BY v.id
-           HAVING actual_votes != v.n_total`,
-        )
+        .query(sanityQueries.votingIndividualCountMismatch)
         .all() as { id: number; n_total: number; actual_votes: number }[];
 
       const checkExceptions = getExceptionsForCheck(
@@ -537,15 +453,7 @@ export class SanityCheckService {
 
     try {
       const duplicateNumbers = this.db
-        .query(
-          `SELECT COUNT(*) as dupes FROM (
-             SELECT session_key, number, COUNT(*) as cnt
-             FROM Voting
-             WHERE session_key != ''
-             GROUP BY session_key, number
-             HAVING cnt > 1
-           )`,
-        )
+        .query(sanityQueries.votingDuplicateNumbers)
         .get() as any;
 
       checks.push({
@@ -573,10 +481,7 @@ export class SanityCheckService {
 
     try {
       const orphans = this.db
-        .query(
-          `SELECT COUNT(*) as orphans FROM Voting v
-           WHERE NOT EXISTS (SELECT 1 FROM Session s WHERE s.key = v.session_key)`,
-        )
+        .query(sanityQueries.votingSessionOrphans)
         .get() as any;
 
       checks.push({
@@ -604,10 +509,7 @@ export class SanityCheckService {
 
     try {
       const invalidVotes = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM Vote
-           WHERE vote NOT IN ('Jaa', 'Ei', 'Tyhjää', 'Poissa')`,
-        )
+        .query(sanityQueries.voteInvalidValues)
         .get() as any;
 
       checks.push({
@@ -629,14 +531,7 @@ export class SanityCheckService {
 
     try {
       const duplicateVotes = this.db
-        .query(
-          `SELECT COUNT(*) as dupes FROM (
-             SELECT voting_id, person_id, COUNT(*) as cnt
-             FROM Vote
-             GROUP BY voting_id, person_id
-             HAVING cnt > 1
-           )`,
-        )
+        .query(sanityQueries.voteDuplicateByPerson)
         .get() as any;
 
       checks.push({
@@ -664,10 +559,7 @@ export class SanityCheckService {
 
     try {
       const invalidGender = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM Representative
-           WHERE gender IS NOT NULL AND gender NOT IN ('Mies', 'Nainen')`,
-        )
+        .query(sanityQueries.representativeInvalidGender)
         .get() as any;
 
       checks.push({
@@ -689,10 +581,7 @@ export class SanityCheckService {
 
     try {
       const noTerms = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM Representative r
-           WHERE NOT EXISTS (SELECT 1 FROM Term t WHERE t.person_id = r.person_id)`,
-        )
+        .query(sanityQueries.representativeWithoutTerms)
         .get() as any;
 
       checks.push({
@@ -720,10 +609,7 @@ export class SanityCheckService {
 
     try {
       const invalidDates = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM Term
-           WHERE end_date IS NOT NULL AND start_date > end_date`,
-        )
+        .query(sanityQueries.termInvalidDates)
         .get() as any;
 
       checks.push({
@@ -751,10 +637,7 @@ export class SanityCheckService {
 
     try {
       const invalidDates = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM ParliamentaryGroupMembership
-           WHERE end_date IS NOT NULL AND start_date > end_date`,
-        )
+        .query(sanityQueries.groupMembershipInvalidDates)
         .get() as any;
 
       checks.push({
@@ -782,10 +665,7 @@ export class SanityCheckService {
 
     try {
       const orphans = this.db
-        .query(
-          `SELECT COUNT(*) as orphans FROM Speech sp
-           WHERE NOT EXISTS (SELECT 1 FROM Session s WHERE s.key = sp.session_key)`,
-        )
+        .query(sanityQueries.speechSessionOrphans)
         .get() as any;
 
       checks.push({
@@ -813,10 +693,7 @@ export class SanityCheckService {
 
     try {
       const orphans = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM Vote vo
-           WHERE NOT EXISTS (SELECT 1 FROM Representative r WHERE r.person_id = vo.person_id)`,
-        )
+        .query(sanityQueries.voteRepresentativeOrphans)
         .get() as any;
 
       checks.push({
@@ -844,24 +721,11 @@ export class SanityCheckService {
 
     try {
       const indexes = this.db
-        .query(
-          "SELECT name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%' ORDER BY name",
-        )
+        .query(sanityQueries.schemaIndexes)
         .all() as { name: string }[];
       const indexNames = indexes.map((i) => i.name);
 
-      const expectedIndexes = [
-        "idx_voting_start_time",
-        "idx_vote_person_voting",
-        "idx_vote_voting_id",
-        "idx_pgm_person_dates",
-        "idx_gm_government",
-        "idx_term_person_dates",
-        "idx_representative_gender",
-        "idx_representative_birth_date",
-      ];
-
-      const missingIndexes = expectedIndexes.filter(
+      const missingIndexes = EXPECTED_SANITY_INDEXES.filter(
         (idx) => !indexNames.includes(idx),
       );
 
@@ -870,7 +734,7 @@ export class SanityCheckService {
         name: "Performance indexes present",
         description: "Critical performance indexes must exist",
         passed: missingIndexes.length === 0,
-        details: missingIndexes.length === 0 ? `All ${expectedIndexes.length} indexes present` : `Missing: ${missingIndexes.join(", ")}`,
+        details: missingIndexes.length === 0 ? `All ${EXPECTED_SANITY_INDEXES.length} indexes present` : `Missing: ${missingIndexes.join(", ")}`,
       });
     } catch (error) {
       checks.push({
@@ -890,16 +754,7 @@ export class SanityCheckService {
 
     try {
       const mismatchedVotings = this.db
-        .query(
-          `SELECT v.id
-           FROM Voting v
-           JOIN Vote vo ON v.id = vo.voting_id
-           GROUP BY v.id
-           HAVING SUM(CASE WHEN vo.vote = 'Jaa' THEN 1 ELSE 0 END) != v.n_yes
-              OR SUM(CASE WHEN vo.vote = 'Ei' THEN 1 ELSE 0 END) != v.n_no
-              OR SUM(CASE WHEN vo.vote = 'Tyhjää' THEN 1 ELSE 0 END) != v.n_abstain
-              OR SUM(CASE WHEN vo.vote = 'Poissa' THEN 1 ELSE 0 END) != v.n_absent`,
-        )
+        .query(sanityQueries.voteAggregationMismatch)
         .all() as { id: number }[];
 
       const checkExceptions = getExceptionsForCheck(
@@ -943,13 +798,7 @@ export class SanityCheckService {
 
     try {
       const mismatches = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM Voting v
-           JOIN Session s ON s.key = v.session_key
-           WHERE v.start_time IS NOT NULL
-             AND s.date IS NOT NULL
-             AND ABS(JULIANDAY(SUBSTR(v.start_time, 1, 10)) - JULIANDAY(s.date)) > 1`,
-        )
+        .query(sanityQueries.votingSessionDateMismatch)
         .get() as any;
 
       checks.push({
@@ -977,11 +826,7 @@ export class SanityCheckService {
 
     try {
       const orphans = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM Voting v
-           WHERE v.section_key IS NOT NULL AND v.section_key != ''
-             AND NOT EXISTS (SELECT 1 FROM Section sec WHERE sec.key = v.section_key)`,
-        )
+        .query(sanityQueries.votingSectionOrphans)
         .get() as any;
 
       checks.push({
@@ -1009,10 +854,7 @@ export class SanityCheckService {
 
     try {
       const invalid = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM CommitteeMembership
-           WHERE end_date IS NOT NULL AND start_date > end_date`,
-        )
+        .query(sanityQueries.committeeMembershipInvalidDates)
         .get() as any;
 
       checks.push({
@@ -1040,10 +882,7 @@ export class SanityCheckService {
 
     try {
       const invalid = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM GovernmentMembership
-           WHERE end_date IS NOT NULL AND start_date > end_date`,
-        )
+        .query(sanityQueries.governmentMembershipInvalidDates)
         .get() as any;
 
       checks.push({
@@ -1065,10 +904,7 @@ export class SanityCheckService {
 
     try {
       const empty = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM GovernmentMembership
-           WHERE government IS NULL OR TRIM(government) = ''`,
-        )
+        .query(sanityQueries.governmentMembershipEmptyGovernment)
         .get() as any;
 
       checks.push({
@@ -1096,7 +932,7 @@ export class SanityCheckService {
 
     try {
       const { c } = this.db
-        .query("SELECT COUNT(*) as c FROM District")
+        .query(sanityQueries.districtCount)
         .get() as any;
 
       checks.push({
@@ -1118,14 +954,7 @@ export class SanityCheckService {
 
     try {
       const overlaps = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM RepresentativeDistrict rd1
-           JOIN RepresentativeDistrict rd2
-             ON rd1.person_id = rd2.person_id AND rd1.id < rd2.id
-           WHERE rd1.district_code != rd2.district_code
-             AND rd1.start_date <= COALESCE(rd2.end_date, '9999-12-31')
-             AND rd2.start_date <= COALESCE(rd1.end_date, '9999-12-31')`,
-        )
+        .query(sanityQueries.representativeDistrictOverlaps)
         .get() as any;
 
       checks.push({
@@ -1155,15 +984,12 @@ export class SanityCheckService {
       { table: "Education", label: "Education" },
       { table: "WorkHistory", label: "WorkHistory" },
       { table: "TrustPosition", label: "TrustPosition" },
-    ];
+    ] as const;
 
     for (const { table, label } of tables) {
       try {
         const orphans = this.db
-          .query(
-            `SELECT COUNT(*) as c FROM ${table} t
-             WHERE NOT EXISTS (SELECT 1 FROM Representative r WHERE r.person_id = t.person_id)`,
-          )
+          .query(getAuxiliaryRepresentativeOrphanQuery(table))
           .get() as any;
 
         checks.push({
@@ -1192,10 +1018,7 @@ export class SanityCheckService {
 
     try {
       const tooOld = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM Session
-           WHERE date IS NOT NULL AND date < '1907-01-01'`,
-        )
+        .query(sanityQueries.sessionTooOld)
         .get() as any;
 
       checks.push({
@@ -1217,10 +1040,7 @@ export class SanityCheckService {
 
     try {
       const future = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM Session
-           WHERE date IS NOT NULL AND date > DATE('now')`,
-        )
+        .query(sanityQueries.sessionInFuture)
         .get() as any;
 
       checks.push({
@@ -1248,25 +1068,7 @@ export class SanityCheckService {
 
     try {
       const mpsWithoutGroup = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM (
-             SELECT DISTINCT s.date, t.person_id
-             FROM Session s
-             JOIN Term t ON t.start_date <= s.date AND (t.end_date IS NULL OR t.end_date >= s.date)
-             WHERE NOT EXISTS (
-               SELECT 1 FROM TemporaryAbsence ta
-               WHERE ta.person_id = t.person_id
-                 AND ta.start_date <= s.date
-                 AND (ta.end_date IS NULL OR ta.end_date >= s.date)
-             )
-             AND NOT EXISTS (
-               SELECT 1 FROM ParliamentaryGroupMembership pgm
-               WHERE pgm.person_id = t.person_id
-                 AND pgm.start_date <= s.date
-                 AND (pgm.end_date IS NULL OR pgm.end_date >= s.date)
-             )
-           )`,
-        )
+        .query(sanityQueries.activeMpWithoutGroup)
         .get() as any;
 
       checks.push({
@@ -1294,31 +1096,7 @@ export class SanityCheckService {
 
     try {
       const mismatches = this.db
-        .query(
-          `SELECT COUNT(*) as c FROM (
-             SELECT s.date,
-               (SELECT COUNT(DISTINCT t.person_id) FROM Term t
-                WHERE t.start_date <= s.date AND (t.end_date IS NULL OR t.end_date >= s.date)
-                AND NOT EXISTS (
-                  SELECT 1 FROM TemporaryAbsence ta
-                  WHERE ta.person_id = t.person_id
-                    AND ta.start_date <= s.date
-                    AND (ta.end_date IS NULL OR ta.end_date >= s.date)
-                )) as term_count,
-               (SELECT COUNT(DISTINCT pgm.person_id) FROM ParliamentaryGroupMembership pgm
-                WHERE pgm.start_date <= s.date AND (pgm.end_date IS NULL OR pgm.end_date >= s.date)
-                AND NOT EXISTS (
-                  SELECT 1 FROM TemporaryAbsence ta
-                  WHERE ta.person_id = pgm.person_id
-                    AND ta.start_date <= s.date
-                    AND (ta.end_date IS NULL OR ta.end_date >= s.date)
-                )) as group_count
-             FROM Session s
-             WHERE s.date IS NOT NULL
-             GROUP BY s.date
-             HAVING term_count != group_count
-           )`,
-        )
+        .query(sanityQueries.activeGroupMemberMismatch)
         .get() as any;
 
       checks.push({
@@ -1344,50 +1122,7 @@ export class SanityCheckService {
   private checkSaliDbLinkage(): SanityCheck[] {
     const checks: SanityCheck[] = [];
 
-    const linkageChecks = [
-      {
-        name: "VotingDocumentLink -> Voting",
-        description: "All voting document links should reference an existing voting",
-        sql: `SELECT COUNT(*) as c FROM VotingDocumentLink vdl LEFT JOIN Voting v ON vdl.voting_id = v.id WHERE v.id IS NULL`,
-      },
-      {
-        name: "VotingDistribution -> Voting",
-        description: "All voting distributions should reference an existing voting",
-        sql: `SELECT COUNT(*) as c FROM VotingDistribution vd LEFT JOIN Voting v ON vd.voting_id = v.id WHERE v.id IS NULL`,
-      },
-      {
-        name: "SectionDocumentLink -> Section",
-        description: "All section document links should reference an existing section",
-        sql: `SELECT COUNT(*) as c FROM SectionDocumentLink sdl LEFT JOIN Section s ON sdl.section_key = s.key WHERE s.key IS NULL`,
-      },
-      {
-        name: "SessionNotice -> Session",
-        description: "All session notices should reference an existing session",
-        sql: `SELECT COUNT(*) as c FROM SessionNotice sn LEFT JOIN Session s ON sn.session_key = s.key WHERE s.key IS NULL`,
-      },
-      {
-        name: "SessionNotice.section_key -> Section",
-        description: "Session notices with a section key should reference an existing section",
-        sql: `SELECT COUNT(*) as c FROM SessionNotice sn LEFT JOIN Section s ON sn.section_key = s.key WHERE sn.section_key IS NOT NULL AND s.key IS NULL`,
-      },
-      {
-        name: "SaliDBDocumentReference -> Voting",
-        description: "Document references with voting_id should reference an existing voting",
-        sql: `SELECT COUNT(*) as c FROM SaliDBDocumentReference dr LEFT JOIN Voting v ON dr.voting_id = v.id WHERE dr.voting_id IS NOT NULL AND v.id IS NULL`,
-      },
-      {
-        name: "SaliDBDocumentReference -> Section",
-        description: "Document references with section_key should reference an existing section",
-        sql: `SELECT COUNT(*) as c FROM SaliDBDocumentReference dr LEFT JOIN Section s ON dr.section_key = s.key WHERE dr.section_key IS NOT NULL AND s.key IS NULL`,
-      },
-      {
-        name: "SaliDBDocumentReference tunnus format",
-        description: "Document references should have a basic tunnus format (e.g., HE 1/2024 vp)",
-        sql: `SELECT COUNT(*) as c FROM SaliDBDocumentReference WHERE document_tunnus NOT LIKE '%/%'`,
-      },
-    ];
-
-    for (const check of linkageChecks) {
+    for (const check of SALIDB_LINKAGE_CHECKS) {
       try {
         const result = this.db.query(check.sql).get() as any;
         const count = result?.c ?? 0;
