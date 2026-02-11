@@ -1,6 +1,7 @@
 import { Database } from "bun:sqlite";
 import { getDatabasePath } from "#database";
 import * as queries from "./queries";
+import { SQLITE_PRAGMAS } from "./sql-statements";
 
 export class DatabaseConnection {
   #database: Database | null = null;
@@ -31,7 +32,7 @@ export class DatabaseConnection {
     const stmt = this.db.prepare<
       DatabaseTables.Representative,
       { $limit: number; $offset: number }
-    >(queries.sql`SELECT * FROM Representative LIMIT $limit OFFSET $offset`);
+    >(queries.representativesPaginated);
     const data = stmt.all({ $limit: params.limit, $offset: offset });
     stmt.finalize();
     return data;
@@ -41,9 +42,7 @@ export class DatabaseConnection {
     const stmt = this.db.prepare<
       DatabaseTables.ParliamentGroupMembership,
       { $personId: number }
-    >(
-      queries.sql`SELECT pgm.* FROM Representative r JOIN ParliamentaryGroupMembership pgm ON r.person_id = pgm.person_id WHERE r.person_id = $personId ORDER BY start_date ASC;`,
-    );
+    >(queries.personGroupMemberships);
     const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
     return data;
@@ -51,7 +50,7 @@ export class DatabaseConnection {
 
   public async fetchPersonTerms(params: { id: string }) {
     const stmt = this.db.prepare<DatabaseTables.Term, { $personId: number }>(
-      queries.sql`SELECT t.* FROM Representative r JOIN term t ON r.person_id = t.person_id WHERE r.person_id = $personId ORDER BY t.start_date ASC;`,
+      queries.personTerms,
     );
     const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
@@ -141,7 +140,7 @@ export class DatabaseConnection {
 
     // Get total count
     const countStmt = this.db.prepare<{ count: number }, []>(
-      queries.sql`SELECT COUNT(*) as count FROM Session`,
+      queries.sessionCount,
     );
     const countResult = countStmt.get();
     const totalCount = countResult?.count || 0;
@@ -210,9 +209,7 @@ export class DatabaseConnection {
     const countStmt = this.db.prepare<
       { count: number },
       { $sectionKey: string }
-    >(
-      queries.sql`SELECT COUNT(*) as count FROM Speech WHERE section_key = $sectionKey`,
-    );
+    >(queries.sectionSpeechCount);
     const countResult = countStmt.get({ $sectionKey: params.sectionKey });
     const total = countResult?.count || 0;
     countStmt.finalize();
@@ -414,9 +411,7 @@ export class DatabaseConnection {
     const votingCountStmt = this.db.prepare<
       { voting_count: number },
       { $sessionKey: string }
-    >(
-      queries.sql`SELECT COUNT(*) as voting_count FROM Voting v JOIN Section sec ON v.section_key = sec.key WHERE sec.session_key = $sessionKey`,
-    );
+    >(queries.sessionVotingCount);
 
     const sessionsWithSections = sessions.map((session) => {
       const sections = sectionsStmt.all({ $sessionKey: session.key });
@@ -468,7 +463,7 @@ export class DatabaseConnection {
   public async fetchLatestVaskiMinutesDate() {
     try {
       const stmt = this.db.prepare<{ max: string | null }, []>(
-        queries.sql`SELECT MAX(start_time) as max FROM VaskiMinutesSpeech`,
+        queries.latestVaskiMinutesDate,
       );
       const result = stmt.get();
       stmt.finalize();
@@ -881,7 +876,8 @@ export class DatabaseConnection {
       create: true,
       readonly: true,
     });
-    this.#database.exec("PRAGMA journal_mode = WAL;");
+    this.#database.exec(SQLITE_PRAGMAS.journalWal);
+    this.#database.exec(SQLITE_PRAGMAS.tempStoreMemory);
     return this.#database;
   }
 

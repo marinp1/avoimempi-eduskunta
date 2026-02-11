@@ -49,9 +49,7 @@ describe("Query compilation", () => {
 
 describe("Representative queries", () => {
   test("SELECT * FROM Representative returns paginated results", () => {
-    const stmt = db.prepare(
-      queries.sql`SELECT * FROM Representative LIMIT $limit OFFSET $offset`,
-    );
+    const stmt = db.prepare(queries.representativesPaginated);
     const rows = stmt.all({ $limit: 10, $offset: 0 }) as any[];
     stmt.finalize();
 
@@ -103,9 +101,7 @@ describe("Representative queries", () => {
 
 describe("Group membership queries", () => {
   test("returns group memberships for a person", () => {
-    const stmt = db.prepare(
-      queries.sql`SELECT pgm.* FROM Representative r JOIN ParliamentaryGroupMembership pgm ON r.person_id = pgm.person_id WHERE r.person_id = $personId ORDER BY start_date ASC;`,
-    );
+    const stmt = db.prepare(queries.personGroupMemberships);
     const rows = stmt.all({ $personId: 1000 }) as any[];
     stmt.finalize();
 
@@ -118,9 +114,7 @@ describe("Group membership queries", () => {
 
 describe("Term queries", () => {
   test("returns terms for a person", () => {
-    const stmt = db.prepare(
-      queries.sql`SELECT t.* FROM Representative r JOIN term t ON r.person_id = t.person_id WHERE r.person_id = $personId ORDER BY t.start_date ASC;`,
-    );
+    const stmt = db.prepare(queries.personTerms);
     const rows = stmt.all({ $personId: 1000 }) as any[];
     stmt.finalize();
 
@@ -164,6 +158,14 @@ describe("Session queries", () => {
     expect(rows).toHaveLength(2);
     expect(rows[0]).toHaveProperty("agenda_title");
     expect(rows[0]).toHaveProperty("agenda_state");
+  });
+
+  test("SESSION_COUNT returns total session count", () => {
+    const stmt = db.prepare(queries.sessionCount);
+    const row = stmt.get() as any;
+    stmt.finalize();
+
+    expect(row.count).toBe(2);
   });
 
   test("SESSIONS_PAGINATED respects limit and offset", () => {
@@ -225,6 +227,14 @@ describe("Session queries", () => {
 // ─── SPEECH QUERIES ─────────────────────────────────────────
 
 describe("Speech queries", () => {
+  test("SECTION_SPEECH_COUNT returns count for one section", () => {
+    const stmt = db.prepare(queries.sectionSpeechCount);
+    const row = stmt.get({ $sectionKey: "2024/1/3" }) as any;
+    stmt.finalize();
+
+    expect(row.count).toBe(2);
+  });
+
   test("SECTION_SPEECHES returns speeches with content from VaskiMinutesSpeech join", () => {
     const stmt = db.prepare(queries.sectionSpeeches);
     const rows = stmt.all({
@@ -267,6 +277,15 @@ describe("Speech queries", () => {
 // ─── VOTING QUERIES ─────────────────────────────────────────
 
 describe("Voting queries", () => {
+  test("SESSION_VOTING_COUNT returns votings in one session", () => {
+    const stmt = db.prepare(queries.sessionVotingCount);
+    const row = stmt.get({ $sessionKey: "2024/1" }) as any;
+    stmt.finalize();
+
+    // Seed dataset does not link test votings to sections via section_key.
+    expect(row.voting_count).toBe(0);
+  });
+
   test("VOTINGS_SEARCH returns computed context_title", () => {
     const stmt = db.prepare(queries.votingsSearch);
     const rows = stmt.all({ $query: "%Äänestys 1%" }) as Array<
@@ -523,6 +542,16 @@ describe("Speech activity query", () => {
       expect(row).toHaveProperty("avg_words_per_speech");
       expect(row.speech_count).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("Vaski helpers", () => {
+  test("LATEST_VASKI_MINUTES_DATE returns max start_time", () => {
+    const stmt = db.prepare(queries.latestVaskiMinutesDate);
+    const row = stmt.get() as any;
+    stmt.finalize();
+
+    expect(row.max).toBe("2024-01-15T10:05:00");
   });
 });
 

@@ -7,6 +7,11 @@ import { TableName } from "#constants/index";
 import { clearStatementCache } from "../datapipe/migrator/utils";
 import { getDatabasePath } from "../shared/database";
 import { getStorage, StorageKeyBuilder } from "../shared/storage";
+import {
+  MIGRATOR_SQL,
+  SQLITE_PRAGMAS,
+  getDeleteAllRowsQuery,
+} from "./database/sql-statements";
 
 export interface MigratorStatus {
   isRunning: boolean;
@@ -173,14 +178,14 @@ export class MigratorController {
         readwrite: true,
       });
 
-      targetDatabase.exec("PRAGMA journal_mode = WAL;");
+      targetDatabase.exec(SQLITE_PRAGMAS.journalWal);
 
       // Apply performance optimizations for bulk inserts
       console.log("⚙️  Applying SQLite performance optimizations...");
-      targetDatabase.exec("PRAGMA synchronous = OFF;"); // Disable sync for speed (data can be regenerated)
-      targetDatabase.exec("PRAGMA cache_size = -64000;"); // 64MB cache
-      targetDatabase.exec("PRAGMA temp_store = MEMORY;"); // Keep temp data in memory
-      targetDatabase.exec("PRAGMA mmap_size = 30000000000;"); // Use memory-mapped I/O
+      targetDatabase.exec(SQLITE_PRAGMAS.synchronousOff); // Disable sync for speed (data can be regenerated)
+      targetDatabase.exec(SQLITE_PRAGMAS.cacheSize64Mb); // 64MB cache
+      targetDatabase.exec(SQLITE_PRAGMAS.tempStoreMemory); // Keep temp data in memory
+      targetDatabase.exec(SQLITE_PRAGMAS.mmapSize30Gb); // Use memory-mapped I/O
 
       // Run migrations
       const migrationsPath = path.resolve(
@@ -195,7 +200,7 @@ export class MigratorController {
       console.log("🗑️  Clearing existing data...");
       const tables = targetDatabase
         .query<{ name: string }, []>(
-          "SELECT name FROM sqlite_master WHERE type='table';",
+          MIGRATOR_SQL.listTables,
         )
         .all();
 
@@ -205,7 +210,7 @@ export class MigratorController {
           table.name !== "_bun_migrations"
         ) {
           console.log(`  Clearing ${table.name}...`);
-          targetDatabase.run(`DELETE FROM ${table.name};`);
+          targetDatabase.run(getDeleteAllRowsQuery(table.name));
         }
       }
       console.log("✅ Tables cleared");
@@ -254,7 +259,7 @@ export class MigratorController {
           let pagesProcessed = 0;
 
           // Start a single transaction for the entire table
-          targetDatabase.exec("BEGIN TRANSACTION;");
+          targetDatabase.exec(MIGRATOR_SQL.beginTransaction);
 
           try {
             // Read and import data
@@ -312,7 +317,7 @@ export class MigratorController {
             }
 
             // Commit the transaction
-            targetDatabase.exec("COMMIT;");
+            targetDatabase.exec(MIGRATOR_SQL.commit);
 
             const tableTime = ((Date.now() - tableStartTime) / 1000).toFixed(2);
             const rowsPerSecond = (
@@ -323,7 +328,7 @@ export class MigratorController {
             );
           } catch (error) {
             // Rollback on error
-            targetDatabase.exec("ROLLBACK;");
+            targetDatabase.exec(MIGRATOR_SQL.rollback);
             throw error;
           }
         } else {
@@ -345,17 +350,12 @@ export class MigratorController {
 
       // Update database timestamp
       const timestamp = new Date().toISOString();
-      targetDatabase.run(
-        `CREATE TABLE IF NOT EXISTS _migration_info (key TEXT PRIMARY KEY, value TEXT);`,
-      );
-      targetDatabase.run(
-        `INSERT OR REPLACE INTO _migration_info (key, value) VALUES ('last_migration', ?);`,
-        [timestamp],
-      );
+      targetDatabase.run(MIGRATOR_SQL.createMigrationInfoTable);
+      targetDatabase.run(MIGRATOR_SQL.upsertMigrationTimestamp, [timestamp]);
 
       // Re-enable safety features
       console.log("\n⚙️  Re-enabling safety features...");
-      targetDatabase.exec("PRAGMA synchronous = FULL;");
+      targetDatabase.exec(SQLITE_PRAGMAS.synchronousFull);
       console.log("✅ Safety features restored");
 
       targetDatabase.close();

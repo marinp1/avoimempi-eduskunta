@@ -1,4 +1,5 @@
 import type { Database } from "bun:sqlite";
+import { KNOWN_EXCEPTION_QUERIES } from "../database/sanity-queries";
 
 export interface AffectedRow {
   id: number;
@@ -30,13 +31,7 @@ export function buildKnownDataExceptions(db: Database): KnownDataException[] {
 
   try {
     const mismatchedVotings = db
-      .query(
-        `SELECT v.id, v.number, v.session_key, v.result_url
-         FROM Voting v
-         JOIN Vote vo ON v.id = vo.voting_id
-         GROUP BY v.id
-         HAVING COUNT(vo.id) = v.n_total - 1`,
-      )
+      .query(KNOWN_EXCEPTION_QUERIES.mismatchedVotings)
       .all() as { id: number; number: number; session_key: string; result_url: string | null }[];
 
     if (mismatchedVotings.length > 0) {
