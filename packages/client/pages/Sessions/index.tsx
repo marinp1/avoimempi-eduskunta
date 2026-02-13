@@ -170,6 +170,40 @@ type SectionDocumentLink = {
   source_type?: string | null;
 };
 
+type RollCallReport = {
+  id: number;
+  parliament_identifier: string;
+  session_date: string;
+  roll_call_start_time?: string | null;
+  roll_call_end_time?: string | null;
+  title?: string | null;
+  status?: string | null;
+  created_at?: string | null;
+  edk_identifier: string;
+  source_path: string;
+  attachment_group_id?: number | null;
+  entry_count: number;
+  absent_count: number;
+  late_count: number;
+};
+
+type RollCallEntry = {
+  roll_call_id: number;
+  entry_order: number;
+  person_id?: number | null;
+  first_name: string;
+  last_name: string;
+  party?: string | null;
+  entry_type: "absent" | "late";
+  absence_reason?: string | null;
+  arrival_time?: string | null;
+};
+
+type SectionRollCallData = {
+  report: RollCallReport;
+  entries: RollCallEntry[];
+};
+
 type Speech = {
   id: number;
   ordinal: number;
@@ -473,11 +507,17 @@ export default () => {
   const [sectionLinks, setSectionLinks] = useState<
     Record<string, SectionDocumentLink[]>
   >({});
+  const [sectionRollCalls, setSectionRollCalls] = useState<
+    Record<number, SectionRollCallData | null>
+  >({});
   const [loadingSpeeches, setLoadingSpeeches] = useState<Set<number>>(
     new Set(),
   );
   const [loadingVotings, setLoadingVotings] = useState<Set<number>>(new Set());
   const [loadingLinks, setLoadingLinks] = useState<Set<string>>(new Set());
+  const [loadingRollCalls, setLoadingRollCalls] = useState<Set<number>>(
+    new Set(),
+  );
   const [loadingMoreSpeeches, setLoadingMoreSpeeches] = useState<Set<number>>(
     new Set(),
   );
@@ -500,7 +540,12 @@ export default () => {
         setLoading(true);
         setError(null);
         setExpandedSections(new Set());
+        setLoadingSpeeches(new Set());
+        setLoadingVotings(new Set());
+        setLoadingLinks(new Set());
+        setLoadingRollCalls(new Set());
         setSectionLinks({});
+        setSectionRollCalls({});
         setExpandedMinutesSessions(new Set());
         setExpandedAttachmentSessions(new Set());
         const res = await fetch(`/api/day/${date}/sessions`);
@@ -1616,6 +1661,224 @@ export default () => {
     );
   };
 
+  const renderSectionRollCall = (section: Section) => {
+    const loading = loadingRollCalls.has(section.id);
+    const rollCallData = sectionRollCalls[section.id];
+
+    if (!loading && !rollCallData && !isRollCallSection(section)) return null;
+
+    if (loading) {
+      return (
+        <Box sx={{ mt: 1.5, py: 1, textAlign: "center" }}>
+          <CircularProgress size={18} sx={{ color: themedColors.primary }} />
+        </Box>
+      );
+    }
+
+    if (!rollCallData) return null;
+
+    const { report, entries } = rollCallData;
+    const documentIdentifier = report.edk_identifier || report.parliament_identifier;
+    const documentUrl = `https://www.parliament.fi/valtiopaivaasiakirjat/${encodeURIComponent(documentIdentifier)}`;
+
+    const formatEntryType = (entryType: RollCallEntry["entry_type"]) =>
+      entryType === "late"
+        ? t("sessions.rollCallLate", { defaultValue: "Myöhässä" })
+        : t("sessions.rollCallAbsent", { defaultValue: "Poissaolijat" });
+
+    const formatAbsenceReason = (reasonCode?: string | null) => {
+      if (!reasonCode) return "-";
+      const code = reasonCode.toLowerCase();
+      if (code === "e") {
+        return t("sessions.rollCallReasonE", {
+          defaultValue: "eduskuntatyöhön liittyvä tehtävä",
+        });
+      }
+      if (code === "h") {
+        return t("sessions.rollCallReasonH", {
+          defaultValue: "henkilökohtainen syy",
+        });
+      }
+      return t("sessions.rollCallReasonUnknown", { defaultValue: "selite puuttuu" });
+    };
+
+    const unknownReasonCodes = Array.from(
+      new Set(
+        entries
+          .map((entry) => entry.absence_reason?.toLowerCase())
+          .filter((code): code is string => !!code && !["e", "h"].includes(code)),
+      ),
+    );
+
+    return (
+      <Box
+        sx={{
+          mt: 1.5,
+          p: 1.5,
+          borderRadius: 1,
+          border: `1px solid ${colors.primaryLight}25`,
+          background: `${colors.primaryLight}08`,
+        }}
+      >
+        <Typography
+          sx={{
+            fontSize: "0.75rem",
+            fontWeight: 700,
+            color: colors.textSecondary,
+            textTransform: "uppercase",
+          }}
+        >
+          {t("sessions.rollCallReport")}
+        </Typography>
+        {report.title && (
+          <Typography
+            sx={{ fontSize: "0.8125rem", fontWeight: 600, color: colors.textPrimary }}
+          >
+            {report.title}
+          </Typography>
+        )}
+        <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mt: 0.5 }}>
+          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+            {t("sessions.rollCallDocument")}: {report.edk_identifier}
+          </Typography>
+          <Link
+            href={documentUrl}
+            target="_blank"
+            rel="noreferrer"
+            underline="hover"
+            sx={{ fontSize: "0.75rem", fontWeight: 600, color: colors.primaryLight }}
+          >
+            {t("sessions.rollCallOpenDocument", {
+              defaultValue: "Avaa valtiopäiväasiakirja",
+            })}
+          </Link>
+          {report.roll_call_start_time && (
+            <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+              {t("sessions.rollCallStart")}: {formatTime(report.roll_call_start_time)}
+            </Typography>
+          )}
+          {report.roll_call_end_time && (
+            <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+              {t("sessions.rollCallEnd")}: {formatTime(report.roll_call_end_time)}
+            </Typography>
+          )}
+        </Box>
+        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 0.75 }}>
+          <Chip
+            label={`${t("sessions.rollCallAbsent")}: ${report.absent_count}`}
+            size="small"
+            sx={{
+              fontSize: "0.6875rem",
+              height: 20,
+              background: `${themedColors.error}15`,
+              color: themedColors.error,
+            }}
+          />
+          <Chip
+            label={`${t("sessions.rollCallLate")}: ${report.late_count}`}
+            size="small"
+            sx={{
+              fontSize: "0.6875rem",
+              height: 20,
+              background: `${themedColors.warning}15`,
+              color: themedColors.warning,
+            }}
+          />
+        </Box>
+
+        {entries.length === 0 && (
+          <Typography sx={{ mt: 0.75, fontSize: "0.75rem", color: colors.textTertiary }}>
+            {t("sessions.rollCallNoEntries")}
+          </Typography>
+        )}
+
+        {entries.length > 0 && (
+          <Box sx={{ mt: 1, overflowX: "auto" }}>
+            <Box
+              component="table"
+              sx={{
+                width: "100%",
+                borderCollapse: "collapse",
+                fontSize: "0.75rem",
+                "& th, & td": {
+                  textAlign: "left",
+                  borderBottom: `1px solid ${colors.dataBorder}`,
+                  px: 0.75,
+                  py: 0.5,
+                  verticalAlign: "top",
+                },
+                "& th": {
+                  color: colors.textSecondary,
+                  fontWeight: 700,
+                  whiteSpace: "nowrap",
+                },
+                "& td": {
+                  color: colors.textPrimary,
+                },
+              }}
+            >
+              <thead>
+                <tr>
+                  <th>{t("sessions.rollCallTableNumber", { defaultValue: "#" })}</th>
+                  <th>{t("sessions.rollCallTableName", { defaultValue: "Nimi" })}</th>
+                  <th>{t("sessions.rollCallTableParty", { defaultValue: "Puolue" })}</th>
+                  <th>{t("sessions.rollCallTableType", { defaultValue: "Merkintä" })}</th>
+                  <th>{t("sessions.rollCallTableCode", { defaultValue: "Koodi" })}</th>
+                  <th>{t("sessions.rollCallTableReason", { defaultValue: "Selite" })}</th>
+                  <th>{t("sessions.rollCallTableArrival", { defaultValue: "Saapumisaika" })}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map((entry) => (
+                  <tr key={`${entry.roll_call_id}-${entry.entry_order}`}>
+                    <td>{entry.entry_order}</td>
+                    <td>{entry.first_name} {entry.last_name}</td>
+                    <td>{entry.party ? entry.party.toUpperCase() : "-"}</td>
+                    <td>{formatEntryType(entry.entry_type)}</td>
+                    <td>{entry.absence_reason ? `(${entry.absence_reason})` : "-"}</td>
+                    <td>{formatAbsenceReason(entry.absence_reason)}</td>
+                    <td>{entry.arrival_time || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Box>
+          </Box>
+        )}
+
+        <Box
+          sx={{
+            mt: 1,
+            p: 1,
+            borderRadius: 1,
+            background: colors.backgroundDefault,
+            border: `1px solid ${colors.dataBorder}`,
+          }}
+        >
+          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+            {t("sessions.rollCallReasonLegend", { defaultValue: "Koodiselitteet" })}
+            :{" "}
+            <strong>(e)</strong>{" "}
+            {t("sessions.rollCallReasonE", {
+              defaultValue: "eduskuntatyöhön liittyvä tehtävä",
+            })}
+            ; <strong>(h)</strong>{" "}
+            {t("sessions.rollCallReasonH", {
+              defaultValue: "henkilökohtainen syy",
+            })}
+          </Typography>
+          {unknownReasonCodes.length > 0 && (
+            <Typography sx={{ mt: 0.5, fontSize: "0.75rem", color: colors.textTertiary }}>
+              {t("sessions.rollCallUnknownCodes", {
+                defaultValue: "Muut datassa olevat koodit ilman selitettä",
+              })}
+              : {unknownReasonCodes.map((code) => `(${code})`).join(", ")}
+            </Typography>
+          )}
+        </Box>
+      </Box>
+    );
+  };
+
   const fetchSpeeches = async (
     sectionId: number,
     sectionKey: string,
@@ -1634,6 +1897,24 @@ export default () => {
     return (await res.json()) as SectionDocumentLink[];
   };
 
+  const fetchSectionRollCall = async (sectionKey: string) => {
+    const res = await fetch(`/api/sections/${sectionKey}/roll-call`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()) as SectionRollCallData | null;
+  };
+
+  const isRollCallSection = (section?: Section) => {
+    if (!section) return false;
+    const documentType = (section.minutes_related_document_type || "").toLowerCase();
+    const sectionTitle = (section.title || "").toLowerCase();
+    const processingTitle = (section.processing_title || "").toLowerCase();
+    return (
+      documentType.includes("nimenhuuto") ||
+      sectionTitle.includes("nimenhuuto") ||
+      processingTitle.includes("nimenhuuto")
+    );
+  };
+
   const toggleSection = async (sectionId: number, sectionKey: string) => {
     const isExpanding = !expandedSections.has(sectionId);
 
@@ -1645,7 +1926,9 @@ export default () => {
     });
 
     if (isExpanding) {
-      let resolvedLinks = sectionLinks[sectionKey];
+      const section = sessions
+        .flatMap((session) => session.sections || [])
+        .find((candidate) => candidate.id === sectionId || candidate.key === sectionKey);
 
       if (!sectionSpeechData[sectionId]) {
         setLoadingSpeeches((prev) => new Set(prev).add(sectionId));
@@ -1682,12 +1965,29 @@ export default () => {
         setLoadingLinks((prev) => new Set(prev).add(sectionKey));
         try {
           const links = await fetchSectionLinks(sectionKey);
-          resolvedLinks = links;
           setSectionLinks((prev) => ({ ...prev, [sectionKey]: links }));
         } finally {
           setLoadingLinks((prev) => {
             const next = new Set(prev);
             next.delete(sectionKey);
+            return next;
+          });
+        }
+      }
+
+      const hasRollCallData = Object.prototype.hasOwnProperty.call(
+        sectionRollCalls,
+        sectionId,
+      );
+      if (isRollCallSection(section) && !hasRollCallData) {
+        setLoadingRollCalls((prev) => new Set(prev).add(sectionId));
+        try {
+          const rollCall = await fetchSectionRollCall(sectionKey);
+          setSectionRollCalls((prev) => ({ ...prev, [sectionId]: rollCall }));
+        } finally {
+          setLoadingRollCalls((prev) => {
+            const next = new Set(prev);
+            next.delete(sectionId);
             return next;
           });
         }
@@ -2282,6 +2582,7 @@ export default () => {
                             {renderMinutesInfo(section, false)}
                             {renderSectionLinks(section)}
                             {renderSectionNotices(session, section.key)}
+                            {renderSectionRollCall(section)}
                             {/* Votings */}
                             {loadingVotings.has(section.id) ? (
                               <Box sx={{ py: 2, textAlign: "center" }}>
@@ -2918,6 +3219,7 @@ export default () => {
                                   {renderMinutesInfo(section, false)}
                                   {renderSectionLinks(section)}
                                   {renderSectionNotices(session, section.key)}
+                                  {renderSectionRollCall(section)}
                                   {loadingVotings.has(section.id) ? (
                                     <Box sx={{ py: 1, textAlign: "center" }}>
                                       <CircularProgress
