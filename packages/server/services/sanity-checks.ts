@@ -2,6 +2,7 @@ import type { Database } from "bun:sqlite";
 import {
   EXPECTED_SANITY_INDEXES,
   getAuxiliaryRepresentativeOrphanQuery,
+  getParliamentOversizedDatesQuery,
   SALIDB_LINKAGE_CHECKS,
   sanityQueries,
 } from "../database/sanity-queries";
@@ -330,21 +331,12 @@ export class SanityCheckService {
         "max_members",
         200,
       );
+      const checkExceptions = getExceptionsForCheck(
+        this.knownExceptions,
+        "Parliament size limit",
+      );
       const oversized = this.db
-        .query(
-          `SELECT s.date, COUNT(DISTINCT r.person_id) as mp_count
-           FROM Session s
-           JOIN Term t ON t.start_date <= s.date AND (t.end_date IS NULL OR t.end_date >= s.date)
-           JOIN Representative r ON r.person_id = t.person_id
-           WHERE NOT EXISTS (
-             SELECT 1 FROM TemporaryAbsence ta
-             WHERE ta.person_id = r.person_id
-               AND ta.start_date <= s.date
-               AND (ta.end_date IS NULL OR ta.end_date >= s.date)
-           )
-           GROUP BY s.date
-           HAVING mp_count > ${maxMembers}`,
-        )
+        .query(getParliamentOversizedDatesQuery(maxMembers))
         .all() as any[];
 
       checks.push({
@@ -356,6 +348,8 @@ export class SanityCheckService {
           oversized.length === 0
             ? `Parliament size always ≤${maxMembers}`
             : `${oversized.length} dates with >${maxMembers} MPs`,
+        knownExceptions:
+          checkExceptions.length > 0 ? checkExceptions : undefined,
       });
     } catch (error) {
       checks.push({
@@ -1277,6 +1271,10 @@ export class SanityCheckService {
       const mpsWithoutGroup = this.db
         .query(sanityQueries.activeMpWithoutGroup)
         .get() as any;
+      const checkExceptions = getExceptionsForCheck(
+        this.knownExceptions,
+        "Active MPs have group membership",
+      );
 
       checks.push({
         category: "Business Logic",
@@ -1287,6 +1285,8 @@ export class SanityCheckService {
           mpsWithoutGroup.c === 0
             ? "All active MPs have group memberships"
             : `${mpsWithoutGroup.c} active MP-date combinations without a group`,
+        knownExceptions:
+          checkExceptions.length > 0 ? checkExceptions : undefined,
       });
     } catch (error) {
       checks.push({
@@ -1308,6 +1308,10 @@ export class SanityCheckService {
       const mismatches = this.db
         .query(sanityQueries.activeGroupMemberMismatch)
         .get() as any;
+      const checkExceptions = getExceptionsForCheck(
+        this.knownExceptions,
+        "Group member count matches active MPs",
+      );
 
       checks.push({
         category: "Business Logic",
@@ -1319,6 +1323,8 @@ export class SanityCheckService {
           mismatches.c === 0
             ? "Counts match on all dates"
             : `${mismatches.c} dates with mismatched counts`,
+        knownExceptions:
+          checkExceptions.length > 0 ? checkExceptions : undefined,
       });
     } catch (error) {
       checks.push({
