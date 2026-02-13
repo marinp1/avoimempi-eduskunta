@@ -166,6 +166,8 @@ type Speech = {
   party_abbreviation?: string;
   speech_type?: string;
   content?: string;
+  start_time?: string;
+  end_time?: string;
 };
 
 type Voting = {
@@ -585,6 +587,13 @@ export default () => {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const formatSpeechTimeRange = (speech: Speech) => {
+    const start = formatTime(speech.start_time);
+    if (start === "-") return null;
+    const end = formatTime(speech.end_time);
+    return end !== "-" ? `${start} - ${end}` : start;
   };
 
   const formatDateTime = (dateTime?: string) => {
@@ -2342,91 +2351,104 @@ export default () => {
                                     })}
                                   </Typography>
                                 )}
-                                {speeches.map((speech) => (
-                                  <Box
-                                    key={speech.id}
-                                    sx={{
-                                      p: 1.5,
-                                      borderRadius: 1,
-                                      background: colors.backgroundSubtle,
-                                    }}
-                                  >
+                                {speeches.map((speech) => {
+                                  const speechTime = formatSpeechTimeRange(speech);
+                                  return (
                                     <Box
+                                      key={speech.id}
                                       sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1,
-                                        mb: speech.content ? 1 : 0,
+                                        p: 1.5,
+                                        borderRadius: 1,
+                                        background: colors.backgroundSubtle,
                                       }}
                                     >
-                                      <Chip
-                                        label={
-                                          speech.ordinal_number ||
-                                          speech.ordinal
-                                        }
-                                        size="small"
-                                        sx={{
-                                          background: `${colors.primaryLight}30`,
-                                          color: colors.primaryLight,
-                                          fontWeight: 600,
-                                          fontSize: "0.625rem",
-                                          height: 18,
-                                          minWidth: 24,
-                                        }}
-                                      />
-                                      <Typography
-                                        sx={{
-                                          fontWeight: 600,
-                                          fontSize: "0.8125rem",
-                                          flex: 1,
-                                        }}
-                                      >
-                                        {speech.first_name} {speech.last_name}
-                                      </Typography>
-                                      {speech.party_abbreviation && (
-                                        <Chip
-                                          label={speech.party_abbreviation}
-                                          size="small"
-                                          sx={{
-                                            fontSize: "0.625rem",
-                                            height: 18,
-                                          }}
-                                        />
-                                      )}
-                                      {speech.speech_type && (
-                                        <Typography
-                                          sx={{
-                                            fontSize: "0.6875rem",
-                                            color: colors.textTertiary,
-                                          }}
-                                        >
-                                          {speech.speech_type}
-                                        </Typography>
-                                      )}
-                                    </Box>
-                                    {speech.content && (
                                       <Box
                                         sx={{
-                                          p: 1.5,
-                                          borderRadius: 1,
-                                          borderLeft: `3px solid ${colors.primaryLight}`,
-                                          background: colors.backgroundDefault,
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: 1,
+                                          mb: speech.content ? 1 : 0,
                                         }}
                                       >
+                                        <Chip
+                                          label={
+                                            speech.ordinal_number ??
+                                            speech.ordinal
+                                          }
+                                          size="small"
+                                          sx={{
+                                            background: `${colors.primaryLight}30`,
+                                            color: colors.primaryLight,
+                                            fontWeight: 600,
+                                            fontSize: "0.625rem",
+                                            height: 18,
+                                            minWidth: 24,
+                                          }}
+                                        />
                                         <Typography
                                           sx={{
+                                            fontWeight: 600,
                                             fontSize: "0.8125rem",
-                                            color: colors.textPrimary,
-                                            whiteSpace: "pre-wrap",
-                                            lineHeight: 1.6,
+                                            flex: 1,
                                           }}
                                         >
-                                          {speech.content}
+                                          {speech.first_name} {speech.last_name}
                                         </Typography>
+                                        {speech.party_abbreviation && (
+                                          <Chip
+                                            label={speech.party_abbreviation}
+                                            size="small"
+                                            sx={{
+                                              fontSize: "0.625rem",
+                                              height: 18,
+                                            }}
+                                          />
+                                        )}
+                                        {speech.speech_type && (
+                                          <Typography
+                                            sx={{
+                                              fontSize: "0.6875rem",
+                                              color: colors.textTertiary,
+                                            }}
+                                          >
+                                            {speech.speech_type}
+                                          </Typography>
+                                        )}
+                                        {speechTime && (
+                                          <Typography
+                                            sx={{
+                                              fontSize: "0.6875rem",
+                                              color: colors.textTertiary,
+                                            }}
+                                          >
+                                            {speechTime}
+                                          </Typography>
+                                        )}
                                       </Box>
-                                    )}
-                                  </Box>
-                                ))}
+                                      {speech.content && (
+                                        <Box
+                                          sx={{
+                                            p: 1.5,
+                                            borderRadius: 1,
+                                            borderLeft: `3px solid ${colors.primaryLight}`,
+                                            background: colors.backgroundDefault,
+                                          }}
+                                        >
+                                          <Typography
+                                            sx={{
+                                              fontSize: "0.8125rem",
+                                              color: colors.textPrimary,
+                                              whiteSpace: "pre-wrap",
+                                              lineHeight: 1.6,
+                                            }}
+                                          >
+                                            {speech.content}
+                                          </Typography>
+                                        </Box>
+                                      )}
+                                    </Box>
+                                  );
+                                })}
                                 {/* Load more button */}
                                 {speechData &&
                                   speechData.page < speechData.totalPages && (
@@ -2882,75 +2904,89 @@ export default () => {
                                             })}
                                           </Typography>
                                         )}
-                                      {speeches.map((speech) => (
-                                        <Box
-                                          key={speech.id}
-                                          sx={{
-                                            p: 1.25,
-                                            borderRadius: 1,
-                                            background: "#fff",
-                                          }}
-                                        >
+                                      {speeches.map((speech) => {
+                                        const speechTime =
+                                          formatSpeechTimeRange(speech);
+                                        return (
                                           <Box
+                                            key={speech.id}
                                             sx={{
-                                              display: "flex",
-                                              alignItems: "center",
-                                              gap: 1,
-                                              mb: speech.content ? 0.75 : 0,
+                                              p: 1.25,
+                                              borderRadius: 1,
+                                              background: "#fff",
                                             }}
                                           >
-                                            <Chip
-                                              label={
-                                                speech.ordinal_number ||
-                                                speech.ordinal
-                                              }
-                                              size="small"
+                                            <Box
                                               sx={{
-                                                background: `${colors.primaryLight}30`,
-                                                color: colors.primaryLight,
-                                                fontWeight: 600,
-                                                fontSize: "0.625rem",
-                                                height: 18,
-                                                minWidth: 24,
-                                              }}
-                                            />
-                                            <Typography
-                                              sx={{
-                                                fontWeight: 600,
-                                                fontSize: "0.8125rem",
-                                                flex: 1,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                                mb: speech.content ? 0.75 : 0,
                                               }}
                                             >
-                                              {speech.first_name}{" "}
-                                              {speech.last_name}
-                                            </Typography>
-                                            {speech.party_abbreviation && (
                                               <Chip
                                                 label={
-                                                  speech.party_abbreviation
+                                                  speech.ordinal_number ??
+                                                  speech.ordinal
                                                 }
                                                 size="small"
                                                 sx={{
+                                                  background: `${colors.primaryLight}30`,
+                                                  color: colors.primaryLight,
+                                                  fontWeight: 600,
                                                   fontSize: "0.625rem",
                                                   height: 18,
+                                                  minWidth: 24,
                                                 }}
                                               />
+                                              <Typography
+                                                sx={{
+                                                  fontWeight: 600,
+                                                  fontSize: "0.8125rem",
+                                                  flex: 1,
+                                                }}
+                                              >
+                                                {speech.first_name}{" "}
+                                                {speech.last_name}
+                                              </Typography>
+                                              {speech.party_abbreviation && (
+                                                <Chip
+                                                  label={
+                                                    speech.party_abbreviation
+                                                  }
+                                                  size="small"
+                                                  sx={{
+                                                    fontSize: "0.625rem",
+                                                    height: 18,
+                                                  }}
+                                                />
+                                              )}
+                                              {speechTime && (
+                                                <Typography
+                                                  sx={{
+                                                    fontSize: "0.6875rem",
+                                                    color: colors.textTertiary,
+                                                  }}
+                                                >
+                                                  {speechTime}
+                                                </Typography>
+                                              )}
+                                            </Box>
+                                            {speech.content && (
+                                              <Typography
+                                                sx={{
+                                                  fontSize: "0.8125rem",
+                                                  color: colors.textPrimary,
+                                                  whiteSpace: "pre-wrap",
+                                                  lineHeight: 1.6,
+                                                }}
+                                              >
+                                                {speech.content}
+                                              </Typography>
                                             )}
                                           </Box>
-                                          {speech.content && (
-                                            <Typography
-                                              sx={{
-                                                fontSize: "0.8125rem",
-                                                color: colors.textPrimary,
-                                                whiteSpace: "pre-wrap",
-                                                lineHeight: 1.6,
-                                              }}
-                                            >
-                                              {speech.content}
-                                            </Typography>
-                                          )}
-                                        </Box>
-                                      ))}
+                                        );
+                                      })}
                                     </Box>
                                   ) : null}
                                 </Box>
