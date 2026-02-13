@@ -64,6 +64,132 @@ const mergeArrays = <T>(
     .filter((s) => !!s) as Exclude<T, undefined>[];
 };
 
+const toEpochDay = (date: string): number => {
+  return new Date(`${date}T00:00:00Z`).getTime();
+};
+
+const toIsoDate = (epochDay: number): string => {
+  return new Date(epochDay).toISOString().slice(0, 10);
+};
+
+type DateInterval = {
+  start_date: string;
+  end_date: string | null;
+};
+
+const mergeContinuousIntervals = (intervals: DateInterval[]): DateInterval[] => {
+  if (intervals.length === 0) return [];
+
+  const sorted = [...intervals].sort((a, b) => {
+    return toEpochDay(a.start_date) - toEpochDay(b.start_date);
+  });
+
+  const merged: DateInterval[] = [sorted[0]];
+
+  for (const current of sorted.slice(1)) {
+    const prev = merged[merged.length - 1];
+    if (prev.end_date === null) continue;
+
+    const prevEnd = toEpochDay(prev.end_date);
+    const currentStart = toEpochDay(current.start_date);
+    const mergesWithPrevious = currentStart <= prevEnd + 24 * 60 * 60 * 1000;
+
+    if (!mergesWithPrevious) {
+      merged.push(current);
+      continue;
+    }
+
+    if (current.end_date === null) {
+      prev.end_date = null;
+      continue;
+    }
+
+    const currentEnd = toEpochDay(current.end_date);
+    if (currentEnd > prevEnd) {
+      prev.end_date = current.end_date;
+    }
+  }
+
+  return merged;
+};
+
+const intersectTermRowsWithGroupMemberships = (
+  termRows: DatabaseTables.Term[],
+  groupMembershipRows: Array<{
+    start_date: string;
+    end_date: string | null;
+  }>,
+): DatabaseTables.Term[] => {
+  if (termRows.length === 0 || groupMembershipRows.length === 0) {
+    return termRows;
+  }
+
+  const refinedRows: DatabaseTables.Term[] = [];
+
+  for (const term of termRows) {
+    const termStart = toEpochDay(term.start_date);
+    const termEnd = term.end_date ? toEpochDay(term.end_date) : Number.POSITIVE_INFINITY;
+
+    const overlaps = groupMembershipRows.flatMap((group): DateInterval[] => {
+      const groupStart = toEpochDay(group.start_date);
+      const groupEnd = group.end_date
+        ? toEpochDay(group.end_date)
+        : Number.POSITIVE_INFINITY;
+      const overlapStart = Math.max(termStart, groupStart);
+      const overlapEnd = Math.min(termEnd, groupEnd);
+
+      if (overlapStart > overlapEnd) {
+        return [];
+      }
+
+      return [
+        {
+          start_date: toIsoDate(overlapStart),
+          end_date:
+            overlapEnd === Number.POSITIVE_INFINITY
+              ? null
+              : toIsoDate(overlapEnd),
+        },
+      ];
+    });
+
+    if (overlaps.length === 0) {
+      // Keep original term if no group overlap exists to avoid dropping historical terms.
+      refinedRows.push(term);
+      continue;
+    }
+
+    const mergedOverlaps = mergeContinuousIntervals(overlaps);
+    refinedRows.push(
+      ...mergedOverlaps.map((interval) => {
+        const startYear = parseYear(interval.start_date.substring(0, 4));
+        const endYear = interval.end_date
+          ? parseYear(interval.end_date.substring(0, 4))
+          : null;
+        return {
+          person_id: term.person_id,
+          start_date: interval.start_date,
+          end_date: interval.end_date,
+          start_year: startYear,
+          end_year: endYear,
+        };
+      }),
+    );
+  }
+
+  const deduped = new Map<string, DatabaseTables.Term>();
+  for (const row of refinedRows) {
+    const key = `${row.person_id}|${row.start_date}|${row.end_date ?? ""}`;
+    if (!deduped.has(key)) {
+      deduped.set(key, row);
+    }
+  }
+
+  return [...deduped.values()].sort((a, b) => {
+    return toEpochDay(a.start_date) - toEpochDay(b.start_date);
+  });
+};
+
 export default (db: Database) =>
   async (dataToImport: DataModel.Representative) => {
     const XmlDataFi = JSON.parse(dataToImport.XmlDataFi);
@@ -114,20 +240,6 @@ export default (db: Database) =>
         };
       });
 
-    const termRows: DatabaseTables.Term[] = mergeArrays(
-      XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi,
-    ).map((v) => {
-      const startDate = parseDate(v.AlkuPvm);
-      const endDate = parseDate(v.LoppuPvm);
-      return {
-        person_id: +dataToImport.personId,
-        start_date: startDate!,
-        end_date: endDate,
-        start_year: startDate ? parseYear(startDate.substring(0, 4)) : null,
-        end_year: endDate ? parseYear(endDate.substring(0, 4)) : null,
-      };
-    });
-
     type ParsedAbsence = {
       absenceRows: DatabaseTables.TemporaryAbsence[];
       joiningRows: DatabaseTables.PeopleJoiningParliament[];
@@ -174,7 +286,7 @@ export default (db: Database) =>
                     person_id: +dataToImport.personId,
                     description: cur.description,
                     replacement_person: cur.replacement_person,
-                    start_date: cur.end_date,
+                    start_date: cur.start_date,
                   },
                 ] satisfies DatabaseTables.PeopleJoiningParliament[],
               };
@@ -184,7 +296,7 @@ export default (db: Database) =>
               absenceRows: [
                 ...prev.absenceRows,
                 cur,
-              ] satisfies DatabaseTables.PeopleLeavingParliament[],
+              ] satisfies DatabaseTables.TemporaryAbsence[],
             };
           },
           {
@@ -287,6 +399,25 @@ export default (db: Database) =>
         end_date: parseDate(v.LoppuPvm),
       };
     });
+
+    const termRowsRaw: DatabaseTables.Term[] = mergeArrays(
+      XmlDataFi.Henkilo.Edustajatoimet.Edustajatoimi,
+    ).map((v) => {
+      const startDate = parseDate(v.AlkuPvm);
+      const endDate = parseDate(v.LoppuPvm);
+      return {
+        person_id: +dataToImport.personId,
+        start_date: startDate!,
+        end_date: endDate,
+        start_year: startDate ? parseYear(startDate.substring(0, 4)) : null,
+        end_year: endDate ? parseYear(endDate.substring(0, 4)) : null,
+      };
+    });
+
+    const termRows: DatabaseTables.Term[] = intersectTermRowsWithGroupMemberships(
+      termRowsRaw,
+      parliamentGroupMembershipRows,
+    );
 
     const parliamentGroupAssignmentRows: DatabaseTables.ParliamentGroupAssignment[] =
       [

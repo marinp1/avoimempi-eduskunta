@@ -271,25 +271,25 @@ const PARLIAMENT_2019_SOURCE_GAP_ROWS: AffectedRow[] = [
   {
     id: 175,
     label:
-      "Toimi Kankaanniemi (person_id=175): Term 2015-04-22..2023-04-04 stays active, but ParliamentaryGroupMembership has a gap 2019-04-17..2019-07-01.",
+      "Toimi Kankaanniemi (person_id=175): source periods are 2015-04-22..2019-04-16 and 2019-07-02..2023-04-04, but Term incorrectly keeps a continuous period 2015-04-22..2023-04-04.",
     sourceUrl: "https://avoindata.eduskunta.fi",
   },
   {
     id: 1107,
     label:
-      "Teuvo Hakkarainen (person_id=1107): TemporaryAbsence starts 2019-07-02 with replacement_person='Toimi Kankaanniemi /ps'.",
+      "Teuvo Hakkarainen (person_id=1107): TemporaryAbsence starts on 2019-07-02 with replacement_person='Toimi Kankaanniemi /ps' (return via substitute seat).",
     sourceUrl: "https://avoindata.eduskunta.fi",
   },
   {
     id: "2019-05-02..2019-06-28",
     label:
-      "Parliament size limit exceeds 200 on 21 session dates in this interval (201 active MPs).",
+      "Parliament size limit is exceeded on 21 session dates in this interval (201 active MPs) because Term keeps Toimi active during the gap period.",
     sourceUrl: "https://avoindata.eduskunta.fi",
   },
   {
     id: "2019-04-24",
     label:
-      "Same source-data gap also causes one active-MP/group-membership mismatch date with count still at 200.",
+      "The same source-data gap also causes one active-MP/group-membership mismatch day while total count remains 200.",
     sourceUrl: "https://avoindata.eduskunta.fi",
   },
 ];
@@ -317,27 +317,27 @@ const KNOWN_DATA_EXCEPTIONS: KnownDataException[] = [
     id: "PARLIAMENT-SIZE-2019-001",
     checkName: "Parliament size limit",
     description:
-      "Term/group-membership source window mismatch around spring-summer 2019 causes 201 active MPs on 21 dates",
+      "Toimi Kankaanniemi's 2019 membership gap is missing from Term, causing 201 active MPs on 21 dates",
     reason:
-      "Source data keeps person_id=175 (Toimi Kankaanniemi) active in Term before replacement window starts. Replacement context: Teuvo Hakkarainen's TemporaryAbsence with replacement_person='Toimi Kankaanniemi /ps' begins on 2019-07-02, but the preceding gap is still represented as active in source tables.",
+      "Source timeline indicates Toimi dropped out in 2019 elections and returned as a substitute on 2019-07-02, but Term does not include the 2019-04-17..2019-07-01 gap. As a result, Toimi is incorrectly counted as active before returning.",
     affectedRows: PARLIAMENT_2019_SOURCE_GAP_ROWS,
   },
   {
     id: "ACTIVE-MP-GROUP-GAP-2019-001",
     checkName: "Active MPs have group membership",
     description:
-      "One source-data gap causes active MP rows without an active parliamentary group membership",
+      "The same 2019 source-data gap produces active MP rows without active parliamentary group membership",
     reason:
-      "person_id=175 remains active in Term during 2019-04-17..2019-07-01 while ParliamentaryGroupMembership has no active row; replacement transition is only recorded from 2019-07-02.",
+      "person_id=175 remains active in Term during 2019-04-17..2019-07-01 while ParliamentaryGroupMembership has no active row before the 2019-07-02 substitute return.",
     affectedRows: PARLIAMENT_2019_SOURCE_GAP_ROWS,
   },
   {
     id: "GROUP-MEMBER-COUNT-GAP-2019-001",
     checkName: "Group member count matches active MPs",
     description:
-      "Same spring-summer 2019 source gap causes active-term count to exceed active-group count",
+      "The same 2019 gap makes the active-term count larger than the active-group count",
     reason:
-      "The same person/date window mismatch (person_id=175) causes date-level count mismatches between active MPs and active group memberships.",
+      "The missing gap for Toimi in Term causes day-level count mismatches between active MPs and active group memberships.",
     affectedRows: PARLIAMENT_2019_SOURCE_GAP_ROWS,
   },
 ];
