@@ -1,11 +1,11 @@
 // Status controller for public-facing data quality dashboard
 
+import { AdminStorageService } from "../database/admin-storage";
 import type { DatabaseConnection } from "../database/db";
 import {
   getStatusTableCountQuery,
   getStatusTableInfoQuery,
-  isStatusTableName,
-  STATUS_TABLES,
+  getStatusTableNamesQuery,
 } from "../database/status-queries";
 import {
   type SanityCheckResult,
@@ -25,12 +25,35 @@ export interface DataOverview {
   lastUpdated: string;
 }
 
+export interface SourceTableStatus {
+  tableName: string;
+  apiRowCount: number;
+  rawRows: number;
+  parsedRows: number;
+  rawPages: number;
+  parsedPages: number;
+  hasRawData: boolean;
+  hasParsedData: boolean;
+  rawLastUpdated: string | null;
+  parsedLastUpdated: string | null;
+  scrapeProgressPercent: number;
+}
+
+export interface SourceDataOverview {
+  tables: SourceTableStatus[];
+  totalTables: number;
+  tablesWithRawData: number;
+  tablesWithParsedData: number;
+  lastUpdated: string;
+}
+
 export class StatusController {
+  private adminStorageService: AdminStorageService;
   private sanityCheckService: SanityCheckService;
-  private cachedOverview: DataOverview | null = null;
   private cachedSanityChecks: SanityCheckResult | null = null;
 
   constructor(private db: DatabaseConnection) {
+    this.adminStorageService = new AdminStorageService();
     this.sanityCheckService = new SanityCheckService(this.database);
   }
 
@@ -41,7 +64,6 @@ export class StatusController {
 
   /** Clear cached results. Call after database rebuild. */
   invalidateCache(): void {
-    this.cachedOverview = null;
     this.cachedSanityChecks = null;
     this.sanityCheckService = new SanityCheckService(this.database);
   }
@@ -54,13 +76,10 @@ export class StatusController {
   }
 
   async getOverview(): Promise<DataOverview> {
-    if (this.cachedOverview) {
-      return this.cachedOverview;
-    }
-
+    const tableNames = this.getTableNames();
     const tableStatuses: TableStatus[] = [];
 
-    for (const tableName of STATUS_TABLES) {
+    for (const tableName of tableNames) {
       try {
         const stmt = this.database.prepare<{ count: number }, []>(
           getStatusTableCountQuery(tableName),
@@ -86,18 +105,42 @@ export class StatusController {
 
     const tablesWithData = tableStatuses.filter((t) => t.hasData).length;
 
-    this.cachedOverview = {
+    return {
       tables: tableStatuses,
-      totalTables: STATUS_TABLES.length,
+      totalTables: tableNames.length,
       tablesWithData,
       lastUpdated: new Date().toISOString(),
     };
+  }
 
-    return this.cachedOverview;
+  async getSourceDataStatus(): Promise<SourceDataOverview> {
+    const storageStatus = await this.adminStorageService.getStatus();
+    const tables = storageStatus.map((row) => ({
+      tableName: row.table_name,
+      apiRowCount: row.total_rows_in_api ?? 0,
+      rawRows: row.raw_estimated_rows,
+      parsedRows: row.parsed_estimated_rows,
+      rawPages: row.raw_page_count,
+      parsedPages: row.parsed_page_count,
+      hasRawData: row.has_raw_data,
+      hasParsedData: row.has_parsed_data,
+      rawLastUpdated: row.raw_last_updated,
+      parsedLastUpdated: row.parsed_last_updated,
+      scrapeProgressPercent: row.scrape_progress_percent ?? 0,
+    }));
+
+    return {
+      tables,
+      totalTables: tables.length,
+      tablesWithRawData: tables.filter((table) => table.hasRawData).length,
+      tablesWithParsedData: tables.filter((table) => table.hasParsedData)
+        .length,
+      lastUpdated: new Date().toISOString(),
+    };
   }
 
   async getTableDetails(tableName: string) {
-    if (!isStatusTableName(tableName)) {
+    if (!this.getTableNames().includes(tableName)) {
       throw new Error(`Invalid table name: ${tableName}`);
     }
 
@@ -125,5 +168,14 @@ export class StatusController {
       rowCount,
       columns,
     };
+  }
+
+  private getTableNames(): string[] {
+    const stmt = this.database.prepare<{ name: string }, []>(
+      getStatusTableNamesQuery(),
+    );
+    const rows = stmt.all();
+    stmt.finalize();
+    return rows.map((row) => row.name);
   }
 }

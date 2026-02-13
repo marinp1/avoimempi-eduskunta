@@ -132,10 +132,10 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
       expect(c).toBe(0);
     });
 
-    test("SessionSectionSpeech.party values are all lowercase", () => {
+    test("RollCallEntry.party values are all lowercase", () => {
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM SessionSectionSpeech
+          `SELECT COUNT(*) as c FROM RollCallEntry
            WHERE party IS NOT NULL
              AND party != LOWER(party)`,
         )
@@ -143,40 +143,37 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
       expect(c).toBe(0);
     });
 
-    test("Document.document_type_code has no lowercase variants", () => {
-      // KNOWN ISSUE: "Kk" (16 rows) should be "KK", "kkb" (1 row) is anomalous
-      // Note: document_type_codes use a specific convention (e.g. KK, HE, PeVL)
-      // so we check for known bad variants rather than enforcing all-caps
+    test("VaskiDocument.document_type uses expected lowercase values", () => {
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM Document
-           WHERE document_type_code IN ('Kk', 'kkb')`,
+          `SELECT COUNT(*) as c FROM VaskiDocument
+           WHERE document_type NOT IN ('pöytäkirja', 'nimenhuutoraportti')`,
         )
         .get() as any;
       expect(c).toBe(0);
     });
   });
 
-  // ─── SPEECH TYPE NORMALIZATION ────────────────────────────
+  // ─── ROLL CALL NORMALIZATION ──────────────────────────────
 
-  describe("SessionSectionSpeech.speech_type: formatting artifacts cleaned", () => {
-    test("no hyphenated word breaks in speech_type", () => {
+  describe("RollCallEntry name formatting", () => {
+    test("first_name and last_name are present", () => {
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM SessionSectionSpeech
-           WHERE speech_type LIKE '%-%'
-             AND speech_type NOT LIKE '%(nopeatahtinen puheenvuoro)%'`,
+          `SELECT COUNT(*) as c FROM RollCallEntry
+           WHERE first_name IS NULL OR TRIM(first_name) = ''
+              OR last_name IS NULL OR TRIM(last_name) = ''`,
         )
         .get() as any;
       expect(c).toBe(0);
     });
 
-    test("no leading/trailing whitespace in speech_type", () => {
+    test("no leading/trailing whitespace in names", () => {
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM SessionSectionSpeech
-           WHERE speech_type IS NOT NULL
-             AND (speech_type LIKE '( %' OR speech_type LIKE '% )')`,
+          `SELECT COUNT(*) as c FROM RollCallEntry
+           WHERE first_name != TRIM(first_name)
+              OR last_name != TRIM(last_name)`,
         )
         .get() as any;
       expect(c).toBe(0);
@@ -200,59 +197,39 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
     });
   });
 
-  // ─── DOCUMENT STATUS CONSISTENCY ──────────────────────────
+  // ─── ROLL CALL STATUS CONSISTENCY ─────────────────────────
 
-  describe("Document.status_text: human-readable values", () => {
-    test("no numeric status codes", () => {
-      // KNOWN ISSUE: status "5" (10,921 rows), "8" (139 rows), "1234" (2 rows)
-      // These should be mapped to their Finnish text equivalents
+  describe("RollCallReport.status: known values", () => {
+    test("status only contains known source codes", () => {
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM Document
-           WHERE status_text GLOB '[0-9]*'`,
+          `SELECT COUNT(*) as c FROM RollCallReport
+           WHERE status IS NOT NULL
+             AND status NOT IN ('5', '8')`,
         )
         .get() as any;
       expect(c).toBe(0);
     });
   });
 
-  // ─── AUTHOR ROLE NORMALIZATION ────────────────────────────
+  // ─── DOCUMENT SOURCE PATH NORMALIZATION ───────────────────
 
-  describe("DocumentActor.position_text: consistent formatting", () => {
-    test("no missing spaces after hyphens (kunta-ja vs kunta- ja)", () => {
-      // KNOWN ISSUE: "kunta-ja alueministeri" (4 rows) vs "kunta- ja alueministeri" (36 rows)
+  describe("Source path consistency", () => {
+    test("VaskiDocument.source_path is non-empty", () => {
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM DocumentActor
-           WHERE role_code = 'laatija'
-             AND position_text = 'kunta-ja alueministeri'`,
+          `SELECT COUNT(*) as c FROM VaskiDocument
+           WHERE source_path IS NULL OR TRIM(source_path) = ''`,
         )
         .get() as any;
       expect(c).toBe(0);
     });
 
-    test("author_role values start with lowercase", () => {
-      // KNOWN ISSUE: "Kulttuuri- ja asuntoministeri" (1 row) starts with uppercase
+    test("SpeechContent.source_path is non-empty", () => {
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM DocumentActor
-           WHERE role_code = 'laatija'
-             AND position_text IS NOT NULL
-             AND position_text != 'Valiokunta'
-             AND UNICODE(position_text) BETWEEN 65 AND 90`,
-        )
-        .get() as any;
-      expect(c).toBe(0);
-    });
-
-    test("no extra comma before 'ja' (urheilu-, ja vs urheilu- ja)", () => {
-      // KNOWN ISSUE: "liikunta-, urheilu-, ja nuorisoministeri" (1 row)
-      // vs "liikunta-, urheilu- ja nuorisoministeri" (16 rows)
-      const { c } = db
-        .query(
-          `SELECT COUNT(*) as c FROM DocumentActor
-           WHERE role_code = 'laatija'
-             AND position_text LIKE '%, ja %'`,
+          `SELECT COUNT(*) as c FROM SpeechContent
+           WHERE source_path IS NULL OR TRIM(source_path) = ''`,
         )
         .get() as any;
       expect(c).toBe(0);
@@ -267,6 +244,26 @@ describe.skipIf(!DB_EXISTS)("Data quality", () => {
       const colNames = cols.map((c: any) => c.name);
       expect(colNames).toContain("group_abbreviation");
       expect(colNames).not.toContain("group_abbrviation");
+    });
+
+    test("legacy document tables are not present", () => {
+      const tables = db
+        .query("SELECT name FROM sqlite_master WHERE type='table'")
+        .all() as Array<{ name: string }>;
+      const tableNames = new Set(tables.map((table) => table.name));
+
+      const legacyTables = [
+        "SessionSectionSpeech",
+        "Document",
+        "DocumentActor",
+        "DocumentSubject",
+        "DocumentRelation",
+        "SessionMinutesItem",
+      ];
+
+      for (const legacyTable of legacyTables) {
+        expect(tableNames.has(legacyTable)).toBe(false);
+      }
     });
   });
 });

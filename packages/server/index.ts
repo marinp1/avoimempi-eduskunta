@@ -57,6 +57,14 @@ const server = Bun.serve<{
               });
             },
           },
+          "/api/status/source-data": {
+            GET: async () => {
+              const sourceData = await statusController.getSourceDataStatus();
+              return new Response(JSON.stringify(sourceData), {
+                headers: { "Content-Type": "application/json" },
+              });
+            },
+          },
         }
       : {}),
     "/api/composition/:date": {

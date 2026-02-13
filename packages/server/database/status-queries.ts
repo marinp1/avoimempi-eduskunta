@@ -1,41 +1,29 @@
 import { sql } from "./queries";
 
-export const STATUS_TABLES = [
-  "Representative",
-  "Term",
-  "Session",
-  "Agenda",
-  "Section",
-  "Voting",
-  "Vote",
-  "Speech",
-  "SectionDocumentLink",
-  "SessionNotice",
-  "SaliDBDocumentReference",
-  "ParliamentaryGroup",
-  "ParliamentaryGroupMembership",
-  "Committee",
-  "CommitteeMembership",
-  "GovernmentMembership",
-  "TrustPosition",
-  "District",
-  "RepresentativeDistrict",
-] as const;
+const INTERNAL_STATUS_TABLES = ["_bun_migrations", "_migration_info"] as const;
 
-export type StatusTableName = (typeof STATUS_TABLES)[number];
-
-const statusTableNameSet = new Set<string>(STATUS_TABLES);
-
-export function isStatusTableName(
-  tableName: string,
-): tableName is StatusTableName {
-  return statusTableNameSet.has(tableName);
+function escapeSqliteIdentifier(identifier: string): string {
+  return identifier.replaceAll('"', '""');
 }
 
-export function getStatusTableCountQuery(tableName: StatusTableName): string {
-  return sql`SELECT COUNT(*) as count FROM "${tableName}"`;
+export function getStatusTableNamesQuery(): string {
+  const internalTableList = INTERNAL_STATUS_TABLES.map((tableName) => {
+    const escaped = tableName.replaceAll("'", "''");
+    return `'${escaped}'`;
+  }).join(", ");
+
+  return sql`SELECT name
+      FROM sqlite_master
+      WHERE type = 'table'
+        AND name NOT LIKE 'sqlite_%'
+        AND name NOT IN (${internalTableList})
+      ORDER BY name`;
 }
 
-export function getStatusTableInfoQuery(tableName: StatusTableName): string {
-  return sql`PRAGMA table_info("${tableName}")`;
+export function getStatusTableCountQuery(tableName: string): string {
+  return sql`SELECT COUNT(*) as count FROM "${escapeSqliteIdentifier(tableName)}"`;
+}
+
+export function getStatusTableInfoQuery(tableName: string): string {
+  return sql`PRAGMA table_info("${escapeSqliteIdentifier(tableName)}")`;
 }

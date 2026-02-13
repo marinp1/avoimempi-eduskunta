@@ -4,7 +4,6 @@ import {
   AUXILIARY_REF_TABLES,
   getAuxiliaryRepresentativeOrphanQuery,
   getRowCountQuery,
-  KNOWN_EXCEPTION_QUERIES,
   ROW_COUNT_TABLES,
   SALIDB_LINKAGE_CHECKS,
   sanityQueries,
@@ -74,13 +73,5 @@ describe("Sanity query centralization", () => {
 
       expect(typeof row.c).toBe("number");
     }
-  });
-
-  test("known exception query executes", () => {
-    const stmt = db.prepare(KNOWN_EXCEPTION_QUERIES.mismatchedVotings);
-    const rows = stmt.all() as any[];
-    stmt.finalize();
-
-    expect(Array.isArray(rows)).toBe(true);
   });
 });

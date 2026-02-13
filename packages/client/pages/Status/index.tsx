@@ -41,6 +41,28 @@ interface DataOverview {
   lastUpdated: string;
 }
 
+interface SourceTableStatus {
+  tableName: string;
+  apiRowCount: number;
+  rawRows: number;
+  parsedRows: number;
+  rawPages: number;
+  parsedPages: number;
+  hasRawData: boolean;
+  hasParsedData: boolean;
+  rawLastUpdated: string | null;
+  parsedLastUpdated: string | null;
+  scrapeProgressPercent: number;
+}
+
+interface SourceDataOverview {
+  tables: SourceTableStatus[];
+  totalTables: number;
+  tablesWithRawData: number;
+  tablesWithParsedData: number;
+  lastUpdated: string;
+}
+
 interface AffectedRow {
   id: number;
   label: string;
@@ -63,6 +85,9 @@ interface SanityCheck {
   details?: string;
   errorMessage?: string;
   knownExceptions?: KnownDataException[];
+  constraintId?: string;
+  queryKeys?: string[];
+  queryReferences?: string[];
 }
 
 interface SanityCheckResult {
@@ -81,11 +106,15 @@ export default function Status() {
   const [sanityChecks, setSanityChecks] = useState<SanityCheckResult | null>(
     null,
   );
+  const [sourceData, setSourceData] = useState<SourceDataOverview | null>(null);
   const [loadingSanityChecks, setLoadingSanityChecks] = useState(false);
+  const [loadingSourceData, setLoadingSourceData] = useState(false);
+  const [sourceDataError, setSourceDataError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOverview();
     fetchSanityChecks();
+    fetchSourceDataStatus();
   }, []);
 
   const fetchOverview = async () => {
@@ -122,6 +151,26 @@ export default function Status() {
     }
   };
 
+  const fetchSourceDataStatus = async () => {
+    try {
+      setLoadingSourceData(true);
+      setSourceDataError(null);
+      const response = await fetch("/api/status/source-data");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setSourceData(data);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch source status";
+      setSourceDataError(message);
+      console.error("Error fetching source data status:", err);
+    } finally {
+      setLoadingSourceData(false);
+    }
+  };
+
   const getStatusColor = (hasData: boolean) => {
     return hasData ? "success" : "warning";
   };
@@ -138,41 +187,14 @@ export default function Status() {
     return new Intl.NumberFormat("fi-FI").format(num);
   };
 
-  const getCompletenessPercentage = () => {
-    if (!overview) return 0;
-    return Math.round((overview.tablesWithData / overview.totalTables) * 100);
+  const formatDateTime = (value: string | null) => {
+    if (!value) return "-";
+    return new Date(value).toLocaleString("fi-FI");
   };
 
-  const getCategoryTables = (category: string): TableStatus[] => {
-    if (!overview) return [];
-
-    const categories: Record<string, string[]> = {
-      Kansanedustajat: [
-        "Representative",
-        "Term",
-        "District",
-        "RepresentativeDistrict",
-      ],
-      "Istunnot ja äänestykset": [
-        "Session",
-        "Agenda",
-        "Section",
-        "Voting",
-        "Vote",
-      ],
-      Puheenvuorot: ["Speech", "VaskiMinutesSpeech"],
-      "Ryhmät ja valiokunt": [
-        "ParliamentaryGroup",
-        "ParliamentaryGroupMembership",
-        "Committee",
-        "CommitteeMembership",
-      ],
-      "Tehtävät ja virat": ["GovernmentMembership", "TrustPosition"],
-      Asiakirjat: ["VaskiDocument", "VaskiSubject", "VaskiRelationship"],
-    };
-
-    const tableNames = categories[category] || [];
-    return overview.tables.filter((t) => tableNames.includes(t.tableName));
+  const getCompletenessPercentage = () => {
+    if (!overview || overview.totalTables === 0) return 0;
+    return Math.round((overview.tablesWithData / overview.totalTables) * 100);
   };
 
   if (loading) {
@@ -203,6 +225,10 @@ export default function Status() {
   }
 
   const completeness = getCompletenessPercentage();
+  const totalDatabaseRows = overview.tables.reduce(
+    (sum, table) => sum + table.rowCount,
+    0,
+  );
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
@@ -265,73 +291,215 @@ export default function Status() {
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card>
             <CardContent>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Viimeksi päivitetty
-              </Typography>
-              <Typography variant="body2">
-                {new Date(overview.lastUpdated).toLocaleString("fi-FI")}
+              <Box display="flex" alignItems="center" mb={1}>
+                <AssessmentIcon color="secondary" sx={{ mr: 1 }} />
+                <Typography variant="h6">{formatNumber(totalDatabaseRows)}</Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Rivejä yhteensä
               </Typography>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Data Tables by Category */}
-      {[
-        "Kansanedustajat",
-        "Istunnot ja äänestykset",
-        "Puheenvuorot",
-        "Ryhmät ja valiokunt",
-        "Tehtävät ja virat",
-        "Asiakirjat",
-      ].map((category) => {
-        const tables = getCategoryTables(category);
-        if (tables.length === 0) return null;
+      {/* Database table row counts */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h5" gutterBottom>
+          Tietokantataulut
+        </Typography>
+        <Typography variant="body2" color="text.secondary" paragraph>
+          Rivimäärä jokaisessa tietokannan taulussa
+        </Typography>
+        <TableContainer component={Paper}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Taulu</TableCell>
+                <TableCell align="right">Rivimäärä</TableCell>
+                <TableCell align="center">Tila</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {overview.tables.map((table) => (
+                <TableRow key={table.tableName}>
+                  <TableCell>
+                    <Typography variant="body2" fontFamily="monospace">
+                      {table.tableName}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="right">
+                    <Typography variant="body2" fontWeight="medium">
+                      {formatNumber(table.rowCount)}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Chip
+                      icon={getStatusIcon(table.hasData)}
+                      label={table.hasData ? "OK" : "Tyhjä"}
+                      size="small"
+                      color={getStatusColor(table.hasData)}
+                      variant="outlined"
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          display="block"
+          mt={1}
+        >
+          Viimeksi päivitetty: {formatDateTime(overview.lastUpdated)}
+        </Typography>
+      </Box>
 
-        return (
-          <Box key={category} sx={{ mb: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              {category}
-            </Typography>
+      {/* Source data status */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h5" gutterBottom>
+          Lähdedatan tila
+        </Typography>
+        <Typography variant="body2" color="text.secondary" paragraph>
+          Raw- ja parsed-vaiheiden eteneminen sekä API-rivimäärät tauluittain
+        </Typography>
+
+        {loadingSourceData ? (
+          <Box display="flex" justifyContent="center" my={2}>
+            <CircularProgress />
+          </Box>
+        ) : sourceData ? (
+          <>
+            <Grid container spacing={3} sx={{ mb: 2 }}>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Card>
+                  <CardContent>
+                    <Box display="flex" alignItems="center" mb={1}>
+                      <StorageIcon color="primary" sx={{ mr: 1 }} />
+                      <Typography variant="h6">
+                        {sourceData.totalTables}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Lähdetauluja
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Card>
+                  <CardContent>
+                    <Box display="flex" alignItems="center" mb={1}>
+                      <CheckCircleIcon color="info" sx={{ mr: 1 }} />
+                      <Typography variant="h6">
+                        {sourceData.tablesWithRawData}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Raw-dataa
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Card>
+                  <CardContent>
+                    <Box display="flex" alignItems="center" mb={1}>
+                      <CheckCircleIcon color="success" sx={{ mr: 1 }} />
+                      <Typography variant="h6">
+                        {sourceData.tablesWithParsedData}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Parsed-dataa
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Viimeksi päivitetty
+                    </Typography>
+                    <Typography variant="body2">
+                      {formatDateTime(sourceData.lastUpdated)}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+
             <TableContainer component={Paper}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>Taulu</TableCell>
-                    <TableCell align="right">Rivimäärä</TableCell>
                     <TableCell align="center">Tila</TableCell>
+                    <TableCell align="right">API</TableCell>
+                    <TableCell align="right">Raw</TableCell>
+                    <TableCell align="right">Parsed</TableCell>
+                    <TableCell align="right">Scrape %</TableCell>
+                    <TableCell>Raw päivitetty</TableCell>
+                    <TableCell>Parsed päivitetty</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {tables.map((table) => (
+                  {sourceData.tables.map((table) => (
                     <TableRow key={table.tableName}>
                       <TableCell>
                         <Typography variant="body2" fontFamily="monospace">
                           {table.tableName}
                         </Typography>
                       </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2" fontWeight="medium">
-                          {formatNumber(table.rowCount)}
-                        </Typography>
-                      </TableCell>
                       <TableCell align="center">
                         <Chip
-                          icon={getStatusIcon(table.hasData)}
-                          label={table.hasData ? "OK" : "Tyhjä"}
+                          label={
+                            table.hasParsedData
+                              ? "Parsed"
+                              : table.hasRawData
+                                ? "Raw"
+                                : "Tyhjä"
+                          }
                           size="small"
-                          color={getStatusColor(table.hasData)}
+                          color={
+                            table.hasParsedData
+                              ? "success"
+                              : table.hasRawData
+                                ? "info"
+                                : "warning"
+                          }
                           variant="outlined"
                         />
                       </TableCell>
+                      <TableCell align="right">
+                        {formatNumber(table.apiRowCount)}
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatNumber(table.rawRows)} ({table.rawPages} s.)
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatNumber(table.parsedRows)} ({table.parsedPages} s.)
+                      </TableCell>
+                      <TableCell align="right">
+                        {table.scrapeProgressPercent.toFixed(1)}%
+                      </TableCell>
+                      <TableCell>{formatDateTime(table.rawLastUpdated)}</TableCell>
+                      <TableCell>{formatDateTime(table.parsedLastUpdated)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
-          </Box>
-        );
-      })}
+          </>
+        ) : sourceDataError ? (
+          <Alert severity="warning">{sourceDataError}</Alert>
+        ) : (
+          <Alert severity="info">Lähdedatan tilaa ei ole saatavilla.</Alert>
+        )}
+      </Box>
 
       {/* Sanity Checks Section */}
       {loadingSanityChecks ? (
@@ -524,6 +692,31 @@ export default function Status() {
                                       >
                                         {check.details}
                                       </Typography>
+                                    )}
+                                    {(check.constraintId ||
+                                      check.queryKeys?.length) && (
+                                      <Box sx={{ mt: 0.5 }}>
+                                        {check.constraintId && (
+                                          <Typography
+                                            variant="caption"
+                                            display="block"
+                                            color="text.secondary"
+                                          >
+                                            Constraint: {check.constraintId}
+                                          </Typography>
+                                        )}
+                                        {check.queryKeys &&
+                                          check.queryKeys.length > 0 && (
+                                            <Typography
+                                              variant="caption"
+                                              display="block"
+                                              color="text.secondary"
+                                            >
+                                              Query keys:{" "}
+                                              {check.queryKeys.join(", ")}
+                                            </Typography>
+                                          )}
+                                      </Box>
                                     )}
                                     {hasExceptions &&
                                       check.knownExceptions!.map((exc) => (

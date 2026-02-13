@@ -3,8 +3,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import {
   getStatusTableCountQuery,
   getStatusTableInfoQuery,
-  isStatusTableName,
-  STATUS_TABLES,
+  getStatusTableNamesQuery,
 } from "../database/status-queries";
 import { createTestDb, seedFullDataset } from "./helpers/setup-db";
 
@@ -20,8 +19,25 @@ afterAll(() => {
 });
 
 describe("status query helpers", () => {
-  test("all status table names exist in schema and count query executes", () => {
-    for (const tableName of STATUS_TABLES) {
+  test("table name query returns user tables", () => {
+    const stmt = db.prepare<{ name: string }, []>(getStatusTableNamesQuery());
+    const rows = stmt.all();
+    stmt.finalize();
+
+    const tableNames = rows.map((row) => row.name);
+    expect(tableNames).toContain("Representative");
+    expect(tableNames).toContain("VaskiDocument");
+    expect(tableNames).not.toContain("_bun_migrations");
+    expect(tableNames).not.toContain("_migration_info");
+  });
+
+  test("count query executes for all discovered status tables", () => {
+    const tableNames = db
+      .prepare<{ name: string }, []>(getStatusTableNamesQuery())
+      .all()
+      .map((row) => row.name);
+
+    for (const tableName of tableNames) {
       const stmt = db.prepare<{ count: number }, []>(
         getStatusTableCountQuery(tableName),
       );
@@ -32,8 +48,13 @@ describe("status query helpers", () => {
     }
   });
 
-  test("table info query executes for each status table", () => {
-    for (const tableName of STATUS_TABLES) {
+  test("table info query executes for all discovered status tables", () => {
+    const tableNames = db
+      .prepare<{ name: string }, []>(getStatusTableNamesQuery())
+      .all()
+      .map((row) => row.name);
+
+    for (const tableName of tableNames) {
       const stmt = db.prepare<{ name: string; type: string }, []>(
         getStatusTableInfoQuery(tableName),
       );
@@ -45,9 +66,8 @@ describe("status query helpers", () => {
     }
   });
 
-  test("type guard validates known and unknown table names", () => {
-    expect(isStatusTableName("DocumentSubject")).toBe(true);
-    expect(isStatusTableName("VaskiSubject")).toBe(false);
-    expect(isStatusTableName("NotATable")).toBe(false);
+  test("identifier escaping protects generated table queries", () => {
+    expect(getStatusTableCountQuery('A"B')).toContain('"A""B"');
+    expect(getStatusTableInfoQuery('A"B')).toContain('"A""B"');
   });
 });

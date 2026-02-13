@@ -104,14 +104,6 @@ export const SALIDB_LINKAGE_CHECKS = [
   },
 ] as const;
 
-export const KNOWN_EXCEPTION_QUERIES = {
-  mismatchedVotings: sql`SELECT v.id, v.number, v.session_key, v.result_url
-         FROM Voting v
-         JOIN Vote vo ON v.id = vo.voting_id
-         GROUP BY v.id
-         HAVING COUNT(vo.id) = v.n_total - 1`,
-} as const;
-
 export const sanityQueries = {
   tableNames: sql`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`,
   personIdDuplicates: sql`SELECT COUNT(*) as dupes FROM (

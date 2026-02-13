@@ -1,18 +1,20 @@
 import type { Database } from "bun:sqlite";
 import {
   EXPECTED_SANITY_INDEXES,
-  EXPECTED_SANITY_TABLES,
   getAuxiliaryRepresentativeOrphanQuery,
-  getRowCountQuery,
-  type ROW_COUNT_TABLES,
   SALIDB_LINKAGE_CHECKS,
   sanityQueries,
 } from "../database/sanity-queries";
 import {
   buildKnownDataExceptions,
+  getExceptionIdSetForCheck,
   getExceptionsForCheck,
   type KnownDataException,
 } from "./known-data-exceptions";
+import {
+  getSanityConstraintDefinitionsByName,
+  getSanityConstraintDefinitionSourcePath,
+} from "./sanity-constraint-definitions";
 
 export interface SanityCheck {
   category: string;
@@ -22,6 +24,10 @@ export interface SanityCheck {
   details?: string;
   errorMessage?: string;
   knownExceptions?: KnownDataException[];
+  constraintId?: string;
+  queryKeys?: string[];
+  queryReferences?: string[];
+  definitionSourcePath?: string;
 }
 
 export interface SanityCheckResult {
@@ -35,6 +41,7 @@ export interface SanityCheckResult {
 
 export class SanityCheckService {
   private knownExceptions: KnownDataException[];
+  private constraintDefinitionsByName = getSanityConstraintDefinitionsByName();
 
   constructor(private db: Database) {
     this.knownExceptions = buildKnownDataExceptions(db);
@@ -44,8 +51,6 @@ export class SanityCheckService {
     const checks: SanityCheck[] = [];
 
     // Run all check categories
-    checks.push(...this.checkTableExistence());
-    checks.push(...this.checkRowCounts());
     checks.push(...this.checkPersonUniqueness());
     checks.push(...this.checkSessionStructure());
     checks.push(...this.checkSectionStructure());
@@ -71,9 +76,13 @@ export class SanityCheckService {
     checks.push(...this.checkActiveGroupMembersCount());
     checks.push(...this.checkSaliDbLinkage());
 
-    const passedChecks = checks.filter((c) => c.passed).length;
-    const failedChecks = checks.filter((c) => !c.passed).length;
-    const knownExceptionCount = checks.filter(
+    const checksWithDefinitions = checks.map((check) =>
+      this.withConstraintDefinition(check),
+    );
+
+    const passedChecks = checksWithDefinitions.filter((c) => c.passed).length;
+    const failedChecks = checksWithDefinitions.filter((c) => !c.passed).length;
+    const knownExceptionCount = checksWithDefinitions.filter(
       (c) => c.knownExceptions && c.knownExceptions.length > 0,
     ).length;
 
@@ -82,125 +91,41 @@ export class SanityCheckService {
       passedChecks,
       failedChecks,
       knownExceptionCount,
-      checks,
+      checks: checksWithDefinitions,
       lastRun: new Date().toISOString(),
     };
   }
 
-  private checkTableExistence(): SanityCheck[] {
-    const checks: SanityCheck[] = [];
+  private withConstraintDefinition(check: SanityCheck): SanityCheck {
+    const definition = this.constraintDefinitionsByName.get(check.name);
+    if (!definition) return check;
 
-    try {
-      const tables = this.db.query(sanityQueries.tableNames).all() as {
-        name: string;
-      }[];
-      const tableNames = tables.map((t) => t.name);
-
-      const missingTables = EXPECTED_SANITY_TABLES.filter(
-        (t) => !tableNames.includes(t),
-      );
-
-      checks.push({
-        category: "Schema",
-        name: "Core tables exist",
-        description: "All expected database tables are present",
-        passed: missingTables.length === 0,
-        details:
-          missingTables.length > 0
-            ? `Missing: ${missingTables.join(", ")}`
-            : `All ${EXPECTED_SANITY_TABLES.length} core tables present`,
-      });
-    } catch (error) {
-      checks.push({
-        category: "Schema",
-        name: "Core tables exist",
-        description: "All expected database tables are present",
-        passed: false,
-        errorMessage: String(error),
-      });
-    }
-
-    return checks;
+    return {
+      ...check,
+      category: definition.category,
+      description: definition.description,
+      constraintId: definition.id,
+      queryKeys: definition.queryKeys.length
+        ? [...definition.queryKeys]
+        : undefined,
+      queryReferences: definition.queryRefs.length
+        ? [...definition.queryRefs]
+        : undefined,
+      definitionSourcePath: getSanityConstraintDefinitionSourcePath(),
+    };
   }
 
-  private checkRowCounts(): SanityCheck[] {
-    const checks: SanityCheck[] = [];
-
-    const countTests: {
-      table: (typeof ROW_COUNT_TABLES)[number];
-      name: string;
-      description: string;
-      minCount: number;
-    }[] = [
-      {
-        table: "Representative",
-        name: "Representative count",
-        description: "Should have >1000 MPs historically",
-        minCount: 1000,
-      },
-      {
-        table: "Session",
-        name: "Session count",
-        description: "Should have >100 sessions",
-        minCount: 100,
-      },
-      {
-        table: "Voting",
-        name: "Voting count",
-        description: "Should have >1000 votings",
-        minCount: 1000,
-      },
-      {
-        table: "Vote",
-        name: "Vote count",
-        description: "Should have >100,000 individual votes",
-        minCount: 100000,
-      },
-      {
-        table: "Section",
-        name: "Section count",
-        description: "Should have >1000 sections",
-        minCount: 1000,
-      },
-      {
-        table: "Speech",
-        name: "Speech count",
-        description: "Should have >10,000 speeches",
-        minCount: 10000,
-      },
-      {
-        table: "Term",
-        name: "Term count",
-        description: "Should have >1000 terms",
-        minCount: 1000,
-      },
-    ];
-
-    for (const test of countTests) {
-      try {
-        const result = this.db.query(getRowCountQuery(test.table)).get() as any;
-        const count = result?.c ?? 0;
-        const passed = count > test.minCount;
-
-        checks.push({
-          category: "Data Volume",
-          name: test.name,
-          description: test.description,
-          passed,
-          details: `Count: ${count.toLocaleString()}`,
-        });
-      } catch (error) {
-        checks.push({
-          category: "Data Volume",
-          name: test.name,
-          description: test.description,
-          passed: false,
-          errorMessage: String(error),
-        });
-      }
+  private getConstraintNumberParam(
+    checkName: string,
+    paramName: string,
+    fallback: number,
+  ): number {
+    const definition = this.constraintDefinitionsByName.get(checkName);
+    const value = definition?.params?.[paramName];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
     }
-
-    return checks;
+    return fallback;
   }
 
   private checkPersonUniqueness(): SanityCheck[] {
@@ -400,8 +325,26 @@ export class SanityCheckService {
     const checks: SanityCheck[] = [];
 
     try {
+      const maxMembers = this.getConstraintNumberParam(
+        "Parliament size limit",
+        "max_members",
+        200,
+      );
       const oversized = this.db
-        .query(sanityQueries.parliamentOversizedDates)
+        .query(
+          `SELECT s.date, COUNT(DISTINCT r.person_id) as mp_count
+           FROM Session s
+           JOIN Term t ON t.start_date <= s.date AND (t.end_date IS NULL OR t.end_date >= s.date)
+           JOIN Representative r ON r.person_id = t.person_id
+           WHERE NOT EXISTS (
+             SELECT 1 FROM TemporaryAbsence ta
+             WHERE ta.person_id = r.person_id
+               AND ta.start_date <= s.date
+               AND (ta.end_date IS NULL OR ta.end_date >= s.date)
+           )
+           GROUP BY s.date
+           HAVING mp_count > ${maxMembers}`,
+        )
         .all() as any[];
 
       checks.push({
@@ -411,8 +354,8 @@ export class SanityCheckService {
         passed: oversized.length === 0,
         details:
           oversized.length === 0
-            ? "Parliament size always ≤200"
-            : `${oversized.length} dates with >200 MPs`,
+            ? `Parliament size always ≤${maxMembers}`
+            : `${oversized.length} dates with >${maxMembers} MPs`,
       });
     } catch (error) {
       checks.push({
@@ -431,8 +374,13 @@ export class SanityCheckService {
     const checks: SanityCheck[] = [];
 
     try {
+      const maxTotal = this.getConstraintNumberParam(
+        "Voting total ≤200",
+        "max_total",
+        200,
+      );
       const oversized = this.db
-        .query(sanityQueries.votingTotalOver200)
+        .query(`SELECT COUNT(*) as c FROM Voting WHERE n_total > ${maxTotal}`)
         .get() as any;
 
       checks.push({
@@ -442,8 +390,8 @@ export class SanityCheckService {
         passed: oversized.c === 0,
         details:
           oversized.c === 0
-            ? "All vote totals ≤200"
-            : `${oversized.c} votings with >200 votes`,
+            ? `All vote totals ≤${maxTotal}`
+            : `${oversized.c} votings with >${maxTotal} votes`,
       });
     } catch (error) {
       checks.push({
@@ -489,11 +437,16 @@ export class SanityCheckService {
         this.knownExceptions,
         "Individual vote count matches",
       );
-      const knownIds = new Set(
-        checkExceptions.flatMap((e) => e.affectedRows.map((r) => r.id)),
+      const knownIds = getExceptionIdSetForCheck(
+        this.knownExceptions,
+        "Individual vote count matches",
       );
-      const unexplained = mismatchedVotings.filter((v) => !knownIds.has(v.id));
-      const explained = mismatchedVotings.filter((v) => knownIds.has(v.id));
+      const unexplained = mismatchedVotings.filter(
+        (v) => !knownIds.has(String(v.id)),
+      );
+      const explained = mismatchedVotings.filter((v) =>
+        knownIds.has(String(v.id)),
+      );
 
       const allExplained = unexplained.length === 0 && explained.length > 0;
 
@@ -968,11 +921,16 @@ export class SanityCheckService {
         this.knownExceptions,
         "Vote aggregation per type",
       );
-      const knownIds = new Set(
-        checkExceptions.flatMap((e) => e.affectedRows.map((r) => r.id)),
+      const knownIds = getExceptionIdSetForCheck(
+        this.knownExceptions,
+        "Vote aggregation per type",
       );
-      const unexplained = mismatchedVotings.filter((v) => !knownIds.has(v.id));
-      const explained = mismatchedVotings.filter((v) => knownIds.has(v.id));
+      const unexplained = mismatchedVotings.filter(
+        (v) => !knownIds.has(String(v.id)),
+      );
+      const explained = mismatchedVotings.filter((v) =>
+        knownIds.has(String(v.id)),
+      );
 
       const allExplained = unexplained.length === 0 && explained.length > 0;
 
@@ -1254,7 +1212,17 @@ export class SanityCheckService {
     const checks: SanityCheck[] = [];
 
     try {
-      const tooOld = this.db.query(sanityQueries.sessionTooOld).get() as any;
+      const minYear = this.getConstraintNumberParam(
+        "Session dates after 1907",
+        "min_year",
+        1907,
+      );
+      const tooOld = this.db
+        .query(
+          `SELECT COUNT(*) as c FROM Session
+           WHERE date IS NOT NULL AND date < '${Math.trunc(minYear)}-01-01'`,
+        )
+        .get() as any;
 
       checks.push({
         category: "Business Logic",
@@ -1263,8 +1231,8 @@ export class SanityCheckService {
         passed: tooOld.c === 0,
         details:
           tooOld.c === 0
-            ? "All session dates after 1907"
-            : `${tooOld.c} sessions before 1907`,
+            ? `All session dates after ${Math.trunc(minYear)}`
+            : `${tooOld.c} sessions before ${Math.trunc(minYear)}`,
       });
     } catch (error) {
       checks.push({
