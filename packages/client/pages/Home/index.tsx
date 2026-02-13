@@ -52,6 +52,10 @@ type Section = {
   vaski_title?: string | null;
   vaski_summary?: string | null;
   vaski_document_type_name?: string | null;
+  minutes_item_number?: string | null;
+  minutes_related_document_identifier?: string | null;
+  minutes_related_document_type?: string | null;
+  minutes_content_text?: string | null;
 };
 
 type Speech = {
@@ -579,6 +583,29 @@ const Home = () => {
                             {section.identifier}
                           </Typography>
                         )}
+                        {(section.minutes_item_number ||
+                          section.minutes_related_document_identifier) && (
+                          <Typography
+                            sx={{
+                              fontSize: "0.75rem",
+                              color: colors.textSecondary,
+                            }}
+                          >
+                            {[section.minutes_item_number, section.minutes_related_document_identifier]
+                              .filter(Boolean)
+                              .join(" • ")}
+                          </Typography>
+                        )}
+                        {section.minutes_related_document_type && (
+                          <Typography
+                            sx={{
+                              fontSize: "0.75rem",
+                              color: colors.textTertiary,
+                            }}
+                          >
+                            {section.minutes_related_document_type}
+                          </Typography>
+                        )}
                         {section.vaski_document_type_name && (
                           <Typography
                             sx={{
@@ -615,6 +642,20 @@ const Home = () => {
                             }}
                           >
                             {section.vaski_summary}
+                          </Typography>
+                        )}
+                        {section.minutes_content_text && (
+                          <Typography
+                            sx={{
+                              fontSize: "0.75rem",
+                              color: colors.textTertiary,
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                            }}
+                          >
+                            {section.minutes_content_text}
                           </Typography>
                         )}
                       </Box>

@@ -86,6 +86,19 @@ type Section = {
   vaski_status?: string | null;
   vaski_source_reference?: string | null;
   vaski_subjects?: string | null;
+  minutes_entry_kind?: string | null;
+  minutes_entry_order?: number | null;
+  minutes_item_identifier?: number | null;
+  minutes_parent_item_identifier?: string | null;
+  minutes_item_number?: string | null;
+  minutes_item_order?: number | null;
+  minutes_item_title?: string | null;
+  minutes_related_document_identifier?: string | null;
+  minutes_related_document_type?: string | null;
+  minutes_processing_phase_code?: string | null;
+  minutes_general_processing_phase_code?: string | null;
+  minutes_content_text?: string | null;
+  minutes_match_mode?: string | null;
 };
 
 type SessionDocument = {
@@ -790,6 +803,123 @@ export default () => {
               />
             ))}
           </Box>
+        )}
+      </Box>
+    );
+  };
+
+  const renderMinutesInfo = (section: Section, compact = false) => {
+    const hasAny =
+      section.minutes_item_number ||
+      section.minutes_item_title ||
+      section.minutes_related_document_identifier ||
+      section.minutes_related_document_type ||
+      section.minutes_processing_phase_code ||
+      section.minutes_general_processing_phase_code ||
+      section.minutes_match_mode ||
+      section.minutes_content_text;
+
+    if (!hasAny) return null;
+
+    const minutesItemLabel = [
+      section.minutes_item_number,
+      section.minutes_item_order != null
+        ? `${t("sessions.minutesOrder", { defaultValue: "järjestys" })} ${section.minutes_item_order}`
+        : null,
+    ]
+      .filter(Boolean)
+      .join(" • ");
+    const relatedDocumentLabel = [
+      section.minutes_related_document_type,
+      section.minutes_related_document_identifier,
+    ]
+      .filter(Boolean)
+      .join(": ");
+
+    return (
+      <Box
+        sx={{
+          mt: 0.75,
+          p: 1,
+          borderRadius: 1,
+          border: `1px solid ${colors.primaryLight}25`,
+          background: `${colors.primaryLight}08`,
+        }}
+      >
+        <Typography
+          sx={{
+            fontSize: "0.7rem",
+            fontWeight: 700,
+            color: colors.textTertiary,
+            textTransform: "uppercase",
+          }}
+        >
+          {t("sessions.minutesMetadata", { defaultValue: "Pöytäkirjatiedot" })}
+        </Typography>
+        {minutesItemLabel && (
+          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+            {t("sessions.minutesItem", { defaultValue: "Asiakohta" })}:{" "}
+            {minutesItemLabel}
+          </Typography>
+        )}
+        {section.minutes_item_title &&
+          section.minutes_item_title !== section.title && (
+            <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+              {t("sessions.minutesItemTitle", { defaultValue: "Pöytäkirjan otsikko" })}
+              : {section.minutes_item_title}
+            </Typography>
+          )}
+        {relatedDocumentLabel && (
+          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+            {t("sessions.minutesRelatedDocument", {
+              defaultValue: "Liittyvä asiakirja",
+            })}
+            : {relatedDocumentLabel}
+          </Typography>
+        )}
+        {(section.minutes_processing_phase_code ||
+          section.minutes_general_processing_phase_code) && (
+          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+            {t("sessions.minutesProcessingCodes", {
+              defaultValue: "Käsittelykoodit",
+            })}
+            :{" "}
+            {[
+              section.minutes_processing_phase_code,
+              section.minutes_general_processing_phase_code,
+            ]
+              .filter(Boolean)
+              .join(" / ")}
+          </Typography>
+        )}
+        {section.minutes_match_mode && (
+          <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
+            {t("sessions.minutesMatchMode", {
+              defaultValue: "Yhdistämistapa",
+            })}
+            : {section.minutes_match_mode}
+          </Typography>
+        )}
+        {section.minutes_content_text && (
+          <Typography
+            sx={{
+              fontSize: "0.75rem",
+              color: colors.textSecondary,
+              mt: 0.5,
+              whiteSpace: "pre-wrap",
+              ...(compact
+                ? {
+                    display: "-webkit-box",
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }
+                : {}),
+            }}
+          >
+            {t("sessions.minutesContent", { defaultValue: "Pöytäkirjateksti" })}
+            : {section.minutes_content_text}
+          </Typography>
         )}
       </Box>
     );
@@ -2045,6 +2175,7 @@ export default () => {
                               </Typography>
                             )}
                             {renderVaskiInfo(section, true)}
+                            {renderMinutesInfo(section, true)}
                             <Box
                               sx={{
                                 display: "flex",
@@ -2148,6 +2279,7 @@ export default () => {
                             }}
                           >
                             {renderVaskiInfo(section, false)}
+                            {renderMinutesInfo(section, false)}
                             {renderSectionLinks(section)}
                             {renderSectionNotices(session, section.key)}
                             {/* Votings */}
@@ -2646,6 +2778,7 @@ export default () => {
                                 </Typography>
                               )}
                               {renderVaskiInfo(section, true)}
+                              {renderMinutesInfo(section, true)}
 
                               <Box
                                 sx={{
@@ -2782,6 +2915,7 @@ export default () => {
                               >
                                 <Box sx={{ mt: 1.5 }}>
                                   {renderVaskiInfo(section, false)}
+                                  {renderMinutesInfo(section, false)}
                                   {renderSectionLinks(section)}
                                   {renderSectionNotices(session, section.key)}
                                   {loadingVotings.has(section.id) ? (
