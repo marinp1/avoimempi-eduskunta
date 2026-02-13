@@ -529,6 +529,42 @@ describe("Speech queries", () => {
     expect(rows[0].party_abbreviation).toBe("kesk");
   });
 
+  test("SECTION_SPEECHES includes SpeechContent when available", () => {
+    db.run(
+      `INSERT INTO SpeechContent (speech_id, session_key, section_key, source_document_id, source_item_identifier, source_entry_order, source_speech_order, source_speech_identifier, speech_type_code, language_code, start_time, end_time, content, source_path)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        201,
+        "2024/1",
+        "2024/1/3",
+        2921,
+        35456,
+        1,
+        1,
+        300434,
+        "T",
+        "fi",
+        "2024-01-15T10:00:00",
+        "2024-01-15T10:02:00",
+        "Testisisalto puheenvuorolle",
+        "vaski-data/pöytäkirja/page_1.json#id=2921",
+      ],
+    );
+
+    const stmt = db.prepare(queries.sectionSpeeches);
+    const rows = stmt.all({
+      $sectionKey: "2024/1/3",
+      $limit: 20,
+      $offset: 0,
+    }) as any[];
+    stmt.finalize();
+
+    const row = rows.find((entry) => entry.id === 201);
+    expect(row).toBeDefined();
+    expect(row.content).toBe("Testisisalto puheenvuorolle");
+    expect(row.start_time).toBe("2024-01-15T10:00:00");
+  });
+
   test("SECTION_SPEECHES returns empty for non-existent section", () => {
     const stmt = db.prepare(queries.sectionSpeeches);
     const rows = stmt.all({
