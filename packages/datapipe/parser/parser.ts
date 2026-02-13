@@ -181,6 +181,9 @@ export async function parseTable(options: ParseOptions): Promise<void> {
     }
 
     if (pagesToParse.length === 0) {
+      if (hooks.onParsingComplete) {
+        await hooks.onParsingComplete();
+      }
       console.log(`✅ All pages already parsed for ${tableName}`);
       return;
     }
