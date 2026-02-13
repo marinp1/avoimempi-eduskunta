@@ -129,6 +129,32 @@ describe("SaliDBAanestysEdustaja migrator", () => {
     expect(rows[0].vote).toBe("Poissa");
   });
 
+  test("normalizes 'Tyhjä' to canonical 'Tyhjää'", async () => {
+    await migrate(makeFinnishVote({ EdustajaAanestys: "Tyhjä" as any }));
+    flushVotes();
+
+    const rows = db.query("SELECT * FROM Vote").all() as any[];
+    expect(rows).toHaveLength(1);
+    expect(rows[0].vote).toBe("Tyhjää");
+  });
+
+  test("normalizes decomposed umlaut form to canonical 'Tyhjää'", async () => {
+    await migrate(makeFinnishVote({ EdustajaAanestys: "Tyhja\u0308a\u0308" as any }));
+    flushVotes();
+
+    const rows = db.query("SELECT * FROM Vote").all() as any[];
+    expect(rows).toHaveLength(1);
+    expect(rows[0].vote).toBe("Tyhjää");
+  });
+
+  test("skips unknown vote value", async () => {
+    await migrate(makeFinnishVote({ EdustajaAanestys: "Muu" as any }));
+    flushVotes();
+
+    const rows = db.query("SELECT * FROM Vote").all() as any[];
+    expect(rows).toHaveLength(0);
+  });
+
   test("trims vote whitespace", async () => {
     await migrate(makeFinnishVote({ EdustajaAanestys: " Jaa " as any }));
     flushVotes();
