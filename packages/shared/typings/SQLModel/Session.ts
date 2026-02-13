@@ -31,6 +31,16 @@ declare global {
       state_text_fi: string | null;
       manual_blocked: number;
       attachment_group_id: number | null;
+      minutes_edk_identifier?: string | null;
+      minutes_status?: string | null;
+      minutes_created_at?: Modules.Common.DateString | null;
+      minutes_source_path?: string | null;
+      minutes_has_signature?: number | null;
+      minutes_agenda_item_count?: number | null;
+      minutes_other_item_count?: number | null;
+      minutes_start_time?: Modules.Common.DateString | null;
+      minutes_end_time?: Modules.Common.DateString | null;
+      minutes_title?: string | null;
     }
   }
 }

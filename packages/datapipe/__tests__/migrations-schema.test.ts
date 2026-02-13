@@ -28,11 +28,24 @@ const getColumnNames = (
       .all() as { name: string }[]
   ).map((row) => row.name);
 
+const getTableInfo = (
+  db: ReturnType<typeof createTestDb>,
+  tableName: string,
+) =>
+  db.query(`PRAGMA table_info(${tableName})`).all() as {
+    name: string;
+    notnull: number;
+  }[];
+
 describe("Migration schema", () => {
   test("uses expected active migration files", () => {
     expect(getActiveMigrationFiles()).toEqual([
       "V001.001__core_parliament_schema.sql",
       "V001.002__vaski_roll_call_schema.sql",
+      "V001.003__vaski_plenary_minutes_schema.sql",
+      "V001.004__vaski_minutes_session_section_columns.sql",
+      "V001.005__drop_vaski_plenary_minutes_tables.sql",
+      "V001.006__speech_content_schema.sql",
     ]);
   });
 
@@ -62,6 +75,9 @@ describe("Migration schema", () => {
       expect(tableNames).toContain("SaliDBDocumentReference");
       expect(tableNames).toContain("RollCallReport");
       expect(tableNames).toContain("RollCallEntry");
+      expect(tableNames).toContain("SpeechContent");
+      expect(tableNames).not.toContain("PlenarySessionMinutes");
+      expect(tableNames).not.toContain("PlenarySessionMinutesItem");
 
       expect(tableNames).not.toContain("Document");
       expect(tableNames).not.toContain("DocumentActor");
@@ -114,6 +130,41 @@ describe("Migration schema", () => {
           .get() as { c: number }
       ).c;
       expect(idxSessionDateCount).toBe(1);
+    } finally {
+      db.close();
+    }
+  });
+
+  test("adds vaski minutes columns directly to Session and Section", () => {
+    const db = createTestDb();
+    try {
+      const sessionColumns = getColumnNames(db, "Session");
+      const sectionColumns = getColumnNames(db, "Section");
+
+      expect(sessionColumns).toContain("minutes_edk_identifier");
+      expect(sessionColumns).toContain("minutes_status");
+      expect(sessionColumns).toContain("minutes_created_at");
+      expect(sessionColumns).toContain("minutes_source_path");
+      expect(sessionColumns).toContain("minutes_has_signature");
+      expect(sessionColumns).toContain("minutes_agenda_item_count");
+      expect(sessionColumns).toContain("minutes_other_item_count");
+      expect(sessionColumns).toContain("minutes_start_time");
+      expect(sessionColumns).toContain("minutes_end_time");
+      expect(sessionColumns).toContain("minutes_title");
+
+      expect(sectionColumns).toContain("minutes_entry_kind");
+      expect(sectionColumns).toContain("minutes_entry_order");
+      expect(sectionColumns).toContain("minutes_item_identifier");
+      expect(sectionColumns).toContain("minutes_parent_item_identifier");
+      expect(sectionColumns).toContain("minutes_item_number");
+      expect(sectionColumns).toContain("minutes_item_order");
+      expect(sectionColumns).toContain("minutes_item_title");
+      expect(sectionColumns).toContain("minutes_related_document_identifier");
+      expect(sectionColumns).toContain("minutes_related_document_type");
+      expect(sectionColumns).toContain("minutes_processing_phase_code");
+      expect(sectionColumns).toContain("minutes_general_processing_phase_code");
+      expect(sectionColumns).toContain("minutes_content_text");
+      expect(sectionColumns).toContain("minutes_match_mode");
     } finally {
       db.close();
     }

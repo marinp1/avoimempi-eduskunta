@@ -252,30 +252,120 @@ export function seedSection(
     id: number;
     key: string;
     title: string;
+    identifier: string | null;
     session_key: string;
     ordinal: number;
+    vaski_id: number | null;
   }> = {},
 ) {
   const defaults = {
     id: 10,
     key: "2024/1/3",
     title: "Hallituksen esitys eduskunnalle",
+    identifier: null as string | null,
     session_key: "2024/1",
     ordinal: 3,
+    vaski_id: null as number | null,
     processing_title: "Ainoa käsittely",
   };
   const row = { ...defaults, ...overrides };
 
   db.run(
-    `INSERT INTO Section (id, key, title, session_key, ordinal, processing_title)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO Section (id, key, identifier, title, session_key, ordinal, processing_title, vaski_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       row.id,
       row.key,
+      row.identifier,
       row.title,
       row.session_key,
       row.ordinal,
       row.processing_title,
+      row.vaski_id,
+    ],
+  );
+  return row;
+}
+
+/**
+ * Insert a sample speech.
+ */
+export function seedSpeech(
+  db: Database,
+  overrides: Partial<{
+    id: number;
+    key: string;
+    session_key: string;
+    section_key: string;
+    ordinal: number;
+    ordinal_number: number;
+    speech_type: string;
+    request_method: string;
+    request_time: string;
+    person_id: number;
+    first_name: string;
+    last_name: string;
+    gender: string;
+    party_abbreviation: string | null;
+    has_spoken: number;
+    ministry: string | null;
+    modified_datetime: string;
+    created_datetime: string | null;
+    imported_datetime: string | null;
+    ad_tunnus: string | null;
+    order_raw: string | null;
+  }> = {},
+) {
+  const defaults = {
+    id: 10000,
+    key: "speech-10000",
+    session_key: "2024/1",
+    section_key: "2024/1/3",
+    ordinal: 20240115100000,
+    ordinal_number: 1,
+    speech_type: "T",
+    request_method: "I",
+    request_time: "2024-01-15T10:00:00",
+    person_id: 1000,
+    first_name: "Matti",
+    last_name: "Meikäläinen",
+    gender: "mies",
+    party_abbreviation: "kesk",
+    has_spoken: 1,
+    ministry: null as string | null,
+    modified_datetime: "2024-01-15T10:00:00",
+    created_datetime: "2024-01-15T10:00:00",
+    imported_datetime: "2024-01-15T10:00:00",
+    ad_tunnus: null as string | null,
+    order_raw: "2024-01-15 10:00:00",
+  };
+  const row = { ...defaults, ...overrides };
+
+  db.run(
+    `INSERT INTO Speech (id, key, session_key, section_key, ordinal, ordinal_number, speech_type, request_method, request_time, person_id, first_name, last_name, gender, party_abbreviation, has_spoken, ministry, modified_datetime, created_datetime, imported_datetime, ad_tunnus, order_raw)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      row.id,
+      row.key,
+      row.session_key,
+      row.section_key,
+      row.ordinal,
+      row.ordinal_number,
+      row.speech_type,
+      row.request_method,
+      row.request_time,
+      row.person_id,
+      row.first_name,
+      row.last_name,
+      row.gender,
+      row.party_abbreviation,
+      row.has_spoken,
+      row.ministry,
+      row.modified_datetime,
+      row.created_datetime,
+      row.imported_datetime,
+      row.ad_tunnus,
+      row.order_raw,
     ],
   );
   return row;
