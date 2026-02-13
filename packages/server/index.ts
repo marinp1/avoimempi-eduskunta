@@ -8,10 +8,18 @@ import homepage from "./public/index.html";
 const db = new DatabaseConnection();
 export const statusController = new StatusController(db);
 const isDev = process.env.NODE_ENV === "development";
+const configuredPort = Number.parseInt(process.env.PORT ?? "", 10);
+const port =
+  Number.isFinite(configuredPort) && configuredPort > 0
+    ? configuredPort
+    : isDev
+      ? 3000
+      : 80;
 
 const server = Bun.serve<{
   type: "parser" | "scraper" | "migrator";
 }>({
+  port,
   routes: {
     "/": homepage,
     "/edustajat": homepage,
@@ -20,29 +28,37 @@ const server = Bun.serve<{
     "/aanestykset": homepage,
     "/asiakirjat": homepage,
     "/analytiikka": homepage,
-    "/tila": homepage,
     "/composition": homepage,
     "/votings": homepage,
     "/sessions": homepage,
     "/insights": homepage,
-    "/status": homepage,
+    ...(isDev
+      ? {
+          "/tila": homepage,
+          "/status": homepage,
+        }
+      : {}),
     "/api/health": new Response("OK"),
-    "/api/status/overview": {
-      GET: async () => {
-        const overview = await statusController.getOverview();
-        return new Response(JSON.stringify(overview), {
-          headers: { "Content-Type": "application/json" },
-        });
-      },
-    },
-    "/api/status/sanity-checks": {
-      GET: async () => {
-        const checks = await statusController.getSanityChecks();
-        return new Response(JSON.stringify(checks), {
-          headers: { "Content-Type": "application/json" },
-        });
-      },
-    },
+    ...(isDev
+      ? {
+          "/api/status/overview": {
+            GET: async () => {
+              const overview = await statusController.getOverview();
+              return new Response(JSON.stringify(overview), {
+                headers: { "Content-Type": "application/json" },
+              });
+            },
+          },
+          "/api/status/sanity-checks": {
+            GET: async () => {
+              const checks = await statusController.getSanityChecks();
+              return new Response(JSON.stringify(checks), {
+                headers: { "Content-Type": "application/json" },
+              });
+            },
+          },
+        }
+      : {}),
     "/api/composition/:date": {
       GET: async (req: BunRequest<"/api/composition/:date">) => {
         const composition = await db.fetchParliamentComposition(req.params);
@@ -518,6 +534,10 @@ const server = Bun.serve<{
     : false,
 
   fetch(req, server) {
+    if (!isDev) {
+      return new Response("Not Found", { status: 404 });
+    }
+
     // Handle WebSocket upgrades
     const url = new URL(req.url);
     if (url.pathname === "/ws/scraper") {
@@ -556,5 +576,5 @@ const server = Bun.serve<{
 });
 
 console.log(
-  `Listening on ${server.url} ${server.development ? "(development)" : ""}`,
+  `Listening on ${server.url} ${server.development ? "(development)" : "(production)"}`,
 );

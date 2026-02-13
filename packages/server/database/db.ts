@@ -947,10 +947,10 @@ export class DatabaseConnection {
     const databasePath = getDatabasePath();
     console.log("Using", databasePath);
     this.#database = new Database(databasePath, {
-      create: true,
+      create: false,
       readonly: true,
     });
-    this.#database.exec(SQLITE_PRAGMAS.journalWal);
+    this.#database.exec(SQLITE_PRAGMAS.queryOnlyOn);
     this.#database.exec(SQLITE_PRAGMAS.tempStoreMemory);
     return this.#database;
   }

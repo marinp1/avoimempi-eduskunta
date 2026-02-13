@@ -10,6 +10,14 @@ const APP_FOLDER = "/root/avoimempi-eduskunta";
 switch (type) {
   case "build": {
     const dist = path.join(import.meta.dirname, "../dist");
+    const startScript = path.join(import.meta.dirname, "start.sh");
+    const nodeEnv = process.env.NODE_ENV ?? "production";
+    const defaultPort = nodeEnv === "development" ? "3000" : "80";
+
+    if (!fs.existsSync(startScript)) {
+      throw new Error("start.sh script not found");
+    }
+
     await build({
       outdir: dist,
       loader: {
@@ -20,17 +28,20 @@ switch (type) {
       ],
       define: {
         "process.env.DB_PATH": "../avoimempi-eduskunta.db",
-        "process.env.MODE": JSON.stringify(
-          process.env.NODE_ENV ?? "production",
-        ),
+        "process.env.NODE_ENV": JSON.stringify(nodeEnv),
+        "process.env.PORT": JSON.stringify(process.env.PORT ?? defaultPort),
       },
       target: "bun",
     });
+    console.log(`Build mode: ${nodeEnv}, default port: ${process.env.PORT ?? defaultPort}`);
     console.log(
       "Upload build to Scaleway",
       `scp -r "${dist}" ${INSTANCE_ALIAS}:${APP_FOLDER}`,
     );
     await $`scp -r ${dist} ${INSTANCE_ALIAS}:${APP_FOLDER}`;
+    console.log("Upload start script to Scaleway");
+    await $`scp ${startScript} ${INSTANCE_ALIAS}:${APP_FOLDER}/start.sh`;
+    await $`ssh ${INSTANCE_ALIAS} chmod +x ${APP_FOLDER}/start.sh`;
     break;
   }
   case "database": {

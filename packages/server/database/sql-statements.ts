@@ -1,5 +1,6 @@
 export const SQLITE_PRAGMAS = {
   journalWal: "PRAGMA journal_mode = WAL;",
+  queryOnlyOn: "PRAGMA query_only = ON;",
   synchronousOff: "PRAGMA synchronous = OFF;",
   synchronousFull: "PRAGMA synchronous = FULL;",
   cacheSize64Mb: "PRAGMA cache_size = -64000;",
