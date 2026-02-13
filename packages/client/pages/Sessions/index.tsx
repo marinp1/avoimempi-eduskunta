@@ -63,6 +63,7 @@ type Section = {
   processing_title?: string;
   identifier?: string;
   resolution?: string;
+  session_key?: string;
   agenda_key?: string;
   modified_datetime?: string;
   vaski_id?: number;
@@ -202,6 +203,26 @@ type RollCallEntry = {
 type SectionRollCallData = {
   report: RollCallReport;
   entries: RollCallEntry[];
+};
+
+type SubSection = {
+  id: number;
+  session_key: string;
+  section_key: string;
+  entry_order: number;
+  entry_kind: "asiakohta" | "muu_asiakohta";
+  item_identifier: number;
+  parent_item_identifier?: string | null;
+  item_number?: string | null;
+  item_order?: number | null;
+  item_title?: string | null;
+  related_document_identifier?: string | null;
+  related_document_type?: string | null;
+  processing_phase_code?: string | null;
+  general_processing_phase_code?: string | null;
+  content_text?: string | null;
+  match_mode: "direct" | "parent_fallback";
+  minutes_document_id: number;
 };
 
 type Speech = {
@@ -510,12 +531,18 @@ export default () => {
   const [sectionRollCalls, setSectionRollCalls] = useState<
     Record<number, SectionRollCallData | null>
   >({});
+  const [sectionSubSections, setSectionSubSections] = useState<
+    Record<number, SubSection[]>
+  >({});
   const [loadingSpeeches, setLoadingSpeeches] = useState<Set<number>>(
     new Set(),
   );
   const [loadingVotings, setLoadingVotings] = useState<Set<number>>(new Set());
   const [loadingLinks, setLoadingLinks] = useState<Set<string>>(new Set());
   const [loadingRollCalls, setLoadingRollCalls] = useState<Set<number>>(
+    new Set(),
+  );
+  const [loadingSubSections, setLoadingSubSections] = useState<Set<number>>(
     new Set(),
   );
   const [loadingMoreSpeeches, setLoadingMoreSpeeches] = useState<Set<number>>(
@@ -544,8 +571,10 @@ export default () => {
         setLoadingVotings(new Set());
         setLoadingLinks(new Set());
         setLoadingRollCalls(new Set());
+        setLoadingSubSections(new Set());
         setSectionLinks({});
         setSectionRollCalls({});
+        setSectionSubSections({});
         setExpandedMinutesSessions(new Set());
         setExpandedAttachmentSessions(new Set());
         const res = await fetch(`/api/day/${date}/sessions`);
@@ -695,7 +724,17 @@ export default () => {
 
   const buildValtiopaivaAsiakirjaUrl = (tunnus?: string | null) => {
     if (!tunnus || !tunnus.trim()) return null;
-    return `/valtiopaivaasiakirjat/${tunnus.trim().replaceAll(" ", "+")}`;
+    const normalized = tunnus.trim();
+    const match = normalized.match(
+      /^([A-Za-zÅÄÖåäö_]+)\s+(\d+)\s*\/\s*(\d{4})(?:\s+vp)?$/i,
+    );
+    if (match) {
+      const [, code, number, year] = match;
+      const slug = `${code.toUpperCase()}_${Number.parseInt(number, 10)}+${year}`;
+      return `https://www.eduskunta.fi/FI/vaski/KasittelytiedotValtiopaivaasia/Sivut/${slug}.aspx`;
+    }
+
+    return `/valtiopaivaasiakirjat/${normalized.replaceAll(" ", "+")}`;
   };
 
   const renderVaskiInfo = (section: Section, compact = false) => {
@@ -854,20 +893,49 @@ export default () => {
   };
 
   const renderMinutesInfo = (section: Section, compact = false) => {
+    const isMergedValue = (value?: string | null) =>
+      typeof value === "string" && value.includes(" | ");
+
+    const fromDb = sectionSubSections[section.id] || [];
+    const fallbackRows = fromDb.length > 0 ? [] : buildFallbackSubSections(section);
+    const hasStructuredSubSections =
+      fromDb.length > 1 || fallbackRows.length > 1;
+
+    const minutesItemNumber = isMergedValue(section.minutes_item_number)
+      ? null
+      : section.minutes_item_number;
+    const minutesItemTitle = isMergedValue(section.minutes_item_title)
+      ? null
+      : section.minutes_item_title;
+    const minutesRelatedDocumentIdentifier = isMergedValue(
+      section.minutes_related_document_identifier,
+    )
+      ? null
+      : section.minutes_related_document_identifier;
+    const minutesRelatedDocumentType = isMergedValue(
+      section.minutes_related_document_type,
+    )
+      ? null
+      : section.minutes_related_document_type;
+    const minutesContentText =
+      hasStructuredSubSections || isMergedValue(section.minutes_content_text)
+        ? null
+        : section.minutes_content_text;
+
     const hasAny =
-      section.minutes_item_number ||
-      section.minutes_item_title ||
-      section.minutes_related_document_identifier ||
-      section.minutes_related_document_type ||
+      minutesItemNumber ||
+      minutesItemTitle ||
+      minutesRelatedDocumentIdentifier ||
+      minutesRelatedDocumentType ||
       section.minutes_processing_phase_code ||
       section.minutes_general_processing_phase_code ||
       section.minutes_match_mode ||
-      section.minutes_content_text;
+      minutesContentText;
 
     if (!hasAny) return null;
 
     const minutesItemLabel = [
-      section.minutes_item_number,
+      minutesItemNumber,
       section.minutes_item_order != null
         ? `${t("sessions.minutesOrder", { defaultValue: "järjestys" })} ${section.minutes_item_order}`
         : null,
@@ -875,8 +943,8 @@ export default () => {
       .filter(Boolean)
       .join(" • ");
     const relatedDocumentLabel = [
-      section.minutes_related_document_type,
-      section.minutes_related_document_identifier,
+      minutesRelatedDocumentType,
+      minutesRelatedDocumentIdentifier,
     ]
       .filter(Boolean)
       .join(": ");
@@ -907,11 +975,10 @@ export default () => {
             {minutesItemLabel}
           </Typography>
         )}
-        {section.minutes_item_title &&
-          section.minutes_item_title !== section.title && (
+        {minutesItemTitle && minutesItemTitle !== section.title && (
             <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
               {t("sessions.minutesItemTitle", { defaultValue: "Pöytäkirjan otsikko" })}
-              : {section.minutes_item_title}
+              : {minutesItemTitle}
             </Typography>
           )}
         {relatedDocumentLabel && (
@@ -945,7 +1012,7 @@ export default () => {
             : {section.minutes_match_mode}
           </Typography>
         )}
-        {section.minutes_content_text && (
+        {minutesContentText && (
           <Typography
             sx={{
               fontSize: "0.75rem",
@@ -963,9 +1030,171 @@ export default () => {
             }}
           >
             {t("sessions.minutesContent", { defaultValue: "Pöytäkirjateksti" })}
-            : {section.minutes_content_text}
+            : {minutesContentText}
           </Typography>
         )}
+      </Box>
+    );
+  };
+
+  const splitPipeValues = (value?: string | null) =>
+    value
+      ? value
+          .split(" | ")
+          .map((part) => part.trim())
+          .filter(Boolean)
+      : [];
+
+  const buildFallbackSubSections = (section: Section): SubSection[] => {
+    const numbers = splitPipeValues(section.minutes_item_number);
+    const titles = splitPipeValues(section.minutes_item_title);
+    const documentIdentifiers = splitPipeValues(
+      section.minutes_related_document_identifier,
+    );
+    const documentTypes = splitPipeValues(section.minutes_related_document_type);
+    const maxLength = Math.max(
+      numbers.length,
+      titles.length,
+      documentIdentifiers.length,
+      0,
+    );
+
+    if (maxLength <= 1) return [];
+
+    return Array.from({ length: maxLength }, (_, index) => ({
+      id: -(index + 1),
+      session_key: section.session_key || "",
+      section_key: section.key,
+      entry_order: index + 1,
+      entry_kind: (section.minutes_entry_kind || "asiakohta") as
+        | "asiakohta"
+        | "muu_asiakohta",
+      item_identifier: section.minutes_item_identifier || 0,
+      parent_item_identifier: section.minutes_parent_item_identifier || null,
+      item_number: numbers[index] || null,
+      item_order:
+        typeof section.minutes_item_order === "number"
+          ? section.minutes_item_order + index
+          : null,
+      item_title: titles[index] || null,
+      related_document_identifier: documentIdentifiers[index] || null,
+      related_document_type:
+        documentTypes[index] || section.minutes_related_document_type || null,
+      processing_phase_code: section.minutes_processing_phase_code || null,
+      general_processing_phase_code:
+        section.minutes_general_processing_phase_code || null,
+      content_text: null,
+      match_mode:
+        section.minutes_match_mode === "parent_fallback"
+          ? "parent_fallback"
+          : "direct",
+      minutes_document_id: section.vaski_document_id || 0,
+    }));
+  };
+
+  const renderSectionSubSections = (section: Section) => {
+    const loading = loadingSubSections.has(section.id);
+    const fromDb = sectionSubSections[section.id] || [];
+    const rows = fromDb.length > 0 ? fromDb : buildFallbackSubSections(section);
+
+    if (loading) {
+      return (
+        <Box sx={{ mt: 1.5, py: 1, textAlign: "center" }}>
+          <CircularProgress size={18} sx={{ color: themedColors.primary }} />
+        </Box>
+      );
+    }
+
+    if (rows.length <= 1) return null;
+
+    return (
+      <Box
+        sx={{
+          mt: 1.5,
+          p: 1.5,
+          borderRadius: 1,
+          border: `1px solid ${colors.primaryLight}25`,
+          background: `${colors.primaryLight}08`,
+        }}
+      >
+        <Typography
+          sx={{
+            fontSize: "0.75rem",
+            fontWeight: 700,
+            color: colors.textSecondary,
+            textTransform: "uppercase",
+            mb: 0.75,
+          }}
+        >
+          {t("sessions.subSections", { defaultValue: "Alakohdat" })}
+        </Typography>
+        <Box sx={{ overflowX: "auto" }}>
+          <Box
+            component="table"
+            sx={{
+              width: "100%",
+              borderCollapse: "collapse",
+              fontSize: "0.75rem",
+              "& th, & td": {
+                textAlign: "left",
+                borderBottom: `1px solid ${colors.dataBorder}`,
+                px: 0.75,
+                py: 0.5,
+                verticalAlign: "top",
+              },
+              "& th": {
+                color: colors.textSecondary,
+                fontWeight: 700,
+                whiteSpace: "nowrap",
+              },
+              "& td": {
+                color: colors.textPrimary,
+              },
+            }}
+          >
+            <thead>
+              <tr>
+                <th>{t("sessions.subSectionNumber", { defaultValue: "Kohta" })}</th>
+                <th>{t("sessions.subSectionTitle", { defaultValue: "Otsikko" })}</th>
+                <th>{t("sessions.subSectionDocument", { defaultValue: "Asiakirja" })}</th>
+                <th>{t("sessions.subSectionType", { defaultValue: "Tyyppi" })}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => {
+                const href = buildValtiopaivaAsiakirjaUrl(
+                  row.related_document_identifier,
+                );
+                return (
+                  <tr key={`${row.section_key}-${row.entry_order}-${row.id}`}>
+                    <td>{row.item_number || row.entry_order}</td>
+                    <td>{row.item_title || "-"}</td>
+                    <td>
+                      {row.related_document_identifier ? (
+                        href ? (
+                          <Link
+                            href={href}
+                            target="_blank"
+                            rel="noreferrer"
+                            underline="hover"
+                            sx={{ fontSize: "0.75rem", color: colors.primaryLight }}
+                          >
+                            {row.related_document_identifier}
+                          </Link>
+                        ) : (
+                          row.related_document_identifier
+                        )
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                    <td>{row.related_document_type || "-"}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </Box>
+        </Box>
       </Box>
     );
   };
@@ -1897,6 +2126,12 @@ export default () => {
     return (await res.json()) as SectionDocumentLink[];
   };
 
+  const fetchSectionSubSections = async (sectionKey: string) => {
+    const res = await fetch(`/api/sections/${sectionKey}/subsections`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()) as SubSection[];
+  };
+
   const fetchSectionRollCall = async (sectionKey: string) => {
     const res = await fetch(`/api/sections/${sectionKey}/roll-call`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1970,6 +2205,24 @@ export default () => {
           setLoadingLinks((prev) => {
             const next = new Set(prev);
             next.delete(sectionKey);
+            return next;
+          });
+        }
+      }
+
+      const hasSubSectionsData = Object.prototype.hasOwnProperty.call(
+        sectionSubSections,
+        sectionId,
+      );
+      if (!hasSubSectionsData) {
+        setLoadingSubSections((prev) => new Set(prev).add(sectionId));
+        try {
+          const subSections = await fetchSectionSubSections(sectionKey);
+          setSectionSubSections((prev) => ({ ...prev, [sectionId]: subSections }));
+        } finally {
+          setLoadingSubSections((prev) => {
+            const next = new Set(prev);
+            next.delete(sectionId);
             return next;
           });
         }
@@ -2580,6 +2833,7 @@ export default () => {
                           >
                             {renderVaskiInfo(section, false)}
                             {renderMinutesInfo(section, false)}
+                            {renderSectionSubSections(section)}
                             {renderSectionLinks(section)}
                             {renderSectionNotices(session, section.key)}
                             {renderSectionRollCall(section)}
@@ -3217,6 +3471,7 @@ export default () => {
                                 <Box sx={{ mt: 1.5 }}>
                                   {renderVaskiInfo(section, false)}
                                   {renderMinutesInfo(section, false)}
+                                  {renderSectionSubSections(section)}
                                   {renderSectionLinks(section)}
                                   {renderSectionNotices(session, section.key)}
                                   {renderSectionRollCall(section)}

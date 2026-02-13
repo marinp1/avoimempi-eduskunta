@@ -47,6 +47,7 @@ describe("Migration schema", () => {
       "V001.005__drop_vaski_plenary_minutes_tables.sql",
       "V001.006__speech_content_schema.sql",
       "V001.007__speech_content_source_names.sql",
+      "V001.008__subsection_schema.sql",
     ]);
   });
 
@@ -77,6 +78,7 @@ describe("Migration schema", () => {
       expect(tableNames).toContain("RollCallReport");
       expect(tableNames).toContain("RollCallEntry");
       expect(tableNames).toContain("SpeechContent");
+      expect(tableNames).toContain("SubSection");
       expect(tableNames).not.toContain("PlenarySessionMinutes");
       expect(tableNames).not.toContain("PlenarySessionMinutesItem");
 

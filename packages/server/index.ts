@@ -200,6 +200,17 @@ const server = Bun.serve<{
       },
     },
 
+    "/api/sections/:sectionKey/subsections": {
+      GET: async (req: BunRequest<"/api/sections/:sectionKey/subsections">) => {
+        const subsections = await db.fetchSectionSubSections({
+          sectionKey: req.params.sectionKey,
+        });
+        return new Response(JSON.stringify(subsections), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
     "/api/sections/:sectionKey/roll-call": {
       GET: async (req: BunRequest<"/api/sections/:sectionKey/roll-call">) => {
         const rollCall = await db.fetchSectionRollCall({
