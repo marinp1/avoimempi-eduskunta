@@ -51,4 +51,22 @@ describe.skipIf(!DB_EXISTS)("Speech content coverage (real DB)", () => {
     expect(row.content_rows).toBeGreaterThanOrEqual(0);
     expect(row.metadata_without_content).toBeGreaterThanOrEqual(0);
   });
+
+  test("explains all metadata/content mismatches with has_spoken=0 exactly", () => {
+    const row = db
+      .query(
+        "SELECT (SELECT COUNT(*) FROM Speech sp WHERE NOT EXISTS (SELECT 1 FROM SpeechContent sc WHERE sc.speech_id = sp.id) AND COALESCE(sp.has_spoken, 1) != 0) AS unexpected_missing_content, (SELECT COUNT(*) FROM Speech sp WHERE COALESCE(sp.has_spoken, 1) = 0 AND EXISTS (SELECT 1 FROM SpeechContent sc WHERE sc.speech_id = sp.id)) AS has_spoken_zero_with_content",
+      )
+      .get() as {
+        unexpected_missing_content: number;
+        has_spoken_zero_with_content: number;
+      };
+
+    console.log(
+      `[speech-content-coverage] unexpected_missing_content=${row.unexpected_missing_content}, has_spoken_zero_with_content=${row.has_spoken_zero_with_content}`,
+    );
+
+    expect(row.unexpected_missing_content).toBe(0);
+    expect(row.has_spoken_zero_with_content).toBe(0);
+  });
 });

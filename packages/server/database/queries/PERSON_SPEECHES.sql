@@ -16,5 +16,6 @@ FROM Speech sp
 LEFT JOIN Section sec ON sp.section_key = sec.key
 LEFT JOIN SpeechContent sc ON sc.speech_id = sp.id
 WHERE sp.person_id = $personId
+  AND COALESCE(sp.has_spoken, 1) = 1
 ORDER BY COALESCE(sc.start_time, sp.request_time, sp.modified_datetime) DESC
 LIMIT $limit OFFSET $offset;

@@ -23,6 +23,7 @@ speech_stats AS (
     COUNT(DISTINCT CASE WHEN sp.party_abbreviation IS NOT NULL THEN sp.party_abbreviation END) AS party_count
   FROM Speech sp
   JOIN session_sections ss ON ss.key = sp.section_key
+  WHERE COALESCE(sp.has_spoken, 1) = 1
   GROUP BY sp.section_key
 ),
 voting_stats AS (

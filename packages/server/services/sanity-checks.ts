@@ -795,9 +795,6 @@ export class SanityCheckService {
       const comparedNameRows = this.db
         .query(sanityQueries.speechContentNameComparedCount)
         .get() as any;
-      const nameMismatches = this.db
-        .query(sanityQueries.speechContentNameMismatches)
-        .get() as any;
 
       checks.push({
         category: "Speech Content Mapping",
@@ -817,6 +814,44 @@ export class SanityCheckService {
         name: "SpeechContent → Speech links",
         description:
           "All speech content rows must map to existing Speech metadata rows",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
+    try {
+      const metadataWithoutContent = this.db
+        .query(sanityQueries.speechMetadataWithoutContent)
+        .get() as any;
+      const metadataWithoutContentUnexpected = this.db
+        .query(sanityQueries.speechMetadataWithoutContentUnexpected)
+        .get() as any;
+      const hasSpokenZeroWithContent = this.db
+        .query(sanityQueries.speechHasSpokenZeroWithContent)
+        .get() as any;
+      const explainedByHasSpokenZero =
+        metadataWithoutContent.c - metadataWithoutContentUnexpected.c;
+
+      checks.push({
+        category: "Speech Content Mapping",
+        name: "Speech metadata/content mismatches are exactly has_spoken=0",
+        description:
+          "Rows without linked SpeechContent are allowed only when Speech.has_spoken = 0, and has_spoken = 0 rows should not have SpeechContent",
+        passed:
+          metadataWithoutContentUnexpected.c === 0 &&
+          hasSpokenZeroWithContent.c === 0,
+        details:
+          `Metadata rows without content: ${metadataWithoutContent.c}. ` +
+          `Explained by has_spoken=0: ${explainedByHasSpokenZero}. ` +
+          `Unexpected missing-content rows: ${metadataWithoutContentUnexpected.c}. ` +
+          `has_spoken=0 rows with content: ${hasSpokenZeroWithContent.c}.`,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Speech Content Mapping",
+        name: "Speech metadata/content mismatches are exactly has_spoken=0",
+        description:
+          "Rows without linked SpeechContent are allowed only when Speech.has_spoken = 0, and has_spoken = 0 rows should not have SpeechContent",
         passed: false,
         errorMessage: String(error),
       });

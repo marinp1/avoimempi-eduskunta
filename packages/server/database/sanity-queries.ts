@@ -180,6 +180,12 @@ export const sanityQueries = {
            WHERE NOT EXISTS (SELECT 1 FROM Speech sp WHERE sp.id = sc.speech_id)`,
   speechMetadataWithoutContent: sql`SELECT COUNT(*) as c FROM Speech sp
            WHERE NOT EXISTS (SELECT 1 FROM SpeechContent sc WHERE sc.speech_id = sp.id)`,
+  speechMetadataWithoutContentUnexpected: sql`SELECT COUNT(*) as c FROM Speech sp
+           WHERE NOT EXISTS (SELECT 1 FROM SpeechContent sc WHERE sc.speech_id = sp.id)
+             AND COALESCE(sp.has_spoken, 1) != 0`,
+  speechHasSpokenZeroWithContent: sql`SELECT COUNT(*) as c FROM Speech sp
+           WHERE COALESCE(sp.has_spoken, 1) = 0
+             AND EXISTS (SELECT 1 FROM SpeechContent sc WHERE sc.speech_id = sp.id)`,
   speechContentCount: sql`SELECT COUNT(*) as c FROM SpeechContent`,
   speechContentNameComparedCount: sql`SELECT COUNT(*) as c FROM SpeechContent sc
            JOIN Speech sp ON sp.id = sc.speech_id

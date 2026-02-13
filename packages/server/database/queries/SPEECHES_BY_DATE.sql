@@ -25,6 +25,7 @@ JOIN
     Session s ON sp.session_key = s.key
 WHERE
     s.date = $date
+    AND COALESCE(sp.has_spoken, 1) = 1
 ORDER BY
     COALESCE(sp.request_time, sp.modified_datetime) ASC,
     sec.key ASC,
