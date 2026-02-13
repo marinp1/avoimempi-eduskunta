@@ -19,6 +19,7 @@ export const EXPECTED_SANITY_TABLES = [
   "Voting",
   "Vote",
   "Speech",
+  "SpeechContent",
   "SectionDocumentLink",
   "SessionNotice",
   "SaliDBDocumentReference",
@@ -175,6 +176,27 @@ export const sanityQueries = {
            WHERE end_date IS NOT NULL AND start_date > end_date`,
   speechSessionOrphans: sql`SELECT COUNT(*) as orphans FROM Speech sp
            WHERE NOT EXISTS (SELECT 1 FROM Session s WHERE s.key = sp.session_key)`,
+  speechContentSpeechOrphans: sql`SELECT COUNT(*) as orphans FROM SpeechContent sc
+           WHERE NOT EXISTS (SELECT 1 FROM Speech sp WHERE sp.id = sc.speech_id)`,
+  speechMetadataWithoutContent: sql`SELECT COUNT(*) as c FROM Speech sp
+           WHERE NOT EXISTS (SELECT 1 FROM SpeechContent sc WHERE sc.speech_id = sp.id)`,
+  speechContentCount: sql`SELECT COUNT(*) as c FROM SpeechContent`,
+  speechContentNameComparedCount: sql`SELECT COUNT(*) as c FROM SpeechContent sc
+           JOIN Speech sp ON sp.id = sc.speech_id
+           WHERE sc.source_first_name IS NOT NULL
+             AND TRIM(sc.source_first_name) != ''
+             AND sc.source_last_name IS NOT NULL
+             AND TRIM(sc.source_last_name) != ''`,
+  speechContentNameMismatches: sql`SELECT COUNT(*) as c FROM SpeechContent sc
+           JOIN Speech sp ON sp.id = sc.speech_id
+           WHERE sc.source_first_name IS NOT NULL
+             AND TRIM(sc.source_first_name) != ''
+             AND sc.source_last_name IS NOT NULL
+             AND TRIM(sc.source_last_name) != ''
+             AND (
+               LOWER(TRIM(sc.source_first_name)) != LOWER(TRIM(sp.first_name))
+               OR LOWER(TRIM(sc.source_last_name)) != LOWER(TRIM(sp.last_name))
+             )`,
   voteRepresentativeOrphans: sql`SELECT COUNT(*) as c FROM Vote vo
            WHERE NOT EXISTS (SELECT 1 FROM Representative r WHERE r.person_id = vo.person_id)`,
   schemaIndexes: sql`SELECT name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%' ORDER BY name`,

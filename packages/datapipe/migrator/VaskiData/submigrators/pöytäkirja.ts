@@ -65,7 +65,9 @@ type SpeechLookupCandidate = {
   person_id: number | null;
   first_name: string | null;
   last_name: string | null;
+  ordinal_number: number | null;
   order_raw: string | null;
+  request_time: string | null;
   created_datetime: string | null;
 };
 
@@ -765,6 +767,39 @@ function normalizeTimestampForMatch(value: string | null | undefined): string | 
   return `${match[1]}T${match[2]}`;
 }
 
+function timestampToMillis(value: string | null | undefined): number | null {
+  const normalized = normalizeTimestampForMatch(value);
+  if (!normalized) return null;
+  const match = normalized.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})$/,
+  );
+  if (!match) return null;
+  const [, y, m, d, hh, mm, ss] = match;
+  return Date.UTC(+y, +m - 1, +d, +hh, +mm, +ss);
+}
+
+function bestTimestampDeltaSeconds(
+  sourceTime: string | null | undefined,
+  candidateTime: string | null | undefined,
+): { deltaSeconds: number; offsetHours: number } | null {
+  const sourceMillis = timestampToMillis(sourceTime);
+  const candidateMillis = timestampToMillis(candidateTime);
+  if (sourceMillis === null || candidateMillis === null) return null;
+
+  let best: { deltaSeconds: number; offsetHours: number } | null = null;
+  const offsets = [0, 1, 2, 3, -1, -2, -3];
+  for (const offsetHours of offsets) {
+    const shiftedSourceMillis = sourceMillis - offsetHours * 3_600_000;
+    const deltaSeconds = Math.abs(
+      Math.round((candidateMillis - shiftedSourceMillis) / 1000),
+    );
+    if (!best || deltaSeconds < best.deltaSeconds) {
+      best = { deltaSeconds, offsetHours };
+    }
+  }
+  return best;
+}
+
 function normalizeNameForMatch(value: string | null | undefined): string | null {
   const normalized = normalizeText(value);
   return normalized ? normalized.toLocaleLowerCase("fi-FI") : null;
@@ -774,76 +809,110 @@ function resolveSpeechForMinutesSpeech(
   db: Database,
   sectionKey: string,
   speech: ParsedMinutesSpeech,
+  usedSpeechIds: Set<number>,
 ): SpeechLinkResult {
-  const candidates = db
+  const allCandidates = db
     .query(
-      "SELECT id, person_id, first_name, last_name, order_raw, created_datetime FROM Speech WHERE section_key = ? AND ordinal_number = ? ORDER BY COALESCE(created_datetime, '') DESC, id DESC",
+      "SELECT id, person_id, first_name, last_name, ordinal_number, order_raw, request_time, created_datetime FROM Speech WHERE section_key = ? ORDER BY COALESCE(created_datetime, '') DESC, id DESC",
     )
-    .all(sectionKey, speech.source_speech_order) as SpeechLookupCandidate[];
+    .all(sectionKey) as SpeechLookupCandidate[];
+
+  const candidates = allCandidates.filter(
+    (candidate) => !usedSpeechIds.has(candidate.id),
+  );
 
   if (candidates.length === 0) {
     return {
       speech_id: null,
-      warning: `No Speech row found (section_key='${sectionKey}', ordinal_number=${speech.source_speech_order})`,
+      warning: `No available Speech rows left (section_key='${sectionKey}')`,
     };
   }
 
-  let filtered = candidates.slice();
-  const narrow = (
-    predicate: (candidate: SpeechLookupCandidate) => boolean,
-  ) => {
-    const next = filtered.filter(predicate);
-    if (next.length > 0) filtered = next;
-  };
+  const byPersonId =
+    speech.person_id === null
+      ? candidates
+      : candidates.filter((candidate) => candidate.person_id === speech.person_id);
+  const personScoped = byPersonId.length > 0 ? byPersonId : candidates;
 
-  if (speech.person_id !== null) {
-    narrow((candidate) => candidate.person_id === speech.person_id);
+  const sourceStartTime = normalizeTimestampForMatch(speech.start_time);
+  if (sourceStartTime) {
+    const scored = personScoped
+      .map((candidate) => {
+        const candidateTime =
+          normalizeTimestampForMatch(candidate.order_raw) ||
+          normalizeTimestampForMatch(candidate.request_time) ||
+          normalizeTimestampForMatch(candidate.created_datetime);
+        const bestDelta = bestTimestampDeltaSeconds(sourceStartTime, candidateTime);
+        return {
+          candidate,
+          bestDelta,
+        };
+      })
+      .filter((entry) => entry.bestDelta !== null)
+      .sort((a, b) => {
+        const deltaCmp =
+          (a.bestDelta?.deltaSeconds ?? Number.MAX_SAFE_INTEGER) -
+          (b.bestDelta?.deltaSeconds ?? Number.MAX_SAFE_INTEGER);
+        if (deltaCmp !== 0) return deltaCmp;
+        return b.candidate.id - a.candidate.id;
+      });
+
+    const best = scored[0];
+    if (best && best.bestDelta && best.bestDelta.deltaSeconds <= 2) {
+      return {
+        speech_id: best.candidate.id,
+        warning:
+          best.bestDelta.offsetHours === 0
+            ? null
+            : `Matched Speech by timestamp with offset ${best.bestDelta.offsetHours}h (section_key='${sectionKey}', speech_id=${best.candidate.id})`,
+      };
+    }
+  }
+
+  const ordinalCandidates = personScoped.filter(
+    (candidate) => candidate.ordinal_number === speech.source_speech_order,
+  );
+  if (ordinalCandidates.length === 1) {
+    return {
+      speech_id: ordinalCandidates[0].id,
+      warning: `Matched Speech by ordinal fallback (section_key='${sectionKey}', ordinal_number=${speech.source_speech_order})`,
+    };
   }
 
   const firstName = normalizeNameForMatch(speech.first_name);
   const lastName = normalizeNameForMatch(speech.last_name);
   if (firstName && lastName) {
-    narrow(
+    const byName = personScoped.filter(
       (candidate) =>
         normalizeNameForMatch(candidate.first_name) === firstName &&
         normalizeNameForMatch(candidate.last_name) === lastName,
     );
+    if (byName.length === 1) {
+      return {
+        speech_id: byName[0].id,
+        warning: `Matched Speech by unique name fallback (section_key='${sectionKey}', ordinal_number=${speech.source_speech_order})`,
+      };
+    }
   }
 
-  const startTime = normalizeTimestampForMatch(speech.start_time);
-  if (startTime) {
-    narrow(
-      (candidate) => normalizeTimestampForMatch(candidate.order_raw) === startTime,
-    );
-  }
-
-  const selected = filtered[0];
-  if (!selected) {
+  if (ordinalCandidates.length > 1) {
     return {
       speech_id: null,
-      warning: `Speech matching failed after narrowing (section_key='${sectionKey}', ordinal_number=${speech.source_speech_order})`,
-    };
-  }
-
-  if (filtered.length > 1) {
-    return {
-      speech_id: selected.id,
       warning:
-        `Ambiguous Speech match resolved to latest row ` +
-        `(section_key='${sectionKey}', ordinal_number=${speech.source_speech_order}, candidates=${filtered.length}, selected=${selected.id})`,
+        `Ambiguous Speech match (section_key='${sectionKey}', ordinal_number=${speech.source_speech_order}, candidates=${ordinalCandidates.length})`,
     };
   }
 
   return {
-    speech_id: selected.id,
-    warning: null,
+    speech_id: null,
+    warning: `No confident Speech match (section_key='${sectionKey}', ordinal_number=${speech.source_speech_order})`,
   };
 }
 
 function insertSpeechContents(db: Database, rows: DatabaseTables.SpeechContent[]) {
   for (const row of rows) {
     db.run(
-      "INSERT INTO SpeechContent (speech_id, session_key, section_key, source_document_id, source_item_identifier, source_entry_order, source_speech_order, source_speech_identifier, speech_type_code, language_code, start_time, end_time, content, source_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO SpeechContent (speech_id, session_key, section_key, source_document_id, source_item_identifier, source_entry_order, source_speech_order, source_speech_identifier, speech_type_code, language_code, start_time, end_time, content, source_path, source_first_name, source_last_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         row.speech_id,
         row.session_key,
@@ -859,6 +928,8 @@ function insertSpeechContents(db: Database, rows: DatabaseTables.SpeechContent[]
         row.end_time,
         row.content,
         row.source_path,
+        row.source_first_name,
+        row.source_last_name,
       ],
     );
   }
@@ -926,6 +997,7 @@ export default function createPoytakirjaSubMigrator(db: Database) {
           hasDirectMatch: boolean;
         }
       >();
+      const usedSpeechIdsBySection = new Map<string, Set<number>>();
       const speechContentBySpeechId = new Map<number, DatabaseTables.SpeechContent>();
       const speechIssues: string[] = [...parseIssues];
 
@@ -975,10 +1047,15 @@ export default function createPoytakirjaSubMigrator(db: Database) {
         }
 
         for (const speech of item.speeches) {
+          const usedSpeechIds =
+            usedSpeechIdsBySection.get(sectionLink.sectionKey) ?? new Set<number>();
+          usedSpeechIdsBySection.set(sectionLink.sectionKey, usedSpeechIds);
+
           const speechLink = resolveSpeechForMinutesSpeech(
             db,
             sectionLink.sectionKey,
             speech,
+            usedSpeechIds,
           );
           if (!speechLink.speech_id) {
             speechIssues.push(
@@ -986,6 +1063,8 @@ export default function createPoytakirjaSubMigrator(db: Database) {
             );
             continue;
           }
+
+          usedSpeechIds.add(speechLink.speech_id);
 
           if (speechLink.warning) {
             speechIssues.push(`Speech link warning: ${speechLink.warning}`);
@@ -1006,6 +1085,8 @@ export default function createPoytakirjaSubMigrator(db: Database) {
             end_time: speech.end_time,
             content: speech.content,
             source_path: incomingRow.source_path,
+            source_first_name: speech.first_name,
+            source_last_name: speech.last_name,
           };
 
           const existing = speechContentBySpeechId.get(speechLink.speech_id);

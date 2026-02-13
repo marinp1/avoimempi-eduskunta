@@ -46,6 +46,7 @@ describe("Migration schema", () => {
       "V001.004__vaski_minutes_session_section_columns.sql",
       "V001.005__drop_vaski_plenary_minutes_tables.sql",
       "V001.006__speech_content_schema.sql",
+      "V001.007__speech_content_source_names.sql",
     ]);
   });
 
