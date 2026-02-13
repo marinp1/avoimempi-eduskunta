@@ -11,15 +11,15 @@ export class DatabaseConnection {
     return this.#database;
   }
 
-  private buildFtsQuery(raw: string | null | undefined): string | null {
+  private buildSearchQuery(raw: string | null | undefined): string | null {
     if (!raw) return null;
     const tokens = raw
       .trim()
       .split(/\s+/)
-      .map((token) => token.replace(/"/g, '""'))
+      .map((token) => token.trim())
       .filter((token) => token.length > 0);
     if (tokens.length === 0) return null;
-    return tokens.map((token) => `${token}*`).join(" ");
+    return tokens.join("%");
   }
 
   private endDateExclusive(endDate: string | null | undefined): string | null {
@@ -143,13 +143,13 @@ export class DatabaseConnection {
   }
 
   public async queryVotings(params: { q: string }) {
-    const ftsQuery = this.buildFtsQuery(params.q);
-    if (!ftsQuery) return [];
+    const searchQuery = this.buildSearchQuery(params.q);
+    if (!searchQuery) return [];
     const stmt = this.db.prepare<
       DatabaseQueries.VotingSearchResult,
       { $query: string }
     >(queries.votingsSearch);
-    const data = stmt.all({ $query: ftsQuery });
+    const data = stmt.all({ $query: searchQuery });
     stmt.finalize();
     return data;
   }
@@ -923,8 +923,8 @@ export class DatabaseConnection {
   }
 
   public async federatedSearch(params: { q: string; limit?: number }) {
-    const ftsQuery = this.buildFtsQuery(params.q);
-    if (!ftsQuery) return [];
+    const searchQuery = this.buildSearchQuery(params.q);
+    if (!searchQuery) return [];
     const stmt = this.db.prepare<
       {
         type: string;
@@ -936,7 +936,7 @@ export class DatabaseConnection {
       { $q: string; $limit: number }
     >(queries.federatedSearch);
     const data = stmt.all({
-      $q: ftsQuery,
+      $q: searchQuery,
       $limit: params.limit ?? 30,
     });
     stmt.finalize();
