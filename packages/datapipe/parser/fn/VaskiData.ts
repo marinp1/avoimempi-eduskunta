@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
-import { mkdir, symlink, writeFile } from "node:fs/promises";
+import { mkdir, symlink, unlink, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
+import { getStorage, getStorageConfig, StorageKeyBuilder } from "#storage";
 import { XMLParser } from "fast-xml-parser";
 import type { ParserFunction } from "../parser";
 
@@ -124,9 +125,108 @@ function findRepoRoot(): string {
   return process.cwd();
 }
 
-// ── Index accumulator (built across pages, flushed in onParsingComplete) ──
+type ParsedRow = Record<string, any>;
+type VaskiIndex = Record<
+  string,
+  { totalRecords: number; pages: Record<string, string[]> }
+>;
 
-const index: Record<string, { totalRecords: number; pages: Record<string, string[]> }> = {};
+function getParsedPageAbsolutePath(pageNumber: number): string {
+  const storageConfig = getStorageConfig();
+  if (storageConfig.provider === "local" && storageConfig.local) {
+    return join(
+      storageConfig.local.baseDir,
+      "parsed",
+      "VaskiData",
+      `page_${pageNumber}.json`,
+    );
+  }
+
+  // Non-local storage providers are not currently supported for symlink output.
+  const repoRoot = findRepoRoot();
+  return join(repoRoot, "data", "parsed", "VaskiData", `page_${pageNumber}.json`);
+}
+
+function collectDocumentTypeRows(rows: ParsedRow[]): Map<string, string[]> {
+  const docTypeRecords = new Map<string, string[]>();
+
+  for (const row of rows) {
+    if (!row || row._skip) continue;
+
+    const id = row.id ?? row.Id;
+    const meta = row["#avoimempieduskunta"];
+    const documentType = meta?.documentType;
+    if (!documentType || id === undefined || id === null) continue;
+
+    const ids = docTypeRecords.get(documentType) ?? [];
+    ids.push(String(id));
+    docTypeRecords.set(documentType, ids);
+  }
+
+  return docTypeRecords;
+}
+
+async function ensureDocumentTypeSymlink(
+  repoRoot: string,
+  documentType: string,
+  pageNumber: number,
+): Promise<void> {
+  const symlinkDir = join(repoRoot, "vaski-data", documentType);
+  const symlinkPath = join(symlinkDir, `page_${pageNumber}.json`);
+
+  await mkdir(symlinkDir, { recursive: true });
+
+  const parsedFile = getParsedPageAbsolutePath(pageNumber);
+  const target = relative(symlinkDir, parsedFile);
+
+  try {
+    await symlink(target, symlinkPath);
+  } catch (e: any) {
+    if (e.code !== "EEXIST") {
+      throw e;
+    }
+
+    await unlink(symlinkPath);
+    await symlink(target, symlinkPath);
+  }
+}
+
+async function buildIndexFromParsedStorage(): Promise<VaskiIndex> {
+  const storage = getStorage();
+  const prefix = StorageKeyBuilder.listPrefixForTable("parsed", "VaskiData");
+  const listResult = await storage.list({ prefix, maxKeys: 100000 });
+
+  const sortedPages = listResult.keys
+    .map((keyMeta) => ({
+      key: keyMeta.key,
+      parsed: StorageKeyBuilder.parseKey(keyMeta.key),
+    }))
+    .filter((item) => item.parsed !== null)
+    .sort((a, b) => (a.parsed?.page || 0) - (b.parsed?.page || 0));
+
+  const index: VaskiIndex = {};
+
+  for (const pageInfo of sortedPages) {
+    const rawPage = await storage.get(pageInfo.key);
+    if (!rawPage) continue;
+
+    const page = JSON.parse(rawPage) as { rowData?: ParsedRow[] };
+    const rows = Array.isArray(page.rowData) ? page.rowData : [];
+    const pageNumber = pageInfo.parsed!.page;
+    const docTypeRows = collectDocumentTypeRows(rows);
+
+    for (const [documentType, ids] of docTypeRows.entries()) {
+      if (!index[documentType]) {
+        index[documentType] = { totalRecords: 0, pages: {} };
+      }
+
+      index[documentType].pages[String(pageNumber)] = ids;
+      index[documentType].totalRecords += ids.length;
+    }
+  }
+
+  return index;
+}
 
 /**
  * Custom parser for VaskiData table.
@@ -179,55 +279,16 @@ export default parser;
 
 /**
  * Called after each parsed page is written to storage.
- * Creates per-documentType symlinks and accumulates the index.
+ * Creates per-documentType symlinks for quick local browsing.
  */
 export async function onPageParsed(
   pageNumber: number,
-  rows: Record<string, any>[],
+  rows: ParsedRow[],
 ): Promise<void> {
-  // Group record IDs by documentType
-  const docTypeRecords = new Map<string, string[]>();
-  for (const row of rows) {
-    if (row._skip) continue;
-    const meta = row["#avoimempieduskunta"];
-    if (!meta?.documentType) continue;
-    const ids = docTypeRecords.get(meta.documentType) ?? [];
-    ids.push(String(row.id));
-    docTypeRecords.set(meta.documentType, ids);
-  }
-
-  // Update in-memory index
-  for (const [docType, ids] of docTypeRecords) {
-    if (!index[docType]) index[docType] = { totalRecords: 0, pages: {} };
-    index[docType].pages[String(pageNumber)] = ids;
-    index[docType].totalRecords += ids.length;
-  }
-
-  // Create symlinks for manual browsing
   const repoRoot = findRepoRoot();
-  const parsedFile = join(
-    repoRoot,
-    "data",
-    "parsed",
-    "VaskiData",
-    `page_${pageNumber}.json`,
-  );
-
-  for (const docType of docTypeRecords.keys()) {
-    const symlinkDir = join(repoRoot, "vaski-data", docType);
-    const symlinkPath = join(symlinkDir, `page_${pageNumber}.json`);
-    await mkdir(symlinkDir, { recursive: true });
-
-    const target = relative(symlinkDir, parsedFile);
-    try {
-      await symlink(target, symlinkPath);
-    } catch (e: any) {
-      if (e.code === "EEXIST") {
-        // Already exists, skip
-      } else {
-        throw e;
-      }
-    }
+  const docTypeRows = collectDocumentTypeRows(rows);
+  for (const documentType of docTypeRows.keys()) {
+    await ensureDocumentTypeSymlink(repoRoot, documentType, pageNumber);
   }
 }
 
@@ -236,9 +297,17 @@ export async function onPageParsed(
  * Writes the vaski-data/index.json metadata index.
  */
 export async function onParsingComplete(): Promise<void> {
+  const index = await buildIndexFromParsedStorage();
   const repoRoot = findRepoRoot();
   const vaskiDir = join(repoRoot, "vaski-data");
   await mkdir(vaskiDir, { recursive: true });
+
+  for (const [documentType, info] of Object.entries(index)) {
+    const pages = Object.keys(info.pages);
+    for (const page of pages) {
+      await ensureDocumentTypeSymlink(repoRoot, documentType, +page);
+    }
+  }
 
   const indexPath = join(vaskiDir, "index.json");
   await writeFile(indexPath, JSON.stringify(index, null, 2));
