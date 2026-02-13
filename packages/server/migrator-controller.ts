@@ -4,6 +4,7 @@ import path from "node:path";
 import type { ServerWebSocket } from "bun";
 import { getMigrations } from "bun-sqlite-migrations";
 import { TableName } from "#constants/index";
+import { migrateVaskiData } from "../datapipe/migrator/VaskiData/migrator";
 import { clearStatementCache } from "../datapipe/migrator/utils";
 import { getDatabasePath } from "../shared/database";
 import { getStorage, StorageKeyBuilder } from "../shared/storage";
@@ -47,7 +48,6 @@ const IMPORT_ORDER: Partial<Record<string, number>> = {
 };
 
 const DISABLED_IMPORT_TABLES = new Set<string>([
-  "VaskiData",
   "SaliDBAanestysAsiakirja",
   "SaliDBAanestysJakauma",
 ]);
@@ -460,6 +460,146 @@ export class MigratorController {
             totalTables: tablesToImport.length,
           },
         });
+
+        if (tableName === TableName.VaskiData) {
+          let totalDocumentTypes = 0;
+          let rowsImported = 0;
+
+          targetDatabase.exec(MIGRATOR_SQL.beginTransaction);
+
+          try {
+            const summary = await migrateVaskiData(targetDatabase, {
+              shouldStop: () => this.shouldStop,
+              documentTypeProgressRowInterval: 1000,
+              onDocumentTypeStart: ({ documentType, index, total }) => {
+                totalDocumentTypes = total;
+                this.sendMessage({
+                  type: "progress",
+                  data: {
+                    message: `Importing ${tableName}/${documentType} (${index}/${total})...`,
+                    currentTable: tableName,
+                    currentDocumentType: documentType,
+                    documentTypesCompleted: index - 1,
+                    totalDocumentTypes: total,
+                    tablesCompleted,
+                    totalTables: tablesToImport.length,
+                  },
+                });
+              },
+              onDocumentTypeProgress: ({
+                documentType,
+                index,
+                total,
+                rowsMigrated,
+              }) => {
+                totalDocumentTypes = total;
+                this.sendMessage({
+                  type: "progress",
+                  data: {
+                    message: `Importing ${tableName}/${documentType} (${index}/${total}) - ${rowsMigrated} rows`,
+                    currentTable: tableName,
+                    currentDocumentType: documentType,
+                    documentTypesCompleted: index - 1,
+                    totalDocumentTypes: total,
+                    rowsInCurrentDocumentType: rowsMigrated,
+                    rowsImported: rowsImported + rowsMigrated,
+                    tablesCompleted,
+                    totalTables: tablesToImport.length,
+                  },
+                });
+              },
+              onDocumentTypeComplete: ({
+                documentType,
+                index,
+                total,
+                rowsMigrated,
+              }) => {
+                totalDocumentTypes = total;
+                rowsImported += rowsMigrated;
+                this.sendMessage({
+                  type: "progress",
+                  data: {
+                    message: `Imported ${tableName}/${documentType} (${index}/${total}) - ${rowsMigrated} rows`,
+                    currentTable: tableName,
+                    currentDocumentType: documentType,
+                    documentTypesCompleted: index,
+                    totalDocumentTypes: total,
+                    rowsImported,
+                    tablesCompleted,
+                    totalTables: tablesToImport.length,
+                  },
+                });
+              },
+              onDocumentTypeSkipped: ({ documentType, index, total, reason }) => {
+                totalDocumentTypes = total;
+                this.sendMessage({
+                  type: "progress",
+                  data: {
+                    message: `Skipping ${tableName}/${documentType} (${index}/${total}) - ${reason}`,
+                    currentTable: tableName,
+                    currentDocumentType: documentType,
+                    documentTypesCompleted: index,
+                    totalDocumentTypes: total,
+                    tablesCompleted,
+                    totalTables: tablesToImport.length,
+                  },
+                });
+              },
+            });
+
+            rowsImported = Object.values(summary.rowsByDocumentType).reduce(
+              (sum, value) => sum + value,
+              0,
+            );
+
+            targetDatabase.exec(MIGRATOR_SQL.commit);
+
+            const tableTime = ((Date.now() - tableStartTime) / 1000).toFixed(2);
+            const rowsPerSecond = (
+              rowsImported / Math.max(parseFloat(tableTime), 0.001)
+            ).toFixed(0);
+            console.log(
+              `✅ Imported ${rowsImported} rows from ${tableName} in ${tableTime}s (${rowsPerSecond} rows/s)`,
+            );
+            console.log(
+              `   Migrated document types: ${summary.migratedDocumentTypes.length}, skipped: ${summary.skippedDocumentTypes.length}, total requested: ${summary.requestedDocumentTypes.length}`,
+            );
+
+            this.sendMessage({
+              type: "progress",
+              data: {
+                message: `Completed ${tableName} (${summary.requestedDocumentTypes.length} processed, ${summary.migratedDocumentTypes.length} migrated, ${summary.skippedDocumentTypes.length} skipped)`,
+                currentTable: tableName,
+                currentDocumentType: null,
+                documentTypesCompleted:
+                  totalDocumentTypes || summary.requestedDocumentTypes.length,
+                totalDocumentTypes:
+                  totalDocumentTypes || summary.requestedDocumentTypes.length,
+                rowsImported,
+                tablesCompleted,
+                totalTables: tablesToImport.length,
+              },
+            });
+          } catch (error) {
+            targetDatabase.exec(MIGRATOR_SQL.rollback);
+            throw error;
+          }
+
+          tablesCompleted++;
+
+          this.sendMessage({
+            type: "progress",
+            data: {
+              message: `Completed ${tableName}`,
+              currentTable: tableName,
+              currentDocumentType: null,
+              tablesCompleted,
+              totalTables: tablesToImport.length,
+            },
+          });
+
+          continue;
+        }
 
         // Check if migrator exists
         const migratorPath = path.resolve(

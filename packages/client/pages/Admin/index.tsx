@@ -89,7 +89,13 @@ export default () => {
 
   // Migrator control state
   const [migratorRunning, setMigratorRunning] = useState<boolean>(false);
+  const [currentMigratingTable, setCurrentMigratingTable] = useState<
+    string | null
+  >(null);
+  const [currentMigratingDocumentType, setCurrentMigratingDocumentType] =
+    useState<string | null>(null);
   const [migratorProgress, setMigratorProgress] = useState<string>("");
+  const [migratorPercent, setMigratorPercent] = useState<number>(0);
   const [lastMigrationTimestamp, setLastMigrationTimestamp] = useState<
     string | null
   >(null);
@@ -369,31 +375,89 @@ export default () => {
         case "status":
           if (message.data.status === "started") {
             setMigratorRunning(true);
+            setCurrentMigratingTable(null);
+            setCurrentMigratingDocumentType(null);
             setMigratorProgress("Starting database migration...");
+            setMigratorPercent(0);
           } else if (message.data.status === "stopping") {
             setMigratorProgress("Stopping...");
           }
           break;
 
         case "progress":
+          if (typeof message.data.currentTable === "string") {
+            setCurrentMigratingTable(message.data.currentTable);
+          } else if (message.data.currentTable === null) {
+            setCurrentMigratingTable(null);
+          }
+
+          if (typeof message.data.currentDocumentType === "string") {
+            setCurrentMigratingDocumentType(message.data.currentDocumentType);
+          } else if (message.data.currentDocumentType === null) {
+            setCurrentMigratingDocumentType(null);
+          }
+
+          const totalTables =
+            typeof message.data.totalTables === "number"
+              ? message.data.totalTables
+              : 0;
+          const tablesCompleted =
+            typeof message.data.tablesCompleted === "number"
+              ? message.data.tablesCompleted
+              : 0;
+          if (totalTables > 0) {
+            let progressPercent = (tablesCompleted / totalTables) * 100;
+
+            const totalDocumentTypes =
+              typeof message.data.totalDocumentTypes === "number"
+                ? message.data.totalDocumentTypes
+                : 0;
+            const documentTypesCompleted =
+              typeof message.data.documentTypesCompleted === "number"
+                ? message.data.documentTypesCompleted
+                : 0;
+
+            if (
+              message.data.currentTable === "VaskiData" &&
+              totalDocumentTypes > 0
+            ) {
+              progressPercent =
+                ((tablesCompleted +
+                  documentTypesCompleted / totalDocumentTypes) /
+                  totalTables) *
+                100;
+            }
+
+            setMigratorPercent(Math.max(0, Math.min(100, progressPercent)));
+          }
+
           setMigratorProgress(message.data.message || "Processing...");
           break;
 
         case "complete":
           setMigratorRunning(false);
+          setCurrentMigratingTable(null);
+          setCurrentMigratingDocumentType(null);
           setMigratorProgress("Migration completed successfully");
+          setMigratorPercent(100);
           setLastMigrationTimestamp(message.data.timestamp);
           setTimeout(() => fetchData(false), 500);
           break;
 
         case "error":
           setMigratorRunning(false);
+          setCurrentMigratingTable(null);
+          setCurrentMigratingDocumentType(null);
           setMigratorProgress(`Error: ${message.data.error}`);
+          setMigratorPercent(0);
           break;
 
         case "stopped":
           setMigratorRunning(false);
+          setCurrentMigratingTable(null);
+          setCurrentMigratingDocumentType(null);
           setMigratorProgress("Migration stopped");
+          setMigratorPercent(0);
           break;
       }
     };
@@ -852,7 +916,12 @@ export default () => {
         description="Build final SQLite database from parsed data"
         isRunning={migratorRunning}
         progress={migratorProgress}
-        progressPercent={0}
+        progressPercent={migratorPercent}
+        currentTable={
+          currentMigratingDocumentType && currentMigratingTable === "VaskiData"
+            ? `${currentMigratingTable}/${currentMigratingDocumentType}`
+            : currentMigratingTable
+        }
         onStart={handleStartMigration}
         onStop={handleStopMigration}
         gradient={gradients.success}

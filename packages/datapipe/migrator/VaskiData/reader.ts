@@ -26,6 +26,11 @@ export interface VaskiEntry {
       SiirtoTiedosto?: Record<string, any>;
     };
   };
+  _source?: {
+    page: number;
+    parsedKey: string;
+    vaskiPath: string;
+  };
 }
 
 export type VaskiIndex = Record<
@@ -101,7 +106,14 @@ export async function* readVaskiRowsByDocumentType(
       if (rowDocumentType !== documentType) continue;
 
       seenIds.add(rowId);
-      yield row as VaskiEntry;
+      yield {
+        ...(row as VaskiEntry),
+        _source: {
+          page,
+          parsedKey: pageKey,
+          vaskiPath: `vaski-data/${documentType}/page_${page}.json`,
+        },
+      };
     }
   }
 }
