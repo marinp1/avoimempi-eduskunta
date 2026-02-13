@@ -29,8 +29,11 @@ const getColumnNames = (
   ).map((row) => row.name);
 
 describe("Migration schema", () => {
-  test("uses a single merged active migration file", () => {
-    expect(getActiveMigrationFiles()).toEqual(["V001.001__core_parliament_schema.sql"]);
+  test("uses expected active migration files", () => {
+    expect(getActiveMigrationFiles()).toEqual([
+      "V001.001__core_parliament_schema.sql",
+      "V001.002__vaski_roll_call_schema.sql",
+    ]);
   });
 
   test("bootstrap migration has no ALTER TABLE or DROP statements", () => {
@@ -57,6 +60,8 @@ describe("Migration schema", () => {
       expect(tableNames).toContain("SectionDocumentLink");
       expect(tableNames).toContain("SessionNotice");
       expect(tableNames).toContain("SaliDBDocumentReference");
+      expect(tableNames).toContain("RollCallReport");
+      expect(tableNames).toContain("RollCallEntry");
 
       expect(tableNames).not.toContain("Document");
       expect(tableNames).not.toContain("DocumentActor");

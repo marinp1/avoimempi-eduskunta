@@ -19,6 +19,7 @@ interface ControlPanelProps {
   isRunning: boolean;
   progress: string;
   progressPercent: number;
+  currentTable?: string | null;
   onStart: () => void;
   onStop: () => void;
   gradient: string;
@@ -32,6 +33,7 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
   isRunning,
   progress,
   progressPercent,
+  currentTable,
   onStart,
   onStop,
   gradient,
@@ -111,6 +113,20 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                 >
                   {progress}
                 </Typography>
+                {currentTable && (
+                  <Typography
+                    variant="body2"
+                    fontWeight="600"
+                    fontFamily="monospace"
+                    sx={{
+                      mb: 1,
+                      color: themedColors.textPrimary,
+                      fontSize: "0.8125rem",
+                    }}
+                  >
+                    {t("admin.bulkOperations.current")} {currentTable}
+                  </Typography>
+                )}
                 <LinearProgress
                   variant="determinate"
                   value={progressPercent}

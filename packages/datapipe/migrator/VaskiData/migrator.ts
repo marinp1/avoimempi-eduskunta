@@ -15,6 +15,31 @@ export interface VaskiMigrationOptions {
    * Document types to migrate. If omitted, migrates all indexed document types.
    */
   documentTypes?: string[];
+  onDocumentTypeStart?: (event: {
+    documentType: string;
+    index: number;
+    total: number;
+  }) => void | Promise<void>;
+  onDocumentTypeComplete?: (event: {
+    documentType: string;
+    index: number;
+    total: number;
+    rowsMigrated: number;
+  }) => void | Promise<void>;
+  onDocumentTypeProgress?: (event: {
+    documentType: string;
+    index: number;
+    total: number;
+    rowsMigrated: number;
+  }) => void | Promise<void>;
+  onDocumentTypeSkipped?: (event: {
+    documentType: string;
+    index: number;
+    total: number;
+    reason: "no_submigrator" | "no_indexed_data";
+  }) => void | Promise<void>;
+  documentTypeProgressRowInterval?: number;
+  shouldStop?: () => boolean;
 }
 
 export interface VaskiMigrationSummary {
@@ -112,20 +137,68 @@ export async function migrateVaskiData(
   const migratedDocumentTypes: string[] = [];
   const skippedDocumentTypes: string[] = [];
   const rowsByDocumentType: Record<string, number> = {};
+  const progressInterval = Math.max(
+    1,
+    options?.documentTypeProgressRowInterval ?? 1000,
+  );
 
-  for (const documentType of requestedDocumentTypes) {
+  for (const [index, documentType] of requestedDocumentTypes.entries()) {
+    const position = index + 1;
     const subMigrator = await loadSubMigrator(db, documentType);
     const hasIndexedData = indexedDocumentTypes.includes(documentType);
 
-    if (!subMigrator || !hasIndexedData) {
+    if (!subMigrator) {
       skippedDocumentTypes.push(documentType);
+      if (options?.onDocumentTypeSkipped) {
+        await options.onDocumentTypeSkipped({
+          documentType,
+          index: position,
+          total: requestedDocumentTypes.length,
+          reason: "no_submigrator",
+        });
+      }
       continue;
+    }
+
+    if (!hasIndexedData) {
+      skippedDocumentTypes.push(documentType);
+      if (options?.onDocumentTypeSkipped) {
+        await options.onDocumentTypeSkipped({
+          documentType,
+          index: position,
+          total: requestedDocumentTypes.length,
+          reason: "no_indexed_data",
+        });
+      }
+      continue;
+    }
+
+    if (options?.onDocumentTypeStart) {
+      await options.onDocumentTypeStart({
+        documentType,
+        index: position,
+        total: requestedDocumentTypes.length,
+      });
     }
 
     let rowsMigrated = 0;
     for await (const row of readVaskiRowsByDocumentType(documentType)) {
+      if (options?.shouldStop?.()) {
+        throw new Error("Migration stopped by user");
+      }
       await subMigrator.migrateRow(row);
       rowsMigrated++;
+      if (
+        options?.onDocumentTypeProgress &&
+        rowsMigrated % progressInterval === 0
+      ) {
+        await options.onDocumentTypeProgress({
+          documentType,
+          index: position,
+          total: requestedDocumentTypes.length,
+          rowsMigrated,
+        });
+      }
     }
 
     if (subMigrator.flush) {
@@ -134,6 +207,15 @@ export async function migrateVaskiData(
 
     rowsByDocumentType[documentType] = rowsMigrated;
     migratedDocumentTypes.push(documentType);
+
+    if (options?.onDocumentTypeComplete) {
+      await options.onDocumentTypeComplete({
+        documentType,
+        index: position,
+        total: requestedDocumentTypes.length,
+        rowsMigrated,
+      });
+    }
   }
 
   return {
