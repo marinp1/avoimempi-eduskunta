@@ -2,6 +2,13 @@ import { Database } from "bun:sqlite";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { existsSync } from "fs";
 import { join } from "path";
+import { EXPECTED_SANITY_TABLES } from "../database/sanity-queries";
+import {
+  buildKnownDataExceptions,
+  getExceptionIdSetForCheck,
+  getExceptionsForCheck,
+  type KnownDataException,
+} from "../services/known-data-exceptions";
 
 /**
  * Sanity tests against the REAL database file.
@@ -17,11 +24,34 @@ const DB_PATH = join(import.meta.dirname, "../../../avoimempi-eduskunta.db");
 const DB_EXISTS = existsSync(DB_PATH);
 
 let db: Database;
+let knownExceptions: KnownDataException[] = [];
+
+function expectIdsExplainedByKnownException(
+  checkName: string,
+  actualIds: Array<number | string>,
+) {
+  const expectedIds = getExceptionIdSetForCheck(knownExceptions, checkName);
+  const actualIdSet = new Set(actualIds.map((id) => String(id)));
+
+  const unexpectedIds = [...actualIdSet].filter((id) => !expectedIds.has(id));
+  const missingKnownIds = [...expectedIds].filter((id) => !actualIdSet.has(id));
+
+  if (unexpectedIds.length > 0 || missingKnownIds.length > 0) {
+    const checkExceptions = getExceptionsForCheck(knownExceptions, checkName);
+    console.log(
+      `[known-exception-mismatch] check=${checkName}, registered_exception_count=${checkExceptions.length}, unexpected_ids=${unexpectedIds.slice(0, 20).join(",")}, missing_known_ids=${missingKnownIds.slice(0, 20).join(",")}`,
+    );
+  }
+
+  expect(unexpectedIds).toEqual([]);
+  expect(missingKnownIds).toEqual([]);
+}
 
 beforeAll(() => {
   if (!DB_EXISTS) return;
   db = new Database(DB_PATH, { readonly: true });
   db.exec("PRAGMA journal_mode = WAL;");
+  knownExceptions = buildKnownDataExceptions(db);
 });
 
 afterAll(() => {
@@ -40,36 +70,7 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
         .all() as { name: string }[];
       const tableNames = tables.map((t) => t.name);
 
-      const expectedTables = [
-        "Representative",
-        "Term",
-        "ParliamentaryGroup",
-        "ParliamentaryGroupMembership",
-        "GovernmentMembership",
-        "Committee",
-        "CommitteeMembership",
-        "District",
-        "RepresentativeDistrict",
-        "Education",
-        "WorkHistory",
-        "TrustPosition",
-        "Agenda",
-        "Session",
-        "Section",
-        "Voting",
-        "Vote",
-        "Speech",
-        "SessionSectionSpeech",
-        "SectionDocumentLink",
-        "SessionNotice",
-        "SaliDBDocumentReference",
-        "Document",
-        "DocumentActor",
-        "DocumentSubject",
-        "DocumentRelation",
-        "SessionMinutesItem",
-      ];
-      for (const expected of expectedTables) {
+      for (const expected of EXPECTED_SANITY_TABLES) {
         expect(tableNames).toContain(expected);
       }
     });
@@ -308,18 +309,20 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
     });
 
     test("individual vote count matches n_total for each voting", () => {
-      const { c } = db
+      const mismatchedRows = db
         .query(
-          `SELECT COUNT(*) as c FROM (
-             SELECT v.id, v.n_total, COUNT(vo.id) as actual_votes
-             FROM Voting v
-             JOIN Vote vo ON v.id = vo.voting_id
-             GROUP BY v.id
-             HAVING actual_votes != v.n_total
-           )`,
+          `SELECT v.id
+           FROM Voting v
+           JOIN Vote vo ON v.id = vo.voting_id
+           GROUP BY v.id
+           HAVING COUNT(vo.id) != v.n_total`,
         )
-        .get() as any;
-      expect(c).toBe(0);
+        .all() as Array<{ id: number }>;
+      const mismatchedIds = mismatchedRows.map((row) => row.id);
+      expectIdsExplainedByKnownException(
+        "Individual vote count matches",
+        mismatchedIds,
+      );
     });
 
     test("no votings with NULL start_time", () => {
@@ -729,26 +732,23 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
 
   describe("Vote aggregation per type", () => {
     test("per-type vote counts match individual vote records", () => {
-      const { c } = db
+      const mismatchedRows = db
         .query(
-          `SELECT COUNT(*) as c FROM (
-             SELECT v.id,
-               v.n_yes, v.n_no, v.n_abstain, v.n_absent,
-               SUM(CASE WHEN vo.vote = 'Jaa' THEN 1 ELSE 0 END) as actual_yes,
-               SUM(CASE WHEN vo.vote = 'Ei' THEN 1 ELSE 0 END) as actual_no,
-               SUM(CASE WHEN vo.vote = 'Tyhjää' THEN 1 ELSE 0 END) as actual_abstain,
-               SUM(CASE WHEN vo.vote = 'Poissa' THEN 1 ELSE 0 END) as actual_absent
-             FROM Voting v
-             JOIN Vote vo ON v.id = vo.voting_id
-             GROUP BY v.id
-             HAVING actual_yes != v.n_yes
-                OR actual_no != v.n_no
-                OR actual_abstain != v.n_abstain
-                OR actual_absent != v.n_absent
-           )`,
+          `SELECT v.id
+           FROM Voting v
+           JOIN Vote vo ON v.id = vo.voting_id
+           GROUP BY v.id
+           HAVING SUM(CASE WHEN vo.vote = 'Jaa' THEN 1 ELSE 0 END) != v.n_yes
+              OR SUM(CASE WHEN vo.vote = 'Ei' THEN 1 ELSE 0 END) != v.n_no
+              OR SUM(CASE WHEN vo.vote = 'Tyhjää' THEN 1 ELSE 0 END) != v.n_abstain
+              OR SUM(CASE WHEN vo.vote = 'Poissa' THEN 1 ELSE 0 END) != v.n_absent`,
         )
-        .get() as any;
-      expect(c).toBe(0);
+        .all() as Array<{ id: number }>;
+      const mismatchedIds = mismatchedRows.map((row) => row.id);
+      expectIdsExplainedByKnownException(
+        "Vote aggregation per type",
+        mismatchedIds,
+      );
     });
   });
 

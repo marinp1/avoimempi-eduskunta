@@ -17,19 +17,19 @@ afterAll(() => {
 });
 
 describe("StatusController", () => {
-  test("getOverview returns table stats without legacy table query errors", async () => {
+  test("getOverview returns dynamic table stats", async () => {
     const overview = await controller.getOverview();
     const tableNames = overview.tables.map((t) => t.tableName);
 
     expect(overview.totalTables).toBeGreaterThan(0);
-    expect(tableNames).toContain("DocumentSubject");
-    expect(tableNames).toContain("DocumentRelation");
-    expect(tableNames).not.toContain("VaskiSubject");
-    expect(tableNames).not.toContain("VaskiRelationship");
+    expect(tableNames).toContain("Representative");
+    expect(tableNames).toContain("Speech");
+    expect(tableNames).toContain("VaskiDocument");
+    expect(tableNames).toContain("RollCallReport");
   });
 
   test("getTableDetails rejects invalid table name", async () => {
-    expect(controller.getTableDetails("VaskiSubject")).rejects.toThrow(
+    expect(controller.getTableDetails("NotATable")).rejects.toThrow(
       "Invalid table name",
     );
   });

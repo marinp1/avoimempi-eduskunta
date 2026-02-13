@@ -1,4 +1,7 @@
 {
   "editor.formatOnSave": true,
-  "files.insertFinalNewline": true
+  "files.insertFinalNewline": true,
+  "yaml.schemas": {
+    "./packages/server/config/sanity-constraints.schema.json": "packages/server/config/sanity-constraints.yaml"
+  }
 }
