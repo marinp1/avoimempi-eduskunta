@@ -1,0 +1,9 @@
+range_start,range_end,mp_count,left_person,left_date,joined_person,joined_date,gap_days,evidence
+2021-09-08,2021-09-08,198,"Juhana Vartiainen (1330)",2021-09-07,"Atte Kaleva (1481)",2021-09-09,1,"Seuraaja Atte Kaleva /kok; Edeltäjä Juhana Vartiainen /kok"
+2021-09-08,2021-09-08,198,"Anna-Kaisa Ikonen (1421)",2021-09-07,"Jari Kinnunen (1480)",2021-09-09,1,"Seuraaja Jari Kinnunen /kok; Edeltäjä Anna-Kaisa Ikonen /kok"
+2022-04-15,2022-04-28,199,"Ilkka Kanerva (170)",2022-04-14,"Ville Valkonen (1483)",2022-04-29,14,"Seuraaja Ville Valkonen /kok; Edeltäjä Ilkka Kanerva /kok"
+2023-04-05,2023-04-11,199,"Miapetra Kumpula-Natri (807), temporary absence starts",2023-04-05,"Helena Marttila (1539)",2023-04-12,7,"TemporaryAbsence replacement=Helena Marttila /sd; Edeltäjä Miapetra Kumpula-Natri /sd"
+2023-09-13,2023-09-13,199,"Sanna Marin (1297)",2023-09-12,"Lotta Hamari (911820)",2023-09-14,1,"Seuraaja Lotta Hamari /sd; Edeltäjä Sanna Marin /sd"
+2024-07-16,2024-07-16,199,"Maria Guzenina (926), temporary absence starts",2024-07-16,"Miapetra Kumpula-Natri (807) (effective compensation)",2024-07-17,1,"TemporaryAbsence replacement points to Helena Marttila who was already active"
+2025-06-12,2025-06-12,199,"Ilmari Nurminen (1302)",2025-06-11,"Hanna Laine-Nousimaa (911829)",2025-06-13,1,"Seuraaja Hanna Laine-Nousimaa /sd; Edeltäjä Ilmari Nurminen /sd"
+2025-08-20,2025-09-05,199,"Eemeli Peltonen (1496)",2025-08-19,"Anette Karlsson (911831)",2025-09-09,"20 total (17 in requested window)","Seuraaja Anette Karlsson /sd; Edeltäjä Eemeli Peltonen /sd"

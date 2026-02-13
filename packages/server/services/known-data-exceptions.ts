@@ -14,6 +14,322 @@ export interface KnownDataException {
   affectedRows: AffectedRow[];
 }
 
+type Interval = [number, number];
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const PARLIAMENT_EXCEPTION_MIN_DATE = "1919-01-01";
+const EXPECTED_PARLIAMENT_SIZE = 200;
+const DEFAULT_SOURCE_URL = "https://avoindata.eduskunta.fi";
+
+const toDay = (value: string): number =>
+  Math.floor(new Date(`${value}T00:00:00Z`).getTime() / DAY_MS);
+
+const toIsoDay = (day: number): string =>
+  new Date(day * DAY_MS).toISOString().slice(0, 10);
+
+const addToSetMap = (map: Map<number, Set<number>>, key: number, value: number) => {
+  const set = map.get(key) ?? new Set<number>();
+  set.add(value);
+  map.set(key, set);
+};
+
+const mergeIntervals = (intervals: Interval[]): Interval[] => {
+  if (intervals.length === 0) return [];
+  const sorted = [...intervals].sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const merged: Interval[] = [[sorted[0][0], sorted[0][1]]];
+
+  for (const [start, end] of sorted.slice(1)) {
+    const prev = merged[merged.length - 1];
+    if (start <= prev[1] + 1) {
+      if (end > prev[1]) prev[1] = end;
+    } else {
+      merged.push([start, end]);
+    }
+  }
+
+  return merged;
+};
+
+const subtractIntervals = (base: Interval[], subs: Interval[]): Interval[] => {
+  if (base.length === 0) return [];
+  if (subs.length === 0) return base.map(([s, e]) => [s, e]);
+
+  const out: Interval[] = [];
+  let j = 0;
+
+  for (const [baseStart, baseEnd] of base) {
+    let cursor = baseStart;
+
+    while (j < subs.length && subs[j][1] < baseStart) j++;
+
+    let k = j;
+    while (k < subs.length && subs[k][0] <= baseEnd) {
+      const [subStart, subEnd] = subs[k];
+      if (subStart > cursor) {
+        out.push([cursor, Math.min(baseEnd, subStart - 1)]);
+      }
+      cursor = Math.max(cursor, subEnd + 1);
+      if (cursor > baseEnd) break;
+      k++;
+    }
+
+    if (cursor <= baseEnd) out.push([cursor, baseEnd]);
+  }
+
+  return out;
+};
+
+const sortedPeople = (
+  ids: Set<number> | undefined,
+  peopleById: Map<number, string>,
+): string[] => {
+  if (!ids || ids.size === 0) return [];
+  return [...ids]
+    .map((id) => ({ id, name: peopleById.get(id) ?? `person_id=${id}` }))
+    .sort((a, b) => a.name.localeCompare(b.name, "fi"))
+    .map((row) => `${row.name} (${row.id})`);
+};
+
+const parseReplacementName = (
+  replacementPerson: string | null | undefined,
+  prefix: "Seuraaja" | "Edeltäjä",
+): string | null => {
+  if (!replacementPerson) return null;
+  const normalized = replacementPerson.trim();
+  if (!normalized.startsWith(prefix)) return null;
+  const withoutPrefix = normalized.slice(prefix.length).trim();
+  const [name] = withoutPrefix.split("/");
+  const cleaned = name?.trim() ?? "";
+  return cleaned.length > 0 ? cleaned : null;
+};
+
+function buildParliamentSizeBelow200Exception(db: Database): KnownDataException {
+  const minDay = toDay(PARLIAMENT_EXCEPTION_MIN_DATE);
+  const maxDateStr = (
+    db
+      .query<{ max_date: string | null }, []>(
+        "SELECT MAX(COALESCE(end_date, DATE('now'))) as max_date FROM Term",
+      )
+      .get() as { max_date: string | null }
+  ).max_date;
+
+  if (!maxDateStr) {
+    return {
+      id: "PARLIAMENT-SIZE-EXACT-200-001",
+      checkName: "Parliament size limit",
+      description: "No Term date coverage for exact-200 parliament-size exceptions",
+      reason:
+        "Term table has no date bounds, so exact-200 mismatch ranges cannot be derived.",
+      affectedRows: [],
+    };
+  }
+
+  const maxDay = toDay(maxDateStr);
+
+  const peopleRows = db
+    .query<
+      { person_id: number; first_name: string | null; last_name: string | null },
+      []
+    >("SELECT person_id, first_name, last_name FROM Representative")
+    .all();
+  const peopleById = new Map<number, string>(
+    peopleRows.map((row) => [
+      row.person_id,
+      `${(row.first_name ?? "").trim()} ${(row.last_name ?? "").trim()}`.trim() ||
+        `person_id=${row.person_id}`,
+    ]),
+  );
+
+  const leavingRows = db
+    .query<
+      { person_id: number; end_date: string | null; replacement_person: string | null },
+      []
+    >(
+      "SELECT person_id, end_date, replacement_person FROM PeopleLeavingParliament WHERE end_date IS NOT NULL",
+    )
+    .all();
+  const latestLeavingByPerson = new Map<
+    number,
+    { endDate: number; replacementPerson: string | null }
+  >();
+  for (const row of leavingRows) {
+    if (!row.end_date) continue;
+    const endDate = toDay(row.end_date);
+    const prev = latestLeavingByPerson.get(row.person_id);
+    if (!prev || endDate > prev.endDate) {
+      latestLeavingByPerson.set(row.person_id, {
+        endDate,
+        replacementPerson: row.replacement_person,
+      });
+    }
+  }
+
+  const joiningRows = db
+    .query<
+      { person_id: number; start_date: string | null; replacement_person: string | null },
+      []
+    >(
+      "SELECT person_id, start_date, replacement_person FROM PeopleJoiningParliament WHERE start_date IS NOT NULL",
+    )
+    .all();
+  const joiningByPredecessorName = new Map<
+    string,
+    Array<{ joinerId: number; startDay: number }>
+  >();
+  for (const row of joiningRows) {
+    if (!row.start_date) continue;
+    const predecessorName = parseReplacementName(row.replacement_person, "Edeltäjä");
+    if (!predecessorName) continue;
+    const list = joiningByPredecessorName.get(predecessorName) ?? [];
+    list.push({ joinerId: row.person_id, startDay: toDay(row.start_date) });
+    joiningByPredecessorName.set(predecessorName, list);
+  }
+  for (const list of joiningByPredecessorName.values()) {
+    list.sort((a, b) => a.startDay - b.startDay || a.joinerId - b.joinerId);
+  }
+
+  const termRows = db
+    .query<
+      { person_id: number; start_date: string; end_date: string | null },
+      []
+    >("SELECT person_id, start_date, end_date FROM Term WHERE start_date IS NOT NULL")
+    .all();
+  const absenceRows = db
+    .query<
+      { person_id: number; start_date: string; end_date: string | null },
+      []
+    >(
+      "SELECT person_id, start_date, end_date FROM TemporaryAbsence WHERE start_date IS NOT NULL",
+    )
+    .all();
+
+  const termsByPerson = new Map<number, Interval[]>();
+  for (const row of termRows) {
+    const start = toDay(row.start_date);
+    const end = row.end_date ? toDay(row.end_date) : maxDay;
+    if (end < minDay || start > maxDay) continue;
+
+    const list = termsByPerson.get(row.person_id) ?? [];
+    list.push([Math.max(start, minDay), Math.min(end, maxDay)]);
+    termsByPerson.set(row.person_id, list);
+  }
+
+  const absencesByPerson = new Map<number, Interval[]>();
+  for (const row of absenceRows) {
+    const start = toDay(row.start_date);
+    const end = row.end_date ? toDay(row.end_date) : maxDay;
+    if (end < minDay || start > maxDay) continue;
+
+    const list = absencesByPerson.get(row.person_id) ?? [];
+    list.push([Math.max(start, minDay), Math.min(end, maxDay)]);
+    absencesByPerson.set(row.person_id, list);
+  }
+
+  const deltaByDay = new Map<number, number>();
+  const startByDay = new Map<number, Set<number>>();
+  const endByDay = new Map<number, Set<number>>();
+
+  const addDelta = (day: number, value: number) => {
+    deltaByDay.set(day, (deltaByDay.get(day) ?? 0) + value);
+  };
+
+  for (const [personId, personTerms] of termsByPerson) {
+    const mergedTerms = mergeIntervals(personTerms);
+    const mergedAbsences = mergeIntervals(absencesByPerson.get(personId) ?? []);
+    const activeIntervals = subtractIntervals(mergedTerms, mergedAbsences);
+
+    for (const [start, end] of activeIntervals) {
+      if (end < minDay || start > maxDay) continue;
+      const clippedStart = Math.max(start, minDay);
+      const clippedEnd = Math.min(end, maxDay);
+
+      addDelta(clippedStart, +1);
+      addToSetMap(startByDay, clippedStart, personId);
+
+      if (clippedEnd + 1 <= maxDay + 1) {
+        addDelta(clippedEnd + 1, -1);
+        addToSetMap(endByDay, clippedEnd + 1, personId);
+      }
+    }
+  }
+
+  for (const [day, delta] of [...deltaByDay.entries()]) {
+    if (delta === 0) deltaByDay.delete(day);
+  }
+
+  const boundaryDays = [...new Set([minDay, maxDay + 1, ...deltaByDay.keys()])]
+    .filter((day) => day >= minDay && day <= maxDay + 1)
+    .sort((a, b) => a - b);
+
+  const mismatchRanges: Array<{ start: number; end: number; count: number }> = [];
+  let currentCount = 0;
+
+  for (let i = 0; i < boundaryDays.length - 1; i++) {
+    const day = boundaryDays[i];
+    currentCount += deltaByDay.get(day) ?? 0;
+
+    const next = boundaryDays[i + 1];
+    const end = next - 1;
+    if (day > end) continue;
+    if (currentCount !== EXPECTED_PARLIAMENT_SIZE) {
+      mismatchRanges.push({ start: day, end, count: currentCount });
+    }
+  }
+
+  const affectedRows: AffectedRow[] = mismatchRanges.map((range) => {
+    const startIso = toIsoDay(range.start);
+    const endIso = toIsoDay(range.end);
+    const leftOn = range.start - 1 >= minDay ? toIsoDay(range.start - 1) : "<1919-01-01";
+    const joinedOn =
+      range.end + 1 <= maxDay ? toIsoDay(range.end + 1) : "(not yet in data)";
+    const gapDays = range.end - range.start + 1;
+    const leftIds = [...(endByDay.get(range.start) ?? new Set<number>())];
+    const leftPeople = sortedPeople(endByDay.get(range.start), peopleById);
+    const joinedPeople = sortedPeople(startByDay.get(range.end + 1), peopleById);
+    const successorPairs = leftIds
+      .map((leftId) => {
+        const leftName = peopleById.get(leftId) ?? `person_id=${leftId}`;
+        const leftDate = range.start - 1;
+        const leaving = latestLeavingByPerson.get(leftId);
+        const expectedSuccessorName = parseReplacementName(
+          leaving?.replacementPerson,
+          "Seuraaja",
+        );
+        const candidates = joiningByPredecessorName.get(leftName) ?? [];
+        const matchedJoin = candidates.find((candidate) => candidate.startDay > leftDate);
+        if (!matchedJoin) {
+          return `${leftName} (${leftId}) -> ?`;
+        }
+
+        const joinerName =
+          peopleById.get(matchedJoin.joinerId) ?? `person_id=${matchedJoin.joinerId}`;
+        const gapFromLeft = Math.max(0, matchedJoin.startDay - leftDate - 1);
+        const expectedSuffix =
+          expectedSuccessorName && expectedSuccessorName !== joinerName
+            ? `, expected_successor=${expectedSuccessorName}`
+            : "";
+        return `${leftName} (${leftId}) -> ${joinerName} (${matchedJoin.joinerId}) on ${toIsoDay(matchedJoin.startDay)} (gap=${gapFromLeft}d${expectedSuffix})`;
+      })
+      .sort((a, b) => a.localeCompare(b, "fi"));
+
+    return {
+      id: `${startIso}..${endIso}`,
+      label: `${startIso}..${endIso} | mp_count=${range.count} | left_on=${leftOn}: ${leftPeople.length ? leftPeople.join(", ") : "-"} | joined_on=${joinedOn}: ${joinedPeople.length ? joinedPeople.join(", ") : "-"} | gap_days=${gapDays} | successor_pairs=${successorPairs.length ? successorPairs.join("; ") : "-"}`,
+      sourceUrl: DEFAULT_SOURCE_URL,
+    };
+  });
+
+  return {
+    id: "PARLIAMENT-SIZE-EXACT-200-001",
+    checkName: "Parliament size limit",
+    description:
+      "All historical ranges where active parliament composition differs from exactly 200 (including below-200 gaps)",
+    reason:
+      "Derived from merged Term intervals minus TemporaryAbsence intervals. Each row lists range, who left at range start, who joined at range end+1, and the resulting gap length in days.",
+    affectedRows,
+  };
+}
+
 const MISSING_SINGLE_VOTE_ROWS: AffectedRow[] = [
   {
     id: 34376,
@@ -267,33 +583,6 @@ const MISSING_SINGLE_VOTE_ROWS: AffectedRow[] = [
   },
 ];
 
-const PARLIAMENT_2019_SOURCE_GAP_ROWS: AffectedRow[] = [
-  {
-    id: 175,
-    label:
-      "Toimi Kankaanniemi (person_id=175): source periods are 2015-04-22..2019-04-16 and 2019-07-02..2023-04-04, but Term incorrectly keeps a continuous period 2015-04-22..2023-04-04.",
-    sourceUrl: "https://avoindata.eduskunta.fi",
-  },
-  {
-    id: 1107,
-    label:
-      "Teuvo Hakkarainen (person_id=1107): TemporaryAbsence starts on 2019-07-02 with replacement_person='Toimi Kankaanniemi /ps' (return via substitute seat).",
-    sourceUrl: "https://avoindata.eduskunta.fi",
-  },
-  {
-    id: "2019-05-02..2019-06-28",
-    label:
-      "Parliament size limit is exceeded on 21 session dates in this interval (201 active MPs) because Term keeps Toimi active during the gap period.",
-    sourceUrl: "https://avoindata.eduskunta.fi",
-  },
-  {
-    id: "2019-04-24",
-    label:
-      "The same source-data gap also causes one active-MP/group-membership mismatch day while total count remains 200.",
-    sourceUrl: "https://avoindata.eduskunta.fi",
-  },
-];
-
 const KNOWN_DATA_EXCEPTIONS: KnownDataException[] = [
   {
     id: "VOTE-MISSING-001",
@@ -313,37 +602,14 @@ const KNOWN_DATA_EXCEPTIONS: KnownDataException[] = [
       "Known incorrect entries tracked explicitly by voting id; upstream root cause documented separately.",
     affectedRows: MISSING_SINGLE_VOTE_ROWS,
   },
-  {
-    id: "PARLIAMENT-SIZE-2019-001",
-    checkName: "Parliament size limit",
-    description:
-      "Toimi Kankaanniemi's 2019 membership gap is missing from Term, causing 201 active MPs on 21 dates",
-    reason:
-      "Source timeline indicates Toimi dropped out in 2019 elections and returned as a substitute on 2019-07-02, but Term does not include the 2019-04-17..2019-07-01 gap. As a result, Toimi is incorrectly counted as active before returning.",
-    affectedRows: PARLIAMENT_2019_SOURCE_GAP_ROWS,
-  },
-  {
-    id: "ACTIVE-MP-GROUP-GAP-2019-001",
-    checkName: "Active MPs have group membership",
-    description:
-      "The same 2019 source-data gap produces active MP rows without active parliamentary group membership",
-    reason:
-      "person_id=175 remains active in Term during 2019-04-17..2019-07-01 while ParliamentaryGroupMembership has no active row before the 2019-07-02 substitute return.",
-    affectedRows: PARLIAMENT_2019_SOURCE_GAP_ROWS,
-  },
-  {
-    id: "GROUP-MEMBER-COUNT-GAP-2019-001",
-    checkName: "Group member count matches active MPs",
-    description:
-      "The same 2019 gap makes the active-term count larger than the active-group count",
-    reason:
-      "The missing gap for Toimi in Term causes day-level count mismatches between active MPs and active group memberships.",
-    affectedRows: PARLIAMENT_2019_SOURCE_GAP_ROWS,
-  },
 ];
 
 export function buildKnownDataExceptions(_db: Database): KnownDataException[] {
-  return KNOWN_DATA_EXCEPTIONS.map((exception) => ({
+  const computedExceptions: KnownDataException[] = [
+    buildParliamentSizeBelow200Exception(_db),
+  ];
+
+  return [...KNOWN_DATA_EXCEPTIONS, ...computedExceptions].map((exception) => ({
     ...exception,
     affectedRows: [...exception.affectedRows],
   }));
