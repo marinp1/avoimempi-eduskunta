@@ -158,7 +158,7 @@ export const sanityQueries = {
   votingSessionOrphans: sql`SELECT COUNT(*) as orphans FROM Voting v
            WHERE NOT EXISTS (SELECT 1 FROM Session s WHERE s.key = v.session_key)`,
   voteInvalidValues: sql`SELECT COUNT(*) as c FROM Vote
-           WHERE vote NOT IN ('Jaa', 'Ei', 'Tyhjää', 'Poissa')`,
+           WHERE vote NOT IN ('Jaa', 'Ei', ('Tyhj' || char(228, 228)), 'Poissa')`,
   voteDuplicateByPerson: sql`SELECT COUNT(*) as dupes FROM (
              SELECT voting_id, person_id, COUNT(*) as cnt
              FROM Vote
@@ -211,7 +211,7 @@ export const sanityQueries = {
            GROUP BY v.id
            HAVING SUM(CASE WHEN vo.vote = 'Jaa' THEN 1 ELSE 0 END) != v.n_yes
               OR SUM(CASE WHEN vo.vote = 'Ei' THEN 1 ELSE 0 END) != v.n_no
-              OR SUM(CASE WHEN vo.vote = 'Tyhjää' THEN 1 ELSE 0 END) != v.n_abstain
+              OR SUM(CASE WHEN vo.vote = ('Tyhj' || char(228, 228)) THEN 1 ELSE 0 END) != v.n_abstain
               OR SUM(CASE WHEN vo.vote = 'Poissa' THEN 1 ELSE 0 END) != v.n_absent`,
   votingSessionDateMismatch: sql`SELECT COUNT(*) as c FROM Voting v
            JOIN Session s ON s.key = v.session_key

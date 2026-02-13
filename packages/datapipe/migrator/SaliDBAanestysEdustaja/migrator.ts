@@ -18,14 +18,45 @@ export const flushVotes = () => {
   currentDb = null;
 };
 
+const SWEDISH_VOTES_TO_DROP = new Set([
+  "ja",
+  "nej",
+  "blank",
+  "frånvarande",
+  "avstår",
+]);
+
+const normalizeVote = (voteRaw?: string | null): DatabaseTables.Vote["vote"] | null => {
+  const normalized = voteRaw?.trim().normalize("NFC");
+  if (!normalized) return null;
+
+  const key = normalized.toLowerCase();
+
+  if (SWEDISH_VOTES_TO_DROP.has(key)) return null;
+
+  switch (key) {
+    case "jaa":
+      return "Jaa";
+    case "ei":
+      return "Ei";
+    case "poissa":
+      return "Poissa";
+    case "tyhjää":
+    case "tyhjä":
+    case "tyhjiä":
+    case "tyhjia":
+      return "Tyhjää";
+    default:
+      return null;
+  }
+};
+
 export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBAanestysEdustaja"]) => {
     currentDb = db;
 
-    // Filter out Swedish duplicate votes (Finnish versions exist separately)
-    const vote = dataToImport.EdustajaAanestys?.trim();
-    const swedishVotesToDrop = ["Ja", "Nej", "Blank", "Frånvarande", "Avstår"];
-    if (swedishVotesToDrop.includes(vote)) {
+    const vote = normalizeVote(dataToImport.EdustajaAanestys);
+    if (!vote) {
       return;
     }
 
