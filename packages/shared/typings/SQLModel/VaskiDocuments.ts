@@ -1,5 +1,12 @@
 declare global {
   export namespace DatabaseTables {
+    export type VaskiDocument = {
+      id: number;
+      document_type: string;
+      edk_identifier: string | null;
+      source_path: string;
+    };
+
     export type RollCallReport = {
       id: number;
       parliament_identifier: string;

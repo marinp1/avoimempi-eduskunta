@@ -56,6 +56,69 @@ interface VaskiSubMigrator {
 
 type VaskiSubMigratorFactory = (db: Database) => VaskiSubMigrator;
 
+const normalizeText = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed === "" ? null : trimmed;
+};
+
+const parseNumericId = (value: unknown): number | null => {
+  const normalized = normalizeText(value);
+  if (!normalized || !/^\d+$/.test(normalized)) return null;
+  const parsed = Number.parseInt(normalized, 10);
+  if (!Number.isSafeInteger(parsed)) return null;
+  return parsed;
+};
+
+const extractEdkIdentifier = (row: VaskiEntry): string | null => {
+  const meta = row.contents?.Siirto?.SiirtoMetatieto;
+  const candidates = [
+    meta?.JulkaisuMetatieto?.["@_muuTunnus"],
+    meta?.["@_muuTunnus"],
+    row.contents?.Siirto?.SiirtoAsiakirja?.RakenneAsiakirja?.Poytakirja?.[
+      "@_muuTunnus"
+    ],
+    row.contents?.Siirto?.SiirtoAsiakirja?.RakenneAsiakirja?.PoytakirjaLiite?.[
+      "@_muuTunnus"
+    ],
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeText(candidate);
+    if (normalized) return normalized;
+  }
+  return null;
+};
+
+const buildSourcePath = (row: VaskiEntry, documentType: string, id: number) => {
+  const basePath =
+    normalizeText(row._source?.vaskiPath) ?? `vaski-data/${documentType}/unknown`;
+  return `${basePath}#id=${id}`;
+};
+
+const upsertVaskiDocument = (
+  db: Database,
+  row: VaskiEntry,
+  documentType: string,
+) => {
+  const id = parseNumericId(row.id);
+  if (id === null) return;
+
+  db.run(
+    `INSERT INTO VaskiDocument (id, document_type, edk_identifier, source_path)
+     VALUES (?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       document_type = excluded.document_type,
+       edk_identifier = CASE
+         WHEN excluded.edk_identifier IS NULL OR TRIM(excluded.edk_identifier) = ''
+           THEN VaskiDocument.edk_identifier
+         ELSE excluded.edk_identifier
+       END,
+       source_path = excluded.source_path`,
+    [id, documentType, extractEdkIdentifier(row), buildSourcePath(row, documentType, id)],
+  );
+};
+
 const getDocumentTypesFromEnv = (): string[] | undefined => {
   const configured = process.env.VASKI_DOCUMENT_TYPES;
   if (!configured) return undefined;
@@ -186,6 +249,7 @@ export async function migrateVaskiData(
       if (options?.shouldStop?.()) {
         throw new Error("Migration stopped by user");
       }
+      upsertVaskiDocument(db, row, documentType);
       await subMigrator.migrateRow(row);
       rowsMigrated++;
       if (

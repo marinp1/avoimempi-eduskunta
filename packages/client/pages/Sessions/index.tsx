@@ -225,6 +225,11 @@ type SubSection = {
   minutes_document_id: number;
 };
 
+type MinutesContentReference = {
+  vaskiId: number | null;
+  code: string | null;
+};
+
 type Speech = {
   id: number;
   ordinal: number;
@@ -733,8 +738,7 @@ export default () => {
       const slug = `${code.toUpperCase()}_${Number.parseInt(number, 10)}+${year}`;
       return `https://www.eduskunta.fi/FI/vaski/KasittelytiedotValtiopaivaasia/Sivut/${slug}.aspx`;
     }
-
-    return `/valtiopaivaasiakirjat/${normalized.replaceAll(" ", "+")}`;
+    return null;
   };
 
   const renderVaskiInfo = (section: Section, compact = false) => {
@@ -892,14 +896,9 @@ export default () => {
     );
   };
 
-  const renderMinutesInfo = (section: Section, compact = false) => {
+  const renderMinutesInfo = (section: Section, _compact = false) => {
     const isMergedValue = (value?: string | null) =>
       typeof value === "string" && value.includes(" | ");
-
-    const fromDb = sectionSubSections[section.id] || [];
-    const fallbackRows = fromDb.length > 0 ? [] : buildFallbackSubSections(section);
-    const hasStructuredSubSections =
-      fromDb.length > 1 || fallbackRows.length > 1;
 
     const minutesItemNumber = isMergedValue(section.minutes_item_number)
       ? null
@@ -917,11 +916,6 @@ export default () => {
     )
       ? null
       : section.minutes_related_document_type;
-    const minutesContentText =
-      hasStructuredSubSections || isMergedValue(section.minutes_content_text)
-        ? null
-        : section.minutes_content_text;
-
     const hasAny =
       minutesItemNumber ||
       minutesItemTitle ||
@@ -929,8 +923,7 @@ export default () => {
       minutesRelatedDocumentType ||
       section.minutes_processing_phase_code ||
       section.minutes_general_processing_phase_code ||
-      section.minutes_match_mode ||
-      minutesContentText;
+      section.minutes_match_mode;
 
     if (!hasAny) return null;
 
@@ -1012,27 +1005,6 @@ export default () => {
             : {section.minutes_match_mode}
           </Typography>
         )}
-        {minutesContentText && (
-          <Typography
-            sx={{
-              fontSize: "0.75rem",
-              color: colors.textSecondary,
-              mt: 0.5,
-              whiteSpace: "pre-wrap",
-              ...(compact
-                ? {
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
-                  }
-                : {}),
-            }}
-          >
-            {t("sessions.minutesContent", { defaultValue: "Pöytäkirjateksti" })}
-            : {minutesContentText}
-          </Typography>
-        )}
       </Box>
     );
   };
@@ -1092,10 +1064,250 @@ export default () => {
     }));
   };
 
+  const getSectionSubSectionRows = (section: Section): SubSection[] => {
+    const fromDb = sectionSubSections[section.id] || [];
+    if (fromDb.length > 0) return fromDb;
+    return buildFallbackSubSections(section);
+  };
+
+  const isMinutesReferenceId = (value: string) => /^\d{5,}$/.test(value);
+
+  const isMinutesReferenceCode = (value: string) =>
+    /^[A-ZÅÄÖ]{1,8}(?:_[A-ZÅÄÖ0-9]+)+$/i.test(value);
+
+  const parseMinutesContent = (content?: string | null) => {
+    const blocks = (content || "")
+      .split(/\n\s*\n+/)
+      .map((block) => block.trim())
+      .filter(Boolean);
+
+    const references: MinutesContentReference[] = [];
+    const narrativeBlocks: string[] = [];
+
+    for (let index = 0; index < blocks.length; index++) {
+      const current = blocks[index];
+      const next = blocks[index + 1];
+
+      if (isMinutesReferenceId(current) && next && isMinutesReferenceCode(next)) {
+        references.push({
+          vaskiId: Number.parseInt(current, 10),
+          code: next,
+        });
+        index += 1;
+        continue;
+      }
+
+      if (isMinutesReferenceId(current)) {
+        references.push({
+          vaskiId: Number.parseInt(current, 10),
+          code: null,
+        });
+        continue;
+      }
+
+      if (isMinutesReferenceCode(current)) {
+        references.push({
+          vaskiId: null,
+          code: current,
+        });
+        continue;
+      }
+
+      narrativeBlocks.push(current);
+    }
+
+    const dedupedReferences: MinutesContentReference[] = [];
+    const seenKeys = new Set<string>();
+    for (const reference of references) {
+      const key = `${reference.vaskiId ?? "null"}::${reference.code ?? "null"}`;
+      if (seenKeys.has(key)) continue;
+      seenKeys.add(key);
+      dedupedReferences.push(reference);
+    }
+
+    return {
+      narrativeBlocks,
+      references: dedupedReferences,
+    };
+  };
+
+  const renderSectionMinutesContent = (section: Section) => {
+    const subSectionRows = getSectionSubSectionRows(section);
+    if (subSectionRows.length > 1) return null;
+
+    const parsed = parseMinutesContent(section.minutes_content_text);
+    const references: MinutesContentReference[] = [...parsed.references];
+    const relatedDocument = section.minutes_related_document_identifier?.trim();
+    if (
+      relatedDocument &&
+      !references.some(
+        (reference) => reference.code === relatedDocument && reference.vaskiId === null,
+      )
+    ) {
+      references.unshift({ vaskiId: null, code: relatedDocument });
+    }
+
+    if (parsed.narrativeBlocks.length === 0 && references.length === 0) return null;
+
+    return (
+      <Box
+        sx={{
+          mt: 1.5,
+          p: 1.5,
+          borderRadius: 1,
+          border: `1px solid ${colors.primaryLight}25`,
+          background: `${colors.primaryLight}08`,
+        }}
+      >
+        <Typography
+          sx={{
+            fontSize: "0.75rem",
+            fontWeight: 700,
+            color: colors.textSecondary,
+            textTransform: "uppercase",
+            mb: 0.75,
+          }}
+        >
+          {t("sessions.minutesContent", { defaultValue: "Pöytäkirjateksti" })}
+        </Typography>
+
+        {parsed.narrativeBlocks.length > 0 && (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+            {parsed.narrativeBlocks.map((block, index) => (
+              <Box
+                key={`${section.key}-minutes-block-${index}`}
+                sx={{
+                  p: 0.75,
+                  borderRadius: 1,
+                  background: colors.backgroundDefault,
+                  borderLeft: `3px solid ${colors.primaryLight}55`,
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: "0.75rem",
+                    color: colors.textSecondary,
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
+                  {block}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        )}
+
+        {references.length > 0 && (
+          <Box sx={{ mt: parsed.narrativeBlocks.length > 0 ? 1 : 0 }}>
+            <Typography
+              sx={{
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                color: colors.textSecondary,
+                textTransform: "uppercase",
+                mb: 0.5,
+              }}
+            >
+              {t("sessions.minutesDocumentReferences", {
+                defaultValue: "Asiakirjaviitteet",
+              })}
+            </Typography>
+            <Box sx={{ overflowX: "auto" }}>
+              <Box
+                component="table"
+                sx={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: "0.75rem",
+                  "& th, & td": {
+                    textAlign: "left",
+                    borderBottom: `1px solid ${colors.dataBorder}`,
+                    px: 0.75,
+                    py: 0.5,
+                    verticalAlign: "top",
+                  },
+                  "& th": {
+                    color: colors.textSecondary,
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                  },
+                  "& td": {
+                    color: colors.textPrimary,
+                  },
+                }}
+              >
+                <thead>
+                  <tr>
+                    <th>
+                      {t("sessions.minutesReferenceId", {
+                        defaultValue: "Vaski ID",
+                      })}
+                    </th>
+                    <th>
+                      {t("sessions.minutesReferenceCode", {
+                        defaultValue: "Tunniste",
+                      })}
+                    </th>
+                    <th>
+                      {t("sessions.minutesReferenceStatus", {
+                        defaultValue: "Tila",
+                      })}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {references.map((reference, index) => {
+                    const href = buildValtiopaivaAsiakirjaUrl(reference.code);
+                    return (
+                      <tr
+                        key={`${section.key}-minutes-reference-${reference.vaskiId ?? "null"}-${reference.code ?? "null"}-${index}`}
+                      >
+                        <td>{reference.vaskiId ?? "-"}</td>
+                        <td>
+                          {reference.code ? (
+                            href ? (
+                              <Link
+                                href={href}
+                                target="_blank"
+                                rel="noreferrer"
+                                underline="hover"
+                                sx={{
+                                  fontSize: "0.75rem",
+                                  color: colors.primaryLight,
+                                  fontFamily: "monospace",
+                                }}
+                              >
+                                {reference.code}
+                              </Link>
+                            ) : (
+                              <Box component="span" sx={{ fontFamily: "monospace" }}>
+                                {reference.code}
+                              </Box>
+                            )
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td>
+                          {t("sessions.minutesReferenceNotMigrated", {
+                            defaultValue: "Asiakirja havaittu, sisältöä ei ole vielä migroitu.",
+                          })}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </Box>
+            </Box>
+          </Box>
+        )}
+      </Box>
+    );
+  };
+
   const renderSectionSubSections = (section: Section) => {
     const loading = loadingSubSections.has(section.id);
-    const fromDb = sectionSubSections[section.id] || [];
-    const rows = fromDb.length > 0 ? fromDb : buildFallbackSubSections(section);
+    const rows = getSectionSubSectionRows(section);
 
     if (loading) {
       return (
@@ -2834,6 +3046,7 @@ export default () => {
                             {renderVaskiInfo(section, false)}
                             {renderMinutesInfo(section, false)}
                             {renderSectionSubSections(section)}
+                            {renderSectionMinutesContent(section)}
                             {renderSectionLinks(section)}
                             {renderSectionNotices(session, section.key)}
                             {renderSectionRollCall(section)}
@@ -3472,6 +3685,7 @@ export default () => {
                                   {renderVaskiInfo(section, false)}
                                   {renderMinutesInfo(section, false)}
                                   {renderSectionSubSections(section)}
+                                  {renderSectionMinutesContent(section)}
                                   {renderSectionLinks(section)}
                                   {renderSectionNotices(session, section.key)}
                                   {renderSectionRollCall(section)}
