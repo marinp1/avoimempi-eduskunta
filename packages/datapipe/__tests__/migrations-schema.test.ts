@@ -48,6 +48,7 @@ describe("Migration schema", () => {
       "V001.006__speech_content_schema.sql",
       "V001.007__speech_content_source_names.sql",
       "V001.008__subsection_schema.sql",
+      "V001.009__vaski_document_registry.sql",
     ]);
   });
 
@@ -92,7 +93,9 @@ describe("Migration schema", () => {
       expect(tableNames).not.toContain("SessionMinutesAttachment");
       expect(tableNames).not.toContain("CommitteeSession");
       expect(tableNames.some((name) => name.startsWith("DocType_"))).toBe(false);
-      expect(tableNames.some((name) => name.startsWith("Vaski"))).toBe(false);
+      expect(tableNames.filter((name) => name.startsWith("Vaski"))).toEqual([
+        "VaskiDocument",
+      ]);
     } finally {
       db.close();
     }
