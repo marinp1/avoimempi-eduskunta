@@ -683,6 +683,10 @@ function clearSessionSectionMinutes(db: Database, sessionKey: string) {
   );
 }
 
+function clearSessionSubSections(db: Database, sessionKey: string) {
+  db.run("DELETE FROM SubSection WHERE session_key = ?", [sessionKey]);
+}
+
 function clearSessionSpeechContents(db: Database, sessionKey: string) {
   db.run("DELETE FROM SpeechContent WHERE session_key = ?", [sessionKey]);
 }
@@ -935,6 +939,35 @@ function insertSpeechContents(db: Database, rows: DatabaseTables.SpeechContent[]
   }
 }
 
+function insertSubSections(
+  db: Database,
+  rows: Omit<DatabaseTables.SubSection, "id">[],
+) {
+  for (const row of rows) {
+    db.run(
+      "INSERT INTO SubSection (session_key, section_key, entry_order, entry_kind, item_identifier, parent_item_identifier, item_number, item_order, item_title, related_document_identifier, related_document_type, processing_phase_code, general_processing_phase_code, content_text, match_mode, minutes_document_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [
+        row.session_key,
+        row.section_key,
+        row.entry_order,
+        row.entry_kind,
+        row.item_identifier,
+        row.parent_item_identifier,
+        row.item_number,
+        row.item_order,
+        row.item_title,
+        row.related_document_identifier,
+        row.related_document_type,
+        row.processing_phase_code,
+        row.general_processing_phase_code,
+        row.content_text,
+        row.match_mode,
+        row.minutes_document_id,
+      ],
+    );
+  }
+}
+
 export default function createPoytakirjaSubMigrator(db: Database) {
   return {
     async migrateRow(row: VaskiEntry): Promise<void> {
@@ -988,6 +1021,7 @@ export default function createPoytakirjaSubMigrator(db: Database) {
       updateSessionMinutes(db, incomingRow);
 
       clearSessionSectionMinutes(db, incomingRow.session_key);
+      clearSessionSubSections(db, incomingRow.session_key);
       clearSessionSpeechContents(db, incomingRow.session_key);
 
       const sectionItemsByKey = new Map<
@@ -999,6 +1033,7 @@ export default function createPoytakirjaSubMigrator(db: Database) {
       >();
       const usedSpeechIdsBySection = new Map<string, Set<number>>();
       const speechContentBySpeechId = new Map<number, DatabaseTables.SpeechContent>();
+      const subSectionRows: Array<Omit<DatabaseTables.SubSection, "id">> = [];
       const speechIssues: string[] = [...parseIssues];
 
       for (const item of incomingItems) {
@@ -1110,17 +1145,54 @@ export default function createPoytakirjaSubMigrator(db: Database) {
       }
 
       for (const [sectionKey, bucket] of sectionItemsByKey.entries()) {
+        const sortedItems = bucket.items
+          .slice()
+          .sort((a, b) => a.entry_order - b.entry_order);
+
         updateSectionMinutes(
           db,
           sectionKey,
-          bucket.items,
+          sortedItems,
           bucket.hasDirectMatch ? "direct" : "parent_fallback",
         );
+
+        for (const item of sortedItems) {
+          const duplicateExisting = subSectionRows.find(
+            (row) =>
+              row.section_key === sectionKey && row.entry_order === item.entry_order,
+          );
+          if (duplicateExisting) {
+            speechIssues.push(
+              `Skipped duplicate SubSection entry_order=${item.entry_order} for section_key='${sectionKey}'`,
+            );
+            continue;
+          }
+
+          subSectionRows.push({
+            session_key: incomingRow.session_key,
+            section_key: sectionKey,
+            entry_order: item.entry_order,
+            entry_kind: item.entry_kind,
+            item_identifier: item.item_identifier_numeric,
+            parent_item_identifier: item.parent_item_identifier,
+            item_number: item.item_number,
+            item_order: item.item_order,
+            item_title: item.item_title,
+            related_document_identifier: item.related_document_identifier,
+            related_document_type: item.related_document_type,
+            processing_phase_code: item.processing_phase_code,
+            general_processing_phase_code: item.general_processing_phase_code,
+            content_text: item.content_text,
+            match_mode: bucket.hasDirectMatch ? "direct" : "parent_fallback",
+            minutes_document_id: incomingRow.id,
+          });
+        }
       }
 
       const incomingSpeechContents = Array.from(speechContentBySpeechId.values()).sort(
         (a, b) => a.speech_id - b.speech_id,
       );
+      insertSubSections(db, subSectionRows);
       insertSpeechContents(db, incomingSpeechContents);
 
       if (previousRow?.id !== null && previousRow?.id !== undefined) {

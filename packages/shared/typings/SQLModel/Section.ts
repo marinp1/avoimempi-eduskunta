@@ -31,6 +31,26 @@ declare global {
       minutes_content_text?: string | null;
       minutes_match_mode?: "direct" | "parent_fallback" | null;
     };
+
+    export type SubSection = {
+      id: number;
+      session_key: string;
+      section_key: string;
+      entry_order: number;
+      entry_kind: "asiakohta" | "muu_asiakohta";
+      item_identifier: number;
+      parent_item_identifier: string | null;
+      item_number: string | null;
+      item_order: number | null;
+      item_title: string | null;
+      related_document_identifier: string | null;
+      related_document_type: string | null;
+      processing_phase_code: string | null;
+      general_processing_phase_code: string | null;
+      content_text: string | null;
+      match_mode: "direct" | "parent_fallback";
+      minutes_document_id: number;
+    };
   }
 }
 

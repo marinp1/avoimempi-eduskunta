@@ -286,6 +286,16 @@ export class DatabaseConnection {
     return votings;
   }
 
+  public async fetchSectionSubSections(params: { sectionKey: string }) {
+    const stmt = this.db.prepare<
+      DatabaseTables.SubSection,
+      { $sectionKey: string }
+    >(queries.sectionSubSections);
+    const rows = stmt.all({ $sectionKey: params.sectionKey });
+    stmt.finalize();
+    return rows;
+  }
+
   public async fetchSectionRollCall(params: { sectionKey: string }) {
     const reportStmt = this.db.prepare<
       {
