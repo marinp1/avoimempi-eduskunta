@@ -782,6 +782,75 @@ export class SanityCheckService {
       });
     }
 
+    try {
+      const orphanedContent = this.db
+        .query(sanityQueries.speechContentSpeechOrphans)
+        .get() as any;
+      const metadataWithoutContent = this.db
+        .query(sanityQueries.speechMetadataWithoutContent)
+        .get() as any;
+      const contentCount = this.db
+        .query(sanityQueries.speechContentCount)
+        .get() as any;
+      const comparedNameRows = this.db
+        .query(sanityQueries.speechContentNameComparedCount)
+        .get() as any;
+      const nameMismatches = this.db
+        .query(sanityQueries.speechContentNameMismatches)
+        .get() as any;
+
+      checks.push({
+        category: "Speech Content Mapping",
+        name: "SpeechContent → Speech links",
+        description:
+          "All speech content rows must map to existing Speech metadata rows",
+        passed: orphanedContent.orphans === 0,
+        details:
+          `Orphaned content rows: ${orphanedContent.orphans}. ` +
+          `Mapped content rows: ${contentCount.c}. ` +
+          `Metadata rows without content: ${metadataWithoutContent.c}. ` +
+          `Name-validated rows: ${comparedNameRows.c}.`,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Speech Content Mapping",
+        name: "SpeechContent → Speech links",
+        description:
+          "All speech content rows must map to existing Speech metadata rows",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
+    try {
+      const comparedNameRows = this.db
+        .query(sanityQueries.speechContentNameComparedCount)
+        .get() as any;
+      const nameMismatches = this.db
+        .query(sanityQueries.speechContentNameMismatches)
+        .get() as any;
+
+      checks.push({
+        category: "Speech Content Mapping",
+        name: "SpeechContent speaker names match Speech metadata",
+        description:
+          "Linked SpeechContent rows should have matching first_name and last_name with Speech",
+        passed: nameMismatches.c === 0,
+        details:
+          `Compared rows: ${comparedNameRows.c}. ` +
+          `Name mismatches: ${nameMismatches.c}.`,
+      });
+    } catch (error) {
+      checks.push({
+        category: "Speech Content Mapping",
+        name: "SpeechContent speaker names match Speech metadata",
+        description:
+          "Linked SpeechContent rows should have matching first_name and last_name with Speech",
+        passed: false,
+        errorMessage: String(error),
+      });
+    }
+
     return checks;
   }
 

@@ -41,6 +41,8 @@ declare global {
       end_time: Modules.Common.DateString | null;
       content: string;
       source_path: string;
+      source_first_name: string | null;
+      source_last_name: string | null;
     };
   }
 }
