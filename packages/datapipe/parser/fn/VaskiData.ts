@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import { mkdir, symlink, writeFile } from "node:fs/promises";
+import { join, relative } from "node:path";
 import { XMLParser } from "fast-xml-parser";
 import type { ParserFunction } from "../parser";
 
@@ -53,9 +56,83 @@ function cleanParsedXml(obj: any): any {
 }
 
 /**
+ * Sanitize a string for use as a folder name.
+ */
+function sanitizeFolderName(name: string): string {
+  return name
+    .replace(/[/\\?%*:|"<>]/g, "-")
+    .replace(/\s+/g, "_");
+}
+
+/**
+ * Extract #avoimempieduskunta classification metadata from parsed contents.
+ * Ported from analyze-vaski-xml.ts classification logic.
+ */
+function classifyDocument(contents: any): {
+  yhteiso: string;
+  kokous: string;
+  documentType: string;
+} {
+  let metatieto =
+    contents?.Siirto?.SiirtoMetatieto ?? contents?.Siirto?.JulkaisuMetatieto;
+  if (metatieto?.JulkaisuMetatieto) {
+    metatieto = metatieto.JulkaisuMetatieto;
+  }
+
+  // yhteiso from KokousViite.YhteisoTeksti
+  const kokousViite = metatieto?.KokousViite;
+  const yhteiso = sanitizeFolderName(kokousViite?.YhteisoTeksti || "no-yhteiso");
+
+  // kokous from KokousViite.@_kokousTunnus
+  const kokous = sanitizeFolderName(kokousViite?.["@_kokousTunnus"] || "no-kokous");
+
+  // documentType from @_asiakirjatyyppiNimi
+  let asiakirjatyyppiNimi = metatieto?.["@_asiakirjatyyppiNimi"];
+
+  // Fallback: try alternative locations in SiirtoAsiakirja
+  if (!asiakirjatyyppiNimi) {
+    const rakenneAsiakirja =
+      contents?.Siirto?.SiirtoAsiakirja?.RakenneAsiakirja;
+    if (rakenneAsiakirja && typeof rakenneAsiakirja === "object") {
+      const kasittelytiedot =
+        rakenneAsiakirja.KasittelytiedotValtiopaivaasia ||
+        rakenneAsiakirja.Kasittelytiedot ||
+        rakenneAsiakirja.KasittelytiedotLausumaasia ||
+        rakenneAsiakirja;
+      asiakirjatyyppiNimi = kasittelytiedot?.["@_asiakirjatyyppiNimi"];
+    }
+  }
+
+  const documentType = sanitizeFolderName(
+    asiakirjatyyppiNimi || "unknown",
+  ).toLowerCase();
+
+  return { yhteiso, kokous, documentType };
+}
+
+/**
+ * Find the repository root by walking up from cwd looking for .git.
+ */
+function findRepoRoot(): string {
+  let dir = process.cwd();
+  for (let i = 0; i < 10; i++) {
+    if (existsSync(join(dir, ".git"))) return dir;
+    const parent = join(dir, "..");
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return process.cwd();
+}
+
+// ── Index accumulator (built across pages, flushed in onParsingComplete) ──
+
+const index: Record<string, { totalRecords: number; pages: Record<string, string[]> }> = {};
+
+/**
  * Custom parser for VaskiData table.
  * Parses the XML in XmlData field to a clean JSON structure,
- * filters out Swedish-language entries, and produces a VaskiEntry-like object.
+ * filters out Swedish-language entries, classifies by document type,
+ * and attaches #avoimempieduskunta metadata.
  */
 const parser: ParserFunction = async (row, primaryKey) => {
   const parsed = xmlParser.parse(row.XmlData);
@@ -77,9 +154,11 @@ const parser: ParserFunction = async (row, primaryKey) => {
   const sanomaName = contents?.Siirto?.Sanomavalitys?.SanomatyyppiNimi;
 
   if (languageCode === "sv" || sanomaName?.endsWith("_sv")) {
-    // Return with a _skip flag so the migrator can skip it
     return [`${row[primaryKey]}`, { ...row, XmlData: undefined, _skip: true }];
   }
+
+  // Classify document type
+  const classification = classifyDocument(contents);
 
   return [
     `${row[primaryKey]}`,
@@ -90,9 +169,88 @@ const parser: ParserFunction = async (row, primaryKey) => {
       created: row.Created,
       attachmentGroupId: row.AttachmentGroupId,
       rootType,
+      "#avoimempieduskunta": classification,
       contents,
     },
   ];
 };
 
 export default parser;
+
+/**
+ * Called after each parsed page is written to storage.
+ * Creates per-documentType symlinks and accumulates the index.
+ */
+export async function onPageParsed(
+  pageNumber: number,
+  rows: Record<string, any>[],
+): Promise<void> {
+  // Group record IDs by documentType
+  const docTypeRecords = new Map<string, string[]>();
+  for (const row of rows) {
+    if (row._skip) continue;
+    const meta = row["#avoimempieduskunta"];
+    if (!meta?.documentType) continue;
+    const ids = docTypeRecords.get(meta.documentType) ?? [];
+    ids.push(String(row.id));
+    docTypeRecords.set(meta.documentType, ids);
+  }
+
+  // Update in-memory index
+  for (const [docType, ids] of docTypeRecords) {
+    if (!index[docType]) index[docType] = { totalRecords: 0, pages: {} };
+    index[docType].pages[String(pageNumber)] = ids;
+    index[docType].totalRecords += ids.length;
+  }
+
+  // Create symlinks for manual browsing
+  const repoRoot = findRepoRoot();
+  const parsedFile = join(
+    repoRoot,
+    "data",
+    "parsed",
+    "VaskiData",
+    `page_${pageNumber}.json`,
+  );
+
+  for (const docType of docTypeRecords.keys()) {
+    const symlinkDir = join(repoRoot, "vaski-data", docType);
+    const symlinkPath = join(symlinkDir, `page_${pageNumber}.json`);
+    await mkdir(symlinkDir, { recursive: true });
+
+    const target = relative(symlinkDir, parsedFile);
+    try {
+      await symlink(target, symlinkPath);
+    } catch (e: any) {
+      if (e.code === "EEXIST") {
+        // Already exists, skip
+      } else {
+        throw e;
+      }
+    }
+  }
+}
+
+/**
+ * Called after all pages have been parsed.
+ * Writes the vaski-data/index.json metadata index.
+ */
+export async function onParsingComplete(): Promise<void> {
+  const repoRoot = findRepoRoot();
+  const vaskiDir = join(repoRoot, "vaski-data");
+  await mkdir(vaskiDir, { recursive: true });
+
+  const indexPath = join(vaskiDir, "index.json");
+  await writeFile(indexPath, JSON.stringify(index, null, 2));
+
+  // Log summary
+  const totalTypes = Object.keys(index).length;
+  const totalRecords = Object.values(index).reduce(
+    (sum, entry) => sum + entry.totalRecords,
+    0,
+  );
+  console.log(
+    `\n📋 Vaski index: ${totalTypes} document types, ${totalRecords.toLocaleString()} records`,
+  );
+  console.log(`📁 Written to ${indexPath}`);
+}
