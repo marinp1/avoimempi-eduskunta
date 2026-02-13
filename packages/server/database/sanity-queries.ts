@@ -66,6 +66,24 @@ export function getAuxiliaryRepresentativeOrphanQuery(
   return sql`SELECT COUNT(*) as c FROM ${table} t WHERE NOT EXISTS (SELECT 1 FROM Representative r WHERE r.person_id = t.person_id)`;
 }
 
+export function getParliamentOversizedDatesQuery(maxMembers = 200): string {
+  const normalizedMaxMembers =
+    Number.isFinite(maxMembers) && maxMembers > 0 ? Math.trunc(maxMembers) : 200;
+
+  return sql`SELECT s.date, COUNT(DISTINCT r.person_id) as mp_count
+           FROM Session s
+           JOIN Term t ON t.start_date <= s.date AND (t.end_date IS NULL OR t.end_date >= s.date)
+           JOIN Representative r ON r.person_id = t.person_id
+           WHERE NOT EXISTS (
+               SELECT 1 FROM TemporaryAbsence ta
+               WHERE ta.person_id = r.person_id
+                 AND ta.start_date <= s.date
+                 AND (ta.end_date IS NULL OR ta.end_date >= s.date)
+             )
+           GROUP BY s.date
+           HAVING mp_count > ${normalizedMaxMembers}`;
+}
+
 export const SALIDB_LINKAGE_CHECKS = [
   {
     name: "SectionDocumentLink -> Section",
@@ -120,18 +138,7 @@ export const sanityQueries = {
   sessionUniqueKeyCount: sql`SELECT COUNT(DISTINCT key) as unique_count FROM Session`,
   sectionSessionOrphans: sql`SELECT COUNT(*) as orphans FROM Section sec
            WHERE NOT EXISTS (SELECT 1 FROM Session s WHERE s.key = sec.session_key)`,
-  parliamentOversizedDates: sql`SELECT s.date, COUNT(DISTINCT r.person_id) as mp_count
-           FROM Session s
-           JOIN Term t ON t.start_date <= s.date AND (t.end_date IS NULL OR t.end_date >= s.date)
-           JOIN Representative r ON r.person_id = t.person_id
-           WHERE NOT EXISTS (
-             SELECT 1 FROM TemporaryAbsence ta
-             WHERE ta.person_id = r.person_id
-               AND ta.start_date <= s.date
-               AND (ta.end_date IS NULL OR ta.end_date >= s.date)
-           )
-           GROUP BY s.date
-           HAVING mp_count > 200`,
+  parliamentOversizedDates: getParliamentOversizedDatesQuery(200),
   votingTotalOver200: sql`SELECT COUNT(*) as c FROM Voting WHERE n_total > 200`,
   votingSumMismatch: sql`SELECT COUNT(*) as c FROM Voting
            WHERE n_total > 0
