@@ -727,6 +727,12 @@ export default () => {
     return parts.length > 0 ? parts.join(" • ") : null;
   };
 
+  const getSectionOrderLabel = (section: Section) => {
+    const identifier = section.identifier?.trim();
+    if (identifier) return identifier;
+    return String(section.ordinal);
+  };
+
   const buildValtiopaivaAsiakirjaUrl = (tunnus?: string | null) => {
     if (!tunnus || !tunnus.trim()) return null;
     const normalized = tunnus.trim();
@@ -900,47 +906,15 @@ export default () => {
     const isMergedValue = (value?: string | null) =>
       typeof value === "string" && value.includes(" | ");
 
-    const minutesItemNumber = isMergedValue(section.minutes_item_number)
-      ? null
-      : section.minutes_item_number;
     const minutesItemTitle = isMergedValue(section.minutes_item_title)
       ? null
       : section.minutes_item_title;
-    const minutesRelatedDocumentIdentifier = isMergedValue(
-      section.minutes_related_document_identifier,
-    )
-      ? null
-      : section.minutes_related_document_identifier;
-    const minutesRelatedDocumentType = isMergedValue(
-      section.minutes_related_document_type,
-    )
-      ? null
-      : section.minutes_related_document_type;
     const hasAny =
-      minutesItemNumber ||
       minutesItemTitle ||
-      minutesRelatedDocumentIdentifier ||
-      minutesRelatedDocumentType ||
       section.minutes_processing_phase_code ||
-      section.minutes_general_processing_phase_code ||
-      section.minutes_match_mode;
+      section.minutes_general_processing_phase_code;
 
     if (!hasAny) return null;
-
-    const minutesItemLabel = [
-      minutesItemNumber,
-      section.minutes_item_order != null
-        ? `${t("sessions.minutesOrder", { defaultValue: "järjestys" })} ${section.minutes_item_order}`
-        : null,
-    ]
-      .filter(Boolean)
-      .join(" • ");
-    const relatedDocumentLabel = [
-      minutesRelatedDocumentType,
-      minutesRelatedDocumentIdentifier,
-    ]
-      .filter(Boolean)
-      .join(": ");
 
     return (
       <Box
@@ -962,24 +936,12 @@ export default () => {
         >
           {t("sessions.minutesMetadata", { defaultValue: "Pöytäkirjatiedot" })}
         </Typography>
-        {minutesItemLabel && (
-          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
-            {t("sessions.minutesItem", { defaultValue: "Asiakohta" })}:{" "}
-            {minutesItemLabel}
-          </Typography>
-        )}
         {minutesItemTitle && minutesItemTitle !== section.title && (
-            <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
-              {t("sessions.minutesItemTitle", { defaultValue: "Pöytäkirjan otsikko" })}
-              : {minutesItemTitle}
-            </Typography>
-          )}
-        {relatedDocumentLabel && (
           <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
-            {t("sessions.minutesRelatedDocument", {
-              defaultValue: "Liittyvä asiakirja",
+            {t("sessions.minutesItemTitle", {
+              defaultValue: "Pöytäkirjan otsikko",
             })}
-            : {relatedDocumentLabel}
+            : {minutesItemTitle}
           </Typography>
         )}
         {(section.minutes_processing_phase_code ||
@@ -995,14 +957,6 @@ export default () => {
             ]
               .filter(Boolean)
               .join(" / ")}
-          </Typography>
-        )}
-        {section.minutes_match_mode && (
-          <Typography sx={{ fontSize: "0.75rem", color: colors.textTertiary }}>
-            {t("sessions.minutesMatchMode", {
-              defaultValue: "Yhdistämistapa",
-            })}
-            : {section.minutes_match_mode}
           </Typography>
         )}
       </Box>
@@ -1149,6 +1103,25 @@ export default () => {
 
     if (parsed.narrativeBlocks.length === 0 && references.length === 0) return null;
 
+    const normalizeIdentifier = (value?: string | null) =>
+      value?.trim().toLowerCase() || null;
+    const rollCallData = sectionRollCalls[section.id];
+    const knownRollCallIdentifiers = new Set<string>(
+      [
+        section.minutes_related_document_identifier,
+        rollCallData?.report?.edk_identifier,
+        rollCallData?.report?.parliament_identifier,
+      ]
+        .map((value) => normalizeIdentifier(value))
+        .filter((value): value is string => value !== null),
+    );
+    const isReferenceMigratedAsRollCall = (reference: MinutesContentReference) => {
+      const normalizedCode = normalizeIdentifier(reference.code);
+      if (!normalizedCode) return false;
+      if (!isRollCallSection(section)) return false;
+      return knownRollCallIdentifiers.has(normalizedCode);
+    };
+
     return (
       <Box
         sx={{
@@ -1258,6 +1231,8 @@ export default () => {
                 <tbody>
                   {references.map((reference, index) => {
                     const href = buildValtiopaivaAsiakirjaUrl(reference.code);
+                    const migratedAsRollCall =
+                      isReferenceMigratedAsRollCall(reference);
                     return (
                       <tr
                         key={`${section.key}-minutes-reference-${reference.vaskiId ?? "null"}-${reference.code ?? "null"}-${index}`}
@@ -1289,9 +1264,14 @@ export default () => {
                           )}
                         </td>
                         <td>
-                          {t("sessions.minutesReferenceNotMigrated", {
-                            defaultValue: "Asiakirja havaittu, sisältöä ei ole vielä migroitu.",
-                          })}
+                          {migratedAsRollCall
+                            ? t("sessions.minutesReferenceMigratedRollCall", {
+                                defaultValue: "Migroitu: nimenhuutoraportti.",
+                              })
+                            : t("sessions.minutesReferenceNotMigrated", {
+                                defaultValue:
+                                  "Asiakirja havaittu, sisältöä ei ole vielä migroitu.",
+                              })}
                         </td>
                       </tr>
                     );
@@ -1427,129 +1407,6 @@ export default () => {
       else next.add(sessionKey);
       return next;
     });
-  };
-
-  const renderSessionDocuments = (session: SessionWithSections) => {
-    const docs = session.documents || [];
-    if (docs.length === 0) return null;
-
-    const labelForKind = (kind: SessionDocument["document_kind"]) => {
-      if (kind === "agenda") return t("sessions.sessionAgenda");
-      if (kind === "minutes") return t("sessions.sessionMinutes");
-      return t("sessions.sessionRollCall");
-    };
-
-    return (
-      <Box
-        sx={{
-          p: 2,
-          borderBottom: `1px solid ${colors.dataBorder}`,
-          background: "#fff",
-        }}
-      >
-        <Typography
-          sx={{
-            fontSize: "0.75rem",
-            fontWeight: 600,
-            color: colors.textSecondary,
-            textTransform: "uppercase",
-            mb: 1,
-          }}
-        >
-          {t("sessions.sessionDocuments")}
-        </Typography>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          {docs.map((doc) => {
-            const docNumber =
-              doc.document_number_text && doc.parliamentary_year_text
-                ? `${doc.document_number_text}/${doc.parliamentary_year_text}`
-                : null;
-            return (
-              <Box
-                key={`${doc.document_kind}-${doc.id}`}
-                sx={{
-                  p: 1.5,
-                  borderRadius: 1,
-                  border: `1px solid ${colors.primaryLight}20`,
-                  background: `${colors.primaryLight}08`,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 0.25,
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <Chip
-                    label={labelForKind(doc.document_kind)}
-                    size="small"
-                    sx={{
-                      fontSize: "0.625rem",
-                      height: 20,
-                      background: colors.primaryLight,
-                      color: "#fff",
-                    }}
-                  />
-                  {(doc.type_name_fi || doc.document_type_code) && (
-                    <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
-                    >
-                      {doc.type_name_fi || doc.document_type_code}
-                    </Typography>
-                  )}
-                  {doc.eduskunta_tunnus && (
-                    <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
-                    >
-                      {doc.eduskunta_tunnus}
-                    </Typography>
-                  )}
-                </Box>
-                {doc.title && (
-                  <Typography
-                    sx={{
-                      fontSize: "0.8125rem",
-                      fontWeight: 600,
-                      color: colors.textPrimary,
-                    }}
-                  >
-                    {doc.title}
-                  </Typography>
-                )}
-                <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
-                  {docNumber && (
-                    <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
-                    >
-                      {t("sessions.vaskiDocNumber")}: {docNumber}
-                    </Typography>
-                  )}
-                  {doc.status_text && (
-                    <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
-                    >
-                      {t("sessions.vaskiStatus")}: {doc.status_text}
-                    </Typography>
-                  )}
-                  {doc.created_at && (
-                    <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
-                    >
-                      {t("sessions.vaskiCreated")}: {doc.created_at}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-            );
-          })}
-        </Box>
-      </Box>
-    );
   };
 
   const renderSessionNotices = (session: SessionWithSections) => {
@@ -2808,7 +2665,6 @@ export default () => {
                   )}
                 </Box>
 
-                {renderSessionDocuments(session)}
                 {renderSessionNotices(session)}
                 {renderSessionMinutesOutline(session)}
                 {renderSessionAttachments(session)}
@@ -2872,7 +2728,7 @@ export default () => {
                           onClick={() => toggleSection(section.id, section.key)}
                         >
                           <Chip
-                            label={section.ordinal}
+                            label={getSectionOrderLabel(section)}
                             size="small"
                             sx={{
                               background: colors.primary,
@@ -2897,14 +2753,17 @@ export default () => {
                                 section.processing_title ||
                                 t("sessions.noTitle")}
                             </Typography>
-                            {section.identifier && (
+                            {section.minutes_item_order != null && (
                               <Typography
                                 sx={{
                                   fontSize: "0.75rem",
                                   color: colors.textTertiary,
                                 }}
                               >
-                                {section.identifier}
+                                {t("sessions.minutesOrder", {
+                                  defaultValue: "järjestys",
+                                })}{" "}
+                                {section.minutes_item_order}
                               </Typography>
                             )}
                             {section.note && (
@@ -3387,22 +3246,6 @@ export default () => {
                               </Box>
                             ) : null}
 
-                            {/* No content */}
-                            {!loadingSpeeches.has(section.id) &&
-                              !loadingVotings.has(section.id) &&
-                              speeches.length === 0 &&
-                              votings.length === 0 && (
-                                <Typography
-                                  sx={{
-                                    py: 2,
-                                    textAlign: "center",
-                                    fontSize: "0.8125rem",
-                                    color: colors.textTertiary,
-                                  }}
-                                >
-                                  {t("sessions.noContent")}
-                                </Typography>
-                              )}
                           </Box>
                         </Collapse>
                       </Box>
@@ -3476,7 +3319,7 @@ export default () => {
                                 }}
                               >
                                 <Chip
-                                  label={section.ordinal}
+                                  label={getSectionOrderLabel(section)}
                                   size="small"
                                   sx={{
                                     background: "#fff",
@@ -3498,7 +3341,7 @@ export default () => {
                                     t("sessions.noTitle")}
                                 </Typography>
                               </Box>
-                              {section.identifier && (
+                              {section.minutes_item_order != null && (
                                 <Typography
                                   sx={{
                                     fontSize: "0.75rem",
@@ -3506,7 +3349,10 @@ export default () => {
                                     mt: 0.25,
                                   }}
                                 >
-                                  {section.identifier}
+                                  {t("sessions.minutesOrder", {
+                                    defaultValue: "järjestys",
+                                  })}{" "}
+                                  {section.minutes_item_order}
                                 </Typography>
                               )}
                               {section.note && (
