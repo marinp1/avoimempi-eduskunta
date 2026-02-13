@@ -286,6 +286,54 @@ export class DatabaseConnection {
     return votings;
   }
 
+  public async fetchSectionRollCall(params: { sectionKey: string }) {
+    const reportStmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        session_date: string;
+        roll_call_start_time?: string | null;
+        roll_call_end_time?: string | null;
+        title?: string | null;
+        status?: string | null;
+        created_at?: string | null;
+        edk_identifier: string;
+        source_path: string;
+        attachment_group_id?: number | null;
+        entry_count: number;
+        absent_count: number;
+        late_count: number;
+      },
+      { $sectionKey: string }
+    >(queries.sectionRollCallReport);
+    const report = reportStmt.get({ $sectionKey: params.sectionKey });
+    reportStmt.finalize();
+
+    if (!report) return null;
+
+    const entriesStmt = this.db.prepare<
+      {
+        roll_call_id: number;
+        entry_order: number;
+        person_id?: number | null;
+        first_name: string;
+        last_name: string;
+        party?: string | null;
+        entry_type: "absent" | "late";
+        absence_reason?: string | null;
+        arrival_time?: string | null;
+      },
+      { $rollCallId: number }
+    >(queries.rollCallEntries);
+    const entries = entriesStmt.all({ $rollCallId: report.id });
+    entriesStmt.finalize();
+
+    return {
+      report,
+      entries,
+    };
+  }
+
   public async fetchVotingParticipation(params?: {
     startDate?: string;
     endDate?: string;

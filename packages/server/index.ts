@@ -200,6 +200,17 @@ const server = Bun.serve<{
       },
     },
 
+    "/api/sections/:sectionKey/roll-call": {
+      GET: async (req: BunRequest<"/api/sections/:sectionKey/roll-call">) => {
+        const rollCall = await db.fetchSectionRollCall({
+          sectionKey: req.params.sectionKey,
+        });
+        return new Response(JSON.stringify(rollCall), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
     "/api/insights/participation": {
       GET: async (req: Request) => {
         const { searchParams } = new URL(req.url);
