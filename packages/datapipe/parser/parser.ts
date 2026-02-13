@@ -29,6 +29,15 @@ export type ParserFunction = (
 ) => Promise<[identifier: string, data: ParsedRow]>;
 
 /**
+ * Optional lifecycle hooks that parser modules can export alongside their
+ * default ParserFunction.
+ */
+export interface ParserHooks {
+  onPageParsed?: (pageNumber: number, rows: ParsedRow[]) => Promise<void>;
+  onParsingComplete?: () => Promise<void>;
+}
+
+/**
  * Default parser - passes through data unchanged
  */
 const defaultParser: ParserFunction = async (
@@ -39,18 +48,26 @@ const defaultParser: ParserFunction = async (
 };
 
 /**
- * Get parser function for a table
- * Tries to load custom parser from fn/{tableName}.ts, falls back to default
+ * Load a parser module for a table.
+ * Returns the parse function and any lifecycle hooks the module exports.
  */
-async function getParser(tableName: string): Promise<ParserFunction> {
+async function getParserModule(
+  tableName: string,
+): Promise<{ parse: ParserFunction; hooks: ParserHooks }> {
   try {
-    const module = await import(`./fn/${tableName}.ts`);
-    return module.default as ParserFunction;
+    const mod = await import(`./fn/${tableName}.ts`);
+    return {
+      parse: mod.default as ParserFunction,
+      hooks: {
+        onPageParsed: typeof mod.onPageParsed === "function" ? mod.onPageParsed : undefined,
+        onParsingComplete: typeof mod.onParsingComplete === "function" ? mod.onParsingComplete : undefined,
+      },
+    };
   } catch (_e) {
     console.warn(
       `⚠️  No custom parser found for ${tableName}, using default parser`,
     );
-    return defaultParser;
+    return { parse: defaultParser, hooks: {} };
   }
 }
 
@@ -100,8 +117,8 @@ export async function parseTable(options: ParseOptions): Promise<void> {
   console.log(`📊 Source stage: ${sourceStage}`);
   console.log(`📊 Target stage: ${targetStage}`);
 
-  // Get parser function
-  const parseData = await getParser(tableName);
+  // Get parser function and hooks
+  const { parse: parseData, hooks } = await getParserModule(tableName);
 
   // List all pages for this table (use high maxKeys to get all pages)
   const prefix = StorageKeyBuilder.listPrefixForTable(sourceStage, tableName);
@@ -229,6 +246,11 @@ export async function parseTable(options: ParseOptions): Promise<void> {
     );
     await storage.put(targetKey, JSON.stringify(parsedPage, null, 2));
 
+    // Call page hook if the parser module exports one
+    if (hooks.onPageParsed) {
+      await hooks.onPageParsed(pageRef.page, parsedRows);
+    }
+
     pagesParsed++;
     const totalPagesParsed = alreadyParsedPages.size + pagesParsed;
     const percentComplete = (totalPagesParsed / totalPages) * 100;
@@ -246,6 +268,11 @@ export async function parseTable(options: ParseOptions): Promise<void> {
         percentComplete,
       });
     }
+  }
+
+  // Call completion hook if the parser module exports one
+  if (hooks.onParsingComplete) {
+    await hooks.onParsingComplete();
   }
 
   console.log(`\n✅ Parsing complete for ${tableName}`);
