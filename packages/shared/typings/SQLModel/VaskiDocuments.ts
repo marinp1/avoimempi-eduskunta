@@ -25,6 +25,23 @@ declare global {
       absence_reason: string | null;
       arrival_time: string | null;
     };
+
+    export type SpeechContent = {
+      speech_id: number;
+      session_key: string;
+      section_key: string;
+      source_document_id: number;
+      source_item_identifier: number;
+      source_entry_order: number;
+      source_speech_order: number;
+      source_speech_identifier: number | null;
+      speech_type_code: string | null;
+      language_code: string | null;
+      start_time: Modules.Common.DateString | null;
+      end_time: Modules.Common.DateString | null;
+      content: string;
+      source_path: string;
+    };
   }
 }
 
