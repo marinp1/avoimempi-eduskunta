@@ -95,7 +95,22 @@
     "language": "Kieli",
     "source": "Lähde",
     "close": "Sulje",
-    "totalDocuments": "asiakirjaa"
+    "totalDocuments": "asiakirjaa",
+    "interpellations": "Välikysymykset",
+    "firstSigner": "Ensimmäinen allekirjoittaja",
+    "coSigners": "Muut allekirjoittajat",
+    "signers": "Allekirjoittajat",
+    "stages": "Käsittelyvaiheet",
+    "questionText": "Kysymysteksti",
+    "resolutionText": "Päätösteksti",
+    "showQuestion": "Näytä kysymys",
+    "hideQuestion": "Piilota kysymys",
+    "showResolution": "Näytä päätös",
+    "hideResolution": "Piilota päätös",
+    "noTitle": "Ei otsikkoa",
+    "submissionDate": "Jättöpäivä",
+    "decisionOutcome": "Päätös",
+    "order": "Järjestys"
   },
   "common": {
     "date": "Päivämäärä",

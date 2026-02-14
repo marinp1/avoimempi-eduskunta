@@ -922,6 +922,168 @@ export class DatabaseConnection {
     return data;
   }
 
+  // ─── Interpellation queries ───
+
+  public async fetchInterpellations(params: {
+    query?: string;
+    year?: string;
+    page: number;
+    limit: number;
+  }) {
+    const offset = (params.page - 1) * params.limit;
+    const $query = params.query?.trim() || null;
+    const $year = params.year || null;
+
+    const countStmt = this.db.prepare<
+      { count: number },
+      { $query: string | null; $year: string | null }
+    >(queries.interpellationsCount);
+    const countResult = countStmt.get({ $query, $year });
+    const totalCount = countResult?.count || 0;
+    countStmt.finalize();
+
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        submission_date: string | null;
+        first_signer_first_name: string | null;
+        first_signer_last_name: string | null;
+        first_signer_party: string | null;
+        co_signer_count: number | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+        subjects: string | null;
+      },
+      {
+        $query: string | null;
+        $year: string | null;
+        $limit: number;
+        $offset: number;
+      }
+    >(queries.interpellationsList);
+    const rows = stmt.all({ $query, $year, $limit: params.limit, $offset: offset });
+    stmt.finalize();
+
+    return {
+      items: rows,
+      totalCount,
+      page: params.page,
+      limit: params.limit,
+      totalPages: Math.ceil(totalCount / params.limit),
+    };
+  }
+
+  public async fetchInterpellationById(params: { id: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        submission_date: string | null;
+        first_signer_person_id: number | null;
+        first_signer_first_name: string | null;
+        first_signer_last_name: string | null;
+        first_signer_party: string | null;
+        co_signer_count: number | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+        question_text: string | null;
+        resolution_text: string | null;
+      },
+      { $id: number }
+    >(queries.interpellationById);
+    const detail = detailStmt.get({ $id: +params.id });
+    detailStmt.finalize();
+    if (!detail) return null;
+
+    const signersStmt = this.db.prepare<
+      {
+        interpellation_id: number;
+        signer_order: number;
+        person_id: number | null;
+        first_name: string;
+        last_name: string;
+        party: string | null;
+        is_first_signer: number;
+      },
+      { $interpellationId: number }
+    >(queries.interpellationSigners);
+    const signers = signersStmt.all({ $interpellationId: detail.id });
+    signersStmt.finalize();
+
+    const stagesStmt = this.db.prepare<
+      {
+        interpellation_id: number;
+        stage_order: number;
+        stage_title: string;
+        stage_code: string | null;
+        event_date: string | null;
+        event_title: string | null;
+        event_description: string | null;
+      },
+      { $interpellationId: number }
+    >(queries.interpellationStages);
+    const stages = stagesStmt.all({ $interpellationId: detail.id });
+    stagesStmt.finalize();
+
+    const subjectsStmt = this.db.prepare<
+      { interpellation_id: number; subject_text: string },
+      { $interpellationId: number }
+    >(queries.interpellationSubjects);
+    const subjects = subjectsStmt.all({ $interpellationId: detail.id });
+    subjectsStmt.finalize();
+
+    return { ...detail, signers, stages, subjects };
+  }
+
+  public async fetchInterpellationByIdentifier(params: { identifier: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        submission_date: string | null;
+        first_signer_person_id: number | null;
+        first_signer_first_name: string | null;
+        first_signer_last_name: string | null;
+        first_signer_party: string | null;
+        co_signer_count: number | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+      },
+      { $identifier: string }
+    >(queries.interpellationByIdentifier);
+    const detail = detailStmt.get({ $identifier: params.identifier });
+    detailStmt.finalize();
+    if (!detail) return null;
+
+    const subjectsStmt = this.db.prepare<
+      { interpellation_id: number; subject_text: string },
+      { $interpellationId: number }
+    >(queries.interpellationSubjects);
+    const subjects = subjectsStmt.all({ $interpellationId: detail.id });
+    subjectsStmt.finalize();
+
+    return { ...detail, subjects };
+  }
+
+  public async fetchInterpellationYears() {
+    const stmt = this.db.prepare<{ year: string }, []>(
+      queries.interpellationYears,
+    );
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
   public async federatedSearch(params: { q: string; limit?: number }) {
     const searchQuery = this.buildSearchQuery(params.q);
     if (!searchQuery) return [];
