@@ -1039,7 +1039,22 @@ export class DatabaseConnection {
     const subjects = subjectsStmt.all({ $interpellationId: detail.id });
     subjectsStmt.finalize();
 
-    return { ...detail, signers, stages, subjects };
+    const sessionsStmt = this.db.prepare<
+      {
+        session_key: string;
+        session_date: string;
+        session_type: string;
+        session_number: number;
+        session_year: string;
+        section_title: string | null;
+        section_key: string;
+      },
+      { $identifier: string }
+    >(queries.interpellationSessions);
+    const sessions = sessionsStmt.all({ $identifier: detail.parliament_identifier });
+    sessionsStmt.finalize();
+
+    return { ...detail, signers, stages, subjects, sessions };
   }
 
   public async fetchInterpellationByIdentifier(params: { identifier: string }) {

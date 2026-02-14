@@ -36,6 +36,7 @@ const mainNavRoutes: RouteName[] = [
   "puolueet",
   "istunnot",
   "aanestykset",
+  "asiakirjat",
   "analytiikka",
 ];
 

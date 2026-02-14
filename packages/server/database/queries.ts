@@ -63,3 +63,4 @@ export { default as interpellationSigners } from "./queries/INTERPELLATION_SIGNE
 export { default as interpellationStages } from "./queries/INTERPELLATION_STAGES.sql";
 export { default as interpellationSubjects } from "./queries/INTERPELLATION_SUBJECTS.sql";
 export { default as interpellationYears } from "./queries/INTERPELLATION_YEARS.sql";
+export { default as interpellationSessions } from "./queries/INTERPELLATION_SESSIONS.sql";
