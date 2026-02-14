@@ -1,6 +1,7 @@
 import {
   AdminPanelSettings,
   Assessment,
+  Description,
   Event,
   Groups,
   Home,
@@ -37,6 +38,11 @@ export const routes = {
     title: "Aanestykset",
     icon: HowToVote,
     Component: React.lazy(() => import("./Votings")),
+  },
+  asiakirjat: {
+    title: "Asiakirjat",
+    icon: Description,
+    Component: React.lazy(() => import("./Documents")),
   },
   analytiikka: {
     title: "Analytiikka",
