@@ -29,6 +29,7 @@ import {
 	Timeline as TimelineIcon,
 	Article as ArticleIcon,
 	Gavel as GavelIcon,
+	Event as EventIcon,
 } from "@mui/icons-material";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { colors } from "#client/theme/index";
@@ -62,17 +63,29 @@ interface InterpellationDetail {
 	decision_outcome: string | null;
 	decision_outcome_code: string | null;
 	signers: Array<{
-		order: number;
+		signer_order: number;
+		is_first_signer: number;
 		first_name: string | null;
 		last_name: string | null;
 		party: string | null;
 	}>;
 	stages: Array<{
-		date: string | null;
-		title: string | null;
-		description: string | null;
+		stage_title: string | null;
+		stage_code: string | null;
+		event_date: string | null;
+		event_title: string | null;
+		event_description: string | null;
 	}>;
-	subjects: string[];
+	subjects: Array<{ subject_text: string }>;
+	sessions: Array<{
+		session_key: string;
+		session_date: string;
+		session_type: string;
+		session_number: number;
+		session_year: string;
+		section_title: string | null;
+		section_key: string;
+	}>;
 }
 
 interface InterpellationCardProps {
@@ -86,8 +99,8 @@ function InterpellationCard({ item }: InterpellationCardProps) {
 	const [detail, setDetail] = useState<InterpellationDetail | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [showQuestion, setShowQuestion] = useState(false);
-	const [showResolution, setShowResolution] = useState(false);
+	const [showJustification, setShowJustification] = useState(false);
+	const [showClauses, setShowClauses] = useState(false);
 
 	const subjects = item.subjects
 		? item.subjects.split("||").filter(Boolean)
@@ -317,9 +330,7 @@ function InterpellationCard({ item }: InterpellationCardProps) {
 										<Table size="small">
 											<TableHead>
 												<TableRow>
-													<TableCell>
-														{t("documents.order", "Järjestys")}
-													</TableCell>
+													<TableCell>#</TableCell>
 													<TableCell>{t("documents.author", "Tekijä")}</TableCell>
 													<TableCell>{t("party", "Puolue")}</TableCell>
 												</TableRow>
@@ -333,8 +344,8 @@ function InterpellationCard({ item }: InterpellationCardProps) {
 																spacing={0.5}
 																alignItems="center"
 															>
-																{signer.order}
-																{signer.order === 1 && (
+																{idx + 1}
+																{signer.is_first_signer === 1 && (
 																	<Chip
 																		label={t(
 																			"documents.firstSigner",
@@ -395,22 +406,30 @@ function InterpellationCard({ item }: InterpellationCardProps) {
 													variant="body2"
 													sx={{ fontWeight: 500, color: colors.textPrimary }}
 												>
-													{stage.title || "—"}
+													{stage.stage_title || "—"}
 												</Typography>
-												{stage.date && (
+												{stage.event_date && (
 													<Typography
 														variant="caption"
 														sx={{ color: colors.textSecondary }}
 													>
-														{formatDate(stage.date)}
+														{formatDate(stage.event_date)}
 													</Typography>
 												)}
-												{stage.description && (
+												{stage.event_title && stage.event_title !== stage.stage_title && (
+													<Typography
+														variant="body2"
+														sx={{ mt: 0.25, color: colors.textPrimary, fontWeight: 400 }}
+													>
+														{stage.event_title}
+													</Typography>
+												)}
+												{stage.event_description && (
 													<Typography
 														variant="body2"
 														sx={{ mt: 0.5, color: colors.textSecondary }}
 													>
-														{stage.description}
+														{stage.event_description}
 													</Typography>
 												)}
 											</Box>
@@ -419,23 +438,23 @@ function InterpellationCard({ item }: InterpellationCardProps) {
 								</Box>
 							)}
 
-							{/* Question text */}
+							{/* Justification text (perustelut) */}
 							{detail.question_text && (
 								<Box>
 									<Button
 										startIcon={<ArticleIcon />}
-										onClick={() => setShowQuestion(!showQuestion)}
+										onClick={() => setShowJustification(!showJustification)}
 										sx={{
 											textTransform: "none",
 											color: colors.primary,
 											mb: 1,
 										}}
 									>
-										{showQuestion
-											? t("documents.hideQuestion", "Piilota kysymys")
-											: t("documents.showQuestion", "Näytä kysymys")}
+										{showJustification
+											? t("documents.hideJustification", "Piilota perustelut")
+											: t("documents.showJustification", "Näytä perustelut")}
 									</Button>
-									<Collapse in={showQuestion}>
+									<Collapse in={showJustification}>
 										<Box
 											sx={{
 												p: 2,
@@ -458,23 +477,23 @@ function InterpellationCard({ item }: InterpellationCardProps) {
 								</Box>
 							)}
 
-							{/* Resolution text */}
+							{/* Clauses text (ponnet) */}
 							{detail.resolution_text && (
 								<Box>
 									<Button
 										startIcon={<GavelIcon />}
-										onClick={() => setShowResolution(!showResolution)}
+										onClick={() => setShowClauses(!showClauses)}
 										sx={{
 											textTransform: "none",
 											color: colors.primary,
 											mb: 1,
 										}}
 									>
-										{showResolution
-											? t("documents.hideResolution", "Piilota päätös")
-											: t("documents.showResolution", "Näytä päätös")}
+										{showClauses
+											? t("documents.hideClauses", "Piilota ponnet")
+											: t("documents.showClauses", "Näytä ponnet")}
 									</Button>
-									<Collapse in={showResolution}>
+									<Collapse in={showClauses}>
 										<Box
 											sx={{
 												p: 2,
@@ -496,6 +515,60 @@ function InterpellationCard({ item }: InterpellationCardProps) {
 											</Typography>
 										</Box>
 									</Collapse>
+								</Box>
+							)}
+
+							{/* Related sessions */}
+							{detail.sessions.length > 0 && (
+								<Box>
+									<Stack
+										direction="row"
+										spacing={1}
+										alignItems="center"
+										sx={{ mb: 1.5 }}
+									>
+										<EventIcon sx={{ color: colors.primary }} />
+										<Typography
+											variant="subtitle1"
+											sx={{ fontWeight: 600, color: colors.textPrimary }}
+										>
+											{t("documents.relatedSessions", "Liittyvät istunnot")}
+										</Typography>
+									</Stack>
+									<Stack spacing={1}>
+										{detail.sessions.map((session, idx) => (
+											<Box
+												key={idx}
+												sx={{
+													pl: 2,
+													borderLeft: `3px solid ${colors.primary}`,
+													cursor: "pointer",
+													"&:hover": { backgroundColor: colors.backgroundSubtle },
+													borderRadius: 1,
+													py: 0.5,
+												}}
+												onClick={() => {
+													window.history.pushState({}, "", `/istunnot?date=${session.session_date}`);
+													window.dispatchEvent(new PopStateEvent("popstate"));
+												}}
+											>
+												<Typography
+													variant="body2"
+													sx={{ fontWeight: 500, color: colors.primary }}
+												>
+													{session.session_type} {session.session_number}/{session.session_year} — {formatDate(session.session_date)}
+												</Typography>
+												{session.section_title && (
+													<Typography
+														variant="caption"
+														sx={{ color: colors.textSecondary }}
+													>
+														{session.section_title}
+													</Typography>
+												)}
+											</Box>
+										))}
+									</Stack>
 								</Box>
 							)}
 						</Stack>
