@@ -130,7 +130,9 @@
     "writtenQuestions": "Kirjalliset kysymykset",
     "answerMinister": "Vastaaja",
     "showQuestionText": "Näytä kysymysteksti",
-    "hideQuestionText": "Piilota kysymysteksti"
+    "hideQuestionText": "Piilota kysymysteksti",
+    "relatedVotings": "Liittyvät äänestykset",
+    "noRelatedVotings": "Ei liittyviä äänestyksiä."
   },
   "common": {
     "date": "Päivämäärä",
@@ -294,7 +296,9 @@
       "minutes": "Pöytäkirja"
     },
     "showProposal": "Näytä HE",
-    "hideProposal": "Piilota HE"
+    "hideProposal": "Piilota HE",
+    "showDocuments": "Näytä asiakirjat",
+    "hideDocuments": "Piilota asiakirjat"
   },
   "sessions": {
     "title": "Istunnot",

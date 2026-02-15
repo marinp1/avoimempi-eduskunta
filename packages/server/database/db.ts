@@ -164,6 +164,16 @@ export class DatabaseConnection {
     return data ?? null;
   }
 
+  public async fetchVotingsByDocument(params: { identifier: string }) {
+    const stmt = this.db.prepare<
+      DatabaseQueries.VotingSearchResult,
+      { $identifier: string }
+    >(queries.votingsByDocument);
+    const data = stmt.all({ $identifier: params.identifier });
+    stmt.finalize();
+    return data;
+  }
+
   public async fetchSessions(params: { page: number; limit: number }) {
     const offset = (params.page - 1) * params.limit;
 

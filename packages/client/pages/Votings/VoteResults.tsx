@@ -29,7 +29,12 @@ import { useThemedColors } from "#client/theme/ThemeContext";
 import { getVoteColors } from "#client/theme/vote-styles";
 
 const CLOSE_VOTE_THRESHOLD = 10;
-const HE_PATTERN = /HE\s+\d+\/\d+\s*vp/;
+const DOC_PATTERN = /\b(HE|VK|KK)\s+\d+\/\d+\s*(?:vp)?/g;
+
+type DocumentRef = {
+  type: "HE" | "VK" | "KK";
+  identifier: string;
+};
 
 type SortMode = "newest" | "oldest" | "closest" | "largest";
 type VotingSearchRow = DatabaseQueries.VotingSearchResult;
@@ -82,18 +87,28 @@ const getSecondaryTitle = (vote: VotingSearchRow) => {
   return vote.title;
 };
 
-const extractHEIdentifier = (vote: VotingSearchRow): string | null => {
+const extractDocumentIdentifiers = (vote: VotingSearchRow): DocumentRef[] => {
+  const seen = new Set<string>();
+  const results: DocumentRef[] = [];
   for (const field of [
     vote.section_title,
     vote.main_section_title,
     vote.agenda_title,
+    vote.parliamentary_item,
   ]) {
-    if (field) {
-      const match = field.match(HE_PATTERN);
-      if (match) return match[0];
+    if (!field) continue;
+    for (const match of field.matchAll(DOC_PATTERN)) {
+      const identifier = match[0].trim();
+      if (!seen.has(identifier)) {
+        seen.add(identifier);
+        results.push({
+          type: match[1] as DocumentRef["type"],
+          identifier,
+        });
+      }
     }
   }
-  return null;
+  return results;
 };
 
 const sortRows = (rows: VotingSearchRow[], sortMode: SortMode) => {
@@ -262,6 +277,278 @@ const GovernmentProposalMiniCard: React.FC<{ identifier: string }> = ({
   );
 };
 
+/** Inline card for VK interpellations referenced in voting context */
+const InterpellationMiniCard: React.FC<{ identifier: string }> = ({
+  identifier,
+}) => {
+  const [data, setData] = React.useState<{
+    id: number;
+    parliament_identifier: string;
+    title: string | null;
+    decision_outcome: string | null;
+    decision_outcome_code: string | null;
+    subjects: { subject_text: string }[];
+  } | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch(
+      `/api/interpellations/by-identifier/${encodeURIComponent(identifier)}`,
+    )
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!cancelled) setData(json);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [identifier]);
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          p: 1,
+          mt: 1,
+          borderRadius: 1,
+          border: `1px solid ${colors.primaryLight}30`,
+          background: `${colors.primaryLight}08`,
+        }}
+      >
+        <CircularProgress size={14} />
+        <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+          Ladataan VK-tietoja...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (!data) return null;
+
+  const decisionColor =
+    data.decision_outcome_code?.toLowerCase().includes("passed") ||
+    data.decision_outcome_code?.toLowerCase().includes("hyväk")
+      ? colors.success
+      : data.decision_outcome_code?.toLowerCase().includes("hylä") ||
+          data.decision_outcome_code?.toLowerCase().includes("reject")
+        ? colors.error
+        : colors.textSecondary;
+
+  const subjectChips = data.subjects?.slice(0, 3) ?? [];
+
+  return (
+    <Box
+      sx={{
+        p: 1.25,
+        mt: 1,
+        borderRadius: 1,
+        border: `1px solid ${colors.primaryLight}30`,
+        background: `${colors.primaryLight}06`,
+        cursor: "pointer",
+        "&:hover": { background: `${colors.primaryLight}12` },
+      }}
+      onClick={() => {
+        window.location.href = `/asiakirjat?id=${data.id}&type=interpellations`;
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+        <ArticleIcon sx={{ fontSize: 16, color: colors.primaryLight }} />
+        <Chip
+          size="small"
+          label={data.parliament_identifier}
+          sx={{
+            fontWeight: 600,
+            fontSize: "0.7rem",
+            height: 20,
+            background: `${colors.primaryLight}15`,
+            color: colors.primary,
+          }}
+        />
+        {data.decision_outcome && (
+          <Typography
+            sx={{ fontSize: "0.7rem", fontWeight: 600, color: decisionColor }}
+          >
+            {data.decision_outcome}
+          </Typography>
+        )}
+      </Box>
+      {data.title && (
+        <Typography
+          sx={{
+            fontSize: "0.8rem",
+            color: colors.textPrimary,
+            lineHeight: 1.4,
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}
+        >
+          {data.title}
+        </Typography>
+      )}
+      {subjectChips.length > 0 && (
+        <Box sx={{ display: "flex", gap: 0.5, mt: 0.5, flexWrap: "wrap" }}>
+          {subjectChips.map((s) => (
+            <Chip
+              key={s.subject_text}
+              size="small"
+              label={s.subject_text}
+              variant="outlined"
+              sx={{ fontSize: "0.65rem", height: 18 }}
+            />
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+};
+
+/** Inline card for KK written questions referenced in voting context */
+const WrittenQuestionMiniCard: React.FC<{ identifier: string }> = ({
+  identifier,
+}) => {
+  const [data, setData] = React.useState<{
+    id: number;
+    parliament_identifier: string;
+    title: string | null;
+    decision_outcome: string | null;
+    decision_outcome_code: string | null;
+    subjects: { subject_text: string }[];
+  } | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch(
+      `/api/written-questions/by-identifier/${encodeURIComponent(identifier)}`,
+    )
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!cancelled) setData(json);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [identifier]);
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          p: 1,
+          mt: 1,
+          borderRadius: 1,
+          border: `1px solid ${colors.primaryLight}30`,
+          background: `${colors.primaryLight}08`,
+        }}
+      >
+        <CircularProgress size={14} />
+        <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+          Ladataan KK-tietoja...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (!data) return null;
+
+  const decisionColor =
+    data.decision_outcome_code?.toLowerCase().includes("passed") ||
+    data.decision_outcome_code?.toLowerCase().includes("hyväk")
+      ? colors.success
+      : data.decision_outcome_code?.toLowerCase().includes("hylä") ||
+          data.decision_outcome_code?.toLowerCase().includes("reject")
+        ? colors.error
+        : colors.textSecondary;
+
+  const subjectChips = data.subjects?.slice(0, 3) ?? [];
+
+  return (
+    <Box
+      sx={{
+        p: 1.25,
+        mt: 1,
+        borderRadius: 1,
+        border: `1px solid ${colors.primaryLight}30`,
+        background: `${colors.primaryLight}06`,
+        cursor: "pointer",
+        "&:hover": { background: `${colors.primaryLight}12` },
+      }}
+      onClick={() => {
+        window.location.href = `/asiakirjat?id=${data.id}&type=written-questions`;
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+        <ArticleIcon sx={{ fontSize: 16, color: colors.primaryLight }} />
+        <Chip
+          size="small"
+          label={data.parliament_identifier}
+          sx={{
+            fontWeight: 600,
+            fontSize: "0.7rem",
+            height: 20,
+            background: `${colors.primaryLight}15`,
+            color: colors.primary,
+          }}
+        />
+        {data.decision_outcome && (
+          <Typography
+            sx={{ fontSize: "0.7rem", fontWeight: 600, color: decisionColor }}
+          >
+            {data.decision_outcome}
+          </Typography>
+        )}
+      </Box>
+      {data.title && (
+        <Typography
+          sx={{
+            fontSize: "0.8rem",
+            color: colors.textPrimary,
+            lineHeight: 1.4,
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}
+        >
+          {data.title}
+        </Typography>
+      )}
+      {subjectChips.length > 0 && (
+        <Box sx={{ display: "flex", gap: 0.5, mt: 0.5, flexWrap: "wrap" }}>
+          {subjectChips.map((s) => (
+            <Chip
+              key={s.subject_text}
+              size="small"
+              label={s.subject_text}
+              variant="outlined"
+              sx={{ fontSize: "0.65rem", height: 18 }}
+            />
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+};
+
 /** Single voting card in the results list */
 const VotingCard: React.FC<{
   vote: VotingSearchRow;
@@ -272,7 +559,7 @@ const VotingCard: React.FC<{
   const [expanded, setExpanded] = React.useState(false);
   const close = isCloseVote(vote);
   const passed = isVotePassed(vote);
-  const heIdentifier = extractHEIdentifier(vote);
+  const docRefs = extractDocumentIdentifiers(vote);
   const primaryTitle = getPrimaryTitle(vote);
   const secondaryTitle = getSecondaryTitle(vote);
 
@@ -517,7 +804,7 @@ const VotingCard: React.FC<{
             {t("votings.results.minutes")}
             <LaunchIcon sx={{ fontSize: 12 }} />
           </Link>
-          {heIdentifier && (
+          {docRefs.length > 0 && (
             <Typography
               onClick={() => setExpanded(!expanded)}
               sx={{
@@ -529,16 +816,40 @@ const VotingCard: React.FC<{
               }}
             >
               {expanded
-                ? t("votings.hideProposal")
-                : t("votings.showProposal")}
+                ? t("votings.hideDocuments")
+                : t("votings.showDocuments")}
             </Typography>
           )}
         </Box>
 
-        {/* HE inline card */}
-        {heIdentifier && (
+        {/* Linked document inline cards */}
+        {docRefs.length > 0 && (
           <Collapse in={expanded}>
-            <GovernmentProposalMiniCard identifier={heIdentifier} />
+            {docRefs.map((ref) => {
+              switch (ref.type) {
+                case "HE":
+                  return (
+                    <GovernmentProposalMiniCard
+                      key={ref.identifier}
+                      identifier={ref.identifier}
+                    />
+                  );
+                case "VK":
+                  return (
+                    <InterpellationMiniCard
+                      key={ref.identifier}
+                      identifier={ref.identifier}
+                    />
+                  );
+                case "KK":
+                  return (
+                    <WrittenQuestionMiniCard
+                      key={ref.identifier}
+                      identifier={ref.identifier}
+                    />
+                  );
+              }
+            })}
           </Collapse>
         )}
       </Box>

@@ -54,6 +54,7 @@ export { default as votesByPerson } from "./queries/VOTES_BY_PERSON.sql";
 export { default as votingById } from "./queries/VOTING_BY_ID.sql";
 export { default as votingParticipation } from "./queries/VOTING_PARTICIPATION.sql";
 export { default as votingParticipationByGovernment } from "./queries/VOTING_PARTICIPATION_BY_GOVERNMENT.sql";
+export { default as votingsByDocument } from "./queries/VOTINGS_BY_DOCUMENT.sql";
 export { default as votingsSearch } from "./queries/VOTINGS_SEARCH.sql";
 export { default as interpellationsList } from "./queries/INTERPELLATIONS_LIST.sql";
 export { default as interpellationsCount } from "./queries/INTERPELLATIONS_COUNT.sql";
