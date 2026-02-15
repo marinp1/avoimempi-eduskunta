@@ -453,6 +453,13 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
     "INSERT OR IGNORE INTO WrittenQuestionSubject (question_id, subject_text) VALUES (?, ?)",
   );
 
+  const linkVaskiDocument = db.prepare(
+    "UPDATE WrittenQuestion SET vaski_document_id = ? WHERE id = ?",
+  );
+  const updateVaskiTitle = db.prepare(
+    "UPDATE VaskiDocument SET title = ? WHERE id = ? AND title IS NULL",
+  );
+
   const updateAnswer = db.prepare(
     `UPDATE WrittenQuestion SET
        answer_parliament_identifier = COALESCE(?, WrittenQuestion.answer_parliament_identifier),
@@ -542,6 +549,9 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
             .get(parsed.identifier) as { id: number } | undefined;
           const questionId = existing?.id ?? id;
 
+          linkVaskiDocument.run(id, questionId);
+          if (data.title) updateVaskiTitle.run(data.title, id);
+
           deleteStages.run(questionId);
           for (const stage of data.stages) {
             insertStage.run(
@@ -590,6 +600,9 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
             .query("SELECT id FROM WrittenQuestion WHERE parliament_identifier = ? LIMIT 1")
             .get(parsed.identifier) as { id: number } | undefined;
           const questionId = existing?.id ?? id;
+
+          linkVaskiDocument.run(id, questionId);
+          if (data.title) updateVaskiTitle.run(data.title, id);
 
           if (data.signers.length > 0) {
             deleteSigners.run(questionId);
@@ -674,6 +687,8 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
       insertStage.finalize();
       deleteSubjects.finalize();
       insertSubject.finalize();
+      linkVaskiDocument.finalize();
+      updateVaskiTitle.finalize();
       updateAnswer.finalize();
     },
   };

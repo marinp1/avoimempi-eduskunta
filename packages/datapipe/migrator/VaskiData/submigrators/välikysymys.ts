@@ -444,6 +444,13 @@ export default function createValikysymysSubMigrator(db: Database) {
     "INSERT OR IGNORE INTO InterpellationSubject (interpellation_id, subject_text) VALUES (?, ?)",
   );
 
+  const linkVaskiDocument = db.prepare(
+    "UPDATE Interpellation SET vaski_document_id = ? WHERE id = ?",
+  );
+  const updateVaskiTitle = db.prepare(
+    "UPDATE VaskiDocument SET title = ? WHERE id = ? AND title IS NULL",
+  );
+
   return {
     async migrateRow(row: VaskiEntry): Promise<void> {
       const parsed = parseParliamentIdentifier(row.eduskuntaTunnus);
@@ -517,6 +524,9 @@ export default function createValikysymysSubMigrator(db: Database) {
             .get(parsed.identifier) as { id: number } | undefined;
           const interpellationId = existing?.id ?? id;
 
+          linkVaskiDocument.run(id, interpellationId);
+          if (data.title) updateVaskiTitle.run(data.title, id);
+
           deleteStages.run(interpellationId);
           for (const stage of data.stages) {
             insertStage.run(
@@ -560,6 +570,9 @@ export default function createValikysymysSubMigrator(db: Database) {
             .get(parsed.identifier) as { id: number } | undefined;
           const interpellationId = existing?.id ?? id;
 
+          linkVaskiDocument.run(id, interpellationId);
+          if (data.title) updateVaskiTitle.run(data.title, id);
+
           if (data.signers.length > 0) {
             deleteSigners.run(interpellationId);
             for (const signer of data.signers) {
@@ -593,6 +606,8 @@ export default function createValikysymysSubMigrator(db: Database) {
       insertStage.finalize();
       deleteSubjects.finalize();
       insertSubject.finalize();
+      linkVaskiDocument.finalize();
+      updateVaskiTitle.finalize();
     },
   };
 }

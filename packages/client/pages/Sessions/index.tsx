@@ -448,9 +448,32 @@ const InterpellationInlineCard: React.FC<{ identifier: string }> = ({
   );
 };
 
-const VK_PATTERN = /^VK \d+\/\d+/;
-const HE_PATTERN = /^HE \d+\/\d+/;
-const KK_PATTERN = /^KK \d+\/\d+/;
+const DOC_PATTERN = /\b(HE|VK|KK)\s+\d+\/\d+\s*(?:vp)?/g;
+type DocRef = { type: "HE" | "VK" | "KK"; identifier: string };
+
+const extractSectionDocRefs = (section: {
+  minutes_related_document_identifier?: string | null;
+  title?: string | null;
+  minutes_item_title?: string | null;
+}): DocRef[] => {
+  const seen = new Set<string>();
+  const results: DocRef[] = [];
+  for (const field of [
+    section.minutes_related_document_identifier,
+    section.title,
+    section.minutes_item_title,
+  ]) {
+    if (!field) continue;
+    for (const match of field.matchAll(DOC_PATTERN)) {
+      const id = match[0].trim();
+      if (!seen.has(id)) {
+        seen.add(id);
+        results.push({ type: match[1] as DocRef["type"], identifier: id });
+      }
+    }
+  }
+  return results;
+};
 
 /** Inline card for government proposal (HE) documents referenced in sections */
 const GovernmentProposalInlineCard: React.FC<{ identifier: string }> = ({
@@ -777,6 +800,125 @@ const WrittenQuestionInlineCard: React.FC<{ identifier: string }> = ({
           </Typography>
         )}
       </Box>
+    </Box>
+  );
+};
+
+/** Related votings for a section based on document identifiers */
+const SectionRelatedVotings: React.FC<{ docRefs: DocRef[] }> = ({ docRefs }) => {
+  const [votings, setVotings] = useState<
+    { id: number; section_title: string | null; context_title: string | null; start_time: string | null; session_key: string | null; n_yes: number; n_no: number; n_total: number }[]
+  >([]);
+  const [loading, setLoading] = useState(true);
+
+  const refKey = docRefs.map((r) => r.identifier).join(",");
+
+  useEffect(() => {
+    if (docRefs.length === 0) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+
+    Promise.all(
+      docRefs.map((ref) =>
+        fetch(`/api/votings/by-document/${encodeURIComponent(ref.identifier)}`)
+          .then((res) => (res.ok ? res.json() : []))
+          .catch(() => []),
+      ),
+    ).then((results) => {
+      if (cancelled) return;
+      const seen = new Set<number>();
+      const merged: typeof votings = [];
+      for (const list of results) {
+        for (const v of list) {
+          if (!seen.has(v.id)) {
+            seen.add(v.id);
+            merged.push(v);
+          }
+        }
+      }
+      setVotings(merged);
+      setLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [refKey]);
+
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 0.5, mt: 0.5 }}>
+        <CircularProgress size={14} />
+        <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
+          Ladataan äänestyksiä...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (votings.length === 0) return null;
+
+  return (
+    <Box sx={{ mt: 1 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
+        <HowToVoteIcon sx={{ fontSize: 16, color: colors.primary }} />
+        <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, color: colors.textPrimary }}>
+          Liittyvät äänestykset
+        </Typography>
+      </Box>
+      {votings.map((v) => {
+        const passed = v.n_yes > v.n_no;
+        const yesRatio = v.n_total > 0 ? (v.n_yes / v.n_total) * 100 : 0;
+        const noRatio = v.n_total > 0 ? (v.n_no / v.n_total) * 100 : 0;
+        return (
+          <Box
+            key={v.id}
+            sx={{
+              pl: 1.5,
+              py: 0.5,
+              borderLeft: `3px solid ${passed ? colors.success : colors.error}`,
+              cursor: "pointer",
+              "&:hover": { backgroundColor: `${colors.primaryLight}08` },
+              borderRadius: 1,
+              mb: 0.5,
+            }}
+            onClick={() => {
+              window.history.pushState({}, "", `/aanestykset?voting=${v.id}`);
+              window.dispatchEvent(new PopStateEvent("popstate"));
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+              <Typography sx={{ fontSize: "0.75rem", fontWeight: 500, color: colors.textPrimary, flex: 1, minWidth: 100 }}>
+                {v.context_title || v.section_title}
+              </Typography>
+              <Chip
+                size="small"
+                label={`${v.n_yes} - ${v.n_no}`}
+                sx={{
+                  fontWeight: 600,
+                  fontSize: "0.65rem",
+                  height: 20,
+                  color: passed ? colors.success : colors.error,
+                  borderColor: passed ? colors.success : colors.error,
+                }}
+                variant="outlined"
+              />
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.25 }}>
+              <Typography sx={{ fontSize: "0.65rem", color: colors.textSecondary }}>
+                {v.start_time?.substring(0, 10)} — {v.session_key}
+              </Typography>
+              <Box sx={{ flex: 1, maxWidth: 100, height: 3, borderRadius: 2, overflow: "hidden", display: "flex", backgroundColor: `${colors.dataBorder}40` }}>
+                <Box sx={{ width: `${yesRatio}%`, backgroundColor: colors.success, height: "100%" }} />
+                <Box sx={{ width: `${noRatio}%`, backgroundColor: colors.error, height: "100%" }} />
+              </Box>
+            </Box>
+          </Box>
+        );
+      })}
     </Box>
   );
 };
@@ -3405,24 +3547,23 @@ export default () => {
                             {renderMinutesInfo(section, false)}
                             {renderSectionSubSections(section)}
                             {renderSectionMinutesContent(section)}
-                            {section.minutes_related_document_identifier &&
-                              VK_PATTERN.test(section.minutes_related_document_identifier) && (
-                                <InterpellationInlineCard
-                                  identifier={section.minutes_related_document_identifier.match(VK_PATTERN)![0]}
-                                />
-                              )}
-                            {section.minutes_related_document_identifier &&
-                              HE_PATTERN.test(section.minutes_related_document_identifier) && (
-                                <GovernmentProposalInlineCard
-                                  identifier={section.minutes_related_document_identifier.match(HE_PATTERN)![0]}
-                                />
-                              )}
-                            {section.minutes_related_document_identifier &&
-                              KK_PATTERN.test(section.minutes_related_document_identifier) && (
-                                <WrittenQuestionInlineCard
-                                  identifier={section.minutes_related_document_identifier.match(KK_PATTERN)![0]}
-                                />
-                              )}
+                            {(() => {
+                              const refs = extractSectionDocRefs(section);
+                              return (
+                                <>
+                                  {refs.map((ref) => {
+                                    switch (ref.type) {
+                                      case "VK": return <InterpellationInlineCard key={ref.identifier} identifier={ref.identifier} />;
+                                      case "HE": return <GovernmentProposalInlineCard key={ref.identifier} identifier={ref.identifier} />;
+                                      case "KK": return <WrittenQuestionInlineCard key={ref.identifier} identifier={ref.identifier} />;
+                                    }
+                                  })}
+                                  {refs.length > 0 && section.voting_count === 0 && (
+                                    <SectionRelatedVotings docRefs={refs} />
+                                  )}
+                                </>
+                              );
+                            })()}
                             {renderSectionLinks(section)}
                             {renderSectionNotices(session, section.key)}
                             {renderSectionRollCall(section)}
@@ -4049,24 +4190,23 @@ export default () => {
                                   {renderMinutesInfo(section, false)}
                                   {renderSectionSubSections(section)}
                                   {renderSectionMinutesContent(section)}
-                                  {section.minutes_related_document_identifier &&
-                                    VK_PATTERN.test(section.minutes_related_document_identifier) && (
-                                      <InterpellationInlineCard
-                                        identifier={section.minutes_related_document_identifier.match(VK_PATTERN)![0]}
-                                      />
-                                    )}
-                                  {section.minutes_related_document_identifier &&
-                                    HE_PATTERN.test(section.minutes_related_document_identifier) && (
-                                      <GovernmentProposalInlineCard
-                                        identifier={section.minutes_related_document_identifier.match(HE_PATTERN)![0]}
-                                      />
-                                    )}
-                                  {section.minutes_related_document_identifier &&
-                                    KK_PATTERN.test(section.minutes_related_document_identifier) && (
-                                      <WrittenQuestionInlineCard
-                                        identifier={section.minutes_related_document_identifier.match(KK_PATTERN)![0]}
-                                      />
-                                    )}
+                                  {(() => {
+                                    const refs = extractSectionDocRefs(section);
+                                    return (
+                                      <>
+                                        {refs.map((ref) => {
+                                          switch (ref.type) {
+                                            case "VK": return <InterpellationInlineCard key={ref.identifier} identifier={ref.identifier} />;
+                                            case "HE": return <GovernmentProposalInlineCard key={ref.identifier} identifier={ref.identifier} />;
+                                            case "KK": return <WrittenQuestionInlineCard key={ref.identifier} identifier={ref.identifier} />;
+                                          }
+                                        })}
+                                        {refs.length > 0 && section.voting_count === 0 && (
+                                          <SectionRelatedVotings docRefs={refs} />
+                                        )}
+                                      </>
+                                    );
+                                  })()}
                                   {renderSectionLinks(section)}
                                   {renderSectionNotices(session, section.key)}
                                   {renderSectionRollCall(section)}
