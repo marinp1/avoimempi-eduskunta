@@ -593,6 +593,47 @@ const server = Bun.serve<{
       },
     },
 
+    // ─── Written question endpoints ───
+
+    "/api/written-questions": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const query = searchParams.get("q") || undefined;
+        const year = searchParams.get("year") || undefined;
+        const page = parseInt(searchParams.get("page") || "1", 10);
+        const limit = parseInt(searchParams.get("limit") || "20", 10);
+        const data = await db.fetchWrittenQuestions({ query, year, page, limit });
+        return Response.json(data);
+      },
+    },
+
+    "/api/written-questions/years": {
+      GET: async () => {
+        const data = await db.fetchWrittenQuestionYears();
+        return Response.json(data);
+      },
+    },
+
+    "/api/written-questions/by-identifier/:identifier": {
+      GET: async (
+        req: BunRequest<"/api/written-questions/by-identifier/:identifier">,
+      ) => {
+        const data = await db.fetchWrittenQuestionByIdentifier({
+          identifier: decodeURIComponent(req.params.identifier),
+        });
+        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        return Response.json(data);
+      },
+    },
+
+    "/api/written-questions/:id": {
+      GET: async (req: BunRequest<"/api/written-questions/:id">) => {
+        const data = await db.fetchWrittenQuestionById({ id: req.params.id });
+        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        return Response.json(data);
+      },
+    },
+
     // ─── Federated search ───
 
     "/api/search": {

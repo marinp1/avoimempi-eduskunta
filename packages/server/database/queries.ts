@@ -74,3 +74,12 @@ export { default as govProposalSubjects } from "./queries/GOV_PROPOSAL_SUBJECTS.
 export { default as govProposalLaws } from "./queries/GOV_PROPOSAL_LAWS.sql";
 export { default as govProposalYears } from "./queries/GOV_PROPOSAL_YEARS.sql";
 export { default as govProposalSessions } from "./queries/GOV_PROPOSAL_SESSIONS.sql";
+export { default as writtenQuestionsList } from "./queries/WRITTEN_QUESTIONS_LIST.sql";
+export { default as writtenQuestionsCount } from "./queries/WRITTEN_QUESTIONS_COUNT.sql";
+export { default as writtenQuestionById } from "./queries/WRITTEN_QUESTION_BY_ID.sql";
+export { default as writtenQuestionByIdentifier } from "./queries/WRITTEN_QUESTION_BY_IDENTIFIER.sql";
+export { default as writtenQuestionSigners } from "./queries/WRITTEN_QUESTION_SIGNERS.sql";
+export { default as writtenQuestionStages } from "./queries/WRITTEN_QUESTION_STAGES.sql";
+export { default as writtenQuestionSubjects } from "./queries/WRITTEN_QUESTION_SUBJECTS.sql";
+export { default as writtenQuestionYears } from "./queries/WRITTEN_QUESTION_YEARS.sql";
+export { default as writtenQuestionSessions } from "./queries/WRITTEN_QUESTION_SESSIONS.sql";

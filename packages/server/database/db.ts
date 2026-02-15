@@ -1285,6 +1285,199 @@ export class DatabaseConnection {
     return data;
   }
 
+  // ─── Written question queries ───
+
+  public async fetchWrittenQuestions(params: {
+    query?: string;
+    year?: string;
+    page: number;
+    limit: number;
+  }) {
+    const offset = (params.page - 1) * params.limit;
+    const $query = params.query?.trim() || null;
+    const $year = params.year || null;
+
+    const countStmt = this.db.prepare<
+      { count: number },
+      { $query: string | null; $year: string | null }
+    >(queries.writtenQuestionsCount);
+    const countResult = countStmt.get({ $query, $year });
+    const totalCount = countResult?.count || 0;
+    countStmt.finalize();
+
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        submission_date: string | null;
+        first_signer_first_name: string | null;
+        first_signer_last_name: string | null;
+        first_signer_party: string | null;
+        co_signer_count: number | null;
+        answer_minister_first_name: string | null;
+        answer_minister_last_name: string | null;
+        answer_minister_title: string | null;
+        answer_date: string | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+        latest_stage_code: string | null;
+        end_date: string | null;
+        subjects: string | null;
+      },
+      {
+        $query: string | null;
+        $year: string | null;
+        $limit: number;
+        $offset: number;
+      }
+    >(queries.writtenQuestionsList);
+    const rows = stmt.all({ $query, $year, $limit: params.limit, $offset: offset });
+    stmt.finalize();
+
+    return {
+      items: rows,
+      totalCount,
+      page: params.page,
+      limit: params.limit,
+      totalPages: Math.ceil(totalCount / params.limit),
+    };
+  }
+
+  public async fetchWrittenQuestionById(params: { id: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        submission_date: string | null;
+        first_signer_person_id: number | null;
+        first_signer_first_name: string | null;
+        first_signer_last_name: string | null;
+        first_signer_party: string | null;
+        co_signer_count: number | null;
+        question_text: string | null;
+        answer_parliament_identifier: string | null;
+        answer_minister_title: string | null;
+        answer_minister_first_name: string | null;
+        answer_minister_last_name: string | null;
+        answer_date: string | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+        latest_stage_code: string | null;
+        end_date: string | null;
+      },
+      { $id: number }
+    >(queries.writtenQuestionById);
+    const detail = detailStmt.get({ $id: +params.id });
+    detailStmt.finalize();
+    if (!detail) return null;
+
+    const signersStmt = this.db.prepare<
+      {
+        question_id: number;
+        signer_order: number;
+        person_id: number | null;
+        first_name: string;
+        last_name: string;
+        party: string | null;
+        is_first_signer: number;
+      },
+      { $questionId: number }
+    >(queries.writtenQuestionSigners);
+    const signers = signersStmt.all({ $questionId: detail.id });
+    signersStmt.finalize();
+
+    const stagesStmt = this.db.prepare<
+      {
+        question_id: number;
+        stage_order: number;
+        stage_title: string;
+        stage_code: string | null;
+        event_date: string | null;
+        event_title: string | null;
+        event_description: string | null;
+      },
+      { $questionId: number }
+    >(queries.writtenQuestionStages);
+    const stages = stagesStmt.all({ $questionId: detail.id });
+    stagesStmt.finalize();
+
+    const subjectsStmt = this.db.prepare<
+      { question_id: number; subject_text: string },
+      { $questionId: number }
+    >(queries.writtenQuestionSubjects);
+    const subjects = subjectsStmt.all({ $questionId: detail.id });
+    subjectsStmt.finalize();
+
+    const sessionsStmt = this.db.prepare<
+      {
+        session_key: string;
+        session_date: string;
+        session_type: string;
+        session_number: number;
+        session_year: string;
+        section_title: string | null;
+        section_key: string;
+      },
+      { $identifier: string }
+    >(queries.writtenQuestionSessions);
+    const sessions = sessionsStmt.all({ $identifier: detail.parliament_identifier });
+    sessionsStmt.finalize();
+
+    return { ...detail, signers, stages, subjects, sessions };
+  }
+
+  public async fetchWrittenQuestionByIdentifier(params: { identifier: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        submission_date: string | null;
+        first_signer_person_id: number | null;
+        first_signer_first_name: string | null;
+        first_signer_last_name: string | null;
+        first_signer_party: string | null;
+        co_signer_count: number | null;
+        answer_minister_title: string | null;
+        answer_minister_first_name: string | null;
+        answer_minister_last_name: string | null;
+        answer_date: string | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+      },
+      { $identifier: string }
+    >(queries.writtenQuestionByIdentifier);
+    const detail = detailStmt.get({ $identifier: params.identifier });
+    detailStmt.finalize();
+    if (!detail) return null;
+
+    const subjectsStmt = this.db.prepare<
+      { question_id: number; subject_text: string },
+      { $questionId: number }
+    >(queries.writtenQuestionSubjects);
+    const subjects = subjectsStmt.all({ $questionId: detail.id });
+    subjectsStmt.finalize();
+
+    return { ...detail, subjects };
+  }
+
+  public async fetchWrittenQuestionYears() {
+    const stmt = this.db.prepare<{ year: string }, []>(
+      queries.writtenQuestionYears,
+    );
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
   public async federatedSearch(params: { q: string; limit?: number }) {
     const searchQuery = this.buildSearchQuery(params.q);
     if (!searchQuery) return [];
