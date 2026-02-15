@@ -469,6 +469,13 @@ export default function createHallituksenEsitysSubMigrator(db: Database) {
     "INSERT INTO GovernmentProposalStage (proposal_id, stage_order, stage_title, stage_code, event_date, event_title, event_description) VALUES (?, ?, ?, ?, ?, ?, ?)",
   );
 
+  const linkVaskiDocument = db.prepare(
+    "UPDATE GovernmentProposal SET vaski_document_id = ? WHERE id = ?",
+  );
+  const updateVaskiTitle = db.prepare(
+    "UPDATE VaskiDocument SET title = ? WHERE id = ? AND title IS NULL",
+  );
+
   return {
     async migrateRow(row: VaskiEntry): Promise<void> {
       const parsed = parseParliamentIdentifier(row.eduskuntaTunnus);
@@ -544,6 +551,9 @@ export default function createHallituksenEsitysSubMigrator(db: Database) {
             .get(parsed.identifier) as { id: number } | undefined;
           const proposalId = existing?.id ?? id;
 
+          linkVaskiDocument.run(id, proposalId);
+          if (data.title) updateVaskiTitle.run(data.title, id);
+
           if (data.signatories.length > 0) {
             deleteSignatories.run(proposalId);
             for (const sig of data.signatories) {
@@ -596,6 +606,9 @@ export default function createHallituksenEsitysSubMigrator(db: Database) {
             .get(parsed.identifier) as { id: number } | undefined;
           const proposalId = existing?.id ?? id;
 
+          linkVaskiDocument.run(id, proposalId);
+          if (data.title) updateVaskiTitle.run(data.title, id);
+
           if (data.stages.length > 0) {
             deleteStages.run(proposalId);
             for (const stage of data.stages) {
@@ -631,6 +644,8 @@ export default function createHallituksenEsitysSubMigrator(db: Database) {
       insertLaw.finalize();
       deleteStages.finalize();
       insertStage.finalize();
+      linkVaskiDocument.finalize();
+      updateVaskiTitle.finalize();
     },
   };
 }
