@@ -171,6 +171,17 @@ const server = Bun.serve<{
       },
     },
 
+    "/api/votings/by-document/:identifier": {
+      GET: async (
+        req: BunRequest<"/api/votings/by-document/:identifier">,
+      ) => {
+        const data = await db.fetchVotingsByDocument({
+          identifier: decodeURIComponent(req.params.identifier),
+        });
+        return Response.json(data);
+      },
+    },
+
     "/api/votings/:id": {
       GET: async (req: BunRequest<"/api/votings/:id">) => {
         const voting = await db.fetchVotingById(req.params);
