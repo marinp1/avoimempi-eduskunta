@@ -1099,6 +1099,192 @@ export class DatabaseConnection {
     return data;
   }
 
+  // ─── Government proposal queries ───
+
+  public async fetchGovernmentProposals(params: {
+    query?: string;
+    year?: string;
+    page: number;
+    limit: number;
+  }) {
+    const offset = (params.page - 1) * params.limit;
+    const $query = params.query?.trim() || null;
+    const $year = params.year || null;
+
+    const countStmt = this.db.prepare<
+      { count: number },
+      { $query: string | null; $year: string | null }
+    >(queries.govProposalsCount);
+    const countResult = countStmt.get({ $query, $year });
+    const totalCount = countResult?.count || 0;
+    countStmt.finalize();
+
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        submission_date: string | null;
+        author: string | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+        latest_stage_code: string | null;
+        end_date: string | null;
+        subjects: string | null;
+      },
+      {
+        $query: string | null;
+        $year: string | null;
+        $limit: number;
+        $offset: number;
+      }
+    >(queries.govProposalsList);
+    const rows = stmt.all({ $query, $year, $limit: params.limit, $offset: offset });
+    stmt.finalize();
+
+    return {
+      items: rows,
+      totalCount,
+      page: params.page,
+      limit: params.limit,
+      totalPages: Math.ceil(totalCount / params.limit),
+    };
+  }
+
+  public async fetchGovernmentProposalById(params: { id: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        submission_date: string | null;
+        author: string | null;
+        summary_text: string | null;
+        justification_text: string | null;
+        proposal_text: string | null;
+        appendix_text: string | null;
+        signature_date: string | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+        law_decision_text: string | null;
+        latest_stage_code: string | null;
+        end_date: string | null;
+      },
+      { $id: number }
+    >(queries.govProposalById);
+    const detail = detailStmt.get({ $id: +params.id });
+    detailStmt.finalize();
+    if (!detail) return null;
+
+    const signatoriesStmt = this.db.prepare<
+      {
+        proposal_id: number;
+        signatory_order: number;
+        first_name: string;
+        last_name: string;
+        title_text: string | null;
+      },
+      { $proposalId: number }
+    >(queries.govProposalSignatories);
+    const signatories = signatoriesStmt.all({ $proposalId: detail.id });
+    signatoriesStmt.finalize();
+
+    const stagesStmt = this.db.prepare<
+      {
+        proposal_id: number;
+        stage_order: number;
+        stage_title: string;
+        stage_code: string | null;
+        event_date: string | null;
+        event_title: string | null;
+        event_description: string | null;
+      },
+      { $proposalId: number }
+    >(queries.govProposalStages);
+    const stages = stagesStmt.all({ $proposalId: detail.id });
+    stagesStmt.finalize();
+
+    const subjectsStmt = this.db.prepare<
+      { proposal_id: number; subject_text: string; yso_uri: string | null },
+      { $proposalId: number }
+    >(queries.govProposalSubjects);
+    const subjects = subjectsStmt.all({ $proposalId: detail.id });
+    subjectsStmt.finalize();
+
+    const lawsStmt = this.db.prepare<
+      {
+        proposal_id: number;
+        law_order: number;
+        law_type: string | null;
+        law_name: string | null;
+      },
+      { $proposalId: number }
+    >(queries.govProposalLaws);
+    const laws = lawsStmt.all({ $proposalId: detail.id });
+    lawsStmt.finalize();
+
+    const sessionsStmt = this.db.prepare<
+      {
+        session_key: string;
+        session_date: string;
+        session_type: string;
+        session_number: number;
+        session_year: string;
+        section_title: string | null;
+        section_key: string;
+      },
+      { $identifier: string }
+    >(queries.govProposalSessions);
+    const sessions = sessionsStmt.all({ $identifier: detail.parliament_identifier });
+    sessionsStmt.finalize();
+
+    return { ...detail, signatories, stages, subjects, laws, sessions };
+  }
+
+  public async fetchGovernmentProposalByIdentifier(params: { identifier: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        submission_date: string | null;
+        author: string | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+        latest_stage_code: string | null;
+        end_date: string | null;
+      },
+      { $identifier: string }
+    >(queries.govProposalByIdentifier);
+    const detail = detailStmt.get({ $identifier: params.identifier });
+    detailStmt.finalize();
+    if (!detail) return null;
+
+    const subjectsStmt = this.db.prepare<
+      { proposal_id: number; subject_text: string; yso_uri: string | null },
+      { $proposalId: number }
+    >(queries.govProposalSubjects);
+    const subjects = subjectsStmt.all({ $proposalId: detail.id });
+    subjectsStmt.finalize();
+
+    return { ...detail, subjects };
+  }
+
+  public async fetchGovernmentProposalYears() {
+    const stmt = this.db.prepare<{ year: string }, []>(
+      queries.govProposalYears,
+    );
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
   public async federatedSearch(params: { q: string; limit?: number }) {
     const searchQuery = this.buildSearchQuery(params.q);
     if (!searchQuery) return [];

@@ -552,6 +552,47 @@ const server = Bun.serve<{
       },
     },
 
+    // ─── Government proposal endpoints ───
+
+    "/api/government-proposals": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const query = searchParams.get("q") || undefined;
+        const year = searchParams.get("year") || undefined;
+        const page = parseInt(searchParams.get("page") || "1", 10);
+        const limit = parseInt(searchParams.get("limit") || "20", 10);
+        const data = await db.fetchGovernmentProposals({ query, year, page, limit });
+        return Response.json(data);
+      },
+    },
+
+    "/api/government-proposals/years": {
+      GET: async () => {
+        const data = await db.fetchGovernmentProposalYears();
+        return Response.json(data);
+      },
+    },
+
+    "/api/government-proposals/by-identifier/:identifier": {
+      GET: async (
+        req: BunRequest<"/api/government-proposals/by-identifier/:identifier">,
+      ) => {
+        const data = await db.fetchGovernmentProposalByIdentifier({
+          identifier: decodeURIComponent(req.params.identifier),
+        });
+        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        return Response.json(data);
+      },
+    },
+
+    "/api/government-proposals/:id": {
+      GET: async (req: BunRequest<"/api/government-proposals/:id">) => {
+        const data = await db.fetchGovernmentProposalById({ id: req.params.id });
+        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        return Response.json(data);
+      },
+    },
+
     // ─── Federated search ───
 
     "/api/search": {

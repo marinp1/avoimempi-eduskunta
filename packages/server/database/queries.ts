@@ -64,3 +64,13 @@ export { default as interpellationStages } from "./queries/INTERPELLATION_STAGES
 export { default as interpellationSubjects } from "./queries/INTERPELLATION_SUBJECTS.sql";
 export { default as interpellationYears } from "./queries/INTERPELLATION_YEARS.sql";
 export { default as interpellationSessions } from "./queries/INTERPELLATION_SESSIONS.sql";
+export { default as govProposalsList } from "./queries/GOV_PROPOSALS_LIST.sql";
+export { default as govProposalsCount } from "./queries/GOV_PROPOSALS_COUNT.sql";
+export { default as govProposalById } from "./queries/GOV_PROPOSAL_BY_ID.sql";
+export { default as govProposalByIdentifier } from "./queries/GOV_PROPOSAL_BY_IDENTIFIER.sql";
+export { default as govProposalSignatories } from "./queries/GOV_PROPOSAL_SIGNATORIES.sql";
+export { default as govProposalStages } from "./queries/GOV_PROPOSAL_STAGES.sql";
+export { default as govProposalSubjects } from "./queries/GOV_PROPOSAL_SUBJECTS.sql";
+export { default as govProposalLaws } from "./queries/GOV_PROPOSAL_LAWS.sql";
+export { default as govProposalYears } from "./queries/GOV_PROPOSAL_YEARS.sql";
+export { default as govProposalSessions } from "./queries/GOV_PROPOSAL_SESSIONS.sql";
