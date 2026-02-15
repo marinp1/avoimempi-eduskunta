@@ -20,3 +20,4 @@ vaski-*.json
 dist
 
 .claude/settings.local.json
+validation-results.json
