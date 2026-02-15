@@ -449,6 +449,167 @@ const InterpellationInlineCard: React.FC<{ identifier: string }> = ({
 };
 
 const VK_PATTERN = /^VK \d+\/\d+/;
+const HE_PATTERN = /^HE \d+\/\d+/;
+
+/** Inline card for government proposal (HE) documents referenced in sections */
+const GovernmentProposalInlineCard: React.FC<{ identifier: string }> = ({
+  identifier,
+}) => {
+  const [data, setData] = useState<{
+    id: number;
+    parliament_identifier: string;
+    title: string | null;
+    author: string | null;
+    decision_outcome: string | null;
+    decision_outcome_code: string | null;
+    subjects: { subject_text: string }[];
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch(`/api/government-proposals/by-identifier/${encodeURIComponent(identifier)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!cancelled) setData(json);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [identifier]);
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          p: 1,
+          mt: 1,
+          borderRadius: 1,
+          border: `1px solid ${colors.primaryLight}30`,
+          background: `${colors.primaryLight}08`,
+        }}
+      >
+        <CircularProgress size={14} />
+        <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+          Ladataan hallituksen esityksen tietoja...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (!data) return null;
+
+  const decisionColor =
+    data.decision_outcome_code?.toLowerCase().includes("passed") ||
+    data.decision_outcome_code?.toLowerCase().includes("hyväk")
+      ? colors.success
+      : data.decision_outcome_code?.toLowerCase().includes("hylä") ||
+          data.decision_outcome_code?.toLowerCase().includes("reject")
+        ? colors.error
+        : colors.textSecondary;
+
+  const subjectChips = data.subjects?.slice(0, 3) ?? [];
+  const moreSubjects = (data.subjects?.length ?? 0) - 3;
+
+  return (
+    <Box
+      sx={{
+        p: 1.5,
+        mt: 1,
+        borderRadius: 1,
+        border: `1px solid ${colors.primaryLight}30`,
+        background: `${colors.primaryLight}06`,
+        cursor: "pointer",
+        "&:hover": { background: `${colors.primaryLight}12` },
+      }}
+      onClick={() => {
+        window.location.href = `/asiakirjat?id=${data.id}&type=government-proposals`;
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+        <Chip
+          label={data.parliament_identifier}
+          size="small"
+          sx={{
+            height: 20,
+            fontSize: "0.7rem",
+            fontWeight: 600,
+            bgcolor: `${colors.primary}15`,
+            color: colors.primary,
+          }}
+        />
+        <Typography
+          sx={{
+            fontSize: "0.8rem",
+            fontWeight: 600,
+            color: colors.textPrimary,
+            flex: 1,
+            minWidth: 0,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {data.title || "Ei otsikkoa"}
+        </Typography>
+        {data.decision_outcome && (
+          <Chip
+            label={data.decision_outcome}
+            size="small"
+            sx={{
+              height: 20,
+              fontSize: "0.65rem",
+              fontWeight: 600,
+              bgcolor: `${decisionColor}15`,
+              color: decisionColor,
+            }}
+          />
+        )}
+      </Box>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mt: 0.5,
+          flexWrap: "wrap",
+        }}
+      >
+        {data.author && (
+          <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
+            {data.author}
+          </Typography>
+        )}
+        {subjectChips.map((s) => (
+          <Chip
+            key={s.subject_text}
+            label={s.subject_text}
+            size="small"
+            variant="outlined"
+            sx={{
+              height: 18,
+              fontSize: "0.6rem",
+              borderColor: `${colors.dataBorder}`,
+            }}
+          />
+        ))}
+        {moreSubjects > 0 && (
+          <Typography sx={{ fontSize: "0.6rem", color: colors.textSecondary }}>
+            +{moreSubjects}
+          </Typography>
+        )}
+      </Box>
+    </Box>
+  );
+};
 
 /** Calendar month grid component */
 const CalendarGrid: React.FC<{
@@ -3080,6 +3241,12 @@ export default () => {
                                   identifier={section.minutes_related_document_identifier.match(VK_PATTERN)![0]}
                                 />
                               )}
+                            {section.minutes_related_document_identifier &&
+                              HE_PATTERN.test(section.minutes_related_document_identifier) && (
+                                <GovernmentProposalInlineCard
+                                  identifier={section.minutes_related_document_identifier.match(HE_PATTERN)![0]}
+                                />
+                              )}
                             {renderSectionLinks(section)}
                             {renderSectionNotices(session, section.key)}
                             {renderSectionRollCall(section)}
@@ -3706,6 +3873,18 @@ export default () => {
                                   {renderMinutesInfo(section, false)}
                                   {renderSectionSubSections(section)}
                                   {renderSectionMinutesContent(section)}
+                                  {section.minutes_related_document_identifier &&
+                                    VK_PATTERN.test(section.minutes_related_document_identifier) && (
+                                      <InterpellationInlineCard
+                                        identifier={section.minutes_related_document_identifier.match(VK_PATTERN)![0]}
+                                      />
+                                    )}
+                                  {section.minutes_related_document_identifier &&
+                                    HE_PATTERN.test(section.minutes_related_document_identifier) && (
+                                      <GovernmentProposalInlineCard
+                                        identifier={section.minutes_related_document_identifier.match(HE_PATTERN)![0]}
+                                      />
+                                    )}
                                   {renderSectionLinks(section)}
                                   {renderSectionNotices(session, section.key)}
                                   {renderSectionRollCall(section)}

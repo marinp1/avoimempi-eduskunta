@@ -288,7 +288,9 @@
       "links": "Linkit",
       "results": "Tulokset",
       "minutes": "Pöytäkirja"
-    }
+    },
+    "showProposal": "Näytä HE",
+    "hideProposal": "Piilota HE"
   },
   "sessions": {
     "title": "Istunnot",

@@ -18,5 +18,21 @@ WHERE
   OR COALESCE(v.section_processing_title, '') LIKE '%' || $q || '%' COLLATE NOCASE
   OR COALESCE(v.session_key, '') LIKE '%' || $q || '%' COLLATE NOCASE
 
+UNION ALL
+
+SELECT 'interpellation' AS type, CAST(i.id AS TEXT) AS id, COALESCE(i.title, i.parliament_identifier) AS title, i.parliament_identifier AS subtitle, i.submission_date AS date
+FROM Interpellation i
+WHERE
+  COALESCE(i.title, '') LIKE '%' || $q || '%' COLLATE NOCASE
+  OR i.parliament_identifier LIKE '%' || $q || '%' COLLATE NOCASE
+
+UNION ALL
+
+SELECT 'government-proposal' AS type, CAST(g.id AS TEXT) AS id, COALESCE(g.title, g.parliament_identifier) AS title, g.parliament_identifier AS subtitle, g.submission_date AS date
+FROM GovernmentProposal g
+WHERE
+  COALESCE(g.title, '') LIKE '%' || $q || '%' COLLATE NOCASE
+  OR g.parliament_identifier LIKE '%' || $q || '%' COLLATE NOCASE
+
 ORDER BY date DESC
 LIMIT $limit;
