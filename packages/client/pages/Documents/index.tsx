@@ -35,7 +35,7 @@ import {
 import { DataCard, PageHeader } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 
-type DocumentType = "interpellations" | "government-proposals";
+type DocumentType = "interpellations" | "government-proposals" | "written-questions";
 
 const formatDate = (dateStr: string | null) => {
 	if (!dateStr) return "—";
@@ -1152,6 +1152,559 @@ function GovernmentProposalCard({ item }: { item: GovernmentProposalListItem }) 
 	);
 }
 
+// ─── Written question types and card ───
+
+interface WrittenQuestionListItem {
+	id: number;
+	parliament_identifier: string;
+	document_number: number;
+	parliamentary_year: string;
+	title: string | null;
+	submission_date: string | null;
+	first_signer_first_name: string | null;
+	first_signer_last_name: string | null;
+	first_signer_party: string | null;
+	co_signer_count: number | null;
+	answer_minister_first_name: string | null;
+	answer_minister_last_name: string | null;
+	answer_minister_title: string | null;
+	answer_date: string | null;
+	decision_outcome: string | null;
+	decision_outcome_code: string | null;
+	latest_stage_code: string | null;
+	end_date: string | null;
+	subjects: string | null;
+}
+
+interface WrittenQuestionDetail {
+	id: number;
+	parliament_identifier: string;
+	document_number: number;
+	parliamentary_year: string;
+	title: string | null;
+	submission_date: string | null;
+	question_text: string | null;
+	answer_parliament_identifier: string | null;
+	answer_minister_title: string | null;
+	answer_minister_first_name: string | null;
+	answer_minister_last_name: string | null;
+	answer_date: string | null;
+	decision_outcome: string | null;
+	decision_outcome_code: string | null;
+	signers: Array<{
+		signer_order: number;
+		is_first_signer: number;
+		first_name: string | null;
+		last_name: string | null;
+		party: string | null;
+	}>;
+	stages: Array<{
+		stage_title: string | null;
+		stage_code: string | null;
+		event_date: string | null;
+		event_title: string | null;
+		event_description: string | null;
+	}>;
+	subjects: Array<{ subject_text: string }>;
+	sessions: Array<{
+		session_key: string;
+		session_date: string;
+		session_type: string;
+		session_number: number;
+		session_year: string;
+		section_title: string | null;
+		section_key: string;
+	}>;
+}
+
+function WrittenQuestionCard({ item }: { item: WrittenQuestionListItem }) {
+	const { t } = useTranslation();
+
+	const [expanded, setExpanded] = useState(false);
+	const [detail, setDetail] = useState<WrittenQuestionDetail | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [showQuestionText, setShowQuestionText] = useState(false);
+
+	const subjects = item.subjects
+		? item.subjects.split("||").filter(Boolean)
+		: [];
+	const displaySubjects = subjects.slice(0, 3);
+	const remainingSubjects = subjects.length - 3;
+
+	const signerName = [item.first_signer_first_name, item.first_signer_last_name]
+		.filter(Boolean)
+		.join(" ");
+	const signerLabel = item.first_signer_party
+		? `${signerName} (${item.first_signer_party})`
+		: signerName;
+
+	const answerMinisterName = [item.answer_minister_first_name, item.answer_minister_last_name]
+		.filter(Boolean)
+		.join(" ");
+
+	const handleExpand = async () => {
+		if (!expanded && !detail) {
+			setLoading(true);
+			setError(null);
+			try {
+				const response = await fetch(`/api/written-questions/${item.id}`);
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}`);
+				}
+				const data = await response.json();
+				setDetail(data);
+			} catch (err) {
+				setError(err instanceof Error ? err.message : "Failed to load");
+			} finally {
+				setLoading(false);
+			}
+		}
+		setExpanded(!expanded);
+	};
+
+	return (
+		<DataCard>
+			<Box
+				sx={{
+					cursor: "pointer",
+					"&:hover": {
+						backgroundColor: colors.backgroundSubtle,
+					},
+					transition: "background-color 0.2s",
+					p: 2,
+				}}
+				onClick={handleExpand}
+			>
+				<Stack spacing={1.5}>
+					{/* Title row */}
+					<Stack
+						direction="row"
+						spacing={1}
+						alignItems="flex-start"
+						flexWrap="wrap"
+					>
+						<Typography
+							variant="h6"
+							sx={{
+								flex: 1,
+								minWidth: "200px",
+								color: colors.textPrimary,
+								fontWeight: 500,
+							}}
+						>
+							{item.title || t("documents.noTitle", "Ei otsikkoa")}
+						</Typography>
+						<Chip
+							label={item.parliament_identifier}
+							size="small"
+							sx={{
+								backgroundColor: colors.primaryLight,
+								color: colors.primary,
+								fontWeight: 500,
+							}}
+						/>
+					</Stack>
+
+					{/* Metadata row */}
+					<Stack
+						direction={{ xs: "column", sm: "row" }}
+						spacing={2}
+						flexWrap="wrap"
+						alignItems={{ xs: "flex-start", sm: "center" }}
+					>
+						{item.submission_date && (
+							<Typography variant="body2" color={colors.textSecondary}>
+								{t("documents.submissionDate", "Jättöpäivä")}:{" "}
+								{formatDate(item.submission_date)}
+							</Typography>
+						)}
+
+						{signerLabel && (
+							<Stack direction="row" spacing={0.5} alignItems="center">
+								<PersonIcon
+									fontSize="small"
+									sx={{ color: colors.textSecondary }}
+								/>
+								<Typography variant="body2" color={colors.textSecondary}>
+									{signerLabel}
+								</Typography>
+								{item.co_signer_count != null && item.co_signer_count > 0 && (
+									<Typography variant="body2" color={colors.textSecondary}>
+										{` +${item.co_signer_count}`}
+									</Typography>
+								)}
+							</Stack>
+						)}
+
+						{answerMinisterName && (
+							<Stack direction="row" spacing={0.5} alignItems="center">
+								<GavelIcon
+									fontSize="small"
+									sx={{ color: colors.textSecondary }}
+								/>
+								<Typography variant="body2" color={colors.textSecondary}>
+									{item.answer_minister_title ? `${item.answer_minister_title} ` : ""}
+									{answerMinisterName}
+									{item.answer_date ? ` (${formatDate(item.answer_date)})` : ""}
+								</Typography>
+							</Stack>
+						)}
+
+						{item.decision_outcome && (
+							<Chip
+								label={item.decision_outcome}
+								size="small"
+								sx={{
+									backgroundColor: getOutcomeColor(item.decision_outcome_code),
+									color: "#fff",
+									fontWeight: 500,
+								}}
+							/>
+						)}
+					</Stack>
+
+					{/* Subjects */}
+					{subjects.length > 0 && (
+						<Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+							{displaySubjects.map((subject, idx) => (
+								<Chip
+									key={idx}
+									label={subject}
+									size="small"
+									variant="outlined"
+									sx={{
+										borderColor: colors.dataBorder,
+										color: colors.textSecondary,
+									}}
+								/>
+							))}
+							{remainingSubjects > 0 && (
+								<Chip
+									label={`+${remainingSubjects}`}
+									size="small"
+									variant="outlined"
+									sx={{
+										borderColor: colors.dataBorder,
+										color: colors.textSecondary,
+									}}
+								/>
+							)}
+						</Stack>
+					)}
+				</Stack>
+
+				<Box
+					sx={{
+						display: "flex",
+						justifyContent: "center",
+						mt: 1,
+					}}
+				>
+					<ExpandMoreIcon
+						sx={{
+							transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+							transition: "transform 0.3s",
+							color: colors.textSecondary,
+						}}
+					/>
+				</Box>
+			</Box>
+
+			<Collapse in={expanded} timeout="auto" unmountOnExit>
+				<Box sx={{ p: 2, pt: 0, borderTop: `1px solid ${colors.dataBorder}` }}>
+					{loading && (
+						<Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+							<CircularProgress size={32} />
+						</Box>
+					)}
+
+					{error && (
+						<Alert severity="error" sx={{ mb: 2 }}>
+							{error}
+						</Alert>
+					)}
+
+					{detail && (
+						<Stack spacing={3}>
+							{detail.signers.length > 0 && (
+								<Box>
+									<Stack
+										direction="row"
+										spacing={1}
+										alignItems="center"
+										sx={{ mb: 1.5 }}
+									>
+										<PersonIcon sx={{ color: colors.primary }} />
+										<Typography
+											variant="subtitle1"
+											sx={{ fontWeight: 600, color: colors.textPrimary }}
+										>
+											{t("documents.signers", "Allekirjoittajat")}
+										</Typography>
+									</Stack>
+									<TableContainer>
+										<Table size="small">
+											<TableHead>
+												<TableRow>
+													<TableCell>#</TableCell>
+													<TableCell>{t("documents.author", "Tekijä")}</TableCell>
+													<TableCell>{t("party", "Puolue")}</TableCell>
+												</TableRow>
+											</TableHead>
+											<TableBody>
+												{detail.signers.map((signer, idx) => (
+													<TableRow key={idx}>
+														<TableCell>
+															<Stack
+																direction="row"
+																spacing={0.5}
+																alignItems="center"
+															>
+																{idx + 1}
+																{signer.is_first_signer === 1 && (
+																	<Chip
+																		label={t(
+																			"documents.firstSigner",
+																			"Ensimmäinen",
+																		)}
+																		size="small"
+																		sx={{
+																			height: 20,
+																			fontSize: "0.7rem",
+																			backgroundColor: colors.primaryLight,
+																			color: colors.primary,
+																		}}
+																	/>
+																)}
+															</Stack>
+														</TableCell>
+														<TableCell>
+															{[signer.first_name, signer.last_name]
+																.filter(Boolean)
+																.join(" ") || "—"}
+														</TableCell>
+														<TableCell>{signer.party || "—"}</TableCell>
+													</TableRow>
+												))}
+											</TableBody>
+										</Table>
+									</TableContainer>
+								</Box>
+							)}
+
+							{/* Answer minister info */}
+							{detail.answer_minister_first_name && (
+								<Box>
+									<Stack
+										direction="row"
+										spacing={1}
+										alignItems="center"
+										sx={{ mb: 1.5 }}
+									>
+										<GavelIcon sx={{ color: colors.primary }} />
+										<Typography
+											variant="subtitle1"
+											sx={{ fontWeight: 600, color: colors.textPrimary }}
+										>
+											{t("documents.answerMinister", "Vastaaja")}
+										</Typography>
+									</Stack>
+									<Box sx={{ pl: 2 }}>
+										<Typography variant="body2" sx={{ color: colors.textPrimary }}>
+											{detail.answer_minister_title && `${detail.answer_minister_title} `}
+											{detail.answer_minister_first_name} {detail.answer_minister_last_name}
+										</Typography>
+										{detail.answer_date && (
+											<Typography variant="caption" sx={{ color: colors.textSecondary }}>
+												{formatDate(detail.answer_date)}
+												{detail.answer_parliament_identifier && ` — ${detail.answer_parliament_identifier}`}
+											</Typography>
+										)}
+									</Box>
+								</Box>
+							)}
+
+							{detail.stages.length > 0 && (
+								<Box>
+									<Stack
+										direction="row"
+										spacing={1}
+										alignItems="center"
+										sx={{ mb: 1.5 }}
+									>
+										<TimelineIcon sx={{ color: colors.primary }} />
+										<Typography
+											variant="subtitle1"
+											sx={{ fontWeight: 600, color: colors.textPrimary }}
+										>
+											{t("documents.stages", "Käsittelyvaiheet")}
+										</Typography>
+									</Stack>
+									<Stack spacing={1.5}>
+										{detail.stages.map((stage, idx) => (
+											<Box
+												key={idx}
+												sx={{
+													pl: 2,
+													borderLeft: `3px solid ${colors.primary}`,
+												}}
+											>
+												<Typography
+													variant="body2"
+													sx={{ fontWeight: 500, color: colors.textPrimary }}
+												>
+													{stage.stage_title || "—"}
+												</Typography>
+												{stage.event_date && (
+													<Typography
+														variant="caption"
+														sx={{ color: colors.textSecondary }}
+													>
+														{formatDate(stage.event_date)}
+													</Typography>
+												)}
+												{stage.event_title && stage.event_title !== stage.stage_title && (
+													<Typography
+														variant="body2"
+														sx={{ mt: 0.25, color: colors.textPrimary, fontWeight: 400 }}
+													>
+														{stage.event_title}
+													</Typography>
+												)}
+												{stage.event_description && (
+													<Typography
+														variant="body2"
+														sx={{ mt: 0.5, color: colors.textSecondary }}
+													>
+														{stage.event_description}
+													</Typography>
+												)}
+											</Box>
+										))}
+									</Stack>
+								</Box>
+							)}
+
+							{detail.question_text && (
+								<Box>
+									<Button
+										startIcon={<ArticleIcon />}
+										onClick={() => setShowQuestionText(!showQuestionText)}
+										sx={{
+											textTransform: "none",
+											color: colors.primary,
+											mb: 1,
+										}}
+									>
+										{showQuestionText
+											? t("documents.hideQuestionText", "Piilota kysymysteksti")
+											: t("documents.showQuestionText", "Näytä kysymysteksti")}
+									</Button>
+									<Collapse in={showQuestionText}>
+										<Box
+											sx={{
+												p: 2,
+												backgroundColor: colors.backgroundSubtle,
+												borderRadius: 1,
+												borderLeft: `4px solid ${colors.primary}`,
+											}}
+										>
+											<Typography
+												variant="body2"
+												sx={{
+													color: colors.textPrimary,
+													whiteSpace: "pre-wrap",
+												}}
+											>
+												{detail.question_text}
+											</Typography>
+										</Box>
+									</Collapse>
+								</Box>
+							)}
+
+							{/* Subjects */}
+							{detail.subjects.length > 0 && (
+								<Box>
+									<Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+										{detail.subjects.map((s, idx) => (
+											<Chip
+												key={idx}
+												label={s.subject_text}
+												size="small"
+												variant="outlined"
+												sx={{
+													borderColor: colors.dataBorder,
+													color: colors.textSecondary,
+												}}
+											/>
+										))}
+									</Stack>
+								</Box>
+							)}
+
+							{/* Related sessions */}
+							{detail.sessions.length > 0 && (
+								<Box>
+									<Stack
+										direction="row"
+										spacing={1}
+										alignItems="center"
+										sx={{ mb: 1.5 }}
+									>
+										<EventIcon sx={{ color: colors.primary }} />
+										<Typography
+											variant="subtitle1"
+											sx={{ fontWeight: 600, color: colors.textPrimary }}
+										>
+											{t("documents.relatedSessions", "Liittyvät istunnot")}
+										</Typography>
+									</Stack>
+									<Stack spacing={1}>
+										{detail.sessions.map((session, idx) => (
+											<Box
+												key={idx}
+												sx={{
+													pl: 2,
+													borderLeft: `3px solid ${colors.primary}`,
+													cursor: "pointer",
+													"&:hover": { backgroundColor: colors.backgroundSubtle },
+													borderRadius: 1,
+													py: 0.5,
+												}}
+												onClick={() => {
+													window.history.pushState({}, "", `/istunnot?date=${session.session_date}`);
+													window.dispatchEvent(new PopStateEvent("popstate"));
+												}}
+											>
+												<Typography
+													variant="body2"
+													sx={{ fontWeight: 500, color: colors.primary }}
+												>
+													{session.session_type} {session.session_number}/{session.session_year} — {formatDate(session.session_date)}
+												</Typography>
+												{session.section_title && (
+													<Typography
+														variant="caption"
+														sx={{ color: colors.textSecondary }}
+													>
+														{session.section_title}
+													</Typography>
+												)}
+											</Box>
+										))}
+									</Stack>
+								</Box>
+							)}
+						</Stack>
+					)}
+				</Box>
+			</Collapse>
+		</DataCard>
+	);
+}
+
 // ─── Main Documents page ───
 
 export default function Documents() {
@@ -1163,7 +1716,7 @@ export default function Documents() {
 	const [debouncedQuery, setDebouncedQuery] = useState("");
 	const [selectedYear, setSelectedYear] = useState<string>("all");
 	const [page, setPage] = useState(1);
-	const [items, setItems] = useState<(InterpellationListItem | GovernmentProposalListItem)[]>([]);
+	const [items, setItems] = useState<(InterpellationListItem | GovernmentProposalListItem | WrittenQuestionListItem)[]>([]);
 	const [totalCount, setTotalCount] = useState(0);
 	const [totalPages, setTotalPages] = useState(0);
 	const [loading, setLoading] = useState(false);
@@ -1174,7 +1727,9 @@ export default function Documents() {
 
 	const apiBase = documentType === "interpellations"
 		? "/api/interpellations"
-		: "/api/government-proposals";
+		: documentType === "government-proposals"
+			? "/api/government-proposals"
+			: "/api/written-questions";
 
 	// Debounce search query
 	useEffect(() => {
@@ -1304,6 +1859,9 @@ export default function Documents() {
 							<MenuItem value="government-proposals">
 								{t("documents.governmentProposals", "Hallituksen esitykset")}
 							</MenuItem>
+							<MenuItem value="written-questions">
+								{t("documents.writtenQuestions", "Kirjalliset kysymykset")}
+							</MenuItem>
 						</Select>
 					</FormControl>
 
@@ -1354,9 +1912,13 @@ export default function Documents() {
 							? (items as InterpellationListItem[]).map((item) => (
 									<InterpellationCard key={item.id} item={item} />
 								))
-							: (items as GovernmentProposalListItem[]).map((item) => (
-									<GovernmentProposalCard key={item.id} item={item} />
-								))}
+							: documentType === "government-proposals"
+								? (items as GovernmentProposalListItem[]).map((item) => (
+										<GovernmentProposalCard key={item.id} item={item} />
+									))
+								: (items as WrittenQuestionListItem[]).map((item) => (
+										<WrittenQuestionCard key={item.id} item={item} />
+									))}
 
 						{/* Load more button */}
 						{page < totalPages && (

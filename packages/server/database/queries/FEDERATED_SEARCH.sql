@@ -34,5 +34,13 @@ WHERE
   COALESCE(g.title, '') LIKE '%' || $q || '%' COLLATE NOCASE
   OR g.parliament_identifier LIKE '%' || $q || '%' COLLATE NOCASE
 
+UNION ALL
+
+SELECT 'written-question' AS type, CAST(wq.id AS TEXT) AS id, COALESCE(wq.title, wq.parliament_identifier) AS title, wq.parliament_identifier AS subtitle, wq.submission_date AS date
+FROM WrittenQuestion wq
+WHERE
+  COALESCE(wq.title, '') LIKE '%' || $q || '%' COLLATE NOCASE
+  OR wq.parliament_identifier LIKE '%' || $q || '%' COLLATE NOCASE
+
 ORDER BY date DESC
 LIMIT $limit;

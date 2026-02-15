@@ -126,7 +126,11 @@
     "endDate": "Päättynyt",
     "lawType": "Tyyppi",
     "lawName": "Nimi",
-    "signatoryTitle": "Asema"
+    "signatoryTitle": "Asema",
+    "writtenQuestions": "Kirjalliset kysymykset",
+    "answerMinister": "Vastaaja",
+    "showQuestionText": "Näytä kysymysteksti",
+    "hideQuestionText": "Piilota kysymysteksti"
   },
   "common": {
     "date": "Päivämäärä",
