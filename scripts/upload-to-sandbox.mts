@@ -10,6 +10,7 @@ const APP_FOLDER = "/root/avoimempi-eduskunta";
 switch (type) {
   case "build": {
     const dist = path.join(import.meta.dirname, "../dist");
+    const config = path.join(import.meta.dirname, "../packages/server/config");
     const startScript = path.join(import.meta.dirname, "start.sh");
     const nodeEnv = process.env.NODE_ENV ?? "production";
     const defaultPort = nodeEnv === "development" ? "3000" : "80";
@@ -33,12 +34,16 @@ switch (type) {
       },
       target: "bun",
     });
-    console.log(`Build mode: ${nodeEnv}, default port: ${process.env.PORT ?? defaultPort}`);
+    console.log(
+      `Build mode: ${nodeEnv}, default port: ${process.env.PORT ?? defaultPort}`,
+    );
     console.log(
       "Upload build to Scaleway",
       `scp -r "${dist}" ${INSTANCE_ALIAS}:${APP_FOLDER}`,
     );
     await $`scp -r ${dist} ${INSTANCE_ALIAS}:${APP_FOLDER}`;
+    console.log("Upload config folder to Scaleway");
+    await $`scp -r ${config} ${INSTANCE_ALIAS}:${APP_FOLDER}`;
     console.log("Upload start script to Scaleway");
     await $`scp ${startScript} ${INSTANCE_ALIAS}:${APP_FOLDER}/start.sh`;
     await $`ssh ${INSTANCE_ALIAS} chmod +x ${APP_FOLDER}/start.sh`;
