@@ -111,7 +111,22 @@
     "noTitle": "Ei otsikkoa",
     "submissionDate": "Jättöpäivä",
     "decisionOutcome": "Päätös",
-    "order": "Järjestys"
+    "order": "Järjestys",
+    "governmentProposals": "Hallituksen esitykset",
+    "proposalSignatories": "Allekirjoittajat",
+    "proposalLaws": "Lakiehdotukset",
+    "proposalSummary": "Tiivistelmä",
+    "showSummary": "Näytä tiivistelmä",
+    "hideSummary": "Piilota tiivistelmä",
+    "showProposalText": "Näytä esitysteksti",
+    "hideProposalText": "Piilota esitysteksti",
+    "proposalText": "Esitysteksti",
+    "lawDecisions": "Lakipäätökset",
+    "latestStage": "Viimeisin vaihe",
+    "endDate": "Päättynyt",
+    "lawType": "Tyyppi",
+    "lawName": "Nimi",
+    "signatoryTitle": "Asema"
   },
   "common": {
     "date": "Päivämäärä",
