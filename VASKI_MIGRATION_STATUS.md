@@ -13,6 +13,7 @@ Source: 84 document types, each containing JSON files (`entry-*.json`).
 | `välikysymys` | Interpellation + 3 child tables | ~200 | V001.010 | Interpellation questions, UPSERT merge (Kysymys + Kasittelytiedot) |
 | `kirjallinen_kysymys` | WrittenQuestion + 3 child tables | 13996 | V001.012 | Written questions, UPSERT merge (Kysymys + Kasittelytiedot + KKV answers from `vastaus_kirjalliseen_kysymykseen`) |
 | `valiokunnan_mietintö` | CommitteeReport + 2 child tables | ~2684 | V001.014 | Committee reports with members and experts, single Mietinto body type |
+| `valiokunnan_lausunto` | CommitteeReport + 2 child tables (shared) | ~3381 | V001.015 | Committee statements, reuses CommitteeReport with recipient_committee column |
 
 ## Planned (Next)
 
