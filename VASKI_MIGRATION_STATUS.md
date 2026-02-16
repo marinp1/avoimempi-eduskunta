@@ -12,6 +12,7 @@ Source: 84 document types, each containing JSON files (`entry-*.json`).
 | `hallituksen_esitys` | GovernmentProposal + 4 child tables | 5067 | V002.002 | 2388 full content + 2679 processing metadata, UPSERT merge |
 | `välikysymys` | Interpellation + 3 child tables | ~200 | V001.010 | Interpellation questions, UPSERT merge (Kysymys + Kasittelytiedot) |
 | `kirjallinen_kysymys` | WrittenQuestion + 3 child tables | 13996 | V001.012 | Written questions, UPSERT merge (Kysymys + Kasittelytiedot + KKV answers from `vastaus_kirjalliseen_kysymykseen`) |
+| `valiokunnan_mietintö` | CommitteeReport + 2 child tables | ~2684 | V001.014 | Committee reports with members and experts, single Mietinto body type |
 
 ## Planned (Next)
 
