@@ -1488,6 +1488,165 @@ export class DatabaseConnection {
     return data;
   }
 
+  // ─── Committee report queries ───
+
+  public async fetchCommitteeReports(params: {
+    query?: string;
+    year?: string;
+    page: number;
+    limit: number;
+  }) {
+    const offset = (params.page - 1) * params.limit;
+    const $query = params.query?.trim() || null;
+    const $year = params.year || null;
+
+    const countStmt = this.db.prepare<
+      { count: number },
+      { $query: string | null; $year: string | null }
+    >(queries.committeeReportsCount);
+    const countResult = countStmt.get({ $query, $year });
+    const totalCount = countResult?.count || 0;
+    countStmt.finalize();
+
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        report_type_code: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        committee_name: string | null;
+        source_reference: string | null;
+        draft_date: string | null;
+        signature_date: string | null;
+      },
+      {
+        $query: string | null;
+        $year: string | null;
+        $limit: number;
+        $offset: number;
+      }
+    >(queries.committeeReportsList);
+    const rows = stmt.all({ $query, $year, $limit: params.limit, $offset: offset });
+    stmt.finalize();
+
+    return {
+      items: rows,
+      totalCount,
+      page: params.page,
+      limit: params.limit,
+      totalPages: Math.ceil(totalCount / params.limit),
+    };
+  }
+
+  public async fetchCommitteeReportById(params: { id: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        report_type_code: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        committee_name: string | null;
+        source_reference: string | null;
+        draft_date: string | null;
+        signature_date: string | null;
+        summary_text: string | null;
+        general_reasoning_text: string | null;
+        detailed_reasoning_text: string | null;
+        decision_text: string | null;
+        legislation_amendment_text: string | null;
+        minority_opinion_text: string | null;
+        resolution_text: string | null;
+      },
+      { $id: number }
+    >(queries.committeeReportById);
+    const detail = detailStmt.get({ $id: +params.id });
+    detailStmt.finalize();
+    if (!detail) return null;
+
+    const membersStmt = this.db.prepare<
+      {
+        report_id: number;
+        member_order: number;
+        person_id: number | null;
+        first_name: string;
+        last_name: string;
+        party: string | null;
+        role: string | null;
+      },
+      { $reportId: number }
+    >(queries.committeeReportMembers);
+    const members = membersStmt.all({ $reportId: detail.id });
+    membersStmt.finalize();
+
+    const expertsStmt = this.db.prepare<
+      {
+        report_id: number;
+        expert_order: number;
+        person_id: number | null;
+        first_name: string | null;
+        last_name: string | null;
+        title: string | null;
+        organization: string | null;
+      },
+      { $reportId: number }
+    >(queries.committeeReportExperts);
+    const experts = expertsStmt.all({ $reportId: detail.id });
+    expertsStmt.finalize();
+
+    const sessionsStmt = this.db.prepare<
+      {
+        session_key: string;
+        session_date: string;
+        session_type: string;
+        session_number: number;
+        session_year: string;
+        section_title: string | null;
+        section_key: string;
+      },
+      { $identifier: string }
+    >(queries.committeeReportSessions);
+    const sessions = sessionsStmt.all({ $identifier: detail.parliament_identifier });
+    sessionsStmt.finalize();
+
+    return { ...detail, members, experts, sessions };
+  }
+
+  public async fetchCommitteeReportByIdentifier(params: { identifier: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        report_type_code: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        committee_name: string | null;
+        source_reference: string | null;
+        draft_date: string | null;
+        signature_date: string | null;
+      },
+      { $identifier: string }
+    >(queries.committeeReportByIdentifier);
+    const detail = detailStmt.get({ $identifier: params.identifier });
+    detailStmt.finalize();
+    if (!detail) return null;
+
+    return detail;
+  }
+
+  public async fetchCommitteeReportYears() {
+    const stmt = this.db.prepare<{ year: string }, []>(
+      queries.committeeReportYears,
+    );
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
   public async federatedSearch(params: { q: string; limit?: number }) {
     const searchQuery = this.buildSearchQuery(params.q);
     if (!searchQuery) return [];

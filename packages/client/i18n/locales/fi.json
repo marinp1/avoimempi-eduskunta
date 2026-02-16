@@ -132,7 +132,20 @@
     "showQuestionText": "Näytä kysymysteksti",
     "hideQuestionText": "Piilota kysymysteksti",
     "relatedVotings": "Liittyvät äänestykset",
-    "noRelatedVotings": "Ei liittyviä äänestyksiä."
+    "noRelatedVotings": "Ei liittyviä äänestyksiä.",
+    "committeeReports": "Valiokunnan mietinnöt",
+    "committeeMembers": "Valiokunnan jäsenet",
+    "committeeExperts": "Asiantuntijat",
+    "committeeRole": "Rooli",
+    "committeeResolution": "Lausumaehdotus",
+    "expertTitle": "Asema",
+    "expertOrganization": "Organisaatio",
+    "showDecision": "Näytä päätösehdotus",
+    "hideDecision": "Piilota päätösehdotus",
+    "showLegislation": "Näytä lakiehdotukset",
+    "hideLegislation": "Piilota lakiehdotukset",
+    "showMinority": "Näytä eriävä mielipide",
+    "hideMinority": "Piilota eriävä mielipide"
   },
   "common": {
     "date": "Päivämäärä",

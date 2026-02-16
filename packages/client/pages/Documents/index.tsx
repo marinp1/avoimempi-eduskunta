@@ -31,12 +31,14 @@ import {
 	Gavel as GavelIcon,
 	Event as EventIcon,
 	Balance as BalanceIcon,
+	Groups as GroupsIcon,
+	School as SchoolIcon,
 } from "@mui/icons-material";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 
-type DocumentType = "interpellations" | "government-proposals" | "written-questions";
+type DocumentType = "interpellations" | "government-proposals" | "written-questions" | "committee-reports";
 
 const formatDate = (dateStr: string | null) => {
 	if (!dateStr) return "—";
@@ -1712,6 +1714,590 @@ function WrittenQuestionCard({ item }: { item: WrittenQuestionListItem }) {
 	);
 }
 
+// ─── Committee report types and card ───
+
+interface CommitteeReportListItem {
+	id: number;
+	parliament_identifier: string;
+	report_type_code: string;
+	document_number: number;
+	parliamentary_year: string;
+	title: string | null;
+	committee_name: string | null;
+	source_reference: string | null;
+	draft_date: string | null;
+	signature_date: string | null;
+}
+
+interface CommitteeReportDetail {
+	id: number;
+	parliament_identifier: string;
+	report_type_code: string;
+	document_number: number;
+	parliamentary_year: string;
+	title: string | null;
+	committee_name: string | null;
+	source_reference: string | null;
+	draft_date: string | null;
+	signature_date: string | null;
+	summary_text: string | null;
+	general_reasoning_text: string | null;
+	detailed_reasoning_text: string | null;
+	decision_text: string | null;
+	legislation_amendment_text: string | null;
+	minority_opinion_text: string | null;
+	resolution_text: string | null;
+	members: Array<{
+		member_order: number;
+		person_id: number | null;
+		first_name: string;
+		last_name: string;
+		party: string | null;
+		role: string | null;
+	}>;
+	experts: Array<{
+		expert_order: number;
+		person_id: number | null;
+		first_name: string | null;
+		last_name: string | null;
+		title: string | null;
+		organization: string | null;
+	}>;
+	sessions: Array<{
+		session_key: string;
+		session_date: string;
+		session_type: string;
+		session_number: number;
+		session_year: string;
+		section_title: string | null;
+		section_key: string;
+	}>;
+}
+
+function CommitteeReportCard({ item }: { item: CommitteeReportListItem }) {
+	const { t } = useTranslation();
+
+	const [expanded, setExpanded] = useState(false);
+	const [detail, setDetail] = useState<CommitteeReportDetail | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [showSummary, setShowSummary] = useState(false);
+	const [showReasoning, setShowReasoning] = useState(false);
+	const [showDecision, setShowDecision] = useState(false);
+	const [showLegislation, setShowLegislation] = useState(false);
+	const [showMinority, setShowMinority] = useState(false);
+
+	const handleExpand = async () => {
+		if (!expanded && !detail) {
+			setLoading(true);
+			setError(null);
+			try {
+				const response = await fetch(`/api/committee-reports/${item.id}`);
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}`);
+				}
+				const data = await response.json();
+				setDetail(data);
+			} catch (err) {
+				setError(err instanceof Error ? err.message : "Failed to load");
+			} finally {
+				setLoading(false);
+			}
+		}
+		setExpanded(!expanded);
+	};
+
+	return (
+		<DataCard>
+			<Box
+				sx={{
+					cursor: "pointer",
+					"&:hover": {
+						backgroundColor: colors.backgroundSubtle,
+					},
+					transition: "background-color 0.2s",
+					p: 2,
+				}}
+				onClick={handleExpand}
+			>
+				<Stack spacing={1.5}>
+					{/* Title row */}
+					<Stack
+						direction="row"
+						spacing={1}
+						alignItems="flex-start"
+						flexWrap="wrap"
+					>
+						<Typography
+							variant="h6"
+							sx={{
+								flex: 1,
+								minWidth: "200px",
+								color: colors.textPrimary,
+								fontWeight: 500,
+							}}
+						>
+							{item.title || t("documents.noTitle", "Ei otsikkoa")}
+						</Typography>
+						<Chip
+							label={item.parliament_identifier}
+							size="small"
+							sx={{
+								backgroundColor: colors.primaryLight,
+								color: colors.primary,
+								fontWeight: 500,
+							}}
+						/>
+					</Stack>
+
+					{/* Metadata row */}
+					<Stack
+						direction={{ xs: "column", sm: "row" }}
+						spacing={2}
+						flexWrap="wrap"
+						alignItems={{ xs: "flex-start", sm: "center" }}
+					>
+						{item.draft_date && (
+							<Typography variant="body2" color={colors.textSecondary}>
+								{t("documents.submissionDate", "Jättöpäivä")}:{" "}
+								{formatDate(item.draft_date)}
+							</Typography>
+						)}
+
+						{item.committee_name && (
+							<Stack direction="row" spacing={0.5} alignItems="center">
+								<GroupsIcon
+									fontSize="small"
+									sx={{ color: colors.textSecondary }}
+								/>
+								<Typography variant="body2" color={colors.textSecondary}>
+									{item.committee_name}
+								</Typography>
+							</Stack>
+						)}
+
+						{item.source_reference && (
+							<Chip
+								label={item.source_reference}
+								size="small"
+								variant="outlined"
+								sx={{
+									borderColor: colors.primaryLight,
+									color: colors.primary,
+									fontWeight: 500,
+								}}
+							/>
+						)}
+					</Stack>
+				</Stack>
+
+				<Box
+					sx={{
+						display: "flex",
+						justifyContent: "center",
+						mt: 1,
+					}}
+				>
+					<ExpandMoreIcon
+						sx={{
+							transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+							transition: "transform 0.3s",
+							color: colors.textSecondary,
+						}}
+					/>
+				</Box>
+			</Box>
+
+			<Collapse in={expanded} timeout="auto" unmountOnExit>
+				<Box sx={{ p: 2, pt: 0, borderTop: `1px solid ${colors.dataBorder}` }}>
+					{loading && (
+						<Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+							<CircularProgress size={32} />
+						</Box>
+					)}
+
+					{error && (
+						<Alert severity="error" sx={{ mb: 2 }}>
+							{error}
+						</Alert>
+					)}
+
+					{detail && (
+						<Stack spacing={3}>
+							{/* Members */}
+							{detail.members.length > 0 && (
+								<Box>
+									<Stack
+										direction="row"
+										spacing={1}
+										alignItems="center"
+										sx={{ mb: 1.5 }}
+									>
+										<GroupsIcon sx={{ color: colors.primary }} />
+										<Typography
+											variant="subtitle1"
+											sx={{ fontWeight: 600, color: colors.textPrimary }}
+										>
+											{t("documents.committeeMembers", "Valiokunnan jäsenet")}
+										</Typography>
+									</Stack>
+									<TableContainer>
+										<Table size="small">
+											<TableHead>
+												<TableRow>
+													<TableCell>#</TableCell>
+													<TableCell>{t("common.name", "Nimi")}</TableCell>
+													<TableCell>{t("common.party", "Puolue")}</TableCell>
+													<TableCell>{t("documents.committeeRole", "Rooli")}</TableCell>
+												</TableRow>
+											</TableHead>
+											<TableBody>
+												{detail.members.map((member, idx) => (
+													<TableRow key={idx}>
+														<TableCell>{idx + 1}</TableCell>
+														<TableCell>
+															{member.first_name} {member.last_name}
+														</TableCell>
+														<TableCell>{member.party || "—"}</TableCell>
+														<TableCell>{member.role || "—"}</TableCell>
+													</TableRow>
+												))}
+											</TableBody>
+										</Table>
+									</TableContainer>
+								</Box>
+							)}
+
+							{/* Experts */}
+							{detail.experts.length > 0 && (
+								<Box>
+									<Stack
+										direction="row"
+										spacing={1}
+										alignItems="center"
+										sx={{ mb: 1.5 }}
+									>
+										<SchoolIcon sx={{ color: colors.primary }} />
+										<Typography
+											variant="subtitle1"
+											sx={{ fontWeight: 600, color: colors.textPrimary }}
+										>
+											{t("documents.committeeExperts", "Asiantuntijat")}
+										</Typography>
+									</Stack>
+									<TableContainer>
+										<Table size="small">
+											<TableHead>
+												<TableRow>
+													<TableCell>#</TableCell>
+													<TableCell>{t("common.name", "Nimi")}</TableCell>
+													<TableCell>{t("documents.expertTitle", "Asema")}</TableCell>
+													<TableCell>{t("documents.expertOrganization", "Organisaatio")}</TableCell>
+												</TableRow>
+											</TableHead>
+											<TableBody>
+												{detail.experts.map((expert, idx) => (
+													<TableRow key={idx}>
+														<TableCell>{idx + 1}</TableCell>
+														<TableCell>
+															{[expert.first_name, expert.last_name].filter(Boolean).join(" ") || "—"}
+														</TableCell>
+														<TableCell>{expert.title || "—"}</TableCell>
+														<TableCell>{expert.organization || "—"}</TableCell>
+													</TableRow>
+												))}
+											</TableBody>
+										</Table>
+									</TableContainer>
+								</Box>
+							)}
+
+							{/* Summary text */}
+							{detail.summary_text && (
+								<Box>
+									<Button
+										startIcon={<ArticleIcon />}
+										onClick={() => setShowSummary(!showSummary)}
+										sx={{
+											textTransform: "none",
+											color: colors.primary,
+											mb: 1,
+										}}
+									>
+										{showSummary
+											? t("documents.hideSummary", "Piilota tiivistelmä")
+											: t("documents.showSummary", "Näytä tiivistelmä")}
+									</Button>
+									<Collapse in={showSummary}>
+										<Box
+											sx={{
+												p: 2,
+												backgroundColor: colors.backgroundSubtle,
+												borderRadius: 1,
+												borderLeft: `4px solid ${colors.primary}`,
+											}}
+										>
+											<Typography
+												variant="body2"
+												sx={{
+													color: colors.textPrimary,
+													whiteSpace: "pre-wrap",
+												}}
+											>
+												{detail.summary_text}
+											</Typography>
+										</Box>
+									</Collapse>
+								</Box>
+							)}
+
+							{/* Reasoning text */}
+							{(detail.general_reasoning_text || detail.detailed_reasoning_text) && (
+								<Box>
+									<Button
+										startIcon={<ArticleIcon />}
+										onClick={() => setShowReasoning(!showReasoning)}
+										sx={{
+											textTransform: "none",
+											color: colors.primary,
+											mb: 1,
+										}}
+									>
+										{showReasoning
+											? t("documents.hideJustification", "Piilota perustelut")
+											: t("documents.showJustification", "Näytä perustelut")}
+									</Button>
+									<Collapse in={showReasoning}>
+										<Box
+											sx={{
+												p: 2,
+												backgroundColor: colors.backgroundSubtle,
+												borderRadius: 1,
+												borderLeft: `4px solid ${colors.primary}`,
+											}}
+										>
+											<Typography
+												variant="body2"
+												sx={{
+													color: colors.textPrimary,
+													whiteSpace: "pre-wrap",
+												}}
+											>
+												{[detail.general_reasoning_text, detail.detailed_reasoning_text].filter(Boolean).join("\n\n")}
+											</Typography>
+										</Box>
+									</Collapse>
+								</Box>
+							)}
+
+							{/* Decision text */}
+							{detail.decision_text && (
+								<Box>
+									<Button
+										startIcon={<GavelIcon />}
+										onClick={() => setShowDecision(!showDecision)}
+										sx={{
+											textTransform: "none",
+											color: colors.primary,
+											mb: 1,
+										}}
+									>
+										{showDecision
+											? t("documents.hideDecision", "Piilota päätösehdotus")
+											: t("documents.showDecision", "Näytä päätösehdotus")}
+									</Button>
+									<Collapse in={showDecision}>
+										<Box
+											sx={{
+												p: 2,
+												backgroundColor: colors.backgroundSubtle,
+												borderRadius: 1,
+												borderLeft: `4px solid ${colors.primary}`,
+											}}
+										>
+											<Typography
+												variant="body2"
+												sx={{
+													color: colors.textPrimary,
+													whiteSpace: "pre-wrap",
+												}}
+											>
+												{detail.decision_text}
+											</Typography>
+										</Box>
+									</Collapse>
+								</Box>
+							)}
+
+							{/* Legislation amendment text */}
+							{detail.legislation_amendment_text && (
+								<Box>
+									<Button
+										startIcon={<BalanceIcon />}
+										onClick={() => setShowLegislation(!showLegislation)}
+										sx={{
+											textTransform: "none",
+											color: colors.primary,
+											mb: 1,
+										}}
+									>
+										{showLegislation
+											? t("documents.hideLegislation", "Piilota lakiehdotukset")
+											: t("documents.showLegislation", "Näytä lakiehdotukset")}
+									</Button>
+									<Collapse in={showLegislation}>
+										<Box
+											sx={{
+												p: 2,
+												backgroundColor: colors.backgroundSubtle,
+												borderRadius: 1,
+												borderLeft: `4px solid ${colors.primary}`,
+											}}
+										>
+											<Typography
+												variant="body2"
+												sx={{
+													color: colors.textPrimary,
+													whiteSpace: "pre-wrap",
+												}}
+											>
+												{detail.legislation_amendment_text}
+											</Typography>
+										</Box>
+									</Collapse>
+								</Box>
+							)}
+
+							{/* Minority opinion */}
+							{detail.minority_opinion_text && (
+								<Box>
+									<Button
+										startIcon={<PersonIcon />}
+										onClick={() => setShowMinority(!showMinority)}
+										sx={{
+											textTransform: "none",
+											color: colors.primary,
+											mb: 1,
+										}}
+									>
+										{showMinority
+											? t("documents.hideMinority", "Piilota eriävä mielipide")
+											: t("documents.showMinority", "Näytä eriävä mielipide")}
+									</Button>
+									<Collapse in={showMinority}>
+										<Box
+											sx={{
+												p: 2,
+												backgroundColor: colors.backgroundSubtle,
+												borderRadius: 1,
+												borderLeft: `4px solid ${colors.error}`,
+											}}
+										>
+											<Typography
+												variant="body2"
+												sx={{
+													color: colors.textPrimary,
+													whiteSpace: "pre-wrap",
+												}}
+											>
+												{detail.minority_opinion_text}
+											</Typography>
+										</Box>
+									</Collapse>
+								</Box>
+							)}
+
+							{/* Resolution text */}
+							{detail.resolution_text && (
+								<Box
+									sx={{
+										p: 2,
+										backgroundColor: colors.backgroundSubtle,
+										borderRadius: 1,
+										borderLeft: `4px solid ${colors.primary}`,
+									}}
+								>
+									<Typography
+										variant="subtitle2"
+										sx={{ fontWeight: 600, color: colors.textPrimary, mb: 1 }}
+									>
+										{t("documents.committeeResolution", "Lausumaehdotus")}
+									</Typography>
+									<Typography
+										variant="body2"
+										sx={{
+											color: colors.textPrimary,
+											whiteSpace: "pre-wrap",
+										}}
+									>
+										{detail.resolution_text}
+									</Typography>
+								</Box>
+							)}
+
+							{/* Related sessions */}
+							{detail.sessions.length > 0 && (
+								<Box>
+									<Stack
+										direction="row"
+										spacing={1}
+										alignItems="center"
+										sx={{ mb: 1.5 }}
+									>
+										<EventIcon sx={{ color: colors.primary }} />
+										<Typography
+											variant="subtitle1"
+											sx={{ fontWeight: 600, color: colors.textPrimary }}
+										>
+											{t("documents.relatedSessions", "Liittyvät istunnot")}
+										</Typography>
+									</Stack>
+									<Stack spacing={1}>
+										{detail.sessions.map((session, idx) => (
+											<Box
+												key={idx}
+												sx={{
+													pl: 2,
+													borderLeft: `3px solid ${colors.primary}`,
+													cursor: "pointer",
+													"&:hover": { backgroundColor: colors.backgroundSubtle },
+													borderRadius: 1,
+													py: 0.5,
+												}}
+												onClick={() => {
+													window.history.pushState({}, "", `/istunnot?date=${session.session_date}`);
+													window.dispatchEvent(new PopStateEvent("popstate"));
+												}}
+											>
+												<Typography
+													variant="body2"
+													sx={{ fontWeight: 500, color: colors.primary }}
+												>
+													{session.session_type} {session.session_number}/{session.session_year} — {formatDate(session.session_date)}
+												</Typography>
+												{session.section_title && (
+													<Typography
+														variant="caption"
+														sx={{ color: colors.textSecondary }}
+													>
+														{session.section_title}
+													</Typography>
+												)}
+											</Box>
+										))}
+									</Stack>
+								</Box>
+							)}
+
+							<RelatedVotings identifiers={[item.parliament_identifier, item.source_reference].filter(Boolean) as string[]} />
+						</Stack>
+					)}
+				</Box>
+			</Collapse>
+		</DataCard>
+	);
+}
+
 // ─── Main Documents page ───
 
 export default function Documents() {
@@ -1723,7 +2309,7 @@ export default function Documents() {
 	const [debouncedQuery, setDebouncedQuery] = useState("");
 	const [selectedYear, setSelectedYear] = useState<string>("all");
 	const [page, setPage] = useState(1);
-	const [items, setItems] = useState<(InterpellationListItem | GovernmentProposalListItem | WrittenQuestionListItem)[]>([]);
+	const [items, setItems] = useState<(InterpellationListItem | GovernmentProposalListItem | WrittenQuestionListItem | CommitteeReportListItem)[]>([]);
 	const [totalCount, setTotalCount] = useState(0);
 	const [totalPages, setTotalPages] = useState(0);
 	const [loading, setLoading] = useState(false);
@@ -1736,7 +2322,9 @@ export default function Documents() {
 		? "/api/interpellations"
 		: documentType === "government-proposals"
 			? "/api/government-proposals"
-			: "/api/written-questions";
+			: documentType === "committee-reports"
+				? "/api/committee-reports"
+				: "/api/written-questions";
 
 	// Debounce search query
 	useEffect(() => {
@@ -1869,6 +2457,9 @@ export default function Documents() {
 							<MenuItem value="written-questions">
 								{t("documents.writtenQuestions", "Kirjalliset kysymykset")}
 							</MenuItem>
+							<MenuItem value="committee-reports">
+								{t("documents.committeeReports", "Valiokunnan mietinnöt")}
+							</MenuItem>
 						</Select>
 					</FormControl>
 
@@ -1923,9 +2514,13 @@ export default function Documents() {
 								? (items as GovernmentProposalListItem[]).map((item) => (
 										<GovernmentProposalCard key={item.id} item={item} />
 									))
-								: (items as WrittenQuestionListItem[]).map((item) => (
-										<WrittenQuestionCard key={item.id} item={item} />
-									))}
+								: documentType === "committee-reports"
+									? (items as CommitteeReportListItem[]).map((item) => (
+											<CommitteeReportCard key={item.id} item={item} />
+										))
+									: (items as WrittenQuestionListItem[]).map((item) => (
+											<WrittenQuestionCard key={item.id} item={item} />
+										))}
 
 						{/* Load more button */}
 						{page < totalPages && (

@@ -84,3 +84,11 @@ export { default as writtenQuestionStages } from "./queries/WRITTEN_QUESTION_STA
 export { default as writtenQuestionSubjects } from "./queries/WRITTEN_QUESTION_SUBJECTS.sql";
 export { default as writtenQuestionYears } from "./queries/WRITTEN_QUESTION_YEARS.sql";
 export { default as writtenQuestionSessions } from "./queries/WRITTEN_QUESTION_SESSIONS.sql";
+export { default as committeeReportsList } from "./queries/COMMITTEE_REPORTS_LIST.sql";
+export { default as committeeReportsCount } from "./queries/COMMITTEE_REPORTS_COUNT.sql";
+export { default as committeeReportById } from "./queries/COMMITTEE_REPORT_BY_ID.sql";
+export { default as committeeReportByIdentifier } from "./queries/COMMITTEE_REPORT_BY_IDENTIFIER.sql";
+export { default as committeeReportMembers } from "./queries/COMMITTEE_REPORT_MEMBERS.sql";
+export { default as committeeReportExperts } from "./queries/COMMITTEE_REPORT_EXPERTS.sql";
+export { default as committeeReportYears } from "./queries/COMMITTEE_REPORT_YEARS.sql";
+export { default as committeeReportSessions } from "./queries/COMMITTEE_REPORT_SESSIONS.sql";
