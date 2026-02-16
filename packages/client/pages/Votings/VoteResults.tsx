@@ -1,17 +1,11 @@
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import InsightsIcon from "@mui/icons-material/Insights";
 import LaunchIcon from "@mui/icons-material/Launch";
-import PersonOffIcon from "@mui/icons-material/PersonOff";
-import RemoveIcon from "@mui/icons-material/Remove";
-import ThumbDownIcon from "@mui/icons-material/ThumbDown";
-import ThumbUpIcon from "@mui/icons-material/ThumbUp";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import {
   Alert,
   Box,
   Chip,
   CircularProgress,
-  Collapse,
   InputLabel,
   Link,
   MenuItem,
@@ -26,8 +20,8 @@ import {
   extractDocumentIdentifiers,
 } from "#client/components/DocumentCards";
 import { refs } from "#client/references";
-import { colors, commonStyles } from "#client/theme";
-import { DataCard, MetricCard, VoteMarginBar } from "#client/theme/components";
+import { commonStyles } from "#client/theme";
+import { DataCard, VoteMarginBar } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { getVoteColors } from "#client/theme/vote-styles";
 
@@ -84,13 +78,26 @@ const getSecondaryTitle = (vote: VotingSearchRow) => {
   return vote.title;
 };
 
-const extractVotingDocRefs = (vote: VotingSearchRow) =>
-  extractDocumentIdentifiers([
+const extractGroupDocRefs = (votes: VotingSearchRow[]) => {
+  const allFields = votes.flatMap((v) => [
+    v.section_title,
+    v.main_section_title,
+    v.agenda_title,
+    v.parliamentary_item,
+  ]);
+  return extractDocumentIdentifiers(allFields);
+};
+
+/** Get the primary document identifier for grouping (e.g. "HE 45/2024 vp") */
+const getDocumentGroupKey = (vote: VotingSearchRow): string | null => {
+  const refs = extractDocumentIdentifiers([
+    vote.parliamentary_item,
     vote.section_title,
     vote.main_section_title,
     vote.agenda_title,
-    vote.parliamentary_item,
   ]);
+  return refs.length > 0 ? refs[0].identifier : null;
+};
 
 const sortRows = (rows: VotingSearchRow[], sortMode: SortMode) => {
   const copy = [...rows];
@@ -103,7 +110,6 @@ const sortRows = (rows: VotingSearchRow[], sortMode: SortMode) => {
       return copy.sort((a, b) => voteMargin(a) - voteMargin(b));
     case "largest":
       return copy.sort((a, b) => b.n_total - a.n_total);
-    case "newest":
     default:
       return copy.sort((a, b) =>
         (b.start_time ?? "").localeCompare(a.start_time ?? ""),
@@ -122,24 +128,147 @@ const formatTime = (dateStr: string | null | undefined) => {
   return d.toLocaleTimeString("fi-FI", { hour: "2-digit", minute: "2-digit" });
 };
 
+/** Compact voting row inside a multi-voting group */
+const VotingRow: React.FC<{
+  vote: VotingSearchRow;
+  showTitle: boolean;
+  themedColors: ReturnType<typeof useThemedColors>;
+  voteColors: ReturnType<typeof getVoteColors>;
+}> = ({ vote, showTitle, themedColors, voteColors }) => {
+  const { t } = useTranslation();
+  const passed = isVotePassed(vote);
+  const close = isCloseVote(vote);
 
-/** Single voting card in the results list */
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: { xs: 1, sm: 1.5 },
+        py: 0.75,
+        flexWrap: "wrap",
+        borderLeft: `3px solid ${passed ? themedColors.success : themedColors.error}`,
+        pl: 1.5,
+        borderRadius: 0.5,
+      }}
+    >
+      {/* Phase chip */}
+      <Chip
+        size="small"
+        label={vote.section_processing_phase || vote.section_processing_title}
+        sx={{ height: 20, fontSize: "0.7rem", minWidth: 80 }}
+      />
+
+      {close && (
+        <Chip
+          size="small"
+          label={t("votings.closeVote")}
+          sx={{
+            height: 20,
+            fontSize: "0.7rem",
+            color: themedColors.warning,
+            borderColor: `${themedColors.warning}66`,
+          }}
+          variant="outlined"
+        />
+      )}
+
+      {/* Vote bar */}
+      <Box sx={{ flex: 1, minWidth: 80, maxWidth: 200 }}>
+        <VoteMarginBar
+          yes={vote.n_yes}
+          no={vote.n_no}
+          empty={vote.n_abstain}
+          absent={vote.n_absent}
+          height={6}
+        />
+      </Box>
+
+      {/* Result */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+        <HowToVoteIcon
+          sx={{
+            fontSize: 14,
+            color: passed ? themedColors.success : themedColors.error,
+          }}
+        />
+        <Typography
+          variant="caption"
+          sx={{
+            fontWeight: 600,
+            color: passed ? themedColors.success : themedColors.error,
+          }}
+        >
+          {vote.n_yes} - {vote.n_no}
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{ color: themedColors.textTertiary }}
+        >
+          ({vote.n_abstain} {String(t("votings.results.empty")).toLowerCase()},{" "}
+          {vote.n_absent} {String(t("votings.results.absent")).toLowerCase()})
+        </Typography>
+      </Box>
+
+      {/* Links */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Link
+          href={refs.voting(vote.id, vote.session_key, vote.start_time)}
+          sx={{
+            color: themedColors.primary,
+            fontWeight: 600,
+            fontSize: "0.75rem",
+          }}
+        >
+          #{vote.id}
+        </Link>
+        <Link
+          target="_blank"
+          rel="noreferrer"
+          href={eduskuntaLink(vote.result_url)}
+          sx={{
+            color: voteColors.yes,
+            fontWeight: 500,
+            fontSize: "0.75rem",
+            display: "flex",
+            alignItems: "center",
+            gap: 0.25,
+          }}
+        >
+          {t("votings.results.results")}
+          <LaunchIcon sx={{ fontSize: 11 }} />
+        </Link>
+      </Box>
+
+      {/* Title (only if different from group title) */}
+      {showTitle && (
+        <Typography
+          variant="caption"
+          sx={{
+            color: themedColors.textSecondary,
+            width: "100%",
+            lineHeight: 1.3,
+          }}
+        >
+          {vote.title}
+        </Typography>
+      )}
+    </Box>
+  );
+};
+
+/** Single voting card (used for singleton groups) */
 const VotingCard: React.FC<{
   vote: VotingSearchRow;
   themedColors: ReturnType<typeof useThemedColors>;
   voteColors: ReturnType<typeof getVoteColors>;
 }> = ({ vote, themedColors, voteColors }) => {
   const { t } = useTranslation();
-  const [expanded, setExpanded] = React.useState(false);
   const close = isCloseVote(vote);
   const passed = isVotePassed(vote);
-  const docRefs = extractVotingDocRefs(vote);
+  const docRefs = extractGroupDocRefs([vote]);
   const primaryTitle = getPrimaryTitle(vote);
   const secondaryTitle = getSecondaryTitle(vote);
-
-  const borderColor = passed
-    ? `${themedColors.success}40`
-    : `${themedColors.error}40`;
 
   return (
     <DataCard
@@ -204,6 +333,24 @@ const VotingCard: React.FC<{
               sx={{ height: 20, fontSize: "0.7rem" }}
             />
           )}
+          {vote.section_key && (
+            <Link
+              href={refs.section(
+                vote.section_key,
+                vote.start_time,
+                vote.session_key,
+              )}
+              underline="none"
+            >
+              <Chip
+                size="small"
+                label={vote.section_key}
+                variant="outlined"
+                clickable
+                sx={{ fontSize: "0.7rem", height: 20 }}
+              />
+            </Link>
+          )}
         </Box>
 
         {/* Title */}
@@ -230,46 +377,6 @@ const VotingCard: React.FC<{
           >
             {secondaryTitle}
           </Typography>
-        )}
-
-        {/* Context chips */}
-        {(vote.agenda_title || vote.section_processing_title || vote.section_key) && (
-          <Box sx={{ display: "flex", gap: 0.5, mb: 1, flexWrap: "wrap" }}>
-            {vote.agenda_title && (
-              <Chip
-                size="small"
-                label={vote.agenda_title}
-                variant="outlined"
-                sx={{ fontSize: "0.7rem", height: 22 }}
-              />
-            )}
-            {vote.section_processing_title && (
-              <Chip
-                size="small"
-                label={vote.section_processing_title}
-                variant="outlined"
-                sx={{ fontSize: "0.7rem", height: 22 }}
-              />
-            )}
-            {vote.section_key && (
-              <Link
-                href={refs.section(
-                  vote.section_key,
-                  vote.start_time,
-                  vote.session_key,
-                )}
-                underline="none"
-              >
-                <Chip
-                  size="small"
-                  label={vote.section_key}
-                  variant="outlined"
-                  clickable
-                  sx={{ fontSize: "0.7rem", height: 22 }}
-                />
-              </Link>
-            )}
-          </Box>
         )}
 
         {/* Vote bar + result */}
@@ -378,32 +485,137 @@ const VotingCard: React.FC<{
             {t("votings.results.minutes")}
             <LaunchIcon sx={{ fontSize: 12 }} />
           </Link>
-          {docRefs.length > 0 && (
-            <Typography
-              onClick={() => setExpanded(!expanded)}
-              sx={{
-                color: colors.primaryLight,
-                fontWeight: 600,
-                fontSize: "0.8rem",
-                cursor: "pointer",
-                "&:hover": { textDecoration: "underline" },
-              }}
-            >
-              {expanded
-                ? t("votings.hideDocuments")
-                : t("votings.showDocuments")}
-            </Typography>
-          )}
         </Box>
 
-        {/* Linked document inline cards */}
+        {/* Inline document context */}
         {docRefs.length > 0 && (
-          <Collapse in={expanded}>
+          <Box sx={{ mt: 1 }}>
             {docRefs.map((ref) => (
               <DocumentCard key={ref.identifier} docRef={ref} />
             ))}
-          </Collapse>
+          </Box>
         )}
+      </Box>
+    </DataCard>
+  );
+};
+
+/** Grouped voting card — multiple votings on the same subject */
+const VotingGroupCard: React.FC<{
+  votes: VotingSearchRow[];
+  themedColors: ReturnType<typeof useThemedColors>;
+  voteColors: ReturnType<typeof getVoteColors>;
+}> = ({ votes, themedColors, voteColors }) => {
+  const { t } = useTranslation();
+  const first = votes[0];
+  const groupTitle = getPrimaryTitle(first);
+  const docRefs = extractGroupDocRefs(votes);
+
+  const allPassed = votes.every(isVotePassed);
+  const anyPassed = votes.some(isVotePassed);
+  const borderColor = allPassed
+    ? themedColors.success
+    : anyPassed
+      ? themedColors.warning
+      : themedColors.error;
+
+  return (
+    <DataCard
+      sx={{
+        p: 0,
+        borderLeft: `3px solid ${borderColor}`,
+        "&:hover": { borderColor },
+      }}
+    >
+      <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+        {/* Group header */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            mb: 1,
+            flexWrap: "wrap",
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary, fontWeight: 500 }}
+          >
+            {formatDate(first.start_time)}
+          </Typography>
+          <Link
+            href={refs.session(first.session_key, first.start_time)}
+            underline="hover"
+            sx={{ fontWeight: 600, fontSize: "0.8rem" }}
+          >
+            {first.session_key}
+          </Link>
+          {first.section_key && (
+            <Link
+              href={refs.section(
+                first.section_key,
+                first.start_time,
+                first.session_key,
+              )}
+              underline="none"
+            >
+              <Chip
+                size="small"
+                label={first.section_key}
+                variant="outlined"
+                clickable
+                sx={{ fontSize: "0.7rem", height: 20 }}
+              />
+            </Link>
+          )}
+          <Chip
+            size="small"
+            label={`${votes.length} ${t("votings.votingCount")}`}
+            sx={{
+              height: 20,
+              fontSize: "0.7rem",
+              fontWeight: 600,
+              bgcolor: `${themedColors.primary}15`,
+              color: themedColors.primary,
+            }}
+          />
+        </Box>
+
+        {/* Group title */}
+        <Typography
+          sx={{
+            fontWeight: 600,
+            fontSize: "0.9375rem",
+            color: themedColors.textPrimary,
+            mb: 0.5,
+            lineHeight: 1.4,
+          }}
+        >
+          {groupTitle || t("common.none")}
+        </Typography>
+
+        {/* Inline document context at group level */}
+        {docRefs.length > 0 && (
+          <Box sx={{ mb: 1.5 }}>
+            {docRefs.map((ref) => (
+              <DocumentCard key={ref.identifier} docRef={ref} />
+            ))}
+          </Box>
+        )}
+
+        {/* Individual voting rows */}
+        <Stack spacing={0.75}>
+          {votes.map((vote) => (
+            <VotingRow
+              key={vote.id}
+              vote={vote}
+              showTitle={vote.title !== null && vote.title !== getPrimaryTitle(first)}
+              themedColors={themedColors}
+              voteColors={voteColors}
+            />
+          ))}
+        </Stack>
       </Box>
     </DataCard>
   );
@@ -544,40 +756,37 @@ export const VoteResults: React.FC<{
     return sortRows(rows, sortMode);
   }, [combinedRows, phaseFilter, sessionFilter, sortMode]);
 
-  const aggregate = React.useMemo(() => {
-    const total = filtered.length;
-    const yes = filtered.reduce((sum, row) => sum + row.n_yes, 0);
-    const no = filtered.reduce((sum, row) => sum + row.n_no, 0);
-    const abstain = filtered.reduce((sum, row) => sum + row.n_abstain, 0);
-    const absent = filtered.reduce((sum, row) => sum + row.n_absent, 0);
-    const votesCast = yes + no + abstain;
-    const possibleVotes = filtered.reduce((sum, row) => sum + row.n_total, 0);
-    const closeVotes = filtered.filter(isCloseVote).length;
-    const passedVotes = filtered.filter(isVotePassed).length;
-    const avgMargin =
-      total > 0
-        ? filtered.reduce((sum, row) => sum + voteMargin(row), 0) / total
-        : 0;
-    const participationPct =
-      possibleVotes > 0 ? (votesCast / possibleVotes) * 100 : 0;
+  /** Group votings by referenced document (e.g. "HE 45/2024 vp") */
+  const grouped = React.useMemo(() => {
+    const groups: VotingSearchRow[][] = [];
+    const keyToIndex = new Map<string, number>();
 
-    return {
-      total,
-      yes,
-      no,
-      abstain,
-      absent,
-      closeVotes,
-      passedVotes,
-      avgMargin,
-      participationPct,
-    };
+    for (const vote of filtered) {
+      const key = getDocumentGroupKey(vote);
+      if (key) {
+        const existingIdx = keyToIndex.get(key);
+        if (existingIdx !== undefined) {
+          groups[existingIdx].push(vote);
+        } else {
+          keyToIndex.set(key, groups.length);
+          groups.push([vote]);
+        }
+      } else {
+        groups.push([vote]);
+      }
+    }
+
+    // Sort within each group by timestamp ascending (chronological order)
+    for (const group of groups) {
+      if (group.length > 1) {
+        group.sort((a, b) =>
+          (a.start_time ?? "").localeCompare(b.start_time ?? ""),
+        );
+      }
+    }
+
+    return groups;
   }, [filtered]);
-
-  const closestVotes = React.useMemo(
-    () => sortRows(filtered, "closest").slice(0, 5),
-    [filtered],
-  );
 
   const noSearch = normalizedQuery.length < 3 && !focusVotingId;
 
@@ -713,159 +922,25 @@ export const VoteResults: React.FC<{
                 </Typography>
               </DataCard>
             ) : (
-              <>
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                      xs: "1fr",
-                      sm: "repeat(2, minmax(0, 1fr))",
-                      lg: "repeat(4, minmax(0, 1fr))",
-                    },
-                    gap: 2,
-                  }}
-                >
-                  <MetricCard
-                    label={t("votings.analysis.total")}
-                    value={aggregate.total}
-                    icon={<InsightsIcon sx={{ fontSize: 20 }} />}
-                  />
-                  <MetricCard
-                    label={t("votings.analysis.participation")}
-                    value={`${aggregate.participationPct.toFixed(1)}%`}
-                    icon={<ThumbUpIcon sx={{ fontSize: 20 }} />}
-                  />
-                  <MetricCard
-                    label={t("votings.analysis.closeVotes")}
-                    value={aggregate.closeVotes}
-                    icon={<WarningAmberIcon sx={{ fontSize: 20 }} />}
-                  />
-                  <MetricCard
-                    label={t("votings.analysis.passed")}
-                    value={`${aggregate.passedVotes}/${aggregate.total}`}
-                    icon={<ThumbDownIcon sx={{ fontSize: 20 }} />}
-                  />
-                </Box>
-
-                <DataCard sx={{ p: 3 }}>
-                  <Typography
-                    variant="h6"
-                    sx={{ color: themedColors.textPrimary, mb: 1.5 }}
-                  >
-                    {t("votings.analysis.aggregateDistribution")}
-                  </Typography>
-                  <VoteMarginBar
-                    yes={aggregate.yes}
-                    no={aggregate.no}
-                    empty={aggregate.abstain}
-                    absent={aggregate.absent}
-                    height={12}
-                    sx={{ mb: 1.5 }}
-                  />
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: {
-                        xs: "repeat(2, 1fr)",
-                        md: "repeat(4, 1fr)",
-                      },
-                      gap: 1.5,
-                    }}
-                  >
-                    <Chip
-                      icon={<ThumbUpIcon />}
-                      label={`${t("votings.results.yes")}: ${aggregate.yes}`}
-                    />
-                    <Chip
-                      icon={<ThumbDownIcon />}
-                      label={`${t("votings.results.no")}: ${aggregate.no}`}
-                    />
-                    <Chip
-                      icon={<RemoveIcon />}
-                      label={`${t("votings.results.empty")}: ${aggregate.abstain}`}
-                    />
-                    <Chip
-                      icon={<PersonOffIcon />}
-                      label={`${t("votings.results.absent")}: ${aggregate.absent}`}
-                    />
-                  </Box>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: themedColors.textSecondary, mt: 1.5 }}
-                  >
-                    {t("votings.analysis.avgMargin")}:{" "}
-                    {aggregate.avgMargin.toFixed(1)}
-                  </Typography>
-                </DataCard>
-
-                <DataCard sx={{ p: 3 }}>
-                  <Typography
-                    variant="h6"
-                    sx={{ color: themedColors.textPrimary, mb: 1.5 }}
-                  >
-                    {t("votings.analysis.closestVotes")}
-                  </Typography>
-                  <Stack spacing={1.25}>
-                    {closestVotes.map((vote) => (
-                      <Box
-                        key={vote.id}
-                        sx={{
-                          p: 1.5,
-                          borderRadius: 1,
-                          border: `1px solid ${themedColors.dataBorder}`,
-                          background: colors.backgroundSubtle,
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontWeight: 600,
-                            color: themedColors.textPrimary,
-                          }}
-                        >
-                          {getPrimaryTitle(vote)}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{ color: themedColors.textSecondary }}
-                        >
-                          <Link
-                            href={refs.session(
-                              vote.session_key,
-                              vote.start_time,
-                            )}
-                            underline="hover"
-                            color="inherit"
-                          >
-                            {vote.session_key}
-                          </Link>{" "}
-                          | {t("votings.margin")}: {voteMargin(vote)} |{" "}
-                          {vote.n_yes} - {vote.n_no}
-                        </Typography>
-                        {getSecondaryTitle(vote) && (
-                          <Typography
-                            variant="caption"
-                            sx={{ color: themedColors.textTertiary }}
-                          >
-                            {getSecondaryTitle(vote)}
-                          </Typography>
-                        )}
-                      </Box>
-                    ))}
-                  </Stack>
-                </DataCard>
-
-                {/* Voting cards list */}
-                <Stack spacing={1.5}>
-                  {filtered.map((vote) => (
+              <Stack spacing={1.5}>
+                {grouped.map((group) =>
+                  group.length === 1 ? (
                     <VotingCard
-                      key={vote.id}
-                      vote={vote}
+                      key={group[0].id}
+                      vote={group[0]}
                       themedColors={themedColors}
                       voteColors={voteColors}
                     />
-                  ))}
-                </Stack>
-              </>
+                  ) : (
+                    <VotingGroupCard
+                      key={group.map((v) => v.id).join("-")}
+                      votes={group}
+                      themedColors={themedColors}
+                      voteColors={voteColors}
+                    />
+                  ),
+                )}
+              </Stack>
             )}
           </Stack>
         )}
