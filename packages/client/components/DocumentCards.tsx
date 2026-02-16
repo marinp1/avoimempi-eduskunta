@@ -3,9 +3,9 @@ import { Box, Chip, CircularProgress, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { colors } from "#client/theme/index";
 
-export type DocRef = { type: "HE" | "VK" | "KK"; identifier: string };
+export type DocRef = { type: "HE" | "VK" | "KK" | "VM"; identifier: string };
 
-const DOC_PATTERN = /\b(HE|VK|KK)\s+\d+\/\d+\s*(?:vp)?/g;
+const DOC_PATTERN = /\b(HE|VK|KK|[A-ZÄÖa-zäö]+VM)\s+\d+\/\d+\s*(?:vp)?/g;
 
 export const extractDocumentIdentifiers = (
   fields: (string | null | undefined)[],
@@ -18,7 +18,9 @@ export const extractDocumentIdentifiers = (
       const id = match[0].trim();
       if (!seen.has(id)) {
         seen.add(id);
-        results.push({ type: match[1] as DocRef["type"], identifier: id });
+        const rawType = match[1];
+        const type: DocRef["type"] = rawType.endsWith("VM") ? "VM" : rawType as DocRef["type"];
+        results.push({ type, identifier: id });
       }
     }
   }
@@ -319,6 +321,50 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
   );
 };
 
+export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
+  identifier,
+}) => {
+  const { data, loading } = useFetchByIdentifier<{
+    id: number;
+    parliament_identifier: string;
+    title: string | null;
+    committee_name: string | null;
+    source_reference: string | null;
+  }>("/api/committee-reports/by-identifier", identifier);
+
+  if (loading) return <LoadingPlaceholder text="Ladataan valiokunnan mietinnön tietoja..." />;
+  if (!data) return null;
+
+  return (
+    <Box
+      sx={cardSx}
+      onClick={() => {
+        window.location.href = `/asiakirjat?id=${data.id}&type=committee-reports`;
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+        <Chip label={data.parliament_identifier} size="small" sx={identifierChipSx} />
+        <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
+      </Box>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5, flexWrap: "wrap" }}>
+        {data.committee_name && (
+          <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
+            {data.committee_name}
+          </Typography>
+        )}
+        {data.source_reference && (
+          <Chip
+            label={data.source_reference}
+            size="small"
+            variant="outlined"
+            sx={subjectChipSx}
+          />
+        )}
+      </Box>
+    </Box>
+  );
+};
+
 export const DocumentCard: React.FC<{ docRef: DocRef }> = ({ docRef }) => {
   switch (docRef.type) {
     case "HE":
@@ -327,6 +373,8 @@ export const DocumentCard: React.FC<{ docRef: DocRef }> = ({ docRef }) => {
       return <InterpellationCard identifier={docRef.identifier} />;
     case "KK":
       return <WrittenQuestionCard identifier={docRef.identifier} />;
+    case "VM":
+      return <CommitteeReportCard identifier={docRef.identifier} />;
   }
 };
 
