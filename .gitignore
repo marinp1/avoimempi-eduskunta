@@ -21,3 +21,9 @@ dist
 
 .claude/settings.local.json
 validation-results.json
+
+# OpenTofu/Terraform state
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform/
