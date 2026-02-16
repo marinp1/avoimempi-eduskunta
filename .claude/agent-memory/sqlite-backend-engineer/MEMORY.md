@@ -33,6 +33,12 @@
 - VaskiDocument.status mixes text labels with numeric codes ("5", "8", "1234")
 - ExcelSpeech.speech_type: many hyphenated/broken word variants from PDF extraction
 
+## Query Patterns & Gotchas
+- **NEVER JOIN Voting → Section → Session**: 97.8% of votings have empty section_key ('')
+- Use `Voting.session_key` directly for counting votings per session
+- Empty string ('') is NOT the same as NULL - check both when filtering
+- Fixed: SESSION_VOTING_COUNT.sql now uses direct session_key (2026-02-16)
+
 ## Migration Conventions
 - Files in `packages/datapipe/migrator/migrations/V*.sql`
 - No inline comments, semicolon-split execution
