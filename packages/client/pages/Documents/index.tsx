@@ -31,8 +31,8 @@ import {
 	Gavel as GavelIcon,
 	Event as EventIcon,
 	Balance as BalanceIcon,
-	HowToVote as HowToVoteIcon,
 } from "@mui/icons-material";
+import { RelatedVotings } from "#client/components/DocumentCards";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 
@@ -64,131 +64,6 @@ const getOutcomeColor = (code: string | null): string => {
 	}
 	return colors.dataBorder;
 };
-
-// ─── Related votings section (shared across all doc types) ───
-
-interface RelatedVoting {
-	id: number;
-	start_time: string;
-	n_yes: number;
-	n_no: number;
-	n_abstain: number;
-	n_absent: number;
-	n_total: number;
-	section_title: string;
-	context_title: string;
-	session_key: string;
-}
-
-function RelatedVotingsSection({ identifier }: { identifier: string }) {
-	const { t } = useTranslation();
-	const [votings, setVotings] = useState<RelatedVoting[]>([]);
-	const [loading, setLoading] = useState(true);
-
-	useEffect(() => {
-		let cancelled = false;
-		setLoading(true);
-		fetch(`/api/votings/by-document/${encodeURIComponent(identifier)}`)
-			.then((res) => (res.ok ? res.json() : []))
-			.then((data) => {
-				if (!cancelled) setVotings(data);
-			})
-			.catch(() => {})
-			.finally(() => {
-				if (!cancelled) setLoading(false);
-			});
-		return () => {
-			cancelled = true;
-		};
-	}, [identifier]);
-
-	if (loading) {
-		return (
-			<Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 1 }}>
-				<CircularProgress size={18} />
-				<Typography variant="body2" sx={{ color: colors.textSecondary }}>
-					{t("app.loading")}
-				</Typography>
-			</Box>
-		);
-	}
-
-	if (votings.length === 0) return null;
-
-	return (
-		<Box>
-			<Stack
-				direction="row"
-				spacing={1}
-				alignItems="center"
-				sx={{ mb: 1.5 }}
-			>
-				<HowToVoteIcon sx={{ color: colors.primary }} />
-				<Typography
-					variant="subtitle1"
-					sx={{ fontWeight: 600, color: colors.textPrimary }}
-				>
-					{t("documents.relatedVotings")}
-				</Typography>
-			</Stack>
-			<Stack spacing={1}>
-				{votings.map((v) => {
-					const passed = v.n_yes > v.n_no;
-					const yesRatio = v.n_total > 0 ? (v.n_yes / v.n_total) * 100 : 0;
-					const noRatio = v.n_total > 0 ? (v.n_no / v.n_total) * 100 : 0;
-					return (
-						<Box
-							key={v.id}
-							sx={{
-								pl: 2,
-								borderLeft: `3px solid ${passed ? colors.success : colors.error}`,
-								cursor: "pointer",
-								"&:hover": { backgroundColor: colors.backgroundSubtle },
-								borderRadius: 1,
-								py: 0.75,
-								px: 1,
-							}}
-							onClick={() => {
-								window.history.pushState({}, "", `/aanestykset?voting=${v.id}`);
-								window.dispatchEvent(new PopStateEvent("popstate"));
-							}}
-						>
-							<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-								<Typography
-									variant="body2"
-									sx={{ fontWeight: 500, color: colors.textPrimary, flex: 1, minWidth: 150 }}
-								>
-									{v.context_title || v.section_title}
-								</Typography>
-								<Chip
-									size="small"
-									label={`${v.n_yes} - ${v.n_no}`}
-									sx={{
-										fontWeight: 600,
-										fontSize: "0.7rem",
-										height: 22,
-										color: passed ? colors.success : colors.error,
-										borderColor: passed ? colors.success : colors.error,
-									}}
-									variant="outlined"
-								/>
-							</Stack>
-							<Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-								<Typography variant="caption" sx={{ color: colors.textSecondary }}>
-									{formatDate(v.start_time)} — {v.session_key}
-								</Typography>
-								<Box sx={{ flex: 1, maxWidth: 120, height: 4, borderRadius: 2, overflow: "hidden", display: "flex", backgroundColor: `${colors.dataBorder}40` }}>
-									<Box sx={{ width: `${yesRatio}%`, backgroundColor: colors.success, height: "100%" }} />
-									<Box sx={{ width: `${noRatio}%`, backgroundColor: colors.error, height: "100%" }} />
-								</Box>
-							</Stack>
-						</Box>
-					);
-				})}
-			</Stack>
-		</Box>
-	);
-}
 
 // ─── Interpellation types and card ───
 
@@ -689,7 +564,7 @@ function InterpellationCard({ item }: { item: InterpellationListItem }) {
 								</Box>
 							)}
 
-							<RelatedVotingsSection identifier={item.parliament_identifier} />
+							<RelatedVotings identifiers={[item.parliament_identifier]} />
 						</Stack>
 					)}
 				</Box>
@@ -1273,7 +1148,7 @@ function GovernmentProposalCard({ item }: { item: GovernmentProposalListItem }) 
 								</Box>
 							)}
 
-							<RelatedVotingsSection identifier={item.parliament_identifier} />
+							<RelatedVotings identifiers={[item.parliament_identifier]} />
 						</Stack>
 					)}
 				</Box>
@@ -1828,7 +1703,7 @@ function WrittenQuestionCard({ item }: { item: WrittenQuestionListItem }) {
 								</Box>
 							)}
 
-							<RelatedVotingsSection identifier={item.parliament_identifier} />
+							<RelatedVotings identifiers={[item.parliament_identifier]} />
 						</Stack>
 					)}
 				</Box>
