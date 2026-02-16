@@ -99,3 +99,11 @@ PDF extraction artifacts creating variants:
 
 ### 20. ExcelSpeech.processing_phase - All NULL
 All 115,915 rows have NULL for processing_phase (column appears unused).
+
+### 21. Voting.section_key - Empty Strings Break JOIN (20,982 rows - 97.8%)
+20,982 of 21,452 votings have `section_key = ''` (empty string) which doesn't match any Section records.
+This means JOINing through Section to count votings per session loses 97.8% of data.
+**Fix**: Use `Voting.session_key` directly instead of joining through Section.
+- Discovered 2026-02-16 when investigating voting count bug on sessions page
+- 377 sessions (22.8%) showed incorrect counts when using JOIN method
+- All votings have valid session_key, so direct lookup is reliable
