@@ -1,27 +1,40 @@
 #!/usr/bin/env bun
-import { parseTable } from "./parser";
+import { parseTable, parseTables } from "./parser";
+import { TableNames } from "#constants";
 
 async function main() {
   const args = process.argv.slice(2);
+  const flags = new Set(args.filter((arg) => arg.startsWith("--")));
+  const positionalArgs = args.filter((arg) => !arg.startsWith("--"));
 
-  if (
-    args.length === 0 ||
-    args[0] === "help" ||
-    args[0] === "--help" ||
-    args[0] === "-h"
-  ) {
+  const force = flags.has("--force");
+  const runAll = flags.has("--all");
+  const requestedHelp = positionalArgs.some((arg) =>
+    ["help", "--help", "-h"].includes(arg),
+  );
+
+  if (args.length === 0 || requestedHelp) {
     printHelp();
     process.exit(0);
   }
 
-  if (args[0] === "status") {
+  const tableName = positionalArgs[0];
+  if (tableName === "status") {
     await showStatus();
     return;
   }
 
-  // Parse a single table
-  const tableName = args[0];
-  const force = args.includes("--force");
+  if (runAll) {
+    const tablesToParse = TableNames.map((name) => name);
+    await parseTables(tablesToParse, { force });
+    return;
+  }
+
+  if (!tableName) {
+    console.error("❌ No table specified");
+    printHelp();
+    process.exit(1);
+  }
 
   await parseTable({
     tableName,

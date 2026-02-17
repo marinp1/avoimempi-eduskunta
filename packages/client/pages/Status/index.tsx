@@ -41,6 +41,13 @@ interface DataOverview {
   lastUpdated: string;
 }
 
+type SourceTableStatusState =
+  | "empty"
+  | "scraping"
+  | "raw"
+  | "parsing"
+  | "parsed";
+
 interface SourceTableStatus {
   tableName: string;
   apiRowCount: number;
@@ -53,6 +60,8 @@ interface SourceTableStatus {
   rawLastUpdated: string | null;
   parsedLastUpdated: string | null;
   scrapeProgressPercent: number;
+  parseProgressPercent: number;
+  status: SourceTableStatusState;
 }
 
 interface SourceDataOverview {
@@ -191,6 +200,39 @@ export default function Status() {
     if (!value) return "-";
     return new Date(value).toLocaleString("fi-FI");
   };
+
+  const getSourceStatusLabel = (table: SourceTableStatus) => {
+    switch (table.status) {
+      case "scraping":
+        return `Scraping ${table.scrapeProgressPercent.toFixed(1)}%`;
+      case "parsing":
+        return `Parsing ${table.parseProgressPercent.toFixed(1)}%`;
+      case "raw":
+        return "Raw";
+      case "parsed":
+        return "Parsed";
+      default:
+        return "Empty";
+    }
+  };
+
+  const getSourceStatusColor = (status: SourceTableStatusState) => {
+    switch (status) {
+      case "scraping":
+        return "info";
+      case "raw":
+        return "info";
+      case "parsing":
+        return "warning";
+      case "parsed":
+        return "success";
+      default:
+        return "warning";
+    }
+  };
+
+  const shouldShowProgress = (status: SourceTableStatusState) =>
+    status === "scraping" || status === "parsing";
 
   const getCompletenessPercentage = () => {
     if (!overview || overview.totalTables === 0) return 0;
@@ -454,25 +496,31 @@ export default function Status() {
                           {table.tableName}
                         </Typography>
                       </TableCell>
-                      <TableCell align="center">
-                        <Chip
-                          label={
-                            table.hasParsedData
-                              ? "Parsed"
-                              : table.hasRawData
-                                ? "Raw"
-                                : "Tyhjä"
-                          }
-                          size="small"
-                          color={
-                            table.hasParsedData
-                              ? "success"
-                              : table.hasRawData
-                                ? "info"
-                                : "warning"
-                          }
-                          variant="outlined"
-                        />
+                    <TableCell align="center">
+                        <Box
+                          display="flex"
+                          flexDirection="column"
+                          alignItems="center"
+                          gap={0.5}
+                        >
+                          <Chip
+                            label={getSourceStatusLabel(table)}
+                            size="small"
+                            color={getSourceStatusColor(table.status)}
+                            variant="outlined"
+                          />
+                          {shouldShowProgress(table.status) && (
+                            <LinearProgress
+                              variant="determinate"
+                              value={
+                                table.status === "scraping"
+                                  ? table.scrapeProgressPercent
+                                  : table.parseProgressPercent
+                              }
+                              sx={{ width: "100%", height: 4 }}
+                            />
+                          )}
+                        </Box>
                       </TableCell>
                       <TableCell align="right">
                         {formatNumber(table.apiRowCount)}
@@ -480,8 +528,24 @@ export default function Status() {
                       <TableCell align="right">
                         {formatNumber(table.rawRows)} ({table.rawPages} s.)
                       </TableCell>
-                      <TableCell align="right">
-                        {formatNumber(table.parsedRows)} ({table.parsedPages} s.)
+                    <TableCell align="right">
+                        <Box textAlign="right">
+                          <Typography variant="body2" fontWeight="medium">
+                            {formatNumber(table.parsedRows)}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            display="block"
+                          >
+                            {table.parsedPages} sivua
+                          </Typography>
+                          {table.status === "parsing" && (
+                            <Typography variant="caption" color="text.secondary">
+                              {table.parseProgressPercent.toFixed(1)} % valmis
+                            </Typography>
+                          )}
+                        </Box>
                       </TableCell>
                       <TableCell align="right">
                         {table.scrapeProgressPercent.toFixed(1)}%

@@ -4,6 +4,7 @@ import {
   listAllStorageKeys,
   StorageKeyBuilder,
 } from "#storage";
+import { recordSourceStagePage } from "#storage/source-status";
 
 /**
  * API Response structure from storage (created by scraper)
@@ -254,6 +255,12 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       pageRef.page,
     );
     await storage.put(targetKey, JSON.stringify(parsedPage, null, 2));
+    await recordSourceStagePage(
+      tableName,
+      targetStage,
+      pageRef.page,
+      parsedPage.rowCount,
+    );
 
     // Call page hook if the parser module exports one
     if (hooks.onPageParsed) {

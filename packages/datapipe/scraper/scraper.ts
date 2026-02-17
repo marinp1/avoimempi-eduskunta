@@ -1,5 +1,6 @@
 import { scheduler } from "node:timers/promises";
 import type { DataStage } from "#storage";
+import { recordSourceStagePage } from "#storage/source-status";
 import { getStorage, listAllStorageKeys, StorageKeyBuilder } from "#storage";
 
 /** Time to wait (in ms) between API calls. */
@@ -306,6 +307,7 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     const key = StorageKeyBuilder.forPage(stage, tableName, currentPage);
     const data = JSON.stringify(content, null, 2);
     await storage.put(key, data);
+    await recordSourceStagePage(tableName, stage, currentPage, content.rowCount);
 
     totalRowsScraped += content.rowCount;
     rowsScrapedThisRun += content.rowCount;

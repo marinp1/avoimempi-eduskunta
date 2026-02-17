@@ -6,6 +6,10 @@ import {
   StorageKeyBuilder,
   type StorageMetadata,
 } from "#storage/types";
+import {
+  loadSourceStageStatusMap,
+  type SourceStageStatusSnapshot,
+} from "#storage/source-status";
 
 export interface TableStorageStatus {
   table_name: string;
@@ -37,6 +41,12 @@ export class AdminStorageService {
   private static cachedApiTableCounts: Record<string, number> | null = null;
   private static apiFetchInFlight: Promise<Record<string, number>> | null =
     null;
+  private static statusCache:
+    | { data: TableStorageStatus[]; expiresAt: number }
+    | null = null;
+  private static statusFetchInFlight: Promise<TableStorageStatus[]> | null =
+    null;
+  private static readonly STATUS_CACHE_TTL = 30_000;
 
   /**
    * Fetch table row counts from Eduskunta API
@@ -81,37 +91,59 @@ export class AdminStorageService {
   private async buildTableStatus(
     tableName: string,
     apiCounts: Record<string, number>,
+    stageSnapshots: Record<string, SourceStageStatusSnapshot>,
   ): Promise<TableStorageStatus> {
-    const rawFiles = await this.getTableFiles("raw", tableName);
-    const parsedFiles = await this.getTableFiles("parsed", tableName);
+    const rawSnapshot = stageSnapshots[this.buildStageSnapshotKey("raw", tableName)];
+    const parsedSnapshot = stageSnapshots[
+      this.buildStageSnapshotKey("parsed", tableName)
+    ];
 
-    const hasRaw = rawFiles.length > 0;
-    const hasParsed = parsedFiles.length > 0;
+    const rawFiles = rawSnapshot ? [] : await this.getTableFiles("raw", tableName);
+    const parsedFiles = parsedSnapshot
+      ? []
+      : await this.getTableFiles("parsed", tableName);
 
-    const rawExactRows = await this.getExactRowCount("raw", tableName, rawFiles);
-    const parsedExactRows = await this.getExactRowCount(
-      "parsed",
-      tableName,
-      parsedFiles,
-    );
+    const rawPageCount = rawSnapshot ? rawSnapshot.pageCount : rawFiles.length;
+    const parsedPageCount = parsedSnapshot
+      ? parsedSnapshot.pageCount
+      : parsedFiles.length;
+
+    const hasRaw = rawSnapshot ? rawSnapshot.pageCount > 0 : rawFiles.length > 0;
+    const hasParsed = parsedSnapshot
+      ? parsedSnapshot.pageCount > 0
+      : parsedFiles.length > 0;
+
+    const rawEstimatedRows = rawSnapshot
+      ? this.estimateRowsFromSnapshot(rawSnapshot)
+      : await this.getExactRowCount("raw", tableName, rawFiles);
+    const parsedEstimatedRows = parsedSnapshot
+      ? this.estimateRowsFromSnapshot(parsedSnapshot)
+      : await this.getExactRowCount("parsed", tableName, parsedFiles);
+
+    const rawLastUpdated = rawSnapshot
+      ? rawSnapshot.lastUpdated
+      : this.getMostRecentTimestamp(rawFiles);
+    const parsedLastUpdated = parsedSnapshot
+      ? parsedSnapshot.lastUpdated
+      : this.getMostRecentTimestamp(parsedFiles);
 
     const totalRowsInApi = apiCounts[tableName] || 0;
-    const effectiveTotal = Math.max(totalRowsInApi, rawExactRows);
+    const effectiveTotal = Math.max(totalRowsInApi, rawEstimatedRows);
     const scrapeProgressPercent =
       effectiveTotal > 0
-        ? Math.min((rawExactRows / effectiveTotal) * 100, 100)
+        ? Math.min((rawEstimatedRows / effectiveTotal) * 100, 100)
         : 0;
 
     return {
       table_name: tableName,
-      raw_page_count: rawFiles.length,
-      parsed_page_count: parsedFiles.length,
+      raw_page_count: rawPageCount,
+      parsed_page_count: parsedPageCount,
       has_raw_data: hasRaw,
       has_parsed_data: hasParsed,
-      raw_last_updated: this.getMostRecentTimestamp(rawFiles),
-      parsed_last_updated: this.getMostRecentTimestamp(parsedFiles),
-      raw_estimated_rows: rawExactRows,
-      parsed_estimated_rows: parsedExactRows,
+      raw_last_updated: rawLastUpdated,
+      parsed_last_updated: parsedLastUpdated,
+      raw_estimated_rows: rawEstimatedRows,
+      parsed_estimated_rows: parsedEstimatedRows,
       total_rows_in_api: totalRowsInApi,
       scrape_progress_percent: scrapeProgressPercent,
     };
@@ -207,15 +239,54 @@ export class AdminStorageService {
     return files.length * 100;
   }
 
+  private buildStageSnapshotKey(stage: DataStage, tableName: string): string {
+    return `${stage}:${tableName}`;
+  }
+
+  private estimateRowsFromSnapshot(
+    snapshot: SourceStageStatusSnapshot,
+  ): number {
+    if (snapshot.pageCount === 0) return 0;
+    return (snapshot.pageCount - 1) * 100 + snapshot.lastPageRowCount;
+  }
+
   /**
    * Get status for all tables
    */
   async getStatus(): Promise<TableStorageStatus[]> {
-    const tables = this.getTableNames();
-    const apiCounts = await this.fetchApiTableCounts();
-    return await Promise.all(
-      tables.map((tableName) => this.buildTableStatus(tableName, apiCounts)),
-    );
+    const now = Date.now();
+    if (
+      AdminStorageService.statusCache &&
+      AdminStorageService.statusCache.expiresAt > now
+    ) {
+      return AdminStorageService.statusCache.data;
+    }
+
+    if (AdminStorageService.statusFetchInFlight) {
+      return AdminStorageService.statusFetchInFlight;
+    }
+
+    AdminStorageService.statusFetchInFlight = (async () => {
+      const tables = this.getTableNames();
+      const apiCounts = await this.fetchApiTableCounts();
+      const stageSnapshots = await loadSourceStageStatusMap();
+      const data = await Promise.all(
+        tables.map((tableName) =>
+          this.buildTableStatus(tableName, apiCounts, stageSnapshots),
+        ),
+      );
+      AdminStorageService.statusCache = {
+        data,
+        expiresAt: Date.now() + AdminStorageService.STATUS_CACHE_TTL,
+      };
+      return data;
+    })();
+
+    try {
+      return await AdminStorageService.statusFetchInFlight;
+    } finally {
+      AdminStorageService.statusFetchInFlight = null;
+    }
   }
 
   /**
@@ -227,7 +298,8 @@ export class AdminStorageService {
     }
 
     const apiCounts = await this.fetchApiTableCounts();
-    return await this.buildTableStatus(tableName, apiCounts);
+    const stageSnapshots = await loadSourceStageStatusMap();
+    return await this.buildTableStatus(tableName, apiCounts, stageSnapshots);
   }
 
   /**
@@ -299,5 +371,9 @@ export class AdminStorageService {
       tables_fully_parsed: tablesFullyParsed,
       total_parsed_rows: totalParsedRows,
     };
+  }
+
+  invalidateStatusCache(): void {
+    AdminStorageService.statusCache = null;
   }
 }
