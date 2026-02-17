@@ -8,5 +8,6 @@ SELECT DISTINCT
   sec.key AS section_key
 FROM Section sec
 JOIN Session s ON sec.session_key = s.key
-WHERE sec.minutes_related_document_identifier = $identifier
+JOIN SectionDocumentReference ref ON ref.section_key = sec.key
+WHERE ref.document_identifier = $identifier
 ORDER BY s.date ASC, sec.ordinal ASC

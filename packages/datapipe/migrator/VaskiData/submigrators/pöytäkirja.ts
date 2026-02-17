@@ -678,6 +678,10 @@ function resolveSectionForMinutesItem(
 
 function clearSessionSectionMinutes(db: Database, sessionKey: string) {
   db.run(
+    "DELETE FROM SectionDocumentReference WHERE section_key IN (SELECT key FROM Section WHERE session_key = ?)",
+    [sessionKey],
+  );
+  db.run(
     "UPDATE Section SET minutes_entry_kind = NULL, minutes_entry_order = NULL, minutes_item_identifier = NULL, minutes_parent_item_identifier = NULL, minutes_item_number = NULL, minutes_item_order = NULL, minutes_item_title = NULL, minutes_related_document_identifier = NULL, minutes_related_document_type = NULL, minutes_processing_phase_code = NULL, minutes_general_processing_phase_code = NULL, minutes_content_text = NULL, minutes_match_mode = NULL WHERE session_key = ?",
     [sessionKey],
   );
@@ -715,6 +719,18 @@ function updateSectionMinutes(
   );
   const contentParts = dedupeNonEmpty(sortedItems.map((item) => item.content_text));
 
+  const referenceMap = new Map<string, string | null>();
+  for (const item of sortedItems) {
+    const identifier = item.related_document_identifier?.trim();
+    if (!identifier) continue;
+    if (referenceMap.has(identifier)) continue;
+    referenceMap.set(identifier, item.related_document_type?.trim() || null);
+  }
+  const referenceRows = Array.from(referenceMap.entries()).map(([identifier, document_type]) => ({
+    identifier,
+    document_type,
+  }));
+
   db.run(
     "UPDATE Section SET minutes_entry_kind = ?, minutes_entry_order = ?, minutes_item_identifier = ?, minutes_parent_item_identifier = ?, minutes_item_number = ?, minutes_item_order = ?, minutes_item_title = ?, minutes_related_document_identifier = ?, minutes_related_document_type = ?, minutes_processing_phase_code = ?, minutes_general_processing_phase_code = ?, minutes_content_text = ?, minutes_match_mode = ? WHERE key = ?",
     [
@@ -738,6 +754,25 @@ function updateSectionMinutes(
       sectionKey,
     ],
   );
+
+  upsertSectionDocumentReferences(db, sectionKey, referenceRows);
+}
+
+function upsertSectionDocumentReferences(
+  db: Database,
+  sectionKey: string,
+  references: Array<{ identifier: string; document_type: string | null }>,
+) {
+  db.run("DELETE FROM SectionDocumentReference WHERE section_key = ?", [sectionKey]);
+  if (references.length === 0) return;
+
+  const stmt = db.prepare(
+    "INSERT INTO SectionDocumentReference (section_key, document_identifier, document_type) VALUES (?, ?, ?)",
+  );
+  for (const reference of references) {
+    stmt.run(sectionKey, reference.identifier, reference.document_type);
+  }
+  stmt.finalize();
 }
 
 function updateSessionMinutes(
