@@ -128,7 +128,7 @@ describe("Vaski talousarvioaloite submigrator", () => {
     clearStatementCache();
     reportLogDir = mkdtempSync(join(tmpdir(), "talousarvioaloite-report-"));
     process.env.MIGRATOR_REPORT_LOG_DIR = reportLogDir;
-    db = createTestDb(17);
+    db = createTestDb(20);
     migrateRow = createSubMigrator(db).migrateRow;
   });
 

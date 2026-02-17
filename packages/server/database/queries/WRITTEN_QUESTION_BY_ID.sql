@@ -11,6 +11,7 @@ SELECT
   q.first_signer_party,
   q.co_signer_count,
   q.question_text,
+  q.question_rich_text,
   q.answer_parliament_identifier,
   q.answer_minister_title,
   q.answer_minister_first_name,

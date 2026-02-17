@@ -88,7 +88,7 @@ describe("Vaski hallituksen esitys submigrator", () => {
 
   beforeEach(() => {
     clearStatementCache();
-    db = createTestDb(19);
+    db = createTestDb(20);
     migrateRow = createSubMigrator(db).migrateRow;
   });
 

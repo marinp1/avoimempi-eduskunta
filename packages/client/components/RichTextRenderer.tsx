@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Table, TableBody, TableCell, TableContainer, TableRow, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
 import { colors } from "#client/theme";
@@ -157,6 +157,46 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
           );
         }
 
+        if (block.type === "table") {
+          return (
+            <TableContainer
+              key={keyPrefix}
+              sx={{
+                mt: marginTop,
+                border: `1px solid ${colors.dataBorder}`,
+                borderRadius: 1,
+                backgroundColor: colors.backgroundPaper,
+              }}
+            >
+              <Table size="small" sx={{ minWidth: 420 }}>
+                <TableBody>
+                  {block.rows.map((row, rowIndex) => (
+                    <TableRow key={`${keyPrefix}-row-${rowIndex}`}>
+                      {row.cells.map((cell, cellIndex) => (
+                        <TableCell
+                          key={`${keyPrefix}-row-${rowIndex}-cell-${cellIndex}`}
+                          component={cell.header ? "th" : "td"}
+                          colSpan={cell.colSpan}
+                          rowSpan={cell.rowSpan}
+                          sx={{
+                            color: colors.textPrimary,
+                            borderColor: colors.dataBorder,
+                            fontWeight: cell.header ? 700 : 400,
+                            backgroundColor: cell.header ? colors.backgroundSubtle : "transparent",
+                            verticalAlign: "top",
+                          }}
+                        >
+                          {renderInlines(cell.inlines, `${keyPrefix}-row-${rowIndex}-cell-${cellIndex}`)}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          );
+        }
+
         return (
           <Box
             key={keyPrefix}
@@ -176,4 +216,3 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
     </Box>
   );
 };
-

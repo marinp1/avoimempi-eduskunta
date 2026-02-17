@@ -54,5 +54,49 @@ describe("Vaski rich text conversion", () => {
     expect(converted.json).toBeNull();
     expect(converted.plainText).toBeNull();
   });
-});
 
+  test("keeps table structures as table blocks", () => {
+    const sourceNode = {
+      KappaleKooste: "Taulukko 1.",
+      table: {
+        tgroup: {
+          tbody: {
+            row: [
+              {
+                entry: [
+                  { KappaleKooste: { LihavaTeksti: "Hyvinvointialue" } },
+                  { KappaleKooste: { LihavaTeksti: "Kertynyt alijäämä" } },
+                ],
+              },
+              {
+                entry: [
+                  { KappaleKooste: "Keski-Suomi" },
+                  { KappaleKooste: "-1 198" },
+                ],
+              },
+            ],
+          },
+        },
+      },
+    };
+
+    const converted = convertVaskiNodeToRichText(sourceNode);
+    const parsed = parseRichTextDocument(converted.json);
+
+    expect(parsed).not.toBeNull();
+    const tableBlock = parsed?.blocks.find((block) => block.type === "table");
+    expect(tableBlock).toBeTruthy();
+
+    if (tableBlock?.type === "table") {
+      expect(tableBlock.rows.length).toBe(2);
+      expect(tableBlock.rows[0]?.cells.length).toBe(2);
+      expect(tableBlock.rows[0]?.cells[0]?.inlines[0]).toMatchObject({
+        type: "text",
+        text: "Hyvinvointialue",
+      });
+      expect(tableBlock.rows[0]?.cells[0]?.header).toBe(true);
+    }
+
+    expect(converted.plainText).toContain("Keski-Suomi | -1 198");
+  });
+});

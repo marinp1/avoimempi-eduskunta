@@ -11,8 +11,12 @@ SELECT
   draft_date,
   signature_date,
   summary_text,
+  summary_rich_text,
   decision_text,
+  decision_rich_text,
   resolution_text,
-  legislation_amendment_text
+  resolution_rich_text,
+  legislation_amendment_text,
+  legislation_amendment_rich_text
 FROM CommitteeReport
 WHERE parliament_identifier = $identifier

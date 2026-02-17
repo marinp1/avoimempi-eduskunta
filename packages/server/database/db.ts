@@ -671,7 +671,9 @@ export class DatabaseConnection {
         decision_outcome: string | null;
         decision_outcome_code: string | null;
         question_text: string | null;
+        question_rich_text: string | null;
         resolution_text: string | null;
+        resolution_rich_text: string | null;
       },
       { $id: number }
     >(queries.interpellationById);
@@ -751,7 +753,9 @@ export class DatabaseConnection {
         decision_outcome: string | null;
         decision_outcome_code: string | null;
         question_text: string | null;
+        question_rich_text: string | null;
         resolution_text: string | null;
+        resolution_rich_text: string | null;
       },
       { $identifier: string }
     >(queries.interpellationByIdentifier);
@@ -1065,6 +1069,7 @@ export class DatabaseConnection {
         first_signer_party: string | null;
         co_signer_count: number | null;
         question_text: string | null;
+        question_rich_text: string | null;
         answer_parliament_identifier: string | null;
         answer_minister_title: string | null;
         answer_minister_first_name: string | null;
@@ -1157,6 +1162,7 @@ export class DatabaseConnection {
         decision_outcome: string | null;
         decision_outcome_code: string | null;
         question_text: string | null;
+        question_rich_text: string | null;
       },
       { $identifier: string }
     >(queries.writtenQuestionByIdentifier);
@@ -1409,12 +1415,19 @@ export class DatabaseConnection {
         draft_date: string | null;
         signature_date: string | null;
         summary_text: string | null;
+        summary_rich_text: string | null;
         general_reasoning_text: string | null;
+        general_reasoning_rich_text: string | null;
         detailed_reasoning_text: string | null;
+        detailed_reasoning_rich_text: string | null;
         decision_text: string | null;
+        decision_rich_text: string | null;
         legislation_amendment_text: string | null;
+        legislation_amendment_rich_text: string | null;
         minority_opinion_text: string | null;
+        minority_opinion_rich_text: string | null;
         resolution_text: string | null;
+        resolution_rich_text: string | null;
       },
       { $id: number }
     >(queries.committeeReportById);
@@ -1485,9 +1498,13 @@ export class DatabaseConnection {
         draft_date: string | null;
         signature_date: string | null;
         summary_text: string | null;
+        summary_rich_text: string | null;
         decision_text: string | null;
+        decision_rich_text: string | null;
         resolution_text: string | null;
+        resolution_rich_text: string | null;
         legislation_amendment_text: string | null;
+        legislation_amendment_rich_text: string | null;
       },
       { $identifier: string }
     >(queries.committeeReportByIdentifier);
@@ -1588,8 +1605,11 @@ export class DatabaseConnection {
         first_signer_last_name: string | null;
         first_signer_party: string | null;
         justification_text: string | null;
+        justification_rich_text: string | null;
         proposal_text: string | null;
+        proposal_rich_text: string | null;
         law_text: string | null;
+        law_rich_text: string | null;
         decision_outcome: string | null;
         decision_outcome_code: string | null;
         latest_stage_code: string | null;
@@ -1671,8 +1691,11 @@ export class DatabaseConnection {
         first_signer_last_name: string | null;
         first_signer_party: string | null;
         justification_text: string | null;
+        justification_rich_text: string | null;
         proposal_text: string | null;
+        proposal_rich_text: string | null;
         law_text: string | null;
+        law_rich_text: string | null;
         decision_outcome: string | null;
         decision_outcome_code: string | null;
       },

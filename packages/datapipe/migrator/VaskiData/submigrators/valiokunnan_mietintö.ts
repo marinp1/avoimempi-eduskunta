@@ -2,6 +2,7 @@ import type { Database } from "bun:sqlite";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { VaskiEntry } from "../reader";
+import { convertVaskiNodeToRichText } from "../rich-text";
 
 function normalizeText(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -168,12 +169,19 @@ function parseMietinto(
   signature_date: string | null;
   edk_identifier: string | null;
   summary_text: string | null;
+  summary_rich_text: string | null;
   general_reasoning_text: string | null;
+  general_reasoning_rich_text: string | null;
   detailed_reasoning_text: string | null;
+  detailed_reasoning_rich_text: string | null;
   decision_text: string | null;
+  decision_rich_text: string | null;
   legislation_amendment_text: string | null;
+  legislation_amendment_rich_text: string | null;
   minority_opinion_text: string | null;
+  minority_opinion_rich_text: string | null;
   resolution_text: string | null;
+  resolution_rich_text: string | null;
   members: CommitteeReportMember[];
   experts: CommitteeReportExpert[];
 } {
@@ -198,45 +206,45 @@ function parseMietinto(
   const osallistujaOsa = mietinto.OsallistujaOsa;
   const signature_date = normalizeText(osallistujaOsa?.PaivaysKooste?.["@_allekirjoitusPvm"]);
 
-  const summaryParts: string[] = [];
-  collectTextFragments(mietinto.SisaltoKuvaus, summaryParts);
-  const summary_text = summaryParts.length > 0 ? summaryParts.join("\n\n") : null;
+  const summaryRichText = convertVaskiNodeToRichText(mietinto.SisaltoKuvaus);
+  const summary_text = summaryRichText.plainText;
+  const summary_rich_text = summaryRichText.json;
 
   const perusteluOsat = normalizeArray<Record<string, any>>(mietinto.PerusteluOsa);
   let general_reasoning_text: string | null = null;
+  let general_reasoning_rich_text: string | null = null;
   let detailed_reasoning_text: string | null = null;
+  let detailed_reasoning_rich_text: string | null = null;
 
   if (perusteluOsat.length === 1) {
-    const parts: string[] = [];
-    collectTextFragments(perusteluOsat[0], parts);
-    general_reasoning_text = parts.length > 0 ? parts.join("\n\n") : null;
+    const generalRichText = convertVaskiNodeToRichText(perusteluOsat[0]);
+    general_reasoning_text = generalRichText.plainText;
+    general_reasoning_rich_text = generalRichText.json;
   } else if (perusteluOsat.length >= 2) {
-    const generalParts: string[] = [];
-    collectTextFragments(perusteluOsat[0], generalParts);
-    general_reasoning_text = generalParts.length > 0 ? generalParts.join("\n\n") : null;
+    const generalRichText = convertVaskiNodeToRichText(perusteluOsat[0]);
+    general_reasoning_text = generalRichText.plainText;
+    general_reasoning_rich_text = generalRichText.json;
 
-    const detailedParts: string[] = [];
-    for (let i = 1; i < perusteluOsat.length; i++) {
-      collectTextFragments(perusteluOsat[i], detailedParts);
-    }
-    detailed_reasoning_text = detailedParts.length > 0 ? detailedParts.join("\n\n") : null;
+    const detailedRichText = convertVaskiNodeToRichText(perusteluOsat.slice(1));
+    detailed_reasoning_text = detailedRichText.plainText;
+    detailed_reasoning_rich_text = detailedRichText.json;
   }
 
-  const decisionParts: string[] = [];
-  collectTextFragments(mietinto.PaatosOsa, decisionParts);
-  const decision_text = decisionParts.length > 0 ? decisionParts.join("\n\n") : null;
+  const decisionRichText = convertVaskiNodeToRichText(mietinto.PaatosOsa);
+  const decision_text = decisionRichText.plainText;
+  const decision_rich_text = decisionRichText.json;
 
-  const legislationParts: string[] = [];
-  collectTextFragments(mietinto.SaadosOsa, legislationParts);
-  const legislation_amendment_text = legislationParts.length > 0 ? legislationParts.join("\n\n") : null;
+  const legislationRichText = convertVaskiNodeToRichText(mietinto.SaadosOsa);
+  const legislation_amendment_text = legislationRichText.plainText;
+  const legislation_amendment_rich_text = legislationRichText.json;
 
-  const minorityParts: string[] = [];
-  collectTextFragments(mietinto.JasenMielipideOsa, minorityParts);
-  const minority_opinion_text = minorityParts.length > 0 ? minorityParts.join("\n\n") : null;
+  const minorityRichText = convertVaskiNodeToRichText(mietinto.JasenMielipideOsa);
+  const minority_opinion_text = minorityRichText.plainText;
+  const minority_opinion_rich_text = minorityRichText.json;
 
-  const resolutionParts: string[] = [];
-  collectTextFragments(mietinto.LausumaKannanottoOsa, resolutionParts);
-  const resolution_text = resolutionParts.length > 0 ? resolutionParts.join("\n\n") : null;
+  const resolutionRichText = convertVaskiNodeToRichText(mietinto.LausumaKannanottoOsa);
+  const resolution_text = resolutionRichText.plainText;
+  const resolution_rich_text = resolutionRichText.json;
 
   const members: CommitteeReportMember[] = [];
   if (osallistujaOsa) {
@@ -290,12 +298,19 @@ function parseMietinto(
     signature_date,
     edk_identifier,
     summary_text,
+    summary_rich_text,
     general_reasoning_text,
+    general_reasoning_rich_text,
     detailed_reasoning_text,
+    detailed_reasoning_rich_text,
     decision_text,
+    decision_rich_text,
     legislation_amendment_text,
+    legislation_amendment_rich_text,
     minority_opinion_text,
+    minority_opinion_rich_text,
     resolution_text,
+    resolution_rich_text,
     members,
     experts,
   };
@@ -303,8 +318,8 @@ function parseMietinto(
 
 export default function createValiokunnanMietintoSubMigrator(db: Database) {
   const insertReport = db.prepare(
-    `INSERT INTO CommitteeReport (id, parliament_identifier, report_type_code, document_number, parliamentary_year, title, committee_name, source_reference, draft_date, signature_date, language, edk_identifier, summary_text, general_reasoning_text, detailed_reasoning_text, decision_text, legislation_amendment_text, minority_opinion_text, resolution_text, source_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'fi', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO CommitteeReport (id, parliament_identifier, report_type_code, document_number, parliamentary_year, title, committee_name, source_reference, draft_date, signature_date, language, edk_identifier, summary_text, summary_rich_text, general_reasoning_text, general_reasoning_rich_text, detailed_reasoning_text, detailed_reasoning_rich_text, decision_text, decision_rich_text, legislation_amendment_text, legislation_amendment_rich_text, minority_opinion_text, minority_opinion_rich_text, resolution_text, resolution_rich_text, source_path)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'fi', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(parliament_identifier) DO UPDATE SET
        title = COALESCE(excluded.title, CommitteeReport.title),
        committee_name = COALESCE(excluded.committee_name, CommitteeReport.committee_name),
@@ -313,12 +328,19 @@ export default function createValiokunnanMietintoSubMigrator(db: Database) {
        signature_date = COALESCE(excluded.signature_date, CommitteeReport.signature_date),
        edk_identifier = COALESCE(excluded.edk_identifier, CommitteeReport.edk_identifier),
        summary_text = COALESCE(excluded.summary_text, CommitteeReport.summary_text),
+       summary_rich_text = COALESCE(excluded.summary_rich_text, CommitteeReport.summary_rich_text),
        general_reasoning_text = COALESCE(excluded.general_reasoning_text, CommitteeReport.general_reasoning_text),
+       general_reasoning_rich_text = COALESCE(excluded.general_reasoning_rich_text, CommitteeReport.general_reasoning_rich_text),
        detailed_reasoning_text = COALESCE(excluded.detailed_reasoning_text, CommitteeReport.detailed_reasoning_text),
+       detailed_reasoning_rich_text = COALESCE(excluded.detailed_reasoning_rich_text, CommitteeReport.detailed_reasoning_rich_text),
        decision_text = COALESCE(excluded.decision_text, CommitteeReport.decision_text),
+       decision_rich_text = COALESCE(excluded.decision_rich_text, CommitteeReport.decision_rich_text),
        legislation_amendment_text = COALESCE(excluded.legislation_amendment_text, CommitteeReport.legislation_amendment_text),
+       legislation_amendment_rich_text = COALESCE(excluded.legislation_amendment_rich_text, CommitteeReport.legislation_amendment_rich_text),
        minority_opinion_text = COALESCE(excluded.minority_opinion_text, CommitteeReport.minority_opinion_text),
+       minority_opinion_rich_text = COALESCE(excluded.minority_opinion_rich_text, CommitteeReport.minority_opinion_rich_text),
        resolution_text = COALESCE(excluded.resolution_text, CommitteeReport.resolution_text),
+       resolution_rich_text = COALESCE(excluded.resolution_rich_text, CommitteeReport.resolution_rich_text),
        source_path = excluded.source_path`,
   );
 
@@ -397,12 +419,19 @@ export default function createValiokunnanMietintoSubMigrator(db: Database) {
           data.signature_date,
           data.edk_identifier,
           data.summary_text,
+          data.summary_rich_text,
           data.general_reasoning_text,
+          data.general_reasoning_rich_text,
           data.detailed_reasoning_text,
+          data.detailed_reasoning_rich_text,
           data.decision_text,
+          data.decision_rich_text,
           data.legislation_amendment_text,
+          data.legislation_amendment_rich_text,
           data.minority_opinion_text,
+          data.minority_opinion_rich_text,
           data.resolution_text,
+          data.resolution_rich_text,
           sourcePath,
         );
 

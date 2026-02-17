@@ -79,7 +79,7 @@ describe("Vaski kansalaisaloite submigrator", () => {
     clearStatementCache();
     reportLogDir = mkdtempSync(join(tmpdir(), "kansalaisaloite-report-"));
     process.env.MIGRATOR_REPORT_LOG_DIR = reportLogDir;
-    db = createTestDb(17);
+    db = createTestDb(20);
     migrateRow = createSubMigrator(db).migrateRow;
   });
 

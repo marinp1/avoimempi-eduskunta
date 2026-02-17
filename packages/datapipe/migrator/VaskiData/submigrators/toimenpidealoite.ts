@@ -2,6 +2,7 @@ import type { Database } from "bun:sqlite";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { VaskiEntry } from "../reader";
+import { convertVaskiNodeToRichText } from "../rich-text";
 
 function normalizeText(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -197,8 +198,11 @@ function parseEduskuntaAloite(
   first_signer_last_name: string | null;
   first_signer_party: string | null;
   justification_text: string | null;
+  justification_rich_text: string | null;
   proposal_text: string | null;
+  proposal_rich_text: string | null;
   law_text: string | null;
+  law_rich_text: string | null;
   signers: InitiativeSigner[];
   subjects: InitiativeSubject[];
 } {
@@ -221,17 +225,17 @@ function parseEduskuntaAloite(
     signers.push(firstSigner);
   }
 
-  const justificationParts: string[] = [];
-  collectTextFragments(aloite.PerusteluOsa, justificationParts);
-  const justification_text = justificationParts.length > 0 ? justificationParts.join("\n\n") : null;
+  const justificationRichText = convertVaskiNodeToRichText(aloite.PerusteluOsa);
+  const justification_text = justificationRichText.plainText;
+  const justification_rich_text = justificationRichText.json;
 
-  const proposalParts: string[] = [];
-  collectTextFragments(aloite.PonsiOsa, proposalParts);
-  const proposal_text = proposalParts.length > 0 ? proposalParts.join("\n\n") : null;
+  const proposalRichText = convertVaskiNodeToRichText(aloite.PonsiOsa);
+  const proposal_text = proposalRichText.plainText;
+  const proposal_rich_text = proposalRichText.json;
 
-  const lawParts: string[] = [];
-  collectTextFragments(aloite.SaadosOsa, lawParts);
-  const law_text = lawParts.length > 0 ? lawParts.join("\n\n") : null;
+  const lawRichText = convertVaskiNodeToRichText(aloite.SaadosOsa);
+  const law_text = lawRichText.plainText;
+  const law_rich_text = lawRichText.json;
 
   const subjects: InitiativeSubject[] = [];
   const aiheet = normalizeArray<Record<string, any>>(meta?.Aihe);
@@ -252,8 +256,11 @@ function parseEduskuntaAloite(
     first_signer_last_name: firstSigner?.last_name ?? null,
     first_signer_party: firstSigner?.party ?? null,
     justification_text,
+    justification_rich_text,
     proposal_text,
+    proposal_rich_text,
     law_text,
+    law_rich_text,
     signers,
     subjects,
   };
@@ -387,8 +394,8 @@ function parseKasittelytiedot(
 
 export default function createToimenpidealoiteSubMigrator(db: Database) {
   const insertInitiative = db.prepare(
-    `INSERT INTO LegislativeInitiative (id, initiative_type_code, parliament_identifier, document_number, parliamentary_year, title, submission_date, first_signer_person_id, first_signer_first_name, first_signer_last_name, first_signer_party, justification_text, proposal_text, law_text, decision_outcome, decision_outcome_code, latest_stage_code, end_date, source_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO LegislativeInitiative (id, initiative_type_code, parliament_identifier, document_number, parliamentary_year, title, submission_date, first_signer_person_id, first_signer_first_name, first_signer_last_name, first_signer_party, justification_text, justification_rich_text, proposal_text, proposal_rich_text, law_text, law_rich_text, decision_outcome, decision_outcome_code, latest_stage_code, end_date, source_path)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(parliament_identifier) DO UPDATE SET
        title = COALESCE(excluded.title, LegislativeInitiative.title),
        submission_date = COALESCE(excluded.submission_date, LegislativeInitiative.submission_date),
@@ -397,8 +404,11 @@ export default function createToimenpidealoiteSubMigrator(db: Database) {
        first_signer_last_name = COALESCE(excluded.first_signer_last_name, LegislativeInitiative.first_signer_last_name),
        first_signer_party = COALESCE(excluded.first_signer_party, LegislativeInitiative.first_signer_party),
        justification_text = COALESCE(excluded.justification_text, LegislativeInitiative.justification_text),
+       justification_rich_text = COALESCE(excluded.justification_rich_text, LegislativeInitiative.justification_rich_text),
        proposal_text = COALESCE(excluded.proposal_text, LegislativeInitiative.proposal_text),
+       proposal_rich_text = COALESCE(excluded.proposal_rich_text, LegislativeInitiative.proposal_rich_text),
        law_text = COALESCE(excluded.law_text, LegislativeInitiative.law_text),
+       law_rich_text = COALESCE(excluded.law_rich_text, LegislativeInitiative.law_rich_text),
        decision_outcome = COALESCE(excluded.decision_outcome, LegislativeInitiative.decision_outcome),
        decision_outcome_code = COALESCE(excluded.decision_outcome_code, LegislativeInitiative.decision_outcome_code),
        latest_stage_code = COALESCE(excluded.latest_stage_code, LegislativeInitiative.latest_stage_code),
@@ -490,8 +500,11 @@ export default function createToimenpidealoiteSubMigrator(db: Database) {
             data.first_signer_last_name,
             data.first_signer_party,
             data.justification_text,
+            data.justification_rich_text,
             data.proposal_text,
+            data.proposal_rich_text,
             data.law_text,
+            data.law_rich_text,
             null,
             null,
             null,
@@ -543,6 +556,9 @@ export default function createToimenpidealoiteSubMigrator(db: Database) {
             data.first_signer_first_name,
             data.first_signer_last_name,
             data.first_signer_party,
+            null,
+            null,
+            null,
             null,
             null,
             null,

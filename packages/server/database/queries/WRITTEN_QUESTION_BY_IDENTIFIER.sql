@@ -16,6 +16,7 @@ SELECT
   q.answer_date,
   q.decision_outcome,
   q.decision_outcome_code,
-  q.question_text
+  q.question_text,
+  q.question_rich_text
 FROM WrittenQuestion q
 WHERE q.parliament_identifier = $identifier

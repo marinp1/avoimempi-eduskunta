@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { VaskiEntry } from "../reader";
 import { readVaskiRowsByDocumentType, readVaskiIndex } from "../reader";
+import { convertVaskiNodeToRichText } from "../rich-text";
 
 function normalizeText(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -309,6 +310,7 @@ function parseKysymys(
   first_signer_last_name: string | null;
   first_signer_party: string | null;
   question_text: string | null;
+  question_rich_text: string | null;
   signers: WrittenQuestionSigner[];
   subjects: WrittenQuestionSubject[];
 } {
@@ -353,6 +355,8 @@ function parseKysymys(
     }
   }
   const question_text = questionParts.length > 0 ? questionParts.join("\n\n") : null;
+  const questionRichText = convertVaskiNodeToRichText([kysymys.PerusteluOsa, kysymys.PonsiOsa]);
+  const question_rich_text = questionRichText.json;
 
   const signers: WrittenQuestionSigner[] = [];
   const allekirjoitusOsa = kysymys.AllekirjoitusOsa;
@@ -399,6 +403,7 @@ function parseKysymys(
     first_signer_last_name: first?.last_name ?? null,
     first_signer_party: first?.party ?? null,
     question_text,
+    question_rich_text,
     signers,
     subjects,
   };
@@ -415,8 +420,8 @@ function normalizeFinnishDate(dateStr: string | null): string | null {
 
 export default function createKirallinenKysymysSubMigrator(db: Database) {
   const insertQuestion = db.prepare(
-    `INSERT INTO WrittenQuestion (id, parliament_identifier, document_number, parliamentary_year, title, submission_date, first_signer_person_id, first_signer_first_name, first_signer_last_name, first_signer_party, co_signer_count, question_text, answer_parliament_identifier, answer_minister_title, answer_minister_first_name, answer_minister_last_name, answer_date, decision_outcome, decision_outcome_code, latest_stage_code, end_date, source_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO WrittenQuestion (id, parliament_identifier, document_number, parliamentary_year, title, submission_date, first_signer_person_id, first_signer_first_name, first_signer_last_name, first_signer_party, co_signer_count, question_text, question_rich_text, answer_parliament_identifier, answer_minister_title, answer_minister_first_name, answer_minister_last_name, answer_date, decision_outcome, decision_outcome_code, latest_stage_code, end_date, source_path)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(parliament_identifier) DO UPDATE SET
        title = COALESCE(excluded.title, WrittenQuestion.title),
        submission_date = COALESCE(excluded.submission_date, WrittenQuestion.submission_date),
@@ -426,6 +431,7 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
        first_signer_party = COALESCE(excluded.first_signer_party, WrittenQuestion.first_signer_party),
        co_signer_count = COALESCE(excluded.co_signer_count, WrittenQuestion.co_signer_count),
        question_text = COALESCE(excluded.question_text, WrittenQuestion.question_text),
+       question_rich_text = COALESCE(excluded.question_rich_text, WrittenQuestion.question_rich_text),
        answer_parliament_identifier = COALESCE(excluded.answer_parliament_identifier, WrittenQuestion.answer_parliament_identifier),
        answer_minister_title = COALESCE(excluded.answer_minister_title, WrittenQuestion.answer_minister_title),
        answer_minister_first_name = COALESCE(excluded.answer_minister_first_name, WrittenQuestion.answer_minister_first_name),
@@ -537,6 +543,7 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
             null,
             null,
             null,
+            null,
             data.decision_outcome,
             data.decision_outcome_code,
             data.latest_stage_code,
@@ -584,6 +591,7 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
             data.first_signer_party,
             null,
             data.question_text,
+            data.question_rich_text,
             null,
             null,
             null,
