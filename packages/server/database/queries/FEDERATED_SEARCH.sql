@@ -42,5 +42,13 @@ WHERE
   COALESCE(wq.title, '') LIKE '%' || $q || '%' COLLATE NOCASE
   OR wq.parliament_identifier LIKE '%' || $q || '%' COLLATE NOCASE
 
+UNION ALL
+
+SELECT 'legislative-initiative' AS type, CAST(li.id AS TEXT) AS id, COALESCE(li.title, li.parliament_identifier) AS title, li.parliament_identifier AS subtitle, li.submission_date AS date
+FROM LegislativeInitiative li
+WHERE
+  COALESCE(li.title, '') LIKE '%' || $q || '%' COLLATE NOCASE
+  OR li.parliament_identifier LIKE '%' || $q || '%' COLLATE NOCASE
+
 ORDER BY date DESC
 LIMIT $limit;

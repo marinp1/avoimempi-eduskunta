@@ -38,7 +38,12 @@ import { RelatedVotings } from "#client/components/DocumentCards";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 
-type DocumentType = "interpellations" | "government-proposals" | "written-questions" | "committee-reports";
+type DocumentType =
+	| "interpellations"
+	| "government-proposals"
+	| "written-questions"
+	| "committee-reports"
+	| "legislative-initiatives";
 
 const formatDate = (dateStr: string | null) => {
 	if (!dateStr) return "—";
@@ -740,6 +745,376 @@ function InterpellationCard({ item }: { item: InterpellationListItem }) {
 												}}
 											>
 												{detail.resolution_text}
+											</Typography>
+										</Box>
+									</Collapse>
+								</Box>
+							)}
+
+							<InlineRelatedSessions sessions={detail.sessions} />
+
+							<RelatedVotings identifiers={[item.parliament_identifier]} />
+						</Stack>
+					)}
+				</Box>
+			</Collapse>
+		</DataCard>
+	);
+}
+
+// ─── Legislative initiative types and card ───
+
+interface LegislativeInitiativeListItem {
+	id: number;
+	initiative_type_code: string;
+	parliament_identifier: string;
+	document_number: number;
+	parliamentary_year: string;
+	title: string | null;
+	submission_date: string | null;
+	first_signer_first_name: string | null;
+	first_signer_last_name: string | null;
+	first_signer_party: string | null;
+	decision_outcome: string | null;
+	decision_outcome_code: string | null;
+	latest_stage_code: string | null;
+	end_date: string | null;
+	subjects: string | null;
+}
+
+interface LegislativeInitiativeDetail {
+	id: number;
+	initiative_type_code: string;
+	parliament_identifier: string;
+	document_number: number;
+	parliamentary_year: string;
+	title: string | null;
+	submission_date: string | null;
+	first_signer_person_id: number | null;
+	first_signer_first_name: string | null;
+	first_signer_last_name: string | null;
+	first_signer_party: string | null;
+	justification_text: string | null;
+	proposal_text: string | null;
+	law_text: string | null;
+	decision_outcome: string | null;
+	decision_outcome_code: string | null;
+	latest_stage_code: string | null;
+	end_date: string | null;
+	signers: Array<{
+		signer_order: number;
+		person_id: number | null;
+		first_name: string;
+		last_name: string;
+		party: string | null;
+		is_first_signer: number;
+	}>;
+	stages: Array<{
+		stage_order: number;
+		stage_title: string | null;
+		stage_code: string | null;
+		event_date: string | null;
+		event_title: string | null;
+		event_description: string | null;
+	}>;
+	subjects: Array<{ subject_text: string; yso_uri: string | null }>;
+	sessions: Array<{
+		session_key: string;
+		session_date: string;
+		session_type: string;
+		session_number: number;
+		session_year: string;
+		section_title: string | null;
+		section_key: string;
+	}>;
+}
+
+function LegislativeInitiativeCard({
+	item,
+}: {
+	item: LegislativeInitiativeListItem;
+}) {
+	const { t } = useTranslation();
+	const [expanded, setExpanded] = useState(false);
+	const [detail, setDetail] = useState<LegislativeInitiativeDetail | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [showJustification, setShowJustification] = useState(false);
+	const [showProposalText, setShowProposalText] = useState(false);
+	const [showLawText, setShowLawText] = useState(false);
+
+	const subjects = item.subjects
+		? item.subjects.split("||").filter(Boolean)
+		: [];
+	const displaySubjects = subjects.slice(0, 3);
+	const remainingSubjects = subjects.length - 3;
+
+	const handleExpand = async () => {
+		if (!expanded && !detail) {
+			setLoading(true);
+			setError(null);
+			try {
+				const response = await fetch(`/api/legislative-initiatives/${item.id}`);
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}`);
+				}
+				const data = await response.json();
+				setDetail(data);
+			} catch (err) {
+				setError(err instanceof Error ? err.message : "Failed to load");
+			} finally {
+				setLoading(false);
+			}
+		}
+		setExpanded(!expanded);
+	};
+
+	const signer = [item.first_signer_first_name, item.first_signer_last_name]
+		.filter(Boolean)
+		.join(" ");
+	const signerWithParty = item.first_signer_party
+		? `${signer} (${item.first_signer_party})`
+		: signer;
+
+	return (
+		<DataCard>
+			<Box
+				sx={{
+					cursor: "pointer",
+					"&:hover": {
+						backgroundColor: colors.backgroundSubtle,
+					},
+					transition: "background-color 0.2s",
+					p: 2,
+				}}
+				onClick={handleExpand}
+			>
+				<Stack spacing={1.5}>
+					<Stack
+						direction="row"
+						spacing={1}
+						alignItems="flex-start"
+						flexWrap="wrap"
+					>
+						<Typography
+							variant="h6"
+							sx={{
+								flex: 1,
+								minWidth: "200px",
+								color: colors.textPrimary,
+								fontWeight: 500,
+							}}
+						>
+							{item.title || t("documents.noTitle", "Ei otsikkoa")}
+						</Typography>
+						<Chip
+							label={item.parliament_identifier}
+							size="small"
+							sx={{
+								backgroundColor: colors.primaryLight,
+								color: colors.primary,
+								fontWeight: 500,
+							}}
+						/>
+						<Chip
+							label={item.initiative_type_code}
+							size="small"
+							variant="outlined"
+						/>
+					</Stack>
+
+					<Stack
+						direction={{ xs: "column", sm: "row" }}
+						spacing={2}
+						flexWrap="wrap"
+						alignItems={{ xs: "flex-start", sm: "center" }}
+					>
+						{item.submission_date && (
+							<Typography variant="body2" color={colors.textSecondary}>
+								{t("documents.submissionDate", "Jättöpäivä")}:{" "}
+								{formatDate(item.submission_date)}
+							</Typography>
+						)}
+
+						{signerWithParty && (
+							<Typography variant="body2" color={colors.textSecondary}>
+								{signerWithParty}
+							</Typography>
+						)}
+
+						{item.decision_outcome && (
+							<Chip
+								label={item.decision_outcome}
+								size="small"
+								sx={{
+									backgroundColor: getOutcomeColor(item.decision_outcome_code),
+									color: "#fff",
+									fontWeight: 500,
+								}}
+							/>
+						)}
+
+						{item.latest_stage_code && !item.decision_outcome && (
+							<Typography variant="body2" color={colors.textSecondary}>
+								{t("documents.latestStage", "Viimeisin vaihe")}: {item.latest_stage_code}
+							</Typography>
+						)}
+					</Stack>
+
+					{subjects.length > 0 && (
+						<Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+							{displaySubjects.map((subject, idx) => (
+								<Chip
+									key={idx}
+									label={subject}
+									size="small"
+									variant="outlined"
+									sx={{
+										borderColor: colors.dataBorder,
+										color: colors.textSecondary,
+									}}
+								/>
+							))}
+							{remainingSubjects > 0 && (
+								<Chip
+									label={`+${remainingSubjects}`}
+									size="small"
+									variant="outlined"
+									sx={{
+										borderColor: colors.dataBorder,
+										color: colors.textSecondary,
+									}}
+								/>
+							)}
+						</Stack>
+					)}
+				</Stack>
+
+				<Box
+					sx={{
+						display: "flex",
+						justifyContent: "center",
+						mt: 1,
+						transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+						transition: "transform 0.2s",
+					}}
+				>
+					<ExpandMoreIcon sx={{ color: colors.textSecondary }} />
+				</Box>
+			</Box>
+
+			<Collapse in={expanded} timeout="auto" unmountOnExit>
+				<Box sx={{ px: 2, pb: 2 }}>
+					{loading && (
+						<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+							<CircularProgress size={24} />
+						</Box>
+					)}
+
+					{error && (
+						<Alert severity="error" sx={{ mb: 2 }}>
+							{t("documents.loadError", "Virhe ladattaessa tietoja")}: {error}
+						</Alert>
+					)}
+
+					{detail && (
+						<Stack spacing={2}>
+							{detail.justification_text && (
+								<Box>
+									<Button
+										startIcon={<ArticleIcon />}
+										onClick={() => setShowJustification(!showJustification)}
+										sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
+									>
+										{showJustification
+											? t("documents.hideJustification", "Piilota perustelut")
+											: t("documents.showJustification", "Näytä perustelut")}
+									</Button>
+									<Collapse in={showJustification}>
+										<Box
+											sx={{
+												p: 2,
+												backgroundColor: colors.backgroundSubtle,
+												borderRadius: 1,
+												borderLeft: `4px solid ${colors.info}`,
+											}}
+										>
+											<Typography
+												variant="body2"
+												sx={{
+													color: colors.textPrimary,
+													whiteSpace: "pre-wrap",
+												}}
+											>
+												{detail.justification_text}
+											</Typography>
+										</Box>
+									</Collapse>
+								</Box>
+							)}
+
+							{detail.proposal_text && (
+								<Box>
+									<Button
+										startIcon={<GavelIcon />}
+										onClick={() => setShowProposalText(!showProposalText)}
+										sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
+									>
+										{showProposalText
+											? t("documents.hideClauses", "Piilota ponnet")
+											: t("documents.showClauses", "Näytä ponnet")}
+									</Button>
+									<Collapse in={showProposalText}>
+										<Box
+											sx={{
+												p: 2,
+												backgroundColor: colors.backgroundSubtle,
+												borderRadius: 1,
+												borderLeft: `4px solid ${colors.primary}`,
+											}}
+										>
+											<Typography
+												variant="body2"
+												sx={{
+													color: colors.textPrimary,
+													whiteSpace: "pre-wrap",
+												}}
+											>
+												{detail.proposal_text}
+											</Typography>
+										</Box>
+									</Collapse>
+								</Box>
+							)}
+
+							{detail.law_text && (
+								<Box>
+									<Button
+										startIcon={<BalanceIcon />}
+										onClick={() => setShowLawText(!showLawText)}
+										sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
+									>
+										{showLawText
+											? t("documents.hideLawText", "Piilota lakiteksti")
+											: t("documents.showLawText", "Näytä lakiteksti")}
+									</Button>
+									<Collapse in={showLawText}>
+										<Box
+											sx={{
+												p: 2,
+												backgroundColor: colors.backgroundSubtle,
+												borderRadius: 1,
+												borderLeft: `4px solid ${colors.success}`,
+											}}
+										>
+											<Typography
+												variant="body2"
+												sx={{
+													color: colors.textPrimary,
+													whiteSpace: "pre-wrap",
+												}}
+											>
+												{detail.law_text}
 											</Typography>
 										</Box>
 									</Collapse>
@@ -2370,7 +2745,15 @@ export default function Documents() {
 	const [debouncedQuery, setDebouncedQuery] = useState("");
 	const [selectedYear, setSelectedYear] = useState<string>("all");
 	const [page, setPage] = useState(1);
-	const [items, setItems] = useState<(InterpellationListItem | GovernmentProposalListItem | WrittenQuestionListItem | CommitteeReportListItem)[]>([]);
+	const [items, setItems] = useState<
+		(
+			| InterpellationListItem
+			| GovernmentProposalListItem
+			| WrittenQuestionListItem
+			| CommitteeReportListItem
+			| LegislativeInitiativeListItem
+		)[]
+	>([]);
 	const [totalCount, setTotalCount] = useState(0);
 	const [totalPages, setTotalPages] = useState(0);
 	const [loading, setLoading] = useState(false);
@@ -2385,7 +2768,9 @@ export default function Documents() {
 			? "/api/government-proposals"
 			: documentType === "committee-reports"
 				? "/api/committee-reports"
-				: "/api/written-questions";
+				: documentType === "legislative-initiatives"
+					? "/api/legislative-initiatives"
+					: "/api/written-questions";
 
 	// Debounce search query
 	useEffect(() => {
@@ -2521,6 +2906,9 @@ export default function Documents() {
 							<MenuItem value="committee-reports">
 								{t("documents.committeeReports", "Valiokunnan mietinnöt")}
 							</MenuItem>
+							<MenuItem value="legislative-initiatives">
+								{t("documents.legislativeInitiatives", "Lakialoitteet")}
+							</MenuItem>
 						</Select>
 					</FormControl>
 
@@ -2575,6 +2963,10 @@ export default function Documents() {
 								? (items as GovernmentProposalListItem[]).map((item) => (
 										<GovernmentProposalCard key={item.id} item={item} />
 									))
+								: documentType === "legislative-initiatives"
+									? (items as LegislativeInitiativeListItem[]).map((item) => (
+											<LegislativeInitiativeCard key={item.id} item={item} />
+										))
 								: documentType === "committee-reports"
 									? (items as CommitteeReportListItem[]).map((item) => (
 											<CommitteeReportCard key={item.id} item={item} />

@@ -706,6 +706,54 @@ const server = Bun.serve<{
       },
     },
 
+    // ─── Legislative initiative endpoints ───
+
+    "/api/legislative-initiatives": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const query = searchParams.get("q") || undefined;
+        const year = searchParams.get("year") || undefined;
+        const initiativeTypeCode = searchParams.get("initiativeTypeCode") || undefined;
+        const page = parseInt(searchParams.get("page") || "1", 10);
+        const limit = parseInt(searchParams.get("limit") || "20", 10);
+        const data = await db.fetchLegislativeInitiatives({
+          query,
+          year,
+          initiativeTypeCode,
+          page,
+          limit,
+        });
+        return Response.json(data);
+      },
+    },
+
+    "/api/legislative-initiatives/years": {
+      GET: async () => {
+        const data = await db.fetchLegislativeInitiativeYears();
+        return Response.json(data);
+      },
+    },
+
+    "/api/legislative-initiatives/by-identifier/:identifier": {
+      GET: async (
+        req: BunRequest<"/api/legislative-initiatives/by-identifier/:identifier">,
+      ) => {
+        const data = await db.fetchLegislativeInitiativeByIdentifier({
+          identifier: decodeURIComponent(req.params.identifier),
+        });
+        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        return Response.json(data);
+      },
+    },
+
+    "/api/legislative-initiatives/:id": {
+      GET: async (req: BunRequest<"/api/legislative-initiatives/:id">) => {
+        const data = await db.fetchLegislativeInitiativeById({ id: req.params.id });
+        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        return Response.json(data);
+      },
+    },
+
     // ─── Federated search ───
 
     "/api/search": {
