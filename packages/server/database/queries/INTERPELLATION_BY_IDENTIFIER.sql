@@ -11,6 +11,8 @@ SELECT
   i.first_signer_party,
   i.co_signer_count,
   i.decision_outcome,
-  i.decision_outcome_code
+  i.decision_outcome_code,
+  i.question_text,
+  i.resolution_text
 FROM Interpellation i
 WHERE i.parliament_identifier = $identifier

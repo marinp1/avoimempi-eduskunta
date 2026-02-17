@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { refs } from "#client/references";
 import { colors, spacing } from "#client/theme";
 import { VoteMarginBar } from "#client/theme/components";
@@ -56,6 +57,14 @@ type VotingInlineDetails = {
     n_abstain: number;
     n_absent: number;
     n_total: number;
+  }[];
+  memberVotes: {
+    person_id: number;
+    first_name: string;
+    last_name: string;
+    party_code: string;
+    vote: string;
+    is_government: 0 | 1;
   }[];
   governmentOpposition: {
     government_yes: number;
@@ -317,22 +326,10 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
                             Hallitus: {details.governmentOpposition.government_yes} jaa / {details.governmentOpposition.government_no} ei, Oppositio: {details.governmentOpposition.opposition_yes} jaa / {details.governmentOpposition.opposition_no} ei
                           </Typography>
                         )}
-                        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                          {details.partyBreakdown.slice(0, 8).map((party) => (
-                            <Chip
-                              key={party.party_code}
-                              size="small"
-                              variant="outlined"
-                              label={`${party.party_name}: ${party.n_yes}-${party.n_no}`}
-                              sx={{ height: 20, fontSize: "0.65rem" }}
-                            />
-                          ))}
-                          {details.partyBreakdown.length > 8 && (
-                            <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-                              +{details.partyBreakdown.length - 8} puoluetta
-                            </Typography>
-                          )}
-                        </Box>
+                        <VotingResultsTable
+                          partyBreakdown={details.partyBreakdown}
+                          memberVotes={details.memberVotes}
+                        />
                       </Box>
                     )}
                   </Box>

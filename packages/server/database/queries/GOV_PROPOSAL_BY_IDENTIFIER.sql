@@ -9,6 +9,9 @@ SELECT
   g.decision_outcome,
   g.decision_outcome_code,
   g.latest_stage_code,
-  g.end_date
+  g.end_date,
+  g.summary_text,
+  g.proposal_text,
+  g.justification_text
 FROM GovernmentProposal g
 WHERE g.parliament_identifier = $identifier
