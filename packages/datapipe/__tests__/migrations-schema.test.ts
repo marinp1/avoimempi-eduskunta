@@ -49,6 +49,13 @@ describe("Migration schema", () => {
       "V001.007__speech_content_source_names.sql",
       "V001.008__subsection_schema.sql",
       "V001.009__vaski_document_registry.sql",
+      "V001.010__vaski_interpellation_schema.sql",
+      "V001.011__vaski_government_proposal_schema.sql",
+      "V001.012__vaski_written_question_schema.sql",
+      "V001.013__vaski_document_enrichment.sql",
+      "V001.014__vaski_committee_report_schema.sql",
+      "V001.015__vaski_committee_statement_schema.sql",
+      "V001.016__vaski_legislative_initiative_schema.sql",
     ]);
   });
 
@@ -63,7 +70,7 @@ describe("Migration schema", () => {
   });
 
   test("creates expected tables and excludes removed document/vaski tables", () => {
-    const db = createTestDb();
+    const db = createTestDb(16);
     try {
       const tableNames = getTableNames(db);
 
@@ -80,6 +87,11 @@ describe("Migration schema", () => {
       expect(tableNames).toContain("RollCallEntry");
       expect(tableNames).toContain("SpeechContent");
       expect(tableNames).toContain("SubSection");
+      expect(tableNames).toContain("Interpellation");
+      expect(tableNames).toContain("GovernmentProposal");
+      expect(tableNames).toContain("WrittenQuestion");
+      expect(tableNames).toContain("CommitteeReport");
+      expect(tableNames).toContain("LegislativeInitiative");
       expect(tableNames).not.toContain("PlenarySessionMinutes");
       expect(tableNames).not.toContain("PlenarySessionMinutesItem");
 
@@ -102,7 +114,7 @@ describe("Migration schema", () => {
   });
 
   test("inlines evolved columns directly into base tables", () => {
-    const db = createTestDb();
+    const db = createTestDb(16);
     try {
       const representativeColumns = getColumnNames(db, "Representative", true);
       const pgmColumns = getColumnNames(db, "ParliamentaryGroupMembership", true);
@@ -142,7 +154,7 @@ describe("Migration schema", () => {
   });
 
   test("adds vaski minutes columns directly to Session and Section", () => {
-    const db = createTestDb();
+    const db = createTestDb(16);
     try {
       const sessionColumns = getColumnNames(db, "Session");
       const sectionColumns = getColumnNames(db, "Section");

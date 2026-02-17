@@ -96,3 +96,12 @@ export { default as committeeReportMembers } from "./queries/COMMITTEE_REPORT_ME
 export { default as committeeReportExperts } from "./queries/COMMITTEE_REPORT_EXPERTS.sql";
 export { default as committeeReportYears } from "./queries/COMMITTEE_REPORT_YEARS.sql";
 export { default as committeeReportSessions } from "./queries/COMMITTEE_REPORT_SESSIONS.sql";
+export { default as legislativeInitiativesList } from "./queries/LEGISLATIVE_INITIATIVES_LIST.sql";
+export { default as legislativeInitiativesCount } from "./queries/LEGISLATIVE_INITIATIVES_COUNT.sql";
+export { default as legislativeInitiativeById } from "./queries/LEGISLATIVE_INITIATIVE_BY_ID.sql";
+export { default as legislativeInitiativeByIdentifier } from "./queries/LEGISLATIVE_INITIATIVE_BY_IDENTIFIER.sql";
+export { default as legislativeInitiativeSigners } from "./queries/LEGISLATIVE_INITIATIVE_SIGNERS.sql";
+export { default as legislativeInitiativeStages } from "./queries/LEGISLATIVE_INITIATIVE_STAGES.sql";
+export { default as legislativeInitiativeSubjects } from "./queries/LEGISLATIVE_INITIATIVE_SUBJECTS.sql";
+export { default as legislativeInitiativeYears } from "./queries/LEGISLATIVE_INITIATIVE_YEARS.sql";
+export { default as legislativeInitiativeSessions } from "./queries/LEGISLATIVE_INITIATIVE_SESSIONS.sql";

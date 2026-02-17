@@ -1756,6 +1756,200 @@ export class DatabaseConnection {
     return data;
   }
 
+  // ─── Legislative initiative queries ───
+
+  public async fetchLegislativeInitiatives(params: {
+    query?: string;
+    year?: string;
+    initiativeTypeCode?: string;
+    page: number;
+    limit: number;
+  }) {
+    const offset = (params.page - 1) * params.limit;
+    const $query = params.query?.trim() || null;
+    const $year = params.year || null;
+    const $typeCode = params.initiativeTypeCode?.trim().toUpperCase() || null;
+
+    const countStmt = this.db.prepare<
+      { count: number },
+      { $query: string | null; $year: string | null; $typeCode: string | null }
+    >(queries.legislativeInitiativesCount);
+    const countResult = countStmt.get({ $query, $year, $typeCode });
+    const totalCount = countResult?.count || 0;
+    countStmt.finalize();
+
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        initiative_type_code: string;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        submission_date: string | null;
+        first_signer_first_name: string | null;
+        first_signer_last_name: string | null;
+        first_signer_party: string | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+        latest_stage_code: string | null;
+        end_date: string | null;
+        subjects: string | null;
+      },
+      {
+        $query: string | null;
+        $year: string | null;
+        $typeCode: string | null;
+        $limit: number;
+        $offset: number;
+      }
+    >(queries.legislativeInitiativesList);
+    const rows = stmt.all({
+      $query,
+      $year,
+      $typeCode,
+      $limit: params.limit,
+      $offset: offset,
+    });
+    stmt.finalize();
+
+    return {
+      items: rows,
+      totalCount,
+      page: params.page,
+      limit: params.limit,
+      totalPages: Math.ceil(totalCount / params.limit),
+    };
+  }
+
+  public async fetchLegislativeInitiativeById(params: { id: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        initiative_type_code: string;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        submission_date: string | null;
+        first_signer_person_id: number | null;
+        first_signer_first_name: string | null;
+        first_signer_last_name: string | null;
+        first_signer_party: string | null;
+        justification_text: string | null;
+        proposal_text: string | null;
+        law_text: string | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+        latest_stage_code: string | null;
+        end_date: string | null;
+      },
+      { $id: number }
+    >(queries.legislativeInitiativeById);
+    const detail = detailStmt.get({ $id: +params.id });
+    detailStmt.finalize();
+    if (!detail) return null;
+
+    const signersStmt = this.db.prepare<
+      {
+        initiative_id: number;
+        signer_order: number;
+        person_id: number | null;
+        first_name: string;
+        last_name: string;
+        party: string | null;
+        is_first_signer: number;
+      },
+      { $initiativeId: number }
+    >(queries.legislativeInitiativeSigners);
+    const signers = signersStmt.all({ $initiativeId: detail.id });
+    signersStmt.finalize();
+
+    const stagesStmt = this.db.prepare<
+      {
+        initiative_id: number;
+        stage_order: number;
+        stage_title: string;
+        stage_code: string | null;
+        event_date: string | null;
+        event_title: string | null;
+        event_description: string | null;
+      },
+      { $initiativeId: number }
+    >(queries.legislativeInitiativeStages);
+    const stages = stagesStmt.all({ $initiativeId: detail.id });
+    stagesStmt.finalize();
+
+    const subjectsStmt = this.db.prepare<
+      { initiative_id: number; subject_text: string; yso_uri: string | null },
+      { $initiativeId: number }
+    >(queries.legislativeInitiativeSubjects);
+    const subjects = subjectsStmt.all({ $initiativeId: detail.id });
+    subjectsStmt.finalize();
+
+    const sessionsStmt = this.db.prepare<
+      {
+        session_key: string;
+        session_date: string;
+        session_type: string;
+        session_number: number;
+        session_year: string;
+        section_title: string | null;
+        section_key: string;
+      },
+      { $identifier: string }
+    >(queries.legislativeInitiativeSessions);
+    const sessions = sessionsStmt.all({ $identifier: detail.parliament_identifier });
+    sessionsStmt.finalize();
+
+    return { ...detail, signers, stages, subjects, sessions };
+  }
+
+  public async fetchLegislativeInitiativeByIdentifier(params: { identifier: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        initiative_type_code: string;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        submission_date: string | null;
+        first_signer_person_id: number | null;
+        first_signer_first_name: string | null;
+        first_signer_last_name: string | null;
+        first_signer_party: string | null;
+        justification_text: string | null;
+        proposal_text: string | null;
+        law_text: string | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+      },
+      { $identifier: string }
+    >(queries.legislativeInitiativeByIdentifier);
+    const detail = detailStmt.get({ $identifier: params.identifier });
+    detailStmt.finalize();
+    if (!detail) return null;
+
+    const subjectsStmt = this.db.prepare<
+      { initiative_id: number; subject_text: string; yso_uri: string | null },
+      { $initiativeId: number }
+    >(queries.legislativeInitiativeSubjects);
+    const subjects = subjectsStmt.all({ $initiativeId: detail.id });
+    subjectsStmt.finalize();
+
+    return { ...detail, subjects };
+  }
+
+  public async fetchLegislativeInitiativeYears() {
+    const stmt = this.db.prepare<{ year: string }, []>(
+      queries.legislativeInitiativeYears,
+    );
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
   public async federatedSearch(params: { q: string; limit?: number }) {
     const searchQuery = this.buildSearchQuery(params.q);
     if (!searchQuery) return [];

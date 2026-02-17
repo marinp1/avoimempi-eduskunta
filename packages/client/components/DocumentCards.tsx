@@ -6,9 +6,9 @@ import React, { useEffect, useState } from "react";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { colors } from "#client/theme/index";
 
-export type DocRef = { type: "HE" | "VK" | "KK" | "VM"; identifier: string };
+export type DocRef = { type: "HE" | "VK" | "KK" | "VM" | "LA"; identifier: string };
 
-const DOC_PATTERN = /\b(HE|VK|KK|[A-ZÄÖa-zäö]+VM)\s+\d+\/\d+\s*(?:vp)?/g;
+const DOC_PATTERN = /\b(HE|VK|KK|LA|[A-ZÄÖa-zäö]+VM)\s+\d+\/\d+\s*(?:vp)?/g;
 
 export const extractDocumentIdentifiers = (
   fields: (string | null | undefined)[],
@@ -372,6 +372,74 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
   );
 };
 
+export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
+  identifier,
+}) => {
+  const { data, loading } = useFetchByIdentifier<
+    WithSigner & {
+      initiative_type_code: string;
+      justification_text: string | null;
+      proposal_text: string | null;
+      law_text: string | null;
+    }
+  >("/api/legislative-initiatives/by-identifier", identifier);
+
+  if (loading) return <LoadingPlaceholder text="Ladataan lakialoitteen tietoja..." />;
+  if (!data) return null;
+
+  const decisionColor = getDecisionColor(data.decision_outcome_code);
+  const signerName = [data.first_signer_first_name, data.first_signer_last_name]
+    .filter(Boolean)
+    .join(" ");
+  const signerLabel = data.first_signer_party
+    ? `${signerName} (${data.first_signer_party})`
+    : signerName;
+
+  return (
+    <Box
+      sx={cardSx}
+      onClick={() => {
+        window.location.href = `/asiakirjat?id=${data.id}&type=legislative-initiatives`;
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+        <Chip label={data.parliament_identifier} size="small" sx={identifierChipSx} />
+        <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
+        {data.decision_outcome && (
+          <Chip
+            label={data.decision_outcome}
+            size="small"
+            sx={{
+              height: 20,
+              fontSize: "0.65rem",
+              fontWeight: 600,
+              bgcolor: `${decisionColor}15`,
+              color: decisionColor,
+            }}
+          />
+        )}
+      </Box>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5, flexWrap: "wrap" }}>
+        <Chip
+          label={data.initiative_type_code}
+          size="small"
+          variant="outlined"
+          sx={subjectChipSx}
+        />
+        {signerLabel && (
+          <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
+            {signerLabel}
+          </Typography>
+        )}
+      </Box>
+      <ExpandableSnippet label="Perustelut" text={data.justification_text} maxLength={260} />
+      <ExpandableSnippet label="Ponsi" text={data.proposal_text} maxLength={220} />
+      <ExpandableSnippet label="Lakiteksti" text={data.law_text} maxLength={220} />
+      {renderSubjectChips(data.subjects)}
+    </Box>
+  );
+};
+
 export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
@@ -505,6 +573,8 @@ export const DocumentCard: React.FC<{ docRef: DocRef }> = ({ docRef }) => {
       return <InterpellationCard identifier={docRef.identifier} />;
     case "KK":
       return <WrittenQuestionCard identifier={docRef.identifier} />;
+    case "LA":
+      return <LegislativeInitiativeCard identifier={docRef.identifier} />;
     case "VM":
       return <CommitteeReportCard identifier={docRef.identifier} />;
   }

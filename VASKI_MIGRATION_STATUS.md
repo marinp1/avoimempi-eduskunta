@@ -2,7 +2,7 @@
 
 Tracks which document types from `vaski-data/no-yhteiso/no-kokous/` have been migrated into the SQLite database.
 
-Source: 84 document types, each containing JSON files (`entry-*.json`).
+Source: 83 indexed document types in `vaski-data/index.json`.
 
 ## Migrated
 
@@ -19,6 +19,8 @@ Source: 84 document types, each containing JSON files (`entry-*.json`).
 
 | Document Type | File Count | Priority | Notes |
 |---|---|---|---|
+| `lakialoite` | 1595 | P1 | Next meaningful type. High session linkage (`LA` references), meaningful legislative content, and compatible with existing dual-variant UPSERT migration pattern. See `VASKI_MIGRATION_OVERPLAN.md`. |
+| `suullinen_kysymys` | 2052 | P2 | Highest unmigrated session-link pressure (`SKT` references). Mostly processing metadata; fast follow-up after `lakialoite`. |
 
 ## Not Yet Planned
 
