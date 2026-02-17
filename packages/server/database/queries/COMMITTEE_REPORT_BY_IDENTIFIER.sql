@@ -6,6 +6,7 @@ SELECT
   parliamentary_year,
   title,
   committee_name,
+  recipient_committee,
   source_reference,
   draft_date,
   signature_date

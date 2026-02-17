@@ -327,8 +327,10 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
   const { data, loading } = useFetchByIdentifier<{
     id: number;
     parliament_identifier: string;
+    report_type_code: string;
     title: string | null;
     committee_name: string | null;
+    recipient_committee: string | null;
     source_reference: string | null;
   }>("/api/committee-reports/by-identifier", identifier);
 
@@ -344,12 +346,23 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
         <Chip label={data.parliament_identifier} size="small" sx={identifierChipSx} />
+        <Chip
+          label={data.report_type_code}
+          size="small"
+          variant="outlined"
+          sx={subjectChipSx}
+        />
         <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
       </Box>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5, flexWrap: "wrap" }}>
         {data.committee_name && (
           <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
             {data.committee_name}
+          </Typography>
+        )}
+        {data.recipient_committee && (
+          <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
+            {data.recipient_committee}
           </Typography>
         )}
         {data.source_reference && (
