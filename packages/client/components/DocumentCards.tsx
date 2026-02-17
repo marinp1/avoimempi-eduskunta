@@ -1,5 +1,7 @@
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
-import { Box, Chip, CircularProgress, Typography } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { Box, Button, Chip, CircularProgress, Collapse, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { colors } from "#client/theme/index";
 
@@ -394,21 +396,92 @@ export const DocumentCard: React.FC<{ docRef: DocRef }> = ({ docRef }) => {
 export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
   identifiers,
 }) => {
-  const [votings, setVotings] = useState<
-    {
-      id: number;
-      section_title: string | null;
-      context_title: string | null;
-      start_time: string | null;
-      session_key: string | null;
+  type VotingSummary = {
+    id: number;
+    section_title: string | null;
+    context_title: string | null;
+    start_time: string | null;
+    session_key: string | null;
+    n_yes: number;
+    n_no: number;
+    n_total: number;
+  };
+
+  type VotingDetails = {
+    voting: VotingSummary & {
+      n_abstain: number;
+      n_absent: number;
+      title: string | null;
+      parliamentary_item: string | null;
+      section_key: string | null;
+    };
+    partyBreakdown: {
+      party_code: string;
+      party_name: string;
       n_yes: number;
       n_no: number;
+      n_abstain: number;
+      n_absent: number;
       n_total: number;
-    }[]
+    }[];
+    memberVotes: {
+      person_id: number;
+      first_name: string;
+      last_name: string;
+      party_code: string;
+      vote: string;
+      is_government: 0 | 1;
+    }[];
+    governmentOpposition: {
+      government_yes: number;
+      government_no: number;
+      government_abstain: number;
+      government_absent: number;
+      government_total: number;
+      opposition_yes: number;
+      opposition_no: number;
+      opposition_abstain: number;
+      opposition_absent: number;
+      opposition_total: number;
+    } | null;
+    relatedVotings: {
+      id: number;
+      number: number | null;
+      start_time: string | null;
+      context_title: string;
+      n_yes: number;
+      n_no: number;
+      n_abstain: number;
+      n_absent: number;
+      n_total: number;
+      session_key: string | null;
+    }[];
+  };
+
+  const [votings, setVotings] = useState<
+    VotingSummary[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [expandedVotingId, setExpandedVotingId] = useState<number | null>(null);
+  const [detailsById, setDetailsById] = useState<Record<number, VotingDetails>>({});
+  const [detailLoadingById, setDetailLoadingById] = useState<Record<number, boolean>>({});
 
   const refKey = identifiers.join(",");
+
+  const fetchVotingDetails = (id: number) => {
+    if (detailsById[id] || detailLoadingById[id]) return;
+    setDetailLoadingById((prev) => ({ ...prev, [id]: true }));
+    fetch(`/api/votings/${id}/details`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!json) return;
+        setDetailsById((prev) => ({ ...prev, [id]: json }));
+      })
+      .catch(() => {})
+      .finally(() => {
+        setDetailLoadingById((prev) => ({ ...prev, [id]: false }));
+      });
+  };
 
   useEffect(() => {
     if (identifiers.length === 0) {
@@ -438,6 +511,9 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
       }
       setVotings(merged);
       setLoading(false);
+      setExpandedVotingId(null);
+      setDetailsById({});
+      setDetailLoadingById({});
     });
 
     return () => {
@@ -469,6 +545,9 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
         </Typography>
       </Box>
       {votings.map((v) => {
+        const isExpanded = expandedVotingId === v.id;
+        const details = detailsById[v.id];
+        const isDetailLoading = !!detailLoadingById[v.id];
         const passed = v.n_yes > v.n_no;
         const yesRatio = v.n_total > 0 ? (v.n_yes / v.n_total) * 100 : 0;
         const noRatio = v.n_total > 0 ? (v.n_no / v.n_total) * 100 : 0;
@@ -479,14 +558,8 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
               pl: 1.5,
               py: 0.5,
               borderLeft: `3px solid ${passed ? colors.success : colors.error}`,
-              cursor: "pointer",
-              "&:hover": { backgroundColor: `${colors.primaryLight}08` },
               borderRadius: 1,
               mb: 0.5,
-            }}
-            onClick={() => {
-              window.history.pushState({}, "", `/aanestykset?voting=${v.id}`);
-              window.dispatchEvent(new PopStateEvent("popstate"));
             }}
           >
             <Box
@@ -520,6 +593,47 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                 }}
                 variant="outlined"
               />
+              <Button
+                size="small"
+                onClick={() => {
+                  const nextExpanded = isExpanded ? null : v.id;
+                  setExpandedVotingId(nextExpanded);
+                  if (nextExpanded === v.id) fetchVotingDetails(v.id);
+                }}
+                sx={{
+                  minWidth: 0,
+                  px: 1,
+                  fontSize: "0.65rem",
+                  textTransform: "none",
+                }}
+                endIcon={
+                  <ExpandMoreIcon
+                    sx={{
+                      fontSize: 14,
+                      transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s",
+                    }}
+                  />
+                }
+              >
+                {isExpanded ? "Piilota tiedot" : "Näytä tiedot"}
+              </Button>
+              <Button
+                size="small"
+                onClick={() => {
+                  window.history.pushState({}, "", `/aanestykset?voting=${v.id}`);
+                  window.dispatchEvent(new PopStateEvent("popstate"));
+                }}
+                sx={{
+                  minWidth: 0,
+                  px: 1,
+                  fontSize: "0.65rem",
+                  textTransform: "none",
+                }}
+                endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
+              >
+                Avaa näkymä
+              </Button>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.25 }}>
               <Typography sx={{ fontSize: "0.65rem", color: colors.textSecondary }}>
@@ -552,6 +666,110 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                 />
               </Box>
             </Box>
+            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+              <Box
+                sx={{
+                  mt: 0.75,
+                  p: 1,
+                  borderRadius: 1,
+                  border: `1px solid ${colors.dataBorder}60`,
+                  backgroundColor: `${colors.primaryLight}04`,
+                }}
+              >
+                {isDetailLoading && (
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <CircularProgress size={12} />
+                    <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
+                      Ladataan äänestyksen yksityiskohtia...
+                    </Typography>
+                  </Box>
+                )}
+                {!isDetailLoading && details && (
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                    <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                      <Chip
+                        size="small"
+                        label={`Jaa ${details.voting.n_yes}`}
+                        sx={{ height: 20, color: colors.success, borderColor: colors.success }}
+                        variant="outlined"
+                      />
+                      <Chip
+                        size="small"
+                        label={`Ei ${details.voting.n_no}`}
+                        sx={{ height: 20, color: colors.error, borderColor: colors.error }}
+                        variant="outlined"
+                      />
+                      <Chip size="small" label={`Tyhjää ${details.voting.n_abstain}`} sx={{ height: 20 }} />
+                      <Chip size="small" label={`Poissa ${details.voting.n_absent}`} sx={{ height: 20 }} />
+                    </Box>
+                    {details.governmentOpposition && (
+                      <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
+                        Hallitus: {details.governmentOpposition.government_yes} jaa / {details.governmentOpposition.government_no} ei, Oppositio: {details.governmentOpposition.opposition_yes} jaa / {details.governmentOpposition.opposition_no} ei
+                      </Typography>
+                    )}
+                    {details.partyBreakdown.length > 0 && (
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        {details.partyBreakdown.slice(0, 8).map((party) => (
+                          <Chip
+                            key={party.party_code}
+                            size="small"
+                            variant="outlined"
+                            label={`${party.party_name}: ${party.n_yes}-${party.n_no}`}
+                            sx={{ height: 20, fontSize: "0.65rem" }}
+                          />
+                        ))}
+                        {details.partyBreakdown.length > 8 && (
+                          <Typography sx={{ fontSize: "0.65rem", color: colors.textSecondary }}>
+                            +{details.partyBreakdown.length - 8} puoluetta
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
+                    {details.memberVotes.length > 0 && (
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        {details.memberVotes.slice(0, 12).map((member) => (
+                          <Chip
+                            key={member.person_id}
+                            size="small"
+                            label={`${member.last_name} (${member.party_code}) ${member.vote}`}
+                            sx={{ height: 20, fontSize: "0.65rem" }}
+                            variant="outlined"
+                          />
+                        ))}
+                        {details.memberVotes.length > 12 && (
+                          <Typography sx={{ fontSize: "0.65rem", color: colors.textSecondary }}>
+                            +{details.memberVotes.length - 12} edustajaa
+                          </Typography>
+                        )}
+                      </Box>
+                    )}
+                    {details.relatedVotings.length > 0 && (
+                      <Box>
+                        <Typography sx={{ fontSize: "0.68rem", color: colors.textSecondary }}>
+                          Samaan käsittelykohtaan liittyvät äänestykset:
+                        </Typography>
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.25 }}>
+                          {details.relatedVotings.slice(0, 6).map((related) => (
+                            <Chip
+                              key={related.id}
+                              size="small"
+                              label={`${related.id}: ${related.n_yes}-${related.n_no}`}
+                              variant="outlined"
+                              sx={{ height: 20, fontSize: "0.65rem" }}
+                            />
+                          ))}
+                          {details.relatedVotings.length > 6 && (
+                            <Typography sx={{ fontSize: "0.65rem", color: colors.textSecondary }}>
+                              +{details.relatedVotings.length - 6} muuta
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                    )}
+                  </Box>
+                )}
+              </Box>
+            </Collapse>
           </Box>
         );
       })}
