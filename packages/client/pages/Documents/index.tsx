@@ -67,6 +67,16 @@ const getOutcomeColor = (code: string | null): string => {
 	return colors.dataBorder;
 };
 
+const getCommitteeReportKind = (
+	reportTypeCode: string | null | undefined,
+): "report" | "statement" | null => {
+	if (!reportTypeCode) return null;
+	const normalized = reportTypeCode.trim().toUpperCase();
+	if (normalized.endsWith("VM")) return "report";
+	if (normalized.endsWith("VL")) return "statement";
+	return null;
+};
+
 // ─── Interpellation types and card ───
 
 interface InterpellationListItem {
@@ -1724,6 +1734,7 @@ interface CommitteeReportListItem {
 	parliamentary_year: string;
 	title: string | null;
 	committee_name: string | null;
+	recipient_committee: string | null;
 	source_reference: string | null;
 	draft_date: string | null;
 	signature_date: string | null;
@@ -1737,6 +1748,7 @@ interface CommitteeReportDetail {
 	parliamentary_year: string;
 	title: string | null;
 	committee_name: string | null;
+	recipient_committee: string | null;
 	source_reference: string | null;
 	draft_date: string | null;
 	signature_date: string | null;
@@ -1776,6 +1788,12 @@ interface CommitteeReportDetail {
 
 function CommitteeReportCard({ item }: { item: CommitteeReportListItem }) {
 	const { t } = useTranslation();
+	const reportKind = getCommitteeReportKind(item.report_type_code);
+	const reportKindLabel = reportKind === "report"
+		? t("documents.committeeReportTypeReport", "Mietintö")
+		: reportKind === "statement"
+			? t("documents.committeeReportTypeStatement", "Lausunto")
+			: item.report_type_code;
 
 	const [expanded, setExpanded] = useState(false);
 	const [detail, setDetail] = useState<CommitteeReportDetail | null>(null);
@@ -1848,6 +1866,16 @@ function CommitteeReportCard({ item }: { item: CommitteeReportListItem }) {
 								fontWeight: 500,
 							}}
 						/>
+						<Chip
+							label={reportKindLabel}
+							size="small"
+							variant="outlined"
+							sx={{
+								borderColor: colors.dataBorder,
+								color: colors.textSecondary,
+								fontWeight: 500,
+							}}
+						/>
 					</Stack>
 
 					{/* Metadata row */}
@@ -1863,6 +1891,12 @@ function CommitteeReportCard({ item }: { item: CommitteeReportListItem }) {
 								{formatDate(item.draft_date)}
 							</Typography>
 						)}
+						{item.signature_date && (
+							<Typography variant="body2" color={colors.textSecondary}>
+								{t("documents.signatureDate", "Allekirjoituspäivä")}:{" "}
+								{formatDate(item.signature_date)}
+							</Typography>
+						)}
 
 						{item.committee_name && (
 							<Stack direction="row" spacing={0.5} alignItems="center">
@@ -1874,6 +1908,17 @@ function CommitteeReportCard({ item }: { item: CommitteeReportListItem }) {
 									{item.committee_name}
 								</Typography>
 							</Stack>
+						)}
+						{item.recipient_committee && (
+							<Chip
+								label={`${t("documents.recipientCommittee", "Vastaanottava valiokunta")}: ${item.recipient_committee}`}
+								size="small"
+								variant="outlined"
+								sx={{
+									borderColor: colors.dataBorder,
+									color: colors.textSecondary,
+								}}
+							/>
 						)}
 
 						{item.source_reference && (

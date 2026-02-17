@@ -1517,6 +1517,7 @@ export class DatabaseConnection {
         parliamentary_year: string;
         title: string | null;
         committee_name: string | null;
+        recipient_committee: string | null;
         source_reference: string | null;
         draft_date: string | null;
         signature_date: string | null;
@@ -1550,6 +1551,7 @@ export class DatabaseConnection {
         parliamentary_year: string;
         title: string | null;
         committee_name: string | null;
+        recipient_committee: string | null;
         source_reference: string | null;
         draft_date: string | null;
         signature_date: string | null;
@@ -1625,6 +1627,7 @@ export class DatabaseConnection {
         parliamentary_year: string;
         title: string | null;
         committee_name: string | null;
+        recipient_committee: string | null;
         source_reference: string | null;
         draft_date: string | null;
         signature_date: string | null;
