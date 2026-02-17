@@ -42,6 +42,7 @@ type DocumentType =
 	| "interpellations"
 	| "government-proposals"
 	| "written-questions"
+	| "oral-questions"
 	| "committee-reports"
 	| "legislative-initiatives";
 
@@ -1729,6 +1730,267 @@ interface WrittenQuestionDetail {
 	}>;
 }
 
+interface OralQuestionListItem {
+	id: number;
+	parliament_identifier: string;
+	document_number: number;
+	parliamentary_year: string;
+	title: string | null;
+	question_text: string | null;
+	asker_text: string | null;
+	submission_date: string | null;
+	decision_outcome: string | null;
+	decision_outcome_code: string | null;
+	latest_stage_code: string | null;
+	end_date: string | null;
+	subjects: string | null;
+}
+
+interface OralQuestionDetail {
+	id: number;
+	parliament_identifier: string;
+	document_number: number;
+	parliamentary_year: string;
+	title: string | null;
+	question_text: string | null;
+	asker_text: string | null;
+	submission_date: string | null;
+	decision_outcome: string | null;
+	decision_outcome_code: string | null;
+	latest_stage_code: string | null;
+	end_date: string | null;
+	stages: Array<{
+		stage_order: number;
+		stage_title: string;
+		stage_code: string | null;
+		event_date: string | null;
+		event_title: string | null;
+		event_description: string | null;
+	}>;
+	subjects: Array<{ subject_text: string; yso_uri: string | null }>;
+	sessions: Array<{
+		session_key: string;
+		session_date: string;
+		session_type: string;
+		session_number: number;
+		session_year: string;
+		section_title: string | null;
+		section_key: string;
+	}>;
+}
+
+function OralQuestionCard({ item }: { item: OralQuestionListItem }) {
+	const { t } = useTranslation();
+
+	const [expanded, setExpanded] = useState(false);
+	const [detail, setDetail] = useState<OralQuestionDetail | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState<string | null>(null);
+	const [showQuestionText, setShowQuestionText] = useState(false);
+
+	const subjects = item.subjects
+		? item.subjects.split("||").filter(Boolean)
+		: [];
+	const displaySubjects = subjects.slice(0, 3);
+	const remainingSubjects = subjects.length - 3;
+
+	const handleExpand = async () => {
+		if (!expanded && !detail) {
+			setLoading(true);
+			setError(null);
+			try {
+				const response = await fetch(`/api/oral-questions/${item.id}`);
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}`);
+				}
+				const data = await response.json();
+				setDetail(data);
+			} catch (err) {
+				setError(err instanceof Error ? err.message : "Failed to load");
+			} finally {
+				setLoading(false);
+			}
+		}
+		setExpanded(!expanded);
+	};
+
+	return (
+		<DataCard>
+			<Box
+				sx={{
+					cursor: "pointer",
+					"&:hover": {
+						backgroundColor: colors.backgroundSubtle,
+					},
+					transition: "background-color 0.2s",
+					p: 2,
+				}}
+				onClick={handleExpand}
+			>
+				<Stack spacing={1.5}>
+					<Stack
+						direction="row"
+						spacing={1}
+						alignItems="flex-start"
+						flexWrap="wrap"
+					>
+						<Typography
+							variant="h6"
+							sx={{
+								flex: 1,
+								minWidth: "200px",
+								color: colors.textPrimary,
+								fontWeight: 500,
+							}}
+						>
+							{item.title || t("documents.noTitle", "Ei otsikkoa")}
+						</Typography>
+						<Chip
+							label={item.parliament_identifier}
+							size="small"
+							sx={{
+								backgroundColor: colors.primaryLight,
+								color: colors.primary,
+								fontWeight: 500,
+							}}
+						/>
+					</Stack>
+
+					<Stack
+						direction={{ xs: "column", sm: "row" }}
+						spacing={2}
+						flexWrap="wrap"
+						alignItems={{ xs: "flex-start", sm: "center" }}
+					>
+						{item.submission_date && (
+							<Typography variant="body2" color={colors.textSecondary}>
+								{t("documents.submissionDate", "Jättöpäivä")}:{" "}
+								{formatDate(item.submission_date)}
+							</Typography>
+						)}
+
+						{item.asker_text && (
+							<Typography variant="body2" color={colors.textSecondary}>
+								{item.asker_text}
+							</Typography>
+						)}
+
+						{item.decision_outcome && (
+							<Chip
+								label={item.decision_outcome}
+								size="small"
+								sx={{
+									backgroundColor: getOutcomeColor(item.decision_outcome_code),
+									color: "#fff",
+									fontWeight: 500,
+								}}
+							/>
+						)}
+					</Stack>
+
+					{subjects.length > 0 && (
+						<Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+							{displaySubjects.map((subject, idx) => (
+								<Chip
+									key={idx}
+									label={subject}
+									size="small"
+									variant="outlined"
+									sx={{
+										borderColor: colors.dataBorder,
+										color: colors.textSecondary,
+									}}
+								/>
+							))}
+							{remainingSubjects > 0 && (
+								<Chip
+									label={`+${remainingSubjects}`}
+									size="small"
+									variant="outlined"
+									sx={{
+										borderColor: colors.dataBorder,
+										color: colors.textSecondary,
+									}}
+								/>
+							)}
+						</Stack>
+					)}
+				</Stack>
+
+				<Box
+					sx={{
+						display: "flex",
+						justifyContent: "center",
+						mt: 1,
+						transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+						transition: "transform 0.2s",
+					}}
+				>
+					<ExpandMoreIcon sx={{ color: colors.textSecondary }} />
+				</Box>
+			</Box>
+
+			<Collapse in={expanded} timeout="auto" unmountOnExit>
+				<Box sx={{ px: 2, pb: 2 }}>
+					{loading && (
+						<Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+							<CircularProgress size={24} />
+						</Box>
+					)}
+
+					{error && (
+						<Alert severity="error" sx={{ mb: 2 }}>
+							{t("documents.loadError", "Virhe ladattaessa tietoja")}: {error}
+						</Alert>
+					)}
+
+					{detail && (
+						<Stack spacing={2}>
+							{detail.question_text && (
+								<Box>
+									<Button
+										startIcon={<ArticleIcon />}
+										onClick={() => setShowQuestionText(!showQuestionText)}
+										sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
+									>
+										{showQuestionText
+											? t("documents.hideQuestion", "Piilota kysymys")
+											: t("documents.showQuestion", "Näytä kysymys")}
+									</Button>
+									<Collapse in={showQuestionText}>
+										<Box
+											sx={{
+												p: 2,
+												backgroundColor: colors.backgroundSubtle,
+												borderRadius: 1,
+												borderLeft: `4px solid ${colors.info}`,
+											}}
+										>
+											<Typography
+												variant="body2"
+												sx={{
+													color: colors.textPrimary,
+													whiteSpace: "pre-wrap",
+												}}
+											>
+												{detail.question_text}
+											</Typography>
+										</Box>
+									</Collapse>
+								</Box>
+							)}
+
+							<InlineRelatedSessions sessions={detail.sessions} />
+
+							<RelatedVotings identifiers={[item.parliament_identifier]} />
+						</Stack>
+					)}
+				</Box>
+			</Collapse>
+		</DataCard>
+	);
+}
+
 function WrittenQuestionCard({ item }: { item: WrittenQuestionListItem }) {
 	const { t } = useTranslation();
 
@@ -2750,6 +3012,7 @@ export default function Documents() {
 			| InterpellationListItem
 			| GovernmentProposalListItem
 			| WrittenQuestionListItem
+			| OralQuestionListItem
 			| CommitteeReportListItem
 			| LegislativeInitiativeListItem
 		)[]
@@ -2766,6 +3029,8 @@ export default function Documents() {
 		? "/api/interpellations"
 		: documentType === "government-proposals"
 			? "/api/government-proposals"
+			: documentType === "oral-questions"
+				? "/api/oral-questions"
 			: documentType === "committee-reports"
 				? "/api/committee-reports"
 				: documentType === "legislative-initiatives"
@@ -2903,6 +3168,9 @@ export default function Documents() {
 							<MenuItem value="written-questions">
 								{t("documents.writtenQuestions", "Kirjalliset kysymykset")}
 							</MenuItem>
+							<MenuItem value="oral-questions">
+								{t("documents.oralQuestions", "Suulliset kysymykset")}
+							</MenuItem>
 							<MenuItem value="committee-reports">
 								{t("documents.committeeReports", "Valiokunnan mietinnöt")}
 							</MenuItem>
@@ -2963,6 +3231,10 @@ export default function Documents() {
 								? (items as GovernmentProposalListItem[]).map((item) => (
 										<GovernmentProposalCard key={item.id} item={item} />
 									))
+								: documentType === "oral-questions"
+									? (items as OralQuestionListItem[]).map((item) => (
+											<OralQuestionCard key={item.id} item={item} />
+										))
 								: documentType === "legislative-initiatives"
 									? (items as LegislativeInitiativeListItem[]).map((item) => (
 											<LegislativeInitiativeCard key={item.id} item={item} />

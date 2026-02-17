@@ -56,6 +56,7 @@ describe("Migration schema", () => {
       "V001.014__vaski_committee_report_schema.sql",
       "V001.015__vaski_committee_statement_schema.sql",
       "V001.016__vaski_legislative_initiative_schema.sql",
+      "V001.017__vaski_oral_question_schema.sql",
     ]);
   });
 
@@ -70,7 +71,7 @@ describe("Migration schema", () => {
   });
 
   test("creates expected tables and excludes removed document/vaski tables", () => {
-    const db = createTestDb(16);
+    const db = createTestDb(17);
     try {
       const tableNames = getTableNames(db);
 
@@ -92,6 +93,7 @@ describe("Migration schema", () => {
       expect(tableNames).toContain("WrittenQuestion");
       expect(tableNames).toContain("CommitteeReport");
       expect(tableNames).toContain("LegislativeInitiative");
+      expect(tableNames).toContain("OralQuestion");
       expect(tableNames).not.toContain("PlenarySessionMinutes");
       expect(tableNames).not.toContain("PlenarySessionMinutesItem");
 
@@ -114,7 +116,7 @@ describe("Migration schema", () => {
   });
 
   test("inlines evolved columns directly into base tables", () => {
-    const db = createTestDb(16);
+    const db = createTestDb(17);
     try {
       const representativeColumns = getColumnNames(db, "Representative", true);
       const pgmColumns = getColumnNames(db, "ParliamentaryGroupMembership", true);
@@ -154,7 +156,7 @@ describe("Migration schema", () => {
   });
 
   test("adds vaski minutes columns directly to Session and Section", () => {
-    const db = createTestDb(16);
+    const db = createTestDb(17);
     try {
       const sessionColumns = getColumnNames(db, "Session");
       const sectionColumns = getColumnNames(db, "Section");

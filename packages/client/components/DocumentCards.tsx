@@ -6,9 +6,9 @@ import React, { useEffect, useState } from "react";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { colors } from "#client/theme/index";
 
-export type DocRef = { type: "HE" | "VK" | "KK" | "VM" | "LA"; identifier: string };
+export type DocRef = { type: "HE" | "VK" | "KK" | "VM" | "LA" | "SKT"; identifier: string };
 
-const DOC_PATTERN = /\b(HE|VK|KK|LA|[A-ZÄÖa-zäö]+VM)\s+\d+\/\d+\s*(?:vp)?/g;
+const DOC_PATTERN = /\b(HE|VK|KK|LA|SKT|[A-ZÄÖa-zäö]+VM)\s+\d+\/\d+\s*(?:vp)?/g;
 
 export const extractDocumentIdentifiers = (
   fields: (string | null | undefined)[],
@@ -440,6 +440,62 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
   );
 };
 
+export const OralQuestionCard: React.FC<{ identifier: string }> = ({
+  identifier,
+}) => {
+  const { data, loading } = useFetchByIdentifier<
+    DocCardData & {
+      question_text: string | null;
+      asker_text: string | null;
+      latest_stage_code: string | null;
+    }
+  >("/api/oral-questions/by-identifier", identifier);
+
+  if (loading) return <LoadingPlaceholder text="Ladataan suullisen kysymyksen tietoja..." />;
+  if (!data) return null;
+
+  const decisionColor = getDecisionColor(data.decision_outcome_code);
+
+  return (
+    <Box
+      sx={cardSx}
+      onClick={() => {
+        window.location.href = `/asiakirjat?id=${data.id}&type=oral-questions`;
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+        <Chip label={data.parliament_identifier} size="small" sx={identifierChipSx} />
+        <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
+        {data.decision_outcome && (
+          <Chip
+            label={data.decision_outcome}
+            size="small"
+            sx={{
+              height: 20,
+              fontSize: "0.65rem",
+              fontWeight: 600,
+              bgcolor: `${decisionColor}15`,
+              color: decisionColor,
+            }}
+          />
+        )}
+      </Box>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5, flexWrap: "wrap" }}>
+        {data.asker_text && (
+          <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
+            {data.asker_text}
+          </Typography>
+        )}
+        {data.latest_stage_code && (
+          <Chip label={data.latest_stage_code} size="small" variant="outlined" sx={subjectChipSx} />
+        )}
+      </Box>
+      <ExpandableSnippet label="Kysymys" text={data.question_text} maxLength={260} />
+      {renderSubjectChips(data.subjects)}
+    </Box>
+  );
+};
+
 export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
@@ -575,6 +631,8 @@ export const DocumentCard: React.FC<{ docRef: DocRef }> = ({ docRef }) => {
       return <WrittenQuestionCard identifier={docRef.identifier} />;
     case "LA":
       return <LegislativeInitiativeCard identifier={docRef.identifier} />;
+    case "SKT":
+      return <OralQuestionCard identifier={docRef.identifier} />;
     case "VM":
       return <CommitteeReportCard identifier={docRef.identifier} />;
   }

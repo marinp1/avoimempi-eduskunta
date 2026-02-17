@@ -44,6 +44,15 @@ WHERE
 
 UNION ALL
 
+SELECT 'oral-question' AS type, CAST(oq.id AS TEXT) AS id, COALESCE(oq.title, oq.parliament_identifier) AS title, oq.parliament_identifier AS subtitle, oq.submission_date AS date
+FROM OralQuestion oq
+WHERE
+  COALESCE(oq.title, '') LIKE '%' || $q || '%' COLLATE NOCASE
+  OR COALESCE(oq.question_text, '') LIKE '%' || $q || '%' COLLATE NOCASE
+  OR oq.parliament_identifier LIKE '%' || $q || '%' COLLATE NOCASE
+
+UNION ALL
+
 SELECT 'legislative-initiative' AS type, CAST(li.id AS TEXT) AS id, COALESCE(li.title, li.parliament_identifier) AS title, li.parliament_identifier AS subtitle, li.submission_date AS date
 FROM LegislativeInitiative li
 WHERE
