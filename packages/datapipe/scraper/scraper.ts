@@ -165,6 +165,12 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
 
   let currentPage = startPage;
   let loopCount = 0;
+  let rowsScrapedThisRun = 0;
+
+  const formatPercent = (value: number): string => {
+    if (value >= 100) return "100.0";
+    return Math.min(value, 99.9).toFixed(1);
+  };
 
   // Calculate total rows already scraped (for progress calculation)
   // Since we re-scrape the last page, count only complete pages (startPage - 1)
@@ -208,7 +214,7 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
       const percentComplete =
         totalRows > 0 ? Math.min((totalRowsScraped / totalRows) * 100, 100) : 0;
       console.log(
-        `📊 Already scraped: ${totalRowsScraped.toLocaleString()} rows (${percentComplete.toFixed(1)}%)`,
+        `📊 Already scraped: ${totalRowsScraped.toLocaleString()} rows (${formatPercent(percentComplete)}%)`,
       );
     }
   }
@@ -302,6 +308,7 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     await storage.put(key, data);
 
     totalRowsScraped += content.rowCount;
+    rowsScrapedThisRun += content.rowCount;
 
     // Dynamically adjust total if we've exceeded the API's initial estimate
     // This handles cases where the API count is stale
@@ -312,7 +319,7 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
         : 0;
 
     console.log(
-      `✅ Saved page ${currentPage} (${content.rowCount} rows) - ${percentComplete.toFixed(1)}% complete`,
+      `✅ Saved page ${currentPage} (${content.rowCount} rows) - ${formatPercent(percentComplete)}% complete`,
     );
 
     // Call progress callback
@@ -366,7 +373,16 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
 
   console.log(`\n✅ Scraping complete for ${tableName}`);
   console.log(`📊 Total pages scraped: ${currentPage - startPage + 1}`);
-  console.log(`📊 Total rows scraped: ${totalRowsScraped.toLocaleString()}`);
+  console.log(`📊 Rows scraped in this run: ${rowsScrapedThisRun.toLocaleString()}`);
+  console.log(`📊 Total rows currently stored: ${totalRowsScraped.toLocaleString()}`);
+
+  if (totalRows > 0 && totalRowsScraped !== totalRows) {
+    const diff = totalRows - totalRowsScraped;
+    const relation = diff > 0 ? "less" : "more";
+    console.warn(
+      `⚠️  Stored rows (${totalRowsScraped.toLocaleString()}) differ from API counts (${totalRows.toLocaleString()}) by ${Math.abs(diff).toLocaleString()} (${relation} than API count).`,
+    );
+  }
 }
 
 /**

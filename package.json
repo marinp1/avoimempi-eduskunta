@@ -34,6 +34,8 @@
     "start": "NODE_ENV=development bun run packages/server/index.ts",
     "scrape": "cd packages/datapipe && bun run scraper/cli.ts",
     "parse": "cd packages/datapipe && bun run parser/cli.ts",
+    "check:vaski-id-ranges": "bun run packages/datapipe/check-vaski-id-ranges.ts",
+    "check:vaski-gaps-api": "bun run packages/datapipe/check-vaski-gaps-from-api.ts",
     "migrate": "cd packages/datapipe && bun run migrator/cli.ts",
     "migrate:fresh": "cd packages/datapipe && bun run migrator/cli.ts recreate",
     "test": "bun test",
