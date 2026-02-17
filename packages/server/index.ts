@@ -197,6 +197,26 @@ const server = Bun.serve<{
       },
     },
 
+    "/api/votings/:id/details": {
+      GET: async (req: BunRequest<"/api/votings/:id/details">) => {
+        const votingId = Number.parseInt(req.params.id, 10);
+        if (!Number.isFinite(votingId) || votingId <= 0) {
+          return Response.json(
+            { message: "Invalid voting id" },
+            { status: 400 },
+          );
+        }
+        const details = await db.fetchVotingInlineDetails({ id: req.params.id });
+        if (!details) {
+          return Response.json(
+            { message: "Voting not found" },
+            { status: 404 },
+          );
+        }
+        return Response.json(details);
+      },
+    },
+
     "/api/sessions": {
       GET: async (req: Request) => {
         const { searchParams } = new URL(req.url);

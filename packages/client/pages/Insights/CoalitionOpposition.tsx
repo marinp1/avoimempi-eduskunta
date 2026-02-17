@@ -1,8 +1,12 @@
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CloseIcon from "@mui/icons-material/Close";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   Alert,
   Box,
+  Button,
+  Chip,
+  Collapse,
   CircularProgress,
   IconButton,
   Typography,
@@ -41,6 +45,18 @@ interface CoalitionOppositionProps {
   onClose: () => void;
 }
 
+type VotingInlineDetails = {
+  partyBreakdown: {
+    party_code: string;
+    party_name: string;
+    n_yes: number;
+    n_no: number;
+    n_abstain: number;
+    n_absent: number;
+    n_total: number;
+  }[];
+};
+
 export default function CoalitionOpposition({
   onClose,
 }: CoalitionOppositionProps) {
@@ -49,6 +65,15 @@ export default function CoalitionOpposition({
   const [data, setData] = useState<CoalitionOppositionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedVotingIds, setExpandedVotingIds] = useState<Set<number>>(
+    new Set(),
+  );
+  const [loadingVotingDetails, setLoadingVotingDetails] = useState<Set<number>>(
+    new Set(),
+  );
+  const [votingDetailsById, setVotingDetailsById] = useState<
+    Record<number, VotingInlineDetails>
+  >({});
 
   useEffect(() => {
     fetch("/api/analytics/coalition-opposition?limit=30")
@@ -58,6 +83,9 @@ export default function CoalitionOpposition({
       })
       .then((result) => {
         setData(result);
+        setExpandedVotingIds(new Set());
+        setLoadingVotingDetails(new Set());
+        setVotingDetailsById({});
         setLoading(false);
       })
       .catch((err) => {
@@ -65,6 +93,36 @@ export default function CoalitionOpposition({
         setLoading(false);
       });
   }, []);
+
+  const fetchVotingDetails = async (votingId: number) => {
+    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId)) return;
+    setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
+    try {
+      const res = await fetch(`/api/votings/${votingId}/details`);
+      if (!res.ok) return;
+      const data: VotingInlineDetails = await res.json();
+      setVotingDetailsById((prev) => ({ ...prev, [votingId]: data }));
+    } finally {
+      setLoadingVotingDetails((prev) => {
+        const next = new Set(prev);
+        next.delete(votingId);
+        return next;
+      });
+    }
+  };
+
+  const toggleVotingDetails = (votingId: number) => {
+    const shouldExpand = !expandedVotingIds.has(votingId);
+    setExpandedVotingIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(votingId)) next.delete(votingId);
+      else next.add(votingId);
+      return next;
+    });
+    if (shouldExpand) {
+      void fetchVotingDetails(votingId);
+    }
+  };
 
   if (loading)
     return (
@@ -259,6 +317,84 @@ export default function CoalitionOpposition({
               />
             </BarChart>
           </ResponsiveContainer>
+
+          <Box sx={{ mt: spacing.lg }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, mb: 1.5 }}>
+              Äänestykset (inline)
+            </Typography>
+            {data.slice(0, 20).map((vote) => {
+              const isExpanded = expandedVotingIds.has(vote.voting_id);
+              const details = votingDetailsById[vote.voting_id];
+              const detailsLoading = loadingVotingDetails.has(vote.voting_id);
+              return (
+                <Box
+                  key={vote.voting_id}
+                  sx={{
+                    py: 1.25,
+                    borderBottom: `1px solid ${themedColors.dataBorder}`,
+                    "&:last-child": { borderBottom: "none" },
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                    <Typography sx={{ flex: 1, minWidth: 200, fontSize: "0.85rem", fontWeight: 600 }}>
+                      {vote.title || vote.section_title}
+                    </Typography>
+                    <Chip size="small" label={`H ${vote.coalition_yes}-${vote.coalition_no}`} />
+                    <Chip size="small" label={`O ${vote.opposition_yes}-${vote.opposition_no}`} />
+                    <Button
+                      size="small"
+                      sx={{ textTransform: "none", minWidth: 0, px: 1, fontSize: "0.68rem" }}
+                      endIcon={
+                        <ExpandMoreIcon
+                          sx={{
+                            fontSize: 14,
+                            transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                            transition: "transform 0.2s",
+                          }}
+                        />
+                      }
+                      onClick={() => toggleVotingDetails(vote.voting_id)}
+                    >
+                      {isExpanded ? "Piilota tiedot" : "Näytä tiedot"}
+                    </Button>
+                  </Box>
+                  <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                    <Box
+                      sx={{
+                        mt: 0.75,
+                        p: 1,
+                        borderRadius: 1,
+                        border: `1px solid ${themedColors.dataBorder}60`,
+                        backgroundColor: `${colors.primaryLight}04`,
+                      }}
+                    >
+                      {detailsLoading && (
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                          <CircularProgress size={12} />
+                          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                            Ladataan äänestyksen yksityiskohtia...
+                          </Typography>
+                        </Box>
+                      )}
+                      {!detailsLoading && details && (
+                        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                          {details.partyBreakdown.slice(0, 10).map((party) => (
+                            <Chip
+                              key={party.party_code}
+                              size="small"
+                              variant="outlined"
+                              label={`${party.party_name}: ${party.n_yes}-${party.n_no}`}
+                              sx={{ height: 20, fontSize: "0.65rem" }}
+                            />
+                          ))}
+                        </Box>
+                      )}
+                    </Box>
+                  </Collapse>
+                </Box>
+              );
+            })}
+          </Box>
         </>
       )}
     </Box>

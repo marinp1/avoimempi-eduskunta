@@ -164,6 +164,87 @@ export class DatabaseConnection {
     return data ?? null;
   }
 
+  public async fetchVotingInlineDetails(params: { id: string }) {
+    const votingId = Number.parseInt(params.id, 10);
+    if (!Number.isFinite(votingId)) return null;
+
+    const voting = await this.fetchVotingById({ id: String(votingId) });
+    if (!voting) return null;
+
+    const partyStmt = this.db.prepare<
+      {
+        party_code: string;
+        party_name: string;
+        n_yes: number;
+        n_no: number;
+        n_abstain: number;
+        n_absent: number;
+        n_total: number;
+      },
+      { $id: number }
+    >(queries.votingPartyBreakdownById);
+    const partyBreakdown = partyStmt.all({ $id: votingId });
+    partyStmt.finalize();
+
+    const memberStmt = this.db.prepare<
+      {
+        person_id: number;
+        first_name: string;
+        last_name: string;
+        party_code: string;
+        vote: string;
+        is_government: 0 | 1;
+      },
+      { $id: number }
+    >(queries.votingMemberVotesById);
+    const memberVotes = memberStmt.all({ $id: votingId });
+    memberStmt.finalize();
+
+    const govStmt = this.db.prepare<
+      {
+        government_yes: number;
+        government_no: number;
+        government_abstain: number;
+        government_absent: number;
+        government_total: number;
+        opposition_yes: number;
+        opposition_no: number;
+        opposition_abstain: number;
+        opposition_absent: number;
+        opposition_total: number;
+      },
+      { $id: number }
+    >(queries.votingGovernmentOppositionById);
+    const governmentOpposition = govStmt.get({ $id: votingId });
+    govStmt.finalize();
+
+    const relatedStmt = this.db.prepare<
+      {
+        id: number;
+        number: number | null;
+        start_time: string | null;
+        context_title: string;
+        n_yes: number;
+        n_no: number;
+        n_abstain: number;
+        n_absent: number;
+        n_total: number;
+        session_key: string | null;
+      },
+      { $id: number }
+    >(queries.votingRelatedById);
+    const relatedVotings = relatedStmt.all({ $id: votingId });
+    relatedStmt.finalize();
+
+    return {
+      voting,
+      partyBreakdown,
+      memberVotes,
+      governmentOpposition,
+      relatedVotings,
+    };
+  }
+
   public async fetchVotingsByDocument(params: { identifier: string }) {
     const stmt = this.db.prepare<
       DatabaseQueries.VotingSearchResult,

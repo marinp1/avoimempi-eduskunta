@@ -2,10 +2,12 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import EventIcon from "@mui/icons-material/Event";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import {
@@ -257,6 +259,57 @@ type Voting = {
   n_abstain: number;
   n_absent: number;
   n_total: number;
+};
+
+type VotingInlineDetails = {
+  voting: Voting & {
+    n_abstain: number;
+    n_absent: number;
+    context_title?: string | null;
+    parliamentary_item?: string | null;
+    section_key?: string | null;
+  };
+  partyBreakdown: {
+    party_code: string;
+    party_name: string;
+    n_yes: number;
+    n_no: number;
+    n_abstain: number;
+    n_absent: number;
+    n_total: number;
+  }[];
+  memberVotes: {
+    person_id: number;
+    first_name: string;
+    last_name: string;
+    party_code: string;
+    vote: string;
+    is_government: 0 | 1;
+  }[];
+  governmentOpposition: {
+    government_yes: number;
+    government_no: number;
+    government_abstain: number;
+    government_absent: number;
+    government_total: number;
+    opposition_yes: number;
+    opposition_no: number;
+    opposition_abstain: number;
+    opposition_absent: number;
+    opposition_total: number;
+  } | null;
+  relatedVotings: {
+    id: number;
+    number: number | null;
+    start_time: string | null;
+    context_title: string;
+    n_yes: number;
+    n_no: number;
+    n_abstain: number;
+    n_absent: number;
+    n_total: number;
+    session_key: string | null;
+  }[];
 };
 
 type SpeechData = {
@@ -569,6 +622,15 @@ export default () => {
   const [loadingMoreSpeeches, setLoadingMoreSpeeches] = useState<Set<number>>(
     new Set(),
   );
+  const [expandedVotingIds, setExpandedVotingIds] = useState<Set<number>>(
+    new Set(),
+  );
+  const [votingDetailsById, setVotingDetailsById] = useState<
+    Record<number, VotingInlineDetails>
+  >({});
+  const [loadingVotingDetails, setLoadingVotingDetails] = useState<Set<number>>(
+    new Set(),
+  );
   const [focusedSessionKey, setFocusedSessionKey] = useState<string | null>(
     getInitialSessionKey(),
   );
@@ -598,6 +660,9 @@ export default () => {
         setSectionSubSections({});
         setExpandedMinutesSessions(new Set());
         setExpandedAttachmentSessions(new Set());
+        setExpandedVotingIds(new Set());
+        setVotingDetailsById({});
+        setLoadingVotingDetails(new Set());
         const res = await fetch(`/api/day/${date}/sessions`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const payload: {
@@ -2358,6 +2423,230 @@ export default () => {
     }
   };
 
+  const fetchVotingDetails = async (votingId: number) => {
+    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId)) return;
+    setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
+    try {
+      const res = await fetch(`/api/votings/${votingId}/details`);
+      if (!res.ok) return;
+      const data: VotingInlineDetails = await res.json();
+      setVotingDetailsById((prev) => ({ ...prev, [votingId]: data }));
+    } finally {
+      setLoadingVotingDetails((prev) => {
+        const next = new Set(prev);
+        next.delete(votingId);
+        return next;
+      });
+    }
+  };
+
+  const toggleVotingDetails = (votingId: number) => {
+    const nextExpanded = !expandedVotingIds.has(votingId);
+    setExpandedVotingIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(votingId)) next.delete(votingId);
+      else next.add(votingId);
+      return next;
+    });
+    if (nextExpanded) {
+      void fetchVotingDetails(votingId);
+    }
+  };
+
+  const renderSectionVotings = (votings: Voting[], session: SessionWithSections) => {
+    if (votings.length === 0) return null;
+
+    return (
+      <Box
+        sx={{
+          mt: 1.5,
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+        }}
+      >
+        <Typography
+          sx={{
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            color: colors.textSecondary,
+            textTransform: "uppercase",
+          }}
+        >
+          {t("sessions.votings")} ({votings.length})
+        </Typography>
+        {votings.map((voting) => {
+          const isPassed = voting.n_yes > voting.n_no;
+          const isExpanded = expandedVotingIds.has(voting.id);
+          const details = votingDetailsById[voting.id];
+          const detailsLoading = loadingVotingDetails.has(voting.id);
+          return (
+            <Box
+              key={voting.id}
+              sx={{
+                p: 1.25,
+                borderRadius: 1,
+                border: `1px solid ${isPassed ? `${themedColors.success}40` : `${themedColors.error}40`}`,
+                background: isPassed
+                  ? `${themedColors.success}08`
+                  : `${themedColors.error}08`,
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 0.75,
+                  flexWrap: "wrap",
+                }}
+              >
+                <HowToVoteIcon
+                  sx={{
+                    fontSize: 16,
+                    color: isPassed
+                      ? themedColors.success
+                      : themedColors.error,
+                  }}
+                />
+                <Typography
+                  sx={{
+                    fontWeight: 600,
+                    fontSize: "0.8125rem",
+                    flex: 1,
+                    minWidth: 0,
+                    color: colors.textPrimary,
+                  }}
+                >
+                  {voting.title}
+                </Typography>
+                <Button
+                  size="small"
+                  onClick={() => toggleVotingDetails(voting.id)}
+                  sx={{ textTransform: "none", fontSize: "0.7rem", minWidth: 0, px: 1 }}
+                  endIcon={
+                    <ExpandMoreIcon
+                      sx={{
+                        fontSize: 14,
+                        transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "transform 0.2s",
+                      }}
+                    />
+                  }
+                >
+                  {isExpanded ? "Piilota tiedot" : "Näytä tiedot"}
+                </Button>
+                <Button
+                  size="small"
+                  sx={{ textTransform: "none", fontSize: "0.7rem", minWidth: 0, px: 1 }}
+                  endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
+                  onClick={() => {
+                    window.history.pushState(
+                      {},
+                      "",
+                      refs.voting(voting.id, session.key, session.date),
+                    );
+                    window.dispatchEvent(new PopStateEvent("popstate"));
+                  }}
+                >
+                  Avaa näkymä
+                </Button>
+              </Box>
+              <VoteMarginBar
+                yes={voting.n_yes}
+                no={voting.n_no}
+                empty={voting.n_abstain}
+                absent={voting.n_absent}
+                height={8}
+              />
+              <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                <Box
+                  sx={{
+                    mt: 0.75,
+                    p: 1,
+                    borderRadius: 1,
+                    border: `1px solid ${colors.dataBorder}60`,
+                    backgroundColor: `${colors.primaryLight}04`,
+                  }}
+                >
+                  {detailsLoading && (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <CircularProgress size={12} />
+                      <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
+                        Ladataan äänestyksen yksityiskohtia...
+                      </Typography>
+                    </Box>
+                  )}
+                  {!detailsLoading && details && (
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                      <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                        <Chip
+                          size="small"
+                          label={`Jaa ${details.voting.n_yes}`}
+                          sx={{ height: 20, color: colors.success, borderColor: colors.success }}
+                          variant="outlined"
+                        />
+                        <Chip
+                          size="small"
+                          label={`Ei ${details.voting.n_no}`}
+                          sx={{ height: 20, color: colors.error, borderColor: colors.error }}
+                          variant="outlined"
+                        />
+                        <Chip size="small" label={`Tyhjää ${details.voting.n_abstain}`} sx={{ height: 20 }} />
+                        <Chip size="small" label={`Poissa ${details.voting.n_absent}`} sx={{ height: 20 }} />
+                      </Box>
+                      {details.governmentOpposition && (
+                        <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
+                          Hallitus: {details.governmentOpposition.government_yes} jaa / {details.governmentOpposition.government_no} ei, Oppositio: {details.governmentOpposition.opposition_yes} jaa / {details.governmentOpposition.opposition_no} ei
+                        </Typography>
+                      )}
+                      {details.partyBreakdown.length > 0 && (
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                          {details.partyBreakdown.slice(0, 8).map((party) => (
+                            <Chip
+                              key={party.party_code}
+                              size="small"
+                              variant="outlined"
+                              label={`${party.party_name}: ${party.n_yes}-${party.n_no}`}
+                              sx={{ height: 20, fontSize: "0.65rem" }}
+                            />
+                          ))}
+                          {details.partyBreakdown.length > 8 && (
+                            <Typography sx={{ fontSize: "0.65rem", color: colors.textSecondary }}>
+                              +{details.partyBreakdown.length - 8} puoluetta
+                            </Typography>
+                          )}
+                        </Box>
+                      )}
+                      {details.relatedVotings.length > 0 && (
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                          {details.relatedVotings.slice(0, 6).map((related) => (
+                            <Chip
+                              key={related.id}
+                              size="small"
+                              variant="outlined"
+                              label={`${related.id}: ${related.n_yes}-${related.n_no}`}
+                              sx={{ height: 20, fontSize: "0.65rem" }}
+                            />
+                          ))}
+                          {details.relatedVotings.length > 6 && (
+                            <Typography sx={{ fontSize: "0.65rem", color: colors.textSecondary }}>
+                              +{details.relatedVotings.length - 6} muuta
+                            </Typography>
+                          )}
+                        </Box>
+                      )}
+                    </Box>
+                  )}
+                </Box>
+              </Collapse>
+            </Box>
+          );
+        })}
+      </Box>
+    );
+  };
+
   return (
     <Box>
       <PageHeader
@@ -2946,147 +3235,9 @@ export default () => {
                                   sx={{ color: themedColors.primary }}
                                 />
                               </Box>
-                            ) : votings.length > 0 ? (
-                              <Box
-                                sx={{
-                                  mt: 1.5,
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: 1,
-                                }}
-                              >
-                                <Typography
-                                  sx={{
-                                    fontSize: "0.75rem",
-                                    fontWeight: 600,
-                                    color: colors.textSecondary,
-                                    textTransform: "uppercase",
-                                  }}
-                                >
-                                  {t("sessions.votings")} ({votings.length})
-                                </Typography>
-                                {votings.map((voting) => {
-                                  const isPassed = voting.n_yes > voting.n_no;
-                                  return (
-                                    <Box
-                                      key={voting.id}
-                                      sx={{
-                                        p: 1.5,
-                                        borderRadius: 1,
-                                        border: `1px solid ${isPassed ? `${themedColors.success}40` : `${themedColors.error}40`}`,
-                                        background: isPassed
-                                          ? `${themedColors.success}08`
-                                          : `${themedColors.error}08`,
-                                      }}
-                                    >
-                                      <Box
-                                        sx={{
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: 1,
-                                          mb: 1,
-                                          flexWrap: "wrap",
-                                        }}
-                                      >
-                                        <HowToVoteIcon
-                                          sx={{
-                                            fontSize: 16,
-                                            color: isPassed
-                                              ? themedColors.success
-                                              : themedColors.error,
-                                          }}
-                                        />
-                                        <Link
-                                          href={refs.voting(
-                                            voting.id,
-                                            session.key,
-                                            session.date,
-                                          )}
-                                          underline="hover"
-                                          sx={{
-                                            fontWeight: 600,
-                                            fontSize: "0.8125rem",
-                                            flex: 1,
-                                            minWidth: 0,
-                                            color: colors.textPrimary,
-                                          }}
-                                        >
-                                          {voting.title}
-                                        </Link>
-                                        <Chip
-                                          label={
-                                            isPassed
-                                              ? t("sessions.passed")
-                                              : t("sessions.rejected")
-                                          }
-                                          size="small"
-                                          sx={{
-                                            fontSize: "0.625rem",
-                                            height: 20,
-                                            background: isPassed
-                                              ? `${themedColors.success}20`
-                                              : `${themedColors.error}20`,
-                                            color: isPassed
-                                              ? themedColors.success
-                                              : themedColors.error,
-                                            fontWeight: 600,
-                                          }}
-                                        />
-                                      </Box>
-                                      <VoteMarginBar
-                                        yes={voting.n_yes}
-                                        no={voting.n_no}
-                                        empty={voting.n_abstain}
-                                        absent={voting.n_absent}
-                                        height={8}
-                                      />
-                                      <Box
-                                        sx={{
-                                          display: "flex",
-                                          gap: 1.5,
-                                          mt: 0.75,
-                                        }}
-                                      >
-                                        <Typography
-                                          sx={{
-                                            fontSize: "0.6875rem",
-                                            color: themedColors.success,
-                                            fontWeight: 600,
-                                          }}
-                                        >
-                                          {t("common.yes")} {voting.n_yes}
-                                        </Typography>
-                                        <Typography
-                                          sx={{
-                                            fontSize: "0.6875rem",
-                                            color: themedColors.error,
-                                            fontWeight: 600,
-                                          }}
-                                        >
-                                          {t("common.no")} {voting.n_no}
-                                        </Typography>
-                                        <Typography
-                                          sx={{
-                                            fontSize: "0.6875rem",
-                                            color: colors.textTertiary,
-                                          }}
-                                        >
-                                          {t("common.empty")} {voting.n_abstain}
-                                        </Typography>
-                                        <Typography
-                                          sx={{
-                                            fontSize: "0.6875rem",
-                                            color: colors.textTertiary,
-                                          }}
-                                        >
-                                          {t("common.absent")} {voting.n_absent}
-                                        </Typography>
-                                      </Box>
-                                    </Box>
-                                  );
-                                })}
-                              </Box>
-                            ) : null}
+                            ) : (
+                              renderSectionVotings(votings, session)
+                            )}
 
                             {/* Speeches */}
                             {loadingSpeeches.has(section.id) ? (
@@ -3584,76 +3735,9 @@ export default () => {
                                         sx={{ color: themedColors.primary }}
                                       />
                                     </Box>
-                                  ) : votings.length > 0 ? (
-                                    <Box
-                                      sx={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        gap: 1,
-                                      }}
-                                    >
-                                      {votings.map((voting) => {
-                                        const isPassed =
-                                          voting.n_yes > voting.n_no;
-                                        return (
-                                          <Box
-                                            key={voting.id}
-                                            sx={{
-                                              p: 1.25,
-                                              borderRadius: 1,
-                                              border: `1px solid ${isPassed ? `${themedColors.success}40` : `${themedColors.error}40`}`,
-                                              background: isPassed
-                                                ? `${themedColors.success}08`
-                                                : `${themedColors.error}08`,
-                                            }}
-                                          >
-                                            <Box
-                                              sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 1,
-                                                mb: 0.75,
-                                                flexWrap: "wrap",
-                                              }}
-                                            >
-                                              <HowToVoteIcon
-                                                sx={{
-                                                  fontSize: 16,
-                                                  color: isPassed
-                                                    ? themedColors.success
-                                                    : themedColors.error,
-                                                }}
-                                              />
-                                              <Link
-                                                href={refs.voting(
-                                                  voting.id,
-                                                  session.key,
-                                                  session.date,
-                                                )}
-                                                underline="hover"
-                                                sx={{
-                                                  fontWeight: 600,
-                                                  fontSize: "0.8125rem",
-                                                  flex: 1,
-                                                  minWidth: 0,
-                                                  color: colors.textPrimary,
-                                                }}
-                                              >
-                                                {voting.title}
-                                              </Link>
-                                            </Box>
-                                            <VoteMarginBar
-                                              yes={voting.n_yes}
-                                              no={voting.n_no}
-                                              empty={voting.n_abstain}
-                                              absent={voting.n_absent}
-                                              height={8}
-                                            />
-                                          </Box>
-                                        );
-                                      })}
-                                    </Box>
-                                  ) : null}
+                                  ) : (
+                                    renderSectionVotings(votings, session)
+                                  )}
 
                                   {loadingSpeeches.has(section.id) ? (
                                     <Box sx={{ py: 1, textAlign: "center" }}>
