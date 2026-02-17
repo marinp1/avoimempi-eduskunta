@@ -35,6 +35,7 @@ import {
 	School as SchoolIcon,
 } from "@mui/icons-material";
 import { RelatedVotings } from "#client/components/DocumentCards";
+import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 
@@ -1159,9 +1160,13 @@ interface GovernmentProposalDetail {
 	submission_date: string | null;
 	author: string | null;
 	summary_text: string | null;
+	summary_rich_text: string | null;
 	justification_text: string | null;
+	justification_rich_text: string | null;
 	proposal_text: string | null;
+	proposal_rich_text: string | null;
 	appendix_text: string | null;
+	appendix_rich_text: string | null;
 	signature_date: string | null;
 	decision_outcome: string | null;
 	decision_outcome_code: string | null;
@@ -1576,83 +1581,75 @@ function GovernmentProposalCard({ item }: { item: GovernmentProposalListItem }) 
 								</Box>
 							)}
 
-							{/* Summary text */}
-							{detail.summary_text && (
-								<Box>
-									<Button
-										startIcon={<ArticleIcon />}
-										onClick={() => setShowSummary(!showSummary)}
+								{/* Summary text */}
+								{(detail.summary_text || detail.summary_rich_text) && (
+									<Box>
+										<Button
+											startIcon={<ArticleIcon />}
+											onClick={() => setShowSummary(!showSummary)}
 										sx={{
 											textTransform: "none",
 											color: colors.primary,
 											mb: 1,
 										}}
 									>
-										{showSummary
-											? t("documents.hideSummary", "Piilota tiivistelmä")
-											: t("documents.showSummary", "Näytä tiivistelmä")}
-									</Button>
-									<Collapse in={showSummary}>
-										<Box
-											sx={{
-												p: 2,
-												backgroundColor: colors.backgroundSubtle,
+											{showSummary
+												? t("documents.hideSummary", "Piilota tiivistelmä")
+												: t("documents.showSummary", "Näytä tiivistelmä")}
+										</Button>
+										<Collapse in={showSummary}>
+											<Box
+												sx={{
+													p: 2,
+													backgroundColor: colors.backgroundSubtle,
 												borderRadius: 1,
 												borderLeft: `4px solid ${colors.primary}`,
 											}}
 										>
-											<Typography
-												variant="body2"
-												sx={{
-													color: colors.textPrimary,
-													whiteSpace: "pre-wrap",
-												}}
-											>
-												{detail.summary_text}
-											</Typography>
-										</Box>
-									</Collapse>
-								</Box>
-							)}
+												<RichTextRenderer
+													document={detail.summary_rich_text}
+													fallbackText={detail.summary_text}
+													paragraphVariant="body2"
+												/>
+											</Box>
+										</Collapse>
+									</Box>
+								)}
 
-							{/* Proposal text (ponsi) */}
-							{detail.proposal_text && (
-								<Box>
-									<Button
-										startIcon={<GavelIcon />}
-										onClick={() => setShowProposalText(!showProposalText)}
+								{/* Proposal text (ponsi) */}
+								{(detail.proposal_text || detail.proposal_rich_text) && (
+									<Box>
+										<Button
+											startIcon={<GavelIcon />}
+											onClick={() => setShowProposalText(!showProposalText)}
 										sx={{
 											textTransform: "none",
 											color: colors.primary,
 											mb: 1,
 										}}
 									>
-										{showProposalText
-											? t("documents.hideProposalText", "Piilota esitysteksti")
-											: t("documents.showProposalText", "Näytä esitysteksti")}
-									</Button>
-									<Collapse in={showProposalText}>
-										<Box
-											sx={{
-												p: 2,
-												backgroundColor: colors.backgroundSubtle,
+											{showProposalText
+												? t("documents.hideProposalText", "Piilota esitysteksti")
+												: t("documents.showProposalText", "Näytä esitysteksti")}
+										</Button>
+										<Collapse in={showProposalText}>
+											<Box
+												sx={{
+													p: 2,
+													backgroundColor: colors.backgroundSubtle,
 												borderRadius: 1,
 												borderLeft: `4px solid ${colors.primary}`,
 											}}
 										>
-											<Typography
-												variant="body2"
-												sx={{
-													color: colors.textPrimary,
-													whiteSpace: "pre-wrap",
-												}}
-											>
-												{detail.proposal_text}
-											</Typography>
-										</Box>
-									</Collapse>
-								</Box>
-							)}
+												<RichTextRenderer
+													document={detail.proposal_rich_text}
+													fallbackText={detail.proposal_text}
+													paragraphVariant="body2"
+												/>
+											</Box>
+										</Collapse>
+									</Box>
+								)}
 
 							<InlineRelatedSessions sessions={detail.sessions} />
 

@@ -858,9 +858,13 @@ export class DatabaseConnection {
         submission_date: string | null;
         author: string | null;
         summary_text: string | null;
+        summary_rich_text: string | null;
         justification_text: string | null;
+        justification_rich_text: string | null;
         proposal_text: string | null;
+        proposal_rich_text: string | null;
         appendix_text: string | null;
+        appendix_rich_text: string | null;
         signature_date: string | null;
         decision_outcome: string | null;
         decision_outcome_code: string | null;
@@ -954,8 +958,11 @@ export class DatabaseConnection {
         latest_stage_code: string | null;
         end_date: string | null;
         summary_text: string | null;
+        summary_rich_text: string | null;
         proposal_text: string | null;
+        proposal_rich_text: string | null;
         justification_text: string | null;
+        justification_rich_text: string | null;
       },
       { $identifier: string }
     >(queries.govProposalByIdentifier);

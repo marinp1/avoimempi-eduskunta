@@ -11,7 +11,10 @@ SELECT
   g.latest_stage_code,
   g.end_date,
   g.summary_text,
+  g.summary_rich_text,
   g.proposal_text,
-  g.justification_text
+  g.proposal_rich_text,
+  g.justification_text,
+  g.justification_rich_text
 FROM GovernmentProposal g
 WHERE g.parliament_identifier = $identifier

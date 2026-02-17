@@ -57,6 +57,8 @@ describe("Migration schema", () => {
       "V001.015__vaski_committee_statement_schema.sql",
       "V001.016__vaski_legislative_initiative_schema.sql",
       "V001.017__vaski_oral_question_schema.sql",
+      "V001.018__section_document_reference.sql",
+      "V001.019__vaski_government_proposal_rich_text.sql",
     ]);
   });
 
@@ -71,7 +73,7 @@ describe("Migration schema", () => {
   });
 
   test("creates expected tables and excludes removed document/vaski tables", () => {
-    const db = createTestDb(17);
+    const db = createTestDb(19);
     try {
       const tableNames = getTableNames(db);
 
@@ -116,7 +118,7 @@ describe("Migration schema", () => {
   });
 
   test("inlines evolved columns directly into base tables", () => {
-    const db = createTestDb(17);
+    const db = createTestDb(19);
     try {
       const representativeColumns = getColumnNames(db, "Representative", true);
       const pgmColumns = getColumnNames(db, "ParliamentaryGroupMembership", true);
@@ -126,6 +128,7 @@ describe("Migration schema", () => {
       const votingColumns = getColumnNames(db, "Voting", true);
       const voteColumns = getColumnNames(db, "Vote");
       const speechColumns = getColumnNames(db, "Speech");
+      const governmentProposalColumns = getColumnNames(db, "GovernmentProposal");
 
       expect(representativeColumns).toContain("birth_year");
       expect(pgmColumns).toContain("group_abbreviation");
@@ -141,6 +144,10 @@ describe("Migration schema", () => {
       expect(voteColumns).not.toContain("group_abbrviation");
       expect(speechColumns).toContain("created_datetime");
       expect(speechColumns).toContain("order_raw");
+      expect(governmentProposalColumns).toContain("summary_rich_text");
+      expect(governmentProposalColumns).toContain("justification_rich_text");
+      expect(governmentProposalColumns).toContain("proposal_rich_text");
+      expect(governmentProposalColumns).toContain("appendix_rich_text");
 
       const idxSessionDateCount = (
         db
@@ -156,7 +163,7 @@ describe("Migration schema", () => {
   });
 
   test("adds vaski minutes columns directly to Session and Section", () => {
-    const db = createTestDb(17);
+    const db = createTestDb(19);
     try {
       const sessionColumns = getColumnNames(db, "Session");
       const sectionColumns = getColumnNames(db, "Section");

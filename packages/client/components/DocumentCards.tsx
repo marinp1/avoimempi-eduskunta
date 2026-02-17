@@ -3,6 +3,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, Button, Chip, CircularProgress, Collapse, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
+import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { colors } from "#client/theme/index";
 
@@ -147,6 +148,69 @@ const ExpandableSnippet: React.FC<{
   );
 };
 
+const ExpandableRichSnippet: React.FC<{
+  label: string;
+  text: string | null | undefined;
+  richText: string | null | undefined;
+  maxLength?: number;
+}> = ({ label, text, richText, maxLength = 280 }) => {
+  const normalized = normalizeSnippet(text);
+  const [expanded, setExpanded] = useState(false);
+
+  if (!normalized && !richText) return null;
+
+  const isLong = normalized ? normalized.length > maxLength : false;
+  const canExpand = isLong || !!richText;
+  const shownText = isLong && !expanded && normalized
+    ? `${normalized.slice(0, maxLength).trimEnd()}...`
+    : normalized;
+
+  return (
+    <Box sx={{ mt: 0.5 }}>
+      {!expanded && (
+        <Typography sx={snippetTextSx}>
+          {label}: {shownText}
+        </Typography>
+      )}
+      {expanded && (
+        <Box>
+          <Typography sx={{ ...snippetTextSx, mt: 0 }}>
+            {label}:
+          </Typography>
+          <Box sx={{ mt: 0.35 }}>
+            <RichTextRenderer
+              document={richText}
+              fallbackText={normalized}
+              paragraphVariant="body2"
+              compact
+            />
+          </Box>
+        </Box>
+      )}
+      {canExpand && (
+        <Button
+          size="small"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            setExpanded((prev) => !prev);
+          }}
+          sx={{
+            mt: 0.25,
+            minWidth: 0,
+            px: 0,
+            fontSize: "0.68rem",
+            textTransform: "none",
+            color: colors.primary,
+          }}
+        >
+          {expanded ? "Näytä vähemmän" : "Näytä lisää"}
+        </Button>
+      )}
+    </Box>
+  );
+};
+
 function useFetchByIdentifier<T>(apiPath: string, identifier: string) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -229,8 +293,11 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
   const { data, loading } = useFetchByIdentifier<
     WithAuthor & {
       summary_text: string | null;
+      summary_rich_text: string | null;
       proposal_text: string | null;
+      proposal_rich_text: string | null;
       justification_text: string | null;
+      justification_rich_text: string | null;
     }
   >(
     "/api/government-proposals/by-identifier",
@@ -273,9 +340,24 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
           </Typography>
         )}
       </Box>
-      <ExpandableSnippet label="Tiivistelmä" text={data.summary_text} maxLength={280} />
-      <ExpandableSnippet label="Esitysteksti" text={data.proposal_text} maxLength={220} />
-      <ExpandableSnippet label="Perustelut" text={data.justification_text} maxLength={220} />
+      <ExpandableRichSnippet
+        label="Tiivistelmä"
+        text={data.summary_text}
+        richText={data.summary_rich_text}
+        maxLength={280}
+      />
+      <ExpandableRichSnippet
+        label="Esitysteksti"
+        text={data.proposal_text}
+        richText={data.proposal_rich_text}
+        maxLength={220}
+      />
+      <ExpandableRichSnippet
+        label="Perustelut"
+        text={data.justification_text}
+        richText={data.justification_rich_text}
+        maxLength={220}
+      />
       {renderSubjectChips(data.subjects)}
     </Box>
   );

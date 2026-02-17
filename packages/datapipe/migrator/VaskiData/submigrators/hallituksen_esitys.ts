@@ -2,6 +2,7 @@ import type { Database } from "bun:sqlite";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { VaskiEntry } from "../reader";
+import { convertVaskiNodeToRichText } from "../rich-text";
 
 function normalizeText(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -174,9 +175,13 @@ function parseHallituksenEsitys(
   author: string | null;
   submission_date: string | null;
   summary_text: string | null;
+  summary_rich_text: string | null;
   justification_text: string | null;
+  justification_rich_text: string | null;
   proposal_text: string | null;
+  proposal_rich_text: string | null;
   appendix_text: string | null;
+  appendix_rich_text: string | null;
   signature_date: string | null;
   signatories: ProposalSignatory[];
   subjects: ProposalSubject[];
@@ -197,37 +202,21 @@ function parseHallituksenEsitys(
   const author = normalizeText(identifiointiOsa.Toimija?.YhteisoTeksti) ||
     normalizeText(meta?.IdentifiointiOsa?.Toimija?.YhteisoTeksti);
 
-  // Summary from SisaltoKuvaus
-  const summaryParts: string[] = [];
-  const sisaltoKuvaus = he.SisaltoKuvaus;
-  if (sisaltoKuvaus) {
-    collectTextFragments(sisaltoKuvaus, summaryParts);
-  }
-  const summary_text = summaryParts.length > 0 ? summaryParts.join("\n\n") : null;
+  const summaryRichText = convertVaskiNodeToRichText(he.SisaltoKuvaus);
+  const summary_text = summaryRichText.plainText;
+  const summary_rich_text = summaryRichText.json;
 
-  // Justification from PerusteluOsa (can be object or array)
-  const justificationParts: string[] = [];
-  const perusteluOsa = he.PerusteluOsa;
-  if (perusteluOsa) {
-    collectTextFragments(perusteluOsa, justificationParts);
-  }
-  const justification_text = justificationParts.length > 0 ? justificationParts.join("\n\n") : null;
+  const justificationRichText = convertVaskiNodeToRichText(he.PerusteluOsa);
+  const justification_text = justificationRichText.plainText;
+  const justification_rich_text = justificationRichText.json;
 
-  // Proposal text from PonsiOsa
-  const proposalParts: string[] = [];
-  const ponsiOsa = he.PonsiOsa;
-  if (ponsiOsa) {
-    collectTextFragments(ponsiOsa, proposalParts);
-  }
-  const proposal_text = proposalParts.length > 0 ? proposalParts.join("\n\n") : null;
+  const proposalRichText = convertVaskiNodeToRichText(he.PonsiOsa);
+  const proposal_text = proposalRichText.plainText;
+  const proposal_rich_text = proposalRichText.json;
 
-  // Appendix text from LiiteOsa (if present)
-  const appendixParts: string[] = [];
-  const liiteOsa = he.LiiteOsa;
-  if (liiteOsa) {
-    collectTextFragments(liiteOsa, appendixParts);
-  }
-  const appendix_text = appendixParts.length > 0 ? appendixParts.join("\n\n") : null;
+  const appendixRichText = convertVaskiNodeToRichText(he.LiiteOsa);
+  const appendix_text = appendixRichText.plainText;
+  const appendix_rich_text = appendixRichText.json;
 
   // Signatories from AllekirjoitusOsa
   const signatories: ProposalSignatory[] = [];
@@ -286,9 +275,13 @@ function parseHallituksenEsitys(
     author,
     submission_date,
     summary_text,
+    summary_rich_text,
     justification_text,
+    justification_rich_text,
     proposal_text,
+    proposal_rich_text,
     appendix_text,
+    appendix_rich_text,
     signature_date,
     signatories,
     subjects,
@@ -430,16 +423,20 @@ function parseKasittelytiedot(
 
 export default function createHallituksenEsitysSubMigrator(db: Database) {
   const insertProposal = db.prepare(
-    `INSERT INTO GovernmentProposal (id, parliament_identifier, document_number, parliamentary_year, title, submission_date, author, summary_text, justification_text, proposal_text, appendix_text, signature_date, decision_outcome, decision_outcome_code, law_decision_text, latest_stage_code, end_date, source_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO GovernmentProposal (id, parliament_identifier, document_number, parliamentary_year, title, submission_date, author, summary_text, summary_rich_text, justification_text, justification_rich_text, proposal_text, proposal_rich_text, appendix_text, appendix_rich_text, signature_date, decision_outcome, decision_outcome_code, law_decision_text, latest_stage_code, end_date, source_path)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(parliament_identifier) DO UPDATE SET
        title = COALESCE(excluded.title, GovernmentProposal.title),
        submission_date = COALESCE(excluded.submission_date, GovernmentProposal.submission_date),
        author = COALESCE(excluded.author, GovernmentProposal.author),
        summary_text = COALESCE(excluded.summary_text, GovernmentProposal.summary_text),
+       summary_rich_text = COALESCE(excluded.summary_rich_text, GovernmentProposal.summary_rich_text),
        justification_text = COALESCE(excluded.justification_text, GovernmentProposal.justification_text),
+       justification_rich_text = COALESCE(excluded.justification_rich_text, GovernmentProposal.justification_rich_text),
        proposal_text = COALESCE(excluded.proposal_text, GovernmentProposal.proposal_text),
+       proposal_rich_text = COALESCE(excluded.proposal_rich_text, GovernmentProposal.proposal_rich_text),
        appendix_text = COALESCE(excluded.appendix_text, GovernmentProposal.appendix_text),
+       appendix_rich_text = COALESCE(excluded.appendix_rich_text, GovernmentProposal.appendix_rich_text),
        signature_date = COALESCE(excluded.signature_date, GovernmentProposal.signature_date),
        decision_outcome = COALESCE(excluded.decision_outcome, GovernmentProposal.decision_outcome),
        decision_outcome_code = COALESCE(excluded.decision_outcome_code, GovernmentProposal.decision_outcome_code),
@@ -534,9 +531,13 @@ export default function createHallituksenEsitysSubMigrator(db: Database) {
             data.submission_date,
             data.author,
             data.summary_text,
+            data.summary_rich_text,
             data.justification_text,
+            data.justification_rich_text,
             data.proposal_text,
+            data.proposal_rich_text,
             data.appendix_text,
+            data.appendix_rich_text,
             data.signature_date,
             null, // decision_outcome
             null, // decision_outcome_code
@@ -589,9 +590,13 @@ export default function createHallituksenEsitysSubMigrator(db: Database) {
             data.submission_date,
             null, // author
             null, // summary_text
+            null, // summary_rich_text
             null, // justification_text
+            null, // justification_rich_text
             null, // proposal_text
+            null, // proposal_rich_text
             null, // appendix_text
+            null, // appendix_rich_text
             null, // signature_date
             data.decision_outcome,
             data.decision_outcome_code,
