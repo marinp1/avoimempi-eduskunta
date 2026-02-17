@@ -25,7 +25,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { colors, commonStyles, gradients, spacing } from "#client/theme";
 import { GlassCard, PageHeader } from "#client/theme/components";
@@ -62,9 +62,9 @@ export default () => {
   const { t } = useTranslation();
   const themedColors = useThemedColors();
   const [status, setStatus] = useState<TableStatus[]>([]);
-  const [overview, setOverview] = useState<ScrapingOverview | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const fetchCycleRef = useRef(0);
 
   // Scraper control state
   const [scraperRunning, setScraperRunning] = useState<boolean>(false);
@@ -101,34 +101,125 @@ export default () => {
   >(null);
   const migratorWsRef = useRef<WebSocket | null>(null);
 
+  const buildPlaceholderStatus = (tableName: string): TableStatus => ({
+    table_name: tableName,
+    raw_page_count: 0,
+    parsed_page_count: 0,
+    has_raw_data: false,
+    has_parsed_data: false,
+    raw_last_updated: null,
+    parsed_last_updated: null,
+    raw_estimated_rows: 0,
+    parsed_estimated_rows: 0,
+    total_rows_in_api: 0,
+    scrape_progress_percent: 0,
+  });
+
+  const overview: ScrapingOverview = useMemo(() => {
+    const totalTables = status.length;
+    const tablesWithData = status.filter((s) => s.has_raw_data).length;
+    const tablesCompleted = status.filter(
+      (s) =>
+        s.total_rows_in_api &&
+        s.scrape_progress_percent &&
+        s.scrape_progress_percent >= 99.9,
+    ).length;
+    const totalApiRows = status.reduce((sum, s) => sum + (s.total_rows_in_api || 0), 0);
+    const totalScrapedRows = status.reduce((sum, s) => sum + s.raw_estimated_rows, 0);
+    const overallProgressPercent =
+      totalApiRows > 0 ? Math.min((totalScrapedRows / totalApiRows) * 100, 100) : 0;
+    const tablesWithParsedData = status.filter((s) => s.has_parsed_data).length;
+    const tablesFullyParsed = status.filter(
+      (s) =>
+        s.has_raw_data &&
+        s.has_parsed_data &&
+        s.parsed_page_count >= s.raw_page_count,
+    ).length;
+    const totalParsedRows = status.reduce((sum, s) => sum + s.parsed_estimated_rows, 0);
+
+    return {
+      total_tables: totalTables,
+      tables_with_data: tablesWithData,
+      tables_completed: tablesCompleted,
+      total_api_rows: totalApiRows,
+      total_scraped_rows: totalScrapedRows,
+      overall_progress_percent: overallProgressPercent,
+      tables_with_parsed_data: tablesWithParsedData,
+      tables_fully_parsed: tablesFullyParsed,
+      total_parsed_rows: totalParsedRows,
+    };
+  }, [status]);
+
   const fetchData = async (showLoading = true) => {
+    const cycleId = ++fetchCycleRef.current;
+    let initialRenderReady = false;
+
     try {
+      setError(null);
       if (showLoading) {
         setLoading(true);
       }
 
-      const [statusRes, overviewRes, migrationRes] = await Promise.all([
-        fetch("/api/admin/status"),
-        fetch("/api/admin/overview"),
+      const [tableListRes, migrationRes] = await Promise.all([
+        fetch("/api/admin/table-list"),
         fetch("/api/migrator/last-migration"),
       ]);
 
-      if (!statusRes.ok || !overviewRes.ok) {
+      if (!tableListRes.ok || !migrationRes.ok) {
         throw new Error(`HTTP error`);
       }
 
-      const statusData: TableStatus[] = await statusRes.json();
-      const overviewData: ScrapingOverview = await overviewRes.json();
+      const tableNames: string[] = await tableListRes.json();
       const migrationData = await migrationRes.json();
 
-      setStatus(statusData);
-      setOverview(overviewData);
+      if (cycleId !== fetchCycleRef.current) {
+        return;
+      }
+
+      setStatus(tableNames.map(buildPlaceholderStatus));
       setLastMigrationTimestamp(migrationData.timestamp);
+
+      if (showLoading) {
+        setLoading(false);
+        initialRenderReady = true;
+      }
+
+      let nextIndex = 0;
+      const workerCount = Math.min(4, tableNames.length);
+      const workers = Array.from({ length: workerCount }, async () => {
+        while (nextIndex < tableNames.length) {
+          const currentIndex = nextIndex++;
+          const tableName = tableNames[currentIndex];
+
+          try {
+            const res = await fetch(
+              `/api/admin/table-status?tableName=${encodeURIComponent(tableName)}`,
+            );
+            if (!res.ok) {
+              continue;
+            }
+            const row = (await res.json()) as TableStatus;
+            if (cycleId !== fetchCycleRef.current) {
+              return;
+            }
+            setStatus((prev) => {
+              const rowIndex = prev.findIndex((s) => s.table_name === tableName);
+              if (rowIndex < 0) return prev;
+              const next = [...prev];
+              next[rowIndex] = row;
+              return next;
+            });
+          } catch (tableError) {
+            console.error(`Failed to fetch status for ${tableName}`, tableError);
+          }
+        }
+      });
+      await Promise.all(workers);
     } catch (err) {
       console.error(err);
       setError("Failed to load admin data.");
     } finally {
-      if (showLoading) {
+      if (showLoading && !initialRenderReady && cycleId === fetchCycleRef.current) {
         setLoading(false);
       }
     }
@@ -733,151 +824,149 @@ export default () => {
         </Fade>
       )}
 
-      {overview && (
-        <Fade in timeout={500}>
-          <Box sx={{ mb: spacing.md }}>
-            <Box sx={commonStyles.responsiveGrid(200)}>
-              <GlassCard sx={{ p: 2.5 }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: themedColors.textSecondary,
-                    fontWeight: 500,
-                    fontSize: "0.8125rem",
-                    mb: 0.75,
-                  }}
-                >
-                  {t("admin.overview.overallProgress")}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: "1.75rem",
-                    fontWeight: 700,
-                    color: themedColors.textPrimary,
-                    lineHeight: 1.2,
-                    letterSpacing: "-0.02em",
-                  }}
-                >
-                  {overview.overall_progress_percent.toFixed(1)}%
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: "0.75rem",
-                    color: themedColors.textTertiary,
-                    mt: 0.75,
-                  }}
-                >
-                  {overview.total_scraped_rows.toLocaleString("fi-FI")} /{" "}
-                  {overview.total_api_rows.toLocaleString("fi-FI")}
-                </Typography>
-              </GlassCard>
+      <Fade in timeout={500}>
+        <Box sx={{ mb: spacing.md }}>
+          <Box sx={commonStyles.responsiveGrid(200)}>
+            <GlassCard sx={{ p: 2.5 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: themedColors.textSecondary,
+                  fontWeight: 500,
+                  fontSize: "0.8125rem",
+                  mb: 0.75,
+                }}
+              >
+                {t("admin.overview.overallProgress")}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "1.75rem",
+                  fontWeight: 700,
+                  color: themedColors.textPrimary,
+                  lineHeight: 1.2,
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {overview.overall_progress_percent.toFixed(1)}%
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "0.75rem",
+                  color: themedColors.textTertiary,
+                  mt: 0.75,
+                }}
+              >
+                {overview.total_scraped_rows.toLocaleString("fi-FI")} /{" "}
+                {overview.total_api_rows.toLocaleString("fi-FI")}
+              </Typography>
+            </GlassCard>
 
-              <GlassCard sx={{ p: 2.5 }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: themedColors.textSecondary,
-                    fontWeight: 500,
-                    fontSize: "0.8125rem",
-                    mb: 0.75,
-                  }}
-                >
-                  {t("admin.overview.tablesWithData")}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: "1.75rem",
-                    fontWeight: 700,
-                    color: themedColors.textPrimary,
-                    lineHeight: 1.2,
-                    letterSpacing: "-0.02em",
-                  }}
-                >
-                  {overview.tables_with_data}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: "0.75rem",
-                    color: themedColors.textTertiary,
-                    mt: 0.75,
-                  }}
-                >
-                  / {overview.total_tables} {t("common.total")}
-                </Typography>
-              </GlassCard>
+            <GlassCard sx={{ p: 2.5 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: themedColors.textSecondary,
+                  fontWeight: 500,
+                  fontSize: "0.8125rem",
+                  mb: 0.75,
+                }}
+              >
+                {t("admin.overview.tablesWithData")}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "1.75rem",
+                  fontWeight: 700,
+                  color: themedColors.textPrimary,
+                  lineHeight: 1.2,
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {overview.tables_with_data}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "0.75rem",
+                  color: themedColors.textTertiary,
+                  mt: 0.75,
+                }}
+              >
+                / {overview.total_tables} {t("common.total")}
+              </Typography>
+            </GlassCard>
 
-              <GlassCard sx={{ p: 2.5 }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: themedColors.textSecondary,
-                    fontWeight: 500,
-                    fontSize: "0.8125rem",
-                    mb: 0.75,
-                  }}
-                >
-                  {t("admin.overview.completedTables")}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: "1.75rem",
-                    fontWeight: 700,
-                    color: themedColors.textPrimary,
-                    lineHeight: 1.2,
-                    letterSpacing: "-0.02em",
-                  }}
-                >
-                  {overview.tables_completed}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: "0.75rem",
-                    color: themedColors.textTertiary,
-                    mt: 0.75,
-                  }}
-                >
-                  {t("admin.overview.scraped100")}
-                </Typography>
-              </GlassCard>
+            <GlassCard sx={{ p: 2.5 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: themedColors.textSecondary,
+                  fontWeight: 500,
+                  fontSize: "0.8125rem",
+                  mb: 0.75,
+                }}
+              >
+                {t("admin.overview.completedTables")}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "1.75rem",
+                  fontWeight: 700,
+                  color: themedColors.textPrimary,
+                  lineHeight: 1.2,
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {overview.tables_completed}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "0.75rem",
+                  color: themedColors.textTertiary,
+                  mt: 0.75,
+                }}
+              >
+                {t("admin.overview.scraped100")}
+              </Typography>
+            </GlassCard>
 
-              <GlassCard sx={{ p: 2.5 }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: themedColors.textSecondary,
-                    fontWeight: 500,
-                    fontSize: "0.8125rem",
-                    mb: 0.75,
-                  }}
-                >
-                  {t("admin.overview.tablesParsed")}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: "1.75rem",
-                    fontWeight: 700,
-                    color: themedColors.textPrimary,
-                    lineHeight: 1.2,
-                    letterSpacing: "-0.02em",
-                  }}
-                >
-                  {overview.tables_with_parsed_data}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: "0.75rem",
-                    color: themedColors.textTertiary,
-                    mt: 0.75,
-                  }}
-                >
-                  {overview.total_parsed_rows.toLocaleString("fi-FI")}{" "}
-                  {t("admin.overview.parsedRows")}
-                </Typography>
-              </GlassCard>
-            </Box>
+            <GlassCard sx={{ p: 2.5 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: themedColors.textSecondary,
+                  fontWeight: 500,
+                  fontSize: "0.8125rem",
+                  mb: 0.75,
+                }}
+              >
+                {t("admin.overview.tablesParsed")}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "1.75rem",
+                  fontWeight: 700,
+                  color: themedColors.textPrimary,
+                  lineHeight: 1.2,
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {overview.tables_with_parsed_data}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "0.75rem",
+                  color: themedColors.textTertiary,
+                  mt: 0.75,
+                }}
+              >
+                {overview.total_parsed_rows.toLocaleString("fi-FI")}{" "}
+                {t("admin.overview.parsedRows")}
+              </Typography>
+            </GlassCard>
           </Box>
-        </Fade>
-      )}
+        </Box>
+      </Fade>
 
       {/* Bulk Scraper Section */}
       <BulkOperationsPanel

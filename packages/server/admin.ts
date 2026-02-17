@@ -12,6 +12,29 @@ const migratorController = MigratorController.getInstance();
 
 export const routes = {
   "/admin": homepage,
+  "/api/admin/table-list": {
+    GET: async () => {
+      const adminService = new AdminStorageService();
+      return Response.json(adminService.getTableNames());
+    },
+  },
+
+  "/api/admin/table-status": {
+    GET: async (req: Request) => {
+      const adminService = new AdminStorageService();
+      const tableName = new URL(req.url).searchParams.get("tableName");
+      if (!tableName) {
+        return Response.json({ error: "tableName is required" }, { status: 400 });
+      }
+
+      const status = await adminService.getTableStatus(tableName);
+      if (!status) {
+        return Response.json({ error: "Invalid tableName" }, { status: 400 });
+      }
+      return Response.json(status);
+    },
+  },
+
   "/api/admin/status": {
     GET: async () => {
       const adminService = new AdminStorageService();
