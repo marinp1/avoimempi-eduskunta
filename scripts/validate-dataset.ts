@@ -29,13 +29,19 @@ async function validateDataset(
     const files = await readdir(datasetPath);
     const pageFiles = files
       .filter((f) => f.startsWith("page_") && f.endsWith(".json"))
-      .sort();
+      .sort((a, b) => {
+        const aMatch = a.match(/page_(\d+)/);
+        const bMatch = b.match(/page_(\d+)/);
+        const aNum = aMatch ? Number(aMatch[1]) : Number.MAX_SAFE_INTEGER;
+        const bNum = bMatch ? Number(bMatch[1]) : Number.MAX_SAFE_INTEGER;
+        return aNum - bNum;
+      });
 
     console.log(`\n${"=".repeat(60)}`);
     console.log(`Dataset: ${datasetName} (${dataDir})`);
     console.log(`Scanning ${pageFiles.length} files...`);
 
-    for (const filename of pageFiles) {
+    for (const [fileIndex, filename] of pageFiles.entries()) {
       try {
         const content = await readFile(join(datasetPath, filename), "utf-8");
         const data = JSON.parse(content);
@@ -70,6 +76,13 @@ async function validateDataset(
         if (!data.rowData || !Array.isArray(data.rowData)) {
           errors.push(`${filename}: Missing or invalid 'rowData' field`);
           continue;
+        }
+
+        const isLastPage = fileIndex === pageFiles.length - 1;
+        if (!isLastPage && data.rowData.length !== 100) {
+          errors.push(
+            `${filename}: Expected exactly 100 entries for non-final page, found ${data.rowData.length}`,
+          );
         }
 
         // Process each row

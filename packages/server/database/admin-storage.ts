@@ -34,32 +34,87 @@ export interface ScrapingOverview {
 }
 
 export class AdminStorageService {
-  private apiTableCounts: Record<string, number> | null = null;
+  private static cachedApiTableCounts: Record<string, number> | null = null;
+  private static apiFetchInFlight: Promise<Record<string, number>> | null =
+    null;
 
   /**
    * Fetch table row counts from Eduskunta API
    */
   private async fetchApiTableCounts(): Promise<Record<string, number>> {
-    if (this.apiTableCounts) {
-      return this.apiTableCounts;
+    if (AdminStorageService.cachedApiTableCounts) {
+      return AdminStorageService.cachedApiTableCounts;
     }
 
-    try {
-      const resp = await fetch(
-        "https://avoindata.eduskunta.fi/api/v1/tables/counts",
-      );
-      const data = (await resp.json()) as {
-        tableName: string;
-        rowCount: number;
-      }[];
-      this.apiTableCounts = Object.fromEntries(
-        data.map((v) => [v.tableName, v.rowCount]),
-      );
-      return this.apiTableCounts;
-    } catch (error) {
-      console.error("Error fetching API table counts:", error);
-      return {};
+    if (AdminStorageService.apiFetchInFlight) {
+      return AdminStorageService.apiFetchInFlight;
     }
+
+    AdminStorageService.apiFetchInFlight = (async () => {
+      try {
+        const resp = await fetch(
+          "https://avoindata.eduskunta.fi/api/v1/tables/counts",
+          { signal: AbortSignal.timeout(2_000) },
+        );
+        const data = (await resp.json()) as {
+          tableName: string;
+          rowCount: number;
+        }[];
+        const counts = Object.fromEntries(data.map((v) => [v.tableName, v.rowCount]));
+        AdminStorageService.cachedApiTableCounts = counts;
+        return counts;
+      } catch (error) {
+        console.error("Error fetching API table counts:", error);
+        return AdminStorageService.cachedApiTableCounts ?? {};
+      } finally {
+        AdminStorageService.apiFetchInFlight = null;
+      }
+    })();
+
+    return AdminStorageService.apiFetchInFlight;
+  }
+
+  getTableNames(): string[] {
+    return (Object.values(TableName) as string[]).sort();
+  }
+
+  private async buildTableStatus(
+    tableName: string,
+    apiCounts: Record<string, number>,
+  ): Promise<TableStorageStatus> {
+    const rawFiles = await this.getTableFiles("raw", tableName);
+    const parsedFiles = await this.getTableFiles("parsed", tableName);
+
+    const hasRaw = rawFiles.length > 0;
+    const hasParsed = parsedFiles.length > 0;
+
+    const rawExactRows = await this.getExactRowCount("raw", tableName, rawFiles);
+    const parsedExactRows = await this.getExactRowCount(
+      "parsed",
+      tableName,
+      parsedFiles,
+    );
+
+    const totalRowsInApi = apiCounts[tableName] || 0;
+    const effectiveTotal = Math.max(totalRowsInApi, rawExactRows);
+    const scrapeProgressPercent =
+      effectiveTotal > 0
+        ? Math.min((rawExactRows / effectiveTotal) * 100, 100)
+        : 0;
+
+    return {
+      table_name: tableName,
+      raw_page_count: rawFiles.length,
+      parsed_page_count: parsedFiles.length,
+      has_raw_data: hasRaw,
+      has_parsed_data: hasParsed,
+      raw_last_updated: this.getMostRecentTimestamp(rawFiles),
+      parsed_last_updated: this.getMostRecentTimestamp(parsedFiles),
+      raw_estimated_rows: rawExactRows,
+      parsed_estimated_rows: parsedExactRows,
+      total_rows_in_api: totalRowsInApi,
+      scrape_progress_percent: scrapeProgressPercent,
+    };
   }
 
   /**
@@ -156,56 +211,11 @@ export class AdminStorageService {
    * Get status for all tables
    */
   async getStatus(): Promise<TableStorageStatus[]> {
-    const tables = (Object.values(TableName) as string[]).sort();
+    const tables = this.getTableNames();
     const apiCounts = await this.fetchApiTableCounts();
-    const status: TableStorageStatus[] = [];
-
-    for (const tableName of tables) {
-      // Get files for both stages
-      const rawFiles = await this.getTableFiles("raw", tableName);
-      const parsedFiles = await this.getTableFiles("parsed", tableName);
-
-      const hasRaw = rawFiles.length > 0;
-      const hasParsed = parsedFiles.length > 0;
-
-      // Get exact row counts by reading the files
-      const rawExactRows = await this.getExactRowCount(
-        "raw",
-        tableName,
-        rawFiles,
-      );
-      const parsedExactRows = await this.getExactRowCount(
-        "parsed",
-        tableName,
-        parsedFiles,
-      );
-
-      const totalRowsInApi = apiCounts[tableName] || 0;
-
-      // If we've scraped more rows than the API reports, the API count is stale
-      // Use the actual scraped count as the total instead
-      const effectiveTotal = Math.max(totalRowsInApi, rawExactRows);
-      const scrapeProgressPercent =
-        effectiveTotal > 0
-          ? Math.min((rawExactRows / effectiveTotal) * 100, 100)
-          : 0;
-
-      status.push({
-        table_name: tableName,
-        raw_page_count: rawFiles.length,
-        parsed_page_count: parsedFiles.length,
-        has_raw_data: hasRaw,
-        has_parsed_data: hasParsed,
-        raw_last_updated: this.getMostRecentTimestamp(rawFiles),
-        parsed_last_updated: this.getMostRecentTimestamp(parsedFiles),
-        raw_estimated_rows: rawExactRows,
-        parsed_estimated_rows: parsedExactRows,
-        total_rows_in_api: totalRowsInApi,
-        scrape_progress_percent: scrapeProgressPercent,
-      });
-    }
-
-    return status;
+    return await Promise.all(
+      tables.map((tableName) => this.buildTableStatus(tableName, apiCounts)),
+    );
   }
 
   /**
@@ -216,23 +226,8 @@ export class AdminStorageService {
       return null;
     }
 
-    const rawFiles = await this.getTableFiles("raw", tableName);
-    const parsedFiles = await this.getTableFiles("parsed", tableName);
-
-    const hasRaw = rawFiles.length > 0;
-    const hasParsed = parsedFiles.length > 0;
-
-    return {
-      table_name: tableName,
-      raw_page_count: rawFiles.length,
-      parsed_page_count: parsedFiles.length,
-      has_raw_data: hasRaw,
-      has_parsed_data: hasParsed,
-      raw_last_updated: this.getMostRecentTimestamp(rawFiles),
-      parsed_last_updated: this.getMostRecentTimestamp(parsedFiles),
-      raw_estimated_rows: 0,
-      parsed_estimated_rows: 0,
-    };
+    const apiCounts = await this.fetchApiTableCounts();
+    return await this.buildTableStatus(tableName, apiCounts);
   }
 
   /**
