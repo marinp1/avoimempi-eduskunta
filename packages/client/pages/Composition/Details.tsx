@@ -30,6 +30,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import React from "react";
+import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { refs } from "#client/references";
 import theme, { colors } from "#client/theme";
 import { VoteMarginBar } from "#client/theme/components";
@@ -657,24 +658,10 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
             Hallitus: {details.governmentOpposition.government_yes} jaa / {details.governmentOpposition.government_no} ei, Oppositio: {details.governmentOpposition.opposition_yes} jaa / {details.governmentOpposition.opposition_no} ei
           </Typography>
         )}
-        {details.partyBreakdown.length > 0 && (
-          <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-            {details.partyBreakdown.slice(0, 6).map((party) => (
-              <Chip
-                key={party.party_code}
-                size="small"
-                variant="outlined"
-                label={`${party.party_name}: ${party.n_yes}-${party.n_no}`}
-                sx={{ height: 20, fontSize: "0.65rem" }}
-              />
-            ))}
-            {details.partyBreakdown.length > 6 && (
-              <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-                +{details.partyBreakdown.length - 6} puoluetta
-              </Typography>
-            )}
-          </Box>
-        )}
+        <VotingResultsTable
+          partyBreakdown={details.partyBreakdown}
+          memberVotes={details.memberVotes}
+        />
       </Box>
     );
   };

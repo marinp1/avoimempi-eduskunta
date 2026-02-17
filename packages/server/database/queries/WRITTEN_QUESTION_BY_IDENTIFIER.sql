@@ -15,6 +15,7 @@ SELECT
   q.answer_minister_last_name,
   q.answer_date,
   q.decision_outcome,
-  q.decision_outcome_code
+  q.decision_outcome_code,
+  q.question_text
 FROM WrittenQuestion q
 WHERE q.parliament_identifier = $identifier

@@ -1164,6 +1164,8 @@ export class DatabaseConnection {
         co_signer_count: number | null;
         decision_outcome: string | null;
         decision_outcome_code: string | null;
+        question_text: string | null;
+        resolution_text: string | null;
       },
       { $identifier: string }
     >(queries.interpellationByIdentifier);
@@ -1178,7 +1180,22 @@ export class DatabaseConnection {
     const subjects = subjectsStmt.all({ $interpellationId: detail.id });
     subjectsStmt.finalize();
 
-    return { ...detail, subjects };
+    const stagesStmt = this.db.prepare<
+      {
+        interpellation_id: number;
+        stage_order: number;
+        stage_title: string;
+        stage_code: string | null;
+        event_date: string | null;
+        event_title: string | null;
+        event_description: string | null;
+      },
+      { $interpellationId: number }
+    >(queries.interpellationStages);
+    const stages = stagesStmt.all({ $interpellationId: detail.id });
+    stagesStmt.finalize();
+
+    return { ...detail, subjects, stages };
   }
 
   public async fetchInterpellationYears() {
@@ -1350,6 +1367,9 @@ export class DatabaseConnection {
         decision_outcome_code: string | null;
         latest_stage_code: string | null;
         end_date: string | null;
+        summary_text: string | null;
+        proposal_text: string | null;
+        justification_text: string | null;
       },
       { $identifier: string }
     >(queries.govProposalByIdentifier);
@@ -1543,6 +1563,7 @@ export class DatabaseConnection {
         answer_date: string | null;
         decision_outcome: string | null;
         decision_outcome_code: string | null;
+        question_text: string | null;
       },
       { $identifier: string }
     >(queries.writtenQuestionByIdentifier);
@@ -1712,6 +1733,10 @@ export class DatabaseConnection {
         source_reference: string | null;
         draft_date: string | null;
         signature_date: string | null;
+        summary_text: string | null;
+        decision_text: string | null;
+        resolution_text: string | null;
+        legislation_amendment_text: string | null;
       },
       { $identifier: string }
     >(queries.committeeReportByIdentifier);

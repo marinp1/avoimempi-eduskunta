@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import {
   Bar,
   BarChart,
@@ -54,6 +55,14 @@ type VotingInlineDetails = {
     n_abstain: number;
     n_absent: number;
     n_total: number;
+  }[];
+  memberVotes: {
+    person_id: number;
+    first_name: string;
+    last_name: string;
+    party_code: string;
+    vote: string;
+    is_government: 0 | 1;
   }[];
 };
 
@@ -377,17 +386,10 @@ export default function CoalitionOpposition({
                         </Box>
                       )}
                       {!detailsLoading && details && (
-                        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                          {details.partyBreakdown.slice(0, 10).map((party) => (
-                            <Chip
-                              key={party.party_code}
-                              size="small"
-                              variant="outlined"
-                              label={`${party.party_name}: ${party.n_yes}-${party.n_no}`}
-                              sx={{ height: 20, fontSize: "0.65rem" }}
-                            />
-                          ))}
-                        </Box>
+                        <VotingResultsTable
+                          partyBreakdown={details.partyBreakdown}
+                          memberVotes={details.memberVotes}
+                        />
                       )}
                     </Box>
                   </Collapse>

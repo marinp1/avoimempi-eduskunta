@@ -34,6 +34,7 @@ import {
   RelatedVotings,
   extractDocumentIdentifiers,
 } from "#client/components/DocumentCards";
+import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { commonStyles } from "#client/theme";
 import { DataCard, PageHeader, VoteMarginBar } from "#client/theme/components";
 import { colors } from "#client/theme/index";
@@ -2600,24 +2601,10 @@ export default () => {
                           Hallitus: {details.governmentOpposition.government_yes} jaa / {details.governmentOpposition.government_no} ei, Oppositio: {details.governmentOpposition.opposition_yes} jaa / {details.governmentOpposition.opposition_no} ei
                         </Typography>
                       )}
-                      {details.partyBreakdown.length > 0 && (
-                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                          {details.partyBreakdown.slice(0, 8).map((party) => (
-                            <Chip
-                              key={party.party_code}
-                              size="small"
-                              variant="outlined"
-                              label={`${party.party_name}: ${party.n_yes}-${party.n_no}`}
-                              sx={{ height: 20, fontSize: "0.65rem" }}
-                            />
-                          ))}
-                          {details.partyBreakdown.length > 8 && (
-                            <Typography sx={{ fontSize: "0.65rem", color: colors.textSecondary }}>
-                              +{details.partyBreakdown.length - 8} puoluetta
-                            </Typography>
-                          )}
-                        </Box>
-                      )}
+                      <VotingResultsTable
+                        partyBreakdown={details.partyBreakdown}
+                        memberVotes={details.memberVotes}
+                      />
                       {details.relatedVotings.length > 0 && (
                         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                           {details.relatedVotings.slice(0, 6).map((related) => (

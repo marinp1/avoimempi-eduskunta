@@ -1,10 +1,13 @@
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import InsightsIcon from "@mui/icons-material/Insights";
 import LaunchIcon from "@mui/icons-material/Launch";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   Alert,
   Box,
+  Button,
   Chip,
+  Collapse,
   CircularProgress,
   InputLabel,
   Link,
@@ -19,6 +22,7 @@ import {
   DocumentCard,
   extractDocumentIdentifiers,
 } from "#client/components/DocumentCards";
+import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { refs } from "#client/references";
 import { commonStyles } from "#client/theme";
 import { DataCard, VoteMarginBar } from "#client/theme/components";
@@ -40,6 +44,57 @@ type FocusVotingState = {
   loading: boolean;
   error: string | null;
   row: VotingSearchRow | null;
+};
+
+type VotingInlineDetails = {
+  voting: VotingSearchRow & {
+    n_abstain: number;
+    n_absent: number;
+    title: string | null;
+    parliamentary_item: string | null;
+    section_key: string | null;
+  };
+  partyBreakdown: {
+    party_code: string;
+    party_name: string;
+    n_yes: number;
+    n_no: number;
+    n_abstain: number;
+    n_absent: number;
+    n_total: number;
+  }[];
+  memberVotes: {
+    person_id: number;
+    first_name: string;
+    last_name: string;
+    party_code: string;
+    vote: string;
+    is_government: 0 | 1;
+  }[];
+  governmentOpposition: {
+    government_yes: number;
+    government_no: number;
+    government_abstain: number;
+    government_absent: number;
+    government_total: number;
+    opposition_yes: number;
+    opposition_no: number;
+    opposition_abstain: number;
+    opposition_absent: number;
+    opposition_total: number;
+  } | null;
+  relatedVotings: {
+    id: number;
+    number: number | null;
+    start_time: string | null;
+    context_title: string;
+    n_yes: number;
+    n_no: number;
+    n_abstain: number;
+    n_absent: number;
+    n_total: number;
+    session_key: string | null;
+  }[];
 };
 
 const emptyState: SearchState = {
@@ -134,10 +189,32 @@ const VotingRow: React.FC<{
   showTitle: boolean;
   themedColors: ReturnType<typeof useThemedColors>;
   voteColors: ReturnType<typeof getVoteColors>;
-}> = ({ vote, showTitle, themedColors, voteColors }) => {
+  isExpanded?: boolean;
+  details?: VotingInlineDetails;
+  detailsLoading?: boolean;
+  onToggleDetails?: (votingId: number) => void;
+}> = ({
+  vote,
+  showTitle,
+  themedColors,
+  voteColors,
+  isExpanded = false,
+  details,
+  detailsLoading = false,
+  onToggleDetails,
+}) => {
   const { t } = useTranslation();
   const passed = isVotePassed(vote);
   const close = isCloseVote(vote);
+  const detailDocRefs = details
+    ? extractDocumentIdentifiers([
+        details.voting.parliamentary_item,
+        details.voting.title,
+        details.voting.section_title,
+        details.voting.main_section_title,
+        details.voting.agenda_title,
+      ])
+    : [];
 
   return (
     <Box
@@ -212,6 +289,29 @@ const VotingRow: React.FC<{
 
       {/* Links */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        {onToggleDetails && (
+          <Button
+            size="small"
+            onClick={() => onToggleDetails(vote.id)}
+            sx={{
+              minWidth: 0,
+              px: 1,
+              fontSize: "0.68rem",
+              textTransform: "none",
+            }}
+            endIcon={
+              <ExpandMoreIcon
+                sx={{
+                  fontSize: 14,
+                  transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 0.2s",
+                }}
+              />
+            }
+          >
+            {isExpanded ? "Piilota tiedot" : "Näytä tiedot"}
+          </Button>
+        )}
         <Link
           href={refs.voting(vote.id, vote.session_key, vote.start_time)}
           sx={{
@@ -253,6 +353,58 @@ const VotingRow: React.FC<{
           {vote.title}
         </Typography>
       )}
+      <Collapse in={!!onToggleDetails && isExpanded} timeout="auto" unmountOnExit>
+        <Box
+          sx={{
+            width: "100%",
+            mt: 0.5,
+            p: 1,
+            borderRadius: 1,
+            border: `1px solid ${themedColors.dataBorder}60`,
+            backgroundColor: `${themedColors.primary}06`,
+          }}
+        >
+          {detailsLoading && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <CircularProgress size={12} />
+              <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                Ladataan äänestyksen yksityiskohtia...
+              </Typography>
+            </Box>
+          )}
+          {!detailsLoading && details && (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+              <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                Äänestyksen kohde: {details.voting.context_title || details.voting.section_title || details.voting.title || "(ei otsikkoa)"}
+              </Typography>
+              {details.voting.parliamentary_item && (
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={details.voting.parliamentary_item}
+                  sx={{ height: 20, fontSize: "0.65rem", width: "fit-content" }}
+                />
+              )}
+              {details.governmentOpposition && (
+                <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                  Hallitus: {details.governmentOpposition.government_yes} jaa / {details.governmentOpposition.government_no} ei, Oppositio: {details.governmentOpposition.opposition_yes} jaa / {details.governmentOpposition.opposition_no} ei
+                </Typography>
+              )}
+              <VotingResultsTable
+                partyBreakdown={details.partyBreakdown}
+                memberVotes={details.memberVotes}
+              />
+              {detailDocRefs.length > 0 && (
+                <Box>
+                  {detailDocRefs.map((ref) => (
+                    <DocumentCard key={`${vote.id}-${ref.identifier}`} docRef={ref} />
+                  ))}
+                </Box>
+              )}
+            </Box>
+          )}
+        </Box>
+      </Collapse>
     </Box>
   );
 };
@@ -510,6 +662,15 @@ const VotingGroupCard: React.FC<{
   const first = votes[0];
   const groupTitle = getPrimaryTitle(first);
   const docRefs = extractGroupDocRefs(votes);
+  const [expandedVotingIds, setExpandedVotingIds] = React.useState<Set<number>>(
+    new Set(),
+  );
+  const [votingDetailsById, setVotingDetailsById] = React.useState<
+    Record<number, VotingInlineDetails>
+  >({});
+  const [loadingVotingDetails, setLoadingVotingDetails] = React.useState<Set<number>>(
+    new Set(),
+  );
 
   const allPassed = votes.every(isVotePassed);
   const anyPassed = votes.some(isVotePassed);
@@ -518,6 +679,36 @@ const VotingGroupCard: React.FC<{
     : anyPassed
       ? themedColors.warning
       : themedColors.error;
+
+  const fetchVotingDetails = async (votingId: number) => {
+    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId)) return;
+    setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
+    try {
+      const res = await fetch(`/api/votings/${votingId}/details`);
+      if (!res.ok) return;
+      const data: VotingInlineDetails = await res.json();
+      setVotingDetailsById((prev) => ({ ...prev, [votingId]: data }));
+    } finally {
+      setLoadingVotingDetails((prev) => {
+        const next = new Set(prev);
+        next.delete(votingId);
+        return next;
+      });
+    }
+  };
+
+  const toggleVotingDetails = (votingId: number) => {
+    const shouldExpand = !expandedVotingIds.has(votingId);
+    setExpandedVotingIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(votingId)) next.delete(votingId);
+      else next.add(votingId);
+      return next;
+    });
+    if (shouldExpand) {
+      void fetchVotingDetails(votingId);
+    }
+  };
 
   return (
     <DataCard
@@ -613,6 +804,10 @@ const VotingGroupCard: React.FC<{
               showTitle={vote.title !== null && vote.title !== getPrimaryTitle(first)}
               themedColors={themedColors}
               voteColors={voteColors}
+              isExpanded={expandedVotingIds.has(vote.id)}
+              details={votingDetailsById[vote.id]}
+              detailsLoading={loadingVotingDetails.has(vote.id)}
+              onToggleDetails={toggleVotingDetails}
             />
           ))}
         </Stack>
