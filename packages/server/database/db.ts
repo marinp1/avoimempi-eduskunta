@@ -1590,6 +1590,164 @@ export class DatabaseConnection {
     return data;
   }
 
+  // ─── Oral question queries ───
+
+  public async fetchOralQuestions(params: {
+    query?: string;
+    year?: string;
+    page: number;
+    limit: number;
+  }) {
+    const offset = (params.page - 1) * params.limit;
+    const $query = params.query?.trim() || null;
+    const $year = params.year || null;
+
+    const countStmt = this.db.prepare<
+      { count: number },
+      { $query: string | null; $year: string | null }
+    >(queries.oralQuestionsCount);
+    const countResult = countStmt.get({ $query, $year });
+    const totalCount = countResult?.count || 0;
+    countStmt.finalize();
+
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        question_text: string | null;
+        asker_text: string | null;
+        submission_date: string | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+        latest_stage_code: string | null;
+        end_date: string | null;
+        subjects: string | null;
+      },
+      {
+        $query: string | null;
+        $year: string | null;
+        $limit: number;
+        $offset: number;
+      }
+    >(queries.oralQuestionsList);
+    const rows = stmt.all({ $query, $year, $limit: params.limit, $offset: offset });
+    stmt.finalize();
+
+    return {
+      items: rows,
+      totalCount,
+      page: params.page,
+      limit: params.limit,
+      totalPages: Math.ceil(totalCount / params.limit),
+    };
+  }
+
+  public async fetchOralQuestionById(params: { id: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        question_text: string | null;
+        asker_text: string | null;
+        submission_date: string | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+        latest_stage_code: string | null;
+        end_date: string | null;
+      },
+      { $id: number }
+    >(queries.oralQuestionById);
+    const detail = detailStmt.get({ $id: +params.id });
+    detailStmt.finalize();
+    if (!detail) return null;
+
+    const stagesStmt = this.db.prepare<
+      {
+        question_id: number;
+        stage_order: number;
+        stage_title: string;
+        stage_code: string | null;
+        event_date: string | null;
+        event_title: string | null;
+        event_description: string | null;
+      },
+      { $questionId: number }
+    >(queries.oralQuestionStages);
+    const stages = stagesStmt.all({ $questionId: detail.id });
+    stagesStmt.finalize();
+
+    const subjectsStmt = this.db.prepare<
+      { question_id: number; subject_text: string; yso_uri: string | null },
+      { $questionId: number }
+    >(queries.oralQuestionSubjects);
+    const subjects = subjectsStmt.all({ $questionId: detail.id });
+    subjectsStmt.finalize();
+
+    const sessionsStmt = this.db.prepare<
+      {
+        session_key: string;
+        session_date: string;
+        session_type: string;
+        session_number: number;
+        session_year: string;
+        section_title: string | null;
+        section_key: string;
+      },
+      { $identifier: string }
+    >(queries.oralQuestionSessions);
+    const sessions = sessionsStmt.all({ $identifier: detail.parliament_identifier });
+    sessionsStmt.finalize();
+
+    return { ...detail, stages, subjects, sessions };
+  }
+
+  public async fetchOralQuestionByIdentifier(params: { identifier: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        question_text: string | null;
+        asker_text: string | null;
+        submission_date: string | null;
+        decision_outcome: string | null;
+        decision_outcome_code: string | null;
+        latest_stage_code: string | null;
+        end_date: string | null;
+      },
+      { $identifier: string }
+    >(queries.oralQuestionByIdentifier);
+    const detail = detailStmt.get({ $identifier: params.identifier });
+    detailStmt.finalize();
+    if (!detail) return null;
+
+    const subjectsStmt = this.db.prepare<
+      { question_id: number; subject_text: string; yso_uri: string | null },
+      { $questionId: number }
+    >(queries.oralQuestionSubjects);
+    const subjects = subjectsStmt.all({ $questionId: detail.id });
+    subjectsStmt.finalize();
+
+    return { ...detail, subjects };
+  }
+
+  public async fetchOralQuestionYears() {
+    const stmt = this.db.prepare<{ year: string }, []>(
+      queries.oralQuestionYears,
+    );
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
   // ─── Committee report queries ───
 
   public async fetchCommitteeReports(params: {

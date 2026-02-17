@@ -88,6 +88,14 @@ export { default as writtenQuestionStages } from "./queries/WRITTEN_QUESTION_STA
 export { default as writtenQuestionSubjects } from "./queries/WRITTEN_QUESTION_SUBJECTS.sql";
 export { default as writtenQuestionYears } from "./queries/WRITTEN_QUESTION_YEARS.sql";
 export { default as writtenQuestionSessions } from "./queries/WRITTEN_QUESTION_SESSIONS.sql";
+export { default as oralQuestionsList } from "./queries/ORAL_QUESTIONS_LIST.sql";
+export { default as oralQuestionsCount } from "./queries/ORAL_QUESTIONS_COUNT.sql";
+export { default as oralQuestionById } from "./queries/ORAL_QUESTION_BY_ID.sql";
+export { default as oralQuestionByIdentifier } from "./queries/ORAL_QUESTION_BY_IDENTIFIER.sql";
+export { default as oralQuestionStages } from "./queries/ORAL_QUESTION_STAGES.sql";
+export { default as oralQuestionSubjects } from "./queries/ORAL_QUESTION_SUBJECTS.sql";
+export { default as oralQuestionYears } from "./queries/ORAL_QUESTION_YEARS.sql";
+export { default as oralQuestionSessions } from "./queries/ORAL_QUESTION_SESSIONS.sql";
 export { default as committeeReportsList } from "./queries/COMMITTEE_REPORTS_LIST.sql";
 export { default as committeeReportsCount } from "./queries/COMMITTEE_REPORTS_COUNT.sql";
 export { default as committeeReportById } from "./queries/COMMITTEE_REPORT_BY_ID.sql";
