@@ -7,9 +7,9 @@ import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { colors } from "#client/theme/index";
 
 export type DocRef =
-  { type: "HE" | "VK" | "KK" | "VM" | "LA" | "TAA" | "SKT"; identifier: string };
+  { type: "HE" | "VK" | "KK" | "VM" | "LA" | "TAA" | "TPA" | "SKT"; identifier: string };
 
-const DOC_PATTERN = /\b(HE|VK|KK|LA|TAA|SKT|[A-ZÄÖa-zäö]+VM)\s+\d+\/\d+\s*(?:vp)?/g;
+const DOC_PATTERN = /\b(HE|VK|KK|LA|TAA|TPA|SKT|[A-ZÄÖa-zäö]+VM)\s+\d+\/\d+\s*(?:vp)?/g;
 
 export const extractDocumentIdentifiers = (
   fields: (string | null | undefined)[],
@@ -633,6 +633,8 @@ export const DocumentCard: React.FC<{ docRef: DocRef }> = ({ docRef }) => {
     case "LA":
       return <LegislativeInitiativeCard identifier={docRef.identifier} />;
     case "TAA":
+      return <LegislativeInitiativeCard identifier={docRef.identifier} />;
+    case "TPA":
       return <LegislativeInitiativeCard identifier={docRef.identifier} />;
     case "SKT":
       return <OralQuestionCard identifier={docRef.identifier} />;
