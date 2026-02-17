@@ -1,4 +1,5 @@
 import { TableName } from "#constants/index";
+import { listAllStorageKeys } from "#storage/list-all";
 import { getStorage } from "#storage/factory";
 import {
   type DataStage,
@@ -72,8 +73,10 @@ export class AdminStorageService {
     const prefix = StorageKeyBuilder.listPrefixForTable(stage, tableName);
 
     try {
-      const result = await storage.list({ prefix, maxKeys: 100000 });
-      return result.keys;
+      return await listAllStorageKeys(storage, {
+        prefix,
+        pageSize: 10_000,
+      });
     } catch (error) {
       console.error(`Error listing files for ${stage}/${tableName}:`, error);
       return [];

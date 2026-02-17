@@ -33,31 +33,32 @@ async function main() {
 }
 
 async function showStatus() {
-  const { getStorage, StorageKeyBuilder } = await import("#storage");
+  const { getStorage, listAllStorageKeys, StorageKeyBuilder } =
+    await import("#storage");
   const storage = getStorage();
 
   console.log("📊 Parser Status\n");
 
   // Get all raw tables
   const rawPrefix = StorageKeyBuilder.listPrefixForStage("raw");
-  const rawResult = await storage.list({ prefix: rawPrefix });
+  const rawKeys = await listAllStorageKeys(storage, { prefix: rawPrefix });
 
   // Get all parsed tables
   const parsedPrefix = StorageKeyBuilder.listPrefixForStage("parsed");
-  const parsedResult = await storage.list({ prefix: parsedPrefix });
+  const parsedKeys = await listAllStorageKeys(storage, { prefix: parsedPrefix });
 
   // Extract table names and counts
   const rawTables = new Map<string, number>();
   const parsedTables = new Map<string, number>();
 
-  for (const key of rawResult.keys) {
+  for (const key of rawKeys) {
     const ref = StorageKeyBuilder.parseKey(key.key);
     if (ref) {
       rawTables.set(ref.table, (rawTables.get(ref.table) || 0) + 1);
     }
   }
 
-  for (const key of parsedResult.keys) {
+  for (const key of parsedKeys) {
     const ref = StorageKeyBuilder.parseKey(key.key);
     if (ref) {
       parsedTables.set(ref.table, (parsedTables.get(ref.table) || 0) + 1);

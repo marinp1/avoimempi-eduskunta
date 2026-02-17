@@ -7,7 +7,11 @@ import { TableName } from "#constants/index";
 import { migrateVaskiData } from "../datapipe/migrator/VaskiData/migrator";
 import { clearStatementCache } from "../datapipe/migrator/utils";
 import { getDatabasePath } from "../shared/database";
-import { getStorage, StorageKeyBuilder } from "../shared/storage";
+import {
+  getStorage,
+  listAllStorageKeys,
+  StorageKeyBuilder,
+} from "../shared/storage";
 import {
   getDeleteAllRowsQuery,
   MIGRATOR_SQL,
@@ -337,10 +341,13 @@ export class MigratorController {
   private async *readParsedData(tableName: string): AsyncGenerator<any[]> {
     const storage = getStorage();
     const prefix = StorageKeyBuilder.listPrefixForTable("parsed", tableName);
-    const listResult = await storage.list({ prefix, maxKeys: 100000 });
+    const keys = await listAllStorageKeys(storage, {
+      prefix,
+      pageSize: 10_000,
+    });
 
     // Sort pages by page number
-    const sortedPages = listResult.keys
+    const sortedPages = keys
       .map((k) => ({ key: k, parsed: StorageKeyBuilder.parseKey(k.key) }))
       .filter((p) => p.parsed !== null)
       .sort((a, b) => (a.parsed?.page || 0) - (b.parsed?.page || 0));

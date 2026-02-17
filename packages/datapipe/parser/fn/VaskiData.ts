@@ -1,7 +1,12 @@
 import { existsSync } from "node:fs";
 import { mkdir, symlink, unlink, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
-import { getStorage, getStorageConfig, StorageKeyBuilder } from "#storage";
+import {
+  getStorage,
+  getStorageConfig,
+  listAllStorageKeys,
+  StorageKeyBuilder,
+} from "#storage";
 import { XMLParser } from "fast-xml-parser";
 import type { ParserFunction } from "../parser";
 
@@ -194,9 +199,12 @@ async function ensureDocumentTypeSymlink(
 async function buildIndexFromParsedStorage(): Promise<VaskiIndex> {
   const storage = getStorage();
   const prefix = StorageKeyBuilder.listPrefixForTable("parsed", "VaskiData");
-  const listResult = await storage.list({ prefix, maxKeys: 100000 });
+  const keys = await listAllStorageKeys(storage, {
+    prefix,
+    pageSize: 10_000,
+  });
 
-  const sortedPages = listResult.keys
+  const sortedPages = keys
     .map((keyMeta) => ({
       key: keyMeta.key,
       parsed: StorageKeyBuilder.parseKey(keyMeta.key),

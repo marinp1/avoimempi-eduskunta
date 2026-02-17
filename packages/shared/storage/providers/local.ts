@@ -71,6 +71,7 @@ export class LocalStorageProvider implements IStorageProvider {
     const prefix = options?.prefix || "";
     const maxKeys = options?.maxKeys || 1000;
     const startAfter = options?.startAfter || "";
+    const detectionLimit = maxKeys + 1;
 
     const searchDir = prefix
       ? path.join(this.baseDir, prefix.split("/").slice(0, -1).join("/"))
@@ -84,7 +85,7 @@ export class LocalStorageProvider implements IStorageProvider {
         this.baseDir,
         prefix,
         startAfter,
-        maxKeys,
+        detectionLimit,
         keys,
       );
     } catch (error: any) {
@@ -98,7 +99,7 @@ export class LocalStorageProvider implements IStorageProvider {
       keys: keys.slice(0, maxKeys),
       isTruncated: keys.length > maxKeys,
       nextContinuationToken:
-        keys.length > maxKeys ? keys[maxKeys].key : undefined,
+        keys.length > maxKeys ? keys[maxKeys - 1].key : undefined,
     };
   }
 
@@ -107,16 +108,17 @@ export class LocalStorageProvider implements IStorageProvider {
     baseDir: string,
     prefix: string,
     startAfter: string,
-    maxKeys: number,
+    maxResults: number,
     results: StorageMetadata[],
   ): Promise<void> {
-    if (results.length >= maxKeys) return;
+    if (results.length >= maxResults) return;
 
     try {
       const entries = await readdir(dir, { withFileTypes: true });
+      entries.sort((a, b) => a.name.localeCompare(b.name));
 
       for (const entry of entries) {
-        if (results.length >= maxKeys) break;
+        if (results.length >= maxResults) break;
 
         const fullPath = path.join(dir, entry.name);
         const relativePath = path
@@ -129,7 +131,7 @@ export class LocalStorageProvider implements IStorageProvider {
             baseDir,
             prefix,
             startAfter,
-            maxKeys,
+            maxResults,
             results,
           );
         } else if (entry.isFile()) {
