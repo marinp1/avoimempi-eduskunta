@@ -35,5 +35,6 @@
 
 export * from "./config";
 export * from "./factory";
+export * from "./list-all";
 export * from "./providers/local";
 export * from "./types";

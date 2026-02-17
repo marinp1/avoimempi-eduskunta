@@ -1,6 +1,6 @@
 import { scheduler } from "node:timers/promises";
 import type { DataStage } from "#storage";
-import { getStorage, StorageKeyBuilder } from "#storage";
+import { getStorage, listAllStorageKeys, StorageKeyBuilder } from "#storage";
 
 /** Time to wait (in ms) between API calls. */
 const TIME_BETWEEN_QUERIES = 25;
@@ -60,14 +60,17 @@ async function getLastScrapedPage(
   stage: DataStage,
 ): Promise<number> {
   const prefix = StorageKeyBuilder.listPrefixForTable(stage, tableName);
-  const result = await storage.list({ prefix, maxKeys: 10_000_000 });
+  const keys = await listAllStorageKeys(storage, {
+    prefix,
+    pageSize: 10_000,
+  });
 
-  if (result.keys.length === 0) {
+  if (keys.length === 0) {
     return 0;
   }
 
   // Parse page numbers from keys
-  const pageNumbers = result.keys
+  const pageNumbers = keys
     .map((key) => StorageKeyBuilder.parseKey(key.key))
     .filter((ref) => ref !== null)
     .map((ref) => ref?.page);

@@ -1,4 +1,9 @@
-import { type DataStage, getStorage, StorageKeyBuilder } from "#storage";
+import {
+  type DataStage,
+  getStorage,
+  listAllStorageKeys,
+  StorageKeyBuilder,
+} from "#storage";
 
 /**
  * API Response structure from storage (created by scraper)
@@ -122,36 +127,37 @@ export async function parseTable(options: ParseOptions): Promise<void> {
 
   // List all pages for this table (use high maxKeys to get all pages)
   const prefix = StorageKeyBuilder.listPrefixForTable(sourceStage, tableName);
-  const listResult = await storage.list({ prefix, maxKeys: 100000 });
+  const sourceKeys = await listAllStorageKeys(storage, {
+    prefix,
+    pageSize: 10_000,
+  });
 
-  if (listResult.keys.length === 0) {
+  if (sourceKeys.length === 0) {
     console.log(`⚠️  No data found for ${tableName} in ${sourceStage} stage`);
     return;
   }
 
-  console.log(`📋 Found ${listResult.keys.length} pages to parse`);
+  console.log(`📋 Found ${sourceKeys.length} pages to parse`);
 
-  let pagesToParse: typeof listResult.keys;
+  let pagesToParse: typeof sourceKeys;
   let alreadyParsedPages = new Set<number>();
 
   if (force) {
-    console.log(
-      `🔄 Force mode: re-parsing all ${listResult.keys.length} pages`,
-    );
-    pagesToParse = listResult.keys;
+    console.log(`🔄 Force mode: re-parsing all ${sourceKeys.length} pages`);
+    pagesToParse = sourceKeys;
   } else {
     // Check which pages are already parsed
     const targetPrefix = StorageKeyBuilder.listPrefixForTable(
       targetStage,
       tableName,
     );
-    const targetListResult = await storage.list({
+    const parsedKeys = await listAllStorageKeys(storage, {
       prefix: targetPrefix,
-      maxKeys: 100000,
+      pageSize: 10_000,
     });
 
     alreadyParsedPages = new Set(
-      targetListResult.keys
+      parsedKeys
         .map((key) => StorageKeyBuilder.parseKey(key.key))
         .filter((ref) => ref !== null)
         .map((ref) => ref?.page),
@@ -164,7 +170,7 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       alreadyParsedPages.delete(lastParsedPage);
     }
 
-    pagesToParse = listResult.keys.filter((key) => {
+    pagesToParse = sourceKeys.filter((key) => {
       const pageRef = StorageKeyBuilder.parseKey(key.key);
       return pageRef && !alreadyParsedPages.has(pageRef.page);
     });
@@ -176,7 +182,7 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       console.log(
         `🔄 Re-parsing last page and continuing: ${pagesToParse.length} pages remaining`,
       );
-    } else if (pagesToParse.length === listResult.keys.length) {
+    } else if (pagesToParse.length === sourceKeys.length) {
       console.log(`🚀 Starting fresh: ${pagesToParse.length} pages to parse`);
     }
 
@@ -191,7 +197,7 @@ export async function parseTable(options: ParseOptions): Promise<void> {
 
   console.log();
 
-  const totalPages = listResult.keys.length;
+  const totalPages = sourceKeys.length;
   let pagesParsed = 0;
   let totalRowsParsed = 0;
 

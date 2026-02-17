@@ -64,7 +64,8 @@ async function main() {
 }
 
 async function showStatus() {
-  const { getStorage, StorageKeyBuilder } = await import("#storage");
+  const { getStorage, listAllStorageKeys, StorageKeyBuilder } =
+    await import("#storage");
   const storage = getStorage();
 
   console.log("📊 Scraping Status\n");
@@ -79,15 +80,15 @@ async function showStatus() {
 
   for (const table of data) {
     const prefix = StorageKeyBuilder.listPrefixForTable("raw", table.tableName);
-    const result = await storage.list({ prefix });
+    const keys = await listAllStorageKeys(storage, { prefix });
 
-    const pageCount = result.keys.length;
+    const pageCount = keys.length;
 
     // Calculate exact row count: ((pageCount - 1) * 100) + rows in last page
     let exactRows = 0;
     if (pageCount > 0) {
       // Parse page numbers to find the highest page
-      const pageNumbers = result.keys
+      const pageNumbers = keys
         .map((key) => StorageKeyBuilder.parseKey(key.key))
         .filter((ref) => ref !== null)
         .map((ref) => ref?.page);
