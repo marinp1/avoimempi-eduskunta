@@ -2,6 +2,37 @@ import { Database } from "bun:sqlite";
 import { getDatabasePath } from "#database";
 import * as queries from "./queries";
 import { SQLITE_PRAGMAS } from "./sql-statements";
+import {
+  fetchGovernmentMemberships,
+  fetchLeavingParliamentRecords,
+  fetchPersonGroupMemberships,
+  fetchPersonTerms,
+  fetchPersonVotes,
+  fetchRepresentativeDetails,
+  fetchRepresentativeDistricts,
+  fetchRepresentativePage,
+  fetchTrustPositions,
+} from "./services/person";
+import {
+  fetchSessionByDate,
+  fetchSessionDocuments,
+  fetchSessionDates,
+  fetchSessionNotices,
+  fetchSessions,
+  fetchSectionDocumentLinks,
+  fetchSectionRollCall,
+  fetchSectionSpeeches,
+  fetchSectionSubSections,
+  fetchSectionVotings,
+  fetchSpeechesByDate,
+  fetchSessionWithSectionsByDate,
+} from "./services/session";
+import {
+  fetchVotingsByDocument,
+  fetchVotingById,
+  fetchVotingInlineDetails,
+  queryVotings,
+} from "./services/voting";
 
 export class DatabaseConnection {
   #database: Database | null = null;
@@ -47,289 +78,65 @@ export class DatabaseConnection {
     page: number;
     limit: number;
   }) {
-    const offset = (params.page - 1) * params.limit;
-    const stmt = this.db.prepare<
-      DatabaseTables.Representative,
-      { $limit: number; $offset: number }
-    >(queries.representativesPaginated);
-    const data = stmt.all({ $limit: params.limit, $offset: offset });
-    stmt.finalize();
-    return data;
+    return fetchRepresentativePage(this.db, params);
   }
 
   public async fetchPersonGroupMemberships(params: { id: string }) {
-    const stmt = this.db.prepare<
-      DatabaseTables.ParliamentGroupMembership,
-      { $personId: number }
-    >(queries.personGroupMemberships);
-    const data = stmt.all({ $personId: +params.id });
-    stmt.finalize();
-    return data;
+    return fetchPersonGroupMemberships(this.db, params);
   }
 
   public async fetchPersonTerms(params: { id: string }) {
-    const stmt = this.db.prepare<DatabaseTables.Term, { $personId: number }>(
-      queries.personTerms,
-    );
-    const data = stmt.all({ $personId: +params.id });
-    stmt.finalize();
-    return data;
+    return fetchPersonTerms(this.db, params);
   }
 
   public async fetchPersonVotes(params: { id: string }) {
-    const stmt = this.db.prepare<
-      DatabaseQueries.VotesByPerson,
-      { $personId: number }
-    >(queries.votesByPerson);
-    const data = stmt.all({ $personId: +params.id });
-    stmt.finalize();
-    return data;
+    return fetchPersonVotes(this.db, params);
   }
 
   public async fetchRepresentativeDetails(params: { id: string }) {
-    const stmt = this.db.prepare<
-      DatabaseTables.Representative,
-      { $personId: number }
-    >(queries.representativeDetails);
-    const data = stmt.get({ $personId: +params.id });
-    stmt.finalize();
-    return data;
+    return fetchRepresentativeDetails(this.db, params);
   }
 
   public async fetchRepresentativeDistricts(params: { id: string }) {
-    const stmt = this.db.prepare<
-      {
-        id: number;
-        person_id: number;
-        district_name: string;
-        start_date: string;
-        end_date: string;
-      },
-      { $personId: number }
-    >(queries.representativeDistricts);
-    const data = stmt.all({ $personId: +params.id });
-    stmt.finalize();
-    return data;
+    return fetchRepresentativeDistricts(this.db, params);
   }
 
   public async fetchLeavingParliamentRecords(params: { id: string }) {
-    const stmt = this.db.prepare<
-      DatabaseTables.PeopleLeavingParliament,
-      { $personId: number }
-    >(queries.leavingParliamentRecords);
-    const data = stmt.all({ $personId: +params.id });
-    stmt.finalize();
-    return data;
+    return fetchLeavingParliamentRecords(this.db, params);
   }
 
   public async fetchTrustPositions(params: { id: string }) {
-    const stmt = this.db.prepare<
-      DatabaseTables.TrustPosition,
-      { $personId: number }
-    >(queries.trustPositions);
-    const data = stmt.all({ $personId: +params.id });
-    stmt.finalize();
-    return data;
+    return fetchTrustPositions(this.db, params);
   }
 
   public async fetchGovernmentMemberships(params: { id: string }) {
-    const stmt = this.db.prepare<
-      DatabaseTables.GovernmentMembership,
-      { $personId: number }
-    >(queries.governmentMemberships);
-    const data = stmt.all({ $personId: +params.id });
-    stmt.finalize();
-    return data;
+    return fetchGovernmentMemberships(this.db, params);
   }
 
   public async queryVotings(params: { q: string }) {
     const searchQuery = this.buildSearchQuery(params.q);
     if (!searchQuery) return [];
-    const stmt = this.db.prepare<
-      DatabaseQueries.VotingSearchResult,
-      { $query: string }
-    >(queries.votingsSearch);
-    const data = stmt.all({ $query: searchQuery });
-    stmt.finalize();
-    return data;
+    return queryVotings(this.db, searchQuery);
   }
 
   public async fetchVotingById(params: { id: string }) {
-    const stmt = this.db.prepare<
-      DatabaseQueries.VotingSearchResult,
-      { $id: number }
-    >(queries.votingById);
-    const data = stmt.get({ $id: +params.id });
-    stmt.finalize();
-    return data ?? null;
+    const votingId = Number.parseInt(params.id, 10);
+    if (!Number.isFinite(votingId)) return null;
+    return fetchVotingById(this.db, votingId);
   }
 
   public async fetchVotingInlineDetails(params: { id: string }) {
     const votingId = Number.parseInt(params.id, 10);
     if (!Number.isFinite(votingId)) return null;
-
-    const voting = await this.fetchVotingById({ id: String(votingId) });
-    if (!voting) return null;
-
-    const partyStmt = this.db.prepare<
-      {
-        party_code: string;
-        party_name: string;
-        n_yes: number;
-        n_no: number;
-        n_abstain: number;
-        n_absent: number;
-        n_total: number;
-      },
-      { $id: number }
-    >(queries.votingPartyBreakdownById);
-    const partyBreakdown = partyStmt.all({ $id: votingId });
-    partyStmt.finalize();
-
-    const memberStmt = this.db.prepare<
-      {
-        person_id: number;
-        first_name: string;
-        last_name: string;
-        party_code: string;
-        vote: string;
-        is_government: 0 | 1;
-      },
-      { $id: number }
-    >(queries.votingMemberVotesById);
-    const memberVotes = memberStmt.all({ $id: votingId });
-    memberStmt.finalize();
-
-    const govStmt = this.db.prepare<
-      {
-        government_yes: number;
-        government_no: number;
-        government_abstain: number;
-        government_absent: number;
-        government_total: number;
-        opposition_yes: number;
-        opposition_no: number;
-        opposition_abstain: number;
-        opposition_absent: number;
-        opposition_total: number;
-      },
-      { $id: number }
-    >(queries.votingGovernmentOppositionById);
-    const governmentOpposition = govStmt.get({ $id: votingId });
-    govStmt.finalize();
-
-    const relatedStmt = this.db.prepare<
-      {
-        id: number;
-        number: number | null;
-        start_time: string | null;
-        context_title: string;
-        n_yes: number;
-        n_no: number;
-        n_abstain: number;
-        n_absent: number;
-        n_total: number;
-        session_key: string | null;
-      },
-      { $id: number }
-    >(queries.votingRelatedById);
-    const relatedVotings = relatedStmt.all({ $id: votingId });
-    relatedStmt.finalize();
-
-    return {
-      voting,
-      partyBreakdown,
-      memberVotes,
-      governmentOpposition,
-      relatedVotings,
-    };
+    return fetchVotingInlineDetails(this.db, votingId);
   }
 
   public async fetchVotingsByDocument(params: { identifier: string }) {
-    const stmt = this.db.prepare<
-      DatabaseQueries.VotingSearchResult,
-      { $identifier: string }
-    >(queries.votingsByDocument);
-    const data = stmt.all({ $identifier: params.identifier });
-    stmt.finalize();
-    return data;
+    return fetchVotingsByDocument(this.db, params.identifier);
   }
 
   public async fetchSessions(params: { page: number; limit: number }) {
-    const offset = (params.page - 1) * params.limit;
-
-    // Get total count
-    const countStmt = this.db.prepare<{ count: number }, []>(
-      queries.sessionCount,
-    );
-    const countResult = countStmt.get();
-    const totalCount = countResult?.count || 0;
-    countStmt.finalize();
-
-    // Get paginated sessions
-    const stmt = this.db.prepare<
-      DatabaseTables.Session & { agenda_title?: string; agenda_state?: string },
-      { $limit: number; $offset: number }
-    >(queries.sessionsPaginated);
-    const sessions = stmt.all({ $limit: params.limit, $offset: offset });
-    stmt.finalize();
-
-    // Fetch sections for each session
-    const sectionsStmt = this.db.prepare<
-      DatabaseTables.Section & {
-        voting_count: number;
-        speech_count: number;
-        speaker_count: number;
-        party_count: number;
-        vaski_document_id?: number | null;
-        vaski_document_type_name?: string | null;
-        vaski_document_type_code?: string | null;
-        vaski_eduskunta_tunnus?: string | null;
-        vaski_document_number?: number | null;
-        vaski_parliamentary_year?: string | null;
-        vaski_title?: string | null;
-        vaski_summary?: string | null;
-        vaski_author_first_name?: string | null;
-        vaski_author_last_name?: string | null;
-        vaski_author_role?: string | null;
-        vaski_author_organization?: string | null;
-        vaski_creation_date?: string | null;
-        vaski_status?: string | null;
-        vaski_source_reference?: string | null;
-        vaski_subjects?: string | null;
-        minutes_entry_kind?: string | null;
-        minutes_entry_order?: number | null;
-        minutes_item_identifier?: number | null;
-        minutes_parent_item_identifier?: string | null;
-        minutes_item_number?: string | null;
-        minutes_item_order?: number | null;
-        minutes_item_title?: string | null;
-        minutes_related_document_identifier?: string | null;
-        minutes_related_document_type?: string | null;
-        minutes_processing_phase_code?: string | null;
-        minutes_general_processing_phase_code?: string | null;
-        minutes_content_text?: string | null;
-        minutes_match_mode?: string | null;
-      },
-      { $sessionKey: string }
-    >(queries.sessionSections);
-
-    const sessionsWithSections = sessions.map((session) => {
-      const sections = sectionsStmt.all({ $sessionKey: session.key });
-      return {
-        ...session,
-        sections,
-      };
-    });
-
-    sectionsStmt.finalize();
-    return {
-      sessions: sessionsWithSections,
-      totalCount,
-      page: params.page,
-      limit: params.limit,
-      totalPages: Math.ceil(totalCount / params.limit),
-    };
+    return fetchSessions(this.db, params);
   }
 
   public async fetchSectionSpeeches(params: {
@@ -337,102 +144,19 @@ export class DatabaseConnection {
     limit?: number;
     offset?: number;
   }) {
-    const limit = params.limit ?? 20;
-    const offset = params.offset ?? 0;
-
-    const countStmt = this.db.prepare<
-      { count: number },
-      { $sectionKey: string }
-    >(queries.sectionSpeechCount);
-    const countResult = countStmt.get({ $sectionKey: params.sectionKey });
-    const total = countResult?.count || 0;
-    countStmt.finalize();
-
-    const stmt = this.db.prepare<
-      DatabaseTables.Speech,
-      { $sectionKey: string; $limit: number; $offset: number }
-    >(queries.sectionSpeeches);
-    const speeches = stmt.all({
-      $sectionKey: params.sectionKey,
-      $limit: limit,
-      $offset: offset,
-    });
-    stmt.finalize();
-
-    return {
-      speeches,
-      total,
-      page: Math.floor(offset / limit) + 1,
-      totalPages: Math.ceil(total / limit),
-    };
+    return fetchSectionSpeeches(this.db, params);
   }
 
   public async fetchSectionVotings(params: { sectionKey: string }) {
-    const stmt = this.db.prepare<
-      DatabaseTables.Voting,
-      { $sectionKey: string }
-    >(queries.sectionVotings);
-    const votings = stmt.all({ $sectionKey: params.sectionKey });
-    stmt.finalize();
-    return votings;
+    return fetchSectionVotings(this.db, params);
   }
 
   public async fetchSectionSubSections(params: { sectionKey: string }) {
-    const stmt = this.db.prepare<
-      DatabaseTables.SubSection,
-      { $sectionKey: string }
-    >(queries.sectionSubSections);
-    const rows = stmt.all({ $sectionKey: params.sectionKey });
-    stmt.finalize();
-    return rows;
+    return fetchSectionSubSections(this.db, params);
   }
 
   public async fetchSectionRollCall(params: { sectionKey: string }) {
-    const reportStmt = this.db.prepare<
-      {
-        id: number;
-        parliament_identifier: string;
-        session_date: string;
-        roll_call_start_time?: string | null;
-        roll_call_end_time?: string | null;
-        title?: string | null;
-        status?: string | null;
-        created_at?: string | null;
-        edk_identifier: string;
-        source_path: string;
-        attachment_group_id?: number | null;
-        entry_count: number;
-        absent_count: number;
-        late_count: number;
-      },
-      { $sectionKey: string }
-    >(queries.sectionRollCallReport);
-    const report = reportStmt.get({ $sectionKey: params.sectionKey });
-    reportStmt.finalize();
-
-    if (!report) return null;
-
-    const entriesStmt = this.db.prepare<
-      {
-        roll_call_id: number;
-        entry_order: number;
-        person_id?: number | null;
-        first_name: string;
-        last_name: string;
-        party?: string | null;
-        entry_type: "absent" | "late";
-        absence_reason?: string | null;
-        arrival_time?: string | null;
-      },
-      { $rollCallId: number }
-    >(queries.rollCallEntries);
-    const entries = entriesStmt.all({ $rollCallId: report.id });
-    entriesStmt.finalize();
-
-    return {
-      report,
-      entries,
-    };
+    return fetchSectionRollCall(this.db, params);
   }
 
   public async fetchVotingParticipation(params?: {
@@ -566,169 +290,31 @@ export class DatabaseConnection {
   }
 
   public async fetchSessionByDate(params: { date: string }) {
-    const stmt = this.db.prepare<
-      DatabaseTables.Session & { agenda_title?: string; agenda_state?: string },
-      { $date: string }
-    >(queries.sessionByDate);
-    const data = stmt.all({ $date: params.date });
-    stmt.finalize();
-    return data;
+    return fetchSessionByDate(this.db, params);
   }
 
   public async fetchSessionWithSectionsByDate(params: { date: string }) {
-    const sessions = await this.fetchSessionByDate(params);
-
-    const sectionsStmt = this.db.prepare<
-      DatabaseTables.Section & {
-        voting_count: number;
-        speech_count: number;
-        speaker_count: number;
-        party_count: number;
-        vaski_document_id?: number | null;
-        vaski_document_type_name?: string | null;
-        vaski_document_type_code?: string | null;
-        vaski_eduskunta_tunnus?: string | null;
-        vaski_document_number?: number | null;
-        vaski_parliamentary_year?: string | null;
-        vaski_title?: string | null;
-        vaski_summary?: string | null;
-        vaski_author_first_name?: string | null;
-        vaski_author_last_name?: string | null;
-        vaski_author_role?: string | null;
-        vaski_author_organization?: string | null;
-        vaski_creation_date?: string | null;
-        vaski_status?: string | null;
-        vaski_source_reference?: string | null;
-        vaski_subjects?: string | null;
-        minutes_entry_kind?: string | null;
-        minutes_entry_order?: number | null;
-        minutes_item_identifier?: number | null;
-        minutes_parent_item_identifier?: string | null;
-        minutes_item_number?: string | null;
-        minutes_item_order?: number | null;
-        minutes_item_title?: string | null;
-        minutes_related_document_identifier?: string | null;
-        minutes_related_document_type?: string | null;
-        minutes_processing_phase_code?: string | null;
-        minutes_general_processing_phase_code?: string | null;
-        minutes_content_text?: string | null;
-        minutes_match_mode?: string | null;
-      },
-      { $sessionKey: string }
-    >(queries.sessionSections);
-
-    const votingCountStmt = this.db.prepare<
-      { voting_count: number },
-      { $sessionKey: string }
-    >(queries.sessionVotingCount);
-
-    const sessionsWithSections = sessions.map((session) => {
-      const sections = sectionsStmt.all({ $sessionKey: session.key });
-      const votingCountResult = votingCountStmt.get({
-        $sessionKey: session.key,
-      });
-      return {
-        ...session,
-        sections,
-        section_count: sections.length,
-        voting_count: votingCountResult?.voting_count || 0,
-      };
-    });
-
-    sectionsStmt.finalize();
-    votingCountStmt.finalize();
-    return sessionsWithSections;
+    return fetchSessionWithSectionsByDate(this.db, params);
   }
 
   public async fetchSessionDocuments(params: { sessionKey: string }) {
-    const stmt = this.db.prepare<
-      {
-        document_kind: "agenda" | "minutes" | "roll_call";
-        id: number;
-        type_slug: string;
-        type_name_fi: string | null;
-        root_family: string | null;
-        eduskunta_tunnus: string | null;
-        document_type_code: string | null;
-        document_number_text: string | null;
-        parliamentary_year_text: string | null;
-        title: string | null;
-        status_text: string | null;
-        created_at: string | null;
-      },
-      { $sessionKey: string }
-    >(queries.sessionDocuments);
-    const data = stmt.all({ $sessionKey: params.sessionKey });
-    stmt.finalize();
-    return data;
+    return fetchSessionDocuments(this.db, params);
   }
 
   public async fetchSessionNotices(params: { sessionKey: string }) {
-    const stmt = this.db.prepare<
-      DatabaseTables.SessionNotice,
-      { $sessionKey: string }
-    >(queries.sessionNotices);
-    const data = stmt.all({ $sessionKey: params.sessionKey });
-    stmt.finalize();
-    return data;
+    return fetchSessionNotices(this.db, params);
   }
 
   public async fetchSectionDocumentLinks(params: { sectionKey: string }) {
-    const stmt = this.db.prepare<
-      {
-        id: number;
-        section_key: string;
-        label: string | null;
-        url: string | null;
-        document_tunnus: string | null;
-        document_id: number | null;
-        document_type_name: string | null;
-        document_type_code: string | null;
-        document_title: string | null;
-        document_created_at: string | null;
-        source_type: string | null;
-      },
-      { $sectionKey: string }
-    >(queries.sectionDocumentLinks);
-    const data = stmt.all({ $sectionKey: params.sectionKey });
-    stmt.finalize();
-    return data;
+    return fetchSectionDocumentLinks(this.db, params);
   }
 
   public async fetchSpeechesByDate(params: { date: string }) {
-    const stmt = this.db.prepare<
-      {
-        id: number;
-        excel_id?: string | null;
-        processing_phase?: string | null;
-        document?: string | null;
-        ordinal?: number | null;
-        position?: string | null;
-        first_name?: string | null;
-        last_name?: string | null;
-        party?: string | null;
-        speech_type?: string | null;
-        start_time?: string | null;
-        end_time?: string | null;
-        content?: string | null;
-        minutes_url?: string | null;
-        source_file?: string | null;
-        section_title?: string;
-        section_processing_title?: string;
-        section_ordinal?: number;
-      },
-      { $date: string }
-    >(queries.speechesByDate);
-    const data = stmt.all({ $date: params.date });
-    stmt.finalize();
-    return data;
+    return fetchSpeechesByDate(this.db, params);
   }
 
   public async fetchSessionDates() {
-    const stmt = this.db.prepare<{ date: string }, []>(queries.sessionDates);
-    const data = stmt.all();
-    stmt.finalize();
-    return data;
+    return fetchSessionDates(this.db);
   }
 
   // ─── Analytics queries ───
