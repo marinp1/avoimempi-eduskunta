@@ -2,6 +2,7 @@ import type { Database } from "bun:sqlite";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { VaskiEntry } from "../reader";
+import { convertVaskiNodeToRichText } from "../rich-text";
 
 function normalizeText(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -307,7 +308,9 @@ function parseKysymys(
   first_signer_last_name: string | null;
   first_signer_party: string | null;
   question_text: string | null;
+  question_rich_text: string | null;
   resolution_text: string | null;
+  resolution_rich_text: string | null;
   signers: InterpellationSigner[];
   subjects: InterpellationSubject[];
 } {
@@ -322,42 +325,13 @@ function parseKysymys(
   const submission_date = normalizeText(identifiointiOsa["@_laadintaPvm"]) ||
     normalizeText(meta?.["@_laadintaPvm"]);
 
-  const questionParts: string[] = [];
-  const perusteluOsa = kysymys.PerusteluOsa;
-  if (perusteluOsa) {
-    const luku = perusteluOsa.PerusteluLuku;
-    if (luku) {
-      const kappaleet = normalizeArray<unknown>(luku.KappaleKooste);
-      for (const kappale of kappaleet) {
-        const text = normalizeText(kappale);
-        if (text) questionParts.push(text);
-      }
-      if (questionParts.length === 0) {
-        collectTextFragments(luku, questionParts);
-      }
-    } else {
-      collectTextFragments(perusteluOsa, questionParts);
-    }
-  }
-  const question_text = questionParts.length > 0 ? questionParts.join("\n\n") : null;
+  const questionRichText = convertVaskiNodeToRichText(kysymys.PerusteluOsa);
+  const question_text = questionRichText.plainText;
+  const question_rich_text = questionRichText.json;
 
-  const resolutionParts: string[] = [];
-  const ponsiOsa = kysymys.PonsiOsa;
-  if (ponsiOsa) {
-    const johdanto = normalizeText(ponsiOsa.JohdantoTeksti);
-    if (johdanto) resolutionParts.push(johdanto);
-
-    const sisennetyt = normalizeArray<Record<string, any>>(ponsiOsa.SisennettyKappaleKooste);
-    for (const item of sisennetyt) {
-      const text = normalizeText(item?.KursiiviTeksti) || normalizeText(item?.KappaleKooste);
-      if (text) resolutionParts.push(text);
-    }
-
-    if (resolutionParts.length <= 1) {
-      collectTextFragments(ponsiOsa, resolutionParts);
-    }
-  }
-  const resolution_text = resolutionParts.length > 0 ? resolutionParts.join("\n\n") : null;
+  const resolutionRichText = convertVaskiNodeToRichText(kysymys.PonsiOsa);
+  const resolution_text = resolutionRichText.plainText;
+  const resolution_rich_text = resolutionRichText.json;
 
   const signers: InterpellationSigner[] = [];
   const allekirjoitusOsa = kysymys.AllekirjoitusOsa;
@@ -404,7 +378,9 @@ function parseKysymys(
     first_signer_last_name: first?.last_name ?? null,
     first_signer_party: first?.party ?? null,
     question_text,
+    question_rich_text,
     resolution_text,
+    resolution_rich_text,
     signers,
     subjects,
   };
@@ -412,8 +388,8 @@ function parseKysymys(
 
 export default function createValikysymysSubMigrator(db: Database) {
   const insertInterpellation = db.prepare(
-    `INSERT INTO Interpellation (id, parliament_identifier, document_number, parliamentary_year, title, submission_date, first_signer_person_id, first_signer_first_name, first_signer_last_name, first_signer_party, co_signer_count, decision_outcome, decision_outcome_code, question_text, resolution_text, source_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO Interpellation (id, parliament_identifier, document_number, parliamentary_year, title, submission_date, first_signer_person_id, first_signer_first_name, first_signer_last_name, first_signer_party, co_signer_count, decision_outcome, decision_outcome_code, question_text, question_rich_text, resolution_text, resolution_rich_text, source_path)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(parliament_identifier) DO UPDATE SET
        title = COALESCE(excluded.title, Interpellation.title),
        submission_date = COALESCE(excluded.submission_date, Interpellation.submission_date),
@@ -425,7 +401,9 @@ export default function createValikysymysSubMigrator(db: Database) {
        decision_outcome = COALESCE(excluded.decision_outcome, Interpellation.decision_outcome),
        decision_outcome_code = COALESCE(excluded.decision_outcome_code, Interpellation.decision_outcome_code),
        question_text = COALESCE(excluded.question_text, Interpellation.question_text),
+       question_rich_text = COALESCE(excluded.question_rich_text, Interpellation.question_rich_text),
        resolution_text = COALESCE(excluded.resolution_text, Interpellation.resolution_text),
+       resolution_rich_text = COALESCE(excluded.resolution_rich_text, Interpellation.resolution_rich_text),
        source_path = excluded.source_path`,
   );
 
@@ -516,6 +494,8 @@ export default function createValikysymysSubMigrator(db: Database) {
             data.decision_outcome_code,
             null,
             null,
+            null,
+            null,
             sourcePath,
           );
 
@@ -561,7 +541,9 @@ export default function createValikysymysSubMigrator(db: Database) {
             null,
             null,
             data.question_text,
+            data.question_rich_text,
             data.resolution_text,
+            data.resolution_rich_text,
             sourcePath,
           );
 

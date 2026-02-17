@@ -333,7 +333,9 @@ interface InterpellationDetail {
 	title: string | null;
 	submission_date: string | null;
 	question_text: string | null;
+	question_rich_text: string | null;
 	resolution_text: string | null;
+	resolution_rich_text: string | null;
 	decision_outcome: string | null;
 	decision_outcome_code: string | null;
 	signers: Array<{
@@ -675,8 +677,8 @@ function InterpellationCard({ item }: { item: InterpellationListItem }) {
 								</Box>
 							)}
 
-							{detail.question_text && (
-								<Box>
+								{(detail.question_text || detail.question_rich_text) && (
+									<Box>
 									<Button
 										startIcon={<ArticleIcon />}
 										onClick={() => setShowJustification(!showJustification)}
@@ -699,22 +701,18 @@ function InterpellationCard({ item }: { item: InterpellationListItem }) {
 												borderLeft: `4px solid ${colors.primary}`,
 											}}
 										>
-											<Typography
-												variant="body2"
-												sx={{
-													color: colors.textPrimary,
-													whiteSpace: "pre-wrap",
-												}}
-											>
-												{detail.question_text}
-											</Typography>
-										</Box>
-									</Collapse>
-								</Box>
-							)}
+												<RichTextRenderer
+													document={detail.question_rich_text}
+													fallbackText={detail.question_text}
+													paragraphVariant="body2"
+												/>
+											</Box>
+										</Collapse>
+									</Box>
+								)}
 
-							{detail.resolution_text && (
-								<Box>
+								{(detail.resolution_text || detail.resolution_rich_text) && (
+									<Box>
 									<Button
 										startIcon={<GavelIcon />}
 										onClick={() => setShowClauses(!showClauses)}
@@ -739,19 +737,15 @@ function InterpellationCard({ item }: { item: InterpellationListItem }) {
 												)}`,
 											}}
 										>
-											<Typography
-												variant="body2"
-												sx={{
-													color: colors.textPrimary,
-													whiteSpace: "pre-wrap",
-												}}
-											>
-												{detail.resolution_text}
-											</Typography>
-										</Box>
-									</Collapse>
-								</Box>
-							)}
+												<RichTextRenderer
+													document={detail.resolution_rich_text}
+													fallbackText={detail.resolution_text}
+													paragraphVariant="body2"
+												/>
+											</Box>
+										</Collapse>
+									</Box>
+								)}
 
 							<InlineRelatedSessions sessions={detail.sessions} />
 
@@ -797,8 +791,11 @@ interface LegislativeInitiativeDetail {
 	first_signer_last_name: string | null;
 	first_signer_party: string | null;
 	justification_text: string | null;
+	justification_rich_text: string | null;
 	proposal_text: string | null;
+	proposal_rich_text: string | null;
 	law_text: string | null;
+	law_rich_text: string | null;
 	decision_outcome: string | null;
 	decision_outcome_code: string | null;
 	latest_stage_code: string | null;
@@ -1021,8 +1018,8 @@ function LegislativeInitiativeCard({
 
 					{detail && (
 						<Stack spacing={2}>
-							{detail.justification_text && (
-								<Box>
+								{(detail.justification_text || detail.justification_rich_text) && (
+									<Box>
 									<Button
 										startIcon={<ArticleIcon />}
 										onClick={() => setShowJustification(!showJustification)}
@@ -1041,22 +1038,18 @@ function LegislativeInitiativeCard({
 												borderLeft: `4px solid ${colors.info}`,
 											}}
 										>
-											<Typography
-												variant="body2"
-												sx={{
-													color: colors.textPrimary,
-													whiteSpace: "pre-wrap",
-												}}
-											>
-												{detail.justification_text}
-											</Typography>
-										</Box>
-									</Collapse>
-								</Box>
-							)}
+												<RichTextRenderer
+													document={detail.justification_rich_text}
+													fallbackText={detail.justification_text}
+													paragraphVariant="body2"
+												/>
+											</Box>
+										</Collapse>
+									</Box>
+								)}
 
-							{detail.proposal_text && (
-								<Box>
+								{(detail.proposal_text || detail.proposal_rich_text) && (
+									<Box>
 									<Button
 										startIcon={<GavelIcon />}
 										onClick={() => setShowProposalText(!showProposalText)}
@@ -1075,22 +1068,18 @@ function LegislativeInitiativeCard({
 												borderLeft: `4px solid ${colors.primary}`,
 											}}
 										>
-											<Typography
-												variant="body2"
-												sx={{
-													color: colors.textPrimary,
-													whiteSpace: "pre-wrap",
-												}}
-											>
-												{detail.proposal_text}
-											</Typography>
-										</Box>
-									</Collapse>
-								</Box>
-							)}
+												<RichTextRenderer
+													document={detail.proposal_rich_text}
+													fallbackText={detail.proposal_text}
+													paragraphVariant="body2"
+												/>
+											</Box>
+										</Collapse>
+									</Box>
+								)}
 
-							{detail.law_text && (
-								<Box>
+								{(detail.law_text || detail.law_rich_text) && (
+									<Box>
 									<Button
 										startIcon={<BalanceIcon />}
 										onClick={() => setShowLawText(!showLawText)}
@@ -1109,19 +1098,15 @@ function LegislativeInitiativeCard({
 												borderLeft: `4px solid ${colors.success}`,
 											}}
 										>
-											<Typography
-												variant="body2"
-												sx={{
-													color: colors.textPrimary,
-													whiteSpace: "pre-wrap",
-												}}
-											>
-												{detail.law_text}
-											</Typography>
-										</Box>
-									</Collapse>
-								</Box>
-							)}
+												<RichTextRenderer
+													document={detail.law_rich_text}
+													fallbackText={detail.law_text}
+													paragraphVariant="body2"
+												/>
+											</Box>
+										</Collapse>
+									</Box>
+								)}
 
 							<InlineRelatedSessions sessions={detail.sessions} />
 
@@ -1694,6 +1679,7 @@ interface WrittenQuestionDetail {
 	title: string | null;
 	submission_date: string | null;
 	question_text: string | null;
+	question_rich_text: string | null;
 	answer_parliament_identifier: string | null;
 	answer_minister_title: string | null;
 	answer_minister_first_name: string | null;
@@ -1941,41 +1927,41 @@ function OralQuestionCard({ item }: { item: OralQuestionListItem }) {
 						</Alert>
 					)}
 
-					{detail && (
-						<Stack spacing={2}>
-							{detail.question_text && (
-								<Box>
-									<Button
-										startIcon={<ArticleIcon />}
-										onClick={() => setShowQuestionText(!showQuestionText)}
-										sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
-									>
-										{showQuestionText
-											? t("documents.hideQuestion", "Piilota kysymys")
-											: t("documents.showQuestion", "Näytä kysymys")}
-									</Button>
-									<Collapse in={showQuestionText}>
-										<Box
-											sx={{
-												p: 2,
-												backgroundColor: colors.backgroundSubtle,
-												borderRadius: 1,
-												borderLeft: `4px solid ${colors.info}`,
-											}}
+						{detail && (
+							<Stack spacing={2}>
+								{detail.question_text && (
+									<Box>
+										<Button
+											startIcon={<ArticleIcon />}
+											onClick={() => setShowQuestionText(!showQuestionText)}
+											sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
 										>
-											<Typography
-												variant="body2"
+											{showQuestionText
+												? t("documents.hideQuestion", "Piilota kysymys")
+												: t("documents.showQuestion", "Näytä kysymys")}
+										</Button>
+										<Collapse in={showQuestionText}>
+											<Box
 												sx={{
-													color: colors.textPrimary,
-													whiteSpace: "pre-wrap",
+													p: 2,
+													backgroundColor: colors.backgroundSubtle,
+													borderRadius: 1,
+													borderLeft: `4px solid ${colors.info}`,
 												}}
 											>
-												{detail.question_text}
-											</Typography>
-										</Box>
-									</Collapse>
-								</Box>
-							)}
+												<Typography
+													variant="body2"
+													sx={{
+														color: colors.textPrimary,
+														whiteSpace: "pre-wrap",
+													}}
+												>
+													{detail.question_text}
+												</Typography>
+											</Box>
+										</Collapse>
+									</Box>
+								)}
 
 							<InlineRelatedSessions sessions={detail.sessions} />
 
@@ -2357,8 +2343,8 @@ function WrittenQuestionCard({ item }: { item: WrittenQuestionListItem }) {
 								</Box>
 							)}
 
-							{detail.question_text && (
-								<Box>
+								{(detail.question_text || detail.question_rich_text) && (
+									<Box>
 									<Button
 										startIcon={<ArticleIcon />}
 										onClick={() => setShowQuestionText(!showQuestionText)}
@@ -2381,19 +2367,15 @@ function WrittenQuestionCard({ item }: { item: WrittenQuestionListItem }) {
 												borderLeft: `4px solid ${colors.primary}`,
 											}}
 										>
-											<Typography
-												variant="body2"
-												sx={{
-													color: colors.textPrimary,
-													whiteSpace: "pre-wrap",
-												}}
-											>
-												{detail.question_text}
-											</Typography>
-										</Box>
-									</Collapse>
-								</Box>
-							)}
+												<RichTextRenderer
+													document={detail.question_rich_text}
+													fallbackText={detail.question_text}
+													paragraphVariant="body2"
+												/>
+											</Box>
+										</Collapse>
+									</Box>
+								)}
 
 							{/* Subjects */}
 							{detail.subjects.length > 0 && (
@@ -2455,12 +2437,19 @@ interface CommitteeReportDetail {
 	draft_date: string | null;
 	signature_date: string | null;
 	summary_text: string | null;
+	summary_rich_text: string | null;
 	general_reasoning_text: string | null;
+	general_reasoning_rich_text: string | null;
 	detailed_reasoning_text: string | null;
+	detailed_reasoning_rich_text: string | null;
 	decision_text: string | null;
+	decision_rich_text: string | null;
 	legislation_amendment_text: string | null;
+	legislation_amendment_rich_text: string | null;
 	minority_opinion_text: string | null;
+	minority_opinion_rich_text: string | null;
 	resolution_text: string | null;
+	resolution_rich_text: string | null;
 	members: Array<{
 		member_order: number;
 		person_id: number | null;
@@ -2760,8 +2749,8 @@ function CommitteeReportCard({ item }: { item: CommitteeReportListItem }) {
 							)}
 
 							{/* Summary text */}
-							{detail.summary_text && (
-								<Box>
+								{(detail.summary_text || detail.summary_rich_text) && (
+									<Box>
 									<Button
 										startIcon={<ArticleIcon />}
 										onClick={() => setShowSummary(!showSummary)}
@@ -2784,23 +2773,24 @@ function CommitteeReportCard({ item }: { item: CommitteeReportListItem }) {
 												borderLeft: `4px solid ${colors.primary}`,
 											}}
 										>
-											<Typography
-												variant="body2"
-												sx={{
-													color: colors.textPrimary,
-													whiteSpace: "pre-wrap",
-												}}
-											>
-												{detail.summary_text}
-											</Typography>
-										</Box>
-									</Collapse>
-								</Box>
-							)}
+												<RichTextRenderer
+													document={detail.summary_rich_text}
+													fallbackText={detail.summary_text}
+													paragraphVariant="body2"
+												/>
+											</Box>
+										</Collapse>
+									</Box>
+								)}
 
-							{/* Reasoning text */}
-							{(detail.general_reasoning_text || detail.detailed_reasoning_text) && (
-								<Box>
+								{/* Reasoning text */}
+								{(
+									detail.general_reasoning_text ||
+									detail.general_reasoning_rich_text ||
+									detail.detailed_reasoning_text ||
+									detail.detailed_reasoning_rich_text
+								) && (
+									<Box>
 									<Button
 										startIcon={<ArticleIcon />}
 										onClick={() => setShowReasoning(!showReasoning)}
@@ -2823,23 +2813,30 @@ function CommitteeReportCard({ item }: { item: CommitteeReportListItem }) {
 												borderLeft: `4px solid ${colors.primary}`,
 											}}
 										>
-											<Typography
-												variant="body2"
-												sx={{
-													color: colors.textPrimary,
-													whiteSpace: "pre-wrap",
-												}}
-											>
-												{[detail.general_reasoning_text, detail.detailed_reasoning_text].filter(Boolean).join("\n\n")}
-											</Typography>
-										</Box>
-									</Collapse>
-								</Box>
-							)}
+												<Stack spacing={1.5}>
+													{(detail.general_reasoning_text || detail.general_reasoning_rich_text) && (
+														<RichTextRenderer
+															document={detail.general_reasoning_rich_text}
+															fallbackText={detail.general_reasoning_text}
+															paragraphVariant="body2"
+														/>
+													)}
+													{(detail.detailed_reasoning_text || detail.detailed_reasoning_rich_text) && (
+														<RichTextRenderer
+															document={detail.detailed_reasoning_rich_text}
+															fallbackText={detail.detailed_reasoning_text}
+															paragraphVariant="body2"
+														/>
+													)}
+												</Stack>
+											</Box>
+										</Collapse>
+									</Box>
+								)}
 
-							{/* Decision text */}
-							{detail.decision_text && (
-								<Box>
+								{/* Decision text */}
+								{(detail.decision_text || detail.decision_rich_text) && (
+									<Box>
 									<Button
 										startIcon={<GavelIcon />}
 										onClick={() => setShowDecision(!showDecision)}
@@ -2862,23 +2859,19 @@ function CommitteeReportCard({ item }: { item: CommitteeReportListItem }) {
 												borderLeft: `4px solid ${colors.primary}`,
 											}}
 										>
-											<Typography
-												variant="body2"
-												sx={{
-													color: colors.textPrimary,
-													whiteSpace: "pre-wrap",
-												}}
-											>
-												{detail.decision_text}
-											</Typography>
-										</Box>
-									</Collapse>
-								</Box>
-							)}
+												<RichTextRenderer
+													document={detail.decision_rich_text}
+													fallbackText={detail.decision_text}
+													paragraphVariant="body2"
+												/>
+											</Box>
+										</Collapse>
+									</Box>
+								)}
 
-							{/* Legislation amendment text */}
-							{detail.legislation_amendment_text && (
-								<Box>
+								{/* Legislation amendment text */}
+								{(detail.legislation_amendment_text || detail.legislation_amendment_rich_text) && (
+									<Box>
 									<Button
 										startIcon={<BalanceIcon />}
 										onClick={() => setShowLegislation(!showLegislation)}
@@ -2901,23 +2894,19 @@ function CommitteeReportCard({ item }: { item: CommitteeReportListItem }) {
 												borderLeft: `4px solid ${colors.primary}`,
 											}}
 										>
-											<Typography
-												variant="body2"
-												sx={{
-													color: colors.textPrimary,
-													whiteSpace: "pre-wrap",
-												}}
-											>
-												{detail.legislation_amendment_text}
-											</Typography>
-										</Box>
-									</Collapse>
-								</Box>
-							)}
+												<RichTextRenderer
+													document={detail.legislation_amendment_rich_text}
+													fallbackText={detail.legislation_amendment_text}
+													paragraphVariant="body2"
+												/>
+											</Box>
+										</Collapse>
+									</Box>
+								)}
 
-							{/* Minority opinion */}
-							{detail.minority_opinion_text && (
-								<Box>
+								{/* Minority opinion */}
+								{(detail.minority_opinion_text || detail.minority_opinion_rich_text) && (
+									<Box>
 									<Button
 										startIcon={<PersonIcon />}
 										onClick={() => setShowMinority(!showMinority)}
@@ -2940,23 +2929,19 @@ function CommitteeReportCard({ item }: { item: CommitteeReportListItem }) {
 												borderLeft: `4px solid ${colors.error}`,
 											}}
 										>
-											<Typography
-												variant="body2"
-												sx={{
-													color: colors.textPrimary,
-													whiteSpace: "pre-wrap",
-												}}
-											>
-												{detail.minority_opinion_text}
-											</Typography>
-										</Box>
-									</Collapse>
-								</Box>
-							)}
+												<RichTextRenderer
+													document={detail.minority_opinion_rich_text}
+													fallbackText={detail.minority_opinion_text}
+													paragraphVariant="body2"
+												/>
+											</Box>
+										</Collapse>
+									</Box>
+								)}
 
-							{/* Resolution text */}
-							{detail.resolution_text && (
-								<Box
+								{/* Resolution text */}
+								{(detail.resolution_text || detail.resolution_rich_text) && (
+									<Box
 									sx={{
 										p: 2,
 										backgroundColor: colors.backgroundSubtle,
@@ -2970,17 +2955,13 @@ function CommitteeReportCard({ item }: { item: CommitteeReportListItem }) {
 									>
 										{t("documents.committeeResolution", "Lausumaehdotus")}
 									</Typography>
-									<Typography
-										variant="body2"
-										sx={{
-											color: colors.textPrimary,
-											whiteSpace: "pre-wrap",
-										}}
-									>
-										{detail.resolution_text}
-									</Typography>
-								</Box>
-							)}
+										<RichTextRenderer
+											document={detail.resolution_rich_text}
+											fallbackText={detail.resolution_text}
+											paragraphVariant="body2"
+										/>
+									</Box>
+								)}
 
 							<InlineRelatedSessions sessions={detail.sessions} />
 

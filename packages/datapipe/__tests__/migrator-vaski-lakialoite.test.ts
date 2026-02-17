@@ -129,7 +129,7 @@ describe("Vaski lakialoite submigrator", () => {
     clearStatementCache();
     reportLogDir = mkdtempSync(join(tmpdir(), "lakialoite-report-"));
     process.env.MIGRATOR_REPORT_LOG_DIR = reportLogDir;
-    db = createTestDb(16);
+    db = createTestDb(20);
     migrateRow = createSubMigrator(db).migrateRow;
   });
 

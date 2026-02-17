@@ -53,11 +53,28 @@ export type RichTextListBlock = {
   items: RichTextListItem[];
 };
 
+export type RichTextTableCell = {
+  inlines: RichTextInline[];
+  header?: boolean;
+  colSpan?: number;
+  rowSpan?: number;
+};
+
+export type RichTextTableRow = {
+  cells: RichTextTableCell[];
+};
+
+export type RichTextTableBlock = {
+  type: "table";
+  rows: RichTextTableRow[];
+};
+
 export type RichTextBlock =
   | RichTextParagraphBlock
   | RichTextHeadingBlock
   | RichTextIndentedBlock
-  | RichTextListBlock;
+  | RichTextListBlock
+  | RichTextTableBlock;
 
 export type RichTextDocument = {
   version: typeof RICH_TEXT_VERSION;
@@ -110,6 +127,22 @@ function hasInlines(value: unknown): value is { inlines: RichTextInline[] } {
   return value.inlines.every((inline) => isRichTextInline(inline));
 }
 
+function isPositiveInteger(value: unknown): boolean {
+  return typeof value === "number" && Number.isInteger(value) && value > 0;
+}
+
+function isRichTextTableCell(value: unknown): value is RichTextTableCell {
+  if (!isRecord(value) || !hasInlines(value)) return false;
+
+  const valueRecord = value as Record<string, unknown>;
+
+  if (valueRecord.header !== undefined && typeof valueRecord.header !== "boolean") return false;
+  if (valueRecord.colSpan !== undefined && !isPositiveInteger(valueRecord.colSpan)) return false;
+  if (valueRecord.rowSpan !== undefined && !isPositiveInteger(valueRecord.rowSpan)) return false;
+
+  return true;
+}
+
 function isRichTextBlock(value: unknown): value is RichTextBlock {
   if (!isRecord(value) || typeof value.type !== "string") return false;
 
@@ -126,6 +159,15 @@ function isRichTextBlock(value: unknown): value is RichTextBlock {
   if (value.type === "list") {
     if (typeof value.ordered !== "boolean" || !Array.isArray(value.items)) return false;
     return value.items.every((item) => hasInlines(item));
+  }
+
+  if (value.type === "table") {
+    if (!Array.isArray(value.rows)) return false;
+    return value.rows.every((row) =>
+      isRecord(row) &&
+      Array.isArray(row.cells) &&
+      row.cells.every((cell) => isRichTextTableCell(cell))
+    );
   }
 
   return false;

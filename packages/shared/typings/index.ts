@@ -25,6 +25,9 @@ export type {
   RichTextListItem,
   RichTextMark,
   RichTextParagraphBlock,
+  RichTextTableBlock,
+  RichTextTableCell,
+  RichTextTableRow,
   RichTextTextInline,
 } from "./RichText";
 

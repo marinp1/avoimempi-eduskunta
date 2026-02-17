@@ -11,11 +11,18 @@ SELECT
   draft_date,
   signature_date,
   summary_text,
+  summary_rich_text,
   general_reasoning_text,
+  general_reasoning_rich_text,
   detailed_reasoning_text,
+  detailed_reasoning_rich_text,
   decision_text,
+  decision_rich_text,
   legislation_amendment_text,
+  legislation_amendment_rich_text,
   minority_opinion_text,
-  resolution_text
+  minority_opinion_rich_text,
+  resolution_text,
+  resolution_rich_text
 FROM CommitteeReport
 WHERE id = $id

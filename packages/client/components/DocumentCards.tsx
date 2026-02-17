@@ -369,7 +369,9 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
   const { data, loading } = useFetchByIdentifier<
     WithSigner & {
       question_text: string | null;
+      question_rich_text: string | null;
       resolution_text: string | null;
+      resolution_rich_text: string | null;
       stages: {
         stage_order: number;
         stage_title: string;
@@ -427,8 +429,18 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
           </Typography>
         )}
       </Box>
-      <ExpandableSnippet label="Kysymys" text={data.question_text} maxLength={280} />
-      <ExpandableSnippet label="Lausumaehdotus" text={data.resolution_text} maxLength={220} />
+      <ExpandableRichSnippet
+        label="Kysymys"
+        text={data.question_text}
+        richText={data.question_rich_text}
+        maxLength={280}
+      />
+      <ExpandableRichSnippet
+        label="Lausumaehdotus"
+        text={data.resolution_text}
+        richText={data.resolution_rich_text}
+        maxLength={220}
+      />
       {(latestStage?.event_title || latestStage?.event_description || latestStage?.event_date) && (
         <Box sx={{ mt: 0.5 }}>
           <Typography sx={{ fontSize: "0.72rem", color: colors.textSecondary, fontWeight: 600 }}>
@@ -465,8 +477,11 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
     WithSigner & {
       initiative_type_code: string;
       justification_text: string | null;
+      justification_rich_text: string | null;
       proposal_text: string | null;
+      proposal_rich_text: string | null;
       law_text: string | null;
+      law_rich_text: string | null;
     }
   >("/api/legislative-initiatives/by-identifier", identifier);
 
@@ -518,9 +533,24 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
           </Typography>
         )}
       </Box>
-      <ExpandableSnippet label="Perustelut" text={data.justification_text} maxLength={260} />
-      <ExpandableSnippet label="Ponsi" text={data.proposal_text} maxLength={220} />
-      <ExpandableSnippet label="Lakiteksti" text={data.law_text} maxLength={220} />
+      <ExpandableRichSnippet
+        label="Perustelut"
+        text={data.justification_text}
+        richText={data.justification_rich_text}
+        maxLength={260}
+      />
+      <ExpandableRichSnippet
+        label="Ponsi"
+        text={data.proposal_text}
+        richText={data.proposal_rich_text}
+        maxLength={220}
+      />
+      <ExpandableRichSnippet
+        label="Lakiteksti"
+        text={data.law_text}
+        richText={data.law_rich_text}
+        maxLength={220}
+      />
       {renderSubjectChips(data.subjects)}
     </Box>
   );
@@ -591,6 +621,7 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
       answer_minister_first_name: string | null;
       answer_minister_last_name: string | null;
       question_text: string | null;
+      question_rich_text: string | null;
     }
   >("/api/written-questions/by-identifier", identifier);
 
@@ -636,7 +667,12 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
           </Typography>
         )}
       </Box>
-      <ExpandableSnippet label="Kysymys" text={data.question_text} maxLength={280} />
+      <ExpandableRichSnippet
+        label="Kysymys"
+        text={data.question_text}
+        richText={data.question_rich_text}
+        maxLength={280}
+      />
       {renderSubjectChips(data.subjects)}
     </Box>
   );
@@ -654,9 +690,13 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
     recipient_committee: string | null;
     source_reference: string | null;
     summary_text: string | null;
+    summary_rich_text: string | null;
     decision_text: string | null;
+    decision_rich_text: string | null;
     resolution_text: string | null;
+    resolution_rich_text: string | null;
     legislation_amendment_text: string | null;
+    legislation_amendment_rich_text: string | null;
   }>("/api/committee-reports/by-identifier", identifier);
 
   if (loading) return <LoadingPlaceholder text="Ladataan valiokunnan mietinnön tietoja..." />;
@@ -699,10 +739,30 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
           />
         )}
       </Box>
-      <ExpandableSnippet label="Tiivistelmä" text={data.summary_text} maxLength={280} />
-      <ExpandableSnippet label="Päätösehdotus" text={data.decision_text} maxLength={220} />
-      <ExpandableSnippet label="Lausumaehdotus" text={data.resolution_text} maxLength={220} />
-      <ExpandableSnippet label="Lakiehdotukset" text={data.legislation_amendment_text} maxLength={220} />
+      <ExpandableRichSnippet
+        label="Tiivistelmä"
+        text={data.summary_text}
+        richText={data.summary_rich_text}
+        maxLength={280}
+      />
+      <ExpandableRichSnippet
+        label="Päätösehdotus"
+        text={data.decision_text}
+        richText={data.decision_rich_text}
+        maxLength={220}
+      />
+      <ExpandableRichSnippet
+        label="Lausumaehdotus"
+        text={data.resolution_text}
+        richText={data.resolution_rich_text}
+        maxLength={220}
+      />
+      <ExpandableRichSnippet
+        label="Lakiehdotukset"
+        text={data.legislation_amendment_text}
+        richText={data.legislation_amendment_rich_text}
+        maxLength={220}
+      />
     </Box>
   );
 };

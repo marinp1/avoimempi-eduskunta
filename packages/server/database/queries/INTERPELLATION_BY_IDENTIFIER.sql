@@ -13,6 +13,8 @@ SELECT
   i.decision_outcome,
   i.decision_outcome_code,
   i.question_text,
-  i.resolution_text
+  i.question_rich_text,
+  i.resolution_text,
+  i.resolution_rich_text
 FROM Interpellation i
 WHERE i.parliament_identifier = $identifier
