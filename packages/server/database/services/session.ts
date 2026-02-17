@@ -8,7 +8,9 @@ const buildSectionRows = (
   votingCountStmt: ReturnType<Database["prepare"]>,
 ) => {
   const sections = sectionsStmt.all({ $sessionKey: sessionKey });
-  const votingCountResult = votingCountStmt.get({ $sessionKey: sessionKey });
+  const votingCountResult = votingCountStmt.get(
+    { $sessionKey: sessionKey },
+  ) as { voting_count?: number } | null;
   return {
     sections,
     section_count: sections.length,

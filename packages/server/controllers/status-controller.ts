@@ -25,6 +25,13 @@ export interface DataOverview {
   lastUpdated: string;
 }
 
+export type SourceTableStatusState =
+  | "empty"
+  | "scraping"
+  | "raw"
+  | "parsing"
+  | "parsed";
+
 export interface SourceTableStatus {
   tableName: string;
   apiRowCount: number;
@@ -37,6 +44,8 @@ export interface SourceTableStatus {
   rawLastUpdated: string | null;
   parsedLastUpdated: string | null;
   scrapeProgressPercent: number;
+  parseProgressPercent: number;
+  status: SourceTableStatusState;
 }
 
 export interface SourceDataOverview {
@@ -66,6 +75,7 @@ export class StatusController {
   invalidateCache(): void {
     this.cachedSanityChecks = null;
     this.sanityCheckService = new SanityCheckService(this.database);
+    this.adminStorageService.invalidateStatusCache();
   }
 
   async getSanityChecks(): Promise<SanityCheckResult> {
@@ -115,19 +125,53 @@ export class StatusController {
 
   async getSourceDataStatus(): Promise<SourceDataOverview> {
     const storageStatus = await this.adminStorageService.getStatus();
-    const tables = storageStatus.map((row) => ({
-      tableName: row.table_name,
-      apiRowCount: row.total_rows_in_api ?? 0,
-      rawRows: row.raw_estimated_rows,
-      parsedRows: row.parsed_estimated_rows,
-      rawPages: row.raw_page_count,
-      parsedPages: row.parsed_page_count,
-      hasRawData: row.has_raw_data,
-      hasParsedData: row.has_parsed_data,
-      rawLastUpdated: row.raw_last_updated,
-      parsedLastUpdated: row.parsed_last_updated,
-      scrapeProgressPercent: row.scrape_progress_percent ?? 0,
-    }));
+    const tables = storageStatus.map((row) => {
+      const rawRows = row.raw_estimated_rows;
+      const parsedRows = row.parsed_estimated_rows;
+      const rawHasData = row.has_raw_data;
+      const parsedHasData = row.has_parsed_data;
+      const scrapePercent = row.scrape_progress_percent ?? 0;
+      const rawComplete = rawHasData && scrapePercent >= 99.9;
+      const parseProgressPercent = rawRows > 0
+        ? Math.min((parsedRows / rawRows) * 100, 100)
+        : parsedRows > 0
+          ? 100
+          : 0;
+
+      let status: SourceTableStatusState = "empty";
+
+      if (rawHasData || parsedHasData) {
+        if (rawHasData && !rawComplete) {
+          status = "scraping";
+        } else if (!parsedHasData || parsedRows === 0) {
+          status = rawHasData ? "raw" : "empty";
+        } else if (parseProgressPercent < 100) {
+          status = "parsing";
+        } else {
+          status = "parsed";
+        }
+
+        if (!rawHasData && parsedHasData) {
+          status = "parsed";
+        }
+      }
+
+      return {
+        tableName: row.table_name,
+        apiRowCount: row.total_rows_in_api ?? 0,
+        rawRows,
+        parsedRows,
+        rawPages: row.raw_page_count,
+        parsedPages: row.parsed_page_count,
+        hasRawData: rawHasData,
+        hasParsedData: parsedHasData,
+        rawLastUpdated: row.raw_last_updated,
+        parsedLastUpdated: row.parsed_last_updated,
+        scrapeProgressPercent: scrapePercent,
+        parseProgressPercent,
+        status,
+      };
+    });
 
     return {
       tables,
