@@ -4,15 +4,34 @@ import { parseDateTime } from "../utils";
 
 export default (db: Database) =>
   async (dataToImport: RawDataModels["SaliDBKohtaAanestys"]) => {
+    const votingNumber = +dataToImport.Aanestysnumero;
+    if (!Number.isFinite(votingNumber)) {
+      console.log(
+        `invalid voting number for session_key = ${dataToImport.IstuntoTekninenAvain}`,
+      );
+      return;
+    }
+
     const { id } = db
-      .prepare<Pick<DatabaseTables.Voting, "id">, { $key: string }>(
-        "SELECT id FROM Voting WHERE session_key = $key ORDER BY start_time DESC, id DESC LIMIT 1",
+      .prepare<
+        Pick<DatabaseTables.Voting, "id">,
+        { $key: string; $number: number }
+      >(
+        `SELECT id
+         FROM Voting
+         WHERE session_key = $key
+           AND number = $number
+         ORDER BY id DESC
+         LIMIT 1`,
       )
-      .get({ $key: dataToImport.IstuntoTekninenAvain }) ?? { id: null };
+      .get({
+        $key: dataToImport.IstuntoTekninenAvain,
+        $number: votingNumber,
+      }) ?? { id: null };
 
     if (id === null) {
       console.log(
-        `id is null for session_key = ${dataToImport.IstuntoTekninenAvain}`,
+        `id is null for session_key = ${dataToImport.IstuntoTekninenAvain}, voting_number = ${votingNumber}`,
       );
       return;
     }

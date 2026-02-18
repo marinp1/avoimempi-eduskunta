@@ -598,8 +598,7 @@ describe("Voting queries", () => {
     const row = stmt.get({ $sessionKey: "2024/1" }) as any;
     stmt.finalize();
 
-    // Seed dataset does not link test votings to sections via section_key.
-    expect(row.voting_count).toBe(0);
+    expect(row.voting_count).toBe(2);
   });
 
   test("VOTINGS_SEARCH returns computed context_title", () => {
@@ -614,6 +613,125 @@ describe("Voting queries", () => {
     const row100 = rows.find((row) => row.id === 100);
     expect(row100).toBeDefined();
     expect(row100?.context_title).toBe("Hallituksen esitys");
+  });
+
+  test("VOTINGS_BY_DOCUMENT uses exact document references instead of text contains", () => {
+    db.run(
+      `INSERT INTO Voting (id, number, start_time, session_key, parliamentary_item, section_title)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [9100, 1, "2024-01-15T13:00:00.000", "2024/1", "HE 1/2024 vp", "Dummy"],
+    );
+
+    try {
+      const stmt = db.prepare(queries.votingsByDocument);
+      const rows = stmt.all({ $identifier: "HE 1/2024 vp" }) as any[];
+      stmt.finalize();
+
+      expect(rows.find((row) => row.id === 9100)).toBeUndefined();
+    } finally {
+      db.run(`DELETE FROM Voting WHERE id = 9100`);
+    }
+  });
+
+  test("VOTINGS_BY_DOCUMENT resolves votings from exact document_tunnus links", () => {
+    db.run(
+      `INSERT INTO Voting (id, number, start_time, session_key, parliamentary_item, section_title)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [9101, 2, "2024-01-15T13:10:00.000", "2024/1", "Ei sisalla tunnusta", "Dummy"],
+    );
+    db.run(
+      `INSERT INTO SaliDBDocumentReference (source_type, voting_id, section_key, document_tunnus, source_text, source_url, created_datetime, imported_datetime)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        "voting_item",
+        9101,
+        null,
+        "HE 1/2024 vp",
+        "HE 1/2024 vp",
+        null,
+        null,
+        "2024-01-15T13:10:00.000",
+      ],
+    );
+
+    try {
+      const stmt = db.prepare(queries.votingsByDocument);
+      const rows = stmt.all({ $identifier: "HE 1/2024 vp" }) as any[];
+      stmt.finalize();
+
+      expect(rows.find((row) => row.id === 9101)).toBeDefined();
+    } finally {
+      db.run(`DELETE FROM SaliDBDocumentReference WHERE voting_id = 9101`);
+      db.run(`DELETE FROM Voting WHERE id = 9101`);
+    }
+  });
+
+  test("VOTING_RELATED_BY_ID does not relate votings only by textual parliamentary_item", () => {
+    db.run(
+      `INSERT INTO Voting (id, number, start_time, session_key, parliamentary_item)
+       VALUES (?, ?, ?, ?, ?)`,
+      [9301, 1, "2024-01-15T14:00:00.000", "2024/1", "HE 7/2024 vp"],
+    );
+    db.run(
+      `INSERT INTO Voting (id, number, start_time, session_key, parliamentary_item)
+       VALUES (?, ?, ?, ?, ?)`,
+      [9302, 2, "2024-01-15T14:10:00.000", "2024/1", "HE 7/2024 vp"],
+    );
+    db.run(
+      `INSERT INTO SaliDBDocumentReference (source_type, voting_id, section_key, document_tunnus, source_text, source_url, created_datetime, imported_datetime)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      ["voting_item", 9301, null, "HE 7/2024 vp", null, null, null, "2024-01-15T14:00:00.000"],
+    );
+    db.run(
+      `INSERT INTO SaliDBDocumentReference (source_type, voting_id, section_key, document_tunnus, source_text, source_url, created_datetime, imported_datetime)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      ["voting_item", 9302, null, "HE 8/2024 vp", null, null, null, "2024-01-15T14:10:00.000"],
+    );
+
+    try {
+      const stmt = db.prepare(queries.votingRelatedById);
+      const rows = stmt.all({ $id: 9301 }) as any[];
+      stmt.finalize();
+
+      expect(rows.find((row) => row.id === 9302)).toBeUndefined();
+    } finally {
+      db.run(`DELETE FROM SaliDBDocumentReference WHERE voting_id IN (9301, 9302)`);
+      db.run(`DELETE FROM Voting WHERE id IN (9301, 9302)`);
+    }
+  });
+
+  test("VOTING_RELATED_BY_ID relates votings sharing exact document_tunnus", () => {
+    db.run(
+      `INSERT INTO Voting (id, number, start_time, session_key, parliamentary_item)
+       VALUES (?, ?, ?, ?, ?)`,
+      [9311, 1, "2024-01-15T15:00:00.000", "2024/1", "Teksti A"],
+    );
+    db.run(
+      `INSERT INTO Voting (id, number, start_time, session_key, parliamentary_item)
+       VALUES (?, ?, ?, ?, ?)`,
+      [9312, 2, "2024-01-15T15:10:00.000", "2024/1", "Teksti B"],
+    );
+    db.run(
+      `INSERT INTO SaliDBDocumentReference (source_type, voting_id, section_key, document_tunnus, source_text, source_url, created_datetime, imported_datetime)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      ["voting_item", 9311, null, "HE 9/2024 vp", null, null, null, "2024-01-15T15:00:00.000"],
+    );
+    db.run(
+      `INSERT INTO SaliDBDocumentReference (source_type, voting_id, section_key, document_tunnus, source_text, source_url, created_datetime, imported_datetime)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      ["voting_item", 9312, null, "HE 9/2024 vp", null, null, null, "2024-01-15T15:10:00.000"],
+    );
+
+    try {
+      const stmt = db.prepare(queries.votingRelatedById);
+      const rows = stmt.all({ $id: 9311 }) as any[];
+      stmt.finalize();
+
+      expect(rows.find((row) => row.id === 9312)).toBeDefined();
+    } finally {
+      db.run(`DELETE FROM SaliDBDocumentReference WHERE voting_id IN (9311, 9312)`);
+      db.run(`DELETE FROM Voting WHERE id IN (9311, 9312)`);
+    }
   });
 
   test("SECTION_VOTINGS returns votings for a section key", () => {

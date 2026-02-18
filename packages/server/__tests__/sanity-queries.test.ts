@@ -74,4 +74,40 @@ describe("Sanity query centralization", () => {
       expect(typeof row.c).toBe("number");
     }
   });
+
+  test("votingIndividualCountMismatch flags votings with non-zero n_total and zero Vote rows", () => {
+    db.run(
+      `INSERT INTO Voting (id, number, start_time, session_key, n_total, n_yes, n_no, n_abstain, n_absent)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [9901, 99, "2024-01-15T12:00:00.000", "2024/1", 1, 1, 0, 0, 0],
+    );
+
+    try {
+      const stmt = db.prepare(sanityQueries.votingIndividualCountMismatch);
+      const rows = stmt.all() as Array<{ id: number }>;
+      stmt.finalize();
+
+      expect(rows.some((row) => row.id === 9901)).toBe(true);
+    } finally {
+      db.run("DELETE FROM Voting WHERE id = ?", [9901]);
+    }
+  });
+
+  test("voteAggregationMismatch flags votings with non-zero aggregates and zero Vote rows", () => {
+    db.run(
+      `INSERT INTO Voting (id, number, start_time, session_key, n_total, n_yes, n_no, n_abstain, n_absent)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [9902, 100, "2024-01-15T12:10:00.000", "2024/1", 1, 1, 0, 0, 0],
+    );
+
+    try {
+      const stmt = db.prepare(sanityQueries.voteAggregationMismatch);
+      const rows = stmt.all() as Array<{ id: number }>;
+      stmt.finalize();
+
+      expect(rows.some((row) => row.id === 9902)).toBe(true);
+    } finally {
+      db.run("DELETE FROM Voting WHERE id = ?", [9902]);
+    }
+  });
 });

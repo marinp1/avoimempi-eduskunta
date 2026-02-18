@@ -473,6 +473,32 @@ function writeMigrationReport(
 }
 
 export default function createNimenhuutoraporttiSubMigrator(db: Database) {
+  const insertReport = db.prepare(
+    "INSERT INTO RollCallReport (id, parliament_identifier, session_date, roll_call_start_time, roll_call_end_time, title, status, created_at, edk_identifier, source_path, attachment_group_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  );
+  const insertEntry = db.prepare(
+    "INSERT INTO RollCallEntry (roll_call_id, entry_order, person_id, first_name, last_name, party, entry_type, absence_reason, arrival_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  );
+
+  const insertEntries = (
+    rollCallId: number,
+    entries: Array<Pick<DatabaseTables.RollCallEntry, "entry_order" | "person_id" | "first_name" | "last_name" | "party" | "entry_type" | "absence_reason" | "arrival_time">>,
+  ) => {
+    for (const entry of entries) {
+      insertEntry.run(
+        rollCallId,
+        entry.entry_order,
+        entry.person_id,
+        entry.first_name,
+        entry.last_name,
+        entry.party,
+        entry.entry_type,
+        entry.absence_reason,
+        entry.arrival_time,
+      );
+    }
+  };
+
   return {
     async migrateRow(row: VaskiEntry): Promise<void> {
       const meta = parseMeta(row);
@@ -531,38 +557,20 @@ export default function createNimenhuutoraporttiSubMigrator(db: Database) {
           [incomingReport.id],
         );
         db.run("DELETE FROM RollCallReport WHERE id = ?", [incomingReport.id]);
-        db.run(
-          "INSERT INTO RollCallReport (id, parliament_identifier, session_date, roll_call_start_time, roll_call_end_time, title, status, created_at, edk_identifier, source_path, attachment_group_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-          [
-            incomingReport.id,
-            incomingReport.parliament_identifier,
-            incomingReport.session_date,
-            incomingReport.roll_call_start_time,
-            incomingReport.roll_call_end_time,
-            incomingReport.title,
-            incomingReport.status,
-            incomingReport.created_at,
-            incomingReport.edk_identifier,
-            incomingReport.source_path,
-            incomingReport.attachment_group_id,
-          ],
+        insertReport.run(
+          incomingReport.id,
+          incomingReport.parliament_identifier,
+          incomingReport.session_date,
+          incomingReport.roll_call_start_time,
+          incomingReport.roll_call_end_time,
+          incomingReport.title,
+          incomingReport.status,
+          incomingReport.created_at,
+          incomingReport.edk_identifier,
+          incomingReport.source_path,
+          incomingReport.attachment_group_id,
         );
-        for (const entry of incomingEntries) {
-          db.run(
-            "INSERT INTO RollCallEntry (roll_call_id, entry_order, person_id, first_name, last_name, party, entry_type, absence_reason, arrival_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [
-              entry.roll_call_id,
-              entry.entry_order,
-              entry.person_id,
-              entry.first_name,
-              entry.last_name,
-              entry.party,
-              entry.entry_type,
-              entry.absence_reason,
-              entry.arrival_time,
-            ],
-          );
-        }
+        insertEntries(incomingReport.id, incomingEntries);
         return;
       }
 
@@ -598,38 +606,20 @@ export default function createNimenhuutoraporttiSubMigrator(db: Database) {
       db.run("DELETE FROM RollCallEntry WHERE roll_call_id = ?", [mergedReport.id]);
       db.run("DELETE FROM RollCallReport WHERE id = ?", [mergedReport.id]);
 
-      db.run(
-        "INSERT INTO RollCallReport (id, parliament_identifier, session_date, roll_call_start_time, roll_call_end_time, title, status, created_at, edk_identifier, source_path, attachment_group_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [
-          mergedReport.id,
-          mergedReport.parliament_identifier,
-          mergedReport.session_date,
-          mergedReport.roll_call_start_time,
-          mergedReport.roll_call_end_time,
-          mergedReport.title,
-          mergedReport.status,
-          mergedReport.created_at,
-          mergedReport.edk_identifier,
-          mergedReport.source_path,
-          mergedReport.attachment_group_id,
-        ],
+      insertReport.run(
+        mergedReport.id,
+        mergedReport.parliament_identifier,
+        mergedReport.session_date,
+        mergedReport.roll_call_start_time,
+        mergedReport.roll_call_end_time,
+        mergedReport.title,
+        mergedReport.status,
+        mergedReport.created_at,
+        mergedReport.edk_identifier,
+        mergedReport.source_path,
+        mergedReport.attachment_group_id,
       );
-      for (const entry of appliedEntries) {
-        db.run(
-          "INSERT INTO RollCallEntry (roll_call_id, entry_order, person_id, first_name, last_name, party, entry_type, absence_reason, arrival_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-          [
-            mergedReport.id,
-            entry.entry_order,
-            entry.person_id,
-            entry.first_name,
-            entry.last_name,
-            entry.party,
-            entry.entry_type,
-            entry.absence_reason,
-            entry.arrival_time,
-          ],
-        );
-      }
+      insertEntries(mergedReport.id, appliedEntries);
     },
   };
 }
