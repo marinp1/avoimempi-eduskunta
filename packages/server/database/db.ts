@@ -1352,18 +1352,32 @@ export class DatabaseConnection {
   public async fetchCommitteeReports(params: {
     query?: string;
     year?: string;
+    sourceCommittee?: string;
+    recipientCommittee?: string;
     page: number;
     limit: number;
   }) {
     const offset = (params.page - 1) * params.limit;
     const $query = params.query?.trim() || null;
     const $year = params.year || null;
+    const $sourceCommittee = params.sourceCommittee?.trim() || null;
+    const $recipientCommittee = params.recipientCommittee?.trim() || null;
 
     const countStmt = this.db.prepare<
       { count: number },
-      { $query: string | null; $year: string | null }
+      {
+        $query: string | null;
+        $year: string | null;
+        $sourceCommittee: string | null;
+        $recipientCommittee: string | null;
+      }
     >(queries.committeeReportsCount);
-    const countResult = countStmt.get({ $query, $year });
+    const countResult = countStmt.get({
+      $query,
+      $year,
+      $sourceCommittee,
+      $recipientCommittee,
+    });
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
 
@@ -1384,11 +1398,20 @@ export class DatabaseConnection {
       {
         $query: string | null;
         $year: string | null;
+        $sourceCommittee: string | null;
+        $recipientCommittee: string | null;
         $limit: number;
         $offset: number;
       }
     >(queries.committeeReportsList);
-    const rows = stmt.all({ $query, $year, $limit: params.limit, $offset: offset });
+    const rows = stmt.all({
+      $query,
+      $year,
+      $sourceCommittee,
+      $recipientCommittee,
+      $limit: params.limit,
+      $offset: offset,
+    });
     stmt.finalize();
 
     return {
@@ -1520,6 +1543,48 @@ export class DatabaseConnection {
       queries.committeeReportYears,
     );
     const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchCommitteeReportSourceCommittees(params?: {
+    query?: string;
+    year?: string;
+    recipientCommittee?: string;
+  }) {
+    const $query = params?.query?.trim() || null;
+    const $year = params?.year?.trim() || null;
+    const $recipientCommittee = params?.recipientCommittee?.trim() || null;
+    const stmt = this.db.prepare<
+      { committee_name: string; count: number },
+      {
+        $query: string | null;
+        $year: string | null;
+        $recipientCommittee: string | null;
+      }
+    >(queries.committeeReportSourceCommittees);
+    const data = stmt.all({ $query, $year, $recipientCommittee });
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchCommitteeReportRecipientCommittees(params?: {
+    query?: string;
+    year?: string;
+    sourceCommittee?: string;
+  }) {
+    const $query = params?.query?.trim() || null;
+    const $year = params?.year?.trim() || null;
+    const $sourceCommittee = params?.sourceCommittee?.trim() || null;
+    const stmt = this.db.prepare<
+      { committee_name: string; count: number },
+      {
+        $query: string | null;
+        $year: string | null;
+        $sourceCommittee: string | null;
+      }
+    >(queries.committeeReportRecipientCommittees);
+    const data = stmt.all({ $query, $year, $sourceCommittee });
     stmt.finalize();
     return data;
   }

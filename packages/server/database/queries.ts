@@ -98,6 +98,8 @@ export { default as oralQuestionYears } from "./queries/ORAL_QUESTION_YEARS.sql"
 export { default as oralQuestionSessions } from "./queries/ORAL_QUESTION_SESSIONS.sql";
 export { default as committeeReportsList } from "./queries/COMMITTEE_REPORTS_LIST.sql";
 export { default as committeeReportsCount } from "./queries/COMMITTEE_REPORTS_COUNT.sql";
+export { default as committeeReportSourceCommittees } from "./queries/COMMITTEE_REPORT_SOURCE_COMMITTEES.sql";
+export { default as committeeReportRecipientCommittees } from "./queries/COMMITTEE_REPORT_RECIPIENT_COMMITTEES.sql";
 export { default as committeeReportById } from "./queries/COMMITTEE_REPORT_BY_ID.sql";
 export { default as committeeReportByIdentifier } from "./queries/COMMITTEE_REPORT_BY_IDENTIFIER.sql";
 export { default as committeeReportMembers } from "./queries/COMMITTEE_REPORT_MEMBERS.sql";

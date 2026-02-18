@@ -1,7 +1,11 @@
-SELECT COUNT(*) AS count
+SELECT
+  c.committee_name AS committee_name,
+  COUNT(*) AS count
 FROM CommitteeReport c
 WHERE
-  ($query IS NULL OR (
+  c.committee_name IS NOT NULL
+  AND c.committee_name != ''
+  AND ($query IS NULL OR (
     c.title LIKE '%' || $query || '%'
     OR c.parliament_identifier LIKE '%' || $query || '%'
     OR c.committee_name LIKE '%' || $query || '%'
@@ -9,5 +13,6 @@ WHERE
     OR c.source_reference LIKE '%' || $query || '%'
   ))
   AND ($year IS NULL OR c.parliamentary_year = $year)
-  AND ($sourceCommittee IS NULL OR c.committee_name = $sourceCommittee)
   AND ($recipientCommittee IS NULL OR c.recipient_committee = $recipientCommittee)
+GROUP BY c.committee_name
+ORDER BY c.committee_name COLLATE NOCASE ASC
