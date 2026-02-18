@@ -13,6 +13,7 @@ export { default as coalitionVsOpposition } from "./queries/COALITION_VS_OPPOSIT
 export { default as committeeOverview } from "./queries/COMMITTEE_OVERVIEW.sql";
 export { default as currentComposition } from "./queries/CURRENT_COMPOSITION.sql";
 export { default as dissentTracking } from "./queries/DISSENT_TRACKING.sql";
+export { default as documentRelationsByIdentifier } from "./queries/DOCUMENT_RELATIONS_BY_IDENTIFIER.sql";
 export { default as federatedSearch } from "./queries/FEDERATED_SEARCH.sql";
 export { default as genderDivisionOverTime } from "./queries/GENDER_DIVISION_OVER_TIME.sql";
 export { default as governmentMemberships } from "./queries/GOVERNMENT_MEMBERSHIPS.sql";

@@ -13,7 +13,7 @@ export type DocRef =
     identifier: string;
   };
 
-const DOC_PATTERN = /\b(HE|VK|KK|LA|TAA|LTA|TPA|KA|KAA|SKT|[A-ZÄÖa-zäö]+VM)\s+\d+\/\d+\s*(?:vp)?/g;
+const DOC_PATTERN = /\b(HE|VK|KK|LA|TAA|LTA|TPA|KA|KAA|SKT|[A-ZÄÖa-zäö]+V[ML])\s+\d+\/\d+\s*(?:vp)?/g;
 
 export const extractDocumentIdentifiers = (
   fields: (string | null | undefined)[],
@@ -27,7 +27,11 @@ export const extractDocumentIdentifiers = (
       if (!seen.has(id)) {
         seen.add(id);
         const rawType = match[1];
-        const type: DocRef["type"] = rawType.endsWith("VM") ? "VM" : rawType as DocRef["type"];
+        const upperType = rawType.toUpperCase();
+        const type: DocRef["type"] =
+          upperType.endsWith("VM") || upperType.endsWith("VL")
+            ? "VM"
+            : upperType as DocRef["type"];
         results.push({ type, identifier: id });
       }
     }

@@ -61,6 +61,13 @@ export class DatabaseConnection {
     return parsed.toISOString().substring(0, 10);
   }
 
+  private buildDocumentIdentifierVariants(identifier: string): [string, string, string] {
+    const normalized = identifier.trim().replace(/\s+/g, " ");
+    const withoutVp = normalized.replace(/\s+vp$/i, "");
+    const withVp = withoutVp === "" ? normalized : `${withoutVp} vp`;
+    return [normalized, withoutVp, withVp];
+  }
+
   public async fetchParliamentComposition(params: { date: string }) {
     const dateObj = new Date(params.date);
     if (Number.isNaN(dateObj.getTime())) throw new Error("Invalid date");
@@ -133,6 +140,32 @@ export class DatabaseConnection {
 
   public async fetchVotingsByDocument(params: { identifier: string }) {
     return fetchVotingsByDocument(this.db, params.identifier);
+  }
+
+  public async fetchDocumentRelations(params: { identifier: string }) {
+    const [idA, idB, idC] = this.buildDocumentIdentifierVariants(params.identifier);
+    const stmt = this.db.prepare<
+      {
+        related_identifier: string;
+        relation_types: string | null;
+        evidence_count: number;
+        first_date: string | null;
+        last_date: string | null;
+      },
+      { $idA: string; $idB: string; $idC: string }
+    >(queries.documentRelationsByIdentifier);
+    const rows = stmt.all({ $idA: idA, $idB: idB, $idC: idC });
+    stmt.finalize();
+
+    return rows.map((row) => ({
+      related_identifier: row.related_identifier,
+      relation_types: row.relation_types
+        ? row.relation_types.split("||").filter(Boolean)
+        : [],
+      evidence_count: row.evidence_count,
+      first_date: row.first_date,
+      last_date: row.last_date,
+    }));
   }
 
   public async fetchSessions(params: { page: number; limit: number }) {

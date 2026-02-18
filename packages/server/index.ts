@@ -182,6 +182,20 @@ const server = Bun.serve<{
       },
     },
 
+    "/api/documents/:identifier/relations": {
+      GET: async (req: BunRequest<"/api/documents/:identifier/relations">) => {
+        const identifier = decodeURIComponent(req.params.identifier).trim();
+        if (!identifier) {
+          return Response.json(
+            { message: "Missing document identifier" },
+            { status: 400 },
+          );
+        }
+        const data = await db.fetchDocumentRelations({ identifier });
+        return Response.json(data);
+      },
+    },
+
     "/api/votings/:id": {
       GET: async (req: BunRequest<"/api/votings/:id">) => {
         const voting = await db.fetchVotingById(req.params);
