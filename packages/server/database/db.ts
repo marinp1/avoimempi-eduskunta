@@ -1715,11 +1715,17 @@ export class DatabaseConnection {
     return { ...detail, subjects };
   }
 
-  public async fetchLegislativeInitiativeYears() {
-    const stmt = this.db.prepare<{ year: string }, []>(
+  public async fetchLegislativeInitiativeYears(params?: {
+    initiativeTypeCode?: string;
+  }) {
+    const $typeCode = params?.initiativeTypeCode?.trim().toUpperCase() || null;
+    const stmt = this.db.prepare<
+      { year: string },
+      { $typeCode: string | null }
+    >(
       queries.legislativeInitiativeYears,
     );
-    const data = stmt.all();
+    const data = stmt.all({ $typeCode });
     stmt.finalize();
     return data;
   }

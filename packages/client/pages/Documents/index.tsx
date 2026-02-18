@@ -45,7 +45,48 @@ type DocumentType =
 	| "written-questions"
 	| "oral-questions"
 	| "committee-reports"
-	| "legislative-initiatives";
+	| "legislative-initiatives-law"
+	| "legislative-initiatives-budget"
+	| "legislative-initiatives-supplementary-budget"
+	| "legislative-initiatives-action"
+	| "legislative-initiatives-discussion"
+	| "legislative-initiatives-citizens";
+
+const LEGISLATIVE_INITIATIVE_TYPE_BY_DOCUMENT_TYPE: Partial<
+	Record<DocumentType, string>
+> = {
+	"legislative-initiatives-law": "LA",
+	"legislative-initiatives-budget": "TAA",
+	"legislative-initiatives-supplementary-budget": "LTA",
+	"legislative-initiatives-action": "TPA",
+	"legislative-initiatives-discussion": "KA",
+	"legislative-initiatives-citizens": "KAA",
+};
+
+const getDocumentApiConfig = (
+	documentType: DocumentType,
+): { apiBase: string; initiativeTypeCode: string | null } => {
+	if (documentType === "interpellations") {
+		return { apiBase: "/api/interpellations", initiativeTypeCode: null };
+	}
+	if (documentType === "government-proposals") {
+		return { apiBase: "/api/government-proposals", initiativeTypeCode: null };
+	}
+	if (documentType === "oral-questions") {
+		return { apiBase: "/api/oral-questions", initiativeTypeCode: null };
+	}
+	if (documentType === "committee-reports") {
+		return { apiBase: "/api/committee-reports", initiativeTypeCode: null };
+	}
+	if (documentType === "written-questions") {
+		return { apiBase: "/api/written-questions", initiativeTypeCode: null };
+	}
+	return {
+		apiBase: "/api/legislative-initiatives",
+		initiativeTypeCode:
+			LEGISLATIVE_INITIATIVE_TYPE_BY_DOCUMENT_TYPE[documentType] || null,
+	};
+};
 
 const formatDate = (dateStr: string | null) => {
 	if (!dateStr) return "—";
@@ -3003,17 +3044,8 @@ export default function Documents() {
 
 	const limit = 20;
 
-	const apiBase = documentType === "interpellations"
-		? "/api/interpellations"
-		: documentType === "government-proposals"
-			? "/api/government-proposals"
-			: documentType === "oral-questions"
-				? "/api/oral-questions"
-			: documentType === "committee-reports"
-				? "/api/committee-reports"
-				: documentType === "legislative-initiatives"
-					? "/api/legislative-initiatives"
-					: "/api/written-questions";
+	const { apiBase, initiativeTypeCode } = getDocumentApiConfig(documentType);
+	const isLegislativeInitiativeType = initiativeTypeCode !== null;
 
 	// Debounce search query
 	useEffect(() => {
@@ -3028,7 +3060,12 @@ export default function Documents() {
 		const fetchYears = async () => {
 			setYearsLoading(true);
 			try {
-				const response = await fetch(`${apiBase}/years`);
+				const params = new URLSearchParams();
+				if (initiativeTypeCode) {
+					params.set("initiativeTypeCode", initiativeTypeCode);
+				}
+				const yearsUrl = `${apiBase}/years${params.toString() ? `?${params}` : ""}`;
+				const response = await fetch(yearsUrl);
 				if (!response.ok) throw new Error("Failed to fetch years");
 				const data = await response.json();
 				setYears(data.map((item: { year: number }) => item.year));
@@ -3039,7 +3076,7 @@ export default function Documents() {
 			}
 		};
 		fetchYears();
-	}, [apiBase]);
+	}, [apiBase, initiativeTypeCode]);
 
 	// Fetch documents
 	const fetchDocuments = useCallback(
@@ -3052,6 +3089,9 @@ export default function Documents() {
 				});
 				if (debouncedQuery) params.set("q", debouncedQuery);
 				if (selectedYear !== "all") params.set("year", selectedYear);
+				if (initiativeTypeCode) {
+					params.set("initiativeTypeCode", initiativeTypeCode);
+				}
 
 				const response = await fetch(`${apiBase}?${params}`);
 				if (!response.ok) throw new Error("Failed to fetch documents");
@@ -3066,14 +3106,14 @@ export default function Documents() {
 				setLoading(false);
 			}
 		},
-		[debouncedQuery, selectedYear, items, apiBase],
+		[debouncedQuery, selectedYear, items, apiBase, initiativeTypeCode],
 	);
 
 	// Reset and fetch on filter change
 	useEffect(() => {
 		setPage(1);
 		fetchDocuments(1, false);
-	}, [debouncedQuery, selectedYear, apiBase]);
+	}, [debouncedQuery, selectedYear, apiBase, initiativeTypeCode]);
 
 	// Reset filters when document type changes
 	const handleDocumentTypeChange = (newType: DocumentType) => {
@@ -3152,8 +3192,26 @@ export default function Documents() {
 							<MenuItem value="committee-reports">
 								{t("documents.committeeReports", "Valiokunnan mietinnöt")}
 							</MenuItem>
-							<MenuItem value="legislative-initiatives">
-								{t("documents.legislativeInitiatives", "Lakialoitteet")}
+							<MenuItem value="legislative-initiatives-law">
+								{t("documents.legislativeInitiativesLaw", "Lakialoitteet")}
+							</MenuItem>
+							<MenuItem value="legislative-initiatives-budget">
+								{t("documents.legislativeInitiativesBudget", "Talousarvioaloitteet")}
+							</MenuItem>
+							<MenuItem value="legislative-initiatives-supplementary-budget">
+								{t(
+									"documents.legislativeInitiativesSupplementaryBudget",
+									"Lisätalousarvioaloitteet",
+								)}
+							</MenuItem>
+							<MenuItem value="legislative-initiatives-action">
+								{t("documents.legislativeInitiativesAction", "Toimenpidealoitteet")}
+							</MenuItem>
+							<MenuItem value="legislative-initiatives-discussion">
+								{t("documents.legislativeInitiativesDiscussion", "Keskustelualoitteet")}
+							</MenuItem>
+							<MenuItem value="legislative-initiatives-citizens">
+								{t("documents.legislativeInitiativesCitizens", "Kansalaisaloitteet")}
 							</MenuItem>
 						</Select>
 					</FormControl>
@@ -3213,7 +3271,7 @@ export default function Documents() {
 									? (items as OralQuestionListItem[]).map((item) => (
 											<OralQuestionCard key={item.id} item={item} />
 										))
-								: documentType === "legislative-initiatives"
+								: isLegislativeInitiativeType
 									? (items as LegislativeInitiativeListItem[]).map((item) => (
 											<LegislativeInitiativeCard key={item.id} item={item} />
 										))

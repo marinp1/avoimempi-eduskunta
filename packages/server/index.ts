@@ -769,8 +769,10 @@ const server = Bun.serve<{
     },
 
     "/api/legislative-initiatives/years": {
-      GET: async () => {
-        const data = await db.fetchLegislativeInitiativeYears();
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const initiativeTypeCode = searchParams.get("initiativeTypeCode") || undefined;
+        const data = await db.fetchLegislativeInitiativeYears({ initiativeTypeCode });
         return Response.json(data);
       },
     },
