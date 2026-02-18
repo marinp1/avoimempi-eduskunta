@@ -713,9 +713,18 @@ const server = Bun.serve<{
         const { searchParams } = new URL(req.url);
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
+        const sourceCommittee = searchParams.get("sourceCommittee") || undefined;
+        const recipientCommittee = searchParams.get("recipientCommittee") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
-        const data = await db.fetchCommitteeReports({ query, year, page, limit });
+        const data = await db.fetchCommitteeReports({
+          query,
+          year,
+          sourceCommittee,
+          recipientCommittee,
+          page,
+          limit,
+        });
         return Response.json(data);
       },
     },
@@ -723,6 +732,36 @@ const server = Bun.serve<{
     "/api/committee-reports/years": {
       GET: async () => {
         const data = await db.fetchCommitteeReportYears();
+        return Response.json(data);
+      },
+    },
+
+    "/api/committee-reports/source-committees": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const query = searchParams.get("q") || undefined;
+        const year = searchParams.get("year") || undefined;
+        const recipientCommittee = searchParams.get("recipientCommittee") || undefined;
+        const data = await db.fetchCommitteeReportSourceCommittees({
+          query,
+          year,
+          recipientCommittee,
+        });
+        return Response.json(data);
+      },
+    },
+
+    "/api/committee-reports/recipient-committees": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const query = searchParams.get("q") || undefined;
+        const year = searchParams.get("year") || undefined;
+        const sourceCommittee = searchParams.get("sourceCommittee") || undefined;
+        const data = await db.fetchCommitteeReportRecipientCommittees({
+          query,
+          year,
+          sourceCommittee,
+        });
         return Response.json(data);
       },
     },

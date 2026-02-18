@@ -20,5 +20,7 @@ WHERE
     OR c.source_reference LIKE '%' || $query || '%'
   ))
   AND ($year IS NULL OR c.parliamentary_year = $year)
+  AND ($sourceCommittee IS NULL OR c.committee_name = $sourceCommittee)
+  AND ($recipientCommittee IS NULL OR c.recipient_committee = $recipientCommittee)
 ORDER BY c.draft_date DESC, c.id DESC
 LIMIT $limit OFFSET $offset

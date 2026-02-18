@@ -138,6 +138,12 @@ function parseParliamentIdentifier(eduskuntaTunnus: unknown): {
   };
 }
 
+function committeeCodeFromReportType(reportTypeCode: string | null): string | null {
+  const normalized = normalizeText(reportTypeCode);
+  if (!normalized || normalized.length < 2) return null;
+  return normalized.slice(0, -1);
+}
+
 type CommitteeReportMember = {
   member_order: number;
   person_id: number | null;
@@ -317,6 +323,17 @@ function parseMietinto(
 }
 
 export default function createValiokunnanMietintoSubMigrator(db: Database) {
+  const committeeNameByCode = db.prepare(
+    "SELECT name FROM Committee WHERE code = ? LIMIT 1",
+  );
+
+  const resolveCommitteeName = (reportTypeCode: string): string | null => {
+    const code = committeeCodeFromReportType(reportTypeCode);
+    if (!code) return null;
+    const row = committeeNameByCode.get(code) as { name?: string } | undefined;
+    return normalizeText(row?.name);
+  };
+
   const insertReport = db.prepare(
     `INSERT INTO CommitteeReport (id, parliament_identifier, report_type_code, document_number, parliamentary_year, title, committee_name, source_reference, draft_date, signature_date, language, edk_identifier, summary_text, summary_rich_text, general_reasoning_text, general_reasoning_rich_text, detailed_reasoning_text, detailed_reasoning_rich_text, decision_text, decision_rich_text, legislation_amendment_text, legislation_amendment_rich_text, minority_opinion_text, minority_opinion_rich_text, resolution_text, resolution_rich_text, source_path)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'fi', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -405,6 +422,7 @@ export default function createValiokunnanMietintoSubMigrator(db: Database) {
 
       try {
         const data = parseMietinto(row, body, parsed, context);
+        const committeeName = data.committee_name || resolveCommitteeName(parsed.typeCode);
 
         insertReport.run(
           id,
@@ -413,7 +431,7 @@ export default function createValiokunnanMietintoSubMigrator(db: Database) {
           parsed.number,
           parsed.year,
           data.title,
-          data.committee_name,
+          committeeName,
           data.source_reference,
           data.draft_date,
           data.signature_date,
@@ -486,6 +504,7 @@ export default function createValiokunnanMietintoSubMigrator(db: Database) {
       insertExpert.finalize();
       linkVaskiDocument.finalize();
       updateVaskiTitle.finalize();
+      committeeNameByCode.finalize();
     },
   };
 }

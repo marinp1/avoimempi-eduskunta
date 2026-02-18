@@ -3041,6 +3041,15 @@ export default function Documents() {
 	const [loading, setLoading] = useState(false);
 	const [years, setYears] = useState<number[]>([]);
 	const [yearsLoading, setYearsLoading] = useState(true);
+	const [selectedSourceCommittee, setSelectedSourceCommittee] = useState("all");
+	const [selectedRecipientCommittee, setSelectedRecipientCommittee] = useState("all");
+	const [sourceCommittees, setSourceCommittees] = useState<
+		Array<{ committee_name: string; count: number }>
+	>([]);
+	const [recipientCommittees, setRecipientCommittees] = useState<
+		Array<{ committee_name: string; count: number }>
+	>([]);
+	const [committeeFiltersLoading, setCommitteeFiltersLoading] = useState(false);
 
 	const limit = 20;
 
@@ -3092,6 +3101,14 @@ export default function Documents() {
 				if (initiativeTypeCode) {
 					params.set("initiativeTypeCode", initiativeTypeCode);
 				}
+				if (documentType === "committee-reports") {
+					if (selectedSourceCommittee !== "all") {
+						params.set("sourceCommittee", selectedSourceCommittee);
+					}
+					if (selectedRecipientCommittee !== "all") {
+						params.set("recipientCommittee", selectedRecipientCommittee);
+					}
+				}
 
 				const response = await fetch(`${apiBase}?${params}`);
 				if (!response.ok) throw new Error("Failed to fetch documents");
@@ -3106,19 +3123,116 @@ export default function Documents() {
 				setLoading(false);
 			}
 		},
-		[debouncedQuery, selectedYear, items, apiBase, initiativeTypeCode],
+		[
+			debouncedQuery,
+			selectedYear,
+			items,
+			apiBase,
+			initiativeTypeCode,
+			documentType,
+			selectedSourceCommittee,
+			selectedRecipientCommittee,
+		],
 	);
 
 	// Reset and fetch on filter change
 	useEffect(() => {
 		setPage(1);
 		fetchDocuments(1, false);
-	}, [debouncedQuery, selectedYear, apiBase, initiativeTypeCode]);
+	}, [
+		debouncedQuery,
+		selectedYear,
+		apiBase,
+		initiativeTypeCode,
+		documentType,
+		selectedSourceCommittee,
+		selectedRecipientCommittee,
+	]);
+
+	useEffect(() => {
+		if (documentType !== "committee-reports") {
+			setSourceCommittees([]);
+			setRecipientCommittees([]);
+			setCommitteeFiltersLoading(false);
+			return;
+		}
+
+		const sourceParams = new URLSearchParams();
+		if (debouncedQuery) sourceParams.set("q", debouncedQuery);
+		if (selectedYear !== "all") sourceParams.set("year", selectedYear);
+		if (selectedRecipientCommittee !== "all") {
+			sourceParams.set("recipientCommittee", selectedRecipientCommittee);
+		}
+
+		const recipientParams = new URLSearchParams();
+		if (debouncedQuery) recipientParams.set("q", debouncedQuery);
+		if (selectedYear !== "all") recipientParams.set("year", selectedYear);
+		if (selectedSourceCommittee !== "all") {
+			recipientParams.set("sourceCommittee", selectedSourceCommittee);
+		}
+
+		const sourceUrl =
+			`/api/committee-reports/source-committees${sourceParams.toString() ? `?${sourceParams}` : ""}`;
+		const recipientUrl =
+			`/api/committee-reports/recipient-committees${recipientParams.toString() ? `?${recipientParams}` : ""}`;
+
+		setCommitteeFiltersLoading(true);
+		Promise.all([
+			fetch(sourceUrl).then((response) => {
+				if (!response.ok) throw new Error("Failed to fetch source committees");
+				return response.json();
+			}),
+			fetch(recipientUrl).then((response) => {
+				if (!response.ok) throw new Error("Failed to fetch recipient committees");
+				return response.json();
+			}),
+		])
+			.then(([sourceData, recipientData]) => {
+				setSourceCommittees(sourceData);
+				setRecipientCommittees(recipientData);
+				if (
+					selectedSourceCommittee !== "all" &&
+					!sourceData.some(
+						(item: { committee_name: string }) =>
+							item.committee_name === selectedSourceCommittee,
+					)
+				) {
+					setSelectedSourceCommittee("all");
+				}
+				if (
+					selectedRecipientCommittee !== "all" &&
+					!recipientData.some(
+						(item: { committee_name: string }) =>
+							item.committee_name === selectedRecipientCommittee,
+					)
+				) {
+					setSelectedRecipientCommittee("all");
+				}
+			})
+			.catch((err) => {
+				console.error("Error fetching committee filters:", err);
+				setSourceCommittees([]);
+				setRecipientCommittees([]);
+			})
+			.finally(() => {
+				setCommitteeFiltersLoading(false);
+			});
+	}, [
+		documentType,
+		debouncedQuery,
+		selectedYear,
+		selectedSourceCommittee,
+		selectedRecipientCommittee,
+	]);
 
 	// Reset filters when document type changes
 	const handleDocumentTypeChange = (newType: DocumentType) => {
 		setDocumentType(newType);
 		setSelectedYear("all");
+		setSelectedSourceCommittee("all");
+		setSelectedRecipientCommittee("all");
+		setSourceCommittees([]);
+		setRecipientCommittees([]);
 		setSearchQuery("");
 		setDebouncedQuery("");
 		setItems([]);
@@ -3236,6 +3350,54 @@ export default function Documents() {
 						</Select>
 					</FormControl>
 				</Stack>
+
+				{documentType === "committee-reports" && (
+					<Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+						<FormControl fullWidth>
+							<InputLabel>{t("documents.sourceCommitteeFilter", "Lähdevaliokunta")}</InputLabel>
+							<Select
+								value={selectedSourceCommittee}
+								label={t("documents.sourceCommitteeFilter", "Lähdevaliokunta")}
+								onChange={(e) => setSelectedSourceCommittee(e.target.value)}
+								disabled={committeeFiltersLoading}
+								sx={{
+									backgroundColor: colors.backgroundDefault,
+								}}
+							>
+								<MenuItem value="all">
+									{t("documents.allSourceCommittees", "Kaikki lähdevaliokunnat")}
+								</MenuItem>
+								{sourceCommittees.map((item) => (
+									<MenuItem key={item.committee_name} value={item.committee_name}>
+										{item.committee_name} ({item.count})
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+
+						<FormControl fullWidth>
+							<InputLabel>{t("documents.targetCommitteeFilter", "Vastaanottava valiokunta")}</InputLabel>
+							<Select
+								value={selectedRecipientCommittee}
+								label={t("documents.targetCommitteeFilter", "Vastaanottava valiokunta")}
+								onChange={(e) => setSelectedRecipientCommittee(e.target.value)}
+								disabled={committeeFiltersLoading}
+								sx={{
+									backgroundColor: colors.backgroundDefault,
+								}}
+							>
+								<MenuItem value="all">
+									{t("documents.allTargetCommittees", "Kaikki vastaanottavat valiokunnat")}
+								</MenuItem>
+								{recipientCommittees.map((item) => (
+									<MenuItem key={item.committee_name} value={item.committee_name}>
+										{item.committee_name} ({item.count})
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+					</Stack>
+				)}
 
 				{/* Result count */}
 				<Typography variant="body2" color={colors.textSecondary}>
