@@ -274,6 +274,8 @@ const shouldSkipTableClear = (
 const MIGRATION_RUN_REPORTS_STORAGE_PREFIX = "metadata/migration-runs";
 const MIGRATION_RUN_LATEST_STORAGE_KEY = `${MIGRATION_RUN_REPORTS_STORAGE_PREFIX}/latest.json`;
 const MIGRATION_RUN_LATEST_SUCCESS_STORAGE_KEY = `${MIGRATION_RUN_REPORTS_STORAGE_PREFIX}/latest-success.json`;
+const SQLITE_ARTIFACTS_STORAGE_PREFIX = "artifacts/sqlite";
+const SQLITE_LATEST_MANIFEST_STORAGE_KEY = `${SQLITE_ARTIFACTS_STORAGE_PREFIX}/latest/manifest.json`;
 
 const normalizeStoragePath = (value: string): string =>
   value.replace(/\\/g, "/").replace(/^\/+/, "");
@@ -452,6 +454,48 @@ export class MigratorController {
 
     console.log(
       `📦 Uploaded migration reports to storage '${storage.name}' at ${runStoragePrefix}`,
+    );
+  }
+
+  private async publishLatestDatabaseArtifact(params: {
+    runId: string;
+    migratedAt: string;
+  }): Promise<void> {
+    const storage = getStorage();
+    const databasePath = getDatabasePath();
+    const databaseFileName = path.basename(databasePath);
+    const artifactKey = `${SQLITE_ARTIFACTS_STORAGE_PREFIX}/latest/${databaseFileName}`;
+
+    if (!fs.existsSync(databasePath)) {
+      throw new Error(`SQLite database file not found at '${databasePath}'`);
+    }
+
+    if (typeof storage.putFile !== "function") {
+      throw new Error(
+        `Storage provider '${storage.name}' does not implement putFile(); required for large SQLite artifact uploads`,
+      );
+    }
+
+    await storage.putFile(artifactKey, databasePath);
+
+    const stats = fs.statSync(databasePath);
+    const manifest = {
+      runId: params.runId,
+      migratedAt: params.migratedAt,
+      storageProvider: storage.name,
+      dbArtifactKey: artifactKey,
+      dbFileName: databaseFileName,
+      dbSizeBytes: stats.size,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await storage.put(
+      SQLITE_LATEST_MANIFEST_STORAGE_KEY,
+      JSON.stringify(manifest, null, 2),
+    );
+
+    console.log(
+      `🧱 Published SQLite artifact to storage '${storage.name}' at ${artifactKey}`,
     );
   }
 
@@ -845,9 +889,15 @@ export class MigratorController {
       // Re-enable safety features
       console.log("\n⚙️  Re-enabling safety features...");
       targetDatabase.exec(SQLITE_PRAGMAS.synchronousFull);
+      console.log("💾 Flushing WAL checkpoint...");
+      targetDatabase.exec("PRAGMA wal_checkpoint(TRUNCATE);");
       console.log("✅ Safety features restored");
 
       targetDatabase.close();
+      await this.publishLatestDatabaseArtifact({
+        runId: reportRunId,
+        migratedAt: timestamp,
+      });
 
       const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
       console.log(`\n🎉 Migration completed successfully in ${totalTime}s!`);

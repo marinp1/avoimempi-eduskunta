@@ -33,6 +33,7 @@ How it works:
   - Runs SQL migrations from packages/datapipe/migrator/migrations
   - Clears target database tables
   - Imports parsed data from storage using table migrators
+  - Publishes latest SQLite artifact to storage (artifacts/sqlite/latest)
   - Stores last migration timestamp in _migration_info
 `);
 }
