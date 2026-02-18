@@ -1,6 +1,7 @@
 import type { Database } from "bun:sqlite";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { extractDocumentTunnusCandidates } from "../../salidb-document-ref";
 import type { VaskiEntry } from "../reader";
 
 type MinutesItemKind = "asiakohta" | "muu_asiakohta";
@@ -50,6 +51,7 @@ type ParsedMinutesItem = {
   item_title: string | null;
   related_document_identifier: string | null;
   related_document_type: string | null;
+  related_documents: Array<{ identifier: string; type: string | null }>;
   item_identifier: string;
   item_identifier_numeric: number;
   parent_item_identifier: string | null;
@@ -58,6 +60,11 @@ type ParsedMinutesItem = {
   item_order: number;
   content_text: string | null;
   speeches: ParsedMinutesSpeech[];
+};
+
+type ParsedRelatedDocument = {
+  identifier: string;
+  type: string | null;
 };
 
 type SpeechLookupCandidate = {
@@ -260,24 +267,59 @@ function extractItemContentText(item: Record<string, any>): string | null {
   return deduped.length > 0 ? deduped.join("\n\n") : null;
 }
 
-function parseRelatedDocument(item: Record<string, any>): {
-  identifier: string | null;
-  type: string | null;
-} {
-  const source = item.KohtaAsia || item.KohtaAsiakirja;
-  if (!source || typeof source !== "object") {
-    return { identifier: null, type: null };
+function upsertRelatedDocument(
+  map: Map<string, ParsedRelatedDocument>,
+  identifier: string,
+  type: string | null,
+) {
+  const existing = map.get(identifier);
+  if (!existing) {
+    map.set(identifier, { identifier, type });
+    return;
+  }
+  if (existing.type === null && type !== null) {
+    map.set(identifier, { identifier, type });
+  }
+}
+
+function addRelatedDocumentCandidate(
+  map: Map<string, ParsedRelatedDocument>,
+  candidate: unknown,
+  type: string | null,
+) {
+  const normalized = normalizeText(candidate);
+  if (!normalized) return;
+
+  const extracted = extractDocumentTunnusCandidates(normalized);
+  if (extracted.length > 0) {
+    for (const identifier of extracted) {
+      upsertRelatedDocument(map, identifier, type);
+    }
+    return;
   }
 
-  return {
-    identifier:
-      normalizeText(source.EduskuntaTunnus) ||
-      normalizeText(source["@_hyperlinkkiKoodi"]) ||
-      normalizeText(source["@_muuTunnus"]) ||
-      normalizeText(source.Muu1Viite?.["@_muuTunnus"]) ||
-      null,
-    type: normalizeText(source.AsiakirjatyyppiNimi) || null,
-  };
+  upsertRelatedDocument(map, normalized, type);
+}
+
+function parseRelatedDocuments(item: Record<string, any>): ParsedRelatedDocument[] {
+  const sources = [
+    ...normalizeArray<Record<string, any>>(item.KohtaAsia),
+    ...normalizeArray<Record<string, any>>(item.KohtaAsiakirja),
+  ].filter((source) => source && typeof source === "object");
+  if (sources.length === 0) return [];
+
+  const references = new Map<string, ParsedRelatedDocument>();
+  for (const source of sources) {
+    const type = normalizeText(source.AsiakirjatyyppiNimi) || null;
+    addRelatedDocumentCandidate(references, source.EduskuntaTunnus, type);
+    addRelatedDocumentCandidate(references, source["@_hyperlinkkiKoodi"], type);
+    addRelatedDocumentCandidate(references, source["@_muuTunnus"], type);
+    addRelatedDocumentCandidate(references, source.MuuTunnus, type);
+    addRelatedDocumentCandidate(references, source.MultiViiteTunnus, type);
+    addRelatedDocumentCandidate(references, source.MuuViite?.ViiteTeksti, type);
+  }
+
+  return Array.from(references.values());
 }
 
 function normalizeSpeakerNode(toimija: unknown): Record<string, any> | null {
@@ -391,7 +433,9 @@ function buildMinutesItems(
 
   const pushItem = (item: Record<string, any>, entryKind: MinutesItemKind) => {
     const context = `row id=${row.id}, entry_order=${items.length + 1}`;
-    const relatedDocument = parseRelatedDocument(item);
+    const relatedDocuments = parseRelatedDocuments(item);
+    const primaryRelatedDocument =
+      relatedDocuments.find((doc) => doc.type !== null) || relatedDocuments[0] || null;
     const itemTitle =
       normalizeText(item.KohtaNimeke?.NimekeTeksti) ||
       normalizeText(item.OtsikkoTeksti);
@@ -411,15 +455,6 @@ function buildMinutesItems(
       context,
     );
 
-    if (
-      (relatedDocument.identifier === null) !==
-      (relatedDocument.type === null)
-    ) {
-      throw new Error(
-        `related_document_identifier/type mismatch (${context})`,
-      );
-    }
-
     if ((processingPhaseCode === null) !== (generalProcessingPhaseCode === null)) {
       throw new Error(
         `processing phase codes mismatch (${context})`,
@@ -428,7 +463,7 @@ function buildMinutesItems(
 
     if (
       itemTitle === null &&
-      relatedDocument.identifier === null &&
+      primaryRelatedDocument === null &&
       contentText === null
     ) {
       throw new Error(
@@ -450,8 +485,9 @@ function buildMinutesItems(
       entry_kind: entryKind,
       item_number: parseRequiredText(item.KohtaNumero, "item_number", context),
       item_title: itemTitle,
-      related_document_identifier: relatedDocument.identifier,
-      related_document_type: relatedDocument.type,
+      related_document_identifier: primaryRelatedDocument?.identifier ?? null,
+      related_document_type: primaryRelatedDocument?.type ?? null,
+      related_documents: relatedDocuments,
       item_identifier: itemIdentifier,
       item_identifier_numeric: itemIdentifierNumeric,
       parent_item_identifier: normalizeText(item["@_paakohtaTunnus"]),
@@ -706,10 +742,18 @@ function updateSectionMinutes(
   const itemNumbers = dedupeNonEmpty(sortedItems.map((item) => item.item_number));
   const itemTitles = dedupeNonEmpty(sortedItems.map((item) => item.item_title));
   const relatedDocumentIdentifiers = dedupeNonEmpty(
-    sortedItems.map((item) => item.related_document_identifier),
+    sortedItems.flatMap((item) =>
+      item.related_documents.length > 0
+        ? item.related_documents.map((document) => document.identifier)
+        : [item.related_document_identifier],
+    ),
   );
   const relatedDocumentTypes = dedupeNonEmpty(
-    sortedItems.map((item) => item.related_document_type),
+    sortedItems.flatMap((item) =>
+      item.related_documents.length > 0
+        ? item.related_documents.map((document) => document.type)
+        : [item.related_document_type],
+    ),
   );
   const processingPhaseCodes = dedupeNonEmpty(
     sortedItems.map((item) => item.processing_phase_code),
@@ -721,10 +765,23 @@ function updateSectionMinutes(
 
   const referenceMap = new Map<string, string | null>();
   for (const item of sortedItems) {
-    const identifier = item.related_document_identifier?.trim();
-    if (!identifier) continue;
-    if (referenceMap.has(identifier)) continue;
-    referenceMap.set(identifier, item.related_document_type?.trim() || null);
+    const references =
+      item.related_documents.length > 0
+        ? item.related_documents
+        : item.related_document_identifier
+          ? [
+              {
+                identifier: item.related_document_identifier,
+                type: item.related_document_type,
+              },
+            ]
+          : [];
+    for (const reference of references) {
+      const identifier = reference.identifier.trim();
+      if (!identifier) continue;
+      if (referenceMap.has(identifier)) continue;
+      referenceMap.set(identifier, reference.type?.trim() || null);
+    }
   }
   const referenceRows = Array.from(referenceMap.entries()).map(([identifier, document_type]) => ({
     identifier,
