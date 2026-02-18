@@ -12,7 +12,9 @@ import {
 
 describe("SaliDBAanestysEdustaja migrator", () => {
   let db: Database;
-  let migrate: (data: RawDataModels["SaliDBAanestysEdustaja"]) => Promise<void>;
+  let migrate: (
+    data: RawDataModels["SaliDBAanestysEdustaja"],
+  ) => void | Promise<void>;
 
   beforeEach(() => {
     clearStatementCache();

@@ -3,7 +3,7 @@ import { extractDocumentTunnusCandidates } from "../salidb-document-ref";
 import { insertRows, parseDateTime } from "../utils";
 
 export default (db: Database) =>
-  async (dataToImport: RawDataModels["SaliDBAanestysAsiakirja"]) => {
+  (dataToImport: RawDataModels["SaliDBAanestysAsiakirja"]) => {
     const tunnusList = [
       ...extractDocumentTunnusCandidates(dataToImport.Asiakirja),
       ...extractDocumentTunnusCandidates(dataToImport.AsiakirjaUrl),

@@ -191,7 +191,7 @@ const intersectTermRowsWithGroupMemberships = (
 };
 
 export default (db: Database) =>
-  async (dataToImport: DataModel.Representative) => {
+  (dataToImport: DataModel.Representative) => {
     const XmlDataFi = JSON.parse(dataToImport.XmlDataFi);
 
     if (process.env.DEBUG)

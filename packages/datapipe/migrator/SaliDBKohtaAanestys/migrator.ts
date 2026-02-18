@@ -3,7 +3,7 @@ import type { Database } from "bun:sqlite";
 import { parseDateTime } from "../utils";
 
 export default (db: Database) =>
-  async (dataToImport: RawDataModels["SaliDBKohtaAanestys"]) => {
+  (dataToImport: RawDataModels["SaliDBKohtaAanestys"]) => {
     const votingNumber = +dataToImport.Aanestysnumero;
     if (!Number.isFinite(votingNumber)) {
       console.log(

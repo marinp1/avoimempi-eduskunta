@@ -312,6 +312,15 @@ const isTruthyEnv = (value: string | undefined): boolean => {
   return normalized === "1" || normalized === "true" || normalized === "yes";
 };
 
+const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
+  !!value && typeof (value as { then?: unknown }).then === "function";
+
+const parsePositiveInt = (value: string | undefined, fallback: number): number => {
+  const parsed = Number.parseInt(value ?? "", 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return parsed;
+};
+
 /**
  * Controller for managing database migration from parsed storage
  */
@@ -514,6 +523,50 @@ export class MigratorController {
     );
   }
 
+  private runForeignKeyCheck(
+    db: Database,
+    sampleLimit: number,
+  ): {
+    checkedAt: string;
+    totalViolations: number;
+    sampleLimit: number;
+    sampleViolations: Array<{
+      childTable: string;
+      rowid: number | null;
+      parentTable: string;
+      foreignKeyIndex: number;
+    }>;
+  } {
+    const safeSampleLimit = Math.max(1, sampleLimit);
+    const totalRow = db
+      .query<{ count: number }, []>(
+        "SELECT COUNT(*) AS count FROM pragma_foreign_key_check",
+      )
+      .get();
+    const sampleViolations = db
+      .query<
+        {
+          childTable: string;
+          rowid: number | null;
+          parentTable: string;
+          foreignKeyIndex: number;
+        },
+        []
+      >(
+        `SELECT "table" AS childTable, rowid, parent AS parentTable, fkid AS foreignKeyIndex
+         FROM pragma_foreign_key_check
+         LIMIT ${safeSampleLimit}`,
+      )
+      .all();
+
+    return {
+      checkedAt: new Date().toISOString(),
+      totalViolations: totalRow?.count ?? 0,
+      sampleLimit: safeSampleLimit,
+      sampleViolations,
+    };
+  }
+
   /**
    * Start database migration from parsed storage
    */
@@ -560,6 +613,12 @@ export class MigratorController {
     let migrationStatus: ConsolidatedMigrationStatus = "failed";
     let migrationError: string | null = null;
     let consolidatedReport: ConsolidatedMigrationReport | null = null;
+    const useExclusiveLock = isTruthyEnv(process.env.MIGRATOR_EXCLUSIVE_LOCK);
+    const runForeignKeyCheck = isTruthyEnv(process.env.MIGRATOR_FOREIGN_KEY_CHECK);
+    const foreignKeyCheckSampleLimit = parsePositiveInt(
+      process.env.MIGRATOR_FOREIGN_KEY_CHECK_SAMPLE_LIMIT,
+      1000,
+    );
 
     try {
       // Get tables with parsed data
@@ -593,6 +652,10 @@ export class MigratorController {
       targetDatabase.exec(SQLITE_PRAGMAS.cacheSize64Mb); // 64MB cache
       targetDatabase.exec(SQLITE_PRAGMAS.tempStoreMemory); // Keep temp data in memory
       targetDatabase.exec(SQLITE_PRAGMAS.mmapSize30Gb); // Use memory-mapped I/O
+      targetDatabase.exec(SQLITE_PRAGMAS.foreignKeysOff);
+      if (useExclusiveLock) {
+        targetDatabase.exec(SQLITE_PRAGMAS.lockingModeExclusive);
+      }
 
       // Run migrations
       const migrationsPath = path.resolve(
@@ -658,7 +721,7 @@ export class MigratorController {
           try {
             const summary = await migrateVaskiData(targetDatabase, {
               shouldStop: () => this.shouldStop,
-              documentTypeProgressRowInterval: 1000,
+              documentTypeProgressRowInterval: 5000,
               onDocumentTypeStart: ({ documentType, index, total }) => {
                 totalDocumentTypes = total;
                 this.sendMessage({
@@ -798,8 +861,8 @@ export class MigratorController {
         if (fs.existsSync(migratorPath)) {
           // Dynamic import the migrator
           const migratorModule = (await import(migratorPath)) as {
-            default: (sql: Database) => (data: any) => Promise<void>;
-            flushVotes?: () => void;
+            default: (sql: Database) => (data: any) => void | Promise<void>;
+            flushVotes?: () => void | Promise<void>;
           };
 
           const migrator = migratorModule.default(targetDatabase);
@@ -833,7 +896,10 @@ export class MigratorController {
                   );
                 }
 
-                await migrator(rowForMigrator);
+                const result = migrator(rowForMigrator);
+                if (isPromiseLike(result)) {
+                  await result;
+                }
                 rowsImported++;
 
                 // Report progress every 5000 rows to reduce overhead
@@ -861,7 +927,10 @@ export class MigratorController {
 
             // Flush any remaining batched rows (if migrator has flush function)
             if (migratorModule.flushVotes) {
-              migratorModule.flushVotes();
+              const result = migratorModule.flushVotes();
+              if (isPromiseLike(result)) {
+                await result;
+              }
             }
 
             // Commit the transaction
@@ -901,8 +970,54 @@ export class MigratorController {
       targetDatabase.run(MIGRATOR_SQL.createMigrationInfoTable);
       targetDatabase.run(MIGRATOR_SQL.upsertMigrationTimestamp, [timestamp]);
 
+      if (runForeignKeyCheck) {
+        try {
+          const foreignKeyCheck = this.runForeignKeyCheck(
+            targetDatabase,
+            foreignKeyCheckSampleLimit,
+          );
+          const foreignKeyCheckPath = path.join(
+            reportDirs.reports,
+            "foreign_key_check.json",
+          );
+          fs.mkdirSync(reportDirs.reports, { recursive: true });
+          fs.writeFileSync(
+            foreignKeyCheckPath,
+            JSON.stringify(
+              {
+                reason: "foreign_key_check",
+                details:
+                  foreignKeyCheck.totalViolations > 0
+                    ? `Found ${foreignKeyCheck.totalViolations} foreign key violation(s)`
+                    : "No foreign key violations found",
+                issue_count: foreignKeyCheck.totalViolations,
+                ...foreignKeyCheck,
+              },
+              null,
+              2,
+            ),
+            "utf8",
+          );
+
+          if (foreignKeyCheck.totalViolations > 0) {
+            console.warn(
+              `⚠️  Foreign key check found ${foreignKeyCheck.totalViolations} violation(s); see ${foreignKeyCheckPath}`,
+            );
+          } else {
+            console.log("✅ Foreign key check found no violations");
+          }
+        } catch (foreignKeyCheckError) {
+          console.warn(
+            `⚠️  Foreign key check failed (non-blocking): ${String(foreignKeyCheckError)}`,
+          );
+        }
+      }
+
       // Re-enable safety features
       console.log("\n⚙️  Re-enabling safety features...");
+      if (useExclusiveLock) {
+        targetDatabase.exec(SQLITE_PRAGMAS.lockingModeNormal);
+      }
       targetDatabase.exec(SQLITE_PRAGMAS.synchronousFull);
       console.log("💾 Flushing WAL checkpoint...");
       targetDatabase.exec("PRAGMA wal_checkpoint(TRUNCATE);");

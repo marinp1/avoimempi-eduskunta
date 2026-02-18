@@ -1,11 +1,14 @@
 export const SQLITE_PRAGMAS = {
   journalWal: "PRAGMA journal_mode = WAL;",
   queryOnlyOn: "PRAGMA query_only = ON;",
+  foreignKeysOff: "PRAGMA foreign_keys = OFF;",
   synchronousOff: "PRAGMA synchronous = OFF;",
   synchronousFull: "PRAGMA synchronous = FULL;",
   cacheSize64Mb: "PRAGMA cache_size = -64000;",
   tempStoreMemory: "PRAGMA temp_store = MEMORY;",
   mmapSize30Gb: "PRAGMA mmap_size = 30000000000;",
+  lockingModeExclusive: "PRAGMA locking_mode = EXCLUSIVE;",
+  lockingModeNormal: "PRAGMA locking_mode = NORMAL;",
 } as const;
 
 export const MIGRATOR_SQL = {
