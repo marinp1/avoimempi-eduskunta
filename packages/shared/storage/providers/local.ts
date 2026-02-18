@@ -61,6 +61,14 @@ export class LocalStorageProvider implements IStorageProvider {
     await copyFile(localFilePath, filePath);
   }
 
+  async getFile(key: StorageKey, localFilePath: string): Promise<void> {
+    const sourcePath = this.keyToPath(key);
+    const dir = path.dirname(localFilePath);
+
+    await mkdir(dir, { recursive: true });
+    await copyFile(sourcePath, localFilePath);
+  }
+
   async get(key: StorageKey): Promise<string | null> {
     const filePath = this.keyToPath(key);
 

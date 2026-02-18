@@ -34,6 +34,7 @@ How it works:
   - Clears target database tables
   - Imports parsed data from storage using table migrators
   - Publishes latest SQLite artifact to storage (artifacts/sqlite/latest)
+  - Optionally publishes per-run snapshot (MIGRATOR_PUBLISH_SNAPSHOT=true)
   - Stores last migration timestamp in _migration_info
 `);
 }

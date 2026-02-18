@@ -53,6 +53,12 @@ export interface IStorageProvider {
   ): Promise<void>;
 
   /**
+   * Download/copy a storage object to a local file path without buffering full content.
+   * Recommended for large artifacts (e.g. multi-GB SQLite files).
+   */
+  getFile?(key: StorageKey, localFilePath: string): Promise<void>;
+
+  /**
    * Read data from storage
    */
   get(key: StorageKey): Promise<string | null>;

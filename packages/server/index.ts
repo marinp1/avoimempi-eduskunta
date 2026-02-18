@@ -3,8 +3,10 @@
 import type { BunRequest } from "bun";
 import { StatusController } from "./controllers/status-controller";
 import { DatabaseConnection } from "./database/db";
+import { prepareDatabaseForServerStartup } from "./database/launch-db";
 import homepage from "./public/index.html";
 
+await prepareDatabaseForServerStartup();
 const db = new DatabaseConnection();
 export const statusController = new StatusController(db);
 const isDev = process.env.NODE_ENV === "development";
