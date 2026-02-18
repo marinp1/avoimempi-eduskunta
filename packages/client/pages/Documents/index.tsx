@@ -35,6 +35,7 @@ import {
 	School as SchoolIcon,
 } from "@mui/icons-material";
 import { RelatedVotings } from "#client/components/DocumentCards";
+import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { colors } from "#client/theme/index";
@@ -788,6 +789,16 @@ function InterpellationCard({ item }: { item: InterpellationListItem }) {
 									</Box>
 								)}
 
+							<DocumentLifecycle
+								currentIdentifier={item.parliament_identifier}
+								directReferenceValues={[
+									...detail.stages.map((stage) => stage.stage_title),
+									...detail.stages.map((stage) => stage.event_title),
+									...detail.stages.map((stage) => stage.event_description),
+								]}
+								richTextValues={[detail.question_rich_text, detail.resolution_rich_text]}
+							/>
+
 							<InlineRelatedSessions sessions={detail.sessions} />
 
 							<RelatedVotings identifiers={[item.parliament_identifier]} />
@@ -1148,6 +1159,20 @@ function LegislativeInitiativeCard({
 										</Collapse>
 									</Box>
 								)}
+
+							<DocumentLifecycle
+								currentIdentifier={item.parliament_identifier}
+								directReferenceValues={[
+									...detail.stages.map((stage) => stage.stage_title),
+									...detail.stages.map((stage) => stage.event_title),
+									...detail.stages.map((stage) => stage.event_description),
+								]}
+								richTextValues={[
+									detail.justification_rich_text,
+									detail.proposal_rich_text,
+									detail.law_rich_text,
+								]}
+							/>
 
 							<InlineRelatedSessions sessions={detail.sessions} />
 
@@ -1677,6 +1702,21 @@ function GovernmentProposalCard({ item }: { item: GovernmentProposalListItem }) 
 									</Box>
 								)}
 
+							<DocumentLifecycle
+								currentIdentifier={item.parliament_identifier}
+								directReferenceValues={[
+									...detail.stages.map((stage) => stage.stage_title),
+									...detail.stages.map((stage) => stage.event_title),
+									...detail.stages.map((stage) => stage.event_description),
+								]}
+								richTextValues={[
+									detail.summary_rich_text,
+									detail.justification_rich_text,
+									detail.proposal_rich_text,
+									detail.appendix_rich_text,
+								]}
+							/>
+
 							<InlineRelatedSessions sessions={detail.sessions} />
 
 							<RelatedVotings identifiers={[item.parliament_identifier]} />
@@ -2003,6 +2043,15 @@ function OralQuestionCard({ item }: { item: OralQuestionListItem }) {
 										</Collapse>
 									</Box>
 								)}
+
+							<DocumentLifecycle
+								currentIdentifier={item.parliament_identifier}
+								directReferenceValues={[
+									...detail.stages.map((stage) => stage.stage_title),
+									...detail.stages.map((stage) => stage.event_title),
+									...detail.stages.map((stage) => stage.event_description),
+								]}
+							/>
 
 							<InlineRelatedSessions sessions={detail.sessions} />
 
@@ -2437,6 +2486,17 @@ function WrittenQuestionCard({ item }: { item: WrittenQuestionListItem }) {
 									</Stack>
 								</Box>
 							)}
+
+							<DocumentLifecycle
+								currentIdentifier={item.parliament_identifier}
+								directReferenceValues={[
+									detail.answer_parliament_identifier,
+									...detail.stages.map((stage) => stage.stage_title),
+									...detail.stages.map((stage) => stage.event_title),
+									...detail.stages.map((stage) => stage.event_description),
+								]}
+								richTextValues={[detail.question_rich_text]}
+							/>
 
 							<InlineRelatedSessions sessions={detail.sessions} />
 
@@ -3003,6 +3063,23 @@ function CommitteeReportCard({ item }: { item: CommitteeReportListItem }) {
 										/>
 									</Box>
 								)}
+
+							<DocumentLifecycle
+								currentIdentifier={item.parliament_identifier}
+								directReferenceValues={[
+									item.source_reference,
+									detail.source_reference,
+								]}
+								richTextValues={[
+									detail.summary_rich_text,
+									detail.general_reasoning_rich_text,
+									detail.detailed_reasoning_rich_text,
+									detail.decision_rich_text,
+									detail.legislation_amendment_rich_text,
+									detail.minority_opinion_rich_text,
+									detail.resolution_rich_text,
+								]}
+							/>
 
 							<InlineRelatedSessions sessions={detail.sessions} />
 
