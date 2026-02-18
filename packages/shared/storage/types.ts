@@ -43,6 +43,16 @@ export interface IStorageProvider {
   ): Promise<void>;
 
   /**
+   * Upload/copy a local file to storage without loading entire file into memory.
+   * Recommended for large artifacts (e.g. multi-GB SQLite snapshots).
+   */
+  putFile?(
+    key: StorageKey,
+    localFilePath: string,
+    options?: StoragePutOptions,
+  ): Promise<void>;
+
+  /**
    * Read data from storage
    */
   get(key: StorageKey): Promise<string | null>;

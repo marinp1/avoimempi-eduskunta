@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import {
+  copyFile,
   mkdir,
   readdir,
   readFile,
@@ -46,6 +47,18 @@ export class LocalStorageProvider implements IStorageProvider {
 
     // Write file
     await writeFile(filePath, data, "utf-8");
+  }
+
+  async putFile(
+    key: StorageKey,
+    localFilePath: string,
+    _options?: StoragePutOptions,
+  ): Promise<void> {
+    const filePath = this.keyToPath(key);
+    const dir = path.dirname(filePath);
+
+    await mkdir(dir, { recursive: true });
+    await copyFile(localFilePath, filePath);
   }
 
   async get(key: StorageKey): Promise<string | null> {
