@@ -121,7 +121,7 @@ function writeOverwriteLog(
 }
 
 export default (db: Database) =>
-  async (dataToImport: RawDataModels["SaliDBKohta"]) => {
+  (dataToImport: RawDataModels["SaliDBKohta"]) => {
     const sessionKey = dataToImport.IstuntoTekninenAvain;
     const vaskiId = +dataToImport.VaskiID;
 

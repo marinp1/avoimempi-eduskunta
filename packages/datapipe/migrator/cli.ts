@@ -35,6 +35,7 @@ How it works:
   - Imports parsed data from storage using table migrators
   - Publishes latest SQLite artifact to storage (artifacts/sqlite/latest)
   - Optionally publishes per-run snapshot (MIGRATOR_PUBLISH_SNAPSHOT=true)
+  - Optional non-blocking FK report (MIGRATOR_FOREIGN_KEY_CHECK=true)
   - Stores last migration timestamp in _migration_info
 `);
 }

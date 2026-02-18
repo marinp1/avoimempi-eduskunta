@@ -9,7 +9,7 @@ import { createTestDb } from "./helpers/setup-db";
 
 describe("SaliDBKohta migrator", () => {
   let db: Database;
-  let migrate: (data: RawDataModels["SaliDBKohta"]) => Promise<void>;
+  let migrate: (data: RawDataModels["SaliDBKohta"]) => void | Promise<void>;
   let overwriteLogDir: string;
 
   beforeEach(() => {

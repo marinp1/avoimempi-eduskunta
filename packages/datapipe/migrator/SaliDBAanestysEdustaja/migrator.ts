@@ -52,7 +52,7 @@ const normalizeVote = (voteRaw?: string | null): DatabaseTables.Vote["vote"] | n
 };
 
 export default (db: Database) =>
-  async (dataToImport: RawDataModels["SaliDBAanestysEdustaja"]) => {
+  (dataToImport: RawDataModels["SaliDBAanestysEdustaja"]) => {
     currentDb = db;
 
     const vote = normalizeVote(dataToImport.EdustajaAanestys);

@@ -82,7 +82,7 @@ const makeRepresentativePayload = (
 
 describe("MemberOfParliament migrator", () => {
   let db: Database;
-  let migrate: (data: RepresentativePayload) => Promise<void>;
+  let migrate: (data: RepresentativePayload) => void | Promise<void>;
 
   beforeEach(() => {
     clearStatementCache();

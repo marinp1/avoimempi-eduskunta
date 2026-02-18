@@ -50,11 +50,14 @@ export interface VaskiMigrationSummary {
 }
 
 interface VaskiSubMigrator {
-  migrateRow: (row: VaskiEntry) => Promise<void>;
+  migrateRow: (row: VaskiEntry) => void | Promise<void>;
   flush?: () => Promise<void> | void;
 }
 
 type VaskiSubMigratorFactory = (db: Database) => VaskiSubMigrator;
+
+const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
+  !!value && typeof (value as { then?: unknown }).then === "function";
 
 const normalizeText = (value: unknown): string | null => {
   if (typeof value !== "string") return null;
@@ -246,7 +249,10 @@ export async function migrateVaskiData(
         throw new Error("Migration stopped by user");
       }
       upsertVaskiDocument(db, row, documentType);
-      await subMigrator.migrateRow(row);
+      const result = subMigrator.migrateRow(row);
+      if (isPromiseLike(result)) {
+        await result;
+      }
       rowsMigrated++;
       if (
         options?.onDocumentTypeProgress &&
@@ -262,7 +268,10 @@ export async function migrateVaskiData(
     }
 
     if (subMigrator.flush) {
-      await subMigrator.flush();
+      const flushResult = subMigrator.flush();
+      if (isPromiseLike(flushResult)) {
+        await flushResult;
+      }
     }
 
     rowsByDocumentType[documentType] = rowsMigrated;
@@ -291,7 +300,7 @@ export async function migrateVaskiData(
  * Kept as no-op until MigratorController is wired to use `migrateVaskiData`.
  */
 export default (_db: Database) => {
-  return async (_row: any) => {
+  return (_row: any) => {
     // no-op by design
   };
 };

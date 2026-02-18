@@ -3,7 +3,7 @@ import type { Database } from "bun:sqlite";
 import { insertRows, parseDateTime } from "../utils";
 
 export default (db: Database) =>
-  async (dataToImport: RawDataModels["SaliDBTiedote"]) => {
+  (dataToImport: RawDataModels["SaliDBTiedote"]) => {
     const row: DatabaseTables.SessionNotice = {
       id: +dataToImport.Id,
       key: dataToImport.TekninenAvain || null,

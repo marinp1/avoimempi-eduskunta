@@ -6,7 +6,7 @@ import { createTestDb } from "./helpers/setup-db";
 
 describe("SaliDBAanestys migrator", () => {
   let db: Database;
-  let migrate: (data: RawDataModels["SaliDBAanestys"]) => Promise<void>;
+  let migrate: (data: RawDataModels["SaliDBAanestys"]) => void | Promise<void>;
 
   beforeEach(() => {
     clearStatementCache();

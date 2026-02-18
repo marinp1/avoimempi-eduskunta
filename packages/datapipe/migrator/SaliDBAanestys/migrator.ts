@@ -4,7 +4,7 @@ import { extractDocumentTunnusCandidates } from "../salidb-document-ref";
 import { insertRows, parseDateTime } from "../utils";
 
 export default (db: Database) =>
-  async (dataToImport: RawDataModels["SaliDBAanestys"]) => {
+  (dataToImport: RawDataModels["SaliDBAanestys"]) => {
     if (dataToImport.KieliId !== LanguageIds.Finnish) {
       return;
     }

@@ -3,7 +3,7 @@ import { extractDocumentTunnusCandidates } from "../salidb-document-ref";
 import { insertRows, parseDateTime } from "../utils";
 
 export default (db: Database) =>
-  async (dataToImport: RawDataModels["SaliDBKohtaAsiakirja"]) => {
+  (dataToImport: RawDataModels["SaliDBKohtaAsiakirja"]) => {
     const row: DatabaseTables.SectionDocumentLink = {
       id: +dataToImport.Id,
       section_key: dataToImport.KohtaTekninenAvain,

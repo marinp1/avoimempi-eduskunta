@@ -18,7 +18,9 @@ const makeKohtaAanestysRow = (
 
 describe("SaliDBKohtaAanestys migrator", () => {
   let db: Database;
-  let migrate: (data: RawDataModels["SaliDBKohtaAanestys"]) => Promise<void>;
+  let migrate: (
+    data: RawDataModels["SaliDBKohtaAanestys"],
+  ) => void | Promise<void>;
 
   beforeEach(() => {
     db = createTestDb(20);

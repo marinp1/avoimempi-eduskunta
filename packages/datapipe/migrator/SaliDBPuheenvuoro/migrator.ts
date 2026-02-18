@@ -3,7 +3,7 @@ import type { Database } from "bun:sqlite";
 import { insertRows, parseDateTime } from "../utils";
 
 export default (db: Database) => {
-  return async (dataToImport: RawDataModels["SaliDBPuheenvuoro"]) => {
+  return (dataToImport: RawDataModels["SaliDBPuheenvuoro"]) => {
     const ordinal = +dataToImport.Jarjestys.substring(0, 19).replace(
       /[-:\s]/g,
       "",
