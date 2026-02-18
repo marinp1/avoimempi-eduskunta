@@ -5,6 +5,7 @@ functions/parser/data
 tsconfig.tsbuildinfo
 .DS_Store
 .env
+.env.sync-storage-s3
 db_dump.sql
 .quokka
 *.db

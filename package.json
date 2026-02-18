@@ -39,6 +39,7 @@
     "check:vaski-gaps-api": "bun run packages/datapipe/check-vaski-gaps-from-api.ts",
     "migrate": "cd packages/datapipe && bun run migrator/cli.ts",
     "migrate:fresh": "cd packages/datapipe && bun run migrator/cli.ts recreate",
+    "sync:storage:s3": "bun run scripts/sync-storage-to-s3.mts",
     "test": "bun test",
     "report:exception-candidates": "bun run packages/server/scripts/generate-known-exception-candidates.ts",
     "check:parliament-size-exact": "bun run packages/server/scripts/check-parliament-composition-exact-200.ts",

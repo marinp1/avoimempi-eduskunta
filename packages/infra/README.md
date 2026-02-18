@@ -24,6 +24,52 @@ tofu plan
 tofu apply
 ```
 
+## Upload existing local data
+
+After bucket creation, sync local pipeline folders:
+
+```bash
+cp .env.sync-storage-s3.example .env.sync-storage-s3
+bun --env-file=.env.sync-storage-s3 run sync:storage:s3 --dry-run
+bun --env-file=.env.sync-storage-s3 run sync:storage:s3
+```
+
+Defaults to uploading `data/raw` and `data/parsed`. Use `--all` to include `metadata` and `artifacts`:
+
+```bash
+bun --env-file=.env.sync-storage-s3 run sync:storage:s3 --all
+```
+
+## Local requirements for sync script
+
+`bun run sync:storage:s3` requires:
+
+- Bun installed (repo runtime)
+- AWS CLI installed (`aws` command) for S3-compatible sync operations
+- Network access to `https://s3.nl-ams.scw.cloud`
+- A filled `.env.sync-storage-s3` file with:
+  - `STORAGE_S3_BUCKET`
+  - `STORAGE_S3_REGION`
+  - `STORAGE_S3_ENDPOINT`
+  - credentials via one of:
+    - `STORAGE_S3_ACCESS_KEY_ID` + `STORAGE_S3_SECRET_ACCESS_KEY`
+    - `SCW_ACCESS_KEY` + `SCW_SECRET_KEY`
+    - `SCW_PROFILE` (requires `scw` CLI installed and profile configured)
+
+Quick checks:
+
+```bash
+command -v bun
+command -v aws
+```
+
+If using `SCW_PROFILE`:
+
+```bash
+command -v scw
+scw config get access-key
+```
+
 ## If bucket name is taken
 
 Edit `packages/infra/main.tf` and change `scaleway_object_bucket.pipeline.name`.
