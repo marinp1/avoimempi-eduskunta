@@ -362,7 +362,8 @@ export default function createValiokunnanLausuntoSubMigrator(db: Database) {
        minority_opinion_rich_text = COALESCE(excluded.minority_opinion_rich_text, CommitteeReport.minority_opinion_rich_text),
        resolution_text = COALESCE(excluded.resolution_text, CommitteeReport.resolution_text),
        resolution_rich_text = COALESCE(excluded.resolution_rich_text, CommitteeReport.resolution_rich_text),
-       source_path = excluded.source_path`,
+       source_path = excluded.source_path
+     RETURNING id`,
   );
 
   const deleteMembers = db.prepare("DELETE FROM CommitteeReportMember WHERE report_id = ?");
@@ -428,7 +429,7 @@ export default function createValiokunnanLausuntoSubMigrator(db: Database) {
         const data = parseLausunto(row, body, parsed, context);
         const committeeName = data.committee_name || resolveCommitteeName(parsed.typeCode);
 
-        insertReport.run(
+        const reportRow = insertReport.get(
           id,
           parsed.identifier,
           parsed.typeCode,
@@ -458,10 +459,7 @@ export default function createValiokunnanLausuntoSubMigrator(db: Database) {
           sourcePath,
         );
 
-        const existing = db
-          .query("SELECT id FROM CommitteeReport WHERE parliament_identifier = ? LIMIT 1")
-          .get(parsed.identifier) as { id: number } | undefined;
-        const reportId = existing?.id ?? id;
+        const reportId = (reportRow as { id: number } | undefined)?.id ?? id;
 
         linkVaskiDocument.run(id, reportId);
         if (data.title) updateVaskiTitle.run(data.title, id);

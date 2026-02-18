@@ -109,11 +109,7 @@ const upsertVaskiDocument = (
      VALUES (?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        document_type = excluded.document_type,
-       edk_identifier = CASE
-         WHEN excluded.edk_identifier IS NULL OR TRIM(excluded.edk_identifier) = ''
-           THEN VaskiDocument.edk_identifier
-         ELSE excluded.edk_identifier
-       END,
+       edk_identifier = COALESCE(excluded.edk_identifier, VaskiDocument.edk_identifier),
        source_path = excluded.source_path`,
     [id, documentType, extractEdkIdentifier(row), buildSourcePath(row, documentType, id)],
   );

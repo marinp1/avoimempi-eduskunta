@@ -404,7 +404,8 @@ export default function createValikysymysSubMigrator(db: Database) {
        question_rich_text = COALESCE(excluded.question_rich_text, Interpellation.question_rich_text),
        resolution_text = COALESCE(excluded.resolution_text, Interpellation.resolution_text),
        resolution_rich_text = COALESCE(excluded.resolution_rich_text, Interpellation.resolution_rich_text),
-       source_path = excluded.source_path`,
+       source_path = excluded.source_path
+     RETURNING id`,
   );
 
   const deleteSigners = db.prepare("DELETE FROM InterpellationSigner WHERE interpellation_id = ?");
@@ -478,7 +479,7 @@ export default function createValikysymysSubMigrator(db: Database) {
         if (isKasittelytiedot) {
           const data = parseKasittelytiedot(row, body, parsed, context);
 
-          insertInterpellation.run(
+          const interpellationRow = insertInterpellation.get(
             id,
             parsed.identifier,
             parsed.number,
@@ -499,10 +500,7 @@ export default function createValikysymysSubMigrator(db: Database) {
             sourcePath,
           );
 
-          const existing = db
-            .query("SELECT id FROM Interpellation WHERE parliament_identifier = ? LIMIT 1")
-            .get(parsed.identifier) as { id: number } | undefined;
-          const interpellationId = existing?.id ?? id;
+          const interpellationId = (interpellationRow as { id: number } | undefined)?.id ?? id;
 
           linkVaskiDocument.run(id, interpellationId);
           if (data.title) updateVaskiTitle.run(data.title, id);
@@ -526,7 +524,7 @@ export default function createValikysymysSubMigrator(db: Database) {
         } else if (isKysymys) {
           const data = parseKysymys(row, body, parsed, context);
 
-          insertInterpellation.run(
+          const interpellationRow = insertInterpellation.get(
             id,
             parsed.identifier,
             parsed.number,
@@ -547,10 +545,7 @@ export default function createValikysymysSubMigrator(db: Database) {
             sourcePath,
           );
 
-          const existing = db
-            .query("SELECT id FROM Interpellation WHERE parliament_identifier = ? LIMIT 1")
-            .get(parsed.identifier) as { id: number } | undefined;
-          const interpellationId = existing?.id ?? id;
+          const interpellationId = (interpellationRow as { id: number } | undefined)?.id ?? id;
 
           linkVaskiDocument.run(id, interpellationId);
           if (data.title) updateVaskiTitle.run(data.title, id);

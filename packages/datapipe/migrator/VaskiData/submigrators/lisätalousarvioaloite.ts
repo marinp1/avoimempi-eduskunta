@@ -413,7 +413,8 @@ export default function createLisatalousarvioaloiteSubMigrator(db: Database) {
        decision_outcome_code = COALESCE(excluded.decision_outcome_code, LegislativeInitiative.decision_outcome_code),
        latest_stage_code = COALESCE(excluded.latest_stage_code, LegislativeInitiative.latest_stage_code),
        end_date = COALESCE(excluded.end_date, LegislativeInitiative.end_date),
-       source_path = excluded.source_path`,
+       source_path = excluded.source_path
+     RETURNING id`,
   );
 
   const deleteSigners = db.prepare("DELETE FROM LegislativeInitiativeSigner WHERE initiative_id = ?");
@@ -487,7 +488,7 @@ export default function createLisatalousarvioaloiteSubMigrator(db: Database) {
         if (isEduskuntaAloite) {
           const data = parseEduskuntaAloite(row, body, context);
 
-          insertInitiative.run(
+          const initiativeRow = insertInitiative.get(
             id,
             parsed.initiativeTypeCode,
             parsed.identifier,
@@ -512,10 +513,7 @@ export default function createLisatalousarvioaloiteSubMigrator(db: Database) {
             sourcePath,
           );
 
-          const existing = db
-            .query("SELECT id FROM LegislativeInitiative WHERE parliament_identifier = ? LIMIT 1")
-            .get(parsed.identifier) as { id: number } | undefined;
-          const initiativeId = existing?.id ?? id;
+          const initiativeId = (initiativeRow as { id: number } | undefined)?.id ?? id;
 
           linkVaskiDocument.run(id, initiativeId);
           if (data.title) updateVaskiTitle.run(data.title, id);
@@ -544,7 +542,7 @@ export default function createLisatalousarvioaloiteSubMigrator(db: Database) {
         } else if (isKasittelytiedot) {
           const data = parseKasittelytiedot(body, context);
 
-          insertInitiative.run(
+          const initiativeRow = insertInitiative.get(
             id,
             parsed.initiativeTypeCode,
             parsed.identifier,
@@ -569,10 +567,7 @@ export default function createLisatalousarvioaloiteSubMigrator(db: Database) {
             sourcePath,
           );
 
-          const existing = db
-            .query("SELECT id FROM LegislativeInitiative WHERE parliament_identifier = ? LIMIT 1")
-            .get(parsed.identifier) as { id: number } | undefined;
-          const initiativeId = existing?.id ?? id;
+          const initiativeId = (initiativeRow as { id: number } | undefined)?.id ?? id;
 
           linkVaskiDocument.run(id, initiativeId);
           if (data.title) updateVaskiTitle.run(data.title, id);

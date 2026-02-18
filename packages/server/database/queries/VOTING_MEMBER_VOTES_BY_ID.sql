@@ -1,22 +1,22 @@
 WITH voting_context AS (
-  SELECT DATE(start_time) AS voting_date
+  SELECT start_date AS voting_date
   FROM Voting
   WHERE id = $id
 )
 SELECT
   v.person_id,
-  COALESCE(NULLIF(TRIM(r.first_name), ''), '?') AS first_name,
-  COALESCE(NULLIF(TRIM(r.last_name), ''), '?') AS last_name,
-  COALESCE(NULLIF(TRIM(v.group_abbreviation), ''), r.party, '(tuntematon)') AS party_code,
-  LOWER(TRIM(v.vote)) AS vote,
+  COALESCE(NULLIF(r.first_name, ''), '?') AS first_name,
+  COALESCE(NULLIF(r.last_name, ''), '?') AS last_name,
+  COALESCE(NULLIF(v.group_abbreviation, ''), r.party, '(tuntematon)') AS party_code,
+  v.vote AS vote,
   CASE
     WHEN EXISTS (
       SELECT 1
       FROM GovernmentMembership gm
       JOIN voting_context vc
       WHERE gm.person_id = v.person_id
-        AND DATE(gm.start_date) <= vc.voting_date
-        AND (gm.end_date IS NULL OR DATE(gm.end_date) >= vc.voting_date)
+        AND gm.start_date <= vc.voting_date
+        AND (gm.end_date IS NULL OR gm.end_date >= vc.voting_date)
     ) THEN 1
     ELSE 0
   END AS is_government

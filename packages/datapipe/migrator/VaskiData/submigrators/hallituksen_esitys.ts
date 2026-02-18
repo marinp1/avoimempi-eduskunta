@@ -443,7 +443,8 @@ export default function createHallituksenEsitysSubMigrator(db: Database) {
        law_decision_text = COALESCE(excluded.law_decision_text, GovernmentProposal.law_decision_text),
        latest_stage_code = COALESCE(excluded.latest_stage_code, GovernmentProposal.latest_stage_code),
        end_date = COALESCE(excluded.end_date, GovernmentProposal.end_date),
-       source_path = excluded.source_path`,
+       source_path = excluded.source_path
+     RETURNING id`,
   );
 
   const deleteSignatories = db.prepare("DELETE FROM GovernmentProposalSignatory WHERE proposal_id = ?");
@@ -522,7 +523,7 @@ export default function createHallituksenEsitysSubMigrator(db: Database) {
         if (isHE) {
           const data = parseHallituksenEsitys(row, body, parsed, context);
 
-          insertProposal.run(
+          const proposalRow = insertProposal.get(
             id,
             parsed.identifier,
             parsed.number,
@@ -547,10 +548,7 @@ export default function createHallituksenEsitysSubMigrator(db: Database) {
             sourcePath,
           );
 
-          const existing = db
-            .query("SELECT id FROM GovernmentProposal WHERE parliament_identifier = ? LIMIT 1")
-            .get(parsed.identifier) as { id: number } | undefined;
-          const proposalId = existing?.id ?? id;
+          const proposalId = (proposalRow as { id: number } | undefined)?.id ?? id;
 
           linkVaskiDocument.run(id, proposalId);
           if (data.title) updateVaskiTitle.run(data.title, id);
@@ -581,7 +579,7 @@ export default function createHallituksenEsitysSubMigrator(db: Database) {
         } else if (isKasittelytiedot) {
           const data = parseKasittelytiedot(row, body, parsed, context);
 
-          insertProposal.run(
+          const proposalRow = insertProposal.get(
             id,
             parsed.identifier,
             parsed.number,
@@ -606,10 +604,7 @@ export default function createHallituksenEsitysSubMigrator(db: Database) {
             sourcePath,
           );
 
-          const existing = db
-            .query("SELECT id FROM GovernmentProposal WHERE parliament_identifier = ? LIMIT 1")
-            .get(parsed.identifier) as { id: number } | undefined;
-          const proposalId = existing?.id ?? id;
+          const proposalId = (proposalRow as { id: number } | undefined)?.id ?? id;
 
           linkVaskiDocument.run(id, proposalId);
           if (data.title) updateVaskiTitle.run(data.title, id);

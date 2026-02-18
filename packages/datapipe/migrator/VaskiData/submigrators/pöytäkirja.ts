@@ -675,7 +675,7 @@ function resolveSectionForMinutesItem(
 ): { sectionKey: string; matchMode: SectionMinutesMatchMode } | null {
   const context = `minutes_id=${item.minutes_id}, entry_order=${item.entry_order}`;
   const directMatches = db
-    .query("SELECT key FROM Section WHERE session_key = ? AND vaski_id = ? ORDER BY key")
+    .query("SELECT key FROM Section WHERE session_key = ? AND vaski_id = ? LIMIT 2")
     .all(sessionKey, item.item_identifier_numeric) as Array<{ key: string }>;
 
   if (directMatches.length > 1) {
@@ -694,7 +694,7 @@ function resolveSectionForMinutesItem(
   if (parentIdentifier === null) return null;
 
   const parentMatches = db
-    .query("SELECT key FROM Section WHERE session_key = ? AND vaski_id = ? ORDER BY key")
+    .query("SELECT key FROM Section WHERE session_key = ? AND vaski_id = ? LIMIT 2")
     .all(sessionKey, parentIdentifier) as Array<{ key: string }>;
 
   if (parentMatches.length > 1) {
@@ -909,7 +909,7 @@ function resolveSpeechForMinutesSpeech(
 ): SpeechLinkResult {
   const allCandidates = db
     .query(
-      "SELECT id, person_id, first_name, last_name, ordinal_number, order_raw, request_time, created_datetime FROM Speech WHERE section_key = ? ORDER BY COALESCE(created_datetime, '') DESC, id DESC",
+      "SELECT id, person_id, first_name, last_name, ordinal_number, order_raw, request_time, created_datetime FROM Speech WHERE section_key = ? ORDER BY created_datetime DESC, id DESC",
     )
     .all(sectionKey) as SpeechLookupCandidate[];
 

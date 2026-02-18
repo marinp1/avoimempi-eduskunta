@@ -441,7 +441,8 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
        decision_outcome_code = COALESCE(excluded.decision_outcome_code, WrittenQuestion.decision_outcome_code),
        latest_stage_code = COALESCE(excluded.latest_stage_code, WrittenQuestion.latest_stage_code),
        end_date = COALESCE(excluded.end_date, WrittenQuestion.end_date),
-       source_path = excluded.source_path`,
+       source_path = excluded.source_path
+     RETURNING id`,
   );
 
   const deleteSigners = db.prepare("DELETE FROM WrittenQuestionSigner WHERE question_id = ?");
@@ -525,7 +526,7 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
         if (isKasittelytiedot) {
           const data = parseKasittelytiedot(row, body, parsed, context);
 
-          insertQuestion.run(
+          const questionRow = insertQuestion.get(
             id,
             parsed.identifier,
             parsed.number,
@@ -551,10 +552,7 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
             sourcePath,
           );
 
-          const existing = db
-            .query("SELECT id FROM WrittenQuestion WHERE parliament_identifier = ? LIMIT 1")
-            .get(parsed.identifier) as { id: number } | undefined;
-          const questionId = existing?.id ?? id;
+          const questionId = (questionRow as { id: number } | undefined)?.id ?? id;
 
           linkVaskiDocument.run(id, questionId);
           if (data.title) updateVaskiTitle.run(data.title, id);
@@ -578,7 +576,7 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
         } else if (isKysymys) {
           const data = parseKysymys(row, body, parsed, context);
 
-          insertQuestion.run(
+          const questionRow = insertQuestion.get(
             id,
             parsed.identifier,
             parsed.number,
@@ -604,10 +602,7 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
             sourcePath,
           );
 
-          const existing = db
-            .query("SELECT id FROM WrittenQuestion WHERE parliament_identifier = ? LIMIT 1")
-            .get(parsed.identifier) as { id: number } | undefined;
-          const questionId = existing?.id ?? id;
+          const questionId = (questionRow as { id: number } | undefined)?.id ?? id;
 
           linkVaskiDocument.run(id, questionId);
           if (data.title) updateVaskiTitle.run(data.title, id);

@@ -145,9 +145,9 @@ export const sanityQueries = {
              AND n_yes + n_no + n_abstain + n_absent != n_total`,
   votingIndividualCountMismatch: sql`SELECT v.id, v.n_total, COUNT(vo.id) as actual_votes
            FROM Voting v
-           JOIN Vote vo ON v.id = vo.voting_id
+           LEFT JOIN Vote vo ON v.id = vo.voting_id
            GROUP BY v.id
-           HAVING actual_votes != v.n_total`,
+           HAVING actual_votes != COALESCE(v.n_total, 0)`,
   votingDuplicateNumbers: sql`SELECT COUNT(*) as dupes FROM (
              SELECT session_key, number, COUNT(*) as cnt
              FROM Voting
@@ -207,17 +207,20 @@ export const sanityQueries = {
   schemaIndexes: sql`SELECT name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%' ORDER BY name`,
   voteAggregationMismatch: sql`SELECT v.id
            FROM Voting v
-           JOIN Vote vo ON v.id = vo.voting_id
+           LEFT JOIN Vote vo ON v.id = vo.voting_id
            GROUP BY v.id
-           HAVING SUM(CASE WHEN vo.vote = 'Jaa' THEN 1 ELSE 0 END) != v.n_yes
-              OR SUM(CASE WHEN vo.vote = 'Ei' THEN 1 ELSE 0 END) != v.n_no
-              OR SUM(CASE WHEN vo.vote = ('Tyhj' || char(228, 228)) THEN 1 ELSE 0 END) != v.n_abstain
-              OR SUM(CASE WHEN vo.vote = 'Poissa' THEN 1 ELSE 0 END) != v.n_absent`,
+           HAVING COALESCE(SUM(CASE WHEN vo.vote = 'Jaa' THEN 1 ELSE 0 END), 0) != COALESCE(v.n_yes, 0)
+              OR COALESCE(SUM(CASE WHEN vo.vote = 'Ei' THEN 1 ELSE 0 END), 0) != COALESCE(v.n_no, 0)
+              OR COALESCE(SUM(CASE WHEN vo.vote = ('Tyhj' || char(228, 228)) THEN 1 ELSE 0 END), 0) != COALESCE(v.n_abstain, 0)
+              OR COALESCE(SUM(CASE WHEN vo.vote = 'Poissa' THEN 1 ELSE 0 END), 0) != COALESCE(v.n_absent, 0)`,
   votingSessionDateMismatch: sql`SELECT COUNT(*) as c FROM Voting v
            JOIN Session s ON s.key = v.session_key
-           WHERE v.start_time IS NOT NULL
+           WHERE v.start_date IS NOT NULL
              AND s.date IS NOT NULL
-             AND ABS(JULIANDAY(SUBSTR(v.start_time, 1, 10)) - JULIANDAY(s.date)) > 1`,
+             AND (
+               v.start_date < DATE(s.date, '-1 day')
+               OR v.start_date > DATE(s.date, '+1 day')
+             )`,
   votingSectionOrphans: sql`SELECT COUNT(*) as c FROM Voting v
            WHERE v.section_key IS NOT NULL AND v.section_key != ''
              AND NOT EXISTS (SELECT 1 FROM Section sec WHERE sec.key = v.section_key)`,

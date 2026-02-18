@@ -60,6 +60,7 @@ describe("Migration schema", () => {
       "V001.018__section_document_reference.sql",
       "V001.019__vaski_government_proposal_rich_text.sql",
       "V001.020__vaski_document_rich_text.sql",
+      "V001.021__query_performance_indexes.sql",
     ]);
   });
 
@@ -210,6 +211,27 @@ describe("Migration schema", () => {
       expect(sectionColumns).toContain("minutes_general_processing_phase_code");
       expect(sectionColumns).toContain("minutes_content_text");
       expect(sectionColumns).toContain("minutes_match_mode");
+    } finally {
+      db.close();
+    }
+  });
+
+  test("has targeted performance indexes and no redundant voting start-date expression index", () => {
+    const db = createTestDb(21);
+    try {
+      const indexNames = (
+        db
+          .query("SELECT name FROM sqlite_master WHERE type='index' ORDER BY name")
+          .all() as Array<{ name: string }>
+      ).map((row) => row.name);
+
+      expect(indexNames).toContain("idx_voting_session_number");
+      expect(indexNames).toContain("idx_representative_sort_name_person_id");
+      expect(indexNames).toContain("idx_trust_position_person_period");
+      expect(indexNames).toContain("idx_people_leaving_parliament_person_end_date");
+      expect(indexNames).toContain("idx_rollcallreport_parliament_identifier");
+      expect(indexNames).toContain("idx_section_session_vaski_modified_id");
+      expect(indexNames).not.toContain("idx_voting_start_date_expr");
     } finally {
       db.close();
     }

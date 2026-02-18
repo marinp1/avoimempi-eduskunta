@@ -290,7 +290,8 @@ export default function createSuullinenKysymysSubMigrator(db: Database) {
        decision_outcome_code = COALESCE(excluded.decision_outcome_code, OralQuestion.decision_outcome_code),
        latest_stage_code = COALESCE(excluded.latest_stage_code, OralQuestion.latest_stage_code),
        end_date = COALESCE(excluded.end_date, OralQuestion.end_date),
-       source_path = excluded.source_path`,
+       source_path = excluded.source_path
+     RETURNING id`,
   );
 
   const deleteStages = db.prepare("DELETE FROM OralQuestionStage WHERE question_id = ?");
@@ -355,7 +356,7 @@ export default function createSuullinenKysymysSubMigrator(db: Database) {
       try {
         const data = parseKasittelytiedot(body, context);
 
-        insertQuestion.run(
+        const questionRow = insertQuestion.get(
           id,
           parsed.identifier,
           parsed.number,
@@ -371,10 +372,7 @@ export default function createSuullinenKysymysSubMigrator(db: Database) {
           sourcePath,
         );
 
-        const existing = db
-          .query("SELECT id FROM OralQuestion WHERE parliament_identifier = ? LIMIT 1")
-          .get(parsed.identifier) as { id: number } | undefined;
-        const questionId = existing?.id ?? id;
+        const questionId = (questionRow as { id: number } | undefined)?.id ?? id;
 
         linkVaskiDocument.run(id, questionId);
         if (data.title) updateVaskiTitle.run(data.title, id);
