@@ -177,7 +177,7 @@ describe("Vaski pöytäkirja submigrator", () => {
     reportLogDir = mkdtempSync(join(tmpdir(), "vaski-poytakirja-report-"));
     process.env.MIGRATOR_OVERWRITE_LOG_DIR = overwriteLogDir;
     process.env.MIGRATOR_REPORT_LOG_DIR = reportLogDir;
-    db = createTestDb();
+    db = createTestDb(20);
     migrateRow = createSubMigrator(db).migrateRow;
   });
 
@@ -227,6 +227,87 @@ describe("Vaski pöytäkirja submigrator", () => {
     expect(other.minutes_item_title).toBe("Nimenhuuto");
     expect(other.minutes_related_document_identifier).toBe("EDK-2017-AK-104325");
     expect(other.minutes_content_text).toContain("Toimitettiin nimenhuuto");
+  });
+
+  test("captures all related document references from array-form minutes entries", async () => {
+    seedDefaultSessionAndSections(db);
+
+    await migrateRow(
+      makeRow({
+        mainItems: [
+          makeAsiakohta({
+            KohtaAsia: [
+              {
+                AsiakirjatyyppiNimi: "Hallituksen esitys",
+                EduskuntaTunnus: "HE 10/2017 vp",
+              },
+              {
+                AsiakirjatyyppiNimi: "Valiokunnan mietintö",
+                MultiViiteTunnus: "VaVM 1, 2/2017 vp",
+              },
+            ],
+            KohtaAsiakirja: [
+              {
+                AsiakirjatyyppiNimi: "Hallituksen esitys",
+                "@_hyperlinkkiKoodi": "/valtiopaivaasiakirjat/HE+11/2017+vp",
+              },
+            ],
+          }),
+        ],
+      }),
+    );
+
+    const refs = db
+      .query(
+        "SELECT document_identifier, document_type FROM SectionDocumentReference WHERE section_key = '2017/2/11' ORDER BY document_identifier",
+      )
+      .all() as Array<{ document_identifier: string; document_type: string | null }>;
+
+    expect(refs).toHaveLength(4);
+    expect(refs.map((row) => row.document_identifier)).toEqual([
+      "HE 10/2017 vp",
+      "HE 11/2017 vp",
+      "VAVM 1/2017 vp",
+      "VAVM 2/2017 vp",
+    ]);
+    expect(refs.find((row) => row.document_identifier === "HE 10/2017 vp")?.document_type).toBe(
+      "Hallituksen esitys",
+    );
+    expect(refs.find((row) => row.document_identifier === "VAVM 1/2017 vp")?.document_type).toBe(
+      "Valiokunnan mietintö",
+    );
+  });
+
+  test("uses MuuViite.ViiteTeksti as related document identifier fallback", async () => {
+    seedDefaultSessionAndSections(db);
+
+    await migrateRow(
+      makeRow({
+        mainItems: [
+          makeAsiakohta({
+            KohtaAsia: {
+              AsiakirjatyyppiNimi: "Hallituksen esitys",
+              MuuViite: {
+                ViiteTeksti: "HE 15/2017 vp",
+              },
+            },
+          }),
+        ],
+      }),
+    );
+
+    const refs = db
+      .query(
+        "SELECT document_identifier, document_type FROM SectionDocumentReference WHERE section_key = '2017/2/11' ORDER BY document_identifier",
+      )
+      .all() as Array<{ document_identifier: string; document_type: string | null }>;
+
+    expect(refs).toEqual([
+      {
+        document_identifier: "HE 15/2017 vp",
+        document_type: "Hallituksen esitys",
+      },
+    ]);
   });
 
   test("skips non-plenary committee minutes", async () => {
