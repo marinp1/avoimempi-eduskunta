@@ -219,6 +219,7 @@ All storage providers implement this interface:
 interface IStorageProvider {
   put(key: string, data: string | Buffer): Promise<void>;
   putFile?(key: string, localFilePath: string): Promise<void>;
+  getFile?(key: string, localFilePath: string): Promise<void>;
   get(key: string): Promise<string | null>;
   exists(key: string): Promise<boolean>;
   list(options?: StorageListOptions): Promise<StorageListResult>;

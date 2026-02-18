@@ -306,6 +306,12 @@ const listJsonFilesRecursive = (baseDir: string): string[] => {
   return files.sort((a, b) => a.localeCompare(b));
 };
 
+const isTruthyEnv = (value: string | undefined): boolean => {
+  if (!value) return false;
+  const normalized = value.trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes";
+};
+
 /**
  * Controller for managing database migration from parsed storage
  */
@@ -465,6 +471,7 @@ export class MigratorController {
     const databasePath = getDatabasePath();
     const databaseFileName = path.basename(databasePath);
     const artifactKey = `${SQLITE_ARTIFACTS_STORAGE_PREFIX}/latest/${databaseFileName}`;
+    const shouldPublishSnapshot = isTruthyEnv(process.env.MIGRATOR_PUBLISH_SNAPSHOT);
 
     if (!fs.existsSync(databasePath)) {
       throw new Error(`SQLite database file not found at '${databasePath}'`);
@@ -478,12 +485,20 @@ export class MigratorController {
 
     await storage.putFile(artifactKey, databasePath);
 
+    const snapshotKey = shouldPublishSnapshot
+      ? `${SQLITE_ARTIFACTS_STORAGE_PREFIX}/snapshots/${params.runId}/${databaseFileName}`
+      : null;
+    if (snapshotKey) {
+      await storage.putFile(snapshotKey, databasePath);
+    }
+
     const stats = fs.statSync(databasePath);
     const manifest = {
       runId: params.runId,
       migratedAt: params.migratedAt,
       storageProvider: storage.name,
       dbArtifactKey: artifactKey,
+      snapshotKey,
       dbFileName: databaseFileName,
       dbSizeBytes: stats.size,
       updatedAt: new Date().toISOString(),
