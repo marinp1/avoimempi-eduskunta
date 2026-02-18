@@ -1,10 +1,17 @@
 import sqlite, { type Database } from "bun:sqlite";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import type { ServerWebSocket } from "bun";
 import { getMigrations } from "bun-sqlite-migrations";
 import { TableName } from "#constants/index";
 import { migrateVaskiData } from "../datapipe/migrator/VaskiData/migrator";
+import {
+  buildConsolidatedMigrationReport,
+  type ConsolidatedMigrationReport,
+  writeConsolidatedMigrationReport,
+  type ConsolidatedMigrationStatus,
+} from "../datapipe/migrator/reporting";
 import { clearStatementCache } from "../datapipe/migrator/utils";
 import { getDatabasePath } from "../shared/database";
 import {
@@ -264,6 +271,39 @@ const shouldSkipTableClear = (
   return false;
 };
 
+const MIGRATION_RUN_REPORTS_STORAGE_PREFIX = "metadata/migration-runs";
+const MIGRATION_RUN_LATEST_STORAGE_KEY = `${MIGRATION_RUN_REPORTS_STORAGE_PREFIX}/latest.json`;
+const MIGRATION_RUN_LATEST_SUCCESS_STORAGE_KEY = `${MIGRATION_RUN_REPORTS_STORAGE_PREFIX}/latest-success.json`;
+
+const normalizeStoragePath = (value: string): string =>
+  value.replace(/\\/g, "/").replace(/^\/+/, "");
+
+const listJsonFilesRecursive = (baseDir: string): string[] => {
+  if (!fs.existsSync(baseDir)) return [];
+
+  const files: string[] = [];
+  const stack: string[] = [baseDir];
+
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current) continue;
+
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        stack.push(fullPath);
+        continue;
+      }
+
+      if (entry.isFile() && entry.name.endsWith(".json")) {
+        files.push(fullPath);
+      }
+    }
+  }
+
+  return files.sort((a, b) => a.localeCompare(b));
+};
+
 /**
  * Controller for managing database migration from parsed storage
  */
@@ -361,6 +401,60 @@ export class MigratorController {
     }
   }
 
+  private async publishMigrationRunReports(params: {
+    runId: string;
+    localRootDir: string;
+    status: ConsolidatedMigrationStatus;
+    startedAt: string;
+    finishedAt: string;
+    consolidatedReport: ConsolidatedMigrationReport | null;
+    migrationError: string | null;
+  }): Promise<void> {
+    const storage = getStorage();
+    const runStoragePrefix = `${MIGRATION_RUN_REPORTS_STORAGE_PREFIX}/${params.runId}`;
+    const localFiles = listJsonFilesRecursive(params.localRootDir);
+    const uploadedKeys: string[] = [];
+
+    for (const localFilePath of localFiles) {
+      const relativePath = normalizeStoragePath(
+        path.relative(params.localRootDir, localFilePath),
+      );
+      const storageKey = `${runStoragePrefix}/${relativePath}`;
+      const payload = fs.readFileSync(localFilePath, "utf8");
+      await storage.put(storageKey, payload);
+      uploadedKeys.push(storageKey);
+    }
+
+    const pointerPayload = {
+      runId: params.runId,
+      status: params.status,
+      startedAt: params.startedAt,
+      finishedAt: params.finishedAt,
+      reportKey: `${runStoragePrefix}/consolidated-report.json`,
+      artifactPrefix: runStoragePrefix,
+      artifactCount: uploadedKeys.length,
+      totals: params.consolidatedReport?.totals ?? null,
+      files: params.consolidatedReport?.files ?? null,
+      error: params.migrationError,
+    };
+
+    await storage.put(
+      MIGRATION_RUN_LATEST_STORAGE_KEY,
+      JSON.stringify(pointerPayload, null, 2),
+    );
+
+    if (params.status === "success") {
+      await storage.put(
+        MIGRATION_RUN_LATEST_SUCCESS_STORAGE_KEY,
+        JSON.stringify(pointerPayload, null, 2),
+      );
+    }
+
+    console.log(
+      `📦 Uploaded migration reports to storage '${storage.name}' at ${runStoragePrefix}`,
+    );
+  }
+
   /**
    * Start database migration from parsed storage
    */
@@ -379,6 +473,34 @@ export class MigratorController {
         message: "Starting database migration",
       },
     });
+
+    const reportStartedAt = new Date().toISOString();
+    const reportRunId = reportStartedAt.replace(/[:.]/g, "-");
+    const reportRootDir = path.join(
+      os.tmpdir(),
+      "avoimempi-eduskunta",
+      "migration-run-reports",
+      reportRunId,
+    );
+    const reportDirs = {
+      reports: path.join(reportRootDir, "reports"),
+      overwrites: path.join(reportRootDir, "overwrites"),
+      knownIssues: path.join(reportRootDir, "known-issues"),
+    };
+
+    const previousReportEnv = {
+      report: process.env.MIGRATOR_REPORT_LOG_DIR,
+      overwrite: process.env.MIGRATOR_OVERWRITE_LOG_DIR,
+      knownIssue: process.env.MIGRATOR_KNOWN_ISSUE_LOG_DIR,
+    };
+
+    process.env.MIGRATOR_REPORT_LOG_DIR = reportDirs.reports;
+    process.env.MIGRATOR_OVERWRITE_LOG_DIR = reportDirs.overwrites;
+    process.env.MIGRATOR_KNOWN_ISSUE_LOG_DIR = reportDirs.knownIssues;
+
+    let migrationStatus: ConsolidatedMigrationStatus = "failed";
+    let migrationError: string | null = null;
+    let consolidatedReport: ConsolidatedMigrationReport | null = null;
 
     try {
       // Get tables with parsed data
@@ -732,6 +854,8 @@ export class MigratorController {
       console.log(`   Tables imported: ${tablesToImport.length}`);
       console.log(`   Timestamp: ${timestamp}`);
 
+      migrationStatus = "success";
+
       this.sendMessage({
         type: "complete",
         data: {
@@ -742,6 +866,8 @@ export class MigratorController {
         },
       });
     } catch (error: any) {
+      migrationStatus = this.shouldStop ? "stopped" : "failed";
+      migrationError = error?.message || String(error);
       if (this.shouldStop) {
         this.sendMessage({
           type: "stopped",
@@ -759,6 +885,64 @@ export class MigratorController {
       }
       throw error;
     } finally {
+      const reportFinishedAt = new Date().toISOString();
+      try {
+        consolidatedReport = buildConsolidatedMigrationReport({
+          runId: reportRunId,
+          status: migrationStatus,
+          startedAt: reportStartedAt,
+          finishedAt: reportFinishedAt,
+          error: migrationError,
+          reportDir: reportDirs.reports,
+          overwriteDir: reportDirs.overwrites,
+          knownIssueDir: reportDirs.knownIssues,
+          rootDir: reportRootDir,
+        });
+        const consolidatedReportPath = path.join(
+          reportRootDir,
+          "consolidated-report.json",
+        );
+        writeConsolidatedMigrationReport(
+          consolidatedReport,
+          consolidatedReportPath,
+        );
+        console.log(`📄 Consolidated migration report: ${consolidatedReportPath}`);
+
+        await this.publishMigrationRunReports({
+          runId: reportRunId,
+          localRootDir: reportRootDir,
+          status: migrationStatus,
+          startedAt: reportStartedAt,
+          finishedAt: reportFinishedAt,
+          consolidatedReport,
+          migrationError,
+        });
+      } catch (reportError) {
+        console.warn(
+          `⚠️  Failed to publish migration reports: ${String(reportError)}`,
+        );
+      }
+
+      fs.rmSync(reportRootDir, { recursive: true, force: true });
+
+      if (previousReportEnv.report === undefined) {
+        delete process.env.MIGRATOR_REPORT_LOG_DIR;
+      } else {
+        process.env.MIGRATOR_REPORT_LOG_DIR = previousReportEnv.report;
+      }
+
+      if (previousReportEnv.overwrite === undefined) {
+        delete process.env.MIGRATOR_OVERWRITE_LOG_DIR;
+      } else {
+        process.env.MIGRATOR_OVERWRITE_LOG_DIR = previousReportEnv.overwrite;
+      }
+
+      if (previousReportEnv.knownIssue === undefined) {
+        delete process.env.MIGRATOR_KNOWN_ISSUE_LOG_DIR;
+      } else {
+        process.env.MIGRATOR_KNOWN_ISSUE_LOG_DIR = previousReportEnv.knownIssue;
+      }
+
       this.isRunning = false;
       this.currentTable = null;
       this.shouldStop = false;
