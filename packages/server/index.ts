@@ -17,11 +17,20 @@ const port =
     : isDev
       ? 3000
       : 80;
+const configuredIdleTimeout = Number.parseInt(
+  process.env.BUN_IDLE_TIMEOUT_SECONDS ?? "",
+  10,
+);
+const idleTimeout =
+  Number.isFinite(configuredIdleTimeout) && configuredIdleTimeout > 0
+    ? configuredIdleTimeout
+    : 120;
 
 const server = Bun.serve<{
   type: "parser" | "scraper" | "migrator";
 }>({
   port,
+  idleTimeout,
   routes: {
     "/": homepage,
     "/edustajat": homepage,

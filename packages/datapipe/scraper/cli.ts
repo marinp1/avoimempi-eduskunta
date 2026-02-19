@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { type ScrapeMode, scrapeTable } from "./scraper";
+import { getExactTableCountsByRows } from "#table-counts";
 
 async function main() {
   const args = process.argv.slice(2);
@@ -70,13 +71,7 @@ async function showStatus() {
 
   console.log("📊 Scraping Status\n");
 
-  const response = await fetch(
-    "https://avoindata.eduskunta.fi/api/v1/tables/counts",
-  );
-  const data = (await response.json()) as {
-    tableName: string;
-    rowCount: number;
-  }[];
+  const data = await getExactTableCountsByRows();
 
   for (const table of data) {
     const prefix = StorageKeyBuilder.listPrefixForTable("raw", table.tableName);

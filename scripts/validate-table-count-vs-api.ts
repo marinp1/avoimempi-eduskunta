@@ -1,4 +1,6 @@
 import { getStorage, listAllStorageKeys, StorageKeyBuilder } from "#storage";
+import { TableNames } from "#constants";
+import { getExactTableCountsByRows } from "#table-counts";
 
 type Stage = "raw" | "parsed";
 
@@ -76,7 +78,7 @@ function parseArgs(argv: string[]): Args {
 
 function printHelpAndExit(): never {
   console.log(`
-Compare local table row counts against the API counts endpoint and print diagnostics.
+Compare local table row counts against exact API-derived counts and print diagnostics.
 
 Usage:
   bun run scripts/validate-table-count-vs-api.ts <TableName> [options]
@@ -109,19 +111,12 @@ function toNumericId(value: unknown): number | null {
 
 async function fetchApiCount(
   table: string,
-  timeoutMs: number,
 ): Promise<{ apiRowCount: number | null; tablesInEndpoint: number }> {
-  const url = "https://avoindata.eduskunta.fi/api/v1/tables/counts";
-  const resp = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
-  if (!resp.ok) {
-    throw new Error(`Could not fetch API counts: HTTP ${resp.status}`);
-  }
-
-  const data = (await resp.json()) as Array<{ tableName: string; rowCount: number }>;
-  const target = data.find((v) => v.tableName === table);
+  const data = await getExactTableCountsByRows({ tableName: table });
+  const target = data[0];
   return {
     apiRowCount: typeof target?.rowCount === "number" ? target.rowCount : null,
-    tablesInEndpoint: data.length,
+    tablesInEndpoint: TableNames.length,
   };
 }
 
@@ -189,7 +184,7 @@ async function main() {
   const prefix = StorageKeyBuilder.listPrefixForTable(args.stage, args.table);
 
   const [{ apiRowCount, tablesInEndpoint }, keys] = await Promise.all([
-    fetchApiCount(args.table, args.timeoutMs),
+    fetchApiCount(args.table),
     listAllStorageKeys(storage, { prefix, pageSize: 10_000 }),
   ]);
 

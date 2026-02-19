@@ -37,6 +37,12 @@
       "#storage/*": [
         "./packages/shared/storage/*"
       ],
+      "#table-counts": [
+        "./packages/shared/table-counts/index.ts"
+      ],
+      "#table-counts/*": [
+        "./packages/shared/table-counts/*"
+      ],
       "#client/*": [
         "./packages/client/*"
       ],
