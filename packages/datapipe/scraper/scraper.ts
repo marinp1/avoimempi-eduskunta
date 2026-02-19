@@ -2,6 +2,7 @@ import { scheduler } from "node:timers/promises";
 import type { DataStage } from "#storage";
 import { recordSourceStagePage } from "#storage/source-status";
 import { getStorage, listAllStorageKeys, StorageKeyBuilder } from "#storage";
+import { getExactTableCountByRows } from "#table-counts";
 
 /** Time to wait (in ms) between API calls. */
 const TIME_BETWEEN_QUERIES = 25;
@@ -19,20 +20,6 @@ interface EduskuntaApiResponse {
   rowData: any[][];
   rowCount: number;
   hasMore: boolean;
-}
-
-/**
- * Get table row counts from API
- */
-async function getTableCounts(): Promise<Record<string, number>> {
-  const resp = await fetch(
-    "https://avoindata.eduskunta.fi/api/v1/tables/counts",
-  );
-  const data = (await resp.json()) as {
-    tableName: string;
-    rowCount: number;
-  }[];
-  return Object.fromEntries(data.map((v) => [v.tableName, v.rowCount]));
 }
 
 /**
@@ -121,8 +108,7 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
 
   // Get table metadata
   const { primaryColumn } = await getTableColumns(tableName);
-  const tableCounts = await getTableCounts();
-  const totalRows = tableCounts[tableName] || 0;
+  const totalRows = await getExactTableCountByRows(tableName);
 
   console.log(`📋 Total rows in API: ${totalRows.toLocaleString()}`);
 

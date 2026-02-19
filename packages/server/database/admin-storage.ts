@@ -1,4 +1,5 @@
 import { TableName } from "#constants/index";
+import { getCachedTableCountMapByRows } from "#table-counts";
 import { listAllStorageKeys } from "#storage/list-all";
 import { getStorage } from "#storage/factory";
 import {
@@ -38,50 +39,47 @@ export interface ScrapingOverview {
 }
 
 export class AdminStorageService {
-  private static cachedApiTableCounts: Record<string, number> | null = null;
-  private static apiFetchInFlight: Promise<Record<string, number>> | null =
-    null;
   private static statusCache:
     | { data: TableStorageStatus[]; expiresAt: number }
     | null = null;
   private static statusFetchInFlight: Promise<TableStorageStatus[]> | null =
     null;
   private static readonly STATUS_CACHE_TTL = 30_000;
+  private static readonly API_COUNTS_TIMEOUT_MS = 1_500;
+  private static readonly API_COUNTS_CONCURRENCY = 5;
+  private static readonly API_COUNTS_CACHE_TTL_MS = 60 * 60 * 1000;
 
   /**
    * Fetch table row counts from Eduskunta API
    */
-  private async fetchApiTableCounts(): Promise<Record<string, number>> {
-    if (AdminStorageService.cachedApiTableCounts) {
-      return AdminStorageService.cachedApiTableCounts;
-    }
+  private async fetchApiTableCounts(options?: {
+    tableNames?: string[];
+    candidateRowCounts?: Record<string, number>;
+  }): Promise<Record<string, number>> {
+    const requestedTableNames = options?.tableNames;
+    const allTableNames = this.getTableNames();
+    const normalizedRequestedTableNames = requestedTableNames
+      ? Array.from(new Set(requestedTableNames)).sort()
+      : [];
+    const isAllTablesRequest =
+      normalizedRequestedTableNames.length === 0 ||
+      (normalizedRequestedTableNames.length === allTableNames.length &&
+        normalizedRequestedTableNames.every(
+          (tableName, index) => tableName === allTableNames[index],
+        ));
+    const effectiveTableNames = isAllTablesRequest
+      ? allTableNames
+      : normalizedRequestedTableNames;
 
-    if (AdminStorageService.apiFetchInFlight) {
-      return AdminStorageService.apiFetchInFlight;
-    }
-
-    AdminStorageService.apiFetchInFlight = (async () => {
-      try {
-        const resp = await fetch(
-          "https://avoindata.eduskunta.fi/api/v1/tables/counts",
-          { signal: AbortSignal.timeout(2_000) },
-        );
-        const data = (await resp.json()) as {
-          tableName: string;
-          rowCount: number;
-        }[];
-        const counts = Object.fromEntries(data.map((v) => [v.tableName, v.rowCount]));
-        AdminStorageService.cachedApiTableCounts = counts;
-        return counts;
-      } catch (error) {
-        console.error("Error fetching API table counts:", error);
-        return AdminStorageService.cachedApiTableCounts ?? {};
-      } finally {
-        AdminStorageService.apiFetchInFlight = null;
-      }
-    })();
-
-    return AdminStorageService.apiFetchInFlight;
+    return await getCachedTableCountMapByRows({
+      tableNames: effectiveTableNames,
+      candidateRowCounts: options?.candidateRowCounts,
+      timeoutMs: AdminStorageService.API_COUNTS_TIMEOUT_MS,
+      concurrency: AdminStorageService.API_COUNTS_CONCURRENCY,
+      cacheTtlMs: AdminStorageService.API_COUNTS_CACHE_TTL_MS,
+      useStaleWhileRefreshing: true,
+      log: false,
+    });
   }
 
   getTableNames(): string[] {
@@ -250,6 +248,27 @@ export class AdminStorageService {
     return (snapshot.pageCount - 1) * 100 + snapshot.lastPageRowCount;
   }
 
+  private buildCandidateRowCounts(
+    stageSnapshots: Record<string, SourceStageStatusSnapshot>,
+    tableNames: string[],
+  ): Record<string, number> {
+    const candidates: Record<string, number> = {};
+
+    for (const tableName of tableNames) {
+      const rawSnapshot = stageSnapshots[this.buildStageSnapshotKey("raw", tableName)];
+      const parsedSnapshot = stageSnapshots[
+        this.buildStageSnapshotKey("parsed", tableName)
+      ];
+      const preferredSnapshot = rawSnapshot ?? parsedSnapshot;
+
+      if (preferredSnapshot) {
+        candidates[tableName] = this.estimateRowsFromSnapshot(preferredSnapshot);
+      }
+    }
+
+    return candidates;
+  }
+
   /**
    * Get status for all tables
    */
@@ -268,8 +287,12 @@ export class AdminStorageService {
 
     AdminStorageService.statusFetchInFlight = (async () => {
       const tables = this.getTableNames();
-      const apiCounts = await this.fetchApiTableCounts();
       const stageSnapshots = await loadSourceStageStatusMap();
+      const candidateRowCounts = this.buildCandidateRowCounts(stageSnapshots, tables);
+      const apiCounts = await this.fetchApiTableCounts({
+        tableNames: tables,
+        candidateRowCounts,
+      });
       const data = await Promise.all(
         tables.map((tableName) =>
           this.buildTableStatus(tableName, apiCounts, stageSnapshots),
@@ -297,8 +320,14 @@ export class AdminStorageService {
       return null;
     }
 
-    const apiCounts = await this.fetchApiTableCounts();
     const stageSnapshots = await loadSourceStageStatusMap();
+    const candidateRowCounts = this.buildCandidateRowCounts(stageSnapshots, [
+      tableName,
+    ]);
+    const apiCounts = await this.fetchApiTableCounts({
+      tableNames: [tableName],
+      candidateRowCounts,
+    });
     return await this.buildTableStatus(tableName, apiCounts, stageSnapshots);
   }
 

@@ -1,4 +1,6 @@
 import { getStorage, listAllStorageKeys, StorageKeyBuilder } from "#storage";
+import { TableNames } from "#constants";
+import { getExactTableCountsByRows } from "#table-counts";
 
 type Stage = "raw" | "parsed";
 
@@ -31,11 +33,6 @@ interface ApiBatchResponse {
   pkLastValue?: number | string | null;
   rowData?: any[][];
   rowCount?: number;
-}
-
-interface ApiTableCount {
-  tableName: string;
-  rowCount: number;
 }
 
 interface RangeVerification extends MissingRange {
@@ -158,7 +155,7 @@ Also verifies local missing ranges against API by probing each range start:
 
 Range is considered missing in API when first returned row PK is > range end
 or when rowCount is 0.
-Also reads /api/v1/tables/counts to compare table-level API row count.
+Also resolves exact table-level API row count via /api/v1/tables/<table>/rows.
 
 Usage:
   bun run scripts/check-table-id-ranges.ts <TableName> [options]
@@ -267,35 +264,24 @@ async function resolvePkNameFromApi(
 
 async function fetchApiTableCount(
   table: string,
-  timeoutMs: number,
 ): Promise<{
   apiTableRowCount: number | null;
   tablesInCountsEndpoint: number | null;
   apiCountsError: string | null;
 }> {
-  const url = "https://avoindata.eduskunta.fi/api/v1/tables/counts";
   try {
-    const resp = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
-    if (!resp.ok) {
-      return {
-        apiTableRowCount: null,
-        tablesInCountsEndpoint: null,
-        apiCountsError: `HTTP ${resp.status}`,
-      };
-    }
-
-    const data = (await resp.json()) as ApiTableCount[];
-    const target = data.find((entry) => entry.tableName === table);
+    const data = await getExactTableCountsByRows({ tableName: table });
+    const target = data[0];
     return {
       apiTableRowCount:
         typeof target?.rowCount === "number" ? target.rowCount : null,
-      tablesInCountsEndpoint: data.length,
+      tablesInCountsEndpoint: TableNames.length,
       apiCountsError: null,
     };
   } catch (error) {
     return {
       apiTableRowCount: null,
-      tablesInCountsEndpoint: null,
+      tablesInCountsEndpoint: TableNames.length,
       apiCountsError: error instanceof Error ? error.message : String(error),
     };
   }
@@ -371,7 +357,7 @@ async function verifyRangeFromApi(
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const apiCountsPromise = fetchApiTableCount(args.table, args.timeoutMs);
+  const apiCountsPromise = fetchApiTableCount(args.table);
   const storage = getStorage();
   const prefix = StorageKeyBuilder.listPrefixForTable(args.stage, args.table);
 
