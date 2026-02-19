@@ -5,7 +5,7 @@ type Stage = "raw" | "parsed";
 interface Args {
   table: string;
   stage: Stage;
-  pkName: string;
+  pkName?: string;
   maxIds: number;
   concurrency: number;
   timeoutMs: number;
@@ -32,13 +32,12 @@ interface ApiBatchResponse {
   pkLastValue: number | null;
   rowData: any[][];
   rowCount: number;
-  hasMore: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
-  let table = "VaskiData";
+  let table = "";
   let stage: Stage = "raw";
-  let pkName = "Id";
+  let pkName: string | undefined;
   let maxIds = 500;
   let concurrency = 8;
   let timeoutMs = 10_000;
@@ -91,7 +90,17 @@ function parseArgs(argv: string[]): Args {
     if (arg === "--help" || arg === "-h") {
       printHelpAndExit();
     }
+    if (!arg.startsWith("-") && !table) {
+      table = arg;
+      continue;
+    }
     throw new Error(`Unknown argument: ${arg}`);
+  }
+
+  if (!table) {
+    throw new Error(
+      "Missing required table name. Pass <TableName> or --table <TableName>.",
+    );
   }
 
   return { table, stage, pkName, maxIds, concurrency, timeoutMs, json };
@@ -101,15 +110,14 @@ function printHelpAndExit(): never {
   console.log(`
 Check local missing ID gaps against Eduskunta API by probing IDs with:
 /api/v1/tables/<table>/batch?pkName=<pkName>&pkStartValue=<id>&perPage=1
-Exact hit criterion: response start=id and end=id (accepting pkEndValue/pkLastValue).
 
 Usage:
-  bun run packages/datapipe/check-vaski-gaps-from-api.ts [options]
+  bun run scripts/check-table-gaps-from-api.ts <TableName> [options]
 
 Options:
-  --table <name>         Table name (default: VaskiData)
+  --table <name>         Table name (alternative to positional argument)
   --stage <raw|parsed>   Local stage to inspect for gaps (default: raw)
-  --pk-name <name>       PK name for API probing (default: Id)
+  --pk-name <name>       PK name for API probing (defaults to API table metadata)
   --max-ids <n>          Max missing IDs to probe (default: 500)
   --concurrency <n>      Concurrent API probes (default: 8)
   --timeout-ms <n>       Per-request timeout in ms (default: 10000)
@@ -120,7 +128,8 @@ Options:
 }
 
 function toNumericId(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return Math.trunc(value);
+  if (typeof value === "number" && Number.isFinite(value))
+    return Math.trunc(value);
   if (typeof value === "string") {
     const trimmed = value.trim();
     if (!/^-?\d+$/.test(trimmed)) return null;
@@ -156,12 +165,37 @@ function expandMissingIds(ranges: MissingRange[], maxIds: number): number[] {
   return ids;
 }
 
+async function resolvePkName(
+  table: string,
+  pkNameFromArgs?: string,
+): Promise<string> {
+  if (pkNameFromArgs) return pkNameFromArgs;
+  const url = `https://avoindata.eduskunta.fi/api/v1/tables/${table}/columns`;
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    throw new Error(
+      `Could not resolve PK name from API for table ${table}: HTTP ${resp.status}`,
+    );
+  }
+  const data = (await resp.json()) as { pkName?: string };
+  if (!data.pkName) {
+    throw new Error(
+      `Could not resolve PK name from API for table ${table}: missing pkName`,
+    );
+  }
+  return data.pkName;
+}
+
 async function readLocalMissingIds(
   table: string,
   stage: Stage,
   pkName: string,
   maxIds: number,
-): Promise<{ missingRanges: MissingRange[]; missingIds: number[]; totalRows: number }> {
+): Promise<{
+  missingRanges: MissingRange[];
+  missingIds: number[];
+  totalRows: number;
+}> {
   const storage = getStorage();
   const prefix = StorageKeyBuilder.listPrefixForTable(stage, table);
   const keys = await listAllStorageKeys(storage, { prefix, pageSize: 10_000 });
@@ -170,7 +204,10 @@ async function readLocalMissingIds(
   }
 
   const pages = keys
-    .map((k) => ({ key: k.key, page: StorageKeyBuilder.parseKey(k.key)?.page ?? 0 }))
+    .map((k) => ({
+      key: k.key,
+      page: StorageKeyBuilder.parseKey(k.key)?.page ?? 0,
+    }))
     .sort((a, b) => a.page - b.page);
 
   const uniqueIds = new Set<number>();
@@ -212,7 +249,9 @@ async function checkIdFromApi(
   returnedPk: number | null;
   error?: string;
 }> {
-  const url = new URL(`https://avoindata.eduskunta.fi/api/v1/tables/${table}/batch`);
+  const url = new URL(
+    `https://avoindata.eduskunta.fi/api/v1/tables/${table}/batch`,
+  );
   url.searchParams.set("pkName", pkName);
   url.searchParams.set("pkStartValue", String(id));
   url.searchParams.set("perPage", "1");
@@ -233,11 +272,17 @@ async function checkIdFromApi(
 
     const data = (await resp.json()) as ApiBatchResponse;
     if (data.rowCount < 1 || data.rowData.length < 1) {
-      return { id, foundExact: false, rowCount: data.rowCount, returnedPk: null };
+      return {
+        id,
+        foundExact: false,
+        rowCount: data.rowCount,
+        returnedPk: null,
+      };
     }
 
     const pkIndex = data.columnNames.indexOf(pkName);
-    const returnedPk = pkIndex >= 0 ? toNumericId(data.rowData[0]?.[pkIndex]) : null;
+    const returnedPk =
+      pkIndex >= 0 ? toNumericId(data.rowData[0]?.[pkIndex]) : null;
     const responseStart =
       typeof data.pkStartValue === "number" ? data.pkStartValue : id;
     const responseEnd =
@@ -272,13 +317,16 @@ async function runWithConcurrency<T, R>(
   const results: R[] = new Array(items.length);
   let index = 0;
 
-  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (true) {
-      const current = index++;
-      if (current >= items.length) break;
-      results[current] = await workerFn(items[current]);
-    }
-  });
+  const workers = Array.from(
+    { length: Math.min(limit, items.length) },
+    async () => {
+      while (true) {
+        const current = index++;
+        if (current >= items.length) break;
+        results[current] = await workerFn(items[current]);
+      }
+    },
+  );
 
   await Promise.all(workers);
   return results;
@@ -286,12 +334,14 @@ async function runWithConcurrency<T, R>(
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  const resolvedPkName = await resolvePkName(args.table, args.pkName);
   console.log(`Scanning local ${args.stage}/${args.table} for missing IDs...`);
+  console.log(`Using PK column: ${resolvedPkName}`);
 
   const local = await readLocalMissingIds(
     args.table,
     args.stage,
-    args.pkName,
+    resolvedPkName,
     args.maxIds,
   );
 
@@ -302,7 +352,7 @@ async function main() {
   const checked = await runWithConcurrency(
     local.missingIds,
     args.concurrency,
-    (id) => checkIdFromApi(args.table, args.pkName, id, args.timeoutMs),
+    (id) => checkIdFromApi(args.table, resolvedPkName, id, args.timeoutMs),
   );
 
   const foundExact = checked.filter((c) => c.foundExact);
@@ -312,7 +362,7 @@ async function main() {
   const result = {
     table: args.table,
     stage: args.stage,
-    pkName: args.pkName,
+    pkName: resolvedPkName,
     localMissingRanges: local.missingRanges.length,
     idsProbed: checked.length,
     foundExactInApi: foundExact.length,
@@ -334,8 +384,12 @@ async function main() {
 
   console.log("");
   console.log(`IDs probed:           ${result.idsProbed.toLocaleString()}`);
-  console.log(`Found exact in API:   ${result.foundExactInApi.toLocaleString()}`);
-  console.log(`Still missing in API: ${result.stillMissingInApi.toLocaleString()}`);
+  console.log(
+    `Found exact in API:   ${result.foundExactInApi.toLocaleString()}`,
+  );
+  console.log(
+    `Still missing in API: ${result.stillMissingInApi.toLocaleString()}`,
+  );
   console.log(`API errors:           ${result.apiErrors.toLocaleString()}`);
 
   if (result.foundExactIds.length > 0) {
