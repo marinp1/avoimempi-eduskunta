@@ -42,6 +42,7 @@ export { default as sectionVotings } from "./queries/SECTION_VOTINGS.sql";
 export { default as sessionByDate } from "./queries/SESSION_BY_DATE.sql";
 export { default as sessionCount } from "./queries/SESSION_COUNT.sql";
 export { default as sessionDates } from "./queries/SESSION_DATES.sql";
+export { default as sessionDatesCompleted } from "./queries/SESSION_DATES_COMPLETED.sql";
 export { default as sessionDocuments } from "./queries/SESSION_DOCUMENTS.sql";
 export { default as sessionNotices } from "./queries/SESSION_NOTICES.sql";
 export { default as sessionSections } from "./queries/SESSION_SECTIONS.sql";

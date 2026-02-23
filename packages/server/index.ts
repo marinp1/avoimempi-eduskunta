@@ -428,6 +428,15 @@ const server = Bun.serve<{
       },
     },
 
+    "/api/session-dates/completed": {
+      GET: async () => {
+        const dates = await db.fetchCompletedSessionDates();
+        return new Response(JSON.stringify(dates), {
+          headers: { "Content-Type": "application/json" },
+        });
+      },
+    },
+
     "/api/sections/:sectionKey/links": {
       GET: async (req: BunRequest<"/api/sections/:sectionKey/links">) => {
         const links = await db.fetchSectionDocumentLinks({

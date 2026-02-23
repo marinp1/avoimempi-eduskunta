@@ -262,6 +262,13 @@ export const fetchSessionDates = (db: Database) => {
   return data;
 };
 
+export const fetchCompletedSessionDates = (db: Database) => {
+  const stmt = db.prepare<{ date: string }, []>(queries.sessionDatesCompleted);
+  const data = stmt.all();
+  stmt.finalize();
+  return data;
+};
+
 export const fetchSectionSpeeches = (
   db: Database,
   params: { sectionKey: string; limit?: number; offset?: number },

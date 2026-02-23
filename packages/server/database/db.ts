@@ -17,6 +17,7 @@ import {
   fetchSessionByDate,
   fetchSessionDocuments,
   fetchSessionDates,
+  fetchCompletedSessionDates,
   fetchSessionNotices,
   fetchSessions,
   fetchSectionDocumentLinks,
@@ -348,6 +349,10 @@ export class DatabaseConnection {
 
   public async fetchSessionDates() {
     return fetchSessionDates(this.db);
+  }
+
+  public async fetchCompletedSessionDates() {
+    return fetchCompletedSessionDates(this.db);
   }
 
   // ─── Analytics queries ───
