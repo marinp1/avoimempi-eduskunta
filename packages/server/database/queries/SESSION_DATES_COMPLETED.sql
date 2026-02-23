@@ -1,0 +1,4 @@
+SELECT DISTINCT date
+FROM Session
+WHERE date IS NOT NULL AND date < DATE('now')
+ORDER BY date DESC

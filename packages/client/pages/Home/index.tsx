@@ -33,6 +33,7 @@ type SessionWithSections = {
   id: number;
   key: string;
   date: string;
+  state?: string;
   description?: string;
   agenda_title?: string;
   agenda_state?: string;
@@ -125,7 +126,7 @@ const Home = () => {
     const fetchLatestSession = async () => {
       try {
         setLoadingSessions(true);
-        const datesRes = await fetch("/api/session-dates");
+        const datesRes = await fetch("/api/session-dates/completed");
         if (!datesRes.ok) throw new Error("Failed to fetch dates");
         const dates: { date: string }[] = await datesRes.json();
         if (dates.length === 0) {
@@ -423,7 +424,7 @@ const Home = () => {
                 fontSize: "1rem",
               }}
             >
-              {t("home.latestSession")}
+              {t("home.latestCompletedSession")}
             </Typography>
           </Box>
           {latestDate && (

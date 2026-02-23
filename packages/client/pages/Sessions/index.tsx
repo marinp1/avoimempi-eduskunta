@@ -2852,18 +2852,6 @@ export default () => {
                       }}
                     />
                   )}
-                  {session.state && (
-                    <Chip
-                      label={`${t("sessions.sessionState")}: ${session.state}`}
-                      size="small"
-                      sx={{
-                        fontSize: "0.6875rem",
-                        height: 22,
-                        background: "#fff",
-                        color: colors.textSecondary,
-                      }}
-                    />
-                  )}
                   <Box
                     sx={{
                       flex: "1 1 100%",

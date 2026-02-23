@@ -34,6 +34,7 @@
     "oppositionChip": "Oppositio",
     "seats": "paikkaa",
     "latestSession": "Viimeisin istunto",
+    "latestCompletedSession": "Viimeisin pidetty istunto",
     "sections": "kohtaa",
     "votings": "äänestystä",
     "noData": "Tietoja ei saatavilla",
