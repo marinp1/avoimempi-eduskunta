@@ -73,13 +73,13 @@ SELECT
   ss.minutes_general_processing_phase_code,
   ss.minutes_content_text,
   ss.minutes_match_mode,
-  vd.id AS vaski_document_id,
-  vd.document_type AS vaski_document_type_name,
+  NULL AS vaski_document_id,
+  NULL AS vaski_document_type_name,
   NULL AS vaski_document_type_code,
-  vd.edk_identifier AS vaski_eduskunta_tunnus,
+  NULL AS vaski_eduskunta_tunnus,
   NULL AS vaski_document_number,
   NULL AS vaski_parliamentary_year,
-  vd.title AS vaski_title,
+  NULL AS vaski_title,
   NULL AS vaski_summary,
   NULL AS vaski_author_first_name,
   NULL AS vaski_author_last_name,
@@ -87,14 +87,13 @@ SELECT
   NULL AS vaski_author_organization,
   NULL AS vaski_creation_date,
   NULL AS vaski_status,
-  vd.source_path AS vaski_source_reference,
+  NULL AS vaski_source_reference,
   NULL AS vaski_subjects,
   COALESCE(vs.voting_count, 0) AS voting_count,
   COALESCE(sps.speech_count, 0) AS speech_count,
   COALESCE(sps.speaker_count, 0) AS speaker_count,
   COALESCE(sps.party_count, 0) AS party_count
 FROM session_sections ss
-LEFT JOIN VaskiDocument vd ON vd.id = ss.vaski_id
 LEFT JOIN voting_stats vs ON vs.section_key = ss.key
 LEFT JOIN speech_stats sps ON sps.section_key = ss.key
 ORDER BY ss.ordinal ASC
