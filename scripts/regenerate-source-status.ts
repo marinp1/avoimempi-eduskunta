@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 type Stage = "raw" | "parsed";
@@ -59,12 +59,16 @@ async function findRepoRoot(): Promise<string> {
   return process.cwd();
 }
 
-async function loadExistingEntries(rootDir: string): Promise<Record<string, SourceStageStatusSnapshot>> {
+async function loadExistingEntries(
+  rootDir: string,
+): Promise<Record<string, SourceStageStatusSnapshot>> {
   const metadataPath = path.join(rootDir, "data", SOURCE_STATUS_PATH);
   try {
     const raw = await readFile(metadataPath, "utf-8");
     const parsed = JSON.parse(raw) as { entries?: SourceStageStatusSnapshot[] };
-    return (parsed.entries ?? []).reduce<Record<string, SourceStageStatusSnapshot>>( (acc, entry) => {
+    return (parsed.entries ?? []).reduce<
+      Record<string, SourceStageStatusSnapshot>
+    >((acc, entry) => {
       if (!entry || !entry.tableName || !entry.stage) return acc;
       const key = `${entry.stage}:${entry.tableName}`;
       acc[key] = entry;
@@ -75,14 +79,20 @@ async function loadExistingEntries(rootDir: string): Promise<Record<string, Sour
   }
 }
 
-async function writeEntries(rootDir: string, entries: SourceStageStatusSnapshot[]): Promise<void> {
+async function writeEntries(
+  rootDir: string,
+  entries: SourceStageStatusSnapshot[],
+): Promise<void> {
   const metadataPath = path.join(rootDir, "data", SOURCE_STATUS_PATH);
   const metadataDir = path.dirname(metadataPath);
   await mkdir(metadataDir, { recursive: true });
   await writeFile(metadataPath, JSON.stringify({ entries }, null, 2), "utf-8");
 }
 
-async function scanStage(rootDir: string, stage: Stage): Promise<Map<string, SourceStageStatusSnapshot>> {
+async function scanStage(
+  rootDir: string,
+  stage: Stage,
+): Promise<Map<string, SourceStageStatusSnapshot>> {
   const stageDir = path.join(rootDir, "data", stage);
   const result = new Map<string, SourceStageStatusSnapshot>();
 
@@ -164,5 +174,7 @@ async function scanStage(rootDir: string, stage: Stage): Promise<Map<string, Sou
 
   const entries = Array.from(updates.values());
   await writeEntries(rootDir, entries);
-  console.log(`Rebuilt source status with ${entries.length} entries (${stageList.join(", ")}).`);
+  console.log(
+    `Rebuilt source status with ${entries.length} entries (${stageList.join(", ")}).`,
+  );
 })();

@@ -1,5 +1,5 @@
-import { getStorage, listAllStorageKeys, StorageKeyBuilder } from "#storage";
 import { TableNames } from "#constants";
+import { getStorage, listAllStorageKeys, StorageKeyBuilder } from "#storage";
 import { getExactTableCountsByRows } from "#table-counts";
 
 type Stage = "raw" | "parsed";
@@ -262,9 +262,7 @@ async function resolvePkNameFromApi(
   return data.pkName;
 }
 
-async function fetchApiTableCount(
-  table: string,
-): Promise<{
+async function fetchApiTableCount(table: string): Promise<{
   apiTableRowCount: number | null;
   tablesInCountsEndpoint: number | null;
   apiCountsError: string | null;

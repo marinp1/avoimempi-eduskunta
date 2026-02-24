@@ -637,7 +637,14 @@ describe("Voting queries", () => {
     db.run(
       `INSERT INTO Voting (id, number, start_time, session_key, parliamentary_item, section_title)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [9101, 2, "2024-01-15T13:10:00.000", "2024/1", "Ei sisalla tunnusta", "Dummy"],
+      [
+        9101,
+        2,
+        "2024-01-15T13:10:00.000",
+        "2024/1",
+        "Ei sisalla tunnusta",
+        "Dummy",
+      ],
     );
     db.run(
       `INSERT INTO SaliDBDocumentReference (source_type, voting_id, section_key, document_tunnus, source_text, source_url, created_datetime, imported_datetime)
@@ -680,12 +687,30 @@ describe("Voting queries", () => {
     db.run(
       `INSERT INTO SaliDBDocumentReference (source_type, voting_id, section_key, document_tunnus, source_text, source_url, created_datetime, imported_datetime)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      ["voting_item", 9301, null, "HE 7/2024 vp", null, null, null, "2024-01-15T14:00:00.000"],
+      [
+        "voting_item",
+        9301,
+        null,
+        "HE 7/2024 vp",
+        null,
+        null,
+        null,
+        "2024-01-15T14:00:00.000",
+      ],
     );
     db.run(
       `INSERT INTO SaliDBDocumentReference (source_type, voting_id, section_key, document_tunnus, source_text, source_url, created_datetime, imported_datetime)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      ["voting_item", 9302, null, "HE 8/2024 vp", null, null, null, "2024-01-15T14:10:00.000"],
+      [
+        "voting_item",
+        9302,
+        null,
+        "HE 8/2024 vp",
+        null,
+        null,
+        null,
+        "2024-01-15T14:10:00.000",
+      ],
     );
 
     try {
@@ -695,7 +720,9 @@ describe("Voting queries", () => {
 
       expect(rows.find((row) => row.id === 9302)).toBeUndefined();
     } finally {
-      db.run(`DELETE FROM SaliDBDocumentReference WHERE voting_id IN (9301, 9302)`);
+      db.run(
+        `DELETE FROM SaliDBDocumentReference WHERE voting_id IN (9301, 9302)`,
+      );
       db.run(`DELETE FROM Voting WHERE id IN (9301, 9302)`);
     }
   });
@@ -714,12 +741,30 @@ describe("Voting queries", () => {
     db.run(
       `INSERT INTO SaliDBDocumentReference (source_type, voting_id, section_key, document_tunnus, source_text, source_url, created_datetime, imported_datetime)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      ["voting_item", 9311, null, "HE 9/2024 vp", null, null, null, "2024-01-15T15:00:00.000"],
+      [
+        "voting_item",
+        9311,
+        null,
+        "HE 9/2024 vp",
+        null,
+        null,
+        null,
+        "2024-01-15T15:00:00.000",
+      ],
     );
     db.run(
       `INSERT INTO SaliDBDocumentReference (source_type, voting_id, section_key, document_tunnus, source_text, source_url, created_datetime, imported_datetime)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      ["voting_item", 9312, null, "HE 9/2024 vp", null, null, null, "2024-01-15T15:10:00.000"],
+      [
+        "voting_item",
+        9312,
+        null,
+        "HE 9/2024 vp",
+        null,
+        null,
+        null,
+        "2024-01-15T15:10:00.000",
+      ],
     );
 
     try {
@@ -729,7 +774,9 @@ describe("Voting queries", () => {
 
       expect(rows.find((row) => row.id === 9312)).toBeDefined();
     } finally {
-      db.run(`DELETE FROM SaliDBDocumentReference WHERE voting_id IN (9311, 9312)`);
+      db.run(
+        `DELETE FROM SaliDBDocumentReference WHERE voting_id IN (9311, 9312)`,
+      );
       db.run(`DELETE FROM Voting WHERE id IN (9311, 9312)`);
     }
   });

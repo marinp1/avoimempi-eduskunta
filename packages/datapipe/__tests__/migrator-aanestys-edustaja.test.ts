@@ -141,7 +141,9 @@ describe("SaliDBAanestysEdustaja migrator", () => {
   });
 
   test("normalizes decomposed umlaut form to canonical 'Tyhjää'", async () => {
-    await migrate(makeFinnishVote({ EdustajaAanestys: "Tyhja\u0308a\u0308" as any }));
+    await migrate(
+      makeFinnishVote({ EdustajaAanestys: "Tyhja\u0308a\u0308" as any }),
+    );
     flushVotes();
 
     const rows = db.query("SELECT * FROM Vote").all() as any[];

@@ -335,7 +335,9 @@ export default function Status() {
             <CardContent>
               <Box display="flex" alignItems="center" mb={1}>
                 <AssessmentIcon color="secondary" sx={{ mr: 1 }} />
-                <Typography variant="h6">{formatNumber(totalDatabaseRows)}</Typography>
+                <Typography variant="h6">
+                  {formatNumber(totalDatabaseRows)}
+                </Typography>
               </Box>
               <Typography variant="body2" color="text.secondary">
                 Rivejä yhteensä
@@ -463,7 +465,11 @@ export default function Status() {
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <Card>
                   <CardContent>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
                       Viimeksi päivitetty
                     </Typography>
                     <Typography variant="body2">
@@ -496,7 +502,7 @@ export default function Status() {
                           {table.tableName}
                         </Typography>
                       </TableCell>
-                    <TableCell align="center">
+                      <TableCell align="center">
                         <Box
                           display="flex"
                           flexDirection="column"
@@ -528,7 +534,7 @@ export default function Status() {
                       <TableCell align="right">
                         {formatNumber(table.rawRows)} ({table.rawPages} s.)
                       </TableCell>
-                    <TableCell align="right">
+                      <TableCell align="right">
                         <Box textAlign="right">
                           <Typography variant="body2" fontWeight="medium">
                             {formatNumber(table.parsedRows)}
@@ -541,7 +547,10 @@ export default function Status() {
                             {table.parsedPages} sivua
                           </Typography>
                           {table.status === "parsing" && (
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               {table.parseProgressPercent.toFixed(1)} % valmis
                             </Typography>
                           )}
@@ -550,8 +559,12 @@ export default function Status() {
                       <TableCell align="right">
                         {table.scrapeProgressPercent.toFixed(1)}%
                       </TableCell>
-                      <TableCell>{formatDateTime(table.rawLastUpdated)}</TableCell>
-                      <TableCell>{formatDateTime(table.parsedLastUpdated)}</TableCell>
+                      <TableCell>
+                        {formatDateTime(table.rawLastUpdated)}
+                      </TableCell>
+                      <TableCell>
+                        {formatDateTime(table.parsedLastUpdated)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

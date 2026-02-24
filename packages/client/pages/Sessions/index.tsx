@@ -2,8 +2,8 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import EventIcon from "@mui/icons-material/Event";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -29,13 +29,13 @@ import {
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { refs } from "#client/references";
 import {
   DocumentCard,
-  RelatedVotings,
   extractDocumentIdentifiers,
+  RelatedVotings,
 } from "#client/components/DocumentCards";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
+import { refs } from "#client/references";
 import { commonStyles } from "#client/theme";
 import { DataCard, PageHeader, VoteMarginBar } from "#client/theme/components";
 import { colors } from "#client/theme/index";
@@ -1060,7 +1060,9 @@ export default () => {
     const documentIdentifiers = splitPipeValues(
       section.minutes_related_document_identifier,
     );
-    const documentTypes = splitPipeValues(section.minutes_related_document_type);
+    const documentTypes = splitPipeValues(
+      section.minutes_related_document_type,
+    );
     const maxLength = Math.max(
       numbers.length,
       titles.length,
@@ -1125,7 +1127,11 @@ export default () => {
       const current = blocks[index];
       const next = blocks[index + 1];
 
-      if (isMinutesReferenceId(current) && next && isMinutesReferenceCode(next)) {
+      if (
+        isMinutesReferenceId(current) &&
+        next &&
+        isMinutesReferenceCode(next)
+      ) {
         references.push({
           vaskiId: Number.parseInt(current, 10),
           code: next,
@@ -1178,13 +1184,15 @@ export default () => {
     if (
       relatedDocument &&
       !references.some(
-        (reference) => reference.code === relatedDocument && reference.vaskiId === null,
+        (reference) =>
+          reference.code === relatedDocument && reference.vaskiId === null,
       )
     ) {
       references.unshift({ vaskiId: null, code: relatedDocument });
     }
 
-    if (parsed.narrativeBlocks.length === 0 && references.length === 0) return null;
+    if (parsed.narrativeBlocks.length === 0 && references.length === 0)
+      return null;
 
     const normalizeIdentifier = (value?: string | null) =>
       value?.trim().toLowerCase() || null;
@@ -1198,7 +1206,9 @@ export default () => {
         .map((value) => normalizeIdentifier(value))
         .filter((value): value is string => value !== null),
     );
-    const isReferenceMigratedAsRollCall = (reference: MinutesContentReference) => {
+    const isReferenceMigratedAsRollCall = (
+      reference: MinutesContentReference,
+    ) => {
       const normalizedCode = normalizeIdentifier(reference.code);
       if (!normalizedCode) return false;
       if (!isRollCallSection(section)) return false;
@@ -1257,7 +1267,8 @@ export default () => {
             {references.map((reference, index) => {
               if (!reference.code) return null;
               const href = buildValtiopaivaAsiakirjaUrl(reference.code);
-              const migratedAsRollCall = isReferenceMigratedAsRollCall(reference);
+              const migratedAsRollCall =
+                isReferenceMigratedAsRollCall(reference);
               const tooltipTitle = migratedAsRollCall
                 ? t("sessions.minutesReferenceMigratedRollCall", {
                     defaultValue: "Nimenhuutoraportti on migroitu.",
@@ -1303,7 +1314,9 @@ export default () => {
                           label={reference.code}
                           size="small"
                           icon={
-                            <OpenInNewIcon sx={{ fontSize: "12px !important" }} />
+                            <OpenInNewIcon
+                              sx={{ fontSize: "12px !important" }}
+                            />
                           }
                           clickable
                           sx={chipSx}
@@ -1383,10 +1396,20 @@ export default () => {
           >
             <thead>
               <tr>
-                <th>{t("sessions.subSectionNumber", { defaultValue: "Kohta" })}</th>
-                <th>{t("sessions.subSectionTitle", { defaultValue: "Otsikko" })}</th>
-                <th>{t("sessions.subSectionDocument", { defaultValue: "Asiakirja" })}</th>
-                <th>{t("sessions.subSectionType", { defaultValue: "Tyyppi" })}</th>
+                <th>
+                  {t("sessions.subSectionNumber", { defaultValue: "Kohta" })}
+                </th>
+                <th>
+                  {t("sessions.subSectionTitle", { defaultValue: "Otsikko" })}
+                </th>
+                <th>
+                  {t("sessions.subSectionDocument", {
+                    defaultValue: "Asiakirja",
+                  })}
+                </th>
+                <th>
+                  {t("sessions.subSectionType", { defaultValue: "Tyyppi" })}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -1406,7 +1429,10 @@ export default () => {
                             target="_blank"
                             rel="noreferrer"
                             underline="hover"
-                            sx={{ fontSize: "0.75rem", color: colors.primaryLight }}
+                            sx={{
+                              fontSize: "0.75rem",
+                              color: colors.primaryLight,
+                            }}
                           >
                             {row.related_document_identifier}
                           </Link>
@@ -2013,7 +2039,8 @@ export default () => {
     if (!rollCallData) return null;
 
     const { report, entries } = rollCallData;
-    const documentIdentifier = report.edk_identifier || report.parliament_identifier;
+    const documentIdentifier =
+      report.edk_identifier || report.parliament_identifier;
     const documentUrl = `https://www.parliament.fi/valtiopaivaasiakirjat/${encodeURIComponent(documentIdentifier)}`;
 
     const formatEntryType = (entryType: RollCallEntry["entry_type"]) =>
@@ -2034,14 +2061,18 @@ export default () => {
           defaultValue: "henkilökohtainen syy",
         });
       }
-      return t("sessions.rollCallReasonUnknown", { defaultValue: "selite puuttuu" });
+      return t("sessions.rollCallReasonUnknown", {
+        defaultValue: "selite puuttuu",
+      });
     };
 
     const unknownReasonCodes = Array.from(
       new Set(
         entries
           .map((entry) => entry.absence_reason?.toLowerCase())
-          .filter((code): code is string => !!code && !["e", "h"].includes(code)),
+          .filter(
+            (code): code is string => !!code && !["e", "h"].includes(code),
+          ),
       ),
     );
 
@@ -2067,7 +2098,11 @@ export default () => {
         </Typography>
         {report.title && (
           <Typography
-            sx={{ fontSize: "0.8125rem", fontWeight: 600, color: colors.textPrimary }}
+            sx={{
+              fontSize: "0.8125rem",
+              fontWeight: 600,
+              color: colors.textPrimary,
+            }}
           >
             {report.title}
           </Typography>
@@ -2081,20 +2116,30 @@ export default () => {
             target="_blank"
             rel="noreferrer"
             underline="hover"
-            sx={{ fontSize: "0.75rem", fontWeight: 600, color: colors.primaryLight }}
+            sx={{
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              color: colors.primaryLight,
+            }}
           >
             {t("sessions.rollCallOpenDocument", {
               defaultValue: "Avaa valtiopäiväasiakirja",
             })}
           </Link>
           {report.roll_call_start_time && (
-            <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
-              {t("sessions.rollCallStart")}: {formatTime(report.roll_call_start_time)}
+            <Typography
+              sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+            >
+              {t("sessions.rollCallStart")}:{" "}
+              {formatTime(report.roll_call_start_time)}
             </Typography>
           )}
           {report.roll_call_end_time && (
-            <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
-              {t("sessions.rollCallEnd")}: {formatTime(report.roll_call_end_time)}
+            <Typography
+              sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+            >
+              {t("sessions.rollCallEnd")}:{" "}
+              {formatTime(report.roll_call_end_time)}
             </Typography>
           )}
         </Box>
@@ -2122,7 +2167,9 @@ export default () => {
         </Box>
 
         {entries.length === 0 && (
-          <Typography sx={{ mt: 0.75, fontSize: "0.75rem", color: colors.textTertiary }}>
+          <Typography
+            sx={{ mt: 0.75, fontSize: "0.75rem", color: colors.textTertiary }}
+          >
             {t("sessions.rollCallNoEntries")}
           </Typography>
         )}
@@ -2154,23 +2201,49 @@ export default () => {
             >
               <thead>
                 <tr>
-                  <th>{t("sessions.rollCallTableNumber", { defaultValue: "#" })}</th>
-                  <th>{t("sessions.rollCallTableName", { defaultValue: "Nimi" })}</th>
-                  <th>{t("sessions.rollCallTableParty", { defaultValue: "Puolue" })}</th>
-                  <th>{t("sessions.rollCallTableType", { defaultValue: "Merkintä" })}</th>
-                  <th>{t("sessions.rollCallTableCode", { defaultValue: "Koodi" })}</th>
-                  <th>{t("sessions.rollCallTableReason", { defaultValue: "Selite" })}</th>
-                  <th>{t("sessions.rollCallTableArrival", { defaultValue: "Saapumisaika" })}</th>
+                  <th>
+                    {t("sessions.rollCallTableNumber", { defaultValue: "#" })}
+                  </th>
+                  <th>
+                    {t("sessions.rollCallTableName", { defaultValue: "Nimi" })}
+                  </th>
+                  <th>
+                    {t("sessions.rollCallTableParty", {
+                      defaultValue: "Puolue",
+                    })}
+                  </th>
+                  <th>
+                    {t("sessions.rollCallTableType", {
+                      defaultValue: "Merkintä",
+                    })}
+                  </th>
+                  <th>
+                    {t("sessions.rollCallTableCode", { defaultValue: "Koodi" })}
+                  </th>
+                  <th>
+                    {t("sessions.rollCallTableReason", {
+                      defaultValue: "Selite",
+                    })}
+                  </th>
+                  <th>
+                    {t("sessions.rollCallTableArrival", {
+                      defaultValue: "Saapumisaika",
+                    })}
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {entries.map((entry) => (
                   <tr key={`${entry.roll_call_id}-${entry.entry_order}`}>
                     <td>{entry.entry_order}</td>
-                    <td>{entry.first_name} {entry.last_name}</td>
+                    <td>
+                      {entry.first_name} {entry.last_name}
+                    </td>
                     <td>{entry.party ? entry.party.toUpperCase() : "-"}</td>
                     <td>{formatEntryType(entry.entry_type)}</td>
-                    <td>{entry.absence_reason ? `(${entry.absence_reason})` : "-"}</td>
+                    <td>
+                      {entry.absence_reason ? `(${entry.absence_reason})` : "-"}
+                    </td>
                     <td>{formatAbsenceReason(entry.absence_reason)}</td>
                     <td>{entry.arrival_time || "-"}</td>
                   </tr>
@@ -2190,9 +2263,10 @@ export default () => {
           }}
         >
           <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
-            {t("sessions.rollCallReasonLegend", { defaultValue: "Koodiselitteet" })}
-            :{" "}
-            <strong>(e)</strong>{" "}
+            {t("sessions.rollCallReasonLegend", {
+              defaultValue: "Koodiselitteet",
+            })}
+            : <strong>(e)</strong>{" "}
             {t("sessions.rollCallReasonE", {
               defaultValue: "eduskuntatyöhön liittyvä tehtävä",
             })}
@@ -2202,7 +2276,9 @@ export default () => {
             })}
           </Typography>
           {unknownReasonCodes.length > 0 && (
-            <Typography sx={{ mt: 0.5, fontSize: "0.75rem", color: colors.textTertiary }}>
+            <Typography
+              sx={{ mt: 0.5, fontSize: "0.75rem", color: colors.textTertiary }}
+            >
               {t("sessions.rollCallUnknownCodes", {
                 defaultValue: "Muut datassa olevat koodit ilman selitettä",
               })}
@@ -2246,7 +2322,9 @@ export default () => {
 
   const isRollCallSection = (section?: Section) => {
     if (!section) return false;
-    const documentType = (section.minutes_related_document_type || "").toLowerCase();
+    const documentType = (
+      section.minutes_related_document_type || ""
+    ).toLowerCase();
     const sectionTitle = (section.title || "").toLowerCase();
     const processingTitle = (section.processing_title || "").toLowerCase();
     return (
@@ -2269,7 +2347,10 @@ export default () => {
     if (isExpanding) {
       const section = sessions
         .flatMap((session) => session.sections || [])
-        .find((candidate) => candidate.id === sectionId || candidate.key === sectionKey);
+        .find(
+          (candidate) =>
+            candidate.id === sectionId || candidate.key === sectionKey,
+        );
 
       if (!sectionSpeechData[sectionId]) {
         setLoadingSpeeches((prev) => new Set(prev).add(sectionId));
@@ -2316,15 +2397,15 @@ export default () => {
         }
       }
 
-      const hasSubSectionsData = Object.prototype.hasOwnProperty.call(
-        sectionSubSections,
-        sectionId,
-      );
+      const hasSubSectionsData = Object.hasOwn(sectionSubSections, sectionId);
       if (!hasSubSectionsData) {
         setLoadingSubSections((prev) => new Set(prev).add(sectionId));
         try {
           const subSections = await fetchSectionSubSections(sectionKey);
-          setSectionSubSections((prev) => ({ ...prev, [sectionId]: subSections }));
+          setSectionSubSections((prev) => ({
+            ...prev,
+            [sectionId]: subSections,
+          }));
         } finally {
           setLoadingSubSections((prev) => {
             const next = new Set(prev);
@@ -2334,10 +2415,7 @@ export default () => {
         }
       }
 
-      const hasRollCallData = Object.prototype.hasOwnProperty.call(
-        sectionRollCalls,
-        sectionId,
-      );
+      const hasRollCallData = Object.hasOwn(sectionRollCalls, sectionId);
       if (isRollCallSection(section) && !hasRollCallData) {
         setLoadingRollCalls((prev) => new Set(prev).add(sectionId));
         try {
@@ -2351,7 +2429,6 @@ export default () => {
           });
         }
       }
-
     }
   };
 
@@ -2380,7 +2457,8 @@ export default () => {
   };
 
   const fetchVotingDetails = async (votingId: number) => {
-    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId)) return;
+    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId))
+      return;
     setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
     try {
       const res = await fetch(`/api/votings/${votingId}/details`);
@@ -2409,7 +2487,10 @@ export default () => {
     }
   };
 
-  const renderSectionVotings = (votings: Voting[], session: SessionWithSections) => {
+  const renderSectionVotings = (
+    votings: Voting[],
+    session: SessionWithSections,
+  ) => {
     if (votings.length === 0) return null;
 
     return (
@@ -2460,9 +2541,7 @@ export default () => {
                 <HowToVoteIcon
                   sx={{
                     fontSize: 16,
-                    color: isPassed
-                      ? themedColors.success
-                      : themedColors.error,
+                    color: isPassed ? themedColors.success : themedColors.error,
                   }}
                 />
                 <Typography
@@ -2479,12 +2558,19 @@ export default () => {
                 <Button
                   size="small"
                   onClick={() => toggleVotingDetails(voting.id)}
-                  sx={{ textTransform: "none", fontSize: "0.7rem", minWidth: 0, px: 1 }}
+                  sx={{
+                    textTransform: "none",
+                    fontSize: "0.7rem",
+                    minWidth: 0,
+                    px: 1,
+                  }}
                   endIcon={
                     <ExpandMoreIcon
                       sx={{
                         fontSize: 14,
-                        transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                        transform: isExpanded
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
                         transition: "transform 0.2s",
                       }}
                     />
@@ -2494,7 +2580,12 @@ export default () => {
                 </Button>
                 <Button
                   size="small"
-                  sx={{ textTransform: "none", fontSize: "0.7rem", minWidth: 0, px: 1 }}
+                  sx={{
+                    textTransform: "none",
+                    fontSize: "0.7rem",
+                    minWidth: 0,
+                    px: 1,
+                  }}
                   endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
                   onClick={() => {
                     window.history.pushState(
@@ -2528,32 +2619,62 @@ export default () => {
                   {detailsLoading && (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <CircularProgress size={12} />
-                      <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
+                      <Typography
+                        sx={{ fontSize: "0.7rem", color: colors.textSecondary }}
+                      >
                         Ladataan äänestyksen yksityiskohtia...
                       </Typography>
                     </Box>
                   )}
                   {!detailsLoading && details && (
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                    <Box
+                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                    >
                       <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                         <Chip
                           size="small"
                           label={`Jaa ${details.voting.n_yes}`}
-                          sx={{ height: 20, color: colors.success, borderColor: colors.success }}
+                          sx={{
+                            height: 20,
+                            color: colors.success,
+                            borderColor: colors.success,
+                          }}
                           variant="outlined"
                         />
                         <Chip
                           size="small"
                           label={`Ei ${details.voting.n_no}`}
-                          sx={{ height: 20, color: colors.error, borderColor: colors.error }}
+                          sx={{
+                            height: 20,
+                            color: colors.error,
+                            borderColor: colors.error,
+                          }}
                           variant="outlined"
                         />
-                        <Chip size="small" label={`Tyhjää ${details.voting.n_abstain}`} sx={{ height: 20 }} />
-                        <Chip size="small" label={`Poissa ${details.voting.n_absent}`} sx={{ height: 20 }} />
+                        <Chip
+                          size="small"
+                          label={`Tyhjää ${details.voting.n_abstain}`}
+                          sx={{ height: 20 }}
+                        />
+                        <Chip
+                          size="small"
+                          label={`Poissa ${details.voting.n_absent}`}
+                          sx={{ height: 20 }}
+                        />
                       </Box>
                       {details.governmentOpposition && (
-                        <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
-                          Hallitus: {details.governmentOpposition.government_yes} jaa / {details.governmentOpposition.government_no} ei, Oppositio: {details.governmentOpposition.opposition_yes} jaa / {details.governmentOpposition.opposition_no} ei
+                        <Typography
+                          sx={{
+                            fontSize: "0.7rem",
+                            color: colors.textSecondary,
+                          }}
+                        >
+                          Hallitus:{" "}
+                          {details.governmentOpposition.government_yes} jaa /{" "}
+                          {details.governmentOpposition.government_no} ei,
+                          Oppositio:{" "}
+                          {details.governmentOpposition.opposition_yes} jaa /{" "}
+                          {details.governmentOpposition.opposition_no} ei
                         </Typography>
                       )}
                       <VotingResultsTable
@@ -2561,7 +2682,9 @@ export default () => {
                         memberVotes={details.memberVotes}
                       />
                       {details.relatedVotings.length > 0 && (
-                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        <Box
+                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
+                        >
                           {details.relatedVotings.slice(0, 6).map((related) => (
                             <Chip
                               key={related.id}
@@ -2572,7 +2695,12 @@ export default () => {
                             />
                           ))}
                           {details.relatedVotings.length > 6 && (
-                            <Typography sx={{ fontSize: "0.65rem", color: colors.textSecondary }}>
+                            <Typography
+                              sx={{
+                                fontSize: "0.65rem",
+                                color: colors.textSecondary,
+                              }}
+                            >
                               +{details.relatedVotings.length - 6} muuta
                             </Typography>
                           )}
@@ -3146,11 +3274,19 @@ export default () => {
                               return (
                                 <>
                                   {refs.map((ref) => (
-                                    <DocumentCard key={ref.identifier} docRef={ref} />
+                                    <DocumentCard
+                                      key={ref.identifier}
+                                      docRef={ref}
+                                    />
                                   ))}
-                                  {refs.length > 0 && section.voting_count === 0 && (
-                                    <RelatedVotings identifiers={refs.map((r) => r.identifier)} />
-                                  )}
+                                  {refs.length > 0 &&
+                                    section.voting_count === 0 && (
+                                      <RelatedVotings
+                                        identifiers={refs.map(
+                                          (r) => r.identifier,
+                                        )}
+                                      />
+                                    )}
                                 </>
                               );
                             })()}
@@ -3221,7 +3357,8 @@ export default () => {
                                   </Typography>
                                 )}
                                 {speeches.map((speech) => {
-                                  const speechTime = formatSpeechTimeRange(speech);
+                                  const speechTime =
+                                    formatSpeechTimeRange(speech);
                                   return (
                                     <Box
                                       key={speech.id}
@@ -3300,7 +3437,8 @@ export default () => {
                                             p: 1.5,
                                             borderRadius: 1,
                                             borderLeft: `3px solid ${colors.primaryLight}`,
-                                            background: colors.backgroundDefault,
+                                            background:
+                                              colors.backgroundDefault,
                                           }}
                                         >
                                           <Typography
@@ -3355,7 +3493,6 @@ export default () => {
                                   )}
                               </Box>
                             ) : null}
-
                           </Box>
                         </Collapse>
                       </Box>
@@ -3647,11 +3784,19 @@ export default () => {
                                     return (
                                       <>
                                         {refs.map((ref) => (
-                                          <DocumentCard key={ref.identifier} docRef={ref} />
+                                          <DocumentCard
+                                            key={ref.identifier}
+                                            docRef={ref}
+                                          />
                                         ))}
-                                        {refs.length > 0 && section.voting_count === 0 && (
-                                          <RelatedVotings identifiers={refs.map((r) => r.identifier)} />
-                                        )}
+                                        {refs.length > 0 &&
+                                          section.voting_count === 0 && (
+                                            <RelatedVotings
+                                              identifiers={refs.map(
+                                                (r) => r.identifier,
+                                              )}
+                                            />
+                                          )}
                                       </>
                                     );
                                   })()}

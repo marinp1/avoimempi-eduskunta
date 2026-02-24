@@ -59,12 +59,20 @@ function writeMigrationReport(
   mkdirSync(baseDir, { recursive: true });
 
   const id = normalizeText(row.id) || "unknown-id";
-  const fileName = [timestamp, toSafeFilePart(reason), toSafeFilePart(id)].join("__");
+  const fileName = [timestamp, toSafeFilePart(reason), toSafeFilePart(id)].join(
+    "__",
+  );
 
   writeFileSync(
     join(baseDir, `${fileName}.json`),
     JSON.stringify(
-      { reason, details, id: row.id, eduskuntaTunnus: row.eduskuntaTunnus, source: row._source || null },
+      {
+        reason,
+        details,
+        id: row.id,
+        eduskuntaTunnus: row.eduskuntaTunnus,
+        source: row._source || null,
+      },
       null,
       2,
     ),
@@ -72,7 +80,10 @@ function writeMigrationReport(
   );
 }
 
-export function createExpertStatementSubMigrator(db: Database, documentType: ExpertStatementDocumentType) {
+export function createExpertStatementSubMigrator(
+  db: Database,
+  documentType: ExpertStatementDocumentType,
+) {
   const insertStatement = db.prepare(
     `INSERT INTO ExpertStatement (id, document_type, edk_identifier, bill_identifier, committee_name, meeting_identifier, meeting_date, title, publicity, language, status, created, source_path)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -94,13 +105,23 @@ export function createExpertStatementSubMigrator(db: Database, documentType: Exp
 
       const edkIdentifier = normalizeText(row.eduskuntaTunnus);
       if (!edkIdentifier) {
-        writeMigrationReport(documentType, row, "missing_edk_identifier", `No eduskuntaTunnus on row id=${row.id}`);
+        writeMigrationReport(
+          documentType,
+          row,
+          "missing_edk_identifier",
+          `No eduskuntaTunnus on row id=${row.id}`,
+        );
         return;
       }
 
       const id = parseOptionalInteger(row.id);
       if (id === null) {
-        writeMigrationReport(documentType, row, "invalid_id", `Could not parse numeric id from '${row.id}'`);
+        writeMigrationReport(
+          documentType,
+          row,
+          "invalid_id",
+          `Could not parse numeric id from '${row.id}'`,
+        );
         return;
       }
 
@@ -111,7 +132,9 @@ export function createExpertStatementSubMigrator(db: Database, documentType: Exp
       const identOsa = (meta as Record<string, any>)?.IdentifiointiOsa || {};
       const kokousViite = (meta as Record<string, any>)?.KokousViite;
 
-      const billIdentifier = normalizeText(identOsa.Vireilletulo?.EduskuntaTunnus);
+      const billIdentifier = normalizeText(
+        identOsa.Vireilletulo?.EduskuntaTunnus,
+      );
       const committeeName = normalizeText(identOsa.Toimija?.YhteisoTeksti);
       const meetingIdentifier = normalizeText(kokousViite?.["@_kokousTunnus"]);
       const meetingDate =
@@ -120,8 +143,12 @@ export function createExpertStatementSubMigrator(db: Database, documentType: Exp
         normalizeFinnishDate(normalizeText(identOsa.LaadintaPvmTeksti));
 
       const title = normalizeText(identOsa.Nimeke?.NimekeTeksti);
-      const publicity = normalizeText((meta as Record<string, any>)?.["@_julkisuusKoodi"]);
-      const language = normalizeText((meta as Record<string, any>)?.["@_kieliKoodi"]);
+      const publicity = normalizeText(
+        (meta as Record<string, any>)?.["@_julkisuusKoodi"],
+      );
+      const language = normalizeText(
+        (meta as Record<string, any>)?.["@_kieliKoodi"],
+      );
       const status = parseOptionalInteger(row.status) ?? 5;
 
       const sourcePath = row._source?.vaskiPath

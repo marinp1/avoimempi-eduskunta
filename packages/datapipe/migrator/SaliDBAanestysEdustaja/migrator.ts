@@ -26,7 +26,9 @@ const SWEDISH_VOTES_TO_DROP = new Set([
   "avstår",
 ]);
 
-const normalizeVote = (voteRaw?: string | null): DatabaseTables.Vote["vote"] | null => {
+const normalizeVote = (
+  voteRaw?: string | null,
+): DatabaseTables.Vote["vote"] | null => {
   const normalized = voteRaw?.trim().normalize("NFC");
   if (!normalized) return null;
 

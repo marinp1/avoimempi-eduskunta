@@ -41,7 +41,9 @@ function parseOptionalInteger(
   if (!normalized) return null;
   const parsed = Number.parseInt(normalized, 10);
   if (Number.isNaN(parsed)) {
-    throw new Error(`Invalid integer in ${fieldName}: '${normalized}' (${context})`);
+    throw new Error(
+      `Invalid integer in ${fieldName}: '${normalized}' (${context})`,
+    );
   }
   return parsed;
 }
@@ -91,7 +93,9 @@ function parsePartyAndNote(
     const bracketInParty = party.match(/^(.*?)\s*\(([^()]*)\)\s*$/);
     if (bracketInParty) {
       if (note) {
-        throw new Error(`Conflicting note in party and note slots (${context})`);
+        throw new Error(
+          `Conflicting note in party and note slots (${context})`,
+        );
       }
       const prefix = bracketInParty[1].trim();
       const suffix = bracketInParty[2].trim();
@@ -101,7 +105,9 @@ function parsePartyAndNote(
   }
 
   if (party && /[()]/.test(party)) {
-    throw new Error(`Unexpected bracket content in party value '${party}' (${context})`);
+    throw new Error(
+      `Unexpected bracket content in party value '${party}' (${context})`,
+    );
   }
 
   if (party) {
@@ -221,8 +227,7 @@ function buildRollCallEntries(
   issues: RollCallMigrationIssue[],
 ): DatabaseTables.RollCallEntry[] {
   const body = parseRollCallBody(row);
-  const osallistujaOsa =
-    body?.MuuAsiakohta?.KohtaSisalto?.OsallistujaOsa;
+  const osallistujaOsa = body?.MuuAsiakohta?.KohtaSisalto?.OsallistujaOsa;
 
   const parts = Array.isArray(osallistujaOsa)
     ? osallistujaOsa
@@ -270,7 +275,11 @@ function buildRollCallEntries(
           : [];
 
       const context = `row id=${row.id}, person=${firstName} ${lastName}, type=${entryType}`;
-      const { party, note } = parsePartyAndNote(lisatieto[0], lisatieto[1], context);
+      const { party, note } = parsePartyAndNote(
+        lisatieto[0],
+        lisatieto[1],
+        context,
+      );
       const { absenceReason, arrivalTime, issue } = parseMarker(
         note,
         entryType,
@@ -283,7 +292,11 @@ function buildRollCallEntries(
       entries.push({
         roll_call_id: rollCallId,
         entry_order: entries.length + 1,
-        person_id: parseOptionalInteger(person["@_muuTunnus"], "person_id", context),
+        person_id: parseOptionalInteger(
+          person["@_muuTunnus"],
+          "person_id",
+          context,
+        ),
         first_name: firstName,
         last_name: lastName,
         party,
@@ -308,7 +321,9 @@ function buildRollCallReport(row: VaskiEntry): DatabaseTables.RollCallReport {
     throw new Error(`Missing parliament_identifier (${context})`);
   }
 
-  const sessionDate = normalizeText(meta?.["@_laadintaPvm"] || meta?.KokousViite?.["@_kokousPvm"]);
+  const sessionDate = normalizeText(
+    meta?.["@_laadintaPvm"] || meta?.KokousViite?.["@_kokousPvm"],
+  );
   if (!sessionDate) {
     throw new Error(`Missing session_date (${context})`);
   }
@@ -383,7 +398,13 @@ function writeOverwriteLog(
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const baseDir =
     process.env.MIGRATOR_OVERWRITE_LOG_DIR ||
-    join(process.cwd(), "data", "migration-overwrites", "VaskiData", "nimenhuutoraportti");
+    join(
+      process.cwd(),
+      "data",
+      "migration-overwrites",
+      "VaskiData",
+      "nimenhuutoraportti",
+    );
   mkdirSync(baseDir, { recursive: true });
 
   const fileName = [
@@ -410,22 +431,30 @@ function writeOverwriteLog(
     ),
   };
 
-  writeFileSync(join(baseDir, `${fileName}.json`), JSON.stringify(payload, null, 2), "utf8");
+  writeFileSync(
+    join(baseDir, `${fileName}.json`),
+    JSON.stringify(payload, null, 2),
+    "utf8",
+  );
 }
 
 function writeKnownIssue(row: VaskiEntry, reason: string, details?: string) {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const baseDir =
     process.env.MIGRATOR_KNOWN_ISSUE_LOG_DIR ||
-    join(process.cwd(), "data", "migration-known-issues", "VaskiData", "nimenhuutoraportti");
+    join(
+      process.cwd(),
+      "data",
+      "migration-known-issues",
+      "VaskiData",
+      "nimenhuutoraportti",
+    );
   mkdirSync(baseDir, { recursive: true });
 
   const id = normalizeText(row.id) || "unknown-id";
-  const fileName = [
-    timestamp,
-    toSafeFilePart(reason),
-    toSafeFilePart(id),
-  ].join("__");
+  const fileName = [timestamp, toSafeFilePart(reason), toSafeFilePart(id)].join(
+    "__",
+  );
 
   const payload = {
     reason,
@@ -436,7 +465,11 @@ function writeKnownIssue(row: VaskiEntry, reason: string, details?: string) {
     source: row._source || null,
   };
 
-  writeFileSync(join(baseDir, `${fileName}.json`), JSON.stringify(payload, null, 2), "utf8");
+  writeFileSync(
+    join(baseDir, `${fileName}.json`),
+    JSON.stringify(payload, null, 2),
+    "utf8",
+  );
 }
 
 function writeMigrationReport(
@@ -448,15 +481,19 @@ function writeMigrationReport(
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const baseDir =
     process.env.MIGRATOR_REPORT_LOG_DIR ||
-    join(process.cwd(), "data", "migration-reports", "VaskiData", "nimenhuutoraportti");
+    join(
+      process.cwd(),
+      "data",
+      "migration-reports",
+      "VaskiData",
+      "nimenhuutoraportti",
+    );
   mkdirSync(baseDir, { recursive: true });
 
   const id = normalizeText(row.id) || "unknown-id";
-  const fileName = [
-    timestamp,
-    toSafeFilePart(reason),
-    toSafeFilePart(id),
-  ].join("__");
+  const fileName = [timestamp, toSafeFilePart(reason), toSafeFilePart(id)].join(
+    "__",
+  );
 
   const payload = {
     reason,
@@ -469,7 +506,11 @@ function writeMigrationReport(
     issues,
   };
 
-  writeFileSync(join(baseDir, `${fileName}.json`), JSON.stringify(payload, null, 2), "utf8");
+  writeFileSync(
+    join(baseDir, `${fileName}.json`),
+    JSON.stringify(payload, null, 2),
+    "utf8",
+  );
 }
 
 export default function createNimenhuutoraporttiSubMigrator(db: Database) {
@@ -482,7 +523,19 @@ export default function createNimenhuutoraporttiSubMigrator(db: Database) {
 
   const insertEntries = (
     rollCallId: number,
-    entries: Array<Pick<DatabaseTables.RollCallEntry, "entry_order" | "person_id" | "first_name" | "last_name" | "party" | "entry_type" | "absence_reason" | "arrival_time">>,
+    entries: Array<
+      Pick<
+        DatabaseTables.RollCallEntry,
+        | "entry_order"
+        | "person_id"
+        | "first_name"
+        | "last_name"
+        | "party"
+        | "entry_type"
+        | "absence_reason"
+        | "arrival_time"
+      >
+    >,
   ) => {
     for (const entry of entries) {
       insertEntry.run(
@@ -521,20 +574,15 @@ export default function createNimenhuutoraporttiSubMigrator(db: Database) {
         incomingEntries = buildRollCallEntries(row, incomingReport.id, issues);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        writeMigrationReport(
-          row,
-          "parse_error_row_skipped",
-          message,
-          [
-            {
-              level: "error",
-              code: "parse_error",
-              context: `row id=${row.id}`,
-              note: null,
-              details: message,
-            },
-          ],
-        );
+        writeMigrationReport(row, "parse_error_row_skipped", message, [
+          {
+            level: "error",
+            code: "parse_error",
+            context: `row id=${row.id}`,
+            note: null,
+            details: message,
+          },
+        ]);
         return;
       }
 
@@ -552,10 +600,9 @@ export default function createNimenhuutoraporttiSubMigrator(db: Database) {
         .get(edkIdentifier) as DatabaseTables.RollCallReport | undefined;
 
       if (!previousReport) {
-        db.run(
-          "DELETE FROM RollCallEntry WHERE roll_call_id = ?",
-          [incomingReport.id],
-        );
+        db.run("DELETE FROM RollCallEntry WHERE roll_call_id = ?", [
+          incomingReport.id,
+        ]);
         db.run("DELETE FROM RollCallReport WHERE id = ?", [incomingReport.id]);
         insertReport.run(
           incomingReport.id,
@@ -575,7 +622,9 @@ export default function createNimenhuutoraporttiSubMigrator(db: Database) {
       }
 
       const previousEntries = db
-        .query("SELECT * FROM RollCallEntry WHERE roll_call_id = ? ORDER BY entry_order")
+        .query(
+          "SELECT * FROM RollCallEntry WHERE roll_call_id = ? ORDER BY entry_order",
+        )
         .all(previousReport.id) as DatabaseTables.RollCallEntry[];
 
       const mergedReport = mergeReportPreservingNonEmptyFields(
@@ -587,10 +636,10 @@ export default function createNimenhuutoraporttiSubMigrator(db: Database) {
         incomingEntries.length > 0
           ? incomingEntries
           : previousEntries.map((entry, index) => ({
-            ...entry,
-            roll_call_id: mergedReport.id,
-            entry_order: index + 1,
-          }));
+              ...entry,
+              roll_call_id: mergedReport.id,
+              entry_order: index + 1,
+            }));
 
       writeOverwriteLog(
         previousReport,
@@ -601,9 +650,13 @@ export default function createNimenhuutoraporttiSubMigrator(db: Database) {
         appliedEntries,
       );
 
-      db.run("DELETE FROM RollCallEntry WHERE roll_call_id = ?", [previousReport.id]);
+      db.run("DELETE FROM RollCallEntry WHERE roll_call_id = ?", [
+        previousReport.id,
+      ]);
       db.run("DELETE FROM RollCallReport WHERE id = ?", [previousReport.id]);
-      db.run("DELETE FROM RollCallEntry WHERE roll_call_id = ?", [mergedReport.id]);
+      db.run("DELETE FROM RollCallEntry WHERE roll_call_id = ?", [
+        mergedReport.id,
+      ]);
       db.run("DELETE FROM RollCallReport WHERE id = ?", [mergedReport.id]);
 
       insertReport.run(

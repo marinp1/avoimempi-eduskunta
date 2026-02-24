@@ -1,7 +1,6 @@
 import { Database } from "bun:sqlite";
 import { getDatabasePath } from "#database";
 import * as queries from "./queries";
-import { SQLITE_PRAGMAS } from "./sql-statements";
 import {
   fetchGovernmentMemberships,
   fetchLeavingParliamentRecords,
@@ -14,26 +13,27 @@ import {
   fetchTrustPositions,
 } from "./services/person";
 import {
-  fetchSessionByDate,
-  fetchSessionDocuments,
-  fetchSessionDates,
   fetchCompletedSessionDates,
-  fetchSessionNotices,
-  fetchSessions,
   fetchSectionDocumentLinks,
   fetchSectionRollCall,
   fetchSectionSpeeches,
   fetchSectionSubSections,
   fetchSectionVotings,
-  fetchSpeechesByDate,
+  fetchSessionByDate,
+  fetchSessionDates,
+  fetchSessionDocuments,
+  fetchSessionNotices,
+  fetchSessions,
   fetchSessionWithSectionsByDate,
+  fetchSpeechesByDate,
 } from "./services/session";
 import {
-  fetchVotingsByDocument,
   fetchVotingById,
   fetchVotingInlineDetails,
+  fetchVotingsByDocument,
   queryVotings,
 } from "./services/voting";
+import { SQLITE_PRAGMAS } from "./sql-statements";
 
 export class DatabaseConnection {
   #database: Database | null = null;
@@ -62,7 +62,9 @@ export class DatabaseConnection {
     return parsed.toISOString().substring(0, 10);
   }
 
-  private buildDocumentIdentifierVariants(identifier: string): [string, string, string] {
+  private buildDocumentIdentifierVariants(
+    identifier: string,
+  ): [string, string, string] {
     const normalized = identifier.trim().replace(/\s+/g, " ");
     const withoutVp = normalized.replace(/\s+vp$/i, "");
     const withVp = withoutVp === "" ? normalized : `${withoutVp} vp`;
@@ -144,7 +146,9 @@ export class DatabaseConnection {
   }
 
   public async fetchDocumentRelations(params: { identifier: string }) {
-    const [idA, idB, idC] = this.buildDocumentIdentifierVariants(params.identifier);
+    const [idA, idB, idC] = this.buildDocumentIdentifierVariants(
+      params.identifier,
+    );
     const stmt = this.db.prepare<
       {
         related_identifier: string;
@@ -683,7 +687,13 @@ export class DatabaseConnection {
         $offset: number;
       }
     >(queries.interpellationsList);
-    const rows = stmt.all({ $query, $year, $subject, $limit: params.limit, $offset: offset });
+    const rows = stmt.all({
+      $query,
+      $year,
+      $subject,
+      $limit: params.limit,
+      $offset: offset,
+    });
     stmt.finalize();
 
     return {
@@ -771,7 +781,9 @@ export class DatabaseConnection {
       },
       { $identifier: string }
     >(queries.interpellationSessions);
-    const sessions = sessionsStmt.all({ $identifier: detail.parliament_identifier });
+    const sessions = sessionsStmt.all({
+      $identifier: detail.parliament_identifier,
+    });
     sessionsStmt.finalize();
 
     return { ...detail, signers, stages, subjects, sessions };
@@ -892,7 +904,13 @@ export class DatabaseConnection {
         $offset: number;
       }
     >(queries.govProposalsList);
-    const rows = stmt.all({ $query, $year, $subject, $limit: params.limit, $offset: offset });
+    const rows = stmt.all({
+      $query,
+      $year,
+      $subject,
+      $limit: params.limit,
+      $offset: offset,
+    });
     stmt.finalize();
 
     return {
@@ -994,13 +1012,17 @@ export class DatabaseConnection {
       },
       { $identifier: string }
     >(queries.govProposalSessions);
-    const sessions = sessionsStmt.all({ $identifier: detail.parliament_identifier });
+    const sessions = sessionsStmt.all({
+      $identifier: detail.parliament_identifier,
+    });
     sessionsStmt.finalize();
 
     return { ...detail, signatories, stages, subjects, laws, sessions };
   }
 
-  public async fetchGovernmentProposalByIdentifier(params: { identifier: string }) {
+  public async fetchGovernmentProposalByIdentifier(params: {
+    identifier: string;
+  }) {
     const detailStmt = this.db.prepare<
       {
         id: number;
@@ -1107,7 +1129,13 @@ export class DatabaseConnection {
         $offset: number;
       }
     >(queries.writtenQuestionsList);
-    const rows = stmt.all({ $query, $year, $subject, $limit: params.limit, $offset: offset });
+    const rows = stmt.all({
+      $query,
+      $year,
+      $subject,
+      $limit: params.limit,
+      $offset: offset,
+    });
     stmt.finalize();
 
     return {
@@ -1200,13 +1228,17 @@ export class DatabaseConnection {
       },
       { $identifier: string }
     >(queries.writtenQuestionSessions);
-    const sessions = sessionsStmt.all({ $identifier: detail.parliament_identifier });
+    const sessions = sessionsStmt.all({
+      $identifier: detail.parliament_identifier,
+    });
     sessionsStmt.finalize();
 
     return { ...detail, signers, stages, subjects, sessions };
   }
 
-  public async fetchWrittenQuestionByIdentifier(params: { identifier: string }) {
+  public async fetchWrittenQuestionByIdentifier(params: {
+    identifier: string;
+  }) {
     const detailStmt = this.db.prepare<
       {
         id: number;
@@ -1309,7 +1341,13 @@ export class DatabaseConnection {
         $offset: number;
       }
     >(queries.oralQuestionsList);
-    const rows = stmt.all({ $query, $year, $subject, $limit: params.limit, $offset: offset });
+    const rows = stmt.all({
+      $query,
+      $year,
+      $subject,
+      $limit: params.limit,
+      $offset: offset,
+    });
     stmt.finalize();
 
     return {
@@ -1377,7 +1415,9 @@ export class DatabaseConnection {
       },
       { $identifier: string }
     >(queries.oralQuestionSessions);
-    const sessions = sessionsStmt.all({ $identifier: detail.parliament_identifier });
+    const sessions = sessionsStmt.all({
+      $identifier: detail.parliament_identifier,
+    });
     sessionsStmt.finalize();
 
     return { ...detail, stages, subjects, sessions };
@@ -1586,13 +1626,17 @@ export class DatabaseConnection {
       },
       { $identifier: string }
     >(queries.committeeReportSessions);
-    const sessions = sessionsStmt.all({ $identifier: detail.parliament_identifier });
+    const sessions = sessionsStmt.all({
+      $identifier: detail.parliament_identifier,
+    });
     sessionsStmt.finalize();
 
     return { ...detail, members, experts, sessions };
   }
 
-  public async fetchCommitteeReportByIdentifier(params: { identifier: string }) {
+  public async fetchCommitteeReportByIdentifier(params: {
+    identifier: string;
+  }) {
     const detailStmt = this.db.prepare<
       {
         id: number;
@@ -1693,7 +1737,12 @@ export class DatabaseConnection {
 
     const countStmt = this.db.prepare<
       { count: number },
-      { $query: string | null; $year: string | null; $subject: string | null; $typeCode: string | null }
+      {
+        $query: string | null;
+        $year: string | null;
+        $subject: string | null;
+        $typeCode: string | null;
+      }
     >(queries.legislativeInitiativesCount);
     const countResult = countStmt.get({ $query, $year, $subject, $typeCode });
     const totalCount = countResult?.count || 0;
@@ -1825,13 +1874,17 @@ export class DatabaseConnection {
       },
       { $identifier: string }
     >(queries.legislativeInitiativeSessions);
-    const sessions = sessionsStmt.all({ $identifier: detail.parliament_identifier });
+    const sessions = sessionsStmt.all({
+      $identifier: detail.parliament_identifier,
+    });
     sessionsStmt.finalize();
 
     return { ...detail, signers, stages, subjects, sessions };
   }
 
-  public async fetchLegislativeInitiativeByIdentifier(params: { identifier: string }) {
+  public async fetchLegislativeInitiativeByIdentifier(params: {
+    identifier: string;
+  }) {
     const detailStmt = this.db.prepare<
       {
         id: number;
@@ -1877,9 +1930,7 @@ export class DatabaseConnection {
     const stmt = this.db.prepare<
       { year: string },
       { $typeCode: string | null }
-    >(
-      queries.legislativeInitiativeYears,
-    );
+    >(queries.legislativeInitiativeYears);
     const data = stmt.all({ $typeCode });
     stmt.finalize();
     return data;

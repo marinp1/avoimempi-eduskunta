@@ -59,7 +59,11 @@ async function hasAnyParsedData(): Promise<boolean> {
 
 function recreateDatabaseFiles() {
   const databasePath = getDatabasePath();
-  const candidates = [databasePath, `${databasePath}-wal`, `${databasePath}-shm`];
+  const candidates = [
+    databasePath,
+    `${databasePath}-wal`,
+    `${databasePath}-shm`,
+  ];
   let removed = 0;
 
   for (const filePath of candidates) {

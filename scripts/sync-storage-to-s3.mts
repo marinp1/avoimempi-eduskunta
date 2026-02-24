@@ -136,7 +136,10 @@ async function commandExists(
   command: string,
   env: Record<string, string>,
 ): Promise<boolean> {
-  const result = await runCommandCapture(["bash", "-lc", `command -v ${command}`], env);
+  const result = await runCommandCapture(
+    ["bash", "-lc", `command -v ${command}`],
+    env,
+  );
   return result.code === 0;
 }
 
@@ -151,13 +154,13 @@ async function readScwConfigValue(
   return result.stdout;
 }
 
-async function resolveAuth(env: Record<string, string>): Promise<AuthResolution> {
+async function resolveAuth(
+  env: Record<string, string>,
+): Promise<AuthResolution> {
   const explicitAccessKey =
-    process.env.STORAGE_S3_ACCESS_KEY_ID ||
-    process.env.SCW_ACCESS_KEY;
+    process.env.STORAGE_S3_ACCESS_KEY_ID || process.env.SCW_ACCESS_KEY;
   const explicitSecretKey =
-    process.env.STORAGE_S3_SECRET_ACCESS_KEY ||
-    process.env.SCW_SECRET_KEY;
+    process.env.STORAGE_S3_SECRET_ACCESS_KEY || process.env.SCW_SECRET_KEY;
 
   if (explicitAccessKey && explicitSecretKey) {
     return {
@@ -206,7 +209,9 @@ async function resolveAuth(env: Record<string, string>): Promise<AuthResolution>
   );
 }
 
-async function ensureAwsCliAvailable(env: Record<string, string>): Promise<void> {
+async function ensureAwsCliAvailable(
+  env: Record<string, string>,
+): Promise<void> {
   try {
     await runCommand(["aws", "--version"], env);
   } catch (error) {
@@ -230,7 +235,9 @@ async function main() {
   }
   const endpoint = process.env.STORAGE_S3_ENDPOINT;
   if (!endpoint) {
-    throw new Error("STORAGE_S3_ENDPOINT is required for Scaleway object storage");
+    throw new Error(
+      "STORAGE_S3_ENDPOINT is required for Scaleway object storage",
+    );
   }
   const region = process.env.STORAGE_S3_REGION || "nl-ams";
 

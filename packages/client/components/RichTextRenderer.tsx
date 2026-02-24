@@ -1,4 +1,12 @@
-import { Box, Table, TableBody, TableCell, TableContainer, TableRow, Typography } from "@mui/material";
+import {
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Typography,
+} from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
 import { colors } from "#client/theme";
@@ -9,7 +17,9 @@ import {
   type RichTextMark,
 } from "../../shared/typings/RichText";
 
-function inlineSxFromMarks(marks: RichTextMark[] | undefined): Record<string, string | number> {
+function inlineSxFromMarks(
+  marks: RichTextMark[] | undefined,
+): Record<string, string | number> {
   const sx: Record<string, string | number> = {};
   if (!marks || marks.length === 0) return sx;
 
@@ -32,7 +42,10 @@ function inlineSxFromMarks(marks: RichTextMark[] | undefined): Record<string, st
   return sx;
 }
 
-function renderInlines(inlines: RichTextInline[], keyPrefix: string): ReactNode[] {
+function renderInlines(
+  inlines: RichTextInline[],
+  keyPrefix: string,
+): ReactNode[] {
   return inlines.map((inline, index) => {
     const key = `${keyPrefix}-${index}`;
 
@@ -72,7 +85,9 @@ function renderInlines(inlines: RichTextInline[], keyPrefix: string): ReactNode[
   });
 }
 
-function headingVariant(level: 1 | 2 | 3 | 4): "h6" | "subtitle1" | "subtitle2" | "body1" {
+function headingVariant(
+  level: 1 | 2 | 3 | 4,
+): "h6" | "subtitle1" | "subtitle2" | "body1" {
   if (level === 1) return "h6";
   if (level === 2) return "subtitle1";
   if (level === 3) return "subtitle2";
@@ -99,7 +114,10 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
   if (!parsed || parsed.blocks.length === 0) {
     if (!fallbackText) return null;
     return (
-      <Typography variant={paragraphVariant} sx={{ color: colors.textPrimary, whiteSpace: "pre-wrap" }}>
+      <Typography
+        variant={paragraphVariant}
+        sx={{ color: colors.textPrimary, whiteSpace: "pre-wrap" }}
+      >
         {fallbackText}
       </Typography>
     );
@@ -150,7 +168,10 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
                 borderRadius: 1,
               }}
             >
-              <Typography variant={paragraphVariant} sx={{ color: colors.textPrimary }}>
+              <Typography
+                variant={paragraphVariant}
+                sx={{ color: colors.textPrimary }}
+              >
                 {renderInlines(block.inlines, keyPrefix)}
               </Typography>
             </Box>
@@ -182,11 +203,16 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
                             color: colors.textPrimary,
                             borderColor: colors.dataBorder,
                             fontWeight: cell.header ? 700 : 400,
-                            backgroundColor: cell.header ? colors.backgroundSubtle : "transparent",
+                            backgroundColor: cell.header
+                              ? colors.backgroundSubtle
+                              : "transparent",
                             verticalAlign: "top",
                           }}
                         >
-                          {renderInlines(cell.inlines, `${keyPrefix}-row-${rowIndex}-cell-${cellIndex}`)}
+                          {renderInlines(
+                            cell.inlines,
+                            `${keyPrefix}-row-${rowIndex}-cell-${cellIndex}`,
+                          )}
                         </TableCell>
                       ))}
                     </TableRow>
@@ -204,9 +230,19 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
             sx={{ mt: marginTop, mb: 0, pl: 2.5 }}
           >
             {block.items.map((item, itemIndex) => (
-              <Box key={`${keyPrefix}-item-${itemIndex}`} component="li" sx={{ mt: itemIndex === 0 ? 0 : 0.5 }}>
-                <Typography variant={paragraphVariant} sx={{ color: colors.textPrimary }}>
-                  {renderInlines(item.inlines, `${keyPrefix}-item-${itemIndex}`)}
+              <Box
+                key={`${keyPrefix}-item-${itemIndex}`}
+                component="li"
+                sx={{ mt: itemIndex === 0 ? 0 : 0.5 }}
+              >
+                <Typography
+                  variant={paragraphVariant}
+                  sx={{ color: colors.textPrimary }}
+                >
+                  {renderInlines(
+                    item.inlines,
+                    `${keyPrefix}-item-${itemIndex}`,
+                  )}
                 </Typography>
               </Box>
             ))}

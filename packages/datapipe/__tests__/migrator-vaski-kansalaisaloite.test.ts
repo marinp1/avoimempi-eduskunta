@@ -3,14 +3,12 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import createSubMigrator from "../migrator/VaskiData/submigrators/kansalaisaloite";
 import { clearStatementCache } from "../migrator/utils";
 import type { VaskiEntry } from "../migrator/VaskiData/reader";
+import createSubMigrator from "../migrator/VaskiData/submigrators/kansalaisaloite";
 import { createTestDb } from "./helpers/setup-db";
 
-function makeKasittelyRow(
-  overrides: Partial<VaskiEntry> = {},
-): VaskiEntry {
+function makeKasittelyRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
   return {
     id: "9951",
     eduskuntaTunnus: "KAA 4/2024 vp",
@@ -55,7 +53,10 @@ function makeKasittelyRow(
               Asiasanat: {
                 Aihe: [
                   { AiheTeksti: "Demokratia", "@_muuTunnus": "yso:p31" },
-                  { AiheTeksti: "Kansalaisvaikuttaminen", "@_muuTunnus": "yso:p32" },
+                  {
+                    AiheTeksti: "Kansalaisvaikuttaminen",
+                    "@_muuTunnus": "yso:p32",
+                  },
                 ],
               },
               "@_viimeisinKasittelyvaiheKoodi": "KAS",
@@ -136,10 +137,14 @@ describe("Vaski kansalaisaloite submigrator", () => {
       } as unknown as VaskiEntry),
     );
 
-    const initiatives = db.query("SELECT id FROM LegislativeInitiative").all() as any[];
+    const initiatives = db
+      .query("SELECT id FROM LegislativeInitiative")
+      .all() as any[];
     expect(initiatives).toHaveLength(0);
 
-    const reportFiles = readdirSync(reportLogDir).filter((f) => f.endsWith(".json"));
+    const reportFiles = readdirSync(reportLogDir).filter((f) =>
+      f.endsWith(".json"),
+    );
     expect(reportFiles.length).toBeGreaterThan(0);
     expect(reportFiles.some((f) => f.includes("unknown_body_type"))).toBe(true);
   });

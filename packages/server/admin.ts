@@ -24,7 +24,10 @@ export const routes = {
       const adminService = new AdminStorageService();
       const tableName = new URL(req.url).searchParams.get("tableName");
       if (!tableName) {
-        return Response.json({ error: "tableName is required" }, { status: 400 });
+        return Response.json(
+          { error: "tableName is required" },
+          { status: 400 },
+        );
       }
 
       const status = await adminService.getTableStatus(tableName);

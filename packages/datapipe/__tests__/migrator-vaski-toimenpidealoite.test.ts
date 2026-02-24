@@ -3,14 +3,12 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import createSubMigrator from "../migrator/VaskiData/submigrators/toimenpidealoite";
 import { clearStatementCache } from "../migrator/utils";
 import type { VaskiEntry } from "../migrator/VaskiData/reader";
+import createSubMigrator from "../migrator/VaskiData/submigrators/toimenpidealoite";
 import { createTestDb } from "./helpers/setup-db";
 
-function makeAloiteRow(
-  overrides: Partial<VaskiEntry> = {},
-): VaskiEntry {
+function makeAloiteRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
   return {
     id: "9701",
     eduskuntaTunnus: "TPA 5/2024 vp",
@@ -26,16 +24,17 @@ function makeAloiteRow(
       Siirto: {
         SiirtoMetatieto: {
           JulkaisuMetatieto: {
-            Aihe: [
-              { AiheTeksti: "Liikenne", "@_muuTunnus": "yso:p11" },
-            ],
+            Aihe: [{ AiheTeksti: "Liikenne", "@_muuTunnus": "yso:p11" }],
           },
         },
         SiirtoAsiakirja: {
           RakenneAsiakirja: {
             EduskuntaAloite: {
               IdentifiointiOsa: {
-                Nimeke: { NimekeTeksti: "Toimenpidealoite joukkoliikenteen parantamisesta" },
+                Nimeke: {
+                  NimekeTeksti:
+                    "Toimenpidealoite joukkoliikenteen parantamisesta",
+                },
                 Toimija: {
                   Henkilo: {
                     "@_muuTunnus": "1001",
@@ -57,9 +56,7 @@ function makeAloiteRow(
   };
 }
 
-function makeKasittelyRow(
-  overrides: Partial<VaskiEntry> = {},
-): VaskiEntry {
+function makeKasittelyRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
   return {
     id: "9702",
     eduskuntaTunnus: "TPA 5/2024 vp",
@@ -77,7 +74,10 @@ function makeKasittelyRow(
           RakenneAsiakirja: {
             KasittelytiedotValtiopaivaasia: {
               IdentifiointiOsa: {
-                Nimeke: { NimekeTeksti: "Toimenpidealoite joukkoliikenteen parantamisesta" },
+                Nimeke: {
+                  NimekeTeksti:
+                    "Toimenpidealoite joukkoliikenteen parantamisesta",
+                },
                 Toimija: {
                   Henkilo: {
                     "@_muuTunnus": "1001",
@@ -157,7 +157,9 @@ describe("Vaski toimenpidealoite submigrator", () => {
 
     expect(initiative.initiative_type_code).toBe("TPA");
     expect(initiative.parliament_identifier).toBe("TPA 5/2024 vp");
-    expect(initiative.title).toBe("Toimenpidealoite joukkoliikenteen parantamisesta");
+    expect(initiative.title).toBe(
+      "Toimenpidealoite joukkoliikenteen parantamisesta",
+    );
     expect(initiative.first_signer_first_name).toBe("Aino");
     expect(initiative.first_signer_last_name).toBe("Esimerkki");
     expect(initiative.justification_text).toContain("Perusteluteksti");
@@ -199,11 +201,17 @@ describe("Vaski toimenpidealoite submigrator", () => {
   test("skips unsupported identifier and writes migration report", async () => {
     await migrateRow(makeAloiteRow({ eduskuntaTunnus: "KK 1/2024 vp" }));
 
-    const initiatives = db.query("SELECT id FROM LegislativeInitiative").all() as any[];
+    const initiatives = db
+      .query("SELECT id FROM LegislativeInitiative")
+      .all() as any[];
     expect(initiatives).toHaveLength(0);
 
-    const reportFiles = readdirSync(reportLogDir).filter((f) => f.endsWith(".json"));
+    const reportFiles = readdirSync(reportLogDir).filter((f) =>
+      f.endsWith(".json"),
+    );
     expect(reportFiles.length).toBeGreaterThan(0);
-    expect(reportFiles.some((f) => f.includes("invalid_parliament_identifier"))).toBe(true);
+    expect(
+      reportFiles.some((f) => f.includes("invalid_parliament_identifier")),
+    ).toBe(true);
   });
 });

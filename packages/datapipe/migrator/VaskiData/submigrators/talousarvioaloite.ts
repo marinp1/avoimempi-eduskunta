@@ -32,7 +32,9 @@ function parseOptionalInteger(
   if (!normalized) return null;
   const parsed = Number.parseInt(normalized, 10);
   if (Number.isNaN(parsed)) {
-    throw new Error(`Invalid integer in ${fieldName}${suffix}: '${normalized}'`);
+    throw new Error(
+      `Invalid integer in ${fieldName}${suffix}: '${normalized}'`,
+    );
   }
   return parsed;
 }
@@ -59,11 +61,9 @@ function writeMigrationReport(
   mkdirSync(baseDir, { recursive: true });
 
   const id = normalizeText(row.id) || "unknown-id";
-  const fileName = [
-    timestamp,
-    toSafeFilePart(reason),
-    toSafeFilePart(id),
-  ].join("__");
+  const fileName = [timestamp, toSafeFilePart(reason), toSafeFilePart(id)].join(
+    "__",
+  );
 
   const payload = {
     reason,
@@ -74,7 +74,11 @@ function writeMigrationReport(
     source: row._source || null,
   };
 
-  writeFileSync(join(baseDir, `${fileName}.json`), JSON.stringify(payload, null, 2), "utf8");
+  writeFileSync(
+    join(baseDir, `${fileName}.json`),
+    JSON.stringify(payload, null, 2),
+    "utf8",
+  );
 }
 
 function parseParliamentIdentifier(eduskuntaTunnus: unknown): {
@@ -132,8 +136,13 @@ function collectTextFragments(node: unknown, output: string[]): void {
   }
 
   if (typeof node === "object") {
-    for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
-      if (typeof value === "string" && (key === "KappaleKooste" || key.endsWith("Teksti"))) {
+    for (const [key, value] of Object.entries(
+      node as Record<string, unknown>,
+    )) {
+      if (
+        typeof value === "string" &&
+        (key === "KappaleKooste" || key.endsWith("Teksti"))
+      ) {
         const normalized = normalizeText(value);
         if (normalized) output.push(normalized);
         continue;
@@ -178,7 +187,8 @@ function buildSigner(
 
   return {
     signer_order: signerOrder,
-    person_id: parseOptionalInteger(henkilo["@_muuTunnus"], "signer_person_id") ?? null,
+    person_id:
+      parseOptionalInteger(henkilo["@_muuTunnus"], "signer_person_id") ?? null,
     first_name,
     last_name,
     party: normalizeText(henkilo.LisatietoTeksti),
@@ -212,10 +222,13 @@ function parseEduskuntaAloite(
   }
 
   const meta = getMeta(row);
-  const identifiointiOsa = aloite.IdentifiointiOsa || meta?.IdentifiointiOsa || {};
-  const title = normalizeText(identifiointiOsa.Nimeke?.NimekeTeksti) ||
+  const identifiointiOsa =
+    aloite.IdentifiointiOsa || meta?.IdentifiointiOsa || {};
+  const title =
+    normalizeText(identifiointiOsa.Nimeke?.NimekeTeksti) ||
     normalizeText(identifiointiOsa.OtsikkoTeksti);
-  const submission_date = normalizeText(aloite["@_laadintaPvm"]) ||
+  const submission_date =
+    normalizeText(aloite["@_laadintaPvm"]) ||
     normalizeText(identifiointiOsa.LaadintaPvmTeksti);
 
   const firstSigner = buildSigner(identifiointiOsa.Toimija?.Henkilo, 1);
@@ -290,9 +303,11 @@ function parseKasittelytiedot(
   }
 
   const identifiointiOsa = kasittely.IdentifiointiOsa || {};
-  const title = normalizeText(identifiointiOsa.Nimeke?.NimekeTeksti) ||
+  const title =
+    normalizeText(identifiointiOsa.Nimeke?.NimekeTeksti) ||
     normalizeText(identifiointiOsa.OtsikkoTeksti);
-  const submission_date = normalizeText(kasittely["@_laadintaPvm"]) ||
+  const submission_date =
+    normalizeText(kasittely["@_laadintaPvm"]) ||
     normalizeText(identifiointiOsa.LaadintaPvmTeksti);
 
   const firstSigner = buildSigner(identifiointiOsa.Toimija?.Henkilo, 1);
@@ -303,21 +318,28 @@ function parseKasittelytiedot(
 
   const paatos = kasittely.EduskuntakasittelyPaatosKuvaus;
   const decision_outcome = normalizeText(paatos?.EduskuntakasittelyPaatosNimi);
-  const decision_outcome_code = normalizeText(paatos?.["@_eduskuntakasittelyPaatosKoodi"]);
+  const decision_outcome_code = normalizeText(
+    paatos?.["@_eduskuntakasittelyPaatosKoodi"],
+  );
 
-  const latest_stage_code = normalizeText(kasittely["@_viimeisinKasittelyvaiheKoodi"]) ||
+  const latest_stage_code =
+    normalizeText(kasittely["@_viimeisinKasittelyvaiheKoodi"]) ||
     normalizeText(kasittely["@_viimeisinYleinenKasittelyvaiheKoodi"]);
   const end_date = normalizeText(kasittely["@_paattymisPvm"]);
 
   const stages: InitiativeStage[] = [];
   let stageOrder = 0;
-  const yleinenVaiheet = normalizeArray<Record<string, any>>(kasittely.YleinenKasittelyvaihe);
+  const yleinenVaiheet = normalizeArray<Record<string, any>>(
+    kasittely.YleinenKasittelyvaihe,
+  );
   for (const vaihe of yleinenVaiheet) {
     if (!vaihe || typeof vaihe !== "object") continue;
     const stageTitle = normalizeText(vaihe.OtsikkoTeksti);
     const stageCode = normalizeText(vaihe["@_yleinenKasittelyvaiheKoodi"]);
 
-    const toimenpiteet = normalizeArray<Record<string, any>>(vaihe.ToimenpideJulkaisu);
+    const toimenpiteet = normalizeArray<Record<string, any>>(
+      vaihe.ToimenpideJulkaisu,
+    );
     for (const toimenpide of toimenpiteet) {
       if (!toimenpide || typeof toimenpide !== "object") continue;
       stageOrder++;
@@ -334,7 +356,10 @@ function parseKasittelytiedot(
         }
         const fraasiPaatos = fraasi.FraasiPaatos;
         if (fraasiPaatos) {
-          collectTextFragments(fraasiPaatos.FraasiPaatosKappaleKooste, descParts);
+          collectTextFragments(
+            fraasiPaatos.FraasiPaatosKappaleKooste,
+            descParts,
+          );
         }
       }
 
@@ -417,17 +442,23 @@ export default function createTalousarvioaloiteSubMigrator(db: Database) {
      RETURNING id`,
   );
 
-  const deleteSigners = db.prepare("DELETE FROM LegislativeInitiativeSigner WHERE initiative_id = ?");
+  const deleteSigners = db.prepare(
+    "DELETE FROM LegislativeInitiativeSigner WHERE initiative_id = ?",
+  );
   const insertSigner = db.prepare(
     "INSERT INTO LegislativeInitiativeSigner (initiative_id, signer_order, person_id, first_name, last_name, party, is_first_signer) VALUES (?, ?, ?, ?, ?, ?, ?)",
   );
 
-  const deleteSubjects = db.prepare("DELETE FROM LegislativeInitiativeSubject WHERE initiative_id = ?");
+  const deleteSubjects = db.prepare(
+    "DELETE FROM LegislativeInitiativeSubject WHERE initiative_id = ?",
+  );
   const insertSubject = db.prepare(
     "INSERT OR IGNORE INTO LegislativeInitiativeSubject (initiative_id, subject_text, yso_uri) VALUES (?, ?, ?)",
   );
 
-  const deleteStages = db.prepare("DELETE FROM LegislativeInitiativeStage WHERE initiative_id = ?");
+  const deleteStages = db.prepare(
+    "DELETE FROM LegislativeInitiativeStage WHERE initiative_id = ?",
+  );
   const insertStage = db.prepare(
     "INSERT INTO LegislativeInitiativeStage (initiative_id, stage_order, stage_title, stage_code, event_date, event_title, event_description) VALUES (?, ?, ?, ?, ?, ?, ?)",
   );
@@ -464,7 +495,11 @@ export default function createTalousarvioaloiteSubMigrator(db: Database) {
       const context = `row id=${row.id}, ${parsed.identifier}`;
       const id = parseOptionalInteger(row.id, "id", context);
       if (id === null) {
-        writeMigrationReport(row, "invalid_id", `Could not parse numeric id from '${row.id}'`);
+        writeMigrationReport(
+          row,
+          "invalid_id",
+          `Could not parse numeric id from '${row.id}'`,
+        );
         return;
       }
 
@@ -513,7 +548,8 @@ export default function createTalousarvioaloiteSubMigrator(db: Database) {
             sourcePath,
           );
 
-          const initiativeId = (initiativeRow as { id: number } | undefined)?.id ?? id;
+          const initiativeId =
+            (initiativeRow as { id: number } | undefined)?.id ?? id;
 
           linkVaskiDocument.run(id, initiativeId);
           if (data.title) updateVaskiTitle.run(data.title, id);
@@ -536,7 +572,11 @@ export default function createTalousarvioaloiteSubMigrator(db: Database) {
           if (data.subjects.length > 0) {
             deleteSubjects.run(initiativeId);
             for (const subject of data.subjects) {
-              insertSubject.run(initiativeId, subject.subject_text, subject.yso_uri);
+              insertSubject.run(
+                initiativeId,
+                subject.subject_text,
+                subject.yso_uri,
+              );
             }
           }
         } else if (isKasittelytiedot) {
@@ -567,7 +607,8 @@ export default function createTalousarvioaloiteSubMigrator(db: Database) {
             sourcePath,
           );
 
-          const initiativeId = (initiativeRow as { id: number } | undefined)?.id ?? id;
+          const initiativeId =
+            (initiativeRow as { id: number } | undefined)?.id ?? id;
 
           linkVaskiDocument.run(id, initiativeId);
           if (data.title) updateVaskiTitle.run(data.title, id);
@@ -605,7 +646,11 @@ export default function createTalousarvioaloiteSubMigrator(db: Database) {
           if (data.subjects.length > 0) {
             deleteSubjects.run(initiativeId);
             for (const subject of data.subjects) {
-              insertSubject.run(initiativeId, subject.subject_text, subject.yso_uri);
+              insertSubject.run(
+                initiativeId,
+                subject.subject_text,
+                subject.yso_uri,
+              );
             }
           }
         }

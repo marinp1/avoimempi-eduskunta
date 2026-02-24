@@ -1,19 +1,38 @@
-import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { Box, Button, Chip, CircularProgress, Collapse, Typography } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Collapse,
+  Typography,
+} from "@mui/material";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { colors } from "#client/theme/index";
 
-export type DocRef =
-  {
-    type: "HE" | "VK" | "KK" | "VM" | "LA" | "TAA" | "LTA" | "TPA" | "KA" | "KAA" | "SKT";
-    identifier: string;
-  };
+export type DocRef = {
+  type:
+    | "HE"
+    | "VK"
+    | "KK"
+    | "VM"
+    | "LA"
+    | "TAA"
+    | "LTA"
+    | "TPA"
+    | "KA"
+    | "KAA"
+    | "SKT";
+  identifier: string;
+};
 
-const DOC_PATTERN = /\b(HE|VK|KK|LA|TAA|LTA|TPA|KA|KAA|SKT|[A-ZÄÖa-zäö]+V[ML])\s+\d+\/\d+\s*(?:vp)?/g;
+const DOC_PATTERN =
+  /\b(HE|VK|KK|LA|TAA|LTA|TPA|KA|KAA|SKT|[A-ZÄÖa-zäö]+V[ML])\s+\d+\/\d+\s*(?:vp)?/g;
 
 export const extractDocumentIdentifiers = (
   fields: (string | null | undefined)[],
@@ -31,7 +50,7 @@ export const extractDocumentIdentifiers = (
         const type: DocRef["type"] =
           upperType.endsWith("VM") || upperType.endsWith("VL")
             ? "VM"
-            : upperType as DocRef["type"];
+            : (upperType as DocRef["type"]);
         results.push({ type, identifier: id });
       }
     }
@@ -119,9 +138,10 @@ const ExpandableSnippet: React.FC<{
 
   if (!normalized) return null;
   const isLong = normalized.length > maxLength;
-  const shownText = isLong && !expanded
-    ? `${normalized.slice(0, maxLength).trimEnd()}...`
-    : normalized;
+  const shownText =
+    isLong && !expanded
+      ? `${normalized.slice(0, maxLength).trimEnd()}...`
+      : normalized;
 
   return (
     <Box sx={{ mt: 0.5 }}>
@@ -165,9 +185,10 @@ const ExpandableRichSnippet: React.FC<{
 
   const isLong = normalized ? normalized.length > maxLength : false;
   const canExpand = isLong || !!richText;
-  const shownText = isLong && !expanded && normalized
-    ? `${normalized.slice(0, maxLength).trimEnd()}...`
-    : normalized;
+  const shownText =
+    isLong && !expanded && normalized
+      ? `${normalized.slice(0, maxLength).trimEnd()}...`
+      : normalized;
 
   return (
     <Box sx={{ mt: 0.5 }}>
@@ -178,9 +199,7 @@ const ExpandableRichSnippet: React.FC<{
       )}
       {expanded && (
         <Box>
-          <Typography sx={{ ...snippetTextSx, mt: 0 }}>
-            {label}:
-          </Typography>
+          <Typography sx={{ ...snippetTextSx, mt: 0 }}>{label}:</Typography>
           <Box sx={{ mt: 0.35 }}>
             <RichTextRenderer
               document={richText}
@@ -258,12 +277,22 @@ type WithAuthor = DocCardData & {
   author: string | null;
 };
 
-const renderSubjectChips = (subjects: { subject_text: string }[] | undefined) => {
+const renderSubjectChips = (
+  subjects: { subject_text: string }[] | undefined,
+) => {
   const chips = subjects?.slice(0, 3) ?? [];
   const more = (subjects?.length ?? 0) - 3;
   if (chips.length === 0) return null;
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5, flexWrap: "wrap" }}>
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        gap: 1,
+        mt: 0.5,
+        flexWrap: "wrap",
+      }}
+    >
       {chips.map((s) => (
         <Chip
           key={s.subject_text}
@@ -303,12 +332,12 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
       justification_text: string | null;
       justification_rich_text: string | null;
     }
-  >(
-    "/api/government-proposals/by-identifier",
-    identifier,
-  );
+  >("/api/government-proposals/by-identifier", identifier);
 
-  if (loading) return <LoadingPlaceholder text="Ladataan hallituksen esityksen tietoja..." />;
+  if (loading)
+    return (
+      <LoadingPlaceholder text="Ladataan hallituksen esityksen tietoja..." />
+    );
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -320,8 +349,14 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
         window.location.href = `/asiakirjat?id=${data.id}&type=government-proposals`;
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-        <Chip label={data.parliament_identifier} size="small" sx={identifierChipSx} />
+      <Box
+        sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
+      >
+        <Chip
+          label={data.parliament_identifier}
+          size="small"
+          sx={identifierChipSx}
+        />
         <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
         {data.decision_outcome && (
           <Chip
@@ -337,7 +372,15 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
           />
         )}
       </Box>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5, flexWrap: "wrap" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mt: 0.5,
+          flexWrap: "wrap",
+        }}
+      >
         {data.author && (
           <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
             {data.author}
@@ -385,12 +428,10 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
         event_description: string | null;
       }[];
     }
-  >(
-    "/api/interpellations/by-identifier",
-    identifier,
-  );
+  >("/api/interpellations/by-identifier", identifier);
 
-  if (loading) return <LoadingPlaceholder text="Ladataan välikysymystietoja..." />;
+  if (loading)
+    return <LoadingPlaceholder text="Ladataan välikysymystietoja..." />;
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -409,8 +450,14 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
         window.location.href = `/asiakirjat?id=${data.id}`;
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-        <Chip label={data.parliament_identifier} size="small" sx={identifierChipSx} />
+      <Box
+        sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
+      >
+        <Chip
+          label={data.parliament_identifier}
+          size="small"
+          sx={identifierChipSx}
+        />
         <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
         {data.decision_outcome && (
           <Chip
@@ -426,7 +473,15 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
           />
         )}
       </Box>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5, flexWrap: "wrap" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mt: 0.5,
+          flexWrap: "wrap",
+        }}
+      >
         {signerLabel && (
           <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
             {signerLabel}
@@ -445,18 +500,30 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
         richText={data.resolution_rich_text}
         maxLength={220}
       />
-      {(latestStage?.event_title || latestStage?.event_description || latestStage?.event_date) && (
+      {(latestStage?.event_title ||
+        latestStage?.event_description ||
+        latestStage?.event_date) && (
         <Box sx={{ mt: 0.5 }}>
-          <Typography sx={{ fontSize: "0.72rem", color: colors.textSecondary, fontWeight: 600 }}>
+          <Typography
+            sx={{
+              fontSize: "0.72rem",
+              color: colors.textSecondary,
+              fontWeight: 600,
+            }}
+          >
             Vastauskäsittelyn tila
           </Typography>
           {latestStage.event_date && (
-            <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
+            <Typography
+              sx={{ fontSize: "0.7rem", color: colors.textSecondary }}
+            >
               {new Date(latestStage.event_date).toLocaleDateString("fi-FI")}
             </Typography>
           )}
           {latestStage.event_title && (
-            <Typography sx={{ fontSize: "0.72rem", color: colors.textSecondary }}>
+            <Typography
+              sx={{ fontSize: "0.72rem", color: colors.textSecondary }}
+            >
               {latestStage.event_title}
             </Typography>
           )}
@@ -489,7 +556,8 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
     }
   >("/api/legislative-initiatives/by-identifier", identifier);
 
-  if (loading) return <LoadingPlaceholder text="Ladataan lakialoitteen tietoja..." />;
+  if (loading)
+    return <LoadingPlaceholder text="Ladataan lakialoitteen tietoja..." />;
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -507,8 +575,14 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
         window.location.href = `/asiakirjat?id=${data.id}&type=legislative-initiatives`;
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-        <Chip label={data.parliament_identifier} size="small" sx={identifierChipSx} />
+      <Box
+        sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
+      >
+        <Chip
+          label={data.parliament_identifier}
+          size="small"
+          sx={identifierChipSx}
+        />
         <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
         {data.decision_outcome && (
           <Chip
@@ -524,7 +598,15 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
           />
         )}
       </Box>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5, flexWrap: "wrap" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mt: 0.5,
+          flexWrap: "wrap",
+        }}
+      >
         <Chip
           label={data.initiative_type_code}
           size="small"
@@ -571,7 +653,10 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
     }
   >("/api/oral-questions/by-identifier", identifier);
 
-  if (loading) return <LoadingPlaceholder text="Ladataan suullisen kysymyksen tietoja..." />;
+  if (loading)
+    return (
+      <LoadingPlaceholder text="Ladataan suullisen kysymyksen tietoja..." />
+    );
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -583,8 +668,14 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
         window.location.href = `/asiakirjat?id=${data.id}&type=oral-questions`;
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-        <Chip label={data.parliament_identifier} size="small" sx={identifierChipSx} />
+      <Box
+        sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
+      >
+        <Chip
+          label={data.parliament_identifier}
+          size="small"
+          sx={identifierChipSx}
+        />
         <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
         {data.decision_outcome && (
           <Chip
@@ -600,17 +691,34 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
           />
         )}
       </Box>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5, flexWrap: "wrap" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mt: 0.5,
+          flexWrap: "wrap",
+        }}
+      >
         {data.asker_text && (
           <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
             {data.asker_text}
           </Typography>
         )}
         {data.latest_stage_code && (
-          <Chip label={data.latest_stage_code} size="small" variant="outlined" sx={subjectChipSx} />
+          <Chip
+            label={data.latest_stage_code}
+            size="small"
+            variant="outlined"
+            sx={subjectChipSx}
+          />
         )}
       </Box>
-      <ExpandableSnippet label="Kysymys" text={data.question_text} maxLength={260} />
+      <ExpandableSnippet
+        label="Kysymys"
+        text={data.question_text}
+        maxLength={260}
+      />
       {renderSubjectChips(data.subjects)}
     </Box>
   );
@@ -629,7 +737,10 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
     }
   >("/api/written-questions/by-identifier", identifier);
 
-  if (loading) return <LoadingPlaceholder text="Ladataan kirjallisen kysymyksen tietoja..." />;
+  if (loading)
+    return (
+      <LoadingPlaceholder text="Ladataan kirjallisen kysymyksen tietoja..." />
+    );
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -647,8 +758,14 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
         window.location.href = `/asiakirjat?id=${data.id}&type=written-questions`;
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-        <Chip label={data.parliament_identifier} size="small" sx={identifierChipSx} />
+      <Box
+        sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
+      >
+        <Chip
+          label={data.parliament_identifier}
+          size="small"
+          sx={identifierChipSx}
+        />
         <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
         {data.decision_outcome && (
           <Chip
@@ -664,7 +781,15 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
           />
         )}
       </Box>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5, flexWrap: "wrap" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mt: 0.5,
+          flexWrap: "wrap",
+        }}
+      >
         {signerLabel && (
           <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
             {signerLabel}
@@ -703,7 +828,10 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
     legislation_amendment_rich_text: string | null;
   }>("/api/committee-reports/by-identifier", identifier);
 
-  if (loading) return <LoadingPlaceholder text="Ladataan valiokunnan mietinnön tietoja..." />;
+  if (loading)
+    return (
+      <LoadingPlaceholder text="Ladataan valiokunnan mietinnön tietoja..." />
+    );
   if (!data) return null;
 
   return (
@@ -713,8 +841,14 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
         window.location.href = `/asiakirjat?id=${data.id}&type=committee-reports`;
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-        <Chip label={data.parliament_identifier} size="small" sx={identifierChipSx} />
+      <Box
+        sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
+      >
+        <Chip
+          label={data.parliament_identifier}
+          size="small"
+          sx={identifierChipSx}
+        />
         <Chip
           label={data.report_type_code}
           size="small"
@@ -723,7 +857,15 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
         />
         <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
       </Box>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5, flexWrap: "wrap" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          mt: 0.5,
+          flexWrap: "wrap",
+        }}
+      >
         {data.committee_name && (
           <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
             {data.committee_name}
@@ -863,13 +1005,15 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
     }[];
   };
 
-  const [votings, setVotings] = useState<
-    VotingSummary[]
-  >([]);
+  const [votings, setVotings] = useState<VotingSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedVotingId, setExpandedVotingId] = useState<number | null>(null);
-  const [detailsById, setDetailsById] = useState<Record<number, VotingDetails>>({});
-  const [detailLoadingById, setDetailLoadingById] = useState<Record<number, boolean>>({});
+  const [detailsById, setDetailsById] = useState<Record<number, VotingDetails>>(
+    {},
+  );
+  const [detailLoadingById, setDetailLoadingById] = useState<
+    Record<number, boolean>
+  >({});
 
   const refKey = identifiers.join(",");
 
@@ -928,7 +1072,9 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
 
   if (loading) {
     return (
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 0.5, mt: 0.5 }}>
+      <Box
+        sx={{ display: "flex", alignItems: "center", gap: 1, py: 0.5, mt: 0.5 }}
+      >
         <CircularProgress size={14} />
         <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
           Ladataan äänestyksiä...
@@ -944,7 +1090,11 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
         <HowToVoteIcon sx={{ fontSize: 16, color: colors.primary }} />
         <Typography
-          sx={{ fontSize: "0.75rem", fontWeight: 600, color: colors.textPrimary }}
+          sx={{
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            color: colors.textPrimary,
+          }}
         >
           Liittyvät äänestykset
         </Typography>
@@ -1026,7 +1176,11 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
               <Button
                 size="small"
                 onClick={() => {
-                  window.history.pushState({}, "", `/aanestykset?voting=${v.id}`);
+                  window.history.pushState(
+                    {},
+                    "",
+                    `/aanestykset?voting=${v.id}`,
+                  );
                   window.dispatchEvent(new PopStateEvent("popstate"));
                 }}
                 sx={{
@@ -1040,8 +1194,12 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                 Avaa näkymä
               </Button>
             </Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.25 }}>
-              <Typography sx={{ fontSize: "0.65rem", color: colors.textSecondary }}>
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.25 }}
+            >
+              <Typography
+                sx={{ fontSize: "0.65rem", color: colors.textSecondary }}
+              >
                 {v.start_time?.substring(0, 10)} — {v.session_key}
               </Typography>
               <Box
@@ -1084,43 +1242,78 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                 {isDetailLoading && (
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <CircularProgress size={12} />
-                    <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
+                    <Typography
+                      sx={{ fontSize: "0.7rem", color: colors.textSecondary }}
+                    >
                       Ladataan äänestyksen yksityiskohtia...
                     </Typography>
                   </Box>
                 )}
                 {!isDetailLoading && details && (
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                  >
                     <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                       <Chip
                         size="small"
                         label={`Jaa ${details.voting.n_yes}`}
-                        sx={{ height: 20, color: colors.success, borderColor: colors.success }}
+                        sx={{
+                          height: 20,
+                          color: colors.success,
+                          borderColor: colors.success,
+                        }}
                         variant="outlined"
                       />
                       <Chip
                         size="small"
                         label={`Ei ${details.voting.n_no}`}
-                        sx={{ height: 20, color: colors.error, borderColor: colors.error }}
+                        sx={{
+                          height: 20,
+                          color: colors.error,
+                          borderColor: colors.error,
+                        }}
                         variant="outlined"
                       />
-                      <Chip size="small" label={`Tyhjää ${details.voting.n_abstain}`} sx={{ height: 20 }} />
-                      <Chip size="small" label={`Poissa ${details.voting.n_absent}`} sx={{ height: 20 }} />
+                      <Chip
+                        size="small"
+                        label={`Tyhjää ${details.voting.n_abstain}`}
+                        sx={{ height: 20 }}
+                      />
+                      <Chip
+                        size="small"
+                        label={`Poissa ${details.voting.n_absent}`}
+                        sx={{ height: 20 }}
+                      />
                     </Box>
-                    <Typography sx={{ fontSize: "0.72rem", color: colors.textSecondary }}>
-                      Äänestyksen kohde: {details.voting.context_title || details.voting.section_title || details.voting.title || "(ei otsikkoa)"}
+                    <Typography
+                      sx={{ fontSize: "0.72rem", color: colors.textSecondary }}
+                    >
+                      Äänestyksen kohde:{" "}
+                      {details.voting.context_title ||
+                        details.voting.section_title ||
+                        details.voting.title ||
+                        "(ei otsikkoa)"}
                     </Typography>
                     {details.voting.parliamentary_item && (
                       <Chip
                         size="small"
                         variant="outlined"
                         label={details.voting.parliamentary_item}
-                        sx={{ height: 20, fontSize: "0.65rem", width: "fit-content" }}
+                        sx={{
+                          height: 20,
+                          fontSize: "0.65rem",
+                          width: "fit-content",
+                        }}
                       />
                     )}
                     {details.governmentOpposition && (
-                      <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
-                        Hallitus: {details.governmentOpposition.government_yes} jaa / {details.governmentOpposition.government_no} ei, Oppositio: {details.governmentOpposition.opposition_yes} jaa / {details.governmentOpposition.opposition_no} ei
+                      <Typography
+                        sx={{ fontSize: "0.7rem", color: colors.textSecondary }}
+                      >
+                        Hallitus: {details.governmentOpposition.government_yes}{" "}
+                        jaa / {details.governmentOpposition.government_no} ei,
+                        Oppositio: {details.governmentOpposition.opposition_yes}{" "}
+                        jaa / {details.governmentOpposition.opposition_no} ei
                       </Typography>
                     )}
                     <VotingResultsTable
@@ -1134,15 +1327,30 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                         details.voting.section_title,
                         details.voting.title,
                       ]).map((ref) => (
-                        <DocumentCard key={`${details.voting.id}-${ref.identifier}`} docRef={ref} />
+                        <DocumentCard
+                          key={`${details.voting.id}-${ref.identifier}`}
+                          docRef={ref}
+                        />
                       ))}
                     </Box>
                     {details.relatedVotings.length > 0 && (
                       <Box>
-                        <Typography sx={{ fontSize: "0.68rem", color: colors.textSecondary }}>
+                        <Typography
+                          sx={{
+                            fontSize: "0.68rem",
+                            color: colors.textSecondary,
+                          }}
+                        >
                           Samaan käsittelykohtaan liittyvät äänestykset:
                         </Typography>
-                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.25 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 0.5,
+                            mt: 0.25,
+                          }}
+                        >
                           {details.relatedVotings.slice(0, 6).map((related) => (
                             <Chip
                               key={related.id}
@@ -1153,7 +1361,12 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                             />
                           ))}
                           {details.relatedVotings.length > 6 && (
-                            <Typography sx={{ fontSize: "0.65rem", color: colors.textSecondary }}>
+                            <Typography
+                              sx={{
+                                fontSize: "0.65rem",
+                                color: colors.textSecondary,
+                              }}
+                            >
                               +{details.relatedVotings.length - 6} muuta
                             </Typography>
                           )}

@@ -8,9 +8,9 @@ const buildSectionRows = (
   votingCountStmt: ReturnType<Database["prepare"]>,
 ) => {
   const sections = sectionsStmt.all({ $sessionKey: sessionKey });
-  const votingCountResult = votingCountStmt.get(
-    { $sessionKey: sessionKey },
-  ) as { voting_count?: number } | null;
+  const votingCountResult = votingCountStmt.get({
+    $sessionKey: sessionKey,
+  }) as { voting_count?: number } | null;
   return {
     sections,
     section_count: sections.length,
@@ -75,9 +75,10 @@ export const fetchSessions = (
     { $sessionKey: string }
   >(queries.sessionSections);
 
-  const votingCountStmt = db.prepare<{ voting_count: number }, { $sessionKey: string }>(
-    queries.sessionVotingCount,
-  );
+  const votingCountStmt = db.prepare<
+    { voting_count: number },
+    { $sessionKey: string }
+  >(queries.sessionVotingCount);
 
   const sessionsWithSections = sessions.map((session) => ({
     ...session,
@@ -96,10 +97,7 @@ export const fetchSessions = (
   };
 };
 
-export const fetchSessionByDate = (
-  db: Database,
-  params: { date: string },
-) => {
+export const fetchSessionByDate = (db: Database, params: { date: string }) => {
   const stmt = db.prepare<
     DatabaseTables.Session & { agenda_title?: string; agenda_state?: string },
     { $date: string }
@@ -154,9 +152,10 @@ export const fetchSessionWithSectionsByDate = (
     { $sessionKey: string }
   >(queries.sessionSections);
 
-  const votingCountStmt = db.prepare<{ voting_count: number }, { $sessionKey: string }>(
-    queries.sessionVotingCount,
-  );
+  const votingCountStmt = db.prepare<
+    { voting_count: number },
+    { $sessionKey: string }
+  >(queries.sessionVotingCount);
 
   const sessionsWithSections = sessions.map((session) => ({
     ...session,
@@ -169,7 +168,10 @@ export const fetchSessionWithSectionsByDate = (
   return sessionsWithSections;
 };
 
-export const fetchSessionDocuments = (db: Database, params: { sessionKey: string }) => {
+export const fetchSessionDocuments = (
+  db: Database,
+  params: { sessionKey: string },
+) => {
   const stmt = db.prepare<
     {
       document_kind: "agenda" | "minutes" | "roll_call";
@@ -192,10 +194,14 @@ export const fetchSessionDocuments = (db: Database, params: { sessionKey: string
   return data;
 };
 
-export const fetchSessionNotices = (db: Database, params: { sessionKey: string }) => {
-  const stmt = db.prepare<DatabaseTables.SessionNotice, { $sessionKey: string }>(
-    queries.sessionNotices,
-  );
+export const fetchSessionNotices = (
+  db: Database,
+  params: { sessionKey: string },
+) => {
+  const stmt = db.prepare<
+    DatabaseTables.SessionNotice,
+    { $sessionKey: string }
+  >(queries.sessionNotices);
   const data = stmt.all({ $sessionKey: params.sessionKey });
   stmt.finalize();
   return data;
@@ -302,7 +308,10 @@ export const fetchSectionSpeeches = (
   };
 };
 
-export const fetchSectionVotings = (db: Database, params: { sectionKey: string }) => {
+export const fetchSectionVotings = (
+  db: Database,
+  params: { sectionKey: string },
+) => {
   const stmt = db.prepare<DatabaseTables.Voting, { $sectionKey: string }>(
     queries.sectionVotings,
   );
@@ -311,7 +320,10 @@ export const fetchSectionVotings = (db: Database, params: { sectionKey: string }
   return votings;
 };
 
-export const fetchSectionSubSections = (db: Database, params: { sectionKey: string }) => {
+export const fetchSectionSubSections = (
+  db: Database,
+  params: { sectionKey: string },
+) => {
   const stmt = db.prepare<DatabaseTables.SubSection, { $sectionKey: string }>(
     queries.sectionSubSections,
   );
@@ -320,7 +332,10 @@ export const fetchSectionSubSections = (db: Database, params: { sectionKey: stri
   return rows;
 };
 
-export const fetchSectionRollCall = (db: Database, params: { sectionKey: string }) => {
+export const fetchSectionRollCall = (
+  db: Database,
+  params: { sectionKey: string },
+) => {
   const infoStmt = db.prepare<
     {
       id: number;

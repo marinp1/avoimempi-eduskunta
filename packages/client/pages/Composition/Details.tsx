@@ -591,7 +591,8 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
   };
 
   const fetchVotingDetails = async (votingId: number) => {
-    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId)) return;
+    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId))
+      return;
     setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
     try {
       const res = await fetch(`/api/votings/${votingId}/details`);
@@ -627,7 +628,10 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
       return (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.75 }}>
           <CircularProgress size={12} />
-          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary }}
+          >
             Ladataan äänestyksen yksityiskohtia...
           </Typography>
         </Box>
@@ -648,14 +652,36 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
         }}
       >
         <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-          <Chip size="small" label={`Jaa ${details.voting.n_yes}`} sx={{ height: 20 }} />
-          <Chip size="small" label={`Ei ${details.voting.n_no}`} sx={{ height: 20 }} />
-          <Chip size="small" label={`Tyhjää ${details.voting.n_abstain}`} sx={{ height: 20 }} />
-          <Chip size="small" label={`Poissa ${details.voting.n_absent}`} sx={{ height: 20 }} />
+          <Chip
+            size="small"
+            label={`Jaa ${details.voting.n_yes}`}
+            sx={{ height: 20 }}
+          />
+          <Chip
+            size="small"
+            label={`Ei ${details.voting.n_no}`}
+            sx={{ height: 20 }}
+          />
+          <Chip
+            size="small"
+            label={`Tyhjää ${details.voting.n_abstain}`}
+            sx={{ height: 20 }}
+          />
+          <Chip
+            size="small"
+            label={`Poissa ${details.voting.n_absent}`}
+            sx={{ height: 20 }}
+          />
         </Box>
         {details.governmentOpposition && (
-          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-            Hallitus: {details.governmentOpposition.government_yes} jaa / {details.governmentOpposition.government_no} ei, Oppositio: {details.governmentOpposition.opposition_yes} jaa / {details.governmentOpposition.opposition_no} ei
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary }}
+          >
+            Hallitus: {details.governmentOpposition.government_yes} jaa /{" "}
+            {details.governmentOpposition.government_no} ei, Oppositio:{" "}
+            {details.governmentOpposition.opposition_yes} jaa /{" "}
+            {details.governmentOpposition.opposition_no} ei
           </Typography>
         )}
         <VotingResultsTable
@@ -827,10 +853,22 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     >
                       {new Date(d.start_time).toLocaleDateString("fi-FI")}
                     </Typography>
-                    <Box sx={{ display: "flex", gap: 0.5, mt: 0.5, flexWrap: "wrap" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 0.5,
+                        mt: 0.5,
+                        flexWrap: "wrap",
+                      }}
+                    >
                       <Button
                         size="small"
-                        sx={{ textTransform: "none", minWidth: 0, px: 1, fontSize: "0.68rem" }}
+                        sx={{
+                          textTransform: "none",
+                          minWidth: 0,
+                          px: 1,
+                          fontSize: "0.68rem",
+                        }}
                         endIcon={
                           <ExpandMoreIcon
                             sx={{
@@ -844,18 +882,29 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                         }
                         onClick={() => toggleVotingDetails(d.voting_id)}
                       >
-                        {expandedVotingIds.has(d.voting_id) ? "Piilota tiedot" : "Näytä tiedot"}
+                        {expandedVotingIds.has(d.voting_id)
+                          ? "Piilota tiedot"
+                          : "Näytä tiedot"}
                       </Button>
                       <Button
                         size="small"
-                        sx={{ textTransform: "none", minWidth: 0, px: 1, fontSize: "0.68rem" }}
+                        sx={{
+                          textTransform: "none",
+                          minWidth: 0,
+                          px: 1,
+                          fontSize: "0.68rem",
+                        }}
                         endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
-                      onClick={() => openVoting(d.voting_id, d.start_time)}
-                    >
-                      Avaa näkymä
-                    </Button>
+                        onClick={() => openVoting(d.voting_id, d.start_time)}
+                      >
+                        Avaa näkymä
+                      </Button>
                     </Box>
-                    <Collapse in={expandedVotingIds.has(d.voting_id)} timeout="auto" unmountOnExit>
+                    <Collapse
+                      in={expandedVotingIds.has(d.voting_id)}
+                      timeout="auto"
+                      unmountOnExit
+                    >
                       {renderVotingInlineDetails(d.voting_id)}
                     </Collapse>
                   </Box>
@@ -947,10 +996,22 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   >
                     {new Date(v.start_time).toLocaleDateString("fi-FI")}
                   </Typography>
-                  <Box sx={{ display: "flex", gap: 0.5, mt: 0.5, flexWrap: "wrap" }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 0.5,
+                      mt: 0.5,
+                      flexWrap: "wrap",
+                    }}
+                  >
                     <Button
                       size="small"
-                      sx={{ textTransform: "none", minWidth: 0, px: 1, fontSize: "0.68rem" }}
+                      sx={{
+                        textTransform: "none",
+                        minWidth: 0,
+                        px: 1,
+                        fontSize: "0.68rem",
+                      }}
                       endIcon={
                         <ExpandMoreIcon
                           sx={{
@@ -964,18 +1025,29 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                       }
                       onClick={() => toggleVotingDetails(v.id)}
                     >
-                      {expandedVotingIds.has(v.id) ? "Piilota tiedot" : "Näytä tiedot"}
+                      {expandedVotingIds.has(v.id)
+                        ? "Piilota tiedot"
+                        : "Näytä tiedot"}
                     </Button>
                     <Button
                       size="small"
-                      sx={{ textTransform: "none", minWidth: 0, px: 1, fontSize: "0.68rem" }}
+                      sx={{
+                        textTransform: "none",
+                        minWidth: 0,
+                        px: 1,
+                        fontSize: "0.68rem",
+                      }}
                       endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
                       onClick={() => openVoting(v.id, v.start_time)}
                     >
                       Avaa näkymä
                     </Button>
                   </Box>
-                  <Collapse in={expandedVotingIds.has(v.id)} timeout="auto" unmountOnExit>
+                  <Collapse
+                    in={expandedVotingIds.has(v.id)}
+                    timeout="auto"
+                    unmountOnExit
+                  >
                     {renderVotingInlineDetails(v.id)}
                   </Collapse>
                 </Box>

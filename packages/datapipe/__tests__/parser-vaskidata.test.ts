@@ -1,7 +1,15 @@
-import { lstat, mkdir, mkdtemp, readFile, readlink, rm, writeFile } from "node:fs/promises";
+import { describe, expect, test } from "bun:test";
+import {
+  lstat,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readlink,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { describe, expect, test } from "bun:test";
 import { StorageFactory } from "#storage";
 import parser, {
   onPageParsed,
@@ -165,7 +173,10 @@ describe("VaskiData parser", () => {
   test("onPageParsed creates per-document-type symlink for parsed page", async () => {
     await withTempWorkspace(async (workspace) => {
       await onPageParsed(42, [
-        { id: "1001", "#avoimempieduskunta": { documentType: "nimenhuutoraportti" } },
+        {
+          id: "1001",
+          "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
+        },
       ]);
 
       const symlinkPath = path.join(

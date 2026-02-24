@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { parseTable, parseTables } from "./parser";
 import { TableNames } from "#constants";
+import { parseTable, parseTables } from "./parser";
 
 async function main() {
   const args = process.argv.slice(2);
@@ -46,8 +46,9 @@ async function main() {
 }
 
 async function showStatus() {
-  const { getStorage, listAllStorageKeys, StorageKeyBuilder } =
-    await import("#storage");
+  const { getStorage, listAllStorageKeys, StorageKeyBuilder } = await import(
+    "#storage"
+  );
   const storage = getStorage();
 
   console.log("📊 Parser Status\n");
@@ -58,7 +59,9 @@ async function showStatus() {
 
   // Get all parsed tables
   const parsedPrefix = StorageKeyBuilder.listPrefixForStage("parsed");
-  const parsedKeys = await listAllStorageKeys(storage, { prefix: parsedPrefix });
+  const parsedKeys = await listAllStorageKeys(storage, {
+    prefix: parsedPrefix,
+  });
 
   // Extract table names and counts
   const rawTables = new Map<string, number>();

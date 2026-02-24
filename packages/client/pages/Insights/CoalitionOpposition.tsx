@@ -6,14 +6,13 @@ import {
   Box,
   Button,
   Chip,
-  Collapse,
   CircularProgress,
+  Collapse,
   IconButton,
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import {
   Bar,
   BarChart,
@@ -24,6 +23,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { colors, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
 
@@ -104,7 +104,8 @@ export default function CoalitionOpposition({
   }, []);
 
   const fetchVotingDetails = async (votingId: number) => {
-    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId)) return;
+    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId))
+      return;
     setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
     try {
       const res = await fetch(`/api/votings/${votingId}/details`);
@@ -344,20 +345,47 @@ export default function CoalitionOpposition({
                     "&:last-child": { borderBottom: "none" },
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-                    <Typography sx={{ flex: 1, minWidth: 200, fontSize: "0.85rem", fontWeight: 600 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        flex: 1,
+                        minWidth: 200,
+                        fontSize: "0.85rem",
+                        fontWeight: 600,
+                      }}
+                    >
                       {vote.title || vote.section_title}
                     </Typography>
-                    <Chip size="small" label={`H ${vote.coalition_yes}-${vote.coalition_no}`} />
-                    <Chip size="small" label={`O ${vote.opposition_yes}-${vote.opposition_no}`} />
+                    <Chip
+                      size="small"
+                      label={`H ${vote.coalition_yes}-${vote.coalition_no}`}
+                    />
+                    <Chip
+                      size="small"
+                      label={`O ${vote.opposition_yes}-${vote.opposition_no}`}
+                    />
                     <Button
                       size="small"
-                      sx={{ textTransform: "none", minWidth: 0, px: 1, fontSize: "0.68rem" }}
+                      sx={{
+                        textTransform: "none",
+                        minWidth: 0,
+                        px: 1,
+                        fontSize: "0.68rem",
+                      }}
                       endIcon={
                         <ExpandMoreIcon
                           sx={{
                             fontSize: 14,
-                            transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                            transform: isExpanded
+                              ? "rotate(180deg)"
+                              : "rotate(0deg)",
                             transition: "transform 0.2s",
                           }}
                         />
@@ -378,9 +406,14 @@ export default function CoalitionOpposition({
                       }}
                     >
                       {detailsLoading && (
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
                           <CircularProgress size={12} />
-                          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: themedColors.textSecondary }}
+                          >
                             Ladataan äänestyksen yksityiskohtia...
                           </Typography>
                         </Box>

@@ -132,11 +132,12 @@ export class StatusController {
       const parsedHasData = row.has_parsed_data;
       const scrapePercent = row.scrape_progress_percent ?? 0;
       const rawComplete = rawHasData && scrapePercent >= 99.9;
-      const parseProgressPercent = rawRows > 0
-        ? Math.min((parsedRows / rawRows) * 100, 100)
-        : parsedRows > 0
-          ? 100
-          : 0;
+      const parseProgressPercent =
+        rawRows > 0
+          ? Math.min((parsedRows / rawRows) * 100, 100)
+          : parsedRows > 0
+            ? 100
+            : 0;
 
       let status: SourceTableStatusState = "empty";
 

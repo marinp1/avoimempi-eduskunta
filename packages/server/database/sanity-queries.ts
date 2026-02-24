@@ -68,7 +68,9 @@ export function getAuxiliaryRepresentativeOrphanQuery(
 
 export function getParliamentOversizedDatesQuery(maxMembers = 200): string {
   const normalizedMaxMembers =
-    Number.isFinite(maxMembers) && maxMembers > 0 ? Math.trunc(maxMembers) : 200;
+    Number.isFinite(maxMembers) && maxMembers > 0
+      ? Math.trunc(maxMembers)
+      : 200;
 
   return sql`SELECT s.date, COUNT(DISTINCT r.person_id) as mp_count
            FROM Session s

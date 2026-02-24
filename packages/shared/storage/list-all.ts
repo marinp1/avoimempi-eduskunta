@@ -15,7 +15,7 @@ export async function listAllStorageKeys(
   const prefix = options?.prefix;
   const pageSize = options?.pageSize ?? 1000;
   const keys: StorageMetadata[] = [];
-  let startAfter: string | undefined = undefined;
+  let startAfter: string | undefined;
 
   while (true) {
     const page = await storage.list({

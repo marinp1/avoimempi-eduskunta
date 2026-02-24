@@ -13,7 +13,8 @@ describe("Vaski rich text conversion", () => {
       PaatosToimenpide: {
         JohdantoTeksti: "Hallintovaliokunta esittää,",
         SisennettyKappaleKooste: {
-          KursiiviTeksti: "että maa- ja metsätalousvaliokunta ottaa edellä olevan huomioon",
+          KursiiviTeksti:
+            "että maa- ja metsätalousvaliokunta ottaa edellä olevan huomioon",
           "#text": ".",
         },
       },
@@ -38,11 +39,15 @@ describe("Vaski rich text conversion", () => {
     expect(parsed).not.toBeNull();
     expect(parsed?.blocks[0]?.type).toBe("heading");
 
-    const paragraph = parsed?.blocks.find((block) => block.type === "paragraph");
+    const paragraph = parsed?.blocks.find(
+      (block) => block.type === "paragraph",
+    );
     expect(paragraph?.type).toBe("paragraph");
     if (paragraph?.type === "paragraph") {
       const inlineWithReference = paragraph.inlines.find(
-        (inline) => inline.type === "text" && inline.reference?.identifier === "HE 77/2017 vp",
+        (inline) =>
+          inline.type === "text" &&
+          inline.reference?.identifier === "HE 77/2017 vp",
       );
       expect(inlineWithReference).toBeTruthy();
     }

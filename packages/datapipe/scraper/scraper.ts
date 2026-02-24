@@ -1,7 +1,7 @@
 import { scheduler } from "node:timers/promises";
 import type { DataStage } from "#storage";
-import { recordSourceStagePage } from "#storage/source-status";
 import { getStorage, listAllStorageKeys, StorageKeyBuilder } from "#storage";
+import { recordSourceStagePage } from "#storage/source-status";
 import { getExactTableCountByRows } from "#table-counts";
 
 /** Time to wait (in ms) between API calls. */
@@ -293,7 +293,12 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     const key = StorageKeyBuilder.forPage(stage, tableName, currentPage);
     const data = JSON.stringify(content, null, 2);
     await storage.put(key, data);
-    await recordSourceStagePage(tableName, stage, currentPage, content.rowCount);
+    await recordSourceStagePage(
+      tableName,
+      stage,
+      currentPage,
+      content.rowCount,
+    );
 
     totalRowsScraped += content.rowCount;
     rowsScrapedThisRun += content.rowCount;
@@ -361,8 +366,12 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
 
   console.log(`\n✅ Scraping complete for ${tableName}`);
   console.log(`📊 Total pages scraped: ${currentPage - startPage + 1}`);
-  console.log(`📊 Rows scraped in this run: ${rowsScrapedThisRun.toLocaleString()}`);
-  console.log(`📊 Total rows currently stored: ${totalRowsScraped.toLocaleString()}`);
+  console.log(
+    `📊 Rows scraped in this run: ${rowsScrapedThisRun.toLocaleString()}`,
+  );
+  console.log(
+    `📊 Total rows currently stored: ${totalRowsScraped.toLocaleString()}`,
+  );
 
   if (totalRows > 0 && totalRowsScraped !== totalRows) {
     const diff = totalRows - totalRowsScraped;

@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import createSubMigrator from "../migrator/VaskiData/submigrators/nimenhuutoraportti";
 import { clearStatementCache } from "../migrator/utils";
 import type { VaskiEntry } from "../migrator/VaskiData/reader";
+import createSubMigrator from "../migrator/VaskiData/submigrators/nimenhuutoraportti";
 import { createTestDb } from "./helpers/setup-db";
 
 function makeParticipant(
@@ -40,18 +40,18 @@ function makeRow(
       ? "EDK-TEST-AK-0001"
       : overrides.edkIdentifier;
   const startTime =
-    overrides.startTime === undefined ? "2024-01-01T14:00:00" : overrides.startTime;
+    overrides.startTime === undefined
+      ? "2024-01-01T14:00:00"
+      : overrides.startTime;
   const endTime =
     overrides.endTime === undefined ? "2024-01-01T14:30:00" : overrides.endTime;
-  const absentParticipants =
-    overrides.absentParticipants ?? [
-      makeParticipant("1001", "Aino", "Esimerkki", "sd", "(e)"),
-      makeParticipant("1002", "Matti", "Mallinen", "kok", ""),
-    ];
-  const lateParticipants =
-    overrides.lateParticipants ?? [
-      makeParticipant("1003", "Liisa", "Viive", "vihr", "(14.17)"),
-    ];
+  const absentParticipants = overrides.absentParticipants ?? [
+    makeParticipant("1001", "Aino", "Esimerkki", "sd", "(e)"),
+    makeParticipant("1002", "Matti", "Mallinen", "kok", ""),
+  ];
+  const lateParticipants = overrides.lateParticipants ?? [
+    makeParticipant("1003", "Liisa", "Viive", "vihr", "(14.17)"),
+  ];
 
   const body: Record<string, any> = {
     IdentifiointiOsa: {
@@ -149,7 +149,9 @@ describe("Vaski nimenhuutoraportti submigrator", () => {
     expect(report.parliament_identifier).toBe("PTK 1/2024 vp");
     expect(report.roll_call_start_time).toBe("2024-01-01T14:00:00");
     expect(report.roll_call_end_time).toBe("2024-01-01T14:30:00");
-    expect(report.source_path).toContain("vaski-data/nimenhuutoraportti/page_1.json");
+    expect(report.source_path).toContain(
+      "vaski-data/nimenhuutoraportti/page_1.json",
+    );
 
     const entries = db
       .query("SELECT * FROM RollCallEntry ORDER BY entry_order")

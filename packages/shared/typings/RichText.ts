@@ -97,7 +97,9 @@ function isRichTextMark(value: unknown): value is RichTextMark {
   return typeof value === "string" && value in MARK_SET;
 }
 
-function isRichTextReference(value: unknown): value is RichTextDocumentReference {
+function isRichTextReference(
+  value: unknown,
+): value is RichTextDocumentReference {
   if (!isRecord(value)) return false;
   return value.type === "document" && typeof value.identifier === "string";
 }
@@ -110,12 +112,19 @@ function isRichTextInline(value: unknown): value is RichTextInline {
   if (value.type !== "text" || typeof value.text !== "string") return false;
 
   if (value.marks !== undefined) {
-    if (!Array.isArray(value.marks) || !value.marks.every((mark) => isRichTextMark(mark))) {
+    if (
+      !Array.isArray(value.marks) ||
+      !value.marks.every((mark) => isRichTextMark(mark))
+    ) {
       return false;
     }
   }
 
-  if (value.reference !== undefined && value.reference !== null && !isRichTextReference(value.reference)) {
+  if (
+    value.reference !== undefined &&
+    value.reference !== null &&
+    !isRichTextReference(value.reference)
+  ) {
     return false;
   }
 
@@ -136,9 +145,21 @@ function isRichTextTableCell(value: unknown): value is RichTextTableCell {
 
   const valueRecord = value as Record<string, unknown>;
 
-  if (valueRecord.header !== undefined && typeof valueRecord.header !== "boolean") return false;
-  if (valueRecord.colSpan !== undefined && !isPositiveInteger(valueRecord.colSpan)) return false;
-  if (valueRecord.rowSpan !== undefined && !isPositiveInteger(valueRecord.rowSpan)) return false;
+  if (
+    valueRecord.header !== undefined &&
+    typeof valueRecord.header !== "boolean"
+  )
+    return false;
+  if (
+    valueRecord.colSpan !== undefined &&
+    !isPositiveInteger(valueRecord.colSpan)
+  )
+    return false;
+  if (
+    valueRecord.rowSpan !== undefined &&
+    !isPositiveInteger(valueRecord.rowSpan)
+  )
+    return false;
 
   return true;
 }
@@ -157,16 +178,18 @@ function isRichTextBlock(value: unknown): value is RichTextBlock {
   }
 
   if (value.type === "list") {
-    if (typeof value.ordered !== "boolean" || !Array.isArray(value.items)) return false;
+    if (typeof value.ordered !== "boolean" || !Array.isArray(value.items))
+      return false;
     return value.items.every((item) => hasInlines(item));
   }
 
   if (value.type === "table") {
     if (!Array.isArray(value.rows)) return false;
-    return value.rows.every((row) =>
-      isRecord(row) &&
-      Array.isArray(row.cells) &&
-      row.cells.every((cell) => isRichTextTableCell(cell))
+    return value.rows.every(
+      (row) =>
+        isRecord(row) &&
+        Array.isArray(row.cells) &&
+        row.cells.every((cell) => isRichTextTableCell(cell)),
     );
   }
 

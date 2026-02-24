@@ -26,7 +26,9 @@ const DEFAULT_BINDINGS: Record<string, number | string | null> = {
 
 const normalizeSql = (sql: string) => sql.replace(/\s+/g, " ").trim();
 
-const getBindingsForSql = (sql: string): Record<string, number | string | null> => {
+const getBindingsForSql = (
+  sql: string,
+): Record<string, number | string | null> => {
   const bindings: Record<string, number | string | null> = {};
   const parameterNames = new Set<string>();
 
