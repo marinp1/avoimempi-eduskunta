@@ -749,6 +749,43 @@ const server = Bun.serve<{
       },
     },
 
+    // ─── Expert statement endpoints ───
+
+    "/api/expert-statements": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const query = searchParams.get("q") || undefined;
+        const year = searchParams.get("year") || undefined;
+        const committee = searchParams.get("committee") || undefined;
+        const docType = searchParams.get("docType") || undefined;
+        const page = parseInt(searchParams.get("page") || "1", 10);
+        const limit = parseInt(searchParams.get("limit") || "20", 10);
+        const data = await db.fetchExpertStatements({
+          query,
+          year,
+          committee,
+          docType,
+          page,
+          limit,
+        });
+        return Response.json(data);
+      },
+    },
+
+    "/api/expert-statements/years": {
+      GET: async () => {
+        const data = await db.fetchExpertStatementYears();
+        return Response.json(data);
+      },
+    },
+
+    "/api/expert-statements/committees": {
+      GET: async () => {
+        const data = await db.fetchExpertStatementCommittees();
+        return Response.json(data);
+      },
+    },
+
     // ─── Written question response endpoints ───
 
     "/api/written-question-responses": {

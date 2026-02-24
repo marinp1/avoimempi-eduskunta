@@ -11,6 +11,10 @@ export { default as ageDivisionOverTime } from "./queries/AGE_DIVISION_OVER_TIME
 export { default as closeVotes } from "./queries/CLOSE_VOTES.sql";
 export { default as coalitionVsOpposition } from "./queries/COALITION_VS_OPPOSITION.sql";
 export { default as committeeOverview } from "./queries/COMMITTEE_OVERVIEW.sql";
+export { default as expertStatementsList } from "./queries/EXPERT_STATEMENTS_LIST.sql";
+export { default as expertStatementsCount } from "./queries/EXPERT_STATEMENTS_COUNT.sql";
+export { default as expertStatementYears } from "./queries/EXPERT_STATEMENT_YEARS.sql";
+export { default as expertStatementCommittees } from "./queries/EXPERT_STATEMENT_COMMITTEES.sql";
 export { default as committeeReportById } from "./queries/COMMITTEE_REPORT_BY_ID.sql";
 export { default as committeeReportByIdentifier } from "./queries/COMMITTEE_REPORT_BY_IDENTIFIER.sql";
 export { default as committeeReportExperts } from "./queries/COMMITTEE_REPORT_EXPERTS.sql";
