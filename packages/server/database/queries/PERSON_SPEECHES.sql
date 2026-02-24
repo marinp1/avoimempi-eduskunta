@@ -1,5 +1,9 @@
 SELECT
   sp.id,
+  sp.section_key AS section_key,
+  sp.session_key AS session_key,
+  sec.title AS section_title,
+  sec.identifier AS section_identifier,
   COALESCE(sc.start_time, sp.request_time, sp.modified_datetime) AS start_time,
   sc.end_time AS end_time,
   sp.speech_type,
