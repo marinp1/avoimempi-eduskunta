@@ -8,7 +8,7 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -21,6 +21,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { colors, spacing } from "#client/theme";
 import { GlassCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -55,6 +56,7 @@ export default function TimeSeriesStatistics({
   onClose,
 }: TimeSeriesStatisticsProps) {
   const themedColors = useThemedColors();
+  const { selectedHallituskausi } = useHallituskausi();
   const [genderData, setGenderData] = useState<GenderData[]>([]);
   const [ageData, setAgeData] = useState<AgeData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -87,6 +89,24 @@ export default function TimeSeriesStatistics({
       }
     })();
   }, []);
+
+  const filteredGenderData = useMemo(() => {
+    if (!selectedHallituskausi) return genderData;
+    const startYear = Number.parseInt(selectedHallituskausi.startDate.slice(0, 4), 10);
+    const endYear = selectedHallituskausi.endDate
+      ? Number.parseInt(selectedHallituskausi.endDate.slice(0, 4), 10)
+      : Number.MAX_SAFE_INTEGER;
+    return genderData.filter((row) => row.year >= startYear && row.year <= endYear);
+  }, [genderData, selectedHallituskausi]);
+
+  const filteredAgeData = useMemo(() => {
+    if (!selectedHallituskausi) return ageData;
+    const startYear = Number.parseInt(selectedHallituskausi.startDate.slice(0, 4), 10);
+    const endYear = selectedHallituskausi.endDate
+      ? Number.parseInt(selectedHallituskausi.endDate.slice(0, 4), 10)
+      : Number.MAX_SAFE_INTEGER;
+    return ageData.filter((row) => row.year >= startYear && row.year <= endYear);
+  }, [ageData, selectedHallituskausi]);
 
   const CustomTooltip = <
     T extends { color: string; name: string; value: string },
@@ -173,6 +193,11 @@ export default function TimeSeriesStatistics({
       </Box>
 
       {/* Gender Division Section */}
+      {selectedHallituskausi && (
+        <Alert severity="info" sx={{ mb: spacing.md }}>
+          Rajattu hallituskauteen: {selectedHallituskausi.label}
+        </Alert>
+      )}
       <Fade in timeout={500}>
         <Box sx={{ mb: spacing.xl }}>
           <GlassCard>
@@ -198,7 +223,7 @@ export default function TimeSeriesStatistics({
                 </Typography>
                 <ResponsiveContainer width="100%" height={400}>
                   <AreaChart
-                    data={genderData}
+                    data={filteredGenderData}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
@@ -250,7 +275,7 @@ export default function TimeSeriesStatistics({
                 </Typography>
                 <ResponsiveContainer width="100%" height={400}>
                   <LineChart
-                    data={genderData}
+                    data={filteredGenderData}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
@@ -385,7 +410,7 @@ export default function TimeSeriesStatistics({
                 </Typography>
                 <ResponsiveContainer width="100%" height={400}>
                   <AreaChart
-                    data={ageData}
+                    data={filteredAgeData}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
@@ -464,7 +489,7 @@ export default function TimeSeriesStatistics({
                 </Typography>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart
-                    data={ageData}
+                    data={filteredAgeData}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.3} />

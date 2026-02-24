@@ -24,11 +24,15 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DocumentCard, RelatedVotings } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
+import {
+  isDateWithinHallituskausi,
+  useHallituskausi,
+} from "#client/filters/HallituskausiContext";
 import type {
   MinutesContentReference,
   RollCallEntry,
@@ -93,6 +97,7 @@ const getInitialSectionKey = (): string | null => {
 export default () => {
   const { t } = useTranslation();
   const themedColors = useThemedColors();
+  const { selectedHallituskausi } = useHallituskausi();
 
   const [sessions, setSessions] = useState<SessionWithSections[]>([]);
   const [vaskiLatestSpeechDate, setVaskiLatestSpeechDate] = useState<
@@ -101,7 +106,7 @@ export default () => {
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState<string>(getInitialDate());
   const [error, setError] = useState<string | null>(null);
-  const [validDates, setValidDates] = useState<Set<string>>(new Set());
+  const [allValidDates, setAllValidDates] = useState<Set<string>>(new Set());
   const [datesLoading, setDatesLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"list" | "calendar" | "timeline">(
     "list",
@@ -161,6 +166,14 @@ export default () => {
     Set<string>
   >(new Set());
 
+  const validDates = useMemo(() => {
+    if (!selectedHallituskausi) return allValidDates;
+    const filtered = Array.from(allValidDates).filter((item) =>
+      isDateWithinHallituskausi(item, selectedHallituskausi),
+    );
+    return new Set(filtered);
+  }, [allValidDates, selectedHallituskausi]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -180,6 +193,11 @@ export default () => {
         setExpandedVotingIds(new Set());
         setVotingDetailsById({});
         setLoadingVotingDetails(new Set());
+        if (!isDateWithinHallituskausi(date, selectedHallituskausi)) {
+          setSessions([]);
+          setVaskiLatestSpeechDate(null);
+          return;
+        }
         const res = await fetch(`/api/day/${date}/sessions`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const payload: {
@@ -195,7 +213,7 @@ export default () => {
       }
     };
     fetchData();
-  }, [date, t]);
+  }, [date, selectedHallituskausi, t]);
 
   useEffect(() => {
     const fetchValidDates = async () => {
@@ -204,7 +222,7 @@ export default () => {
         const response = await fetch("/api/session-dates");
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: { date: string }[] = await response.json();
-        setValidDates(new Set(data.map((item) => item.date)));
+        setAllValidDates(new Set(data.map((item) => item.date)));
       } catch {
         // non-critical
       } finally {
@@ -254,6 +272,18 @@ export default () => {
     }
     return { before, after };
   };
+
+  useEffect(() => {
+    if (datesLoading) return;
+    if (validDates.size === 0) return;
+    if (isValidDate(date)) return;
+    const { before, after } = findNearestValidDates(date);
+    const fallback =
+      after || before || Array.from(validDates).sort().at(-1) || null;
+    if (fallback) {
+      handleDateChange(fallback);
+    }
+  }, [date, datesLoading, validDates]);
 
   const formatDate = formatDateLongFi;
   const formatTime = formatTimeFi;
@@ -1993,6 +2023,17 @@ export default () => {
         subtitle={t("sessions.subtitle")}
         actions={
           <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+            {selectedHallituskausi && (
+              <Chip
+                size="small"
+                label={`Hallituskausi: ${selectedHallituskausi.label}`}
+                sx={{
+                  background: `${colors.primary}20`,
+                  color: colors.textPrimary,
+                  border: `1px solid ${colors.primary}40`,
+                }}
+              />
+            )}
             <ToggleButtonGroup
               value={viewMode}
               exclusive

@@ -9,3 +9,5 @@ WHERE
   AND ($year IS NULL OR substr(e.meeting_date, 1, 4) = $year)
   AND ($committee IS NULL OR e.committee_name = $committee)
   AND ($docType IS NULL OR e.document_type = $docType)
+  AND ($startDate IS NULL OR e.meeting_date >= $startDate)
+  AND ($endDateExclusive IS NULL OR e.meeting_date < $endDateExclusive)

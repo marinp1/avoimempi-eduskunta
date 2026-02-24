@@ -11,3 +11,5 @@ WHERE
     SELECT 1 FROM OralQuestionSubject
     WHERE question_id = oq.id AND subject_text = $subject
   ))
+  AND ($startDate IS NULL OR oq.submission_date >= $startDate)
+  AND ($endDateExclusive IS NULL OR oq.submission_date < $endDateExclusive)

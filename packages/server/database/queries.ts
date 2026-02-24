@@ -41,6 +41,7 @@ export { default as govProposalYears } from "./queries/GOV_PROPOSAL_YEARS.sql";
 export { default as govProposalsCount } from "./queries/GOV_PROPOSALS_COUNT.sql";
 export { default as govProposalsList } from "./queries/GOV_PROPOSALS_LIST.sql";
 export { default as govProposalsSubjectsList } from "./queries/GOV_PROPOSALS_SUBJECTS_LIST.sql";
+export { default as hallituskaudet } from "./queries/HALLITUSKAUDET.sql";
 export { default as governmentMemberships } from "./queries/GOVERNMENT_MEMBERSHIPS.sql";
 export { default as importSourceTableSummary } from "./queries/IMPORT_SOURCE_TABLE_SUMMARY.sql";
 export { default as interpellationById } from "./queries/INTERPELLATION_BY_ID.sql";

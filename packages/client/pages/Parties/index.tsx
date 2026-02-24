@@ -18,6 +18,7 @@ import {
 } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { colors, spacing } from "#client/theme";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -57,6 +58,7 @@ type SortDirection = "asc" | "desc";
 const Parties = () => {
   const { t } = useTranslation();
   const themedColors = useThemedColors();
+  const { selectedHallituskausi } = useHallituskausi();
   const [parties, setParties] = useState<PartySummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,8 +69,42 @@ const Parties = () => {
   const [sortField, setSortField] = useState<SortField>("member_count");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
+  const asOfDate = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    if (!selectedHallituskausi) return today;
+    let value = selectedHallituskausi.endDate || today;
+    if (selectedHallituskausi.endDate) {
+      const [year, month, day] = selectedHallituskausi.endDate
+        .split("-")
+        .map((part) => Number(part));
+      const end = new Date(Date.UTC(year, month - 1, day));
+      end.setUTCDate(end.getUTCDate() - 1);
+      const previousDay = end.toISOString().slice(0, 10);
+      value =
+        previousDay >= selectedHallituskausi.startDate
+          ? previousDay
+          : selectedHallituskausi.startDate;
+    }
+    if (value < selectedHallituskausi.startDate) {
+      value = selectedHallituskausi.startDate;
+    }
+    if (selectedHallituskausi.endDate && value > selectedHallituskausi.endDate) {
+      value = selectedHallituskausi.endDate;
+    }
+    return value;
+  }, [selectedHallituskausi]);
+
   useEffect(() => {
-    fetch("/api/parties/summary")
+    const params = new URLSearchParams({ asOfDate });
+    if (selectedHallituskausi) {
+      params.set("startDate", selectedHallituskausi.startDate);
+      if (selectedHallituskausi.endDate) {
+        params.set("endDate", selectedHallituskausi.endDate);
+      }
+      params.set("governmentName", selectedHallituskausi.name);
+      params.set("governmentStartDate", selectedHallituskausi.startDate);
+    }
+    fetch(`/api/parties/summary?${params.toString()}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
@@ -81,7 +117,7 @@ const Parties = () => {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
+  }, [asOfDate, selectedHallituskausi]);
 
   const handleCardClick = (party: PartySummary) => {
     setSelectedParty(party);
@@ -179,6 +215,11 @@ const Parties = () => {
   return (
     <Box>
       <PageHeader title={t("parties.title")} subtitle={t("parties.subtitle")} />
+      {selectedHallituskausi && (
+        <Alert severity="info" sx={{ mb: spacing.md }}>
+          Rajattu hallituskauteen: {selectedHallituskausi.label}
+        </Alert>
+      )}
 
       <Grid container spacing={spacing.md} sx={{ mb: spacing.md }}>
         <Grid size={{ xs: 6, md: 3 }}>
@@ -619,6 +660,11 @@ const Parties = () => {
         open={dialogOpen}
         onClose={handleDialogClose}
         party={selectedParty}
+        asOfDate={asOfDate}
+        startDate={selectedHallituskausi?.startDate}
+        endDate={selectedHallituskausi?.endDate || undefined}
+        governmentName={selectedHallituskausi?.name}
+        governmentStartDate={selectedHallituskausi?.startDate}
       />
     </Box>
   );

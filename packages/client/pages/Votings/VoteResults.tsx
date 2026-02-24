@@ -23,6 +23,10 @@ import {
 } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
+import {
+  isDateWithinHallituskausi,
+  useHallituskausi,
+} from "#client/filters/HallituskausiContext";
 import { refs } from "#client/references";
 import { commonStyles } from "#client/theme";
 import { DataCard, VoteMarginBar } from "#client/theme/components";
@@ -817,6 +821,7 @@ export const VoteResults: React.FC<{
 }> = ({ query, focusVotingId, initialSessionFilter }) => {
   const { t } = useTranslation();
   const themedColors = useThemedColors();
+  const { selectedHallituskausi } = useHallituskausi();
   const voteColors = getVoteColors(themedColors);
 
   const [state, setState] = React.useState<SearchState>(emptyState);
@@ -846,6 +851,12 @@ export const VoteResults: React.FC<{
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const params = new URLSearchParams({ q: normalizedQuery });
+        if (selectedHallituskausi) {
+          params.set("startDate", selectedHallituskausi.startDate);
+          if (selectedHallituskausi.endDate) {
+            params.set("endDate", selectedHallituskausi.endDate);
+          }
+        }
         const res = await fetch(`/api/votings/search?${params.toString()}`, {
           signal: ac.signal,
         });
@@ -865,7 +876,7 @@ export const VoteResults: React.FC<{
 
     run();
     return () => ac.abort();
-  }, [normalizedQuery, t]);
+  }, [normalizedQuery, selectedHallituskausi, t]);
 
   React.useEffect(() => {
     if (!focusVotingId) {
@@ -936,6 +947,11 @@ export const VoteResults: React.FC<{
 
   const filtered = React.useMemo(() => {
     const rows = combinedRows.filter((row) => {
+      if (
+        selectedHallituskausi &&
+        !isDateWithinHallituskausi(row.start_time, selectedHallituskausi)
+      )
+        return false;
       if (phaseFilter !== "all" && row.section_processing_phase !== phaseFilter)
         return false;
       if (sessionFilter !== "all" && row.session_key !== sessionFilter)
@@ -943,7 +959,7 @@ export const VoteResults: React.FC<{
       return true;
     });
     return sortRows(rows, sortMode);
-  }, [combinedRows, phaseFilter, sessionFilter, sortMode]);
+  }, [combinedRows, phaseFilter, selectedHallituskausi, sessionFilter, sortMode]);
 
   /** Group votings by referenced document (e.g. "HE 45/2024 vp") */
   const grouped = React.useMemo(() => {
@@ -1020,6 +1036,11 @@ export const VoteResults: React.FC<{
         !focusVoting.error && (
           <Stack spacing={3}>
             <DataCard sx={{ p: 2.5 }}>
+              {selectedHallituskausi && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Rajattu hallituskauteen: {selectedHallituskausi.label}
+                </Alert>
+              )}
               <Box
                 sx={{
                   display: "grid",

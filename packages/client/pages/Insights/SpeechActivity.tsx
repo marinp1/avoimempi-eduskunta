@@ -24,6 +24,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { colors, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
 
@@ -46,12 +47,20 @@ interface SpeechActivityProps {
 export default function SpeechActivity({ onClose }: SpeechActivityProps) {
   const themedColors = useThemedColors();
   const { t } = useTranslation();
+  const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<SpeechActivityData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/analytics/speech-activity?limit=30")
+    const params = new URLSearchParams({ limit: "30" });
+    if (selectedHallituskausi) {
+      params.set("startDate", selectedHallituskausi.startDate);
+      if (selectedHallituskausi.endDate) {
+        params.set("endDate", selectedHallituskausi.endDate);
+      }
+    }
+    fetch(`/api/analytics/speech-activity?${params.toString()}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
@@ -64,7 +73,7 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
+  }, [selectedHallituskausi]);
 
   if (loading)
     return (
@@ -122,6 +131,11 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
       >
         {t("insights.speechActivity.description")}
       </Typography>
+      {selectedHallituskausi && (
+        <Alert severity="info" sx={{ mb: spacing.md }}>
+          Rajattu hallituskauteen: {selectedHallituskausi.label}
+        </Alert>
+      )}
 
       {data.length === 0 ? (
         <Alert severity="info">{t("insights.speechActivity.noData")}</Alert>

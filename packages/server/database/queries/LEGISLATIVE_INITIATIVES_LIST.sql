@@ -27,6 +27,8 @@ WHERE
     SELECT 1 FROM LegislativeInitiativeSubject
     WHERE initiative_id = li.id AND subject_text = $subject
   ))
+  AND ($startDate IS NULL OR li.submission_date >= $startDate)
+  AND ($endDateExclusive IS NULL OR li.submission_date < $endDateExclusive)
 GROUP BY li.id
 ORDER BY li.submission_date DESC, li.id DESC
 LIMIT $limit OFFSET $offset

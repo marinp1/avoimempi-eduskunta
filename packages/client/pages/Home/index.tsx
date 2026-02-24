@@ -25,6 +25,10 @@ import { useTranslation } from "react-i18next";
 import { DocumentCard, RelatedVotings } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
+import {
+  isDateWithinHallituskausi,
+  useHallituskausi,
+} from "#client/filters/HallituskausiContext";
 import type {
   MinutesContentReference,
   RollCallEntry,
@@ -84,6 +88,7 @@ type Member = {
 const Home = () => {
   const { t } = useTranslation();
   const themedColors = useThemedColors();
+  const { selectedHallituskausi } = useHallituskausi();
 
   const [sessions, setSessions] = useState<SessionWithSections[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
@@ -150,9 +155,15 @@ const Home = () => {
         setLoadingSessions(true);
         const datesRes = await fetch("/api/session-dates/completed");
         if (!datesRes.ok) throw new Error("Failed to fetch dates");
-        const dates: { date: string }[] = await datesRes.json();
+        const allDates: { date: string }[] = await datesRes.json();
+        const dates = selectedHallituskausi
+          ? allDates.filter((item) =>
+              isDateWithinHallituskausi(item.date, selectedHallituskausi),
+            )
+          : allDates;
         if (dates.length === 0) {
           setSessions([]);
+          setLatestDate(null);
           setLoadingSessions(false);
           return;
         }
@@ -175,7 +186,7 @@ const Home = () => {
       }
     };
     fetchLatestSession();
-  }, [t]);
+  }, [selectedHallituskausi, t]);
 
   // Fetch current composition
   useEffect(() => {
@@ -183,7 +194,24 @@ const Home = () => {
       try {
         setLoadingComposition(true);
         const today = new Date().toISOString().split("T")[0];
-        const res = await fetch(`/api/composition/${today}`);
+        let asOfDate = today;
+        if (selectedHallituskausi) {
+          const candidate =
+            latestDate ||
+            selectedHallituskausi.endDate ||
+            selectedHallituskausi.startDate;
+          asOfDate = candidate;
+          if (asOfDate < selectedHallituskausi.startDate) {
+            asOfDate = selectedHallituskausi.startDate;
+          }
+          if (
+            selectedHallituskausi.endDate &&
+            asOfDate > selectedHallituskausi.endDate
+          ) {
+            asOfDate = selectedHallituskausi.endDate;
+          }
+        }
+        const res = await fetch(`/api/composition/${asOfDate}`);
         if (!res.ok) throw new Error("Failed to fetch composition");
         const data: Member[] = await res.json();
         setMembers(data);
@@ -194,7 +222,7 @@ const Home = () => {
       }
     };
     fetchComposition();
-  }, []);
+  }, [latestDate, selectedHallituskausi]);
 
   // Composition stats
   const stats = React.useMemo(() => {

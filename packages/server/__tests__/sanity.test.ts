@@ -2,6 +2,7 @@ import { Database } from "bun:sqlite";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import * as queries from "../database/queries";
 import { EXPECTED_SANITY_TABLES } from "../database/sanity-queries";
 import {
   buildKnownDataExceptions,
@@ -25,6 +26,154 @@ const DB_EXISTS = existsSync(DB_PATH);
 
 let db: Database;
 let knownExceptions: KnownDataException[] = [];
+
+const addDays = (isoDate: string, days: number) => {
+  const [year, month, day] = isoDate.split("-").map((part) => Number(part));
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+};
+
+const toEndDateExclusive = (endDate: string | null) =>
+  endDate ? addDays(endDate, 1) : null;
+
+const todayIso = new Date().toISOString().slice(0, 10);
+
+interface OfficialGovernmentReference {
+  name: string;
+  startDate: string;
+  endDate: string | null;
+}
+
+/**
+ * Reference data source:
+ * - https://valtioneuvosto.fi/hallitukset-ja-ministerit/hallitukset
+ * - Orpo: https://valtioneuvosto.fi/hallitukset-ja-ministerit/hallitukset/-/gov/orpo
+ * - Marin: https://valtioneuvosto.fi/hallitukset-ja-ministerit/hallitukset/-/gov/marin
+ * - Sipilä: https://valtioneuvosto.fi/hallitukset-ja-ministerit/hallitukset/-/gov/sipila
+ */
+const parseFiDate = (value: string) => {
+  const [day, month, year] = value.split(".").map((part) => Number(part));
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.toISOString().slice(0, 10);
+};
+
+const OFFICIAL_GOVERNMENTS_RAW = `
+Orpo|20.6.2023|
+Marin|10.12.2019|20.6.2023
+Rinne|6.6.2019|10.12.2019
+Sipilä|29.5.2015|6.6.2019
+Stubb|24.6.2014|29.5.2015
+Katainen|22.6.2011|24.6.2014
+Kiviniemi|22.6.2010|22.6.2011
+Vanhanen II|19.4.2007|22.6.2010
+Vanhanen|24.6.2003|19.4.2007
+Jäätteenmäki|17.4.2003|24.6.2003
+Lipponen II|15.4.1999|17.4.2003
+Lipponen|13.4.1995|15.4.1999
+Aho|26.4.1991|13.4.1995
+Holkeri|30.4.1987|26.4.1991
+Sorsa IV|6.5.1983|30.4.1987
+Sorsa III|19.2.1982|6.5.1983
+Koivisto II|26.5.1979|19.2.1982
+Sorsa II|15.5.1977|26.5.1979
+Miettunen III|29.9.1976|15.5.1977
+Miettunen II|30.11.1975|29.9.1976
+Liinamaa|13.6.1975|30.11.1975
+Sorsa|4.9.1972|13.6.1975
+Paasio II|23.2.1972|4.9.1972
+Aura II|29.10.1971|23.2.1972
+Karjalainen II|15.7.1970|29.10.1971
+Aura|14.5.1970|15.7.1970
+Koivisto|22.3.1968|14.5.1970
+Paasio|27.5.1966|22.3.1968
+Virolainen|12.9.1964|27.5.1966
+Lehto|18.12.1963|12.9.1964
+Karjalainen|13.4.1962|18.12.1963
+Miettunen|14.7.1961|13.4.1962
+Sukselainen II|13.1.1959|14.7.1961
+Fagerholm III|29.8.1958|13.1.1959
+Kuuskoski|26.4.1958|29.8.1958
+von Fieandt|29.11.1957|26.4.1958
+Sukselainen|27.5.1957|29.11.1957
+Fagerholm II|3.3.1956|27.5.1957
+Kekkonen V|20.10.1954|3.3.1956
+Törngren|5.5.1954|20.10.1954
+Tuomioja|17.11.1953|5.5.1954
+Kekkonen IV|9.7.1953|17.11.1953
+Kekkonen III|20.9.1951|9.7.1953
+Kekkonen II|17.1.1951|20.9.1951
+Kekkonen|17.3.1950|17.1.1951
+Fagerholm|29.7.1948|17.3.1950
+Pekkala|26.3.1946|29.7.1948
+Paasikivi III|17.4.1945|26.3.1946
+Paasikivi II|17.11.1944|17.4.1945
+Castren U.|21.9.1944|17.11.1944
+Hackzell|8.8.1944|21.9.1944
+Linkomies|5.3.1943|8.8.1944
+Rangell|4.1.1941|5.3.1943
+Ryti II|27.3.1940|4.1.1941
+Ryti|1.12.1939|27.3.1940
+Cajander III|12.3.1937|1.12.1939
+Kallio IV|7.10.1936|12.3.1937
+Kivimäki|14.12.1932|7.10.1936
+Sunila II|21.3.1931|14.12.1932
+Svinhufvud II|4.7.1930|21.3.1931
+Kallio III|16.8.1929|4.7.1930
+Mantere|22.12.1928|16.8.1929
+Sunila|17.12.1927|22.12.1928
+Tanner|13.12.1926|17.12.1927
+Kallio II|31.12.1925|13.12.1926
+Tulenheimo|31.3.1925|31.12.1925
+Ingman II|31.5.1924|31.3.1925
+Cajander II|18.1.1924|31.5.1924
+Kallio|14.11.1922|18.1.1924
+Cajander|2.6.1922|14.11.1922
+Vennola II|9.4.1921|2.6.1922
+Erich|15.3.1920|9.4.1921
+Vennola|15.8.1919|15.3.1920
+Castren K.|17.4.1919|15.8.1919
+Ingman|27.11.1918|17.4.1919
+Paasikivi|27.5.1918|27.11.1918
+Svinhufvud|27.11.1917|27.5.1918
+`.trim();
+
+const OFFICIAL_GOVERNMENT_REFERENCES: OfficialGovernmentReference[] =
+  OFFICIAL_GOVERNMENTS_RAW.split("\n").map((line) => {
+    const [name, startFi, endFi] = line.split("|");
+    return {
+      name,
+      startDate: parseFiDate(startFi),
+      endDate: endFi ? parseFiDate(endFi) : null,
+    };
+  });
+
+const GOVERNMENT_NAME_ALIASES: Record<string, string> = {
+  Lipponen: "Lipponen I",
+};
+
+const resolveDbGovernmentName = (officialName: string) =>
+  GOVERNMENT_NAME_ALIASES[officialName] || officialName;
+
+// Documented in /GOVERNMENT_DATA_EXCEPTIONS.md
+const KNOWN_GOVERNMENT_RANGE_MISMATCHES = new Set([
+  "von Fieandt",
+  "Kekkonen IV",
+  "Kekkonen",
+  "Paasikivi III",
+  "Kallio IV",
+  "Kallio II",
+  "Ingman",
+]);
+
+// Documented in /GOVERNMENT_DATA_EXCEPTIONS.md
+const KNOWN_PARTY_SUMMARY_NO_COALITION = new Set([
+  "Aura II",
+  "Aura",
+  "Lehto",
+  "von Fieandt",
+  "Cajander",
+]);
 
 function expectIdsExplainedByKnownException(
   checkName: string,
@@ -819,6 +968,144 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
         )
         .get() as any;
       expect(c).toBe(0);
+    });
+  });
+
+  // ─── GOVERNMENT COMPOSITION REFERENCE CHECKS ───────────────
+
+  describe("Government composition reference checks", () => {
+    test("all official governments from valtioneuvosto exist with compatible names and ranges", () => {
+      const valuesSql = OFFICIAL_GOVERNMENT_REFERENCES.map((row) => {
+        const dbName = resolveDbGovernmentName(row.name).replaceAll("'", "''");
+        const endDateSql = row.endDate ? `'${row.endDate}'` : "NULL";
+        return `('${dbName}', '${row.startDate}', ${endDateSql})`;
+      }).join(",\n");
+
+      const mismatchRows = db
+        .query(
+          `WITH official(db_name, start_date, end_date) AS (
+             VALUES ${valuesSql}
+           ),
+           aggregated AS (
+             SELECT
+               TRIM(government) AS government,
+               MIN(start_date) AS start_date,
+               CASE
+                 WHEN SUM(CASE WHEN end_date IS NULL THEN 1 ELSE 0 END) > 0 THEN NULL
+                 ELSE MAX(end_date)
+               END AS end_date
+             FROM GovernmentMembership
+             WHERE government IS NOT NULL
+               AND TRIM(government) <> ''
+             GROUP BY TRIM(government)
+           )
+           SELECT
+             o.db_name,
+             o.start_date AS official_start,
+             o.end_date AS official_end,
+             a.start_date AS db_start,
+             a.end_date AS db_end
+           FROM official o
+           LEFT JOIN aggregated a ON a.government = o.db_name
+           WHERE a.government IS NULL
+             OR NOT (
+               (
+                 a.start_date = o.start_date
+                 OR ABS(JULIANDAY(a.start_date) - JULIANDAY(o.start_date)) <= 1
+                 OR (
+                   SUBSTR(a.start_date, 6, 5) IN ('01-01', '12-31')
+                   AND SUBSTR(a.start_date, 1, 4) = SUBSTR(o.start_date, 1, 4)
+                 )
+               )
+               AND
+               (
+                 (o.end_date IS NULL AND a.end_date IS NULL)
+                 OR (
+                   o.end_date IS NOT NULL
+                   AND a.end_date IS NOT NULL
+                   AND (
+                     a.end_date = o.end_date
+                     OR ABS(JULIANDAY(a.end_date) - JULIANDAY(o.end_date)) <= 1
+                     OR (
+                       SUBSTR(a.end_date, 6, 5) IN ('01-01', '12-31')
+                       AND SUBSTR(a.end_date, 1, 4) = SUBSTR(o.end_date, 1, 4)
+                     )
+                   )
+                 )
+               )
+             )`,
+        )
+        .all() as Array<{
+        db_name: string;
+        official_start: string;
+        official_end: string | null;
+        db_start: string | null;
+        db_end: string | null;
+      }>;
+
+      const unexpectedMismatches = mismatchRows.filter(
+        (row) => !KNOWN_GOVERNMENT_RANGE_MISMATCHES.has(row.db_name),
+      );
+      expect(unexpectedMismatches).toHaveLength(0);
+    });
+
+    test("PARTY_SUMMARY returns at least one coalition party for every official government", () => {
+      const stmt = db.prepare(queries.partySummary);
+      const governmentsWithNoCoalition: string[] = [];
+
+      for (const expected of OFFICIAL_GOVERNMENT_REFERENCES) {
+        const endDate = expected.endDate ?? todayIso;
+        const candidateAsOf = addDays(endDate, -1);
+        const asOfDate =
+          candidateAsOf >= expected.startDate ? candidateAsOf : expected.startDate;
+        const rows = stmt.all({
+          $asOfDate: asOfDate,
+          $startDate: expected.startDate,
+          $endDateExclusive: toEndDateExclusive(expected.endDate),
+          $governmentName: resolveDbGovernmentName(expected.name),
+          $governmentStartDate: expected.startDate,
+        }) as Array<{
+          is_in_government: number;
+        }>;
+
+        const coalitionCount = rows.filter(
+          (row) => row.is_in_government === 1,
+        ).length;
+        if (coalitionCount === 0) {
+          governmentsWithNoCoalition.push(expected.name);
+        }
+      }
+
+      stmt.finalize();
+
+      const unexpectedNoCoalition = governmentsWithNoCoalition.filter(
+        (name) => !KNOWN_PARTY_SUMMARY_NO_COALITION.has(name),
+      );
+      expect(unexpectedNoCoalition).toHaveLength(0);
+    });
+
+    test("every official government has minister role and ministry data", () => {
+      for (const expected of OFFICIAL_GOVERNMENT_REFERENCES) {
+        const windowEnd = expected.endDate ?? todayIso;
+        const { role_count, ministry_count } = db
+          .query(
+            `SELECT
+               SUM(CASE WHEN gm.name IS NOT NULL AND TRIM(gm.name) <> '' THEN 1 ELSE 0 END) AS role_count,
+               SUM(CASE WHEN gm.ministry IS NOT NULL AND TRIM(gm.ministry) <> '' THEN 1 ELSE 0 END) AS ministry_count
+             FROM GovernmentMembership gm
+             WHERE TRIM(gm.government) = $governmentName
+               AND gm.start_date <= $windowEnd
+               AND (gm.end_date IS NULL OR gm.end_date >= $windowStart)`,
+          )
+          .get({
+            $governmentName: resolveDbGovernmentName(expected.name),
+            $windowStart: expected.startDate,
+            $windowEnd: windowEnd,
+          }) as { role_count: number | null; ministry_count: number | null };
+
+        expect(role_count || 0).toBeGreaterThan(0);
+        expect(ministry_count || 0).toBeGreaterThan(0);
+      }
     });
   });
 
