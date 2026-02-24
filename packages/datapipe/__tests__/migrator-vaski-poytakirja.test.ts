@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { clearStatementCache } from "../migrator/utils";
 import type { VaskiEntry } from "../migrator/VaskiData/reader";
 import createSubMigrator from "../migrator/VaskiData/submigrators/pöytäkirja";
-import { clearStatementCache } from "../migrator/utils";
 import {
   createTestDb,
   seedSection,
@@ -173,7 +173,9 @@ describe("Vaski pöytäkirja submigrator", () => {
 
   beforeEach(() => {
     clearStatementCache();
-    overwriteLogDir = mkdtempSync(join(tmpdir(), "vaski-poytakirja-overwrite-"));
+    overwriteLogDir = mkdtempSync(
+      join(tmpdir(), "vaski-poytakirja-overwrite-"),
+    );
     reportLogDir = mkdtempSync(join(tmpdir(), "vaski-poytakirja-report-"));
     process.env.MIGRATOR_OVERWRITE_LOG_DIR = overwriteLogDir;
     process.env.MIGRATOR_REPORT_LOG_DIR = reportLogDir;
@@ -225,7 +227,9 @@ describe("Vaski pöytäkirja submigrator", () => {
     expect(other.minutes_match_mode).toBe("direct");
     expect(other.minutes_item_identifier).toBe(29133);
     expect(other.minutes_item_title).toBe("Nimenhuuto");
-    expect(other.minutes_related_document_identifier).toBe("EDK-2017-AK-104325");
+    expect(other.minutes_related_document_identifier).toBe(
+      "EDK-2017-AK-104325",
+    );
     expect(other.minutes_content_text).toContain("Toimitettiin nimenhuuto");
   });
 
@@ -261,7 +265,10 @@ describe("Vaski pöytäkirja submigrator", () => {
       .query(
         "SELECT document_identifier, document_type FROM SectionDocumentReference WHERE section_key = '2017/2/11' ORDER BY document_identifier",
       )
-      .all() as Array<{ document_identifier: string; document_type: string | null }>;
+      .all() as Array<{
+      document_identifier: string;
+      document_type: string | null;
+    }>;
 
     expect(refs).toHaveLength(4);
     expect(refs.map((row) => row.document_identifier)).toEqual([
@@ -270,12 +277,14 @@ describe("Vaski pöytäkirja submigrator", () => {
       "VAVM 1/2017 vp",
       "VAVM 2/2017 vp",
     ]);
-    expect(refs.find((row) => row.document_identifier === "HE 10/2017 vp")?.document_type).toBe(
-      "Hallituksen esitys",
-    );
-    expect(refs.find((row) => row.document_identifier === "VAVM 1/2017 vp")?.document_type).toBe(
-      "Valiokunnan mietintö",
-    );
+    expect(
+      refs.find((row) => row.document_identifier === "HE 10/2017 vp")
+        ?.document_type,
+    ).toBe("Hallituksen esitys");
+    expect(
+      refs.find((row) => row.document_identifier === "VAVM 1/2017 vp")
+        ?.document_type,
+    ).toBe("Valiokunnan mietintö");
   });
 
   test("uses MuuViite.ViiteTeksti as related document identifier fallback", async () => {
@@ -300,7 +309,10 @@ describe("Vaski pöytäkirja submigrator", () => {
       .query(
         "SELECT document_identifier, document_type FROM SectionDocumentReference WHERE section_key = '2017/2/11' ORDER BY document_identifier",
       )
-      .all() as Array<{ document_identifier: string; document_type: string | null }>;
+      .all() as Array<{
+      document_identifier: string;
+      document_type: string | null;
+    }>;
 
     expect(refs).toEqual([
       {
@@ -462,9 +474,7 @@ describe("Vaski pöytäkirja submigrator", () => {
     expect(speechContent.content).toContain("testipuheenvuoro");
 
     const section = db
-      .query(
-        "SELECT minutes_content_text FROM Section WHERE key = '2017/2/11'",
-      )
+      .query("SELECT minutes_content_text FROM Section WHERE key = '2017/2/11'")
       .get() as any;
     expect(section.minutes_content_text).toContain(
       "Eduskunta hyväksyi vapautuspyynnön.",

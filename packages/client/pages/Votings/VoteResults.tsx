@@ -1,14 +1,14 @@
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import InsightsIcon from "@mui/icons-material/Insights";
 import LaunchIcon from "@mui/icons-material/Launch";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   Alert,
   Box,
   Button,
   Chip,
-  Collapse,
   CircularProgress,
+  Collapse,
   InputLabel,
   Link,
   MenuItem,
@@ -278,10 +278,7 @@ const VotingRow: React.FC<{
         >
           {vote.n_yes} - {vote.n_no}
         </Typography>
-        <Typography
-          variant="caption"
-          sx={{ color: themedColors.textTertiary }}
-        >
+        <Typography variant="caption" sx={{ color: themedColors.textTertiary }}>
           ({vote.n_abstain} {String(t("votings.results.empty")).toLowerCase()},{" "}
           {vote.n_absent} {String(t("votings.results.absent")).toLowerCase()})
         </Typography>
@@ -353,7 +350,11 @@ const VotingRow: React.FC<{
           {vote.title}
         </Typography>
       )}
-      <Collapse in={!!onToggleDetails && isExpanded} timeout="auto" unmountOnExit>
+      <Collapse
+        in={!!onToggleDetails && isExpanded}
+        timeout="auto"
+        unmountOnExit
+      >
         <Box
           sx={{
             width: "100%",
@@ -367,15 +368,25 @@ const VotingRow: React.FC<{
           {detailsLoading && (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <CircularProgress size={12} />
-              <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+              <Typography
+                variant="caption"
+                sx={{ color: themedColors.textSecondary }}
+              >
                 Ladataan äänestyksen yksityiskohtia...
               </Typography>
             </Box>
           )}
           {!detailsLoading && details && (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
-              <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-                Äänestyksen kohde: {details.voting.context_title || details.voting.section_title || details.voting.title || "(ei otsikkoa)"}
+              <Typography
+                variant="caption"
+                sx={{ color: themedColors.textSecondary }}
+              >
+                Äänestyksen kohde:{" "}
+                {details.voting.context_title ||
+                  details.voting.section_title ||
+                  details.voting.title ||
+                  "(ei otsikkoa)"}
               </Typography>
               {details.voting.parliamentary_item && (
                 <Chip
@@ -386,8 +397,14 @@ const VotingRow: React.FC<{
                 />
               )}
               {details.governmentOpposition && (
-                <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-                  Hallitus: {details.governmentOpposition.government_yes} jaa / {details.governmentOpposition.government_no} ei, Oppositio: {details.governmentOpposition.opposition_yes} jaa / {details.governmentOpposition.opposition_no} ei
+                <Typography
+                  variant="caption"
+                  sx={{ color: themedColors.textSecondary }}
+                >
+                  Hallitus: {details.governmentOpposition.government_yes} jaa /{" "}
+                  {details.governmentOpposition.government_no} ei, Oppositio:{" "}
+                  {details.governmentOpposition.opposition_yes} jaa /{" "}
+                  {details.governmentOpposition.opposition_no} ei
                 </Typography>
               )}
               <VotingResultsTable
@@ -397,7 +414,10 @@ const VotingRow: React.FC<{
               {detailDocRefs.length > 0 && (
                 <Box>
                   {detailDocRefs.map((ref) => (
-                    <DocumentCard key={`${vote.id}-${ref.identifier}`} docRef={ref} />
+                    <DocumentCard
+                      key={`${vote.id}-${ref.identifier}`}
+                      docRef={ref}
+                    />
                   ))}
                 </Box>
               )}
@@ -576,8 +596,10 @@ const VotingCard: React.FC<{
               variant="caption"
               sx={{ color: themedColors.textTertiary }}
             >
-              ({vote.n_abstain} {String(t("votings.results.empty")).toLowerCase()},{" "}
-              {vote.n_absent} {String(t("votings.results.absent")).toLowerCase()})
+              ({vote.n_abstain}{" "}
+              {String(t("votings.results.empty")).toLowerCase()},{" "}
+              {vote.n_absent}{" "}
+              {String(t("votings.results.absent")).toLowerCase()})
             </Typography>
           </Box>
         </Box>
@@ -668,9 +690,9 @@ const VotingGroupCard: React.FC<{
   const [votingDetailsById, setVotingDetailsById] = React.useState<
     Record<number, VotingInlineDetails>
   >({});
-  const [loadingVotingDetails, setLoadingVotingDetails] = React.useState<Set<number>>(
-    new Set(),
-  );
+  const [loadingVotingDetails, setLoadingVotingDetails] = React.useState<
+    Set<number>
+  >(new Set());
 
   const allPassed = votes.every(isVotePassed);
   const anyPassed = votes.some(isVotePassed);
@@ -681,7 +703,8 @@ const VotingGroupCard: React.FC<{
       : themedColors.error;
 
   const fetchVotingDetails = async (votingId: number) => {
-    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId)) return;
+    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId))
+      return;
     setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
     try {
       const res = await fetch(`/api/votings/${votingId}/details`);
@@ -801,7 +824,9 @@ const VotingGroupCard: React.FC<{
             <VotingRow
               key={vote.id}
               vote={vote}
-              showTitle={vote.title !== null && vote.title !== getPrimaryTitle(first)}
+              showTitle={
+                vote.title !== null && vote.title !== getPrimaryTitle(first)
+              }
               themedColors={themedColors}
               voteColors={voteColors}
               isExpanded={expandedVotingIds.has(vote.id)}

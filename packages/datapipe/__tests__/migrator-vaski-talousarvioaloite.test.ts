@@ -3,14 +3,12 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import createSubMigrator from "../migrator/VaskiData/submigrators/talousarvioaloite";
 import { clearStatementCache } from "../migrator/utils";
 import type { VaskiEntry } from "../migrator/VaskiData/reader";
+import createSubMigrator from "../migrator/VaskiData/submigrators/talousarvioaloite";
 import { createTestDb } from "./helpers/setup-db";
 
-function makeAloiteRow(
-  overrides: Partial<VaskiEntry> = {},
-): VaskiEntry {
+function makeAloiteRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
   return {
     id: "9601",
     eduskuntaTunnus: "TAA 8/2024 vp",
@@ -26,16 +24,16 @@ function makeAloiteRow(
       Siirto: {
         SiirtoMetatieto: {
           JulkaisuMetatieto: {
-            Aihe: [
-              { AiheTeksti: "Valtiontalous", "@_muuTunnus": "yso:p1" },
-            ],
+            Aihe: [{ AiheTeksti: "Valtiontalous", "@_muuTunnus": "yso:p1" }],
           },
         },
         SiirtoAsiakirja: {
           RakenneAsiakirja: {
             EduskuntaAloite: {
               IdentifiointiOsa: {
-                Nimeke: { NimekeTeksti: "Talousarvioaloite määrärahan lisäämisestä" },
+                Nimeke: {
+                  NimekeTeksti: "Talousarvioaloite määrärahan lisäämisestä",
+                },
                 Toimija: {
                   Henkilo: {
                     "@_muuTunnus": "1001",
@@ -57,9 +55,7 @@ function makeAloiteRow(
   };
 }
 
-function makeKasittelyRow(
-  overrides: Partial<VaskiEntry> = {},
-): VaskiEntry {
+function makeKasittelyRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
   return {
     id: "9602",
     eduskuntaTunnus: "TAA 8/2024 vp",
@@ -77,7 +73,9 @@ function makeKasittelyRow(
           RakenneAsiakirja: {
             KasittelytiedotValtiopaivaasia: {
               IdentifiointiOsa: {
-                Nimeke: { NimekeTeksti: "Talousarvioaloite määrärahan lisäämisestä" },
+                Nimeke: {
+                  NimekeTeksti: "Talousarvioaloite määrärahan lisäämisestä",
+                },
                 Toimija: {
                   Henkilo: {
                     "@_muuTunnus": "1001",
@@ -205,11 +203,17 @@ describe("Vaski talousarvioaloite submigrator", () => {
   test("skips unsupported identifier and writes migration report", async () => {
     await migrateRow(makeAloiteRow({ eduskuntaTunnus: "LA 1/2024 vp" }));
 
-    const initiatives = db.query("SELECT id FROM LegislativeInitiative").all() as any[];
+    const initiatives = db
+      .query("SELECT id FROM LegislativeInitiative")
+      .all() as any[];
     expect(initiatives).toHaveLength(0);
 
-    const reportFiles = readdirSync(reportLogDir).filter((f) => f.endsWith(".json"));
+    const reportFiles = readdirSync(reportLogDir).filter((f) =>
+      f.endsWith(".json"),
+    );
     expect(reportFiles.length).toBeGreaterThan(0);
-    expect(reportFiles.some((f) => f.includes("invalid_parliament_identifier"))).toBe(true);
+    expect(
+      reportFiles.some((f) => f.includes("invalid_parliament_identifier")),
+    ).toBe(true);
   });
 });

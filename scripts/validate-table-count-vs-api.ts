@@ -1,5 +1,5 @@
-import { getStorage, listAllStorageKeys, StorageKeyBuilder } from "#storage";
 import { TableNames } from "#constants";
+import { getStorage, listAllStorageKeys, StorageKeyBuilder } from "#storage";
 import { getExactTableCountsByRows } from "#table-counts";
 
 type Stage = "raw" | "parsed";
@@ -70,7 +70,9 @@ function parseArgs(argv: string[]): Args {
   }
 
   if (!table) {
-    throw new Error("Missing required table name. Pass <TableName> or --table <TableName>.");
+    throw new Error(
+      "Missing required table name. Pass <TableName> or --table <TableName>.",
+    );
   }
 
   return { table, stage, pkName, timeoutMs, json };
@@ -99,7 +101,8 @@ Examples:
 }
 
 function toNumericId(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) return Math.trunc(value);
+  if (typeof value === "number" && Number.isFinite(value))
+    return Math.trunc(value);
   if (typeof value === "string") {
     const trimmed = value.trim();
     if (!/^-?\d+$/.test(trimmed)) return null;
@@ -127,7 +130,9 @@ async function fetchApiPkName(
   const url = `https://avoindata.eduskunta.fi/api/v1/tables/${table}/columns`;
   const resp = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
   if (!resp.ok) {
-    throw new Error(`Could not fetch table columns for ${table}: HTTP ${resp.status}`);
+    throw new Error(
+      `Could not fetch table columns for ${table}: HTTP ${resp.status}`,
+    );
   }
   const data = (await resp.json()) as { pkName?: string };
   if (!data.pkName) {
@@ -141,8 +146,15 @@ async function probeNextId(
   pkName: string,
   id: number,
   timeoutMs: number,
-): Promise<{ hasRow: boolean; returnedPk: number | null; rowCount: number; error?: string }> {
-  const url = new URL(`https://avoindata.eduskunta.fi/api/v1/tables/${table}/batch`);
+): Promise<{
+  hasRow: boolean;
+  returnedPk: number | null;
+  rowCount: number;
+  error?: string;
+}> {
+  const url = new URL(
+    `https://avoindata.eduskunta.fi/api/v1/tables/${table}/batch`,
+  );
   url.searchParams.set("pkName", pkName);
   url.searchParams.set("pkStartValue", String(id));
   url.searchParams.set("perPage", "1");
@@ -152,7 +164,12 @@ async function probeNextId(
       signal: AbortSignal.timeout(timeoutMs),
     });
     if (!resp.ok) {
-      return { hasRow: false, returnedPk: null, rowCount: 0, error: `HTTP ${resp.status}` };
+      return {
+        hasRow: false,
+        returnedPk: null,
+        rowCount: 0,
+        error: `HTTP ${resp.status}`,
+      };
     }
 
     const data = (await resp.json()) as {
@@ -166,7 +183,8 @@ async function probeNextId(
     }
 
     const pkIndex = data.columnNames.indexOf(pkName);
-    const returnedPk = pkIndex >= 0 ? toNumericId(data.rowData[0]?.[pkIndex]) : null;
+    const returnedPk =
+      pkIndex >= 0 ? toNumericId(data.rowData[0]?.[pkIndex]) : null;
     return { hasRow: true, returnedPk, rowCount: data.rowCount };
   } catch (error) {
     return {
@@ -192,7 +210,8 @@ async function main() {
     throw new Error(`No pages found under prefix: ${prefix}`);
   }
 
-  const resolvedPkName = args.pkName ?? (await fetchApiPkName(args.table, args.timeoutMs));
+  const resolvedPkName =
+    args.pkName ?? (await fetchApiPkName(args.table, args.timeoutMs));
 
   const pages = keys
     .map((k) => ({
@@ -278,19 +297,24 @@ async function main() {
     }
   }
 
-  const probe = maxId !== null
-    ? await probeNextId(args.table, resolvedPkName, maxId + 1, args.timeoutMs)
-    : null;
+  const probe =
+    maxId !== null
+      ? await probeNextId(args.table, resolvedPkName, maxId + 1, args.timeoutMs)
+      : null;
 
-  const diffRowsVsApi = apiRowCount !== null ? localRowsByRowData - apiRowCount : null;
-  const diffUniqueVsApi = apiRowCount !== null ? uniqueIds.size - apiRowCount : null;
+  const diffRowsVsApi =
+    apiRowCount !== null ? localRowsByRowData - apiRowCount : null;
+  const diffUniqueVsApi =
+    apiRowCount !== null ? uniqueIds.size - apiRowCount : null;
 
   const reasons: string[] = [];
   if (apiRowCount === null) {
     reasons.push("Table not found in API counts endpoint.");
   }
   if (lastPageHasMore === true) {
-    reasons.push("Local last page indicates hasMore=true, so scraping likely incomplete.");
+    reasons.push(
+      "Local last page indicates hasMore=true, so scraping likely incomplete.",
+    );
   }
   if (probe?.hasRow) {
     reasons.push(
@@ -298,20 +322,28 @@ async function main() {
     );
   }
   if (duplicateIds > 0) {
-    reasons.push(`Local data contains duplicate primary keys (${duplicateIds.toLocaleString()}).`);
+    reasons.push(
+      `Local data contains duplicate primary keys (${duplicateIds.toLocaleString()}).`,
+    );
   }
   if (invalidIds > 0) {
-    reasons.push(`Local data has non-numeric/invalid PK values (${invalidIds.toLocaleString()}).`);
+    reasons.push(
+      `Local data has non-numeric/invalid PK values (${invalidIds.toLocaleString()}).`,
+    );
   }
   if (pagesWithNoPkColumn > 0) {
-    reasons.push(`Some pages are missing the PK column (${pagesWithNoPkColumn.toLocaleString()} pages).`);
+    reasons.push(
+      `Some pages are missing the PK column (${pagesWithNoPkColumn.toLocaleString()} pages).`,
+    );
   }
   if (pagesWithRowCountMismatch > 0) {
     reasons.push(
       `Some pages have rowCount != rowData.length (${pagesWithRowCountMismatch.toLocaleString()} pages).`,
     );
   }
-  reasons.push("The API counts endpoint can be stale versus the current batch endpoint data.");
+  reasons.push(
+    "The API counts endpoint can be stale versus the current batch endpoint data.",
+  );
 
   const result = {
     table: args.table,
@@ -332,15 +364,16 @@ async function main() {
     maxId,
     lastPageNumber,
     lastPageHasMore,
-    probeFromNextId: maxId === null
-      ? null
-      : {
-          startAtId: maxId + 1,
-          hasRow: probe?.hasRow ?? false,
-          returnedPk: probe?.returnedPk ?? null,
-          rowCount: probe?.rowCount ?? 0,
-          error: probe?.error,
-        },
+    probeFromNextId:
+      maxId === null
+        ? null
+        : {
+            startAtId: maxId + 1,
+            hasRow: probe?.hasRow ?? false,
+            returnedPk: probe?.returnedPk ?? null,
+            rowCount: probe?.rowCount ?? 0,
+            error: probe?.error,
+          },
     diffRowsVsApi,
     diffUniqueVsApi,
     likelyReasons: reasons,
@@ -356,11 +389,17 @@ async function main() {
   console.log(`PK column:            ${result.pkName}`);
   console.log(`Pages scanned:        ${result.pagesScanned.toLocaleString()}`);
   console.log(`API row count:        ${result.apiRowCount ?? "n/a"}`);
-  console.log(`Local rows (rowData): ${result.localRowsByRowData.toLocaleString()}`);
-  console.log(`Local unique IDs:     ${result.localUniqueIds.toLocaleString()}`);
+  console.log(
+    `Local rows (rowData): ${result.localRowsByRowData.toLocaleString()}`,
+  );
+  console.log(
+    `Local unique IDs:     ${result.localUniqueIds.toLocaleString()}`,
+  );
   console.log(`Duplicate IDs:        ${result.duplicateIds.toLocaleString()}`);
   console.log(`Invalid IDs:          ${result.invalidIds.toLocaleString()}`);
-  console.log(`ID span:              ${result.minId ?? "-"} .. ${result.maxId ?? "-"}`);
+  console.log(
+    `ID span:              ${result.minId ?? "-"} .. ${result.maxId ?? "-"}`,
+  );
   console.log(`Last page hasMore:    ${result.lastPageHasMore ?? "unknown"}`);
   console.log(
     `Diff rows vs API:     ${result.diffRowsVsApi === null ? "n/a" : result.diffRowsVsApi.toLocaleString()}`,

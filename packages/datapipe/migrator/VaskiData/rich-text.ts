@@ -35,13 +35,19 @@ function isMetadataKey(key: string): boolean {
 }
 
 function isReferenceKey(key: string): boolean {
-  return key === REFERENCE_IDENTIFIER_KEY || key === REFERENCE_LABEL_KEY || key === REFERENCE_SOURCE_KEY;
+  return (
+    key === REFERENCE_IDENTIFIER_KEY ||
+    key === REFERENCE_LABEL_KEY ||
+    key === REFERENCE_SOURCE_KEY
+  );
 }
 
 function isParagraphContainerKey(key: string): boolean {
   if (key === "#text") return false;
-  if (INLINE_STYLE_ITALIC_KEYS.has(key) || INLINE_STYLE_BOLD_KEYS.has(key)) return false;
-  if (key === HEADING_KEY || key === INDENTED_KEY || key === TABLE_KEY) return false;
+  if (INLINE_STYLE_ITALIC_KEYS.has(key) || INLINE_STYLE_BOLD_KEYS.has(key))
+    return false;
+  if (key === HEADING_KEY || key === INDENTED_KEY || key === TABLE_KEY)
+    return false;
   if (key === "KappaleKooste") return true;
   if (key.endsWith("KappaleKooste")) return true;
   if (key === "JohdantoTeksti") return true;
@@ -79,7 +85,10 @@ function shouldInsertSpace(previous: string, current: string): boolean {
   const nextChar = current[0];
   if (!prevChar || !nextChar) return false;
   if (/\s/.test(prevChar) || /\s/.test(nextChar)) return false;
-  return /[0-9A-Za-z\u00c0-\u024f]/.test(prevChar) && /[0-9A-Za-z\u00c0-\u024f]/.test(nextChar);
+  return (
+    /[0-9A-Za-z\u00c0-\u024f]/.test(prevChar) &&
+    /[0-9A-Za-z\u00c0-\u024f]/.test(nextChar)
+  );
 }
 
 function normalizeArray<T>(value: T | T[] | null | undefined): T[] {
@@ -120,12 +129,15 @@ function pushTextInline(
 }
 
 function hasTextInline(inlines: RichTextInline[]): boolean {
-  return inlines.some((inline) => inline.type === "text" && inline.text.trim() !== "");
+  return inlines.some(
+    (inline) => inline.type === "text" && inline.text.trim() !== "",
+  );
 }
 
 function areAllTextInlinesBold(inlines: RichTextInline[]): boolean {
-  const textInlines = inlines.filter((inline): inline is Extract<RichTextInline, { type: "text" }> =>
-    inline.type === "text" && inline.text.trim() !== ""
+  const textInlines = inlines.filter(
+    (inline): inline is Extract<RichTextInline, { type: "text" }> =>
+      inline.type === "text" && inline.text.trim() !== "",
   );
   if (textInlines.length === 0) return false;
   return textInlines.every((inline) => inline.marks?.includes("bold"));
@@ -158,7 +170,12 @@ function collectInlines(
     if (isMetadataKey(key) || isReferenceKey(key)) continue;
 
     if (key === HEADING_KEY) {
-      collectInlines(value, inlines, [...marks, "bold", "italic"], localReference);
+      collectInlines(
+        value,
+        inlines,
+        [...marks, "bold", "italic"],
+        localReference,
+      );
       continue;
     }
 
@@ -238,10 +255,26 @@ function createTableCell(
 function extractRowsFromTableSection(
   section: unknown,
   header: boolean,
-): Array<{ cells: Array<{ inlines: RichTextInline[]; header?: boolean; colSpan?: number; rowSpan?: number }> }> {
-  const rows: Array<{ cells: Array<{ inlines: RichTextInline[]; header?: boolean; colSpan?: number; rowSpan?: number }> }> = [];
+): Array<{
+  cells: Array<{
+    inlines: RichTextInline[];
+    header?: boolean;
+    colSpan?: number;
+    rowSpan?: number;
+  }>;
+}> {
+  const rows: Array<{
+    cells: Array<{
+      inlines: RichTextInline[];
+      header?: boolean;
+      colSpan?: number;
+      rowSpan?: number;
+    }>;
+  }> = [];
   const sectionRecord = isRecord(section) ? section : null;
-  const rowNodes = sectionRecord ? normalizeArray(sectionRecord.row) : normalizeArray(section);
+  const rowNodes = sectionRecord
+    ? normalizeArray(sectionRecord.row)
+    : normalizeArray(section);
 
   for (const rowNode of rowNodes) {
     if (!isRecord(rowNode)) continue;
@@ -258,10 +291,7 @@ function extractRowsFromTableSection(
   return rows;
 }
 
-function pushTableBlocks(
-  blocks: RichTextBlock[],
-  tableNode: unknown,
-): boolean {
+function pushTableBlocks(blocks: RichTextBlock[], tableNode: unknown): boolean {
   let pushed = false;
   const tables = normalizeArray(tableNode);
 
@@ -354,23 +384,21 @@ function collectBlocks(
 
   const localReference = extractReference(node, inheritedReference);
   const entries = Object.entries(node);
-  const hasStructuredKeys = entries.some(([key]) =>
-    key === HEADING_KEY ||
-    key === INDENTED_KEY ||
-    key === TABLE_KEY ||
-    isParagraphContainerKey(key)
+  const hasStructuredKeys = entries.some(
+    ([key]) =>
+      key === HEADING_KEY ||
+      key === INDENTED_KEY ||
+      key === TABLE_KEY ||
+      isParagraphContainerKey(key),
   );
 
   if (!hasStructuredKeys) {
-    const hasNestedContent = entries.some(([
-      key,
-      value,
-    ]) =>
-      !isMetadataKey(key) &&
-      !isReferenceKey(key) &&
-      key !== "#text" &&
-      (Array.isArray(value) || isRecord(value)
-      )
+    const hasNestedContent = entries.some(
+      ([key, value]) =>
+        !isMetadataKey(key) &&
+        !isReferenceKey(key) &&
+        key !== "#text" &&
+        (Array.isArray(value) || isRecord(value)),
     );
 
     if (hasNestedContent) {
@@ -389,7 +417,13 @@ function collectBlocks(
     if (isMetadataKey(key) || isReferenceKey(key)) continue;
 
     if (key === HEADING_KEY) {
-      pushTextBlock(blocks, "heading", value, ["bold", "italic"], localReference);
+      pushTextBlock(
+        blocks,
+        "heading",
+        value,
+        ["bold", "italic"],
+        localReference,
+      );
       continue;
     }
 
@@ -423,7 +457,10 @@ function renderBlockText(block: RichTextBlock): string {
   if (block.type === "list") {
     const lines: string[] = [];
     for (const [index, item] of block.items.entries()) {
-      const text = item.inlines.map((inline) => renderInlineText(inline)).join("").trim();
+      const text = item.inlines
+        .map((inline) => renderInlineText(inline))
+        .join("")
+        .trim();
       if (!text) continue;
       const prefix = block.ordered ? `${index + 1}. ` : "- ";
       lines.push(`${prefix}${text}`);
@@ -435,7 +472,12 @@ function renderBlockText(block: RichTextBlock): string {
     const lines: string[] = [];
     for (const row of block.rows) {
       const cells = row.cells
-        .map((cell) => cell.inlines.map((inline) => renderInlineText(inline)).join("").trim())
+        .map((cell) =>
+          cell.inlines
+            .map((inline) => renderInlineText(inline))
+            .join("")
+            .trim(),
+        )
         .filter((cellText) => cellText !== "");
       if (cells.length > 0) {
         lines.push(cells.join(" | "));
@@ -444,7 +486,10 @@ function renderBlockText(block: RichTextBlock): string {
     return lines.join("\n");
   }
 
-  return block.inlines.map((inline) => renderInlineText(inline)).join("").trim();
+  return block.inlines
+    .map((inline) => renderInlineText(inline))
+    .join("")
+    .trim();
 }
 
 export type RichTextConversionResult = {
@@ -453,7 +498,9 @@ export type RichTextConversionResult = {
   plainText: string | null;
 };
 
-export function convertVaskiNodeToRichText(node: unknown): RichTextConversionResult {
+export function convertVaskiNodeToRichText(
+  node: unknown,
+): RichTextConversionResult {
   const blocks: RichTextBlock[] = [];
   collectBlocks(node, blocks, "paragraph", null);
 

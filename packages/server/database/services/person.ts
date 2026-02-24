@@ -6,10 +6,13 @@ export const fetchRepresentativePage = async (
   params: { page: number; limit: number },
 ) => {
   const offset = (params.page - 1) * params.limit;
-  const stmt = db.prepare<DatabaseTables.Representative, {
-    $limit: number;
-    $offset: number;
-  }>(queries.representativesPaginated);
+  const stmt = db.prepare<
+    DatabaseTables.Representative,
+    {
+      $limit: number;
+      $offset: number;
+    }
+  >(queries.representativesPaginated);
   const data = stmt.all({ $limit: params.limit, $offset: offset });
   stmt.finalize();
   return data;

@@ -2,9 +2,10 @@ import type { Database } from "bun:sqlite";
 import * as queries from "../queries";
 
 export const queryVotings = (db: Database, searchQuery: string) => {
-  const stmt = db.prepare<DatabaseQueries.VotingSearchResult, { $query: string }>(
-    queries.votingsSearch,
-  );
+  const stmt = db.prepare<
+    DatabaseQueries.VotingSearchResult,
+    { $query: string }
+  >(queries.votingsSearch);
   const data = stmt.all({ $query: searchQuery });
   stmt.finalize();
   return data;
@@ -98,9 +99,10 @@ export const fetchVotingInlineDetails = (db: Database, votingId: number) => {
 };
 
 export const fetchVotingsByDocument = (db: Database, identifier: string) => {
-  const stmt = db.prepare<DatabaseQueries.VotingSearchResult, { $identifier: string }>(
-    queries.votingsByDocument,
-  );
+  const stmt = db.prepare<
+    DatabaseQueries.VotingSearchResult,
+    { $identifier: string }
+  >(queries.votingsByDocument);
   const data = stmt.all({ $identifier: identifier });
   stmt.finalize();
   return data;

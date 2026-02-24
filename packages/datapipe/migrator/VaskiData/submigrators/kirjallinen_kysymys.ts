@@ -2,7 +2,7 @@ import type { Database } from "bun:sqlite";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { VaskiEntry } from "../reader";
-import { readVaskiRowsByDocumentType, readVaskiIndex } from "../reader";
+import { readVaskiIndex, readVaskiRowsByDocumentType } from "../reader";
 import { convertVaskiNodeToRichText } from "../rich-text";
 
 function normalizeText(value: unknown): string | null {
@@ -33,7 +33,9 @@ function parseOptionalInteger(
   if (!normalized) return null;
   const parsed = Number.parseInt(normalized, 10);
   if (Number.isNaN(parsed)) {
-    throw new Error(`Invalid integer in ${fieldName}${suffix}: '${normalized}'`);
+    throw new Error(
+      `Invalid integer in ${fieldName}${suffix}: '${normalized}'`,
+    );
   }
   return parsed;
 }
@@ -50,15 +52,19 @@ function writeMigrationReport(
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const baseDir =
     process.env.MIGRATOR_REPORT_LOG_DIR ||
-    join(process.cwd(), "data", "migration-reports", "VaskiData", "kirjallinen_kysymys");
+    join(
+      process.cwd(),
+      "data",
+      "migration-reports",
+      "VaskiData",
+      "kirjallinen_kysymys",
+    );
   mkdirSync(baseDir, { recursive: true });
 
   const id = normalizeText(row.id) || "unknown-id";
-  const fileName = [
-    timestamp,
-    toSafeFilePart(reason),
-    toSafeFilePart(id),
-  ].join("__");
+  const fileName = [timestamp, toSafeFilePart(reason), toSafeFilePart(id)].join(
+    "__",
+  );
 
   const payload = {
     reason,
@@ -69,7 +75,11 @@ function writeMigrationReport(
     source: row._source || null,
   };
 
-  writeFileSync(join(baseDir, `${fileName}.json`), JSON.stringify(payload, null, 2), "utf8");
+  writeFileSync(
+    join(baseDir, `${fileName}.json`),
+    JSON.stringify(payload, null, 2),
+    "utf8",
+  );
 }
 
 function parseParliamentIdentifier(eduskuntaTunnus: unknown): {
@@ -125,8 +135,13 @@ function collectTextFragments(node: unknown, output: string[]): void {
   }
 
   if (typeof node === "object") {
-    for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
-      if (typeof value === "string" && (key === "KappaleKooste" || key.endsWith("Teksti"))) {
+    for (const [key, value] of Object.entries(
+      node as Record<string, unknown>,
+    )) {
+      if (
+        typeof value === "string" &&
+        (key === "KappaleKooste" || key.endsWith("Teksti"))
+      ) {
         const normalized = normalizeText(value);
         if (normalized) output.push(normalized);
         continue;
@@ -185,32 +200,47 @@ function parseKasittelytiedot(
 
   const identifiointiOsa = kasittely.IdentifiointiOsa || {};
   const title = normalizeText(identifiointiOsa.Nimeke?.NimekeTeksti);
-  const submission_date = normalizeText(kasittely["@_laadintaPvm"]) ||
+  const submission_date =
+    normalizeText(kasittely["@_laadintaPvm"]) ||
     normalizeText(identifiointiOsa.LaadintaPvmTeksti);
 
   const toimija = identifiointiOsa.Toimija;
   const henkilo = toimija?.Henkilo;
-  const first_signer_person_id = henkilo ? parseOptionalInteger(henkilo["@_muuTunnus"], "first_signer_person_id", context) : null;
+  const first_signer_person_id = henkilo
+    ? parseOptionalInteger(
+        henkilo["@_muuTunnus"],
+        "first_signer_person_id",
+        context,
+      )
+    : null;
   const first_signer_first_name = normalizeText(henkilo?.EtuNimi);
   const first_signer_last_name = normalizeText(henkilo?.SukuNimi);
   const first_signer_party = normalizeText(henkilo?.LisatietoTeksti);
 
   const paatos = kasittely.EduskuntakasittelyPaatosKuvaus;
   const decision_outcome = normalizeText(paatos?.EduskuntakasittelyPaatosNimi);
-  const decision_outcome_code = normalizeText(paatos?.["@_eduskuntakasittelyPaatosKoodi"]);
+  const decision_outcome_code = normalizeText(
+    paatos?.["@_eduskuntakasittelyPaatosKoodi"],
+  );
 
-  const latest_stage_code = normalizeText(kasittely["@_viimeisinYleinenKasittelyvaiheKoodi"]);
+  const latest_stage_code = normalizeText(
+    kasittely["@_viimeisinYleinenKasittelyvaiheKoodi"],
+  );
   const end_date = normalizeText(kasittely["@_paattymisPvm"]);
 
   const stages: WrittenQuestionStage[] = [];
   let stageOrder = 0;
-  const yleinenVaiheet = normalizeArray<Record<string, any>>(kasittely.YleinenKasittelyvaihe);
+  const yleinenVaiheet = normalizeArray<Record<string, any>>(
+    kasittely.YleinenKasittelyvaihe,
+  );
   for (const vaihe of yleinenVaiheet) {
     if (!vaihe || typeof vaihe !== "object") continue;
     const stageTitle = normalizeText(vaihe.OtsikkoTeksti);
     const stageCode = normalizeText(vaihe["@_yleinenKasittelyvaiheKoodi"]);
 
-    const toimenpiteet = normalizeArray<Record<string, any>>(vaihe.ToimenpideJulkaisu);
+    const toimenpiteet = normalizeArray<Record<string, any>>(
+      vaihe.ToimenpideJulkaisu,
+    );
     for (const toimenpide of toimenpiteet) {
       if (!toimenpide || typeof toimenpide !== "object") continue;
       stageOrder++;
@@ -227,10 +257,14 @@ function parseKasittelytiedot(
         }
         const fraasiPaatos = fraasi.FraasiPaatos;
         if (fraasiPaatos) {
-          collectTextFragments(fraasiPaatos.FraasiPaatosKappaleKooste, descParts);
+          collectTextFragments(
+            fraasiPaatos.FraasiPaatosKappaleKooste,
+            descParts,
+          );
         }
       }
-      const eventDescription = descParts.length > 0 ? descParts.join("\n\n") : null;
+      const eventDescription =
+        descParts.length > 0 ? descParts.join("\n\n") : null;
 
       stages.push({
         stage_order: stageOrder,
@@ -269,9 +303,15 @@ function parseKasittelytiedot(
 
   let co_signer_count: number | null = null;
   for (const vaihe of yleinenVaiheet) {
-    const toimenpiteet = normalizeArray<Record<string, any>>(vaihe?.ToimenpideJulkaisu);
+    const toimenpiteet = normalizeArray<Record<string, any>>(
+      vaihe?.ToimenpideJulkaisu,
+    );
     for (const toimenpide of toimenpiteet) {
-      const count = parseOptionalInteger(toimenpide?.MuuAllekirjoittajaLkm, "co_signer_count", context);
+      const count = parseOptionalInteger(
+        toimenpide?.MuuAllekirjoittajaLkm,
+        "co_signer_count",
+        context,
+      );
       if (count !== null) {
         co_signer_count = count;
         break;
@@ -320,9 +360,11 @@ function parseKysymys(
   }
 
   const meta = getMeta(row);
-  const identifiointiOsa = meta?.IdentifiointiOsa || kysymys?.IdentifiointiOsa || {};
+  const identifiointiOsa =
+    meta?.IdentifiointiOsa || kysymys?.IdentifiointiOsa || {};
   const title = normalizeText(identifiointiOsa.Nimeke?.NimekeTeksti);
-  const submission_date = normalizeText(identifiointiOsa["@_laadintaPvm"]) ||
+  const submission_date =
+    normalizeText(identifiointiOsa["@_laadintaPvm"]) ||
     normalizeText(meta?.["@_laadintaPvm"]);
 
   const questionParts: string[] = [];
@@ -348,20 +390,30 @@ function parseKysymys(
     const johdanto = normalizeText(ponsiOsa.JohdantoTeksti);
     if (johdanto) questionParts.push(johdanto);
 
-    const sisennetyt = normalizeArray<Record<string, any>>(ponsiOsa.SisennettyKappaleKooste);
+    const sisennetyt = normalizeArray<Record<string, any>>(
+      ponsiOsa.SisennettyKappaleKooste,
+    );
     for (const item of sisennetyt) {
-      const text = normalizeText(item?.KursiiviTeksti) || normalizeText(item?.KappaleKooste);
+      const text =
+        normalizeText(item?.KursiiviTeksti) ||
+        normalizeText(item?.KappaleKooste);
       if (text) questionParts.push(text);
     }
   }
-  const question_text = questionParts.length > 0 ? questionParts.join("\n\n") : null;
-  const questionRichText = convertVaskiNodeToRichText([kysymys.PerusteluOsa, kysymys.PonsiOsa]);
+  const question_text =
+    questionParts.length > 0 ? questionParts.join("\n\n") : null;
+  const questionRichText = convertVaskiNodeToRichText([
+    kysymys.PerusteluOsa,
+    kysymys.PonsiOsa,
+  ]);
   const question_rich_text = questionRichText.json;
 
   const signers: WrittenQuestionSigner[] = [];
   const allekirjoitusOsa = kysymys.AllekirjoitusOsa;
   if (allekirjoitusOsa) {
-    const allekirjoittajat = normalizeArray<Record<string, any>>(allekirjoitusOsa.Allekirjoittaja);
+    const allekirjoittajat = normalizeArray<Record<string, any>>(
+      allekirjoitusOsa.Allekirjoittaja,
+    );
     for (const [index, allekirjoittaja] of allekirjoittajat.entries()) {
       const henkilo = allekirjoittaja?.Henkilo;
       if (!henkilo) continue;
@@ -371,13 +423,18 @@ function parseKysymys(
       if (!firstName || !lastName) continue;
 
       const isFirst =
-        normalizeText(allekirjoittaja["@_allekirjoitusLuokitusKoodi"]) === "EnsimmainenAllekirjoittaja"
+        normalizeText(allekirjoittaja["@_allekirjoitusLuokitusKoodi"]) ===
+        "EnsimmainenAllekirjoittaja"
           ? 1
           : 0;
 
       signers.push({
         signer_order: index + 1,
-        person_id: parseOptionalInteger(henkilo["@_muuTunnus"], "person_id", context),
+        person_id: parseOptionalInteger(
+          henkilo["@_muuTunnus"],
+          "person_id",
+          context,
+        ),
         first_name: firstName,
         last_name: lastName,
         party: normalizeText(henkilo.LisatietoTeksti),
@@ -386,7 +443,8 @@ function parseKysymys(
     }
   }
 
-  const first = signers.find((s) => s.is_first_signer === 1) || signers[0] || null;
+  const first =
+    signers.find((s) => s.is_first_signer === 1) || signers[0] || null;
 
   const subjects: WrittenQuestionSubject[] = [];
   const aiheet = normalizeArray<Record<string, any>>(meta?.Aihe);
@@ -445,17 +503,23 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
      RETURNING id`,
   );
 
-  const deleteSigners = db.prepare("DELETE FROM WrittenQuestionSigner WHERE question_id = ?");
+  const deleteSigners = db.prepare(
+    "DELETE FROM WrittenQuestionSigner WHERE question_id = ?",
+  );
   const insertSigner = db.prepare(
     "INSERT INTO WrittenQuestionSigner (question_id, signer_order, person_id, first_name, last_name, party, is_first_signer) VALUES (?, ?, ?, ?, ?, ?, ?)",
   );
 
-  const deleteStages = db.prepare("DELETE FROM WrittenQuestionStage WHERE question_id = ?");
+  const deleteStages = db.prepare(
+    "DELETE FROM WrittenQuestionStage WHERE question_id = ?",
+  );
   const insertStage = db.prepare(
     "INSERT INTO WrittenQuestionStage (question_id, stage_order, stage_title, stage_code, event_date, event_title, event_description) VALUES (?, ?, ?, ?, ?, ?, ?)",
   );
 
-  const deleteSubjects = db.prepare("DELETE FROM WrittenQuestionSubject WHERE question_id = ?");
+  const deleteSubjects = db.prepare(
+    "DELETE FROM WrittenQuestionSubject WHERE question_id = ?",
+  );
   const insertSubject = db.prepare(
     "INSERT OR IGNORE INTO WrittenQuestionSubject (question_id, subject_text) VALUES (?, ?)",
   );
@@ -502,7 +566,11 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
       const context = `row id=${row.id}, ${parsed.identifier}`;
       const id = parseOptionalInteger(row.id, "id", context);
       if (id === null) {
-        writeMigrationReport(row, "invalid_id", `Could not parse numeric id from '${row.id}'`);
+        writeMigrationReport(
+          row,
+          "invalid_id",
+          `Could not parse numeric id from '${row.id}'`,
+        );
         return;
       }
 
@@ -552,7 +620,8 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
             sourcePath,
           );
 
-          const questionId = (questionRow as { id: number } | undefined)?.id ?? id;
+          const questionId =
+            (questionRow as { id: number } | undefined)?.id ?? id;
 
           linkVaskiDocument.run(id, questionId);
           if (data.title) updateVaskiTitle.run(data.title, id);
@@ -602,7 +671,8 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
             sourcePath,
           );
 
-          const questionId = (questionRow as { id: number } | undefined)?.id ?? id;
+          const questionId =
+            (questionRow as { id: number } | undefined)?.id ?? id;
 
           linkVaskiDocument.run(id, questionId);
           if (data.title) updateVaskiTitle.run(data.title, id);
@@ -638,7 +708,10 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
 
       try {
         const index = await readVaskiIndex();
-        for await (const row of readVaskiRowsByDocumentType("vastaus_kirjalliseen_kysymykseen", index)) {
+        for await (const row of readVaskiRowsByDocumentType(
+          "vastaus_kirjalliseen_kysymykseen",
+          index,
+        )) {
           const meta = getMeta(row);
           const identOsa = meta?.IdentifiointiOsa;
           if (!identOsa) {
@@ -679,10 +752,14 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
           processedCount++;
         }
       } catch (error) {
-        console.error(`[kirjallinen_kysymys] Error processing KKV answers: ${error}`);
+        console.error(
+          `[kirjallinen_kysymys] Error processing KKV answers: ${error}`,
+        );
       }
 
-      console.log(`[kirjallinen_kysymys] KKV answers: ${processedCount} linked, ${skippedCount} skipped`);
+      console.log(
+        `[kirjallinen_kysymys] KKV answers: ${processedCount} linked, ${skippedCount} skipped`,
+      );
       insertQuestion.finalize();
       deleteSigners.finalize();
       insertSigner.finalize();

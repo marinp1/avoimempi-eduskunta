@@ -6,7 +6,10 @@ const VASKI_MIGRATOR_PATH = join(
   import.meta.dirname,
   "../migrator/VaskiData/migrator.ts",
 );
-const SUBMIGRATORS_DIR = join(import.meta.dirname, "../migrator/VaskiData/submigrators");
+const SUBMIGRATORS_DIR = join(
+  import.meta.dirname,
+  "../migrator/VaskiData/submigrators",
+);
 const NIMENHUUTORAPORTTI_PATH = join(
   import.meta.dirname,
   "../migrator/VaskiData/submigrators/nimenhuutoraportti.ts",
@@ -26,7 +29,9 @@ describe("Migrator SQL pattern regressions", () => {
   });
 
   test("submigrators avoid post-upsert SELECT id round-trips", () => {
-    const files = readdirSync(SUBMIGRATORS_DIR).filter((file) => file.endsWith(".ts"));
+    const files = readdirSync(SUBMIGRATORS_DIR).filter((file) =>
+      file.endsWith(".ts"),
+    );
 
     for (const file of files) {
       const source = readFileSync(join(SUBMIGRATORS_DIR, file), "utf8");
@@ -38,9 +43,7 @@ describe("Migrator SQL pattern regressions", () => {
 
   test("roll call migrator does not run INSERT INTO RollCallEntry inside loops via db.run", () => {
     const source = readFileSync(NIMENHUUTORAPORTTI_PATH, "utf8");
-    expect(source).not.toMatch(
-      /db\.run\(\s*"INSERT INTO RollCallEntry\s*\(/,
-    );
+    expect(source).not.toMatch(/db\.run\(\s*"INSERT INTO RollCallEntry\s*\(/);
   });
 
   test("minutes section resolver does not order by key and limits ambiguity checks", () => {

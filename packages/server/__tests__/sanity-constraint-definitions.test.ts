@@ -2,11 +2,11 @@ import type { Database } from "bun:sqlite";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { SanityCheckService } from "../services/sanity-checks";
 import {
   getSanityConstraintDefinitionSourcePath,
   getSanityConstraintDefinitions,
 } from "../services/sanity-constraint-definitions";
-import { SanityCheckService } from "../services/sanity-checks";
 import { createTestDb, seedFullDataset } from "./helpers/setup-db";
 
 let db: Database;
@@ -56,7 +56,9 @@ describe("Sanity constraint definitions", () => {
     const result = await service.runAllChecks();
     const definitions = getSanityConstraintDefinitions();
     const emittedNames = new Set(result.checks.map((check) => check.name));
-    const definitionNames = new Set(definitions.map((definition) => definition.name));
+    const definitionNames = new Set(
+      definitions.map((definition) => definition.name),
+    );
 
     const missingDefinition = result.checks.filter(
       (check) => !check.constraintId,

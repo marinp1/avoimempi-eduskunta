@@ -13,8 +13,8 @@ import {
   type KnownDataException,
 } from "./known-data-exceptions";
 import {
-  getSanityConstraintDefinitionsByName,
   getSanityConstraintDefinitionSourcePath,
+  getSanityConstraintDefinitionsByName,
 } from "./sanity-constraint-definitions";
 
 export interface SanityCheck {

@@ -183,9 +183,7 @@ const server = Bun.serve<{
     },
 
     "/api/votings/by-document/:identifier": {
-      GET: async (
-        req: BunRequest<"/api/votings/by-document/:identifier">,
-      ) => {
+      GET: async (req: BunRequest<"/api/votings/by-document/:identifier">) => {
         const data = await db.fetchVotingsByDocument({
           identifier: decodeURIComponent(req.params.identifier),
         });
@@ -231,7 +229,9 @@ const server = Bun.serve<{
             { status: 400 },
           );
         }
-        const details = await db.fetchVotingInlineDetails({ id: req.params.id });
+        const details = await db.fetchVotingInlineDetails({
+          id: req.params.id,
+        });
         if (!details) {
           return Response.json(
             { message: "Voting not found" },
@@ -586,7 +586,13 @@ const server = Bun.serve<{
         const subject = searchParams.get("subject") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
-        const data = await db.fetchInterpellations({ query, year, subject, page, limit });
+        const data = await db.fetchInterpellations({
+          query,
+          year,
+          subject,
+          page,
+          limit,
+        });
         return Response.json(data);
       },
     },
@@ -612,7 +618,8 @@ const server = Bun.serve<{
         const data = await db.fetchInterpellationByIdentifier({
           identifier: decodeURIComponent(req.params.identifier),
         });
-        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        if (!data)
+          return Response.json({ message: "Not found" }, { status: 404 });
         return Response.json(data);
       },
     },
@@ -620,7 +627,8 @@ const server = Bun.serve<{
     "/api/interpellations/:id": {
       GET: async (req: BunRequest<"/api/interpellations/:id">) => {
         const data = await db.fetchInterpellationById({ id: req.params.id });
-        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        if (!data)
+          return Response.json({ message: "Not found" }, { status: 404 });
         return Response.json(data);
       },
     },
@@ -635,7 +643,13 @@ const server = Bun.serve<{
         const subject = searchParams.get("subject") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
-        const data = await db.fetchGovernmentProposals({ query, year, subject, page, limit });
+        const data = await db.fetchGovernmentProposals({
+          query,
+          year,
+          subject,
+          page,
+          limit,
+        });
         return Response.json(data);
       },
     },
@@ -661,15 +675,19 @@ const server = Bun.serve<{
         const data = await db.fetchGovernmentProposalByIdentifier({
           identifier: decodeURIComponent(req.params.identifier),
         });
-        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        if (!data)
+          return Response.json({ message: "Not found" }, { status: 404 });
         return Response.json(data);
       },
     },
 
     "/api/government-proposals/:id": {
       GET: async (req: BunRequest<"/api/government-proposals/:id">) => {
-        const data = await db.fetchGovernmentProposalById({ id: req.params.id });
-        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        const data = await db.fetchGovernmentProposalById({
+          id: req.params.id,
+        });
+        if (!data)
+          return Response.json({ message: "Not found" }, { status: 404 });
         return Response.json(data);
       },
     },
@@ -684,7 +702,13 @@ const server = Bun.serve<{
         const subject = searchParams.get("subject") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
-        const data = await db.fetchWrittenQuestions({ query, year, subject, page, limit });
+        const data = await db.fetchWrittenQuestions({
+          query,
+          year,
+          subject,
+          page,
+          limit,
+        });
         return Response.json(data);
       },
     },
@@ -710,7 +734,8 @@ const server = Bun.serve<{
         const data = await db.fetchWrittenQuestionByIdentifier({
           identifier: decodeURIComponent(req.params.identifier),
         });
-        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        if (!data)
+          return Response.json({ message: "Not found" }, { status: 404 });
         return Response.json(data);
       },
     },
@@ -718,7 +743,8 @@ const server = Bun.serve<{
     "/api/written-questions/:id": {
       GET: async (req: BunRequest<"/api/written-questions/:id">) => {
         const data = await db.fetchWrittenQuestionById({ id: req.params.id });
-        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        if (!data)
+          return Response.json({ message: "Not found" }, { status: 404 });
         return Response.json(data);
       },
     },
@@ -733,7 +759,13 @@ const server = Bun.serve<{
         const subject = searchParams.get("subject") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
-        const data = await db.fetchOralQuestions({ query, year, subject, page, limit });
+        const data = await db.fetchOralQuestions({
+          query,
+          year,
+          subject,
+          page,
+          limit,
+        });
         return Response.json(data);
       },
     },
@@ -759,7 +791,8 @@ const server = Bun.serve<{
         const data = await db.fetchOralQuestionByIdentifier({
           identifier: decodeURIComponent(req.params.identifier),
         });
-        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        if (!data)
+          return Response.json({ message: "Not found" }, { status: 404 });
         return Response.json(data);
       },
     },
@@ -767,7 +800,8 @@ const server = Bun.serve<{
     "/api/oral-questions/:id": {
       GET: async (req: BunRequest<"/api/oral-questions/:id">) => {
         const data = await db.fetchOralQuestionById({ id: req.params.id });
-        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        if (!data)
+          return Response.json({ message: "Not found" }, { status: 404 });
         return Response.json(data);
       },
     },
@@ -779,8 +813,10 @@ const server = Bun.serve<{
         const { searchParams } = new URL(req.url);
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
-        const sourceCommittee = searchParams.get("sourceCommittee") || undefined;
-        const recipientCommittee = searchParams.get("recipientCommittee") || undefined;
+        const sourceCommittee =
+          searchParams.get("sourceCommittee") || undefined;
+        const recipientCommittee =
+          searchParams.get("recipientCommittee") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
         const data = await db.fetchCommitteeReports({
@@ -807,7 +843,8 @@ const server = Bun.serve<{
         const { searchParams } = new URL(req.url);
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
-        const recipientCommittee = searchParams.get("recipientCommittee") || undefined;
+        const recipientCommittee =
+          searchParams.get("recipientCommittee") || undefined;
         const data = await db.fetchCommitteeReportSourceCommittees({
           query,
           year,
@@ -822,7 +859,8 @@ const server = Bun.serve<{
         const { searchParams } = new URL(req.url);
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
-        const sourceCommittee = searchParams.get("sourceCommittee") || undefined;
+        const sourceCommittee =
+          searchParams.get("sourceCommittee") || undefined;
         const data = await db.fetchCommitteeReportRecipientCommittees({
           query,
           year,
@@ -839,7 +877,8 @@ const server = Bun.serve<{
         const data = await db.fetchCommitteeReportByIdentifier({
           identifier: decodeURIComponent(req.params.identifier),
         });
-        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        if (!data)
+          return Response.json({ message: "Not found" }, { status: 404 });
         return Response.json(data);
       },
     },
@@ -847,7 +886,8 @@ const server = Bun.serve<{
     "/api/committee-reports/:id": {
       GET: async (req: BunRequest<"/api/committee-reports/:id">) => {
         const data = await db.fetchCommitteeReportById({ id: req.params.id });
-        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        if (!data)
+          return Response.json({ message: "Not found" }, { status: 404 });
         return Response.json(data);
       },
     },
@@ -860,7 +900,8 @@ const server = Bun.serve<{
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
         const subject = searchParams.get("subject") || undefined;
-        const initiativeTypeCode = searchParams.get("initiativeTypeCode") || undefined;
+        const initiativeTypeCode =
+          searchParams.get("initiativeTypeCode") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
         const data = await db.fetchLegislativeInitiatives({
@@ -885,8 +926,11 @@ const server = Bun.serve<{
     "/api/legislative-initiatives/years": {
       GET: async (req: Request) => {
         const { searchParams } = new URL(req.url);
-        const initiativeTypeCode = searchParams.get("initiativeTypeCode") || undefined;
-        const data = await db.fetchLegislativeInitiativeYears({ initiativeTypeCode });
+        const initiativeTypeCode =
+          searchParams.get("initiativeTypeCode") || undefined;
+        const data = await db.fetchLegislativeInitiativeYears({
+          initiativeTypeCode,
+        });
         return Response.json(data);
       },
     },
@@ -898,15 +942,19 @@ const server = Bun.serve<{
         const data = await db.fetchLegislativeInitiativeByIdentifier({
           identifier: decodeURIComponent(req.params.identifier),
         });
-        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        if (!data)
+          return Response.json({ message: "Not found" }, { status: 404 });
         return Response.json(data);
       },
     },
 
     "/api/legislative-initiatives/:id": {
       GET: async (req: BunRequest<"/api/legislative-initiatives/:id">) => {
-        const data = await db.fetchLegislativeInitiativeById({ id: req.params.id });
-        if (!data) return Response.json({ message: "Not found" }, { status: 404 });
+        const data = await db.fetchLegislativeInitiativeById({
+          id: req.params.id,
+        });
+        if (!data)
+          return Response.json({ message: "Not found" }, { status: 404 });
         return Response.json(data);
       },
     },

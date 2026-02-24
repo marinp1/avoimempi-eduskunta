@@ -8,8 +8,8 @@ import {
   Box,
   Button,
   Chip,
-  Collapse,
   CircularProgress,
+  Collapse,
   Dialog,
   DialogContent,
   IconButton,
@@ -258,7 +258,8 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({ isGovernment }) => {
   }, []);
 
   const fetchVotingDetails = async (votingId: number) => {
-    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId)) return;
+    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId))
+      return;
     setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
     try {
       const res = await fetch(`/api/votings/${votingId}/details`);
@@ -371,18 +372,39 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({ isGovernment }) => {
                 "&:last-child": { borderBottom: "none" },
               }}
             >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-                <Typography sx={{ flex: 1, minWidth: 180, fontSize: "0.82rem", fontWeight: 600 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  flexWrap: "wrap",
+                }}
+              >
+                <Typography
+                  sx={{
+                    flex: 1,
+                    minWidth: 180,
+                    fontSize: "0.82rem",
+                    fontWeight: 600,
+                  }}
+                >
                   {vote.title || vote.section_title}
                 </Typography>
                 <Button
                   size="small"
-                  sx={{ textTransform: "none", minWidth: 0, px: 1, fontSize: "0.68rem" }}
+                  sx={{
+                    textTransform: "none",
+                    minWidth: 0,
+                    px: 1,
+                    fontSize: "0.68rem",
+                  }}
                   endIcon={
                     <ExpandMoreIcon
                       sx={{
                         fontSize: 14,
-                        transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                        transform: isExpanded
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
                         transition: "transform 0.2s",
                       }}
                     />
@@ -393,7 +415,12 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({ isGovernment }) => {
                 </Button>
                 <Button
                   size="small"
-                  sx={{ textTransform: "none", minWidth: 0, px: 1, fontSize: "0.68rem" }}
+                  sx={{
+                    textTransform: "none",
+                    minWidth: 0,
+                    px: 1,
+                    fontSize: "0.68rem",
+                  }}
                   endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
                   onClick={() => {
                     window.history.pushState(
@@ -420,16 +447,33 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({ isGovernment }) => {
                   {detailsLoading && (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <CircularProgress size={12} />
-                      <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: themedColors.textSecondary }}
+                      >
                         Ladataan äänestyksen yksityiskohtia...
                       </Typography>
                     </Box>
                   )}
                   {!detailsLoading && details && (
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 0.75,
+                      }}
+                    >
                       {details.governmentOpposition && (
-                        <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-                          Hallitus: {details.governmentOpposition.government_yes} jaa / {details.governmentOpposition.government_no} ei, Oppositio: {details.governmentOpposition.opposition_yes} jaa / {details.governmentOpposition.opposition_no} ei
+                        <Typography
+                          variant="caption"
+                          sx={{ color: themedColors.textSecondary }}
+                        >
+                          Hallitus:{" "}
+                          {details.governmentOpposition.government_yes} jaa /{" "}
+                          {details.governmentOpposition.government_no} ei,
+                          Oppositio:{" "}
+                          {details.governmentOpposition.opposition_yes} jaa /{" "}
+                          {details.governmentOpposition.opposition_no} ei
                         </Typography>
                       )}
                       <VotingResultsTable

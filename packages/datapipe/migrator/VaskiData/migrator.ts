@@ -95,7 +95,8 @@ const extractEdkIdentifier = (row: VaskiEntry): string | null => {
 
 const buildSourcePath = (row: VaskiEntry, documentType: string, id: number) => {
   const basePath =
-    normalizeText(row._source?.vaskiPath) ?? `vaski-data/${documentType}/unknown`;
+    normalizeText(row._source?.vaskiPath) ??
+    `vaski-data/${documentType}/unknown`;
   return `${basePath}#id=${id}`;
 };
 
@@ -114,7 +115,12 @@ const upsertVaskiDocument = (
        document_type = excluded.document_type,
        edk_identifier = COALESCE(excluded.edk_identifier, VaskiDocument.edk_identifier),
        source_path = excluded.source_path`,
-    [id, documentType, extractEdkIdentifier(row), buildSourcePath(row, documentType, id)],
+    [
+      id,
+      documentType,
+      extractEdkIdentifier(row),
+      buildSourcePath(row, documentType, id),
+    ],
   );
 };
 

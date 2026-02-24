@@ -3,7 +3,8 @@ import path from "node:path";
 import { getDatabasePath } from "#database";
 import { getStorage } from "#storage";
 
-const SQLITE_LATEST_MANIFEST_STORAGE_KEY = "artifacts/sqlite/latest/manifest.json";
+const SQLITE_LATEST_MANIFEST_STORAGE_KEY =
+  "artifacts/sqlite/latest/manifest.json";
 
 type LaunchMode = "local" | "latest" | "storage-key";
 

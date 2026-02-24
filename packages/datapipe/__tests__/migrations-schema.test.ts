@@ -11,9 +11,13 @@ const getActiveMigrationFiles = () =>
     .sort();
 
 const getTableNames = (db: ReturnType<typeof createTestDb>) =>
-  (db.query("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all() as {
-    name: string;
-  }[]).map((row) => row.name);
+  (
+    db
+      .query("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
+      .all() as {
+      name: string;
+    }[]
+  ).map((row) => row.name);
 
 const getColumnNames = (
   db: ReturnType<typeof createTestDb>,
@@ -28,10 +32,7 @@ const getColumnNames = (
       .all() as { name: string }[]
   ).map((row) => row.name);
 
-const getTableInfo = (
-  db: ReturnType<typeof createTestDb>,
-  tableName: string,
-) =>
+const getTableInfo = (db: ReturnType<typeof createTestDb>, tableName: string) =>
   db.query(`PRAGMA table_info(${tableName})`).all() as {
     name: string;
     notnull: number;
@@ -110,7 +111,9 @@ describe("Migration schema", () => {
       expect(tableNames).not.toContain("SessionMinutesItem");
       expect(tableNames).not.toContain("SessionMinutesAttachment");
       expect(tableNames).not.toContain("CommitteeSession");
-      expect(tableNames.some((name) => name.startsWith("DocType_"))).toBe(false);
+      expect(tableNames.some((name) => name.startsWith("DocType_"))).toBe(
+        false,
+      );
       expect(tableNames.filter((name) => name.startsWith("Vaski"))).toEqual([
         "VaskiDocument",
       ]);
@@ -123,18 +126,28 @@ describe("Migration schema", () => {
     const db = createTestDb(20);
     try {
       const representativeColumns = getColumnNames(db, "Representative", true);
-      const pgmColumns = getColumnNames(db, "ParliamentaryGroupMembership", true);
+      const pgmColumns = getColumnNames(
+        db,
+        "ParliamentaryGroupMembership",
+        true,
+      );
       const termColumns = getColumnNames(db, "Term");
       const sessionColumns = getColumnNames(db, "Session");
       const sectionColumns = getColumnNames(db, "Section");
       const votingColumns = getColumnNames(db, "Voting", true);
       const voteColumns = getColumnNames(db, "Vote");
       const speechColumns = getColumnNames(db, "Speech");
-      const governmentProposalColumns = getColumnNames(db, "GovernmentProposal");
+      const governmentProposalColumns = getColumnNames(
+        db,
+        "GovernmentProposal",
+      );
       const interpellationColumns = getColumnNames(db, "Interpellation");
       const writtenQuestionColumns = getColumnNames(db, "WrittenQuestion");
       const committeeReportColumns = getColumnNames(db, "CommitteeReport");
-      const legislativeInitiativeColumns = getColumnNames(db, "LegislativeInitiative");
+      const legislativeInitiativeColumns = getColumnNames(
+        db,
+        "LegislativeInitiative",
+      );
 
       expect(representativeColumns).toContain("birth_year");
       expect(pgmColumns).toContain("group_abbreviation");
@@ -161,7 +174,9 @@ describe("Migration schema", () => {
       expect(committeeReportColumns).toContain("general_reasoning_rich_text");
       expect(committeeReportColumns).toContain("detailed_reasoning_rich_text");
       expect(committeeReportColumns).toContain("decision_rich_text");
-      expect(committeeReportColumns).toContain("legislation_amendment_rich_text");
+      expect(committeeReportColumns).toContain(
+        "legislation_amendment_rich_text",
+      );
       expect(committeeReportColumns).toContain("minority_opinion_rich_text");
       expect(committeeReportColumns).toContain("resolution_rich_text");
       expect(legislativeInitiativeColumns).toContain("justification_rich_text");
@@ -221,14 +236,18 @@ describe("Migration schema", () => {
     try {
       const indexNames = (
         db
-          .query("SELECT name FROM sqlite_master WHERE type='index' ORDER BY name")
+          .query(
+            "SELECT name FROM sqlite_master WHERE type='index' ORDER BY name",
+          )
           .all() as Array<{ name: string }>
       ).map((row) => row.name);
 
       expect(indexNames).toContain("idx_voting_session_number");
       expect(indexNames).toContain("idx_representative_sort_name_person_id");
       expect(indexNames).toContain("idx_trust_position_person_period");
-      expect(indexNames).toContain("idx_people_leaving_parliament_person_end_date");
+      expect(indexNames).toContain(
+        "idx_people_leaving_parliament_person_end_date",
+      );
       expect(indexNames).toContain("idx_rollcallreport_parliament_identifier");
       expect(indexNames).toContain("idx_section_session_vaski_modified_id");
       expect(indexNames).not.toContain("idx_voting_start_date_expr");

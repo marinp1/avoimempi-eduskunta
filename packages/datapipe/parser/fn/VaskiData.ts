@@ -1,13 +1,13 @@
 import { existsSync } from "node:fs";
 import { mkdir, symlink, unlink, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
+import { XMLParser } from "fast-xml-parser";
 import {
   getStorage,
   getStorageConfig,
   listAllStorageKeys,
   StorageKeyBuilder,
 } from "#storage";
-import { XMLParser } from "fast-xml-parser";
 import type { ParserFunction } from "../parser";
 
 const xmlParser = new XMLParser({
@@ -65,9 +65,7 @@ function cleanParsedXml(obj: any): any {
  * Sanitize a string for use as a folder name.
  */
 function sanitizeFolderName(name: string): string {
-  return name
-    .replace(/[/\\?%*:|"<>]/g, "-")
-    .replace(/\s+/g, "_");
+  return name.replace(/[/\\?%*:|"<>]/g, "-").replace(/\s+/g, "_");
 }
 
 /**
@@ -87,10 +85,14 @@ function classifyDocument(contents: any): {
 
   // yhteiso from KokousViite.YhteisoTeksti
   const kokousViite = metatieto?.KokousViite;
-  const yhteiso = sanitizeFolderName(kokousViite?.YhteisoTeksti || "no-yhteiso");
+  const yhteiso = sanitizeFolderName(
+    kokousViite?.YhteisoTeksti || "no-yhteiso",
+  );
 
   // kokous from KokousViite.@_kokousTunnus
-  const kokous = sanitizeFolderName(kokousViite?.["@_kokousTunnus"] || "no-kokous");
+  const kokous = sanitizeFolderName(
+    kokousViite?.["@_kokousTunnus"] || "no-kokous",
+  );
 
   // documentType from @_asiakirjatyyppiNimi
   let asiakirjatyyppiNimi = metatieto?.["@_asiakirjatyyppiNimi"];
@@ -149,7 +151,13 @@ function getParsedPageAbsolutePath(pageNumber: number): string {
 
   // Non-local storage providers are not currently supported for symlink output.
   const repoRoot = findRepoRoot();
-  return join(repoRoot, "data", "parsed", "VaskiData", `page_${pageNumber}.json`);
+  return join(
+    repoRoot,
+    "data",
+    "parsed",
+    "VaskiData",
+    `page_${pageNumber}.json`,
+  );
 }
 
 function collectDocumentTypeRows(rows: ParsedRow[]): Map<string, string[]> {

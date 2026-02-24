@@ -124,10 +124,18 @@ export default () => {
         s.scrape_progress_percent &&
         s.scrape_progress_percent >= 99.9,
     ).length;
-    const totalApiRows = status.reduce((sum, s) => sum + (s.total_rows_in_api || 0), 0);
-    const totalScrapedRows = status.reduce((sum, s) => sum + s.raw_estimated_rows, 0);
+    const totalApiRows = status.reduce(
+      (sum, s) => sum + (s.total_rows_in_api || 0),
+      0,
+    );
+    const totalScrapedRows = status.reduce(
+      (sum, s) => sum + s.raw_estimated_rows,
+      0,
+    );
     const overallProgressPercent =
-      totalApiRows > 0 ? Math.min((totalScrapedRows / totalApiRows) * 100, 100) : 0;
+      totalApiRows > 0
+        ? Math.min((totalScrapedRows / totalApiRows) * 100, 100)
+        : 0;
     const tablesWithParsedData = status.filter((s) => s.has_parsed_data).length;
     const tablesFullyParsed = status.filter(
       (s) =>
@@ -135,7 +143,10 @@ export default () => {
         s.has_parsed_data &&
         s.parsed_page_count >= s.raw_page_count,
     ).length;
-    const totalParsedRows = status.reduce((sum, s) => sum + s.parsed_estimated_rows, 0);
+    const totalParsedRows = status.reduce(
+      (sum, s) => sum + s.parsed_estimated_rows,
+      0,
+    );
 
     return {
       total_tables: totalTables,
@@ -203,14 +214,19 @@ export default () => {
               return;
             }
             setStatus((prev) => {
-              const rowIndex = prev.findIndex((s) => s.table_name === tableName);
+              const rowIndex = prev.findIndex(
+                (s) => s.table_name === tableName,
+              );
               if (rowIndex < 0) return prev;
               const next = [...prev];
               next[rowIndex] = row;
               return next;
             });
           } catch (tableError) {
-            console.error(`Failed to fetch status for ${tableName}`, tableError);
+            console.error(
+              `Failed to fetch status for ${tableName}`,
+              tableError,
+            );
           }
         }
       });
@@ -219,7 +235,11 @@ export default () => {
       console.error(err);
       setError("Failed to load admin data.");
     } finally {
-      if (showLoading && !initialRenderReady && cycleId === fetchCycleRef.current) {
+      if (
+        showLoading &&
+        !initialRenderReady &&
+        cycleId === fetchCycleRef.current
+      ) {
         setLoading(false);
       }
     }
@@ -475,7 +495,7 @@ export default () => {
           }
           break;
 
-        case "progress":
+        case "progress": {
           if (typeof message.data.currentTable === "string") {
             setCurrentMigratingTable(message.data.currentTable);
           } else if (message.data.currentTable === null) {
@@ -524,6 +544,7 @@ export default () => {
 
           setMigratorProgress(message.data.message || "Processing...");
           break;
+        }
 
         case "complete":
           setMigratorRunning(false);

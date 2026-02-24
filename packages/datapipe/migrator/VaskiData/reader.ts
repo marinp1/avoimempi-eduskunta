@@ -90,7 +90,9 @@ export async function* readVaskiRowsByDocumentType(
     const rawPage = await storage.get(pageKey);
     if (!rawPage) continue;
 
-    const parsedPage = JSON.parse(rawPage) as { rowData?: Array<Record<string, any>> };
+    const parsedPage = JSON.parse(rawPage) as {
+      rowData?: Array<Record<string, any>>;
+    };
     const rows = Array.isArray(parsedPage.rowData) ? parsedPage.rowData : [];
 
     for (const row of rows) {

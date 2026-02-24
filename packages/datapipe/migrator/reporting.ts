@@ -144,7 +144,9 @@ const resolveEntity = (payload: Record<string, unknown>): string => {
   return "unknown";
 };
 
-const classifyReportEvent = (payload: Record<string, unknown>): ReportCategory => {
+const classifyReportEvent = (
+  payload: Record<string, unknown>,
+): ReportCategory => {
   const reason = normalizeText(payload.reason)?.toLowerCase() || "";
   const issueCount =
     typeof payload.issue_count === "number" ? payload.issue_count : 0;
@@ -252,13 +254,7 @@ export const buildConsolidatedMigrationReport = (
 
     pushEvent(
       entities,
-      toEvent(
-        "known_issue",
-        "knownIssues",
-        payload,
-        filePath,
-        options.rootDir,
-      ),
+      toEvent("known_issue", "knownIssues", payload, filePath, options.rootDir),
     );
   }
 

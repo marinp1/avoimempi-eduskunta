@@ -42,10 +42,10 @@ describe.skipIf(!DB_EXISTS)("Speech content coverage (real DB)", () => {
         "SELECT (SELECT COUNT(*) FROM Speech) AS speech_rows, (SELECT COUNT(*) FROM SpeechContent) AS content_rows, (SELECT COUNT(*) FROM Speech sp WHERE NOT EXISTS (SELECT 1 FROM SpeechContent sc WHERE sc.speech_id = sp.id)) AS metadata_without_content",
       )
       .get() as {
-        speech_rows: number;
-        content_rows: number;
-        metadata_without_content: number;
-      };
+      speech_rows: number;
+      content_rows: number;
+      metadata_without_content: number;
+    };
 
     const mappedPercentage =
       row.speech_rows === 0 ? 0 : (row.content_rows / row.speech_rows) * 100;
@@ -83,7 +83,9 @@ describe.skipIf(!DB_EXISTS)("Speech content coverage (real DB)", () => {
     );
     const actualIdSet = new Set(actualIds);
     const unexpectedIds = [...actualIdSet].filter((id) => !expectedIds.has(id));
-    const missingKnownIds = [...expectedIds].filter((id) => !actualIdSet.has(id));
+    const missingKnownIds = [...expectedIds].filter(
+      (id) => !actualIdSet.has(id),
+    );
 
     console.log(
       `[speech-content-coverage] unexpected_missing_content=${unexpectedMissingRows.length}, has_spoken_zero_with_content=${hasSpokenZeroWithContentRows.length}`,

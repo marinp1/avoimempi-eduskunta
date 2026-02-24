@@ -32,7 +32,9 @@ function parseOptionalInteger(
   if (!normalized) return null;
   const parsed = Number.parseInt(normalized, 10);
   if (Number.isNaN(parsed)) {
-    throw new Error(`Invalid integer in ${fieldName}${suffix}: '${normalized}'`);
+    throw new Error(
+      `Invalid integer in ${fieldName}${suffix}: '${normalized}'`,
+    );
   }
   return parsed;
 }
@@ -49,15 +51,19 @@ function writeMigrationReport(
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const baseDir =
     process.env.MIGRATOR_REPORT_LOG_DIR ||
-    join(process.cwd(), "data", "migration-reports", "VaskiData", "valiokunnan_mietintö");
+    join(
+      process.cwd(),
+      "data",
+      "migration-reports",
+      "VaskiData",
+      "valiokunnan_mietintö",
+    );
   mkdirSync(baseDir, { recursive: true });
 
   const id = normalizeText(row.id) || "unknown-id";
-  const fileName = [
-    timestamp,
-    toSafeFilePart(reason),
-    toSafeFilePart(id),
-  ].join("__");
+  const fileName = [timestamp, toSafeFilePart(reason), toSafeFilePart(id)].join(
+    "__",
+  );
 
   const payload = {
     reason,
@@ -68,7 +74,11 @@ function writeMigrationReport(
     source: row._source || null,
   };
 
-  writeFileSync(join(baseDir, `${fileName}.json`), JSON.stringify(payload, null, 2), "utf8");
+  writeFileSync(
+    join(baseDir, `${fileName}.json`),
+    JSON.stringify(payload, null, 2),
+    "utf8",
+  );
 }
 
 function collectTextFragments(node: unknown, output: string[]): void {
@@ -88,8 +98,13 @@ function collectTextFragments(node: unknown, output: string[]): void {
   }
 
   if (typeof node === "object") {
-    for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
-      if (typeof value === "string" && (key === "KappaleKooste" || key.endsWith("Teksti"))) {
+    for (const [key, value] of Object.entries(
+      node as Record<string, unknown>,
+    )) {
+      if (
+        typeof value === "string" &&
+        (key === "KappaleKooste" || key.endsWith("Teksti"))
+      ) {
         const normalized = normalizeText(value);
         if (normalized) output.push(normalized);
         continue;
@@ -122,7 +137,9 @@ function parseParliamentIdentifier(eduskuntaTunnus: unknown): {
   const normalized = normalizeText(eduskuntaTunnus);
   if (!normalized) return null;
 
-  const match = normalized.match(/^([A-ZÄÖa-zäö]+[A-Za-z]M)\s+(\d+)\/(\d+)\s*(?:vp)?$/i);
+  const match = normalized.match(
+    /^([A-ZÄÖa-zäö]+[A-Za-z]M)\s+(\d+)\/(\d+)\s*(?:vp)?$/i,
+  );
   if (!match) return null;
 
   const typeCode = match[1];
@@ -138,7 +155,9 @@ function parseParliamentIdentifier(eduskuntaTunnus: unknown): {
   };
 }
 
-function committeeCodeFromReportType(reportTypeCode: string | null): string | null {
+function committeeCodeFromReportType(
+  reportTypeCode: string | null,
+): string | null {
   const normalized = normalizeText(reportTypeCode);
   if (!normalized || normalized.length < 2) return null;
   return normalized.slice(0, -1);
@@ -200,23 +219,31 @@ function parseMietinto(
   const identOsa = mietinto.IdentifiointiOsa || {};
   const title = normalizeText(identOsa.Nimeke?.NimekeTeksti);
   const committee_name = normalizeText(identOsa.OrganisaatioTeksti);
-  const draft_date = normalizeText(identOsa["@_laadintaPvm"]) ||
+  const draft_date =
+    normalizeText(identOsa["@_laadintaPvm"]) ||
     normalizeText(meta?.["@_laadintaPvm"]);
-  const edk_identifier = normalizeText(meta?.EduskuntaTunniste?.["@_asiakirjaEduskuntaTunnus"]);
+  const edk_identifier = normalizeText(
+    meta?.EduskuntaTunniste?.["@_asiakirjaEduskuntaTunnus"],
+  );
 
   const asiaKuvaus = mietinto.AsiaKuvaus;
   const vireilletulo = asiaKuvaus?.VireilletuloAsia || asiaKuvaus?.Vireilletulo;
-  const source_reference = normalizeText(vireilletulo?.EduskuntaTunnus) ||
+  const source_reference =
+    normalizeText(vireilletulo?.EduskuntaTunnus) ||
     normalizeText(vireilletulo?.EduskuntaTunnusTeksti);
 
   const osallistujaOsa = mietinto.OsallistujaOsa;
-  const signature_date = normalizeText(osallistujaOsa?.PaivaysKooste?.["@_allekirjoitusPvm"]);
+  const signature_date = normalizeText(
+    osallistujaOsa?.PaivaysKooste?.["@_allekirjoitusPvm"],
+  );
 
   const summaryRichText = convertVaskiNodeToRichText(mietinto.SisaltoKuvaus);
   const summary_text = summaryRichText.plainText;
   const summary_rich_text = summaryRichText.json;
 
-  const perusteluOsat = normalizeArray<Record<string, any>>(mietinto.PerusteluOsa);
+  const perusteluOsat = normalizeArray<Record<string, any>>(
+    mietinto.PerusteluOsa,
+  );
   let general_reasoning_text: string | null = null;
   let general_reasoning_rich_text: string | null = null;
   let detailed_reasoning_text: string | null = null;
@@ -244,17 +271,23 @@ function parseMietinto(
   const legislation_amendment_text = legislationRichText.plainText;
   const legislation_amendment_rich_text = legislationRichText.json;
 
-  const minorityRichText = convertVaskiNodeToRichText(mietinto.JasenMielipideOsa);
+  const minorityRichText = convertVaskiNodeToRichText(
+    mietinto.JasenMielipideOsa,
+  );
   const minority_opinion_text = minorityRichText.plainText;
   const minority_opinion_rich_text = minorityRichText.json;
 
-  const resolutionRichText = convertVaskiNodeToRichText(mietinto.LausumaKannanottoOsa);
+  const resolutionRichText = convertVaskiNodeToRichText(
+    mietinto.LausumaKannanottoOsa,
+  );
   const resolution_text = resolutionRichText.plainText;
   const resolution_rich_text = resolutionRichText.json;
 
   const members: CommitteeReportMember[] = [];
   if (osallistujaOsa) {
-    const toimijat = normalizeArray<Record<string, any>>(osallistujaOsa.Toimija);
+    const toimijat = normalizeArray<Record<string, any>>(
+      osallistujaOsa.Toimija,
+    );
     for (const [index, toimija] of toimijat.entries()) {
       const henkilo = toimija?.Henkilo;
       if (!henkilo) continue;
@@ -265,11 +298,16 @@ function parseMietinto(
 
       members.push({
         member_order: index + 1,
-        person_id: parseOptionalInteger(henkilo["@_muuTunnus"], "person_id", context),
+        person_id: parseOptionalInteger(
+          henkilo["@_muuTunnus"],
+          "person_id",
+          context,
+        ),
         first_name: firstName,
         last_name: lastName,
         party: normalizeText(henkilo.LisatietoTeksti),
-        role: normalizeText(toimija["@_rooliKoodi"]) ||
+        role:
+          normalizeText(toimija["@_rooliKoodi"]) ||
           normalizeText(toimija.TarkennusAsemaTeksti),
       });
     }
@@ -277,16 +315,26 @@ function parseMietinto(
 
   const experts: CommitteeReportExpert[] = [];
   if (asiaKuvaus) {
-    const toimenpiteet = normalizeArray<Record<string, any>>(asiaKuvaus.AsiantuntijatToimenpide);
+    const toimenpiteet = normalizeArray<Record<string, any>>(
+      asiaKuvaus.AsiantuntijatToimenpide,
+    );
     let expertOrder = 0;
     for (const toimenpide of toimenpiteet) {
-      const asiantuntijat = normalizeArray<Record<string, any>>(toimenpide?.Asiantuntija);
+      const asiantuntijat = normalizeArray<Record<string, any>>(
+        toimenpide?.Asiantuntija,
+      );
       for (const asiantuntija of asiantuntijat) {
         expertOrder++;
         const henkilo = asiantuntija?.Henkilo;
         experts.push({
           expert_order: expertOrder,
-          person_id: henkilo ? parseOptionalInteger(henkilo["@_muuTunnus"], "expert_person_id", context) : null,
+          person_id: henkilo
+            ? parseOptionalInteger(
+                henkilo["@_muuTunnus"],
+                "expert_person_id",
+                context,
+              )
+            : null,
           first_name: henkilo ? normalizeText(henkilo.EtuNimi) : null,
           last_name: henkilo ? normalizeText(henkilo.SukuNimi) : null,
           title: henkilo ? normalizeText(henkilo.AsemaTeksti) : null,
@@ -362,12 +410,16 @@ export default function createValiokunnanMietintoSubMigrator(db: Database) {
      RETURNING id`,
   );
 
-  const deleteMembers = db.prepare("DELETE FROM CommitteeReportMember WHERE report_id = ?");
+  const deleteMembers = db.prepare(
+    "DELETE FROM CommitteeReportMember WHERE report_id = ?",
+  );
   const insertMember = db.prepare(
     "INSERT INTO CommitteeReportMember (report_id, member_order, person_id, first_name, last_name, party, role) VALUES (?, ?, ?, ?, ?, ?, ?)",
   );
 
-  const deleteExperts = db.prepare("DELETE FROM CommitteeReportExpert WHERE report_id = ?");
+  const deleteExperts = db.prepare(
+    "DELETE FROM CommitteeReportExpert WHERE report_id = ?",
+  );
   const insertExpert = db.prepare(
     "INSERT INTO CommitteeReportExpert (report_id, expert_order, person_id, first_name, last_name, title, organization) VALUES (?, ?, ?, ?, ?, ?, ?)",
   );
@@ -413,7 +465,11 @@ export default function createValiokunnanMietintoSubMigrator(db: Database) {
       const context = `row id=${row.id}, ${parsed.identifier}`;
       const id = parseOptionalInteger(row.id, "id", context);
       if (id === null) {
-        writeMigrationReport(row, "invalid_id", `Could not parse numeric id from '${row.id}'`);
+        writeMigrationReport(
+          row,
+          "invalid_id",
+          `Could not parse numeric id from '${row.id}'`,
+        );
         return;
       }
 
@@ -423,7 +479,8 @@ export default function createValiokunnanMietintoSubMigrator(db: Database) {
 
       try {
         const data = parseMietinto(row, body, parsed, context);
-        const committeeName = data.committee_name || resolveCommitteeName(parsed.typeCode);
+        const committeeName =
+          data.committee_name || resolveCommitteeName(parsed.typeCode);
 
         const reportRow = insertReport.get(
           id,

@@ -29,15 +29,27 @@ function toSafeFilePart(value: string): string {
   return value.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
 
-function writeMigrationReport(row: VaskiEntry, reason: string, details: string) {
+function writeMigrationReport(
+  row: VaskiEntry,
+  reason: string,
+  details: string,
+) {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const baseDir =
     process.env.MIGRATOR_REPORT_LOG_DIR ||
-    join(process.cwd(), "data", "migration-reports", "VaskiData", "vastaus_kirjalliseen_kysymykseen");
+    join(
+      process.cwd(),
+      "data",
+      "migration-reports",
+      "VaskiData",
+      "vastaus_kirjalliseen_kysymykseen",
+    );
   mkdirSync(baseDir, { recursive: true });
 
   const id = normalizeText(row.id) || "unknown-id";
-  const fileName = [timestamp, toSafeFilePart(reason), toSafeFilePart(id)].join("__");
+  const fileName = [timestamp, toSafeFilePart(reason), toSafeFilePart(id)].join(
+    "__",
+  );
 
   const payload = {
     reason,
@@ -48,7 +60,11 @@ function writeMigrationReport(row: VaskiEntry, reason: string, details: string) 
     source: row._source || null,
   };
 
-  writeFileSync(join(baseDir, `${fileName}.json`), JSON.stringify(payload, null, 2), "utf8");
+  writeFileSync(
+    join(baseDir, `${fileName}.json`),
+    JSON.stringify(payload, null, 2),
+    "utf8",
+  );
 }
 
 function getMeta(row: VaskiEntry): Record<string, any> {
@@ -84,7 +100,9 @@ function normalizeFinnishDate(dateStr: string | null): string | null {
   return dateStr;
 }
 
-export default function createVastausKirjallinenKysymysSubMigrator(db: Database) {
+export default function createVastausKirjallinenKysymysSubMigrator(
+  db: Database,
+) {
   const lookupQuestion = db.prepare(
     "SELECT id FROM WrittenQuestion WHERE parliament_identifier = ? LIMIT 1",
   );
@@ -136,7 +154,11 @@ export default function createVastausKirjallinenKysymysSubMigrator(db: Database)
 
       const id = parseOptionalInteger(row.id);
       if (id === null) {
-        writeMigrationReport(row, "invalid_id", `Could not parse numeric id from '${row.id}'`);
+        writeMigrationReport(
+          row,
+          "invalid_id",
+          `Could not parse numeric id from '${row.id}'`,
+        );
         return;
       }
 
@@ -151,7 +173,9 @@ export default function createVastausKirjallinenKysymysSubMigrator(db: Database)
         return;
       }
 
-      const kkIdentifier = normalizeText(identOsa.Vireilletulo?.EduskuntaTunnus);
+      const kkIdentifier = normalizeText(
+        identOsa.Vireilletulo?.EduskuntaTunnus,
+      );
 
       if (!kkIdentifier) {
         writeMigrationReport(
@@ -162,7 +186,9 @@ export default function createVastausKirjallinenKysymysSubMigrator(db: Database)
         return;
       }
 
-      const questionRow = lookupQuestion.get(kkIdentifier) as { id: number } | undefined;
+      const questionRow = lookupQuestion.get(kkIdentifier) as
+        | { id: number }
+        | undefined;
       if (!questionRow) {
         writeMigrationReport(
           row,
@@ -189,9 +215,11 @@ export default function createVastausKirjallinenKysymysSubMigrator(db: Database)
       const status = parseOptionalInteger(row.status) ?? 5;
 
       const documentNumber =
-        parseOptionalInteger(identOsa.EduskuntaTunniste?.AsiakirjaNroTeksti) ?? kkvParsed.number;
+        parseOptionalInteger(identOsa.EduskuntaTunniste?.AsiakirjaNroTeksti) ??
+        kkvParsed.number;
       const parliamentaryYear =
-        normalizeText(identOsa.EduskuntaTunniste?.ValtiopaivavuosiTeksti) ?? kkvParsed.year;
+        normalizeText(identOsa.EduskuntaTunniste?.ValtiopaivavuosiTeksti) ??
+        kkvParsed.year;
 
       const sourcePath = row._source?.vaskiPath
         ? `${row._source.vaskiPath}#id=${id}`

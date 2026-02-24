@@ -17,11 +17,16 @@ interface SourceStatusFile {
   entries: SourceStageStatusSnapshot[];
 }
 
-function buildSnapshotKey(tableName: string, stage: DataStage): SourceStageStatusKey {
+function buildSnapshotKey(
+  tableName: string,
+  stage: DataStage,
+): SourceStageStatusKey {
   return `${stage}:${tableName}`;
 }
 
-async function readStatusMap(): Promise<Record<SourceStageStatusKey, SourceStageStatusSnapshot>> {
+async function readStatusMap(): Promise<
+  Record<SourceStageStatusKey, SourceStageStatusSnapshot>
+> {
   const storage = getStorage();
   const raw = await storage.get(SOURCE_STATUS_KEY);
 
@@ -35,12 +40,15 @@ async function readStatusMap(): Promise<Record<SourceStageStatusKey, SourceStage
       return {};
     }
 
-    return parsed.entries.reduce<Record<SourceStageStatusKey, SourceStageStatusSnapshot>>( (acc, entry) => {
+    return parsed.entries.reduce<
+      Record<SourceStageStatusKey, SourceStageStatusSnapshot>
+    >((acc, entry) => {
       if (!entry || typeof entry !== "object") {
         return acc;
       }
 
-      const { tableName, stage, pageCount, lastPageRowCount, lastUpdated } = entry;
+      const { tableName, stage, pageCount, lastPageRowCount, lastUpdated } =
+        entry;
       if (!tableName || (stage !== "raw" && stage !== "parsed")) {
         return acc;
       }
@@ -53,7 +61,10 @@ async function readStatusMap(): Promise<Record<SourceStageStatusKey, SourceStage
           Number.isFinite(lastPageRowCount) && lastPageRowCount >= 0
             ? lastPageRowCount
             : 0,
-        lastUpdated: typeof lastUpdated === "string" ? lastUpdated : new Date().toISOString(),
+        lastUpdated:
+          typeof lastUpdated === "string"
+            ? lastUpdated
+            : new Date().toISOString(),
       };
 
       return acc;
@@ -88,13 +99,14 @@ export async function recordSourceStagePage(
   const key = buildSnapshotKey(tableName, stage);
   const existing = map[key];
   const normalizedPage = Number.isFinite(page) && page >= 0 ? page : 0;
-  const normalizedRowCount = Number.isFinite(rowCount) && rowCount >= 0 ? rowCount : 0;
+  const normalizedRowCount =
+    Number.isFinite(rowCount) && rowCount >= 0 ? rowCount : 0;
   const nextPageCount = Math.max(existing?.pageCount ?? 0, normalizedPage);
   const shouldUpdateLastRowCount =
     !existing || normalizedPage >= (existing.pageCount ?? 0);
   const lastPageRowCount = shouldUpdateLastRowCount
     ? normalizedRowCount
-    : existing?.lastPageRowCount ?? 0;
+    : (existing?.lastPageRowCount ?? 0);
 
   map[key] = {
     tableName,

@@ -6,9 +6,9 @@ import {
   Alert,
   Box,
   Button,
-  Collapse,
   Chip,
   CircularProgress,
+  Collapse,
   IconButton,
   Typography,
 } from "@mui/material";
@@ -110,7 +110,8 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
   }, []);
 
   const fetchVotingDetails = async (votingId: number) => {
-    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId)) return;
+    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId))
+      return;
     setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
     try {
       const res = await fetch(`/api/votings/${votingId}/details`);
@@ -231,15 +232,29 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
                     >
                       {new Date(vote.start_time).toLocaleDateString("fi-FI")}
                     </Typography>
-                    <Box sx={{ display: "flex", gap: 0.5, mt: 0.5, flexWrap: "wrap" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 0.5,
+                        mt: 0.5,
+                        flexWrap: "wrap",
+                      }}
+                    >
                       <Button
                         size="small"
-                        sx={{ textTransform: "none", minWidth: 0, px: 1, fontSize: "0.68rem" }}
+                        sx={{
+                          textTransform: "none",
+                          minWidth: 0,
+                          px: 1,
+                          fontSize: "0.68rem",
+                        }}
                         endIcon={
                           <ExpandMoreIcon
                             sx={{
                               fontSize: 14,
-                              transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                              transform: isExpanded
+                                ? "rotate(180deg)"
+                                : "rotate(0deg)",
                               transition: "transform 0.2s",
                             }}
                           />
@@ -250,10 +265,23 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
                       </Button>
                       <Button
                         size="small"
-                        sx={{ textTransform: "none", minWidth: 0, px: 1, fontSize: "0.68rem" }}
+                        sx={{
+                          textTransform: "none",
+                          minWidth: 0,
+                          px: 1,
+                          fontSize: "0.68rem",
+                        }}
                         endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
                         onClick={() => {
-                          window.history.pushState({}, "", refs.voting(vote.id, vote.session_key, vote.start_time));
+                          window.history.pushState(
+                            {},
+                            "",
+                            refs.voting(
+                              vote.id,
+                              vote.session_key,
+                              vote.start_time,
+                            ),
+                          );
                           window.dispatchEvent(new PopStateEvent("popstate"));
                         }}
                       >
@@ -302,28 +330,47 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
                   {vote.n_absent} poissa
                 </Typography>
                 <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                    <Box
-                      sx={{
-                        mt: 0.75,
-                        p: 1,
-                        borderRadius: 1,
-                        border: `1px solid ${themedColors.dataBorder}60`,
-                        backgroundColor: `${colors.primaryLight}04`,
-                      }}
-                    >
+                  <Box
+                    sx={{
+                      mt: 0.75,
+                      p: 1,
+                      borderRadius: 1,
+                      border: `1px solid ${themedColors.dataBorder}60`,
+                      backgroundColor: `${colors.primaryLight}04`,
+                    }}
+                  >
                     {detailsLoading && (
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
                         <CircularProgress size={12} />
-                        <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: themedColors.textSecondary }}
+                        >
                           Ladataan äänestyksen yksityiskohtia...
                         </Typography>
                       </Box>
                     )}
                     {!detailsLoading && details && (
-                      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 0.75,
+                        }}
+                      >
                         {details.governmentOpposition && (
-                          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-                            Hallitus: {details.governmentOpposition.government_yes} jaa / {details.governmentOpposition.government_no} ei, Oppositio: {details.governmentOpposition.opposition_yes} jaa / {details.governmentOpposition.opposition_no} ei
+                          <Typography
+                            variant="caption"
+                            sx={{ color: themedColors.textSecondary }}
+                          >
+                            Hallitus:{" "}
+                            {details.governmentOpposition.government_yes} jaa /{" "}
+                            {details.governmentOpposition.government_no} ei,
+                            Oppositio:{" "}
+                            {details.governmentOpposition.opposition_yes} jaa /{" "}
+                            {details.governmentOpposition.opposition_no} ei
                           </Typography>
                         )}
                         <VotingResultsTable

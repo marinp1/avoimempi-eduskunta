@@ -96,7 +96,9 @@ function loadRawDefinitions(): RawConstraintFile {
     throw new Error("Invalid sanity constraint file: missing valid version");
   }
   if (!Array.isArray(parsed.constraints)) {
-    throw new Error("Invalid sanity constraint file: constraints must be array");
+    throw new Error(
+      "Invalid sanity constraint file: constraints must be array",
+    );
   }
 
   return parsed;
@@ -112,7 +114,9 @@ function validateAndNormalizeDefinitions(
   const definitions: SanityConstraintDefinition[] = [];
   for (const raw of rawDefinitions) {
     if (!raw || typeof raw !== "object") {
-      throw new Error("Invalid sanity constraint file: constraint must be object");
+      throw new Error(
+        "Invalid sanity constraint file: constraint must be object",
+      );
     }
     if (typeof raw.id !== "string" || raw.id.trim().length === 0) {
       throw new Error("Invalid sanity constraint: id must be non-empty string");

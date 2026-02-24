@@ -222,7 +222,9 @@ async function getExactTableCountWithMetadataByRows(
   let lowPageWithMore = 0;
   let highCandidate = 1;
   const candidatePage =
-    candidateRowCount !== null && candidateRowCount !== undefined && candidateRowCount > 0
+    candidateRowCount !== null &&
+    candidateRowCount !== undefined &&
+    candidateRowCount > 0
       ? Math.min(
           Math.max(Math.floor((candidateRowCount - 1) / pageSize), 1),
           MAX_SEARCH_PAGE,
@@ -277,7 +279,9 @@ export async function getExactTableCountsByRows(
   options?: ExactTableCountOptions,
 ): Promise<TableCountRow[]> {
   const targetTables = resolveTargetTableNames(options);
-  const counts: Array<TableCountRow | undefined> = new Array(targetTables.length);
+  const counts: Array<TableCountRow | undefined> = new Array(
+    targetTables.length,
+  );
   const errors: string[] = [];
   const concurrency = Math.max(
     1,
@@ -285,7 +289,8 @@ export async function getExactTableCountsByRows(
   );
   const log = options?.log ?? false;
   const skipOnError = options?.skipOnError ?? false;
-  const fallbackToCandidateOnError = options?.fallbackToCandidateOnError ?? false;
+  const fallbackToCandidateOnError =
+    options?.fallbackToCandidateOnError ?? false;
   let nextIndex = 0;
 
   const worker = async () => {
@@ -299,11 +304,12 @@ export async function getExactTableCountsByRows(
       const candidate = resolveCandidateRowCountFromOptions(tableName, options);
 
       try {
-        const { rowCount, requestCount } = await getExactTableCountWithMetadataByRows(
-          tableName,
-          options,
-          candidate,
-        );
+        const { rowCount, requestCount } =
+          await getExactTableCountWithMetadataByRows(
+            tableName,
+            options,
+            candidate,
+          );
         if (log) {
           console.log(
             `[exact-counts] ${tableName}: ${requestCount} fetch call(s), ${rowCount.toLocaleString()} rows`,
@@ -331,7 +337,9 @@ export async function getExactTableCountsByRows(
 
         if (skipOnError) {
           if (log) {
-            console.warn(`[exact-counts] ${tableName}: ${message}. Skipping table.`);
+            console.warn(
+              `[exact-counts] ${tableName}: ${message}. Skipping table.`,
+            );
           }
           continue;
         }
@@ -359,7 +367,10 @@ export async function getExactTableCountMapByRows(
   return Object.fromEntries(rows.map((row) => [row.tableName, row.rowCount]));
 }
 
-async function ensureCacheLoaded(cacheKey: string, cache: CacheStore): Promise<void> {
+async function ensureCacheLoaded(
+  cacheKey: string,
+  cache: CacheStore,
+): Promise<void> {
   if (cache.loaded) return;
   if (cache.loadInFlight) {
     await cache.loadInFlight;
@@ -410,14 +421,19 @@ async function ensureCacheLoaded(cacheKey: string, cache: CacheStore): Promise<v
   await cache.loadInFlight;
 }
 
-async function persistCache(cacheKey: string, cache: CacheStore): Promise<void> {
+async function persistCache(
+  cacheKey: string,
+  cache: CacheStore,
+): Promise<void> {
   const storage = getStorage();
   const entries = Object.keys(cache.counts)
     .sort()
     .map((tableName) => ({
       tableName,
       rowCount: cache.counts[tableName],
-      updatedAt: new Date(cache.updatedAtMs[tableName] ?? Date.now()).toISOString(),
+      updatedAt: new Date(
+        cache.updatedAtMs[tableName] ?? Date.now(),
+      ).toISOString(),
     }));
 
   await storage.put(cacheKey, JSON.stringify({ entries }, null, 2));
@@ -434,7 +450,12 @@ function isCacheFresh(
   return nowMs - updatedAtMs <= cacheTtlMs;
 }
 
-function updateCacheCount(cache: CacheStore, tableName: string, rowCount: number, nowMs: number) {
+function updateCacheCount(
+  cache: CacheStore,
+  tableName: string,
+  rowCount: number,
+  nowMs: number,
+) {
   cache.counts[tableName] = Math.max(0, Math.trunc(rowCount));
   cache.updatedAtMs[tableName] = nowMs;
 }
@@ -498,7 +519,8 @@ export async function getCachedTableCountMapByRows(
     }
   }
 
-  const hasCachedForAll = Object.keys(cachedResult).length === tableNames.length;
+  const hasCachedForAll =
+    Object.keys(cachedResult).length === tableNames.length;
 
   if (hasCachedForAll && stale.length > 0 && useStaleWhileRefreshing) {
     const staleScope = Array.from(new Set(stale)).sort().join("|");
@@ -553,7 +575,10 @@ export async function getCachedTableCountMapByRows(
     console.error("[exact-counts] failed to fetch table counts:", error);
     const fallback = { ...cachedResult };
     for (const tableName of toFetch) {
-      const fallbackCandidate = resolveCandidateRowCountFromOptions(tableName, options);
+      const fallbackCandidate = resolveCandidateRowCountFromOptions(
+        tableName,
+        options,
+      );
       fallback[tableName] = fallback[tableName] ?? fallbackCandidate ?? 0;
     }
     return fallback;

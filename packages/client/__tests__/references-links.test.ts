@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { refs } from "../references";
 import { routes } from "../pages";
+import { refs } from "../references";
 
 const toRouteKey = (path: string) => {
   const url = new URL(path, "https://example.test");

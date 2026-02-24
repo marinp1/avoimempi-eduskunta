@@ -65,8 +65,12 @@ async function getParserModule(
     return {
       parse: mod.default as ParserFunction,
       hooks: {
-        onPageParsed: typeof mod.onPageParsed === "function" ? mod.onPageParsed : undefined,
-        onParsingComplete: typeof mod.onParsingComplete === "function" ? mod.onParsingComplete : undefined,
+        onPageParsed:
+          typeof mod.onPageParsed === "function" ? mod.onPageParsed : undefined,
+        onParsingComplete:
+          typeof mod.onParsingComplete === "function"
+            ? mod.onParsingComplete
+            : undefined,
       },
     };
   } catch (_e) {

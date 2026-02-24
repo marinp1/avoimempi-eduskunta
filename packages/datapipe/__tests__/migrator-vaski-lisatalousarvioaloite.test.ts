@@ -3,14 +3,12 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import createSubMigrator from "../migrator/VaskiData/submigrators/lisätalousarvioaloite";
 import { clearStatementCache } from "../migrator/utils";
 import type { VaskiEntry } from "../migrator/VaskiData/reader";
+import createSubMigrator from "../migrator/VaskiData/submigrators/lisätalousarvioaloite";
 import { createTestDb } from "./helpers/setup-db";
 
-function makeAloiteRow(
-  overrides: Partial<VaskiEntry> = {},
-): VaskiEntry {
+function makeAloiteRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
   return {
     id: "9901",
     eduskuntaTunnus: "LTA 3/2024 vp",
@@ -33,7 +31,9 @@ function makeAloiteRow(
           RakenneAsiakirja: {
             EduskuntaAloite: {
               IdentifiointiOsa: {
-                Nimeke: { NimekeTeksti: "Lisätalousarvioaloite määrärahan lisäämisestä" },
+                Nimeke: {
+                  NimekeTeksti: "Lisätalousarvioaloite määrärahan lisäämisestä",
+                },
                 Toimija: {
                   Henkilo: {
                     "@_muuTunnus": "1001",
@@ -55,9 +55,7 @@ function makeAloiteRow(
   };
 }
 
-function makeKasittelyRow(
-  overrides: Partial<VaskiEntry> = {},
-): VaskiEntry {
+function makeKasittelyRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
   return {
     id: "9902",
     eduskuntaTunnus: "LTA 3/2024 vp",
@@ -75,7 +73,9 @@ function makeKasittelyRow(
           RakenneAsiakirja: {
             KasittelytiedotValtiopaivaasia: {
               IdentifiointiOsa: {
-                Nimeke: { NimekeTeksti: "Lisätalousarvioaloite määrärahan lisäämisestä" },
+                Nimeke: {
+                  NimekeTeksti: "Lisätalousarvioaloite määrärahan lisäämisestä",
+                },
                 Toimija: {
                   Henkilo: {
                     "@_muuTunnus": "1001",
@@ -155,7 +155,9 @@ describe("Vaski lisätalousarvioaloite submigrator", () => {
 
     expect(initiative.initiative_type_code).toBe("LTA");
     expect(initiative.parliament_identifier).toBe("LTA 3/2024 vp");
-    expect(initiative.title).toBe("Lisätalousarvioaloite määrärahan lisäämisestä");
+    expect(initiative.title).toBe(
+      "Lisätalousarvioaloite määrärahan lisäämisestä",
+    );
     expect(initiative.justification_text).toContain("Perusteluteksti");
     expect(initiative.proposal_text).toContain("Ponsiteksti");
     expect(initiative.law_text).toBeNull();
@@ -167,11 +169,17 @@ describe("Vaski lisätalousarvioaloite submigrator", () => {
   test("skips unsupported identifier and writes migration report", async () => {
     await migrateRow(makeAloiteRow({ eduskuntaTunnus: "TAA 1/2024 vp" }));
 
-    const initiatives = db.query("SELECT id FROM LegislativeInitiative").all() as any[];
+    const initiatives = db
+      .query("SELECT id FROM LegislativeInitiative")
+      .all() as any[];
     expect(initiatives).toHaveLength(0);
 
-    const reportFiles = readdirSync(reportLogDir).filter((f) => f.endsWith(".json"));
+    const reportFiles = readdirSync(reportLogDir).filter((f) =>
+      f.endsWith(".json"),
+    );
     expect(reportFiles.length).toBeGreaterThan(0);
-    expect(reportFiles.some((f) => f.includes("invalid_parliament_identifier"))).toBe(true);
+    expect(
+      reportFiles.some((f) => f.includes("invalid_parliament_identifier")),
+    ).toBe(true);
   });
 });

@@ -1,16 +1,16 @@
 import { TableName } from "#constants/index";
-import { getCachedTableCountMapByRows } from "#table-counts";
-import { listAllStorageKeys } from "#storage/list-all";
 import { getStorage } from "#storage/factory";
+import { listAllStorageKeys } from "#storage/list-all";
+import {
+  loadSourceStageStatusMap,
+  type SourceStageStatusSnapshot,
+} from "#storage/source-status";
 import {
   type DataStage,
   StorageKeyBuilder,
   type StorageMetadata,
 } from "#storage/types";
-import {
-  loadSourceStageStatusMap,
-  type SourceStageStatusSnapshot,
-} from "#storage/source-status";
+import { getCachedTableCountMapByRows } from "#table-counts";
 
 export interface TableStorageStatus {
   table_name: string;
@@ -39,9 +39,10 @@ export interface ScrapingOverview {
 }
 
 export class AdminStorageService {
-  private static statusCache:
-    | { data: TableStorageStatus[]; expiresAt: number }
-    | null = null;
+  private static statusCache: {
+    data: TableStorageStatus[];
+    expiresAt: number;
+  } | null = null;
   private static statusFetchInFlight: Promise<TableStorageStatus[]> | null =
     null;
   private static readonly STATUS_CACHE_TTL = 30_000;
@@ -91,12 +92,14 @@ export class AdminStorageService {
     apiCounts: Record<string, number>,
     stageSnapshots: Record<string, SourceStageStatusSnapshot>,
   ): Promise<TableStorageStatus> {
-    const rawSnapshot = stageSnapshots[this.buildStageSnapshotKey("raw", tableName)];
-    const parsedSnapshot = stageSnapshots[
-      this.buildStageSnapshotKey("parsed", tableName)
-    ];
+    const rawSnapshot =
+      stageSnapshots[this.buildStageSnapshotKey("raw", tableName)];
+    const parsedSnapshot =
+      stageSnapshots[this.buildStageSnapshotKey("parsed", tableName)];
 
-    const rawFiles = rawSnapshot ? [] : await this.getTableFiles("raw", tableName);
+    const rawFiles = rawSnapshot
+      ? []
+      : await this.getTableFiles("raw", tableName);
     const parsedFiles = parsedSnapshot
       ? []
       : await this.getTableFiles("parsed", tableName);
@@ -106,7 +109,9 @@ export class AdminStorageService {
       ? parsedSnapshot.pageCount
       : parsedFiles.length;
 
-    const hasRaw = rawSnapshot ? rawSnapshot.pageCount > 0 : rawFiles.length > 0;
+    const hasRaw = rawSnapshot
+      ? rawSnapshot.pageCount > 0
+      : rawFiles.length > 0;
     const hasParsed = parsedSnapshot
       ? parsedSnapshot.pageCount > 0
       : parsedFiles.length > 0;
@@ -255,14 +260,15 @@ export class AdminStorageService {
     const candidates: Record<string, number> = {};
 
     for (const tableName of tableNames) {
-      const rawSnapshot = stageSnapshots[this.buildStageSnapshotKey("raw", tableName)];
-      const parsedSnapshot = stageSnapshots[
-        this.buildStageSnapshotKey("parsed", tableName)
-      ];
+      const rawSnapshot =
+        stageSnapshots[this.buildStageSnapshotKey("raw", tableName)];
+      const parsedSnapshot =
+        stageSnapshots[this.buildStageSnapshotKey("parsed", tableName)];
       const preferredSnapshot = rawSnapshot ?? parsedSnapshot;
 
       if (preferredSnapshot) {
-        candidates[tableName] = this.estimateRowsFromSnapshot(preferredSnapshot);
+        candidates[tableName] =
+          this.estimateRowsFromSnapshot(preferredSnapshot);
       }
     }
 
@@ -288,7 +294,10 @@ export class AdminStorageService {
     AdminStorageService.statusFetchInFlight = (async () => {
       const tables = this.getTableNames();
       const stageSnapshots = await loadSourceStageStatusMap();
-      const candidateRowCounts = this.buildCandidateRowCounts(stageSnapshots, tables);
+      const candidateRowCounts = this.buildCandidateRowCounts(
+        stageSnapshots,
+        tables,
+      );
       const apiCounts = await this.fetchApiTableCounts({
         tableNames: tables,
         candidateRowCounts,

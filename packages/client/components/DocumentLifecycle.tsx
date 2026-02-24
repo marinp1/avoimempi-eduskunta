@@ -3,9 +3,15 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  DocumentCard,
+  extractDocumentIdentifiers,
+} from "#client/components/DocumentCards";
 import { colors } from "#client/theme";
-import { DocumentCard, extractDocumentIdentifiers } from "#client/components/DocumentCards";
-import { parseRichTextDocument, type RichTextInline } from "../../shared/typings/RichText";
+import {
+  parseRichTextDocument,
+  type RichTextInline,
+} from "../../shared/typings/RichText";
 
 const INITIAL_VISIBLE_REFS = 6;
 
@@ -44,7 +50,11 @@ const extractRichTextReferences = (
     if (!parsed) continue;
 
     for (const block of parsed.blocks) {
-      if (block.type === "paragraph" || block.type === "heading" || block.type === "indented") {
+      if (
+        block.type === "paragraph" ||
+        block.type === "heading" ||
+        block.type === "indented"
+      ) {
         collectInlineReferences(block.inlines, references);
         continue;
       }
@@ -105,7 +115,11 @@ export const DocumentLifecycle: React.FC<DocumentLifecycleProps> = ({
 
   const documentRefs = useMemo(() => {
     const richTextReferences = extractRichTextReferences(richTextValues);
-    const candidates = [...directReferenceValues, ...richTextReferences, ...apiIdentifiers];
+    const candidates = [
+      ...directReferenceValues,
+      ...richTextReferences,
+      ...apiIdentifiers,
+    ];
     const extracted = extractDocumentIdentifiers(candidates);
     const normalizedCurrent = normalizeIdentifier(currentIdentifier);
     const seen = new Set<string>();
@@ -117,18 +131,29 @@ export const DocumentLifecycle: React.FC<DocumentLifecycleProps> = ({
       seen.add(normalized);
       return true;
     });
-  }, [currentIdentifier, directReferenceValues, richTextValues, apiIdentifiers]);
+  }, [
+    currentIdentifier,
+    directReferenceValues,
+    richTextValues,
+    apiIdentifiers,
+  ]);
 
   const visibleReferences = showAll
     ? documentRefs
     : documentRefs.slice(0, INITIAL_VISIBLE_REFS);
-  const hiddenReferenceCount = Math.max(0, documentRefs.length - visibleReferences.length);
+  const hiddenReferenceCount = Math.max(
+    0,
+    documentRefs.length - visibleReferences.length,
+  );
 
   return (
     <Box>
       <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
         <AccountTreeIcon sx={{ color: colors.primary }} />
-        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: colors.textPrimary }}>
+        <Typography
+          variant="subtitle1"
+          sx={{ fontWeight: 600, color: colors.textPrimary }}
+        >
           {t("documents.lifecycle", "Asiakirjaketju")}
         </Typography>
       </Stack>
@@ -169,7 +194,10 @@ export const DocumentLifecycle: React.FC<DocumentLifecycleProps> = ({
         >
           {showAll
             ? t("documents.lifecycleShowLess", "Näytä vähemmän")
-            : t("documents.lifecycleShowMore", `Näytä lisää (+${hiddenReferenceCount})`)}
+            : t(
+                "documents.lifecycleShowMore",
+                `Näytä lisää (+${hiddenReferenceCount})`,
+              )}
         </Button>
       )}
     </Box>

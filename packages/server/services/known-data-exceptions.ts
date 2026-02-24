@@ -27,7 +27,11 @@ const toDay = (value: string): number =>
 const toIsoDay = (day: number): string =>
   new Date(day * DAY_MS).toISOString().slice(0, 10);
 
-const addToSetMap = (map: Map<number, Set<number>>, key: number, value: number) => {
+const addToSetMap = (
+  map: Map<number, Set<number>>,
+  key: number,
+  value: number,
+) => {
   const set = map.get(key) ?? new Set<number>();
   set.add(value);
   map.set(key, set);
@@ -103,7 +107,9 @@ const parseReplacementName = (
   return cleaned.length > 0 ? cleaned : null;
 };
 
-function buildParliamentSizeBelow200Exception(db: Database): KnownDataException {
+function buildParliamentSizeBelow200Exception(
+  db: Database,
+): KnownDataException {
   const minDay = toDay(PARLIAMENT_EXCEPTION_MIN_DATE);
   const maxDateStr = (
     db
@@ -117,7 +123,8 @@ function buildParliamentSizeBelow200Exception(db: Database): KnownDataException 
     return {
       id: "PARLIAMENT-SIZE-EXACT-200-001",
       checkName: "Parliament size limit",
-      description: "No Term date coverage for exact-200 parliament-size exceptions",
+      description:
+        "No Term date coverage for exact-200 parliament-size exceptions",
       reason:
         "Term table has no date bounds, so exact-200 mismatch ranges cannot be derived.",
       affectedRows: [],
@@ -128,7 +135,11 @@ function buildParliamentSizeBelow200Exception(db: Database): KnownDataException 
 
   const peopleRows = db
     .query<
-      { person_id: number; first_name: string | null; last_name: string | null },
+      {
+        person_id: number;
+        first_name: string | null;
+        last_name: string | null;
+      },
       []
     >("SELECT person_id, first_name, last_name FROM Representative")
     .all();
@@ -142,7 +153,11 @@ function buildParliamentSizeBelow200Exception(db: Database): KnownDataException 
 
   const leavingRows = db
     .query<
-      { person_id: number; end_date: string | null; replacement_person: string | null },
+      {
+        person_id: number;
+        end_date: string | null;
+        replacement_person: string | null;
+      },
       []
     >(
       "SELECT person_id, end_date, replacement_person FROM PeopleLeavingParliament WHERE end_date IS NOT NULL",
@@ -166,7 +181,11 @@ function buildParliamentSizeBelow200Exception(db: Database): KnownDataException 
 
   const joiningRows = db
     .query<
-      { person_id: number; start_date: string | null; replacement_person: string | null },
+      {
+        person_id: number;
+        start_date: string | null;
+        replacement_person: string | null;
+      },
       []
     >(
       "SELECT person_id, start_date, replacement_person FROM PeopleJoiningParliament WHERE start_date IS NOT NULL",
@@ -178,7 +197,10 @@ function buildParliamentSizeBelow200Exception(db: Database): KnownDataException 
   >();
   for (const row of joiningRows) {
     if (!row.start_date) continue;
-    const predecessorName = parseReplacementName(row.replacement_person, "Edeltäjä");
+    const predecessorName = parseReplacementName(
+      row.replacement_person,
+      "Edeltäjä",
+    );
     if (!predecessorName) continue;
     const list = joiningByPredecessorName.get(predecessorName) ?? [];
     list.push({ joinerId: row.person_id, startDay: toDay(row.start_date) });
@@ -192,7 +214,9 @@ function buildParliamentSizeBelow200Exception(db: Database): KnownDataException 
     .query<
       { person_id: number; start_date: string; end_date: string | null },
       []
-    >("SELECT person_id, start_date, end_date FROM Term WHERE start_date IS NOT NULL")
+    >(
+      "SELECT person_id, start_date, end_date FROM Term WHERE start_date IS NOT NULL",
+    )
     .all();
   const absenceRows = db
     .query<
@@ -261,7 +285,8 @@ function buildParliamentSizeBelow200Exception(db: Database): KnownDataException 
     .filter((day) => day >= minDay && day <= maxDay + 1)
     .sort((a, b) => a - b);
 
-  const mismatchRanges: Array<{ start: number; end: number; count: number }> = [];
+  const mismatchRanges: Array<{ start: number; end: number; count: number }> =
+    [];
   let currentCount = 0;
 
   for (let i = 0; i < boundaryDays.length - 1; i++) {
@@ -279,13 +304,17 @@ function buildParliamentSizeBelow200Exception(db: Database): KnownDataException 
   const affectedRows: AffectedRow[] = mismatchRanges.map((range) => {
     const startIso = toIsoDay(range.start);
     const endIso = toIsoDay(range.end);
-    const leftOn = range.start - 1 >= minDay ? toIsoDay(range.start - 1) : "<1919-01-01";
+    const leftOn =
+      range.start - 1 >= minDay ? toIsoDay(range.start - 1) : "<1919-01-01";
     const joinedOn =
       range.end + 1 <= maxDay ? toIsoDay(range.end + 1) : "(not yet in data)";
     const gapDays = range.end - range.start + 1;
     const leftIds = [...(endByDay.get(range.start) ?? new Set<number>())];
     const leftPeople = sortedPeople(endByDay.get(range.start), peopleById);
-    const joinedPeople = sortedPeople(startByDay.get(range.end + 1), peopleById);
+    const joinedPeople = sortedPeople(
+      startByDay.get(range.end + 1),
+      peopleById,
+    );
     const successorPairs = leftIds
       .map((leftId) => {
         const leftName = peopleById.get(leftId) ?? `person_id=${leftId}`;
@@ -296,13 +325,16 @@ function buildParliamentSizeBelow200Exception(db: Database): KnownDataException 
           "Seuraaja",
         );
         const candidates = joiningByPredecessorName.get(leftName) ?? [];
-        const matchedJoin = candidates.find((candidate) => candidate.startDay > leftDate);
+        const matchedJoin = candidates.find(
+          (candidate) => candidate.startDay > leftDate,
+        );
         if (!matchedJoin) {
           return `${leftName} (${leftId}) -> ?`;
         }
 
         const joinerName =
-          peopleById.get(matchedJoin.joinerId) ?? `person_id=${matchedJoin.joinerId}`;
+          peopleById.get(matchedJoin.joinerId) ??
+          `person_id=${matchedJoin.joinerId}`;
         const gapFromLeft = Math.max(0, matchedJoin.startDay - leftDate - 1);
         const expectedSuffix =
           expectedSuccessorName && expectedSuccessorName !== joinerName
@@ -626,8 +658,8 @@ export function getExceptionIdSetForCheck(
   exceptions: KnownDataException[],
   checkName: string,
 ): Set<string> {
-  const ids = getExceptionsForCheck(exceptions, checkName).flatMap((exception) =>
-    exception.affectedRows.map((row) => String(row.id)),
+  const ids = getExceptionsForCheck(exceptions, checkName).flatMap(
+    (exception) => exception.affectedRows.map((row) => String(row.id)),
   );
   return new Set(ids);
 }

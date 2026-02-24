@@ -1,8 +1,8 @@
+import { afterEach, describe, expect, test } from "bun:test";
 import fs from "node:fs";
 import path from "node:path";
-import { afterEach, describe, expect, test } from "bun:test";
-import { StorageFactory } from "#storage";
 import { getDatabasePath } from "#database";
+import { StorageFactory } from "#storage";
 import { prepareDatabaseForServerStartup } from "../database/launch-db";
 
 const envKeys = [
@@ -61,7 +61,8 @@ describe("prepareDatabaseForServerStartup", () => {
   test("uses latest manifest artifact key when launch mode is latest", async () => {
     const testRoot = path.join(process.cwd(), ".tmp-tests", "launch-db-latest");
     const storageDir = path.join(testRoot, "storage");
-    const dbRelativePath = "../../../.tmp-tests/launch-db-latest/runtime/active.db";
+    const dbRelativePath =
+      "../../../.tmp-tests/launch-db-latest/runtime/active.db";
 
     process.env.STORAGE_PROVIDER = "local";
     process.env.STORAGE_LOCAL_DIR = storageDir;
@@ -129,6 +130,8 @@ describe("prepareDatabaseForServerStartup", () => {
     StorageFactory.reset();
     await prepareDatabaseForServerStartup();
 
-    expect(fs.readFileSync(targetDbPath, "utf8")).toBe("from-snapshot-artifact");
+    expect(fs.readFileSync(targetDbPath, "utf8")).toBe(
+      "from-snapshot-artifact",
+    );
   });
 });

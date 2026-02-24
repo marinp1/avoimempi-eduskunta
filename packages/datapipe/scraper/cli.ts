@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { type ScrapeMode, scrapeTable } from "./scraper";
 import { getExactTableCountsByRows } from "#table-counts";
+import { type ScrapeMode, scrapeTable } from "./scraper";
 
 async function main() {
   const args = process.argv.slice(2);
@@ -65,8 +65,9 @@ async function main() {
 }
 
 async function showStatus() {
-  const { getStorage, listAllStorageKeys, StorageKeyBuilder } =
-    await import("#storage");
+  const { getStorage, listAllStorageKeys, StorageKeyBuilder } = await import(
+    "#storage"
+  );
   const storage = getStorage();
 
   console.log("📊 Scraping Status\n");

@@ -32,7 +32,9 @@ function parseOptionalInteger(
   if (!normalized) return null;
   const parsed = Number.parseInt(normalized, 10);
   if (Number.isNaN(parsed)) {
-    throw new Error(`Invalid integer in ${fieldName}${suffix}: '${normalized}'`);
+    throw new Error(
+      `Invalid integer in ${fieldName}${suffix}: '${normalized}'`,
+    );
   }
   return parsed;
 }
@@ -49,15 +51,19 @@ function writeMigrationReport(
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const baseDir =
     process.env.MIGRATOR_REPORT_LOG_DIR ||
-    join(process.cwd(), "data", "migration-reports", "VaskiData", "välikysymys");
+    join(
+      process.cwd(),
+      "data",
+      "migration-reports",
+      "VaskiData",
+      "välikysymys",
+    );
   mkdirSync(baseDir, { recursive: true });
 
   const id = normalizeText(row.id) || "unknown-id";
-  const fileName = [
-    timestamp,
-    toSafeFilePart(reason),
-    toSafeFilePart(id),
-  ].join("__");
+  const fileName = [timestamp, toSafeFilePart(reason), toSafeFilePart(id)].join(
+    "__",
+  );
 
   const payload = {
     reason,
@@ -68,7 +74,11 @@ function writeMigrationReport(
     source: row._source || null,
   };
 
-  writeFileSync(join(baseDir, `${fileName}.json`), JSON.stringify(payload, null, 2), "utf8");
+  writeFileSync(
+    join(baseDir, `${fileName}.json`),
+    JSON.stringify(payload, null, 2),
+    "utf8",
+  );
 }
 
 function parseParliamentIdentifier(eduskuntaTunnus: unknown): {
@@ -124,8 +134,13 @@ function collectTextFragments(node: unknown, output: string[]): void {
   }
 
   if (typeof node === "object") {
-    for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
-      if (typeof value === "string" && (key === "KappaleKooste" || key.endsWith("Teksti"))) {
+    for (const [key, value] of Object.entries(
+      node as Record<string, unknown>,
+    )) {
+      if (
+        typeof value === "string" &&
+        (key === "KappaleKooste" || key.endsWith("Teksti"))
+      ) {
         const normalized = normalizeText(value);
         if (normalized) output.push(normalized);
         continue;
@@ -185,29 +200,42 @@ function parseKasittelytiedot(
 
   const identifiointiOsa = kasittely.IdentifiointiOsa || {};
   const title = normalizeText(identifiointiOsa.Nimeke?.NimekeTeksti);
-  const submission_date = normalizeText(kasittely["@_laadintaPvm"]) ||
+  const submission_date =
+    normalizeText(kasittely["@_laadintaPvm"]) ||
     normalizeText(identifiointiOsa.LaadintaPvmTeksti);
 
   const toimija = identifiointiOsa.Toimija;
   const henkilo = toimija?.Henkilo;
-  const first_signer_person_id = henkilo ? parseOptionalInteger(henkilo["@_muuTunnus"], "first_signer_person_id", context) : null;
+  const first_signer_person_id = henkilo
+    ? parseOptionalInteger(
+        henkilo["@_muuTunnus"],
+        "first_signer_person_id",
+        context,
+      )
+    : null;
   const first_signer_first_name = normalizeText(henkilo?.EtuNimi);
   const first_signer_last_name = normalizeText(henkilo?.SukuNimi);
   const first_signer_party = normalizeText(henkilo?.LisatietoTeksti);
 
   const paatos = kasittely.EduskuntakasittelyPaatosKuvaus;
   const decision_outcome = normalizeText(paatos?.EduskuntakasittelyPaatosNimi);
-  const decision_outcome_code = normalizeText(paatos?.["@_eduskuntakasittelyPaatosKoodi"]);
+  const decision_outcome_code = normalizeText(
+    paatos?.["@_eduskuntakasittelyPaatosKoodi"],
+  );
 
   const stages: InterpellationStage[] = [];
   let stageOrder = 0;
-  const yleinenVaiheet = normalizeArray<Record<string, any>>(kasittely.YleinenKasittelyvaihe);
+  const yleinenVaiheet = normalizeArray<Record<string, any>>(
+    kasittely.YleinenKasittelyvaihe,
+  );
   for (const vaihe of yleinenVaiheet) {
     if (!vaihe || typeof vaihe !== "object") continue;
     const stageTitle = normalizeText(vaihe.OtsikkoTeksti);
     const stageCode = normalizeText(vaihe["@_yleinenKasittelyvaiheKoodi"]);
 
-    const toimenpiteet = normalizeArray<Record<string, any>>(vaihe.ToimenpideJulkaisu);
+    const toimenpiteet = normalizeArray<Record<string, any>>(
+      vaihe.ToimenpideJulkaisu,
+    );
     for (const toimenpide of toimenpiteet) {
       if (!toimenpide || typeof toimenpide !== "object") continue;
       stageOrder++;
@@ -224,10 +252,14 @@ function parseKasittelytiedot(
         }
         const fraasiPaatos = fraasi.FraasiPaatos;
         if (fraasiPaatos) {
-          collectTextFragments(fraasiPaatos.FraasiPaatosKappaleKooste, descParts);
+          collectTextFragments(
+            fraasiPaatos.FraasiPaatosKappaleKooste,
+            descParts,
+          );
         }
       }
-      const eventDescription = descParts.length > 0 ? descParts.join("\n\n") : null;
+      const eventDescription =
+        descParts.length > 0 ? descParts.join("\n\n") : null;
 
       stages.push({
         stage_order: stageOrder,
@@ -266,9 +298,15 @@ function parseKasittelytiedot(
 
   let co_signer_count: number | null = null;
   for (const vaihe of yleinenVaiheet) {
-    const toimenpiteet = normalizeArray<Record<string, any>>(vaihe?.ToimenpideJulkaisu);
+    const toimenpiteet = normalizeArray<Record<string, any>>(
+      vaihe?.ToimenpideJulkaisu,
+    );
     for (const toimenpide of toimenpiteet) {
-      const count = parseOptionalInteger(toimenpide?.MuuAllekirjoittajaLkm, "co_signer_count", context);
+      const count = parseOptionalInteger(
+        toimenpide?.MuuAllekirjoittajaLkm,
+        "co_signer_count",
+        context,
+      );
       if (count !== null) {
         co_signer_count = count;
         break;
@@ -320,9 +358,11 @@ function parseKysymys(
   }
 
   const meta = getMeta(row);
-  const identifiointiOsa = meta?.IdentifiointiOsa || kysymys?.IdentifiointiOsa || {};
+  const identifiointiOsa =
+    meta?.IdentifiointiOsa || kysymys?.IdentifiointiOsa || {};
   const title = normalizeText(identifiointiOsa.Nimeke?.NimekeTeksti);
-  const submission_date = normalizeText(identifiointiOsa["@_laadintaPvm"]) ||
+  const submission_date =
+    normalizeText(identifiointiOsa["@_laadintaPvm"]) ||
     normalizeText(meta?.["@_laadintaPvm"]);
 
   const questionRichText = convertVaskiNodeToRichText(kysymys.PerusteluOsa);
@@ -336,7 +376,9 @@ function parseKysymys(
   const signers: InterpellationSigner[] = [];
   const allekirjoitusOsa = kysymys.AllekirjoitusOsa;
   if (allekirjoitusOsa) {
-    const allekirjoittajat = normalizeArray<Record<string, any>>(allekirjoitusOsa.Allekirjoittaja);
+    const allekirjoittajat = normalizeArray<Record<string, any>>(
+      allekirjoitusOsa.Allekirjoittaja,
+    );
     for (const [index, allekirjoittaja] of allekirjoittajat.entries()) {
       const henkilo = allekirjoittaja?.Henkilo;
       if (!henkilo) continue;
@@ -346,13 +388,18 @@ function parseKysymys(
       if (!firstName || !lastName) continue;
 
       const isFirst =
-        normalizeText(allekirjoittaja["@_allekirjoitusLuokitusKoodi"]) === "EnsimmainenAllekirjoittaja"
+        normalizeText(allekirjoittaja["@_allekirjoitusLuokitusKoodi"]) ===
+        "EnsimmainenAllekirjoittaja"
           ? 1
           : 0;
 
       signers.push({
         signer_order: index + 1,
-        person_id: parseOptionalInteger(henkilo["@_muuTunnus"], "person_id", context),
+        person_id: parseOptionalInteger(
+          henkilo["@_muuTunnus"],
+          "person_id",
+          context,
+        ),
         first_name: firstName,
         last_name: lastName,
         party: normalizeText(henkilo.LisatietoTeksti),
@@ -361,7 +408,8 @@ function parseKysymys(
     }
   }
 
-  const first = signers.find((s) => s.is_first_signer === 1) || signers[0] || null;
+  const first =
+    signers.find((s) => s.is_first_signer === 1) || signers[0] || null;
 
   const subjects: InterpellationSubject[] = [];
   const aiheet = normalizeArray<Record<string, any>>(meta?.Aihe);
@@ -408,17 +456,23 @@ export default function createValikysymysSubMigrator(db: Database) {
      RETURNING id`,
   );
 
-  const deleteSigners = db.prepare("DELETE FROM InterpellationSigner WHERE interpellation_id = ?");
+  const deleteSigners = db.prepare(
+    "DELETE FROM InterpellationSigner WHERE interpellation_id = ?",
+  );
   const insertSigner = db.prepare(
     "INSERT INTO InterpellationSigner (interpellation_id, signer_order, person_id, first_name, last_name, party, is_first_signer) VALUES (?, ?, ?, ?, ?, ?, ?)",
   );
 
-  const deleteStages = db.prepare("DELETE FROM InterpellationStage WHERE interpellation_id = ?");
+  const deleteStages = db.prepare(
+    "DELETE FROM InterpellationStage WHERE interpellation_id = ?",
+  );
   const insertStage = db.prepare(
     "INSERT INTO InterpellationStage (interpellation_id, stage_order, stage_title, stage_code, event_date, event_title, event_description) VALUES (?, ?, ?, ?, ?, ?, ?)",
   );
 
-  const deleteSubjects = db.prepare("DELETE FROM InterpellationSubject WHERE interpellation_id = ?");
+  const deleteSubjects = db.prepare(
+    "DELETE FROM InterpellationSubject WHERE interpellation_id = ?",
+  );
   const insertSubject = db.prepare(
     "INSERT OR IGNORE INTO InterpellationSubject (interpellation_id, subject_text) VALUES (?, ?)",
   );
@@ -455,7 +509,11 @@ export default function createValikysymysSubMigrator(db: Database) {
       const context = `row id=${row.id}, ${parsed.identifier}`;
       const id = parseOptionalInteger(row.id, "id", context);
       if (id === null) {
-        writeMigrationReport(row, "invalid_id", `Could not parse numeric id from '${row.id}'`);
+        writeMigrationReport(
+          row,
+          "invalid_id",
+          `Could not parse numeric id from '${row.id}'`,
+        );
         return;
       }
 
@@ -500,7 +558,8 @@ export default function createValikysymysSubMigrator(db: Database) {
             sourcePath,
           );
 
-          const interpellationId = (interpellationRow as { id: number } | undefined)?.id ?? id;
+          const interpellationId =
+            (interpellationRow as { id: number } | undefined)?.id ?? id;
 
           linkVaskiDocument.run(id, interpellationId);
           if (data.title) updateVaskiTitle.run(data.title, id);
@@ -545,7 +604,8 @@ export default function createValikysymysSubMigrator(db: Database) {
             sourcePath,
           );
 
-          const interpellationId = (interpellationRow as { id: number } | undefined)?.id ?? id;
+          const interpellationId =
+            (interpellationRow as { id: number } | undefined)?.id ?? id;
 
           linkVaskiDocument.run(id, interpellationId);
           if (data.title) updateVaskiTitle.run(data.title, id);

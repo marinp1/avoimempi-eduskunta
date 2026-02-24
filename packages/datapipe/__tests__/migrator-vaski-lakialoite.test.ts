@@ -3,14 +3,12 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import createSubMigrator from "../migrator/VaskiData/submigrators/lakialoite";
 import { clearStatementCache } from "../migrator/utils";
 import type { VaskiEntry } from "../migrator/VaskiData/reader";
+import createSubMigrator from "../migrator/VaskiData/submigrators/lakialoite";
 import { createTestDb } from "./helpers/setup-db";
 
-function makeLakialoiteRow(
-  overrides: Partial<VaskiEntry> = {},
-): VaskiEntry {
+function makeLakialoiteRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
   return {
     id: "9001",
     eduskuntaTunnus: "LA 12/2024 vp",
@@ -26,9 +24,7 @@ function makeLakialoiteRow(
       Siirto: {
         SiirtoMetatieto: {
           JulkaisuMetatieto: {
-            Aihe: [
-              { AiheTeksti: "Valtiontalous", "@_muuTunnus": "yso:p1" },
-            ],
+            Aihe: [{ AiheTeksti: "Valtiontalous", "@_muuTunnus": "yso:p1" }],
           },
         },
         SiirtoAsiakirja: {
@@ -58,9 +54,7 @@ function makeLakialoiteRow(
   };
 }
 
-function makeKasittelyRow(
-  overrides: Partial<VaskiEntry> = {},
-): VaskiEntry {
+function makeKasittelyRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
   return {
     id: "9002",
     eduskuntaTunnus: "LA 12/2024 vp",
@@ -207,11 +201,17 @@ describe("Vaski lakialoite submigrator", () => {
   test("skips unsupported identifier and writes migration report", async () => {
     await migrateRow(makeLakialoiteRow({ eduskuntaTunnus: "HE 1/2024 vp" }));
 
-    const initiatives = db.query("SELECT id FROM LegislativeInitiative").all() as any[];
+    const initiatives = db
+      .query("SELECT id FROM LegislativeInitiative")
+      .all() as any[];
     expect(initiatives).toHaveLength(0);
 
-    const reportFiles = readdirSync(reportLogDir).filter((f) => f.endsWith(".json"));
+    const reportFiles = readdirSync(reportLogDir).filter((f) =>
+      f.endsWith(".json"),
+    );
     expect(reportFiles.length).toBeGreaterThan(0);
-    expect(reportFiles.some((f) => f.includes("invalid_parliament_identifier"))).toBe(true);
+    expect(
+      reportFiles.some((f) => f.includes("invalid_parliament_identifier")),
+    ).toBe(true);
   });
 });

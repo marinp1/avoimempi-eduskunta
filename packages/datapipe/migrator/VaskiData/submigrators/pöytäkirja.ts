@@ -135,7 +135,9 @@ function parseOptionalInteger(
 
   const parsed = Number.parseInt(normalized, 10);
   if (Number.isNaN(parsed)) {
-    throw new Error(`Invalid integer in ${fieldName}${suffix}: '${normalized}'`);
+    throw new Error(
+      `Invalid integer in ${fieldName}${suffix}: '${normalized}'`,
+    );
   }
   return parsed;
 }
@@ -192,7 +194,8 @@ function parseMeta(row: VaskiEntry): Record<string, any> {
 }
 
 function parseBody(row: VaskiEntry): Record<string, any> {
-  const body = row.contents?.Siirto?.SiirtoAsiakirja?.RakenneAsiakirja?.Poytakirja;
+  const body =
+    row.contents?.Siirto?.SiirtoAsiakirja?.RakenneAsiakirja?.Poytakirja;
   if (!body || typeof body !== "object") {
     throw new Error(`Poytakirja body missing for row id=${row.id}`);
   }
@@ -217,7 +220,10 @@ function collectTextFragments(node: unknown, output: string[]): void {
 
   if (typeof node === "object") {
     for (const [key, value] of Object.entries(node)) {
-      if (typeof value === "string" && (key === "KappaleKooste" || key.endsWith("Teksti"))) {
+      if (
+        typeof value === "string" &&
+        (key === "KappaleKooste" || key.endsWith("Teksti"))
+      ) {
         const normalized = normalizeText(value);
         if (normalized) output.push(normalized);
         continue;
@@ -250,9 +256,16 @@ function extractSpeechText(parts: Record<string, any>[]): string | null {
 }
 
 function extractItemContentText(item: Record<string, any>): string | null {
-  const candidates: unknown[] = [item.KohtaSisalto, item.Toimenpide, item.PaatoksentekoToimenpide];
+  const candidates: unknown[] = [
+    item.KohtaSisalto,
+    item.Toimenpide,
+    item.PaatoksentekoToimenpide,
+  ];
 
-  if (item.KeskusteluToimenpide && typeof item.KeskusteluToimenpide === "object") {
+  if (
+    item.KeskusteluToimenpide &&
+    typeof item.KeskusteluToimenpide === "object"
+  ) {
     const discussionWithoutSpeeches = { ...item.KeskusteluToimenpide };
     delete discussionWithoutSpeeches.PuheenvuoroToimenpide;
     candidates.push(discussionWithoutSpeeches);
@@ -301,7 +314,9 @@ function addRelatedDocumentCandidate(
   upsertRelatedDocument(map, normalized, type);
 }
 
-function parseRelatedDocuments(item: Record<string, any>): ParsedRelatedDocument[] {
+function parseRelatedDocuments(
+  item: Record<string, any>,
+): ParsedRelatedDocument[] {
   const sources = [
     ...normalizeArray<Record<string, any>>(item.KohtaAsia),
     ...normalizeArray<Record<string, any>>(item.KohtaAsiakirja),
@@ -363,8 +378,7 @@ function extractSpeechesFromItem(
   ).filter((entry) => entry && typeof entry === "object");
 
   for (const [speechIndex, speechEntry] of speechEntries.entries()) {
-    const context =
-      `row id=${row.id}, entry_order=${sourceEntryOrder}, speech_index=${speechIndex + 1}`;
+    const context = `row id=${row.id}, entry_order=${sourceEntryOrder}, speech_index=${speechIndex + 1}`;
 
     const speechParts = normalizeArray<Record<string, any>>(
       speechEntry.PuheenvuoroOsa,
@@ -376,8 +390,9 @@ function extractSpeechesFromItem(
     }
 
     const speechOrder =
-      parseDigitsInteger(firstNonEmpty(speechParts.map((part) => part["@_puheenvuoroJNro"]))) ||
-      parseDigitsInteger(speechEntry["@_puheenvuoroJNro"]);
+      parseDigitsInteger(
+        firstNonEmpty(speechParts.map((part) => part["@_puheenvuoroJNro"])),
+      ) || parseDigitsInteger(speechEntry["@_puheenvuoroJNro"]);
     if (speechOrder === null) {
       issues.push(`Missing puheenvuoro order (${context})`);
       continue;
@@ -411,7 +426,9 @@ function extractSpeechesFromItem(
       person_id: parseDigitsInteger(speaker?.["@_muuTunnus"]),
       first_name: normalizeText(speaker?.EtuNimi),
       last_name: normalizeText(speaker?.SukuNimi),
-      speech_type_code: normalizeText(speechEntry["@_puheenvuoroLuokitusKoodi"]),
+      speech_type_code: normalizeText(
+        speechEntry["@_puheenvuoroLuokitusKoodi"],
+      ),
       language_code: languageCode,
       start_time: startTime,
       end_time: endTime,
@@ -435,7 +452,9 @@ function buildMinutesItems(
     const context = `row id=${row.id}, entry_order=${items.length + 1}`;
     const relatedDocuments = parseRelatedDocuments(item);
     const primaryRelatedDocument =
-      relatedDocuments.find((doc) => doc.type !== null) || relatedDocuments[0] || null;
+      relatedDocuments.find((doc) => doc.type !== null) ||
+      relatedDocuments[0] ||
+      null;
     const itemTitle =
       normalizeText(item.KohtaNimeke?.NimekeTeksti) ||
       normalizeText(item.OtsikkoTeksti);
@@ -455,10 +474,11 @@ function buildMinutesItems(
       context,
     );
 
-    if ((processingPhaseCode === null) !== (generalProcessingPhaseCode === null)) {
-      throw new Error(
-        `processing phase codes mismatch (${context})`,
-      );
+    if (
+      (processingPhaseCode === null) !==
+      (generalProcessingPhaseCode === null)
+    ) {
+      throw new Error(`processing phase codes mismatch (${context})`);
     }
 
     if (
@@ -493,7 +513,11 @@ function buildMinutesItems(
       parent_item_identifier: normalizeText(item["@_paakohtaTunnus"]),
       processing_phase_code: processingPhaseCode,
       general_processing_phase_code: generalProcessingPhaseCode,
-      item_order: parseRequiredInteger(item["@_kohtaJNro"], "item_order", context),
+      item_order: parseRequiredInteger(
+        item["@_kohtaJNro"],
+        "item_order",
+        context,
+      ),
       content_text: contentText,
       speeches,
     });
@@ -516,7 +540,9 @@ function buildMinutesRow(row: VaskiEntry): ParsedMinutesRow {
   const context = `row id=${row.id}`;
   const sessionKey = parseSessionKey(row.eduskuntaTunnus);
   if (!sessionKey) {
-    throw new Error(`Could not parse PTK session key from '${row.eduskuntaTunnus}'`);
+    throw new Error(
+      `Could not parse PTK session key from '${row.eduskuntaTunnus}'`,
+    );
   }
 
   const meta = parseMeta(row);
@@ -548,7 +574,8 @@ function buildMinutesRow(row: VaskiEntry): ParsedMinutesRow {
   const createdAt = parseRequiredText(row.created, "created_at", context);
 
   const edkIdentifier =
-    normalizeText(meta?.["@_muuTunnus"]) || normalizeText(body?.["@_muuTunnus"]);
+    normalizeText(meta?.["@_muuTunnus"]) ||
+    normalizeText(body?.["@_muuTunnus"]);
   if (!edkIdentifier) {
     throw new Error(`Missing edk_identifier (${context})`);
   }
@@ -608,7 +635,13 @@ function writeOverwriteLog(
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const baseDir =
     process.env.MIGRATOR_OVERWRITE_LOG_DIR ||
-    join(process.cwd(), "data", "migration-overwrites", "VaskiData", "pöytäkirja");
+    join(
+      process.cwd(),
+      "data",
+      "migration-overwrites",
+      "VaskiData",
+      "pöytäkirja",
+    );
   mkdirSync(baseDir, { recursive: true });
 
   const fileName = [
@@ -635,7 +668,11 @@ function writeOverwriteLog(
     ),
   };
 
-  writeFileSync(join(baseDir, `${fileName}.json`), JSON.stringify(payload, null, 2), "utf8");
+  writeFileSync(
+    join(baseDir, `${fileName}.json`),
+    JSON.stringify(payload, null, 2),
+    "utf8",
+  );
 }
 
 function writeMigrationReport(
@@ -650,11 +687,9 @@ function writeMigrationReport(
   mkdirSync(baseDir, { recursive: true });
 
   const id = normalizeText(row.id) || "unknown-id";
-  const fileName = [
-    timestamp,
-    toSafeFilePart(reason),
-    toSafeFilePart(id),
-  ].join("__");
+  const fileName = [timestamp, toSafeFilePart(reason), toSafeFilePart(id)].join(
+    "__",
+  );
 
   const payload = {
     reason,
@@ -665,7 +700,11 @@ function writeMigrationReport(
     source: row._source || null,
   };
 
-  writeFileSync(join(baseDir, `${fileName}.json`), JSON.stringify(payload, null, 2), "utf8");
+  writeFileSync(
+    join(baseDir, `${fileName}.json`),
+    JSON.stringify(payload, null, 2),
+    "utf8",
+  );
 }
 
 function resolveSectionForMinutesItem(
@@ -675,7 +714,9 @@ function resolveSectionForMinutesItem(
 ): { sectionKey: string; matchMode: SectionMinutesMatchMode } | null {
   const context = `minutes_id=${item.minutes_id}, entry_order=${item.entry_order}`;
   const directMatches = db
-    .query("SELECT key FROM Section WHERE session_key = ? AND vaski_id = ? LIMIT 2")
+    .query(
+      "SELECT key FROM Section WHERE session_key = ? AND vaski_id = ? LIMIT 2",
+    )
     .all(sessionKey, item.item_identifier_numeric) as Array<{ key: string }>;
 
   if (directMatches.length > 1) {
@@ -694,7 +735,9 @@ function resolveSectionForMinutesItem(
   if (parentIdentifier === null) return null;
 
   const parentMatches = db
-    .query("SELECT key FROM Section WHERE session_key = ? AND vaski_id = ? LIMIT 2")
+    .query(
+      "SELECT key FROM Section WHERE session_key = ? AND vaski_id = ? LIMIT 2",
+    )
     .all(sessionKey, parentIdentifier) as Array<{ key: string }>;
 
   if (parentMatches.length > 1) {
@@ -737,9 +780,13 @@ function updateSectionMinutes(
   items: ParsedMinutesItem[],
   matchMode: SectionMinutesMatchMode,
 ) {
-  const sortedItems = items.slice().sort((a, b) => a.entry_order - b.entry_order);
+  const sortedItems = items
+    .slice()
+    .sort((a, b) => a.entry_order - b.entry_order);
   const primary = sortedItems[0];
-  const itemNumbers = dedupeNonEmpty(sortedItems.map((item) => item.item_number));
+  const itemNumbers = dedupeNonEmpty(
+    sortedItems.map((item) => item.item_number),
+  );
   const itemTitles = dedupeNonEmpty(sortedItems.map((item) => item.item_title));
   const relatedDocumentIdentifiers = dedupeNonEmpty(
     sortedItems.flatMap((item) =>
@@ -761,7 +808,9 @@ function updateSectionMinutes(
   const generalProcessingPhaseCodes = dedupeNonEmpty(
     sortedItems.map((item) => item.general_processing_phase_code),
   );
-  const contentParts = dedupeNonEmpty(sortedItems.map((item) => item.content_text));
+  const contentParts = dedupeNonEmpty(
+    sortedItems.map((item) => item.content_text),
+  );
 
   const referenceMap = new Map<string, string | null>();
   for (const item of sortedItems) {
@@ -783,10 +832,12 @@ function updateSectionMinutes(
       referenceMap.set(identifier, reference.type?.trim() || null);
     }
   }
-  const referenceRows = Array.from(referenceMap.entries()).map(([identifier, document_type]) => ({
-    identifier,
-    document_type,
-  }));
+  const referenceRows = Array.from(referenceMap.entries()).map(
+    ([identifier, document_type]) => ({
+      identifier,
+      document_type,
+    }),
+  );
 
   db.run(
     "UPDATE Section SET minutes_entry_kind = ?, minutes_entry_order = ?, minutes_item_identifier = ?, minutes_parent_item_identifier = ?, minutes_item_number = ?, minutes_item_order = ?, minutes_item_title = ?, minutes_related_document_identifier = ?, minutes_related_document_type = ?, minutes_processing_phase_code = ?, minutes_general_processing_phase_code = ?, minutes_content_text = ?, minutes_match_mode = ? WHERE key = ?",
@@ -820,7 +871,9 @@ function upsertSectionDocumentReferences(
   sectionKey: string,
   references: Array<{ identifier: string; document_type: string | null }>,
 ) {
-  db.run("DELETE FROM SectionDocumentReference WHERE section_key = ?", [sectionKey]);
+  db.run("DELETE FROM SectionDocumentReference WHERE section_key = ?", [
+    sectionKey,
+  ]);
   if (references.length === 0) return;
 
   const stmt = db.prepare(
@@ -832,10 +885,7 @@ function upsertSectionDocumentReferences(
   stmt.finalize();
 }
 
-function updateSessionMinutes(
-  db: Database,
-  row: ParsedMinutesRow,
-) {
+function updateSessionMinutes(db: Database, row: ParsedMinutesRow) {
   db.run(
     "UPDATE Session SET minutes_document_id = ?, minutes_edk_identifier = ?, minutes_status = ?, minutes_created_at = ?, minutes_source_path = ?, minutes_has_signature = ?, minutes_agenda_item_count = ?, minutes_other_item_count = ?, minutes_start_time = ?, minutes_end_time = ?, minutes_title = ? WHERE key = ?",
     [
@@ -855,7 +905,9 @@ function updateSessionMinutes(
   );
 }
 
-function normalizeTimestampForMatch(value: string | null | undefined): string | null {
+function normalizeTimestampForMatch(
+  value: string | null | undefined,
+): string | null {
   const normalized = normalizeText(value);
   if (!normalized) return null;
   const match = normalized.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})/);
@@ -896,7 +948,9 @@ function bestTimestampDeltaSeconds(
   return best;
 }
 
-function normalizeNameForMatch(value: string | null | undefined): string | null {
+function normalizeNameForMatch(
+  value: string | null | undefined,
+): string | null {
   const normalized = normalizeText(value);
   return normalized ? normalized.toLocaleLowerCase("fi-FI") : null;
 }
@@ -927,7 +981,9 @@ function resolveSpeechForMinutesSpeech(
   const byPersonId =
     speech.person_id === null
       ? candidates
-      : candidates.filter((candidate) => candidate.person_id === speech.person_id);
+      : candidates.filter(
+          (candidate) => candidate.person_id === speech.person_id,
+        );
   const personScoped = byPersonId.length > 0 ? byPersonId : candidates;
 
   const sourceStartTime = normalizeTimestampForMatch(speech.start_time);
@@ -938,7 +994,10 @@ function resolveSpeechForMinutesSpeech(
           normalizeTimestampForMatch(candidate.order_raw) ||
           normalizeTimestampForMatch(candidate.request_time) ||
           normalizeTimestampForMatch(candidate.created_datetime);
-        const bestDelta = bestTimestampDeltaSeconds(sourceStartTime, candidateTime);
+        const bestDelta = bestTimestampDeltaSeconds(
+          sourceStartTime,
+          candidateTime,
+        );
         return {
           candidate,
           bestDelta,
@@ -994,8 +1053,7 @@ function resolveSpeechForMinutesSpeech(
   if (ordinalCandidates.length > 1) {
     return {
       speech_id: null,
-      warning:
-        `Ambiguous Speech match (section_key='${sectionKey}', ordinal_number=${speech.source_speech_order}, candidates=${ordinalCandidates.length})`,
+      warning: `Ambiguous Speech match (section_key='${sectionKey}', ordinal_number=${speech.source_speech_order}, candidates=${ordinalCandidates.length})`,
     };
   }
 
@@ -1005,7 +1063,10 @@ function resolveSpeechForMinutesSpeech(
   };
 }
 
-function insertSpeechContents(db: Database, rows: DatabaseTables.SpeechContent[]) {
+function insertSpeechContents(
+  db: Database,
+  rows: DatabaseTables.SpeechContent[],
+) {
   for (const row of rows) {
     db.run(
       "INSERT INTO SpeechContent (speech_id, session_key, section_key, source_document_id, source_item_identifier, source_entry_order, source_speech_order, source_speech_identifier, speech_type_code, language_code, start_time, end_time, content, source_path, source_first_name, source_last_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -1124,16 +1185,27 @@ export default function createPoytakirjaSubMigrator(db: Database) {
         }
       >();
       const usedSpeechIdsBySection = new Map<string, Set<number>>();
-      const speechContentBySpeechId = new Map<number, DatabaseTables.SpeechContent>();
+      const speechContentBySpeechId = new Map<
+        number,
+        DatabaseTables.SpeechContent
+      >();
       const subSectionRows: Array<Omit<DatabaseTables.SubSection, "id">> = [];
       const speechIssues: string[] = [...parseIssues];
 
       for (const item of incomingItems) {
-        let sectionLink: { sectionKey: string; matchMode: SectionMinutesMatchMode } | null;
+        let sectionLink: {
+          sectionKey: string;
+          matchMode: SectionMinutesMatchMode;
+        } | null;
         try {
-          sectionLink = resolveSectionForMinutesItem(db, incomingRow.session_key, item);
+          sectionLink = resolveSectionForMinutesItem(
+            db,
+            incomingRow.session_key,
+            item,
+          );
         } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
+          const message =
+            error instanceof Error ? error.message : String(error);
           writeMigrationReport(row, "section_link_error_row_skipped", message);
           return;
         }
@@ -1175,7 +1247,8 @@ export default function createPoytakirjaSubMigrator(db: Database) {
 
         for (const speech of item.speeches) {
           const usedSpeechIds =
-            usedSpeechIdsBySection.get(sectionLink.sectionKey) ?? new Set<number>();
+            usedSpeechIdsBySection.get(sectionLink.sectionKey) ??
+            new Set<number>();
           usedSpeechIdsBySection.set(sectionLink.sectionKey, usedSpeechIds);
 
           const speechLink = resolveSpeechForMinutesSpeech(
@@ -1251,7 +1324,8 @@ export default function createPoytakirjaSubMigrator(db: Database) {
         for (const item of sortedItems) {
           const duplicateExisting = subSectionRows.find(
             (row) =>
-              row.section_key === sectionKey && row.entry_order === item.entry_order,
+              row.section_key === sectionKey &&
+              row.entry_order === item.entry_order,
           );
           if (duplicateExisting) {
             speechIssues.push(
@@ -1281,9 +1355,9 @@ export default function createPoytakirjaSubMigrator(db: Database) {
         }
       }
 
-      const incomingSpeechContents = Array.from(speechContentBySpeechId.values()).sort(
-        (a, b) => a.speech_id - b.speech_id,
-      );
+      const incomingSpeechContents = Array.from(
+        speechContentBySpeechId.values(),
+      ).sort((a, b) => a.speech_id - b.speech_id);
       insertSubSections(db, subSectionRows);
       insertSpeechContents(db, incomingSpeechContents);
 
@@ -1304,7 +1378,10 @@ export default function createPoytakirjaSubMigrator(db: Database) {
         const payload = {
           issue_count: speechIssues.length,
           sampled_issue_count: sampled.length,
-          omitted_issue_count: Math.max(0, speechIssues.length - sampled.length),
+          omitted_issue_count: Math.max(
+            0,
+            speechIssues.length - sampled.length,
+          ),
           issues: sampled,
         };
         writeMigrationReport(

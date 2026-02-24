@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import createSubMigrator from "../migrator/VaskiData/submigrators/suullinen_kysymys";
 import { clearStatementCache } from "../migrator/utils";
 import type { VaskiEntry } from "../migrator/VaskiData/reader";
+import createSubMigrator from "../migrator/VaskiData/submigrators/suullinen_kysymys";
 import { createTestDb } from "./helpers/setup-db";
 
 function makeRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
@@ -27,7 +27,8 @@ function makeRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
             KasittelytiedotValtiopaivaasia: {
               IdentifiointiOsa: {
                 Nimeke: {
-                  NimekeTeksti: "Suullinen kysymys sähkömarkkinasta (Aino Esimerkki sd)",
+                  NimekeTeksti:
+                    "Suullinen kysymys sähkömarkkinasta (Aino Esimerkki sd)",
                 },
               },
               EduskuntakasittelyPaatosKuvaus: {
@@ -45,9 +46,7 @@ function makeRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
                 },
               ],
               Asiasanat: {
-                Aihe: [
-                  { AiheTeksti: "Energia", "@_muuTunnus": "yso:p123" },
-                ],
+                Aihe: [{ AiheTeksti: "Energia", "@_muuTunnus": "yso:p123" }],
               },
               "@_viimeisinKasittelyvaiheKoodi": "KAS",
               "@_paattymisPvm": "2024-03-05",
@@ -94,7 +93,9 @@ describe("Vaski suullinen_kysymys submigrator", () => {
       .get() as any;
 
     expect(question.parliament_identifier).toBe("SKT 15/2024 vp");
-    expect(question.title).toBe("Suullinen kysymys sähkömarkkinasta (Aino Esimerkki sd)");
+    expect(question.title).toBe(
+      "Suullinen kysymys sähkömarkkinasta (Aino Esimerkki sd)",
+    );
     expect(question.question_text).toBe("sähkömarkkinasta");
     expect(question.asker_text).toBe("Aino Esimerkki sd");
     expect(question.decision_outcome).toBe("Vastattu");
@@ -112,7 +113,9 @@ describe("Vaski suullinen_kysymys submigrator", () => {
     expect(stages[0].event_title).toBe("Keskustelu käytiin");
 
     const subjects = db
-      .query("SELECT subject_text, yso_uri FROM OralQuestionSubject WHERE question_id = 9501")
+      .query(
+        "SELECT subject_text, yso_uri FROM OralQuestionSubject WHERE question_id = 9501",
+      )
       .all() as any[];
     expect(subjects).toHaveLength(1);
     expect(subjects[0].subject_text).toBe("Energia");
@@ -125,8 +128,12 @@ describe("Vaski suullinen_kysymys submigrator", () => {
     const questions = db.query("SELECT id FROM OralQuestion").all() as any[];
     expect(questions).toHaveLength(0);
 
-    const reportFiles = readdirSync(reportLogDir).filter((f) => f.endsWith(".json"));
+    const reportFiles = readdirSync(reportLogDir).filter((f) =>
+      f.endsWith(".json"),
+    );
     expect(reportFiles.length).toBeGreaterThan(0);
-    expect(reportFiles.some((f) => f.includes("invalid_parliament_identifier"))).toBe(true);
+    expect(
+      reportFiles.some((f) => f.includes("invalid_parliament_identifier")),
+    ).toBe(true);
   });
 });

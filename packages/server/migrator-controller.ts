@@ -5,14 +5,14 @@ import path from "node:path";
 import type { ServerWebSocket } from "bun";
 import { getMigrations } from "bun-sqlite-migrations";
 import { TableName } from "#constants/index";
-import { migrateVaskiData } from "../datapipe/migrator/VaskiData/migrator";
 import {
   buildConsolidatedMigrationReport,
   type ConsolidatedMigrationReport,
-  writeConsolidatedMigrationReport,
   type ConsolidatedMigrationStatus,
+  writeConsolidatedMigrationReport,
 } from "../datapipe/migrator/reporting";
 import { clearStatementCache } from "../datapipe/migrator/utils";
+import { migrateVaskiData } from "../datapipe/migrator/VaskiData/migrator";
 import { getDatabasePath } from "../shared/database";
 import {
   getStorage,
@@ -187,7 +187,9 @@ const applyMigrationsSafely = (
   db: Database,
   migrations: SqlMigration[],
 ): void => {
-  const orderedMigrations = [...migrations].sort((a, b) => a.version - b.version);
+  const orderedMigrations = [...migrations].sort(
+    (a, b) => a.version - b.version,
+  );
   if (orderedMigrations.length === 0) {
     return;
   }
@@ -315,7 +317,10 @@ const isTruthyEnv = (value: string | undefined): boolean => {
 const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
   !!value && typeof (value as { then?: unknown }).then === "function";
 
-const parsePositiveInt = (value: string | undefined, fallback: number): number => {
+const parsePositiveInt = (
+  value: string | undefined,
+  fallback: number,
+): number => {
   const parsed = Number.parseInt(value ?? "", 10);
   if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
   return parsed;
@@ -480,7 +485,9 @@ export class MigratorController {
     const databasePath = getDatabasePath();
     const databaseFileName = path.basename(databasePath);
     const artifactKey = `${SQLITE_ARTIFACTS_STORAGE_PREFIX}/latest/${databaseFileName}`;
-    const shouldPublishSnapshot = isTruthyEnv(process.env.MIGRATOR_PUBLISH_SNAPSHOT);
+    const shouldPublishSnapshot = isTruthyEnv(
+      process.env.MIGRATOR_PUBLISH_SNAPSHOT,
+    );
 
     if (!fs.existsSync(databasePath)) {
       throw new Error(`SQLite database file not found at '${databasePath}'`);
@@ -614,7 +621,9 @@ export class MigratorController {
     let migrationError: string | null = null;
     let consolidatedReport: ConsolidatedMigrationReport | null = null;
     const useExclusiveLock = isTruthyEnv(process.env.MIGRATOR_EXCLUSIVE_LOCK);
-    const runForeignKeyCheck = isTruthyEnv(process.env.MIGRATOR_FOREIGN_KEY_CHECK);
+    const runForeignKeyCheck = isTruthyEnv(
+      process.env.MIGRATOR_FOREIGN_KEY_CHECK,
+    );
     const foreignKeyCheckSampleLimit = parsePositiveInt(
       process.env.MIGRATOR_FOREIGN_KEY_CHECK_SAMPLE_LIMIT,
       1000,
@@ -781,7 +790,12 @@ export class MigratorController {
                   },
                 });
               },
-              onDocumentTypeSkipped: ({ documentType, index, total, reason }) => {
+              onDocumentTypeSkipped: ({
+                documentType,
+                index,
+                total,
+                reason,
+              }) => {
                 totalDocumentTypes = total;
                 this.sendMessage({
                   type: "progress",
@@ -1086,7 +1100,9 @@ export class MigratorController {
           consolidatedReport,
           consolidatedReportPath,
         );
-        console.log(`📄 Consolidated migration report: ${consolidatedReportPath}`);
+        console.log(
+          `📄 Consolidated migration report: ${consolidatedReportPath}`,
+        );
 
         await this.publishMigrationRunReports({
           runId: reportRunId,
