@@ -24,6 +24,10 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
+import {
+  isDateWithinHallituskausi,
+  useHallituskausi,
+} from "#client/filters/HallituskausiContext";
 import { commonStyles, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { RepresentativeDetails } from "./Details";
@@ -35,6 +39,7 @@ type MemberWithExtras = DatabaseQueries.GetParliamentComposition & {
 
 export default () => {
   const themedColors = useThemedColors();
+  const { selectedHallituskausi } = useHallituskausi();
 
   // Initialize from URL
   const getInitialDate = (): string => {
@@ -178,9 +183,29 @@ export default () => {
   };
 
   const handleDateChange = (newDate: string) => {
+    if (selectedHallituskausi && !isDateWithinHallituskausi(newDate, selectedHallituskausi)) {
+      const clamped =
+        newDate < selectedHallituskausi.startDate
+          ? selectedHallituskausi.startDate
+          : selectedHallituskausi.endDate || newDate;
+      setDate(clamped);
+      updateURL(clamped);
+      return;
+    }
     setDate(newDate);
     updateURL(newDate);
   };
+
+  useEffect(() => {
+    if (!selectedHallituskausi) return;
+    if (isDateWithinHallituskausi(date, selectedHallituskausi)) return;
+    const fallback =
+      date < selectedHallituskausi.startDate
+        ? selectedHallituskausi.startDate
+        : selectedHallituskausi.endDate || selectedHallituskausi.startDate;
+    setDate(fallback);
+    updateURL(fallback);
+  }, [date, selectedHallituskausi]);
 
   const handleRowClick = (member: DatabaseQueries.GetParliamentComposition) => {
     setSelectedRepresentative(member);
@@ -259,6 +284,10 @@ export default () => {
                 value={date}
                 onChange={(e) => handleDateChange(e.target.value)}
                 InputLabelProps={{ shrink: true }}
+                inputProps={{
+                  min: selectedHallituskausi?.startDate,
+                  max: selectedHallituskausi?.endDate || undefined,
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -273,6 +302,11 @@ export default () => {
                   },
                 }}
               />
+              {selectedHallituskausi && (
+                <Alert severity="info" sx={{ mt: spacing.md }}>
+                  Rajattu hallituskauteen: {selectedHallituskausi.label}
+                </Alert>
+              )}
             </CardContent>
           </Box>
         </Box>

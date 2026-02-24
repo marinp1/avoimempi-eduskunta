@@ -1,5 +1,6 @@
 import { Search as SearchIcon } from "@mui/icons-material";
 import {
+  Alert,
   Autocomplete,
   Box,
   Button,
@@ -15,6 +16,7 @@ import {
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { PageHeader } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import {
@@ -98,6 +100,7 @@ const getDocumentApiConfig = (
 
 export default function Documents() {
   const { t } = useTranslation();
+  const { selectedHallituskausi } = useHallituskausi();
 
   // State
   const [documentType, setDocumentType] =
@@ -165,6 +168,12 @@ export default function Documents() {
         if (initiativeTypeCode) {
           params.set("initiativeTypeCode", initiativeTypeCode);
         }
+        if (selectedHallituskausi) {
+          params.set("startDate", selectedHallituskausi.startDate);
+          if (selectedHallituskausi.endDate) {
+            params.set("endDate", selectedHallituskausi.endDate);
+          }
+        }
         const yearsUrl = `${apiBase}/years${params.toString() ? `?${params}` : ""}`;
         const response = await fetch(yearsUrl);
         if (!response.ok) throw new Error("Failed to fetch years");
@@ -177,7 +186,7 @@ export default function Documents() {
       }
     };
     fetchYears();
-  }, [apiBase, initiativeTypeCode]);
+  }, [apiBase, initiativeTypeCode, selectedHallituskausi]);
 
   // Fetch expert statement committees when document type changes
   useEffect(() => {
@@ -248,6 +257,12 @@ export default function Documents() {
             params.set("docType", selectedExpertDocType);
           }
         }
+        if (selectedHallituskausi) {
+          params.set("startDate", selectedHallituskausi.startDate);
+          if (selectedHallituskausi.endDate) {
+            params.set("endDate", selectedHallituskausi.endDate);
+          }
+        }
 
         const response = await fetch(`${apiBase}?${params}`);
         if (!response.ok) throw new Error("Failed to fetch documents");
@@ -274,6 +289,7 @@ export default function Documents() {
       selectedRecipientCommittee,
       selectedExpertCommittee,
       selectedExpertDocType,
+      selectedHallituskausi,
     ],
   );
 
@@ -308,12 +324,24 @@ export default function Documents() {
     if (selectedRecipientCommittee !== "all") {
       sourceParams.set("recipientCommittee", selectedRecipientCommittee);
     }
+    if (selectedHallituskausi) {
+      sourceParams.set("startDate", selectedHallituskausi.startDate);
+      if (selectedHallituskausi.endDate) {
+        sourceParams.set("endDate", selectedHallituskausi.endDate);
+      }
+    }
 
     const recipientParams = new URLSearchParams();
     if (debouncedQuery) recipientParams.set("q", debouncedQuery);
     if (selectedYear !== "all") recipientParams.set("year", selectedYear);
     if (selectedSourceCommittee !== "all") {
       recipientParams.set("sourceCommittee", selectedSourceCommittee);
+    }
+    if (selectedHallituskausi) {
+      recipientParams.set("startDate", selectedHallituskausi.startDate);
+      if (selectedHallituskausi.endDate) {
+        recipientParams.set("endDate", selectedHallituskausi.endDate);
+      }
     }
 
     const sourceUrl = `/api/committee-reports/source-committees${sourceParams.toString() ? `?${sourceParams}` : ""}`;
@@ -367,6 +395,7 @@ export default function Documents() {
     selectedYear,
     selectedSourceCommittee,
     selectedRecipientCommittee,
+    selectedHallituskausi,
   ]);
 
   // Reset filters when document type changes
@@ -686,6 +715,11 @@ export default function Documents() {
             {t("documents.totalDocuments", "asiakirjaa")}
           </Typography>
         </Box>
+        {selectedHallituskausi && (
+          <Alert severity="info">
+            Rajattu hallituskauteen: {selectedHallituskausi.label}
+          </Alert>
+        )}
 
         {/* Results */}
         {loading && page === 1 ? (

@@ -17,5 +17,7 @@ FROM Voting v
 WHERE v.annulled = 0
   AND v.n_total > 0
   AND ABS(v.n_yes - v.n_no) <= $threshold
+  AND ($startDate IS NULL OR v.start_date >= $startDate)
+  AND ($endDateExclusive IS NULL OR v.start_date < $endDateExclusive)
 ORDER BY v.start_time DESC
 LIMIT $limit;

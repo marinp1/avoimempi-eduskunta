@@ -10,3 +10,5 @@ WHERE
     SELECT 1 FROM InterpellationSubject
     WHERE interpellation_id = i.id AND subject_text = $subject
   ))
+  AND ($startDate IS NULL OR i.submission_date >= $startDate)
+  AND ($endDateExclusive IS NULL OR i.submission_date < $endDateExclusive)

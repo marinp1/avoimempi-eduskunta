@@ -25,6 +25,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  intersectDateRangeWithHallituskausi,
+  useHallituskausi,
+} from "#client/filters/HallituskausiContext";
 import { colors, commonStyles, spacing } from "#client/theme";
 import { GlassCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -63,6 +67,7 @@ export default function PartyParticipation({
   onClose,
 }: PartyParticipationProps) {
   const themedColors = useThemedColors();
+  const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<PartyParticipationData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,39 +77,55 @@ export default function PartyParticipation({
     new Set(),
   );
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const params = new URLSearchParams();
-      if (startDate) params.set("startDate", startDate);
-      if (endDate) params.set("endDate", endDate);
-
-      const response = await fetch(
-        `/api/insights/party-participation-by-government?${params.toString()}`,
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch party participation data");
-      }
-
-      const result = await response.json();
-      setData(result);
-
-      // Initialize with all parties selected
-      const parties = new Set<string>(result.map((d: any) => d.party_name));
-      setSelectedParties(parties);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const effectiveDateRange = React.useMemo(
+    () =>
+      intersectDateRangeWithHallituskausi(
+        {
+          startDate,
+          endDate,
+        },
+        selectedHallituskausi,
+      ),
+    [endDate, selectedHallituskausi, startDate],
+  );
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const params = new URLSearchParams();
+        if (effectiveDateRange.startDate) {
+          params.set("startDate", effectiveDateRange.startDate);
+        }
+        if (effectiveDateRange.endDate) {
+          params.set("endDate", effectiveDateRange.endDate);
+        }
+
+        const response = await fetch(
+          `/api/insights/party-participation-by-government?${params.toString()}`,
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch party participation data");
+        }
+
+        const result = await response.json();
+        setData(result);
+
+        // Initialize with all parties selected
+        const parties = new Set<string>(result.map((d: any) => d.party_name));
+        setSelectedParties(parties);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchData();
-  }, [fetchData]);
+  }, [effectiveDateRange.endDate, effectiveDateRange.startDate]);
 
   // Transform data for chart
   const chartData = React.useMemo(() => {
@@ -321,6 +342,11 @@ export default function PartyParticipation({
                   />
                 </Grid>
               </Grid>
+              {selectedHallituskausi && (
+                <Alert severity="info" sx={{ mt: spacing.sm }}>
+                  Rajattu hallituskauteen: {selectedHallituskausi.label}
+                </Alert>
+              )}
             </CardContent>
           </GlassCard>
         </Box>

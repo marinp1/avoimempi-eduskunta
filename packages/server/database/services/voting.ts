@@ -1,12 +1,27 @@
 import type { Database } from "bun:sqlite";
 import * as queries from "../queries";
 
-export const queryVotings = (db: Database, searchQuery: string) => {
+export const queryVotings = (
+  db: Database,
+  params: {
+    searchQuery: string;
+    startDate?: string | null;
+    endDateExclusive?: string | null;
+  },
+) => {
   const stmt = db.prepare<
     DatabaseQueries.VotingSearchResult,
-    { $query: string }
+    {
+      $query: string;
+      $startDate: string | null;
+      $endDateExclusive: string | null;
+    }
   >(queries.votingsSearch);
-  const data = stmt.all({ $query: searchQuery });
+  const data = stmt.all({
+    $query: params.searchQuery,
+    $startDate: params.startDate ?? null,
+    $endDateExclusive: params.endDateExclusive ?? null,
+  });
   stmt.finalize();
   return data;
 };

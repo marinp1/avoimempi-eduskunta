@@ -189,10 +189,19 @@ const server = Bun.serve<{
       },
     },
 
+    "/api/hallituskaudet": {
+      GET: async () => {
+        const periods = await db.fetchHallituskaudet();
+        return Response.json(periods);
+      },
+    },
+
     "/api/votings/search": {
       GET: async (req: BunRequest<"/api/votings/search">) => {
         const { searchParams } = new URL(req.url);
         const q = searchParams.get("q")?.trim() || "";
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
         if (!q)
           return Response.json(
             { message: "Missing query parameter" },
@@ -203,7 +212,7 @@ const server = Bun.serve<{
             { message: "Query paramter requires at least three characters" },
             { status: 400 },
           );
-        const titles = await db.queryVotings({ q });
+        const titles = await db.queryVotings({ q, startDate, endDate });
         return new Response(JSON.stringify(titles), {
           headers: { "Content-Type": "application/json" },
         });
@@ -479,8 +488,11 @@ const server = Bun.serve<{
     // ─── Analytics endpoints ───
 
     "/api/analytics/party-discipline": {
-      GET: async () => {
-        const data = await db.fetchPartyDiscipline();
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
+        const data = await db.fetchPartyDiscipline({ startDate, endDate });
         return Response.json(data);
       },
     },
@@ -490,7 +502,14 @@ const server = Bun.serve<{
         const { searchParams } = new URL(req.url);
         const threshold = parseInt(searchParams.get("threshold") || "10", 10);
         const limit = parseInt(searchParams.get("limit") || "50", 10);
-        const data = await db.fetchCloseVotes({ threshold, limit });
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
+        const data = await db.fetchCloseVotes({
+          threshold,
+          limit,
+          startDate,
+          endDate,
+        });
         return Response.json(data);
       },
     },
@@ -508,7 +527,13 @@ const server = Bun.serve<{
       GET: async (req: Request) => {
         const { searchParams } = new URL(req.url);
         const limit = parseInt(searchParams.get("limit") || "50", 10);
-        const data = await db.fetchCoalitionVsOpposition({ limit });
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
+        const data = await db.fetchCoalitionVsOpposition({
+          limit,
+          startDate,
+          endDate,
+        });
         return Response.json(data);
       },
     },
@@ -518,9 +543,13 @@ const server = Bun.serve<{
         const { searchParams } = new URL(req.url);
         const personId = searchParams.get("personId");
         const limit = parseInt(searchParams.get("limit") || "100", 10);
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
         const data = await db.fetchDissentTracking({
           personId: personId ? +personId : undefined,
           limit,
+          startDate,
+          endDate,
         });
         return Response.json(data);
       },
@@ -530,7 +559,9 @@ const server = Bun.serve<{
       GET: async (req: Request) => {
         const { searchParams } = new URL(req.url);
         const limit = parseInt(searchParams.get("limit") || "50", 10);
-        const data = await db.fetchSpeechActivity({ limit });
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
+        const data = await db.fetchSpeechActivity({ limit, startDate, endDate });
         return Response.json(data);
       },
     },
@@ -554,16 +585,41 @@ const server = Bun.serve<{
     // ─── Party endpoints ───
 
     "/api/parties/summary": {
-      GET: async () => {
-        const data = await db.fetchPartySummary();
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const asOfDate = searchParams.get("asOfDate") || undefined;
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
+        const governmentName = searchParams.get("governmentName") || undefined;
+        const governmentStartDate =
+          searchParams.get("governmentStartDate") || undefined;
+        const data = await db.fetchPartySummary({
+          asOfDate,
+          startDate,
+          endDate,
+          governmentName,
+          governmentStartDate,
+        });
         return Response.json(data);
       },
     },
 
     "/api/parties/:code/members": {
       GET: async (req: BunRequest<"/api/parties/:code/members">) => {
+        const { searchParams } = new URL(req.url);
+        const asOfDate = searchParams.get("asOfDate") || undefined;
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
+        const governmentName = searchParams.get("governmentName") || undefined;
+        const governmentStartDate =
+          searchParams.get("governmentStartDate") || undefined;
         const data = await db.fetchPartyMembers({
           partyCode: req.params.code,
+          asOfDate,
+          startDate,
+          endDate,
+          governmentName,
+          governmentStartDate,
         });
         return Response.json(data);
       },
@@ -612,12 +668,16 @@ const server = Bun.serve<{
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
         const subject = searchParams.get("subject") || undefined;
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
         const data = await db.fetchInterpellations({
           query,
           year,
           subject,
+          startDate,
+          endDate,
           page,
           limit,
         });
@@ -669,12 +729,16 @@ const server = Bun.serve<{
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
         const subject = searchParams.get("subject") || undefined;
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
         const data = await db.fetchGovernmentProposals({
           query,
           year,
           subject,
+          startDate,
+          endDate,
           page,
           limit,
         });
@@ -728,12 +792,16 @@ const server = Bun.serve<{
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
         const subject = searchParams.get("subject") || undefined;
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
         const data = await db.fetchWrittenQuestions({
           query,
           year,
           subject,
+          startDate,
+          endDate,
           page,
           limit,
         });
@@ -786,6 +854,8 @@ const server = Bun.serve<{
         const year = searchParams.get("year") || undefined;
         const committee = searchParams.get("committee") || undefined;
         const docType = searchParams.get("docType") || undefined;
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
         const data = await db.fetchExpertStatements({
@@ -793,6 +863,8 @@ const server = Bun.serve<{
           year,
           committee,
           docType,
+          startDate,
+          endDate,
           page,
           limit,
         });
@@ -822,12 +894,16 @@ const server = Bun.serve<{
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
         const minister = searchParams.get("minister") || undefined;
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
         const data = await db.fetchWrittenQuestionResponses({
           query,
           year,
           minister,
+          startDate,
+          endDate,
           page,
           limit,
         });
@@ -850,12 +926,16 @@ const server = Bun.serve<{
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
         const subject = searchParams.get("subject") || undefined;
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
         const data = await db.fetchOralQuestions({
           query,
           year,
           subject,
+          startDate,
+          endDate,
           page,
           limit,
         });
@@ -910,6 +990,8 @@ const server = Bun.serve<{
           searchParams.get("sourceCommittee") || undefined;
         const recipientCommittee =
           searchParams.get("recipientCommittee") || undefined;
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
         const data = await db.fetchCommitteeReports({
@@ -917,6 +999,8 @@ const server = Bun.serve<{
           year,
           sourceCommittee,
           recipientCommittee,
+          startDate,
+          endDate,
           page,
           limit,
         });
@@ -938,10 +1022,14 @@ const server = Bun.serve<{
         const year = searchParams.get("year") || undefined;
         const recipientCommittee =
           searchParams.get("recipientCommittee") || undefined;
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
         const data = await db.fetchCommitteeReportSourceCommittees({
           query,
           year,
           recipientCommittee,
+          startDate,
+          endDate,
         });
         return Response.json(data);
       },
@@ -954,10 +1042,14 @@ const server = Bun.serve<{
         const year = searchParams.get("year") || undefined;
         const sourceCommittee =
           searchParams.get("sourceCommittee") || undefined;
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
         const data = await db.fetchCommitteeReportRecipientCommittees({
           query,
           year,
           sourceCommittee,
+          startDate,
+          endDate,
         });
         return Response.json(data);
       },
@@ -995,6 +1087,8 @@ const server = Bun.serve<{
         const subject = searchParams.get("subject") || undefined;
         const initiativeTypeCode =
           searchParams.get("initiativeTypeCode") || undefined;
+        const startDate = searchParams.get("startDate") || undefined;
+        const endDate = searchParams.get("endDate") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
         const data = await db.fetchLegislativeInitiatives({
@@ -1002,6 +1096,8 @@ const server = Bun.serve<{
           year,
           subject,
           initiativeTypeCode,
+          startDate,
+          endDate,
           page,
           limit,
         });

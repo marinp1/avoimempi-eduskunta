@@ -134,10 +134,40 @@ export class DatabaseConnection {
     return fetchGovernmentMemberships(this.db, params);
   }
 
-  public async queryVotings(params: { q: string }) {
+  public async fetchHallituskaudet() {
+    const stmt = this.db.prepare<
+      {
+        government: string;
+        start_date: string;
+        end_date: string | null;
+      },
+      []
+    >(queries.hallituskaudet);
+    const rows = stmt.all();
+    stmt.finalize();
+
+    return rows.map((row) => ({
+      id: `${row.start_date}|${row.government}`,
+      name: row.government,
+      label: `${row.government} (${row.start_date} - ${row.end_date ?? "..."})`,
+      startDate: row.start_date,
+      endDate: row.end_date,
+    }));
+  }
+
+  public async queryVotings(params: {
+    q: string;
+    startDate?: string;
+    endDate?: string;
+  }) {
     const searchQuery = this.buildSearchQuery(params.q);
     if (!searchQuery) return [];
-    return queryVotings(this.db, searchQuery);
+    const endDateExclusive = this.endDateExclusive(params.endDate);
+    return queryVotings(this.db, {
+      searchQuery,
+      startDate: params.startDate ?? null,
+      endDateExclusive,
+    });
   }
 
   public async fetchVotingById(params: { id: string }) {
@@ -440,7 +470,11 @@ export class DatabaseConnection {
 
   // ─── Analytics queries ───
 
-  public async fetchPartyDiscipline() {
+  public async fetchPartyDiscipline(params?: {
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const endDateExclusive = this.endDateExclusive(params?.endDate);
     const stmt = this.db.prepare<
       {
         party_name: string;
@@ -449,14 +483,23 @@ export class DatabaseConnection {
         votes_with_majority: number;
         discipline_rate: number;
       },
-      []
+      { $startDate: string | null; $endDateExclusive: string | null }
     >(queries.partyDiscipline);
-    const data = stmt.all();
+    const data = stmt.all({
+      $startDate: params?.startDate || null,
+      $endDateExclusive: endDateExclusive,
+    });
     stmt.finalize();
     return data;
   }
 
-  public async fetchCloseVotes(params: { threshold?: number; limit?: number }) {
+  public async fetchCloseVotes(params: {
+    threshold?: number;
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const endDateExclusive = this.endDateExclusive(params.endDate);
     const stmt = this.db.prepare<
       {
         id: number;
@@ -474,11 +517,18 @@ export class DatabaseConnection {
         result_url: string;
         proceedings_url: string;
       },
-      { $threshold: number; $limit: number }
+      {
+        $threshold: number;
+        $limit: number;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
     >(queries.closeVotes);
     const data = stmt.all({
       $threshold: params.threshold ?? 10,
       $limit: params.limit ?? 50,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
     });
     stmt.finalize();
     return data;
@@ -504,7 +554,12 @@ export class DatabaseConnection {
     return data;
   }
 
-  public async fetchCoalitionVsOpposition(params: { limit?: number }) {
+  public async fetchCoalitionVsOpposition(params: {
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const endDateExclusive = this.endDateExclusive(params.endDate);
     const stmt = this.db.prepare<
       {
         voting_id: number;
@@ -520,9 +575,17 @@ export class DatabaseConnection {
         opposition_no: number;
         opposition_total: number;
       },
-      { $limit: number }
+      {
+        $limit: number;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
     >(queries.coalitionVsOpposition);
-    const data = stmt.all({ $limit: params.limit ?? 50 });
+    const data = stmt.all({
+      $limit: params.limit ?? 50,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
+    });
     stmt.finalize();
     return data;
   }
@@ -530,7 +593,10 @@ export class DatabaseConnection {
   public async fetchDissentTracking(params: {
     personId?: number;
     limit?: number;
+    startDate?: string;
+    endDate?: string;
   }) {
+    const endDateExclusive = this.endDateExclusive(params.endDate);
     const stmt = this.db.prepare<
       {
         person_id: number;
@@ -545,17 +611,29 @@ export class DatabaseConnection {
         mp_vote: string;
         majority_vote: string;
       },
-      { $personId: number | null; $limit: number }
+      {
+        $personId: number | null;
+        $limit: number;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
     >(queries.dissentTracking);
     const data = stmt.all({
       $personId: params.personId ?? null,
       $limit: params.limit ?? 100,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
     });
     stmt.finalize();
     return data;
   }
 
-  public async fetchSpeechActivity(params: { limit?: number }) {
+  public async fetchSpeechActivity(params: {
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const endDateExclusive = this.endDateExclusive(params.endDate);
     const stmt = this.db.prepare<
       {
         person_id: number;
@@ -568,9 +646,17 @@ export class DatabaseConnection {
         first_speech: string;
         last_speech: string;
       },
-      { $limit: number }
+      {
+        $limit: number;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
     >(queries.speechActivity);
-    const data = stmt.all({ $limit: params.limit ?? 50 });
+    const data = stmt.all({
+      $limit: params.limit ?? 50,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
+    });
     stmt.finalize();
     return data;
   }
@@ -610,7 +696,20 @@ export class DatabaseConnection {
     return data;
   }
 
-  public async fetchPartySummary() {
+  public async fetchPartySummary(params?: {
+    asOfDate?: string;
+    startDate?: string;
+    endDate?: string;
+    governmentName?: string;
+    governmentStartDate?: string;
+  }) {
+    const asOfDate =
+      params?.asOfDate ||
+      new Date().toISOString().substring(0, 10);
+    const startDate = params?.startDate ?? null;
+    const endDateExclusive = this.endDateExclusive(params?.endDate);
+    const governmentName = params?.governmentName ?? null;
+    const governmentStartDate = params?.governmentStartDate ?? null;
     const stmt = this.db.prepare<
       {
         party_code: string;
@@ -622,14 +721,40 @@ export class DatabaseConnection {
         male_count: number;
         average_age: number;
       },
-      []
+      {
+        $asOfDate: string;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+        $governmentName: string | null;
+        $governmentStartDate: string | null;
+      }
     >(queries.partySummary);
-    const data = stmt.all();
+    const data = stmt.all({
+      $asOfDate: asOfDate,
+      $startDate: startDate,
+      $endDateExclusive: endDateExclusive,
+      $governmentName: governmentName,
+      $governmentStartDate: governmentStartDate,
+    });
     stmt.finalize();
     return data;
   }
 
-  public async fetchPartyMembers(params: { partyCode: string }) {
+  public async fetchPartyMembers(params: {
+    partyCode: string;
+    asOfDate?: string;
+    startDate?: string;
+    endDate?: string;
+    governmentName?: string;
+    governmentStartDate?: string;
+  }) {
+    const asOfDate =
+      params.asOfDate ||
+      new Date().toISOString().substring(0, 10);
+    const startDate = params.startDate ?? null;
+    const endDateExclusive = this.endDateExclusive(params.endDate);
+    const governmentName = params.governmentName ?? null;
+    const governmentStartDate = params.governmentStartDate ?? null;
     const stmt = this.db.prepare<
       {
         person_id: number;
@@ -643,9 +768,23 @@ export class DatabaseConnection {
         is_minister: number;
         ministry: string | null;
       },
-      { $partyCode: string }
+      {
+        $partyCode: string;
+        $asOfDate: string;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+        $governmentName: string | null;
+        $governmentStartDate: string | null;
+      }
     >(queries.partyMembers);
-    const data = stmt.all({ $partyCode: params.partyCode });
+    const data = stmt.all({
+      $partyCode: params.partyCode,
+      $asOfDate: asOfDate,
+      $startDate: startDate,
+      $endDateExclusive: endDateExclusive,
+      $governmentName: governmentName,
+      $governmentStartDate: governmentStartDate,
+    });
     stmt.finalize();
     return data;
   }
@@ -730,19 +869,34 @@ export class DatabaseConnection {
     query?: string;
     year?: string;
     subject?: string;
+    startDate?: string;
+    endDate?: string;
     page: number;
     limit: number;
   }) {
     const offset = (params.page - 1) * params.limit;
+    const endDateExclusive = this.endDateExclusive(params.endDate);
     const $query = params.query?.trim() || null;
     const $year = params.year || null;
     const $subject = params.subject?.trim() || null;
 
     const countStmt = this.db.prepare<
       { count: number },
-      { $query: string | null; $year: string | null; $subject: string | null }
+      {
+        $query: string | null;
+        $year: string | null;
+        $subject: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
     >(queries.interpellationsCount);
-    const countResult = countStmt.get({ $query, $year, $subject });
+    const countResult = countStmt.get({
+      $query,
+      $year,
+      $subject,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
+    });
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
 
@@ -766,6 +920,8 @@ export class DatabaseConnection {
         $query: string | null;
         $year: string | null;
         $subject: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
         $limit: number;
         $offset: number;
       }
@@ -774,6 +930,8 @@ export class DatabaseConnection {
       $query,
       $year,
       $subject,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
       $limit: params.limit,
       $offset: offset,
     });
@@ -948,19 +1106,34 @@ export class DatabaseConnection {
     query?: string;
     year?: string;
     subject?: string;
+    startDate?: string;
+    endDate?: string;
     page: number;
     limit: number;
   }) {
     const offset = (params.page - 1) * params.limit;
+    const endDateExclusive = this.endDateExclusive(params.endDate);
     const $query = params.query?.trim() || null;
     const $year = params.year || null;
     const $subject = params.subject?.trim() || null;
 
     const countStmt = this.db.prepare<
       { count: number },
-      { $query: string | null; $year: string | null; $subject: string | null }
+      {
+        $query: string | null;
+        $year: string | null;
+        $subject: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
     >(queries.govProposalsCount);
-    const countResult = countStmt.get({ $query, $year, $subject });
+    const countResult = countStmt.get({
+      $query,
+      $year,
+      $subject,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
+    });
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
 
@@ -983,6 +1156,8 @@ export class DatabaseConnection {
         $query: string | null;
         $year: string | null;
         $subject: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
         $limit: number;
         $offset: number;
       }
@@ -991,6 +1166,8 @@ export class DatabaseConnection {
       $query,
       $year,
       $subject,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
       $limit: params.limit,
       $offset: offset,
     });
@@ -1166,19 +1343,34 @@ export class DatabaseConnection {
     query?: string;
     year?: string;
     subject?: string;
+    startDate?: string;
+    endDate?: string;
     page: number;
     limit: number;
   }) {
     const offset = (params.page - 1) * params.limit;
+    const endDateExclusive = this.endDateExclusive(params.endDate);
     const $query = params.query?.trim() || null;
     const $year = params.year || null;
     const $subject = params.subject?.trim() || null;
 
     const countStmt = this.db.prepare<
       { count: number },
-      { $query: string | null; $year: string | null; $subject: string | null }
+      {
+        $query: string | null;
+        $year: string | null;
+        $subject: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
     >(queries.writtenQuestionsCount);
-    const countResult = countStmt.get({ $query, $year, $subject });
+    const countResult = countStmt.get({
+      $query,
+      $year,
+      $subject,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
+    });
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
 
@@ -1208,6 +1400,8 @@ export class DatabaseConnection {
         $query: string | null;
         $year: string | null;
         $subject: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
         $limit: number;
         $offset: number;
       }
@@ -1216,6 +1410,8 @@ export class DatabaseConnection {
       $query,
       $year,
       $subject,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
       $limit: params.limit,
       $offset: offset,
     });
@@ -1404,10 +1600,13 @@ export class DatabaseConnection {
     year?: string;
     committee?: string;
     docType?: string;
+    startDate?: string;
+    endDate?: string;
     page: number;
     limit: number;
   }) {
     const offset = (params.page - 1) * params.limit;
+    const endDateExclusive = this.endDateExclusive(params.endDate);
     const $query = params.query?.trim() || null;
     const $year = params.year || null;
     const $committee = params.committee || null;
@@ -1420,9 +1619,18 @@ export class DatabaseConnection {
         $year: string | null;
         $committee: string | null;
         $docType: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
       }
     >(queries.expertStatementsCount);
-    const countResult = countStmt.get({ $query, $year, $committee, $docType });
+    const countResult = countStmt.get({
+      $query,
+      $year,
+      $committee,
+      $docType,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
+    });
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
 
@@ -1444,6 +1652,8 @@ export class DatabaseConnection {
         $year: string | null;
         $committee: string | null;
         $docType: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
         $limit: number;
         $offset: number;
       }
@@ -1453,6 +1663,8 @@ export class DatabaseConnection {
       $year,
       $committee,
       $docType,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
       $limit: params.limit,
       $offset: offset,
     });
@@ -1491,19 +1703,34 @@ export class DatabaseConnection {
     query?: string;
     year?: string;
     minister?: string;
+    startDate?: string;
+    endDate?: string;
     page: number;
     limit: number;
   }) {
     const offset = (params.page - 1) * params.limit;
+    const endDateExclusive = this.endDateExclusive(params.endDate);
     const $query = params.query?.trim() || null;
     const $year = params.year || null;
     const $minister = params.minister || null;
 
     const countStmt = this.db.prepare<
       { count: number },
-      { $query: string | null; $year: string | null; $minister: string | null }
+      {
+        $query: string | null;
+        $year: string | null;
+        $minister: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
     >(queries.writtenQuestionResponsesCount);
-    const countResult = countStmt.get({ $query, $year, $minister });
+    const countResult = countStmt.get({
+      $query,
+      $year,
+      $minister,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
+    });
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
 
@@ -1527,6 +1754,8 @@ export class DatabaseConnection {
         $query: string | null;
         $year: string | null;
         $minister: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
         $limit: number;
         $offset: number;
       }
@@ -1535,6 +1764,8 @@ export class DatabaseConnection {
       $query,
       $year,
       $minister,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
       $limit: params.limit,
       $offset: offset,
     });
@@ -1564,19 +1795,34 @@ export class DatabaseConnection {
     query?: string;
     year?: string;
     subject?: string;
+    startDate?: string;
+    endDate?: string;
     page: number;
     limit: number;
   }) {
     const offset = (params.page - 1) * params.limit;
+    const endDateExclusive = this.endDateExclusive(params.endDate);
     const $query = params.query?.trim() || null;
     const $year = params.year || null;
     const $subject = params.subject?.trim() || null;
 
     const countStmt = this.db.prepare<
       { count: number },
-      { $query: string | null; $year: string | null; $subject: string | null }
+      {
+        $query: string | null;
+        $year: string | null;
+        $subject: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
     >(queries.oralQuestionsCount);
-    const countResult = countStmt.get({ $query, $year, $subject });
+    const countResult = countStmt.get({
+      $query,
+      $year,
+      $subject,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
+    });
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
 
@@ -1600,6 +1846,8 @@ export class DatabaseConnection {
         $query: string | null;
         $year: string | null;
         $subject: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
         $limit: number;
         $offset: number;
       }
@@ -1608,6 +1856,8 @@ export class DatabaseConnection {
       $query,
       $year,
       $subject,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
       $limit: params.limit,
       $offset: offset,
     });
@@ -1743,10 +1993,13 @@ export class DatabaseConnection {
     year?: string;
     sourceCommittee?: string;
     recipientCommittee?: string;
+    startDate?: string;
+    endDate?: string;
     page: number;
     limit: number;
   }) {
     const offset = (params.page - 1) * params.limit;
+    const endDateExclusive = this.endDateExclusive(params.endDate);
     const $query = params.query?.trim() || null;
     const $year = params.year || null;
     const $sourceCommittee = params.sourceCommittee?.trim() || null;
@@ -1759,6 +2012,8 @@ export class DatabaseConnection {
         $year: string | null;
         $sourceCommittee: string | null;
         $recipientCommittee: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
       }
     >(queries.committeeReportsCount);
     const countResult = countStmt.get({
@@ -1766,6 +2021,8 @@ export class DatabaseConnection {
       $year,
       $sourceCommittee,
       $recipientCommittee,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
     });
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
@@ -1789,6 +2046,8 @@ export class DatabaseConnection {
         $year: string | null;
         $sourceCommittee: string | null;
         $recipientCommittee: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
         $limit: number;
         $offset: number;
       }
@@ -1798,6 +2057,8 @@ export class DatabaseConnection {
       $year,
       $sourceCommittee,
       $recipientCommittee,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
       $limit: params.limit,
       $offset: offset,
     });
@@ -1944,7 +2205,10 @@ export class DatabaseConnection {
     query?: string;
     year?: string;
     recipientCommittee?: string;
+    startDate?: string;
+    endDate?: string;
   }) {
+    const endDateExclusive = this.endDateExclusive(params?.endDate);
     const $query = params?.query?.trim() || null;
     const $year = params?.year?.trim() || null;
     const $recipientCommittee = params?.recipientCommittee?.trim() || null;
@@ -1954,9 +2218,17 @@ export class DatabaseConnection {
         $query: string | null;
         $year: string | null;
         $recipientCommittee: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
       }
     >(queries.committeeReportSourceCommittees);
-    const data = stmt.all({ $query, $year, $recipientCommittee });
+    const data = stmt.all({
+      $query,
+      $year,
+      $recipientCommittee,
+      $startDate: params?.startDate || null,
+      $endDateExclusive: endDateExclusive,
+    });
     stmt.finalize();
     return data;
   }
@@ -1965,7 +2237,10 @@ export class DatabaseConnection {
     query?: string;
     year?: string;
     sourceCommittee?: string;
+    startDate?: string;
+    endDate?: string;
   }) {
+    const endDateExclusive = this.endDateExclusive(params?.endDate);
     const $query = params?.query?.trim() || null;
     const $year = params?.year?.trim() || null;
     const $sourceCommittee = params?.sourceCommittee?.trim() || null;
@@ -1975,9 +2250,17 @@ export class DatabaseConnection {
         $query: string | null;
         $year: string | null;
         $sourceCommittee: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
       }
     >(queries.committeeReportRecipientCommittees);
-    const data = stmt.all({ $query, $year, $sourceCommittee });
+    const data = stmt.all({
+      $query,
+      $year,
+      $sourceCommittee,
+      $startDate: params?.startDate || null,
+      $endDateExclusive: endDateExclusive,
+    });
     stmt.finalize();
     return data;
   }
@@ -1989,10 +2272,13 @@ export class DatabaseConnection {
     year?: string;
     subject?: string;
     initiativeTypeCode?: string;
+    startDate?: string;
+    endDate?: string;
     page: number;
     limit: number;
   }) {
     const offset = (params.page - 1) * params.limit;
+    const endDateExclusive = this.endDateExclusive(params.endDate);
     const $query = params.query?.trim() || null;
     const $year = params.year || null;
     const $subject = params.subject?.trim() || null;
@@ -2005,9 +2291,18 @@ export class DatabaseConnection {
         $year: string | null;
         $subject: string | null;
         $typeCode: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
       }
     >(queries.legislativeInitiativesCount);
-    const countResult = countStmt.get({ $query, $year, $subject, $typeCode });
+    const countResult = countStmt.get({
+      $query,
+      $year,
+      $subject,
+      $typeCode,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
+    });
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
 
@@ -2034,6 +2329,8 @@ export class DatabaseConnection {
         $year: string | null;
         $subject: string | null;
         $typeCode: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
         $limit: number;
         $offset: number;
       }
@@ -2043,6 +2340,8 @@ export class DatabaseConnection {
       $year,
       $subject,
       $typeCode,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusive,
       $limit: params.limit,
       $offset: offset,
     });

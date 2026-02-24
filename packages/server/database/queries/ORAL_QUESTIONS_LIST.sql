@@ -25,6 +25,8 @@ WHERE
     SELECT 1 FROM OralQuestionSubject
     WHERE question_id = oq.id AND subject_text = $subject
   ))
+  AND ($startDate IS NULL OR oq.submission_date >= $startDate)
+  AND ($endDateExclusive IS NULL OR oq.submission_date < $endDateExclusive)
 GROUP BY oq.id
 ORDER BY oq.submission_date DESC, oq.id DESC
 LIMIT $limit OFFSET $offset

@@ -24,6 +24,7 @@ import {
   YAxis,
 } from "recharts";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
+import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { colors, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
 
@@ -71,6 +72,7 @@ export default function CoalitionOpposition({
 }: CoalitionOppositionProps) {
   const themedColors = useThemedColors();
   const { t } = useTranslation();
+  const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<CoalitionOppositionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +87,14 @@ export default function CoalitionOpposition({
   >({});
 
   useEffect(() => {
-    fetch("/api/analytics/coalition-opposition?limit=30")
+    const params = new URLSearchParams({ limit: "30" });
+    if (selectedHallituskausi) {
+      params.set("startDate", selectedHallituskausi.startDate);
+      if (selectedHallituskausi.endDate) {
+        params.set("endDate", selectedHallituskausi.endDate);
+      }
+    }
+    fetch(`/api/analytics/coalition-opposition?${params.toString()}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
@@ -101,7 +110,7 @@ export default function CoalitionOpposition({
         setError(err.message);
         setLoading(false);
       });
-  }, []);
+  }, [selectedHallituskausi]);
 
   const fetchVotingDetails = async (votingId: number) => {
     if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId))
@@ -202,6 +211,11 @@ export default function CoalitionOpposition({
       >
         {t("insights.coalitionOpposition.description")}
       </Typography>
+      {selectedHallituskausi && (
+        <Alert severity="info" sx={{ mb: spacing.md }}>
+          Rajattu hallituskauteen: {selectedHallituskausi.label}
+        </Alert>
+      )}
 
       {data.length === 0 ? (
         <Alert severity="info">

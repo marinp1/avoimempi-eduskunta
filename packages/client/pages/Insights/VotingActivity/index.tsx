@@ -10,6 +10,10 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
+import {
+  intersectDateRangeWithHallituskausi,
+  useHallituskausi,
+} from "#client/filters/HallituskausiContext";
 import { colors, commonStyles, gradients, spacing } from "#client/theme";
 import { GlassCard, StatCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -27,6 +31,7 @@ export default function Osallistumisaktiivisuus({
   initialPersonId,
 }: OsallistumisaktiivisuusProps) {
   const _themedColors = useThemedColors();
+  const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<ParticipationData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +47,18 @@ export default function Osallistumisaktiivisuus({
       setSelectedPersonId(initialPersonId);
     }
   }, [initialPersonId]);
+
+  const effectiveDateRange = React.useMemo(
+    () =>
+      intersectDateRangeWithHallituskausi(
+        {
+          startDate,
+          endDate,
+        },
+        selectedHallituskausi,
+      ),
+    [endDate, selectedHallituskausi, startDate],
+  );
 
   // Compute statistics
   const stats = React.useMemo(() => {
@@ -76,8 +93,12 @@ export default function Osallistumisaktiivisuus({
         setError(null);
 
         const params = new URLSearchParams();
-        if (startDate) params.set("startDate", startDate);
-        if (endDate) params.set("endDate", endDate);
+        if (effectiveDateRange.startDate) {
+          params.set("startDate", effectiveDateRange.startDate);
+        }
+        if (effectiveDateRange.endDate) {
+          params.set("endDate", effectiveDateRange.endDate);
+        }
 
         const response = await fetch(
           `/api/insights/participation?${params.toString()}`,
@@ -97,7 +118,7 @@ export default function Osallistumisaktiivisuus({
     };
 
     fetchData();
-  }, [startDate, endDate]);
+  }, [effectiveDateRange.endDate, effectiveDateRange.startDate]);
 
   return (
     <Box
@@ -235,6 +256,11 @@ export default function Osallistumisaktiivisuus({
                     />
                   </Grid>
                 </Grid>
+                {selectedHallituskausi && (
+                  <Alert severity="info" sx={{ mt: spacing.sm }}>
+                    Rajattu hallituskauteen: {selectedHallituskausi.label}
+                  </Alert>
+                )}
               </Box>
             </GlassCard>
           </Box>
@@ -268,8 +294,8 @@ export default function Osallistumisaktiivisuus({
             <Box sx={{ mt: spacing.md }}>
               <HistoricalComparison
                 personId={selectedPersonId}
-                startDate={startDate}
-                endDate={endDate}
+                startDate={effectiveDateRange.startDate}
+                endDate={effectiveDateRange.endDate}
                 onClose={() => setSelectedPersonId(null)}
               />
             </Box>

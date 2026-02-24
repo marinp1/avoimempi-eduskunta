@@ -1,4 +1,9 @@
-WITH active_members AS (
+WITH window AS (
+  SELECT
+    COALESCE($startDate, $asOfDate) AS start_date,
+    COALESCE(DATE($endDateExclusive, '-1 day'), $asOfDate) AS end_date
+),
+active_members AS (
   SELECT DISTINCT
     pgm.group_code,
     pgm.group_name,
@@ -6,8 +11,10 @@ WITH active_members AS (
     pgm.person_id
   FROM ParliamentaryGroupMembership pgm
   JOIN Term t ON t.person_id = pgm.person_id
-  WHERE pgm.end_date IS NULL
-    AND t.end_date IS NULL
+  WHERE pgm.start_date <= $asOfDate
+    AND (pgm.end_date IS NULL OR pgm.end_date >= $asOfDate)
+    AND t.start_date <= $asOfDate
+    AND (t.end_date IS NULL OR t.end_date >= $asOfDate)
 ),
 active_groups AS (
   SELECT
@@ -28,7 +35,9 @@ member_stats AS (
 recent_votings AS (
   SELECT id
   FROM Voting
-  WHERE start_time >= DATE('now', '-6 months')
+  WHERE start_date <= $asOfDate
+    AND start_date >= COALESCE($startDate, DATE($asOfDate, '-6 months'))
+    AND ($endDateExclusive IS NULL OR start_date < $endDateExclusive)
 ),
 vote_stats AS (
   SELECT
@@ -44,13 +53,23 @@ vote_stats AS (
 ),
 gov_groups AS (
   SELECT
-    am.group_code,
+    pgm.group_code,
     MAX(CASE WHEN gm.id IS NOT NULL THEN 1 ELSE 0 END) AS is_in_government
-  FROM active_members am
-  LEFT JOIN GovernmentMembership gm
-    ON gm.person_id = am.person_id
-    AND gm.end_date IS NULL
-  GROUP BY am.group_code
+  FROM GovernmentMembership gm
+  JOIN ParliamentaryGroupMembership pgm
+    ON pgm.person_id = gm.person_id
+    AND pgm.start_date <= COALESCE(gm.end_date, '9999-12-31')
+    AND (pgm.end_date IS NULL OR pgm.end_date >= gm.start_date)
+  CROSS JOIN window w
+  WHERE gm.start_date <= w.end_date
+    AND (gm.end_date IS NULL OR gm.end_date >= w.start_date)
+    AND (
+      $governmentName IS NULL OR (
+        TRIM(gm.government) = TRIM($governmentName)
+        AND gm.start_date >= $governmentStartDate
+      )
+    )
+  GROUP BY pgm.group_code
 ),
 demo_stats AS (
   SELECT
@@ -59,7 +78,7 @@ demo_stats AS (
     SUM(CASE WHEN r.gender = 'Mies' THEN 1 ELSE 0 END) AS male_count,
     AVG(
       CASE
-        WHEN r.birth_date IS NOT NULL THEN (JULIANDAY('now') - JULIANDAY(r.birth_date)) / 365.25
+        WHEN r.birth_date IS NOT NULL THEN (JULIANDAY($asOfDate) - JULIANDAY(r.birth_date)) / 365.25
         ELSE NULL
       END
     ) AS avg_age

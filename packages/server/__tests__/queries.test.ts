@@ -1087,7 +1087,13 @@ describe("Recent activity query", () => {
 describe("Party queries", () => {
   test("PARTY_SUMMARY returns party stats", () => {
     const stmt = db.prepare(queries.partySummary);
-    const rows = stmt.all() as any[];
+    const rows = stmt.all({
+      $asOfDate: "2024-01-15",
+      $startDate: null,
+      $endDateExclusive: null,
+      $governmentName: null,
+      $governmentStartDate: null,
+    }) as any[];
     stmt.finalize();
 
     expect(rows.length).toBeGreaterThan(0);
@@ -1101,7 +1107,14 @@ describe("Party queries", () => {
 
   test("PARTY_MEMBERS returns members of a specific party", () => {
     const stmt = db.prepare(queries.partyMembers);
-    const rows = stmt.all({ $partyCode: "kesk" }) as any[];
+    const rows = stmt.all({
+      $partyCode: "kesk",
+      $asOfDate: "2024-01-15",
+      $startDate: null,
+      $endDateExclusive: null,
+      $governmentName: null,
+      $governmentStartDate: null,
+    }) as any[];
     stmt.finalize();
 
     expect(rows).toHaveLength(1);
@@ -1111,7 +1124,14 @@ describe("Party queries", () => {
 
   test("PARTY_MEMBERS returns empty for non-existent party", () => {
     const stmt = db.prepare(queries.partyMembers);
-    const rows = stmt.all({ $partyCode: "xxx" }) as any[];
+    const rows = stmt.all({
+      $partyCode: "xxx",
+      $asOfDate: "2024-01-15",
+      $startDate: null,
+      $endDateExclusive: null,
+      $governmentName: null,
+      $governmentStartDate: null,
+    }) as any[];
     stmt.finalize();
 
     expect(rows).toHaveLength(0);

@@ -23,6 +23,8 @@ WHERE
     SELECT 1 FROM GovernmentProposalSubject
     WHERE proposal_id = g.id AND subject_text = $subject
   ))
+  AND ($startDate IS NULL OR g.submission_date >= $startDate)
+  AND ($endDateExclusive IS NULL OR g.submission_date < $endDateExclusive)
 GROUP BY g.id
 ORDER BY g.submission_date DESC, g.id DESC
 LIMIT $limit OFFSET $offset

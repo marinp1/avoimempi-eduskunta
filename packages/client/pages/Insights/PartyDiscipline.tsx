@@ -25,6 +25,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { colors, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
 
@@ -55,12 +56,22 @@ interface PartyDisciplineProps {
 export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
   const themedColors = useThemedColors();
   const { t } = useTranslation();
+  const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<PartyDisciplineData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/analytics/party-discipline")
+    const params = new URLSearchParams();
+    if (selectedHallituskausi) {
+      params.set("startDate", selectedHallituskausi.startDate);
+      if (selectedHallituskausi.endDate) {
+        params.set("endDate", selectedHallituskausi.endDate);
+      }
+    }
+    fetch(
+      `/api/analytics/party-discipline${params.toString() ? `?${params.toString()}` : ""}`,
+    )
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
@@ -78,7 +89,7 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
+  }, [selectedHallituskausi]);
 
   if (loading)
     return (
@@ -136,6 +147,11 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
       >
         {t("insights.partyDiscipline.description")}
       </Typography>
+      {selectedHallituskausi && (
+        <Alert severity="info" sx={{ mb: spacing.md }}>
+          Rajattu hallituskauteen: {selectedHallituskausi.label}
+        </Alert>
+      )}
 
       {data.length === 0 ? (
         <Alert severity="info">{t("insights.partyDiscipline.noData")}</Alert>

@@ -15,6 +15,7 @@ import {
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
+import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { refs } from "#client/references";
 import { colors, spacing } from "#client/theme";
 import { VoteMarginBar } from "#client/theme/components";
@@ -77,6 +78,7 @@ type VotingInlineDetails = {
 export default function CloseVotes({ onClose }: CloseVotesProps) {
   const themedColors = useThemedColors();
   const { t } = useTranslation();
+  const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<CloseVoteData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +93,17 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
   >({});
 
   useEffect(() => {
-    fetch("/api/analytics/close-votes?threshold=10&limit=30")
+    const params = new URLSearchParams({
+      threshold: "10",
+      limit: "30",
+    });
+    if (selectedHallituskausi) {
+      params.set("startDate", selectedHallituskausi.startDate);
+      if (selectedHallituskausi.endDate) {
+        params.set("endDate", selectedHallituskausi.endDate);
+      }
+    }
+    fetch(`/api/analytics/close-votes?${params.toString()}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
@@ -107,7 +119,7 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
+  }, [selectedHallituskausi]);
 
   const fetchVotingDetails = async (votingId: number) => {
     if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId))
@@ -190,6 +202,11 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
       >
         {t("insights.closeVotes.description")}
       </Typography>
+      {selectedHallituskausi && (
+        <Alert severity="info" sx={{ mb: spacing.md }}>
+          Rajattu hallituskauteen: {selectedHallituskausi.label}
+        </Alert>
+      )}
 
       {data.length === 0 ? (
         <Alert severity="info">{t("insights.closeVotes.noData")}</Alert>

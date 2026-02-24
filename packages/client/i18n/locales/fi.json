@@ -3,6 +3,10 @@
     "title": "Avoimempi Eduskunta",
     "subtitle": "Suomen eduskunnan avoin data",
     "loading": "Ladataan...",
+    "hallituskausi": {
+      "label": "Hallituskausi",
+      "all": "Kaikki hallituskaudet"
+    },
     "disclaimer": {
       "source": "Tietolähde: Eduskunnan avoin data (avoindata.eduskunta.fi)",
       "unofficial": "Tiedot haetaan ja jäsennetään päivittäin Eduskunnan avoiden datan rajapinnoista ja voivat olla puutteellisia tai virheellisiä. Varmista informaation todenmukaisuus aina virallisista lähteistä, äläkä luota satunnaisiin verkkosivustoihin. Tällä sivulla on mahdollisuuksien mukaan aina myös suora linkki eduskunnan omiin palveluihin."

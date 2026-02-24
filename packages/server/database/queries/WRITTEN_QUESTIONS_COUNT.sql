@@ -10,3 +10,5 @@ WHERE
     SELECT 1 FROM WrittenQuestionSubject
     WHERE question_id = q.id AND subject_text = $subject
   ))
+  AND ($startDate IS NULL OR q.submission_date >= $startDate)
+  AND ($endDateExclusive IS NULL OR q.submission_date < $endDateExclusive)

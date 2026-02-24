@@ -38,6 +38,7 @@ import {
   YAxis,
 } from "recharts";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
+import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { refs } from "#client/references";
 import theme, { colors } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -130,7 +131,21 @@ interface PartyDisciplineRow {
 }
 
 // ── Members Tab ──
-const MembersTab: React.FC<{ partyCode: string }> = ({ partyCode }) => {
+const MembersTab: React.FC<{
+  partyCode: string;
+  asOfDate: string;
+  startDate?: string;
+  endDate?: string;
+  governmentName?: string;
+  governmentStartDate?: string;
+}> = ({
+  partyCode,
+  asOfDate,
+  startDate,
+  endDate,
+  governmentName,
+  governmentStartDate,
+}) => {
   const themedColors = useThemedColors();
   const { t } = useTranslation();
   const [members, setMembers] = useState<PartyMember[] | null>(null);
@@ -138,13 +153,27 @@ const MembersTab: React.FC<{ partyCode: string }> = ({ partyCode }) => {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/parties/${partyCode}/members`)
+    const params = new URLSearchParams({ asOfDate });
+    if (startDate) params.set("startDate", startDate);
+    if (endDate) params.set("endDate", endDate);
+    if (governmentName && governmentStartDate) {
+      params.set("governmentName", governmentName);
+      params.set("governmentStartDate", governmentStartDate);
+    }
+    fetch(`/api/parties/${partyCode}/members?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         setMembers(data);
         setLoading(false);
       });
-  }, [partyCode]);
+  }, [
+    asOfDate,
+    endDate,
+    governmentName,
+    governmentStartDate,
+    partyCode,
+    startDate,
+  ]);
 
   if (loading)
     return (
@@ -234,6 +263,7 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
 }) => {
   const themedColors = useThemedColors();
   const { t } = useTranslation();
+  const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<CoalitionOppositionRow[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedVotingIds, setExpandedVotingIds] = useState<Set<number>>(
@@ -248,7 +278,14 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
 
   useEffect(() => {
     setLoading(true);
-    fetch("/api/analytics/coalition-opposition?limit=30")
+    const params = new URLSearchParams({ limit: "30" });
+    if (selectedHallituskausi) {
+      params.set("startDate", selectedHallituskausi.startDate);
+      if (selectedHallituskausi.endDate) {
+        params.set("endDate", selectedHallituskausi.endDate);
+      }
+    }
+    fetch(`/api/analytics/coalition-opposition?${params.toString()}`)
       .then((res) => res.json())
       .then((result) => {
         setData(result);
@@ -257,7 +294,7 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
         setVotingDetailsById({});
         setLoading(false);
       });
-  }, []);
+  }, [selectedHallituskausi]);
 
   const fetchVotingDetails = async (votingId: number) => {
     if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId))
@@ -501,6 +538,7 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
 }) => {
   const themedColors = useThemedColors();
   const { t } = useTranslation();
+  const { selectedHallituskausi } = useHallituskausi();
   const [disciplineData, setDisciplineData] =
     useState<PartyDisciplineRow | null>(null);
   const [dissents, setDissents] = useState<DissentRow[] | null>(null);
@@ -508,9 +546,19 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
 
   useEffect(() => {
     setLoading(true);
+    const params = new URLSearchParams();
+    if (selectedHallituskausi) {
+      params.set("startDate", selectedHallituskausi.startDate);
+      if (selectedHallituskausi.endDate) {
+        params.set("endDate", selectedHallituskausi.endDate);
+      }
+    }
+    const query = params.toString() ? `?${params.toString()}` : "";
     Promise.all([
-      fetch("/api/analytics/party-discipline").then((r) => r.json()),
-      fetch("/api/analytics/dissent?limit=200").then((r) => r.json()),
+      fetch(`/api/analytics/party-discipline${query}`).then((r) => r.json()),
+      fetch(
+        `/api/analytics/dissent?limit=200${params.toString() ? `&${params.toString()}` : ""}`,
+      ).then((r) => r.json()),
     ]).then(([allDiscipline, allDissents]) => {
       const partyDisc = (allDiscipline as PartyDisciplineRow[]).find(
         (d) => d.party_code === partyCode,
@@ -523,7 +571,7 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
       setDissents(partyDissents);
       setLoading(false);
     });
-  }, [partyCode]);
+  }, [partyCode, selectedHallituskausi]);
 
   if (loading)
     return (
@@ -642,7 +690,21 @@ export const PartyDetail: React.FC<{
   open: boolean;
   onClose: () => void;
   party: PartySummary | null;
-}> = ({ open, onClose, party }) => {
+  asOfDate: string;
+  startDate?: string;
+  endDate?: string;
+  governmentName?: string;
+  governmentStartDate?: string;
+}> = ({
+  open,
+  onClose,
+  party,
+  asOfDate,
+  startDate,
+  endDate,
+  governmentName,
+  governmentStartDate,
+}) => {
   const themedColors = useThemedColors();
   const { t } = useTranslation();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -786,7 +848,16 @@ export const PartyDetail: React.FC<{
           overflowY: "auto",
         }}
       >
-        {tabIndex === 0 && <MembersTab partyCode={party.party_code} />}
+        {tabIndex === 0 && (
+          <MembersTab
+            partyCode={party.party_code}
+            asOfDate={asOfDate}
+            startDate={startDate}
+            endDate={endDate}
+            governmentName={governmentName}
+            governmentStartDate={governmentStartDate}
+          />
+        )}
         {tabIndex === 1 && (
           <VotingTab isGovernment={party.is_in_government === 1} />
         )}

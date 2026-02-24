@@ -22,5 +22,7 @@ WHERE
   AND ($year IS NULL OR c.parliamentary_year = $year)
   AND ($sourceCommittee IS NULL OR c.committee_name = $sourceCommittee)
   AND ($recipientCommittee IS NULL OR c.recipient_committee = $recipientCommittee)
+  AND ($startDate IS NULL OR COALESCE(c.signature_date, c.draft_date) >= $startDate)
+  AND ($endDateExclusive IS NULL OR COALESCE(c.signature_date, c.draft_date) < $endDateExclusive)
 ORDER BY c.draft_date DESC, c.id DESC
 LIMIT $limit OFFSET $offset

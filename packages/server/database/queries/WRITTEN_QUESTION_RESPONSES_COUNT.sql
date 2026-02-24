@@ -9,3 +9,5 @@ WHERE
   ))
   AND ($year IS NULL OR r.parliamentary_year = $year)
   AND ($minister IS NULL OR r.minister_last_name = $minister)
+  AND ($startDate IS NULL OR r.answer_date >= $startDate)
+  AND ($endDateExclusive IS NULL OR r.answer_date < $endDateExclusive)

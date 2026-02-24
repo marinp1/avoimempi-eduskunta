@@ -2,6 +2,8 @@ WITH recent_votings AS (
   SELECT id, start_time, start_date, title, section_title, n_yes, n_no
   FROM Voting
   WHERE annulled = 0
+    AND ($startDate IS NULL OR start_date >= $startDate)
+    AND ($endDateExclusive IS NULL OR start_date < $endDateExclusive)
   ORDER BY start_time DESC
   LIMIT $limit
 )

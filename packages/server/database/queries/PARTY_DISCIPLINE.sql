@@ -6,7 +6,10 @@ WITH party_vote_counts AS (
     SUM(CASE WHEN v.vote = 'Ei' THEN 1 ELSE 0 END) AS n_ei,
     SUM(CASE WHEN v.vote = 'Tyhjää' THEN 1 ELSE 0 END) AS n_tyhjaa
   FROM Vote v
+  JOIN Voting vt ON vt.id = v.voting_id
   WHERE v.group_abbreviation IS NOT NULL
+    AND ($startDate IS NULL OR vt.start_date >= $startDate)
+    AND ($endDateExclusive IS NULL OR vt.start_date < $endDateExclusive)
   GROUP BY v.voting_id, v.group_abbreviation
 ),
 discipline_stats AS (

@@ -11,12 +11,16 @@ import {
   AppBar,
   Box,
   Drawer,
+  FormControl,
   IconButton,
+  InputLabel,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  MenuItem,
+  Select,
   Tab,
   Tabs,
   Toolbar,
@@ -25,6 +29,7 @@ import {
 import type React from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useHallituskausi } from "./filters/HallituskausiContext";
 import { type RouteName, routes } from "./pages";
 import { colors, spacing } from "./theme";
 import { applicationMode } from "./utils";
@@ -56,6 +61,12 @@ export const Navigation: React.FC<{
   setActiveTab: (tab: RouteName) => void;
 }> = ({ activeTab, setActiveTab }) => {
   const { t } = useTranslation();
+  const {
+    hallituskaudet,
+    selectedHallituskausiId,
+    setSelectedHallituskausiId,
+    loading,
+  } = useHallituskausi();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const navigate = (path: RouteName) => {
@@ -96,6 +107,8 @@ export const Navigation: React.FC<{
         ) as RouteName[])
       : (Object.keys(routes) as RouteName[]);
 
+  const allLabel = t("app.hallituskausi.all", "Kaikki hallituskaudet");
+
   const DrawerContent = (
     <Box sx={{ width: 280 }} role="presentation">
       <Box
@@ -135,6 +148,27 @@ export const Navigation: React.FC<{
         >
           <CloseIcon fontSize="small" />
         </IconButton>
+      </Box>
+      <Box sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}>
+        <FormControl size="small" fullWidth>
+          <InputLabel id="drawer-hallituskausi-label">
+            {t("app.hallituskausi.label", "Hallituskausi")}
+          </InputLabel>
+          <Select
+            labelId="drawer-hallituskausi-label"
+            value={selectedHallituskausiId}
+            label={t("app.hallituskausi.label", "Hallituskausi")}
+            onChange={(event) => setSelectedHallituskausiId(event.target.value)}
+            disabled={loading}
+          >
+            <MenuItem value="">{allLabel}</MenuItem>
+            {hallituskaudet.map((row) => (
+              <MenuItem key={row.id} value={row.id}>
+                {row.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </Box>
       <List sx={{ pt: 0.5 }}>
         {allDrawerRoutes.map((path) => {
@@ -259,7 +293,63 @@ export const Navigation: React.FC<{
             </Tabs>
           </Box>
 
-          <Box sx={{ flexShrink: 0, width: 100 }} />
+          <Box sx={{ flexShrink: 0, minWidth: 300 }}>
+            <FormControl
+              size="small"
+              fullWidth
+              sx={{
+                "& .MuiInputLabel-root": {
+                  color: "rgba(255,255,255,0.75)",
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: "white",
+                },
+                "& .MuiInputLabel-root.MuiInputLabel-shrink": {
+                  color: "rgba(255,255,255,0.9)",
+                },
+              }}
+            >
+              <InputLabel
+                id="header-hallituskausi-label"
+              >
+                {t("app.hallituskausi.label", "Hallituskausi")}
+              </InputLabel>
+              <Select
+                labelId="header-hallituskausi-label"
+                value={selectedHallituskausiId}
+                label={t("app.hallituskausi.label", "Hallituskausi")}
+                onChange={(event) => setSelectedHallituskausiId(event.target.value)}
+                disabled={loading}
+                displayEmpty
+                renderValue={(value) =>
+                  hallituskaudet.find((row) => row.id === value)?.label || allLabel
+                }
+                sx={{
+                  color: "white",
+                  ".MuiSelect-icon": { color: "white" },
+                  "& .MuiSelect-select": {
+                    color: "white",
+                  },
+                  ".MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(255,255,255,0.35)",
+                  },
+                  "&:hover .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "rgba(255,255,255,0.65)",
+                  },
+                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: "white",
+                  },
+                }}
+              >
+                <MenuItem value="">{allLabel}</MenuItem>
+                {hallituskaudet.map((row) => (
+                  <MenuItem key={row.id} value={row.id}>
+                    {row.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
         </Toolbar>
       </AppBar>
 
