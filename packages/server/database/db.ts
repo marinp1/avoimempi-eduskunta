@@ -1233,7 +1233,26 @@ export class DatabaseConnection {
     });
     sessionsStmt.finalize();
 
-    return { ...detail, signers, stages, subjects, sessions };
+    let response_subjects: Array<{ subject_text: string }> = [];
+    try {
+      const responseSubjectsStmt = this.db.prepare<
+        { subject_text: string },
+        { $questionId: number }
+      >(queries.writtenQuestionResponseSubjects);
+      response_subjects = responseSubjectsStmt.all({ $questionId: detail.id });
+      responseSubjectsStmt.finalize();
+    } catch {
+      // WrittenQuestionResponse table may not exist yet (DB not rebuilt after migration)
+    }
+
+    return {
+      ...detail,
+      signers,
+      stages,
+      subjects,
+      sessions,
+      response_subjects,
+    };
   }
 
   public async fetchWrittenQuestionByIdentifier(params: {
@@ -1289,6 +1308,79 @@ export class DatabaseConnection {
   public async fetchWrittenQuestionsSubjects() {
     const stmt = this.db.prepare<{ subject_text: string; count: number }, []>(
       queries.writtenQuestionsSubjectsList,
+    );
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
+  // ─── Written question response queries ───
+
+  public async fetchWrittenQuestionResponses(params: {
+    query?: string;
+    year?: string;
+    minister?: string;
+    page: number;
+    limit: number;
+  }) {
+    const offset = (params.page - 1) * params.limit;
+    const $query = params.query?.trim() || null;
+    const $year = params.year || null;
+    const $minister = params.minister || null;
+
+    const countStmt = this.db.prepare<
+      { count: number },
+      { $query: string | null; $year: string | null; $minister: string | null }
+    >(queries.writtenQuestionResponsesCount);
+    const countResult = countStmt.get({ $query, $year, $minister });
+    const totalCount = countResult?.count || 0;
+    countStmt.finalize();
+
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number | null;
+        parliamentary_year: string;
+        title: string | null;
+        answer_date: string | null;
+        minister_title: string | null;
+        minister_first_name: string | null;
+        minister_last_name: string | null;
+        question_id: number;
+        question_identifier: string;
+        question_title: string | null;
+        subjects: string | null;
+      },
+      {
+        $query: string | null;
+        $year: string | null;
+        $minister: string | null;
+        $limit: number;
+        $offset: number;
+      }
+    >(queries.writtenQuestionResponsesList);
+    const rows = stmt.all({
+      $query,
+      $year,
+      $minister,
+      $limit: params.limit,
+      $offset: offset,
+    });
+    stmt.finalize();
+
+    return {
+      items: rows,
+      totalCount,
+      page: params.page,
+      limit: params.limit,
+      totalPages: Math.ceil(totalCount / params.limit),
+    };
+  }
+
+  public async fetchWrittenQuestionResponseYears() {
+    const stmt = this.db.prepare<{ year: string }, []>(
+      queries.writtenQuestionResponsesYears,
     );
     const data = stmt.all();
     stmt.finalize();
