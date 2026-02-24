@@ -1,8 +1,6 @@
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CloseIcon from "@mui/icons-material/Close";
 import EmailIcon from "@mui/icons-material/Email";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import GavelIcon from "@mui/icons-material/Gavel";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -16,7 +14,6 @@ import {
   Button,
   Chip,
   CircularProgress,
-  Collapse,
   Dialog,
   DialogContent,
   Drawer,
@@ -112,16 +109,6 @@ type CommitteeType = {
   role: string;
   start_date: string;
   end_date: string | null;
-};
-
-type DissentType = {
-  voting_id: number;
-  start_time: string;
-  title: string;
-  section_title: string;
-  mp_vote: string;
-  majority_vote: string;
-  party_name: string;
 };
 
 type VotesByPersonType = {
@@ -317,11 +304,6 @@ const fetchSectionConversation = async (
 const fetchPersonCommittees = async (personId: number) => {
   const res = await fetch(`/api/person/${personId}/committees`);
   return res.json() as Promise<CommitteeType[]>;
-};
-
-const fetchPersonDissents = async (personId: number, limit = 100) => {
-  const res = await fetch(`/api/person/${personId}/dissents?limit=${limit}`);
-  return res.json() as Promise<DissentType[]>;
 };
 
 const displayDate = (date?: string | null) => {
@@ -683,31 +665,38 @@ const OverviewTab: React.FC<{
 const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
   const themedColors = useThemedColors();
   const [votes, setVotes] = React.useState<VotesByPersonType[] | null>(null);
-  const [dissents, setDissents] = React.useState<DissentType[] | null>(null);
   const [loading, setLoading] = React.useState(true);
-  const [expandedVotingIds, setExpandedVotingIds] = React.useState<Set<number>>(
-    new Set(),
-  );
+  const [selectedVoting, setSelectedVoting] =
+    React.useState<VotesByPersonType | null>(null);
   const [votingDetailsById, setVotingDetailsById] = React.useState<
     Record<number, VotingInlineDetails>
   >({});
   const [loadingVotingDetails, setLoadingVotingDetails] = React.useState<
     Set<number>
   >(new Set());
+  const [failedVotingDetails, setFailedVotingDetails] = React.useState<
+    Set<number>
+  >(new Set());
 
   React.useEffect(() => {
+    let ignore = false;
     setLoading(true);
-    Promise.all([
-      fetchPersonVotes(personId),
-      fetchPersonDissents(personId),
-    ]).then(([v, d]) => {
-      setVotes(v);
-      setDissents(d);
-      setExpandedVotingIds(new Set());
-      setVotingDetailsById({});
-      setLoadingVotingDetails(new Set());
-      setLoading(false);
-    });
+    fetchPersonVotes(personId)
+      .then((v) => {
+        if (ignore) return;
+        setVotes(v);
+        setSelectedVoting(null);
+        setVotingDetailsById({});
+        setLoadingVotingDetails(new Set());
+        setFailedVotingDetails(new Set());
+      })
+      .finally(() => {
+        if (ignore) return;
+        setLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
   }, [personId]);
 
   const openVoting = (votingId: number, startTime?: string | null) => {
@@ -719,15 +708,25 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
 
-  const fetchVotingDetails = async (votingId: number) => {
-    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId))
+  const fetchVotingDetails = async (votingId: number, force = false) => {
+    if (!force && (votingDetailsById[votingId] || loadingVotingDetails.has(votingId))) {
       return;
+    }
+    if (force || failedVotingDetails.has(votingId)) {
+      setFailedVotingDetails((prev) => {
+        const next = new Set(prev);
+        next.delete(votingId);
+        return next;
+      });
+    }
     setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
     try {
       const res = await fetch(`/api/votings/${votingId}/details`);
-      if (!res.ok) return;
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: VotingInlineDetails = await res.json();
       setVotingDetailsById((prev) => ({ ...prev, [votingId]: data }));
+    } catch {
+      setFailedVotingDetails((prev) => new Set(prev).add(votingId));
     } finally {
       setLoadingVotingDetails((prev) => {
         const next = new Set(prev);
@@ -737,89 +736,24 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
     }
   };
 
-  const toggleVotingDetails = (votingId: number) => {
-    const shouldExpand = !expandedVotingIds.has(votingId);
-    setExpandedVotingIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(votingId)) next.delete(votingId);
-      else next.add(votingId);
-      return next;
-    });
-    if (shouldExpand) {
-      void fetchVotingDetails(votingId);
-    }
+  const openVotingDetails = (vote: VotesByPersonType) => {
+    setSelectedVoting(vote);
+    void fetchVotingDetails(vote.id);
   };
 
-  const renderVotingInlineDetails = (votingId: number) => {
-    const details = votingDetailsById[votingId];
-    const loadingDetails = loadingVotingDetails.has(votingId);
-    if (loadingDetails) {
-      return (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.75 }}>
-          <CircularProgress size={12} />
-          <Typography
-            variant="caption"
-            sx={{ color: themedColors.textSecondary }}
-          >
-            Ladataan äänestyksen yksityiskohtia...
-          </Typography>
-        </Box>
-      );
-    }
-    if (!details) return null;
-    return (
-      <Box
-        sx={{
-          mt: 0.75,
-          p: 1,
-          borderRadius: 1,
-          border: `1px solid ${themedColors.dataBorder}60`,
-          backgroundColor: `${colors.primaryLight}04`,
-          display: "flex",
-          flexDirection: "column",
-          gap: 0.75,
-        }}
-      >
-        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-          <Chip
-            size="small"
-            label={`Jaa ${details.voting.n_yes}`}
-            sx={{ height: 20 }}
-          />
-          <Chip
-            size="small"
-            label={`Ei ${details.voting.n_no}`}
-            sx={{ height: 20 }}
-          />
-          <Chip
-            size="small"
-            label={`Tyhjää ${details.voting.n_abstain}`}
-            sx={{ height: 20 }}
-          />
-          <Chip
-            size="small"
-            label={`Poissa ${details.voting.n_absent}`}
-            sx={{ height: 20 }}
-          />
-        </Box>
-        {details.governmentOpposition && (
-          <Typography
-            variant="caption"
-            sx={{ color: themedColors.textSecondary }}
-          >
-            Hallitus: {details.governmentOpposition.government_yes} jaa /{" "}
-            {details.governmentOpposition.government_no} ei, Oppositio:{" "}
-            {details.governmentOpposition.opposition_yes} jaa /{" "}
-            {details.governmentOpposition.opposition_no} ei
-          </Typography>
-        )}
-        <VotingResultsTable
-          partyBreakdown={details.partyBreakdown}
-          memberVotes={details.memberVotes}
-        />
-      </Box>
-    );
+  const closeVotingDetails = () => {
+    setSelectedVoting(null);
   };
+
+  const selectedVotingDetails = selectedVoting
+    ? votingDetailsById[selectedVoting.id]
+    : null;
+  const selectedVotingLoading = selectedVoting
+    ? loadingVotingDetails.has(selectedVoting.id)
+    : false;
+  const selectedVotingFailed = selectedVoting
+    ? failedVotingDetails.has(selectedVoting.id)
+    : false;
 
   if (loading)
     return (
@@ -837,7 +771,6 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
     totalVotes > 0
       ? (((totalVotes - absentVotes) / totalVotes) * 100).toFixed(1)
       : "0";
-  const dissentCount = dissents?.length || 0;
 
   return (
     <Box>
@@ -845,7 +778,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(4, 1fr)" },
+          gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)" },
           gap: 1.5,
           mb: 3,
         }}
@@ -906,26 +839,6 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
             textAlign: "center",
           }}
         >
-          <Typography
-            sx={{ fontSize: "1.25rem", fontWeight: 700, color: colors.error }}
-          >
-            {dissentCount}
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{ color: themedColors.textSecondary }}
-          >
-            Poikkeamia
-          </Typography>
-        </Box>
-        <Box
-          sx={{
-            p: 1.5,
-            borderRadius: 2,
-            border: `1px solid ${themedColors.dataBorder}`,
-            textAlign: "center",
-          }}
-        >
           <VoteMarginBar
             yes={yesVotes}
             no={noVotes}
@@ -942,150 +855,6 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
           </Typography>
         </Box>
       </Box>
-
-      {/* Dissent list */}
-      {dissents && dissents.length > 0 && (
-        <>
-          <SectionLabel
-            icon={<GavelIcon sx={{ color: colors.error, fontSize: 20 }} />}
-            label={`Puolue-enemmistosta poikenneet aanestykset (${dissentCount})`}
-          />
-          <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
-            {dissents.slice(0, 50).map((d) => (
-              <Box
-                key={d.voting_id}
-                sx={{
-                  py: 1.5,
-                  borderBottom: `1px solid ${themedColors.dataBorder}`,
-                  "&:last-child": { borderBottom: "none" },
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    gap: 1,
-                  }}
-                >
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography
-                      variant="body2"
-                      fontWeight="600"
-                      sx={{ color: themedColors.textPrimary }}
-                    >
-                      {d.title || d.section_title}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{ color: themedColors.textSecondary }}
-                    >
-                      {new Date(d.start_time).toLocaleDateString("fi-FI")}
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        gap: 0.5,
-                        mt: 0.5,
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <Button
-                        size="small"
-                        sx={{
-                          textTransform: "none",
-                          minWidth: 0,
-                          px: 1,
-                          fontSize: "0.68rem",
-                        }}
-                        endIcon={
-                          <ExpandMoreIcon
-                            sx={{
-                              fontSize: 14,
-                              transform: expandedVotingIds.has(d.voting_id)
-                                ? "rotate(180deg)"
-                                : "rotate(0deg)",
-                              transition: "transform 0.2s",
-                            }}
-                          />
-                        }
-                        onClick={() => toggleVotingDetails(d.voting_id)}
-                      >
-                        {expandedVotingIds.has(d.voting_id)
-                          ? "Piilota tiedot"
-                          : "Näytä tiedot"}
-                      </Button>
-                      <Button
-                        size="small"
-                        sx={{
-                          textTransform: "none",
-                          minWidth: 0,
-                          px: 1,
-                          fontSize: "0.68rem",
-                        }}
-                        endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
-                        onClick={() => openVoting(d.voting_id, d.start_time)}
-                      >
-                        Avaa näkymä
-                      </Button>
-                    </Box>
-                    <Collapse
-                      in={expandedVotingIds.has(d.voting_id)}
-                      timeout="auto"
-                      unmountOnExit
-                    >
-                      {renderVotingInlineDetails(d.voting_id)}
-                    </Collapse>
-                  </Box>
-                  <Box sx={{ display: "flex", gap: 0.5, flexShrink: 0 }}>
-                    <Chip
-                      label={d.mp_vote}
-                      size="small"
-                      sx={{
-                        height: 22,
-                        fontSize: "0.7rem",
-                        fontWeight: 700,
-                        bgcolor:
-                          d.mp_vote === "Jaa"
-                            ? "#22C55E20"
-                            : d.mp_vote === "Ei"
-                              ? "#EF444420"
-                              : "#F59E0B20",
-                        color:
-                          d.mp_vote === "Jaa"
-                            ? "#16A34A"
-                            : d.mp_vote === "Ei"
-                              ? "#DC2626"
-                              : "#D97706",
-                      }}
-                    />
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: themedColors.textTertiary,
-                        alignSelf: "center",
-                      }}
-                    >
-                      vs
-                    </Typography>
-                    <Chip
-                      label={d.majority_vote}
-                      size="small"
-                      sx={{
-                        height: 22,
-                        fontSize: "0.7rem",
-                        fontWeight: 700,
-                        bgcolor: `${themedColors.dataBorder}`,
-                        color: themedColors.textSecondary,
-                      }}
-                    />
-                  </Box>
-                </Box>
-              </Box>
-            ))}
-          </Box>
-        </>
-      )}
 
       {/* Recent votes */}
       {votes && votes.length > 0 && (
@@ -1141,22 +910,9 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                         px: 1,
                         fontSize: "0.68rem",
                       }}
-                      endIcon={
-                        <ExpandMoreIcon
-                          sx={{
-                            fontSize: 14,
-                            transform: expandedVotingIds.has(v.id)
-                              ? "rotate(180deg)"
-                              : "rotate(0deg)",
-                            transition: "transform 0.2s",
-                          }}
-                        />
-                      }
-                      onClick={() => toggleVotingDetails(v.id)}
+                      onClick={() => openVotingDetails(v)}
                     >
-                      {expandedVotingIds.has(v.id)
-                        ? "Piilota tiedot"
-                        : "Näytä tiedot"}
+                      Nayta tiedot
                     </Button>
                     <Button
                       size="small"
@@ -1172,13 +928,6 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                       Avaa näkymä
                     </Button>
                   </Box>
-                  <Collapse
-                    in={expandedVotingIds.has(v.id)}
-                    timeout="auto"
-                    unmountOnExit
-                  >
-                    {renderVotingInlineDetails(v.id)}
-                  </Collapse>
                 </Box>
                 <Chip
                   label={v.vote}
@@ -1220,6 +969,240 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
           Ei aanestystietoja.
         </Typography>
       )}
+
+      <Drawer
+        anchor="right"
+        open={Boolean(selectedVoting)}
+        onClose={closeVotingDetails}
+        sx={{ zIndex: theme.zIndex.modal + 2 }}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: 560 },
+            bgcolor: themedColors.backgroundSubtle,
+          },
+        }}
+      >
+        <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          <Box
+            sx={{
+              p: { xs: 2, sm: 2.5 },
+              borderBottom: `1px solid ${themedColors.dataBorder}`,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: 1,
+              }}
+            >
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={700}
+                  sx={{ color: themedColors.textPrimary }}
+                >
+                  Aanestyksen tiedot
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: themedColors.textSecondary }}
+                >
+                  {selectedVoting
+                    ? new Date(selectedVoting.start_time).toLocaleDateString("fi-FI")
+                    : "-"}
+                </Typography>
+              </Box>
+              <IconButton
+                size="small"
+                onClick={closeVotingDetails}
+                aria-label="Sulje aanestyksen tiedot"
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+
+            {selectedVoting && (
+              <>
+                <Typography
+                  variant="body2"
+                  sx={{ color: themedColors.textSecondary, mt: 1 }}
+                >
+                  {selectedVoting.title || selectedVoting.section_title}
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 0.75,
+                    mt: 1,
+                    alignItems: "center",
+                  }}
+                >
+                  <Chip
+                    size="small"
+                    label={`Aani: ${selectedVoting.vote}`}
+                    sx={{ height: 20, fontSize: "0.65rem" }}
+                  />
+                  <Chip
+                    size="small"
+                    label={`Ryhma: ${selectedVoting.group_abbreviation}`}
+                    sx={{ height: 20, fontSize: "0.65rem" }}
+                  />
+                </Box>
+                <Button
+                  onClick={() => openVoting(selectedVoting.id, selectedVoting.start_time)}
+                  endIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
+                  sx={{
+                    mt: 1.25,
+                    textTransform: "none",
+                    px: 1.25,
+                    py: 0.5,
+                    minWidth: 0,
+                    alignSelf: "flex-start",
+                  }}
+                >
+                  Avaa koko aanestys
+                </Button>
+              </>
+            )}
+          </Box>
+
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: "auto",
+              p: { xs: 2, sm: 2.5 },
+            }}
+          >
+            {selectedVotingLoading && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
+                <CircularProgress size={20} />
+                <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+                  Ladataan aanestyksen yksityiskohtia...
+                </Typography>
+              </Box>
+            )}
+
+            {selectedVoting && selectedVotingFailed && !selectedVotingLoading && (
+              <Box sx={{ py: 2 }}>
+                <Typography variant="body2" sx={{ color: themedColors.textTertiary }}>
+                  Aanestyksen yksityiskohtien lataus epaonnistui.
+                </Typography>
+                <Button
+                  size="small"
+                  onClick={() => void fetchVotingDetails(selectedVoting.id, true)}
+                  sx={{
+                    mt: 0.75,
+                    px: 1,
+                    py: 0,
+                    minWidth: 0,
+                    textTransform: "none",
+                    fontSize: "0.72rem",
+                  }}
+                >
+                  Yrita uudelleen
+                </Button>
+              </Box>
+            )}
+
+            {selectedVotingDetails && !selectedVotingLoading && (
+              <Box>
+                <Box
+                  sx={{
+                    p: 1.25,
+                    borderRadius: 1.5,
+                    border: `1px solid ${themedColors.dataBorder}`,
+                    bgcolor: themedColors.backgroundPaper,
+                    mb: 1.25,
+                  }}
+                >
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={700}
+                    sx={{ color: themedColors.textPrimary, mb: 0.75 }}
+                  >
+                    Aanestyksen yhteenveto
+                  </Typography>
+                  <VoteMarginBar
+                    yes={selectedVotingDetails.voting.n_yes}
+                    no={selectedVotingDetails.voting.n_no}
+                    empty={selectedVotingDetails.voting.n_abstain}
+                    absent={selectedVotingDetails.voting.n_absent}
+                    height={8}
+                    sx={{ mb: 0.8 }}
+                  />
+                  <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                    <Chip
+                      size="small"
+                      label={`Jaa ${selectedVotingDetails.voting.n_yes}`}
+                      sx={{ height: 20 }}
+                    />
+                    <Chip
+                      size="small"
+                      label={`Ei ${selectedVotingDetails.voting.n_no}`}
+                      sx={{ height: 20 }}
+                    />
+                    <Chip
+                      size="small"
+                      label={`Tyhjaa ${selectedVotingDetails.voting.n_abstain}`}
+                      sx={{ height: 20 }}
+                    />
+                    <Chip
+                      size="small"
+                      label={`Poissa ${selectedVotingDetails.voting.n_absent}`}
+                      sx={{ height: 20 }}
+                    />
+                  </Box>
+                  {selectedVotingDetails.governmentOpposition && (
+                    <Typography
+                      variant="caption"
+                      sx={{ color: themedColors.textSecondary, mt: 0.75, display: "block" }}
+                    >
+                      Hallitus: {selectedVotingDetails.governmentOpposition.government_yes} jaa /{" "}
+                      {selectedVotingDetails.governmentOpposition.government_no} ei, Oppositio:{" "}
+                      {selectedVotingDetails.governmentOpposition.opposition_yes} jaa /{" "}
+                      {selectedVotingDetails.governmentOpposition.opposition_no} ei
+                    </Typography>
+                  )}
+                  {selectedVotingDetails.relatedVotings.length > 0 && (
+                    <Box sx={{ mt: 0.9 }}>
+                      <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                        Liittyvat aanestykset
+                      </Typography>
+                      <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.5 }}>
+                        {selectedVotingDetails.relatedVotings.slice(0, 6).map((related) => (
+                          <Button
+                            key={related.id}
+                            size="small"
+                            onClick={() => openVoting(related.id, selectedVoting.start_time)}
+                            sx={{
+                              textTransform: "none",
+                              minWidth: 0,
+                              px: 1,
+                              py: 0.25,
+                              fontSize: "0.68rem",
+                            }}
+                          >
+                            #{related.id} ({related.n_yes}/{related.n_no})
+                          </Button>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+
+                <VotingResultsTable
+                  partyBreakdown={selectedVotingDetails.partyBreakdown}
+                  memberVotes={selectedVotingDetails.memberVotes}
+                />
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </Drawer>
     </Box>
   );
 };
