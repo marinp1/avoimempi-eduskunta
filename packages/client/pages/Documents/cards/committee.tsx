@@ -397,8 +397,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showSummary
-                      ? t("documents.hideSummary")
-                      : t("documents.showSummary")}
+                      ? t("documents.summaryToggle", { context: "hide" })
+                      : t("documents.summaryToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showSummary}>
                     <Box
@@ -435,8 +435,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showReasoning
-                      ? t("documents.hideJustification")
-                      : t("documents.showJustification")}
+                      ? t("documents.justificationToggle", { context: "hide" })
+                      : t("documents.justificationToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showReasoning}>
                     <Box
@@ -483,8 +483,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showDecision
-                      ? t("documents.hideDecision")
-                      : t("documents.showDecision")}
+                      ? t("documents.decisionToggle", { context: "hide" })
+                      : t("documents.decisionToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showDecision}>
                     <Box
@@ -519,8 +519,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showLegislation
-                      ? t("documents.hideLegislation")
-                      : t("documents.showLegislation")}
+                      ? t("documents.legislationToggle", { context: "hide" })
+                      : t("documents.legislationToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showLegislation}>
                     <Box
@@ -555,8 +555,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showMinority
-                      ? t("documents.hideMinority")
-                      : t("documents.showMinority")}
+                      ? t("documents.minorityToggle", { context: "hide" })
+                      : t("documents.minorityToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showMinority}>
                     <Box

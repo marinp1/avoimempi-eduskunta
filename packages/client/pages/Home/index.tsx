@@ -88,7 +88,7 @@ type Member = {
 const Home = () => {
   const { t } = useTranslation();
   const speechContentLatestLabel = (date: string) =>
-    String(t("sessions.speechContentLatest" as any)).replace("{{date}}", date);
+    t("sessions.speechContentLatest", { date });
   const themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
 
@@ -1150,7 +1150,9 @@ const Home = () => {
               fontSize: "0.75rem",
             }}
           >
-            {isExpanded ? t("sessions.hideMinutes") : t("sessions.showMinutes")}
+            {isExpanded
+              ? t("sessions.minutesToggle", { context: "hide" })
+              : t("sessions.minutesToggle", { context: "show" })}
           </Button>
         </Box>
         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
@@ -1269,8 +1271,8 @@ const Home = () => {
             }}
           >
             {isExpanded
-              ? t("sessions.hideAttachments")
-              : t("sessions.showAttachments")}
+              ? t("sessions.attachmentsToggle", { context: "hide" })
+              : t("sessions.attachmentsToggle", { context: "show" })}
           </Button>
         </Box>
         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
@@ -1757,8 +1759,8 @@ const Home = () => {
                   }
                 >
                   {isExpanded
-                    ? t("common.hideDetails")
-                    : t("common.showDetails")}
+                    ? t("common.detailsToggle", { context: "hide" })
+                    : t("common.detailsToggle", { context: "show" })}
                 </Button>
                 <Button
                   size="small"

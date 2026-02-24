@@ -416,8 +416,8 @@ export function InterpellationCard({
                     }}
                   >
                     {showJustification
-                      ? t("documents.hideJustification")
-                      : t("documents.showJustification")}
+                      ? t("documents.justificationToggle", { context: "hide" })
+                      : t("documents.justificationToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showJustification}>
                     <Box
@@ -450,8 +450,8 @@ export function InterpellationCard({
                     }}
                   >
                     {showClauses
-                      ? t("documents.hideClauses")
-                      : t("documents.showClauses")}
+                      ? t("documents.clausesToggle", { context: "hide" })
+                      : t("documents.clausesToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showClauses}>
                     <Box

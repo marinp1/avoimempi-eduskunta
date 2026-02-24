@@ -726,8 +726,8 @@ export function OralQuestionCard({
                     sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
                   >
                     {showQuestionText
-                      ? t("documents.hideQuestion")
-                      : t("documents.showQuestion")}
+                      ? t("documents.questionToggle", { context: "hide" })
+                      : t("documents.questionToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showQuestionText}>
                     <Box
@@ -1228,8 +1228,8 @@ export function WrittenQuestionCard({
                     }}
                   >
                     {showQuestionText
-                      ? t("documents.hideQuestionText")
-                      : t("documents.showQuestionText")}
+                      ? t("documents.questionTextToggle", { context: "hide" })
+                      : t("documents.questionTextToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showQuestionText}>
                     <Box
