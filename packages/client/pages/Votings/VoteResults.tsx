@@ -318,6 +318,7 @@ const VotingRow: React.FC<{
           href={vote.result_url}
           sx={{
             fontSize: "0.75rem",
+            color: voteColors.yes,
           }}
         >
           {t("votings.results.results")}
@@ -618,6 +619,7 @@ const VotingCard: React.FC<{
             href={vote.result_url}
             sx={{
               fontSize: "0.8rem",
+              color: voteColors.yes,
             }}
           >
             {t("votings.results.results")}

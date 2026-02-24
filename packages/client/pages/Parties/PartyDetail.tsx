@@ -229,7 +229,9 @@ const MembersTab: React.FC<{ partyCode: string }> = ({ partyCode }) => {
 };
 
 // ── Voting Tab ──
-const VotingTab: React.FC<{ isGovernment: boolean }> = ({ isGovernment }) => {
+const VotingTab: React.FC<{ isGovernment: boolean }> = ({
+  isGovernment: _isGovernment,
+}) => {
   const themedColors = useThemedColors();
   const { t } = useTranslation();
   const [data, setData] = useState<CoalitionOppositionRow[] | null>(null);

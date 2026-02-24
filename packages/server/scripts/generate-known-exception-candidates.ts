@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
-import { mkdirSync } from "fs";
-import { join } from "path";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
 import { getDatabasePath } from "../../shared/database";
 import { StatusController } from "../controllers/status-controller";
 import { DatabaseConnection } from "../database/db";

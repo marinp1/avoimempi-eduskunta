@@ -176,9 +176,9 @@ type InterpellationSubject = {
  * Extract data from a KasittelytiedotValtiopaivaasia variant.
  */
 function parseKasittelytiedot(
-  row: VaskiEntry,
+  _row: VaskiEntry,
   body: Record<string, any>,
-  parsed: ReturnType<typeof parseParliamentIdentifier>,
+  _parsed: ReturnType<typeof parseParliamentIdentifier>,
   context: string,
 ): {
   title: string | null;
@@ -336,7 +336,7 @@ function parseKasittelytiedot(
 function parseKysymys(
   row: VaskiEntry,
   body: Record<string, any>,
-  parsed: ReturnType<typeof parseParliamentIdentifier>,
+  _parsed: ReturnType<typeof parseParliamentIdentifier>,
   context: string,
 ): {
   title: string | null;

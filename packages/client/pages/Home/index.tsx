@@ -30,7 +30,7 @@ import {
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { refs } from "#client/references";
-import { commonStyles, spacing } from "#client/theme";
+import { commonStyles } from "#client/theme";
 import {
   DataCard,
   MetricCard,
@@ -701,7 +701,7 @@ const Home = () => {
     ]);
 
   const fetchSpeeches = async (
-    sectionId: number,
+    _sectionId: number,
     sectionKey: string,
     offset = 0,
   ) => {
@@ -1250,7 +1250,10 @@ const Home = () => {
                       <EduskuntaSourceLink
                         href={href}
                         showExternalIcon={false}
-                        sx={{ color: "inherit", "&:hover": { textDecoration: "none" } }}
+                        sx={{
+                          color: "inherit",
+                          "&:hover": { textDecoration: "none" },
+                        }}
                       >
                         <Chip
                           label={reference.code}

@@ -364,7 +364,6 @@ const CalendarGrid: React.FC<{
   selectedDate: string;
   onSelectDate: (date: string) => void;
 }> = ({ validDates, selectedDate, onSelectDate }) => {
-  const { t } = useTranslation();
   const themedColors = useThemedColors();
 
   const monthNames = useMemo(
@@ -387,10 +386,10 @@ const CalendarGrid: React.FC<{
   );
 
   const [viewYear, setViewYear] = useState(() =>
-    parseInt(selectedDate.slice(0, 4)),
+    parseInt(selectedDate.slice(0, 4), 10),
   );
   const [viewMonth, setViewMonth] = useState(
-    () => parseInt(selectedDate.slice(5, 7)) - 1,
+    () => parseInt(selectedDate.slice(5, 7), 10) - 1,
   );
 
   const daysInMonth = useMemo(() => {
@@ -1314,7 +1313,10 @@ export default () => {
                       <EduskuntaSourceLink
                         href={href}
                         showExternalIcon={false}
-                        sx={{ color: "inherit", "&:hover": { textDecoration: "none" } }}
+                        sx={{
+                          color: "inherit",
+                          "&:hover": { textDecoration: "none" },
+                        }}
                       >
                         <Chip
                           label={reference.code}
@@ -2305,7 +2307,7 @@ export default () => {
   };
 
   const fetchSpeeches = async (
-    sectionId: number,
+    _sectionId: number,
     sectionKey: string,
     offset = 0,
   ) => {
