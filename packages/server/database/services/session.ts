@@ -2,7 +2,7 @@ import type { Database } from "bun:sqlite";
 import * as queries from "../queries";
 
 const buildSectionRows = (
-  db: Database,
+  _db: Database,
   sessionKey: string,
   sectionsStmt: ReturnType<Database["prepare"]>,
   votingCountStmt: ReturnType<Database["prepare"]>,

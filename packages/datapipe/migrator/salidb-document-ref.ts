@@ -8,8 +8,8 @@ export function extractDocumentTunnusCandidates(
   const normalized = text.replace(/\+/g, " ");
   const matches: string[] = [];
 
-  let m: RegExpExecArray | null;
-  while ((m = DOC_TUNNUS_RE.exec(normalized)) !== null) {
+  let m: RegExpExecArray | null = DOC_TUNNUS_RE.exec(normalized);
+  while (m !== null) {
     const type = m[1].toUpperCase();
     const numbers = m[2]
       .split(",")
@@ -19,6 +19,7 @@ export function extractDocumentTunnusCandidates(
     for (const num of numbers) {
       matches.push(`${type} ${num}/${year} vp`);
     }
+    m = DOC_TUNNUS_RE.exec(normalized);
   }
 
   return Array.from(new Set(matches));

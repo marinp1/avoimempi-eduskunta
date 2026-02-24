@@ -1013,7 +1013,7 @@ function resolveSpeechForMinutesSpeech(
       });
 
     const best = scored[0];
-    if (best && best.bestDelta && best.bestDelta.deltaSeconds <= 2) {
+    if (best?.bestDelta && best.bestDelta.deltaSeconds <= 2) {
       return {
         speech_id: best.candidate.id,
         warning:

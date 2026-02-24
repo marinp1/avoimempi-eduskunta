@@ -32,7 +32,10 @@ const getColumnNames = (
       .all() as { name: string }[]
   ).map((row) => row.name);
 
-const getTableInfo = (db: ReturnType<typeof createTestDb>, tableName: string) =>
+const _getTableInfo = (
+  db: ReturnType<typeof createTestDb>,
+  tableName: string,
+) =>
   db.query(`PRAGMA table_info(${tableName})`).all() as {
     name: string;
     notnull: number;

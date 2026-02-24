@@ -81,7 +81,7 @@ function writeMigrationReport(
   );
 }
 
-function collectTextFragments(node: unknown, output: string[]): void {
+function _collectTextFragments(node: unknown, output: string[]): void {
   if (node === null || node === undefined) return;
 
   if (typeof node === "string") {
@@ -92,7 +92,7 @@ function collectTextFragments(node: unknown, output: string[]): void {
 
   if (Array.isArray(node)) {
     for (const item of node) {
-      collectTextFragments(item, output);
+      _collectTextFragments(item, output);
     }
     return;
   }
@@ -109,7 +109,7 @@ function collectTextFragments(node: unknown, output: string[]): void {
         if (normalized) output.push(normalized);
         continue;
       }
-      collectTextFragments(value, output);
+      _collectTextFragments(value, output);
     }
   }
 }
@@ -184,7 +184,7 @@ type CommitteeReportExpert = {
 function parseMietinto(
   row: VaskiEntry,
   body: Record<string, any>,
-  parsed: ReturnType<typeof parseParliamentIdentifier> & {},
+  _parsed: ReturnType<typeof parseParliamentIdentifier> & {},
   context: string,
 ): {
   title: string | null;

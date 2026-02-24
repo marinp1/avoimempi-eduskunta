@@ -68,7 +68,7 @@ export class StatusController {
 
   private get database() {
     // Access the internal database connection
-    return (this.db as any)["db"] as import("bun:sqlite").Database;
+    return (this.db as any).db as import("bun:sqlite").Database;
   }
 
   /** Clear cached results. Call after database rebuild. */
