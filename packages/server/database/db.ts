@@ -184,25 +184,41 @@ export class DatabaseConnection {
     }));
   }
 
-  public async fetchImportSourcePages(params: {
-    tableName: string;
-    limit: number;
-    offset: number;
+  public async fetchImportSourceTableSummaries(params: {
+    tableNames: string[];
   }) {
-    if (!this.hasImportSourceReferenceTable()) {
+    const uniqueTableNames = Array.from(
+      new Set(
+        params.tableNames
+          .map((tableName) => tableName.trim())
+          .filter((tableName) => tableName.length > 0),
+      ),
+    );
+
+    if (uniqueTableNames.length === 0) {
       return {
-        tableName: params.tableName,
-        totalPages: 0,
-        pages: [],
+        tables: [],
       };
     }
 
-    const pagesStmt = this.db.prepare<
+    if (!this.hasImportSourceReferenceTable()) {
+      return {
+        tables: uniqueTableNames.map((tableName) => ({
+          tableName,
+          importedRows: 0,
+          distinctPages: 0,
+          firstScrapedAt: null,
+          lastScrapedAt: null,
+          firstMigratedAt: null,
+          lastMigratedAt: null,
+        })),
+      };
+    }
+
+    const stmt = this.db.prepare<
       {
-        source_table: string;
-        source_page: number | null;
         imported_rows: number;
-        distinct_source_rows: number;
+        distinct_pages: number;
         first_scraped_at: string | null;
         last_scraped_at: string | null;
         first_migrated_at: string | null;
@@ -210,114 +226,29 @@ export class DatabaseConnection {
       },
       {
         $tableName: string;
-        $limit: number;
-        $offset: number;
       }
-    >(queries.importSourcePages);
-    const pageRows = pagesStmt.all({
-      $tableName: params.tableName,
-      $limit: params.limit,
-      $offset: params.offset,
-    });
-    pagesStmt.finalize();
+    >(queries.importSourceTableSummary);
 
-    const countStmt = this.db.prepare<
-      {
-        total_pages: number;
-      },
-      {
-        $tableName: string;
-      }
-    >(queries.importSourcePagesCount);
-    const totalRow = countStmt.get({
-      $tableName: params.tableName,
-    });
-    countStmt.finalize();
+    const tables = uniqueTableNames.map((tableName) => {
+      const row = stmt.get({
+        $tableName: tableName,
+      });
 
-    return {
-      tableName: params.tableName,
-      totalPages: totalRow?.total_pages ?? 0,
-      pages: pageRows.map((row) => ({
-        tableName: row.source_table,
-        page: row.source_page,
-        importedRows: row.imported_rows,
-        distinctSourceRows: row.distinct_source_rows,
-        firstScrapedAt: row.first_scraped_at,
-        lastScrapedAt: row.last_scraped_at,
-        firstMigratedAt: row.first_migrated_at,
-        lastMigratedAt: row.last_migrated_at,
-      })),
-    };
-  }
-
-  public async fetchImportSourcePageTrail(params: {
-    tableName: string;
-    page: number;
-    limit: number;
-    offset: number;
-  }) {
-    if (!this.hasImportSourceReferenceTable()) {
       return {
-        tableName: params.tableName,
-        page: params.page,
-        totalRows: 0,
-        rows: [],
+        tableName,
+        importedRows: row?.imported_rows ?? 0,
+        distinctPages: row?.distinct_pages ?? 0,
+        firstScrapedAt: row?.first_scraped_at ?? null,
+        lastScrapedAt: row?.last_scraped_at ?? null,
+        firstMigratedAt: row?.first_migrated_at ?? null,
+        lastMigratedAt: row?.last_migrated_at ?? null,
       };
-    }
-
-    const rowsStmt = this.db.prepare<
-      {
-        id: number;
-        source_table: string;
-        source_page: number | null;
-        source_pk_name: string | null;
-        source_pk_value: string | null;
-        scraped_at: string | null;
-        migrated_at: string | null;
-      },
-      {
-        $tableName: string;
-        $page: number;
-        $limit: number;
-        $offset: number;
-      }
-    >(queries.importSourcePageTrail);
-    const rows = rowsStmt.all({
-      $tableName: params.tableName,
-      $page: params.page,
-      $limit: params.limit,
-      $offset: params.offset,
     });
-    rowsStmt.finalize();
 
-    const countStmt = this.db.prepare<
-      {
-        total_rows: number;
-      },
-      {
-        $tableName: string;
-        $page: number;
-      }
-    >(queries.importSourcePageTrailCount);
-    const totalRow = countStmt.get({
-      $tableName: params.tableName,
-      $page: params.page,
-    });
-    countStmt.finalize();
+    stmt.finalize();
 
     return {
-      tableName: params.tableName,
-      page: params.page,
-      totalRows: totalRow?.total_rows ?? 0,
-      rows: rows.map((row) => ({
-        id: row.id,
-        tableName: row.source_table,
-        page: row.source_page,
-        sourcePkName: row.source_pk_name,
-        sourcePkValue: row.source_pk_value,
-        scrapedAt: row.scraped_at,
-        migratedAt: row.migrated_at,
-      })),
+      tables,
     };
   }
 

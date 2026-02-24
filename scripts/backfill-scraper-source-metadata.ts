@@ -92,7 +92,9 @@ function parseOptions(argv: string[]): ScriptOptions {
   return { apply, overwrite, stages, tables, limit };
 }
 
-function getCreationDateFromStats(fileStats: Awaited<ReturnType<typeof stat>>): {
+function getCreationDateFromStats(
+  fileStats: Awaited<ReturnType<typeof stat>>,
+): {
   createdAt: Date;
   source: "birthtime" | "mtime-fallback";
 } {
@@ -399,9 +401,7 @@ async function main() {
   };
 
   const mode = options.apply ? "APPLY" : "DRY-RUN";
-  console.log(
-    `${mode}: backfilling source metadata`,
-  );
+  console.log(`${mode}: backfilling source metadata`);
   console.log(`Stages: ${options.stages.join(", ")}`);
   if (options.limit !== null) {
     console.log(`Limit: ${options.limit} files`);

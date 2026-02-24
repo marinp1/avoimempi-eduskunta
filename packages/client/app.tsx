@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { PageDataSourcesDrawer } from "./components/PageDataSourcesDrawer";
 import { Navigation } from "./Navigation";
 import { type RouteName, routes } from "./pages";
 import { colors, spacing } from "./theme";
@@ -94,6 +95,7 @@ export const App: React.FC = () => {
           </Typography>
         </Box>
       </Container>
+      <PageDataSourcesDrawer activeRoute={activeTab} />
     </>
   );
 };
