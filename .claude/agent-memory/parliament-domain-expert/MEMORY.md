@@ -120,6 +120,35 @@ Issue requirement "NEVER exceeds 199" is imprecise - means "typically 199, but 2
 - Vote totals = 200: <5%
 - Terms without group membership: <2%
 
+## vastaus_kirjalliseen_kysymykseen (KKV) Documents
+
+### Key Facts
+- ~8700 total rows across 1308 page files (2015-2025), status 5 (published) or 8 (revised)
+- Document type is PDF-only: `SiirtoAsiakirja` is always null or empty `{}`; no XML answer text
+- Sanomavalitys type is always `VASKI_JULKVP_WrittenQuestionReply_fi` (no Swedish variant seen)
+
+### Linking to WrittenQuestion (KK)
+- **Authoritative link**: `Siirto.SiirtoMetatieto.JulkaisuMetatieto.IdentifiointiOsa.Vireilletulo.EduskuntaTunnus`
+- This is the KK identifier e.g. `"KK 384/2018 vp"` — matches `WrittenQuestion.parliament_identifier`
+- **CRITICAL**: Never derive KK reference by substituting "KK" for "KKV" in the KKV identifier
+  - Confirmed cross-year case: `KKV 741/2023 vp` → `KK 741/2022 vp` (question filed 2022, answer registered 2023)
+- `AsiakirjaViitteet.Muu1Viite` is a redundant secondary reference (only present 2015-2019 era)
+
+### Fields Available in vastaus (not yet stored)
+Already captured via `kirjallinen_kysymys.ts` flush(): minister name/title/date → `WrittenQuestion` answer columns
+NOT yet stored: answer title, answer subjects (Aihe list), vaski GUID, EDK number, PDF hash/filename
+
+### Edge Cases
+- Toimija.Henkilo missing in ~4% of rows (2022 and 2025 data gaps) — minister columns must be nullable
+- Aihe is always a list (never single dict), 3-9 items per response
+- LisatietoTeksti in Henkilo is always empty for KKV (unlike KK signers where it carries party)
+- Minister party must be inferred via GovernmentMembership table (name + date), not from document
+
+### Current Architecture Note
+`kirjallinen_kysymys.ts` `flush()` already reads all KKV rows and updates WrittenQuestion answer columns.
+A separate `WrittenQuestionResponse` table (migration V001.022+) would capture full document metadata.
+Next migration file should be `V001.022__vaski_written_question_response_schema.sql`.
+
 ## See Also
 - `session-agenda-structure.md` - Full documentation of session/section/speech data structure
 - `sanity-checks.md` - Comprehensive data validation rules (40+ implemented, 20 recommended)
