@@ -53,7 +53,8 @@ type DocumentType =
   | "legislative-initiatives-supplementary-budget"
   | "legislative-initiatives-action"
   | "legislative-initiatives-discussion"
-  | "legislative-initiatives-citizens";
+  | "legislative-initiatives-citizens"
+  | "expert-statements";
 
 const LEGISLATIVE_INITIATIVE_TYPE_BY_DOCUMENT_TYPE: Partial<
   Record<DocumentType, string>
@@ -87,11 +88,21 @@ const getDocumentApiConfig = (
   if (documentType === "written-question-responses") {
     return { apiBase: "/api/written-question-responses", initiativeTypeCode: null };
   }
+  if (documentType === "expert-statements") {
+    return { apiBase: "/api/expert-statements", initiativeTypeCode: null };
+  }
   return {
     apiBase: "/api/legislative-initiatives",
     initiativeTypeCode:
       LEGISLATIVE_INITIATIVE_TYPE_BY_DOCUMENT_TYPE[documentType] || null,
   };
+};
+
+const buildKysymysPdfUrl = (identifier: string | null): string | null => {
+  if (!identifier) return null;
+  const m = identifier.match(/^(KKV?)\s+(\d+)\/(\d{4})\s+vp$/i);
+  if (!m) return null;
+  return `https://www.eduskunta.fi/FI/vaski/Kysymys/Documents/${m[1].toUpperCase()}_${parseInt(m[2], 10)}+${m[3]}.pdf`;
 };
 
 const formatDate = (dateStr: string | null) => {
@@ -1933,6 +1944,19 @@ interface WrittenQuestionResponseListItem {
   subjects: string | null;
 }
 
+interface ExpertStatementListItem {
+  id: number;
+  document_type: string;
+  edk_identifier: string;
+  bill_identifier: string | null;
+  committee_name: string | null;
+  meeting_identifier: string | null;
+  meeting_date: string | null;
+  title: string | null;
+  publicity: string | null;
+  language: string | null;
+}
+
 interface OralQuestionListItem {
   id: number;
   parliament_identifier: string;
@@ -1991,6 +2015,10 @@ function WrittenQuestionResponseCard({
 }) {
   const { t } = useTranslation();
 
+  const [expanded, setExpanded] = useState(false);
+  const [questionDetail, setQuestionDetail] = useState<Pick<WrittenQuestionDetail, "question_text" | "question_rich_text" | "answer_parliament_identifier"> | null>(null);
+  const [loading, setLoading] = useState(false);
+
   const subjects = item.subjects
     ? item.subjects.split("||").filter(Boolean)
     : [];
@@ -2000,6 +2028,238 @@ function WrittenQuestionResponseCard({
   const ministerName = [item.minister_first_name, item.minister_last_name]
     .filter(Boolean)
     .join(" ");
+
+  const eduskuntaUrl = buildKysymysPdfUrl(item.parliament_identifier);
+  const questionEduskuntaUrl = buildKysymysPdfUrl(item.question_identifier);
+
+  const handleExpand = async () => {
+    if (!expanded && !questionDetail) {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/written-questions/${item.question_id}`);
+        if (res.ok) setQuestionDetail(await res.json());
+      } finally {
+        setLoading(false);
+      }
+    }
+    setExpanded((e) => !e);
+  };
+
+  return (
+    <DataCard>
+      <Box
+        sx={{
+          cursor: "pointer",
+          "&:hover": {
+            backgroundColor: colors.backgroundSubtle,
+          },
+          transition: "background-color 0.2s",
+          p: 2,
+        }}
+        onClick={handleExpand}
+      >
+        <Stack spacing={1.5}>
+          {/* Identifier + answered chip row */}
+          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" gap={0.5}>
+            <Typography
+              variant="caption"
+              sx={{ color: colors.textSecondary, fontFamily: "monospace" }}
+            >
+              {item.parliament_identifier}
+            </Typography>
+            {item.answer_date && (
+              <Chip
+                label={`${t("documents.answered", "Vastattu")} ${formatDate(item.answer_date)}`}
+                size="small"
+                sx={{
+                  backgroundColor: colors.success,
+                  color: "#fff",
+                  fontSize: "0.7rem",
+                }}
+              />
+            )}
+          </Stack>
+
+          {/* Title */}
+          {item.title ? (
+            <Typography
+              variant="body1"
+              sx={{ fontWeight: 500, color: colors.textPrimary }}
+            >
+              {item.title}
+            </Typography>
+          ) : item.question_title ? (
+            <Typography
+              variant="body1"
+              sx={{ fontWeight: 500, color: colors.textPrimary }}
+            >
+              {item.question_title}
+            </Typography>
+          ) : null}
+
+          {/* Minister */}
+          {ministerName && (
+            <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+              {item.minister_title ? `${item.minister_title} ` : ""}
+              {ministerName}
+            </Typography>
+          )}
+
+          {/* Parent question identifier */}
+          <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+            {t("documents.writtenQuestion", "Kirjallinen kysymys")}:{" "}
+            <span style={{ fontFamily: "monospace" }}>{item.question_identifier}</span>
+          </Typography>
+
+          {/* Subject chips */}
+          {displaySubjects.length > 0 && (
+            <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+              {displaySubjects.map((subject, idx) => (
+                <Chip
+                  key={idx}
+                  label={subject}
+                  size="small"
+                  variant="outlined"
+                  onClick={
+                    onSubjectClick
+                      ? (e) => {
+                          e.stopPropagation();
+                          onSubjectClick(subject);
+                        }
+                      : undefined
+                  }
+                  sx={{
+                    borderColor: colors.dataBorder,
+                    color: colors.textSecondary,
+                    cursor: onSubjectClick ? "pointer" : "default",
+                  }}
+                />
+              ))}
+              {remainingSubjects > 0 && (
+                <Chip
+                  label={`+${remainingSubjects}`}
+                  size="small"
+                  variant="outlined"
+                  sx={{ borderColor: colors.dataBorder, color: colors.textSecondary }}
+                />
+              )}
+            </Stack>
+          )}
+        </Stack>
+
+        {/* Expand toggle icon */}
+        <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>
+          <ExpandMoreIcon
+            sx={{
+              transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform 0.3s",
+              color: colors.textSecondary,
+            }}
+          />
+        </Box>
+      </Box>
+
+      <Collapse in={expanded} timeout="auto" unmountOnExit>
+        <Box sx={{ p: 2, pt: 0, borderTop: `1px solid ${colors.dataBorder}` }}>
+          {loading && (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+              <CircularProgress size={32} />
+            </Box>
+          )}
+
+          {/* External link buttons */}
+          {(eduskuntaUrl || questionEduskuntaUrl) && (
+            <Stack direction="row" spacing={1} flexWrap="wrap" gap={0.5} sx={{ mb: 2, pt: 2 }}>
+              {eduskuntaUrl && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  href={eduskuntaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  sx={{ textTransform: "none", color: colors.primary, borderColor: colors.primary }}
+                >
+                  {t("documents.viewResponseOnEduskunta", "Vastaus eduskunta.fi:ssä")}
+                </Button>
+              )}
+              {questionEduskuntaUrl && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  href={questionEduskuntaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  sx={{ textTransform: "none", color: colors.textSecondary, borderColor: colors.dataBorder }}
+                >
+                  {t("documents.viewQuestionOnEduskunta", "Kysymys eduskunta.fi:ssä")}
+                </Button>
+              )}
+            </Stack>
+          )}
+
+          {/* Question text from fetched detail */}
+          {!loading && questionDetail?.question_rich_text ? (
+            <Box>
+              <Typography variant="subtitle2" sx={{ color: colors.textSecondary, mb: 1 }}>
+                {t("documents.questionText", "Kysymyksen teksti")}
+              </Typography>
+              <Box
+                sx={{
+                  p: 2,
+                  backgroundColor: colors.backgroundSubtle,
+                  borderRadius: 1,
+                  borderLeft: `4px solid ${colors.info}`,
+                }}
+              >
+                <RichTextRenderer document={questionDetail.question_rich_text} />
+              </Box>
+            </Box>
+          ) : !loading && questionDetail?.question_text ? (
+            <Box>
+              <Typography variant="subtitle2" sx={{ color: colors.textSecondary, mb: 1 }}>
+                {t("documents.questionText", "Kysymyksen teksti")}
+              </Typography>
+              <Box
+                sx={{
+                  p: 2,
+                  backgroundColor: colors.backgroundSubtle,
+                  borderRadius: 1,
+                  borderLeft: `4px solid ${colors.info}`,
+                }}
+              >
+                <Typography variant="body2" sx={{ color: colors.textPrimary, whiteSpace: "pre-wrap" }}>
+                  {questionDetail.question_text}
+                </Typography>
+              </Box>
+            </Box>
+          ) : !loading && questionDetail ? (
+            <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+              {t("documents.noQuestionText", "Kysymyksen teksti ei saatavilla")}
+            </Typography>
+          ) : null}
+        </Box>
+      </Collapse>
+    </DataCard>
+  );
+}
+
+function ExpertStatementCard({ item }: { item: ExpertStatementListItem }) {
+  const { t } = useTranslation();
+
+  const docTypeLabel =
+    ({
+      asiantuntijalausunto: t("documents.expertStatement", "Lausunto"),
+      asiantuntijalausunnon_liite: t(
+        "documents.expertStatementAttachment",
+        "Lausunnon liite",
+      ),
+      asiantuntijasuunnitelma: t(
+        "documents.expertHearingPlan",
+        "Kuulemissuunnitelma",
+      ),
+    } as Record<string, string>)[item.document_type] ?? item.document_type;
 
   return (
     <DataCard>
@@ -2011,88 +2271,73 @@ function WrittenQuestionResponseCard({
           spacing={1}
         >
           <Box sx={{ flex: 1 }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              flexWrap="wrap"
+              gap={0.5}
+              sx={{ mb: 0.5 }}
+            >
               <Typography
                 variant="caption"
                 sx={{ color: colors.textSecondary, fontFamily: "monospace" }}
               >
-                {item.parliament_identifier}
+                {item.edk_identifier}
               </Typography>
-              {item.answer_date && (
+              <Chip
+                label={docTypeLabel}
+                size="small"
+                sx={{
+                  backgroundColor: colors.info,
+                  color: "#fff",
+                  fontSize: "0.7rem",
+                }}
+              />
+              {item.bill_identifier && (
                 <Chip
-                  label={`${t("documents.answered", "Vastattu")} ${formatDate(item.answer_date)}`}
+                  label={item.bill_identifier}
                   size="small"
                   sx={{
-                    backgroundColor: colors.success,
-                    color: "#fff",
+                    backgroundColor: colors.primaryLight,
+                    color: colors.primary,
+                    fontFamily: "monospace",
                     fontSize: "0.7rem",
                   }}
                 />
               )}
             </Stack>
 
-            {item.title ? (
+            {item.title && (
               <Typography
                 variant="body1"
                 sx={{ fontWeight: 500, color: colors.textPrimary, mb: 0.5 }}
               >
                 {item.title}
               </Typography>
-            ) : item.question_title ? (
-              <Typography
-                variant="body1"
-                sx={{ fontWeight: 500, color: colors.textPrimary, mb: 0.5 }}
-              >
-                {item.question_title}
-              </Typography>
-            ) : null}
+            )}
 
-            {ministerName && (
-              <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
-                {item.minister_title ? `${item.minister_title} ` : ""}
-                {ministerName}
+            {item.committee_name && (
+              <Typography
+                variant="body2"
+                sx={{ color: colors.textSecondary, mb: 0.25 }}
+              >
+                {item.committee_name}
               </Typography>
             )}
 
-            <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-              {t("documents.writtenQuestion", "Kirjallinen kysymys")}:{" "}
-              <span style={{ fontFamily: "monospace" }}>{item.question_identifier}</span>
-            </Typography>
+            {(item.meeting_date || item.meeting_identifier) && (
+              <Typography
+                variant="caption"
+                sx={{ color: colors.textSecondary }}
+              >
+                {item.meeting_identifier && `${item.meeting_identifier}`}
+                {item.meeting_date && item.meeting_identifier && " · "}
+                {item.meeting_date && formatDate(item.meeting_date)}
+              </Typography>
+            )}
           </Box>
         </Stack>
-
-        {displaySubjects.length > 0 && (
-          <Stack
-            direction="row"
-            spacing={0.5}
-            flexWrap="wrap"
-            gap={0.5}
-            sx={{ mt: 1 }}
-          >
-            {displaySubjects.map((subject, idx) => (
-              <Chip
-                key={idx}
-                label={subject}
-                size="small"
-                variant="outlined"
-                onClick={onSubjectClick ? () => onSubjectClick(subject) : undefined}
-                sx={{
-                  borderColor: colors.dataBorder,
-                  color: colors.textSecondary,
-                  cursor: onSubjectClick ? "pointer" : "default",
-                }}
-              />
-            ))}
-            {remainingSubjects > 0 && (
-              <Chip
-                label={`+${remainingSubjects}`}
-                size="small"
-                variant="outlined"
-                sx={{ borderColor: colors.dataBorder, color: colors.textSecondary }}
-              />
-            )}
-          </Stack>
-        )}
       </Box>
     </DataCard>
   );
@@ -2355,6 +2600,8 @@ function WrittenQuestionCard({
   const displaySubjects = subjects.slice(0, 3);
   const remainingSubjects = subjects.length - 3;
 
+  const kkPdfUrl = buildKysymysPdfUrl(item.parliament_identifier);
+
   const signerName = [item.first_signer_first_name, item.first_signer_last_name]
     .filter(Boolean)
     .join(" ");
@@ -2576,6 +2823,50 @@ function WrittenQuestionCard({
 
           {detail && (
             <Stack spacing={3}>
+              {(kkPdfUrl || detail.answer_parliament_identifier) && (
+                <Stack direction="row" spacing={1} flexWrap="wrap" gap={0.5}>
+                  {kkPdfUrl && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      href={kkPdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      sx={{
+                        textTransform: "none",
+                        color: colors.primary,
+                        borderColor: colors.primary,
+                      }}
+                    >
+                      {t("documents.viewQuestionPdf", "Kysymys (PDF)")}
+                    </Button>
+                  )}
+                  {(() => {
+                    const url = buildKysymysPdfUrl(
+                      detail.answer_parliament_identifier,
+                    );
+                    return url ? (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        sx={{
+                          textTransform: "none",
+                          color: colors.textSecondary,
+                          borderColor: colors.dataBorder,
+                        }}
+                      >
+                        {t("documents.viewResponsePdf", "Vastaus (PDF)")}
+                      </Button>
+                    ) : null;
+                  })()}
+                </Stack>
+              )}
+
               {detail.signers.length > 0 && (
                 <Box>
                   <Stack
@@ -3460,6 +3751,7 @@ export default function Documents() {
       | OralQuestionListItem
       | CommitteeReportListItem
       | LegislativeInitiativeListItem
+      | ExpertStatementListItem
     )[]
   >([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -3480,6 +3772,12 @@ export default function Documents() {
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
   const [subjectOptions, setSubjectOptions] = useState<string[]>([]);
   const [subjectsLoading, setSubjectsLoading] = useState(false);
+  const [selectedExpertCommittee, setSelectedExpertCommittee] = useState("all");
+  const [selectedExpertDocType, setSelectedExpertDocType] = useState("all");
+  const [expertCommittees, setExpertCommittees] = useState<
+    Array<{ committee_name: string; count: number }>
+  >([]);
+  const [expertFiltersLoading, setExpertFiltersLoading] = useState(false);
 
   const limit = 20;
 
@@ -3517,9 +3815,20 @@ export default function Documents() {
     fetchYears();
   }, [apiBase, initiativeTypeCode]);
 
-  // Fetch subjects when document type changes (skip committee-reports which has no subject table)
+  // Fetch expert statement committees when document type changes
   useEffect(() => {
-    if (documentType === "committee-reports") {
+    if (documentType !== "expert-statements") return;
+    setExpertFiltersLoading(true);
+    fetch("/api/expert-statements/committees")
+      .then((r) => r.json())
+      .then((data) => setExpertCommittees(data))
+      .catch(() => {})
+      .finally(() => setExpertFiltersLoading(false));
+  }, [documentType]);
+
+  // Fetch subjects when document type changes (skip committee-reports and expert-statements which has no subject table)
+  useEffect(() => {
+    if (documentType === "committee-reports" || documentType === "expert-statements") {
       setSubjectOptions([]);
       return;
     }
@@ -3564,6 +3873,14 @@ export default function Documents() {
             params.set("recipientCommittee", selectedRecipientCommittee);
           }
         }
+        if (documentType === "expert-statements") {
+          if (selectedExpertCommittee !== "all") {
+            params.set("committee", selectedExpertCommittee);
+          }
+          if (selectedExpertDocType !== "all") {
+            params.set("docType", selectedExpertDocType);
+          }
+        }
 
         const response = await fetch(`${apiBase}?${params}`);
         if (!response.ok) throw new Error("Failed to fetch documents");
@@ -3588,6 +3905,8 @@ export default function Documents() {
       documentType,
       selectedSourceCommittee,
       selectedRecipientCommittee,
+      selectedExpertCommittee,
+      selectedExpertDocType,
     ],
   );
 
@@ -3604,6 +3923,8 @@ export default function Documents() {
     documentType,
     selectedSourceCommittee,
     selectedRecipientCommittee,
+    selectedExpertCommittee,
+    selectedExpertDocType,
   ]);
 
   useEffect(() => {
@@ -3691,6 +4012,9 @@ export default function Documents() {
     setSelectedRecipientCommittee("all");
     setSourceCommittees([]);
     setRecipientCommittees([]);
+    setSelectedExpertCommittee("all");
+    setSelectedExpertDocType("all");
+    setExpertCommittees([]);
     setSearchQuery("");
     setDebouncedQuery("");
     setItems([]);
@@ -3762,6 +4086,9 @@ export default function Documents() {
               </MenuItem>
               <MenuItem value="written-question-responses">
                 {t("documents.writtenQuestionResponses", "Kirjalliset vastaukset")}
+              </MenuItem>
+              <MenuItem value="expert-statements">
+                {t("documents.expertStatements", "Asiantuntijalausunnot")}
               </MenuItem>
               <MenuItem value="oral-questions">
                 {t("documents.oralQuestions", "Suulliset kysymykset")}
@@ -3896,8 +4223,58 @@ export default function Documents() {
           </Stack>
         )}
 
-        {/* Subject filter (not shown for committee-reports) */}
-        {documentType !== "committee-reports" && (
+        {documentType === "expert-statements" && (
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <FormControl fullWidth>
+              <InputLabel>
+                {t("documents.committeeFilter", "Valiokunta")}
+              </InputLabel>
+              <Select
+                value={selectedExpertCommittee}
+                label={t("documents.committeeFilter", "Valiokunta")}
+                onChange={(e) => setSelectedExpertCommittee(e.target.value)}
+                disabled={expertFiltersLoading}
+                sx={{ backgroundColor: colors.backgroundDefault }}
+              >
+                <MenuItem value="all">
+                  {t("documents.allCommittees", "Kaikki valiokunnat")}
+                </MenuItem>
+                {expertCommittees.map((item) => (
+                  <MenuItem key={item.committee_name} value={item.committee_name}>
+                    {item.committee_name} ({item.count})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>
+                {t("documents.documentSubtype", "Tyyppi")}
+              </InputLabel>
+              <Select
+                value={selectedExpertDocType}
+                label={t("documents.documentSubtype", "Tyyppi")}
+                onChange={(e) => setSelectedExpertDocType(e.target.value)}
+                sx={{ backgroundColor: colors.backgroundDefault }}
+              >
+                <MenuItem value="all">
+                  {t("documents.allTypes", "Kaikki tyypit")}
+                </MenuItem>
+                <MenuItem value="asiantuntijalausunto">
+                  {t("documents.expertStatement", "Lausunto")}
+                </MenuItem>
+                <MenuItem value="asiantuntijalausunnon_liite">
+                  {t("documents.expertStatementAttachment", "Lausunnon liite")}
+                </MenuItem>
+                <MenuItem value="asiantuntijasuunnitelma">
+                  {t("documents.expertHearingPlan", "Kuulemissuunnitelma")}
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
+        )}
+
+        {/* Subject filter (not shown for committee-reports or expert-statements) */}
+        {documentType !== "committee-reports" && documentType !== "expert-statements" && (
           <Autocomplete
             options={subjectOptions}
             value={selectedSubject}
@@ -3986,7 +4363,11 @@ export default function Documents() {
                               onSubjectClick={setSelectedSubject}
                             />
                           ))
-                        : (items as WrittenQuestionListItem[]).map((item) => (
+                        : documentType === "expert-statements"
+                          ? (items as ExpertStatementListItem[]).map((item) => (
+                              <ExpertStatementCard key={item.id} item={item} />
+                            ))
+                          : (items as WrittenQuestionListItem[]).map((item) => (
                             <WrittenQuestionCard
                               key={item.id}
                               item={item}

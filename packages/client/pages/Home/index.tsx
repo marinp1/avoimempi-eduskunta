@@ -1931,7 +1931,7 @@ const Home = () => {
     const { report, entries } = rollCallData;
     const documentIdentifier =
       report.edk_identifier || report.parliament_identifier;
-    const documentUrl = `https://www.parliament.fi/valtiopaivaasiakirjat/${encodeURIComponent(documentIdentifier)}`;
+    const documentUrl = `https://www.eduskunta.fi/valtiopaivaasiakirjat/${encodeURIComponent(documentIdentifier)}`;
 
     const formatEntryType = (entryType: RollCallEntry["entry_type"]) =>
       entryType === "late"

@@ -1314,6 +1314,94 @@ export class DatabaseConnection {
     return data;
   }
 
+  // ─── Expert statement queries ───
+
+  public async fetchExpertStatements(params: {
+    query?: string;
+    year?: string;
+    committee?: string;
+    docType?: string;
+    page: number;
+    limit: number;
+  }) {
+    const offset = (params.page - 1) * params.limit;
+    const $query = params.query?.trim() || null;
+    const $year = params.year || null;
+    const $committee = params.committee || null;
+    const $docType = params.docType || null;
+
+    const countStmt = this.db.prepare<
+      { count: number },
+      {
+        $query: string | null;
+        $year: string | null;
+        $committee: string | null;
+        $docType: string | null;
+      }
+    >(queries.expertStatementsCount);
+    const countResult = countStmt.get({ $query, $year, $committee, $docType });
+    const totalCount = countResult?.count || 0;
+    countStmt.finalize();
+
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        document_type: string;
+        edk_identifier: string;
+        bill_identifier: string | null;
+        committee_name: string | null;
+        meeting_identifier: string | null;
+        meeting_date: string | null;
+        title: string | null;
+        publicity: string | null;
+        language: string | null;
+      },
+      {
+        $query: string | null;
+        $year: string | null;
+        $committee: string | null;
+        $docType: string | null;
+        $limit: number;
+        $offset: number;
+      }
+    >(queries.expertStatementsList);
+    const rows = stmt.all({
+      $query,
+      $year,
+      $committee,
+      $docType,
+      $limit: params.limit,
+      $offset: offset,
+    });
+    stmt.finalize();
+
+    return {
+      items: rows,
+      totalCount,
+      page: params.page,
+      limit: params.limit,
+      totalPages: Math.ceil(totalCount / params.limit),
+    };
+  }
+
+  public async fetchExpertStatementYears() {
+    const stmt = this.db.prepare<{ year: string }, []>(
+      queries.expertStatementYears,
+    );
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchExpertStatementCommittees() {
+    const stmt = this.db.prepare<{ committee_name: string; count: number }, []>(
+      queries.expertStatementCommittees,
+    );
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
   // ─── Written question response queries ───
 
   public async fetchWrittenQuestionResponses(params: {
