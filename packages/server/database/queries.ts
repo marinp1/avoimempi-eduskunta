@@ -42,10 +42,7 @@ export { default as govProposalsCount } from "./queries/GOV_PROPOSALS_COUNT.sql"
 export { default as govProposalsList } from "./queries/GOV_PROPOSALS_LIST.sql";
 export { default as govProposalsSubjectsList } from "./queries/GOV_PROPOSALS_SUBJECTS_LIST.sql";
 export { default as governmentMemberships } from "./queries/GOVERNMENT_MEMBERSHIPS.sql";
-export { default as importSourcePageTrail } from "./queries/IMPORT_SOURCE_PAGE_TRAIL.sql";
-export { default as importSourcePageTrailCount } from "./queries/IMPORT_SOURCE_PAGE_TRAIL_COUNT.sql";
-export { default as importSourcePages } from "./queries/IMPORT_SOURCE_PAGES.sql";
-export { default as importSourcePagesCount } from "./queries/IMPORT_SOURCE_PAGES_COUNT.sql";
+export { default as importSourceTableSummary } from "./queries/IMPORT_SOURCE_TABLE_SUMMARY.sql";
 export { default as interpellationById } from "./queries/INTERPELLATION_BY_ID.sql";
 export { default as interpellationByIdentifier } from "./queries/INTERPELLATION_BY_IDENTIFIER.sql";
 export { default as interpellationSessions } from "./queries/INTERPELLATION_SESSIONS.sql";

@@ -4326,10 +4326,20 @@ export default function Documents() {
           )}
 
         {/* Result count */}
-        <Typography variant="body2" color={colors.textSecondary}>
-          {t("documents.showing")} {items.length} / {totalCount}{" "}
-          {t("documents.totalDocuments", "asiakirjaa")}
-        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 1,
+          }}
+        >
+          <Typography variant="body2" color={colors.textSecondary}>
+            {t("documents.showing")} {items.length} / {totalCount}{" "}
+            {t("documents.totalDocuments", "asiakirjaa")}
+          </Typography>
+        </Box>
 
         {/* Results */}
         {loading && page === 1 ? (
