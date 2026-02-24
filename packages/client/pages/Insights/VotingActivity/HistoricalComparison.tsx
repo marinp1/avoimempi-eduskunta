@@ -17,6 +17,7 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { colors, gradients, spacing } from "#client/theme";
 import { GlassCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -35,6 +36,7 @@ export function HistoricalComparison({
   startDate,
   endDate,
 }: HistoricalComparisonProps) {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
   const [data, setData] = React.useState<ParticipationByGovernmentData[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
@@ -107,7 +109,7 @@ export function HistoricalComparison({
     if (wasInGovernment) {
       return (
         <Chip
-          label="Ministeri"
+          label={t("composition.details.minister")}
           size="small"
           sx={{
             backgroundColor: themedColors.ministerBackground,
@@ -119,7 +121,7 @@ export function HistoricalComparison({
     } else if (wasInCoalition) {
       return (
         <Chip
-          label="Hallituspuolue"
+          label={t("composition.details.filters.government")}
           size="small"
           sx={{
             backgroundColor: themedColors.coalitionBackground,
@@ -131,7 +133,7 @@ export function HistoricalComparison({
     } else {
       return (
         <Chip
-          label="Oppositio"
+          label={t("composition.details.filters.opposition")}
           size="small"
           sx={{
             backgroundColor: themedColors.oppositionBackground,
@@ -155,7 +157,8 @@ export function HistoricalComparison({
           }}
         >
           <Typography variant="h6" fontWeight={600}>
-            {representativeName} - Historiallinen vertailu
+            {representativeName} -{" "}
+            {t("insights.votingActivity.historicalComparison")}
           </Typography>
           <IconButton onClick={onClose} size="small">
             <CloseIcon />
@@ -167,7 +170,7 @@ export function HistoricalComparison({
           color="text.secondary"
           sx={{ mb: spacing.md }}
         >
-          Äänestysosallistuminen eri hallitusten aikana
+          {t("insights.votingActivity.historicalSubtitle")}
         </Typography>
 
         {loading && (
@@ -194,25 +197,25 @@ export function HistoricalComparison({
                   }}
                 >
                   <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                    Hallitus
+                    {t("parties.government")}
                   </TableCell>
                   <TableCell
                     align="center"
                     sx={{ color: "white", fontWeight: 600 }}
                   >
-                    Rooli
+                    {t("documents.committeeRole")}
                   </TableCell>
                   <TableCell
                     align="right"
                     sx={{ color: "white", fontWeight: 600 }}
                   >
-                    Äänestyksiä
+                    {t("insights.votingActivity.votings")}
                   </TableCell>
                   <TableCell
                     align="right"
                     sx={{ color: "white", fontWeight: 600 }}
                   >
-                    Yhteensä
+                    {t("common.total")}
                   </TableCell>
                   <TableCell
                     align="right"
@@ -224,7 +227,7 @@ export function HistoricalComparison({
                     align="center"
                     sx={{ color: "white", fontWeight: 600 }}
                   >
-                    Trendi
+                    {t("insights.votingActivity.trend")}
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -293,7 +296,7 @@ export function HistoricalComparison({
         {!loading && !error && sortedData.length === 0 && (
           <Box sx={{ textAlign: "center", py: spacing.md }}>
             <Typography variant="body2" color="text.secondary">
-              Ei tietoja tälle edustajalle.
+              {t("insights.votingActivity.noPersonData")}
             </Typography>
           </Box>
         )}
@@ -308,8 +311,7 @@ export function HistoricalComparison({
             }}
           >
             <Typography variant="body2" color={colors.info}>
-              Vain yksi hallitus saatavilla. Historiallinen vertailu vaatii
-              useamman hallituksen.
+              {t("insights.votingActivity.historicalNeedsMoreData")}
             </Typography>
           </Box>
         )}

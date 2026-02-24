@@ -87,6 +87,8 @@ type Member = {
 
 const Home = () => {
   const { t } = useTranslation();
+  const speechContentLatestLabel = (date: string) =>
+    String(t("sessions.speechContentLatest" as any)).replace("{{date}}", date);
   const themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
 
@@ -658,23 +660,17 @@ const Home = () => {
             textTransform: "uppercase",
           }}
         >
-          {t("sessions.minutesMetadata", { defaultValue: "Pöytäkirjatiedot" })}
+          {t("sessions.minutesMetadata")}
         </Typography>
         {minutesItemTitle && minutesItemTitle !== section.title && (
           <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
-            {t("sessions.minutesItemTitle", {
-              defaultValue: "Pöytäkirjan otsikko",
-            })}
-            : {minutesItemTitle}
+            {t("sessions.minutesItemTitle")}: {minutesItemTitle}
           </Typography>
         )}
         {(section.minutes_processing_phase_code ||
           section.minutes_general_processing_phase_code) && (
           <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
-            {t("sessions.minutesProcessingCodes", {
-              defaultValue: "Käsittelykoodit",
-            })}
-            :{" "}
+            {t("sessions.minutesProcessingCodes")}:{" "}
             {[
               section.minutes_processing_phase_code,
               section.minutes_general_processing_phase_code,
@@ -746,7 +742,7 @@ const Home = () => {
             mb: 1,
           }}
         >
-          {t("sessions.minutesContent", { defaultValue: "Pöytäkirjateksti" })}
+          {t("sessions.minutesContent")}
         </Typography>
 
         {parsed.narrativeBlocks.length > 0 && (
@@ -783,12 +779,8 @@ const Home = () => {
               const migratedAsRollCall =
                 isReferenceMigratedAsRollCall(reference);
               const tooltipTitle = migratedAsRollCall
-                ? t("sessions.minutesReferenceMigratedRollCall", {
-                    defaultValue: "Nimenhuutoraportti on migroitu.",
-                  })
-                : t("sessions.minutesReferenceNotMigrated", {
-                    defaultValue: "Asiakirjaa ei ole vielä migroitu.",
-                  });
+                ? t("sessions.minutesReferenceMigratedRollCall")
+                : t("sessions.minutesReferenceNotMigrated");
               const chipSx = {
                 fontFamily: "monospace",
                 fontSize: "0.75rem",
@@ -883,7 +875,7 @@ const Home = () => {
             mb: 0.75,
           }}
         >
-          {t("sessions.subSections", { defaultValue: "Alakohdat" })}
+          {t("sessions.subSections")}
         </Typography>
         <Box sx={{ overflowX: "auto" }}>
           <Box
@@ -911,20 +903,10 @@ const Home = () => {
           >
             <thead>
               <tr>
-                <th>
-                  {t("sessions.subSectionNumber", { defaultValue: "Kohta" })}
-                </th>
-                <th>
-                  {t("sessions.subSectionTitle", { defaultValue: "Otsikko" })}
-                </th>
-                <th>
-                  {t("sessions.subSectionDocument", {
-                    defaultValue: "Asiakirja",
-                  })}
-                </th>
-                <th>
-                  {t("sessions.subSectionType", { defaultValue: "Tyyppi" })}
-                </th>
+                <th>{t("sessions.subSectionNumber")}</th>
+                <th>{t("sessions.subSectionTitle")}</th>
+                <th>{t("sessions.subSectionDocument")}</th>
+                <th>{t("sessions.subSectionType")}</th>
               </tr>
             </thead>
             <tbody>
@@ -1483,25 +1465,19 @@ const Home = () => {
 
     const formatEntryType = (entryType: RollCallEntry["entry_type"]) =>
       entryType === "late"
-        ? t("sessions.rollCallLate", { defaultValue: "Myöhässä" })
-        : t("sessions.rollCallAbsent", { defaultValue: "Poissaolijat" });
+        ? t("sessions.rollCallLate")
+        : t("sessions.rollCallAbsent");
 
     const formatAbsenceReason = (reasonCode?: string | null) => {
       if (!reasonCode) return "-";
       const code = reasonCode.toLowerCase();
       if (code === "e") {
-        return t("sessions.rollCallReasonE", {
-          defaultValue: "eduskuntatyöhön liittyvä tehtävä",
-        });
+        return t("sessions.rollCallReasonE");
       }
       if (code === "h") {
-        return t("sessions.rollCallReasonH", {
-          defaultValue: "henkilökohtainen syy",
-        });
+        return t("sessions.rollCallReasonH");
       }
-      return t("sessions.rollCallReasonUnknown", {
-        defaultValue: "selite puuttuu",
-      });
+      return t("sessions.rollCallReasonUnknown");
     };
 
     const unknownReasonCodes = Array.from(
@@ -1557,9 +1533,7 @@ const Home = () => {
               color: colors.primaryLight,
             }}
           >
-            {t("sessions.rollCallOpenDocument", {
-              defaultValue: "Avaa valtiopäiväasiakirja",
-            })}
+            {t("sessions.rollCallOpenDocument")}
           </EduskuntaSourceLink>
           {report.roll_call_start_time && (
             <Typography
@@ -1636,35 +1610,13 @@ const Home = () => {
             >
               <thead>
                 <tr>
-                  <th>
-                    {t("sessions.rollCallTableNumber", { defaultValue: "#" })}
-                  </th>
-                  <th>
-                    {t("sessions.rollCallTableName", { defaultValue: "Nimi" })}
-                  </th>
-                  <th>
-                    {t("sessions.rollCallTableParty", {
-                      defaultValue: "Puolue",
-                    })}
-                  </th>
-                  <th>
-                    {t("sessions.rollCallTableType", {
-                      defaultValue: "Merkintä",
-                    })}
-                  </th>
-                  <th>
-                    {t("sessions.rollCallTableCode", { defaultValue: "Koodi" })}
-                  </th>
-                  <th>
-                    {t("sessions.rollCallTableReason", {
-                      defaultValue: "Selite",
-                    })}
-                  </th>
-                  <th>
-                    {t("sessions.rollCallTableArrival", {
-                      defaultValue: "Saapumisaika",
-                    })}
-                  </th>
+                  <th>{t("sessions.rollCallTableNumber")}</th>
+                  <th>{t("sessions.rollCallTableName")}</th>
+                  <th>{t("sessions.rollCallTableParty")}</th>
+                  <th>{t("sessions.rollCallTableType")}</th>
+                  <th>{t("sessions.rollCallTableCode")}</th>
+                  <th>{t("sessions.rollCallTableReason")}</th>
+                  <th>{t("sessions.rollCallTableArrival")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1698,26 +1650,16 @@ const Home = () => {
           }}
         >
           <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
-            {t("sessions.rollCallReasonLegend", {
-              defaultValue: "Koodiselitteet",
-            })}
-            : <strong>(e)</strong>{" "}
-            {t("sessions.rollCallReasonE", {
-              defaultValue: "eduskuntatyöhön liittyvä tehtävä",
-            })}
-            ; <strong>(h)</strong>{" "}
-            {t("sessions.rollCallReasonH", {
-              defaultValue: "henkilökohtainen syy",
-            })}
+            {t("sessions.rollCallReasonLegend")}: <strong>(e)</strong>{" "}
+            {t("sessions.rollCallReasonE")}; <strong>(h)</strong>{" "}
+            {t("sessions.rollCallReasonH")}
           </Typography>
           {unknownReasonCodes.length > 0 && (
             <Typography
               sx={{ mt: 0.5, fontSize: "0.75rem", color: colors.textTertiary }}
             >
-              {t("sessions.rollCallUnknownCodes", {
-                defaultValue: "Muut datassa olevat koodit ilman selitettä",
-              })}
-              : {unknownReasonCodes.map((code) => `(${code})`).join(", ")}
+              {t("sessions.rollCallUnknownCodes")}:{" "}
+              {unknownReasonCodes.map((code) => `(${code})`).join(", ")}
             </Typography>
           )}
         </Box>
@@ -1814,7 +1756,9 @@ const Home = () => {
                     />
                   }
                 >
-                  {isExpanded ? "Piilota tiedot" : "Näytä tiedot"}
+                  {isExpanded
+                    ? t("common.hideDetails")
+                    : t("common.showDetails")}
                 </Button>
                 <Button
                   size="small"
@@ -1827,7 +1771,7 @@ const Home = () => {
                   endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
                   href={refs.voting(voting.id, session.key, session.date)}
                 >
-                  Avaa näkymä
+                  {t("common.openView")}
                 </Button>
               </Box>
               <VoteMarginBar
@@ -1853,7 +1797,7 @@ const Home = () => {
                       <Typography
                         sx={{ fontSize: "0.7rem", color: colors.textSecondary }}
                       >
-                        Ladataan äänestyksen yksityiskohtia...
+                        {t("common.loadingVotingDetails")}
                       </Typography>
                     </Box>
                   )}
@@ -1884,7 +1828,7 @@ const Home = () => {
                         />
                         <Chip
                           size="small"
-                          label={`Tyhjää ${details.voting.n_abstain}`}
+                          label={`${t("common.empty")} ${details.voting.n_abstain}`}
                           sx={{ height: 20 }}
                         />
                         <Chip
@@ -2229,10 +2173,9 @@ const Home = () => {
                         {t("sessions.speechContentPending")}
                       </Typography>
                       <Typography sx={{ fontSize: "0.8125rem" }}>
-                        {t("sessions.speechContentLatest", {
-                          date: formatDate(vaskiLatestSpeechDate),
-                          defaultValue: "",
-                        })}
+                        {speechContentLatestLabel(
+                          formatDate(vaskiLatestSpeechDate),
+                        )}
                       </Typography>
                     </Alert>
                   </Box>
@@ -2299,9 +2242,7 @@ const Home = () => {
                               color: colors.textTertiary,
                             }}
                           >
-                            {t("sessions.minutesOrder", {
-                              defaultValue: "järjestys",
-                            })}{" "}
+                            {t("sessions.minutesOrder")}{" "}
                             {section.minutes_item_order}
                           </Typography>
                         )}
@@ -2485,10 +2426,9 @@ const Home = () => {
                                   color: colors.textTertiary,
                                 }}
                               >
-                                {t("sessions.speechContentLatest", {
-                                  date: formatDate(vaskiLatestSpeechDate),
-                                  defaultValue: "",
-                                })}
+                                {speechContentLatestLabel(
+                                  formatDate(vaskiLatestSpeechDate),
+                                )}
                               </Typography>
                             )}
                             {speeches.map((speech) => {

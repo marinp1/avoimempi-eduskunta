@@ -153,7 +153,7 @@ export function InlineRelatedSessions({
           variant="subtitle1"
           sx={{ fontWeight: 600, color: colors.textPrimary }}
         >
-          {t("documents.relatedSessions", "Liittyvät istunnot")}
+          {t("documents.relatedSessions")}
         </Typography>
       </Stack>
       <Stack spacing={1}>
@@ -211,7 +211,9 @@ export function InlineRelatedSessions({
                     if (next) fetchSessionSectionDetails(next);
                   }}
                 >
-                  {isExpanded ? "Piilota tiedot" : "Näytä tiedot"}
+                  {isExpanded
+                    ? t("common.hideDetails")
+                    : t("common.showDetails")}
                 </Button>
                 <Button
                   size="small"
@@ -226,7 +228,7 @@ export function InlineRelatedSessions({
                     window.dispatchEvent(new PopStateEvent("popstate"));
                   }}
                 >
-                  Avaa istunto
+                  {t("documents.openSession")}
                 </Button>
               </Box>
               {session.section_title && (
@@ -253,7 +255,7 @@ export function InlineRelatedSessions({
                         variant="caption"
                         sx={{ color: colors.textSecondary }}
                       >
-                        Ladataan istunnon tietoja...
+                        {t("documents.loadingSessionDetails")}
                       </Typography>
                     </Box>
                   )}
@@ -263,9 +265,16 @@ export function InlineRelatedSessions({
                         variant="caption"
                         sx={{ color: colors.textSecondary }}
                       >
-                        Äänestyksiä: {details.votings.length} ·
-                        Asiakirjalinkkejä: {details.links.length} · Alakohtia:{" "}
-                        {details.subsections.length}
+                        {String(t("documents.inlineCounts" as any))
+                          .replace(
+                            "{{votings}}",
+                            String(details.votings.length),
+                          )
+                          .replace("{{links}}", String(details.links.length))
+                          .replace(
+                            "{{subsections}}",
+                            String(details.subsections.length),
+                          )}
                       </Typography>
                       {details.votings.length > 0 && (
                         <Box
@@ -285,7 +294,12 @@ export function InlineRelatedSessions({
                               variant="caption"
                               sx={{ color: colors.textSecondary }}
                             >
-                              +{details.votings.length - 6} äänestystä
+                              {String(
+                                t("documents.moreVotings" as any),
+                              ).replace(
+                                "{{count}}",
+                                String(details.votings.length - 6),
+                              )}
                             </Typography>
                           )}
                         </Box>
@@ -307,7 +321,7 @@ export function InlineRelatedSessions({
                               {subsection.item_title ||
                                 subsection.related_document_identifier ||
                                 subsection.content_text ||
-                                "Alakohta"}
+                                t("documents.subsectionFallback")}
                             </Typography>
                           ))}
                         </Box>
@@ -325,7 +339,7 @@ export function InlineRelatedSessions({
                               >
                                 {link.document_tunnus ||
                                   link.label ||
-                                  "Asiakirjalinkki"}
+                                  t("documents.documentLink")}
                               </EduskuntaSourceLink>
                             ) : (
                               <Chip
@@ -339,7 +353,7 @@ export function InlineRelatedSessions({
                                 label={
                                   link.document_tunnus ||
                                   link.label ||
-                                  "Asiakirjalinkki"
+                                  t("documents.documentLink")
                                 }
                                 sx={{ height: 20, fontSize: "0.65rem" }}
                               />
@@ -350,7 +364,10 @@ export function InlineRelatedSessions({
                               variant="caption"
                               sx={{ color: colors.textSecondary }}
                             >
-                              +{details.links.length - 4} linkkiä
+                              {String(t("documents.moreLinks" as any)).replace(
+                                "{{count}}",
+                                String(details.links.length - 4),
+                              )}
                             </Typography>
                           )}
                         </Box>

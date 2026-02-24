@@ -450,7 +450,9 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
                   }
                   onClick={() => toggleVotingDetails(vote.voting_id)}
                 >
-                  {isExpanded ? "Piilota tiedot" : "Näytä tiedot"}
+                  {isExpanded
+                    ? t("common.hideDetails")
+                    : t("common.showDetails")}
                 </Button>
                 <Button
                   size="small"
@@ -470,7 +472,7 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
                     window.dispatchEvent(new PopStateEvent("popstate"));
                   }}
                 >
-                  Avaa näkymä
+                  {t("common.openView")}
                 </Button>
               </Box>
               <Collapse in={isExpanded} timeout="auto" unmountOnExit>
@@ -490,7 +492,7 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
                         variant="caption"
                         sx={{ color: themedColors.textSecondary }}
                       >
-                        Ladataan äänestyksen yksityiskohtia...
+                        {t("common.loadingVotingDetails")}
                       </Typography>
                     </Box>
                   )}

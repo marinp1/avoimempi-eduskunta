@@ -173,7 +173,7 @@ export function LegislativeInitiativeCard({
                 fontWeight: 500,
               }}
             >
-              {item.title || t("documents.noTitle", "Ei otsikkoa")}
+              {item.title || t("documents.noTitle")}
             </Typography>
             <Chip
               label={item.parliament_identifier}
@@ -199,7 +199,7 @@ export function LegislativeInitiativeCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDate", "Jättöpäivä")}:{" "}
+                {t("documents.submissionDate")}:{" "}
                 {formatDate(item.submission_date)}
               </Typography>
             )}
@@ -224,8 +224,7 @@ export function LegislativeInitiativeCard({
 
             {item.latest_stage_code && !item.decision_outcome && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.latestStage", "Viimeisin vaihe")}:{" "}
-                {item.latest_stage_code}
+                {t("documents.latestStage")}: {item.latest_stage_code}
               </Typography>
             )}
           </Stack>
@@ -291,7 +290,7 @@ export function LegislativeInitiativeCard({
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {t("documents.loadError", "Virhe ladattaessa tietoja")}: {error}
+              {t("documents.loadError")}: {error}
             </Alert>
           )}
 
@@ -306,8 +305,8 @@ export function LegislativeInitiativeCard({
                     sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
                   >
                     {showJustification
-                      ? t("documents.hideJustification", "Piilota perustelut")
-                      : t("documents.showJustification", "Näytä perustelut")}
+                      ? t("documents.hideJustification")
+                      : t("documents.showJustification")}
                   </Button>
                   <Collapse in={showJustification}>
                     <Box
@@ -336,8 +335,8 @@ export function LegislativeInitiativeCard({
                     sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
                   >
                     {showProposalText
-                      ? t("documents.hideClauses", "Piilota ponnet")
-                      : t("documents.showClauses", "Näytä ponnet")}
+                      ? t("documents.hideClauses")
+                      : t("documents.showClauses")}
                   </Button>
                   <Collapse in={showProposalText}>
                     <Box
@@ -366,8 +365,8 @@ export function LegislativeInitiativeCard({
                     sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
                   >
                     {showLawText
-                      ? t("documents.hideLawText", "Piilota lakiteksti")
-                      : t("documents.showLawText", "Näytä lakiteksti")}
+                      ? t("documents.hideLawText")
+                      : t("documents.showLawText")}
                   </Button>
                   <Collapse in={showLawText}>
                     <Box

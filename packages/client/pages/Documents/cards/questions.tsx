@@ -253,7 +253,7 @@ export function WrittenQuestionResponseCard({
             </Typography>
             {item.answer_date && (
               <Chip
-                label={`${t("documents.answered", "Vastattu")} ${formatDate(item.answer_date)}`}
+                label={`${t("documents.answered")} ${formatDate(item.answer_date)}`}
                 size="small"
                 sx={{
                   backgroundColor: colors.success,
@@ -291,7 +291,7 @@ export function WrittenQuestionResponseCard({
 
           {/* Parent question identifier */}
           <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-            {t("documents.writtenQuestion", "Kirjallinen kysymys")}:{" "}
+            {t("documents.writtenQuestion")}:{" "}
             <span style={{ fontFamily: "monospace" }}>
               {item.question_identifier}
             </span>
@@ -367,7 +367,7 @@ export function WrittenQuestionResponseCard({
             >
               {eduskuntaUrl && (
                 <EduskuntaSourceLink href={eduskuntaUrl} stopPropagation>
-                  {t("documents.viewResponseOnEduskunta", "Vastaus (PDF)")}
+                  {t("documents.viewResponseOnEduskunta")}
                 </EduskuntaSourceLink>
               )}
               {questionEduskuntaUrl && (
@@ -375,7 +375,7 @@ export function WrittenQuestionResponseCard({
                   href={questionEduskuntaUrl}
                   stopPropagation
                 >
-                  {t("documents.viewQuestionOnEduskunta", "Kysymys (PDF)")}
+                  {t("documents.viewQuestionOnEduskunta")}
                 </EduskuntaSourceLink>
               )}
             </Stack>
@@ -388,7 +388,7 @@ export function WrittenQuestionResponseCard({
                 variant="subtitle2"
                 sx={{ color: colors.textSecondary, mb: 1 }}
               >
-                {t("documents.questionText", "Kysymyksen teksti")}
+                {t("documents.questionText")}
               </Typography>
               <Box
                 sx={{
@@ -409,7 +409,7 @@ export function WrittenQuestionResponseCard({
                 variant="subtitle2"
                 sx={{ color: colors.textSecondary, mb: 1 }}
               >
-                {t("documents.questionText", "Kysymyksen teksti")}
+                {t("documents.questionText")}
               </Typography>
               <Box
                 sx={{
@@ -429,7 +429,7 @@ export function WrittenQuestionResponseCard({
             </Box>
           ) : !loading && questionDetail ? (
             <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-              {t("documents.noQuestionText", "Kysymyksen teksti ei saatavilla")}
+              {t("documents.noQuestionText")}
             </Typography>
           ) : null}
         </Box>
@@ -448,15 +448,9 @@ export function ExpertStatementCard({
   const docTypeLabel =
     (
       {
-        asiantuntijalausunto: t("documents.expertStatement", "Lausunto"),
-        asiantuntijalausunnon_liite: t(
-          "documents.expertStatementAttachment",
-          "Lausunnon liite",
-        ),
-        asiantuntijasuunnitelma: t(
-          "documents.expertHearingPlan",
-          "Kuulemissuunnitelma",
-        ),
+        asiantuntijalausunto: t("documents.expertStatement"),
+        asiantuntijalausunnon_liite: t("documents.expertStatementAttachment"),
+        asiantuntijasuunnitelma: t("documents.expertHearingPlan"),
       } as Record<string, string>
     )[item.document_type] ?? item.document_type;
 
@@ -612,7 +606,7 @@ export function OralQuestionCard({
                 fontWeight: 500,
               }}
             >
-              {item.title || t("documents.noTitle", "Ei otsikkoa")}
+              {item.title || t("documents.noTitle")}
             </Typography>
             <Chip
               label={item.parliament_identifier}
@@ -633,7 +627,7 @@ export function OralQuestionCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDate", "Jättöpäivä")}:{" "}
+                {t("documents.submissionDate")}:{" "}
                 {formatDate(item.submission_date)}
               </Typography>
             )}
@@ -718,7 +712,7 @@ export function OralQuestionCard({
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {t("documents.loadError", "Virhe ladattaessa tietoja")}: {error}
+              {t("documents.loadError")}: {error}
             </Alert>
           )}
 
@@ -732,8 +726,8 @@ export function OralQuestionCard({
                     sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
                   >
                     {showQuestionText
-                      ? t("documents.hideQuestion", "Piilota kysymys")
-                      : t("documents.showQuestion", "Näytä kysymys")}
+                      ? t("documents.hideQuestion")
+                      : t("documents.showQuestion")}
                   </Button>
                   <Collapse in={showQuestionText}>
                     <Box
@@ -865,7 +859,7 @@ export function WrittenQuestionCard({
                 fontWeight: 500,
               }}
             >
-              {item.title || t("documents.noTitle", "Ei otsikkoa")}
+              {item.title || t("documents.noTitle")}
             </Typography>
             <Chip
               label={item.parliament_identifier}
@@ -887,7 +881,7 @@ export function WrittenQuestionCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDate", "Jättöpäivä")}:{" "}
+                {t("documents.submissionDate")}:{" "}
                 {formatDate(item.submission_date)}
               </Typography>
             )}
@@ -939,7 +933,7 @@ export function WrittenQuestionCard({
 
             {item.answer_date && (
               <Chip
-                label={`${t("documents.answered", "Vastattu")} ${formatDate(item.answer_date)}`}
+                label={`${t("documents.answered")} ${formatDate(item.answer_date)}`}
                 size="small"
                 sx={{
                   backgroundColor: colors.success,
@@ -1026,7 +1020,7 @@ export function WrittenQuestionCard({
                 <Stack direction="row" spacing={1} flexWrap="wrap" gap={0.5}>
                   {kkPdfUrl && (
                     <EduskuntaSourceLink href={kkPdfUrl} stopPropagation>
-                      {t("documents.viewQuestionPdf", "Kysymys (PDF)")}
+                      {t("documents.viewQuestionPdf")}
                     </EduskuntaSourceLink>
                   )}
                   {(() => {
@@ -1035,7 +1029,7 @@ export function WrittenQuestionCard({
                     );
                     return url ? (
                       <EduskuntaSourceLink href={url} stopPropagation>
-                        {t("documents.viewResponsePdf", "Vastaus (PDF)")}
+                        {t("documents.viewResponsePdf")}
                       </EduskuntaSourceLink>
                     ) : null;
                   })()}
@@ -1055,7 +1049,7 @@ export function WrittenQuestionCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.signers", "Allekirjoittajat")}
+                      {t("documents.signers")}
                     </Typography>
                   </Stack>
                   <TableContainer>
@@ -1063,10 +1057,8 @@ export function WrittenQuestionCard({
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>
-                            {t("documents.author", "Tekijä")}
-                          </TableCell>
-                          <TableCell>{t("party", "Puolue")}</TableCell>
+                          <TableCell>{t("documents.author")}</TableCell>
+                          <TableCell>{t("common.party")}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -1109,7 +1101,7 @@ export function WrittenQuestionCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.answerMinister", "Vastaaja")}
+                      {t("documents.answerMinister")}
                     </Typography>
                   </Stack>
                   <Box sx={{ pl: 2 }}>
@@ -1171,7 +1163,7 @@ export function WrittenQuestionCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.stages", "Käsittelyvaiheet")}
+                      {t("documents.stages")}
                     </Typography>
                   </Stack>
                   <Stack spacing={1.5}>
@@ -1236,8 +1228,8 @@ export function WrittenQuestionCard({
                     }}
                   >
                     {showQuestionText
-                      ? t("documents.hideQuestionText", "Piilota kysymysteksti")
-                      : t("documents.showQuestionText", "Näytä kysymysteksti")}
+                      ? t("documents.hideQuestionText")
+                      : t("documents.showQuestionText")}
                   </Button>
                   <Collapse in={showQuestionText}>
                     <Box

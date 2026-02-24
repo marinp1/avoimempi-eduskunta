@@ -298,7 +298,10 @@ const server = Bun.serve<{
           sectionKey: req.params.sectionKey,
         });
         if (!section) {
-          return Response.json({ message: "Section not found" }, { status: 404 });
+          return Response.json(
+            { message: "Section not found" },
+            { status: 404 },
+          );
         }
         return Response.json(section);
       },
@@ -573,7 +576,11 @@ const server = Bun.serve<{
         const limit = parseInt(searchParams.get("limit") || "50", 10);
         const startDate = searchParams.get("startDate") || undefined;
         const endDate = searchParams.get("endDate") || undefined;
-        const data = await db.fetchSpeechActivity({ limit, startDate, endDate });
+        const data = await db.fetchSpeechActivity({
+          limit,
+          startDate,
+          endDate,
+        });
         return Response.json(data);
       },
     },

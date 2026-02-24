@@ -175,12 +175,17 @@ export default function CoalitionOpposition({
   const agreementRate =
     data.length > 0 ? ((agreementCount / data.length) * 100).toFixed(1) : "0";
 
+  const coalitionYesLabel = t("insights.coalitionOpposition.coalitionYes");
+  const coalitionNoLabel = t("insights.coalitionOpposition.coalitionNo");
+  const oppositionYesLabel = t("insights.coalitionOpposition.oppositionYes");
+  const oppositionNoLabel = t("insights.coalitionOpposition.oppositionNo");
+
   const chartData = data.slice(0, 20).map((d, i) => ({
     name: `#${i + 1}`,
-    "Hallitus jaa": d.coalition_yes,
-    "Hallitus ei": d.coalition_no,
-    "Oppositio jaa": d.opposition_yes,
-    "Oppositio ei": d.opposition_no,
+    [coalitionYesLabel]: d.coalition_yes,
+    [coalitionNoLabel]: d.coalition_no,
+    [oppositionYesLabel]: d.opposition_yes,
+    [oppositionNoLabel]: d.opposition_no,
   }));
 
   return (
@@ -244,7 +249,7 @@ export default function CoalitionOpposition({
                 variant="body2"
                 sx={{ color: themedColors.textSecondary }}
               >
-                Yksimielisyysaste
+                {t("insights.coalitionOpposition.agreementRate")}
               </Typography>
               <Typography
                 sx={{
@@ -268,7 +273,7 @@ export default function CoalitionOpposition({
                 variant="body2"
                 sx={{ color: themedColors.textSecondary }}
               >
-                Yksimielisiä
+                {t("insights.coalitionOpposition.agreements")}
               </Typography>
               <Typography
                 sx={{
@@ -292,7 +297,7 @@ export default function CoalitionOpposition({
                 variant="body2"
                 sx={{ color: themedColors.textSecondary }}
               >
-                Äänestyksiä
+                {t("insights.coalitionOpposition.votings")}
               </Typography>
               <Typography
                 sx={{
@@ -320,22 +325,22 @@ export default function CoalitionOpposition({
               <Tooltip />
               <Legend />
               <Bar
-                dataKey="Hallitus jaa"
+                dataKey={coalitionYesLabel}
                 stackId="coalition"
                 fill={colors.success}
               />
               <Bar
-                dataKey="Hallitus ei"
+                dataKey={coalitionNoLabel}
                 stackId="coalition"
                 fill={colors.errorLight}
               />
               <Bar
-                dataKey="Oppositio jaa"
+                dataKey={oppositionYesLabel}
                 stackId="opposition"
                 fill={colors.coalitionColor}
               />
               <Bar
-                dataKey="Oppositio ei"
+                dataKey={oppositionNoLabel}
                 stackId="opposition"
                 fill={colors.warning}
               />
@@ -344,7 +349,7 @@ export default function CoalitionOpposition({
 
           <Box sx={{ mt: spacing.lg }}>
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 1.5 }}>
-              Äänestykset (inline)
+              {t("insights.coalitionOpposition.inlineVotings")}
             </Typography>
             {data.slice(0, 20).map((vote) => {
               const isExpanded = expandedVotingIds.has(vote.voting_id);
@@ -406,7 +411,9 @@ export default function CoalitionOpposition({
                       }
                       onClick={() => toggleVotingDetails(vote.voting_id)}
                     >
-                      {isExpanded ? "Piilota tiedot" : "Näytä tiedot"}
+                      {isExpanded
+                        ? t("common.hideDetails")
+                        : t("common.showDetails")}
                     </Button>
                   </Box>
                   <Collapse in={isExpanded} timeout="auto" unmountOnExit>
@@ -428,7 +435,7 @@ export default function CoalitionOpposition({
                             variant="caption"
                             sx={{ color: themedColors.textSecondary }}
                           >
-                            Ladataan äänestyksen yksityiskohtia...
+                            {t("common.loadingVotingDetails")}
                           </Typography>
                         </Box>
                       )}

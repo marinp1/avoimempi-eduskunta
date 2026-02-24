@@ -9,6 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Area,
   AreaChart,
@@ -55,6 +56,7 @@ interface TimeSeriesStatisticsProps {
 export default function TimeSeriesStatistics({
   onClose,
 }: TimeSeriesStatisticsProps) {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
   const [genderData, setGenderData] = useState<GenderData[]>([]);
@@ -92,20 +94,30 @@ export default function TimeSeriesStatistics({
 
   const filteredGenderData = useMemo(() => {
     if (!selectedHallituskausi) return genderData;
-    const startYear = Number.parseInt(selectedHallituskausi.startDate.slice(0, 4), 10);
+    const startYear = Number.parseInt(
+      selectedHallituskausi.startDate.slice(0, 4),
+      10,
+    );
     const endYear = selectedHallituskausi.endDate
       ? Number.parseInt(selectedHallituskausi.endDate.slice(0, 4), 10)
       : Number.MAX_SAFE_INTEGER;
-    return genderData.filter((row) => row.year >= startYear && row.year <= endYear);
+    return genderData.filter(
+      (row) => row.year >= startYear && row.year <= endYear,
+    );
   }, [genderData, selectedHallituskausi]);
 
   const filteredAgeData = useMemo(() => {
     if (!selectedHallituskausi) return ageData;
-    const startYear = Number.parseInt(selectedHallituskausi.startDate.slice(0, 4), 10);
+    const startYear = Number.parseInt(
+      selectedHallituskausi.startDate.slice(0, 4),
+      10,
+    );
     const endYear = selectedHallituskausi.endDate
       ? Number.parseInt(selectedHallituskausi.endDate.slice(0, 4), 10)
       : Number.MAX_SAFE_INTEGER;
-    return ageData.filter((row) => row.year >= startYear && row.year <= endYear);
+    return ageData.filter(
+      (row) => row.year >= startYear && row.year <= endYear,
+    );
   }, [ageData, selectedHallituskausi]);
 
   const CustomTooltip = <
@@ -185,7 +197,7 @@ export default function TimeSeriesStatistics({
         }}
       >
         <Typography variant="h4" sx={{ fontWeight: 600 }}>
-          Eduskunnan tilastot ajassa
+          {t("insights.timeSeries.title")}
         </Typography>
         <IconButton onClick={onClose} size="large">
           <CloseIcon />
@@ -203,14 +215,14 @@ export default function TimeSeriesStatistics({
           <GlassCard>
             <CardContent sx={{ p: spacing.lg }}>
               <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
-                Sukupuolijakauma
+                {t("insights.timeSeries.gender.title")}
               </Typography>
               <Typography
                 variant="body2"
                 color="text.secondary"
                 sx={{ mb: spacing.lg }}
               >
-                Naisten ja miesten määrä eduskunnassa vuosittain
+                {t("insights.timeSeries.gender.description")}
               </Typography>
 
               {/* Percentage Chart */}
@@ -219,7 +231,7 @@ export default function TimeSeriesStatistics({
                   variant="h6"
                   sx={{ mb: spacing.md, fontWeight: 600 }}
                 >
-                  Prosentuaalinen jakauma
+                  {t("insights.timeSeries.gender.percentageDistribution")}
                 </Typography>
                 <ResponsiveContainer width="100%" height={400}>
                   <AreaChart
@@ -236,7 +248,7 @@ export default function TimeSeriesStatistics({
                       style={{ fontSize: "14px" }}
                       tick={{ fill: themedColors.textSecondary }}
                       label={{
-                        value: "Osuus (%)",
+                        value: t("insights.timeSeries.gender.sharePercent"),
                         angle: -90,
                         position: "insideLeft",
                       }}
@@ -250,7 +262,7 @@ export default function TimeSeriesStatistics({
                       stroke={colors.chartPink}
                       fill={colors.chartPink}
                       fillOpacity={0.6}
-                      name="Naiset %"
+                      name={t("insights.timeSeries.gender.womenPercent")}
                     />
                     <Area
                       type="monotone"
@@ -259,7 +271,7 @@ export default function TimeSeriesStatistics({
                       stroke={colors.chartBlue}
                       fill={colors.chartBlue}
                       fillOpacity={0.6}
-                      name="Miehet %"
+                      name={t("insights.timeSeries.gender.menPercent")}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -271,7 +283,7 @@ export default function TimeSeriesStatistics({
                   variant="h6"
                   sx={{ mb: spacing.md, fontWeight: 600 }}
                 >
-                  Lukumääräinen jakauma
+                  {t("insights.timeSeries.gender.countDistribution")}
                 </Typography>
                 <ResponsiveContainer width="100%" height={400}>
                   <LineChart
@@ -288,7 +300,7 @@ export default function TimeSeriesStatistics({
                       style={{ fontSize: "14px" }}
                       tick={{ fill: themedColors.textSecondary }}
                       label={{
-                        value: "Lukumäärä",
+                        value: t("insights.timeSeries.count"),
                         angle: -90,
                         position: "insideLeft",
                       }}
@@ -301,7 +313,7 @@ export default function TimeSeriesStatistics({
                       stroke={colors.chartPink}
                       strokeWidth={2}
                       dot={{ fill: colors.chartPink }}
-                      name="Naiset"
+                      name={t("insights.timeSeries.gender.women")}
                     />
                     <Line
                       type="monotone"
@@ -309,7 +321,7 @@ export default function TimeSeriesStatistics({
                       stroke={colors.chartBlue}
                       strokeWidth={2}
                       dot={{ fill: colors.chartBlue }}
-                      name="Miehet"
+                      name={t("insights.timeSeries.gender.men")}
                     />
                     <Line
                       type="monotone"
@@ -318,7 +330,7 @@ export default function TimeSeriesStatistics({
                       strokeWidth={2}
                       dot={{ fill: colors.chartGreen }}
                       strokeDasharray="5 5"
-                      name="Yhteensä"
+                      name={t("common.total")}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -341,7 +353,7 @@ export default function TimeSeriesStatistics({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    Naiset viimeisimpänä
+                    {t("insights.timeSeries.gender.womenLatest")}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {genderData[genderData.length - 1]?.female_count || 0} (
@@ -357,7 +369,7 @@ export default function TimeSeriesStatistics({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    Miehet viimeisimpänä
+                    {t("insights.timeSeries.gender.menLatest")}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {genderData[genderData.length - 1]?.male_count || 0} (
@@ -372,7 +384,7 @@ export default function TimeSeriesStatistics({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    Yhteensä viimeisimpänä
+                    {t("insights.timeSeries.totalLatest")}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {genderData[genderData.length - 1]?.total_count || 0}
@@ -390,14 +402,14 @@ export default function TimeSeriesStatistics({
           <GlassCard>
             <CardContent sx={{ p: spacing.lg }}>
               <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
-                Ikäjakauma
+                {t("insights.timeSeries.age.title")}
               </Typography>
               <Typography
                 variant="body2"
                 color="text.secondary"
                 sx={{ mb: spacing.lg }}
               >
-                Kansanedustajien ikäjakauma eri ikäryhmissä vuosittain
+                {t("insights.timeSeries.age.description")}
               </Typography>
 
               {/* Age Groups Stacked Area Chart */}
@@ -406,7 +418,7 @@ export default function TimeSeriesStatistics({
                   variant="h6"
                   sx={{ mb: spacing.md, fontWeight: 600 }}
                 >
-                  Ikäryhmät
+                  {t("insights.timeSeries.age.groups")}
                 </Typography>
                 <ResponsiveContainer width="100%" height={400}>
                   <AreaChart
@@ -423,7 +435,7 @@ export default function TimeSeriesStatistics({
                       style={{ fontSize: "14px" }}
                       tick={{ fill: themedColors.textSecondary }}
                       label={{
-                        value: "Lukumäärä",
+                        value: t("insights.timeSeries.count"),
                         angle: -90,
                         position: "insideLeft",
                       }}
@@ -485,7 +497,7 @@ export default function TimeSeriesStatistics({
                   variant="h6"
                   sx={{ mb: spacing.md, fontWeight: 600 }}
                 >
-                  Keski-ikä
+                  {t("insights.timeSeries.age.averageAge")}
                 </Typography>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart
@@ -503,7 +515,7 @@ export default function TimeSeriesStatistics({
                       style={{ fontSize: "14px" }}
                       tick={{ fill: themedColors.textSecondary }}
                       label={{
-                        value: "Ikä (vuotta)",
+                        value: t("insights.timeSeries.age.years"),
                         angle: -90,
                         position: "insideLeft",
                       }}
@@ -516,7 +528,7 @@ export default function TimeSeriesStatistics({
                       stroke={colors.primary}
                       strokeWidth={3}
                       dot={{ fill: colors.primary, r: 4 }}
-                      name="Keski-ikä"
+                      name={t("insights.timeSeries.age.averageAge")}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -539,7 +551,7 @@ export default function TimeSeriesStatistics({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    Keski-ikä viimeisimpänä
+                    {t("insights.timeSeries.age.averageLatest")}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {ageData[ageData.length - 1]?.average_age || 0} v
@@ -553,7 +565,7 @@ export default function TimeSeriesStatistics({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    Nuorin viimeisimpänä
+                    {t("insights.timeSeries.age.youngestLatest")}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {ageData[ageData.length - 1]?.min_age || 0} v
@@ -567,7 +579,7 @@ export default function TimeSeriesStatistics({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    Vanhin viimeisimpänä
+                    {t("insights.timeSeries.age.oldestLatest")}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {ageData[ageData.length - 1]?.max_age || 0} v
@@ -581,7 +593,7 @@ export default function TimeSeriesStatistics({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    Yhteensä viimeisimpänä
+                    {t("insights.timeSeries.totalLatest")}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {ageData[ageData.length - 1]?.total_count || 0}

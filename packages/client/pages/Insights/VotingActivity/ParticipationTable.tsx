@@ -13,6 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { colors, commonStyles, gradients } from "#client/theme";
 import { GlassCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -27,6 +28,7 @@ export function ParticipationTable({
   data,
   onSelectPerson,
 }: ParticipationTableProps) {
+  const { t } = useTranslation();
   const _themedColors = useThemedColors();
   const [sortField, setSortField] = useState<SortField>("participation_rate");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -96,7 +98,7 @@ export function ParticipationTable({
               }}
             >
               <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                Sija
+                {t("insights.votingActivity.rank")}
               </TableCell>
               <TableCell sx={{ color: "white", fontWeight: 600 }}>
                 <TableSortLabel
@@ -111,7 +113,7 @@ export function ParticipationTable({
                     },
                   }}
                 >
-                  Edustaja
+                  {t("composition.table.name")}
                 </TableSortLabel>
               </TableCell>
               <TableCell align="right" sx={{ color: "white", fontWeight: 600 }}>
@@ -127,11 +129,11 @@ export function ParticipationTable({
                     },
                   }}
                 >
-                  Äänestyksiä
+                  {t("insights.votingActivity.votings")}
                 </TableSortLabel>
               </TableCell>
               <TableCell align="right" sx={{ color: "white", fontWeight: 600 }}>
-                Yhteensä
+                {t("common.total")}
               </TableCell>
               <TableCell align="right" sx={{ color: "white", fontWeight: 600 }}>
                 <TableSortLabel
@@ -185,7 +187,11 @@ export function ParticipationTable({
                   </TableCell>
                   <TableCell align="right">
                     <Tooltip
-                      title={`${row.votes_cast} / ${row.total_votings} äänestystä`}
+                      title={String(
+                        t("insights.votingActivity.voteRatioTooltip" as any),
+                      )
+                        .replace("{{cast}}", String(row.votes_cast))
+                        .replace("{{total}}", String(row.total_votings))}
                     >
                       <Box
                         sx={{ display: "inline-flex", alignItems: "center" }}
@@ -219,9 +225,16 @@ export function ParticipationTable({
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
-        labelRowsPerPage="Rivejä per sivu:"
+        labelRowsPerPage={t("common.rowsPerPage")}
         labelDisplayedRows={({ from, to, count }) =>
-          `${from}-${to} / ${count !== -1 ? count : `enemmän kuin ${to}`}`
+          `${from}-${to} / ${
+            count !== -1
+              ? count
+              : String(t("common.moreThan" as any)).replace(
+                  "{{value}}",
+                  String(to),
+                )
+          }`
         }
       />
     </GlassCard>

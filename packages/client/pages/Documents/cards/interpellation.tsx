@@ -159,7 +159,7 @@ export function InterpellationCard({
                 fontWeight: 500,
               }}
             >
-              {item.title || t("documents.noTitle", "Ei otsikkoa")}
+              {item.title || t("documents.noTitle")}
             </Typography>
             <Chip
               label={item.parliament_identifier}
@@ -181,7 +181,7 @@ export function InterpellationCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDate", "Jättöpäivä")}:{" "}
+                {t("documents.submissionDate")}:{" "}
                 {formatDate(item.submission_date)}
               </Typography>
             )}
@@ -300,7 +300,7 @@ export function InterpellationCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.signers", "Allekirjoittajat")}
+                      {t("documents.signers")}
                     </Typography>
                   </Stack>
                   <TableContainer>
@@ -308,10 +308,8 @@ export function InterpellationCard({
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>
-                            {t("documents.author", "Tekijä")}
-                          </TableCell>
-                          <TableCell>{t("party", "Puolue")}</TableCell>
+                          <TableCell>{t("documents.author")}</TableCell>
+                          <TableCell>{t("common.party")}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -353,7 +351,7 @@ export function InterpellationCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.stages", "Käsittelyvaiheet")}
+                      {t("documents.stages")}
                     </Typography>
                   </Stack>
                   <Stack spacing={1.5}>
@@ -418,8 +416,8 @@ export function InterpellationCard({
                     }}
                   >
                     {showJustification
-                      ? t("documents.hideJustification", "Piilota perustelut")
-                      : t("documents.showJustification", "Näytä perustelut")}
+                      ? t("documents.hideJustification")
+                      : t("documents.showJustification")}
                   </Button>
                   <Collapse in={showJustification}>
                     <Box
@@ -452,8 +450,8 @@ export function InterpellationCard({
                     }}
                   >
                     {showClauses
-                      ? t("documents.hideClauses", "Piilota ponnet")
-                      : t("documents.showClauses", "Näytä ponnet")}
+                      ? t("documents.hideClauses")
+                      : t("documents.showClauses")}
                   </Button>
                   <Collapse in={showClauses}>
                     <Box

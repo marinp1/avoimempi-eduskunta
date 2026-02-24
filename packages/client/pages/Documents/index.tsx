@@ -472,61 +472,43 @@ export default function Documents() {
               }}
             >
               <MenuItem value="interpellations">
-                {t("documents.interpellations", "Välikysymykset")}
+                {t("documents.interpellations")}
               </MenuItem>
               <MenuItem value="government-proposals">
-                {t("documents.governmentProposals", "Hallituksen esitykset")}
+                {t("documents.governmentProposals")}
               </MenuItem>
               <MenuItem value="written-questions">
-                {t("documents.writtenQuestions", "Kirjalliset kysymykset")}
+                {t("documents.writtenQuestions")}
               </MenuItem>
               <MenuItem value="written-question-responses">
-                {t(
-                  "documents.writtenQuestionResponses",
-                  "Kirjalliset vastaukset",
-                )}
+                {t("documents.writtenQuestionResponses")}
               </MenuItem>
               <MenuItem value="expert-statements">
-                {t("documents.expertStatements", "Asiantuntijalausunnot")}
+                {t("documents.expertStatements")}
               </MenuItem>
               <MenuItem value="oral-questions">
-                {t("documents.oralQuestions", "Suulliset kysymykset")}
+                {t("documents.oralQuestions")}
               </MenuItem>
               <MenuItem value="committee-reports">
-                {t("documents.committeeReports", "Valiokunnan mietinnöt")}
+                {t("documents.committeeReports")}
               </MenuItem>
               <MenuItem value="legislative-initiatives-law">
-                {t("documents.legislativeInitiativesLaw", "Lakialoitteet")}
+                {t("documents.legislativeInitiativesLaw")}
               </MenuItem>
               <MenuItem value="legislative-initiatives-budget">
-                {t(
-                  "documents.legislativeInitiativesBudget",
-                  "Talousarvioaloitteet",
-                )}
+                {t("documents.legislativeInitiativesBudget")}
               </MenuItem>
               <MenuItem value="legislative-initiatives-supplementary-budget">
-                {t(
-                  "documents.legislativeInitiativesSupplementaryBudget",
-                  "Lisätalousarvioaloitteet",
-                )}
+                {t("documents.legislativeInitiativesSupplementaryBudget")}
               </MenuItem>
               <MenuItem value="legislative-initiatives-action">
-                {t(
-                  "documents.legislativeInitiativesAction",
-                  "Toimenpidealoitteet",
-                )}
+                {t("documents.legislativeInitiativesAction")}
               </MenuItem>
               <MenuItem value="legislative-initiatives-discussion">
-                {t(
-                  "documents.legislativeInitiativesDiscussion",
-                  "Keskustelualoitteet",
-                )}
+                {t("documents.legislativeInitiativesDiscussion")}
               </MenuItem>
               <MenuItem value="legislative-initiatives-citizens">
-                {t(
-                  "documents.legislativeInitiativesCitizens",
-                  "Kansalaisaloitteet",
-                )}
+                {t("documents.legislativeInitiativesCitizens")}
               </MenuItem>
             </Select>
           </FormControl>
@@ -555,12 +537,10 @@ export default function Documents() {
         {documentType === "committee-reports" && (
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <FormControl fullWidth>
-              <InputLabel>
-                {t("documents.sourceCommitteeFilter", "Lähdevaliokunta")}
-              </InputLabel>
+              <InputLabel>{t("documents.sourceCommitteeFilter")}</InputLabel>
               <Select
                 value={selectedSourceCommittee}
-                label={t("documents.sourceCommitteeFilter", "Lähdevaliokunta")}
+                label={t("documents.sourceCommitteeFilter")}
                 onChange={(e) => setSelectedSourceCommittee(e.target.value)}
                 disabled={committeeFiltersLoading}
                 sx={{
@@ -568,10 +548,7 @@ export default function Documents() {
                 }}
               >
                 <MenuItem value="all">
-                  {t(
-                    "documents.allSourceCommittees",
-                    "Kaikki lähdevaliokunnat",
-                  )}
+                  {t("documents.allSourceCommittees")}
                 </MenuItem>
                 {sourceCommittees.map((item) => (
                   <MenuItem
@@ -585,18 +562,10 @@ export default function Documents() {
             </FormControl>
 
             <FormControl fullWidth>
-              <InputLabel>
-                {t(
-                  "documents.targetCommitteeFilter",
-                  "Vastaanottava valiokunta",
-                )}
-              </InputLabel>
+              <InputLabel>{t("documents.targetCommitteeFilter")}</InputLabel>
               <Select
                 value={selectedRecipientCommittee}
-                label={t(
-                  "documents.targetCommitteeFilter",
-                  "Vastaanottava valiokunta",
-                )}
+                label={t("documents.targetCommitteeFilter")}
                 onChange={(e) => setSelectedRecipientCommittee(e.target.value)}
                 disabled={committeeFiltersLoading}
                 sx={{
@@ -604,10 +573,7 @@ export default function Documents() {
                 }}
               >
                 <MenuItem value="all">
-                  {t(
-                    "documents.allTargetCommittees",
-                    "Kaikki vastaanottavat valiokunnat",
-                  )}
+                  {t("documents.allTargetCommittees")}
                 </MenuItem>
                 {recipientCommittees.map((item) => (
                   <MenuItem
@@ -625,19 +591,15 @@ export default function Documents() {
         {documentType === "expert-statements" && (
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <FormControl fullWidth>
-              <InputLabel>
-                {t("documents.committeeFilter", "Valiokunta")}
-              </InputLabel>
+              <InputLabel>{t("documents.committeeFilter")}</InputLabel>
               <Select
                 value={selectedExpertCommittee}
-                label={t("documents.committeeFilter", "Valiokunta")}
+                label={t("documents.committeeFilter")}
                 onChange={(e) => setSelectedExpertCommittee(e.target.value)}
                 disabled={expertFiltersLoading}
                 sx={{ backgroundColor: colors.backgroundDefault }}
               >
-                <MenuItem value="all">
-                  {t("documents.allCommittees", "Kaikki valiokunnat")}
-                </MenuItem>
+                <MenuItem value="all">{t("documents.allCommittees")}</MenuItem>
                 {expertCommittees.map((item) => (
                   <MenuItem
                     key={item.committee_name}
@@ -649,26 +611,22 @@ export default function Documents() {
               </Select>
             </FormControl>
             <FormControl fullWidth>
-              <InputLabel>
-                {t("documents.documentSubtype", "Tyyppi")}
-              </InputLabel>
+              <InputLabel>{t("documents.documentSubtype")}</InputLabel>
               <Select
                 value={selectedExpertDocType}
-                label={t("documents.documentSubtype", "Tyyppi")}
+                label={t("documents.documentSubtype")}
                 onChange={(e) => setSelectedExpertDocType(e.target.value)}
                 sx={{ backgroundColor: colors.backgroundDefault }}
               >
-                <MenuItem value="all">
-                  {t("documents.allTypes", "Kaikki tyypit")}
-                </MenuItem>
+                <MenuItem value="all">{t("documents.allTypes")}</MenuItem>
                 <MenuItem value="asiantuntijalausunto">
-                  {t("documents.expertStatement", "Lausunto")}
+                  {t("documents.expertStatement")}
                 </MenuItem>
                 <MenuItem value="asiantuntijalausunnon_liite">
-                  {t("documents.expertStatementAttachment", "Lausunnon liite")}
+                  {t("documents.expertStatementAttachment")}
                 </MenuItem>
                 <MenuItem value="asiantuntijasuunnitelma">
-                  {t("documents.expertHearingPlan", "Kuulemissuunnitelma")}
+                  {t("documents.expertHearingPlan")}
                 </MenuItem>
               </Select>
             </FormControl>
@@ -686,7 +644,7 @@ export default function Documents() {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label={t("documents.subjectFilter", "Aihe")}
+                  label={t("documents.subjectFilter")}
                   sx={{
                     backgroundColor: colors.backgroundDefault,
                     "& .MuiOutlinedInput-root": {
@@ -712,7 +670,7 @@ export default function Documents() {
         >
           <Typography variant="body2" color={colors.textSecondary}>
             {t("documents.showing")} {items.length} / {totalCount}{" "}
-            {t("documents.totalDocuments", "asiakirjaa")}
+            {t("documents.totalDocuments")}
           </Typography>
         </Box>
         {selectedHallituskausi && (

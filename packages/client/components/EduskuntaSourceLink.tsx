@@ -69,7 +69,7 @@ export function EduskuntaSourceLink({
             opacity: 0.85,
           }}
         >
-          {t("common.officialSourceEduskunta", "eduskunta.fi")}
+          {t("common.officialSourceEduskunta")}
         </Box>
       )}
       {showExternalIcon && <OpenInNewIcon sx={{ fontSize: 12 }} />}

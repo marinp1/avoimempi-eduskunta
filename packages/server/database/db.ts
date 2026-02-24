@@ -709,8 +709,7 @@ export class DatabaseConnection {
     governmentStartDate?: string;
   }) {
     const asOfDate =
-      params?.asOfDate ||
-      new Date().toISOString().substring(0, 10);
+      params?.asOfDate || new Date().toISOString().substring(0, 10);
     const startDate = params?.startDate ?? null;
     const endDateExclusive = this.endDateExclusive(params?.endDate);
     const governmentName = params?.governmentName ?? null;
@@ -754,8 +753,7 @@ export class DatabaseConnection {
     governmentStartDate?: string;
   }) {
     const asOfDate =
-      params.asOfDate ||
-      new Date().toISOString().substring(0, 10);
+      params.asOfDate || new Date().toISOString().substring(0, 10);
     const startDate = params.startDate ?? null;
     const endDateExclusive = this.endDateExclusive(params.endDate);
     const governmentName = params.governmentName ?? null;

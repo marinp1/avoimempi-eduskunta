@@ -24,6 +24,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   isDateWithinHallituskausi,
   useHallituskausi,
@@ -38,6 +39,7 @@ type MemberWithExtras = DatabaseQueries.GetParliamentComposition & {
 };
 
 export default () => {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
 
@@ -183,7 +185,10 @@ export default () => {
   };
 
   const handleDateChange = (newDate: string) => {
-    if (selectedHallituskausi && !isDateWithinHallituskausi(newDate, selectedHallituskausi)) {
+    if (
+      selectedHallituskausi &&
+      !isDateWithinHallituskausi(newDate, selectedHallituskausi)
+    ) {
       const clamped =
         newDate < selectedHallituskausi.startDate
           ? selectedHallituskausi.startDate
@@ -269,17 +274,17 @@ export default () => {
                   fontSize: { xs: "1.5rem", sm: "2.125rem" },
                 }}
               >
-                Eduskunnan kokoonpano
+                {t("composition.title")}
               </Typography>
               <Typography
                 variant="body1"
                 color="text.secondary"
                 sx={{ mb: spacing.md, maxWidth: 600, mx: "auto" }}
               >
-                Selaa kansanedustajia ja heidän tietojaan
+                {t("composition.subtitle")}
               </Typography>
               <TextField
-                label="Valitse päivämäärä"
+                label={t("common.selectDate")}
                 type="date"
                 value={date}
                 onChange={(e) => handleDateChange(e.target.value)}
@@ -304,7 +309,8 @@ export default () => {
               />
               {selectedHallituskausi && (
                 <Alert severity="info" sx={{ mt: spacing.md }}>
-                  Rajattu hallituskauteen: {selectedHallituskausi.label}
+                  {t("common.filteredByGovernmentPeriod")}:{" "}
+                  {selectedHallituskausi.label}
                 </Alert>
               )}
             </CardContent>
@@ -393,7 +399,7 @@ export default () => {
                         fontWeight: 600,
                       }}
                     >
-                      Jäsentä yhteensä
+                      {t("composition.distribution.totalMembers")}
                     </Typography>
                   </Box>
 
@@ -515,7 +521,7 @@ export default () => {
                     fontSize: "1.125rem",
                   }}
                 >
-                  Puolueiden jako
+                  {t("composition.partyBreakdown.title")}
                 </Typography>
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
                   {stats.partyGroups.map(([party, data]) => (
@@ -552,7 +558,7 @@ export default () => {
                           {party}
                         </Typography>
                         <Chip
-                          label={`${data.total} jäsentä`}
+                          label={`${data.total} ${t("composition.partyBreakdown.members")}`}
                           size="small"
                           sx={{
                             background: themedColors.primary,
@@ -580,7 +586,7 @@ export default () => {
                                 }}
                               />
                             }
-                            label={`Hallitus: ${data.inGovernment}`}
+                            label={`${t("composition.partyBreakdown.government")} ${data.inGovernment}`}
                             size="small"
                             sx={{
                               background: `${themedColors.success}20`,
@@ -592,7 +598,7 @@ export default () => {
                         )}
                         {data.total - data.inGovernment > 0 && (
                           <Chip
-                            label={`Oppositio: ${data.total - data.inGovernment}`}
+                            label={`${t("composition.partyBreakdown.opposition")} ${data.total - data.inGovernment}`}
                             size="small"
                             sx={{
                               background: `${themedColors.warning}20`,
@@ -630,10 +636,10 @@ export default () => {
                 key={g}
                 label={
                   g === "all"
-                    ? "Kaikki"
+                    ? t("composition.details.filters.all")
                     : g === "government"
-                      ? "Hallitus"
-                      : "Oppositio"
+                      ? t("composition.details.filters.government")
+                      : t("composition.details.filters.opposition")
                 }
                 size="small"
                 onClick={() => setGovFilter(g)}
@@ -835,28 +841,28 @@ export default () => {
                     }}
                   >
                     <TableCell sx={{ ...commonStyles.tableHeader }}>
-                      Nimi
+                      {t("composition.table.name")}
                     </TableCell>
                     <TableCell sx={{ ...commonStyles.tableHeader }}>
-                      Puolue
+                      {t("composition.table.party")}
                     </TableCell>
                     <TableCell
                       sx={{ ...commonStyles.tableHeader }}
                       align="center"
                     >
-                      Hallitus
+                      {t("composition.table.government")}
                     </TableCell>
                     <TableCell sx={{ ...commonStyles.tableHeader }}>
-                      Sukupuoli
+                      {t("composition.table.gender")}
                     </TableCell>
                     <TableCell sx={{ ...commonStyles.tableHeader }}>
-                      Syntymäaika
+                      {t("composition.table.birthDate")}
                     </TableCell>
                     <TableCell sx={{ ...commonStyles.tableHeader }}>
-                      Syntymäpaikka
+                      {t("composition.table.birthPlace")}
                     </TableCell>
                     <TableCell sx={{ ...commonStyles.tableHeader }}>
-                      Ammatti
+                      {t("composition.table.occupation")}
                     </TableCell>
                   </TableRow>
                 </TableHead>
