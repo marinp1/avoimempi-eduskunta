@@ -20,6 +20,11 @@ interface EduskuntaApiResponse {
   rowData: any[][];
   rowCount: number;
   hasMore: boolean;
+  source?: {
+    tableName: string;
+    page: number;
+    scrapedAt: string;
+  };
 }
 
 /**
@@ -291,7 +296,15 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
 
     // Save page to storage
     const key = StorageKeyBuilder.forPage(stage, tableName, currentPage);
-    const data = JSON.stringify(content, null, 2);
+    const contentWithSource: EduskuntaApiResponse = {
+      ...content,
+      source: {
+        tableName,
+        page: currentPage,
+        scrapedAt: new Date().toISOString(),
+      },
+    };
+    const data = JSON.stringify(contentWithSource, null, 2);
     await storage.put(key, data);
     await recordSourceStagePage(
       tableName,
