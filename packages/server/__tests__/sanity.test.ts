@@ -1057,7 +1057,9 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
         const endDate = expected.endDate ?? todayIso;
         const candidateAsOf = addDays(endDate, -1);
         const asOfDate =
-          candidateAsOf >= expected.startDate ? candidateAsOf : expected.startDate;
+          candidateAsOf >= expected.startDate
+            ? candidateAsOf
+            : expected.startDate;
         const rows = stmt.all({
           $asOfDate: asOfDate,
           $startDate: expected.startDate,

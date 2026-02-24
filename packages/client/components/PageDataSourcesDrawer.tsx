@@ -186,7 +186,7 @@ export const PageDataSourcesDrawer = ({
         );
 
         if (!response.ok) {
-          throw new Error("Tietolahteiden haku epäonnistui");
+          throw new Error(t("pageSources.fetchFailed"));
         }
 
         const data = (await response.json()) as { tables: TableSummary[] };
@@ -201,9 +201,7 @@ export const PageDataSourcesDrawer = ({
         if (abortController.signal.aborted) return;
         if (!mounted) return;
         setError(
-          err instanceof Error
-            ? err.message
-            : "Tietolahteiden haku epäonnistui",
+          err instanceof Error ? err.message : t("pageSources.fetchFailed"),
         );
       } finally {
         if (mounted) setLoading(false);
@@ -220,7 +218,7 @@ export const PageDataSourcesDrawer = ({
 
   return (
     <>
-      <Tooltip title="Nayta sivun tietolahteet ja aikaleimat">
+      <Tooltip title={t("pageSources.openTooltip")}>
         <Fab
           color="primary"
           variant="extended"
@@ -234,7 +232,7 @@ export const PageDataSourcesDrawer = ({
           }}
         >
           <TravelExploreIcon sx={{ mr: 1 }} />
-          Lahteet
+          {t("pageSources.buttonLabel")}
         </Fab>
       </Tooltip>
 
@@ -263,7 +261,7 @@ export const PageDataSourcesDrawer = ({
                 variant="h6"
                 sx={{ fontSize: "1rem", fontWeight: 600 }}
               >
-                Sivun tietolahteet
+                {t("pageSources.drawerTitle")}
               </Typography>
               <Typography
                 variant="caption"
@@ -279,9 +277,7 @@ export const PageDataSourcesDrawer = ({
 
           <Box sx={{ p: 2, overflowY: "auto", height: "calc(100% - 69px)" }}>
             {sourceDefinitions.length === 0 ? (
-              <Alert severity="info">
-                Talle sivulle ei ole viela maaritetty tietolahdekartoitusta.
-              </Alert>
+              <Alert severity="info">{t("pageSources.noMapping")}</Alert>
             ) : loading ? (
               <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
                 <CircularProgress size={26} />
@@ -324,22 +320,24 @@ export const PageDataSourcesDrawer = ({
                         variant="caption"
                         sx={{ display: "block", mb: 0.5 }}
                       >
-                        Viimeisin scraping:{" "}
+                        {t("pageSources.lastScrape")}:{" "}
                         {formatDateTime(summary?.lastScrapedAt ?? null)}
                       </Typography>
                       <Typography
                         variant="caption"
                         sx={{ display: "block", mb: 0.5 }}
                       >
-                        Viimeisin migraatio:{" "}
+                        {t("pageSources.lastMigration")}:{" "}
                         {formatDateTime(summary?.lastMigratedAt ?? null)}
                       </Typography>
                       <Typography
                         variant="caption"
                         sx={{ display: "block", mb: 1 }}
                       >
-                        Tuotuja riveja: {summary?.importedRows ?? 0} |
-                        Lahdesivuja: {summary?.distinctPages ?? 0}
+                        {t("pageSources.importedRows")}:{" "}
+                        {summary?.importedRows ?? 0} |{" "}
+                        {t("pageSources.sourcePages")}:{" "}
+                        {summary?.distinctPages ?? 0}
                       </Typography>
                     </Box>
                   );

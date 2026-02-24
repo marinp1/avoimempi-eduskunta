@@ -88,7 +88,10 @@ const Parties = () => {
     if (value < selectedHallituskausi.startDate) {
       value = selectedHallituskausi.startDate;
     }
-    if (selectedHallituskausi.endDate && value > selectedHallituskausi.endDate) {
+    if (
+      selectedHallituskausi.endDate &&
+      value > selectedHallituskausi.endDate
+    ) {
       value = selectedHallituskausi.endDate;
     }
     return value;
@@ -224,8 +227,11 @@ const Parties = () => {
       <Grid container spacing={spacing.md} sx={{ mb: spacing.md }}>
         <Grid size={{ xs: 6, md: 3 }}>
           <DataCard sx={{ p: 2 }}>
-            <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-              {t("parties.totalParties", "Puolueita")}
+            <Typography
+              variant="caption"
+              sx={{ color: themedColors.textSecondary }}
+            >
+              {t("parties.totalParties")}
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, mt: 0.5 }}>
               {parties.length}
@@ -234,8 +240,11 @@ const Parties = () => {
         </Grid>
         <Grid size={{ xs: 6, md: 3 }}>
           <DataCard sx={{ p: 2 }}>
-            <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-              {t("parties.totalMembers", "Kansanedustajia")}
+            <Typography
+              variant="caption"
+              sx={{ color: themedColors.textSecondary }}
+            >
+              {t("parties.totalMembers")}
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, mt: 0.5 }}>
               {summary.totalMembers}
@@ -244,8 +253,11 @@ const Parties = () => {
         </Grid>
         <Grid size={{ xs: 6, md: 3 }}>
           <DataCard sx={{ p: 2 }}>
-            <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-              {t("parties.government", "Hallitus")} / {t("parties.opposition", "Oppositio")}
+            <Typography
+              variant="caption"
+              sx={{ color: themedColors.textSecondary }}
+            >
+              {t("parties.government")} / {t("parties.opposition")}
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, mt: 0.5 }}>
               {summary.governmentParties} / {summary.oppositionParties}
@@ -254,8 +266,11 @@ const Parties = () => {
         </Grid>
         <Grid size={{ xs: 6, md: 3 }}>
           <DataCard sx={{ p: 2 }}>
-            <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-              {t("parties.weightedParticipation", "Painotettu osallistuminen")}
+            <Typography
+              variant="caption"
+              sx={{ color: themedColors.textSecondary }}
+            >
+              {t("parties.weightedParticipation")}
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, mt: 0.5 }}>
               {summary.weightedParticipation.toFixed(1)}%
@@ -277,11 +292,8 @@ const Parties = () => {
             size="small"
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
-            label={t("common.search", "Haku")}
-            placeholder={t(
-              "parties.searchPlaceholder",
-              "Hae puolueen nimellä tai tunnuksella",
-            )}
+            label={t("common.search")}
+            placeholder={t("parties.searchPlaceholder")}
             sx={{
               minWidth: { xs: "100%", sm: 280 },
               "& .MuiInputBase-input": { fontSize: "0.9rem" },
@@ -291,7 +303,7 @@ const Parties = () => {
             const selected = roleFilter === role;
             const label =
               role === "all"
-                ? t("parties.filters.all", "Kaikki")
+                ? t("parties.filters.all")
                 : role === "government"
                   ? t("parties.government")
                   : t("parties.opposition");
@@ -303,25 +315,28 @@ const Parties = () => {
                 onClick={() => setRoleFilter(role)}
                 sx={{
                   fontWeight: 600,
-                  bgcolor: selected ? colors.primary : themedColors.backgroundPaper,
+                  bgcolor: selected
+                    ? colors.primary
+                    : themedColors.backgroundPaper,
                   color: selected ? "white" : themedColors.textSecondary,
                   border: `1px solid ${selected ? colors.primary : themedColors.dataBorder}`,
                 }}
               />
             );
           })}
-          <Typography variant="body2" sx={{ ml: "auto", color: themedColors.textSecondary }}>
-            {t("parties.showingResults", {
-              defaultValue: "Näytetään {{shown}} / {{total}} puolueesta",
-              shown: visibleParties.length,
-              total: parties.length,
-            })}
+          <Typography
+            variant="body2"
+            sx={{ ml: "auto", color: themedColors.textSecondary }}
+          >
+            {String(t("parties.showingResults" as any))
+              .replace("{{shown}}", String(visibleParties.length))
+              .replace("{{total}}", String(parties.length))}
           </Typography>
         </Box>
       </DataCard>
 
       {visibleParties.length === 0 && (
-        <Alert severity="info">{t("common.noData", "Ei tietoja")}</Alert>
+        <Alert severity="info">{t("common.noData")}</Alert>
       )}
 
       {visibleParties.length > 0 && (
@@ -342,68 +357,94 @@ const Parties = () => {
                 <TableCell sx={{ color: "white", fontWeight: 700 }}>
                   <TableSortLabel
                     active={sortField === "party_name"}
-                    direction={sortField === "party_name" ? sortDirection : "asc"}
+                    direction={
+                      sortField === "party_name" ? sortDirection : "asc"
+                    }
                     onClick={() => handleSort("party_name")}
                     sx={{
                       color: "white !important",
-                      "& .MuiTableSortLabel-icon": { color: "white !important" },
+                      "& .MuiTableSortLabel-icon": {
+                        color: "white !important",
+                      },
                     }}
                   >
-                    {t("parties.table.party", "Puolue")}
+                    {t("parties.table.party")}
                   </TableSortLabel>
                 </TableCell>
                 <TableCell sx={{ color: "white", fontWeight: 700 }}>
-                  {t("parties.table.status", "Asema")}
+                  {t("parties.table.status")}
                 </TableCell>
-                <TableCell align="right" sx={{ color: "white", fontWeight: 700 }}>
+                <TableCell
+                  align="right"
+                  sx={{ color: "white", fontWeight: 700 }}
+                >
                   <TableSortLabel
                     active={sortField === "member_count"}
-                    direction={sortField === "member_count" ? sortDirection : "desc"}
+                    direction={
+                      sortField === "member_count" ? sortDirection : "desc"
+                    }
                     onClick={() => handleSort("member_count")}
                     sx={{
                       color: "white !important",
-                      "& .MuiTableSortLabel-icon": { color: "white !important" },
+                      "& .MuiTableSortLabel-icon": {
+                        color: "white !important",
+                      },
                     }}
                   >
-                    {t("parties.table.members", "Jäseniä")}
+                    {t("parties.table.members")}
                   </TableSortLabel>
                 </TableCell>
-                <TableCell align="right" sx={{ color: "white", fontWeight: 700 }}>
+                <TableCell
+                  align="right"
+                  sx={{ color: "white", fontWeight: 700 }}
+                >
                   <TableSortLabel
                     active={sortField === "participation_rate"}
                     direction={
-                      sortField === "participation_rate" ? sortDirection : "desc"
+                      sortField === "participation_rate"
+                        ? sortDirection
+                        : "desc"
                     }
                     onClick={() => handleSort("participation_rate")}
                     sx={{
                       color: "white !important",
-                      "& .MuiTableSortLabel-icon": { color: "white !important" },
+                      "& .MuiTableSortLabel-icon": {
+                        color: "white !important",
+                      },
                     }}
                   >
-                    {t("parties.table.participation", "Osallistuminen")}
+                    {t("parties.table.participation")}
                   </TableSortLabel>
                 </TableCell>
                 <TableCell sx={{ color: "white", fontWeight: 700 }}>
-                  {t("parties.table.genderSplit", "Sukupuolijakauma")}
+                  {t("parties.table.genderSplit")}
                 </TableCell>
-                <TableCell align="right" sx={{ color: "white", fontWeight: 700 }}>
+                <TableCell
+                  align="right"
+                  sx={{ color: "white", fontWeight: 700 }}
+                >
                   <TableSortLabel
                     active={sortField === "average_age"}
-                    direction={sortField === "average_age" ? sortDirection : "desc"}
+                    direction={
+                      sortField === "average_age" ? sortDirection : "desc"
+                    }
                     onClick={() => handleSort("average_age")}
                     sx={{
                       color: "white !important",
-                      "& .MuiTableSortLabel-icon": { color: "white !important" },
+                      "& .MuiTableSortLabel-icon": {
+                        color: "white !important",
+                      },
                     }}
                   >
-                    {t("parties.table.averageAge", "Keski-ikä")}
+                    {t("parties.table.averageAge")}
                   </TableSortLabel>
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {visibleParties.map((party) => {
-                const partyColor = PARTY_COLORS[party.party_code] || colors.neutral;
+                const partyColor =
+                  PARTY_COLORS[party.party_code] || colors.neutral;
                 const female = party.female_count ?? 0;
                 const male = party.male_count ?? 0;
                 const totalKnownGender = female + male;
@@ -422,7 +463,9 @@ const Parties = () => {
                     }}
                   >
                     <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
                         <Box
                           sx={{
                             width: 10,
@@ -433,8 +476,13 @@ const Parties = () => {
                           }}
                         />
                         <Box>
-                          <Typography fontWeight={700}>{party.party_name}</Typography>
-                          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                          <Typography fontWeight={700}>
+                            {party.party_name}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: themedColors.textSecondary }}
+                          >
                             {party.party_code}
                           </Typography>
                         </Box>
@@ -462,7 +510,9 @@ const Parties = () => {
                       />
                     </TableCell>
                     <TableCell align="right">
-                      <Typography fontWeight={700}>{party.member_count}</Typography>
+                      <Typography fontWeight={700}>
+                        {party.member_count}
+                      </Typography>
                     </TableCell>
                     <TableCell align="right">
                       <Chip
@@ -472,14 +522,19 @@ const Parties = () => {
                           minWidth: 72,
                           fontWeight: 700,
                           bgcolor: `${getParticipationColor(party.participation_rate ?? 0)}20`,
-                          color: getParticipationColor(party.participation_rate ?? 0),
+                          color: getParticipationColor(
+                            party.participation_rate ?? 0,
+                          ),
                         }}
                       />
                     </TableCell>
                     <TableCell>
-                      <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-                        {t("parties.womenShort", "N")}: {female} | {t("parties.menShort", "M")}
-                        : {male}
+                      <Typography
+                        variant="caption"
+                        sx={{ color: themedColors.textSecondary }}
+                      >
+                        {t("parties.womenShort")}: {female} |{" "}
+                        {t("parties.menShort")}: {male}
                       </Typography>
                       <Box
                         sx={{
@@ -522,7 +577,8 @@ const Parties = () => {
         <Box sx={{ display: { xs: "block", md: "none" } }}>
           <DataCard sx={{ p: 0 }}>
             {visibleParties.map((party, index) => {
-              const partyColor = PARTY_COLORS[party.party_code] || colors.neutral;
+              const partyColor =
+                PARTY_COLORS[party.party_code] || colors.neutral;
               const female = party.female_count ?? 0;
               const male = party.male_count ?? 0;
               const totalKnownGender = female + male;
@@ -551,7 +607,9 @@ const Parties = () => {
                           mb: 1.5,
                         }}
                       >
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
                           <Box
                             sx={{
                               width: 10,
@@ -560,7 +618,9 @@ const Parties = () => {
                               bgcolor: partyColor,
                             }}
                           />
-                          <Typography fontWeight={700}>{party.party_name}</Typography>
+                          <Typography fontWeight={700}>
+                            {party.party_name}
+                          </Typography>
                         </Box>
                         <Chip
                           size="small"
@@ -578,13 +638,21 @@ const Parties = () => {
                         }}
                       >
                         <Box>
-                          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: themedColors.textSecondary }}
+                          >
                             {t("parties.members")}
                           </Typography>
-                          <Typography fontWeight={700}>{party.member_count}</Typography>
+                          <Typography fontWeight={700}>
+                            {party.member_count}
+                          </Typography>
                         </Box>
                         <Box>
-                          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: themedColors.textSecondary }}
+                          >
                             {t("parties.participation")}
                           </Typography>
                           <Typography fontWeight={700}>
@@ -592,16 +660,22 @@ const Parties = () => {
                           </Typography>
                         </Box>
                         <Box>
-                          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-                            {t("parties.table.averageAge", "Keski-ikä")}
+                          <Typography
+                            variant="caption"
+                            sx={{ color: themedColors.textSecondary }}
+                          >
+                            {t("parties.table.averageAge")}
                           </Typography>
                           <Typography fontWeight={700}>
                             {(party.average_age ?? 0).toFixed(1)}
                           </Typography>
                         </Box>
                         <Box>
-                          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-                            {t("parties.table.status", "Asema")}
+                          <Typography
+                            variant="caption"
+                            sx={{ color: themedColors.textSecondary }}
+                          >
+                            {t("parties.table.status")}
                           </Typography>
                           <Typography fontWeight={700}>
                             {party.is_in_government === 1
@@ -611,10 +685,12 @@ const Parties = () => {
                         </Box>
                       </Box>
 
-                      <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
-                        {t("parties.womenShort", "N")}: {female} | {t("parties.menShort", "M")}:
-                        {" "}
-                        {male}
+                      <Typography
+                        variant="caption"
+                        sx={{ color: themedColors.textSecondary }}
+                      >
+                        {t("parties.womenShort")}: {female} |{" "}
+                        {t("parties.menShort")}: {male}
                       </Typography>
                       <Box
                         sx={{

@@ -27,6 +27,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { refs } from "#client/references";
@@ -663,6 +664,7 @@ const OverviewTab: React.FC<{
 // ──────────────────────────── Tab: Aanestykset ────────────────────────────
 
 const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
   const [votes, setVotes] = React.useState<VotesByPersonType[] | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -709,7 +711,10 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
   };
 
   const fetchVotingDetails = async (votingId: number, force = false) => {
-    if (!force && (votingDetailsById[votingId] || loadingVotingDetails.has(votingId))) {
+    if (
+      !force &&
+      (votingDetailsById[votingId] || loadingVotingDetails.has(votingId))
+    ) {
       return;
     }
     if (force || failedVotingDetails.has(votingId)) {
@@ -912,7 +917,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                       }}
                       onClick={() => openVotingDetails(v)}
                     >
-                      Nayta tiedot
+                      {t("common.showDetails")}
                     </Button>
                     <Button
                       size="small"
@@ -925,7 +930,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                       endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
                       onClick={() => openVoting(v.id, v.start_time)}
                     >
-                      Avaa näkymä
+                      {t("common.openView")}
                     </Button>
                   </Box>
                 </Box>
@@ -1010,7 +1015,9 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   sx={{ color: themedColors.textSecondary }}
                 >
                   {selectedVoting
-                    ? new Date(selectedVoting.start_time).toLocaleDateString("fi-FI")
+                    ? new Date(selectedVoting.start_time).toLocaleDateString(
+                        "fi-FI",
+                      )
                     : "-"}
                 </Typography>
               </Box>
@@ -1052,7 +1059,9 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   />
                 </Box>
                 <Button
-                  onClick={() => openVoting(selectedVoting.id, selectedVoting.start_time)}
+                  onClick={() =>
+                    openVoting(selectedVoting.id, selectedVoting.start_time)
+                  }
                   endIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
                   sx={{
                     mt: 1.25,
@@ -1078,35 +1087,47 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
             }}
           >
             {selectedVotingLoading && (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 1, py: 2 }}
+              >
                 <CircularProgress size={20} />
-                <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: themedColors.textSecondary }}
+                >
                   Ladataan aanestyksen yksityiskohtia...
                 </Typography>
               </Box>
             )}
 
-            {selectedVoting && selectedVotingFailed && !selectedVotingLoading && (
-              <Box sx={{ py: 2 }}>
-                <Typography variant="body2" sx={{ color: themedColors.textTertiary }}>
-                  Aanestyksen yksityiskohtien lataus epaonnistui.
-                </Typography>
-                <Button
-                  size="small"
-                  onClick={() => void fetchVotingDetails(selectedVoting.id, true)}
-                  sx={{
-                    mt: 0.75,
-                    px: 1,
-                    py: 0,
-                    minWidth: 0,
-                    textTransform: "none",
-                    fontSize: "0.72rem",
-                  }}
-                >
-                  Yrita uudelleen
-                </Button>
-              </Box>
-            )}
+            {selectedVoting &&
+              selectedVotingFailed &&
+              !selectedVotingLoading && (
+                <Box sx={{ py: 2 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: themedColors.textTertiary }}
+                  >
+                    Aanestyksen yksityiskohtien lataus epaonnistui.
+                  </Typography>
+                  <Button
+                    size="small"
+                    onClick={() =>
+                      void fetchVotingDetails(selectedVoting.id, true)
+                    }
+                    sx={{
+                      mt: 0.75,
+                      px: 1,
+                      py: 0,
+                      minWidth: 0,
+                      textTransform: "none",
+                      fontSize: "0.72rem",
+                    }}
+                  >
+                    Yrita uudelleen
+                  </Button>
+                </Box>
+              )}
 
             {selectedVotingDetails && !selectedVotingLoading && (
               <Box>
@@ -1159,36 +1180,68 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   {selectedVotingDetails.governmentOpposition && (
                     <Typography
                       variant="caption"
-                      sx={{ color: themedColors.textSecondary, mt: 0.75, display: "block" }}
+                      sx={{
+                        color: themedColors.textSecondary,
+                        mt: 0.75,
+                        display: "block",
+                      }}
                     >
-                      Hallitus: {selectedVotingDetails.governmentOpposition.government_yes} jaa /{" "}
-                      {selectedVotingDetails.governmentOpposition.government_no} ei, Oppositio:{" "}
-                      {selectedVotingDetails.governmentOpposition.opposition_yes} jaa /{" "}
-                      {selectedVotingDetails.governmentOpposition.opposition_no} ei
+                      Hallitus:{" "}
+                      {
+                        selectedVotingDetails.governmentOpposition
+                          .government_yes
+                      }{" "}
+                      jaa /{" "}
+                      {selectedVotingDetails.governmentOpposition.government_no}{" "}
+                      ei, Oppositio:{" "}
+                      {
+                        selectedVotingDetails.governmentOpposition
+                          .opposition_yes
+                      }{" "}
+                      jaa /{" "}
+                      {selectedVotingDetails.governmentOpposition.opposition_no}{" "}
+                      ei
                     </Typography>
                   )}
                   {selectedVotingDetails.relatedVotings.length > 0 && (
                     <Box sx={{ mt: 0.9 }}>
-                      <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: themedColors.textSecondary }}
+                      >
                         Liittyvat aanestykset
                       </Typography>
-                      <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.5 }}>
-                        {selectedVotingDetails.relatedVotings.slice(0, 6).map((related) => (
-                          <Button
-                            key={related.id}
-                            size="small"
-                            onClick={() => openVoting(related.id, selectedVoting.start_time)}
-                            sx={{
-                              textTransform: "none",
-                              minWidth: 0,
-                              px: 1,
-                              py: 0.25,
-                              fontSize: "0.68rem",
-                            }}
-                          >
-                            #{related.id} ({related.n_yes}/{related.n_no})
-                          </Button>
-                        ))}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 0.5,
+                          flexWrap: "wrap",
+                          mt: 0.5,
+                        }}
+                      >
+                        {selectedVotingDetails.relatedVotings
+                          .slice(0, 6)
+                          .map((related) => (
+                            <Button
+                              key={related.id}
+                              size="small"
+                              onClick={() =>
+                                openVoting(
+                                  related.id,
+                                  selectedVoting.start_time,
+                                )
+                              }
+                              sx={{
+                                textTransform: "none",
+                                minWidth: 0,
+                                px: 1,
+                                py: 0.25,
+                                fontSize: "0.68rem",
+                              }}
+                            >
+                              #{related.id} ({related.n_yes}/{related.n_no})
+                            </Button>
+                          ))}
                       </Box>
                     </Box>
                   )}
@@ -1794,7 +1847,11 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   !selectedSectionDetails && (
                     <Typography
                       variant="caption"
-                      sx={{ color: themedColors.textTertiary, mt: 1, display: "block" }}
+                      sx={{
+                        color: themedColors.textTertiary,
+                        mt: 1,
+                        display: "block",
+                      }}
                     >
                       Ladataan asiakohdan sisaltoa...
                     </Typography>
@@ -1815,7 +1872,11 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                       <Typography
                         variant="caption"
                         fontWeight={700}
-                        sx={{ color: themedColors.textSecondary, display: "block", mb: 0.5 }}
+                        sx={{
+                          color: themedColors.textSecondary,
+                          display: "block",
+                          mb: 0.5,
+                        }}
                       >
                         {sectionContextTitle}
                       </Typography>
@@ -1876,9 +1937,9 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
             </Typography>
             {selectedSectionKey &&
               loadingContextSection === selectedSectionKey && (
-              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-                <CircularProgress size={26} />
-              </Box>
+                <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                  <CircularProgress size={26} />
+                </Box>
               )}
 
             {contextError && (
@@ -1933,7 +1994,8 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                 <Box sx={{ mt: 1.5 }}>
                   {selectedConversation.speeches.map((speech) => {
                     const isSelected = speech.id === activeSpeechId;
-                    const isSelectedPersonSpeech = speech.person_id === personId;
+                    const isSelectedPersonSpeech =
+                      speech.person_id === personId;
                     return (
                       <Box
                         key={speech.id}
@@ -1957,13 +2019,13 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                               ? colors.primaryLight
                               : isSelectedPersonSpeech
                                 ? colors.success
-                              : themedColors.dataBorder
+                                : themedColors.dataBorder
                           }`,
                           bgcolor: isSelected
                             ? `${colors.primaryLight}10`
                             : isSelectedPersonSpeech
                               ? `${colors.success}12`
-                            : themedColors.backgroundPaper,
+                              : themedColors.backgroundPaper,
                           "&:hover": {
                             borderColor: isSelectedPersonSpeech
                               ? colors.success

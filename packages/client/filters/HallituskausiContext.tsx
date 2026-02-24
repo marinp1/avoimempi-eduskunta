@@ -166,7 +166,9 @@ export const HallituskausiProvider: React.FC<{ children: React.ReactNode }> = ({
   React.useEffect(() => {
     if (loading) return;
     if (selectedHallituskausiId === "") return;
-    const exists = hallituskaudet.some((row) => row.id === selectedHallituskausiId);
+    const exists = hallituskaudet.some(
+      (row) => row.id === selectedHallituskausiId,
+    );
     if (!exists) {
       setSelectedHallituskausiIdState("");
       clearSelectedIdFromUrl();
@@ -211,7 +213,9 @@ export const HallituskausiProvider: React.FC<{ children: React.ReactNode }> = ({
 export const useHallituskausi = () => {
   const context = React.useContext(HallituskausiContext);
   if (!context) {
-    throw new Error("useHallituskausi must be used within HallituskausiProvider");
+    throw new Error(
+      "useHallituskausi must be used within HallituskausiProvider",
+    );
   }
   return context;
 };

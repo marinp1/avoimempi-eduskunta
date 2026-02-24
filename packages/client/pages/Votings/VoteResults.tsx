@@ -301,7 +301,7 @@ const VotingRow: React.FC<{
               />
             }
           >
-            {isExpanded ? "Piilota tiedot" : "Näytä tiedot"}
+            {isExpanded ? t("common.hideDetails") : t("common.showDetails")}
           </Button>
         )}
         <Link
@@ -360,7 +360,7 @@ const VotingRow: React.FC<{
                 variant="caption"
                 sx={{ color: themedColors.textSecondary }}
               >
-                Ladataan äänestyksen yksityiskohtia...
+                {t("common.loadingVotingDetails")}
               </Typography>
             </Box>
           )}
@@ -370,7 +370,7 @@ const VotingRow: React.FC<{
                 variant="caption"
                 sx={{ color: themedColors.textSecondary }}
               >
-                Äänestyksen kohde:{" "}
+                {t("common.votingTarget")}:{" "}
                 {details.voting.context_title ||
                   details.voting.section_title ||
                   details.voting.title ||
@@ -959,7 +959,13 @@ export const VoteResults: React.FC<{
       return true;
     });
     return sortRows(rows, sortMode);
-  }, [combinedRows, phaseFilter, selectedHallituskausi, sessionFilter, sortMode]);
+  }, [
+    combinedRows,
+    phaseFilter,
+    selectedHallituskausi,
+    sessionFilter,
+    sortMode,
+  ]);
 
   /** Group votings by referenced document (e.g. "HE 45/2024 vp") */
   const grouped = React.useMemo(() => {

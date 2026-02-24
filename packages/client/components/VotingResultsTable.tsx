@@ -10,6 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { colors } from "#client/theme";
 
 export type VotingPartyBreakdown = {
@@ -35,6 +36,7 @@ export const VotingResultsTable: React.FC<{
   partyBreakdown: VotingPartyBreakdown[];
   memberVotes: VotingMemberVote[];
 }> = ({ partyBreakdown, memberVotes }) => {
+  const { t } = useTranslation();
   const [groupBy, setGroupBy] = useState<"party" | "representative">("party");
 
   if (partyBreakdown.length === 0 && memberVotes.length === 0) return null;
@@ -51,7 +53,7 @@ export const VotingResultsTable: React.FC<{
         }}
       >
         <Typography sx={{ fontSize: "0.68rem", color: colors.textSecondary }}>
-          Tulostaulu:
+          {t("votings.resultsTable.title")}
         </Typography>
         <Button
           size="small"
@@ -65,7 +67,7 @@ export const VotingResultsTable: React.FC<{
           }}
           onClick={() => setGroupBy("party")}
         >
-          Ryhmitä puolueittain
+          {t("votings.resultsTable.groupByParty")}
         </Button>
         <Button
           size="small"
@@ -79,7 +81,7 @@ export const VotingResultsTable: React.FC<{
           }}
           onClick={() => setGroupBy("representative")}
         >
-          Ryhmitä edustajittain
+          {t("votings.resultsTable.groupByRepresentative")}
         </Button>
       </Box>
       <TableContainer
@@ -90,22 +92,22 @@ export const VotingResultsTable: React.FC<{
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }}>
-                  Puolue
+                  {t("common.party")}
                 </TableCell>
                 <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }} align="right">
-                  Jaa
+                  {t("common.yes")}
                 </TableCell>
                 <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }} align="right">
-                  Ei
+                  {t("common.no")}
                 </TableCell>
                 <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }} align="right">
-                  Tyhjää
+                  {t("common.empty")}
                 </TableCell>
                 <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }} align="right">
-                  Poissa
+                  {t("common.absent")}
                 </TableCell>
                 <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }} align="right">
-                  Yht.
+                  {t("votings.results.total")}
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -154,13 +156,13 @@ export const VotingResultsTable: React.FC<{
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }}>
-                  Edustaja
+                  {t("votings.resultsTable.representative")}
                 </TableCell>
                 <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }}>
-                  Puolue
+                  {t("common.party")}
                 </TableCell>
                 <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }}>
-                  Ääni
+                  {t("votings.resultsTable.vote")}
                 </TableCell>
               </TableRow>
             </TableHead>

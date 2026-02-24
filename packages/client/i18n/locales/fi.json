@@ -184,7 +184,53 @@
     "showLegislation": "Näytä lakiehdotukset",
     "hideLegislation": "Piilota lakiehdotukset",
     "showMinority": "Näytä eriävä mielipide",
-    "hideMinority": "Piilota eriävä mielipide"
+    "hideMinority": "Piilota eriävä mielipide",
+    "additionalInfo": "Lisätieto",
+    "allCommittees": "Kaikki valiokunnat",
+    "answerProcessingStatus": "Vastauskäsittelyn tila",
+    "committeeFilter": "Valiokunta",
+    "decisionProposal": "Päätösehdotus",
+    "documentLink": "Asiakirjalinkki",
+    "documentSubtype": "Tyyppi",
+    "expertHearingPlan": "Kuulemissuunnitelma",
+    "expertStatement": "Lausunto",
+    "expertStatementAttachment": "Lausunnon liite",
+    "expertStatements": "Asiantuntijalausunnot",
+    "hideLawText": "Piilota lakiteksti",
+    "hideQuestion": "Piilota kysymys",
+    "inlineCounts": "Äänestyksiä: {{votings}} · Asiakirjalinkkejä: {{links}} · Alakohtia: {{subsections}}",
+    "lifecycle": "Asiakirjaketju",
+    "lifecycleLoading": "Ladataan asiakirjaketjua...",
+    "lifecycleNoReferences": "Ei tunnistettuja asiakirjaviitteitä tässä asiakirjassa.",
+    "lifecycleShowLess": "Näytä vähemmän",
+    "lifecycleShowMore": "Näytä lisää (+{{count}})",
+    "loadError": "Virhe ladattaessa tietoja",
+    "loadingCommitteeReport": "Ladataan valiokunnan mietinnön tietoja...",
+    "loadingGovernmentProposal": "Ladataan hallituksen esityksen tietoja...",
+    "loadingInterpellation": "Ladataan välikysymystietoja...",
+    "loadingLegislativeInitiative": "Ladataan lakialoitteen tietoja...",
+    "loadingOralQuestion": "Ladataan suullisen kysymyksen tietoja...",
+    "loadingSessionDetails": "Ladataan istunnon tietoja...",
+    "loadingVotings": "Ladataan äänestyksiä...",
+    "loadingWrittenQuestion": "Ladataan kirjallisen kysymyksen tietoja...",
+    "moreLinks": "+{{count}} linkkiä",
+    "moreOther": "+{{count}} muuta",
+    "moreVotings": "+{{count}} äänestystä",
+    "noQuestionText": "Kysymyksen teksti ei saatavilla",
+    "openSession": "Avaa istunto",
+    "oralQuestions": "Suulliset kysymykset",
+    "question": "Kysymys",
+    "questionText": "Kysymyksen teksti",
+    "relatedVotingsSameSection": "Samaan käsittelykohtaan liittyvät äänestykset:",
+    "showLawText": "Näytä lakiteksti",
+    "showQuestion": "Näytä kysymys",
+    "subsectionFallback": "Alakohta",
+    "viewQuestionOnEduskunta": "Kysymys (PDF)",
+    "viewQuestionPdf": "Kysymys (PDF)",
+    "viewResponseOnEduskunta": "Vastaus (PDF)",
+    "viewResponsePdf": "Vastaus (PDF)",
+    "writtenQuestion": "Kirjallinen kysymys",
+    "writtenQuestionResponses": "Kirjalliset vastaukset"
   },
   "common": {
     "date": "Päivämäärä",
@@ -210,7 +256,19 @@
     "empty": "Tyhjää",
     "absent": "Poissa",
     "share": "Jaa",
-    "officialSourceEduskunta": "eduskunta.fi"
+    "officialSourceEduskunta": "eduskunta.fi",
+    "filteredByGovernmentPeriod": "Rajattu hallituskauteen",
+    "hideDetails": "Piilota tiedot",
+    "loadingVotingDetails": "Ladataan äänestyksen yksityiskohtia...",
+    "moreThan": "enemmän kuin {{value}}",
+    "noData": "Ei tietoja",
+    "openView": "Avaa näkymä",
+    "rowsPerPage": "Rivejä per sivu:",
+    "search": "Haku",
+    "showDetails": "Näytä tiedot",
+    "showLess": "Näytä vähemmän",
+    "showMore": "Näytä lisää",
+    "votingTarget": "Äänestyksen kohde"
   },
   "errors": {
     "loadFailed": "Tietojen lataaminen epäonnistui.",
@@ -296,7 +354,8 @@
         "government": "Hallitus",
         "opposition": "Oppositio",
         "representatives": "edustajaa"
-      }
+      },
+      "minister": "Ministeri"
     }
   },
   "votings": {
@@ -352,7 +411,14 @@
     "hideProposal": "Piilota HE",
     "showDocuments": "Näytä asiakirjat",
     "hideDocuments": "Piilota asiakirjat",
-    "votingCount": "äänestystä"
+    "votingCount": "äänestystä",
+    "resultsTable": {
+      "title": "Tulostaulu:",
+      "groupByParty": "Ryhmitä puolueittain",
+      "groupByRepresentative": "Ryhmitä edustajittain",
+      "representative": "Edustaja",
+      "vote": "Ääni"
+    }
   },
   "sessions": {
     "title": "Istunnot",
@@ -476,7 +542,12 @@
       "Joulukuu"
     ],
     "weekDays": ["Ma", "Ti", "Ke", "To", "Pe", "La", "Su"],
-    "sessionsOnDay": "istuntoa"
+    "sessionsOnDay": "istuntoa",
+    "minutesContent": "Pöytäkirjateksti",
+    "minutesItemTitle": "Pöytäkirjan otsikko",
+    "minutesMetadata": "Pöytäkirjatiedot",
+    "minutesOrder": "järjestys",
+    "minutesProcessingCodes": "Käsittelykoodit"
   },
   "insights": {
     "title": "Eduskunnan analytiikka",
@@ -529,7 +600,15 @@
       "startDate": "Aloituspäivä",
       "endDate": "Lopetuspäivä",
       "noData": "Ei äänestystietoja valitulle aikavälille.",
-      "source": "Lähde: Eduskunnan avoin data API"
+      "source": "Lähde: Eduskunnan avoin data API",
+      "historicalComparison": "Historiallinen vertailu",
+      "historicalNeedsMoreData": "Vain yksi hallitus saatavilla. Historiallinen vertailu vaatii useamman hallituksen.",
+      "historicalSubtitle": "Äänestysosallistuminen eri hallitusten aikana",
+      "noPersonData": "Ei tietoja tälle edustajalle.",
+      "rank": "Sija",
+      "trend": "Trendi",
+      "voteRatioTooltip": "{{cast}} / {{total}} äänestystä",
+      "votings": "Äänestyksiä"
     },
     "partyParticipation": {
       "title": "Puolueiden äänestysosallistuminen",
@@ -569,7 +648,11 @@
       "coalitionNo": "Hallitus ei",
       "oppositionYes": "Oppositio jaa",
       "oppositionNo": "Oppositio ei",
-      "noData": "Ei hallitus-oppositio-tietoja."
+      "noData": "Ei hallitus-oppositio-tietoja.",
+      "agreementRate": "Yksimielisyysaste",
+      "agreements": "Yksimielisiä",
+      "inlineVotings": "Äänestykset (inline)",
+      "votings": "Äänestyksiä"
     },
     "speechActivity": {
       "title": "Puheaktiivisuus",
@@ -578,6 +661,34 @@
       "totalWords": "Sanoja yhteensä",
       "avgWords": "Keskim. sanat/puhe",
       "noData": "Ei puheenvuorotietoja."
+    },
+    "timeSeries": {
+      "title": "Eduskunnan tilastot ajassa",
+      "count": "Lukumäärä",
+      "totalLatest": "Yhteensä viimeisimpänä",
+      "gender": {
+        "title": "Sukupuolijakauma",
+        "description": "Naisten ja miesten määrä eduskunnassa vuosittain",
+        "percentageDistribution": "Prosentuaalinen jakauma",
+        "sharePercent": "Osuus (%)",
+        "womenPercent": "Naiset %",
+        "menPercent": "Miehet %",
+        "countDistribution": "Lukumääräinen jakauma",
+        "women": "Naiset",
+        "men": "Miehet",
+        "womenLatest": "Naiset viimeisimpänä",
+        "menLatest": "Miehet viimeisimpänä"
+      },
+      "age": {
+        "title": "Ikäjakauma",
+        "description": "Kansanedustajien ikäjakauma eri ikäryhmissä vuosittain",
+        "groups": "Ikäryhmät",
+        "averageAge": "Keski-ikä",
+        "years": "Ikä (vuotta)",
+        "averageLatest": "Keski-ikä viimeisimpänä",
+        "youngestLatest": "Nuorin viimeisimpänä",
+        "oldestLatest": "Vanhin viimeisimpänä"
+      }
     }
   },
   "admin": {
@@ -636,5 +747,53 @@
       "stop": "Pysäytä",
       "lastUpdate": "Viimeisin päivitys:"
     }
+  },
+  "pageSources": {
+    "buttonLabel": "Lähteet",
+    "drawerTitle": "Sivun tietolähteet",
+    "fetchFailed": "Tietolähteiden haku epäonnistui",
+    "importedRows": "Tuotuja rivejä",
+    "lastMigration": "Viimeisin migraatio",
+    "lastScrape": "Viimeisin scraping",
+    "noMapping": "Tälle sivulle ei ole vielä määritetty tietolähdekartoitusta.",
+    "openTooltip": "Näytä sivun tietolähteet ja aikaleimat",
+    "sourcePages": "Lähdesivuja"
+  },
+  "status": {
+    "title": "Tietolähteiden tila",
+    "subtitle": "Tietokantaan tuodun datan tilanne ja laatu",
+    "lastUpdated": "Viimeksi päivitetty",
+    "overview": {
+      "totalTables": "Tauluja yhteensä",
+      "completeness": "Täyttöaste",
+      "totalRows": "Rivejä yhteensä"
+    },
+    "databaseTables": {
+      "title": "Tietokantataulut",
+      "description": "Rivimäärä jokaisessa tietokannan taulussa",
+      "rowCount": "Rivimäärä",
+      "ok": "OK",
+      "empty": "Tyhjä"
+    },
+    "sourceData": {
+      "title": "Lähdedatan tila",
+      "description": "Raw- ja parsed-vaiheiden eteneminen sekä API-rivimäärät tauluittain",
+      "sourceTables": "Lähdetauluja",
+      "rawUpdated": "Raw päivitetty",
+      "parsedUpdated": "Parsed päivitetty",
+      "unavailable": "Lähdedatan tilaa ei ole saatavilla."
+    },
+    "sanity": {
+      "title": "Tietojen validointi",
+      "description": "Automaattiset tarkistukset tietojen laadun ja eheyden varmistamiseksi",
+      "totalChecks": "Tarkistuksia yhteensä",
+      "passed": "Läpäisty",
+      "failed": "Epäonnistunut",
+      "failedCount": "{{count}} epäonnistui",
+      "passedWithExceptions": "Läpäisty tunnetuilla poikkeamilla",
+      "error": "Virhe",
+      "lastRun": "Viimeksi ajettu"
+    },
+    "footerNote": "Tiedot päivitetään automaattisesti Eduskunnan avoimen datan rajapinnasta. Tyhjät taulut eivät välttämättä tarkoita virhettä - joitain tauluja ei ole vielä tuotu järjestelmään."
   }
 }

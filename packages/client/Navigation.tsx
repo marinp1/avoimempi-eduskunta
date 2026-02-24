@@ -107,7 +107,7 @@ export const Navigation: React.FC<{
         ) as RouteName[])
       : (Object.keys(routes) as RouteName[]);
 
-  const allLabel = t("app.hallituskausi.all", "Kaikki hallituskaudet");
+  const allLabel = t("app.hallituskausi.all");
 
   const DrawerContent = (
     <Box sx={{ width: 280 }} role="presentation">
@@ -152,12 +152,12 @@ export const Navigation: React.FC<{
       <Box sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}>
         <FormControl size="small" fullWidth>
           <InputLabel id="drawer-hallituskausi-label">
-            {t("app.hallituskausi.label", "Hallituskausi")}
+            {t("app.hallituskausi.label")}
           </InputLabel>
           <Select
             labelId="drawer-hallituskausi-label"
             value={selectedHallituskausiId}
-            label={t("app.hallituskausi.label", "Hallituskausi")}
+            label={t("app.hallituskausi.label")}
             onChange={(event) => setSelectedHallituskausiId(event.target.value)}
             disabled={loading}
           >
@@ -309,20 +309,21 @@ export const Navigation: React.FC<{
                 },
               }}
             >
-              <InputLabel
-                id="header-hallituskausi-label"
-              >
-                {t("app.hallituskausi.label", "Hallituskausi")}
+              <InputLabel id="header-hallituskausi-label">
+                {t("app.hallituskausi.label")}
               </InputLabel>
               <Select
                 labelId="header-hallituskausi-label"
                 value={selectedHallituskausiId}
-                label={t("app.hallituskausi.label", "Hallituskausi")}
-                onChange={(event) => setSelectedHallituskausiId(event.target.value)}
+                label={t("app.hallituskausi.label")}
+                onChange={(event) =>
+                  setSelectedHallituskausiId(event.target.value)
+                }
                 disabled={loading}
                 displayEmpty
                 renderValue={(value) =>
-                  hallituskaudet.find((row) => row.id === value)?.label || allLabel
+                  hallituskaudet.find((row) => row.id === value)?.label ||
+                  allLabel
                 }
                 sx={{
                   color: "white",

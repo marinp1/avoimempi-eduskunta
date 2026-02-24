@@ -15,6 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   CartesianGrid,
   Legend,
@@ -55,7 +56,7 @@ const PARTY_COLORS: Record<string, string> = {
   SDP: "#E11931", // SDP - Red
   PS: "#FFDE55", // Perussuomalaiset - Yellow
   KESK: "#3AAA35", // Keskusta - Green
-  VIHR: "#61BF1A", // Vihreät - Light Green
+  VIHR: "#61BF1A", // Greens - Light Green
   VAS: "#AA0000", // Vasemmisto - Dark Red
   RKP: "#FFD500", // RKP - Yellow
   KD: "#1E90FF", // KD - Light Blue
@@ -66,6 +67,7 @@ const PARTY_COLORS: Record<string, string> = {
 export default function PartyParticipation({
   onClose,
 }: PartyParticipationProps) {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<PartyParticipationData[]>([]);
@@ -247,7 +249,7 @@ export default function PartyParticipation({
             variant="caption"
             sx={{ display: "block", mt: spacing.sm, color: "text.secondary" }}
           >
-            ★ = Hallituspuolue
+            ★ = {t("insights.partyParticipation.governmentPartyIndicator")}
           </Typography>
         </Box>
       );
@@ -293,7 +295,7 @@ export default function PartyParticipation({
         <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
           <HowToVoteIcon sx={{ fontSize: 36, color: colors.primary }} />
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            Puolueiden äänestysosallistuminen
+            {t("insights.partyParticipation.title")}
           </Typography>
         </Box>
         <IconButton onClick={onClose} size="large">
@@ -306,8 +308,7 @@ export default function PartyParticipation({
         color="text.secondary"
         sx={{ mb: spacing.lg }}
       >
-        Seuraa puolueiden äänestysosallistumista eri hallitusten aikana.
-        Hallituspuolueet merkitty tähdellä (★).
+        {t("insights.partyParticipation.description")}
       </Typography>
 
       {/* Filters */}
@@ -316,14 +317,14 @@ export default function PartyParticipation({
           <GlassCard>
             <CardContent sx={{ p: spacing.md }}>
               <Typography variant="h6" sx={{ mb: spacing.sm, fontWeight: 600 }}>
-                Suodattimet
+                {t("insights.partyParticipation.filters")}
               </Typography>
               <Grid container spacing={spacing.sm}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     fullWidth
                     type="date"
-                    label="Aloituspäivä"
+                    label={t("insights.partyParticipation.startDate")}
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     InputLabelProps={{ shrink: true }}
@@ -334,7 +335,7 @@ export default function PartyParticipation({
                   <TextField
                     fullWidth
                     type="date"
-                    label="Lopetuspäivä"
+                    label={t("insights.partyParticipation.endDate")}
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     InputLabelProps={{ shrink: true }}
@@ -344,7 +345,8 @@ export default function PartyParticipation({
               </Grid>
               {selectedHallituskausi && (
                 <Alert severity="info" sx={{ mt: spacing.sm }}>
-                  Rajattu hallituskauteen: {selectedHallituskausi.label}
+                  {t("common.filteredByGovernmentPeriod")}:{" "}
+                  {selectedHallituskausi.label}
                 </Alert>
               )}
             </CardContent>
@@ -358,7 +360,7 @@ export default function PartyParticipation({
           <GlassCard>
             <CardContent sx={{ p: spacing.md }}>
               <Typography variant="h6" sx={{ mb: spacing.sm, fontWeight: 600 }}>
-                Valitse puolueet
+                {t("insights.partyParticipation.selectParties")}
               </Typography>
               <FormGroup
                 sx={{
@@ -411,14 +413,14 @@ export default function PartyParticipation({
           <GlassCard>
             <CardContent sx={{ p: spacing.lg }}>
               <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
-                Osallistumisprosentti hallituksittain
+                {t("insights.partyParticipation.chartTitle")}
               </Typography>
               <Typography
                 variant="body2"
                 color="text.secondary"
                 sx={{ mb: spacing.lg }}
               >
-                Puolueiden äänestysosallistuminen eri hallitusten aikana
+                {t("insights.partyParticipation.chartSubtitle")}
               </Typography>
 
               {chartData.length > 0 ? (
@@ -473,7 +475,7 @@ export default function PartyParticipation({
                 </ResponsiveContainer>
               ) : (
                 <Alert severity="info">
-                  Ei dataa valitulle aikavälille tai puolueille.
+                  {t("insights.partyParticipation.noData")}
                 </Alert>
               )}
             </CardContent>
@@ -491,7 +493,7 @@ export default function PartyParticipation({
                   variant="h5"
                   sx={{ mb: spacing.md, fontWeight: 600 }}
                 >
-                  Yhteenveto
+                  {t("insights.partyParticipation.summary")}
                 </Typography>
                 <Box
                   sx={{
@@ -512,7 +514,7 @@ export default function PartyParticipation({
                     }}
                   >
                     <Typography variant="body2" color="text.secondary">
-                      Hallituksia yhteensä
+                      {t("insights.partyParticipation.totalGovernments")}
                     </Typography>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       {new Set(data.map((d) => d.government)).size}
@@ -526,7 +528,7 @@ export default function PartyParticipation({
                     }}
                   >
                     <Typography variant="body2" color="text.secondary">
-                      Puolueita yhteensä
+                      {t("insights.partyParticipation.totalParties")}
                     </Typography>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       {allParties.length}
@@ -540,7 +542,7 @@ export default function PartyParticipation({
                     }}
                   >
                     <Typography variant="body2" color="text.secondary">
-                      Keskimääräinen osallistuminen
+                      {t("insights.partyParticipation.averageParticipation")}
                     </Typography>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       {(

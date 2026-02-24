@@ -10,6 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   intersectDateRangeWithHallituskausi,
   useHallituskausi,
@@ -30,6 +31,7 @@ export default function Osallistumisaktiivisuus({
   onClose,
   initialPersonId,
 }: OsallistumisaktiivisuusProps) {
+  const { t } = useTranslation();
   const _themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<ParticipationData[]>([]);
@@ -158,7 +160,7 @@ export default function Osallistumisaktiivisuus({
             >
               <HowToVoteIcon sx={{ fontSize: 32, color: colors.primary }} />
               <Typography variant="h4" sx={commonStyles.gradientText}>
-                Äänestysosallistuminen
+                {t("insights.votingActivity.title")}
               </Typography>
             </Box>
             <IconButton onClick={onClose} size="large">
@@ -166,8 +168,7 @@ export default function Osallistumisaktiivisuus({
             </IconButton>
           </Box>
           <Typography variant="body1" color="text.secondary">
-            Seuraa kansanedustajien äänestysosallistumista eri hallitusten
-            aikana. Tiedot perustuvat äänestystietoihin ja ministeritietoihin.
+            {t("insights.votingActivity.description")}
           </Typography>
         </Box>
       </Box>
@@ -188,7 +189,7 @@ export default function Osallistumisaktiivisuus({
               <Grid container spacing={spacing.sm} sx={{ mb: spacing.md }}>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <StatCard
-                    title="Edustajia"
+                    title={t("insights.votingActivity.members")}
                     value={stats.totalRepresentatives.toString()}
                     gradient={gradients.info}
                     icon="👥"
@@ -196,7 +197,7 @@ export default function Osallistumisaktiivisuus({
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <StatCard
-                    title="Keskiarvo"
+                    title={t("insights.votingActivity.average")}
                     value={`${stats.averageParticipation}%`}
                     gradient={gradients.primary}
                     icon="📊"
@@ -204,7 +205,7 @@ export default function Osallistumisaktiivisuus({
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <StatCard
-                    title="Korkein"
+                    title={t("insights.votingActivity.highest")}
                     value={`${stats.highestParticipation}%`}
                     gradient={gradients.success}
                     icon="🏆"
@@ -212,7 +213,7 @@ export default function Osallistumisaktiivisuus({
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <StatCard
-                    title="Matalin"
+                    title={t("insights.votingActivity.lowest")}
                     value={`${stats.lowestParticipation}%`}
                     gradient={gradients.warning}
                     icon="⚠️"
@@ -230,14 +231,14 @@ export default function Osallistumisaktiivisuus({
                   variant="h6"
                   sx={{ mb: spacing.sm, fontWeight: 600 }}
                 >
-                  Suodattimet
+                  {t("insights.votingActivity.filters")}
                 </Typography>
                 <Grid container spacing={spacing.sm}>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       fullWidth
                       type="date"
-                      label="Aloituspäivä"
+                      label={t("insights.votingActivity.startDate")}
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
                       InputLabelProps={{ shrink: true }}
@@ -248,7 +249,7 @@ export default function Osallistumisaktiivisuus({
                     <TextField
                       fullWidth
                       type="date"
-                      label="Lopetuspäivä"
+                      label={t("insights.votingActivity.endDate")}
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
                       InputLabelProps={{ shrink: true }}
@@ -258,7 +259,8 @@ export default function Osallistumisaktiivisuus({
                 </Grid>
                 {selectedHallituskausi && (
                   <Alert severity="info" sx={{ mt: spacing.sm }}>
-                    Rajattu hallituskauteen: {selectedHallituskausi.label}
+                    {t("common.filteredByGovernmentPeriod")}:{" "}
+                    {selectedHallituskausi.label}
                   </Alert>
                 )}
               </Box>
@@ -303,15 +305,13 @@ export default function Osallistumisaktiivisuus({
 
           {/* No Data State */}
           {!loading && !error && data.length === 0 && (
-            <Alert severity="info">
-              Ei äänestystietoja valitulle aikavälille.
-            </Alert>
+            <Alert severity="info">{t("insights.votingActivity.noData")}</Alert>
           )}
 
           {/* Footer */}
           <Box sx={{ mt: spacing.lg, textAlign: "center" }}>
             <Typography variant="body2" color="text.secondary">
-              Lähde: Eduskunnan avoin data API
+              {t("insights.votingActivity.source")}
             </Typography>
           </Box>
         </Box>

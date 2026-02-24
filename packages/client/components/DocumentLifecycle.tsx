@@ -154,22 +154,19 @@ export const DocumentLifecycle: React.FC<DocumentLifecycleProps> = ({
           variant="subtitle1"
           sx={{ fontWeight: 600, color: colors.textPrimary }}
         >
-          {t("documents.lifecycle", "Asiakirjaketju")}
+          {t("documents.lifecycle")}
         </Typography>
       </Stack>
 
       {apiLoading && (
         <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 1 }}>
-          {t("documents.lifecycleLoading", "Ladataan asiakirjaketjua...")}
+          {t("documents.lifecycleLoading")}
         </Typography>
       )}
 
       {documentRefs.length === 0 && (
         <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-          {t(
-            "documents.lifecycleNoReferences",
-            "Ei tunnistettuja asiakirjaviitteitä tässä asiakirjassa.",
-          )}
+          {t("documents.lifecycleNoReferences")}
         </Typography>
       )}
 
@@ -193,10 +190,10 @@ export const DocumentLifecycle: React.FC<DocumentLifecycleProps> = ({
           }
         >
           {showAll
-            ? t("documents.lifecycleShowLess", "Näytä vähemmän")
-            : t(
-                "documents.lifecycleShowMore",
-                `Näytä lisää (+${hiddenReferenceCount})`,
+            ? t("documents.lifecycleShowLess")
+            : String(t("documents.lifecycleShowMore" as any)).replace(
+                "{{count}}",
+                String(hiddenReferenceCount),
               )}
         </Button>
       )}

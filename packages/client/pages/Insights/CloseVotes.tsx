@@ -278,7 +278,9 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
                         }
                         onClick={() => toggleVotingDetails(vote.id)}
                       >
-                        {isExpanded ? "Piilota tiedot" : "Näytä tiedot"}
+                        {isExpanded
+                          ? t("common.hideDetails")
+                          : t("common.showDetails")}
                       </Button>
                       <Button
                         size="small"
@@ -302,7 +304,7 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
                           window.dispatchEvent(new PopStateEvent("popstate"));
                         }}
                       >
-                        Avaa näkymä
+                        {t("common.openView")}
                       </Button>
                     </Box>
                   </Box>
@@ -319,7 +321,7 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
                       }}
                     />
                     <Chip
-                      label={passed ? "Jaa" : "Ei"}
+                      label={passed ? t("common.yes") : t("common.no")}
                       size="small"
                       sx={{
                         height: 22,
@@ -343,8 +345,10 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
                   variant="caption"
                   sx={{ color: themedColors.textTertiary }}
                 >
-                  {vote.n_yes} jaa / {vote.n_no} ei / {vote.n_abstain} tyhjää /{" "}
-                  {vote.n_absent} poissa
+                  {vote.n_yes} {String(t("common.yes")).toLowerCase()} /{" "}
+                  {vote.n_no} {String(t("common.no")).toLowerCase()} /{" "}
+                  {vote.n_abstain} {String(t("common.empty")).toLowerCase()} /{" "}
+                  {vote.n_absent} {String(t("common.absent")).toLowerCase()}
                 </Typography>
                 <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                   <Box
@@ -365,7 +369,7 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
                           variant="caption"
                           sx={{ color: themedColors.textSecondary }}
                         >
-                          Ladataan äänestyksen yksityiskohtia...
+                          {t("common.loadingVotingDetails")}
                         </Typography>
                       </Box>
                     )}

@@ -114,9 +114,9 @@ export function CommitteeReportCard({
   const reportKind = getCommitteeReportKind(item.report_type_code);
   const reportKindLabel =
     reportKind === "report"
-      ? t("documents.committeeReportTypeReport", "Mietintö")
+      ? t("documents.committeeReportTypeReport")
       : reportKind === "statement"
-        ? t("documents.committeeReportTypeStatement", "Lausunto")
+        ? t("documents.committeeReportTypeStatement")
         : item.report_type_code;
 
   const [expanded, setExpanded] = useState(false);
@@ -179,7 +179,7 @@ export function CommitteeReportCard({
                 fontWeight: 500,
               }}
             >
-              {item.title || t("documents.noTitle", "Ei otsikkoa")}
+              {item.title || t("documents.noTitle")}
             </Typography>
             <Chip
               label={item.parliament_identifier}
@@ -211,13 +211,12 @@ export function CommitteeReportCard({
           >
             {item.draft_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDate", "Jättöpäivä")}:{" "}
-                {formatDate(item.draft_date)}
+                {t("documents.submissionDate")}: {formatDate(item.draft_date)}
               </Typography>
             )}
             {item.signature_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.signatureDate", "Allekirjoituspäivä")}:{" "}
+                {t("documents.signatureDate")}:{" "}
                 {formatDate(item.signature_date)}
               </Typography>
             )}
@@ -235,7 +234,7 @@ export function CommitteeReportCard({
             )}
             {item.recipient_committee && (
               <Chip
-                label={`${t("documents.recipientCommittee", "Vastaanottava valiokunta")}: ${item.recipient_committee}`}
+                label={`${t("documents.recipientCommittee")}: ${item.recipient_committee}`}
                 size="small"
                 variant="outlined"
                 sx={{
@@ -307,7 +306,7 @@ export function CommitteeReportCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.committeeMembers", "Valiokunnan jäsenet")}
+                      {t("documents.committeeMembers")}
                     </Typography>
                   </Stack>
                   <TableContainer>
@@ -315,11 +314,9 @@ export function CommitteeReportCard({
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>{t("common.name", "Nimi")}</TableCell>
-                          <TableCell>{t("common.party", "Puolue")}</TableCell>
-                          <TableCell>
-                            {t("documents.committeeRole", "Rooli")}
-                          </TableCell>
+                          <TableCell>{t("common.name")}</TableCell>
+                          <TableCell>{t("common.party")}</TableCell>
+                          <TableCell>{t("documents.committeeRole")}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -353,7 +350,7 @@ export function CommitteeReportCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.committeeExperts", "Asiantuntijat")}
+                      {t("documents.committeeExperts")}
                     </Typography>
                   </Stack>
                   <TableContainer>
@@ -361,12 +358,10 @@ export function CommitteeReportCard({
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>{t("common.name", "Nimi")}</TableCell>
+                          <TableCell>{t("common.name")}</TableCell>
+                          <TableCell>{t("documents.expertTitle")}</TableCell>
                           <TableCell>
-                            {t("documents.expertTitle", "Asema")}
-                          </TableCell>
-                          <TableCell>
-                            {t("documents.expertOrganization", "Organisaatio")}
+                            {t("documents.expertOrganization")}
                           </TableCell>
                         </TableRow>
                       </TableHead>
@@ -402,8 +397,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showSummary
-                      ? t("documents.hideSummary", "Piilota tiivistelmä")
-                      : t("documents.showSummary", "Näytä tiivistelmä")}
+                      ? t("documents.hideSummary")
+                      : t("documents.showSummary")}
                   </Button>
                   <Collapse in={showSummary}>
                     <Box
@@ -440,8 +435,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showReasoning
-                      ? t("documents.hideJustification", "Piilota perustelut")
-                      : t("documents.showJustification", "Näytä perustelut")}
+                      ? t("documents.hideJustification")
+                      : t("documents.showJustification")}
                   </Button>
                   <Collapse in={showReasoning}>
                     <Box
@@ -488,8 +483,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showDecision
-                      ? t("documents.hideDecision", "Piilota päätösehdotus")
-                      : t("documents.showDecision", "Näytä päätösehdotus")}
+                      ? t("documents.hideDecision")
+                      : t("documents.showDecision")}
                   </Button>
                   <Collapse in={showDecision}>
                     <Box
@@ -524,8 +519,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showLegislation
-                      ? t("documents.hideLegislation", "Piilota lakiehdotukset")
-                      : t("documents.showLegislation", "Näytä lakiehdotukset")}
+                      ? t("documents.hideLegislation")
+                      : t("documents.showLegislation")}
                   </Button>
                   <Collapse in={showLegislation}>
                     <Box
@@ -560,8 +555,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showMinority
-                      ? t("documents.hideMinority", "Piilota eriävä mielipide")
-                      : t("documents.showMinority", "Näytä eriävä mielipide")}
+                      ? t("documents.hideMinority")
+                      : t("documents.showMinority")}
                   </Button>
                   <Collapse in={showMinority}>
                     <Box
@@ -596,7 +591,7 @@ export function CommitteeReportCard({
                     variant="subtitle2"
                     sx={{ fontWeight: 600, color: colors.textPrimary, mb: 1 }}
                   >
-                    {t("documents.committeeResolution", "Lausumaehdotus")}
+                    {t("documents.committeeResolution")}
                   </Typography>
                   <RichTextRenderer
                     document={detail.resolution_rich_text}

@@ -172,7 +172,7 @@ export function GovernmentProposalCard({
                 fontWeight: 500,
               }}
             >
-              {item.title || t("documents.noTitle", "Ei otsikkoa")}
+              {item.title || t("documents.noTitle")}
             </Typography>
             <Chip
               label={item.parliament_identifier}
@@ -194,7 +194,7 @@ export function GovernmentProposalCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDate", "Jättöpäivä")}:{" "}
+                {t("documents.submissionDate")}:{" "}
                 {formatDate(item.submission_date)}
               </Typography>
             )}
@@ -225,8 +225,7 @@ export function GovernmentProposalCard({
 
             {item.latest_stage_code && !item.decision_outcome && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.latestStage", "Viimeisin vaihe")}:{" "}
-                {item.latest_stage_code}
+                {t("documents.latestStage")}: {item.latest_stage_code}
               </Typography>
             )}
           </Stack>
@@ -318,7 +317,7 @@ export function GovernmentProposalCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.proposalSignatories", "Allekirjoittajat")}
+                      {t("documents.proposalSignatories")}
                     </Typography>
                   </Stack>
                   {detail.signature_date && (
@@ -334,10 +333,8 @@ export function GovernmentProposalCard({
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>{t("common.name", "Nimi")}</TableCell>
-                          <TableCell>
-                            {t("documents.signatoryTitle", "Asema")}
-                          </TableCell>
+                          <TableCell>{t("common.name")}</TableCell>
+                          <TableCell>{t("documents.signatoryTitle")}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -370,7 +367,7 @@ export function GovernmentProposalCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.proposalLaws", "Lakiehdotukset")}
+                      {t("documents.proposalLaws")}
                     </Typography>
                   </Stack>
                   <TableContainer>
@@ -378,12 +375,8 @@ export function GovernmentProposalCard({
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>
-                            {t("documents.lawType", "Tyyppi")}
-                          </TableCell>
-                          <TableCell>
-                            {t("documents.lawName", "Nimi")}
-                          </TableCell>
+                          <TableCell>{t("documents.lawType")}</TableCell>
+                          <TableCell>{t("documents.lawName")}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -414,7 +407,7 @@ export function GovernmentProposalCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.lawDecisions", "Lakipäätökset")}
+                      {t("documents.lawDecisions")}
                     </Typography>
                   </Stack>
                   <Box
@@ -452,7 +445,7 @@ export function GovernmentProposalCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.stages", "Käsittelyvaiheet")}
+                      {t("documents.stages")}
                     </Typography>
                   </Stack>
                   <Stack spacing={1.5}>
@@ -518,8 +511,8 @@ export function GovernmentProposalCard({
                     }}
                   >
                     {showSummary
-                      ? t("documents.hideSummary", "Piilota tiivistelmä")
-                      : t("documents.showSummary", "Näytä tiivistelmä")}
+                      ? t("documents.hideSummary")
+                      : t("documents.showSummary")}
                   </Button>
                   <Collapse in={showSummary}>
                     <Box
@@ -553,8 +546,8 @@ export function GovernmentProposalCard({
                     }}
                   >
                     {showProposalText
-                      ? t("documents.hideProposalText", "Piilota esitysteksti")
-                      : t("documents.showProposalText", "Näytä esitysteksti")}
+                      ? t("documents.hideProposalText")
+                      : t("documents.showProposalText")}
                   </Button>
                   <Collapse in={showProposalText}>
                     <Box

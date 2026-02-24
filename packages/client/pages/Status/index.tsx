@@ -27,6 +27,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface TableStatus {
   tableName: string;
@@ -109,6 +110,7 @@ interface SanityCheckResult {
 }
 
 export default function Status() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [overview, setOverview] = useState<DataOverview | null>(null);
@@ -275,10 +277,10 @@ export default function Status() {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       <Typography variant="h4" gutterBottom>
-        Tietolähteiden tila
+        {t("status.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary" paragraph>
-        Tietokantaan tuodun datan tilanne ja laatu
+        {t("status.subtitle")}
       </Typography>
 
       {/* Overview Cards */}
@@ -291,7 +293,7 @@ export default function Status() {
                 <Typography variant="h6">{overview.totalTables}</Typography>
               </Box>
               <Typography variant="body2" color="text.secondary">
-                Tauluja yhteensä
+                {t("status.overview.totalTables")}
               </Typography>
             </CardContent>
           </Card>
@@ -319,7 +321,7 @@ export default function Status() {
                 <Typography variant="h6">{completeness}%</Typography>
               </Box>
               <Typography variant="body2" color="text.secondary">
-                Täyttöaste
+                {t("status.overview.completeness")}
               </Typography>
               <LinearProgress
                 variant="determinate"
@@ -340,7 +342,7 @@ export default function Status() {
                 </Typography>
               </Box>
               <Typography variant="body2" color="text.secondary">
-                Rivejä yhteensä
+                {t("status.overview.totalRows")}
               </Typography>
             </CardContent>
           </Card>
@@ -350,18 +352,20 @@ export default function Status() {
       {/* Database table row counts */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h5" gutterBottom>
-          Tietokantataulut
+          {t("status.databaseTables.title")}
         </Typography>
         <Typography variant="body2" color="text.secondary" paragraph>
-          Rivimäärä jokaisessa tietokannan taulussa
+          {t("status.databaseTables.description")}
         </Typography>
         <TableContainer component={Paper}>
           <Table size="small">
             <TableHead>
               <TableRow>
                 <TableCell>Taulu</TableCell>
-                <TableCell align="right">Rivimäärä</TableCell>
-                <TableCell align="center">Tila</TableCell>
+                <TableCell align="right">
+                  {t("status.databaseTables.rowCount")}
+                </TableCell>
+                <TableCell align="center">{t("common.status")}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -380,7 +384,11 @@ export default function Status() {
                   <TableCell align="center">
                     <Chip
                       icon={getStatusIcon(table.hasData)}
-                      label={table.hasData ? "OK" : "Tyhjä"}
+                      label={
+                        table.hasData
+                          ? t("status.databaseTables.ok")
+                          : t("status.databaseTables.empty")
+                      }
                       size="small"
                       color={getStatusColor(table.hasData)}
                       variant="outlined"
@@ -397,17 +405,17 @@ export default function Status() {
           display="block"
           mt={1}
         >
-          Viimeksi päivitetty: {formatDateTime(overview.lastUpdated)}
+          {t("status.lastUpdated")}: {formatDateTime(overview.lastUpdated)}
         </Typography>
       </Box>
 
       {/* Source data status */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h5" gutterBottom>
-          Lähdedatan tila
+          {t("status.sourceData.title")}
         </Typography>
         <Typography variant="body2" color="text.secondary" paragraph>
-          Raw- ja parsed-vaiheiden eteneminen sekä API-rivimäärät tauluittain
+          {t("status.sourceData.description")}
         </Typography>
 
         {loadingSourceData ? (
@@ -427,7 +435,7 @@ export default function Status() {
                       </Typography>
                     </Box>
                     <Typography variant="body2" color="text.secondary">
-                      Lähdetauluja
+                      {t("status.sourceData.sourceTables")}
                     </Typography>
                   </CardContent>
                 </Card>
@@ -470,7 +478,7 @@ export default function Status() {
                       color="text.secondary"
                       gutterBottom
                     >
-                      Viimeksi päivitetty
+                      {t("status.lastUpdated")}
                     </Typography>
                     <Typography variant="body2">
                       {formatDateTime(sourceData.lastUpdated)}
@@ -490,8 +498,10 @@ export default function Status() {
                     <TableCell align="right">Raw</TableCell>
                     <TableCell align="right">Parsed</TableCell>
                     <TableCell align="right">Scrape %</TableCell>
-                    <TableCell>Raw päivitetty</TableCell>
-                    <TableCell>Parsed päivitetty</TableCell>
+                    <TableCell>{t("status.sourceData.rawUpdated")}</TableCell>
+                    <TableCell>
+                      {t("status.sourceData.parsedUpdated")}
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -574,7 +584,7 @@ export default function Status() {
         ) : sourceDataError ? (
           <Alert severity="warning">{sourceDataError}</Alert>
         ) : (
-          <Alert severity="info">Lähdedatan tilaa ei ole saatavilla.</Alert>
+          <Alert severity="info">{t("status.sourceData.unavailable")}</Alert>
         )}
       </Box>
 
@@ -586,11 +596,10 @@ export default function Status() {
       ) : sanityChecks ? (
         <Box sx={{ mt: 4 }}>
           <Typography variant="h5" gutterBottom>
-            Tietojen validointi
+            {t("status.sanity.title")}
           </Typography>
           <Typography variant="body2" color="text.secondary" paragraph>
-            Automaattiset tarkistukset tietojen laadun ja eheyden
-            varmistamiseksi
+            {t("status.sanity.description")}
           </Typography>
 
           <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -604,7 +613,7 @@ export default function Status() {
                     </Typography>
                   </Box>
                   <Typography variant="body2" color="text.secondary">
-                    Tarkistuksia yhteensä
+                    {t("status.sanity.totalChecks")}
                   </Typography>
                 </CardContent>
               </Card>
@@ -619,7 +628,7 @@ export default function Status() {
                     </Typography>
                   </Box>
                   <Typography variant="body2" color="text.secondary">
-                    Läpäisty
+                    {t("status.sanity.passed")}
                   </Typography>
                 </CardContent>
               </Card>
@@ -639,7 +648,7 @@ export default function Status() {
                     </Typography>
                   </Box>
                   <Typography variant="body2" color="text.secondary">
-                    Epäonnistunut
+                    {t("status.sanity.failed")}
                   </Typography>
                 </CardContent>
               </Card>
@@ -688,7 +697,9 @@ export default function Status() {
                     <Typography variant="h6">{category}</Typography>
                     {failedCount > 0 && (
                       <Chip
-                        label={`${failedCount} epäonnistui`}
+                        label={String(
+                          t("status.sanity.failedCount" as any),
+                        ).replace("{{count}}", String(failedCount))}
                         size="small"
                         color="error"
                       />
@@ -721,7 +732,11 @@ export default function Status() {
                             <TableRow key={idx}>
                               <TableCell>
                                 {hasExceptions && check.passed ? (
-                                  <Tooltip title="Läpäisty tunnetuilla poikkeamilla">
+                                  <Tooltip
+                                    title={t(
+                                      "status.sanity.passedWithExceptions",
+                                    )}
+                                  >
                                     <WarningIcon
                                       color="warning"
                                       fontSize="small"
@@ -752,7 +767,8 @@ export default function Status() {
                               <TableCell>
                                 {check.errorMessage ? (
                                   <Typography variant="body2" color="error">
-                                    Virhe: {check.errorMessage}
+                                    {t("status.sanity.error")}:{" "}
+                                    {check.errorMessage}
                                   </Typography>
                                 ) : (
                                   <>
@@ -884,7 +900,7 @@ export default function Status() {
             display="block"
             mt={2}
           >
-            Viimeksi ajettu:{" "}
+            {t("status.sanity.lastRun")}:{" "}
             {new Date(sanityChecks.lastRun).toLocaleString("fi-FI")}
           </Typography>
         </Box>
@@ -892,11 +908,7 @@ export default function Status() {
 
       {/* Note about data quality */}
       <Alert severity="info" sx={{ mt: 4 }}>
-        <Typography variant="body2">
-          Tiedot päivitetään automaattisesti Eduskunnan avoimen datan
-          rajapinnasta. Tyhjät taulut eivät välttämättä tarkoita virhettä -
-          joitain tauluja ei ole vielä tuotu järjestelmään.
-        </Typography>
+        <Typography variant="body2">{t("status.footerNote")}</Typography>
       </Alert>
     </Container>
   );

@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import type React from "react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { colors } from "#client/theme/index";
@@ -133,6 +134,7 @@ const ExpandableSnippet: React.FC<{
   text: string | null | undefined;
   maxLength?: number;
 }> = ({ label, text, maxLength = 280 }) => {
+  const { t } = useTranslation();
   const normalized = normalizeSnippet(text);
   const [expanded, setExpanded] = useState(false);
 
@@ -165,7 +167,7 @@ const ExpandableSnippet: React.FC<{
             color: colors.primary,
           }}
         >
-          {expanded ? "Näytä vähemmän" : "Näytä lisää"}
+          {expanded ? t("common.showLess") : t("common.showMore")}
         </Button>
       )}
     </Box>
@@ -178,6 +180,7 @@ const ExpandableRichSnippet: React.FC<{
   richText: string | null | undefined;
   maxLength?: number;
 }> = ({ label, text, richText, maxLength = 280 }) => {
+  const { t } = useTranslation();
   const normalized = normalizeSnippet(text);
   const [expanded, setExpanded] = useState(false);
 
@@ -227,7 +230,7 @@ const ExpandableRichSnippet: React.FC<{
             color: colors.primary,
           }}
         >
-          {expanded ? "Näytä vähemmän" : "Näytä lisää"}
+          {expanded ? t("common.showLess") : t("common.showMore")}
         </Button>
       )}
     </Box>
@@ -323,6 +326,7 @@ const LoadingPlaceholder: React.FC<{ text: string }> = ({ text }) => (
 export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
+  const { t } = useTranslation();
   const { data, loading } = useFetchByIdentifier<
     WithAuthor & {
       summary_text: string | null;
@@ -336,7 +340,7 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
 
   if (loading)
     return (
-      <LoadingPlaceholder text="Ladataan hallituksen esityksen tietoja..." />
+      <LoadingPlaceholder text={t("documents.loadingGovernmentProposal")} />
     );
   if (!data) return null;
 
@@ -357,7 +361,9 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
           size="small"
           sx={identifierChipSx}
         />
-        <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
+        <Typography sx={titleSx}>
+          {data.title || t("documents.noTitle")}
+        </Typography>
         {data.decision_outcome && (
           <Chip
             label={data.decision_outcome}
@@ -388,19 +394,19 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
         )}
       </Box>
       <ExpandableRichSnippet
-        label="Tiivistelmä"
+        label={t("documents.summary")}
         text={data.summary_text}
         richText={data.summary_rich_text}
         maxLength={280}
       />
       <ExpandableRichSnippet
-        label="Esitysteksti"
+        label={t("documents.proposalText")}
         text={data.proposal_text}
         richText={data.proposal_rich_text}
         maxLength={220}
       />
       <ExpandableRichSnippet
-        label="Perustelut"
+        label={t("documents.justificationText")}
         text={data.justification_text}
         richText={data.justification_rich_text}
         maxLength={220}
@@ -413,6 +419,7 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
 export const InterpellationCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
+  const { t } = useTranslation();
   const { data, loading } = useFetchByIdentifier<
     WithSigner & {
       question_text: string | null;
@@ -431,7 +438,7 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
   >("/api/interpellations/by-identifier", identifier);
 
   if (loading)
-    return <LoadingPlaceholder text="Ladataan välikysymystietoja..." />;
+    return <LoadingPlaceholder text={t("documents.loadingInterpellation")} />;
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -458,7 +465,9 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
           size="small"
           sx={identifierChipSx}
         />
-        <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
+        <Typography sx={titleSx}>
+          {data.title || t("documents.noTitle")}
+        </Typography>
         {data.decision_outcome && (
           <Chip
             label={data.decision_outcome}
@@ -489,13 +498,13 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
         )}
       </Box>
       <ExpandableRichSnippet
-        label="Kysymys"
+        label={t("documents.question")}
         text={data.question_text}
         richText={data.question_rich_text}
         maxLength={280}
       />
       <ExpandableRichSnippet
-        label="Lausumaehdotus"
+        label={t("documents.committeeResolution")}
         text={data.resolution_text}
         richText={data.resolution_rich_text}
         maxLength={220}
@@ -511,7 +520,7 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
               fontWeight: 600,
             }}
           >
-            Vastauskäsittelyn tila
+            {t("documents.answerProcessingStatus")}
           </Typography>
           {latestStage.event_date && (
             <Typography
@@ -529,7 +538,7 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
           )}
           {latestStage.event_description && (
             <ExpandableSnippet
-              label="Lisätieto"
+              label={t("documents.additionalInfo")}
               text={latestStage.event_description}
               maxLength={220}
             />
@@ -544,6 +553,7 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
 export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
+  const { t } = useTranslation();
   const { data, loading } = useFetchByIdentifier<
     WithSigner & {
       initiative_type_code: string;
@@ -557,7 +567,9 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
   >("/api/legislative-initiatives/by-identifier", identifier);
 
   if (loading)
-    return <LoadingPlaceholder text="Ladataan lakialoitteen tietoja..." />;
+    return (
+      <LoadingPlaceholder text={t("documents.loadingLegislativeInitiative")} />
+    );
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -583,7 +595,9 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
           size="small"
           sx={identifierChipSx}
         />
-        <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
+        <Typography sx={titleSx}>
+          {data.title || t("documents.noTitle")}
+        </Typography>
         {data.decision_outcome && (
           <Chip
             label={data.decision_outcome}
@@ -620,19 +634,19 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
         )}
       </Box>
       <ExpandableRichSnippet
-        label="Perustelut"
+        label={t("documents.justificationText")}
         text={data.justification_text}
         richText={data.justification_rich_text}
         maxLength={260}
       />
       <ExpandableRichSnippet
-        label="Ponsi"
+        label={t("documents.clausesText")}
         text={data.proposal_text}
         richText={data.proposal_rich_text}
         maxLength={220}
       />
       <ExpandableRichSnippet
-        label="Lakiteksti"
+        label={t("documents.proposalLaws")}
         text={data.law_text}
         richText={data.law_rich_text}
         maxLength={220}
@@ -645,6 +659,7 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
 export const OralQuestionCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
+  const { t } = useTranslation();
   const { data, loading } = useFetchByIdentifier<
     DocCardData & {
       question_text: string | null;
@@ -654,9 +669,7 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
   >("/api/oral-questions/by-identifier", identifier);
 
   if (loading)
-    return (
-      <LoadingPlaceholder text="Ladataan suullisen kysymyksen tietoja..." />
-    );
+    return <LoadingPlaceholder text={t("documents.loadingOralQuestion")} />;
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -676,7 +689,9 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
           size="small"
           sx={identifierChipSx}
         />
-        <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
+        <Typography sx={titleSx}>
+          {data.title || t("documents.noTitle")}
+        </Typography>
         {data.decision_outcome && (
           <Chip
             label={data.decision_outcome}
@@ -715,7 +730,7 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
         )}
       </Box>
       <ExpandableSnippet
-        label="Kysymys"
+        label={t("documents.question")}
         text={data.question_text}
         maxLength={260}
       />
@@ -727,6 +742,7 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
 export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
+  const { t } = useTranslation();
   const { data, loading } = useFetchByIdentifier<
     WithSigner & {
       answer_minister_title: string | null;
@@ -738,9 +754,7 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
   >("/api/written-questions/by-identifier", identifier);
 
   if (loading)
-    return (
-      <LoadingPlaceholder text="Ladataan kirjallisen kysymyksen tietoja..." />
-    );
+    return <LoadingPlaceholder text={t("documents.loadingWrittenQuestion")} />;
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -766,7 +780,9 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
           size="small"
           sx={identifierChipSx}
         />
-        <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
+        <Typography sx={titleSx}>
+          {data.title || t("documents.noTitle")}
+        </Typography>
         {data.decision_outcome && (
           <Chip
             label={data.decision_outcome}
@@ -797,7 +813,7 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
         )}
       </Box>
       <ExpandableRichSnippet
-        label="Kysymys"
+        label={t("documents.question")}
         text={data.question_text}
         richText={data.question_rich_text}
         maxLength={280}
@@ -810,6 +826,7 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
 export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
+  const { t } = useTranslation();
   const { data, loading } = useFetchByIdentifier<{
     id: number;
     parliament_identifier: string;
@@ -829,9 +846,7 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
   }>("/api/committee-reports/by-identifier", identifier);
 
   if (loading)
-    return (
-      <LoadingPlaceholder text="Ladataan valiokunnan mietinnön tietoja..." />
-    );
+    return <LoadingPlaceholder text={t("documents.loadingCommitteeReport")} />;
   if (!data) return null;
 
   return (
@@ -855,7 +870,9 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
           variant="outlined"
           sx={subjectChipSx}
         />
-        <Typography sx={titleSx}>{data.title || "Ei otsikkoa"}</Typography>
+        <Typography sx={titleSx}>
+          {data.title || t("documents.noTitle")}
+        </Typography>
       </Box>
       <Box
         sx={{
@@ -886,25 +903,25 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
         )}
       </Box>
       <ExpandableRichSnippet
-        label="Tiivistelmä"
+        label={t("documents.summary")}
         text={data.summary_text}
         richText={data.summary_rich_text}
         maxLength={280}
       />
       <ExpandableRichSnippet
-        label="Päätösehdotus"
+        label={t("documents.decisionProposal")}
         text={data.decision_text}
         richText={data.decision_rich_text}
         maxLength={220}
       />
       <ExpandableRichSnippet
-        label="Lausumaehdotus"
+        label={t("documents.committeeResolution")}
         text={data.resolution_text}
         richText={data.resolution_rich_text}
         maxLength={220}
       />
       <ExpandableRichSnippet
-        label="Lakiehdotukset"
+        label={t("documents.proposalLaws")}
         text={data.legislation_amendment_text}
         richText={data.legislation_amendment_rich_text}
         maxLength={220}
@@ -943,6 +960,7 @@ export const DocumentCard: React.FC<{ docRef: DocRef }> = ({ docRef }) => {
 export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
   identifiers,
 }) => {
+  const { t } = useTranslation();
   type VotingSummary = {
     id: number;
     section_title: string | null;
@@ -1077,7 +1095,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
       >
         <CircularProgress size={14} />
         <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
-          Ladataan äänestyksiä...
+          {t("documents.loadingVotings")}
         </Typography>
       </Box>
     );
@@ -1096,7 +1114,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
             color: colors.textPrimary,
           }}
         >
-          Liittyvät äänestykset
+          {t("documents.relatedVotings")}
         </Typography>
       </Box>
       {votings.map((v) => {
@@ -1171,7 +1189,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                   />
                 }
               >
-                {isExpanded ? "Piilota tiedot" : "Näytä tiedot"}
+                {isExpanded ? t("common.hideDetails") : t("common.showDetails")}
               </Button>
               <Button
                 size="small"
@@ -1191,7 +1209,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                 }}
                 endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
               >
-                Avaa näkymä
+                {t("common.openView")}
               </Button>
             </Box>
             <Box
@@ -1245,7 +1263,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                     <Typography
                       sx={{ fontSize: "0.7rem", color: colors.textSecondary }}
                     >
-                      Ladataan äänestyksen yksityiskohtia...
+                      {t("common.loadingVotingDetails")}
                     </Typography>
                   </Box>
                 )}
@@ -1256,7 +1274,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                     <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                       <Chip
                         size="small"
-                        label={`Jaa ${details.voting.n_yes}`}
+                        label={`${t("common.yes")} ${details.voting.n_yes}`}
                         sx={{
                           height: 20,
                           color: colors.success,
@@ -1266,7 +1284,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                       />
                       <Chip
                         size="small"
-                        label={`Ei ${details.voting.n_no}`}
+                        label={`${t("common.no")} ${details.voting.n_no}`}
                         sx={{
                           height: 20,
                           color: colors.error,
@@ -1276,23 +1294,23 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                       />
                       <Chip
                         size="small"
-                        label={`Tyhjää ${details.voting.n_abstain}`}
+                        label={`${t("common.empty")} ${details.voting.n_abstain}`}
                         sx={{ height: 20 }}
                       />
                       <Chip
                         size="small"
-                        label={`Poissa ${details.voting.n_absent}`}
+                        label={`${t("common.absent")} ${details.voting.n_absent}`}
                         sx={{ height: 20 }}
                       />
                     </Box>
                     <Typography
                       sx={{ fontSize: "0.72rem", color: colors.textSecondary }}
                     >
-                      Äänestyksen kohde:{" "}
+                      {t("common.votingTarget")}:{" "}
                       {details.voting.context_title ||
                         details.voting.section_title ||
                         details.voting.title ||
-                        "(ei otsikkoa)"}
+                        t("documents.noTitle")}
                     </Typography>
                     {details.voting.parliamentary_item && (
                       <Chip
@@ -1341,7 +1359,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                             color: colors.textSecondary,
                           }}
                         >
-                          Samaan käsittelykohtaan liittyvät äänestykset:
+                          {t("documents.relatedVotingsSameSection")}
                         </Typography>
                         <Box
                           sx={{
@@ -1367,7 +1385,10 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                                 color: colors.textSecondary,
                               }}
                             >
-                              +{details.relatedVotings.length - 6} muuta
+                              {String(t("documents.moreOther" as any)).replace(
+                                "{{count}}",
+                                String(details.relatedVotings.length - 6),
+                              )}
                             </Typography>
                           )}
                         </Box>
