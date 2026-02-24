@@ -30,6 +30,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import React from "react";
+import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { refs } from "#client/references";
 import theme, { colors } from "#client/theme";
@@ -68,6 +69,7 @@ type SectionSpeechType = Pick<
   | "id"
   | "section_key"
   | "session_key"
+  | "person_id"
   | "first_name"
   | "last_name"
   | "party_abbreviation"
@@ -90,6 +92,17 @@ type SectionConversationType = {
   speeches: SectionSpeechType[];
   total: number;
   truncated: boolean;
+};
+
+type SectionDetailsType = {
+  key: string;
+  identifier: string | null;
+  title: string | null;
+  processing_title: string | null;
+  note: string | null;
+  resolution: string | null;
+  minutes_item_title: string | null;
+  minutes_content_text: string | null;
 };
 
 type CommitteeType = {
@@ -223,40 +236,73 @@ const fetchPersonSpeeches = async (
 
 const SECTION_SPEECH_PAGE_SIZE = 100;
 const SECTION_SPEECH_MAX_PAGES = 30;
+const SECTION_SPEECH_TARGET_SEEK_MAX_PAGES = 500;
+const SECTION_SPEECH_REQUEST_TIMEOUT_MS = 15_000;
+const SECTION_SPEECH_TOTAL_FETCH_TIMEOUT_MS = 12_000;
 
 const fetchSectionSpeechesPage = async (
   sectionKey: string,
   limit = SECTION_SPEECH_PAGE_SIZE,
   offset = 0,
 ) => {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(
+    () => controller.abort(),
+    SECTION_SPEECH_REQUEST_TIMEOUT_MS,
+  );
   const res = await fetch(
     `/api/sections/${encodeURIComponent(sectionKey)}/speeches?limit=${limit}&offset=${offset}`,
-  );
+    { signal: controller.signal },
+  ).finally(() => {
+    window.clearTimeout(timeoutId);
+  });
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
   }
   return res.json() as Promise<SectionSpeechData>;
 };
 
+const fetchSectionDetails = async (sectionKey: string) => {
+  const res = await fetch(`/api/sections/${encodeURIComponent(sectionKey)}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+  return res.json() as Promise<SectionDetailsType>;
+};
+
 const fetchSectionConversation = async (
   sectionKey: string,
+  targetSpeechId?: number,
 ): Promise<SectionConversationType> => {
+  const startedAt = Date.now();
   let page = 1;
   let totalPages = 1;
   let offset = 0;
   let total = 0;
   const speeches: SectionSpeechType[] = [];
+  let targetSpeechIncluded = targetSpeechId === undefined;
 
-  while (page <= totalPages && page <= SECTION_SPEECH_MAX_PAGES) {
+  while (
+    page <= totalPages &&
+    page <= SECTION_SPEECH_TARGET_SEEK_MAX_PAGES &&
+    Date.now() - startedAt < SECTION_SPEECH_TOTAL_FETCH_TIMEOUT_MS
+  ) {
     const data = await fetchSectionSpeechesPage(
       sectionKey,
       SECTION_SPEECH_PAGE_SIZE,
       offset,
     );
     speeches.push(...data.speeches);
+    if (targetSpeechId !== undefined) {
+      targetSpeechIncluded =
+        targetSpeechIncluded ||
+        data.speeches.some((speech) => speech.id === targetSpeechId);
+    }
     total = data.total;
     totalPages = data.totalPages || 1;
     if (data.speeches.length === 0) break;
+    if (page >= SECTION_SPEECH_MAX_PAGES && targetSpeechIncluded) break;
+    if (page >= SECTION_SPEECH_MAX_PAGES && targetSpeechId === undefined) break;
     page += 1;
     offset += SECTION_SPEECH_PAGE_SIZE;
   }
@@ -472,6 +518,7 @@ const OverviewTab: React.FC<{
             {details.districts.map((district) => (
               <ListItem key={district.id} sx={{ px: 0, py: 0.5 }}>
                 <ListItemText
+                  disableTypography
                   primary={
                     <Typography
                       variant="body2"
@@ -522,6 +569,7 @@ const OverviewTab: React.FC<{
               return (
                 <ListItem key={i} sx={{ px: 0, py: 0.5 }}>
                   <ListItemText
+                    disableTypography
                     primary={
                       <Typography
                         variant="body2"
@@ -581,6 +629,7 @@ const OverviewTab: React.FC<{
               {details.governmentMemberships.map((membership, i) => (
                 <ListItem key={i} sx={{ px: 0, py: 0.5 }}>
                   <ListItemText
+                    disableTypography
                     primary={
                       <Box>
                         <Typography
@@ -1186,6 +1235,11 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
   const [sectionConversations, setSectionConversations] = React.useState<
     Record<string, SectionConversationType>
   >({});
+  const [sectionDetailsByKey, setSectionDetailsByKey] = React.useState<
+    Record<string, SectionDetailsType>
+  >({});
+  const [failedSectionDetailsKeys, setFailedSectionDetailsKeys] =
+    React.useState<Record<string, true>>({});
   const [failedContextSections, setFailedContextSections] = React.useState<
     Record<string, true>
   >({});
@@ -1194,7 +1248,14 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
   const [loadingContextSection, setLoadingContextSection] = React.useState<
     string | null
   >(null);
+  const [loadingSectionDetailsKey, setLoadingSectionDetailsKey] =
+    React.useState<string | null>(null);
+  const contextLoadRequestRef = React.useRef(0);
+  const sectionDetailsRequestRef = React.useRef(0);
   const selectedSpeechRef = React.useRef<HTMLDivElement | null>(null);
+  const [activeSpeechId, setActiveSpeechId] = React.useState<number | null>(
+    null,
+  );
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -1202,10 +1263,14 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
     setLoading(true);
     setLoadError(null);
     setSelectedSpeech(null);
+    setActiveSpeechId(null);
     setSectionConversations({});
+    setSectionDetailsByKey({});
+    setFailedSectionDetailsKeys({});
     setFailedContextSections({});
     setContextError(null);
     setLoadingContextSection(null);
+    setLoadingSectionDetailsKey(null);
     fetchPersonSpeeches(personId, 50)
       .then((data) => {
         if (ignore) return;
@@ -1228,31 +1293,87 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
   const selectedConversation = selectedSectionKey
     ? sectionConversations[selectedSectionKey]
     : null;
-  const selectedSpeechPosition = selectedConversation
+  const selectedSectionDetails = selectedSectionKey
+    ? sectionDetailsByKey[selectedSectionKey]
+    : null;
+  const selectedSpeechIndex = selectedConversation
     ? selectedConversation.speeches.findIndex(
-        (item) => item.id === selectedSpeech?.id,
-      ) + 1
-    : 0;
+        (item) => item.id === activeSpeechId,
+      )
+    : -1;
+  const selectedSpeechPosition =
+    selectedSpeechIndex >= 0 ? selectedSpeechIndex + 1 : 0;
+  const activeConversationSpeech =
+    selectedSpeechIndex >= 0 && selectedConversation
+      ? selectedConversation.speeches[selectedSpeechIndex]
+      : null;
+  const activeSpeechStartTime =
+    activeConversationSpeech?.start_time || selectedSpeech?.start_time || null;
+  const activeSpeechEndTime =
+    activeConversationSpeech?.end_time || selectedSpeech?.end_time || null;
+  const activeSpeechType =
+    activeConversationSpeech?.speech_type ||
+    selectedSpeech?.speech_type ||
+    null;
+  const activeSpeechParty =
+    activeConversationSpeech?.party_abbreviation ||
+    selectedSpeech?.party ||
+    null;
+  const sectionContextTitle =
+    selectedSectionDetails?.minutes_item_title ||
+    selectedSectionDetails?.title ||
+    selectedSpeech?.section_title ||
+    null;
+  const sectionContextContent =
+    selectedSectionDetails?.minutes_content_text ||
+    selectedSectionDetails?.resolution ||
+    selectedSectionDetails?.note ||
+    null;
 
   React.useEffect(() => {
     if (!selectedSectionKey) return;
-    if (sectionConversations[selectedSectionKey]) return;
+    const selectedSpeechId = selectedSpeech?.id;
+    const existingConversation = sectionConversations[selectedSectionKey];
+    const existingContainsSelectedSpeech =
+      selectedSpeechId !== undefined
+        ? existingConversation?.speeches.some(
+            (speech) => speech.id === selectedSpeechId,
+          ) || false
+        : true;
+    if (
+      existingConversation &&
+      (!existingConversation.truncated || existingContainsSelectedSpeech)
+    )
+      return;
     if (failedContextSections[selectedSectionKey]) return;
     if (loadingContextSection === selectedSectionKey) return;
 
-    let ignore = false;
+    const requestId = contextLoadRequestRef.current + 1;
+    contextLoadRequestRef.current = requestId;
     setContextError(null);
     setLoadingContextSection(selectedSectionKey);
-    fetchSectionConversation(selectedSectionKey)
+    fetchSectionConversation(selectedSectionKey, selectedSpeechId)
       .then((data) => {
-        if (ignore) return;
+        if (contextLoadRequestRef.current !== requestId) return;
         setSectionConversations((prev) => ({
           ...prev,
           [selectedSectionKey]: data,
         }));
+        if (
+          selectedSpeechId !== undefined &&
+          !data.speeches.some((speech) => speech.id === selectedSpeechId)
+        ) {
+          setFailedContextSections((prev) => ({
+            ...prev,
+            [selectedSectionKey]: true,
+          }));
+          setContextError(
+            "Valittua puheenvuoroa ei loytynyt keskusteluketjusta. Avaa koko asiakohta jatkaaksesi.",
+          );
+        }
       })
       .catch(() => {
-        if (ignore) return;
+        if (contextLoadRequestRef.current !== requestId) return;
         setFailedContextSections((prev) => ({
           ...prev,
           [selectedSectionKey]: true,
@@ -1260,29 +1381,64 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
         setContextError("Keskustelukontekstin lataus epaonnistui.");
       })
       .finally(() => {
-        if (ignore) return;
+        if (contextLoadRequestRef.current !== requestId) return;
         setLoadingContextSection((current) =>
           current === selectedSectionKey ? null : current,
         );
       });
-
-    return () => {
-      ignore = true;
-    };
   }, [
     selectedSectionKey,
+    selectedSpeech?.id,
     sectionConversations,
     failedContextSections,
     loadingContextSection,
   ]);
 
   React.useEffect(() => {
+    if (!selectedSectionKey) return;
+    if (selectedSectionDetails) return;
+    if (failedSectionDetailsKeys[selectedSectionKey]) return;
+    if (loadingSectionDetailsKey === selectedSectionKey) return;
+
+    const requestId = sectionDetailsRequestRef.current + 1;
+    sectionDetailsRequestRef.current = requestId;
+    setLoadingSectionDetailsKey(selectedSectionKey);
+    fetchSectionDetails(selectedSectionKey)
+      .then((data) => {
+        if (sectionDetailsRequestRef.current !== requestId) return;
+        setSectionDetailsByKey((prev) => ({
+          ...prev,
+          [selectedSectionKey]: data,
+        }));
+      })
+      .catch(() => {
+        if (sectionDetailsRequestRef.current !== requestId) return;
+        setFailedSectionDetailsKeys((prev) => ({
+          ...prev,
+          [selectedSectionKey]: true,
+        }));
+      })
+      .finally(() => {
+        if (sectionDetailsRequestRef.current !== requestId) return;
+        setLoadingSectionDetailsKey((current) =>
+          current === selectedSectionKey ? null : current,
+        );
+      });
+  }, [
+    selectedSectionKey,
+    selectedSectionDetails,
+    failedSectionDetailsKeys,
+    loadingSectionDetailsKey,
+  ]);
+
+  React.useEffect(() => {
     if (!selectedSpeechRef.current) return;
     selectedSpeechRef.current.scrollIntoView({ block: "center" });
-  }, [selectedSpeech?.id, selectedConversation?.speeches.length]);
+  }, [activeSpeechId, selectedConversation?.speeches.length]);
 
   const openSpeechConversation = (speech: SpeechType) => {
     setSelectedSpeech(speech);
+    setActiveSpeechId(speech.id);
     if (!speech.section_key) {
       setContextError(
         "Talta puheenvuorolta puuttuu asiakohdan tunniste, joten kontekstia ei voi avata.",
@@ -1294,6 +1450,14 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
 
   const closeSpeechConversation = () => {
     setSelectedSpeech(null);
+    setActiveSpeechId(null);
+    setContextError(null);
+    setLoadingContextSection(null);
+    setLoadingSectionDetailsKey(null);
+  };
+
+  const selectSpeechInConversation = (speechId: number) => {
+    setActiveSpeechId(speechId);
     setContextError(null);
   };
 
@@ -1545,7 +1709,14 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
           },
         }}
       >
-        <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+            minHeight: 0,
+          }}
+        >
           <Box
             sx={{
               p: { xs: 2, sm: 2.5 },
@@ -1573,7 +1744,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   sx={{ color: themedColors.textSecondary }}
                 >
                   {selectedSpeech
-                    ? formatSpeechDate(selectedSpeech.start_time)
+                    ? formatSpeechDate(activeSpeechStartTime)
                     : "-"}
                 </Typography>
               </Box>
@@ -1603,10 +1774,10 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     alignItems: "center",
                   }}
                 >
-                  {selectedSpeech.party && (
+                  {activeSpeechParty && (
                     <Chip
                       size="small"
-                      label={selectedSpeech.party.toUpperCase()}
+                      label={activeSpeechParty?.toUpperCase()}
                       sx={{
                         height: 20,
                         fontSize: "0.65rem",
@@ -1616,18 +1787,18 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   <Chip
                     size="small"
                     label={formatSpeechTime(
-                      selectedSpeech.start_time,
-                      selectedSpeech.end_time,
+                      activeSpeechStartTime,
+                      activeSpeechEndTime,
                     )}
                     sx={{
                       height: 20,
                       fontSize: "0.65rem",
                     }}
                   />
-                  {selectedSpeech.speech_type && (
+                  {activeSpeechType && (
                     <Chip
                       size="small"
-                      label={selectedSpeech.speech_type}
+                      label={activeSpeechType}
                       sx={{
                         height: 20,
                         fontSize: "0.65rem",
@@ -1635,6 +1806,52 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     />
                   )}
                 </Box>
+                {selectedSectionKey &&
+                  loadingSectionDetailsKey === selectedSectionKey &&
+                  !selectedSectionDetails && (
+                    <Typography
+                      variant="caption"
+                      sx={{ color: themedColors.textTertiary, mt: 1, display: "block" }}
+                    >
+                      Ladataan asiakohdan sisaltoa...
+                    </Typography>
+                  )}
+                {sectionContextContent && (
+                  <Box
+                    sx={{
+                      mt: 1.25,
+                      p: 1.25,
+                      borderRadius: 1.5,
+                      border: `1px solid ${themedColors.dataBorder}`,
+                      bgcolor: themedColors.backgroundPaper,
+                      maxHeight: { xs: "22vh", sm: "18vh" },
+                      overflowY: "auto",
+                    }}
+                  >
+                    {sectionContextTitle && (
+                      <Typography
+                        variant="caption"
+                        fontWeight={700}
+                        sx={{ color: themedColors.textSecondary, display: "block", mb: 0.5 }}
+                      >
+                        {sectionContextTitle}
+                      </Typography>
+                    )}
+                    <RichTextRenderer
+                      document={sectionContextContent}
+                      fallbackText={sectionContextContent}
+                      paragraphVariant="body2"
+                      compact
+                      sx={{
+                        whiteSpace: "pre-line",
+                        "& .MuiTypography-root": {
+                          color: themedColors.textPrimary,
+                          lineHeight: 1.45,
+                        },
+                      }}
+                    />
+                  </Box>
+                )}
                 {selectedSpeech.section_key && (
                   <Button
                     href={refs.section(
@@ -1661,41 +1878,25 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
 
           <Box
             sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: "auto",
               p: { xs: 2, sm: 2.5 },
-              borderBottom: `1px solid ${themedColors.dataBorder}`,
             }}
           >
             <Typography
               variant="subtitle2"
               fontWeight={700}
-              sx={{ color: themedColors.textPrimary, mb: 0.75 }}
+              sx={{ color: themedColors.textPrimary, mb: 1 }}
             >
-              Valittu puheenvuoro
+              Keskustelun puheenvuorot
             </Typography>
-            <Typography
-              variant="body2"
-              sx={{
-                color: themedColors.textPrimary,
-                whiteSpace: "pre-line",
-                lineHeight: 1.55,
-              }}
-            >
-              {selectedSpeech?.content || "Ei puhesisaltoa saatavilla."}
-            </Typography>
-          </Box>
-
-          <Box
-            sx={{
-              flex: 1,
-              overflowY: "auto",
-              p: { xs: 2, sm: 2.5 },
-            }}
-          >
-            {loadingContextSection === selectedSectionKey && (
+            {selectedSectionKey &&
+              loadingContextSection === selectedSectionKey && (
               <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
                 <CircularProgress size={26} />
               </Box>
-            )}
+              )}
 
             {contextError && (
               <Box sx={{ py: 2 }}>
@@ -1748,23 +1949,43 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                 )}
                 <Box sx={{ mt: 1.5 }}>
                   {selectedConversation.speeches.map((speech) => {
-                    const isSelected = speech.id === selectedSpeech?.id;
+                    const isSelected = speech.id === activeSpeechId;
+                    const isSelectedPersonSpeech = speech.person_id === personId;
                     return (
                       <Box
                         key={speech.id}
                         ref={isSelected ? selectedSpeechRef : null}
+                        onClick={() => selectSpeechInConversation(speech.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            selectSpeechInConversation(speech.id);
+                          }
+                        }}
                         sx={{
                           p: 1.25,
                           borderRadius: 1.5,
                           mb: 1.25,
+                          cursor: "pointer",
                           border: `1px solid ${
                             isSelected
                               ? colors.primaryLight
+                              : isSelectedPersonSpeech
+                                ? colors.success
                               : themedColors.dataBorder
                           }`,
                           bgcolor: isSelected
                             ? `${colors.primaryLight}10`
+                            : isSelectedPersonSpeech
+                              ? `${colors.success}12`
                             : themedColors.backgroundPaper,
+                          "&:hover": {
+                            borderColor: isSelectedPersonSpeech
+                              ? colors.success
+                              : colors.primaryLight,
+                          },
                         }}
                       >
                         <Box
@@ -1882,6 +2103,7 @@ const PositionsTab: React.FC<{
             {committees.map((c) => (
               <ListItem key={c.id} sx={{ px: 0, py: 0.5 }}>
                 <ListItemText
+                  disableTypography
                   primary={
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Typography
@@ -1935,6 +2157,7 @@ const PositionsTab: React.FC<{
             {governmentMemberships.map((gm, i) => (
               <ListItem key={i} sx={{ px: 0, py: 0.5 }}>
                 <ListItemText
+                  disableTypography
                   primary={
                     <Box>
                       <Typography
@@ -1981,6 +2204,7 @@ const PositionsTab: React.FC<{
             {trustPositions.map((tp, i) => (
               <ListItem key={i} sx={{ px: 0, py: 0.5 }}>
                 <ListItemText
+                  disableTypography
                   primary={
                     <Typography
                       variant="body2"

@@ -14,6 +14,7 @@ import {
 } from "./services/person";
 import {
   fetchCompletedSessionDates,
+  fetchSectionByKey,
   fetchSectionDocumentLinks,
   fetchSectionRollCall,
   fetchSectionSpeeches,
@@ -292,6 +293,10 @@ export class DatabaseConnection {
     offset?: number;
   }) {
     return fetchSectionSpeeches(this.db, params);
+  }
+
+  public async fetchSectionByKey(params: { sectionKey: string }) {
+    return fetchSectionByKey(this.db, params);
   }
 
   public async fetchSectionVotings(params: { sectionKey: string }) {

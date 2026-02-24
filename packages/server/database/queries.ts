@@ -90,6 +90,7 @@ export { default as representativeDistricts } from "./queries/REPRESENTATIVE_DIS
 export { default as representativesPaginated } from "./queries/REPRESENTATIVES_PAGINATED.sql";
 export { default as rollCallEntries } from "./queries/ROLL_CALL_ENTRIES.sql";
 export { default as sectionDocumentLinks } from "./queries/SECTION_DOCUMENT_LINKS.sql";
+export { default as sectionByKey } from "./queries/SECTION_BY_KEY.sql";
 export { default as sectionRollCallReport } from "./queries/SECTION_ROLL_CALL_REPORT.sql";
 export { default as sectionSpeechCount } from "./queries/SECTION_SPEECH_COUNT.sql";
 export { default as sectionSpeeches } from "./queries/SECTION_SPEECHES.sql";

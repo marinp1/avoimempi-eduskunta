@@ -232,6 +232,28 @@ export const fetchSectionDocumentLinks = (
   return data;
 };
 
+export const fetchSectionByKey = (
+  db: Database,
+  params: { sectionKey: string },
+) => {
+  const stmt = db.prepare<
+    {
+      key: string;
+      identifier: string | null;
+      title: string | null;
+      processing_title: string | null;
+      note: string | null;
+      resolution: string | null;
+      minutes_item_title: string | null;
+      minutes_content_text: string | null;
+    },
+    { $sectionKey: string }
+  >(queries.sectionByKey);
+  const data = stmt.get({ $sectionKey: params.sectionKey });
+  stmt.finalize();
+  return data || null;
+};
+
 export const fetchSpeechesByDate = (db: Database, params: { date: string }) => {
   const stmt = db.prepare<
     {
