@@ -175,10 +175,18 @@ export default function CoalitionOpposition({
   const agreementRate =
     data.length > 0 ? ((agreementCount / data.length) * 100).toFixed(1) : "0";
 
-  const coalitionYesLabel = t("insights.coalitionOpposition.coalitionYes");
-  const coalitionNoLabel = t("insights.coalitionOpposition.coalitionNo");
-  const oppositionYesLabel = t("insights.coalitionOpposition.oppositionYes");
-  const oppositionNoLabel = t("insights.coalitionOpposition.oppositionNo");
+  const coalitionYesLabel = t("insights.coalitionOpposition.coalition", {
+    context: "yes",
+  });
+  const coalitionNoLabel = t("insights.coalitionOpposition.coalition", {
+    context: "no",
+  });
+  const oppositionYesLabel = t("insights.coalitionOpposition.opposition", {
+    context: "yes",
+  });
+  const oppositionNoLabel = t("insights.coalitionOpposition.opposition", {
+    context: "no",
+  });
 
   const chartData = data.slice(0, 20).map((d, i) => ({
     name: `#${i + 1}`,
@@ -412,8 +420,8 @@ export default function CoalitionOpposition({
                       onClick={() => toggleVotingDetails(vote.voting_id)}
                     >
                       {isExpanded
-                        ? t("common.hideDetails")
-                        : t("common.showDetails")}
+                        ? t("common.detailsToggle", { context: "hide" })
+                        : t("common.detailsToggle", { context: "show" })}
                     </Button>
                   </Box>
                   <Collapse in={isExpanded} timeout="auto" unmountOnExit>

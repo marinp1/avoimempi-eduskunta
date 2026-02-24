@@ -301,7 +301,9 @@ const VotingRow: React.FC<{
               />
             }
           >
-            {isExpanded ? t("common.hideDetails") : t("common.showDetails")}
+            {isExpanded
+              ? t("common.detailsToggle", { context: "hide" })
+              : t("common.detailsToggle", { context: "show" })}
           </Button>
         )}
         <Link

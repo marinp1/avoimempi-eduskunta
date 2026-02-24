@@ -1189,7 +1189,9 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                   />
                 }
               >
-                {isExpanded ? t("common.hideDetails") : t("common.showDetails")}
+                {isExpanded
+                  ? t("common.detailsToggle", { context: "hide" })
+                  : t("common.detailsToggle", { context: "show" })}
               </Button>
               <Button
                 size="small"
@@ -1385,10 +1387,9 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                                 color: colors.textSecondary,
                               }}
                             >
-                              {String(t("documents.moreOther" as any)).replace(
-                                "{{count}}",
-                                String(details.relatedVotings.length - 6),
-                              )}
+                              {t("documents.moreOther", {
+                                count: details.relatedVotings.length - 6,
+                              })}
                             </Typography>
                           )}
                         </Box>

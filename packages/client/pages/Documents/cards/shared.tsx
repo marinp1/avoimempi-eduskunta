@@ -212,8 +212,8 @@ export function InlineRelatedSessions({
                   }}
                 >
                   {isExpanded
-                    ? t("common.hideDetails")
-                    : t("common.showDetails")}
+                    ? t("common.detailsToggle", { context: "hide" })
+                    : t("common.detailsToggle", { context: "show" })}
                 </Button>
                 <Button
                   size="small"
@@ -265,16 +265,11 @@ export function InlineRelatedSessions({
                         variant="caption"
                         sx={{ color: colors.textSecondary }}
                       >
-                        {String(t("documents.inlineCounts" as any))
-                          .replace(
-                            "{{votings}}",
-                            String(details.votings.length),
-                          )
-                          .replace("{{links}}", String(details.links.length))
-                          .replace(
-                            "{{subsections}}",
-                            String(details.subsections.length),
-                          )}
+                        {t("documents.inlineCounts", {
+                          votings: details.votings.length,
+                          links: details.links.length,
+                          subsections: details.subsections.length,
+                        })}
                       </Typography>
                       {details.votings.length > 0 && (
                         <Box
@@ -294,12 +289,9 @@ export function InlineRelatedSessions({
                               variant="caption"
                               sx={{ color: colors.textSecondary }}
                             >
-                              {String(
-                                t("documents.moreVotings" as any),
-                              ).replace(
-                                "{{count}}",
-                                String(details.votings.length - 6),
-                              )}
+                              {t("documents.moreVotings", {
+                                count: details.votings.length - 6,
+                              })}
                             </Typography>
                           )}
                         </Box>
@@ -364,10 +356,9 @@ export function InlineRelatedSessions({
                               variant="caption"
                               sx={{ color: colors.textSecondary }}
                             >
-                              {String(t("documents.moreLinks" as any)).replace(
-                                "{{count}}",
-                                String(details.links.length - 4),
-                              )}
+                              {t("documents.moreLinks", {
+                                count: details.links.length - 4,
+                              })}
                             </Typography>
                           )}
                         </Box>

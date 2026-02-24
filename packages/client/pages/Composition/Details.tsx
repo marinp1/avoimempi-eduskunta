@@ -917,7 +917,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                       }}
                       onClick={() => openVotingDetails(v)}
                     >
-                      {t("common.showDetails")}
+                      {t("common.detailsToggle", { context: "show" })}
                     </Button>
                     <Button
                       size="small"

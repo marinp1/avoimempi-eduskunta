@@ -344,12 +344,21 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
       </Typography>
     );
 
+  const coalitionYesLabel = t("parties.detail.coalition", { context: "yes" });
+  const coalitionNoLabel = t("parties.detail.coalition", { context: "no" });
+  const oppositionYesLabel = t("parties.detail.opposition", {
+    context: "yes",
+  });
+  const oppositionNoLabel = t("parties.detail.opposition", {
+    context: "no",
+  });
+
   const chartData = data.slice(0, 20).map((d) => ({
     title: (d.title || d.section_title || "").slice(0, 30),
-    [t("parties.detail.coalitionYes")]: d.coalition_yes,
-    [t("parties.detail.coalitionNo")]: d.coalition_no,
-    [t("parties.detail.oppositionYes")]: d.opposition_yes,
-    [t("parties.detail.oppositionNo")]: d.opposition_no,
+    [coalitionYesLabel]: d.coalition_yes,
+    [coalitionNoLabel]: d.coalition_no,
+    [oppositionYesLabel]: d.opposition_yes,
+    [oppositionNoLabel]: d.opposition_no,
   }));
 
   return (
@@ -375,22 +384,22 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
           <YAxis tick={{ fill: themedColors.textSecondary }} />
           <Tooltip />
           <Bar
-            dataKey={t("parties.detail.coalitionYes")}
+            dataKey={coalitionYesLabel}
             stackId="coalition"
             fill={colors.success}
           />
           <Bar
-            dataKey={t("parties.detail.coalitionNo")}
+            dataKey={coalitionNoLabel}
             stackId="coalition"
             fill={colors.errorLight}
           />
           <Bar
-            dataKey={t("parties.detail.oppositionYes")}
+            dataKey={oppositionYesLabel}
             stackId="opposition"
             fill={colors.coalitionColor}
           />
           <Bar
-            dataKey={t("parties.detail.oppositionNo")}
+            dataKey={oppositionNoLabel}
             stackId="opposition"
             fill={colors.warning}
           />
@@ -451,8 +460,8 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
                   onClick={() => toggleVotingDetails(vote.voting_id)}
                 >
                   {isExpanded
-                    ? t("common.hideDetails")
-                    : t("common.showDetails")}
+                    ? t("common.detailsToggle", { context: "hide" })
+                    : t("common.detailsToggle", { context: "show" })}
                 </Button>
                 <Button
                   size="small"

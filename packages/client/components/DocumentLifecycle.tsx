@@ -191,10 +191,9 @@ export const DocumentLifecycle: React.FC<DocumentLifecycleProps> = ({
         >
           {showAll
             ? t("documents.lifecycleShowLess")
-            : String(t("documents.lifecycleShowMore" as any)).replace(
-                "{{count}}",
-                String(hiddenReferenceCount),
-              )}
+            : t("documents.lifecycleShowMore", {
+                count: hiddenReferenceCount,
+              })}
         </Button>
       )}
     </Box>

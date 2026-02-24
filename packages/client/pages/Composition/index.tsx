@@ -902,9 +902,9 @@ export default () => {
                         {m.first_name} {m.last_name}
                       </TableCell>
                       <TableCell sx={{ py: 2.5 }}>
-                        {(m as any).party_name ? (
+                        {m.party_name ? (
                           <Chip
-                            label={(m as any).party_name}
+                            label={m.party_name}
                             size="small"
                             sx={{
                               background: themedColors.primary,
@@ -925,7 +925,7 @@ export default () => {
                         )}
                       </TableCell>
                       <TableCell align="center" sx={{ py: 2.5 }}>
-                        {(m as any).is_in_government === 1 ? (
+                        {m.is_in_government === 1 ? (
                           <CheckCircleIcon
                             sx={{
                               color: themedColors.success,

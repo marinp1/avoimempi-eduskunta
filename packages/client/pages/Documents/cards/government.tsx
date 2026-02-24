@@ -511,8 +511,8 @@ export function GovernmentProposalCard({
                     }}
                   >
                     {showSummary
-                      ? t("documents.hideSummary")
-                      : t("documents.showSummary")}
+                      ? t("documents.summaryToggle", { context: "hide" })
+                      : t("documents.summaryToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showSummary}>
                     <Box
@@ -546,8 +546,8 @@ export function GovernmentProposalCard({
                     }}
                   >
                     {showProposalText
-                      ? t("documents.hideProposalText")
-                      : t("documents.showProposalText")}
+                      ? t("documents.proposalTextToggle", { context: "hide" })
+                      : t("documents.proposalTextToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showProposalText}>
                     <Box

@@ -305,8 +305,8 @@ export function LegislativeInitiativeCard({
                     sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
                   >
                     {showJustification
-                      ? t("documents.hideJustification")
-                      : t("documents.showJustification")}
+                      ? t("documents.justificationToggle", { context: "hide" })
+                      : t("documents.justificationToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showJustification}>
                     <Box
@@ -335,8 +335,8 @@ export function LegislativeInitiativeCard({
                     sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
                   >
                     {showProposalText
-                      ? t("documents.hideClauses")
-                      : t("documents.showClauses")}
+                      ? t("documents.clausesToggle", { context: "hide" })
+                      : t("documents.clausesToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showProposalText}>
                     <Box
@@ -365,8 +365,8 @@ export function LegislativeInitiativeCard({
                     sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
                   >
                     {showLawText
-                      ? t("documents.hideLawText")
-                      : t("documents.showLawText")}
+                      ? t("documents.lawTextToggle", { context: "hide" })
+                      : t("documents.lawTextToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showLawText}>
                     <Box

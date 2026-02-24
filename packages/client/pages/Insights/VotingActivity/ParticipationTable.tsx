@@ -187,11 +187,10 @@ export function ParticipationTable({
                   </TableCell>
                   <TableCell align="right">
                     <Tooltip
-                      title={String(
-                        t("insights.votingActivity.voteRatioTooltip" as any),
-                      )
-                        .replace("{{cast}}", String(row.votes_cast))
-                        .replace("{{total}}", String(row.total_votings))}
+                      title={t("insights.votingActivity.voteRatioTooltip", {
+                        cast: row.votes_cast,
+                        total: row.total_votings,
+                      })}
                     >
                       <Box
                         sx={{ display: "inline-flex", alignItems: "center" }}
@@ -228,12 +227,7 @@ export function ParticipationTable({
         labelRowsPerPage={t("common.rowsPerPage")}
         labelDisplayedRows={({ from, to, count }) =>
           `${from}-${to} / ${
-            count !== -1
-              ? count
-              : String(t("common.moreThan" as any)).replace(
-                  "{{value}}",
-                  String(to),
-                )
+            count !== -1 ? count : t("common.moreThan", { value: to })
           }`
         }
       />

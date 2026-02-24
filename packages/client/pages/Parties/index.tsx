@@ -328,9 +328,10 @@ const Parties = () => {
             variant="body2"
             sx={{ ml: "auto", color: themedColors.textSecondary }}
           >
-            {String(t("parties.showingResults" as any))
-              .replace("{{shown}}", String(visibleParties.length))
-              .replace("{{total}}", String(parties.length))}
+            {t("parties.showingResults", {
+              shown: visibleParties.length,
+              total: parties.length,
+            })}
           </Typography>
         </Box>
       </DataCard>

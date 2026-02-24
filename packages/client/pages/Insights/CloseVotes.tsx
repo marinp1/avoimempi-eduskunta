@@ -279,8 +279,8 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
                         onClick={() => toggleVotingDetails(vote.id)}
                       >
                         {isExpanded
-                          ? t("common.hideDetails")
-                          : t("common.showDetails")}
+                          ? t("common.detailsToggle", { context: "hide" })
+                          : t("common.detailsToggle", { context: "show" })}
                       </Button>
                       <Button
                         size="small"

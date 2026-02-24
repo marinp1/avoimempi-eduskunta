@@ -697,9 +697,9 @@ export default function Status() {
                     <Typography variant="h6">{category}</Typography>
                     {failedCount > 0 && (
                       <Chip
-                        label={String(
-                          t("status.sanity.failedCount" as any),
-                        ).replace("{{count}}", String(failedCount))}
+                        label={t("status.sanity.failedCount", {
+                          count: failedCount,
+                        })}
                         size="small"
                         color="error"
                       />
