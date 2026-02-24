@@ -292,6 +292,18 @@ const server = Bun.serve<{
       },
     },
 
+    "/api/sections/:sectionKey": {
+      GET: async (req: BunRequest<"/api/sections/:sectionKey">) => {
+        const section = await db.fetchSectionByKey({
+          sectionKey: req.params.sectionKey,
+        });
+        if (!section) {
+          return Response.json({ message: "Section not found" }, { status: 404 });
+        }
+        return Response.json(section);
+      },
+    },
+
     "/api/sections/:sectionKey/speeches": {
       GET: async (req: BunRequest<"/api/sections/:sectionKey/speeches">) => {
         const { searchParams } = new URL(req.url);

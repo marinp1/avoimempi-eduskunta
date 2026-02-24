@@ -186,7 +186,7 @@ export const PageDataSourcesDrawer = ({
         );
 
         if (!response.ok) {
-          throw new Error("Tietolahteiden haku epaonnistui");
+          throw new Error("Tietolahteiden haku epäonnistui");
         }
 
         const data = (await response.json()) as { tables: TableSummary[] };
@@ -203,7 +203,7 @@ export const PageDataSourcesDrawer = ({
         setError(
           err instanceof Error
             ? err.message
-            : "Tietolahteiden haku epaonnistui",
+            : "Tietolahteiden haku epäonnistui",
         );
       } finally {
         if (mounted) setLoading(false);
