@@ -50,6 +50,78 @@ const server = Bun.serve<{
         }
       : {}),
     "/api/health": new Response("OK"),
+    "/api/import-source/pages": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const tableName = searchParams.get("tableName")?.trim() || "";
+        if (!tableName) {
+          return Response.json(
+            { message: "Missing required query parameter: tableName" },
+            { status: 400 },
+          );
+        }
+
+        const rawLimit = Number.parseInt(searchParams.get("limit") || "50", 10);
+        const rawOffset = Number.parseInt(
+          searchParams.get("offset") || "0",
+          10,
+        );
+        const limit = Number.isFinite(rawLimit)
+          ? Math.min(Math.max(rawLimit, 1), 500)
+          : 50;
+        const offset =
+          Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
+
+        const data = await db.fetchImportSourcePages({
+          tableName,
+          limit,
+          offset,
+        });
+        return Response.json(data);
+      },
+    },
+    "/api/import-source/page-trail": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const tableName = searchParams.get("tableName")?.trim() || "";
+        if (!tableName) {
+          return Response.json(
+            { message: "Missing required query parameter: tableName" },
+            { status: 400 },
+          );
+        }
+
+        const rawPage = Number.parseInt(searchParams.get("page") || "", 10);
+        if (!Number.isFinite(rawPage) || rawPage < 1) {
+          return Response.json(
+            { message: "Invalid required query parameter: page" },
+            { status: 400 },
+          );
+        }
+
+        const rawLimit = Number.parseInt(
+          searchParams.get("limit") || "200",
+          10,
+        );
+        const rawOffset = Number.parseInt(
+          searchParams.get("offset") || "0",
+          10,
+        );
+        const limit = Number.isFinite(rawLimit)
+          ? Math.min(Math.max(rawLimit, 1), 2000)
+          : 200;
+        const offset =
+          Number.isFinite(rawOffset) && rawOffset >= 0 ? rawOffset : 0;
+
+        const data = await db.fetchImportSourcePageTrail({
+          tableName,
+          page: rawPage,
+          limit,
+          offset,
+        });
+        return Response.json(data);
+      },
+    },
     ...(isDev
       ? {
           "/api/status/overview": {
