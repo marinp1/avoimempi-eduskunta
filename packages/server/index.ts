@@ -583,9 +583,17 @@ const server = Bun.serve<{
         const { searchParams } = new URL(req.url);
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
+        const subject = searchParams.get("subject") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
-        const data = await db.fetchInterpellations({ query, year, page, limit });
+        const data = await db.fetchInterpellations({ query, year, subject, page, limit });
+        return Response.json(data);
+      },
+    },
+
+    "/api/interpellations/subjects": {
+      GET: async () => {
+        const data = await db.fetchInterpellationsSubjects();
         return Response.json(data);
       },
     },
@@ -624,9 +632,17 @@ const server = Bun.serve<{
         const { searchParams } = new URL(req.url);
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
+        const subject = searchParams.get("subject") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
-        const data = await db.fetchGovernmentProposals({ query, year, page, limit });
+        const data = await db.fetchGovernmentProposals({ query, year, subject, page, limit });
+        return Response.json(data);
+      },
+    },
+
+    "/api/government-proposals/subjects": {
+      GET: async () => {
+        const data = await db.fetchGovernmentProposalsSubjects();
         return Response.json(data);
       },
     },
@@ -665,9 +681,17 @@ const server = Bun.serve<{
         const { searchParams } = new URL(req.url);
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
+        const subject = searchParams.get("subject") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
-        const data = await db.fetchWrittenQuestions({ query, year, page, limit });
+        const data = await db.fetchWrittenQuestions({ query, year, subject, page, limit });
+        return Response.json(data);
+      },
+    },
+
+    "/api/written-questions/subjects": {
+      GET: async () => {
+        const data = await db.fetchWrittenQuestionsSubjects();
         return Response.json(data);
       },
     },
@@ -706,9 +730,17 @@ const server = Bun.serve<{
         const { searchParams } = new URL(req.url);
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
+        const subject = searchParams.get("subject") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
-        const data = await db.fetchOralQuestions({ query, year, page, limit });
+        const data = await db.fetchOralQuestions({ query, year, subject, page, limit });
+        return Response.json(data);
+      },
+    },
+
+    "/api/oral-questions/subjects": {
+      GET: async () => {
+        const data = await db.fetchOralQuestionsSubjects();
         return Response.json(data);
       },
     },
@@ -827,16 +859,25 @@ const server = Bun.serve<{
         const { searchParams } = new URL(req.url);
         const query = searchParams.get("q") || undefined;
         const year = searchParams.get("year") || undefined;
+        const subject = searchParams.get("subject") || undefined;
         const initiativeTypeCode = searchParams.get("initiativeTypeCode") || undefined;
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "20", 10);
         const data = await db.fetchLegislativeInitiatives({
           query,
           year,
+          subject,
           initiativeTypeCode,
           page,
           limit,
         });
+        return Response.json(data);
+      },
+    },
+
+    "/api/legislative-initiatives/subjects": {
+      GET: async () => {
+        const data = await db.fetchLegislativeInitiativesSubjects();
         return Response.json(data);
       },
     },

@@ -7,3 +7,7 @@ WHERE
   ))
   AND ($year IS NULL OR li.parliamentary_year = $year)
   AND ($typeCode IS NULL OR li.initiative_type_code = $typeCode)
+  AND ($subject IS NULL OR EXISTS (
+    SELECT 1 FROM LegislativeInitiativeSubject
+    WHERE initiative_id = li.id AND subject_text = $subject
+  ))

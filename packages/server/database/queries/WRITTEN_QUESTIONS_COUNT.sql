@@ -6,3 +6,7 @@ WHERE
     OR q.parliament_identifier LIKE '%' || $query || '%'
   ))
   AND ($year IS NULL OR q.parliamentary_year = $year)
+  AND ($subject IS NULL OR EXISTS (
+    SELECT 1 FROM WrittenQuestionSubject
+    WHERE question_id = q.id AND subject_text = $subject
+  ))

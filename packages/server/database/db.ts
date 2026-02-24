@@ -642,18 +642,20 @@ export class DatabaseConnection {
   public async fetchInterpellations(params: {
     query?: string;
     year?: string;
+    subject?: string;
     page: number;
     limit: number;
   }) {
     const offset = (params.page - 1) * params.limit;
     const $query = params.query?.trim() || null;
     const $year = params.year || null;
+    const $subject = params.subject?.trim() || null;
 
     const countStmt = this.db.prepare<
       { count: number },
-      { $query: string | null; $year: string | null }
+      { $query: string | null; $year: string | null; $subject: string | null }
     >(queries.interpellationsCount);
-    const countResult = countStmt.get({ $query, $year });
+    const countResult = countStmt.get({ $query, $year, $subject });
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
 
@@ -676,11 +678,12 @@ export class DatabaseConnection {
       {
         $query: string | null;
         $year: string | null;
+        $subject: string | null;
         $limit: number;
         $offset: number;
       }
     >(queries.interpellationsList);
-    const rows = stmt.all({ $query, $year, $limit: params.limit, $offset: offset });
+    const rows = stmt.all({ $query, $year, $subject, $limit: params.limit, $offset: offset });
     stmt.finalize();
 
     return {
@@ -835,23 +838,34 @@ export class DatabaseConnection {
     return data;
   }
 
+  public async fetchInterpellationsSubjects() {
+    const stmt = this.db.prepare<{ subject_text: string; count: number }, []>(
+      queries.interpellationsSubjectsList,
+    );
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
   // ─── Government proposal queries ───
 
   public async fetchGovernmentProposals(params: {
     query?: string;
     year?: string;
+    subject?: string;
     page: number;
     limit: number;
   }) {
     const offset = (params.page - 1) * params.limit;
     const $query = params.query?.trim() || null;
     const $year = params.year || null;
+    const $subject = params.subject?.trim() || null;
 
     const countStmt = this.db.prepare<
       { count: number },
-      { $query: string | null; $year: string | null }
+      { $query: string | null; $year: string | null; $subject: string | null }
     >(queries.govProposalsCount);
-    const countResult = countStmt.get({ $query, $year });
+    const countResult = countStmt.get({ $query, $year, $subject });
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
 
@@ -873,11 +887,12 @@ export class DatabaseConnection {
       {
         $query: string | null;
         $year: string | null;
+        $subject: string | null;
         $limit: number;
         $offset: number;
       }
     >(queries.govProposalsList);
-    const rows = stmt.all({ $query, $year, $limit: params.limit, $offset: offset });
+    const rows = stmt.all({ $query, $year, $subject, $limit: params.limit, $offset: offset });
     stmt.finalize();
 
     return {
@@ -1031,23 +1046,34 @@ export class DatabaseConnection {
     return data;
   }
 
+  public async fetchGovernmentProposalsSubjects() {
+    const stmt = this.db.prepare<{ subject_text: string; count: number }, []>(
+      queries.govProposalsSubjectsList,
+    );
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
   // ─── Written question queries ───
 
   public async fetchWrittenQuestions(params: {
     query?: string;
     year?: string;
+    subject?: string;
     page: number;
     limit: number;
   }) {
     const offset = (params.page - 1) * params.limit;
     const $query = params.query?.trim() || null;
     const $year = params.year || null;
+    const $subject = params.subject?.trim() || null;
 
     const countStmt = this.db.prepare<
       { count: number },
-      { $query: string | null; $year: string | null }
+      { $query: string | null; $year: string | null; $subject: string | null }
     >(queries.writtenQuestionsCount);
-    const countResult = countStmt.get({ $query, $year });
+    const countResult = countStmt.get({ $query, $year, $subject });
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
 
@@ -1076,11 +1102,12 @@ export class DatabaseConnection {
       {
         $query: string | null;
         $year: string | null;
+        $subject: string | null;
         $limit: number;
         $offset: number;
       }
     >(queries.writtenQuestionsList);
-    const rows = stmt.all({ $query, $year, $limit: params.limit, $offset: offset });
+    const rows = stmt.all({ $query, $year, $subject, $limit: params.limit, $offset: offset });
     stmt.finalize();
 
     return {
@@ -1227,23 +1254,34 @@ export class DatabaseConnection {
     return data;
   }
 
+  public async fetchWrittenQuestionsSubjects() {
+    const stmt = this.db.prepare<{ subject_text: string; count: number }, []>(
+      queries.writtenQuestionsSubjectsList,
+    );
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
   // ─── Oral question queries ───
 
   public async fetchOralQuestions(params: {
     query?: string;
     year?: string;
+    subject?: string;
     page: number;
     limit: number;
   }) {
     const offset = (params.page - 1) * params.limit;
     const $query = params.query?.trim() || null;
     const $year = params.year || null;
+    const $subject = params.subject?.trim() || null;
 
     const countStmt = this.db.prepare<
       { count: number },
-      { $query: string | null; $year: string | null }
+      { $query: string | null; $year: string | null; $subject: string | null }
     >(queries.oralQuestionsCount);
-    const countResult = countStmt.get({ $query, $year });
+    const countResult = countStmt.get({ $query, $year, $subject });
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
 
@@ -1266,11 +1304,12 @@ export class DatabaseConnection {
       {
         $query: string | null;
         $year: string | null;
+        $subject: string | null;
         $limit: number;
         $offset: number;
       }
     >(queries.oralQuestionsList);
-    const rows = stmt.all({ $query, $year, $limit: params.limit, $offset: offset });
+    const rows = stmt.all({ $query, $year, $subject, $limit: params.limit, $offset: offset });
     stmt.finalize();
 
     return {
@@ -1379,6 +1418,15 @@ export class DatabaseConnection {
   public async fetchOralQuestionYears() {
     const stmt = this.db.prepare<{ year: string }, []>(
       queries.oralQuestionYears,
+    );
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchOralQuestionsSubjects() {
+    const stmt = this.db.prepare<{ subject_text: string; count: number }, []>(
+      queries.oralQuestionsSubjectsList,
     );
     const data = stmt.all();
     stmt.finalize();
@@ -1632,6 +1680,7 @@ export class DatabaseConnection {
   public async fetchLegislativeInitiatives(params: {
     query?: string;
     year?: string;
+    subject?: string;
     initiativeTypeCode?: string;
     page: number;
     limit: number;
@@ -1639,13 +1688,14 @@ export class DatabaseConnection {
     const offset = (params.page - 1) * params.limit;
     const $query = params.query?.trim() || null;
     const $year = params.year || null;
+    const $subject = params.subject?.trim() || null;
     const $typeCode = params.initiativeTypeCode?.trim().toUpperCase() || null;
 
     const countStmt = this.db.prepare<
       { count: number },
-      { $query: string | null; $year: string | null; $typeCode: string | null }
+      { $query: string | null; $year: string | null; $subject: string | null; $typeCode: string | null }
     >(queries.legislativeInitiativesCount);
-    const countResult = countStmt.get({ $query, $year, $typeCode });
+    const countResult = countStmt.get({ $query, $year, $subject, $typeCode });
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
 
@@ -1670,6 +1720,7 @@ export class DatabaseConnection {
       {
         $query: string | null;
         $year: string | null;
+        $subject: string | null;
         $typeCode: string | null;
         $limit: number;
         $offset: number;
@@ -1678,6 +1729,7 @@ export class DatabaseConnection {
     const rows = stmt.all({
       $query,
       $year,
+      $subject,
       $typeCode,
       $limit: params.limit,
       $offset: offset,
@@ -1829,6 +1881,15 @@ export class DatabaseConnection {
       queries.legislativeInitiativeYears,
     );
     const data = stmt.all({ $typeCode });
+    stmt.finalize();
+    return data;
+  }
+
+  public async fetchLegislativeInitiativesSubjects() {
+    const stmt = this.db.prepare<{ subject_text: string; count: number }, []>(
+      queries.legislativeInitiativesSubjectsList,
+    );
+    const data = stmt.all();
     stmt.finalize();
     return data;
   }

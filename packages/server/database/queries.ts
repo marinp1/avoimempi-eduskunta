@@ -64,6 +64,7 @@ export { default as votingsByDocument } from "./queries/VOTINGS_BY_DOCUMENT.sql"
 export { default as votingsSearch } from "./queries/VOTINGS_SEARCH.sql";
 export { default as interpellationsList } from "./queries/INTERPELLATIONS_LIST.sql";
 export { default as interpellationsCount } from "./queries/INTERPELLATIONS_COUNT.sql";
+export { default as interpellationsSubjectsList } from "./queries/INTERPELLATIONS_SUBJECTS_LIST.sql";
 export { default as interpellationById } from "./queries/INTERPELLATION_BY_ID.sql";
 export { default as interpellationByIdentifier } from "./queries/INTERPELLATION_BY_IDENTIFIER.sql";
 export { default as interpellationSigners } from "./queries/INTERPELLATION_SIGNERS.sql";
@@ -73,6 +74,7 @@ export { default as interpellationYears } from "./queries/INTERPELLATION_YEARS.s
 export { default as interpellationSessions } from "./queries/INTERPELLATION_SESSIONS.sql";
 export { default as govProposalsList } from "./queries/GOV_PROPOSALS_LIST.sql";
 export { default as govProposalsCount } from "./queries/GOV_PROPOSALS_COUNT.sql";
+export { default as govProposalsSubjectsList } from "./queries/GOV_PROPOSALS_SUBJECTS_LIST.sql";
 export { default as govProposalById } from "./queries/GOV_PROPOSAL_BY_ID.sql";
 export { default as govProposalByIdentifier } from "./queries/GOV_PROPOSAL_BY_IDENTIFIER.sql";
 export { default as govProposalSignatories } from "./queries/GOV_PROPOSAL_SIGNATORIES.sql";
@@ -83,6 +85,7 @@ export { default as govProposalYears } from "./queries/GOV_PROPOSAL_YEARS.sql";
 export { default as govProposalSessions } from "./queries/GOV_PROPOSAL_SESSIONS.sql";
 export { default as writtenQuestionsList } from "./queries/WRITTEN_QUESTIONS_LIST.sql";
 export { default as writtenQuestionsCount } from "./queries/WRITTEN_QUESTIONS_COUNT.sql";
+export { default as writtenQuestionsSubjectsList } from "./queries/WRITTEN_QUESTIONS_SUBJECTS_LIST.sql";
 export { default as writtenQuestionById } from "./queries/WRITTEN_QUESTION_BY_ID.sql";
 export { default as writtenQuestionByIdentifier } from "./queries/WRITTEN_QUESTION_BY_IDENTIFIER.sql";
 export { default as writtenQuestionSigners } from "./queries/WRITTEN_QUESTION_SIGNERS.sql";
@@ -92,6 +95,7 @@ export { default as writtenQuestionYears } from "./queries/WRITTEN_QUESTION_YEAR
 export { default as writtenQuestionSessions } from "./queries/WRITTEN_QUESTION_SESSIONS.sql";
 export { default as oralQuestionsList } from "./queries/ORAL_QUESTIONS_LIST.sql";
 export { default as oralQuestionsCount } from "./queries/ORAL_QUESTIONS_COUNT.sql";
+export { default as oralQuestionsSubjectsList } from "./queries/ORAL_QUESTIONS_SUBJECTS_LIST.sql";
 export { default as oralQuestionById } from "./queries/ORAL_QUESTION_BY_ID.sql";
 export { default as oralQuestionByIdentifier } from "./queries/ORAL_QUESTION_BY_IDENTIFIER.sql";
 export { default as oralQuestionStages } from "./queries/ORAL_QUESTION_STAGES.sql";
@@ -110,6 +114,7 @@ export { default as committeeReportYears } from "./queries/COMMITTEE_REPORT_YEAR
 export { default as committeeReportSessions } from "./queries/COMMITTEE_REPORT_SESSIONS.sql";
 export { default as legislativeInitiativesList } from "./queries/LEGISLATIVE_INITIATIVES_LIST.sql";
 export { default as legislativeInitiativesCount } from "./queries/LEGISLATIVE_INITIATIVES_COUNT.sql";
+export { default as legislativeInitiativesSubjectsList } from "./queries/LEGISLATIVE_INITIATIVES_SUBJECTS_LIST.sql";
 export { default as legislativeInitiativeById } from "./queries/LEGISLATIVE_INITIATIVE_BY_ID.sql";
 export { default as legislativeInitiativeByIdentifier } from "./queries/LEGISLATIVE_INITIATIVE_BY_IDENTIFIER.sql";
 export { default as legislativeInitiativeSigners } from "./queries/LEGISLATIVE_INITIATIVE_SIGNERS.sql";
