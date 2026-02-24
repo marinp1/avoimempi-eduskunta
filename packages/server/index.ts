@@ -749,6 +749,34 @@ const server = Bun.serve<{
       },
     },
 
+    // ─── Written question response endpoints ───
+
+    "/api/written-question-responses": {
+      GET: async (req: Request) => {
+        const { searchParams } = new URL(req.url);
+        const query = searchParams.get("q") || undefined;
+        const year = searchParams.get("year") || undefined;
+        const minister = searchParams.get("minister") || undefined;
+        const page = parseInt(searchParams.get("page") || "1", 10);
+        const limit = parseInt(searchParams.get("limit") || "20", 10);
+        const data = await db.fetchWrittenQuestionResponses({
+          query,
+          year,
+          minister,
+          page,
+          limit,
+        });
+        return Response.json(data);
+      },
+    },
+
+    "/api/written-question-responses/years": {
+      GET: async () => {
+        const data = await db.fetchWrittenQuestionResponseYears();
+        return Response.json(data);
+      },
+    },
+
     // ─── Oral question endpoints ───
 
     "/api/oral-questions": {

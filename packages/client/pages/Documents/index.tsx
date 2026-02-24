@@ -45,6 +45,7 @@ type DocumentType =
   | "interpellations"
   | "government-proposals"
   | "written-questions"
+  | "written-question-responses"
   | "oral-questions"
   | "committee-reports"
   | "legislative-initiatives-law"
@@ -82,6 +83,9 @@ const getDocumentApiConfig = (
   }
   if (documentType === "written-questions") {
     return { apiBase: "/api/written-questions", initiativeTypeCode: null };
+  }
+  if (documentType === "written-question-responses") {
+    return { apiBase: "/api/written-question-responses", initiativeTypeCode: null };
   }
   return {
     apiBase: "/api/legislative-initiatives",
@@ -1901,6 +1905,7 @@ interface WrittenQuestionDetail {
     event_description: string | null;
   }>;
   subjects: Array<{ subject_text: string }>;
+  response_subjects: Array<{ subject_text: string }>;
   sessions: Array<{
     session_key: string;
     session_date: string;
@@ -1910,6 +1915,22 @@ interface WrittenQuestionDetail {
     section_title: string | null;
     section_key: string;
   }>;
+}
+
+interface WrittenQuestionResponseListItem {
+  id: number;
+  parliament_identifier: string;
+  document_number: number | null;
+  parliamentary_year: string;
+  title: string | null;
+  answer_date: string | null;
+  minister_title: string | null;
+  minister_first_name: string | null;
+  minister_last_name: string | null;
+  question_id: number;
+  question_identifier: string;
+  question_title: string | null;
+  subjects: string | null;
 }
 
 interface OralQuestionListItem {
@@ -1959,6 +1980,122 @@ interface OralQuestionDetail {
     section_title: string | null;
     section_key: string;
   }>;
+}
+
+function WrittenQuestionResponseCard({
+  item,
+  onSubjectClick,
+}: {
+  item: WrittenQuestionResponseListItem;
+  onSubjectClick?: (subject: string) => void;
+}) {
+  const { t } = useTranslation();
+
+  const subjects = item.subjects
+    ? item.subjects.split("||").filter(Boolean)
+    : [];
+  const displaySubjects = subjects.slice(0, 3);
+  const remainingSubjects = subjects.length - 3;
+
+  const ministerName = [item.minister_first_name, item.minister_last_name]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <DataCard>
+      <Box sx={{ p: 2 }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="flex-start"
+          spacing={1}
+        >
+          <Box sx={{ flex: 1 }}>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+              <Typography
+                variant="caption"
+                sx={{ color: colors.textSecondary, fontFamily: "monospace" }}
+              >
+                {item.parliament_identifier}
+              </Typography>
+              {item.answer_date && (
+                <Chip
+                  label={`${t("documents.answered", "Vastattu")} ${formatDate(item.answer_date)}`}
+                  size="small"
+                  sx={{
+                    backgroundColor: colors.success,
+                    color: "#fff",
+                    fontSize: "0.7rem",
+                  }}
+                />
+              )}
+            </Stack>
+
+            {item.title ? (
+              <Typography
+                variant="body1"
+                sx={{ fontWeight: 500, color: colors.textPrimary, mb: 0.5 }}
+              >
+                {item.title}
+              </Typography>
+            ) : item.question_title ? (
+              <Typography
+                variant="body1"
+                sx={{ fontWeight: 500, color: colors.textPrimary, mb: 0.5 }}
+              >
+                {item.question_title}
+              </Typography>
+            ) : null}
+
+            {ministerName && (
+              <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 0.5 }}>
+                {item.minister_title ? `${item.minister_title} ` : ""}
+                {ministerName}
+              </Typography>
+            )}
+
+            <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+              {t("documents.writtenQuestion", "Kirjallinen kysymys")}:{" "}
+              <span style={{ fontFamily: "monospace" }}>{item.question_identifier}</span>
+            </Typography>
+          </Box>
+        </Stack>
+
+        {displaySubjects.length > 0 && (
+          <Stack
+            direction="row"
+            spacing={0.5}
+            flexWrap="wrap"
+            gap={0.5}
+            sx={{ mt: 1 }}
+          >
+            {displaySubjects.map((subject, idx) => (
+              <Chip
+                key={idx}
+                label={subject}
+                size="small"
+                variant="outlined"
+                onClick={onSubjectClick ? () => onSubjectClick(subject) : undefined}
+                sx={{
+                  borderColor: colors.dataBorder,
+                  color: colors.textSecondary,
+                  cursor: onSubjectClick ? "pointer" : "default",
+                }}
+              />
+            ))}
+            {remainingSubjects > 0 && (
+              <Chip
+                label={`+${remainingSubjects}`}
+                size="small"
+                variant="outlined"
+                sx={{ borderColor: colors.dataBorder, color: colors.textSecondary }}
+              />
+            )}
+          </Stack>
+        )}
+      </Box>
+    </DataCard>
+  );
 }
 
 function OralQuestionCard({
@@ -2492,9 +2629,8 @@ function WrittenQuestionCard({
                 </Box>
               )}
 
-              {/* Answer minister info */}
-              {/* TODO: Show full answer text (KKV document body) once KKV answer documents are imported into database */}
-              {detail.answer_minister_first_name && (
+              {/* Answer section */}
+              {(detail.answer_date || detail.answer_minister_first_name) && (
                 <Box>
                   <Stack
                     direction="row"
@@ -2529,6 +2665,28 @@ function WrittenQuestionCard({
                         {detail.answer_parliament_identifier &&
                           ` — ${detail.answer_parliament_identifier}`}
                       </Typography>
+                    )}
+                    {detail.response_subjects.length > 0 && (
+                      <Stack
+                        direction="row"
+                        spacing={0.5}
+                        flexWrap="wrap"
+                        gap={0.5}
+                        sx={{ mt: 1 }}
+                      >
+                        {detail.response_subjects.map((s, idx) => (
+                          <Chip
+                            key={idx}
+                            label={s.subject_text}
+                            size="small"
+                            variant="outlined"
+                            sx={{
+                              borderColor: colors.dataBorder,
+                              color: colors.textSecondary,
+                            }}
+                          />
+                        ))}
+                      </Stack>
                     )}
                   </Box>
                 </Box>
@@ -3298,6 +3456,7 @@ export default function Documents() {
       | InterpellationListItem
       | GovernmentProposalListItem
       | WrittenQuestionListItem
+      | WrittenQuestionResponseListItem
       | OralQuestionListItem
       | CommitteeReportListItem
       | LegislativeInitiativeListItem
@@ -3601,6 +3760,9 @@ export default function Documents() {
               <MenuItem value="written-questions">
                 {t("documents.writtenQuestions", "Kirjalliset kysymykset")}
               </MenuItem>
+              <MenuItem value="written-question-responses">
+                {t("documents.writtenQuestionResponses", "Kirjalliset vastaukset")}
+              </MenuItem>
               <MenuItem value="oral-questions">
                 {t("documents.oralQuestions", "Suulliset kysymykset")}
               </MenuItem>
@@ -3816,13 +3978,21 @@ export default function Documents() {
                       ? (items as CommitteeReportListItem[]).map((item) => (
                           <CommitteeReportCard key={item.id} item={item} />
                         ))
-                      : (items as WrittenQuestionListItem[]).map((item) => (
-                          <WrittenQuestionCard
-                            key={item.id}
-                            item={item}
-                            onSubjectClick={setSelectedSubject}
-                          />
-                        ))}
+                      : documentType === "written-question-responses"
+                        ? (items as WrittenQuestionResponseListItem[]).map((item) => (
+                            <WrittenQuestionResponseCard
+                              key={item.id}
+                              item={item}
+                              onSubjectClick={setSelectedSubject}
+                            />
+                          ))
+                        : (items as WrittenQuestionListItem[]).map((item) => (
+                            <WrittenQuestionCard
+                              key={item.id}
+                              item={item}
+                              onSubjectClick={setSelectedSubject}
+                            />
+                          ))}
 
             {/* Load more button */}
             {page < totalPages && (
