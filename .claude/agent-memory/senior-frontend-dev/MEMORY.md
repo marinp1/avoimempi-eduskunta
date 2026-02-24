@@ -32,6 +32,8 @@
 - Use `Chip` for badges, labels, counts
 - Use `Collapse` for expandable content with `timeout="auto" unmountOnExit`
 - Use `CircularProgress` for loading states
+- `DocumentCard`, `RelatedVotings`, `extractDocumentIdentifiers` from `#client/components/DocumentCards`
+- `VotingResultsTable` from `#client/components/VotingResultsTable`
 
 ### Responsive Design
 - Mobile cards: Display at `xs` to `md` breakpoints with `display: { xs: "block", md: "none" }`
@@ -46,26 +48,25 @@
 5. Display loading spinner while fetching
 6. Handle empty states gracefully
 
-## Sessions Page Implementation
+## Sessions/Home Page Architecture
 
-### Structure
-- **Sessions**: Top-level entities with agenda information
-- **Sections**: Expandable items within sessions (kohdat)
-  - Each section can have 0+ speeches (puheenvuorot)
-  - Each section can have 0+ votings (äänestykset)
-- **On-demand loading**: Speeches and votings are fetched when section expands
+### Shared Section Rendering
+Both Home (`packages/client/pages/Home/index.tsx`) and Sessions (`packages/client/pages/Sessions/index.tsx`) render the same session/section content. They share:
+- Identical section expand logic fetching: speeches (paginated), votings, links, subsections, roll calls
+- `renderVaskiInfo`, `renderMinutesInfo`, `renderSectionMinutesContent`, `renderSectionSubSections`
+- `renderSessionNotices`, `renderSectionNotices`, `renderSessionMinutesOutline`, `renderSessionAttachments`
+- `renderSectionLinks`, `renderSectionRollCall`, `renderSectionVotings` (uses `VotingResultsTable`)
+- `DocumentCard` + `RelatedVotings` for sections with `extractSectionDocRefs`
+- `getSectionOrderLabel` for section chip, `isRollCallSection` to detect nimenhuuto sections
 
-### Section Metadata Display
-- Show `processing_title` if different from `title`
-- Show `resolution` if available
-- Show `identifier` for reference
-- Badge showing section ordinal number
+### Sessions-only UI (not in Home)
+- Date picker, view mode toggle (list/calendar/timeline), navigation controls
+- Focused session/section highlighting, scroll-to-section
+- "Open section" link from minutes outline items
 
-### Voting Display
-- Show vote number, title, and result (Hyväksytty/Hylätty)
-- Visual indicators: green border for passed, red for failed
-- Display vote counts: n_yes, n_no, n_abstain, n_absent, n_total
-- Use `HowToVoteIcon` for visual consistency
+### Section expand: what gets fetched
+When a section expands: speeches (paginated), votings, links (`/api/sections/{key}/links`),
+subsections (`/api/sections/{key}/subsections`), roll call if `isRollCallSection` (`/api/sections/{key}/roll-call`)
 
 ## Database Tables
 
