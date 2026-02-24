@@ -16,12 +16,25 @@ interface EduskuntaApiResponse {
   rowData: any[][];
   rowCount: number;
   hasMore: boolean;
+  source?: {
+    tableName?: string;
+    page?: number;
+    scrapedAt?: string;
+  };
 }
 
 /**
  * Parsed row structure - normalized to object format
  */
 type ParsedRow = Record<string, any>;
+
+const IMPORT_METADATA_FIELDS = {
+  sourceTable: "__sourceTable",
+  sourcePage: "__sourcePage",
+  scrapedAt: "__sourceScrapedAt",
+  sourcePrimaryKeyName: "__sourcePrimaryKeyName",
+  sourcePrimaryKeyValue: "__sourcePrimaryKeyValue",
+} as const;
 
 /**
  * Parser function type - transforms raw row data
@@ -224,6 +237,20 @@ export async function parseTable(options: ParseOptions): Promise<void> {
     }
 
     const apiResponse = JSON.parse(rawData) as EduskuntaApiResponse;
+    const sourceTableName =
+      typeof apiResponse.source?.tableName === "string" &&
+      apiResponse.source.tableName.trim() !== ""
+        ? apiResponse.source.tableName
+        : tableName;
+    const sourcePage =
+      typeof apiResponse.source?.page === "number" &&
+      Number.isFinite(apiResponse.source.page)
+        ? apiResponse.source.page
+        : pageRef.page;
+    const sourceScrapedAt =
+      typeof apiResponse.source?.scrapedAt === "string"
+        ? apiResponse.source.scrapedAt
+        : null;
 
     // Parse each row in the page
     const parsedRows: ParsedRow[] = [];
@@ -238,7 +265,15 @@ export async function parseTable(options: ParseOptions): Promise<void> {
         apiResponse.pkName,
       );
 
-      parsedRows.push(parsedData);
+      parsedRows.push({
+        ...parsedData,
+        [IMPORT_METADATA_FIELDS.sourceTable]: sourceTableName,
+        [IMPORT_METADATA_FIELDS.sourcePage]: sourcePage,
+        [IMPORT_METADATA_FIELDS.scrapedAt]: sourceScrapedAt,
+        [IMPORT_METADATA_FIELDS.sourcePrimaryKeyName]: apiResponse.pkName,
+        [IMPORT_METADATA_FIELDS.sourcePrimaryKeyValue]:
+          rowObject[apiResponse.pkName] ?? null,
+      });
       totalRowsParsed++;
     }
 
@@ -250,6 +285,11 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       rowData: parsedRows,
       rowCount: parsedRows.length,
       hasMore: apiResponse.hasMore,
+      source: {
+        tableName: sourceTableName,
+        page: sourcePage,
+        scrapedAt: sourceScrapedAt,
+      },
     };
 
     // Write parsed page to storage

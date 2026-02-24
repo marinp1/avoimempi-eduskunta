@@ -35,6 +35,7 @@
     "scrape": "cd packages/datapipe && bun run scraper/cli.ts",
     "parse": "cd packages/datapipe && bun run parser/cli.ts",
     "regen-source-status": "bun run scripts/regenerate-source-status.ts",
+    "backfill:scraper-source-metadata": "bun run scripts/backfill-scraper-source-metadata.ts",
     "check:table-id-ranges": "bun run scripts/check-table-id-ranges.ts",
     "check:table-gaps-api": "bun run scripts/check-table-gaps-from-api.ts",
     "check:table-count-vs-api": "bun run scripts/validate-table-count-vs-api.ts",

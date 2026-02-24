@@ -32,6 +32,7 @@ export interface VaskiMigrationOptions {
     total: number;
     rowsMigrated: number;
   }) => void | Promise<void>;
+  onSourceRow?: (row: VaskiEntry) => void | Promise<void>;
   onDocumentTypeSkipped?: (event: {
     documentType: string;
     index: number;
@@ -253,6 +254,9 @@ export async function migrateVaskiData(
     for await (const row of readVaskiRowsByDocumentType(documentType)) {
       if (options?.shouldStop?.()) {
         throw new Error("Migration stopped by user");
+      }
+      if (options?.onSourceRow) {
+        await options.onSourceRow(row);
       }
       upsertVaskiDocument(db, row, documentType);
       const result = subMigrator.migrateRow(row);

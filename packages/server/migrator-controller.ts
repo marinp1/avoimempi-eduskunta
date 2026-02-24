@@ -326,6 +326,107 @@ const parsePositiveInt = (
   return parsed;
 };
 
+const IMPORT_METADATA_FIELDS = {
+  sourceTable: "__sourceTable",
+  sourcePage: "__sourcePage",
+  scrapedAt: "__sourceScrapedAt",
+  sourcePrimaryKeyName: "__sourcePrimaryKeyName",
+  sourcePrimaryKeyValue: "__sourcePrimaryKeyValue",
+} as const;
+
+type ParsedPageEnvelope = {
+  rowData?: any[];
+  pkName?: string;
+  source?: {
+    tableName?: string;
+    page?: number;
+    scrapedAt?: string | null;
+  };
+};
+
+type ParsedPageBatch = {
+  page: number;
+  rows: any[];
+  pkName: string | null;
+  sourceTable: string;
+  sourcePage: number | null;
+  scrapedAt: string | null;
+};
+
+type SourceReferenceFallback = {
+  sourceTable: string;
+  sourcePage: number | null;
+  sourcePkName: string | null;
+  sourcePkValue: unknown;
+  scrapedAt: string | null;
+};
+
+type SourceReference = {
+  sourceTable: string;
+  sourcePage: number | null;
+  sourcePkName: string | null;
+  sourcePkValue: string | null;
+  scrapedAt: string | null;
+};
+
+const normalizeText = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  return normalized === "" ? null : normalized;
+};
+
+const normalizeNumber = (value: unknown): number | null => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return null;
+};
+
+const normalizeSourceReference = (
+  row: Record<string, any>,
+  fallback: SourceReferenceFallback,
+): SourceReference => {
+  const sourceTable =
+    normalizeText(row[IMPORT_METADATA_FIELDS.sourceTable]) ??
+    fallback.sourceTable;
+  const sourcePage =
+    normalizeNumber(row[IMPORT_METADATA_FIELDS.sourcePage]) ??
+    fallback.sourcePage;
+  const sourcePkName =
+    normalizeText(row[IMPORT_METADATA_FIELDS.sourcePrimaryKeyName]) ??
+    fallback.sourcePkName;
+
+  const fallbackPkValue =
+    sourcePkName && row[sourcePkName] !== undefined
+      ? row[sourcePkName]
+      : fallback.sourcePkValue;
+  const sourcePkValueRaw =
+    row[IMPORT_METADATA_FIELDS.sourcePrimaryKeyValue] ?? fallbackPkValue;
+  const sourcePkValue =
+    sourcePkValueRaw === null || sourcePkValueRaw === undefined
+      ? null
+      : String(sourcePkValueRaw);
+
+  const scrapedAt =
+    normalizeText(row[IMPORT_METADATA_FIELDS.scrapedAt]) ?? fallback.scrapedAt;
+
+  return {
+    sourceTable,
+    sourcePage,
+    sourcePkName,
+    sourcePkValue,
+    scrapedAt,
+  };
+};
+
 /**
  * Controller for managing database migration from parsed storage
  */
@@ -400,7 +501,9 @@ export class MigratorController {
   /**
    * Read all parsed pages for a table
    */
-  private async *readParsedData(tableName: string): AsyncGenerator<any[]> {
+  private async *readParsedData(
+    tableName: string,
+  ): AsyncGenerator<ParsedPageBatch> {
     const storage = getStorage();
     const prefix = StorageKeyBuilder.listPrefixForTable("parsed", tableName);
     const keys = await listAllStorageKeys(storage, {
@@ -415,10 +518,24 @@ export class MigratorController {
       .sort((a, b) => (a.parsed?.page || 0) - (b.parsed?.page || 0));
 
     for (const pageInfo of sortedPages) {
+      if (!pageInfo.parsed) {
+        continue;
+      }
+
       const data = await storage.get(pageInfo.key.key);
       if (data) {
-        const pageData = JSON.parse(data) as { rowData: any[] };
-        yield pageData.rowData;
+        const pageData = JSON.parse(data) as ParsedPageEnvelope;
+        const rows = Array.isArray(pageData.rowData) ? pageData.rowData : [];
+
+        yield {
+          page: pageInfo.parsed.page,
+          rows,
+          pkName: normalizeText(pageData.pkName),
+          sourceTable: normalizeText(pageData.source?.tableName) ?? tableName,
+          sourcePage:
+            normalizeNumber(pageData.source?.page) ?? pageInfo.parsed.page,
+          scrapedAt: normalizeText(pageData.source?.scrapedAt),
+        };
       }
     }
   }
@@ -697,6 +814,30 @@ export class MigratorController {
 
       // Clear prepared statement cache before starting
       clearStatementCache();
+      const sourceReferenceStatement = targetDatabase.prepare(
+        `INSERT INTO ImportSourceReference (
+           source_table,
+           source_page,
+           source_pk_name,
+           source_pk_value,
+           scraped_at,
+           migrated_at
+         ) VALUES (?, ?, ?, ?, ?, ?)`,
+      );
+      const recordSourceReference = (
+        row: Record<string, any>,
+        fallback: SourceReferenceFallback,
+      ) => {
+        const sourceReference = normalizeSourceReference(row, fallback);
+        sourceReferenceStatement.run(
+          sourceReference.sourceTable,
+          sourceReference.sourcePage,
+          sourceReference.sourcePkName,
+          sourceReference.sourcePkValue,
+          sourceReference.scrapedAt,
+          reportStartedAt,
+        );
+      };
 
       // Import each table
       let tablesCompleted = 0;
@@ -731,6 +872,15 @@ export class MigratorController {
             const summary = await migrateVaskiData(targetDatabase, {
               shouldStop: () => this.shouldStop,
               documentTypeProgressRowInterval: 5000,
+              onSourceRow: (row) => {
+                recordSourceReference(row as Record<string, any>, {
+                  sourceTable: TableName.VaskiData,
+                  sourcePage: normalizeNumber(row?._source?.page),
+                  sourcePkName: "id",
+                  sourcePkValue: row?.id ?? null,
+                  scrapedAt: null,
+                });
+              },
               onDocumentTypeStart: ({ documentType, index, total }) => {
                 totalDocumentTypes = total;
                 this.sendMessage({
@@ -888,14 +1038,14 @@ export class MigratorController {
 
           try {
             // Read and import data
-            for await (const rows of this.readParsedData(tableName)) {
+            for await (const pageData of this.readParsedData(tableName)) {
               if (this.shouldStop) {
                 throw new Error("Migration stopped by user");
               }
 
               pagesProcessed++;
 
-              for (const row of rows) {
+              for (const row of pageData.rows) {
                 // Convert parsed object fields back to JSON strings for the migrator
                 // The old migrator expects fields like XmlDataFi to be JSON strings
                 const rowForMigrator = { ...row };
@@ -909,6 +1059,16 @@ export class MigratorController {
                     rowForMigrator.XmlDataFi,
                   );
                 }
+
+                recordSourceReference(rowForMigrator, {
+                  sourceTable: pageData.sourceTable,
+                  sourcePage: pageData.sourcePage,
+                  sourcePkName: pageData.pkName,
+                  sourcePkValue: pageData.pkName
+                    ? rowForMigrator[pageData.pkName]
+                    : null,
+                  scrapedAt: pageData.scrapedAt,
+                });
 
                 const result = migrator(rowForMigrator);
                 if (isPromiseLike(result)) {

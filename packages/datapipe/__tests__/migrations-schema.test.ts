@@ -65,6 +65,9 @@ describe("Migration schema", () => {
       "V001.019__vaski_government_proposal_rich_text.sql",
       "V001.020__vaski_document_rich_text.sql",
       "V001.021__query_performance_indexes.sql",
+      "V001.022__vaski_written_question_response_schema.sql",
+      "V001.023__vaski_expert_statement_schema.sql",
+      "V001.024__import_source_reference_schema.sql",
     ]);
   });
 
@@ -254,6 +257,35 @@ describe("Migration schema", () => {
       expect(indexNames).toContain("idx_rollcallreport_parliament_identifier");
       expect(indexNames).toContain("idx_section_session_vaski_modified_id");
       expect(indexNames).not.toContain("idx_voting_start_date_expr");
+    } finally {
+      db.close();
+    }
+  });
+
+  test("creates import source reference table and indexes", () => {
+    const db = createTestDb(24);
+    try {
+      const tableNames = getTableNames(db);
+      expect(tableNames).toContain("ImportSourceReference");
+
+      const columns = getColumnNames(db, "ImportSourceReference");
+      expect(columns).toContain("source_table");
+      expect(columns).toContain("source_page");
+      expect(columns).toContain("source_pk_name");
+      expect(columns).toContain("source_pk_value");
+      expect(columns).toContain("scraped_at");
+      expect(columns).toContain("migrated_at");
+
+      const indexNames = (
+        db
+          .query(
+            "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='ImportSourceReference' ORDER BY name",
+          )
+          .all() as Array<{ name: string }>
+      ).map((row) => row.name);
+
+      expect(indexNames).toContain("idx_import_source_reference_lookup");
+      expect(indexNames).toContain("idx_import_source_reference_scraped_at");
     } finally {
       db.close();
     }
