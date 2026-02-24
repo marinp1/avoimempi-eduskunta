@@ -658,14 +658,18 @@ export class DatabaseConnection {
     const stmt = this.db.prepare<
       {
         id: number;
-        start_time: string;
-        end_time: string;
-        speech_type: string;
-        processing_phase: string;
-        document: string;
-        content: string;
-        party: string;
-        minutes_url: string;
+        section_key: string;
+        session_key: string;
+        section_title: string | null;
+        section_identifier: string | null;
+        start_time: string | null;
+        end_time: string | null;
+        speech_type: string | null;
+        processing_phase: string | null;
+        document: string | null;
+        content: string | null;
+        party: string | null;
+        minutes_url: string | null;
         word_count: number;
       },
       { $personId: number; $limit: number; $offset: number }

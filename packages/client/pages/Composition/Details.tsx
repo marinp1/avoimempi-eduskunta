@@ -19,6 +19,7 @@ import {
   Collapse,
   Dialog,
   DialogContent,
+  Drawer,
   IconButton,
   List,
   ListItem,
@@ -47,15 +48,48 @@ type DistrictHistoryType = {
 
 type SpeechType = {
   id: number;
-  start_time: string;
-  end_time: string;
-  speech_type: string;
-  processing_phase: string;
-  document: string;
-  content: string;
-  party: string;
-  minutes_url: string;
+  section_key: string | null;
+  session_key: string | null;
+  section_title: string | null;
+  section_identifier: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  speech_type: string | null;
+  processing_phase: string | null;
+  document: string | null;
+  content: string | null;
+  party: string | null;
+  minutes_url: string | null;
   word_count: number;
+};
+
+type SectionSpeechType = Pick<
+  DatabaseTables.Speech,
+  | "id"
+  | "section_key"
+  | "session_key"
+  | "first_name"
+  | "last_name"
+  | "party_abbreviation"
+  | "speech_type"
+  | "ordinal_number"
+> & {
+  start_time: string | null;
+  end_time: string | null;
+  content: string | null;
+};
+
+type SectionSpeechData = {
+  speeches: SectionSpeechType[];
+  total: number;
+  page: number;
+  totalPages: number;
+};
+
+type SectionConversationType = {
+  speeches: SectionSpeechType[];
+  total: number;
+  truncated: boolean;
 };
 
 type CommitteeType = {
@@ -185,6 +219,53 @@ const fetchPersonSpeeches = async (
     `/api/person/${personId}/speeches?limit=${limit}&offset=${offset}`,
   );
   return res.json() as Promise<SpeechType[]>;
+};
+
+const SECTION_SPEECH_PAGE_SIZE = 100;
+const SECTION_SPEECH_MAX_PAGES = 30;
+
+const fetchSectionSpeechesPage = async (
+  sectionKey: string,
+  limit = SECTION_SPEECH_PAGE_SIZE,
+  offset = 0,
+) => {
+  const res = await fetch(
+    `/api/sections/${encodeURIComponent(sectionKey)}/speeches?limit=${limit}&offset=${offset}`,
+  );
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+  return res.json() as Promise<SectionSpeechData>;
+};
+
+const fetchSectionConversation = async (
+  sectionKey: string,
+): Promise<SectionConversationType> => {
+  let page = 1;
+  let totalPages = 1;
+  let offset = 0;
+  let total = 0;
+  const speeches: SectionSpeechType[] = [];
+
+  while (page <= totalPages && page <= SECTION_SPEECH_MAX_PAGES) {
+    const data = await fetchSectionSpeechesPage(
+      sectionKey,
+      SECTION_SPEECH_PAGE_SIZE,
+      offset,
+    );
+    speeches.push(...data.speeches);
+    total = data.total;
+    totalPages = data.totalPages || 1;
+    if (data.speeches.length === 0) break;
+    page += 1;
+    offset += SECTION_SPEECH_PAGE_SIZE;
+  }
+
+  return {
+    speeches,
+    total,
+    truncated: speeches.length < total,
+  };
 };
 
 const fetchPersonCommittees = async (personId: number) => {
@@ -1099,15 +1180,150 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
 const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
   const themedColors = useThemedColors();
   const [speeches, setSpeeches] = React.useState<SpeechType[] | null>(null);
+  const [selectedSpeech, setSelectedSpeech] = React.useState<SpeechType | null>(
+    null,
+  );
+  const [sectionConversations, setSectionConversations] = React.useState<
+    Record<string, SectionConversationType>
+  >({});
+  const [failedContextSections, setFailedContextSections] = React.useState<
+    Record<string, true>
+  >({});
+  const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [contextError, setContextError] = React.useState<string | null>(null);
+  const [loadingContextSection, setLoadingContextSection] = React.useState<
+    string | null
+  >(null);
+  const selectedSpeechRef = React.useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    let ignore = false;
     setLoading(true);
-    fetchPersonSpeeches(personId, 50).then((data) => {
-      setSpeeches(data);
-      setLoading(false);
-    });
+    setLoadError(null);
+    setSelectedSpeech(null);
+    setSectionConversations({});
+    setFailedContextSections({});
+    setContextError(null);
+    setLoadingContextSection(null);
+    fetchPersonSpeeches(personId, 50)
+      .then((data) => {
+        if (ignore) return;
+        setSpeeches(data);
+      })
+      .catch(() => {
+        if (ignore) return;
+        setLoadError("Puheenvuorojen lataus epaonnistui.");
+      })
+      .finally(() => {
+        if (ignore) return;
+        setLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
   }, [personId]);
+
+  const selectedSectionKey = selectedSpeech?.section_key || null;
+  const selectedConversation = selectedSectionKey
+    ? sectionConversations[selectedSectionKey]
+    : null;
+  const selectedSpeechPosition = selectedConversation
+    ? selectedConversation.speeches.findIndex(
+        (item) => item.id === selectedSpeech?.id,
+      ) + 1
+    : 0;
+
+  React.useEffect(() => {
+    if (!selectedSectionKey) return;
+    if (sectionConversations[selectedSectionKey]) return;
+    if (failedContextSections[selectedSectionKey]) return;
+    if (loadingContextSection === selectedSectionKey) return;
+
+    let ignore = false;
+    setContextError(null);
+    setLoadingContextSection(selectedSectionKey);
+    fetchSectionConversation(selectedSectionKey)
+      .then((data) => {
+        if (ignore) return;
+        setSectionConversations((prev) => ({
+          ...prev,
+          [selectedSectionKey]: data,
+        }));
+      })
+      .catch(() => {
+        if (ignore) return;
+        setFailedContextSections((prev) => ({
+          ...prev,
+          [selectedSectionKey]: true,
+        }));
+        setContextError("Keskustelukontekstin lataus epaonnistui.");
+      })
+      .finally(() => {
+        if (ignore) return;
+        setLoadingContextSection((current) =>
+          current === selectedSectionKey ? null : current,
+        );
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [
+    selectedSectionKey,
+    sectionConversations,
+    failedContextSections,
+    loadingContextSection,
+  ]);
+
+  React.useEffect(() => {
+    if (!selectedSpeechRef.current) return;
+    selectedSpeechRef.current.scrollIntoView({ block: "center" });
+  }, [selectedSpeech?.id, selectedConversation?.speeches.length]);
+
+  const openSpeechConversation = (speech: SpeechType) => {
+    setSelectedSpeech(speech);
+    if (!speech.section_key) {
+      setContextError(
+        "Talta puheenvuorolta puuttuu asiakohdan tunniste, joten kontekstia ei voi avata.",
+      );
+      return;
+    }
+    setContextError(null);
+  };
+
+  const closeSpeechConversation = () => {
+    setSelectedSpeech(null);
+    setContextError(null);
+  };
+
+  const retryContextLoad = () => {
+    if (!selectedSectionKey) return;
+    setContextError(null);
+    setFailedContextSections((prev) => {
+      const { [selectedSectionKey]: _removed, ...rest } = prev;
+      return rest;
+    });
+  };
+
+  const formatSpeechDate = (value: string | null) => {
+    if (!value) return "-";
+    return new Date(value).toLocaleDateString("fi-FI");
+  };
+
+  const formatSpeechTime = (start: string | null, end: string | null) => {
+    if (!start) return "-";
+    const startLabel = new Date(start).toLocaleTimeString("fi-FI", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    if (!end) return startLabel;
+    const endLabel = new Date(end).toLocaleTimeString("fi-FI", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    return `${startLabel} - ${endLabel}`;
+  };
 
   if (loading)
     return (
@@ -1115,6 +1331,17 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
         <CircularProgress size={28} />
       </Box>
     );
+
+  if (loadError) {
+    return (
+      <Typography
+        variant="body2"
+        sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4 }}
+      >
+        {loadError}
+      </Typography>
+    );
+  }
 
   const totalWords =
     speeches?.reduce((sum, s) => sum + (s.word_count || 0), 0) || 0;
@@ -1192,7 +1419,14 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                 py: 1.5,
                 borderBottom: `1px solid ${themedColors.dataBorder}`,
                 "&:last-child": { borderBottom: "none" },
+                borderRadius: 1,
+                px: 1,
+                cursor: "pointer",
+                "&:hover": {
+                  bgcolor: themedColors.backgroundPaper,
+                },
               }}
+              onClick={() => openSpeechConversation(s)}
             >
               <Box
                 sx={{
@@ -1208,7 +1442,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     fontWeight="600"
                     sx={{ color: themedColors.textSecondary }}
                   >
-                    {new Date(s.start_time).toLocaleDateString("fi-FI")}
+                    {formatSpeechDate(s.start_time)}
                   </Typography>
                   {s.speech_type && (
                     <Chip
@@ -1257,6 +1491,36 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   {s.document}
                 </Typography>
               )}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  mt: 0.75,
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{ color: themedColors.textTertiary }}
+                >
+                  {s.section_identifier || s.section_title || "Asiakohta"}
+                </Typography>
+                <Button
+                  size="small"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    openSpeechConversation(s);
+                  }}
+                  sx={{
+                    minWidth: 0,
+                    px: 1,
+                    py: 0,
+                    fontSize: "0.68rem",
+                    textTransform: "none",
+                  }}
+                >
+                  Nayta keskustelu
+                </Button>
+              </Box>
             </Box>
           ))}
         </Box>
@@ -1268,6 +1532,309 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
           Ei puheenvuoroja.
         </Typography>
       )}
+
+      <Drawer
+        anchor="right"
+        open={Boolean(selectedSpeech)}
+        onClose={closeSpeechConversation}
+        sx={{ zIndex: theme.zIndex.modal + 2 }}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: 560 },
+            bgcolor: themedColors.backgroundSubtle,
+          },
+        }}
+      >
+        <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          <Box
+            sx={{
+              p: { xs: 2, sm: 2.5 },
+              borderBottom: `1px solid ${themedColors.dataBorder}`,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: 1,
+              }}
+            >
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={700}
+                  sx={{ color: themedColors.textPrimary }}
+                >
+                  Keskustelun konteksti
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: themedColors.textSecondary }}
+                >
+                  {selectedSpeech
+                    ? formatSpeechDate(selectedSpeech.start_time)
+                    : "-"}
+                </Typography>
+              </Box>
+              <IconButton
+                size="small"
+                onClick={closeSpeechConversation}
+                aria-label="Sulje keskustelu"
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+
+            {selectedSpeech && (
+              <>
+                <Typography
+                  variant="body2"
+                  sx={{ color: themedColors.textSecondary, mt: 1 }}
+                >
+                  {selectedSpeech.document || "Asiakohdan tiedot puuttuvat"}
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 0.75,
+                    mt: 1,
+                    alignItems: "center",
+                  }}
+                >
+                  {selectedSpeech.party && (
+                    <Chip
+                      size="small"
+                      label={selectedSpeech.party.toUpperCase()}
+                      sx={{
+                        height: 20,
+                        fontSize: "0.65rem",
+                      }}
+                    />
+                  )}
+                  <Chip
+                    size="small"
+                    label={formatSpeechTime(
+                      selectedSpeech.start_time,
+                      selectedSpeech.end_time,
+                    )}
+                    sx={{
+                      height: 20,
+                      fontSize: "0.65rem",
+                    }}
+                  />
+                  {selectedSpeech.speech_type && (
+                    <Chip
+                      size="small"
+                      label={selectedSpeech.speech_type}
+                      sx={{
+                        height: 20,
+                        fontSize: "0.65rem",
+                      }}
+                    />
+                  )}
+                </Box>
+                {selectedSpeech.section_key && (
+                  <Button
+                    href={refs.section(
+                      selectedSpeech.section_key,
+                      selectedSpeech.start_time,
+                      selectedSpeech.session_key,
+                    )}
+                    endIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
+                    sx={{
+                      mt: 1.25,
+                      textTransform: "none",
+                      px: 1.25,
+                      py: 0.5,
+                      minWidth: 0,
+                      alignSelf: "flex-start",
+                    }}
+                  >
+                    Avaa koko asiakohta
+                  </Button>
+                )}
+              </>
+            )}
+          </Box>
+
+          <Box
+            sx={{
+              p: { xs: 2, sm: 2.5 },
+              borderBottom: `1px solid ${themedColors.dataBorder}`,
+            }}
+          >
+            <Typography
+              variant="subtitle2"
+              fontWeight={700}
+              sx={{ color: themedColors.textPrimary, mb: 0.75 }}
+            >
+              Valittu puheenvuoro
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: themedColors.textPrimary,
+                whiteSpace: "pre-line",
+                lineHeight: 1.55,
+              }}
+            >
+              {selectedSpeech?.content || "Ei puhesisaltoa saatavilla."}
+            </Typography>
+          </Box>
+
+          <Box
+            sx={{
+              flex: 1,
+              overflowY: "auto",
+              p: { xs: 2, sm: 2.5 },
+            }}
+          >
+            {loadingContextSection === selectedSectionKey && (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                <CircularProgress size={26} />
+              </Box>
+            )}
+
+            {contextError && (
+              <Box sx={{ py: 2 }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: themedColors.textTertiary }}
+                >
+                  {contextError}
+                </Typography>
+                {selectedSectionKey &&
+                  failedContextSections[selectedSectionKey] && (
+                    <Button
+                      size="small"
+                      onClick={retryContextLoad}
+                      sx={{
+                        mt: 0.75,
+                        px: 1,
+                        py: 0,
+                        minWidth: 0,
+                        textTransform: "none",
+                        fontSize: "0.72rem",
+                      }}
+                    >
+                      Yrita uudelleen
+                    </Button>
+                  )}
+              </Box>
+            )}
+
+            {selectedConversation && (
+              <Box>
+                <Typography
+                  variant="caption"
+                  sx={{ color: themedColors.textSecondary }}
+                >
+                  {`Keskustelu (${selectedSpeechPosition}/${selectedConversation.total})`}
+                </Typography>
+                {selectedConversation.truncated && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: themedColors.textTertiary,
+                      display: "block",
+                      mt: 0.5,
+                    }}
+                  >
+                    Naytossa {selectedConversation.speeches.length}/
+                    {selectedConversation.total} puheenvuoroa.
+                  </Typography>
+                )}
+                <Box sx={{ mt: 1.5 }}>
+                  {selectedConversation.speeches.map((speech) => {
+                    const isSelected = speech.id === selectedSpeech?.id;
+                    return (
+                      <Box
+                        key={speech.id}
+                        ref={isSelected ? selectedSpeechRef : null}
+                        sx={{
+                          p: 1.25,
+                          borderRadius: 1.5,
+                          mb: 1.25,
+                          border: `1px solid ${
+                            isSelected
+                              ? colors.primaryLight
+                              : themedColors.dataBorder
+                          }`,
+                          bgcolor: isSelected
+                            ? `${colors.primaryLight}10`
+                            : themedColors.backgroundPaper,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: 1,
+                            alignItems: "center",
+                            mb: 0.5,
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            fontWeight={700}
+                            sx={{ color: themedColors.textPrimary }}
+                          >
+                            {speech.first_name} {speech.last_name}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: themedColors.textSecondary }}
+                          >
+                            {formatSpeechTime(
+                              speech.start_time,
+                              speech.end_time,
+                            )}
+                          </Typography>
+                        </Box>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 0.5,
+                            mb: 0.75,
+                          }}
+                        >
+                          {speech.party_abbreviation && (
+                            <Chip
+                              size="small"
+                              label={speech.party_abbreviation.toUpperCase()}
+                              sx={{ height: 18, fontSize: "0.62rem" }}
+                            />
+                          )}
+                          {speech.speech_type && (
+                            <Chip
+                              size="small"
+                              label={speech.speech_type}
+                              sx={{ height: 18, fontSize: "0.62rem" }}
+                            />
+                          )}
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: themedColors.textPrimary,
+                            lineHeight: 1.5,
+                            whiteSpace: "pre-line",
+                          }}
+                        >
+                          {speech.content || "Ei puhesisaltoa saatavilla."}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </Drawer>
     </Box>
   );
 };
