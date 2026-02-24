@@ -50,6 +50,24 @@
     "opposition": "Oppositio",
     "participation": "Osallistuminen",
     "discipline": "Puoluekuri",
+    "totalParties": "Puolueita",
+    "totalMembers": "Kansanedustajia",
+    "weightedParticipation": "Painotettu osallistuminen",
+    "searchPlaceholder": "Hae puolueen nimellä tai tunnuksella",
+    "showingResults": "Näytetään {{shown}} / {{total}} puolueesta",
+    "womenShort": "N",
+    "menShort": "M",
+    "filters": {
+      "all": "Kaikki"
+    },
+    "table": {
+      "party": "Puolue",
+      "status": "Asema",
+      "members": "Jäseniä",
+      "participation": "Osallistuminen",
+      "genderSplit": "Sukupuolijakauma",
+      "averageAge": "Keski-ikä"
+    },
     "detail": {
       "tabs": {
         "members": "Jäsenet",
