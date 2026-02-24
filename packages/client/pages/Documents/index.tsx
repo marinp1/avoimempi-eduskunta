@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
+	Autocomplete,
 	Box,
 	TextField,
 	Select,
@@ -406,7 +407,13 @@ interface InterpellationDetail {
 	}>;
 }
 
-function InterpellationCard({ item }: { item: InterpellationListItem }) {
+function InterpellationCard({
+	item,
+	onSubjectClick,
+}: {
+	item: InterpellationListItem;
+	onSubjectClick?: (subject: string) => void;
+}) {
 	const { t } = useTranslation();
 
 	const [expanded, setExpanded] = useState(false);
@@ -538,9 +545,11 @@ function InterpellationCard({ item }: { item: InterpellationListItem }) {
 									label={subject}
 									size="small"
 									variant="outlined"
+									onClick={onSubjectClick ? (e) => { e.stopPropagation(); onSubjectClick(subject); } : undefined}
 									sx={{
 										borderColor: colors.dataBorder,
 										color: colors.textSecondary,
+										cursor: onSubjectClick ? "pointer" : "default",
 									}}
 								/>
 							))}
@@ -627,21 +636,6 @@ function InterpellationCard({ item }: { item: InterpellationListItem }) {
 																alignItems="center"
 															>
 																{idx + 1}
-																{signer.is_first_signer === 1 && (
-																	<Chip
-																		label={t(
-																			"documents.firstSigner",
-																			"Ensimmäinen",
-																		)}
-																		size="small"
-																		sx={{
-																			height: 20,
-																			fontSize: "0.7rem",
-																			backgroundColor: colors.primaryLight,
-																			color: colors.primary,
-																		}}
-																	/>
-																)}
 															</Stack>
 														</TableCell>
 														<TableCell>
@@ -882,8 +876,10 @@ interface LegislativeInitiativeDetail {
 
 function LegislativeInitiativeCard({
 	item,
+	onSubjectClick,
 }: {
 	item: LegislativeInitiativeListItem;
+	onSubjectClick?: (subject: string) => void;
 }) {
 	const { t } = useTranslation();
 	const [expanded, setExpanded] = useState(false);
@@ -1020,9 +1016,11 @@ function LegislativeInitiativeCard({
 									label={subject}
 									size="small"
 									variant="outlined"
+									onClick={onSubjectClick ? (e) => { e.stopPropagation(); onSubjectClick(subject); } : undefined}
 									sx={{
 										borderColor: colors.dataBorder,
 										color: colors.textSecondary,
+										cursor: onSubjectClick ? "pointer" : "default",
 									}}
 								/>
 							))}
@@ -1254,7 +1252,13 @@ interface GovernmentProposalDetail {
 	}>;
 }
 
-function GovernmentProposalCard({ item }: { item: GovernmentProposalListItem }) {
+function GovernmentProposalCard({
+	item,
+	onSubjectClick,
+}: {
+	item: GovernmentProposalListItem;
+	onSubjectClick?: (subject: string) => void;
+}) {
 	const { t } = useTranslation();
 
 	const [expanded, setExpanded] = useState(false);
@@ -1387,9 +1391,11 @@ function GovernmentProposalCard({ item }: { item: GovernmentProposalListItem }) 
 									label={subject}
 									size="small"
 									variant="outlined"
+									onClick={onSubjectClick ? (e) => { e.stopPropagation(); onSubjectClick(subject); } : undefined}
 									sx={{
 										borderColor: colors.dataBorder,
 										color: colors.textSecondary,
+										cursor: onSubjectClick ? "pointer" : "default",
 									}}
 								/>
 							))}
@@ -1843,7 +1849,13 @@ interface OralQuestionDetail {
 	}>;
 }
 
-function OralQuestionCard({ item }: { item: OralQuestionListItem }) {
+function OralQuestionCard({
+	item,
+	onSubjectClick,
+}: {
+	item: OralQuestionListItem;
+	onSubjectClick?: (subject: string) => void;
+}) {
 	const { t } = useTranslation();
 
 	const [expanded, setExpanded] = useState(false);
@@ -1960,9 +1972,11 @@ function OralQuestionCard({ item }: { item: OralQuestionListItem }) {
 									label={subject}
 									size="small"
 									variant="outlined"
+									onClick={onSubjectClick ? (e) => { e.stopPropagation(); onSubjectClick(subject); } : undefined}
 									sx={{
 										borderColor: colors.dataBorder,
 										color: colors.textSecondary,
+										cursor: onSubjectClick ? "pointer" : "default",
 									}}
 								/>
 							))}
@@ -2064,7 +2078,13 @@ function OralQuestionCard({ item }: { item: OralQuestionListItem }) {
 	);
 }
 
-function WrittenQuestionCard({ item }: { item: WrittenQuestionListItem }) {
+function WrittenQuestionCard({
+	item,
+	onSubjectClick,
+}: {
+	item: WrittenQuestionListItem;
+	onSubjectClick?: (subject: string) => void;
+}) {
 	const { t } = useTranslation();
 
 	const [expanded, setExpanded] = useState(false);
@@ -2209,6 +2229,18 @@ function WrittenQuestionCard({ item }: { item: WrittenQuestionListItem }) {
 								}}
 							/>
 						)}
+
+						{item.answer_date && (
+							<Chip
+								label={`${t("documents.answered", "Vastattu")} ${formatDate(item.answer_date)}`}
+								size="small"
+								sx={{
+									backgroundColor: colors.success,
+									color: "#fff",
+									fontWeight: 500,
+								}}
+							/>
+						)}
 					</Stack>
 
 					{/* Subjects */}
@@ -2220,9 +2252,11 @@ function WrittenQuestionCard({ item }: { item: WrittenQuestionListItem }) {
 									label={subject}
 									size="small"
 									variant="outlined"
+									onClick={onSubjectClick ? (e) => { e.stopPropagation(); onSubjectClick(subject); } : undefined}
 									sx={{
 										borderColor: colors.dataBorder,
 										color: colors.textSecondary,
+										cursor: onSubjectClick ? "pointer" : "default",
 									}}
 								/>
 							))}
@@ -2309,21 +2343,6 @@ function WrittenQuestionCard({ item }: { item: WrittenQuestionListItem }) {
 																alignItems="center"
 															>
 																{idx + 1}
-																{signer.is_first_signer === 1 && (
-																	<Chip
-																		label={t(
-																			"documents.firstSigner",
-																			"Ensimmäinen",
-																		)}
-																		size="small"
-																		sx={{
-																			height: 20,
-																			fontSize: "0.7rem",
-																			backgroundColor: colors.primaryLight,
-																			color: colors.primary,
-																		}}
-																	/>
-																)}
 															</Stack>
 														</TableCell>
 														<TableCell>
@@ -2341,6 +2360,7 @@ function WrittenQuestionCard({ item }: { item: WrittenQuestionListItem }) {
 							)}
 
 							{/* Answer minister info */}
+						{/* TODO: Show full answer text (KKV document body) once KKV answer documents are imported into database */}
 							{detail.answer_minister_first_name && (
 								<Box>
 									<Stack
@@ -3127,6 +3147,9 @@ export default function Documents() {
 		Array<{ committee_name: string; count: number }>
 	>([]);
 	const [committeeFiltersLoading, setCommitteeFiltersLoading] = useState(false);
+	const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+	const [subjectOptions, setSubjectOptions] = useState<string[]>([]);
+	const [subjectsLoading, setSubjectsLoading] = useState(false);
 
 	const limit = 20;
 
@@ -3164,6 +3187,29 @@ export default function Documents() {
 		fetchYears();
 	}, [apiBase, initiativeTypeCode]);
 
+	// Fetch subjects when document type changes (skip committee-reports which has no subject table)
+	useEffect(() => {
+		if (documentType === "committee-reports") {
+			setSubjectOptions([]);
+			return;
+		}
+		const fetchSubjects = async () => {
+			setSubjectsLoading(true);
+			try {
+				const response = await fetch(`${apiBase}/subjects`);
+				if (!response.ok) throw new Error("Failed to fetch subjects");
+				const data: { subject_text: string; count: number }[] = await response.json();
+				setSubjectOptions(data.map((item) => item.subject_text));
+			} catch (err) {
+				console.error("Error fetching subjects:", err);
+				setSubjectOptions([]);
+			} finally {
+				setSubjectsLoading(false);
+			}
+		};
+		fetchSubjects();
+	}, [apiBase, documentType]);
+
 	// Fetch documents
 	const fetchDocuments = useCallback(
 		async (pageNum: number, append = false) => {
@@ -3175,6 +3221,7 @@ export default function Documents() {
 				});
 				if (debouncedQuery) params.set("q", debouncedQuery);
 				if (selectedYear !== "all") params.set("year", selectedYear);
+				if (selectedSubject) params.set("subject", selectedSubject);
 				if (initiativeTypeCode) {
 					params.set("initiativeTypeCode", initiativeTypeCode);
 				}
@@ -3203,6 +3250,7 @@ export default function Documents() {
 		[
 			debouncedQuery,
 			selectedYear,
+			selectedSubject,
 			items,
 			apiBase,
 			initiativeTypeCode,
@@ -3219,6 +3267,7 @@ export default function Documents() {
 	}, [
 		debouncedQuery,
 		selectedYear,
+		selectedSubject,
 		apiBase,
 		initiativeTypeCode,
 		documentType,
@@ -3306,6 +3355,8 @@ export default function Documents() {
 	const handleDocumentTypeChange = (newType: DocumentType) => {
 		setDocumentType(newType);
 		setSelectedYear("all");
+		setSelectedSubject(null);
+		setSubjectOptions([]);
 		setSelectedSourceCommittee("all");
 		setSelectedRecipientCommittee("all");
 		setSourceCommittees([]);
@@ -3476,6 +3527,30 @@ export default function Documents() {
 					</Stack>
 				)}
 
+				{/* Subject filter (not shown for committee-reports) */}
+				{documentType !== "committee-reports" && (
+					<Autocomplete
+						options={subjectOptions}
+						value={selectedSubject}
+						onChange={(_event, newValue) => setSelectedSubject(newValue)}
+						loading={subjectsLoading}
+						renderInput={(params) => (
+							<TextField
+								{...params}
+								label={t("documents.subjectFilter", "Aihe")}
+								sx={{
+									backgroundColor: colors.backgroundDefault,
+									"& .MuiOutlinedInput-root": {
+										"& fieldset": {
+											borderColor: colors.dataBorder,
+										},
+									},
+								}}
+							/>
+						)}
+					/>
+				)}
+
 				{/* Result count */}
 				<Typography variant="body2" color={colors.textSecondary}>
 					{t("documents.showing")} {items.length} / {totalCount}{" "}
@@ -3500,26 +3575,26 @@ export default function Documents() {
 					<Stack spacing={2}>
 						{documentType === "interpellations"
 							? (items as InterpellationListItem[]).map((item) => (
-									<InterpellationCard key={item.id} item={item} />
+									<InterpellationCard key={item.id} item={item} onSubjectClick={setSelectedSubject} />
 								))
 							: documentType === "government-proposals"
 								? (items as GovernmentProposalListItem[]).map((item) => (
-										<GovernmentProposalCard key={item.id} item={item} />
+										<GovernmentProposalCard key={item.id} item={item} onSubjectClick={setSelectedSubject} />
 									))
 								: documentType === "oral-questions"
 									? (items as OralQuestionListItem[]).map((item) => (
-											<OralQuestionCard key={item.id} item={item} />
+											<OralQuestionCard key={item.id} item={item} onSubjectClick={setSelectedSubject} />
 										))
 								: isLegislativeInitiativeType
 									? (items as LegislativeInitiativeListItem[]).map((item) => (
-											<LegislativeInitiativeCard key={item.id} item={item} />
+											<LegislativeInitiativeCard key={item.id} item={item} onSubjectClick={setSelectedSubject} />
 										))
 								: documentType === "committee-reports"
 									? (items as CommitteeReportListItem[]).map((item) => (
 											<CommitteeReportCard key={item.id} item={item} />
 										))
 									: (items as WrittenQuestionListItem[]).map((item) => (
-											<WrittenQuestionCard key={item.id} item={item} />
+											<WrittenQuestionCard key={item.id} item={item} onSubjectClick={setSelectedSubject} />
 										))}
 
 						{/* Load more button */}
