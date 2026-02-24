@@ -37,9 +37,14 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
+import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { colors } from "#client/theme/index";
+import {
+  isEduskuntaOfficialUrl,
+  toEduskuntaUrl,
+} from "#client/utils/eduskunta-links";
 
 type DocumentType =
   | "interpellations"
@@ -86,7 +91,10 @@ const getDocumentApiConfig = (
     return { apiBase: "/api/written-questions", initiativeTypeCode: null };
   }
   if (documentType === "written-question-responses") {
-    return { apiBase: "/api/written-question-responses", initiativeTypeCode: null };
+    return {
+      apiBase: "/api/written-question-responses",
+      initiativeTypeCode: null,
+    };
   }
   if (documentType === "expert-statements") {
     return { apiBase: "/api/expert-statements", initiativeTypeCode: null };
@@ -102,7 +110,9 @@ const buildKysymysPdfUrl = (identifier: string | null): string | null => {
   if (!identifier) return null;
   const m = identifier.match(/^(KKV?)\s+(\d+)\/(\d{4})\s+vp$/i);
   if (!m) return null;
-  return `https://www.eduskunta.fi/FI/vaski/Kysymys/Documents/${m[1].toUpperCase()}_${parseInt(m[2], 10)}+${m[3]}.pdf`;
+  return toEduskuntaUrl(
+    `/FI/vaski/Kysymys/Documents/${m[1].toUpperCase()}_${parseInt(m[2], 10)}+${m[3]}.pdf`,
+  );
 };
 
 const formatDate = (dateStr: string | null) => {
@@ -392,23 +402,35 @@ function InlineRelatedSessions({
                         <Box
                           sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}
                         >
-                          {details.links.slice(0, 4).map((link) => (
-                            <Chip
-                              key={link.id}
-                              size="small"
-                              component="a"
-                              clickable
-                              href={link.url || undefined}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              label={
-                                link.document_tunnus ||
-                                link.label ||
-                                "Asiakirjalinkki"
-                              }
-                              sx={{ height: 20, fontSize: "0.65rem" }}
-                            />
-                          ))}
+                          {details.links.slice(0, 4).map((link) =>
+                            isEduskuntaOfficialUrl(link.url) ? (
+                              <EduskuntaSourceLink
+                                key={link.id}
+                                href={link.url as string}
+                                sx={{ fontSize: "0.65rem" }}
+                              >
+                                {link.document_tunnus ||
+                                  link.label ||
+                                  "Asiakirjalinkki"}
+                              </EduskuntaSourceLink>
+                            ) : (
+                              <Chip
+                                key={link.id}
+                                size="small"
+                                component="a"
+                                clickable
+                                href={link.url || undefined}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                label={
+                                  link.document_tunnus ||
+                                  link.label ||
+                                  "Asiakirjalinkki"
+                                }
+                                sx={{ height: 20, fontSize: "0.65rem" }}
+                              />
+                            ),
+                          )}
                           {details.links.length > 4 && (
                             <Typography
                               variant="caption"
@@ -2016,7 +2038,10 @@ function WrittenQuestionResponseCard({
   const { t } = useTranslation();
 
   const [expanded, setExpanded] = useState(false);
-  const [questionDetail, setQuestionDetail] = useState<Pick<WrittenQuestionDetail, "question_text" | "question_rich_text" | "answer_parliament_identifier"> | null>(null);
+  const [questionDetail, setQuestionDetail] = useState<Pick<
+    WrittenQuestionDetail,
+    "question_text" | "question_rich_text" | "answer_parliament_identifier"
+  > | null>(null);
   const [loading, setLoading] = useState(false);
 
   const subjects = item.subjects
@@ -2060,7 +2085,13 @@ function WrittenQuestionResponseCard({
       >
         <Stack spacing={1.5}>
           {/* Identifier + answered chip row */}
-          <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" gap={0.5}>
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            flexWrap="wrap"
+            gap={0.5}
+          >
             <Typography
               variant="caption"
               sx={{ color: colors.textSecondary, fontFamily: "monospace" }}
@@ -2108,7 +2139,9 @@ function WrittenQuestionResponseCard({
           {/* Parent question identifier */}
           <Typography variant="caption" sx={{ color: colors.textSecondary }}>
             {t("documents.writtenQuestion", "Kirjallinen kysymys")}:{" "}
-            <span style={{ fontFamily: "monospace" }}>{item.question_identifier}</span>
+            <span style={{ fontFamily: "monospace" }}>
+              {item.question_identifier}
+            </span>
           </Typography>
 
           {/* Subject chips */}
@@ -2140,7 +2173,10 @@ function WrittenQuestionResponseCard({
                   label={`+${remainingSubjects}`}
                   size="small"
                   variant="outlined"
-                  sx={{ borderColor: colors.dataBorder, color: colors.textSecondary }}
+                  sx={{
+                    borderColor: colors.dataBorder,
+                    color: colors.textSecondary,
+                  }}
                 />
               )}
             </Stack>
@@ -2169,32 +2205,25 @@ function WrittenQuestionResponseCard({
 
           {/* External link buttons */}
           {(eduskuntaUrl || questionEduskuntaUrl) && (
-            <Stack direction="row" spacing={1} flexWrap="wrap" gap={0.5} sx={{ mb: 2, pt: 2 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              flexWrap="wrap"
+              gap={0.5}
+              sx={{ mb: 2, pt: 2 }}
+            >
               {eduskuntaUrl && (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  href={eduskuntaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  sx={{ textTransform: "none", color: colors.primary, borderColor: colors.primary }}
-                >
-                  {t("documents.viewResponseOnEduskunta", "Vastaus eduskunta.fi:ssä")}
-                </Button>
+                <EduskuntaSourceLink href={eduskuntaUrl} stopPropagation>
+                  {t("documents.viewResponseOnEduskunta", "Vastaus (PDF)")}
+                </EduskuntaSourceLink>
               )}
               {questionEduskuntaUrl && (
-                <Button
-                  size="small"
-                  variant="outlined"
+                <EduskuntaSourceLink
                   href={questionEduskuntaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  sx={{ textTransform: "none", color: colors.textSecondary, borderColor: colors.dataBorder }}
+                  stopPropagation
                 >
-                  {t("documents.viewQuestionOnEduskunta", "Kysymys eduskunta.fi:ssä")}
-                </Button>
+                  {t("documents.viewQuestionOnEduskunta", "Kysymys (PDF)")}
+                </EduskuntaSourceLink>
               )}
             </Stack>
           )}
@@ -2202,7 +2231,10 @@ function WrittenQuestionResponseCard({
           {/* Question text from fetched detail */}
           {!loading && questionDetail?.question_rich_text ? (
             <Box>
-              <Typography variant="subtitle2" sx={{ color: colors.textSecondary, mb: 1 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{ color: colors.textSecondary, mb: 1 }}
+              >
                 {t("documents.questionText", "Kysymyksen teksti")}
               </Typography>
               <Box
@@ -2213,12 +2245,17 @@ function WrittenQuestionResponseCard({
                   borderLeft: `4px solid ${colors.info}`,
                 }}
               >
-                <RichTextRenderer document={questionDetail.question_rich_text} />
+                <RichTextRenderer
+                  document={questionDetail.question_rich_text}
+                />
               </Box>
             </Box>
           ) : !loading && questionDetail?.question_text ? (
             <Box>
-              <Typography variant="subtitle2" sx={{ color: colors.textSecondary, mb: 1 }}>
+              <Typography
+                variant="subtitle2"
+                sx={{ color: colors.textSecondary, mb: 1 }}
+              >
                 {t("documents.questionText", "Kysymyksen teksti")}
               </Typography>
               <Box
@@ -2229,7 +2266,10 @@ function WrittenQuestionResponseCard({
                   borderLeft: `4px solid ${colors.info}`,
                 }}
               >
-                <Typography variant="body2" sx={{ color: colors.textPrimary, whiteSpace: "pre-wrap" }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: colors.textPrimary, whiteSpace: "pre-wrap" }}
+                >
                   {questionDetail.question_text}
                 </Typography>
               </Box>
@@ -2249,17 +2289,19 @@ function ExpertStatementCard({ item }: { item: ExpertStatementListItem }) {
   const { t } = useTranslation();
 
   const docTypeLabel =
-    ({
-      asiantuntijalausunto: t("documents.expertStatement", "Lausunto"),
-      asiantuntijalausunnon_liite: t(
-        "documents.expertStatementAttachment",
-        "Lausunnon liite",
-      ),
-      asiantuntijasuunnitelma: t(
-        "documents.expertHearingPlan",
-        "Kuulemissuunnitelma",
-      ),
-    } as Record<string, string>)[item.document_type] ?? item.document_type;
+    (
+      {
+        asiantuntijalausunto: t("documents.expertStatement", "Lausunto"),
+        asiantuntijalausunnon_liite: t(
+          "documents.expertStatementAttachment",
+          "Lausunnon liite",
+        ),
+        asiantuntijasuunnitelma: t(
+          "documents.expertHearingPlan",
+          "Kuulemissuunnitelma",
+        ),
+      } as Record<string, string>
+    )[item.document_type] ?? item.document_type;
 
   return (
     <DataCard>
@@ -2826,42 +2868,18 @@ function WrittenQuestionCard({
               {(kkPdfUrl || detail.answer_parliament_identifier) && (
                 <Stack direction="row" spacing={1} flexWrap="wrap" gap={0.5}>
                   {kkPdfUrl && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      href={kkPdfUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      sx={{
-                        textTransform: "none",
-                        color: colors.primary,
-                        borderColor: colors.primary,
-                      }}
-                    >
+                    <EduskuntaSourceLink href={kkPdfUrl} stopPropagation>
                       {t("documents.viewQuestionPdf", "Kysymys (PDF)")}
-                    </Button>
+                    </EduskuntaSourceLink>
                   )}
                   {(() => {
                     const url = buildKysymysPdfUrl(
                       detail.answer_parliament_identifier,
                     );
                     return url ? (
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        sx={{
-                          textTransform: "none",
-                          color: colors.textSecondary,
-                          borderColor: colors.dataBorder,
-                        }}
-                      >
+                      <EduskuntaSourceLink href={url} stopPropagation>
                         {t("documents.viewResponsePdf", "Vastaus (PDF)")}
-                      </Button>
+                      </EduskuntaSourceLink>
                     ) : null;
                   })()}
                 </Stack>
@@ -3828,7 +3846,10 @@ export default function Documents() {
 
   // Fetch subjects when document type changes (skip committee-reports and expert-statements which has no subject table)
   useEffect(() => {
-    if (documentType === "committee-reports" || documentType === "expert-statements") {
+    if (
+      documentType === "committee-reports" ||
+      documentType === "expert-statements"
+    ) {
       setSubjectOptions([]);
       return;
     }
@@ -4085,7 +4106,10 @@ export default function Documents() {
                 {t("documents.writtenQuestions", "Kirjalliset kysymykset")}
               </MenuItem>
               <MenuItem value="written-question-responses">
-                {t("documents.writtenQuestionResponses", "Kirjalliset vastaukset")}
+                {t(
+                  "documents.writtenQuestionResponses",
+                  "Kirjalliset vastaukset",
+                )}
               </MenuItem>
               <MenuItem value="expert-statements">
                 {t("documents.expertStatements", "Asiantuntijalausunnot")}
@@ -4240,7 +4264,10 @@ export default function Documents() {
                   {t("documents.allCommittees", "Kaikki valiokunnat")}
                 </MenuItem>
                 {expertCommittees.map((item) => (
-                  <MenuItem key={item.committee_name} value={item.committee_name}>
+                  <MenuItem
+                    key={item.committee_name}
+                    value={item.committee_name}
+                  >
                     {item.committee_name} ({item.count})
                   </MenuItem>
                 ))}
@@ -4274,28 +4301,29 @@ export default function Documents() {
         )}
 
         {/* Subject filter (not shown for committee-reports or expert-statements) */}
-        {documentType !== "committee-reports" && documentType !== "expert-statements" && (
-          <Autocomplete
-            options={subjectOptions}
-            value={selectedSubject}
-            onChange={(_event, newValue) => setSelectedSubject(newValue)}
-            loading={subjectsLoading}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label={t("documents.subjectFilter", "Aihe")}
-                sx={{
-                  backgroundColor: colors.backgroundDefault,
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": {
-                      borderColor: colors.dataBorder,
+        {documentType !== "committee-reports" &&
+          documentType !== "expert-statements" && (
+            <Autocomplete
+              options={subjectOptions}
+              value={selectedSubject}
+              onChange={(_event, newValue) => setSelectedSubject(newValue)}
+              loading={subjectsLoading}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label={t("documents.subjectFilter", "Aihe")}
+                  sx={{
+                    backgroundColor: colors.backgroundDefault,
+                    "& .MuiOutlinedInput-root": {
+                      "& fieldset": {
+                        borderColor: colors.dataBorder,
+                      },
                     },
-                  },
-                }}
-              />
-            )}
-          />
-        )}
+                  }}
+                />
+              )}
+            />
+          )}
 
         {/* Result count */}
         <Typography variant="body2" color={colors.textSecondary}>
@@ -4356,24 +4384,26 @@ export default function Documents() {
                           <CommitteeReportCard key={item.id} item={item} />
                         ))
                       : documentType === "written-question-responses"
-                        ? (items as WrittenQuestionResponseListItem[]).map((item) => (
-                            <WrittenQuestionResponseCard
-                              key={item.id}
-                              item={item}
-                              onSubjectClick={setSelectedSubject}
-                            />
-                          ))
+                        ? (items as WrittenQuestionResponseListItem[]).map(
+                            (item) => (
+                              <WrittenQuestionResponseCard
+                                key={item.id}
+                                item={item}
+                                onSubjectClick={setSelectedSubject}
+                              />
+                            ),
+                          )
                         : documentType === "expert-statements"
                           ? (items as ExpertStatementListItem[]).map((item) => (
                               <ExpertStatementCard key={item.id} item={item} />
                             ))
                           : (items as WrittenQuestionListItem[]).map((item) => (
-                            <WrittenQuestionCard
-                              key={item.id}
-                              item={item}
-                              onSubjectClick={setSelectedSubject}
-                            />
-                          ))}
+                              <WrittenQuestionCard
+                                key={item.id}
+                                item={item}
+                                onSubjectClick={setSelectedSubject}
+                              />
+                            ))}
 
             {/* Load more button */}
             {page < totalPages && (

@@ -27,6 +27,7 @@ import {
   extractDocumentIdentifiers,
   RelatedVotings,
 } from "#client/components/DocumentCards";
+import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { refs } from "#client/references";
 import { commonStyles, spacing } from "#client/theme";
@@ -38,6 +39,10 @@ import {
 } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import {
+  isEduskuntaOfficialUrl,
+  toEduskuntaUrl,
+} from "#client/utils/eduskunta-links";
 
 type SessionWithSections = {
   id: number;
@@ -539,7 +544,9 @@ const Home = () => {
     if (match) {
       const [, code, number, year] = match;
       const slug = `${code.toUpperCase()}_${Number.parseInt(number, 10)}+${year}`;
-      return `https://www.eduskunta.fi/FI/vaski/KasittelytiedotValtiopaivaasia/Sivut/${slug}.aspx`;
+      return toEduskuntaUrl(
+        `/FI/vaski/KasittelytiedotValtiopaivaasia/Sivut/${slug}.aspx`,
+      );
     }
     return null;
   };
@@ -1240,11 +1247,10 @@ const Home = () => {
                 >
                   <span>
                     {href ? (
-                      <Link
+                      <EduskuntaSourceLink
                         href={href}
-                        target="_blank"
-                        rel="noreferrer"
-                        underline="none"
+                        showExternalIcon={false}
+                        sx={{ color: "inherit", "&:hover": { textDecoration: "none" } }}
                       >
                         <Chip
                           label={reference.code}
@@ -1257,7 +1263,7 @@ const Home = () => {
                           clickable
                           sx={chipSx}
                         />
-                      </Link>
+                      </EduskuntaSourceLink>
                     ) : (
                       <Chip label={reference.code} size="small" sx={chipSx} />
                     )}
@@ -1360,18 +1366,15 @@ const Home = () => {
                     <td>
                       {row.related_document_identifier ? (
                         href ? (
-                          <Link
+                          <EduskuntaSourceLink
                             href={href}
-                            target="_blank"
-                            rel="noreferrer"
-                            underline="hover"
                             sx={{
                               fontSize: "0.75rem",
                               color: colors.primaryLight,
                             }}
                           >
                             {row.related_document_identifier}
-                          </Link>
+                          </EduskuntaSourceLink>
                         ) : (
                           row.related_document_identifier
                         )
@@ -1852,19 +1855,31 @@ const Home = () => {
                   flexWrap: "wrap",
                 }}
               >
-                <Link
-                  href={link.url || "#"}
-                  underline="hover"
-                  target="_blank"
-                  rel="noreferrer"
-                  sx={{
-                    fontSize: "0.8125rem",
-                    fontWeight: 600,
-                    color: colors.textPrimary,
-                  }}
-                >
-                  {link.label || link.document_title || link.url}
-                </Link>
+                {isEduskuntaOfficialUrl(link.url) ? (
+                  <EduskuntaSourceLink
+                    href={link.url as string}
+                    sx={{
+                      fontSize: "0.8125rem",
+                      color: colors.textPrimary,
+                    }}
+                  >
+                    {link.label || link.document_title || link.url}
+                  </EduskuntaSourceLink>
+                ) : (
+                  <Link
+                    href={link.url || "#"}
+                    underline="hover"
+                    target="_blank"
+                    rel="noreferrer"
+                    sx={{
+                      fontSize: "0.8125rem",
+                      fontWeight: 600,
+                      color: colors.textPrimary,
+                    }}
+                  >
+                    {link.label || link.document_title || link.url}
+                  </Link>
+                )}
                 {link.document_tunnus && (
                   <Typography
                     sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
@@ -1931,7 +1946,9 @@ const Home = () => {
     const { report, entries } = rollCallData;
     const documentIdentifier =
       report.edk_identifier || report.parliament_identifier;
-    const documentUrl = `https://www.eduskunta.fi/valtiopaivaasiakirjat/${encodeURIComponent(documentIdentifier)}`;
+    const documentUrl = toEduskuntaUrl(
+      `/valtiopaivaasiakirjat/${encodeURIComponent(documentIdentifier)}`,
+    );
 
     const formatEntryType = (entryType: RollCallEntry["entry_type"]) =>
       entryType === "late"
@@ -2001,11 +2018,8 @@ const Home = () => {
           <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
             {t("sessions.rollCallDocument")}: {report.edk_identifier}
           </Typography>
-          <Link
+          <EduskuntaSourceLink
             href={documentUrl}
-            target="_blank"
-            rel="noreferrer"
-            underline="hover"
             sx={{
               fontSize: "0.75rem",
               fontWeight: 600,
@@ -2015,7 +2029,7 @@ const Home = () => {
             {t("sessions.rollCallOpenDocument", {
               defaultValue: "Avaa valtiopäiväasiakirja",
             })}
-          </Link>
+          </EduskuntaSourceLink>
           {report.roll_call_start_time && (
             <Typography
               sx={{ fontSize: "0.75rem", color: colors.textSecondary }}

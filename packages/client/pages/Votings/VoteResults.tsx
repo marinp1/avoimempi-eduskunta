@@ -1,7 +1,6 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import InsightsIcon from "@mui/icons-material/Insights";
-import LaunchIcon from "@mui/icons-material/Launch";
 import {
   Alert,
   Box,
@@ -22,6 +21,7 @@ import {
   DocumentCard,
   extractDocumentIdentifiers,
 } from "#client/components/DocumentCards";
+import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { refs } from "#client/references";
 import { commonStyles } from "#client/theme";
@@ -107,11 +107,6 @@ const emptyFocusState: FocusVotingState = {
   loading: false,
   error: null,
   row: null,
-};
-
-const eduskuntaLink = (href: string) => {
-  if (!href.startsWith("/")) return `https://www.eduskunta.fi/${href}`;
-  return `https://www.eduskunta.fi${href}`;
 };
 
 const voteMargin = (vote: VotingSearchRow) => Math.abs(vote.n_yes - vote.n_no);
@@ -319,22 +314,14 @@ const VotingRow: React.FC<{
         >
           #{vote.id}
         </Link>
-        <Link
-          target="_blank"
-          rel="noreferrer"
-          href={eduskuntaLink(vote.result_url)}
+        <EduskuntaSourceLink
+          href={vote.result_url}
           sx={{
-            color: voteColors.yes,
-            fontWeight: 500,
             fontSize: "0.75rem",
-            display: "flex",
-            alignItems: "center",
-            gap: 0.25,
           }}
         >
           {t("votings.results.results")}
-          <LaunchIcon sx={{ fontSize: 11 }} />
-        </Link>
+        </EduskuntaSourceLink>
       </Box>
 
       {/* Title (only if different from group title) */}
@@ -627,38 +614,22 @@ const VotingCard: React.FC<{
           >
             #{vote.id}
           </Link>
-          <Link
-            target="_blank"
-            rel="noreferrer"
-            href={eduskuntaLink(vote.result_url)}
+          <EduskuntaSourceLink
+            href={vote.result_url}
             sx={{
-              color: voteColors.yes,
-              fontWeight: 500,
               fontSize: "0.8rem",
-              display: "flex",
-              alignItems: "center",
-              gap: 0.25,
             }}
           >
             {t("votings.results.results")}
-            <LaunchIcon sx={{ fontSize: 12 }} />
-          </Link>
-          <Link
-            target="_blank"
-            rel="noreferrer"
-            href={eduskuntaLink(vote.proceedings_url)}
+          </EduskuntaSourceLink>
+          <EduskuntaSourceLink
+            href={vote.proceedings_url}
             sx={{
-              color: themedColors.primary,
-              fontWeight: 500,
               fontSize: "0.8rem",
-              display: "flex",
-              alignItems: "center",
-              gap: 0.25,
             }}
           >
             {t("votings.results.minutes")}
-            <LaunchIcon sx={{ fontSize: 12 }} />
-          </Link>
+          </EduskuntaSourceLink>
         </Box>
 
         {/* Inline document context */}

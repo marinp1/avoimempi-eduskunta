@@ -187,7 +187,8 @@
     "no": "Ei",
     "empty": "Tyhjää",
     "absent": "Poissa",
-    "share": "Jaa"
+    "share": "Jaa",
+    "officialSourceEduskunta": "eduskunta.fi"
   },
   "errors": {
     "loadFailed": "Tietojen lataaminen epäonnistui.",
