@@ -23,6 +23,7 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import type React from "react";
@@ -1208,159 +1209,113 @@ export default () => {
       <Box
         sx={{
           mt: 1.5,
-          p: 1.5,
-          borderRadius: 1,
-          border: `1px solid ${colors.primaryLight}25`,
-          background: `${colors.primaryLight}08`,
+          pl: 2,
+          borderLeft: `3px solid ${colors.primaryLight}40`,
         }}
       >
         <Typography
           sx={{
-            fontSize: "0.75rem",
+            fontSize: "0.6875rem",
             fontWeight: 700,
             color: colors.textSecondary,
             textTransform: "uppercase",
-            mb: 0.75,
+            letterSpacing: "0.05em",
+            mb: 1,
           }}
         >
           {t("sessions.minutesContent", { defaultValue: "Pöytäkirjateksti" })}
         </Typography>
 
         {parsed.narrativeBlocks.length > 0 && (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
             {parsed.narrativeBlocks.map((block, index) => (
-              <Box
+              <Typography
                 key={`${section.key}-minutes-block-${index}`}
                 sx={{
-                  p: 0.75,
-                  borderRadius: 1,
-                  background: colors.backgroundDefault,
-                  borderLeft: `3px solid ${colors.primaryLight}55`,
+                  fontSize: "0.8125rem",
+                  color: colors.textPrimary,
+                  whiteSpace: "pre-wrap",
+                  lineHeight: 1.6,
                 }}
               >
-                <Typography
-                  sx={{
-                    fontSize: "0.75rem",
-                    color: colors.textSecondary,
-                    whiteSpace: "pre-wrap",
-                  }}
-                >
-                  {block}
-                </Typography>
-              </Box>
+                {block}
+              </Typography>
             ))}
           </Box>
         )}
 
         {references.length > 0 && (
-          <Box sx={{ mt: parsed.narrativeBlocks.length > 0 ? 1 : 0 }}>
-            <Typography
-              sx={{
+          <Box
+            sx={{
+              mt: parsed.narrativeBlocks.length > 0 ? 1 : 0,
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 0.75,
+              alignItems: "center",
+            }}
+          >
+            {references.map((reference, index) => {
+              if (!reference.code) return null;
+              const href = buildValtiopaivaAsiakirjaUrl(reference.code);
+              const migratedAsRollCall = isReferenceMigratedAsRollCall(reference);
+              const tooltipTitle = migratedAsRollCall
+                ? t("sessions.minutesReferenceMigratedRollCall", {
+                    defaultValue: "Nimenhuutoraportti on migroitu.",
+                  })
+                : t("sessions.minutesReferenceNotMigrated", {
+                    defaultValue: "Asiakirjaa ei ole vielä migroitu.",
+                  });
+              const chipSx = {
+                fontFamily: "monospace",
                 fontSize: "0.75rem",
-                fontWeight: 700,
-                color: colors.textSecondary,
-                textTransform: "uppercase",
-                mb: 0.5,
-              }}
-            >
-              {t("sessions.minutesDocumentReferences", {
-                defaultValue: "Asiakirjaviitteet",
-              })}
-            </Typography>
-            <Box sx={{ overflowX: "auto" }}>
-              <Box
-                component="table"
-                sx={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  fontSize: "0.75rem",
-                  "& th, & td": {
-                    textAlign: "left",
-                    borderBottom: `1px solid ${colors.dataBorder}`,
-                    px: 0.75,
-                    py: 0.5,
-                    verticalAlign: "top",
-                  },
-                  "& th": {
-                    color: colors.textSecondary,
-                    fontWeight: 700,
-                    whiteSpace: "nowrap",
-                  },
-                  "& td": {
-                    color: colors.textPrimary,
-                  },
-                }}
-              >
-                <thead>
-                  <tr>
-                    <th>
-                      {t("sessions.minutesReferenceId", {
-                        defaultValue: "Vaski ID",
-                      })}
-                    </th>
-                    <th>
-                      {t("sessions.minutesReferenceCode", {
-                        defaultValue: "Tunniste",
-                      })}
-                    </th>
-                    <th>
-                      {t("sessions.minutesReferenceStatus", {
-                        defaultValue: "Tila",
-                      })}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {references.map((reference, index) => {
-                    const href = buildValtiopaivaAsiakirjaUrl(reference.code);
-                    const migratedAsRollCall =
-                      isReferenceMigratedAsRollCall(reference);
-                    return (
-                      <tr
-                        key={`${section.key}-minutes-reference-${reference.vaskiId ?? "null"}-${reference.code ?? "null"}-${index}`}
+                height: 24,
+                ...(href
+                  ? {
+                      background: migratedAsRollCall
+                        ? `${themedColors.success}15`
+                        : `${colors.primaryLight}15`,
+                      color: migratedAsRollCall
+                        ? themedColors.success
+                        : colors.primaryLight,
+                      border: `1px solid ${migratedAsRollCall ? themedColors.success : colors.primaryLight}40`,
+                      "& .MuiChip-icon": { color: "inherit", ml: "6px" },
+                    }
+                  : {
+                      background: colors.backgroundSubtle,
+                      color: colors.textTertiary,
+                    }),
+              };
+              return (
+                <Tooltip
+                  key={`${section.key}-minutes-reference-${reference.vaskiId ?? "null"}-${reference.code}-${index}`}
+                  title={tooltipTitle}
+                  arrow
+                >
+                  <span>
+                    {href ? (
+                      <Link
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        underline="none"
                       >
-                        <td>{reference.vaskiId ?? "-"}</td>
-                        <td>
-                          {reference.code ? (
-                            href ? (
-                              <Link
-                                href={href}
-                                target="_blank"
-                                rel="noreferrer"
-                                underline="hover"
-                                sx={{
-                                  fontSize: "0.75rem",
-                                  color: colors.primaryLight,
-                                  fontFamily: "monospace",
-                                }}
-                              >
-                                {reference.code}
-                              </Link>
-                            ) : (
-                              <Box component="span" sx={{ fontFamily: "monospace" }}>
-                                {reference.code}
-                              </Box>
-                            )
-                          ) : (
-                            "-"
-                          )}
-                        </td>
-                        <td>
-                          {migratedAsRollCall
-                            ? t("sessions.minutesReferenceMigratedRollCall", {
-                                defaultValue: "Migroitu: nimenhuutoraportti.",
-                              })
-                            : t("sessions.minutesReferenceNotMigrated", {
-                                defaultValue:
-                                  "Asiakirja havaittu, sisältöä ei ole vielä migroitu.",
-                              })}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </Box>
-            </Box>
+                        <Chip
+                          label={reference.code}
+                          size="small"
+                          icon={
+                            <OpenInNewIcon sx={{ fontSize: "12px !important" }} />
+                          }
+                          clickable
+                          sx={chipSx}
+                        />
+                      </Link>
+                    ) : (
+                      <Chip label={reference.code} size="small" sx={chipSx} />
+                    )}
+                  </span>
+                </Tooltip>
+              );
+            })}
           </Box>
         )}
       </Box>
