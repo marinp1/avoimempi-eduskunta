@@ -28,6 +28,7 @@ import { commonStyles } from "#client/theme";
 import { DataCard, VoteMarginBar } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { getVoteColors } from "#client/theme/vote-styles";
+import { formatDateFi, formatTimeFi } from "#client/utils/date-time";
 
 const CLOSE_VOTE_THRESHOLD = 10;
 
@@ -167,16 +168,11 @@ const sortRows = (rows: VotingSearchRow[], sortMode: SortMode) => {
   }
 };
 
-const formatDate = (dateStr: string | null | undefined) => {
-  if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleDateString("fi-FI");
-};
+const formatDate = (dateStr: string | null | undefined) =>
+  formatDateFi(dateStr);
 
-const formatTime = (dateStr: string | null | undefined) => {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  return d.toLocaleTimeString("fi-FI", { hour: "2-digit", minute: "2-digit" });
-};
+const formatTime = (dateStr: string | null | undefined) =>
+  formatTimeFi(dateStr, "");
 
 /** Compact voting row inside a multi-voting group */
 const VotingRow: React.FC<{
