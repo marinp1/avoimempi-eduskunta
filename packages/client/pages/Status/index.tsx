@@ -8,6 +8,7 @@ import {
 } from "@mui/icons-material";
 import {
   Alert,
+  Button,
   Box,
   Card,
   CardContent,
@@ -23,6 +24,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -72,6 +74,40 @@ interface SourceDataOverview {
   lastUpdated: string;
 }
 
+interface ImportSourcePageSummary {
+  tableName: string;
+  page: number | null;
+  importedRows: number;
+  distinctSourceRows: number;
+  firstScrapedAt: string | null;
+  lastScrapedAt: string | null;
+  firstMigratedAt: string | null;
+  lastMigratedAt: string | null;
+}
+
+interface ImportSourcePagesResponse {
+  tableName: string;
+  totalPages: number;
+  pages: ImportSourcePageSummary[];
+}
+
+interface ImportSourceTrailRow {
+  id: number;
+  tableName: string;
+  page: number | null;
+  sourcePkName: string | null;
+  sourcePkValue: string | null;
+  scrapedAt: string | null;
+  migratedAt: string | null;
+}
+
+interface ImportSourceTrailResponse {
+  tableName: string;
+  page: number;
+  totalRows: number;
+  rows: ImportSourceTrailRow[];
+}
+
 interface AffectedRow {
   id: number;
   label: string;
@@ -119,12 +155,36 @@ export default function Status() {
   const [loadingSanityChecks, setLoadingSanityChecks] = useState(false);
   const [loadingSourceData, setLoadingSourceData] = useState(false);
   const [sourceDataError, setSourceDataError] = useState<string | null>(null);
+  const [lookupTableName, setLookupTableName] = useState("");
+  const [lookupPage, setLookupPage] = useState("");
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [lookupPages, setLookupPages] = useState<ImportSourcePagesResponse | null>(
+    null,
+  );
+  const [lookupTrail, setLookupTrail] = useState<ImportSourceTrailResponse | null>(
+    null,
+  );
 
   useEffect(() => {
     fetchOverview();
     fetchSanityChecks();
     fetchSourceDataStatus();
   }, []);
+
+  useEffect(() => {
+    if (lookupTableName || !sourceData?.tables?.length) {
+      return;
+    }
+    setLookupTableName(sourceData.tables[0].tableName);
+  }, [lookupTableName, sourceData]);
+
+  useEffect(() => {
+    if (!lookupTableName) {
+      return;
+    }
+    fetchImportSourcePages(lookupTableName);
+  }, [lookupTableName]);
 
   const fetchOverview = async () => {
     try {
@@ -178,6 +238,82 @@ export default function Status() {
     } finally {
       setLoadingSourceData(false);
     }
+  };
+
+  const fetchImportSourcePages = async (tableName: string) => {
+    try {
+      setLookupLoading(true);
+      setLookupError(null);
+      const params = new URLSearchParams({
+        tableName,
+        limit: "100",
+        offset: "0",
+      });
+      const response = await fetch(`/api/import-source/pages?${params.toString()}`);
+      if (!response.ok) {
+        const errPayload = await response.json().catch(() => null);
+        throw new Error(
+          errPayload?.message || `HTTP error! status: ${response.status}`,
+        );
+      }
+      const data = (await response.json()) as ImportSourcePagesResponse;
+      setLookupPages(data);
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch import source pages";
+      setLookupError(message);
+      setLookupPages(null);
+      console.error("Error fetching import source pages:", err);
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  const fetchImportSourcePageTrail = async (tableName: string, page: number) => {
+    try {
+      setLookupLoading(true);
+      setLookupError(null);
+      const params = new URLSearchParams({
+        tableName,
+        page: String(page),
+        limit: "500",
+        offset: "0",
+      });
+      const response = await fetch(
+        `/api/import-source/page-trail?${params.toString()}`,
+      );
+      if (!response.ok) {
+        const errPayload = await response.json().catch(() => null);
+        throw new Error(
+          errPayload?.message || `HTTP error! status: ${response.status}`,
+        );
+      }
+      const data = (await response.json()) as ImportSourceTrailResponse;
+      setLookupTrail(data);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch page trail";
+      setLookupError(message);
+      setLookupTrail(null);
+      console.error("Error fetching import source page trail:", err);
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  const handleLookupTrail = async () => {
+    if (!lookupTableName.trim()) {
+      setLookupError("Anna taulun nimi.");
+      return;
+    }
+    const pageNumber = Number.parseInt(lookupPage, 10);
+    if (!Number.isFinite(pageNumber) || pageNumber < 1) {
+      setLookupError("Anna kelvollinen sivunumero (>= 1).");
+      return;
+    }
+    await fetchImportSourcePageTrail(lookupTableName.trim(), pageNumber);
   };
 
   const getStatusColor = (hasData: boolean) => {
@@ -575,6 +711,164 @@ export default function Status() {
           <Alert severity="warning">{sourceDataError}</Alert>
         ) : (
           <Alert severity="info">Lähdedatan tilaa ei ole saatavilla.</Alert>
+        )}
+      </Box>
+
+      {/* Import source lookup */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h5" gutterBottom>
+          Tuontijäljen haku
+        </Typography>
+        <Typography variant="body2" color="text.secondary" paragraph>
+          Erilliset kyselyt sivukohtaisiin aikaleimoihin ja lähderivien
+          tuontijälkeen.
+        </Typography>
+
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <TextField
+              fullWidth
+              label="Taulu"
+              value={lookupTableName}
+              onChange={(event) => {
+                setLookupTableName(event.target.value);
+                setLookupTrail(null);
+              }}
+              placeholder="esim. SaliDBIstunto"
+              size="small"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <TextField
+              fullWidth
+              label="Sivu"
+              type="number"
+              value={lookupPage}
+              onChange={(event) => setLookupPage(event.target.value)}
+              placeholder="1"
+              size="small"
+            />
+          </Grid>
+          <Grid
+            size={{ xs: 12, md: 5 }}
+            display="flex"
+            alignItems="center"
+            gap={1}
+          >
+            <Button
+              variant="outlined"
+              onClick={() => {
+                if (lookupTableName.trim()) {
+                  fetchImportSourcePages(lookupTableName.trim());
+                } else {
+                  setLookupError("Anna taulun nimi.");
+                }
+              }}
+              disabled={lookupLoading}
+            >
+              Hae sivut
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleLookupTrail}
+              disabled={lookupLoading}
+            >
+              Hae sivun trail
+            </Button>
+          </Grid>
+        </Grid>
+
+        {lookupError && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            {lookupError}
+          </Alert>
+        )}
+
+        {lookupLoading && (
+          <Box display="flex" justifyContent="center" my={2}>
+            <CircularProgress size={22} />
+          </Box>
+        )}
+
+        {lookupPages && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>
+              Sivukohtainen yhteenveto ({lookupPages.tableName},{" "}
+              {lookupPages.totalPages} sivua)
+            </Typography>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Sivu</TableCell>
+                    <TableCell align="right">Tuodut rivit</TableCell>
+                    <TableCell align="right">Uniikit lähderivit</TableCell>
+                    <TableCell>Ensimmäinen scrape</TableCell>
+                    <TableCell>Viimeisin scrape</TableCell>
+                    <TableCell>Viimeisin migrate</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {lookupPages.pages.map((entry) => (
+                    <TableRow
+                      key={`${entry.tableName}-${entry.page ?? "null"}`}
+                      hover
+                      sx={{ cursor: "pointer" }}
+                      onClick={() => {
+                        if (entry.page === null) return;
+                        setLookupPage(String(entry.page));
+                        fetchImportSourcePageTrail(entry.tableName, entry.page);
+                      }}
+                    >
+                      <TableCell>{entry.page ?? "-"}</TableCell>
+                      <TableCell align="right">
+                        {formatNumber(entry.importedRows)}
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatNumber(entry.distinctSourceRows)}
+                      </TableCell>
+                      <TableCell>{formatDateTime(entry.firstScrapedAt)}</TableCell>
+                      <TableCell>{formatDateTime(entry.lastScrapedAt)}</TableCell>
+                      <TableCell>{formatDateTime(entry.lastMigratedAt)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        )}
+
+        {lookupTrail && (
+          <Box>
+            <Typography variant="subtitle1" gutterBottom>
+              Sivun trail ({lookupTrail.tableName} / sivu {lookupTrail.page},{" "}
+              {lookupTrail.totalRows} riviä)
+            </Typography>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>ID</TableCell>
+                    <TableCell>Lähdeavain</TableCell>
+                    <TableCell>Arvo</TableCell>
+                    <TableCell>Scraped at</TableCell>
+                    <TableCell>Migrated at</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {lookupTrail.rows.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell>{row.id}</TableCell>
+                      <TableCell>{row.sourcePkName ?? "-"}</TableCell>
+                      <TableCell>{row.sourcePkValue ?? "-"}</TableCell>
+                      <TableCell>{formatDateTime(row.scrapedAt)}</TableCell>
+                      <TableCell>{formatDateTime(row.migratedAt)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
         )}
       </Box>
 
