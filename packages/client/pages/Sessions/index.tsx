@@ -3,8 +3,6 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import EventIcon from "@mui/icons-material/Event";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import ViewListIcon from "@mui/icons-material/ViewList";
@@ -15,7 +13,6 @@ import {
   Chip,
   CircularProgress,
   Collapse,
-  IconButton,
   InputAdornment,
   Link,
   TextField,
@@ -72,6 +69,7 @@ import {
   toEduskuntaUrl,
 } from "#client/utils/eduskunta-links";
 import { CalendarGrid } from "./components/CalendarGrid";
+import { SessionSectionPanel } from "./components/SessionSectionPanel";
 
 const SPEECH_PAGE_SIZE = 20;
 
@@ -1036,6 +1034,14 @@ export default () => {
     target.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
+  const findSectionInCurrentSessions = (sectionId: number, sectionKey: string) =>
+    sessions
+      .flatMap((session) => session.sections || [])
+      .find(
+        (candidate) =>
+          candidate.id === sectionId || candidate.key === sectionKey,
+      );
+
   const renderSessionMinutesOutline = (session: SessionWithSections) => {
     const items = (session.minutes_items || [])
       .slice()
@@ -1128,16 +1134,20 @@ export default () => {
                       size="small"
                       variant="text"
                       onClick={() => {
-                        const targetSectionKey = item.section_key!;
-                        setFocusedSectionKey(targetSectionKey);
-                        if (!expandedSections.has(item.section_id!)) {
+                        const targetSection = findSectionInCurrentSessions(
+                          item.section_id!,
+                          item.section_key!,
+                        );
+                        if (!targetSection) return;
+                        setFocusedSectionKey(targetSection.key);
+                        if (!expandedSections.has(targetSection.id)) {
                           void toggleSection(
-                            item.section_id!,
-                            targetSectionKey,
+                            targetSection.id,
+                            targetSection.key,
                           );
                         }
                         requestAnimationFrame(() =>
-                          scrollToSection(targetSectionKey),
+                          scrollToSection(targetSection.key),
                         );
                       }}
                       sx={{
@@ -1773,100 +1783,105 @@ export default () => {
   };
 
   const loadSectionData = async (sectionId: number, sectionKey: string) => {
-    const section = sessions
-      .flatMap((session) => session.sections || [])
-      .find(
-        (candidate) =>
-          candidate.id === sectionId || candidate.key === sectionKey,
-      );
+    const section = findSectionInCurrentSessions(sectionId, sectionKey);
+    if (!section) return;
+    const targetSectionId = section.id;
+    const targetSectionKey = section.key;
 
-    if (!sectionSpeechData[sectionId]) {
-      setLoadingSpeeches((prev) => new Set(prev).add(sectionId));
+    if (!sectionSpeechData[targetSectionId]) {
+      setLoadingSpeeches((prev) => new Set(prev).add(targetSectionId));
       try {
-        const data = await fetchSpeeches(sectionId, sectionKey);
-        setSectionSpeechData((prev) => ({ ...prev, [sectionId]: data }));
-        clearSectionLoadError(sectionId, "speeches");
+        const data = await fetchSpeeches(targetSectionId, targetSectionKey);
+        setSectionSpeechData((prev) => ({ ...prev, [targetSectionId]: data }));
+        clearSectionLoadError(targetSectionId, "speeches");
       } catch (error) {
-        setSectionLoadError(sectionId, "speeches", getErrorReason(error));
+        setSectionLoadError(targetSectionId, "speeches", getErrorReason(error));
       } finally {
         setLoadingSpeeches((prev) => {
           const next = new Set(prev);
-          next.delete(sectionId);
+          next.delete(targetSectionId);
           return next;
         });
       }
     }
 
-    if (!sectionVotings[sectionId]) {
-      setLoadingVotings((prev) => new Set(prev).add(sectionId));
+    if (!sectionVotings[targetSectionId]) {
+      setLoadingVotings((prev) => new Set(prev).add(targetSectionId));
       try {
-        const res = await fetch(`/api/sections/${sectionKey}/votings`);
+        const res = await fetch(`/api/sections/${targetSectionKey}/votings`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const votings: Voting[] = await res.json();
-        setSectionVotings((prev) => ({ ...prev, [sectionId]: votings }));
-        clearSectionLoadError(sectionId, "votings");
+        setSectionVotings((prev) => ({ ...prev, [targetSectionId]: votings }));
+        clearSectionLoadError(targetSectionId, "votings");
       } catch (error) {
-        setSectionLoadError(sectionId, "votings", getErrorReason(error));
+        setSectionLoadError(targetSectionId, "votings", getErrorReason(error));
       } finally {
         setLoadingVotings((prev) => {
           const next = new Set(prev);
-          next.delete(sectionId);
+          next.delete(targetSectionId);
           return next;
         });
       }
     }
 
-    if (!sectionLinks[sectionKey]) {
-      setLoadingLinks((prev) => new Set(prev).add(sectionKey));
+    if (!sectionLinks[targetSectionKey]) {
+      setLoadingLinks((prev) => new Set(prev).add(targetSectionKey));
       try {
-        const links = await fetchSectionLinks(sectionKey);
-        setSectionLinks((prev) => ({ ...prev, [sectionKey]: links }));
-        clearSectionLoadError(sectionId, "links");
+        const links = await fetchSectionLinks(targetSectionKey);
+        setSectionLinks((prev) => ({ ...prev, [targetSectionKey]: links }));
+        clearSectionLoadError(targetSectionId, "links");
       } catch (error) {
-        setSectionLoadError(sectionId, "links", getErrorReason(error));
+        setSectionLoadError(targetSectionId, "links", getErrorReason(error));
       } finally {
         setLoadingLinks((prev) => {
           const next = new Set(prev);
-          next.delete(sectionKey);
+          next.delete(targetSectionKey);
           return next;
         });
       }
     }
 
-    const hasSubSectionsData = Object.hasOwn(sectionSubSections, sectionId);
+    const hasSubSectionsData = Object.hasOwn(sectionSubSections, targetSectionId);
     if (!hasSubSectionsData) {
-      setLoadingSubSections((prev) => new Set(prev).add(sectionId));
+      setLoadingSubSections((prev) => new Set(prev).add(targetSectionId));
       try {
-        const subSections = await fetchSectionSubSections(sectionKey);
+        const subSections = await fetchSectionSubSections(targetSectionKey);
         setSectionSubSections((prev) => ({
           ...prev,
-          [sectionId]: subSections,
+          [targetSectionId]: subSections,
         }));
-        clearSectionLoadError(sectionId, "subSections");
+        clearSectionLoadError(targetSectionId, "subSections");
       } catch (error) {
-        setSectionLoadError(sectionId, "subSections", getErrorReason(error));
+        setSectionLoadError(
+          targetSectionId,
+          "subSections",
+          getErrorReason(error),
+        );
       } finally {
         setLoadingSubSections((prev) => {
           const next = new Set(prev);
-          next.delete(sectionId);
+          next.delete(targetSectionId);
           return next;
         });
       }
     }
 
-    const hasRollCallData = Object.hasOwn(sectionRollCalls, sectionId);
+    const hasRollCallData = Object.hasOwn(sectionRollCalls, targetSectionId);
     if (isRollCallSection(section) && !hasRollCallData) {
-      setLoadingRollCalls((prev) => new Set(prev).add(sectionId));
+      setLoadingRollCalls((prev) => new Set(prev).add(targetSectionId));
       try {
-        const rollCall = await fetchSectionRollCall(sectionKey);
-        setSectionRollCalls((prev) => ({ ...prev, [sectionId]: rollCall }));
-        clearSectionLoadError(sectionId, "rollCall");
+        const rollCall = await fetchSectionRollCall(targetSectionKey);
+        setSectionRollCalls((prev) => ({
+          ...prev,
+          [targetSectionId]: rollCall,
+        }));
+        clearSectionLoadError(targetSectionId, "rollCall");
       } catch (error) {
-        setSectionLoadError(sectionId, "rollCall", getErrorReason(error));
+        setSectionLoadError(targetSectionId, "rollCall", getErrorReason(error));
       } finally {
         setLoadingRollCalls((prev) => {
           const next = new Set(prev);
-          next.delete(sectionId);
+          next.delete(targetSectionId);
           return next;
         });
       }
@@ -1874,17 +1889,21 @@ export default () => {
   };
 
   const toggleSection = (sectionId: number, sectionKey: string) => {
-    const isExpanding = !expandedSections.has(sectionId);
+    const section = findSectionInCurrentSessions(sectionId, sectionKey);
+    if (!section) return;
+    const targetSectionId = section.id;
+    const targetSectionKey = section.key;
+    const isExpanding = !expandedSections.has(targetSectionId);
 
     setExpandedSections((prev) => {
       const next = new Set(prev);
-      if (next.has(sectionId)) next.delete(sectionId);
-      else next.add(sectionId);
+      if (next.has(targetSectionId)) next.delete(targetSectionId);
+      else next.add(targetSectionId);
       return next;
     });
 
     if (isExpanding) {
-      void loadSectionData(sectionId, sectionKey);
+      void loadSectionData(targetSectionId, targetSectionKey);
     }
   };
 
@@ -2584,221 +2603,221 @@ export default () => {
                         ([key, reason]) =>
                           `${sectionLoadErrorLabels[key]} (${reason})`,
                       );
+                    const vaskiInfoCompact = renderVaskiInfo(section, true);
+                    const vaskiInfoContent = renderVaskiInfo(section, false);
+                    const minutesInfoCompact = renderMinutesInfo(section, true);
+                    const minutesInfoContent = renderMinutesInfo(section, false);
+                    const sectionSubSectionsContent = renderSectionSubSections(
+                      section,
+                    );
+                    const sectionMinutesContent = renderSectionMinutesContent(
+                      section,
+                    );
+                    const docRefs = extractSectionDocRefs(section);
+                    const sectionLinksContent = renderSectionLinks(section);
+                    const sectionNoticesContent = renderSectionNotices(
+                      session,
+                      section.key,
+                    );
+                    const sectionRollCallContent = renderSectionRollCall(section);
+                    const sectionVotingsContent = renderSectionVotings(
+                      votings,
+                      session,
+                    );
+                    const hasAdditionalExpandedContent =
+                      Boolean(vaskiInfoContent) ||
+                      Boolean(minutesInfoContent) ||
+                      Boolean(sectionSubSectionsContent) ||
+                      Boolean(sectionMinutesContent) ||
+                      docRefs.length > 0 ||
+                      Boolean(sectionLinksContent) ||
+                      Boolean(sectionNoticesContent) ||
+                      Boolean(sectionRollCallContent);
 
                     return (
-                      <Box
+                      <SessionSectionPanel
                         key={section.id}
-                        id={`session-section-${section.key}`}
-                        sx={{
-                          borderBottom: `1px solid ${colors.dataBorder}`,
-                          background: isFocusedSection
-                            ? `${colors.primaryLight}10`
-                            : "transparent",
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            p: 2,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            cursor: "pointer",
-                            "&:hover": { background: colors.backgroundSubtle },
-                            transition: "background 0.15s",
-                          }}
-                          onClick={() => toggleSection(section.id, section.key)}
-                        >
-                          <Chip
-                            label={getSectionOrderLabel(section)}
-                            size="small"
-                            sx={{
-                              background: colors.primary,
-                              color: "#fff",
-                              fontWeight: 600,
-                              ...commonStyles.compactTextMd,
-                              height: 22,
-                              minWidth: 28,
-                              flexShrink: 0,
-                            }}
-                          />
-                          <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography
+                        sectionId={section.id}
+                        sectionKey={section.key}
+                        isExpanded={isExpanded}
+                        isFocused={isFocusedSection}
+                        onToggle={() => toggleSection(section.id, section.key)}
+                        headerContent={
+                          <>
+                            <Chip
+                              label={getSectionOrderLabel(section)}
+                              size="small"
                               sx={{
+                                background: colors.primary,
+                                color: "#fff",
                                 fontWeight: 600,
-                                fontSize: "0.875rem",
-                                color: colors.textPrimary,
-                                wordBreak: "break-word",
+                                ...commonStyles.compactTextMd,
+                                height: 22,
+                                minWidth: 28,
+                                flexShrink: 0,
                               }}
-                            >
-                              {section.title ||
-                                section.processing_title ||
-                                t("sessions.noTitle")}
-                            </Typography>
-                            {section.minutes_item_order != null && (
+                            />
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
                               <Typography
                                 sx={{
-                                  ...commonStyles.compactTextLg,
-                                  color: colors.textTertiary,
+                                  fontWeight: 600,
+                                  fontSize: "0.875rem",
+                                  color: colors.textPrimary,
+                                  wordBreak: "break-word",
                                 }}
                               >
-                                {t("sessions.minutesOrder")}{" "}
-                                {section.minutes_item_order}
+                                {section.title ||
+                                  section.processing_title ||
+                                  t("sessions.noTitle")}
                               </Typography>
-                            )}
-                            {section.note && (
-                              <Typography
-                                sx={{
-                                  ...commonStyles.compactTextLg,
-                                  color: colors.textSecondary,
-                                }}
-                              >
-                                {section.note}
-                              </Typography>
-                            )}
-                            {section.processing_title &&
-                              section.processing_title !== section.title && (
+                              {section.minutes_item_order != null && (
                                 <Typography
                                   sx={{
                                     ...commonStyles.compactTextLg,
                                     color: colors.textTertiary,
                                   }}
                                 >
-                                  {t("sessions.processingLine", {
-                                    value: section.processing_title,
-                                  })}
+                                  {t("sessions.minutesOrder")}{" "}
+                                  {section.minutes_item_order}
                                 </Typography>
                               )}
-                            {section.resolution && (
-                              <Typography
-                                sx={{
-                                  ...commonStyles.compactTextLg,
-                                  color: colors.textTertiary,
-                                }}
-                              >
-                                {t("sessions.resolutionLine", {
-                                  value: section.resolution,
-                                })}
-                              </Typography>
-                            )}
-                            {renderVaskiInfo(section, true)}
-                            {renderMinutesInfo(section, true)}
-                            <Box
-                              sx={{
-                                display: "flex",
-                                gap: 1,
-                                flexWrap: "wrap",
-                                mt: 0.75,
-                              }}
-                            >
-                              <Chip
-                                label={t("sessions.votingsCount", {
-                                  count: section.voting_count ?? 0,
-                                })}
-                                size="small"
-                                sx={{
-                                  fontSize: "0.6875rem",
-                                  height: 20,
-                                  background: `${themedColors.success}15`,
-                                  color: themedColors.success,
-                                }}
-                              />
-                              <Chip
-                                label={t("sessions.speechesCount", {
-                                  count: section.speech_count ?? 0,
-                                })}
-                                size="small"
-                                sx={{
-                                  fontSize: "0.6875rem",
-                                  height: 20,
-                                  background: `${colors.primaryLight}20`,
-                                  color: colors.primaryLight,
-                                }}
-                              />
-                              <Chip
-                                label={t("sessions.speakersCount", {
-                                  count: section.speaker_count ?? 0,
-                                })}
-                                size="small"
-                                sx={{ fontSize: "0.6875rem", height: 20 }}
-                              />
-                              <Chip
-                                label={t("sessions.partiesCount", {
-                                  count: section.party_count ?? 0,
-                                })}
-                                size="small"
-                                sx={{ fontSize: "0.6875rem", height: 20 }}
-                              />
-                            </Box>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                gap: 1.5,
-                                flexWrap: "wrap",
-                                mt: 0.5,
-                              }}
-                            >
-                              {section.agenda_key && (
+                              {section.note && (
                                 <Typography
                                   sx={{
                                     ...commonStyles.compactTextLg,
-                                    color: colors.textTertiary,
+                                    color: colors.textSecondary,
                                   }}
                                 >
-                                  {t("sessions.agendaKeyLine", {
-                                    value: section.agenda_key,
-                                  })}
+                                  {section.note}
                                 </Typography>
                               )}
-                              {section.vaski_id !== undefined &&
-                                section.vaski_id !== null && (
+                              {section.processing_title &&
+                                section.processing_title !== section.title && (
                                   <Typography
                                     sx={{
                                       ...commonStyles.compactTextLg,
                                       color: colors.textTertiary,
                                     }}
                                   >
-                                    {t("sessions.vaskiIdLine", {
-                                      value: section.vaski_id,
+                                    {t("sessions.processingLine", {
+                                      value: section.processing_title,
                                     })}
                                   </Typography>
                                 )}
-                              {section.modified_datetime && (
+                              {section.resolution && (
                                 <Typography
                                   sx={{
                                     ...commonStyles.compactTextLg,
                                     color: colors.textTertiary,
                                   }}
                                 >
-                                  {t("sessions.sectionUpdatedLine", {
-                                    value: formatDateTime(
-                                      section.modified_datetime,
-                                    ),
+                                  {t("sessions.resolutionLine", {
+                                    value: section.resolution,
                                   })}
                                 </Typography>
                               )}
+                              {vaskiInfoCompact}
+                              {minutesInfoCompact}
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  gap: 1,
+                                  flexWrap: "wrap",
+                                  mt: 0.75,
+                                }}
+                              >
+                                <Chip
+                                  label={t("sessions.votingsCount", {
+                                    count: section.voting_count ?? 0,
+                                  })}
+                                  size="small"
+                                  sx={{
+                                    fontSize: "0.6875rem",
+                                    height: 20,
+                                    background: `${themedColors.success}15`,
+                                    color: themedColors.success,
+                                  }}
+                                />
+                                <Chip
+                                  label={t("sessions.speechesCount", {
+                                    count: section.speech_count ?? 0,
+                                  })}
+                                  size="small"
+                                  sx={{
+                                    fontSize: "0.6875rem",
+                                    height: 20,
+                                    background: `${colors.primaryLight}20`,
+                                    color: colors.primaryLight,
+                                  }}
+                                />
+                                <Chip
+                                  label={t("sessions.speakersCount", {
+                                    count: section.speaker_count ?? 0,
+                                  })}
+                                  size="small"
+                                  sx={{ fontSize: "0.6875rem", height: 20 }}
+                                />
+                                <Chip
+                                  label={t("sessions.partiesCount", {
+                                    count: section.party_count ?? 0,
+                                  })}
+                                  size="small"
+                                  sx={{ fontSize: "0.6875rem", height: 20 }}
+                                />
+                              </Box>
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  gap: 1.5,
+                                  flexWrap: "wrap",
+                                  mt: 0.5,
+                                }}
+                              >
+                                {section.agenda_key && (
+                                  <Typography
+                                    sx={{
+                                      ...commonStyles.compactTextLg,
+                                      color: colors.textTertiary,
+                                    }}
+                                  >
+                                    {t("sessions.agendaKeyLine", {
+                                      value: section.agenda_key,
+                                    })}
+                                  </Typography>
+                                )}
+                                {section.vaski_id !== undefined &&
+                                  section.vaski_id !== null && (
+                                    <Typography
+                                      sx={{
+                                        ...commonStyles.compactTextLg,
+                                        color: colors.textTertiary,
+                                      }}
+                                    >
+                                      {t("sessions.vaskiIdLine", {
+                                        value: section.vaski_id,
+                                      })}
+                                    </Typography>
+                                  )}
+                                {section.modified_datetime && (
+                                  <Typography
+                                    sx={{
+                                      ...commonStyles.compactTextLg,
+                                      color: colors.textTertiary,
+                                    }}
+                                  >
+                                    {t("sessions.sectionUpdatedLine", {
+                                      value: formatDateTime(
+                                        section.modified_datetime,
+                                      ),
+                                    })}
+                                  </Typography>
+                                )}
+                              </Box>
                             </Box>
-                          </Box>
-                          <IconButton
-                            size="small"
-                            sx={{ color: colors.primaryLight, flexShrink: 0 }}
-                          >
-                            {isExpanded ? (
-                              <KeyboardArrowUpIcon />
-                            ) : (
-                              <KeyboardArrowDownIcon />
-                            )}
-                          </IconButton>
-                        </Box>
-
-                        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                          <Box
-                            sx={{
-                              px: 2,
-                              pb: 2,
-                              borderTop: `1px solid ${colors.dataBorder}`,
-                            }}
-                          >
-                            {sectionErrorReasons.length > 0 && (
+                          </>
+                        }
+                      >
+                        {sectionErrorReasons.length > 0 && (
                               <Alert
                                 severity="warning"
                                 sx={{ mt: 1.5, mb: 0.5 }}
@@ -2826,34 +2845,21 @@ export default () => {
                                 })}
                               </Alert>
                             )}
-                            {renderVaskiInfo(section, false)}
-                            {renderMinutesInfo(section, false)}
-                            {renderSectionSubSections(section)}
-                            {renderSectionMinutesContent(section)}
-                            {(() => {
-                              const refs = extractSectionDocRefs(section);
-                              return (
-                                <>
-                                  {refs.map((ref) => (
-                                    <DocumentCard
-                                      key={ref.identifier}
-                                      docRef={ref}
-                                    />
-                                  ))}
-                                  {refs.length > 0 &&
-                                    section.voting_count === 0 && (
-                                      <RelatedVotings
-                                        identifiers={refs.map(
-                                          (r) => r.identifier,
-                                        )}
-                                      />
-                                    )}
-                                </>
-                              );
-                            })()}
-                            {renderSectionLinks(section)}
-                            {renderSectionNotices(session, section.key)}
-                            {renderSectionRollCall(section)}
+                            {vaskiInfoContent}
+                            {minutesInfoContent}
+                            {sectionSubSectionsContent}
+                            {sectionMinutesContent}
+                            {docRefs.map((ref) => (
+                              <DocumentCard key={ref.identifier} docRef={ref} />
+                            ))}
+                            {docRefs.length > 0 && section.voting_count === 0 && (
+                              <RelatedVotings
+                                identifiers={docRefs.map((r) => r.identifier)}
+                              />
+                            )}
+                            {sectionLinksContent}
+                            {sectionNoticesContent}
+                            {sectionRollCallContent}
                             {/* Votings */}
                             {loadingVotings.has(section.id) ? (
                               <Box
@@ -2876,7 +2882,7 @@ export default () => {
                                 </Typography>
                               </Box>
                             ) : (
-                              renderSectionVotings(votings, session)
+                              sectionVotingsContent
                             )}
 
                             {/* Speeches */}
@@ -3081,9 +3087,24 @@ export default () => {
                                   )}
                               </Box>
                             ) : null}
-                          </Box>
-                        </Collapse>
-                      </Box>
+                        {!loadingSpeeches.has(section.id) &&
+                          !loadingVotings.has(section.id) &&
+                          speeches.length === 0 &&
+                          votings.length === 0 &&
+                          sectionErrorReasons.length === 0 &&
+                          !hasAdditionalExpandedContent && (
+                            <Typography
+                              sx={{
+                                py: 2,
+                                textAlign: "center",
+                                fontSize: "0.8125rem",
+                                color: colors.textTertiary,
+                              }}
+                            >
+                              {t("sessions.noSectionContent")}
+                            </Typography>
+                          )}
+                      </SessionSectionPanel>
                     );
                   })}
 

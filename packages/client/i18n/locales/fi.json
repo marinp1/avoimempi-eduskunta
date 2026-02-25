@@ -447,6 +447,7 @@
     "session": "Istunto",
     "speeches": "Puheenvuorot",
     "noSpeeches": "Ei puheenvuoroja",
+    "noSectionContent": "Ei sisältöä tässä asiakohdassa.",
     "noSessionsSelected": "Valitulla päivällä ei ole istuntoja",
     "noSessionsForDate": "Ei istuntoja valitulla päivämäärällä.",
     "nearestSessions": "Lähimmät istunnot:",
