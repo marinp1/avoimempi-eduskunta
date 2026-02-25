@@ -825,6 +825,29 @@ export class DatabaseConnection {
     return data;
   }
 
+  public async fetchPersonQuestions(params: {
+    personId: string;
+    limit?: number;
+  }) {
+    const stmt = this.db.prepare<
+      {
+        question_kind: "interpellation" | "written_question" | "oral_question";
+        id: number;
+        parliament_identifier: string;
+        title: string | null;
+        submission_date: string | null;
+        relation_role: "asker" | "first_signer" | "signer";
+      },
+      { $personId: number; $limit: number }
+    >(queries.personQuestions);
+    const data = stmt.all({
+      $personId: +params.personId,
+      $limit: params.limit ?? 500,
+    });
+    stmt.finalize();
+    return data;
+  }
+
   public async fetchPersonCommittees(params: { personId: string }) {
     const stmt = this.db.prepare<
       {

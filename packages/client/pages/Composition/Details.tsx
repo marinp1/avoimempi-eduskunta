@@ -7,6 +7,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import MicIcon from "@mui/icons-material/Mic";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PersonIcon from "@mui/icons-material/Person";
+import QuizIcon from "@mui/icons-material/Quiz";
 import WorkIcon from "@mui/icons-material/Work";
 import {
   Avatar,
@@ -123,6 +124,15 @@ type VotesByPersonType = {
   no_votes: number;
   empty_votes: number;
   absent_votes: number;
+};
+
+type PersonQuestionType = {
+  question_kind: "interpellation" | "oral_question" | "written_question";
+  id: number;
+  parliament_identifier: string;
+  title: string | null;
+  submission_date: string | null;
+  relation_role: "asker" | "first_signer" | "signer";
 };
 
 type VotingInlineDetails = {
@@ -305,6 +315,11 @@ const fetchSectionConversation = async (
 const fetchPersonCommittees = async (personId: number) => {
   const res = await fetch(`/api/person/${personId}/committees`);
   return res.json() as Promise<CommitteeType[]>;
+};
+
+const fetchPersonQuestions = async (personId: number, limit = 500) => {
+  const res = await fetch(`/api/person/${personId}/questions?limit=${limit}`);
+  return res.json() as Promise<PersonQuestionType[]>;
 };
 
 const displayDate = (date?: string | null) => {
@@ -2105,6 +2120,294 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
   );
 };
 
+// ─────────────────────────── Tab: Kysymykset ─────────────────────────────
+
+const QuestionsTab: React.FC<{ personId: number }> = ({ personId }) => {
+  const { t } = useTranslation();
+  const themedColors = useThemedColors();
+  const [questions, setQuestions] = React.useState<PersonQuestionType[] | null>(
+    null,
+  );
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let ignore = false;
+    setLoading(true);
+    fetchPersonQuestions(personId)
+      .then((data) => {
+        if (ignore) return;
+        setQuestions(data);
+      })
+      .finally(() => {
+        if (ignore) return;
+        setLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [personId]);
+
+  const groupedQuestions = React.useMemo(
+    () => ({
+      interpellation:
+        questions?.filter((q) => q.question_kind === "interpellation") || [],
+      oral_question:
+        questions?.filter((q) => q.question_kind === "oral_question") || [],
+      written_question:
+        questions?.filter((q) => q.question_kind === "written_question") || [],
+    }),
+    [questions],
+  );
+
+  const roleLabelByKey: Record<PersonQuestionType["relation_role"], string> = {
+    asker: t("composition.details.questions.role.asker"),
+    first_signer: t("composition.details.questions.role.firstSigner"),
+    signer: t("composition.details.questions.role.signer"),
+  };
+
+  const totalQuestions = questions?.length || 0;
+  const interpellationsCount = groupedQuestions.interpellation.length;
+  const oralQuestionsCount = groupedQuestions.oral_question.length;
+  const writtenQuestionsCount = groupedQuestions.written_question.length;
+
+  const renderQuestionList = (
+    items: PersonQuestionType[],
+    emptyText: string,
+  ) => {
+    if (items.length === 0) {
+      return (
+        <Typography
+          variant="body2"
+          sx={{
+            color: themedColors.textTertiary,
+            py: 1.5,
+          }}
+        >
+          {emptyText}
+        </Typography>
+      );
+    }
+
+    return (
+      <Box>
+        {items.map((item) => (
+          <Box
+            key={`${item.question_kind}-${item.id}`}
+            sx={{
+              py: 1.25,
+              borderBottom: `1px solid ${themedColors.dataBorder}`,
+              "&:last-child": { borderBottom: "none" },
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 1,
+              alignItems: "flex-start",
+            }}
+          >
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{ color: themedColors.textPrimary }}
+              >
+                {item.title || item.parliament_identifier}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{ color: themedColors.textSecondary, display: "block" }}
+              >
+                {item.parliament_identifier}
+                {item.submission_date
+                  ? ` - ${displayDate(item.submission_date)}`
+                  : ""}
+              </Typography>
+            </Box>
+            <Chip
+              label={roleLabelByKey[item.relation_role]}
+              size="small"
+              sx={{
+                height: 20,
+                fontSize: "0.65rem",
+                flexShrink: 0,
+                bgcolor:
+                  item.relation_role === "asker"
+                    ? `${colors.primaryLight}20`
+                    : item.relation_role === "first_signer"
+                      ? `${colors.success}20`
+                      : `${colors.neutral}20`,
+                color:
+                  item.relation_role === "asker"
+                    ? colors.primaryLight
+                    : item.relation_role === "first_signer"
+                      ? colors.success
+                      : colors.neutral,
+              }}
+            />
+          </Box>
+        ))}
+      </Box>
+    );
+  };
+
+  if (loading)
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+        <CircularProgress size={28} />
+      </Box>
+    );
+
+  return (
+    <Box>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(4, 1fr)" },
+          gap: 1.5,
+          mb: 3,
+        }}
+      >
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 2,
+            border: `1px solid ${themedColors.dataBorder}`,
+            textAlign: "center",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: "1.25rem",
+              fontWeight: 700,
+              color: themedColors.textPrimary,
+            }}
+          >
+            {totalQuestions}
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary }}
+          >
+            {t("composition.details.questions.total", {
+              count: totalQuestions,
+            })}
+          </Typography>
+        </Box>
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 2,
+            border: `1px solid ${themedColors.dataBorder}`,
+            textAlign: "center",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: "1.25rem",
+              fontWeight: 700,
+              color: themedColors.textPrimary,
+            }}
+          >
+            {interpellationsCount}
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary }}
+          >
+            {t("composition.details.questions.interpellations", {
+              count: interpellationsCount,
+            })}
+          </Typography>
+        </Box>
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 2,
+            border: `1px solid ${themedColors.dataBorder}`,
+            textAlign: "center",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: "1.25rem",
+              fontWeight: 700,
+              color: themedColors.textPrimary,
+            }}
+          >
+            {oralQuestionsCount}
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary }}
+          >
+            {t("composition.details.questions.oralQuestions", {
+              count: oralQuestionsCount,
+            })}
+          </Typography>
+        </Box>
+        <Box
+          sx={{
+            p: 1.5,
+            borderRadius: 2,
+            border: `1px solid ${themedColors.dataBorder}`,
+            textAlign: "center",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: "1.25rem",
+              fontWeight: 700,
+              color: themedColors.textPrimary,
+            }}
+          >
+            {writtenQuestionsCount}
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary }}
+          >
+            {t("composition.details.questions.writtenQuestions", {
+              count: writtenQuestionsCount,
+            })}
+          </Typography>
+        </Box>
+      </Box>
+
+      <SectionLabel
+        icon={
+          <AccountBalanceIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />
+        }
+        label={t("composition.details.questions.interpellationsSection", {
+          count: interpellationsCount,
+        })}
+      />
+      {renderQuestionList(
+        groupedQuestions.interpellation,
+        t("composition.details.questions.noInterpellations"),
+      )}
+
+      <SectionLabel
+        icon={<MicIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
+        label={t("composition.details.questions.oralQuestionsSection", {
+          count: oralQuestionsCount,
+        })}
+      />
+      {renderQuestionList(
+        groupedQuestions.oral_question,
+        t("composition.details.questions.noOralQuestions"),
+      )}
+
+      <SectionLabel
+        icon={<EmailIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
+        label={t("composition.details.questions.writtenQuestionsSection", {
+          count: writtenQuestionsCount,
+        })}
+      />
+      {renderQuestionList(
+        groupedQuestions.written_question,
+        t("composition.details.questions.noWrittenQuestions"),
+      )}
+    </Box>
+  );
+};
+
 // ──────────────────────── Tab: Luottamustehtavat ──────────────────────────
 
 const PositionsTab: React.FC<{
@@ -2309,6 +2612,7 @@ export const RepresentativeDetails: React.FC<{
   selectedRepresentative: DatabaseQueries.GetParliamentComposition | null;
   selectedDate: string;
 }> = ({ open, onClose, selectedRepresentative, selectedDate }) => {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [tabIndex, setTabIndex] = React.useState(0);
@@ -2527,22 +2831,27 @@ export const RepresentativeDetails: React.FC<{
               }}
             >
               <Tab
-                label="Yleistiedot"
+                label={t("composition.details.tabs.overview")}
                 icon={<PersonIcon sx={{ fontSize: 18 }} />}
                 iconPosition="start"
               />
               <Tab
-                label="Aanestykset"
+                label={t("composition.details.tabs.votes")}
                 icon={<HowToVoteIcon sx={{ fontSize: 18 }} />}
                 iconPosition="start"
               />
               <Tab
-                label="Puheenvuorot"
+                label={t("composition.details.tabs.speeches")}
                 icon={<MicIcon sx={{ fontSize: 18 }} />}
                 iconPosition="start"
               />
               <Tab
-                label="Luottamustehtavat"
+                label={t("composition.details.tabs.questions")}
+                icon={<QuizIcon sx={{ fontSize: 18 }} />}
+                iconPosition="start"
+              />
+              <Tab
+                label={t("composition.details.tabs.positions")}
                 icon={<WorkIcon sx={{ fontSize: 18 }} />}
                 iconPosition="start"
               />
@@ -2564,7 +2873,10 @@ export const RepresentativeDetails: React.FC<{
             {tabIndex === 2 && (
               <SpeechesTab personId={selectedRepresentative.person_id} />
             )}
-            {tabIndex === 3 && details && (
+            {tabIndex === 3 && (
+              <QuestionsTab personId={selectedRepresentative.person_id} />
+            )}
+            {tabIndex === 4 && details && (
               <PositionsTab
                 personId={selectedRepresentative.person_id}
                 trustPositions={details.trustPositions || []}

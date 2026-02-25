@@ -658,6 +658,18 @@ const server = Bun.serve<{
       },
     },
 
+    "/api/person/:id/questions": {
+      GET: async (req: BunRequest<"/api/person/:id/questions">) => {
+        const { searchParams } = new URL(req.url);
+        const limit = parseInt(searchParams.get("limit") || "500", 10);
+        const data = await db.fetchPersonQuestions({
+          personId: req.params.id,
+          limit,
+        });
+        return Response.json(data);
+      },
+    },
+
     "/api/person/:id/committees": {
       GET: async (req: BunRequest<"/api/person/:id/committees">) => {
         const data = await db.fetchPersonCommittees({

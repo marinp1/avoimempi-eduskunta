@@ -82,6 +82,7 @@ export { default as partySummary } from "./queries/PARTY_SUMMARY.sql";
 export { default as personCommittees } from "./queries/PERSON_COMMITTEES.sql";
 export { default as personDissents } from "./queries/PERSON_DISSENTS.sql";
 export { default as personGroupMemberships } from "./queries/PERSON_GROUP_MEMBERSHIPS.sql";
+export { default as personQuestions } from "./queries/PERSON_QUESTIONS.sql";
 export { default as personSpeeches } from "./queries/PERSON_SPEECHES.sql";
 export { default as personTerms } from "./queries/PERSON_TERMS.sql";
 export { default as recentActivity } from "./queries/RECENT_ACTIVITY.sql";

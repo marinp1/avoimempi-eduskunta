@@ -147,6 +147,112 @@ describe("Votes by person queries", () => {
   });
 });
 
+// ─── PERSON QUESTION QUERIES ───────────────────────────────
+
+describe("Person question queries", () => {
+  test("PERSON_QUESTIONS returns interpellations, oral questions, and written questions", () => {
+    db.run(
+      `INSERT INTO Interpellation (id, parliament_identifier, document_number, parliamentary_year, title, submission_date, first_signer_person_id, source_path)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        81001,
+        "VK 1/2024 vp",
+        1,
+        "2024",
+        "Valikysymys hallitukselle",
+        "2024-02-03",
+        1000,
+        "test/interpellation/81001.json",
+      ],
+    );
+    db.run(
+      `INSERT INTO InterpellationSigner (interpellation_id, signer_order, person_id, first_name, last_name, party, is_first_signer)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [81001, 1, 1000, "Matti", "Meikäläinen", "kesk", 1],
+    );
+
+    db.run(
+      `INSERT INTO WrittenQuestion (id, parliament_identifier, document_number, parliamentary_year, title, submission_date, first_signer_person_id, source_path)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        81002,
+        "KK 10/2024 vp",
+        10,
+        "2024",
+        "Kirjallinen kysymys energiasta",
+        "2024-02-02",
+        1001,
+        "test/written-question/81002.json",
+      ],
+    );
+    db.run(
+      `INSERT INTO WrittenQuestionSigner (question_id, signer_order, person_id, first_name, last_name, party, is_first_signer)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [81002, 2, 1000, "Matti", "Meikäläinen", "kesk", 0],
+    );
+
+    db.run(
+      `INSERT INTO OralQuestion (id, parliament_identifier, document_number, parliamentary_year, title, question_text, asker_text, submission_date, source_path)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        81003,
+        "SKT 5/2024 vp",
+        5,
+        "2024",
+        "Suullinen kysymys energiasta (kansanedustaja Matti Meikäläinen /kesk)",
+        "Energia",
+        "kansanedustaja Matti Meikäläinen /kesk",
+        "2024-02-01",
+        "test/oral-question/81003.json",
+      ],
+    );
+
+    try {
+      const stmt = db.prepare(queries.personQuestions);
+      const rows = stmt.all({ $personId: 1000, $limit: 50 }) as any[];
+      stmt.finalize();
+
+      expect(rows).toHaveLength(3);
+
+      const interpellation = rows.find(
+        (row) => row.question_kind === "interpellation",
+      );
+      expect(interpellation?.parliament_identifier).toBe("VK 1/2024 vp");
+      expect(interpellation?.relation_role).toBe("first_signer");
+
+      const writtenQuestion = rows.find(
+        (row) => row.question_kind === "written_question",
+      );
+      expect(writtenQuestion?.parliament_identifier).toBe("KK 10/2024 vp");
+      expect(writtenQuestion?.relation_role).toBe("signer");
+
+      const oralQuestion = rows.find(
+        (row) => row.question_kind === "oral_question",
+      );
+      expect(oralQuestion?.parliament_identifier).toBe("SKT 5/2024 vp");
+      expect(oralQuestion?.relation_role).toBe("asker");
+    } finally {
+      db.run(`DELETE FROM InterpellationSigner WHERE interpellation_id = ?`, [
+        81001,
+      ]);
+      db.run(`DELETE FROM Interpellation WHERE id = ?`, [81001]);
+
+      db.run(`DELETE FROM WrittenQuestionSigner WHERE question_id = ?`, [81002]);
+      db.run(`DELETE FROM WrittenQuestion WHERE id = ?`, [81002]);
+
+      db.run(`DELETE FROM OralQuestion WHERE id = ?`, [81003]);
+    }
+  });
+
+  test("PERSON_QUESTIONS returns empty for person with no matches", () => {
+    const stmt = db.prepare(queries.personQuestions);
+    const rows = stmt.all({ $personId: 9999, $limit: 50 }) as any[];
+    stmt.finalize();
+
+    expect(rows).toHaveLength(0);
+  });
+});
+
 // ─── SESSION QUERIES ────────────────────────────────────────
 
 describe("Session queries", () => {
