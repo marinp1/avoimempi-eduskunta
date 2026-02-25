@@ -109,6 +109,19 @@ describe("SaliDBAanestys migrator", () => {
     expect(rows[0].annulled).toBe(1);
   });
 
+  test("trims parliamentary_item on insert", async () => {
+    await migrate(
+      makeFinnishVoting({
+        AanestysValtiopaivaasia: "  HE 12/2024 vp  ",
+      }),
+    );
+
+    const rows = db
+      .query("SELECT parliamentary_item FROM Voting WHERE id = 1001")
+      .all() as Array<{ parliamentary_item: string | null }>;
+    expect(rows[0].parliamentary_item).toBe("HE 12/2024 vp");
+  });
+
   test("inserts multiple voting records", async () => {
     await migrate(makeFinnishVoting({ AanestysId: "1001" }));
     await migrate(makeFinnishVoting({ AanestysId: "1002" }));

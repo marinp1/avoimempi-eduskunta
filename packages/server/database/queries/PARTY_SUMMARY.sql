@@ -56,6 +56,7 @@ gov_groups AS (
     pgm.group_code,
     MAX(CASE WHEN gm.id IS NOT NULL THEN 1 ELSE 0 END) AS is_in_government
   FROM GovernmentMembership gm
+  JOIN Government g ON g.id = gm.government_id
   JOIN ParliamentaryGroupMembership pgm
     ON pgm.person_id = gm.person_id
     AND pgm.start_date <= COALESCE(gm.end_date, '9999-12-31')
@@ -65,8 +66,8 @@ gov_groups AS (
     AND (gm.end_date IS NULL OR gm.end_date >= w.start_date)
     AND (
       $governmentName IS NULL OR (
-        TRIM(gm.government) = TRIM($governmentName)
-        AND gm.start_date >= $governmentStartDate
+        TRIM(g.name) = TRIM($governmentName)
+        AND g.start_date = $governmentStartDate
       )
     )
   GROUP BY pgm.group_code

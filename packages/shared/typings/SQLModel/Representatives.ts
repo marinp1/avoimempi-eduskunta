@@ -74,6 +74,14 @@ declare global {
       ministry: string;
       name: string;
       government: string;
+      government_id: number;
+      start_date: DateString;
+      end_date: DateString | null;
+    };
+
+    export type Government = {
+      id: number;
+      name: string;
       start_date: DateString;
       end_date: DateString | null;
     };

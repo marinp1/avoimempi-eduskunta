@@ -1,20 +1,21 @@
 WITH GovernmentPeriods AS (
-    SELECT DISTINCT
-        government,
-        MIN(start_date) AS government_start,
-        MAX(end_date) AS government_end
-    FROM GovernmentMembership
-    GROUP BY government
+    SELECT
+        g.id AS government_id,
+        g.name AS government,
+        g.start_date AS government_start,
+        g.end_date AS government_end
+    FROM Government g
 ),
 CoalitionParties AS (
     SELECT
-        gm.government,
+        gm.government_id,
         pgm.group_abbreviation AS party
     FROM GovernmentMembership gm
+    JOIN Government g ON g.id = gm.government_id
     JOIN ParliamentaryGroupMembership pgm ON gm.person_id = pgm.person_id
-    WHERE pgm.start_date <= gm.start_date
-        AND (pgm.end_date IS NULL OR pgm.end_date >= gm.start_date)
-    GROUP BY gm.government, pgm.group_abbreviation
+    WHERE pgm.start_date <= g.start_date
+        AND (pgm.end_date IS NULL OR pgm.end_date >= g.start_date)
+    GROUP BY gm.government_id, pgm.group_abbreviation
 ),
 GroupMap AS (
     SELECT
@@ -52,11 +53,11 @@ VotingDates AS (
 DateGovernment AS (
     SELECT
         ranked.voting_date,
-        ranked.government
+        ranked.government_id
     FROM (
         SELECT
             vd.voting_date,
-            gp.government,
+            gp.government_id,
             ROW_NUMBER() OVER (
                 PARTITION BY vd.voting_date
                 ORDER BY gp.government_start DESC
@@ -72,7 +73,7 @@ VotingGovernment AS (
     SELECT
         vb.voting_id,
         vb.voting_date,
-        dg.government
+        dg.government_id
     FROM VotingBase vb
     JOIN DateGovernment dg ON dg.voting_date = vb.voting_date
 ),
@@ -89,7 +90,7 @@ VoteAgg AS (
 ),
 PartyVotingStats AS (
     SELECT
-        vg.government,
+        vg.government_id,
         va.party,
         SUM(va.votes_cast) AS votes_cast,
         SUM(va.total_votings) AS total_votings,
@@ -102,15 +103,15 @@ PartyVotingStats AS (
     FROM VotingGovernment vg
     JOIN VoteAgg va ON vg.voting_id = va.voting_id
     WHERE
-        vg.government IS NOT NULL
+        vg.government_id IS NOT NULL
     GROUP BY
-        vg.government,
+        vg.government_id,
         va.party
     HAVING
         SUM(va.total_votings) >= 10
 )
 SELECT
-    pvs.government,
+    gp.government,
     gp.government_start,
     gp.government_end,
     COALESCE(gm.group_name, pvs.party) AS party_name,
@@ -120,10 +121,10 @@ SELECT
     pvs.party_member_count,
     COALESCE(cp.party IS NOT NULL, 0) AS was_in_coalition
 FROM PartyVotingStats pvs
-JOIN GovernmentPeriods gp ON pvs.government = gp.government
+JOIN GovernmentPeriods gp ON pvs.government_id = gp.government_id
 LEFT JOIN GroupMap gm ON gm.party = pvs.party
 LEFT JOIN CoalitionParties cp ON
-    pvs.government = cp.government
+    pvs.government_id = cp.government_id
     AND pvs.party = cp.party
 ORDER BY
     gp.government_start DESC, COALESCE(gm.group_name, pvs.party) ASC

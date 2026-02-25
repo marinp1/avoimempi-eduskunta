@@ -1,7 +1,7 @@
 import type { Database } from "bun:sqlite";
 import { LanguageIds } from "#constants/index";
 import { extractDocumentTunnusCandidates } from "../salidb-document-ref";
-import { insertRows, parseDateTime } from "../utils";
+import { insertRows, parseDateTime, trimString } from "../utils";
 
 export default (db: Database) =>
   (dataToImport: RawDataModels["SaliDBAanestys"]) => {
@@ -24,7 +24,7 @@ export default (db: Database) =>
       proceedings_name: dataToImport.AanestysPoytakirja,
       proceedings_url: dataToImport.AanestysPoytakirjaUrl,
       result_url: dataToImport.Url,
-      parliamentary_item: dataToImport.AanestysValtiopaivaasia || null,
+      parliamentary_item: trimString(dataToImport.AanestysValtiopaivaasia),
       parliamentary_item_url: dataToImport.AanestysValtiopaivaasiaUrl || null,
       n_yes: +dataToImport.AanestysTulosJaa,
       n_no: +dataToImport.AanestysTulosEi,

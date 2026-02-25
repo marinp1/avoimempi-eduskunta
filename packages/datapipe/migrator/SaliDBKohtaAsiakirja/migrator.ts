@@ -1,6 +1,6 @@
 import type { Database } from "bun:sqlite";
 import { extractDocumentTunnusCandidates } from "../salidb-document-ref";
-import { insertRows, parseDateTime } from "../utils";
+import { insertRows, parseDateTime, trimString } from "../utils";
 
 export default (db: Database) =>
   (dataToImport: RawDataModels["SaliDBKohtaAsiakirja"]) => {
@@ -9,7 +9,7 @@ export default (db: Database) =>
       section_key: dataToImport.KohtaTekninenAvain,
       key: dataToImport.TekninenAvain || null,
       name_fi: dataToImport.NimiFI || null,
-      link_text_fi: dataToImport.LinkkiTekstiFI || null,
+      link_text_fi: trimString(dataToImport.LinkkiTekstiFI),
       link_url_fi: dataToImport.LinkkiUrlFI || null,
       created_datetime: parseDateTime(dataToImport.Created),
       modified_datetime: parseDateTime(dataToImport.Modified),

@@ -5,6 +5,7 @@ export const EXPECTED_SANITY_TABLES = [
   "Term",
   "ParliamentaryGroup",
   "ParliamentaryGroupMembership",
+  "Government",
   "GovernmentMembership",
   "Committee",
   "CommitteeMembership",
@@ -231,7 +232,14 @@ export const sanityQueries = {
   governmentMembershipInvalidDates: sql`SELECT COUNT(*) as c FROM GovernmentMembership
            WHERE end_date IS NOT NULL AND start_date > end_date`,
   governmentMembershipEmptyGovernment: sql`SELECT COUNT(*) as c FROM GovernmentMembership
-           WHERE government IS NULL OR TRIM(government) = ''`,
+           WHERE government_id IS NULL
+             OR NOT EXISTS (
+               SELECT 1
+               FROM Government g
+               WHERE g.id = GovernmentMembership.government_id
+                 AND g.name IS NOT NULL
+                 AND TRIM(g.name) <> ''
+             )`,
   districtCount: sql`SELECT COUNT(*) as c FROM District`,
   representativeDistrictOverlaps: sql`SELECT COUNT(*) as c FROM RepresentativeDistrict rd1
            JOIN RepresentativeDistrict rd2

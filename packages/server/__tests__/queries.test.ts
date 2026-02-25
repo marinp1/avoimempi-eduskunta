@@ -1400,6 +1400,7 @@ describe("Schema integrity", () => {
     expect(tableNames).toContain("Term");
     expect(tableNames).toContain("ParliamentaryGroup");
     expect(tableNames).toContain("ParliamentaryGroupMembership");
+    expect(tableNames).toContain("Government");
     expect(tableNames).toContain("GovernmentMembership");
     expect(tableNames).toContain("Committee");
     expect(tableNames).toContain("CommitteeMembership");

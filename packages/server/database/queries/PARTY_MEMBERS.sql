@@ -30,13 +30,14 @@ LEFT JOIN (
     1 AS is_minister,
     gm.ministry
   FROM GovernmentMembership gm
+  JOIN Government g ON g.id = gm.government_id
   CROSS JOIN window w
   WHERE gm.start_date <= w.window_end_date
     AND (gm.end_date IS NULL OR gm.end_date >= w.window_start_date)
     AND (
       $governmentName IS NULL OR (
-        TRIM(gm.government) = TRIM($governmentName)
-        AND gm.start_date >= $governmentStartDate
+        TRIM(g.name) = TRIM($governmentName)
+        AND g.start_date = $governmentStartDate
       )
     )
 ) gm_current ON r.person_id = gm_current.person_id

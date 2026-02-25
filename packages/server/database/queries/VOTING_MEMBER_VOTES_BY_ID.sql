@@ -13,8 +13,11 @@ SELECT
     WHEN EXISTS (
       SELECT 1
       FROM GovernmentMembership gm
+      JOIN Government g ON g.id = gm.government_id
       JOIN voting_context vc
       WHERE gm.person_id = v.person_id
+        AND g.start_date <= vc.voting_date
+        AND (g.end_date IS NULL OR g.end_date >= vc.voting_date)
         AND gm.start_date <= vc.voting_date
         AND (gm.end_date IS NULL OR gm.end_date >= vc.voting_date)
     ) THEN 1
