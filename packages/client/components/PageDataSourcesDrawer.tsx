@@ -277,14 +277,20 @@ export const PageDataSourcesDrawer = ({
 
           <Box sx={{ p: 2, overflowY: "auto", height: "calc(100% - 69px)" }}>
             {sourceDefinitions.length === 0 ? (
-              <Alert severity="info">{t("pageSources.noMapping")}</Alert>
+              <Alert severity="info" role="status" aria-live="polite">
+                {t("pageSources.noMapping")}
+              </Alert>
             ) : loading ? (
               <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
                 <CircularProgress size={26} />
               </Box>
             ) : (
               <Box sx={{ display: "grid", gap: 1.5 }}>
-                {error ? <Alert severity="warning">{error}</Alert> : null}
+                {error ? (
+                  <Alert severity="warning" role="status" aria-live="polite">
+                    {error}
+                  </Alert>
+                ) : null}
                 {sourceDefinitions.map((sourceDefinition) => {
                   const summary = summaries[sourceDefinition.tableName];
                   return (

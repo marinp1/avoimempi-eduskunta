@@ -815,6 +815,20 @@ export default () => {
     );
   };
 
+  const getExpandedRowControlId = (tableName: string) =>
+    `admin-row-panel-${tableName.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+
+  const handleRowKeyDown = (
+    event: React.KeyboardEvent,
+    tableName: string,
+    isExpanded: boolean,
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setExpandedRow(isExpanded ? null : tableName);
+    }
+  };
+
   return (
     <Box>
       <PageHeader
@@ -839,7 +853,12 @@ export default () => {
 
       {error && (
         <Fade in timeout={500}>
-          <Alert severity="error" sx={{ mb: spacing.md, borderRadius: 2 }}>
+          <Alert
+            severity="error"
+            role="status"
+            aria-live="polite"
+            sx={{ mb: spacing.md, borderRadius: 2 }}
+          >
             {error}
           </Alert>
         </Fade>
@@ -1121,18 +1140,31 @@ export default () => {
                     currentScrapingTable === row.table_name;
                   const isThisTableParsing =
                     currentParsingTable === row.table_name;
+                  const expandedRowControlId = getExpandedRowControlId(
+                    row.table_name,
+                  );
 
                   return (
                     <React.Fragment key={row.table_name}>
                       <TableRow
+                        tabIndex={0}
+                        aria-expanded={isExpanded}
+                        aria-controls={expandedRowControlId}
                         onClick={() =>
                           setExpandedRow(isExpanded ? null : row.table_name)
+                        }
+                        onKeyDown={(event) =>
+                          handleRowKeyDown(event, row.table_name, isExpanded)
                         }
                         sx={{
                           ...commonStyles.tableRow,
                           ...commonStyles.fadeIn(index * 15),
                           "&:hover": {
                             bgcolor: `${colors.primary}06`,
+                          },
+                          "&:focus-visible": {
+                            outline: `2px solid ${themedColors.primary}`,
+                            outlineOffset: -2,
                           },
                         }}
                       >
@@ -1244,6 +1276,7 @@ export default () => {
                           colSpan={8}
                         >
                           <Collapse
+                            id={expandedRowControlId}
                             in={isExpanded}
                             timeout="auto"
                             unmountOnExit

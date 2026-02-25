@@ -254,6 +254,7 @@
     "showLess": "Näytä vähemmän",
     "showMore": "Näytä lisää",
     "retry": "Yritä uudelleen",
+    "voteMarginAria": "Jaa {{yes}}, Ei {{no}}, Tyhjää {{empty}}, Poissa {{absent}}",
     "votingTargetLine": "Äänestyksen kohde: {{value}}"
   },
   "errors": {
@@ -264,6 +265,9 @@
   "composition": {
     "title": "Eduskunnan kokoonpano",
     "subtitle": "Selaa kansanedustajia ja heidän tietojaan",
+    "noResults": "Ei edustajia näillä suodattimilla.",
+    "noResultsHint": "Kokeile laajentaa suodatusta nähdäksesi tuloksia.",
+    "resetFilters": "Tyhjennä suodattimet",
     "distribution": {
       "totalMembers": "Jäsentä yhteensä"
     },
@@ -513,6 +517,7 @@
     "rollCallReasonUnknown": "selite puuttuu",
     "rollCallNoEntries": "Ei merkintöjä",
     "loadMoreProgress": "Näytä lisää ({{loaded}}/{{total}})",
+    "loadMorePageProgress": "Sivu {{current}} / {{total}}",
     "speechesCount_one": "Puheenvuoro: {{count}}",
     "speechesCount_other": "Puheenvuorot: {{count}}",
     "detailsToggle_show": "Näytä puheenvuorot ja äänestykset",
@@ -535,7 +540,13 @@
     "rollCallAbsentLine_one": "Poissaolija: {{count}}",
     "rollCallAbsentLine_other": "Poissaolijat: {{count}}",
     "rollCallLateLine_one": "Myöhässä: {{count}}",
-    "rollCallLateLine_other": "Myöhässä: {{count}}"
+    "rollCallLateLine_other": "Myöhässä: {{count}}",
+    "relatedVotingAria": "Liittyvä äänestys {{id}}: {{yes}} jaa, {{no}} ei",
+    "loadErrorSpeeches": "Puheenvuorot",
+    "loadErrorVotings": "Äänestykset",
+    "loadErrorLinks": "Asiakirjalinkit",
+    "loadErrorSubSections": "Alakohdat",
+    "loadErrorRollCall": "Nimenhuuto"
   },
   "insights": {
     "title": "Eduskunnan analytiikka",

@@ -6,6 +6,7 @@ import PieChartIcon from "@mui/icons-material/PieChart";
 import {
   Alert,
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
@@ -216,6 +217,16 @@ export default () => {
     setSelectedRepresentative(member);
     setDialogOpen(true);
     updateURL(undefined, member.person_id);
+  };
+
+  const handleActivateOnKeyDown = (
+    event: React.KeyboardEvent,
+    onActivate: () => void,
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onActivate();
+    }
   };
 
   const handleCloseDialog = () => {
@@ -736,6 +747,8 @@ export default () => {
       {!loading && error && (
         <Alert
           severity="error"
+          role="status"
+          aria-live="polite"
           sx={{ py: spacing.sm, textAlign: "center", mb: spacing.lg }}
         >
           {error}
@@ -746,253 +759,315 @@ export default () => {
       {!loading && !error && (
         <Fade in timeout={700}>
           <Box>
-            <Box sx={{ display: { xs: "block", lg: "none" } }}>
-              {filteredMembers.map((m) => (
-                <Card
-                  key={m.person_id}
-                  onClick={() => handleRowClick(m)}
-                  sx={{
-                    mb: 1.5,
-                    cursor: "pointer",
-                    border: `1px solid ${themedColors.dataBorder}`,
-                    transition: "all 0.2s ease-in-out",
-                    "&:active": {
-                      transform: "scale(0.99)",
-                    },
-                  }}
+            {filteredMembers.length === 0 ? (
+              <Paper
+                elevation={0}
+                sx={{
+                  mb: spacing.lg,
+                  px: 3,
+                  py: 4,
+                  borderRadius: 1,
+                  border: `1px solid ${themedColors.dataBorder}`,
+                  background: themedColors.backgroundPaper,
+                  textAlign: "center",
+                }}
+              >
+                <Typography
+                  variant="body1"
+                  sx={{ color: themedColors.textPrimary, fontWeight: 600 }}
                 >
-                  <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        mb: 1,
-                      }}
-                    >
-                      <Typography
-                        variant="subtitle1"
-                        sx={{
-                          fontWeight: 600,
-                          color: themedColors.textPrimary,
-                        }}
-                      >
-                        {m.first_name} {m.last_name}
-                      </Typography>
-                      {m.is_in_government === 1 && (
-                        <CheckCircleIcon
-                          sx={{
-                            color: themedColors.success,
-                            fontSize: 20,
-                            ml: 1,
-                            flexShrink: 0,
-                          }}
-                          titleAccess="Hallituksessa"
-                        />
-                      )}
-                    </Box>
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      flexWrap="wrap"
-                      useFlexGap
-                    >
-                      {m.party_name && (
-                        <Chip
-                          label={m.party_name}
-                          size="small"
-                          sx={{
-                            background: themedColors.primary,
-                            color: "white",
-                            fontWeight: 600,
-                            fontSize: "0.75rem",
-                            height: 26,
-                          }}
-                        />
-                      )}
-                      {m.profession && (
-                        <Chip
-                          label={m.profession}
-                          size="small"
-                          variant="outlined"
-                          sx={{
-                            fontSize: "0.75rem",
-                            height: 26,
-                          }}
-                        />
-                      )}
-                    </Stack>
-                  </CardContent>
-                </Card>
-              ))}
-            </Box>
-
-            {/* Desktop Table */}
-            <TableContainer
-              component={Paper}
-              elevation={0}
-              sx={{
-                borderRadius: 1,
-                background: themedColors.backgroundPaper,
-                border: `1px solid ${themedColors.dataBorder}`,
-                boxShadow:
-                  "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
-                mb: spacing.lg,
-                overflow: "hidden",
-                display: { xs: "none", lg: "block" },
-              }}
-            >
-              <Table>
-                <TableHead>
-                  <TableRow
-                    sx={{
-                      background: themedColors.primaryGradient,
+                  {t("composition.noResults")}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ color: themedColors.textSecondary, mt: 0.5 }}
+                >
+                  {t("composition.noResultsHint")}
+                </Typography>
+                {(partyFilter || govFilter !== "all") && (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    sx={{ mt: 2, textTransform: "none" }}
+                    onClick={() => {
+                      setPartyFilter(null);
+                      setGovFilter("all");
                     }}
                   >
-                    <TableCell sx={{ ...commonStyles.tableHeader }}>
-                      {t("composition.table.name")}
-                    </TableCell>
-                    <TableCell sx={{ ...commonStyles.tableHeader }}>
-                      {t("composition.table.party")}
-                    </TableCell>
-                    <TableCell
-                      sx={{ ...commonStyles.tableHeader }}
-                      align="center"
-                    >
-                      {t("composition.table.government")}
-                    </TableCell>
-                    <TableCell sx={{ ...commonStyles.tableHeader }}>
-                      {t("composition.table.gender")}
-                    </TableCell>
-                    <TableCell sx={{ ...commonStyles.tableHeader }}>
-                      {t("composition.table.birthDate")}
-                    </TableCell>
-                    <TableCell sx={{ ...commonStyles.tableHeader }}>
-                      {t("composition.table.birthPlace")}
-                    </TableCell>
-                    <TableCell sx={{ ...commonStyles.tableHeader }}>
-                      {t("composition.table.occupation")}
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredMembers.map((m, index) => (
-                    <TableRow
+                    {t("composition.resetFilters")}
+                  </Button>
+                )}
+              </Paper>
+            ) : (
+              <>
+                <Box sx={{ display: { xs: "block", lg: "none" } }}>
+                  {filteredMembers.map((m) => (
+                    <Card
                       key={m.person_id}
-                      hover
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => handleRowClick(m)}
+                      onKeyDown={(event) =>
+                        handleActivateOnKeyDown(event, () => handleRowClick(m))
+                      }
                       sx={{
-                        ...commonStyles.tableRow,
-                        borderBottom: `1px solid ${themedColors.dataBorder}`,
-                        "&:hover": {
-                          background: `${themedColors.primary}08`,
-                          boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+                        mb: 1.5,
+                        cursor: "pointer",
+                        border: `1px solid ${themedColors.dataBorder}`,
+                        transition: "all 0.2s ease-in-out",
+                        "&:focus-visible": {
+                          outline: `2px solid ${themedColors.primary}`,
+                          outlineOffset: 1,
                         },
-                        animation: `fadeIn 0.3s ease-out ${index * 0.02}s both`,
-                        "@keyframes fadeIn": {
-                          from: {
-                            opacity: 0,
-                            transform: "translateY(8px)",
-                          },
-                          to: {
-                            opacity: 1,
-                            transform: "translateY(0)",
-                          },
+                        "&:active": {
+                          transform: "scale(0.99)",
                         },
                       }}
-                      onClick={() => handleRowClick(m)}
                     >
-                      <TableCell
-                        sx={{
-                          ...commonStyles.dataCell,
-                          color: themedColors.textPrimary,
-                          py: 2.5,
-                        }}
-                      >
-                        {m.first_name} {m.last_name}
-                      </TableCell>
-                      <TableCell sx={{ py: 2.5 }}>
-                        {m.party_name ? (
-                          <Chip
-                            label={m.party_name}
-                            size="small"
-                            sx={{
-                              background: themedColors.primary,
-                              color: "white",
-                              fontWeight: 700,
-                              fontSize: "0.75rem",
-                              height: 28,
-                            }}
-                          />
-                        ) : (
+                      <CardContent sx={{ p: 2, "&:last-child": { pb: 2 } }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            mb: 1,
+                          }}
+                        >
                           <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ fontWeight: 500 }}
-                          >
-                            -
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell align="center" sx={{ py: 2.5 }}>
-                        {m.is_in_government === 1 ? (
-                          <CheckCircleIcon
+                            variant="subtitle1"
                             sx={{
-                              color: themedColors.success,
-                              fontSize: 28,
+                              fontWeight: 600,
+                              color: themedColors.textPrimary,
                             }}
-                            titleAccess="Hallituksessa"
-                          />
-                        ) : (
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{ fontWeight: 500 }}
                           >
-                            -
+                            {m.first_name} {m.last_name}
                           </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          ...commonStyles.labelCell,
-                          color: themedColors.textSecondary,
-                          py: 2.5,
-                        }}
-                      >
-                        {m.gender}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          ...commonStyles.labelCell,
-                          color: themedColors.textSecondary,
-                          py: 2.5,
-                        }}
-                      >
-                        {m.birth_date}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          ...commonStyles.labelCell,
-                          color: themedColors.textSecondary,
-                          py: 2.5,
-                        }}
-                      >
-                        {m.birth_place}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          ...commonStyles.labelCell,
-                          color: themedColors.textSecondary,
-                          py: 2.5,
-                        }}
-                      >
-                        {m.profession}
-                      </TableCell>
-                    </TableRow>
+                          {m.is_in_government === 1 && (
+                            <CheckCircleIcon
+                              sx={{
+                                color: themedColors.success,
+                                fontSize: 20,
+                                ml: 1,
+                                flexShrink: 0,
+                              }}
+                              titleAccess="Hallituksessa"
+                            />
+                          )}
+                        </Box>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          {m.party_name && (
+                            <Chip
+                              label={m.party_name}
+                              size="small"
+                              sx={{
+                                background: themedColors.primary,
+                                color: "white",
+                                fontWeight: 600,
+                                fontSize: "0.75rem",
+                                height: 26,
+                              }}
+                            />
+                          )}
+                          {m.profession && (
+                            <Chip
+                              label={m.profession}
+                              size="small"
+                              variant="outlined"
+                              sx={{
+                                fontSize: "0.75rem",
+                                height: 26,
+                              }}
+                            />
+                          )}
+                        </Stack>
+                      </CardContent>
+                    </Card>
                   ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                </Box>
+
+                {/* Desktop Table */}
+                <TableContainer
+                  component={Paper}
+                  elevation={0}
+                  sx={{
+                    borderRadius: 1,
+                    background: themedColors.backgroundPaper,
+                    border: `1px solid ${themedColors.dataBorder}`,
+                    boxShadow:
+                      "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
+                    mb: spacing.lg,
+                    overflow: "hidden",
+                    display: { xs: "none", lg: "block" },
+                  }}
+                >
+                  <Table>
+                    <TableHead>
+                      <TableRow
+                        sx={{
+                          background: themedColors.primaryGradient,
+                        }}
+                      >
+                        <TableCell sx={{ ...commonStyles.tableHeader }}>
+                          {t("composition.table.name")}
+                        </TableCell>
+                        <TableCell sx={{ ...commonStyles.tableHeader }}>
+                          {t("composition.table.party")}
+                        </TableCell>
+                        <TableCell
+                          sx={{ ...commonStyles.tableHeader }}
+                          align="center"
+                        >
+                          {t("composition.table.government")}
+                        </TableCell>
+                        <TableCell sx={{ ...commonStyles.tableHeader }}>
+                          {t("composition.table.gender")}
+                        </TableCell>
+                        <TableCell sx={{ ...commonStyles.tableHeader }}>
+                          {t("composition.table.birthDate")}
+                        </TableCell>
+                        <TableCell sx={{ ...commonStyles.tableHeader }}>
+                          {t("composition.table.birthPlace")}
+                        </TableCell>
+                        <TableCell sx={{ ...commonStyles.tableHeader }}>
+                          {t("composition.table.occupation")}
+                        </TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {filteredMembers.map((m, index) => (
+                        <TableRow
+                          key={m.person_id}
+                          hover
+                          tabIndex={0}
+                          onClick={() => handleRowClick(m)}
+                          onKeyDown={(event) =>
+                            handleActivateOnKeyDown(event, () =>
+                              handleRowClick(m),
+                            )
+                          }
+                          sx={{
+                            ...commonStyles.tableRow,
+                            borderBottom: `1px solid ${themedColors.dataBorder}`,
+                            "&:hover": {
+                              background: `${themedColors.primary}08`,
+                              boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+                            },
+                            "&:focus-visible": {
+                              outline: `2px solid ${themedColors.primary}`,
+                              outlineOffset: -2,
+                            },
+                            animation: `fadeIn 0.3s ease-out ${index * 0.02}s both`,
+                            "@keyframes fadeIn": {
+                              from: {
+                                opacity: 0,
+                                transform: "translateY(8px)",
+                              },
+                              to: {
+                                opacity: 1,
+                                transform: "translateY(0)",
+                              },
+                            },
+                          }}
+                        >
+                          <TableCell
+                            sx={{
+                              ...commonStyles.dataCell,
+                              color: themedColors.textPrimary,
+                              py: 2.5,
+                            }}
+                          >
+                            {m.first_name} {m.last_name}
+                          </TableCell>
+                          <TableCell sx={{ py: 2.5 }}>
+                            {m.party_name ? (
+                              <Chip
+                                label={m.party_name}
+                                size="small"
+                                sx={{
+                                  background: themedColors.primary,
+                                  color: "white",
+                                  fontWeight: 700,
+                                  fontSize: "0.75rem",
+                                  height: 28,
+                                }}
+                              />
+                            ) : (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ fontWeight: 500 }}
+                              >
+                                -
+                              </Typography>
+                            )}
+                          </TableCell>
+                          <TableCell align="center" sx={{ py: 2.5 }}>
+                            {m.is_in_government === 1 ? (
+                              <CheckCircleIcon
+                                sx={{
+                                  color: themedColors.success,
+                                  fontSize: 28,
+                                }}
+                                titleAccess="Hallituksessa"
+                              />
+                            ) : (
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{ fontWeight: 500 }}
+                              >
+                                -
+                              </Typography>
+                            )}
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              ...commonStyles.labelCell,
+                              color: themedColors.textSecondary,
+                              py: 2.5,
+                            }}
+                          >
+                            {m.gender}
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              ...commonStyles.labelCell,
+                              color: themedColors.textSecondary,
+                              py: 2.5,
+                            }}
+                          >
+                            {m.birth_date}
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              ...commonStyles.labelCell,
+                              color: themedColors.textSecondary,
+                              py: 2.5,
+                            }}
+                          >
+                            {m.birth_place}
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              ...commonStyles.labelCell,
+                              color: themedColors.textSecondary,
+                              py: 2.5,
+                            }}
+                          >
+                            {m.profession}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </>
+            )}
           </Box>
         </Fade>
       )}

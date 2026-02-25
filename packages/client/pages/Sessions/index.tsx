@@ -75,6 +75,13 @@ import { CalendarGrid } from "./components/CalendarGrid";
 
 const SPEECH_PAGE_SIZE = 20;
 
+type SectionLoadErrorKey =
+  | "speeches"
+  | "votings"
+  | "links"
+  | "subSections"
+  | "rollCall";
+
 const getInitialDate = (): string => {
   const params = new URLSearchParams(window.location.search);
   const dateParam = params.get("date");
@@ -146,6 +153,9 @@ export default () => {
   const [loadingMoreSpeeches, setLoadingMoreSpeeches] = useState<Set<number>>(
     new Set(),
   );
+  const [sectionLoadErrors, setSectionLoadErrors] = useState<
+    Record<number, Partial<Record<SectionLoadErrorKey, string>>>
+  >({});
   const [expandedVotingIds, setExpandedVotingIds] = useState<Set<number>>(
     new Set(),
   );
@@ -187,6 +197,7 @@ export default () => {
         setLoadingLinks(new Set());
         setLoadingRollCalls(new Set());
         setLoadingSubSections(new Set());
+        setSectionLoadErrors({});
         setSectionLinks({});
         setSectionRollCalls({});
         setSectionSubSections({});
@@ -332,7 +343,7 @@ export default () => {
       >
         <Typography
           sx={{
-            fontSize: "0.7rem",
+            ...commonStyles.compactTextMd,
             fontWeight: 700,
             color: colors.textTertiary,
             textTransform: "uppercase",
@@ -350,7 +361,10 @@ export default () => {
             {(section.vaski_document_type_name ||
               section.vaski_document_type_code) && (
               <Typography
-                sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textSecondary,
+                }}
               >
                 {t("sessions.vaskiTypeLine", {
                   value:
@@ -362,7 +376,10 @@ export default () => {
             )}
             {section.vaski_eduskunta_tunnus && (
               <Typography
-                sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textSecondary,
+                }}
               >
                 {t("sessions.vaskiTunnusLine", {
                   value: section.vaski_eduskunta_tunnus,
@@ -371,21 +388,30 @@ export default () => {
             )}
             {docNumber && (
               <Typography
-                sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textSecondary,
+                }}
               >
                 {t("sessions.vaskiDocNumberLine", { value: docNumber })}
               </Typography>
             )}
             {section.vaski_status && (
               <Typography
-                sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textSecondary,
+                }}
               >
                 {t("sessions.vaskiStatusLine", { value: section.vaski_status })}
               </Typography>
             )}
             {section.vaski_creation_date && (
               <Typography
-                sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textSecondary,
+                }}
               >
                 {t("sessions.vaskiCreatedLine", {
                   value: section.vaski_creation_date,
@@ -408,14 +434,22 @@ export default () => {
         )}
         {authorLine && (
           <Typography
-            sx={{ fontSize: "0.75rem", color: colors.textSecondary, mt: 0.25 }}
+            sx={{
+              ...commonStyles.compactTextLg,
+              color: colors.textSecondary,
+              mt: 0.25,
+            }}
           >
             {t("sessions.vaskiAuthorLine", { value: authorLine })}
           </Typography>
         )}
         {section.vaski_source_reference && (
           <Typography
-            sx={{ fontSize: "0.75rem", color: colors.textTertiary, mt: 0.25 }}
+            sx={{
+              ...commonStyles.compactTextLg,
+              color: colors.textTertiary,
+              mt: 0.25,
+            }}
           >
             {t("sessions.vaskiSourceReferenceLine", {
               value: section.vaski_source_reference,
@@ -425,7 +459,7 @@ export default () => {
         {section.vaski_summary && (
           <Typography
             sx={{
-              fontSize: "0.75rem",
+              ...commonStyles.compactTextLg,
               color: colors.textSecondary,
               mt: 0.5,
               ...(compact
@@ -444,7 +478,11 @@ export default () => {
         {subjects.length > 0 && (
           <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.5 }}>
             <Typography
-              sx={{ fontSize: "0.75rem", color: colors.textSecondary, mr: 0.5 }}
+              sx={{
+                ...commonStyles.compactTextLg,
+                color: colors.textSecondary,
+                mr: 0.5,
+              }}
             >
               {t("sessions.vaskiSubjects")}:
             </Typography>
@@ -488,7 +526,7 @@ export default () => {
       >
         <Typography
           sx={{
-            fontSize: "0.7rem",
+            ...commonStyles.compactTextMd,
             fontWeight: 700,
             color: colors.textTertiary,
             textTransform: "uppercase",
@@ -497,13 +535,17 @@ export default () => {
           {t("sessions.minutesMetadata")}
         </Typography>
         {minutesItemTitle && minutesItemTitle !== section.title && (
-          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+          <Typography
+            sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
+          >
             {t("sessions.minutesItemTitleLine", { value: minutesItemTitle })}
           </Typography>
         )}
         {(section.minutes_processing_phase_code ||
           section.minutes_general_processing_phase_code) && (
-          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+          <Typography
+            sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
+          >
             {t("sessions.minutesProcessingCodesLine", {
               value: [
                 section.minutes_processing_phase_code,
@@ -624,7 +666,7 @@ export default () => {
                 : t("sessions.minutesReferenceNotMigrated");
               const chipSx = {
                 fontFamily: "monospace",
-                fontSize: "0.75rem",
+                ...commonStyles.compactTextLg,
                 height: 24,
                 ...(href
                   ? {
@@ -709,7 +751,7 @@ export default () => {
       >
         <Typography
           sx={{
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
             fontWeight: 700,
             color: colors.textSecondary,
             textTransform: "uppercase",
@@ -724,7 +766,7 @@ export default () => {
             sx={{
               width: "100%",
               borderCollapse: "collapse",
-              fontSize: "0.75rem",
+              ...commonStyles.compactTextLg,
               "& th, & td": {
                 textAlign: "left",
                 borderBottom: `1px solid ${colors.dataBorder}`,
@@ -765,7 +807,7 @@ export default () => {
                           <EduskuntaSourceLink
                             href={href}
                             sx={{
-                              fontSize: "0.75rem",
+                              ...commonStyles.compactTextLg,
                               color: colors.primaryLight,
                             }}
                           >
@@ -817,7 +859,7 @@ export default () => {
       <Box sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}>
         <Typography
           sx={{
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
             fontWeight: 600,
             color: colors.textSecondary,
             textTransform: "uppercase",
@@ -859,7 +901,10 @@ export default () => {
                 )}
                 {notice.sent_at && (
                   <Typography
-                    sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                    sx={{
+                      ...commonStyles.compactTextLg,
+                      color: colors.textTertiary,
+                    }}
                   >
                     {t("sessions.noticeSentLine", {
                       value: formatDateTime(notice.sent_at),
@@ -868,7 +913,10 @@ export default () => {
                 )}
                 {notice.valid_until && (
                   <Typography
-                    sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                    sx={{
+                      ...commonStyles.compactTextLg,
+                      color: colors.textTertiary,
+                    }}
                   >
                     {t("sessions.noticeValidUntilLine", {
                       value: formatDateTime(notice.valid_until),
@@ -903,7 +951,7 @@ export default () => {
       <Box sx={{ mt: 1.5 }}>
         <Typography
           sx={{
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
             fontWeight: 600,
             color: colors.textSecondary,
             textTransform: "uppercase",
@@ -945,7 +993,10 @@ export default () => {
                 )}
                 {notice.sent_at && (
                   <Typography
-                    sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                    sx={{
+                      ...commonStyles.compactTextLg,
+                      color: colors.textTertiary,
+                    }}
                   >
                     {t("sessions.noticeSentLine", {
                       value: formatDateTime(notice.sent_at),
@@ -954,7 +1005,10 @@ export default () => {
                 )}
                 {notice.valid_until && (
                   <Typography
-                    sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                    sx={{
+                      ...commonStyles.compactTextLg,
+                      color: colors.textTertiary,
+                    }}
                   >
                     {t("sessions.noticeValidUntilLine", {
                       value: formatDateTime(notice.valid_until),
@@ -1002,7 +1056,7 @@ export default () => {
         >
           <Typography
             sx={{
-              fontSize: "0.75rem",
+              ...commonStyles.compactTextLg,
               fontWeight: 600,
               color: colors.textSecondary,
               textTransform: "uppercase",
@@ -1018,7 +1072,7 @@ export default () => {
               textTransform: "none",
               borderColor: colors.primaryLight,
               color: colors.primaryLight,
-              fontSize: "0.75rem",
+              ...commonStyles.compactTextLg,
             }}
           >
             {isExpanded
@@ -1086,7 +1140,10 @@ export default () => {
                           scrollToSection(targetSectionKey),
                         );
                       }}
-                      sx={{ textTransform: "none", fontSize: "0.75rem" }}
+                      sx={{
+                        textTransform: "none",
+                        ...commonStyles.compactTextLg,
+                      }}
                     >
                       {t("sessions.openSection")}
                     </Button>
@@ -1097,7 +1154,10 @@ export default () => {
                 >
                   {item.identifier_text && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textTertiary,
+                      }}
                     >
                       {t("sessions.identifierLine", {
                         value: item.identifier_text,
@@ -1107,7 +1167,10 @@ export default () => {
                   {item.processing_title &&
                     item.processing_title !== item.title && (
                       <Typography
-                        sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                        sx={{
+                          ...commonStyles.compactTextLg,
+                          color: colors.textTertiary,
+                        }}
                       >
                         {t("sessions.processingLine", {
                           value: item.processing_title,
@@ -1116,7 +1179,10 @@ export default () => {
                     )}
                   {item.note && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textSecondary,
+                      }}
                     >
                       {item.note}
                     </Typography>
@@ -1148,7 +1214,7 @@ export default () => {
         >
           <Typography
             sx={{
-              fontSize: "0.75rem",
+              ...commonStyles.compactTextLg,
               fontWeight: 600,
               color: colors.textSecondary,
               textTransform: "uppercase",
@@ -1164,7 +1230,7 @@ export default () => {
               textTransform: "none",
               borderColor: colors.primaryLight,
               color: colors.primaryLight,
-              fontSize: "0.75rem",
+              ...commonStyles.compactTextLg,
             }}
           >
             {isExpanded
@@ -1200,7 +1266,10 @@ export default () => {
                 >
                   {attachment.related_document_tunnus && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textTertiary,
+                      }}
                     >
                       {t("sessions.relatedDocumentLine", {
                         value: attachment.related_document_tunnus,
@@ -1209,7 +1278,10 @@ export default () => {
                   )}
                   {attachment.file_name && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textTertiary,
+                      }}
                     >
                       {t("sessions.fileNameLine", {
                         value: attachment.file_name,
@@ -1218,7 +1290,10 @@ export default () => {
                   )}
                   {attachment.native_id && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textTertiary,
+                      }}
                     >
                       {t("sessions.nativeIdLine", {
                         value: attachment.native_id,
@@ -1238,8 +1313,18 @@ export default () => {
     const links = sectionLinks[section.key] || [];
     if (loadingLinks.has(section.key)) {
       return (
-        <Box sx={{ py: 1, textAlign: "center" }}>
+        <Box
+          sx={{ py: 1, textAlign: "center" }}
+          role="status"
+          aria-live="polite"
+          aria-label={t("app.loading")}
+        >
           <CircularProgress size={18} sx={{ color: themedColors.primary }} />
+          <Typography
+            sx={{ ...commonStyles.compactTextXs, color: colors.textTertiary }}
+          >
+            {t("app.loading")}
+          </Typography>
         </Box>
       );
     }
@@ -1249,7 +1334,7 @@ export default () => {
       <Box sx={{ mt: 1.5 }}>
         <Typography
           sx={{
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
             fontWeight: 600,
             color: colors.textSecondary,
             textTransform: "uppercase",
@@ -1299,7 +1384,10 @@ export default () => {
                 )}
                 {link.document_tunnus && (
                   <Typography
-                    sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                    sx={{
+                      ...commonStyles.compactTextLg,
+                      color: colors.textTertiary,
+                    }}
                   >
                     {link.document_tunnus}
                   </Typography>
@@ -1323,14 +1411,20 @@ export default () => {
                 <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
                   {(link.document_type_name || link.document_type_code) && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textSecondary,
+                      }}
                     >
                       {link.document_type_name || link.document_type_code}
                     </Typography>
                   )}
                   {link.document_created_at && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textTertiary,
+                      }}
                     >
                       {t("sessions.vaskiCreatedLine", {
                         value: link.document_created_at,
@@ -1354,8 +1448,18 @@ export default () => {
 
     if (loading) {
       return (
-        <Box sx={{ mt: 1.5, py: 1, textAlign: "center" }}>
+        <Box
+          sx={{ mt: 1.5, py: 1, textAlign: "center" }}
+          role="status"
+          aria-live="polite"
+          aria-label={t("app.loading")}
+        >
           <CircularProgress size={18} sx={{ color: themedColors.primary }} />
+          <Typography
+            sx={{ ...commonStyles.compactTextXs, color: colors.textTertiary }}
+          >
+            {t("app.loading")}
+          </Typography>
         </Box>
       );
     }
@@ -1408,7 +1512,7 @@ export default () => {
       >
         <Typography
           sx={{
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
             fontWeight: 700,
             color: colors.textSecondary,
             textTransform: "uppercase",
@@ -1428,7 +1532,9 @@ export default () => {
           </Typography>
         )}
         <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mt: 0.5 }}>
-          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+          <Typography
+            sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
+          >
             {t("sessions.rollCallDocumentLine", {
               value: report.edk_identifier,
             })}
@@ -1436,7 +1542,7 @@ export default () => {
           <EduskuntaSourceLink
             href={documentUrl}
             sx={{
-              fontSize: "0.75rem",
+              ...commonStyles.compactTextLg,
               fontWeight: 600,
               color: colors.primaryLight,
             }}
@@ -1445,7 +1551,10 @@ export default () => {
           </EduskuntaSourceLink>
           {report.roll_call_start_time && (
             <Typography
-              sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+              sx={{
+                ...commonStyles.compactTextLg,
+                color: colors.textSecondary,
+              }}
             >
               {t("sessions.rollCallStartLine", {
                 value: formatTime(report.roll_call_start_time),
@@ -1454,7 +1563,10 @@ export default () => {
           )}
           {report.roll_call_end_time && (
             <Typography
-              sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+              sx={{
+                ...commonStyles.compactTextLg,
+                color: colors.textSecondary,
+              }}
             >
               {t("sessions.rollCallEndLine", {
                 value: formatTime(report.roll_call_end_time),
@@ -1489,7 +1601,11 @@ export default () => {
 
         {entries.length === 0 && (
           <Typography
-            sx={{ mt: 0.75, fontSize: "0.75rem", color: colors.textTertiary }}
+            sx={{
+              mt: 0.75,
+              ...commonStyles.compactTextLg,
+              color: colors.textTertiary,
+            }}
           >
             {t("sessions.rollCallNoEntries")}
           </Typography>
@@ -1502,7 +1618,7 @@ export default () => {
               sx={{
                 width: "100%",
                 borderCollapse: "collapse",
-                fontSize: "0.75rem",
+                ...commonStyles.compactTextLg,
                 "& th, & td": {
                   textAlign: "left",
                   borderBottom: `1px solid ${colors.dataBorder}`,
@@ -1561,14 +1677,20 @@ export default () => {
             border: `1px solid ${colors.dataBorder}`,
           }}
         >
-          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+          <Typography
+            sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
+          >
             {t("sessions.rollCallReasonLegend")}: <strong>(e)</strong>{" "}
             {t("sessions.rollCallReasonE")}; <strong>(h)</strong>{" "}
             {t("sessions.rollCallReasonH")}
           </Typography>
           {unknownReasonCodes.length > 0 && (
             <Typography
-              sx={{ mt: 0.5, fontSize: "0.75rem", color: colors.textTertiary }}
+              sx={{
+                mt: 0.5,
+                ...commonStyles.compactTextLg,
+                color: colors.textTertiary,
+              }}
             >
               {t("sessions.rollCallUnknownCodesLine", {
                 value: unknownReasonCodes.map((code) => `(${code})`).join(", "),
@@ -1610,7 +1732,148 @@ export default () => {
     return (await res.json()) as SectionRollCallData | null;
   };
 
-  const toggleSection = async (sectionId: number, sectionKey: string) => {
+  const getErrorReason = (error: unknown) =>
+    error instanceof Error ? error.message : t("errors.unknownError");
+
+  const sectionLoadErrorLabels: Record<SectionLoadErrorKey, string> = {
+    speeches: t("sessions.loadErrorSpeeches"),
+    votings: t("sessions.loadErrorVotings"),
+    links: t("sessions.loadErrorLinks"),
+    subSections: t("sessions.loadErrorSubSections"),
+    rollCall: t("sessions.loadErrorRollCall"),
+  };
+
+  const setSectionLoadError = (
+    sectionId: number,
+    key: SectionLoadErrorKey,
+    reason: string,
+  ) => {
+    setSectionLoadErrors((prev) => ({
+      ...prev,
+      [sectionId]: { ...(prev[sectionId] || {}), [key]: reason },
+    }));
+  };
+
+  const clearSectionLoadError = (
+    sectionId: number,
+    key: SectionLoadErrorKey,
+  ) => {
+    setSectionLoadErrors((prev) => {
+      const current = prev[sectionId];
+      if (!current || !current[key]) return prev;
+      const nextSection = { ...current };
+      delete nextSection[key];
+      if (Object.keys(nextSection).length === 0) {
+        const next = { ...prev };
+        delete next[sectionId];
+        return next;
+      }
+      return { ...prev, [sectionId]: nextSection };
+    });
+  };
+
+  const loadSectionData = async (sectionId: number, sectionKey: string) => {
+    const section = sessions
+      .flatMap((session) => session.sections || [])
+      .find(
+        (candidate) =>
+          candidate.id === sectionId || candidate.key === sectionKey,
+      );
+
+    if (!sectionSpeechData[sectionId]) {
+      setLoadingSpeeches((prev) => new Set(prev).add(sectionId));
+      try {
+        const data = await fetchSpeeches(sectionId, sectionKey);
+        setSectionSpeechData((prev) => ({ ...prev, [sectionId]: data }));
+        clearSectionLoadError(sectionId, "speeches");
+      } catch (error) {
+        setSectionLoadError(sectionId, "speeches", getErrorReason(error));
+      } finally {
+        setLoadingSpeeches((prev) => {
+          const next = new Set(prev);
+          next.delete(sectionId);
+          return next;
+        });
+      }
+    }
+
+    if (!sectionVotings[sectionId]) {
+      setLoadingVotings((prev) => new Set(prev).add(sectionId));
+      try {
+        const res = await fetch(`/api/sections/${sectionKey}/votings`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const votings: Voting[] = await res.json();
+        setSectionVotings((prev) => ({ ...prev, [sectionId]: votings }));
+        clearSectionLoadError(sectionId, "votings");
+      } catch (error) {
+        setSectionLoadError(sectionId, "votings", getErrorReason(error));
+      } finally {
+        setLoadingVotings((prev) => {
+          const next = new Set(prev);
+          next.delete(sectionId);
+          return next;
+        });
+      }
+    }
+
+    if (!sectionLinks[sectionKey]) {
+      setLoadingLinks((prev) => new Set(prev).add(sectionKey));
+      try {
+        const links = await fetchSectionLinks(sectionKey);
+        setSectionLinks((prev) => ({ ...prev, [sectionKey]: links }));
+        clearSectionLoadError(sectionId, "links");
+      } catch (error) {
+        setSectionLoadError(sectionId, "links", getErrorReason(error));
+      } finally {
+        setLoadingLinks((prev) => {
+          const next = new Set(prev);
+          next.delete(sectionKey);
+          return next;
+        });
+      }
+    }
+
+    const hasSubSectionsData = Object.hasOwn(sectionSubSections, sectionId);
+    if (!hasSubSectionsData) {
+      setLoadingSubSections((prev) => new Set(prev).add(sectionId));
+      try {
+        const subSections = await fetchSectionSubSections(sectionKey);
+        setSectionSubSections((prev) => ({
+          ...prev,
+          [sectionId]: subSections,
+        }));
+        clearSectionLoadError(sectionId, "subSections");
+      } catch (error) {
+        setSectionLoadError(sectionId, "subSections", getErrorReason(error));
+      } finally {
+        setLoadingSubSections((prev) => {
+          const next = new Set(prev);
+          next.delete(sectionId);
+          return next;
+        });
+      }
+    }
+
+    const hasRollCallData = Object.hasOwn(sectionRollCalls, sectionId);
+    if (isRollCallSection(section) && !hasRollCallData) {
+      setLoadingRollCalls((prev) => new Set(prev).add(sectionId));
+      try {
+        const rollCall = await fetchSectionRollCall(sectionKey);
+        setSectionRollCalls((prev) => ({ ...prev, [sectionId]: rollCall }));
+        clearSectionLoadError(sectionId, "rollCall");
+      } catch (error) {
+        setSectionLoadError(sectionId, "rollCall", getErrorReason(error));
+      } finally {
+        setLoadingRollCalls((prev) => {
+          const next = new Set(prev);
+          next.delete(sectionId);
+          return next;
+        });
+      }
+    }
+  };
+
+  const toggleSection = (sectionId: number, sectionKey: string) => {
     const isExpanding = !expandedSections.has(sectionId);
 
     setExpandedSections((prev) => {
@@ -1621,90 +1884,7 @@ export default () => {
     });
 
     if (isExpanding) {
-      const section = sessions
-        .flatMap((session) => session.sections || [])
-        .find(
-          (candidate) =>
-            candidate.id === sectionId || candidate.key === sectionKey,
-        );
-
-      if (!sectionSpeechData[sectionId]) {
-        setLoadingSpeeches((prev) => new Set(prev).add(sectionId));
-        try {
-          const data = await fetchSpeeches(sectionId, sectionKey);
-          setSectionSpeechData((prev) => ({ ...prev, [sectionId]: data }));
-        } finally {
-          setLoadingSpeeches((prev) => {
-            const next = new Set(prev);
-            next.delete(sectionId);
-            return next;
-          });
-        }
-      }
-
-      if (!sectionVotings[sectionId]) {
-        setLoadingVotings((prev) => new Set(prev).add(sectionId));
-        try {
-          const res = await fetch(`/api/sections/${sectionKey}/votings`);
-          if (res.ok) {
-            const votings: Voting[] = await res.json();
-            setSectionVotings((prev) => ({ ...prev, [sectionId]: votings }));
-          }
-        } finally {
-          setLoadingVotings((prev) => {
-            const next = new Set(prev);
-            next.delete(sectionId);
-            return next;
-          });
-        }
-      }
-
-      if (!sectionLinks[sectionKey]) {
-        setLoadingLinks((prev) => new Set(prev).add(sectionKey));
-        try {
-          const links = await fetchSectionLinks(sectionKey);
-          setSectionLinks((prev) => ({ ...prev, [sectionKey]: links }));
-        } finally {
-          setLoadingLinks((prev) => {
-            const next = new Set(prev);
-            next.delete(sectionKey);
-            return next;
-          });
-        }
-      }
-
-      const hasSubSectionsData = Object.hasOwn(sectionSubSections, sectionId);
-      if (!hasSubSectionsData) {
-        setLoadingSubSections((prev) => new Set(prev).add(sectionId));
-        try {
-          const subSections = await fetchSectionSubSections(sectionKey);
-          setSectionSubSections((prev) => ({
-            ...prev,
-            [sectionId]: subSections,
-          }));
-        } finally {
-          setLoadingSubSections((prev) => {
-            const next = new Set(prev);
-            next.delete(sectionId);
-            return next;
-          });
-        }
-      }
-
-      const hasRollCallData = Object.hasOwn(sectionRollCalls, sectionId);
-      if (isRollCallSection(section) && !hasRollCallData) {
-        setLoadingRollCalls((prev) => new Set(prev).add(sectionId));
-        try {
-          const rollCall = await fetchSectionRollCall(sectionKey);
-          setSectionRollCalls((prev) => ({ ...prev, [sectionId]: rollCall }));
-        } finally {
-          setLoadingRollCalls((prev) => {
-            const next = new Set(prev);
-            next.delete(sectionId);
-            return next;
-          });
-        }
-      }
+      void loadSectionData(sectionId, sectionKey);
     }
   };
 
@@ -1723,6 +1903,9 @@ export default () => {
           speeches: [...(prev[sectionId]?.speeches || []), ...data.speeches],
         },
       }));
+      clearSectionLoadError(sectionId, "speeches");
+    } catch (error) {
+      setSectionLoadError(sectionId, "speeches", getErrorReason(error));
     } finally {
       setLoadingMoreSpeeches((prev) => {
         const next = new Set(prev);
@@ -1780,7 +1963,7 @@ export default () => {
       >
         <Typography
           sx={{
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
             fontWeight: 600,
             color: colors.textSecondary,
             textTransform: "uppercase",
@@ -1836,7 +2019,7 @@ export default () => {
                   onClick={() => toggleVotingDetails(voting.id)}
                   sx={{
                     textTransform: "none",
-                    fontSize: "0.7rem",
+                    ...commonStyles.compactTextMd,
                     minWidth: 0,
                     px: 1,
                   }}
@@ -1860,7 +2043,7 @@ export default () => {
                   size="small"
                   sx={{
                     textTransform: "none",
-                    fontSize: "0.7rem",
+                    ...commonStyles.compactTextMd,
                     minWidth: 0,
                     px: 1,
                   }}
@@ -1898,7 +2081,10 @@ export default () => {
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <CircularProgress size={12} />
                       <Typography
-                        sx={{ fontSize: "0.7rem", color: colors.textSecondary }}
+                        sx={{
+                          ...commonStyles.compactTextMd,
+                          color: colors.textSecondary,
+                        }}
                       >
                         {t("common.loadingVotingDetails")}
                       </Typography>
@@ -1945,7 +2131,7 @@ export default () => {
                       {details.governmentOpposition && (
                         <Typography
                           sx={{
-                            fontSize: "0.7rem",
+                            ...commonStyles.compactTextMd,
                             color: colors.textSecondary,
                           }}
                         >
@@ -1971,13 +2157,18 @@ export default () => {
                               size="small"
                               variant="outlined"
                               label={`${related.id}: ${related.n_yes}-${related.n_no}`}
-                              sx={{ height: 20, fontSize: "0.65rem" }}
+                              aria-label={t("sessions.relatedVotingAria", {
+                                id: related.id,
+                                yes: related.n_yes,
+                                no: related.n_no,
+                              })}
+                              sx={{ height: 20, ...commonStyles.compactTextXs }}
                             />
                           ))}
                           {details.relatedVotings.length > 6 && (
                             <Typography
                               sx={{
-                                fontSize: "0.65rem",
+                                ...commonStyles.compactTextXs,
                                 color: colors.textSecondary,
                               }}
                             >
@@ -2250,7 +2441,10 @@ export default () => {
                     )}
                     {session.description && (
                       <Typography
-                        sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                        sx={{
+                          ...commonStyles.compactTextLg,
+                          color: colors.textTertiary,
+                        }}
                       >
                         {session.description}
                       </Typography>
@@ -2297,7 +2491,10 @@ export default () => {
                   />
                   {session.start_time_reported && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textSecondary,
+                      }}
                     >
                       {t("sessions.startReportedLine", {
                         value: formatTime(session.start_time_reported),
@@ -2306,7 +2503,10 @@ export default () => {
                   )}
                   {session.start_time_actual && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textSecondary,
+                      }}
                     >
                       {t("sessions.startActualLine", {
                         value: formatTime(session.start_time_actual),
@@ -2315,7 +2515,10 @@ export default () => {
                   )}
                   {session.agenda_state && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textSecondary,
+                      }}
                     >
                       {t("sessions.agendaStateLine", {
                         value: session.agenda_state,
@@ -2324,7 +2527,10 @@ export default () => {
                   )}
                   {session.year !== undefined && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textSecondary,
+                      }}
                     >
                       {t("sessions.sessionYearLine", { value: session.year })}
                     </Typography>
@@ -2368,6 +2574,16 @@ export default () => {
                       (speech) => speech.content,
                     );
                     const votings = sectionVotings[section.id] || [];
+                    const sectionErrorReasons = (
+                      Object.entries(
+                        sectionLoadErrors[section.id] || {},
+                      ) as Array<[SectionLoadErrorKey, string]>
+                    )
+                      .filter(([, reason]) => Boolean(reason))
+                      .map(
+                        ([key, reason]) =>
+                          `${sectionLoadErrorLabels[key]} (${reason})`,
+                      );
 
                     return (
                       <Box
@@ -2399,7 +2615,7 @@ export default () => {
                               background: colors.primary,
                               color: "#fff",
                               fontWeight: 600,
-                              fontSize: "0.7rem",
+                              ...commonStyles.compactTextMd,
                               height: 22,
                               minWidth: 28,
                               flexShrink: 0,
@@ -2421,7 +2637,7 @@ export default () => {
                             {section.minutes_item_order != null && (
                               <Typography
                                 sx={{
-                                  fontSize: "0.75rem",
+                                  ...commonStyles.compactTextLg,
                                   color: colors.textTertiary,
                                 }}
                               >
@@ -2432,7 +2648,7 @@ export default () => {
                             {section.note && (
                               <Typography
                                 sx={{
-                                  fontSize: "0.75rem",
+                                  ...commonStyles.compactTextLg,
                                   color: colors.textSecondary,
                                 }}
                               >
@@ -2443,7 +2659,7 @@ export default () => {
                               section.processing_title !== section.title && (
                                 <Typography
                                   sx={{
-                                    fontSize: "0.75rem",
+                                    ...commonStyles.compactTextLg,
                                     color: colors.textTertiary,
                                   }}
                                 >
@@ -2455,7 +2671,7 @@ export default () => {
                             {section.resolution && (
                               <Typography
                                 sx={{
-                                  fontSize: "0.75rem",
+                                  ...commonStyles.compactTextLg,
                                   color: colors.textTertiary,
                                 }}
                               >
@@ -2524,7 +2740,7 @@ export default () => {
                               {section.agenda_key && (
                                 <Typography
                                   sx={{
-                                    fontSize: "0.75rem",
+                                    ...commonStyles.compactTextLg,
                                     color: colors.textTertiary,
                                   }}
                                 >
@@ -2537,7 +2753,7 @@ export default () => {
                                 section.vaski_id !== null && (
                                   <Typography
                                     sx={{
-                                      fontSize: "0.75rem",
+                                      ...commonStyles.compactTextLg,
                                       color: colors.textTertiary,
                                     }}
                                   >
@@ -2549,7 +2765,7 @@ export default () => {
                               {section.modified_datetime && (
                                 <Typography
                                   sx={{
-                                    fontSize: "0.75rem",
+                                    ...commonStyles.compactTextLg,
                                     color: colors.textTertiary,
                                   }}
                                 >
@@ -2582,6 +2798,34 @@ export default () => {
                               borderTop: `1px solid ${colors.dataBorder}`,
                             }}
                           >
+                            {sectionErrorReasons.length > 0 && (
+                              <Alert
+                                severity="warning"
+                                sx={{ mt: 1.5, mb: 0.5 }}
+                                action={
+                                  <Button
+                                    color="inherit"
+                                    size="small"
+                                    onClick={() =>
+                                      void loadSectionData(
+                                        section.id,
+                                        section.key,
+                                      )
+                                    }
+                                    sx={{
+                                      ...commonStyles.compactTextMd,
+                                      textTransform: "none",
+                                    }}
+                                  >
+                                    {t("common.retry")}
+                                  </Button>
+                                }
+                              >
+                                {t("errors.loadFailedWithReason", {
+                                  reason: sectionErrorReasons.join(", "),
+                                })}
+                              </Alert>
+                            )}
                             {renderVaskiInfo(section, false)}
                             {renderMinutesInfo(section, false)}
                             {renderSectionSubSections(section)}
@@ -2612,11 +2856,24 @@ export default () => {
                             {renderSectionRollCall(section)}
                             {/* Votings */}
                             {loadingVotings.has(section.id) ? (
-                              <Box sx={{ py: 2, textAlign: "center" }}>
+                              <Box
+                                sx={{ py: 2, textAlign: "center" }}
+                                role="status"
+                                aria-live="polite"
+                                aria-label={t("app.loading")}
+                              >
                                 <CircularProgress
                                   size={20}
                                   sx={{ color: themedColors.primary }}
                                 />
+                                <Typography
+                                  sx={{
+                                    ...commonStyles.compactTextXs,
+                                    color: colors.textTertiary,
+                                  }}
+                                >
+                                  {t("app.loading")}
+                                </Typography>
                               </Box>
                             ) : (
                               renderSectionVotings(votings, session)
@@ -2624,11 +2881,24 @@ export default () => {
 
                             {/* Speeches */}
                             {loadingSpeeches.has(section.id) ? (
-                              <Box sx={{ py: 2, textAlign: "center" }}>
+                              <Box
+                                sx={{ py: 2, textAlign: "center" }}
+                                role="status"
+                                aria-live="polite"
+                                aria-label={t("app.loading")}
+                              >
                                 <CircularProgress
                                   size={20}
                                   sx={{ color: themedColors.primary }}
                                 />
+                                <Typography
+                                  sx={{
+                                    ...commonStyles.compactTextXs,
+                                    color: colors.textTertiary,
+                                  }}
+                                >
+                                  {t("app.loading")}
+                                </Typography>
                               </Box>
                             ) : speeches.length > 0 ? (
                               <Box
@@ -2641,7 +2911,7 @@ export default () => {
                               >
                                 <Typography
                                   sx={{
-                                    fontSize: "0.75rem",
+                                    ...commonStyles.compactTextLg,
                                     fontWeight: 600,
                                     color: colors.textSecondary,
                                     textTransform: "uppercase",
@@ -2653,7 +2923,7 @@ export default () => {
                                 {!hasSpeechContent && (
                                   <Typography
                                     sx={{
-                                      fontSize: "0.75rem",
+                                      ...commonStyles.compactTextLg,
                                       color: colors.textTertiary,
                                     }}
                                   >
@@ -2663,7 +2933,7 @@ export default () => {
                                 {!hasSpeechContent && vaskiLatestSpeechDate && (
                                   <Typography
                                     sx={{
-                                      fontSize: "0.75rem",
+                                      ...commonStyles.compactTextLg,
                                       color: colors.textTertiary,
                                     }}
                                   >
@@ -2849,6 +3119,16 @@ export default () => {
                           section.speech_count ??
                           speechData?.total ??
                           speeches.length;
+                        const sectionErrorReasons = (
+                          Object.entries(
+                            sectionLoadErrors[section.id] || {},
+                          ) as Array<[SectionLoadErrorKey, string]>
+                        )
+                          .filter(([, reason]) => Boolean(reason))
+                          .map(
+                            ([key, reason]) =>
+                              `${sectionLoadErrorLabels[key]} (${reason})`,
+                          );
 
                         return (
                           <Box
@@ -2890,7 +3170,7 @@ export default () => {
                                     background: "#fff",
                                     color: colors.textSecondary,
                                     fontWeight: 600,
-                                    fontSize: "0.7rem",
+                                    ...commonStyles.compactTextMd,
                                     height: 22,
                                   }}
                                 />
@@ -2909,7 +3189,7 @@ export default () => {
                               {section.minutes_item_order != null && (
                                 <Typography
                                   sx={{
-                                    fontSize: "0.75rem",
+                                    ...commonStyles.compactTextLg,
                                     color: colors.textTertiary,
                                     mt: 0.25,
                                   }}
@@ -2921,7 +3201,7 @@ export default () => {
                               {section.note && (
                                 <Typography
                                   sx={{
-                                    fontSize: "0.75rem",
+                                    ...commonStyles.compactTextLg,
                                     color: colors.textSecondary,
                                     mt: 0.25,
                                   }}
@@ -2933,7 +3213,7 @@ export default () => {
                                 section.processing_title !== section.title && (
                                   <Typography
                                     sx={{
-                                      fontSize: "0.75rem",
+                                      ...commonStyles.compactTextLg,
                                       color: colors.textTertiary,
                                       mt: 0.25,
                                     }}
@@ -2946,7 +3226,7 @@ export default () => {
                               {section.resolution && (
                                 <Typography
                                   sx={{
-                                    fontSize: "0.75rem",
+                                    ...commonStyles.compactTextLg,
                                     color: colors.textTertiary,
                                     mt: 0.25,
                                   }}
@@ -3008,7 +3288,7 @@ export default () => {
                                 {!hasSpeechContent && speeches.length > 0 && (
                                   <Typography
                                     sx={{
-                                      fontSize: "0.75rem",
+                                      ...commonStyles.compactTextLg,
                                       color: colors.textTertiary,
                                     }}
                                   >
@@ -3020,7 +3300,7 @@ export default () => {
                                   vaskiLatestSpeechDate && (
                                     <Typography
                                       sx={{
-                                        fontSize: "0.75rem",
+                                        ...commonStyles.compactTextLg,
                                         color: colors.textTertiary,
                                       }}
                                     >
@@ -3041,7 +3321,7 @@ export default () => {
                                 {section.agenda_key && (
                                   <Typography
                                     sx={{
-                                      fontSize: "0.75rem",
+                                      ...commonStyles.compactTextLg,
                                       color: colors.textTertiary,
                                     }}
                                   >
@@ -3054,7 +3334,7 @@ export default () => {
                                   section.vaski_id !== null && (
                                     <Typography
                                       sx={{
-                                        fontSize: "0.75rem",
+                                        ...commonStyles.compactTextLg,
                                         color: colors.textTertiary,
                                       }}
                                     >
@@ -3066,7 +3346,7 @@ export default () => {
                                 {section.modified_datetime && (
                                   <Typography
                                     sx={{
-                                      fontSize: "0.75rem",
+                                      ...commonStyles.compactTextLg,
                                       color: colors.textTertiary,
                                     }}
                                   >
@@ -3090,7 +3370,7 @@ export default () => {
                                     textTransform: "none",
                                     borderColor: colors.primaryLight,
                                     color: colors.primaryLight,
-                                    fontSize: "0.75rem",
+                                    ...commonStyles.compactTextLg,
                                   }}
                                 >
                                   {isExpanded
@@ -3109,6 +3389,34 @@ export default () => {
                                 unmountOnExit
                               >
                                 <Box sx={{ mt: 1.5 }}>
+                                  {sectionErrorReasons.length > 0 && (
+                                    <Alert
+                                      severity="warning"
+                                      sx={{ mb: 1 }}
+                                      action={
+                                        <Button
+                                          color="inherit"
+                                          size="small"
+                                          onClick={() =>
+                                            void loadSectionData(
+                                              section.id,
+                                              section.key,
+                                            )
+                                          }
+                                          sx={{
+                                            ...commonStyles.compactTextMd,
+                                            textTransform: "none",
+                                          }}
+                                        >
+                                          {t("common.retry")}
+                                        </Button>
+                                      }
+                                    >
+                                      {t("errors.loadFailedWithReason", {
+                                        reason: sectionErrorReasons.join(", "),
+                                      })}
+                                    </Alert>
+                                  )}
                                   {renderVaskiInfo(section, false)}
                                   {renderMinutesInfo(section, false)}
                                   {renderSectionSubSections(section)}
@@ -3138,22 +3446,48 @@ export default () => {
                                   {renderSectionNotices(session, section.key)}
                                   {renderSectionRollCall(section)}
                                   {loadingVotings.has(section.id) ? (
-                                    <Box sx={{ py: 1, textAlign: "center" }}>
+                                    <Box
+                                      sx={{ py: 1, textAlign: "center" }}
+                                      role="status"
+                                      aria-live="polite"
+                                      aria-label={t("app.loading")}
+                                    >
                                       <CircularProgress
                                         size={20}
                                         sx={{ color: themedColors.primary }}
                                       />
+                                      <Typography
+                                        sx={{
+                                          ...commonStyles.compactTextXs,
+                                          color: colors.textTertiary,
+                                        }}
+                                      >
+                                        {t("app.loading")}
+                                      </Typography>
                                     </Box>
                                   ) : (
                                     renderSectionVotings(votings, session)
                                   )}
 
                                   {loadingSpeeches.has(section.id) ? (
-                                    <Box sx={{ py: 1, textAlign: "center" }}>
+                                    <Box
+                                      sx={{ py: 1, textAlign: "center" }}
+                                      role="status"
+                                      aria-live="polite"
+                                      aria-label={t("app.loading")}
+                                    >
                                       <CircularProgress
                                         size={20}
                                         sx={{ color: themedColors.primary }}
                                       />
+                                      <Typography
+                                        sx={{
+                                          ...commonStyles.compactTextXs,
+                                          color: colors.textTertiary,
+                                        }}
+                                      >
+                                        {t("app.loading")}
+                                      </Typography>
                                     </Box>
                                   ) : speeches.length > 0 ? (
                                     <Box
@@ -3167,7 +3501,7 @@ export default () => {
                                       {!hasSpeechContent && (
                                         <Typography
                                           sx={{
-                                            fontSize: "0.75rem",
+                                            ...commonStyles.compactTextLg,
                                             color: colors.textTertiary,
                                           }}
                                         >
@@ -3178,7 +3512,7 @@ export default () => {
                                         vaskiLatestSpeechDate && (
                                           <Typography
                                             sx={{
-                                              fontSize: "0.75rem",
+                                              ...commonStyles.compactTextLg,
                                               color: colors.textTertiary,
                                             }}
                                           >

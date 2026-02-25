@@ -17,10 +17,11 @@ import {
   Grid,
   IconButton,
   Link,
+  Skeleton,
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DocumentCard, RelatedVotings } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
@@ -85,6 +86,13 @@ type Member = {
   profession?: string;
 };
 
+type SectionLoadErrorKey =
+  | "speeches"
+  | "votings"
+  | "links"
+  | "subSections"
+  | "rollCall";
+
 const Home = () => {
   const { t } = useTranslation();
   const speechContentLatestLabel = (date: string) =>
@@ -134,6 +142,9 @@ const Home = () => {
   const [loadingMoreSpeeches, setLoadingMoreSpeeches] = useState<Set<number>>(
     new Set(),
   );
+  const [sectionLoadErrors, setSectionLoadErrors] = useState<
+    Record<number, Partial<Record<SectionLoadErrorKey, string>>>
+  >({});
   const [expandedVotingIds, setExpandedVotingIds] = useState<Set<number>>(
     new Set(),
   );
@@ -165,6 +176,7 @@ const Home = () => {
           : allDates;
         if (dates.length === 0) {
           setSessions([]);
+          setSectionLoadErrors({});
           setLatestDate(null);
           setLoadingSessions(false);
           return;
@@ -180,6 +192,7 @@ const Home = () => {
           vaskiLatestSpeechDate?: string | null;
         } = await sessionsRes.json();
         setSessions(payload.sessions || []);
+        setSectionLoadErrors({});
         setVaskiLatestSpeechDate(payload.vaskiLatestSpeechDate ?? null);
       } catch {
         setError(t("home.loadingError"));
@@ -190,41 +203,46 @@ const Home = () => {
     fetchLatestSession();
   }, [selectedHallituskausi, t]);
 
+  const [compositionError, setCompositionError] = useState<string | null>(null);
+
+  const loadComposition = useCallback(async () => {
+    try {
+      setLoadingComposition(true);
+      setCompositionError(null);
+      const today = new Date().toISOString().split("T")[0];
+      let asOfDate = today;
+      if (selectedHallituskausi) {
+        const candidate =
+          latestDate ||
+          selectedHallituskausi.endDate ||
+          selectedHallituskausi.startDate;
+        asOfDate = candidate;
+        if (asOfDate < selectedHallituskausi.startDate) {
+          asOfDate = selectedHallituskausi.startDate;
+        }
+        if (
+          selectedHallituskausi.endDate &&
+          asOfDate > selectedHallituskausi.endDate
+        ) {
+          asOfDate = selectedHallituskausi.endDate;
+        }
+      }
+      const res = await fetch(`/api/composition/${asOfDate}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: Member[] = await res.json();
+      setMembers(data);
+    } catch {
+      setMembers([]);
+      setCompositionError(t("home.loadingError"));
+    } finally {
+      setLoadingComposition(false);
+    }
+  }, [latestDate, selectedHallituskausi, t]);
+
   // Fetch current composition
   useEffect(() => {
-    const fetchComposition = async () => {
-      try {
-        setLoadingComposition(true);
-        const today = new Date().toISOString().split("T")[0];
-        let asOfDate = today;
-        if (selectedHallituskausi) {
-          const candidate =
-            latestDate ||
-            selectedHallituskausi.endDate ||
-            selectedHallituskausi.startDate;
-          asOfDate = candidate;
-          if (asOfDate < selectedHallituskausi.startDate) {
-            asOfDate = selectedHallituskausi.startDate;
-          }
-          if (
-            selectedHallituskausi.endDate &&
-            asOfDate > selectedHallituskausi.endDate
-          ) {
-            asOfDate = selectedHallituskausi.endDate;
-          }
-        }
-        const res = await fetch(`/api/composition/${asOfDate}`);
-        if (!res.ok) throw new Error("Failed to fetch composition");
-        const data: Member[] = await res.json();
-        setMembers(data);
-      } catch {
-        // Non-critical - just won't show composition
-      } finally {
-        setLoadingComposition(false);
-      }
-    };
-    fetchComposition();
-  }, [latestDate, selectedHallituskausi]);
+    void loadComposition();
+  }, [loadComposition]);
 
   // Composition stats
   const stats = React.useMemo(() => {
@@ -302,7 +320,148 @@ const Home = () => {
     return (await res.json()) as SectionRollCallData | null;
   };
 
-  const toggleSection = async (sectionId: number, sectionKey: string) => {
+  const getErrorReason = (error: unknown) =>
+    error instanceof Error ? error.message : t("errors.unknownError");
+
+  const sectionLoadErrorLabels: Record<SectionLoadErrorKey, string> = {
+    speeches: t("sessions.loadErrorSpeeches"),
+    votings: t("sessions.loadErrorVotings"),
+    links: t("sessions.loadErrorLinks"),
+    subSections: t("sessions.loadErrorSubSections"),
+    rollCall: t("sessions.loadErrorRollCall"),
+  };
+
+  const setSectionLoadError = (
+    sectionId: number,
+    key: SectionLoadErrorKey,
+    reason: string,
+  ) => {
+    setSectionLoadErrors((prev) => ({
+      ...prev,
+      [sectionId]: { ...(prev[sectionId] || {}), [key]: reason },
+    }));
+  };
+
+  const clearSectionLoadError = (
+    sectionId: number,
+    key: SectionLoadErrorKey,
+  ) => {
+    setSectionLoadErrors((prev) => {
+      const current = prev[sectionId];
+      if (!current || !current[key]) return prev;
+      const nextSection = { ...current };
+      delete nextSection[key];
+      if (Object.keys(nextSection).length === 0) {
+        const next = { ...prev };
+        delete next[sectionId];
+        return next;
+      }
+      return { ...prev, [sectionId]: nextSection };
+    });
+  };
+
+  const loadSectionData = async (sectionId: number, sectionKey: string) => {
+    const section = sessions
+      .flatMap((session) => session.sections || [])
+      .find(
+        (candidate) =>
+          candidate.id === sectionId || candidate.key === sectionKey,
+      );
+
+    if (!sectionSpeechData[sectionId]) {
+      setLoadingSpeeches((prev) => new Set(prev).add(sectionId));
+      try {
+        const data = await fetchSpeeches(sectionId, sectionKey);
+        setSectionSpeechData((prev) => ({ ...prev, [sectionId]: data }));
+        clearSectionLoadError(sectionId, "speeches");
+      } catch (error) {
+        setSectionLoadError(sectionId, "speeches", getErrorReason(error));
+      } finally {
+        setLoadingSpeeches((prev) => {
+          const next = new Set(prev);
+          next.delete(sectionId);
+          return next;
+        });
+      }
+    }
+
+    if (!sectionVotings[sectionId]) {
+      setLoadingVotings((prev) => new Set(prev).add(sectionId));
+      try {
+        const res = await fetch(`/api/sections/${sectionKey}/votings`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const votings: Voting[] = await res.json();
+        setSectionVotings((prev) => ({ ...prev, [sectionId]: votings }));
+        clearSectionLoadError(sectionId, "votings");
+      } catch (error) {
+        setSectionLoadError(sectionId, "votings", getErrorReason(error));
+      } finally {
+        setLoadingVotings((prev) => {
+          const next = new Set(prev);
+          next.delete(sectionId);
+          return next;
+        });
+      }
+    }
+
+    if (!sectionLinks[sectionKey]) {
+      setLoadingLinks((prev) => new Set(prev).add(sectionKey));
+      try {
+        const links = await fetchSectionLinks(sectionKey);
+        setSectionLinks((prev) => ({ ...prev, [sectionKey]: links }));
+        clearSectionLoadError(sectionId, "links");
+      } catch (error) {
+        setSectionLoadError(sectionId, "links", getErrorReason(error));
+      } finally {
+        setLoadingLinks((prev) => {
+          const next = new Set(prev);
+          next.delete(sectionKey);
+          return next;
+        });
+      }
+    }
+
+    const hasSubSectionsData = Object.hasOwn(sectionSubSections, sectionId);
+    if (!hasSubSectionsData) {
+      setLoadingSubSections((prev) => new Set(prev).add(sectionId));
+      try {
+        const subSections = await fetchSectionSubSections(sectionKey);
+        setSectionSubSections((prev) => ({
+          ...prev,
+          [sectionId]: subSections,
+        }));
+        clearSectionLoadError(sectionId, "subSections");
+      } catch (error) {
+        setSectionLoadError(sectionId, "subSections", getErrorReason(error));
+      } finally {
+        setLoadingSubSections((prev) => {
+          const next = new Set(prev);
+          next.delete(sectionId);
+          return next;
+        });
+      }
+    }
+
+    const hasRollCallData = Object.hasOwn(sectionRollCalls, sectionId);
+    if (isRollCallSection(section) && !hasRollCallData) {
+      setLoadingRollCalls((prev) => new Set(prev).add(sectionId));
+      try {
+        const rollCall = await fetchSectionRollCall(sectionKey);
+        setSectionRollCalls((prev) => ({ ...prev, [sectionId]: rollCall }));
+        clearSectionLoadError(sectionId, "rollCall");
+      } catch (error) {
+        setSectionLoadError(sectionId, "rollCall", getErrorReason(error));
+      } finally {
+        setLoadingRollCalls((prev) => {
+          const next = new Set(prev);
+          next.delete(sectionId);
+          return next;
+        });
+      }
+    }
+  };
+
+  const toggleSection = (sectionId: number, sectionKey: string) => {
     const isExpanding = !expandedSections.has(sectionId);
 
     setExpandedSections((prev) => {
@@ -313,90 +472,7 @@ const Home = () => {
     });
 
     if (isExpanding) {
-      const section = sessions
-        .flatMap((session) => session.sections || [])
-        .find(
-          (candidate) =>
-            candidate.id === sectionId || candidate.key === sectionKey,
-        );
-
-      if (!sectionSpeechData[sectionId]) {
-        setLoadingSpeeches((prev) => new Set(prev).add(sectionId));
-        try {
-          const data = await fetchSpeeches(sectionId, sectionKey);
-          setSectionSpeechData((prev) => ({ ...prev, [sectionId]: data }));
-        } finally {
-          setLoadingSpeeches((prev) => {
-            const next = new Set(prev);
-            next.delete(sectionId);
-            return next;
-          });
-        }
-      }
-
-      if (!sectionVotings[sectionId]) {
-        setLoadingVotings((prev) => new Set(prev).add(sectionId));
-        try {
-          const res = await fetch(`/api/sections/${sectionKey}/votings`);
-          if (res.ok) {
-            const votings: Voting[] = await res.json();
-            setSectionVotings((prev) => ({ ...prev, [sectionId]: votings }));
-          }
-        } finally {
-          setLoadingVotings((prev) => {
-            const next = new Set(prev);
-            next.delete(sectionId);
-            return next;
-          });
-        }
-      }
-
-      if (!sectionLinks[sectionKey]) {
-        setLoadingLinks((prev) => new Set(prev).add(sectionKey));
-        try {
-          const links = await fetchSectionLinks(sectionKey);
-          setSectionLinks((prev) => ({ ...prev, [sectionKey]: links }));
-        } finally {
-          setLoadingLinks((prev) => {
-            const next = new Set(prev);
-            next.delete(sectionKey);
-            return next;
-          });
-        }
-      }
-
-      const hasSubSectionsData = Object.hasOwn(sectionSubSections, sectionId);
-      if (!hasSubSectionsData) {
-        setLoadingSubSections((prev) => new Set(prev).add(sectionId));
-        try {
-          const subSections = await fetchSectionSubSections(sectionKey);
-          setSectionSubSections((prev) => ({
-            ...prev,
-            [sectionId]: subSections,
-          }));
-        } finally {
-          setLoadingSubSections((prev) => {
-            const next = new Set(prev);
-            next.delete(sectionId);
-            return next;
-          });
-        }
-      }
-
-      const hasRollCallData = Object.hasOwn(sectionRollCalls, sectionId);
-      if (isRollCallSection(section) && !hasRollCallData) {
-        setLoadingRollCalls((prev) => new Set(prev).add(sectionId));
-        try {
-          const rollCall = await fetchSectionRollCall(sectionKey);
-          setSectionRollCalls((prev) => ({ ...prev, [sectionId]: rollCall }));
-        } finally {
-          setLoadingRollCalls((prev) => {
-            const next = new Set(prev);
-            next.delete(sectionId);
-            return next;
-          });
-        }
-      }
+      void loadSectionData(sectionId, sectionKey);
     }
   };
 
@@ -415,6 +491,9 @@ const Home = () => {
           speeches: [...(prev[sectionId]?.speeches || []), ...data.speeches],
         },
       }));
+      clearSectionLoadError(sectionId, "speeches");
+    } catch (error) {
+      setSectionLoadError(sectionId, "speeches", getErrorReason(error));
     } finally {
       setLoadingMoreSpeeches((prev) => {
         const next = new Set(prev);
@@ -473,6 +552,16 @@ const Home = () => {
     });
   };
 
+  const handleActivateOnKeyDown = (
+    event: React.KeyboardEvent,
+    onActivate: () => void,
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onActivate();
+    }
+  };
+
   const renderVaskiInfo = (section: Section, compact = false) => {
     const hasAny =
       section.vaski_title ||
@@ -506,7 +595,7 @@ const Home = () => {
       >
         <Typography
           sx={{
-            fontSize: "0.7rem",
+            ...commonStyles.compactTextMd,
             fontWeight: 700,
             color: colors.textTertiary,
             textTransform: "uppercase",
@@ -524,7 +613,10 @@ const Home = () => {
             {(section.vaski_document_type_name ||
               section.vaski_document_type_code) && (
               <Typography
-                sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textSecondary,
+                }}
               >
                 {t("sessions.vaskiTypeLine", {
                   value:
@@ -536,7 +628,10 @@ const Home = () => {
             )}
             {section.vaski_eduskunta_tunnus && (
               <Typography
-                sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textSecondary,
+                }}
               >
                 {t("sessions.vaskiTunnusLine", {
                   value: section.vaski_eduskunta_tunnus,
@@ -545,21 +640,30 @@ const Home = () => {
             )}
             {docNumber && (
               <Typography
-                sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textSecondary,
+                }}
               >
                 {t("sessions.vaskiDocNumberLine", { value: docNumber })}
               </Typography>
             )}
             {section.vaski_status && (
               <Typography
-                sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textSecondary,
+                }}
               >
                 {t("sessions.vaskiStatusLine", { value: section.vaski_status })}
               </Typography>
             )}
             {section.vaski_creation_date && (
               <Typography
-                sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textSecondary,
+                }}
               >
                 {t("sessions.vaskiCreatedLine", {
                   value: section.vaski_creation_date,
@@ -582,14 +686,22 @@ const Home = () => {
         )}
         {authorLine && (
           <Typography
-            sx={{ fontSize: "0.75rem", color: colors.textSecondary, mt: 0.25 }}
+            sx={{
+              ...commonStyles.compactTextLg,
+              color: colors.textSecondary,
+              mt: 0.25,
+            }}
           >
             {t("sessions.vaskiAuthorLine", { value: authorLine })}
           </Typography>
         )}
         {section.vaski_source_reference && (
           <Typography
-            sx={{ fontSize: "0.75rem", color: colors.textTertiary, mt: 0.25 }}
+            sx={{
+              ...commonStyles.compactTextLg,
+              color: colors.textTertiary,
+              mt: 0.25,
+            }}
           >
             {t("sessions.vaskiSourceReferenceLine", {
               value: section.vaski_source_reference,
@@ -599,7 +711,7 @@ const Home = () => {
         {section.vaski_summary && (
           <Typography
             sx={{
-              fontSize: "0.75rem",
+              ...commonStyles.compactTextLg,
               color: colors.textSecondary,
               mt: 0.5,
               ...(compact
@@ -618,7 +730,11 @@ const Home = () => {
         {subjects.length > 0 && (
           <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.5 }}>
             <Typography
-              sx={{ fontSize: "0.75rem", color: colors.textSecondary, mr: 0.5 }}
+              sx={{
+                ...commonStyles.compactTextLg,
+                color: colors.textSecondary,
+                mr: 0.5,
+              }}
             >
               {t("sessions.vaskiSubjects")}:
             </Typography>
@@ -627,7 +743,7 @@ const Home = () => {
                 key={subject}
                 label={subject}
                 size="small"
-                sx={{ fontSize: "0.625rem", height: 20 }}
+                sx={{ ...commonStyles.compactChipSm, fontSize: "0.625rem" }}
               />
             ))}
           </Box>
@@ -662,7 +778,7 @@ const Home = () => {
       >
         <Typography
           sx={{
-            fontSize: "0.7rem",
+            ...commonStyles.compactTextMd,
             fontWeight: 700,
             color: colors.textTertiary,
             textTransform: "uppercase",
@@ -671,13 +787,17 @@ const Home = () => {
           {t("sessions.minutesMetadata")}
         </Typography>
         {minutesItemTitle && minutesItemTitle !== section.title && (
-          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+          <Typography
+            sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
+          >
             {t("sessions.minutesItemTitleLine", { value: minutesItemTitle })}
           </Typography>
         )}
         {(section.minutes_processing_phase_code ||
           section.minutes_general_processing_phase_code) && (
-          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+          <Typography
+            sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
+          >
             {t("sessions.minutesProcessingCodesLine", {
               value: [
                 section.minutes_processing_phase_code,
@@ -792,7 +912,7 @@ const Home = () => {
                 : t("sessions.minutesReferenceNotMigrated");
               const chipSx = {
                 fontFamily: "monospace",
-                fontSize: "0.75rem",
+                ...commonStyles.compactTextLg,
                 height: 24,
                 ...(href
                   ? {
@@ -877,7 +997,7 @@ const Home = () => {
       >
         <Typography
           sx={{
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
             fontWeight: 700,
             color: colors.textSecondary,
             textTransform: "uppercase",
@@ -892,7 +1012,7 @@ const Home = () => {
             sx={{
               width: "100%",
               borderCollapse: "collapse",
-              fontSize: "0.75rem",
+              ...commonStyles.compactTextLg,
               "& th, & td": {
                 textAlign: "left",
                 borderBottom: `1px solid ${colors.dataBorder}`,
@@ -933,7 +1053,7 @@ const Home = () => {
                           <EduskuntaSourceLink
                             href={href}
                             sx={{
-                              fontSize: "0.75rem",
+                              ...commonStyles.compactTextLg,
                               color: colors.primaryLight,
                             }}
                           >
@@ -967,7 +1087,7 @@ const Home = () => {
       <Box sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}>
         <Typography
           sx={{
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
             fontWeight: 600,
             color: colors.textSecondary,
             textTransform: "uppercase",
@@ -1000,8 +1120,8 @@ const Home = () => {
                     label={notice.notice_type}
                     size="small"
                     sx={{
+                      ...commonStyles.compactChipSm,
                       fontSize: "0.625rem",
-                      height: 20,
                       background: `${colors.warning}40`,
                       color: colors.textPrimary,
                     }}
@@ -1009,7 +1129,10 @@ const Home = () => {
                 )}
                 {notice.sent_at && (
                   <Typography
-                    sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                    sx={{
+                      ...commonStyles.compactTextLg,
+                      color: colors.textTertiary,
+                    }}
                   >
                     {t("sessions.noticeSentLine", {
                       value: formatDateTime(notice.sent_at),
@@ -1018,7 +1141,10 @@ const Home = () => {
                 )}
                 {notice.valid_until && (
                   <Typography
-                    sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                    sx={{
+                      ...commonStyles.compactTextLg,
+                      color: colors.textTertiary,
+                    }}
                   >
                     {t("sessions.noticeValidUntilLine", {
                       value: formatDateTime(notice.valid_until),
@@ -1053,7 +1179,7 @@ const Home = () => {
       <Box sx={{ mt: 1.5 }}>
         <Typography
           sx={{
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
             fontWeight: 600,
             color: colors.textSecondary,
             textTransform: "uppercase",
@@ -1086,8 +1212,8 @@ const Home = () => {
                     label={notice.notice_type}
                     size="small"
                     sx={{
+                      ...commonStyles.compactChipSm,
                       fontSize: "0.625rem",
-                      height: 20,
                       background: `${colors.warning}40`,
                       color: colors.textPrimary,
                     }}
@@ -1095,7 +1221,10 @@ const Home = () => {
                 )}
                 {notice.sent_at && (
                   <Typography
-                    sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                    sx={{
+                      ...commonStyles.compactTextLg,
+                      color: colors.textTertiary,
+                    }}
                   >
                     {t("sessions.noticeSentLine", {
                       value: formatDateTime(notice.sent_at),
@@ -1104,7 +1233,10 @@ const Home = () => {
                 )}
                 {notice.valid_until && (
                   <Typography
-                    sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                    sx={{
+                      ...commonStyles.compactTextLg,
+                      color: colors.textTertiary,
+                    }}
                   >
                     {t("sessions.noticeValidUntilLine", {
                       value: formatDateTime(notice.valid_until),
@@ -1132,6 +1264,7 @@ const Home = () => {
       .sort(compareMinutesItems);
     if (items.length === 0) return null;
     const isExpanded = expandedMinutesSessions.has(session.key);
+    const minutesCollapseId = `session-minutes-${session.id}`;
 
     return (
       <Box sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}>
@@ -1146,7 +1279,7 @@ const Home = () => {
         >
           <Typography
             sx={{
-              fontSize: "0.75rem",
+              ...commonStyles.compactTextLg,
               fontWeight: 600,
               color: colors.textSecondary,
               textTransform: "uppercase",
@@ -1158,11 +1291,10 @@ const Home = () => {
             size="small"
             variant="outlined"
             onClick={() => toggleSessionMinutes(session.key)}
+            aria-expanded={isExpanded}
+            aria-controls={minutesCollapseId}
             sx={{
-              textTransform: "none",
-              borderColor: colors.primaryLight,
-              color: colors.primaryLight,
-              fontSize: "0.75rem",
+              ...commonStyles.compactOutlinedPrimaryButton,
             }}
           >
             {isExpanded
@@ -1170,7 +1302,12 @@ const Home = () => {
               : t("sessions.minutesToggle", { context: "show" })}
           </Button>
         </Box>
-        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+        <Collapse
+          id={minutesCollapseId}
+          in={isExpanded}
+          timeout="auto"
+          unmountOnExit
+        >
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {items.map((item) => (
               <Box
@@ -1195,8 +1332,7 @@ const Home = () => {
                       label={item.ordinal}
                       size="small"
                       sx={{
-                        fontSize: "0.625rem",
-                        height: 18,
+                        ...commonStyles.compactChipXs,
                         background: colors.primary,
                         color: "#fff",
                       }}
@@ -1219,7 +1355,10 @@ const Home = () => {
                 >
                   {item.identifier_text && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textTertiary,
+                      }}
                     >
                       {t("sessions.identifierLine", {
                         value: item.identifier_text,
@@ -1229,7 +1368,10 @@ const Home = () => {
                   {item.processing_title &&
                     item.processing_title !== item.title && (
                       <Typography
-                        sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                        sx={{
+                          ...commonStyles.compactTextLg,
+                          color: colors.textTertiary,
+                        }}
                       >
                         {t("sessions.processingLine", {
                           value: item.processing_title,
@@ -1238,7 +1380,10 @@ const Home = () => {
                     )}
                   {item.note && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textSecondary,
+                      }}
                     >
                       {item.note}
                     </Typography>
@@ -1256,6 +1401,7 @@ const Home = () => {
     const attachments = session.minutes_attachments || [];
     if (attachments.length === 0) return null;
     const isExpanded = expandedAttachmentSessions.has(session.key);
+    const attachmentsCollapseId = `session-attachments-${session.id}`;
 
     return (
       <Box sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}>
@@ -1270,7 +1416,7 @@ const Home = () => {
         >
           <Typography
             sx={{
-              fontSize: "0.75rem",
+              ...commonStyles.compactTextLg,
               fontWeight: 600,
               color: colors.textSecondary,
               textTransform: "uppercase",
@@ -1282,11 +1428,10 @@ const Home = () => {
             size="small"
             variant="outlined"
             onClick={() => toggleSessionAttachments(session.key)}
+            aria-expanded={isExpanded}
+            aria-controls={attachmentsCollapseId}
             sx={{
-              textTransform: "none",
-              borderColor: colors.primaryLight,
-              color: colors.primaryLight,
-              fontSize: "0.75rem",
+              ...commonStyles.compactOutlinedPrimaryButton,
             }}
           >
             {isExpanded
@@ -1294,7 +1439,12 @@ const Home = () => {
               : t("sessions.attachmentsToggle", { context: "show" })}
           </Button>
         </Box>
-        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+        <Collapse
+          id={attachmentsCollapseId}
+          in={isExpanded}
+          timeout="auto"
+          unmountOnExit
+        >
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {attachments.map((attachment) => (
               <Box
@@ -1322,7 +1472,10 @@ const Home = () => {
                 >
                   {attachment.related_document_tunnus && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textTertiary,
+                      }}
                     >
                       {t("sessions.relatedDocumentLine", {
                         value: attachment.related_document_tunnus,
@@ -1331,7 +1484,10 @@ const Home = () => {
                   )}
                   {attachment.file_name && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textTertiary,
+                      }}
                     >
                       {t("sessions.fileNameLine", {
                         value: attachment.file_name,
@@ -1340,7 +1496,10 @@ const Home = () => {
                   )}
                   {attachment.native_id && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textTertiary,
+                      }}
                     >
                       {t("sessions.nativeIdLine", {
                         value: attachment.native_id,
@@ -1360,8 +1519,18 @@ const Home = () => {
     const links = sectionLinks[section.key] || [];
     if (loadingLinks.has(section.key)) {
       return (
-        <Box sx={{ py: 1, textAlign: "center" }}>
+        <Box
+          sx={{ py: 1, textAlign: "center" }}
+          role="status"
+          aria-live="polite"
+          aria-label={t("app.loading")}
+        >
           <CircularProgress size={18} sx={{ color: themedColors.primary }} />
+          <Typography
+            sx={{ ...commonStyles.compactTextXs, color: colors.textTertiary }}
+          >
+            {t("app.loading")}
+          </Typography>
         </Box>
       );
     }
@@ -1371,7 +1540,7 @@ const Home = () => {
       <Box sx={{ mt: 1.5 }}>
         <Typography
           sx={{
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
             fontWeight: 600,
             color: colors.textSecondary,
             textTransform: "uppercase",
@@ -1421,7 +1590,10 @@ const Home = () => {
                 )}
                 {link.document_tunnus && (
                   <Typography
-                    sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                    sx={{
+                      ...commonStyles.compactTextLg,
+                      color: colors.textTertiary,
+                    }}
                   >
                     {link.document_tunnus}
                   </Typography>
@@ -1431,8 +1603,7 @@ const Home = () => {
                     label={link.source_type}
                     size="small"
                     sx={{
-                      fontSize: "0.625rem",
-                      height: 18,
+                      ...commonStyles.compactChipXs,
                       background: `${colors.primaryLight}20`,
                       color: colors.primaryLight,
                     }}
@@ -1445,14 +1616,20 @@ const Home = () => {
                 <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
                   {(link.document_type_name || link.document_type_code) && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textSecondary,
+                      }}
                     >
                       {link.document_type_name || link.document_type_code}
                     </Typography>
                   )}
                   {link.document_created_at && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textTertiary,
+                      }}
                     >
                       {t("sessions.vaskiCreatedLine", {
                         value: link.document_created_at,
@@ -1476,8 +1653,18 @@ const Home = () => {
 
     if (loading) {
       return (
-        <Box sx={{ mt: 1.5, py: 1, textAlign: "center" }}>
+        <Box
+          sx={{ mt: 1.5, py: 1, textAlign: "center" }}
+          role="status"
+          aria-live="polite"
+          aria-label={t("app.loading")}
+        >
           <CircularProgress size={18} sx={{ color: themedColors.primary }} />
+          <Typography
+            sx={{ ...commonStyles.compactTextXs, color: colors.textTertiary }}
+          >
+            {t("app.loading")}
+          </Typography>
         </Box>
       );
     }
@@ -1530,7 +1717,7 @@ const Home = () => {
       >
         <Typography
           sx={{
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
             fontWeight: 700,
             color: colors.textSecondary,
             textTransform: "uppercase",
@@ -1550,7 +1737,9 @@ const Home = () => {
           </Typography>
         )}
         <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mt: 0.5 }}>
-          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+          <Typography
+            sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
+          >
             {t("sessions.rollCallDocumentLine", {
               value: report.edk_identifier,
             })}
@@ -1558,7 +1747,7 @@ const Home = () => {
           <EduskuntaSourceLink
             href={documentUrl}
             sx={{
-              fontSize: "0.75rem",
+              ...commonStyles.compactTextLg,
               fontWeight: 600,
               color: colors.primaryLight,
             }}
@@ -1567,7 +1756,10 @@ const Home = () => {
           </EduskuntaSourceLink>
           {report.roll_call_start_time && (
             <Typography
-              sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+              sx={{
+                ...commonStyles.compactTextLg,
+                color: colors.textSecondary,
+              }}
             >
               {t("sessions.rollCallStartLine", {
                 value: formatTime(report.roll_call_start_time),
@@ -1576,7 +1768,10 @@ const Home = () => {
           )}
           {report.roll_call_end_time && (
             <Typography
-              sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+              sx={{
+                ...commonStyles.compactTextLg,
+                color: colors.textSecondary,
+              }}
             >
               {t("sessions.rollCallEndLine", {
                 value: formatTime(report.roll_call_end_time),
@@ -1591,8 +1786,8 @@ const Home = () => {
             })}
             size="small"
             sx={{
+              ...commonStyles.compactChipSm,
               fontSize: "0.6875rem",
-              height: 20,
               background: `${themedColors.error}15`,
               color: themedColors.error,
             }}
@@ -1601,8 +1796,8 @@ const Home = () => {
             label={t("sessions.rollCallLateLine", { count: report.late_count })}
             size="small"
             sx={{
+              ...commonStyles.compactChipSm,
               fontSize: "0.6875rem",
-              height: 20,
               background: `${themedColors.warning}15`,
               color: themedColors.warning,
             }}
@@ -1611,7 +1806,11 @@ const Home = () => {
 
         {entries.length === 0 && (
           <Typography
-            sx={{ mt: 0.75, fontSize: "0.75rem", color: colors.textTertiary }}
+            sx={{
+              mt: 0.75,
+              ...commonStyles.compactTextLg,
+              color: colors.textTertiary,
+            }}
           >
             {t("sessions.rollCallNoEntries")}
           </Typography>
@@ -1624,7 +1823,7 @@ const Home = () => {
               sx={{
                 width: "100%",
                 borderCollapse: "collapse",
-                fontSize: "0.75rem",
+                ...commonStyles.compactTextLg,
                 "& th, & td": {
                   textAlign: "left",
                   borderBottom: `1px solid ${colors.dataBorder}`,
@@ -1642,6 +1841,17 @@ const Home = () => {
                 },
               }}
             >
+              <Box
+                component="caption"
+                sx={{
+                  ...commonStyles.compactTextXs,
+                  textAlign: "left",
+                  color: colors.textSecondary,
+                  pb: 0.5,
+                }}
+              >
+                {t("sessions.rollCallReport")}: {report.title || "-"}
+              </Box>
               <thead>
                 <tr>
                   <th>{t("sessions.rollCallTableNumber")}</th>
@@ -1683,14 +1893,20 @@ const Home = () => {
             border: `1px solid ${colors.dataBorder}`,
           }}
         >
-          <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
+          <Typography
+            sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
+          >
             {t("sessions.rollCallReasonLegend")}: <strong>(e)</strong>{" "}
             {t("sessions.rollCallReasonE")}; <strong>(h)</strong>{" "}
             {t("sessions.rollCallReasonH")}
           </Typography>
           {unknownReasonCodes.length > 0 && (
             <Typography
-              sx={{ mt: 0.5, fontSize: "0.75rem", color: colors.textTertiary }}
+              sx={{
+                mt: 0.5,
+                ...commonStyles.compactTextLg,
+                color: colors.textTertiary,
+              }}
             >
               {t("sessions.rollCallUnknownCodesLine", {
                 value: unknownReasonCodes.map((code) => `(${code})`).join(", "),
@@ -1719,7 +1935,7 @@ const Home = () => {
       >
         <Typography
           sx={{
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
             fontWeight: 600,
             color: colors.textSecondary,
             textTransform: "uppercase",
@@ -1732,6 +1948,8 @@ const Home = () => {
           const isExpanded = expandedVotingIds.has(voting.id);
           const details = votingDetailsById[voting.id];
           const detailsLoading = loadingVotingDetails.has(voting.id);
+          const votingDetailsId = `home-voting-details-${voting.id}`;
+          const votingToggleId = `home-voting-toggle-${voting.id}`;
           return (
             <Box
               key={voting.id}
@@ -1773,11 +1991,12 @@ const Home = () => {
                 <Button
                   size="small"
                   onClick={() => toggleVotingDetails(voting.id)}
+                  id={votingToggleId}
+                  aria-expanded={isExpanded}
+                  aria-controls={votingDetailsId}
                   sx={{
-                    textTransform: "none",
-                    fontSize: "0.7rem",
-                    minWidth: 0,
-                    px: 1,
+                    ...commonStyles.compactActionButton,
+                    ...commonStyles.compactTextMd,
                   }}
                   endIcon={
                     <ExpandMoreIcon
@@ -1798,10 +2017,8 @@ const Home = () => {
                 <Button
                   size="small"
                   sx={{
-                    textTransform: "none",
-                    fontSize: "0.7rem",
-                    minWidth: 0,
-                    px: 1,
+                    ...commonStyles.compactActionButton,
+                    ...commonStyles.compactTextMd,
                   }}
                   endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
                   href={refs.voting(voting.id, session.key, session.date)}
@@ -1816,7 +2033,13 @@ const Home = () => {
                 absent={voting.n_absent}
                 height={8}
               />
-              <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+              <Collapse
+                id={votingDetailsId}
+                aria-labelledby={votingToggleId}
+                in={isExpanded}
+                timeout="auto"
+                unmountOnExit
+              >
                 <Box
                   sx={{
                     mt: 0.75,
@@ -1830,7 +2053,10 @@ const Home = () => {
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <CircularProgress size={12} />
                       <Typography
-                        sx={{ fontSize: "0.7rem", color: colors.textSecondary }}
+                        sx={{
+                          ...commonStyles.compactTextMd,
+                          color: colors.textSecondary,
+                        }}
                       >
                         {t("common.loadingVotingDetails")}
                       </Typography>
@@ -1845,7 +2071,7 @@ const Home = () => {
                           size="small"
                           label={`Jaa ${details.voting.n_yes}`}
                           sx={{
-                            height: 20,
+                            ...commonStyles.compactChipSm,
                             color: colors.success,
                             borderColor: colors.success,
                           }}
@@ -1855,7 +2081,7 @@ const Home = () => {
                           size="small"
                           label={`Ei ${details.voting.n_no}`}
                           sx={{
-                            height: 20,
+                            ...commonStyles.compactChipSm,
                             color: colors.error,
                             borderColor: colors.error,
                           }}
@@ -1866,18 +2092,18 @@ const Home = () => {
                           label={t("common.emptyCount", {
                             count: details.voting.n_abstain,
                           })}
-                          sx={{ height: 20 }}
+                          sx={{ ...commonStyles.compactChipSm }}
                         />
                         <Chip
                           size="small"
                           label={`Poissa ${details.voting.n_absent}`}
-                          sx={{ height: 20 }}
+                          sx={{ ...commonStyles.compactChipSm }}
                         />
                       </Box>
                       {details.governmentOpposition && (
                         <Typography
                           sx={{
-                            fontSize: "0.7rem",
+                            ...commonStyles.compactTextMd,
                             color: colors.textSecondary,
                           }}
                         >
@@ -1903,13 +2129,18 @@ const Home = () => {
                               size="small"
                               variant="outlined"
                               label={`${related.id}: ${related.n_yes}-${related.n_no}`}
-                              sx={{ height: 20, fontSize: "0.65rem" }}
+                              aria-label={t("sessions.relatedVotingAria", {
+                                id: related.id,
+                                yes: related.n_yes,
+                                no: related.n_no,
+                              })}
+                              sx={{ ...commonStyles.compactChipSm }}
                             />
                           ))}
                           {details.relatedVotings.length > 6 && (
                             <Typography
                               sx={{
-                                fontSize: "0.65rem",
+                                ...commonStyles.compactTextXs,
                                 color: colors.textSecondary,
                               }}
                             >
@@ -1934,127 +2165,196 @@ const Home = () => {
       <PageHeader title={t("home.title")} subtitle={t("home.subtitle")} />
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" role="status" aria-live="polite" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
 
       {/* ─── Parliament Composition ─── */}
       {loadingComposition ? (
-        <Box sx={{ ...commonStyles.centeredFlex, py: 4 }}>
-          <CircularProgress size={28} sx={{ color: themedColors.primary }} />
+        <Box sx={{ mb: 4 }}>
+          <Box
+            sx={{
+              display: "grid",
+              gap: 2,
+              mb: 2.5,
+              gridTemplateColumns: {
+                xs: "1fr",
+                md: "repeat(3, minmax(0, 1fr))",
+              },
+            }}
+          >
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton
+                key={`composition-metric-skeleton-${index}`}
+                variant="rounded"
+                animation="wave"
+                height={82}
+              />
+            ))}
+          </Box>
+          <DataCard sx={{ p: 0, overflow: "hidden" }}>
+            <Box
+              sx={{ p: 2.5, borderBottom: `1px solid ${colors.dataBorder}` }}
+            >
+              <Skeleton variant="text" width={180} height={28} />
+            </Box>
+            <Box
+              sx={{
+                p: 2,
+                display: "grid",
+                gap: 1.5,
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "repeat(2, minmax(0, 1fr))",
+                },
+              }}
+            >
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Skeleton
+                  key={`composition-party-skeleton-${index}`}
+                  variant="rounded"
+                  animation="wave"
+                  height={42}
+                />
+              ))}
+            </Box>
+          </DataCard>
         </Box>
-      ) : (
-        stats.totalMembers > 0 && (
-          <Box sx={{ mb: 4 }}>
-            {/* Summary row */}
-            <Grid container spacing={2} sx={{ mb: 2.5 }}>
-              <Grid size={{ xs: 4 }}>
-                <MetricCard
-                  label={t("home.totalMPs")}
-                  value={stats.totalMembers}
-                  icon={<GroupsIcon fontSize="small" />}
-                />
-              </Grid>
-              <Grid size={{ xs: 4 }}>
-                <MetricCard
-                  label={t("home.government")}
-                  value={stats.inGovernment}
-                  icon={<AccountBalanceIcon fontSize="small" />}
-                />
-              </Grid>
-              <Grid size={{ xs: 4 }}>
-                <MetricCard
-                  label={t("home.opposition")}
-                  value={stats.inOpposition}
-                  icon={<PieChartIcon fontSize="small" />}
-                />
-              </Grid>
-            </Grid>
-
-            {/* Party breakdown */}
-            <DataCard sx={{ p: 0, overflow: "hidden" }}>
-              <Box
-                sx={{ p: 2.5, borderBottom: `1px solid ${colors.dataBorder}` }}
+      ) : compositionError ? (
+        <Box sx={{ mb: 4 }}>
+          <Alert
+            severity="warning"
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => void loadComposition()}
+                sx={{ ...commonStyles.compactTextMd, textTransform: "none" }}
               >
-                <Typography
-                  variant="h6"
+                {t("common.retry")}
+              </Button>
+            }
+          >
+            {compositionError}
+          </Alert>
+        </Box>
+      ) : stats.totalMembers > 0 ? (
+        <Box sx={{ mb: 4 }}>
+          {/* Summary row */}
+          <Grid container spacing={2} sx={{ mb: 2.5 }}>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <MetricCard
+                label={t("home.totalMPs")}
+                value={stats.totalMembers}
+                icon={<GroupsIcon fontSize="small" />}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <MetricCard
+                label={t("home.government")}
+                value={stats.inGovernment}
+                icon={<AccountBalanceIcon fontSize="small" />}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 4 }}>
+              <MetricCard
+                label={t("home.opposition")}
+                value={stats.inOpposition}
+                icon={<PieChartIcon fontSize="small" />}
+              />
+            </Grid>
+          </Grid>
+
+          {/* Party breakdown */}
+          <DataCard sx={{ p: 0, overflow: "hidden" }}>
+            <Box
+              sx={{ p: 2.5, borderBottom: `1px solid ${colors.dataBorder}` }}
+            >
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 600,
+                  color: colors.textPrimary,
+                  fontSize: "1rem",
+                }}
+              >
+                {t("home.partyBreakdown")}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                p: 2,
+                ...commonStyles.responsiveGrid(220),
+                gap: 1.25,
+              }}
+            >
+              {stats.partyGroups.map(([party, data]) => (
+                <Box
+                  key={party}
                   sx={{
-                    fontWeight: 600,
-                    color: colors.textPrimary,
-                    fontSize: "1rem",
+                    p: 1.5,
+                    border: `1px solid ${colors.dataBorder}`,
+                    borderRadius: 1,
+                    background: colors.backgroundSubtle,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                   }}
                 >
-                  {t("home.partyBreakdown")}
-                </Typography>
-              </Box>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0 }}>
-                {stats.partyGroups.map(([party, data]) => (
-                  <Box
-                    key={party}
-                    sx={{
-                      flex: { xs: "1 1 100%", sm: "1 1 calc(50% - 1px)" },
-                      p: 2,
-                      borderBottom: `1px solid ${colors.dataBorder}`,
-                      borderRight: { sm: `1px solid ${colors.dataBorder}` },
-                      "&:nth-of-type(2n)": { borderRight: { sm: "none" } },
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Typography
-                        sx={{
-                          fontWeight: 600,
-                          fontSize: "0.875rem",
-                          color: colors.textPrimary,
-                        }}
-                      >
-                        {party}
-                      </Typography>
-                      {data.inGovernment > 0 ? (
-                        <Chip
-                          label={t("home.governmentChip")}
-                          size="small"
-                          sx={{
-                            fontSize: "0.625rem",
-                            height: 18,
-                            background: `${themedColors.success}20`,
-                            color: themedColors.success,
-                            fontWeight: 600,
-                          }}
-                        />
-                      ) : (
-                        <Chip
-                          label={t("home.oppositionChip")}
-                          size="small"
-                          sx={{
-                            fontSize: "0.625rem",
-                            height: 18,
-                            background: `${themedColors.warning}20`,
-                            color: themedColors.warning,
-                            fontWeight: 600,
-                          }}
-                        />
-                      )}
-                    </Box>
-                    <Chip
-                      label={t("home.seatCount", { count: data.total })}
-                      size="small"
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography
                       sx={{
-                        background: colors.primaryLight,
-                        color: "#fff",
-                        fontWeight: 700,
-                        fontSize: "0.75rem",
+                        fontWeight: 600,
+                        fontSize: "0.875rem",
+                        color: colors.textPrimary,
                       }}
-                    />
+                    >
+                      {party}
+                    </Typography>
+                    {data.inGovernment > 0 ? (
+                      <Chip
+                        label={t("home.governmentChip")}
+                        size="small"
+                        sx={{
+                          ...commonStyles.compactChipXs,
+                          background: `${themedColors.success}20`,
+                          color: themedColors.success,
+                          fontWeight: 600,
+                        }}
+                      />
+                    ) : (
+                      <Chip
+                        label={t("home.oppositionChip")}
+                        size="small"
+                        sx={{
+                          ...commonStyles.compactChipXs,
+                          background: `${themedColors.warning}20`,
+                          color: themedColors.warning,
+                          fontWeight: 600,
+                        }}
+                      />
+                    )}
                   </Box>
-                ))}
-              </Box>
-            </DataCard>
-          </Box>
-        )
+                  <Chip
+                    label={t("home.seatCount", { count: data.total })}
+                    size="small"
+                    sx={{
+                      background: colors.primaryLight,
+                      color: "#fff",
+                      fontWeight: 700,
+                      ...commonStyles.compactTextLg,
+                    }}
+                  />
+                </Box>
+              ))}
+            </Box>
+          </DataCard>
+        </Box>
+      ) : (
+        <Box sx={{ mb: 4 }}>
+          <Alert severity="info">{t("home.noData")}</Alert>
+        </Box>
       )}
 
       {/* ─── Latest Session ─── */}
@@ -2109,6 +2409,8 @@ const Home = () => {
               >
                 <Link
                   href={refs.session(session.key, session.date)}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   underline="hover"
                   sx={{
                     fontWeight: 700,
@@ -2138,7 +2440,10 @@ const Home = () => {
                   )}
                   {session.description && (
                     <Typography
-                      sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
+                      sx={{
+                        ...commonStyles.compactTextLg,
+                        color: colors.textTertiary,
+                      }}
                     >
                       {session.description}
                     </Typography>
@@ -2165,8 +2470,7 @@ const Home = () => {
                     })}
                     size="small"
                     sx={{
-                      fontSize: "0.6875rem",
-                      height: 22,
+                      ...commonStyles.compactChipMd,
                       background: `${colors.primaryLight}20`,
                       color: colors.primaryLight,
                     }}
@@ -2180,8 +2484,7 @@ const Home = () => {
                     })}
                     size="small"
                     sx={{
-                      fontSize: "0.6875rem",
-                      height: 22,
+                      ...commonStyles.compactChipMd,
                       background: `${themedColors.success}15`,
                       color: themedColors.success,
                     }}
@@ -2189,7 +2492,10 @@ const Home = () => {
                 )}
                 {session.agenda_state && (
                   <Typography
-                    sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
+                    sx={{
+                      ...commonStyles.compactTextLg,
+                      color: colors.textSecondary,
+                    }}
                   >
                     {t("sessions.agendaStateLine", {
                       value: session.agenda_state,
@@ -2233,6 +2539,18 @@ const Home = () => {
                   (speech) => speech.content,
                 );
                 const votings = sectionVotings[section.id] || [];
+                const sectionErrorReasons = (
+                  Object.entries(sectionLoadErrors[section.id] || {}) as Array<
+                    [SectionLoadErrorKey, string]
+                  >
+                )
+                  .filter(([, reason]) => Boolean(reason))
+                  .map(
+                    ([key, reason]) =>
+                      `${sectionLoadErrorLabels[key]} (${reason})`,
+                  );
+                const sectionCollapseId = `session-section-panel-${section.id}`;
+                const sectionToggleId = `session-section-toggle-${section.id}`;
 
                 return (
                   <Box
@@ -2241,16 +2559,34 @@ const Home = () => {
                     sx={{ borderBottom: `1px solid ${colors.dataBorder}` }}
                   >
                     <Box
+                      id={sectionToggleId}
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={isExpanded}
+                      aria-controls={sectionCollapseId}
                       sx={{
                         p: 2,
                         display: "flex",
                         alignItems: "center",
                         gap: 1,
                         cursor: "pointer",
+                        width: "100%",
+                        border: 0,
+                        textAlign: "left",
+                        background: "transparent",
                         "&:hover": { background: colors.backgroundSubtle },
+                        "&:focus-visible": {
+                          outline: `2px solid ${colors.primaryLight}`,
+                          outlineOffset: -2,
+                        },
                         transition: "background 0.15s",
                       }}
                       onClick={() => toggleSection(section.id, section.key)}
+                      onKeyDown={(event) =>
+                        handleActivateOnKeyDown(event, () =>
+                          toggleSection(section.id, section.key),
+                        )
+                      }
                     >
                       <Chip
                         label={getSectionOrderLabel(section)}
@@ -2259,8 +2595,8 @@ const Home = () => {
                           background: colors.primary,
                           color: "#fff",
                           fontWeight: 600,
-                          fontSize: "0.7rem",
-                          height: 22,
+                          ...commonStyles.compactChipMd,
+                          ...commonStyles.compactTextMd,
                           minWidth: 28,
                           flexShrink: 0,
                         }}
@@ -2281,7 +2617,7 @@ const Home = () => {
                         {section.minutes_item_order != null && (
                           <Typography
                             sx={{
-                              fontSize: "0.75rem",
+                              ...commonStyles.compactTextLg,
                               color: colors.textTertiary,
                             }}
                           >
@@ -2292,7 +2628,7 @@ const Home = () => {
                         {section.note && (
                           <Typography
                             sx={{
-                              fontSize: "0.75rem",
+                              ...commonStyles.compactTextLg,
                               color: colors.textSecondary,
                             }}
                           >
@@ -2303,7 +2639,7 @@ const Home = () => {
                           section.processing_title !== section.title && (
                             <Typography
                               sx={{
-                                fontSize: "0.75rem",
+                                ...commonStyles.compactTextLg,
                                 color: colors.textTertiary,
                               }}
                             >
@@ -2315,7 +2651,7 @@ const Home = () => {
                         {section.resolution && (
                           <Typography
                             sx={{
-                              fontSize: "0.75rem",
+                              ...commonStyles.compactTextLg,
                               color: colors.textTertiary,
                             }}
                           >
@@ -2340,8 +2676,8 @@ const Home = () => {
                             })}
                             size="small"
                             sx={{
+                              ...commonStyles.compactChipSm,
                               fontSize: "0.6875rem",
-                              height: 20,
                               background: `${themedColors.success}15`,
                               color: themedColors.success,
                             }}
@@ -2352,8 +2688,8 @@ const Home = () => {
                             })}
                             size="small"
                             sx={{
+                              ...commonStyles.compactChipSm,
                               fontSize: "0.6875rem",
-                              height: 20,
                               background: `${colors.primaryLight}20`,
                               color: colors.primaryLight,
                             }}
@@ -2363,19 +2699,27 @@ const Home = () => {
                               count: section.speaker_count ?? 0,
                             })}
                             size="small"
-                            sx={{ fontSize: "0.6875rem", height: 20 }}
+                            sx={{
+                              ...commonStyles.compactChipSm,
+                              fontSize: "0.6875rem",
+                            }}
                           />
                           <Chip
                             label={t("sessions.partiesCount", {
                               count: section.party_count ?? 0,
                             })}
                             size="small"
-                            sx={{ fontSize: "0.6875rem", height: 20 }}
+                            sx={{
+                              ...commonStyles.compactChipSm,
+                              fontSize: "0.6875rem",
+                            }}
                           />
                         </Box>
                       </Box>
                       <IconButton
                         size="small"
+                        tabIndex={-1}
+                        aria-hidden
                         sx={{ color: colors.primaryLight, flexShrink: 0 }}
                       >
                         {isExpanded ? (
@@ -2386,7 +2730,13 @@ const Home = () => {
                       </IconButton>
                     </Box>
 
-                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                    <Collapse
+                      id={sectionCollapseId}
+                      aria-labelledby={sectionToggleId}
+                      in={isExpanded}
+                      timeout="auto"
+                      unmountOnExit
+                    >
                       <Box
                         sx={{
                           px: 2,
@@ -2394,6 +2744,31 @@ const Home = () => {
                           borderTop: `1px solid ${colors.dataBorder}`,
                         }}
                       >
+                        {sectionErrorReasons.length > 0 && (
+                          <Alert
+                            severity="warning"
+                            sx={{ mt: 1.5, mb: 0.5 }}
+                            action={
+                              <Button
+                                color="inherit"
+                                size="small"
+                                onClick={() =>
+                                  void loadSectionData(section.id, section.key)
+                                }
+                                sx={{
+                                  ...commonStyles.compactTextMd,
+                                  textTransform: "none",
+                                }}
+                              >
+                                {t("common.retry")}
+                              </Button>
+                            }
+                          >
+                            {t("errors.loadFailedWithReason", {
+                              reason: sectionErrorReasons.join(", "),
+                            })}
+                          </Alert>
+                        )}
                         {renderVaskiInfo(section, false)}
                         {renderMinutesInfo(section, false)}
                         {renderSectionSubSections(section)}
@@ -2425,11 +2800,24 @@ const Home = () => {
 
                         {/* Votings */}
                         {loadingVotings.has(section.id) ? (
-                          <Box sx={{ py: 2, textAlign: "center" }}>
+                          <Box
+                            sx={{ py: 2, textAlign: "center" }}
+                            role="status"
+                            aria-live="polite"
+                            aria-label={t("app.loading")}
+                          >
                             <CircularProgress
                               size={20}
                               sx={{ color: themedColors.primary }}
                             />
+                            <Typography
+                              sx={{
+                                ...commonStyles.compactTextXs,
+                                color: colors.textTertiary,
+                              }}
+                            >
+                              {t("app.loading")}
+                            </Typography>
                           </Box>
                         ) : (
                           renderSectionVotings(votings, session)
@@ -2437,11 +2825,24 @@ const Home = () => {
 
                         {/* Speeches */}
                         {loadingSpeeches.has(section.id) ? (
-                          <Box sx={{ py: 2, textAlign: "center" }}>
+                          <Box
+                            sx={{ py: 2, textAlign: "center" }}
+                            role="status"
+                            aria-live="polite"
+                            aria-label={t("app.loading")}
+                          >
                             <CircularProgress
                               size={20}
                               sx={{ color: themedColors.primary }}
                             />
+                            <Typography
+                              sx={{
+                                ...commonStyles.compactTextXs,
+                                color: colors.textTertiary,
+                              }}
+                            >
+                              {t("app.loading")}
+                            </Typography>
                           </Box>
                         ) : speeches.length > 0 ? (
                           <Box
@@ -2454,7 +2855,7 @@ const Home = () => {
                           >
                             <Typography
                               sx={{
-                                fontSize: "0.75rem",
+                                ...commonStyles.compactTextLg,
                                 fontWeight: 600,
                                 color: colors.textSecondary,
                                 textTransform: "uppercase",
@@ -2466,7 +2867,7 @@ const Home = () => {
                             {!hasSpeechContent && (
                               <Typography
                                 sx={{
-                                  fontSize: "0.75rem",
+                                  ...commonStyles.compactTextLg,
                                   color: colors.textTertiary,
                                 }}
                               >
@@ -2476,7 +2877,7 @@ const Home = () => {
                             {!hasSpeechContent && vaskiLatestSpeechDate && (
                               <Typography
                                 sx={{
-                                  fontSize: "0.75rem",
+                                  ...commonStyles.compactTextLg,
                                   color: colors.textTertiary,
                                 }}
                               >
@@ -2513,8 +2914,7 @@ const Home = () => {
                                         background: `${colors.primaryLight}30`,
                                         color: colors.primaryLight,
                                         fontWeight: 600,
-                                        fontSize: "0.625rem",
-                                        height: 18,
+                                        ...commonStyles.compactChipXs,
                                         minWidth: 24,
                                       }}
                                     />
@@ -2532,8 +2932,7 @@ const Home = () => {
                                         label={speech.party_abbreviation}
                                         size="small"
                                         sx={{
-                                          fontSize: "0.625rem",
-                                          height: 18,
+                                          ...commonStyles.compactChipXs,
                                         }}
                                       />
                                     )}
@@ -2585,7 +2984,10 @@ const Home = () => {
                             {/* Load more button */}
                             {speechData &&
                               speechData.page < speechData.totalPages && (
-                                <Box sx={{ textAlign: "center", mt: 1 }}>
+                                <Box
+                                  sx={{ textAlign: "center", mt: 1 }}
+                                  aria-live="polite"
+                                >
                                   <Button
                                     size="small"
                                     variant="outlined"
@@ -2600,9 +3002,7 @@ const Home = () => {
                                       section.id,
                                     )}
                                     sx={{
-                                      textTransform: "none",
-                                      borderColor: colors.primaryLight,
-                                      color: colors.primaryLight,
+                                      ...commonStyles.compactOutlinedPrimaryButton,
                                       fontSize: "0.8125rem",
                                     }}
                                   >
@@ -2617,6 +3017,18 @@ const Home = () => {
                                       total: speechData.total,
                                     })}
                                   </Button>
+                                  <Typography
+                                    sx={{
+                                      mt: 0.5,
+                                      fontSize: "0.6875rem",
+                                      color: colors.textTertiary,
+                                    }}
+                                  >
+                                    {t("sessions.loadMorePageProgress", {
+                                      current: speechData.page,
+                                      total: speechData.totalPages,
+                                    })}
+                                  </Typography>
                                 </Box>
                               )}
                           </Box>

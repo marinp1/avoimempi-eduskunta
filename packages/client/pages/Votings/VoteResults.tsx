@@ -210,6 +210,8 @@ const VotingRow: React.FC<{
         details.voting.agenda_title,
       ])
     : [];
+  const detailsPanelId = `voting-inline-details-${vote.id}`;
+  const detailsToggleId = `voting-inline-toggle-${vote.id}`;
 
   return (
     <Box
@@ -228,7 +230,11 @@ const VotingRow: React.FC<{
       <Chip
         size="small"
         label={vote.section_processing_phase || vote.section_processing_title}
-        sx={{ height: 20, fontSize: "0.7rem", minWidth: 80 }}
+        sx={{
+          ...commonStyles.compactChipSm,
+          ...commonStyles.compactTextMd,
+          minWidth: 80,
+        }}
       />
 
       {close && (
@@ -236,8 +242,8 @@ const VotingRow: React.FC<{
           size="small"
           label={t("votings.closeVote")}
           sx={{
-            height: 20,
-            fontSize: "0.7rem",
+            ...commonStyles.compactChipSm,
+            ...commonStyles.compactTextMd,
             color: themedColors.warning,
             borderColor: `${themedColors.warning}66`,
           }}
@@ -284,12 +290,12 @@ const VotingRow: React.FC<{
         {onToggleDetails && (
           <Button
             size="small"
+            id={detailsToggleId}
             onClick={() => onToggleDetails(vote.id)}
+            aria-expanded={isExpanded}
+            aria-controls={detailsPanelId}
             sx={{
-              minWidth: 0,
-              px: 1,
-              fontSize: "0.68rem",
-              textTransform: "none",
+              ...commonStyles.compactActionButton,
             }}
             endIcon={
               <ExpandMoreIcon
@@ -311,7 +317,7 @@ const VotingRow: React.FC<{
           sx={{
             color: themedColors.primary,
             fontWeight: 600,
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
           }}
         >
           #{vote.id}
@@ -319,7 +325,7 @@ const VotingRow: React.FC<{
         <EduskuntaSourceLink
           href={vote.result_url}
           sx={{
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
             color: voteColors.yes,
           }}
         >
@@ -341,6 +347,8 @@ const VotingRow: React.FC<{
         </Typography>
       )}
       <Collapse
+        id={detailsPanelId}
+        aria-labelledby={detailsToggleId}
         in={!!onToggleDetails && isExpanded}
         timeout="auto"
         unmountOnExit
@@ -385,7 +393,7 @@ const VotingRow: React.FC<{
                   size="small"
                   variant="outlined"
                   label={details.voting.parliamentary_item}
-                  sx={{ height: 20, fontSize: "0.65rem", width: "fit-content" }}
+                  sx={{ ...commonStyles.compactChipSm, width: "fit-content" }}
                 />
               )}
               {details.governmentOpposition && (
@@ -474,15 +482,18 @@ const VotingCard: React.FC<{
           <Chip
             size="small"
             label={vote.section_processing_phase}
-            sx={{ height: 20, fontSize: "0.7rem" }}
+            sx={{
+              ...commonStyles.compactChipSm,
+              ...commonStyles.compactTextMd,
+            }}
           />
           {close && (
             <Chip
               size="small"
               label={t("votings.closeVote")}
               sx={{
-                height: 20,
-                fontSize: "0.7rem",
+                ...commonStyles.compactChipSm,
+                ...commonStyles.compactTextMd,
                 color: themedColors.warning,
                 borderColor: `${themedColors.warning}66`,
               }}
@@ -494,7 +505,10 @@ const VotingCard: React.FC<{
               size="small"
               label={`#${vote.number}`}
               variant="outlined"
-              sx={{ height: 20, fontSize: "0.7rem" }}
+              sx={{
+                ...commonStyles.compactChipSm,
+                ...commonStyles.compactTextMd,
+              }}
             />
           )}
           {vote.section_key && (
@@ -511,7 +525,10 @@ const VotingCard: React.FC<{
                 label={vote.section_key}
                 variant="outlined"
                 clickable
-                sx={{ fontSize: "0.7rem", height: 20 }}
+                sx={{
+                  ...commonStyles.compactChipSm,
+                  ...commonStyles.compactTextMd,
+                }}
               />
             </Link>
           )}
@@ -756,7 +773,10 @@ const VotingGroupCard: React.FC<{
                 label={first.section_key}
                 variant="outlined"
                 clickable
-                sx={{ fontSize: "0.7rem", height: 20 }}
+                sx={{
+                  ...commonStyles.compactChipSm,
+                  ...commonStyles.compactTextMd,
+                }}
               />
             </Link>
           )}
@@ -764,8 +784,8 @@ const VotingGroupCard: React.FC<{
             size="small"
             label={t("votings.votingCount", { count: votes.length })}
             sx={{
-              height: 20,
-              fontSize: "0.7rem",
+              ...commonStyles.compactChipSm,
+              ...commonStyles.compactTextMd,
               fontWeight: 600,
               bgcolor: `${themedColors.primary}15`,
               color: themedColors.primary,
@@ -1066,7 +1086,7 @@ export const VoteResults: React.FC<{
                 }}
               >
                 <Box>
-                  <InputLabel sx={{ mb: 0.5, fontSize: "0.75rem" }}>
+                  <InputLabel sx={{ mb: 0.5, ...commonStyles.compactTextLg }}>
                     {t("votings.filters.phase")}
                   </InputLabel>
                   <Select
@@ -1084,7 +1104,7 @@ export const VoteResults: React.FC<{
                   </Select>
                 </Box>
                 <Box>
-                  <InputLabel sx={{ mb: 0.5, fontSize: "0.75rem" }}>
+                  <InputLabel sx={{ mb: 0.5, ...commonStyles.compactTextLg }}>
                     {t("votings.filters.session")}
                   </InputLabel>
                   <Select
@@ -1102,7 +1122,7 @@ export const VoteResults: React.FC<{
                   </Select>
                 </Box>
                 <Box>
-                  <InputLabel sx={{ mb: 0.5, fontSize: "0.75rem" }}>
+                  <InputLabel sx={{ mb: 0.5, ...commonStyles.compactTextLg }}>
                     {t("votings.filters.sort")}
                   </InputLabel>
                   <Select
