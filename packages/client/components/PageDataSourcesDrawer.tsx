@@ -320,24 +320,28 @@ export const PageDataSourcesDrawer = ({
                         variant="caption"
                         sx={{ display: "block", mb: 0.5 }}
                       >
-                        {t("pageSources.lastScrape")}:{" "}
-                        {formatDateTime(summary?.lastScrapedAt ?? null)}
+                        {t("pageSources.lastScrapeLine", {
+                          value: formatDateTime(summary?.lastScrapedAt ?? null),
+                        })}
                       </Typography>
                       <Typography
                         variant="caption"
                         sx={{ display: "block", mb: 0.5 }}
                       >
-                        {t("pageSources.lastMigration")}:{" "}
-                        {formatDateTime(summary?.lastMigratedAt ?? null)}
+                        {t("pageSources.lastMigrationLine", {
+                          value: formatDateTime(
+                            summary?.lastMigratedAt ?? null,
+                          ),
+                        })}
                       </Typography>
                       <Typography
                         variant="caption"
                         sx={{ display: "block", mb: 1 }}
                       >
-                        {t("pageSources.importedRows")}:{" "}
-                        {summary?.importedRows ?? 0} |{" "}
-                        {t("pageSources.sourcePages")}:{" "}
-                        {summary?.distinctPages ?? 0}
+                        {t("pageSources.summaryCounts", {
+                          rows: summary?.importedRows ?? 0,
+                          pages: summary?.distinctPages ?? 0,
+                        })}
                       </Typography>
                     </Box>
                   );

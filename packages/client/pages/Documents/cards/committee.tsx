@@ -211,13 +211,16 @@ export function CommitteeReportCard({
           >
             {item.draft_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDate")}: {formatDate(item.draft_date)}
+                {t("documents.submissionDateLine", {
+                  value: formatDate(item.draft_date),
+                })}
               </Typography>
             )}
             {item.signature_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.signatureDate")}:{" "}
-                {formatDate(item.signature_date)}
+                {t("documents.signatureDateLine", {
+                  value: formatDate(item.signature_date),
+                })}
               </Typography>
             )}
 
@@ -234,7 +237,9 @@ export function CommitteeReportCard({
             )}
             {item.recipient_committee && (
               <Chip
-                label={`${t("documents.recipientCommittee")}: ${item.recipient_committee}`}
+                label={t("documents.recipientCommitteeLine", {
+                  value: item.recipient_committee,
+                })}
                 size="small"
                 variant="outlined"
                 sx={{

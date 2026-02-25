@@ -534,8 +534,12 @@ const Parties = () => {
                         variant="caption"
                         sx={{ color: themedColors.textSecondary }}
                       >
-                        {t("parties.womenShort")}: {female} |{" "}
-                        {t("parties.menShort")}: {male}
+                        {t("parties.genderSplitLine", {
+                          womenLabel: t("parties.womenShort"),
+                          female,
+                          menLabel: t("parties.menShort"),
+                          male,
+                        })}
                       </Typography>
                       <Box
                         sx={{
@@ -690,8 +694,12 @@ const Parties = () => {
                         variant="caption"
                         sx={{ color: themedColors.textSecondary }}
                       >
-                        {t("parties.womenShort")}: {female} |{" "}
-                        {t("parties.menShort")}: {male}
+                        {t("parties.genderSplitLine", {
+                          womenLabel: t("parties.womenShort"),
+                          female,
+                          menLabel: t("parties.menShort"),
+                          male,
+                        })}
                       </Typography>
                       <Box
                         sx={{

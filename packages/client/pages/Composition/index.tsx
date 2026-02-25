@@ -309,8 +309,9 @@ export default () => {
               />
               {selectedHallituskausi && (
                 <Alert severity="info" sx={{ mt: spacing.md }}>
-                  {t("common.filteredByGovernmentPeriod")}:{" "}
-                  {selectedHallituskausi.label}
+                  {t("common.filteredByGovernmentPeriodLine", {
+                    value: selectedHallituskausi.label,
+                  })}
                 </Alert>
               )}
             </CardContent>
@@ -558,7 +559,9 @@ export default () => {
                           {party}
                         </Typography>
                         <Chip
-                          label={`${data.total} ${t("composition.partyBreakdown.members")}`}
+                          label={t("composition.partyBreakdown.members", {
+                            count: data.total,
+                          })}
                           size="small"
                           sx={{
                             background: themedColors.primary,
@@ -586,7 +589,10 @@ export default () => {
                                 }}
                               />
                             }
-                            label={`${t("composition.partyBreakdown.government")} ${data.inGovernment}`}
+                            label={t(
+                              "composition.partyBreakdown.governmentCountLine",
+                              { count: data.inGovernment },
+                            )}
                             size="small"
                             sx={{
                               background: `${themedColors.success}20`,
@@ -598,7 +604,10 @@ export default () => {
                         )}
                         {data.total - data.inGovernment > 0 && (
                           <Chip
-                            label={`${t("composition.partyBreakdown.opposition")} ${data.total - data.inGovernment}`}
+                            label={t(
+                              "composition.partyBreakdown.oppositionCountLine",
+                              { count: data.total - data.inGovernment },
+                            )}
                             size="small"
                             sx={{
                               background: `${themedColors.warning}20`,

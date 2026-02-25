@@ -1276,7 +1276,9 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                     <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                       <Chip
                         size="small"
-                        label={`${t("common.yes")} ${details.voting.n_yes}`}
+                        label={t("common.yesCount", {
+                          count: details.voting.n_yes,
+                        })}
                         sx={{
                           height: 20,
                           color: colors.success,
@@ -1286,7 +1288,9 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                       />
                       <Chip
                         size="small"
-                        label={`${t("common.no")} ${details.voting.n_no}`}
+                        label={t("common.noCount", {
+                          count: details.voting.n_no,
+                        })}
                         sx={{
                           height: 20,
                           color: colors.error,
@@ -1296,23 +1300,29 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                       />
                       <Chip
                         size="small"
-                        label={`${t("common.empty")} ${details.voting.n_abstain}`}
+                        label={t("common.emptyCount", {
+                          count: details.voting.n_abstain,
+                        })}
                         sx={{ height: 20 }}
                       />
                       <Chip
                         size="small"
-                        label={`${t("common.absent")} ${details.voting.n_absent}`}
+                        label={t("common.absentCount", {
+                          count: details.voting.n_absent,
+                        })}
                         sx={{ height: 20 }}
                       />
                     </Box>
                     <Typography
                       sx={{ fontSize: "0.72rem", color: colors.textSecondary }}
                     >
-                      {t("common.votingTarget")}:{" "}
-                      {details.voting.context_title ||
-                        details.voting.section_title ||
-                        details.voting.title ||
-                        t("documents.noTitle")}
+                      {t("common.votingTargetLine", {
+                        value:
+                          details.voting.context_title ||
+                          details.voting.section_title ||
+                          details.voting.title ||
+                          t("documents.noTitle"),
+                      })}
                     </Typography>
                     {details.voting.parliamentary_item && (
                       <Chip

@@ -125,8 +125,9 @@ export const BulkOperationsPanel: React.FC<BulkOperationsPanelProps> = ({
                     color="text.secondary"
                     sx={{ display: "block" }}
                   >
-                    {selectedTables.size}{" "}
-                    {t("admin.bulkOperations.tablesSelected")}
+                    {t("admin.bulkOperations.tablesSelected", {
+                      count: selectedTables.size,
+                    })}
                   </Typography>
                 )}
               </Box>

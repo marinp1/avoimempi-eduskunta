@@ -677,7 +677,9 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
                   {person.name}
                 </Typography>
                 <Chip
-                  label={`${person.count} ${t("parties.detail.dissentCount")}`}
+                  label={t("parties.detail.dissentCount", {
+                    count: person.count,
+                  })}
                   size="small"
                   sx={{
                     height: 22,

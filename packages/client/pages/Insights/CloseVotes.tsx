@@ -310,7 +310,9 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
                   </Box>
                   <Box sx={{ display: "flex", gap: 0.5, flexShrink: 0 }}>
                     <Chip
-                      label={`${t("insights.closeVotes.margin")}: ${vote.margin}`}
+                      label={t("insights.closeVotes.marginLabel", {
+                        value: vote.margin,
+                      })}
                       size="small"
                       sx={{
                         height: 22,

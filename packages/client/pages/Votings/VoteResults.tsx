@@ -372,11 +372,13 @@ const VotingRow: React.FC<{
                 variant="caption"
                 sx={{ color: themedColors.textSecondary }}
               >
-                {t("common.votingTarget")}:{" "}
-                {details.voting.context_title ||
-                  details.voting.section_title ||
-                  details.voting.title ||
-                  "(ei otsikkoa)"}
+                {t("common.votingTargetLine", {
+                  value:
+                    details.voting.context_title ||
+                    details.voting.section_title ||
+                    details.voting.title ||
+                    "(ei otsikkoa)",
+                })}
               </Typography>
               {details.voting.parliamentary_item && (
                 <Chip
@@ -760,7 +762,7 @@ const VotingGroupCard: React.FC<{
           )}
           <Chip
             size="small"
-            label={`${votes.length} ${t("votings.votingCount")}`}
+            label={t("votings.votingCount", { count: votes.length })}
             sx={{
               height: 20,
               fontSize: "0.7rem",
@@ -897,7 +899,9 @@ export const VoteResults: React.FC<{
         if (res.status === 404) {
           setFocusVoting({
             loading: false,
-            error: `${t("errors.loadFailed")}: ${t("common.none")}`,
+            error: t("errors.loadFailedWithReason", {
+              reason: t("common.none"),
+            }),
             row: null,
           });
           return;
@@ -1033,7 +1037,9 @@ export const VoteResults: React.FC<{
         !focusVoting.loading &&
         (state.error || focusVoting.error) && (
           <Alert severity="error" sx={{ mb: 3 }}>
-            {t("errors.loadFailed")}: {state.error || focusVoting.error}
+            {t("errors.loadFailedWithReason", {
+              reason: state.error || focusVoting.error,
+            })}
           </Alert>
         )}
 

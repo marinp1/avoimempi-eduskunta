@@ -345,8 +345,9 @@ export default function PartyParticipation({
               </Grid>
               {selectedHallituskausi && (
                 <Alert severity="info" sx={{ mt: spacing.sm }}>
-                  {t("common.filteredByGovernmentPeriod")}:{" "}
-                  {selectedHallituskausi.label}
+                  {t("common.filteredByGovernmentPeriodLine", {
+                    value: selectedHallituskausi.label,
+                  })}
                 </Alert>
               )}
             </CardContent>

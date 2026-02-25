@@ -601,7 +601,7 @@ const OverviewTab: React.FC<{
                             t("composition.details.ongoing"),
                           )}
                           {leavingRecord?.replacement_person &&
-                            ` (${t("composition.details.successor")} ${leavingRecord.replacement_person})`}
+                            ` (${t("composition.details.successorLine", { value: leavingRecord.replacement_person })})`}
                         </Typography>
                         {leavingRecord?.description && (
                           <Typography
@@ -1090,12 +1090,16 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                 >
                   <Chip
                     size="small"
-                    label={`${t("composition.details.votes.drawer.votePrefix")}: ${selectedVoting.vote}`}
+                    label={t("composition.details.votes.drawer.voteLine", {
+                      value: selectedVoting.vote,
+                    })}
                     sx={{ height: 20, fontSize: "0.65rem" }}
                   />
                   <Chip
                     size="small"
-                    label={`${t("composition.details.votes.drawer.groupPrefix")}: ${selectedVoting.group_abbreviation}`}
+                    label={t("composition.details.votes.drawer.groupLine", {
+                      value: selectedVoting.group_abbreviation,
+                    })}
                     sx={{ height: 20, fontSize: "0.65rem" }}
                   />
                 </Box>
@@ -1199,22 +1203,30 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                     <Chip
                       size="small"
-                      label={`${t("common.yes")} ${selectedVotingDetails.voting.n_yes}`}
+                      label={t("common.yesCount", {
+                        count: selectedVotingDetails.voting.n_yes,
+                      })}
                       sx={{ height: 20 }}
                     />
                     <Chip
                       size="small"
-                      label={`${t("common.no")} ${selectedVotingDetails.voting.n_no}`}
+                      label={t("common.noCount", {
+                        count: selectedVotingDetails.voting.n_no,
+                      })}
                       sx={{ height: 20 }}
                     />
                     <Chip
                       size="small"
-                      label={`${t("common.empty")} ${selectedVotingDetails.voting.n_abstain}`}
+                      label={t("common.emptyCount", {
+                        count: selectedVotingDetails.voting.n_abstain,
+                      })}
                       sx={{ height: 20 }}
                     />
                     <Chip
                       size="small"
-                      label={`${t("common.absent")} ${selectedVotingDetails.voting.n_absent}`}
+                      label={t("common.absentCount", {
+                        count: selectedVotingDetails.voting.n_absent,
+                      })}
                       sx={{ height: 20 }}
                     />
                   </Box>

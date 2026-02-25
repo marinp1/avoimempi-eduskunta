@@ -669,8 +669,11 @@ export default function Documents() {
           }}
         >
           <Typography variant="body2" color={colors.textSecondary}>
-            {t("documents.showing")} {items.length} / {totalCount}{" "}
-            {t("documents.totalDocuments")}
+            {t("documents.resultsSummary", {
+              shown: items.length,
+              total: totalCount,
+              count: totalCount,
+            })}
           </Typography>
         </Box>
         {selectedHallituskausi && (
