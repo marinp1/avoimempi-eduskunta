@@ -10,11 +10,11 @@ import {
   Typography,
 } from "@mui/material";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
-import { colors } from "#client/theme/index";
+import { colors, commonStyles } from "#client/theme/index";
 
 export type DocRef = {
   type:
@@ -77,6 +77,10 @@ const cardSx = {
   background: `${colors.primaryLight}06`,
   cursor: "pointer",
   "&:hover": { background: `${colors.primaryLight}12` },
+  "&:focus-visible": {
+    outline: `2px solid ${colors.primary}`,
+    outlineOffset: 2,
+  },
 };
 
 const loadingSx = {
@@ -91,8 +95,8 @@ const loadingSx = {
 };
 
 const identifierChipSx = {
-  height: 20,
-  fontSize: "0.7rem",
+  ...commonStyles.compactChipSm,
+  ...commonStyles.compactTextMd,
   fontWeight: 600,
   bgcolor: `${colors.primary}15`,
   color: colors.primary,
@@ -110,9 +114,24 @@ const titleSx = {
 };
 
 const subjectChipSx = {
-  height: 18,
+  ...commonStyles.compactChipXs,
   fontSize: "0.6rem",
   borderColor: `${colors.dataBorder}`,
+};
+
+const decisionOutcomeChipSx = {
+  ...commonStyles.compactChipSm,
+  fontWeight: 600,
+};
+
+const metaTextSx = {
+  ...commonStyles.compactTextMd,
+  color: colors.textSecondary,
+};
+
+const secondaryTextSx = {
+  ...commonStyles.compactTextLg,
+  color: colors.textSecondary,
 };
 
 const snippetTextSx = {
@@ -129,6 +148,17 @@ const normalizeSnippet = (text: string | null | undefined) => {
   return cleaned;
 };
 
+const handleActivateOnKeyDown = (
+  event: React.KeyboardEvent,
+  onActivate: () => void,
+) => {
+  if (event.currentTarget !== event.target) return;
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    onActivate();
+  }
+};
+
 const ExpandableSnippet: React.FC<{
   label: string;
   text: string | null | undefined;
@@ -137,6 +167,7 @@ const ExpandableSnippet: React.FC<{
   const { t } = useTranslation();
   const normalized = normalizeSnippet(text);
   const [expanded, setExpanded] = useState(false);
+  const snippetContentId = useId();
 
   if (!normalized) return null;
   const isLong = normalized.length > maxLength;
@@ -147,9 +178,11 @@ const ExpandableSnippet: React.FC<{
 
   return (
     <Box sx={{ mt: 0.5 }}>
-      <Typography sx={snippetTextSx}>
-        {label}: {shownText}
-      </Typography>
+      <Box id={snippetContentId}>
+        <Typography sx={snippetTextSx}>
+          {label}: {shownText}
+        </Typography>
+      </Box>
       {isLong && (
         <Button
           size="small"
@@ -158,12 +191,10 @@ const ExpandableSnippet: React.FC<{
             event.stopPropagation();
             setExpanded((prev) => !prev);
           }}
+          aria-expanded={expanded}
+          aria-controls={snippetContentId}
           sx={{
-            mt: 0.25,
-            minWidth: 0,
-            px: 0,
-            fontSize: "0.68rem",
-            textTransform: "none",
+            ...commonStyles.compactInlineTextButton,
             color: colors.primary,
           }}
         >
@@ -183,6 +214,7 @@ const ExpandableRichSnippet: React.FC<{
   const { t } = useTranslation();
   const normalized = normalizeSnippet(text);
   const [expanded, setExpanded] = useState(false);
+  const snippetContentId = useId();
 
   if (!normalized && !richText) return null;
 
@@ -195,24 +227,26 @@ const ExpandableRichSnippet: React.FC<{
 
   return (
     <Box sx={{ mt: 0.5 }}>
-      {!expanded && (
-        <Typography sx={snippetTextSx}>
-          {label}: {shownText}
-        </Typography>
-      )}
-      {expanded && (
-        <Box>
-          <Typography sx={{ ...snippetTextSx, mt: 0 }}>{label}:</Typography>
-          <Box sx={{ mt: 0.35 }}>
-            <RichTextRenderer
-              document={richText}
-              fallbackText={normalized}
-              paragraphVariant="body2"
-              compact
-            />
+      <Box id={snippetContentId}>
+        {!expanded && (
+          <Typography sx={snippetTextSx}>
+            {label}: {shownText}
+          </Typography>
+        )}
+        {expanded && (
+          <Box>
+            <Typography sx={{ ...snippetTextSx, mt: 0 }}>{label}:</Typography>
+            <Box sx={{ mt: 0.35 }}>
+              <RichTextRenderer
+                document={richText}
+                fallbackText={normalized}
+                paragraphVariant="body2"
+                compact
+              />
+            </Box>
           </Box>
-        </Box>
-      )}
+        )}
+      </Box>
       {canExpand && (
         <Button
           size="small"
@@ -221,12 +255,10 @@ const ExpandableRichSnippet: React.FC<{
             event.stopPropagation();
             setExpanded((prev) => !prev);
           }}
+          aria-expanded={expanded}
+          aria-controls={snippetContentId}
           sx={{
-            mt: 0.25,
-            minWidth: 0,
-            px: 0,
-            fontSize: "0.68rem",
-            textTransform: "none",
+            ...commonStyles.compactInlineTextButton,
             color: colors.primary,
           }}
         >
@@ -317,9 +349,7 @@ const renderSubjectChips = (
 const LoadingPlaceholder: React.FC<{ text: string }> = ({ text }) => (
   <Box sx={loadingSx}>
     <CircularProgress size={14} />
-    <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
-      {text}
-    </Typography>
+    <Typography sx={secondaryTextSx}>{text}</Typography>
   </Box>
 );
 
@@ -345,13 +375,18 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
+  const openDocument = () => {
+    window.location.href = `/asiakirjat?id=${data.id}&type=government-proposals`;
+  };
 
   return (
     <Box
       sx={cardSx}
-      onClick={() => {
-        window.location.href = `/asiakirjat?id=${data.id}&type=government-proposals`;
-      }}
+      role="button"
+      tabIndex={0}
+      onClick={openDocument}
+      onKeyDown={(event) => handleActivateOnKeyDown(event, openDocument)}
+      aria-label={`${t("common.openView")}: ${data.parliament_identifier}`}
     >
       <Box
         sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
@@ -369,9 +404,7 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
             label={data.decision_outcome}
             size="small"
             sx={{
-              height: 20,
-              fontSize: "0.65rem",
-              fontWeight: 600,
+              ...decisionOutcomeChipSx,
               bgcolor: `${decisionColor}15`,
               color: decisionColor,
             }}
@@ -387,11 +420,7 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
           flexWrap: "wrap",
         }}
       >
-        {data.author && (
-          <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
-            {data.author}
-          </Typography>
-        )}
+        {data.author && <Typography sx={metaTextSx}>{data.author}</Typography>}
       </Box>
       <ExpandableRichSnippet
         label={t("documents.summary")}
@@ -449,13 +478,18 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
     ? `${signerName} (${data.first_signer_party})`
     : signerName;
   const latestStage = data.stages?.[data.stages.length - 1];
+  const openDocument = () => {
+    window.location.href = `/asiakirjat?id=${data.id}`;
+  };
 
   return (
     <Box
       sx={cardSx}
-      onClick={() => {
-        window.location.href = `/asiakirjat?id=${data.id}`;
-      }}
+      role="button"
+      tabIndex={0}
+      onClick={openDocument}
+      onKeyDown={(event) => handleActivateOnKeyDown(event, openDocument)}
+      aria-label={`${t("common.openView")}: ${data.parliament_identifier}`}
     >
       <Box
         sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
@@ -473,9 +507,7 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
             label={data.decision_outcome}
             size="small"
             sx={{
-              height: 20,
-              fontSize: "0.65rem",
-              fontWeight: 600,
+              ...decisionOutcomeChipSx,
               bgcolor: `${decisionColor}15`,
               color: decisionColor,
             }}
@@ -491,11 +523,7 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
           flexWrap: "wrap",
         }}
       >
-        {signerLabel && (
-          <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
-            {signerLabel}
-          </Typography>
-        )}
+        {signerLabel && <Typography sx={metaTextSx}>{signerLabel}</Typography>}
       </Box>
       <ExpandableRichSnippet
         label={t("documents.question")}
@@ -523,9 +551,7 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
             {t("documents.answerProcessingStatus")}
           </Typography>
           {latestStage.event_date && (
-            <Typography
-              sx={{ fontSize: "0.7rem", color: colors.textSecondary }}
-            >
+            <Typography sx={metaTextSx}>
               {new Date(latestStage.event_date).toLocaleDateString("fi-FI")}
             </Typography>
           )}
@@ -579,13 +605,18 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
   const signerLabel = data.first_signer_party
     ? `${signerName} (${data.first_signer_party})`
     : signerName;
+  const openDocument = () => {
+    window.location.href = `/asiakirjat?id=${data.id}&type=legislative-initiatives`;
+  };
 
   return (
     <Box
       sx={cardSx}
-      onClick={() => {
-        window.location.href = `/asiakirjat?id=${data.id}&type=legislative-initiatives`;
-      }}
+      role="button"
+      tabIndex={0}
+      onClick={openDocument}
+      onKeyDown={(event) => handleActivateOnKeyDown(event, openDocument)}
+      aria-label={`${t("common.openView")}: ${data.parliament_identifier}`}
     >
       <Box
         sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
@@ -603,9 +634,7 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
             label={data.decision_outcome}
             size="small"
             sx={{
-              height: 20,
-              fontSize: "0.65rem",
-              fontWeight: 600,
+              ...decisionOutcomeChipSx,
               bgcolor: `${decisionColor}15`,
               color: decisionColor,
             }}
@@ -627,11 +656,7 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
           variant="outlined"
           sx={subjectChipSx}
         />
-        {signerLabel && (
-          <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
-            {signerLabel}
-          </Typography>
-        )}
+        {signerLabel && <Typography sx={metaTextSx}>{signerLabel}</Typography>}
       </Box>
       <ExpandableRichSnippet
         label={t("documents.justificationText")}
@@ -673,13 +698,18 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
+  const openDocument = () => {
+    window.location.href = `/asiakirjat?id=${data.id}&type=oral-questions`;
+  };
 
   return (
     <Box
       sx={cardSx}
-      onClick={() => {
-        window.location.href = `/asiakirjat?id=${data.id}&type=oral-questions`;
-      }}
+      role="button"
+      tabIndex={0}
+      onClick={openDocument}
+      onKeyDown={(event) => handleActivateOnKeyDown(event, openDocument)}
+      aria-label={`${t("common.openView")}: ${data.parliament_identifier}`}
     >
       <Box
         sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
@@ -697,9 +727,7 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
             label={data.decision_outcome}
             size="small"
             sx={{
-              height: 20,
-              fontSize: "0.65rem",
-              fontWeight: 600,
+              ...decisionOutcomeChipSx,
               bgcolor: `${decisionColor}15`,
               color: decisionColor,
             }}
@@ -716,9 +744,7 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
         }}
       >
         {data.asker_text && (
-          <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
-            {data.asker_text}
-          </Typography>
+          <Typography sx={metaTextSx}>{data.asker_text}</Typography>
         )}
         {data.latest_stage_code && (
           <Chip
@@ -764,13 +790,18 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
   const signerLabel = data.first_signer_party
     ? `${signerName} (${data.first_signer_party})`
     : signerName;
+  const openDocument = () => {
+    window.location.href = `/asiakirjat?id=${data.id}&type=written-questions`;
+  };
 
   return (
     <Box
       sx={cardSx}
-      onClick={() => {
-        window.location.href = `/asiakirjat?id=${data.id}&type=written-questions`;
-      }}
+      role="button"
+      tabIndex={0}
+      onClick={openDocument}
+      onKeyDown={(event) => handleActivateOnKeyDown(event, openDocument)}
+      aria-label={`${t("common.openView")}: ${data.parliament_identifier}`}
     >
       <Box
         sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
@@ -788,9 +819,7 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
             label={data.decision_outcome}
             size="small"
             sx={{
-              height: 20,
-              fontSize: "0.65rem",
-              fontWeight: 600,
+              ...decisionOutcomeChipSx,
               bgcolor: `${decisionColor}15`,
               color: decisionColor,
             }}
@@ -806,11 +835,7 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
           flexWrap: "wrap",
         }}
       >
-        {signerLabel && (
-          <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
-            {signerLabel}
-          </Typography>
-        )}
+        {signerLabel && <Typography sx={metaTextSx}>{signerLabel}</Typography>}
       </Box>
       <ExpandableRichSnippet
         label={t("documents.question")}
@@ -848,13 +873,18 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
   if (loading)
     return <LoadingPlaceholder text={t("documents.loadingCommitteeReport")} />;
   if (!data) return null;
+  const openDocument = () => {
+    window.location.href = `/asiakirjat?id=${data.id}&type=committee-reports`;
+  };
 
   return (
     <Box
       sx={cardSx}
-      onClick={() => {
-        window.location.href = `/asiakirjat?id=${data.id}&type=committee-reports`;
-      }}
+      role="button"
+      tabIndex={0}
+      onClick={openDocument}
+      onKeyDown={(event) => handleActivateOnKeyDown(event, openDocument)}
+      aria-label={`${t("common.openView")}: ${data.parliament_identifier}`}
     >
       <Box
         sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
@@ -884,14 +914,10 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
         }}
       >
         {data.committee_name && (
-          <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
-            {data.committee_name}
-          </Typography>
+          <Typography sx={metaTextSx}>{data.committee_name}</Typography>
         )}
         {data.recipient_committee && (
-          <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
-            {data.recipient_committee}
-          </Typography>
+          <Typography sx={metaTextSx}>{data.recipient_committee}</Typography>
         )}
         {data.source_reference && (
           <Chip
@@ -1094,9 +1120,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
         sx={{ display: "flex", alignItems: "center", gap: 1, py: 0.5, mt: 0.5 }}
       >
         <CircularProgress size={14} />
-        <Typography sx={{ fontSize: "0.7rem", color: colors.textSecondary }}>
-          {t("documents.loadingVotings")}
-        </Typography>
+        <Typography sx={metaTextSx}>{t("documents.loadingVotings")}</Typography>
       </Box>
     );
   }
@@ -1109,7 +1133,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
         <HowToVoteIcon sx={{ fontSize: 16, color: colors.primary }} />
         <Typography
           sx={{
-            fontSize: "0.75rem",
+            ...commonStyles.compactTextLg,
             fontWeight: 600,
             color: colors.textPrimary,
           }}
@@ -1124,6 +1148,8 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
         const passed = v.n_yes > v.n_no;
         const yesRatio = v.n_total > 0 ? (v.n_yes / v.n_total) * 100 : 0;
         const noRatio = v.n_total > 0 ? (v.n_no / v.n_total) * 100 : 0;
+        const detailsCollapseId = `related-voting-details-${v.id}`;
+        const detailsToggleId = `related-voting-toggle-${v.id}`;
         return (
           <Box
             key={v.id}
@@ -1145,7 +1171,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
             >
               <Typography
                 sx={{
-                  fontSize: "0.75rem",
+                  ...commonStyles.compactTextLg,
                   fontWeight: 500,
                   color: colors.textPrimary,
                   flex: 1,
@@ -1158,9 +1184,8 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                 size="small"
                 label={`${v.n_yes} - ${v.n_no}`}
                 sx={{
+                  ...commonStyles.compactChipSm,
                   fontWeight: 600,
-                  fontSize: "0.65rem",
-                  height: 20,
                   color: passed ? colors.success : colors.error,
                   borderColor: passed ? colors.success : colors.error,
                 }}
@@ -1168,16 +1193,17 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
               />
               <Button
                 size="small"
+                id={detailsToggleId}
                 onClick={() => {
                   const nextExpanded = isExpanded ? null : v.id;
                   setExpandedVotingId(nextExpanded);
                   if (nextExpanded === v.id) fetchVotingDetails(v.id);
                 }}
+                aria-expanded={isExpanded}
+                aria-controls={detailsCollapseId}
                 sx={{
-                  minWidth: 0,
-                  px: 1,
-                  fontSize: "0.65rem",
-                  textTransform: "none",
+                  ...commonStyles.compactActionButton,
+                  ...commonStyles.compactTextXs,
                 }}
                 endIcon={
                   <ExpandMoreIcon
@@ -1204,10 +1230,8 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                   window.dispatchEvent(new PopStateEvent("popstate"));
                 }}
                 sx={{
-                  minWidth: 0,
-                  px: 1,
-                  fontSize: "0.65rem",
-                  textTransform: "none",
+                  ...commonStyles.compactActionButton,
+                  ...commonStyles.compactTextXs,
                 }}
                 endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
               >
@@ -1218,7 +1242,10 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
               sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.25 }}
             >
               <Typography
-                sx={{ fontSize: "0.65rem", color: colors.textSecondary }}
+                sx={{
+                  ...commonStyles.compactTextXs,
+                  color: colors.textSecondary,
+                }}
               >
                 {v.start_time?.substring(0, 10)} — {v.session_key}
               </Typography>
@@ -1249,7 +1276,13 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                 />
               </Box>
             </Box>
-            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+            <Collapse
+              id={detailsCollapseId}
+              aria-labelledby={detailsToggleId}
+              in={isExpanded}
+              timeout="auto"
+              unmountOnExit
+            >
               <Box
                 sx={{
                   mt: 0.75,
@@ -1262,9 +1295,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                 {isDetailLoading && (
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <CircularProgress size={12} />
-                    <Typography
-                      sx={{ fontSize: "0.7rem", color: colors.textSecondary }}
-                    >
+                    <Typography sx={metaTextSx}>
                       {t("common.loadingVotingDetails")}
                     </Typography>
                   </Box>
@@ -1280,7 +1311,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                           count: details.voting.n_yes,
                         })}
                         sx={{
-                          height: 20,
+                          ...commonStyles.compactChipSm,
                           color: colors.success,
                           borderColor: colors.success,
                         }}
@@ -1292,7 +1323,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                           count: details.voting.n_no,
                         })}
                         sx={{
-                          height: 20,
+                          ...commonStyles.compactChipSm,
                           color: colors.error,
                           borderColor: colors.error,
                         }}
@@ -1303,14 +1334,14 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                         label={t("common.emptyCount", {
                           count: details.voting.n_abstain,
                         })}
-                        sx={{ height: 20 }}
+                        sx={{ ...commonStyles.compactChipSm }}
                       />
                       <Chip
                         size="small"
                         label={t("common.absentCount", {
                           count: details.voting.n_absent,
                         })}
-                        sx={{ height: 20 }}
+                        sx={{ ...commonStyles.compactChipSm }}
                       />
                     </Box>
                     <Typography
@@ -1330,16 +1361,13 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                         variant="outlined"
                         label={details.voting.parliamentary_item}
                         sx={{
-                          height: 20,
-                          fontSize: "0.65rem",
+                          ...commonStyles.compactChipSm,
                           width: "fit-content",
                         }}
                       />
                     )}
                     {details.governmentOpposition && (
-                      <Typography
-                        sx={{ fontSize: "0.7rem", color: colors.textSecondary }}
-                      >
+                      <Typography sx={metaTextSx}>
                         Hallitus: {details.governmentOpposition.government_yes}{" "}
                         jaa / {details.governmentOpposition.government_no} ei,
                         Oppositio: {details.governmentOpposition.opposition_yes}{" "}
@@ -1367,7 +1395,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                       <Box>
                         <Typography
                           sx={{
-                            fontSize: "0.68rem",
+                            ...commonStyles.compactTextSm,
                             color: colors.textSecondary,
                           }}
                         >
@@ -1387,13 +1415,13 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                               size="small"
                               label={`${related.id}: ${related.n_yes}-${related.n_no}`}
                               variant="outlined"
-                              sx={{ height: 20, fontSize: "0.65rem" }}
+                              sx={{ ...commonStyles.compactChipSm }}
                             />
                           ))}
                           {details.relatedVotings.length > 6 && (
                             <Typography
                               sx={{
-                                fontSize: "0.65rem",
+                                ...commonStyles.compactTextXs,
                                 color: colors.textSecondary,
                               }}
                             >

@@ -55,6 +55,7 @@ const mobileTabRoutes: { key: RouteName; icon: React.ElementType }[] = [
   { key: "aanestykset", icon: HowToVote },
   { key: "istunnot", icon: Event },
 ];
+const MOBILE_MORE_TAB_VALUE = "__more__";
 
 export const Navigation: React.FC<{
   activeTab: string;
@@ -85,8 +86,12 @@ export const Navigation: React.FC<{
 
   const handleMobileTabChange = (
     _event: React.SyntheticEvent,
-    newValue: RouteName,
+    newValue: RouteName | typeof MOBILE_MORE_TAB_VALUE,
   ) => {
+    if (newValue === MOBILE_MORE_TAB_VALUE) {
+      setDrawerOpen(true);
+      return;
+    }
     navigate(newValue);
   };
 
@@ -419,7 +424,9 @@ export const Navigation: React.FC<{
       >
         <Tabs
           value={
-            mobileTabRoutes.some((r) => r.key === activeTab) ? activeTab : false
+            mobileTabRoutes.some((r) => r.key === activeTab)
+              ? activeTab
+              : MOBILE_MORE_TAB_VALUE
           }
           onChange={handleMobileTabChange}
           variant="fullWidth"
@@ -458,11 +465,7 @@ export const Navigation: React.FC<{
           <Tab
             icon={<MoreHoriz sx={{ fontSize: 22 }} />}
             label={t("navigation.more")}
-            value="__more__"
-            onClick={(e) => {
-              e.preventDefault();
-              setDrawerOpen(true);
-            }}
+            value={MOBILE_MORE_TAB_VALUE}
           />
         </Tabs>
       </AppBar>

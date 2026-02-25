@@ -186,6 +186,74 @@ export const commonStyles = {
   } satisfies SxProps<Theme>,
 
   /**
+   * Compact action button for dense table/card controls
+   */
+  compactActionButton: {
+    minWidth: 0,
+    px: 1,
+    fontSize: "0.68rem",
+    textTransform: "none",
+  } satisfies SxProps<Theme>,
+
+  /**
+   * Compact inline text button for snippet expand/collapse controls
+   */
+  compactInlineTextButton: {
+    mt: 0.25,
+    minWidth: 0,
+    px: 0,
+    fontSize: "0.68rem",
+    textTransform: "none",
+  } satisfies SxProps<Theme>,
+
+  /**
+   * Compact outlined action in primary color
+   */
+  compactOutlinedPrimaryButton: {
+    textTransform: "none",
+    borderColor: colors.primaryLight,
+    color: colors.primaryLight,
+    fontSize: "0.75rem",
+  } satisfies SxProps<Theme>,
+
+  /**
+   * Compact chip sizes used in dense data views
+   */
+  compactChipXs: {
+    height: 18,
+    fontSize: "0.625rem",
+  } satisfies SxProps<Theme>,
+
+  compactChipSm: {
+    height: 20,
+    fontSize: "0.65rem",
+  } satisfies SxProps<Theme>,
+
+  compactChipMd: {
+    height: 22,
+    fontSize: "0.6875rem",
+  } satisfies SxProps<Theme>,
+
+  /**
+   * Compact text sizes used in dense data views
+   */
+  compactTextXs: {
+    fontSize: "0.65rem",
+  } satisfies SxProps<Theme>,
+
+  compactTextSm: {
+    fontSize: "0.68rem",
+  } satisfies SxProps<Theme>,
+
+  compactTextMd: {
+    fontSize: "0.7rem",
+  } satisfies SxProps<Theme>,
+
+  compactTextLg: {
+    fontSize: "0.75rem",
+  } satisfies SxProps<Theme>,
+
+  /**
    * Interactive hover effect
    */
   interactiveHover: {

@@ -7,6 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import type React from "react";
+import { useTranslation } from "react-i18next";
 import { colors, commonStyles } from "./index";
 import { useThemedColors } from "./ThemeContext";
 
@@ -180,8 +181,11 @@ export const VoteMarginBar: React.FC<{
   height?: number;
   sx?: SxProps<Theme>;
 }> = ({ yes, no, empty = 0, absent = 0, height = 8, sx }) => {
+  const { t } = useTranslation();
   const total = yes + no + empty + absent;
   if (total === 0) return null;
+
+  const ariaLabel = t("common.voteMarginAria", { yes, no, empty, absent });
 
   const yesPercent = (yes / total) * 100;
   const noPercent = (no / total) * 100;
@@ -189,6 +193,8 @@ export const VoteMarginBar: React.FC<{
 
   return (
     <Box
+      role="img"
+      aria-label={ariaLabel}
       sx={{
         display: "flex",
         width: "100%",

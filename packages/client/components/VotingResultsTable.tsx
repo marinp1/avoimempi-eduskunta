@@ -11,7 +11,10 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { colors } from "#client/theme";
+import { colors, commonStyles } from "#client/theme";
+
+const tableHeadCellSx = { ...commonStyles.compactTextXs, py: 0.5 };
+const tableBodyCellSx = { ...commonStyles.compactTextSm, py: 0.4 };
 
 export type VotingPartyBreakdown = {
   party_code: string;
@@ -44,6 +47,8 @@ export const VotingResultsTable: React.FC<{
   return (
     <Box sx={{ mt: 0.5 }}>
       <Box
+        role="group"
+        aria-label={t("votings.resultsTable.title")}
         sx={{
           display: "flex",
           alignItems: "center",
@@ -52,17 +57,18 @@ export const VotingResultsTable: React.FC<{
           flexWrap: "wrap",
         }}
       >
-        <Typography sx={{ fontSize: "0.68rem", color: colors.textSecondary }}>
+        <Typography
+          sx={{ ...commonStyles.compactTextSm, color: colors.textSecondary }}
+        >
           {t("votings.resultsTable.title")}
         </Typography>
         <Button
           size="small"
           variant={groupBy === "party" ? "contained" : "outlined"}
+          aria-pressed={groupBy === "party"}
           sx={{
-            minWidth: 0,
-            px: 1,
-            fontSize: "0.65rem",
-            textTransform: "none",
+            ...commonStyles.compactActionButton,
+            ...commonStyles.compactTextXs,
             height: 22,
           }}
           onClick={() => setGroupBy("party")}
@@ -72,11 +78,10 @@ export const VotingResultsTable: React.FC<{
         <Button
           size="small"
           variant={groupBy === "representative" ? "contained" : "outlined"}
+          aria-pressed={groupBy === "representative"}
           sx={{
-            minWidth: 0,
-            px: 1,
-            fontSize: "0.65rem",
-            textTransform: "none",
+            ...commonStyles.compactActionButton,
+            ...commonStyles.compactTextXs,
             height: 22,
           }}
           onClick={() => setGroupBy("representative")}
@@ -91,22 +96,20 @@ export const VotingResultsTable: React.FC<{
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }}>
-                  {t("common.party")}
-                </TableCell>
-                <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }} align="right">
+                <TableCell sx={tableHeadCellSx}>{t("common.party")}</TableCell>
+                <TableCell sx={tableHeadCellSx} align="right">
                   {t("common.yes")}
                 </TableCell>
-                <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }} align="right">
+                <TableCell sx={tableHeadCellSx} align="right">
                   {t("common.no")}
                 </TableCell>
-                <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }} align="right">
+                <TableCell sx={tableHeadCellSx} align="right">
                   {t("common.empty")}
                 </TableCell>
-                <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }} align="right">
+                <TableCell sx={tableHeadCellSx} align="right">
                   {t("common.absent")}
                 </TableCell>
-                <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }} align="right">
+                <TableCell sx={tableHeadCellSx} align="right">
                   {t("votings.results.total")}
                 </TableCell>
               </TableRow>
@@ -114,37 +117,20 @@ export const VotingResultsTable: React.FC<{
             <TableBody>
               {partyBreakdown.map((party) => (
                 <TableRow key={party.party_code}>
-                  <TableCell sx={{ fontSize: "0.68rem", py: 0.4 }}>
-                    {party.party_name}
-                  </TableCell>
-                  <TableCell
-                    sx={{ fontSize: "0.68rem", py: 0.4 }}
-                    align="right"
-                  >
+                  <TableCell sx={tableBodyCellSx}>{party.party_name}</TableCell>
+                  <TableCell sx={tableBodyCellSx} align="right">
                     {party.n_yes}
                   </TableCell>
-                  <TableCell
-                    sx={{ fontSize: "0.68rem", py: 0.4 }}
-                    align="right"
-                  >
+                  <TableCell sx={tableBodyCellSx} align="right">
                     {party.n_no}
                   </TableCell>
-                  <TableCell
-                    sx={{ fontSize: "0.68rem", py: 0.4 }}
-                    align="right"
-                  >
+                  <TableCell sx={tableBodyCellSx} align="right">
                     {party.n_abstain}
                   </TableCell>
-                  <TableCell
-                    sx={{ fontSize: "0.68rem", py: 0.4 }}
-                    align="right"
-                  >
+                  <TableCell sx={tableBodyCellSx} align="right">
                     {party.n_absent}
                   </TableCell>
-                  <TableCell
-                    sx={{ fontSize: "0.68rem", py: 0.4 }}
-                    align="right"
-                  >
+                  <TableCell sx={tableBodyCellSx} align="right">
                     {party.n_total}
                   </TableCell>
                 </TableRow>
@@ -155,13 +141,11 @@ export const VotingResultsTable: React.FC<{
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }}>
+                <TableCell sx={tableHeadCellSx}>
                   {t("votings.resultsTable.representative")}
                 </TableCell>
-                <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }}>
-                  {t("common.party")}
-                </TableCell>
-                <TableCell sx={{ fontSize: "0.65rem", py: 0.5 }}>
+                <TableCell sx={tableHeadCellSx}>{t("common.party")}</TableCell>
+                <TableCell sx={tableHeadCellSx}>
                   {t("votings.resultsTable.vote")}
                 </TableCell>
               </TableRow>
@@ -169,15 +153,13 @@ export const VotingResultsTable: React.FC<{
             <TableBody>
               {memberVotes.map((member) => (
                 <TableRow key={member.person_id}>
-                  <TableCell sx={{ fontSize: "0.68rem", py: 0.4 }}>
+                  <TableCell sx={tableBodyCellSx}>
                     {member.last_name}, {member.first_name}
                   </TableCell>
-                  <TableCell sx={{ fontSize: "0.68rem", py: 0.4 }}>
+                  <TableCell sx={tableBodyCellSx}>
                     {member.party_code}
                   </TableCell>
-                  <TableCell sx={{ fontSize: "0.68rem", py: 0.4 }}>
-                    {member.vote}
-                  </TableCell>
+                  <TableCell sx={tableBodyCellSx}>{member.vote}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
