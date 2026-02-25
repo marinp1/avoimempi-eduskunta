@@ -327,6 +327,7 @@
         "overview": "Yleistiedot",
         "votes": "Äänestykset",
         "speeches": "Puheenvuorot",
+        "questions": "Kysymykset",
         "positions": "Luottamustehtävät"
       },
       "votes": {
@@ -348,6 +349,30 @@
         "governmentPositions": "Hallitustehtävät",
         "otherPositions": "Muut luottamustehtävät",
         "noData": "Ei luottamustehtäviä."
+      },
+      "questions": {
+        "total_one": "Kysymys",
+        "total_other": "Kysymykset",
+        "interpellations_one": "Välikysymys",
+        "interpellations_other": "Välikysymykset",
+        "oralQuestions_one": "Suullinen kysymys",
+        "oralQuestions_other": "Suulliset kysymykset",
+        "writtenQuestions_one": "Kirjallinen kysymys",
+        "writtenQuestions_other": "Kirjalliset kysymykset",
+        "interpellationsSection_one": "Välikysymys ({{count}})",
+        "interpellationsSection_other": "Välikysymykset ({{count}})",
+        "oralQuestionsSection_one": "Suullinen kysymys ({{count}})",
+        "oralQuestionsSection_other": "Suulliset kysymykset ({{count}})",
+        "writtenQuestionsSection_one": "Kirjallinen kysymys ({{count}})",
+        "writtenQuestionsSection_other": "Kirjalliset kysymykset ({{count}})",
+        "noInterpellations": "Ei välikysymyksiä.",
+        "noOralQuestions": "Ei suullisia kysymyksiä.",
+        "noWrittenQuestions": "Ei kirjallisia kysymyksiä.",
+        "role": {
+          "asker": "Kysyjä",
+          "firstSigner": "Ensimmäinen allekirjoittaja",
+          "signer": "Allekirjoittaja"
+        }
       },
       "filters": {
         "all": "Kaikki",
