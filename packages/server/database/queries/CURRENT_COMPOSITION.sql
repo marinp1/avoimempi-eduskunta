@@ -2,8 +2,11 @@ WITH government_groups AS (
     SELECT DISTINCT
         pgm.group_name
     FROM GovernmentMembership gm
+    JOIN Government g ON g.id = gm.government_id
     JOIN ParliamentaryGroupMembership pgm ON gm.person_id = pgm.person_id
-    WHERE gm.start_date <= $date
+    WHERE g.start_date <= $date
+      AND (g.end_date IS NULL OR g.end_date >= $date)
+      AND gm.start_date <= $date
       AND (gm.end_date IS NULL OR gm.end_date >= $date)
       AND pgm.start_date <= $date
       AND (pgm.end_date IS NULL OR pgm.end_date >= $date)

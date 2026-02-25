@@ -963,8 +963,24 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
     test("all government memberships have a government name", () => {
       const { c } = db
         .query(
-          `SELECT COUNT(*) as c FROM GovernmentMembership
-           WHERE government IS NULL OR TRIM(government) = ''`,
+          `SELECT COUNT(*) as c
+           FROM GovernmentMembership gm
+           LEFT JOIN Government g ON g.id = gm.government_id
+           WHERE g.id IS NULL
+             OR g.name IS NULL
+             OR TRIM(g.name) = ''`,
+        )
+        .get() as any;
+      expect(c).toBe(0);
+    });
+
+    test("all government memberships reference existing governments", () => {
+      const { c } = db
+        .query(
+          `SELECT COUNT(*) as c
+           FROM GovernmentMembership gm
+           LEFT JOIN Government g ON g.id = gm.government_id
+           WHERE g.id IS NULL`,
         )
         .get() as any;
       expect(c).toBe(0);
@@ -988,16 +1004,10 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
            ),
            aggregated AS (
              SELECT
-               TRIM(government) AS government,
-               MIN(start_date) AS start_date,
-               CASE
-                 WHEN SUM(CASE WHEN end_date IS NULL THEN 1 ELSE 0 END) > 0 THEN NULL
-                 ELSE MAX(end_date)
-               END AS end_date
-             FROM GovernmentMembership
-             WHERE government IS NOT NULL
-               AND TRIM(government) <> ''
-             GROUP BY TRIM(government)
+               name AS government,
+               start_date,
+               end_date
+             FROM Government
            )
            SELECT
              o.db_name,
@@ -1095,7 +1105,8 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
                SUM(CASE WHEN gm.name IS NOT NULL AND TRIM(gm.name) <> '' THEN 1 ELSE 0 END) AS role_count,
                SUM(CASE WHEN gm.ministry IS NOT NULL AND TRIM(gm.ministry) <> '' THEN 1 ELSE 0 END) AS ministry_count
              FROM GovernmentMembership gm
-             WHERE TRIM(gm.government) = $governmentName
+             JOIN Government g ON g.id = gm.government_id
+             WHERE TRIM(g.name) = $governmentName
                AND gm.start_date <= $windowEnd
                AND (gm.end_date IS NULL OR gm.end_date >= $windowStart)`,
           )

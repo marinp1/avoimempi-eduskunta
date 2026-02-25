@@ -68,6 +68,7 @@ describe("Migration schema", () => {
       "V001.022__vaski_written_question_response_schema.sql",
       "V001.023__vaski_expert_statement_schema.sql",
       "V001.024__import_source_reference_schema.sql",
+      "V001.025__government_reference_schema.sql",
     ]);
   });
 
@@ -286,6 +287,27 @@ describe("Migration schema", () => {
 
       expect(indexNames).toContain("idx_import_source_reference_lookup");
       expect(indexNames).toContain("idx_import_source_reference_scraped_at");
+    } finally {
+      db.close();
+    }
+  });
+
+  test("creates normalized government tables and references", () => {
+    const db = createTestDb(25);
+    try {
+      const tableNames = getTableNames(db);
+      expect(tableNames).toContain("Government");
+      expect(tableNames).toContain("GovernmentMembership");
+
+      const governmentColumns = getColumnNames(db, "Government");
+      expect(governmentColumns).toContain("id");
+      expect(governmentColumns).toContain("name");
+      expect(governmentColumns).toContain("start_date");
+      expect(governmentColumns).toContain("end_date");
+
+      const gmColumns = getColumnNames(db, "GovernmentMembership");
+      expect(gmColumns).toContain("government");
+      expect(gmColumns).toContain("government_id");
     } finally {
       db.close();
     }

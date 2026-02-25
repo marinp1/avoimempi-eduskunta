@@ -295,14 +295,20 @@ export function seedFullDataset(db: Database) {
 
   // Government memberships (Pekka is a minister in current government)
   db.run(
-    `INSERT INTO GovernmentMembership (id, person_id, ministry, name, government, start_date, end_date)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO Government (id, name, start_date, end_date)
+     VALUES (?, ?, ?, ?)`,
+    [1, "Orpon hallitus", "2023-06-20", null],
+  );
+  db.run(
+    `INSERT INTO GovernmentMembership (id, person_id, ministry, name, government, government_id, start_date, end_date)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       1,
       1002,
       "Valtiovarainministeriö",
       "Valtiovarainministeri",
       "Orpon hallitus",
+      1,
       "2023-06-20",
       null,
     ],

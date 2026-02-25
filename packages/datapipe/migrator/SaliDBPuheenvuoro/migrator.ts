@@ -1,6 +1,6 @@
 import type { Database } from "bun:sqlite";
 
-import { insertRows, parseDateTime } from "../utils";
+import { insertRows, parseDateTime, trimString } from "../utils";
 
 export default (db: Database) => {
   return (dataToImport: RawDataModels["SaliDBPuheenvuoro"]) => {
@@ -31,7 +31,7 @@ export default (db: Database) => {
       modified_datetime: parseDateTime(dataToImport.Modified),
       created_datetime: parseDateTime(dataToImport.Created),
       imported_datetime: parseDateTime(dataToImport.Imported),
-      ad_tunnus: dataToImport.ADtunnus || null,
+      ad_tunnus: trimString(dataToImport.ADtunnus),
       order_raw: dataToImport.Jarjestys || null,
     };
     insertRows(db)("Speech", [speechRow]);

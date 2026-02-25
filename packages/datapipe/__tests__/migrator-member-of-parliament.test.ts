@@ -86,7 +86,7 @@ describe("MemberOfParliament migrator", () => {
 
   beforeEach(() => {
     clearStatementCache();
-    db = createTestDb(12);
+    db = createTestDb(25);
     migrate = createMigrator(db);
   });
 
@@ -167,5 +167,101 @@ describe("MemberOfParliament migrator", () => {
     expect(terms).toEqual([
       { start_date: "2000-01-01", end_date: "2004-12-31" },
     ]);
+  });
+
+  test("infers and upserts Government ranges and links memberships by foreign key", async () => {
+    const payload = makeRepresentativePayload({
+      personId: "177",
+      firstname: "Hallitus",
+      lastname: " Testaaja ",
+      XmlDataFi: JSON.stringify({
+        Henkilo: {
+          LajitteluNimi: "testaaja hallitus",
+          MatrikkeliNimi: "Hallitus Testaaja",
+          SyntymaPvm: "01.01.1970",
+          SyntymaPaikka: "Helsinki",
+          SukuPuoliKoodi: "Mies",
+          NykyinenKotikunta: "Helsinki",
+          Ammatti: "testaaja",
+          LisaTiedot: "",
+          Vaalipiirit: {
+            NykyinenVaalipiiri: {
+              Nimi: "Helsinki",
+              Tunnus: "01",
+              AlkuPvm: "01.01.2000",
+              LoppuPvm: "31.12.2001",
+            },
+          },
+          Edustajatoimet: {
+            Edustajatoimi: {
+              AlkuPvm: "01.01.2000",
+              LoppuPvm: "31.12.2001",
+            },
+          },
+          Eduskuntaryhmat: {},
+          ValtioneuvostonJasenyydet: {
+            Jasenyys: [
+              {
+                Hallitus: "  Testihallitus ",
+                Nimi: " Ministeri ",
+                Ministeriys: " Testiministeriö ",
+                AlkuPvm: "01.01.2000",
+                LoppuPvm: "31.12.2000",
+              },
+              {
+                Hallitus: "Testihallitus",
+                Nimi: "Ministeri",
+                Ministeriys: "Testiministeriö",
+                AlkuPvm: "01.01.2001",
+                LoppuPvm: "31.12.2001",
+              },
+            ],
+          },
+        },
+      }),
+    });
+
+    await migrate(payload);
+
+    const representative = db
+      .query("SELECT last_name FROM Representative WHERE person_id = ?")
+      .get(177) as { last_name: string } | null;
+    expect(representative?.last_name).toBe("Testaaja");
+
+    const government = db
+      .query(
+        "SELECT id, name, start_date, end_date FROM Government WHERE name = ?",
+      )
+      .get("Testihallitus") as
+      | {
+          id: number;
+          name: string;
+          start_date: string;
+          end_date: string | null;
+        }
+      | null;
+
+    expect(government).not.toBeNull();
+    expect(government?.start_date).toBe("2000-01-01");
+    expect(government?.end_date).toBe("2001-12-31");
+
+    const memberships = db
+      .query(
+        "SELECT name, ministry, government, government_id FROM GovernmentMembership WHERE person_id = ? ORDER BY start_date",
+      )
+      .all(177) as Array<{
+        name: string | null;
+        ministry: string | null;
+        government: string;
+        government_id: number;
+      }>;
+
+    expect(memberships).toHaveLength(2);
+    expect(memberships[0].name).toBe("Ministeri");
+    expect(memberships[0].ministry).toBe("Testiministeriö");
+    expect(memberships[0].government).toBe("Testihallitus");
+    expect(memberships[1].government).toBe("Testihallitus");
+    expect(memberships[0].government_id).toBe(government?.id);
+    expect(memberships[1].government_id).toBe(government?.id);
   });
 });

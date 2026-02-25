@@ -204,6 +204,12 @@ export const parseDateTime = (date: string | null | undefined) => {
   return `${date.substring(0, 10)}T${date.substring(11)}`;
 };
 
+export const trimString = (value: string | null | undefined) => {
+  if (value === null || value === undefined) return null;
+  const trimmed = value.trim();
+  return trimmed === "" ? null : trimmed;
+};
+
 export const parseYear = (year: string): number | null => {
   const parsed = parseInt(year, 10);
   if (Number.isNaN(parsed)) return null;
