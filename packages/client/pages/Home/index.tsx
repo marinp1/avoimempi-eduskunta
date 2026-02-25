@@ -3,8 +3,6 @@ import EventIcon from "@mui/icons-material/Event";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PieChartIcon from "@mui/icons-material/PieChart";
 import {
@@ -15,7 +13,6 @@ import {
   CircularProgress,
   Collapse,
   Grid,
-  IconButton,
   Link,
   Skeleton,
   Tooltip,
@@ -54,6 +51,7 @@ import {
   parseMinutesContent,
   parseVaskiSubjects,
 } from "#client/pages/Sessions/shared/utils";
+import { SessionSectionPanel } from "#client/pages/Sessions/components/SessionSectionPanel";
 import { refs } from "#client/references";
 import { commonStyles } from "#client/theme";
 import {
@@ -550,16 +548,6 @@ const Home = () => {
       else next.add(sessionKey);
       return next;
     });
-  };
-
-  const handleActivateOnKeyDown = (
-    event: React.KeyboardEvent,
-    onActivate: () => void,
-  ) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      onActivate();
-    }
   };
 
   const renderVaskiInfo = (section: Section, compact = false) => {
@@ -2285,7 +2273,7 @@ const Home = () => {
             <Box
               sx={{
                 p: 2,
-                ...commonStyles.responsiveGrid(220),
+                ...commonStyles.responsiveGrid(250),
                 gap: 1.25,
               }}
             >
@@ -2297,17 +2285,28 @@ const Home = () => {
                     border: `1px solid ${colors.dataBorder}`,
                     borderRadius: 1,
                     background: colors.backgroundSubtle,
-                    display: "flex",
-                    justifyContent: "space-between",
+                    display: "grid",
+                    gridTemplateColumns: "minmax(0, 1fr) auto",
+                    columnGap: 1,
+                    rowGap: 0.75,
                     alignItems: "center",
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Box
+                    sx={{
+                      minWidth: 0,
+                      display: "flex",
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
+                  >
                     <Typography
                       sx={{
                         fontWeight: 600,
                         fontSize: "0.875rem",
                         color: colors.textPrimary,
+                        wordBreak: "break-word",
                       }}
                     >
                       {party}
@@ -2343,6 +2342,7 @@ const Home = () => {
                       background: colors.primaryLight,
                       color: "#fff",
                       fontWeight: 700,
+                      flexShrink: 0,
                       ...commonStyles.compactTextLg,
                     }}
                   />
@@ -2549,202 +2549,174 @@ const Home = () => {
                     ([key, reason]) =>
                       `${sectionLoadErrorLabels[key]} (${reason})`,
                   );
-                const sectionCollapseId = `session-section-panel-${section.id}`;
-                const sectionToggleId = `session-section-toggle-${section.id}`;
+                const vaskiInfoCompact = renderVaskiInfo(section, true);
+                const vaskiInfoContent = renderVaskiInfo(section, false);
+                const minutesInfoCompact = renderMinutesInfo(section, true);
+                const minutesInfoContent = renderMinutesInfo(section, false);
+                const sectionSubSectionsContent = renderSectionSubSections(section);
+                const sectionMinutesContent = renderSectionMinutesContent(section);
+                const docRefs = extractSectionDocRefs(section);
+                const sectionLinksContent = renderSectionLinks(section);
+                const sectionNoticesContent = renderSectionNotices(
+                  session,
+                  section.key,
+                );
+                const sectionRollCallContent = renderSectionRollCall(section);
+                const sectionVotingsContent = renderSectionVotings(
+                  votings,
+                  session,
+                );
+                const hasAdditionalExpandedContent =
+                  Boolean(vaskiInfoContent) ||
+                  Boolean(minutesInfoContent) ||
+                  Boolean(sectionSubSectionsContent) ||
+                  Boolean(sectionMinutesContent) ||
+                  docRefs.length > 0 ||
+                  Boolean(sectionLinksContent) ||
+                  Boolean(sectionNoticesContent) ||
+                  Boolean(sectionRollCallContent);
 
                 return (
-                  <Box
+                  <SessionSectionPanel
                     key={section.id}
-                    id={`session-section-${section.key}`}
-                    sx={{ borderBottom: `1px solid ${colors.dataBorder}` }}
-                  >
-                    <Box
-                      id={sectionToggleId}
-                      role="button"
-                      tabIndex={0}
-                      aria-expanded={isExpanded}
-                      aria-controls={sectionCollapseId}
-                      sx={{
-                        p: 2,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        cursor: "pointer",
-                        width: "100%",
-                        border: 0,
-                        textAlign: "left",
-                        background: "transparent",
-                        "&:hover": { background: colors.backgroundSubtle },
-                        "&:focus-visible": {
-                          outline: `2px solid ${colors.primaryLight}`,
-                          outlineOffset: -2,
-                        },
-                        transition: "background 0.15s",
-                      }}
-                      onClick={() => toggleSection(section.id, section.key)}
-                      onKeyDown={(event) =>
-                        handleActivateOnKeyDown(event, () =>
-                          toggleSection(section.id, section.key),
-                        )
-                      }
-                    >
-                      <Chip
-                        label={getSectionOrderLabel(section)}
-                        size="small"
-                        sx={{
-                          background: colors.primary,
-                          color: "#fff",
-                          fontWeight: 600,
-                          ...commonStyles.compactChipMd,
-                          ...commonStyles.compactTextMd,
-                          minWidth: 28,
-                          flexShrink: 0,
-                        }}
-                      />
-                      <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Typography
+                    sectionId={section.id}
+                    sectionKey={section.key}
+                    isExpanded={isExpanded}
+                    onToggle={() => toggleSection(section.id, section.key)}
+                    headerContent={
+                      <>
+                        <Chip
+                          label={getSectionOrderLabel(section)}
+                          size="small"
                           sx={{
+                            background: colors.primary,
+                            color: "#fff",
                             fontWeight: 600,
-                            fontSize: "0.875rem",
-                            color: colors.textPrimary,
-                            wordBreak: "break-word",
+                            ...commonStyles.compactChipMd,
+                            ...commonStyles.compactTextMd,
+                            minWidth: 28,
+                            flexShrink: 0,
                           }}
-                        >
-                          {section.title ||
-                            section.processing_title ||
-                            t("sessions.noTitle")}
-                        </Typography>
-                        {section.minutes_item_order != null && (
+                        />
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
                           <Typography
                             sx={{
-                              ...commonStyles.compactTextLg,
-                              color: colors.textTertiary,
+                              fontWeight: 600,
+                              fontSize: "0.875rem",
+                              color: colors.textPrimary,
+                              wordBreak: "break-word",
                             }}
                           >
-                            {t("sessions.minutesOrder")}{" "}
-                            {section.minutes_item_order}
+                            {section.title ||
+                              section.processing_title ||
+                              t("sessions.noTitle")}
                           </Typography>
-                        )}
-                        {section.note && (
-                          <Typography
-                            sx={{
-                              ...commonStyles.compactTextLg,
-                              color: colors.textSecondary,
-                            }}
-                          >
-                            {section.note}
-                          </Typography>
-                        )}
-                        {section.processing_title &&
-                          section.processing_title !== section.title && (
+                          {section.minutes_item_order != null && (
                             <Typography
                               sx={{
                                 ...commonStyles.compactTextLg,
                                 color: colors.textTertiary,
                               }}
                             >
-                              {t("sessions.processingLine", {
-                                value: section.processing_title,
+                              {t("sessions.minutesOrder")}{" "}
+                              {section.minutes_item_order}
+                            </Typography>
+                          )}
+                          {section.note && (
+                            <Typography
+                              sx={{
+                                ...commonStyles.compactTextLg,
+                                color: colors.textSecondary,
+                              }}
+                            >
+                              {section.note}
+                            </Typography>
+                          )}
+                          {section.processing_title &&
+                            section.processing_title !== section.title && (
+                              <Typography
+                                sx={{
+                                  ...commonStyles.compactTextLg,
+                                  color: colors.textTertiary,
+                                }}
+                              >
+                                {t("sessions.processingLine", {
+                                  value: section.processing_title,
+                                })}
+                              </Typography>
+                            )}
+                          {section.resolution && (
+                            <Typography
+                              sx={{
+                                ...commonStyles.compactTextLg,
+                                color: colors.textTertiary,
+                              }}
+                            >
+                              {t("sessions.resolutionLine", {
+                                value: section.resolution,
                               })}
                             </Typography>
                           )}
-                        {section.resolution && (
-                          <Typography
+                          {vaskiInfoCompact}
+                          {minutesInfoCompact}
+                          <Box
                             sx={{
-                              ...commonStyles.compactTextLg,
-                              color: colors.textTertiary,
+                              display: "flex",
+                              gap: 1,
+                              flexWrap: "wrap",
+                              mt: 0.75,
                             }}
                           >
-                            {t("sessions.resolutionLine", {
-                              value: section.resolution,
-                            })}
-                          </Typography>
-                        )}
-                        {renderVaskiInfo(section, true)}
-                        {renderMinutesInfo(section, true)}
-                        <Box
-                          sx={{
-                            display: "flex",
-                            gap: 1,
-                            flexWrap: "wrap",
-                            mt: 0.75,
-                          }}
-                        >
-                          <Chip
-                            label={t("sessions.votingsCount", {
-                              count: section.voting_count ?? 0,
-                            })}
-                            size="small"
-                            sx={{
-                              ...commonStyles.compactChipSm,
-                              fontSize: "0.6875rem",
-                              background: `${themedColors.success}15`,
-                              color: themedColors.success,
-                            }}
-                          />
-                          <Chip
-                            label={t("sessions.speechesCount", {
-                              count: section.speech_count ?? 0,
-                            })}
-                            size="small"
-                            sx={{
-                              ...commonStyles.compactChipSm,
-                              fontSize: "0.6875rem",
-                              background: `${colors.primaryLight}20`,
-                              color: colors.primaryLight,
-                            }}
-                          />
-                          <Chip
-                            label={t("sessions.speakersCount", {
-                              count: section.speaker_count ?? 0,
-                            })}
-                            size="small"
-                            sx={{
-                              ...commonStyles.compactChipSm,
-                              fontSize: "0.6875rem",
-                            }}
-                          />
-                          <Chip
-                            label={t("sessions.partiesCount", {
-                              count: section.party_count ?? 0,
-                            })}
-                            size="small"
-                            sx={{
-                              ...commonStyles.compactChipSm,
-                              fontSize: "0.6875rem",
-                            }}
-                          />
+                            <Chip
+                              label={t("sessions.votingsCount", {
+                                count: section.voting_count ?? 0,
+                              })}
+                              size="small"
+                              sx={{
+                                ...commonStyles.compactChipSm,
+                                fontSize: "0.6875rem",
+                                background: `${themedColors.success}15`,
+                                color: themedColors.success,
+                              }}
+                            />
+                            <Chip
+                              label={t("sessions.speechesCount", {
+                                count: section.speech_count ?? 0,
+                              })}
+                              size="small"
+                              sx={{
+                                ...commonStyles.compactChipSm,
+                                fontSize: "0.6875rem",
+                                background: `${colors.primaryLight}20`,
+                                color: colors.primaryLight,
+                              }}
+                            />
+                            <Chip
+                              label={t("sessions.speakersCount", {
+                                count: section.speaker_count ?? 0,
+                              })}
+                              size="small"
+                              sx={{
+                                ...commonStyles.compactChipSm,
+                                fontSize: "0.6875rem",
+                              }}
+                            />
+                            <Chip
+                              label={t("sessions.partiesCount", {
+                                count: section.party_count ?? 0,
+                              })}
+                              size="small"
+                              sx={{
+                                ...commonStyles.compactChipSm,
+                                fontSize: "0.6875rem",
+                              }}
+                            />
+                          </Box>
                         </Box>
-                      </Box>
-                      <IconButton
-                        size="small"
-                        tabIndex={-1}
-                        aria-hidden
-                        sx={{ color: colors.primaryLight, flexShrink: 0 }}
-                      >
-                        {isExpanded ? (
-                          <KeyboardArrowUpIcon />
-                        ) : (
-                          <KeyboardArrowDownIcon />
-                        )}
-                      </IconButton>
-                    </Box>
-
-                    <Collapse
-                      id={sectionCollapseId}
-                      aria-labelledby={sectionToggleId}
-                      in={isExpanded}
-                      timeout="auto"
-                      unmountOnExit
-                    >
-                      <Box
-                        sx={{
-                          px: 2,
-                          pb: 2,
-                          borderTop: `1px solid ${colors.dataBorder}`,
-                        }}
-                      >
-                        {sectionErrorReasons.length > 0 && (
+                      </>
+                    }
+                  >
+                    {sectionErrorReasons.length > 0 && (
                           <Alert
                             severity="warning"
                             sx={{ mt: 1.5, mb: 0.5 }}
@@ -2769,34 +2741,21 @@ const Home = () => {
                             })}
                           </Alert>
                         )}
-                        {renderVaskiInfo(section, false)}
-                        {renderMinutesInfo(section, false)}
-                        {renderSectionSubSections(section)}
-                        {renderSectionMinutesContent(section)}
-                        {(() => {
-                          const docRefs = extractSectionDocRefs(section);
-                          return (
-                            <>
-                              {docRefs.map((ref) => (
-                                <DocumentCard
-                                  key={ref.identifier}
-                                  docRef={ref}
-                                />
-                              ))}
-                              {docRefs.length > 0 &&
-                                section.voting_count === 0 && (
-                                  <RelatedVotings
-                                    identifiers={docRefs.map(
-                                      (r) => r.identifier,
-                                    )}
-                                  />
-                                )}
-                            </>
-                          );
-                        })()}
-                        {renderSectionLinks(section)}
-                        {renderSectionNotices(session, section.key)}
-                        {renderSectionRollCall(section)}
+                        {vaskiInfoContent}
+                        {minutesInfoContent}
+                        {sectionSubSectionsContent}
+                        {sectionMinutesContent}
+                        {docRefs.map((ref) => (
+                          <DocumentCard key={ref.identifier} docRef={ref} />
+                        ))}
+                        {docRefs.length > 0 && section.voting_count === 0 && (
+                          <RelatedVotings
+                            identifiers={docRefs.map((r) => r.identifier)}
+                          />
+                        )}
+                        {sectionLinksContent}
+                        {sectionNoticesContent}
+                        {sectionRollCallContent}
 
                         {/* Votings */}
                         {loadingVotings.has(section.id) ? (
@@ -2820,7 +2779,7 @@ const Home = () => {
                             </Typography>
                           </Box>
                         ) : (
-                          renderSectionVotings(votings, session)
+                          sectionVotingsContent
                         )}
 
                         {/* Speeches */}
@@ -3037,7 +2996,9 @@ const Home = () => {
                         {!loadingSpeeches.has(section.id) &&
                           !loadingVotings.has(section.id) &&
                           speeches.length === 0 &&
-                          votings.length === 0 && (
+                          votings.length === 0 &&
+                          sectionErrorReasons.length === 0 &&
+                          !hasAdditionalExpandedContent && (
                             <Typography
                               sx={{
                                 py: 2,
@@ -3046,12 +3007,10 @@ const Home = () => {
                                 color: colors.textTertiary,
                               }}
                             >
-                              {t("sessions.noSpeeches")}
+                              {t("sessions.noSectionContent")}
                             </Typography>
                           )}
-                      </Box>
-                    </Collapse>
-                  </Box>
+                  </SessionSectionPanel>
                 );
               })}
             </Box>

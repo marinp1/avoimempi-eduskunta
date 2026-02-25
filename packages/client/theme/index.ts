@@ -133,6 +133,12 @@ export const transitions = {
   fast: 150,
   normal: 250,
   slow: 400,
+  extraSlow: 900,
+  easing: {
+    standard: "cubic-bezier(0.2, 0, 0, 1)",
+    emphasized: "cubic-bezier(0.22, 1, 0.36, 1)",
+    smooth: "cubic-bezier(0.16, 1, 0.3, 1)",
+  },
 } as const;
 
 /**
@@ -147,7 +153,7 @@ export const commonStyles = {
     background: colors.backgroundPaper,
     border: `1px solid ${colors.dataBorder}`,
     boxShadow: shadows.card,
-    transition: "all 0.2s ease-in-out",
+    transition: `box-shadow ${transitions.normal}ms ${transitions.easing.standard}, border-color ${transitions.normal}ms ${transitions.easing.standard}`,
   } satisfies SxProps<Theme>,
 
   /**
@@ -158,10 +164,14 @@ export const commonStyles = {
     background: colors.backgroundPaper,
     border: `1px solid ${colors.dataBorder}`,
     boxShadow: shadows.card,
-    transition: "all 0.2s ease-in-out",
-    "&:hover": {
-      boxShadow: shadows.cardHover,
-      borderColor: colors.primaryLight,
+    transition: `transform ${transitions.normal}ms ${transitions.easing.smooth}, box-shadow ${transitions.normal}ms ${transitions.easing.standard}, border-color ${transitions.normal}ms ${transitions.easing.standard}`,
+    willChange: "transform, box-shadow",
+    "@media (hover: hover) and (pointer: fine)": {
+      "&:hover": {
+        transform: "translateY(-2px)",
+        boxShadow: shadows.cardHover,
+        borderColor: colors.primaryLight,
+      },
     },
   } satisfies SxProps<Theme>,
 
@@ -180,8 +190,17 @@ export const commonStyles = {
     background: colors.primary,
     color: "white",
     fontWeight: 500,
+    transition: `transform ${transitions.fast}ms ${transitions.easing.standard}, background-color ${transitions.fast}ms ${transitions.easing.standard}`,
+    "@media (hover: hover) and (pointer: fine)": {
+      "&:hover": {
+        transform: "translateY(-1px)",
+      },
+    },
     "&:hover": {
       background: colors.primaryDark,
+    },
+    "&:active": {
+      transform: "translateY(0)",
     },
   } satisfies SxProps<Theme>,
 
@@ -257,10 +276,13 @@ export const commonStyles = {
    * Interactive hover effect
    */
   interactiveHover: {
-    transition: "all 0.2s ease-in-out",
+    transition: `transform ${transitions.normal}ms ${transitions.easing.smooth}, box-shadow ${transitions.normal}ms ${transitions.easing.standard}`,
     cursor: "pointer",
-    "&:hover": {
-      boxShadow: shadows.subtle,
+    "@media (hover: hover) and (pointer: fine)": {
+      "&:hover": {
+        transform: "translateY(-1px)",
+        boxShadow: shadows.subtle,
+      },
     },
   } satisfies SxProps<Theme>,
 
@@ -268,8 +290,11 @@ export const commonStyles = {
    * Table row style
    */
   tableRow: {
-    transition: "all 0.15s ease-in-out",
+    transition: `background-color ${transitions.fast}ms ${transitions.easing.standard}`,
     cursor: "pointer",
+    "&:hover": {
+      background: `${colors.primary}04`,
+    },
     "&:last-child": {
       borderBottom: "none",
     },
@@ -367,7 +392,7 @@ export const commonStyles = {
    */
   fadeIn: (delay: number = 0) =>
     ({
-      animation: "fadeIn 0.3s ease-out",
+      animation: `fadeIn ${transitions.normal}ms ${transitions.easing.emphasized}`,
       animationDelay: `${delay}ms`,
       animationFillMode: "both",
       "@keyframes fadeIn": {
@@ -552,6 +577,7 @@ export const createLightTheme = () => {
             borderRadius: 12,
             border: `1px solid ${colors.dataBorder}`,
             boxShadow: shadows.card,
+            transition: `box-shadow ${transitions.normal}ms ${transitions.easing.standard}, border-color ${transitions.normal}ms ${transitions.easing.standard}`,
           },
         },
       },
@@ -563,6 +589,7 @@ export const createLightTheme = () => {
           root: {
             backgroundImage: "none",
             borderRadius: 12,
+            transition: `box-shadow ${transitions.normal}ms ${transitions.easing.standard}, border-color ${transitions.normal}ms ${transitions.easing.standard}, background-color ${transitions.normal}ms ${transitions.easing.standard}`,
           },
         },
       },
@@ -574,7 +601,15 @@ export const createLightTheme = () => {
             borderRadius: 8,
             padding: "8px 20px",
             boxShadow: "none",
-            transition: "all 0.15s ease-in-out",
+            transition: `transform ${transitions.fast}ms ${transitions.easing.standard}, background-color ${transitions.fast}ms ${transitions.easing.standard}, border-color ${transitions.fast}ms ${transitions.easing.standard}, color ${transitions.fast}ms ${transitions.easing.standard}`,
+            "@media (hover: hover) and (pointer: fine)": {
+              "&:hover": {
+                transform: "translateY(-1px)",
+              },
+            },
+            "&:active": {
+              transform: "translateY(0)",
+            },
             "&:hover": {
               boxShadow: "none",
             },
@@ -591,6 +626,7 @@ export const createLightTheme = () => {
           root: {
             fontWeight: 500,
             borderRadius: 6,
+            transition: `transform ${transitions.fast}ms ${transitions.easing.standard}, background-color ${transitions.fast}ms ${transitions.easing.standard}`,
           },
         },
       },

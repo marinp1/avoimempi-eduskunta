@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { PageDataSourcesDrawer } from "./components/PageDataSourcesDrawer";
 import { Navigation } from "./Navigation";
 import { type RouteName, routes } from "./pages";
-import { colors, spacing } from "./theme";
+import { colors, spacing, transitions } from "./theme";
 import { useThemedColors } from "./theme/ThemeContext";
 
 const getInitialTab = (): RouteName => {
@@ -41,9 +41,99 @@ export const App: React.FC = () => {
       <CssBaseline />
       <GlobalStyles
         styles={{
+          ":root": {
+            "--ae-ambient-primary": "rgba(74, 111, 165, 0.18)",
+            "--ae-ambient-accent": "rgba(232, 145, 58, 0.1)",
+            "--ae-ambient-neutral": "rgba(27, 42, 74, 0.06)",
+          },
+          "html, body, #root": {
+            minHeight: "100%",
+          },
           body: {
-            background: colors.backgroundDefault,
+            position: "relative",
+            background: `
+              radial-gradient(1100px 620px at 8% -10%, var(--ae-ambient-primary), transparent 70%),
+              radial-gradient(900px 540px at 98% 0%, var(--ae-ambient-accent), transparent 72%),
+              linear-gradient(180deg, ${colors.backgroundDefault} 0%, ${colors.backgroundSubtle} 100%)
+            `,
+            backgroundAttachment: "fixed",
             minHeight: "100vh",
+            overflowX: "hidden",
+          },
+          "#root": {
+            position: "relative",
+            zIndex: 1,
+          },
+          "body::before": {
+            content: '""',
+            position: "fixed",
+            width: "38vw",
+            minWidth: 320,
+            height: "38vw",
+            minHeight: 320,
+            top: "-14vw",
+            right: "-12vw",
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, var(--ae-ambient-primary) 0%, transparent 72%)",
+            filter: "blur(16px)",
+            pointerEvents: "none",
+            zIndex: 0,
+            animation: `ambientFloatA ${transitions.extraSlow * 3}ms ${transitions.easing.smooth} infinite alternate`,
+          },
+          "body::after": {
+            content: '""',
+            position: "fixed",
+            width: "28vw",
+            minWidth: 250,
+            height: "28vw",
+            minHeight: 250,
+            bottom: "-11vw",
+            left: "-10vw",
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, var(--ae-ambient-neutral) 0%, transparent 74%)",
+            filter: "blur(16px)",
+            pointerEvents: "none",
+            zIndex: 0,
+            animation: `ambientFloatB ${transitions.extraSlow * 4}ms ${transitions.easing.smooth} infinite alternate`,
+          },
+          "@keyframes ambientFloatA": {
+            from: {
+              transform: "translate3d(0, 0, 0) scale(1)",
+            },
+            to: {
+              transform: "translate3d(-2.5vw, 2vw, 0) scale(1.08)",
+            },
+          },
+          "@keyframes ambientFloatB": {
+            from: {
+              transform: "translate3d(0, 0, 0) scale(1)",
+            },
+            to: {
+              transform: "translate3d(2vw, -1.5vw, 0) scale(1.04)",
+            },
+          },
+          "@keyframes pageEnter": {
+            from: {
+              opacity: 0,
+              transform: "translateY(10px)",
+            },
+            to: {
+              opacity: 1,
+              transform: "translateY(0)",
+            },
+          },
+          "@media (prefers-reduced-motion: reduce)": {
+            "*, *::before, *::after": {
+              animationDuration: "0.01ms !important",
+              animationIterationCount: "1 !important",
+              transitionDuration: "0.01ms !important",
+              scrollBehavior: "auto !important",
+            },
+            "body::before, body::after": {
+              display: "none",
+            },
           },
         }}
       />
@@ -56,8 +146,22 @@ export const App: React.FC = () => {
           pb: { xs: 10, lg: spacing.xl },
         }}
       >
-        <Box>
-          <React.Suspense fallback={<div>{t("app.loading")}</div>}>
+        <Box
+          key={activeTab}
+          sx={{
+            position: "relative",
+            animation: `pageEnter ${transitions.slow}ms ${transitions.easing.emphasized}`,
+            transformOrigin: "top center",
+            "@media (prefers-reduced-motion: reduce)": {
+              animation: "none",
+            },
+          }}
+        >
+          <React.Suspense
+            fallback={
+              <Typography variant="body2">{t("app.loading")}</Typography>
+            }
+          >
             <ActivePage.Component />
           </React.Suspense>
         </Box>
