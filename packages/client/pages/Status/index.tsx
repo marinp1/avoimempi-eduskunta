@@ -405,7 +405,9 @@ export default function Status() {
           display="block"
           mt={1}
         >
-          {t("status.lastUpdated")}: {formatDateTime(overview.lastUpdated)}
+          {t("status.lastUpdatedLine", {
+            value: formatDateTime(overview.lastUpdated),
+          })}
         </Typography>
       </Box>
 
@@ -706,7 +708,9 @@ export default function Status() {
                     )}
                     {exceptionCount > 0 && (
                       <Chip
-                        label={`${exceptionCount} poikkeama`}
+                        label={t("status.sanity.exceptionCount", {
+                          count: exceptionCount,
+                        })}
                         size="small"
                         color="warning"
                       />
@@ -767,8 +771,9 @@ export default function Status() {
                               <TableCell>
                                 {check.errorMessage ? (
                                   <Typography variant="body2" color="error">
-                                    {t("status.sanity.error")}:{" "}
-                                    {check.errorMessage}
+                                    {t("status.sanity.errorLine", {
+                                      value: check.errorMessage,
+                                    })}
                                   </Typography>
                                 ) : (
                                   <>
@@ -900,8 +905,9 @@ export default function Status() {
             display="block"
             mt={2}
           >
-            {t("status.sanity.lastRun")}:{" "}
-            {new Date(sanityChecks.lastRun).toLocaleString("fi-FI")}
+            {t("status.sanity.lastRunLine", {
+              value: new Date(sanityChecks.lastRun).toLocaleString("fi-FI"),
+            })}
           </Typography>
         </Box>
       ) : null}

@@ -181,8 +181,9 @@ export function InterpellationCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDate")}:{" "}
-                {formatDate(item.submission_date)}
+                {t("documents.submissionDateLine", {
+                  value: formatDate(item.submission_date),
+                })}
               </Typography>
             )}
 

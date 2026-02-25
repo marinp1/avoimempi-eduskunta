@@ -253,7 +253,9 @@ export function WrittenQuestionResponseCard({
             </Typography>
             {item.answer_date && (
               <Chip
-                label={`${t("documents.answered")} ${formatDate(item.answer_date)}`}
+                label={t("documents.answeredLine", {
+                  value: formatDate(item.answer_date),
+                })}
                 size="small"
                 sx={{
                   backgroundColor: colors.success,
@@ -291,10 +293,9 @@ export function WrittenQuestionResponseCard({
 
           {/* Parent question identifier */}
           <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-            {t("documents.writtenQuestion")}:{" "}
-            <span style={{ fontFamily: "monospace" }}>
-              {item.question_identifier}
-            </span>
+            {t("documents.writtenQuestionLine", {
+              value: item.question_identifier,
+            })}
           </Typography>
 
           {/* Subject chips */}
@@ -627,8 +628,9 @@ export function OralQuestionCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDate")}:{" "}
-                {formatDate(item.submission_date)}
+                {t("documents.submissionDateLine", {
+                  value: formatDate(item.submission_date),
+                })}
               </Typography>
             )}
 
@@ -712,7 +714,7 @@ export function OralQuestionCard({
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {t("documents.loadError")}: {error}
+              {t("documents.loadErrorLine", { value: error })}
             </Alert>
           )}
 
@@ -881,8 +883,9 @@ export function WrittenQuestionCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDate")}:{" "}
-                {formatDate(item.submission_date)}
+                {t("documents.submissionDateLine", {
+                  value: formatDate(item.submission_date),
+                })}
               </Typography>
             )}
 
@@ -933,7 +936,9 @@ export function WrittenQuestionCard({
 
             {item.answer_date && (
               <Chip
-                label={`${t("documents.answered")} ${formatDate(item.answer_date)}`}
+                label={t("documents.answeredLine", {
+                  value: formatDate(item.answer_date),
+                })}
                 size="small"
                 sx={{
                   backgroundColor: colors.success,

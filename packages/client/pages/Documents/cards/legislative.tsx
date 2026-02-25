@@ -199,8 +199,9 @@ export function LegislativeInitiativeCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDate")}:{" "}
-                {formatDate(item.submission_date)}
+                {t("documents.submissionDateLine", {
+                  value: formatDate(item.submission_date),
+                })}
               </Typography>
             )}
 
@@ -224,7 +225,9 @@ export function LegislativeInitiativeCard({
 
             {item.latest_stage_code && !item.decision_outcome && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.latestStage")}: {item.latest_stage_code}
+                {t("documents.latestStageLine", {
+                  value: item.latest_stage_code,
+                })}
               </Typography>
             )}
           </Stack>
@@ -290,7 +293,7 @@ export function LegislativeInitiativeCard({
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {t("documents.loadError")}: {error}
+              {t("documents.loadErrorLine", { value: error })}
             </Alert>
           )}
 

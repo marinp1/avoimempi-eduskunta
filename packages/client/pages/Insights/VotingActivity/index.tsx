@@ -259,8 +259,9 @@ export default function Osallistumisaktiivisuus({
                 </Grid>
                 {selectedHallituskausi && (
                   <Alert severity="info" sx={{ mt: spacing.sm }}>
-                    {t("common.filteredByGovernmentPeriod")}:{" "}
-                    {selectedHallituskausi.label}
+                    {t("common.filteredByGovernmentPeriodLine", {
+                      value: selectedHallituskausi.label,
+                    })}
                   </Alert>
                 )}
               </Box>

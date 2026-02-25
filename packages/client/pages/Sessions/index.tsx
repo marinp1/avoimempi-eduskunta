@@ -352,37 +352,44 @@ export default () => {
               <Typography
                 sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
               >
-                {t("sessions.vaskiType")}:{" "}
-                {section.vaski_document_type_name ||
-                  section.vaski_document_type_code}
+                {t("sessions.vaskiTypeLine", {
+                  value:
+                    section.vaski_document_type_name ||
+                    section.vaski_document_type_code ||
+                    t("common.none"),
+                })}
               </Typography>
             )}
             {section.vaski_eduskunta_tunnus && (
               <Typography
                 sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
               >
-                {t("sessions.vaskiTunnus")}: {section.vaski_eduskunta_tunnus}
+                {t("sessions.vaskiTunnusLine", {
+                  value: section.vaski_eduskunta_tunnus,
+                })}
               </Typography>
             )}
             {docNumber && (
               <Typography
                 sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
               >
-                {t("sessions.vaskiDocNumber")}: {docNumber}
+                {t("sessions.vaskiDocNumberLine", { value: docNumber })}
               </Typography>
             )}
             {section.vaski_status && (
               <Typography
                 sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
               >
-                {t("sessions.vaskiStatus")}: {section.vaski_status}
+                {t("sessions.vaskiStatusLine", { value: section.vaski_status })}
               </Typography>
             )}
             {section.vaski_creation_date && (
               <Typography
                 sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
               >
-                {t("sessions.vaskiCreated")}: {section.vaski_creation_date}
+                {t("sessions.vaskiCreatedLine", {
+                  value: section.vaski_creation_date,
+                })}
               </Typography>
             )}
           </Box>
@@ -403,15 +410,16 @@ export default () => {
           <Typography
             sx={{ fontSize: "0.75rem", color: colors.textSecondary, mt: 0.25 }}
           >
-            {t("sessions.vaskiAuthor")}: {authorLine}
+            {t("sessions.vaskiAuthorLine", { value: authorLine })}
           </Typography>
         )}
         {section.vaski_source_reference && (
           <Typography
             sx={{ fontSize: "0.75rem", color: colors.textTertiary, mt: 0.25 }}
           >
-            {t("sessions.vaskiSourceReference")}:{" "}
-            {section.vaski_source_reference}
+            {t("sessions.vaskiSourceReferenceLine", {
+              value: section.vaski_source_reference,
+            })}
           </Typography>
         )}
         {section.vaski_summary && (
@@ -430,7 +438,7 @@ export default () => {
                 : {}),
             }}
           >
-            {t("sessions.vaskiSummary")}: {section.vaski_summary}
+            {t("sessions.vaskiSummaryLine", { value: section.vaski_summary })}
           </Typography>
         )}
         {subjects.length > 0 && (
@@ -490,19 +498,20 @@ export default () => {
         </Typography>
         {minutesItemTitle && minutesItemTitle !== section.title && (
           <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
-            {t("sessions.minutesItemTitle")}: {minutesItemTitle}
+            {t("sessions.minutesItemTitleLine", { value: minutesItemTitle })}
           </Typography>
         )}
         {(section.minutes_processing_phase_code ||
           section.minutes_general_processing_phase_code) && (
           <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
-            {t("sessions.minutesProcessingCodes")}:{" "}
-            {[
-              section.minutes_processing_phase_code,
-              section.minutes_general_processing_phase_code,
-            ]
-              .filter(Boolean)
-              .join(" / ")}
+            {t("sessions.minutesProcessingCodesLine", {
+              value: [
+                section.minutes_processing_phase_code,
+                section.minutes_general_processing_phase_code,
+              ]
+                .filter(Boolean)
+                .join(" / "),
+            })}
           </Typography>
         )}
       </Box>
@@ -852,15 +861,18 @@ export default () => {
                   <Typography
                     sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
                   >
-                    {t("sessions.noticeSent")}: {formatDateTime(notice.sent_at)}
+                    {t("sessions.noticeSentLine", {
+                      value: formatDateTime(notice.sent_at),
+                    })}
                   </Typography>
                 )}
                 {notice.valid_until && (
                   <Typography
                     sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
                   >
-                    {t("sessions.noticeValidUntil")}:{" "}
-                    {formatDateTime(notice.valid_until)}
+                    {t("sessions.noticeValidUntilLine", {
+                      value: formatDateTime(notice.valid_until),
+                    })}
                   </Typography>
                 )}
               </Box>
@@ -935,15 +947,18 @@ export default () => {
                   <Typography
                     sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
                   >
-                    {t("sessions.noticeSent")}: {formatDateTime(notice.sent_at)}
+                    {t("sessions.noticeSentLine", {
+                      value: formatDateTime(notice.sent_at),
+                    })}
                   </Typography>
                 )}
                 {notice.valid_until && (
                   <Typography
                     sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
                   >
-                    {t("sessions.noticeValidUntil")}:{" "}
-                    {formatDateTime(notice.valid_until)}
+                    {t("sessions.noticeValidUntilLine", {
+                      value: formatDateTime(notice.valid_until),
+                    })}
                   </Typography>
                 )}
               </Box>
@@ -1084,7 +1099,9 @@ export default () => {
                     <Typography
                       sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
                     >
-                      {t("sessions.identifier")}: {item.identifier_text}
+                      {t("sessions.identifierLine", {
+                        value: item.identifier_text,
+                      })}
                     </Typography>
                   )}
                   {item.processing_title &&
@@ -1092,7 +1109,9 @@ export default () => {
                       <Typography
                         sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
                       >
-                        {t("sessions.processing")}: {item.processing_title}
+                        {t("sessions.processingLine", {
+                          value: item.processing_title,
+                        })}
                       </Typography>
                     )}
                   {item.note && (
@@ -1183,22 +1202,27 @@ export default () => {
                     <Typography
                       sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
                     >
-                      {t("sessions.relatedDocument")}:{" "}
-                      {attachment.related_document_tunnus}
+                      {t("sessions.relatedDocumentLine", {
+                        value: attachment.related_document_tunnus,
+                      })}
                     </Typography>
                   )}
                   {attachment.file_name && (
                     <Typography
                       sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
                     >
-                      {t("sessions.fileName")}: {attachment.file_name}
+                      {t("sessions.fileNameLine", {
+                        value: attachment.file_name,
+                      })}
                     </Typography>
                   )}
                   {attachment.native_id && (
                     <Typography
                       sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
                     >
-                      {t("sessions.nativeId")}: {attachment.native_id}
+                      {t("sessions.nativeIdLine", {
+                        value: attachment.native_id,
+                      })}
                     </Typography>
                   )}
                 </Box>
@@ -1308,7 +1332,9 @@ export default () => {
                     <Typography
                       sx={{ fontSize: "0.75rem", color: colors.textTertiary }}
                     >
-                      {t("sessions.vaskiCreated")}: {link.document_created_at}
+                      {t("sessions.vaskiCreatedLine", {
+                        value: link.document_created_at,
+                      })}
                     </Typography>
                   )}
                 </Box>
@@ -1403,7 +1429,9 @@ export default () => {
         )}
         <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mt: 0.5 }}>
           <Typography sx={{ fontSize: "0.75rem", color: colors.textSecondary }}>
-            {t("sessions.rollCallDocument")}: {report.edk_identifier}
+            {t("sessions.rollCallDocumentLine", {
+              value: report.edk_identifier,
+            })}
           </Typography>
           <EduskuntaSourceLink
             href={documentUrl}
@@ -1419,22 +1447,26 @@ export default () => {
             <Typography
               sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
             >
-              {t("sessions.rollCallStart")}:{" "}
-              {formatTime(report.roll_call_start_time)}
+              {t("sessions.rollCallStartLine", {
+                value: formatTime(report.roll_call_start_time),
+              })}
             </Typography>
           )}
           {report.roll_call_end_time && (
             <Typography
               sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
             >
-              {t("sessions.rollCallEnd")}:{" "}
-              {formatTime(report.roll_call_end_time)}
+              {t("sessions.rollCallEndLine", {
+                value: formatTime(report.roll_call_end_time),
+              })}
             </Typography>
           )}
         </Box>
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 0.75 }}>
           <Chip
-            label={`${t("sessions.rollCallAbsent")}: ${report.absent_count}`}
+            label={t("sessions.rollCallAbsentLine", {
+              count: report.absent_count,
+            })}
             size="small"
             sx={{
               fontSize: "0.6875rem",
@@ -1444,7 +1476,7 @@ export default () => {
             }}
           />
           <Chip
-            label={`${t("sessions.rollCallLate")}: ${report.late_count}`}
+            label={t("sessions.rollCallLateLine", { count: report.late_count })}
             size="small"
             sx={{
               fontSize: "0.6875rem",
@@ -1538,8 +1570,9 @@ export default () => {
             <Typography
               sx={{ mt: 0.5, fontSize: "0.75rem", color: colors.textTertiary }}
             >
-              {t("sessions.rollCallUnknownCodes")}:{" "}
-              {unknownReasonCodes.map((code) => `(${code})`).join(", ")}
+              {t("sessions.rollCallUnknownCodesLine", {
+                value: unknownReasonCodes.map((code) => `(${code})`).join(", "),
+              })}
             </Typography>
           )}
         </Box>
@@ -1753,7 +1786,7 @@ export default () => {
             textTransform: "uppercase",
           }}
         >
-          {t("sessions.votings")} ({votings.length})
+          {t("sessions.votingsLabel", { count: votings.length })}
         </Typography>
         {votings.map((voting) => {
           const isPassed = voting.n_yes > voting.n_no;
@@ -1898,7 +1931,9 @@ export default () => {
                         />
                         <Chip
                           size="small"
-                          label={`${t("common.empty")} ${details.voting.n_abstain}`}
+                          label={t("common.emptyCount", {
+                            count: details.voting.n_abstain,
+                          })}
                           sx={{ height: 20 }}
                         />
                         <Chip
@@ -2169,7 +2204,9 @@ export default () => {
                   </Link>
                   {session.number !== undefined && (
                     <Chip
-                      label={`${t("sessions.sessionNumber")}: ${session.number}`}
+                      label={t("sessions.sessionNumberLine", {
+                        value: session.number,
+                      })}
                       size="small"
                       sx={{
                         fontSize: "0.6875rem",
@@ -2181,7 +2218,9 @@ export default () => {
                   )}
                   {session.type && (
                     <Chip
-                      label={`${t("sessions.sessionType")}: ${session.type}`}
+                      label={t("sessions.sessionTypeLine", {
+                        value: session.type,
+                      })}
                       size="small"
                       sx={{
                         fontSize: "0.6875rem",
@@ -2232,7 +2271,9 @@ export default () => {
                   }}
                 >
                   <Chip
-                    label={`${session.section_count} ${t("home.sections")}`}
+                    label={t("home.sectionCount", {
+                      count: session.section_count,
+                    })}
                     size="small"
                     sx={{
                       fontSize: "0.6875rem",
@@ -2243,7 +2284,9 @@ export default () => {
                   />
                   <Chip
                     icon={<HowToVoteIcon sx={{ fontSize: 14 }} />}
-                    label={`${session.voting_count} ${t("home.votings")}`}
+                    label={t("home.votingCount", {
+                      count: session.voting_count,
+                    })}
                     size="small"
                     sx={{
                       fontSize: "0.6875rem",
@@ -2256,30 +2299,34 @@ export default () => {
                     <Typography
                       sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
                     >
-                      {t("sessions.startReported")}:{" "}
-                      {formatTime(session.start_time_reported)}
+                      {t("sessions.startReportedLine", {
+                        value: formatTime(session.start_time_reported),
+                      })}
                     </Typography>
                   )}
                   {session.start_time_actual && (
                     <Typography
                       sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
                     >
-                      {t("sessions.startActual")}:{" "}
-                      {formatTime(session.start_time_actual)}
+                      {t("sessions.startActualLine", {
+                        value: formatTime(session.start_time_actual),
+                      })}
                     </Typography>
                   )}
                   {session.agenda_state && (
                     <Typography
                       sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
                     >
-                      {t("sessions.agendaState")}: {session.agenda_state}
+                      {t("sessions.agendaStateLine", {
+                        value: session.agenda_state,
+                      })}
                     </Typography>
                   )}
                   {session.year !== undefined && (
                     <Typography
                       sx={{ fontSize: "0.75rem", color: colors.textSecondary }}
                     >
-                      {t("sessions.sessionYear")}: {session.year}
+                      {t("sessions.sessionYearLine", { value: session.year })}
                     </Typography>
                   )}
                 </Box>
@@ -2400,8 +2447,9 @@ export default () => {
                                     color: colors.textTertiary,
                                   }}
                                 >
-                                  {t("sessions.processing")}:{" "}
-                                  {section.processing_title}
+                                  {t("sessions.processingLine", {
+                                    value: section.processing_title,
+                                  })}
                                 </Typography>
                               )}
                             {section.resolution && (
@@ -2411,7 +2459,9 @@ export default () => {
                                   color: colors.textTertiary,
                                 }}
                               >
-                                {t("sessions.resolution")}: {section.resolution}
+                                {t("sessions.resolutionLine", {
+                                  value: section.resolution,
+                                })}
                               </Typography>
                             )}
                             {renderVaskiInfo(section, true)}
@@ -2425,7 +2475,9 @@ export default () => {
                               }}
                             >
                               <Chip
-                                label={`${t("sessions.votings")}: ${section.voting_count ?? 0}`}
+                                label={t("sessions.votingsCount", {
+                                  count: section.voting_count ?? 0,
+                                })}
                                 size="small"
                                 sx={{
                                   fontSize: "0.6875rem",
@@ -2435,7 +2487,9 @@ export default () => {
                                 }}
                               />
                               <Chip
-                                label={`${t("sessions.speeches")}: ${section.speech_count ?? 0}`}
+                                label={t("sessions.speechesCount", {
+                                  count: section.speech_count ?? 0,
+                                })}
                                 size="small"
                                 sx={{
                                   fontSize: "0.6875rem",
@@ -2445,12 +2499,16 @@ export default () => {
                                 }}
                               />
                               <Chip
-                                label={`${t("sessions.speakers")}: ${section.speaker_count ?? 0}`}
+                                label={t("sessions.speakersCount", {
+                                  count: section.speaker_count ?? 0,
+                                })}
                                 size="small"
                                 sx={{ fontSize: "0.6875rem", height: 20 }}
                               />
                               <Chip
-                                label={`${t("sessions.parties")}: ${section.party_count ?? 0}`}
+                                label={t("sessions.partiesCount", {
+                                  count: section.party_count ?? 0,
+                                })}
                                 size="small"
                                 sx={{ fontSize: "0.6875rem", height: 20 }}
                               />
@@ -2470,8 +2528,9 @@ export default () => {
                                     color: colors.textTertiary,
                                   }}
                                 >
-                                  {t("sessions.agendaKey")}:{" "}
-                                  {section.agenda_key}
+                                  {t("sessions.agendaKeyLine", {
+                                    value: section.agenda_key,
+                                  })}
                                 </Typography>
                               )}
                               {section.vaski_id !== undefined &&
@@ -2482,7 +2541,9 @@ export default () => {
                                       color: colors.textTertiary,
                                     }}
                                   >
-                                    {t("sessions.vaskiId")}: {section.vaski_id}
+                                    {t("sessions.vaskiIdLine", {
+                                      value: section.vaski_id,
+                                    })}
                                   </Typography>
                                 )}
                               {section.modified_datetime && (
@@ -2492,8 +2553,11 @@ export default () => {
                                     color: colors.textTertiary,
                                   }}
                                 >
-                                  {t("sessions.sectionUpdated")}:{" "}
-                                  {formatDateTime(section.modified_datetime)}
+                                  {t("sessions.sectionUpdatedLine", {
+                                    value: formatDateTime(
+                                      section.modified_datetime,
+                                    ),
+                                  })}
                                 </Typography>
                               )}
                             </Box>
@@ -2738,8 +2802,10 @@ export default () => {
                                             sx={{ mr: 1 }}
                                           />
                                         ) : null}
-                                        {t("sessions.loadMore")} (
-                                        {speeches.length}/{speechData.total})
+                                        {t("sessions.loadMoreProgress", {
+                                          loaded: speeches.length,
+                                          total: speechData.total,
+                                        })}
                                       </Button>
                                     </Box>
                                   )}
@@ -2872,8 +2938,9 @@ export default () => {
                                       mt: 0.25,
                                     }}
                                   >
-                                    {t("sessions.processing")}:{" "}
-                                    {section.processing_title}
+                                    {t("sessions.processingLine", {
+                                      value: section.processing_title,
+                                    })}
                                   </Typography>
                                 )}
                               {section.resolution && (
@@ -2884,8 +2951,9 @@ export default () => {
                                     mt: 0.25,
                                   }}
                                 >
-                                  {t("sessions.resolution")}:{" "}
-                                  {section.resolution}
+                                  {t("sessions.resolutionLine", {
+                                    value: section.resolution,
+                                  })}
                                 </Typography>
                               )}
                               {renderVaskiInfo(section, true)}
@@ -2900,7 +2968,9 @@ export default () => {
                                 }}
                               >
                                 <Chip
-                                  label={`${t("sessions.votings")}: ${votingCount}`}
+                                  label={t("sessions.votingsCount", {
+                                    count: votingCount,
+                                  })}
                                   size="small"
                                   sx={{
                                     fontSize: "0.6875rem",
@@ -2910,7 +2980,9 @@ export default () => {
                                   }}
                                 />
                                 <Chip
-                                  label={`${t("sessions.speeches")}: ${speechCount}`}
+                                  label={t("sessions.speechesCount", {
+                                    count: speechCount,
+                                  })}
                                   size="small"
                                   sx={{
                                     fontSize: "0.6875rem",
@@ -2920,12 +2992,16 @@ export default () => {
                                   }}
                                 />
                                 <Chip
-                                  label={`${t("sessions.speakers")}: ${section.speaker_count ?? 0}`}
+                                  label={t("sessions.speakersCount", {
+                                    count: section.speaker_count ?? 0,
+                                  })}
                                   size="small"
                                   sx={{ fontSize: "0.6875rem", height: 22 }}
                                 />
                                 <Chip
-                                  label={`${t("sessions.parties")}: ${section.party_count ?? 0}`}
+                                  label={t("sessions.partiesCount", {
+                                    count: section.party_count ?? 0,
+                                  })}
                                   size="small"
                                   sx={{ fontSize: "0.6875rem", height: 22 }}
                                 />
@@ -2969,8 +3045,9 @@ export default () => {
                                       color: colors.textTertiary,
                                     }}
                                   >
-                                    {t("sessions.agendaKey")}:{" "}
-                                    {section.agenda_key}
+                                    {t("sessions.agendaKeyLine", {
+                                      value: section.agenda_key,
+                                    })}
                                   </Typography>
                                 )}
                                 {section.vaski_id !== undefined &&
@@ -2981,8 +3058,9 @@ export default () => {
                                         color: colors.textTertiary,
                                       }}
                                     >
-                                      {t("sessions.vaskiId")}:{" "}
-                                      {section.vaski_id}
+                                      {t("sessions.vaskiIdLine", {
+                                        value: section.vaski_id,
+                                      })}
                                     </Typography>
                                   )}
                                 {section.modified_datetime && (
@@ -2992,8 +3070,11 @@ export default () => {
                                       color: colors.textTertiary,
                                     }}
                                   >
-                                    {t("sessions.sectionUpdated")}:{" "}
-                                    {formatDateTime(section.modified_datetime)}
+                                    {t("sessions.sectionUpdatedLine", {
+                                      value: formatDateTime(
+                                        section.modified_datetime,
+                                      ),
+                                    })}
                                   </Typography>
                                 )}
                               </Box>

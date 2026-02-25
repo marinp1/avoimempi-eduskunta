@@ -1498,16 +1498,20 @@ export default () => {
                                 color="text.secondary"
                                 sx={{ fontFamily: "monospace" }}
                               >
-                                {t("admin.table.rawLastUpdated")}:{" "}
-                                {formatTimestamp(row.raw_last_updated)}
+                                {t("admin.table.rawLastUpdatedLine", {
+                                  value: formatTimestamp(row.raw_last_updated),
+                                })}
                               </Typography>
                               <Typography
                                 variant="caption"
                                 color="text.secondary"
                                 sx={{ fontFamily: "monospace" }}
                               >
-                                {t("admin.table.parsedLastUpdated")}:{" "}
-                                {formatTimestamp(row.parsed_last_updated)}
+                                {t("admin.table.parsedLastUpdatedLine", {
+                                  value: formatTimestamp(
+                                    row.parsed_last_updated,
+                                  ),
+                                })}
                               </Typography>
                             </Box>
                           </Collapse>

@@ -194,8 +194,9 @@ export function GovernmentProposalCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDate")}:{" "}
-                {formatDate(item.submission_date)}
+                {t("documents.submissionDateLine", {
+                  value: formatDate(item.submission_date),
+                })}
               </Typography>
             )}
 
@@ -225,7 +226,9 @@ export function GovernmentProposalCard({
 
             {item.latest_stage_code && !item.decision_outcome && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.latestStage")}: {item.latest_stage_code}
+                {t("documents.latestStageLine", {
+                  value: item.latest_stage_code,
+                })}
               </Typography>
             )}
           </Stack>

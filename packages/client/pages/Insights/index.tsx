@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type fi from "#client/i18n/locales/fi.json";
 import { spacing } from "#client/theme";
 import { GlassCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -35,6 +36,23 @@ type DrawerType =
   | "coalitionOpposition"
   | "speechActivity"
   | null;
+
+type DrawerKey = Exclude<DrawerType, null>;
+type InsightsCardTranslationName = keyof (typeof fi)["insights"]["cards"];
+type InsightsTitleKey = `insights.cards.${InsightsCardTranslationName}.title`;
+type InsightsDescriptionKey =
+  `insights.cards.${InsightsCardTranslationName}.description`;
+type InsightsActionKey = `insights.cards.${InsightsCardTranslationName}.action`;
+type InsightCard = {
+  key: DrawerKey;
+  icon: React.ReactNode;
+  iconColor: string;
+  titleKey: InsightsTitleKey;
+  descriptionKey: InsightsDescriptionKey;
+  actionKey: InsightsActionKey;
+  actionColor: string;
+  actionBg: string;
+};
 
 export default () => {
   const themedColors = useThemedColors();
@@ -74,7 +92,7 @@ export default () => {
     return () => window.removeEventListener("popstate", handleUrlChange);
   }, []);
 
-  const openDrawer = (drawer: DrawerType, personId?: number) => {
+  const openDrawer = (drawer: DrawerKey, personId?: number) => {
     setActiveDrawer(drawer);
     if (drawer === "votingActivity") {
       if (personId) setInitialPersonId(personId);
@@ -161,16 +179,7 @@ export default () => {
       actionColor: themedColors.warning,
       actionBg: "rgba(255, 152, 0, 0.1)",
     },
-  ] as const satisfies {
-    key: DrawerType;
-    icon: React.ReactNode;
-    iconColor: string;
-    titleKey: string;
-    descriptionKey: string;
-    actionKey: string;
-    actionColor: string;
-    actionBg: string;
-  }[];
+  ] as const satisfies readonly InsightCard[];
 
   const drawerPaperProps = {
     sx: {
@@ -224,7 +233,7 @@ export default () => {
             {cards.map((card) => (
               <Grid key={card.key} size={{ xs: 12, md: 6 }}>
                 <Box
-                  onClick={() => openDrawer(card.key!)}
+                  onClick={() => openDrawer(card.key)}
                   sx={{ height: "100%" }}
                 >
                   <GlassCard
