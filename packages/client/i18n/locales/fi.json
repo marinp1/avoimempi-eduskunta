@@ -268,6 +268,7 @@
     "detailsToggle_show": "Näytä tiedot",
     "showLess": "Näytä vähemmän",
     "showMore": "Näytä lisää",
+    "retry": "Yritä uudelleen",
     "votingTarget": "Äänestyksen kohde"
   },
   "errors": {
@@ -316,13 +317,24 @@
       "gender": "Sukupuoli",
       "birthDate": "Syntymäaika",
       "deathDate": "Kuolinaika",
+      "profession": "Ammatti",
       "contactInfo": "Yhteystiedot",
+      "email": "Sähköposti",
+      "phone": "Puhelin",
+      "website": "Verkkosivu",
       "electoralDistricts": "Vaalipiirit",
       "membership": "Eduskuntajäsenyys",
       "governmentParticipation": "Hallituksessa",
+      "governmentCoalitionParticipation": "Hallituskoalitioon osallistuminen",
       "party": "Puolue",
       "successor": "Seuraaja:",
       "ongoing": "edelleen",
+      "unknownParty": "Ei tiedossa",
+      "unknownDistrict": "Ei tiedossa",
+      "header": {
+        "government": "Hallitus",
+        "opposition": "Oppositio"
+      },
       "tabs": {
         "overview": "Yleistiedot",
         "votes": "Äänestykset",
@@ -333,22 +345,57 @@
       "votes": {
         "participation": "Osallistuminen",
         "totalVotes": "Äänestyksiä",
+        "voteBreakdown": "{{yes}} jaa / {{no}} ei / {{empty}} tyhj.",
         "dissents": "Poikkeamia",
         "dissentList": "Puolue-enemmistöstä poikenneet äänestykset",
         "recentVotes": "Viimeisimmät äänestykset",
-        "noData": "Ei äänestystietoja."
+        "noData": "Ei äänestystietoja.",
+        "drawer": {
+          "title": "Äänestyksen tiedot",
+          "closeAria": "Sulje äänestyksen tiedot",
+          "votePrefix": "Ääni",
+          "groupPrefix": "Ryhmä",
+          "openFullVoting": "Avaa koko äänestys",
+          "detailsLoadError": "Äänestyksen yksityiskohtien lataus epäonnistui.",
+          "summaryTitle": "Äänestyksen yhteenveto",
+          "governmentOppositionSummary": "Hallitus: {{governmentYes}} jaa / {{governmentNo}} ei, Oppositio: {{oppositionYes}} jaa / {{oppositionNo}} ei",
+          "relatedVotingsTitle": "Liittyvät äänestykset"
+        }
       },
       "speeches": {
         "count": "Puheenvuoroja",
         "totalWords": "Sanaa yhteensä",
         "noData": "Ei puheenvuoroja.",
-        "words": "sanaa"
+        "words": "sanaa",
+        "loadError": "Puheenvuorojen lataus epäonnistui.",
+        "missingSpeechInThread": "Valittua puheenvuoroa ei löytynyt keskusteluketjusta. Avaa koko asiakohta jatkaaksesi.",
+        "contextLoadError": "Keskustelukontekstin lataus epäonnistui.",
+        "missingSectionKey": "Tältä puheenvuorolta puuttuu asiakohdan tunniste, joten kontekstia ei voi avata.",
+        "noSectionTitle": "Asiakohta",
+        "showConversation": "Näytä keskustelu",
+        "drawer": {
+          "title": "Keskustelun konteksti",
+          "closeAria": "Sulje keskustelu",
+          "missingDocument": "Asiakohdan tiedot puuttuvat",
+          "loadingSectionContent": "Ladataan asiakohdan sisältöä...",
+          "openSection": "Avaa koko asiakohta",
+          "conversationHeading": "Keskustelun puheenvuorot",
+          "conversationSummary": "Keskustelu ({{current}}/{{total}})",
+          "truncatedNotice": "Näytössä {{shown}}/{{total}} puheenvuoroa.",
+          "noContent": "Ei puhesisältöä saatavilla."
+        }
       },
       "positions": {
         "committees": "Valiokunnat",
         "governmentPositions": "Hallitustehtävät",
         "otherPositions": "Muut luottamustehtävät",
-        "noData": "Ei luottamustehtäviä."
+        "noData": "Ei luottamustehtäviä.",
+        "committeesTitle_one": "Valiokunta ({{count}})",
+        "committeesTitle_other": "Valiokunnat ({{count}})",
+        "governmentPositionsTitle_one": "Hallitustehtävä ({{count}})",
+        "governmentPositionsTitle_other": "Hallitustehtävät ({{count}})",
+        "otherPositionsTitle_one": "Muu luottamustehtävä ({{count}})",
+        "otherPositionsTitle_other": "Muut luottamustehtävät ({{count}})"
       },
       "questions": {
         "total_one": "Kysymys",
