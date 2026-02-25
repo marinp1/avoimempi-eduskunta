@@ -322,8 +322,8 @@ const fetchPersonQuestions = async (personId: number, limit = 500) => {
   return res.json() as Promise<PersonQuestionType[]>;
 };
 
-const displayDate = (date?: string | null) => {
-  if (!date) return "edelleen";
+const displayDate = (date?: string | null, ongoingLabel = "-") => {
+  if (!date) return ongoingLabel;
   return new Date(date).toLocaleDateString("fi-FI");
 };
 
@@ -404,6 +404,7 @@ const SectionLabel: React.FC<{
 const OverviewTab: React.FC<{
   details: Awaited<ReturnType<typeof fetchPersonDetails>>;
 }> = ({ details }) => {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
 
   return (
@@ -411,18 +412,18 @@ const OverviewTab: React.FC<{
       {/* Basic Info */}
       <SectionLabel
         icon={<PersonIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
-        label="Perustiedot"
+        label={t("composition.details.basicInfo")}
       />
       <Box sx={{ mb: 2 }}>
         {details.representativeDetails?.gender && (
           <InfoRow
-            label="Sukupuoli"
+            label={t("composition.details.gender")}
             value={details.representativeDetails.gender}
           />
         )}
         {details.representativeDetails?.birth_date && (
           <InfoRow
-            label="Syntymaaika"
+            label={t("composition.details.birthDate")}
             value={
               <>
                 {displayDate(details.representativeDetails.birth_date)}
@@ -434,21 +435,21 @@ const OverviewTab: React.FC<{
         )}
         {details.representativeDetails?.death_date && (
           <InfoRow
-            label="Kuolinaika"
+            label={t("composition.details.deathDate")}
             value={
               <>
                 {displayDate(details.representativeDetails.death_date)}
                 {details.representativeDetails.death_place &&
                   ` (${details.representativeDetails.death_place})`}
                 {details.representativeDetails.birth_date &&
-                  ` - ${calculateAge(details.representativeDetails.birth_date, details.representativeDetails.death_date)} v`}
+                  ` - ${calculateAge(details.representativeDetails.birth_date, details.representativeDetails.death_date)} ${t("composition.details.years")}`}
               </>
             }
           />
         )}
         {details.representativeDetails?.profession && (
           <InfoRow
-            label="Ammatti"
+            label={t("composition.details.profession")}
             value={details.representativeDetails.profession}
           />
         )}
@@ -463,24 +464,24 @@ const OverviewTab: React.FC<{
             icon={
               <EmailIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />
             }
-            label="Yhteystiedot"
+            label={t("composition.details.contactInfo")}
           />
           <Box sx={{ mb: 2 }}>
             {details.representativeDetails.email && (
               <InfoRow
-                label="Sahkoposti"
+                label={t("composition.details.email")}
                 value={details.representativeDetails.email}
               />
             )}
             {details.representativeDetails.phone && (
               <InfoRow
-                label="Puhelin"
+                label={t("composition.details.phone")}
                 value={details.representativeDetails.phone}
               />
             )}
             {details.representativeDetails.website && (
               <InfoRow
-                label="Verkkosivu"
+                label={t("composition.details.website")}
                 value={
                   <a
                     href={details.representativeDetails.website}
@@ -510,7 +511,7 @@ const OverviewTab: React.FC<{
                 sx={{ color: colors.primaryLight, fontSize: 20 }}
               />
             }
-            label="Vaalipiirit"
+            label={t("composition.details.electoralDistricts")}
           />
           <List dense sx={{ p: 0, mb: 2 }}>
             {details.districts.map((district) => (
@@ -531,8 +532,15 @@ const OverviewTab: React.FC<{
                       variant="caption"
                       sx={{ color: themedColors.textSecondary }}
                     >
-                      {displayDate(district.start_date)} -{" "}
-                      {displayDate(district.end_date)}
+                      {displayDate(
+                        district.start_date,
+                        t("composition.details.ongoing"),
+                      )}{" "}
+                      -{" "}
+                      {displayDate(
+                        district.end_date,
+                        t("composition.details.ongoing"),
+                      )}
                     </Typography>
                   }
                 />
@@ -551,7 +559,7 @@ const OverviewTab: React.FC<{
                 sx={{ color: colors.primaryLight, fontSize: 20 }}
               />
             }
-            label="Eduskuntajasenyys"
+            label={t("composition.details.membership")}
           />
           <List dense sx={{ p: 0, mb: 2 }}>
             {details.groupMemberships.map((membership, i) => {
@@ -583,10 +591,17 @@ const OverviewTab: React.FC<{
                           variant="caption"
                           sx={{ color: themedColors.textSecondary }}
                         >
-                          {displayDate(membership.start_date)} -{" "}
-                          {displayDate(membership.end_date)}
+                          {displayDate(
+                            membership.start_date,
+                            t("composition.details.ongoing"),
+                          )}{" "}
+                          -{" "}
+                          {displayDate(
+                            membership.end_date,
+                            t("composition.details.ongoing"),
+                          )}
                           {leavingRecord?.replacement_person &&
-                            ` (Seuraaja: ${leavingRecord.replacement_person})`}
+                            ` (${t("composition.details.successor")} ${leavingRecord.replacement_person})`}
                         </Typography>
                         {leavingRecord?.description && (
                           <Typography
@@ -621,7 +636,7 @@ const OverviewTab: React.FC<{
                   sx={{ color: colors.primaryLight, fontSize: 20 }}
                 />
               }
-              label="Hallituskoalitioon osallistuminen"
+              label={t("composition.details.governmentCoalitionParticipation")}
             />
             <List dense sx={{ p: 0 }}>
               {details.governmentMemberships.map((membership, i) => (
@@ -661,8 +676,15 @@ const OverviewTab: React.FC<{
                           display="block"
                           sx={{ color: themedColors.textSecondary }}
                         >
-                          {displayDate(membership.start_date)} -{" "}
-                          {displayDate(membership.end_date)}
+                          {displayDate(
+                            membership.start_date,
+                            t("composition.details.ongoing"),
+                          )}{" "}
+                          -{" "}
+                          {displayDate(
+                            membership.end_date,
+                            t("composition.details.ongoing"),
+                          )}
                         </Typography>
                       </Box>
                     }
@@ -824,7 +846,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
             variant="caption"
             sx={{ color: themedColors.textSecondary }}
           >
-            Osallistuminen
+            {t("composition.details.votes.participation")}
           </Typography>
         </Box>
         <Box
@@ -848,7 +870,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
             variant="caption"
             sx={{ color: themedColors.textSecondary }}
           >
-            Aanestyksia
+            {t("composition.details.votes.totalVotes")}
           </Typography>
         </Box>
         <Box
@@ -871,7 +893,11 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
             variant="caption"
             sx={{ color: themedColors.textSecondary }}
           >
-            {yesVotes} jaa / {noVotes} ei / {emptyVotes} tyhj.
+            {t("composition.details.votes.voteBreakdown", {
+              yes: yesVotes,
+              no: noVotes,
+              empty: emptyVotes,
+            })}
           </Typography>
         </Box>
       </Box>
@@ -885,7 +911,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                 sx={{ color: colors.primaryLight, fontSize: 20 }}
               />
             }
-            label="Viimeisimmat aanestykset"
+            label={t("composition.details.votes.recentVotes")}
           />
           <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
             {votes.slice(0, 30).map((v) => (
@@ -986,7 +1012,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
           variant="body2"
           sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4 }}
         >
-          Ei aanestystietoja.
+          {t("composition.details.votes.noData")}
         </Typography>
       )}
 
@@ -1023,7 +1049,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   fontWeight={700}
                   sx={{ color: themedColors.textPrimary }}
                 >
-                  Aanestyksen tiedot
+                  {t("composition.details.votes.drawer.title")}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -1039,7 +1065,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
               <IconButton
                 size="small"
                 onClick={closeVotingDetails}
-                aria-label="Sulje aanestyksen tiedot"
+                aria-label={t("composition.details.votes.drawer.closeAria")}
               >
                 <CloseIcon fontSize="small" />
               </IconButton>
@@ -1064,12 +1090,12 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                 >
                   <Chip
                     size="small"
-                    label={`Aani: ${selectedVoting.vote}`}
+                    label={`${t("composition.details.votes.drawer.votePrefix")}: ${selectedVoting.vote}`}
                     sx={{ height: 20, fontSize: "0.65rem" }}
                   />
                   <Chip
                     size="small"
-                    label={`Ryhma: ${selectedVoting.group_abbreviation}`}
+                    label={`${t("composition.details.votes.drawer.groupPrefix")}: ${selectedVoting.group_abbreviation}`}
                     sx={{ height: 20, fontSize: "0.65rem" }}
                   />
                 </Box>
@@ -1087,7 +1113,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     alignSelf: "flex-start",
                   }}
                 >
-                  Avaa koko aanestys
+                  {t("composition.details.votes.drawer.openFullVoting")}
                 </Button>
               </>
             )}
@@ -1110,7 +1136,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   variant="body2"
                   sx={{ color: themedColors.textSecondary }}
                 >
-                  Ladataan aanestyksen yksityiskohtia...
+                  {t("common.loadingVotingDetails")}
                 </Typography>
               </Box>
             )}
@@ -1123,7 +1149,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     variant="body2"
                     sx={{ color: themedColors.textTertiary }}
                   >
-                    Aanestyksen yksityiskohtien lataus epaonnistui.
+                    {t("composition.details.votes.drawer.detailsLoadError")}
                   </Typography>
                   <Button
                     size="small"
@@ -1139,7 +1165,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                       fontSize: "0.72rem",
                     }}
                   >
-                    Yrita uudelleen
+                    {t("common.retry")}
                   </Button>
                 </Box>
               )}
@@ -1160,7 +1186,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     fontWeight={700}
                     sx={{ color: themedColors.textPrimary, mb: 0.75 }}
                   >
-                    Aanestyksen yhteenveto
+                    {t("composition.details.votes.drawer.summaryTitle")}
                   </Typography>
                   <VoteMarginBar
                     yes={selectedVotingDetails.voting.n_yes}
@@ -1173,22 +1199,22 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                     <Chip
                       size="small"
-                      label={`Jaa ${selectedVotingDetails.voting.n_yes}`}
+                      label={`${t("common.yes")} ${selectedVotingDetails.voting.n_yes}`}
                       sx={{ height: 20 }}
                     />
                     <Chip
                       size="small"
-                      label={`Ei ${selectedVotingDetails.voting.n_no}`}
+                      label={`${t("common.no")} ${selectedVotingDetails.voting.n_no}`}
                       sx={{ height: 20 }}
                     />
                     <Chip
                       size="small"
-                      label={`Tyhjaa ${selectedVotingDetails.voting.n_abstain}`}
+                      label={`${t("common.empty")} ${selectedVotingDetails.voting.n_abstain}`}
                       sx={{ height: 20 }}
                     />
                     <Chip
                       size="small"
-                      label={`Poissa ${selectedVotingDetails.voting.n_absent}`}
+                      label={`${t("common.absent")} ${selectedVotingDetails.voting.n_absent}`}
                       sx={{ height: 20 }}
                     />
                   </Box>
@@ -1201,21 +1227,23 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                         display: "block",
                       }}
                     >
-                      Hallitus:{" "}
-                      {
-                        selectedVotingDetails.governmentOpposition
-                          .government_yes
-                      }{" "}
-                      jaa /{" "}
-                      {selectedVotingDetails.governmentOpposition.government_no}{" "}
-                      ei, Oppositio:{" "}
-                      {
-                        selectedVotingDetails.governmentOpposition
-                          .opposition_yes
-                      }{" "}
-                      jaa /{" "}
-                      {selectedVotingDetails.governmentOpposition.opposition_no}{" "}
-                      ei
+                      {t(
+                        "composition.details.votes.drawer.governmentOppositionSummary",
+                        {
+                          governmentYes:
+                            selectedVotingDetails.governmentOpposition
+                              .government_yes,
+                          governmentNo:
+                            selectedVotingDetails.governmentOpposition
+                              .government_no,
+                          oppositionYes:
+                            selectedVotingDetails.governmentOpposition
+                              .opposition_yes,
+                          oppositionNo:
+                            selectedVotingDetails.governmentOpposition
+                              .opposition_no,
+                        },
+                      )}
                     </Typography>
                   )}
                   {selectedVotingDetails.relatedVotings.length > 0 && (
@@ -1224,7 +1252,9 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                         variant="caption"
                         sx={{ color: themedColors.textSecondary }}
                       >
-                        Liittyvat aanestykset
+                        {t(
+                          "composition.details.votes.drawer.relatedVotingsTitle",
+                        )}
                       </Typography>
                       <Box
                         sx={{
@@ -1278,6 +1308,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
 // ──────────────────────────── Tab: Puheenvuorot ────────────────────────────
 
 const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
   const [speeches, setSpeeches] = React.useState<SpeechType[] | null>(null);
   const [selectedSpeech, setSelectedSpeech] = React.useState<SpeechType | null>(
@@ -1329,7 +1360,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
       })
       .catch(() => {
         if (ignore) return;
-        setLoadError("Puheenvuorojen lataus epaonnistui.");
+        setLoadError(t("composition.details.speeches.loadError"));
       })
       .finally(() => {
         if (ignore) return;
@@ -1338,7 +1369,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
     return () => {
       ignore = true;
     };
-  }, [personId]);
+  }, [personId, t]);
 
   const selectedSectionKey = selectedSpeech?.section_key || null;
   const selectedConversation = selectedSectionKey
@@ -1419,7 +1450,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
             [selectedSectionKey]: true,
           }));
           setContextError(
-            "Valittua puheenvuoroa ei loytynyt keskusteluketjusta. Avaa koko asiakohta jatkaaksesi.",
+            t("composition.details.speeches.missingSpeechInThread"),
           );
         }
       })
@@ -1429,7 +1460,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
           ...prev,
           [selectedSectionKey]: true,
         }));
-        setContextError("Keskustelukontekstin lataus epaonnistui.");
+        setContextError(t("composition.details.speeches.contextLoadError"));
       })
       .finally(() => {
         if (contextLoadRequestRef.current !== requestId) return;
@@ -1443,6 +1474,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
     sectionConversations,
     failedContextSections,
     loadingContextSection,
+    t,
   ]);
 
   React.useEffect(() => {
@@ -1491,9 +1523,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
     setSelectedSpeech(speech);
     setActiveSpeechId(speech.id);
     if (!speech.section_key) {
-      setContextError(
-        "Talta puheenvuorolta puuttuu asiakohdan tunniste, joten kontekstia ei voi avata.",
-      );
+      setContextError(t("composition.details.speeches.missingSectionKey"));
       return;
     }
     setContextError(null);
@@ -1593,7 +1623,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
             variant="caption"
             sx={{ color: themedColors.textSecondary }}
           >
-            Puheenvuoroja
+            {t("composition.details.speeches.count")}
           </Typography>
         </Box>
         <Box
@@ -1619,7 +1649,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
             variant="caption"
             sx={{ color: themedColors.textSecondary }}
           >
-            Sanaa yhteensa
+            {t("composition.details.speeches.totalWords")}
           </Typography>
         </Box>
       </Box>
@@ -1676,7 +1706,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   variant="caption"
                   sx={{ color: themedColors.textTertiary }}
                 >
-                  {s.word_count} sanaa
+                  {s.word_count} {t("composition.details.speeches.words")}
                 </Typography>
               </Box>
               {s.content && (
@@ -1717,7 +1747,9 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   variant="caption"
                   sx={{ color: themedColors.textTertiary }}
                 >
-                  {s.section_identifier || s.section_title || "Asiakohta"}
+                  {s.section_identifier ||
+                    s.section_title ||
+                    t("composition.details.speeches.noSectionTitle")}
                 </Typography>
                 <Button
                   size="small"
@@ -1733,7 +1765,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     textTransform: "none",
                   }}
                 >
-                  Nayta keskustelu
+                  {t("composition.details.speeches.showConversation")}
                 </Button>
               </Box>
             </Box>
@@ -1744,7 +1776,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
           variant="body2"
           sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4 }}
         >
-          Ei puheenvuoroja.
+          {t("composition.details.speeches.noData")}
         </Typography>
       )}
 
@@ -1788,7 +1820,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   fontWeight={700}
                   sx={{ color: themedColors.textPrimary }}
                 >
-                  Keskustelun konteksti
+                  {t("composition.details.speeches.drawer.title")}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -1802,7 +1834,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
               <IconButton
                 size="small"
                 onClick={closeSpeechConversation}
-                aria-label="Sulje keskustelu"
+                aria-label={t("composition.details.speeches.drawer.closeAria")}
               >
                 <CloseIcon fontSize="small" />
               </IconButton>
@@ -1814,7 +1846,8 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   variant="body2"
                   sx={{ color: themedColors.textSecondary, mt: 1 }}
                 >
-                  {selectedSpeech.document || "Asiakohdan tiedot puuttuvat"}
+                  {selectedSpeech.document ||
+                    t("composition.details.speeches.drawer.missingDocument")}
                 </Typography>
                 <Box
                   sx={{
@@ -1868,7 +1901,9 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                         display: "block",
                       }}
                     >
-                      Ladataan asiakohdan sisaltoa...
+                      {t(
+                        "composition.details.speeches.drawer.loadingSectionContent",
+                      )}
                     </Typography>
                   )}
                 {sectionContextContent && (
@@ -1928,7 +1963,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                       alignSelf: "flex-start",
                     }}
                   >
-                    Avaa koko asiakohta
+                    {t("composition.details.speeches.drawer.openSection")}
                   </Button>
                 )}
               </>
@@ -1948,7 +1983,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
               fontWeight={700}
               sx={{ color: themedColors.textPrimary, mb: 1 }}
             >
-              Keskustelun puheenvuorot
+              {t("composition.details.speeches.drawer.conversationHeading")}
             </Typography>
             {selectedSectionKey &&
               loadingContextSection === selectedSectionKey && (
@@ -1979,7 +2014,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                         fontSize: "0.72rem",
                       }}
                     >
-                      Yrita uudelleen
+                      {t("common.retry")}
                     </Button>
                   )}
               </Box>
@@ -1991,7 +2026,13 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   variant="caption"
                   sx={{ color: themedColors.textSecondary }}
                 >
-                  {`Keskustelu (${selectedSpeechPosition}/${selectedConversation.total})`}
+                  {t(
+                    "composition.details.speeches.drawer.conversationSummary",
+                    {
+                      current: selectedSpeechPosition,
+                      total: selectedConversation.total,
+                    },
+                  )}
                 </Typography>
                 {selectedConversation.truncated && (
                   <Typography
@@ -2002,8 +2043,10 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                       mt: 0.5,
                     }}
                   >
-                    Naytossa {selectedConversation.speeches.length}/
-                    {selectedConversation.total} puheenvuoroa.
+                    {t("composition.details.speeches.drawer.truncatedNotice", {
+                      shown: selectedConversation.speeches.length,
+                      total: selectedConversation.total,
+                    })}
                   </Typography>
                 )}
                 <Box sx={{ mt: 1.5 }}>
@@ -2105,7 +2148,8 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                             whiteSpace: "pre-line",
                           }}
                         >
-                          {speech.content || "Ei puhesisaltoa saatavilla."}
+                          {speech.content ||
+                            t("composition.details.speeches.drawer.noContent")}
                         </Typography>
                       </Box>
                     );
@@ -2372,7 +2416,9 @@ const QuestionsTab: React.FC<{ personId: number }> = ({ personId }) => {
 
       <SectionLabel
         icon={
-          <AccountBalanceIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />
+          <AccountBalanceIcon
+            sx={{ color: colors.primaryLight, fontSize: 20 }}
+          />
         }
         label={t("composition.details.questions.interpellationsSection", {
           count: interpellationsCount,
@@ -2415,6 +2461,7 @@ const PositionsTab: React.FC<{
   trustPositions: DatabaseTables.TrustPosition[];
   governmentMemberships: DatabaseTables.GovernmentMembership[];
 }> = ({ personId, trustPositions, governmentMemberships }) => {
+  const { t } = useTranslation();
   const themedColors = useThemedColors();
   const [committees, setCommittees] = React.useState<CommitteeType[] | null>(
     null,
@@ -2445,7 +2492,9 @@ const PositionsTab: React.FC<{
             icon={
               <GroupsIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />
             }
-            label={`Valiokunnat (${committees.length})`}
+            label={t("composition.details.positions.committeesTitle", {
+              count: committees.length,
+            })}
           />
           <List dense sx={{ p: 0, mb: 2 }}>
             {committees.map((c) => (
@@ -2480,7 +2529,15 @@ const PositionsTab: React.FC<{
                       variant="caption"
                       sx={{ color: themedColors.textSecondary }}
                     >
-                      {displayDate(c.start_date)} - {displayDate(c.end_date)}
+                      {displayDate(
+                        c.start_date,
+                        t("composition.details.ongoing"),
+                      )}{" "}
+                      -{" "}
+                      {displayDate(
+                        c.end_date,
+                        t("composition.details.ongoing"),
+                      )}
                     </Typography>
                   }
                 />
@@ -2499,7 +2556,9 @@ const PositionsTab: React.FC<{
                 sx={{ color: colors.primaryLight, fontSize: 20 }}
               />
             }
-            label={`Hallitustehtavat (${governmentMemberships.length})`}
+            label={t("composition.details.positions.governmentPositionsTitle", {
+              count: governmentMemberships.length,
+            })}
           />
           <List dense sx={{ p: 0, mb: 2 }}>
             {governmentMemberships.map((gm, i) => (
@@ -2529,7 +2588,15 @@ const PositionsTab: React.FC<{
                       variant="caption"
                       sx={{ color: themedColors.textSecondary }}
                     >
-                      {displayDate(gm.start_date)} - {displayDate(gm.end_date)}
+                      {displayDate(
+                        gm.start_date,
+                        t("composition.details.ongoing"),
+                      )}{" "}
+                      -{" "}
+                      {displayDate(
+                        gm.end_date,
+                        t("composition.details.ongoing"),
+                      )}
                     </Typography>
                   }
                 />
@@ -2546,7 +2613,9 @@ const PositionsTab: React.FC<{
             icon={
               <WorkIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />
             }
-            label={`Muut luottamustehtavat (${trustPositions.length})`}
+            label={t("composition.details.positions.otherPositionsTitle", {
+              count: trustPositions.length,
+            })}
           />
           <List dense sx={{ p: 0 }}>
             {trustPositions.map((tp, i) => (
@@ -2597,7 +2666,7 @@ const PositionsTab: React.FC<{
               py: 4,
             }}
           >
-            Ei luottamustehtavia.
+            {t("composition.details.positions.noData")}
           </Typography>
         )}
     </Box>
@@ -2633,9 +2702,11 @@ export const RepresentativeDetails: React.FC<{
   if (!selectedRepresentative) return null;
 
   const currentParty =
-    details?.groupMemberships?.[0]?.group_name || "Ei tiedossa";
+    details?.groupMemberships?.[0]?.group_name ||
+    t("composition.details.unknownParty");
   const currentDistrict =
-    details?.districts?.[0]?.district_name || "Ei tiedossa";
+    details?.districts?.[0]?.district_name ||
+    t("composition.details.unknownDistrict");
 
   const selectedDateObj = new Date(selectedDate);
   const deathDateObj = selectedRepresentative.death_date
@@ -2775,15 +2846,15 @@ export const RepresentativeDetails: React.FC<{
                           variant="body2"
                           sx={{ color: "rgba(255,255,255,0.85)" }}
                         >
-                          {age} v
+                          {age} {t("composition.details.years")}
                         </Typography>
                       </>
                     )}
                     <Chip
                       label={
                         selectedRepresentative.is_in_government === 1
-                          ? "Hallitus"
-                          : "Oppositio"
+                          ? t("composition.details.header.government")
+                          : t("composition.details.header.opposition")
                       }
                       size="small"
                       sx={{

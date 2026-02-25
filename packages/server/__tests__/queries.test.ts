@@ -232,12 +232,16 @@ describe("Person question queries", () => {
       expect(oralQuestion?.parliament_identifier).toBe("SKT 5/2024 vp");
       expect(oralQuestion?.relation_role).toBe("asker");
     } finally {
-      db.run(`DELETE FROM InterpellationSigner WHERE interpellation_id = ?`, [
-        81001,
-      ]);
+      db.run(
+        `DELETE FROM InterpellationSigner WHERE interpellation_id = ?`,
+        [81001],
+      );
       db.run(`DELETE FROM Interpellation WHERE id = ?`, [81001]);
 
-      db.run(`DELETE FROM WrittenQuestionSigner WHERE question_id = ?`, [81002]);
+      db.run(
+        `DELETE FROM WrittenQuestionSigner WHERE question_id = ?`,
+        [81002],
+      );
       db.run(`DELETE FROM WrittenQuestion WHERE id = ?`, [81002]);
 
       db.run(`DELETE FROM OralQuestion WHERE id = ?`, [81003]);
