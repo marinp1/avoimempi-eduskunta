@@ -13,7 +13,7 @@ import {
 } from "../datapipe/migrator/reporting";
 import { clearStatementCache } from "../datapipe/migrator/utils";
 import { migrateVaskiData } from "../datapipe/migrator/VaskiData/migrator";
-import { getDatabasePath } from "../shared/database";
+import { getDatabasePath, getTraceDatabasePath } from "../shared/database";
 import {
   getStorage,
   listAllStorageKeys,
@@ -326,6 +326,43 @@ const parsePositiveInt = (
   return parsed;
 };
 
+const parseOptionalPositiveInt = (
+  value: string | undefined,
+  fallback: number | null,
+): number | null => {
+  if (!value || value.trim() === "") return fallback;
+
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "off" || normalized === "none" || normalized === "full") {
+    return null;
+  }
+
+  const parsed = Number.parseInt(normalized, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return parsed;
+};
+
+const withOptionalSubstrLimit = (
+  expression: string,
+  maxChars: number | null,
+): string => {
+  if (maxChars === null) {
+    return expression;
+  }
+  return `SUBSTR(${expression}, 1, ${maxChars})`;
+};
+
+type SourceReferenceMode = "full" | "summary" | "off";
+
+const parseSourceReferenceMode = (
+  value: string | undefined,
+): SourceReferenceMode => {
+  const normalized = (value ?? "summary").trim().toLowerCase();
+  if (normalized === "full") return "full";
+  if (normalized === "off") return "off";
+  return "summary";
+};
+
 const IMPORT_METADATA_FIELDS = {
   sourceTable: "__sourceTable",
   sourcePage: "__sourcePage",
@@ -368,6 +405,15 @@ type SourceReference = {
   sourcePkName: string | null;
   sourcePkValue: string | null;
   scrapedAt: string | null;
+};
+
+type ImportSourceReferenceSummary = {
+  importedRows: number;
+  distinctPages: Set<string>;
+  firstScrapedAt: string | null;
+  lastScrapedAt: string | null;
+  firstMigratedAt: string | null;
+  lastMigratedAt: string | null;
 };
 
 const normalizeText = (value: unknown): string | null => {
@@ -693,6 +739,133 @@ export class MigratorController {
     };
   }
 
+  private updateImportSourceReferenceSummary(
+    summaries: Map<string, ImportSourceReferenceSummary>,
+    sourceReference: SourceReference,
+    migratedAt: string,
+  ): void {
+    const sourceTable = sourceReference.sourceTable;
+    if (!sourceTable) return;
+
+    let summary = summaries.get(sourceTable);
+    if (!summary) {
+      summary = {
+        importedRows: 0,
+        distinctPages: new Set<string>(),
+        firstScrapedAt: null,
+        lastScrapedAt: null,
+        firstMigratedAt: null,
+        lastMigratedAt: null,
+      };
+      summaries.set(sourceTable, summary);
+    }
+
+    summary.importedRows += 1;
+
+    if (
+      sourceReference.sourcePage !== null &&
+      sourceReference.sourcePage !== undefined
+    ) {
+      summary.distinctPages.add(String(sourceReference.sourcePage));
+    }
+
+    if (sourceReference.scrapedAt) {
+      if (!summary.firstScrapedAt || sourceReference.scrapedAt < summary.firstScrapedAt) {
+        summary.firstScrapedAt = sourceReference.scrapedAt;
+      }
+      if (!summary.lastScrapedAt || sourceReference.scrapedAt > summary.lastScrapedAt) {
+        summary.lastScrapedAt = sourceReference.scrapedAt;
+      }
+    }
+
+    if (!summary.firstMigratedAt || migratedAt < summary.firstMigratedAt) {
+      summary.firstMigratedAt = migratedAt;
+    }
+    if (!summary.lastMigratedAt || migratedAt > summary.lastMigratedAt) {
+      summary.lastMigratedAt = migratedAt;
+    }
+  }
+
+  private persistImportSourceReferenceSummaries(
+    db: Database,
+    summaries: Map<string, ImportSourceReferenceSummary>,
+  ): void {
+    if (!objectExists(db, "table", "ImportSourceReferenceSummary")) {
+      return;
+    }
+
+    const persistTransaction = db.transaction(() => {
+      db.run("DELETE FROM ImportSourceReferenceSummary");
+      const stmt = db.prepare(
+        `INSERT INTO ImportSourceReferenceSummary (
+           source_table,
+           imported_rows,
+           distinct_pages,
+           first_scraped_at,
+           last_scraped_at,
+           first_migrated_at,
+           last_migrated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      );
+
+      for (const [sourceTable, summary] of summaries.entries()) {
+        stmt.run(
+          sourceTable,
+          summary.importedRows,
+          summary.distinctPages.size,
+          summary.firstScrapedAt,
+          summary.lastScrapedAt,
+          summary.firstMigratedAt,
+          summary.lastMigratedAt,
+        );
+      }
+
+      stmt.finalize();
+    });
+
+    persistTransaction.immediate();
+  }
+
+  private ensureImportTraceSchema(db: Database): void {
+    db.run(
+      `CREATE TABLE IF NOT EXISTS ImportSourceReference (
+         id INTEGER PRIMARY KEY,
+         source_table TEXT NOT NULL,
+         source_page INTEGER,
+         source_pk_name TEXT,
+         source_pk_value TEXT,
+         scraped_at TEXT,
+         migrated_at TEXT NOT NULL
+       )`,
+    );
+    db.run(
+      `CREATE TABLE IF NOT EXISTS ImportSourceReferenceSummary (
+         source_table TEXT PRIMARY KEY,
+         imported_rows INTEGER NOT NULL DEFAULT 0,
+         distinct_pages INTEGER NOT NULL DEFAULT 0,
+         first_scraped_at TEXT,
+         last_scraped_at TEXT,
+         first_migrated_at TEXT,
+         last_migrated_at TEXT
+       )`,
+    );
+    db.run(
+      "CREATE INDEX IF NOT EXISTS idx_import_source_reference_lookup ON ImportSourceReference(source_table, source_pk_name, source_pk_value)",
+    );
+    db.run(
+      "CREATE INDEX IF NOT EXISTS idx_import_source_reference_source_table ON ImportSourceReference(source_table)",
+    );
+  }
+
+  private clearImportTraceData(db: Database): void {
+    if (objectExists(db, "table", "ImportSourceReferenceSummary")) {
+      db.run("DELETE FROM ImportSourceReferenceSummary");
+    }
+    if (objectExists(db, "table", "ImportSourceReference")) {
+      db.run("DELETE FROM ImportSourceReference");
+    }
+  }
+
   private normalizeImportedTextData(db: Database): void {
     const normalizeTransaction = db.transaction(() => {
       if (objectExists(db, "table", "Interpellation")) {
@@ -948,10 +1121,78 @@ export class MigratorController {
     return row?.count ?? 0;
   }
 
-  private rebuildFederatedSearchIndex(db: Database): number {
+  private rebuildFederatedSearchIndex(
+    db: Database,
+    searchBodyMaxChars: number | null,
+  ): number {
     if (!objectExists(db, "table", "FederatedSearchFts")) {
       return 0;
     }
+
+    const representativeBodySql = withOptionalSubstrLimit(
+      `TRIM(
+             COALESCE(r.first_name, '') || ' ' ||
+             COALESCE(r.last_name, '') || ' ' ||
+             COALESCE(r.party, '') || ' ' ||
+             COALESCE(r.profession, '')
+           )`,
+      searchBodyMaxChars,
+    );
+    const votingBodySql = withOptionalSubstrLimit(
+      `TRIM(
+             COALESCE(v.title, '') || ' ' ||
+             COALESCE(v.section_title, '') || ' ' ||
+             COALESCE(v.main_section_title, '') || ' ' ||
+             COALESCE(v.agenda_title, '') || ' ' ||
+             COALESCE(v.section_processing_title, '') || ' ' ||
+             COALESCE(v.session_key, '')
+           )`,
+      searchBodyMaxChars,
+    );
+    const interpellationBodySql = withOptionalSubstrLimit(
+      `TRIM(
+             COALESCE(i.title, '') || ' ' ||
+             COALESCE(i.parliament_identifier, '') || ' ' ||
+             COALESCE(i.question_text, '') || ' ' ||
+             COALESCE(i.resolution_text, '')
+           )`,
+      searchBodyMaxChars,
+    );
+    const governmentProposalBodySql = withOptionalSubstrLimit(
+      `TRIM(
+             COALESCE(g.title, '') || ' ' ||
+             COALESCE(g.parliament_identifier, '') || ' ' ||
+             COALESCE(g.summary_text, '') || ' ' ||
+             COALESCE(g.justification_text, '')
+           )`,
+      searchBodyMaxChars,
+    );
+    const writtenQuestionBodySql = withOptionalSubstrLimit(
+      `TRIM(
+             COALESCE(wq.title, '') || ' ' ||
+             COALESCE(wq.parliament_identifier, '') || ' ' ||
+             COALESCE(wq.question_text, '')
+           )`,
+      searchBodyMaxChars,
+    );
+    const oralQuestionBodySql = withOptionalSubstrLimit(
+      `TRIM(
+             COALESCE(oq.title, '') || ' ' ||
+             COALESCE(oq.parliament_identifier, '') || ' ' ||
+             COALESCE(oq.question_text, '') || ' ' ||
+             COALESCE(oq.asker_text, '')
+           )`,
+      searchBodyMaxChars,
+    );
+    const legislativeInitiativeBodySql = withOptionalSubstrLimit(
+      `TRIM(
+             COALESCE(li.title, '') || ' ' ||
+             COALESCE(li.parliament_identifier, '') || ' ' ||
+             COALESCE(li.justification_text, '') || ' ' ||
+             COALESCE(li.proposal_text, '')
+           )`,
+      searchBodyMaxChars,
+    );
 
     const rebuildTransaction = db.transaction(() => {
       db.run("DELETE FROM FederatedSearchFts");
@@ -967,12 +1208,7 @@ export class MigratorController {
              CAST(r.person_id AS TEXT)
            ),
            NULLIF(TRIM(r.party), ''),
-           TRIM(
-             COALESCE(r.first_name, '') || ' ' ||
-             COALESCE(r.last_name, '') || ' ' ||
-             COALESCE(r.party, '') || ' ' ||
-             COALESCE(r.profession, '')
-           ),
+           ${representativeBodySql},
            NULL
          FROM Representative r
          WHERE EXISTS (
@@ -994,14 +1230,7 @@ export class MigratorController {
              'Voting ' || CAST(v.id AS TEXT)
            ),
            'Jaa: ' || COALESCE(v.n_yes, 0) || ' / Ei: ' || COALESCE(v.n_no, 0),
-           TRIM(
-             COALESCE(v.title, '') || ' ' ||
-             COALESCE(v.section_title, '') || ' ' ||
-             COALESCE(v.main_section_title, '') || ' ' ||
-             COALESCE(v.agenda_title, '') || ' ' ||
-             COALESCE(v.section_processing_title, '') || ' ' ||
-             COALESCE(v.session_key, '')
-           ),
+           ${votingBodySql},
            v.start_time
          FROM Voting v`,
       );
@@ -1013,12 +1242,7 @@ export class MigratorController {
            CAST(i.id AS TEXT),
            COALESCE(NULLIF(TRIM(i.title), ''), i.parliament_identifier),
            i.parliament_identifier,
-           TRIM(
-             COALESCE(i.title, '') || ' ' ||
-             COALESCE(i.parliament_identifier, '') || ' ' ||
-             COALESCE(i.question_text, '') || ' ' ||
-             COALESCE(i.resolution_text, '')
-           ),
+           ${interpellationBodySql},
            i.submission_date
          FROM Interpellation i`,
       );
@@ -1030,12 +1254,7 @@ export class MigratorController {
            CAST(g.id AS TEXT),
            COALESCE(NULLIF(TRIM(g.title), ''), g.parliament_identifier),
            g.parliament_identifier,
-           TRIM(
-             COALESCE(g.title, '') || ' ' ||
-             COALESCE(g.parliament_identifier, '') || ' ' ||
-             COALESCE(g.summary_text, '') || ' ' ||
-             COALESCE(g.justification_text, '')
-           ),
+           ${governmentProposalBodySql},
            g.submission_date
          FROM GovernmentProposal g`,
       );
@@ -1047,11 +1266,7 @@ export class MigratorController {
            CAST(wq.id AS TEXT),
            COALESCE(NULLIF(TRIM(wq.title), ''), wq.parliament_identifier),
            wq.parliament_identifier,
-           TRIM(
-             COALESCE(wq.title, '') || ' ' ||
-             COALESCE(wq.parliament_identifier, '') || ' ' ||
-             COALESCE(wq.question_text, '')
-           ),
+           ${writtenQuestionBodySql},
            wq.submission_date
          FROM WrittenQuestion wq`,
       );
@@ -1063,12 +1278,7 @@ export class MigratorController {
            CAST(oq.id AS TEXT),
            COALESCE(NULLIF(TRIM(oq.title), ''), oq.parliament_identifier),
            oq.parliament_identifier,
-           TRIM(
-             COALESCE(oq.title, '') || ' ' ||
-             COALESCE(oq.parliament_identifier, '') || ' ' ||
-             COALESCE(oq.question_text, '') || ' ' ||
-             COALESCE(oq.asker_text, '')
-           ),
+           ${oralQuestionBodySql},
            oq.submission_date
          FROM OralQuestion oq`,
       );
@@ -1080,12 +1290,7 @@ export class MigratorController {
            CAST(li.id AS TEXT),
            COALESCE(NULLIF(TRIM(li.title), ''), li.parliament_identifier),
            li.parliament_identifier,
-           TRIM(
-             COALESCE(li.title, '') || ' ' ||
-             COALESCE(li.parliament_identifier, '') || ' ' ||
-             COALESCE(li.justification_text, '') || ' ' ||
-             COALESCE(li.proposal_text, '')
-           ),
+           ${legislativeInitiativeBodySql},
            li.submission_date
          FROM LegislativeInitiative li`,
       );
@@ -1147,6 +1352,12 @@ export class MigratorController {
     let migrationStatus: ConsolidatedMigrationStatus = "failed";
     let migrationError: string | null = null;
     let consolidatedReport: ConsolidatedMigrationReport | null = null;
+    let traceDatabase: Database | null = null;
+    let traceTransactionOpen = false;
+    let sourceReferenceStatement: {
+      run: (...args: any[]) => unknown;
+      finalize: () => void;
+    } | null = null;
     const useExclusiveLock = isTruthyEnv(process.env.MIGRATOR_EXCLUSIVE_LOCK);
     const runForeignKeyCheck = isTruthyEnv(
       process.env.MIGRATOR_FOREIGN_KEY_CHECK,
@@ -1154,6 +1365,14 @@ export class MigratorController {
     const foreignKeyCheckSampleLimit = parsePositiveInt(
       process.env.MIGRATOR_FOREIGN_KEY_CHECK_SAMPLE_LIMIT,
       1000,
+    );
+    const shouldVacuumAfterImport =
+      process.env.MIGRATOR_VACUUM_AFTER_IMPORT === undefined
+        ? true
+        : isTruthyEnv(process.env.MIGRATOR_VACUUM_AFTER_IMPORT);
+    const federatedSearchBodyMaxChars = parseOptionalPositiveInt(
+      process.env.MIGRATOR_FEDERATED_SEARCH_BODY_MAX_CHARS,
+      4096,
     );
 
     try {
@@ -1224,21 +1443,67 @@ export class MigratorController {
 
       // Clear prepared statement cache before starting
       clearStatementCache();
-      const sourceReferenceStatement = targetDatabase.prepare(
-        `INSERT INTO ImportSourceReference (
-           source_table,
-           source_page,
-           source_pk_name,
-           source_pk_value,
-           scraped_at,
-           migrated_at
-         ) VALUES (?, ?, ?, ?, ?, ?)`,
+      const sourceReferenceMode = parseSourceReferenceMode(
+        process.env.MIGRATOR_SOURCE_REFERENCE_MODE,
       );
+      console.log(
+        `🧾 Source reference mode: ${sourceReferenceMode} (${sourceReferenceMode === "full" ? "store detailed rows + summary" : sourceReferenceMode === "summary" ? "store summary only" : "skip source reference storage"})`,
+      );
+      const traceDatabasePath = getTraceDatabasePath();
+      console.log(`🧾 Trace database: ${traceDatabasePath}`);
+      console.log(
+        `🔎 Federated search body limit: ${federatedSearchBodyMaxChars === null ? "unlimited" : `${federatedSearchBodyMaxChars} chars`}`,
+      );
+
+      if (sourceReferenceMode !== "off") {
+        traceDatabase = sqlite.open(traceDatabasePath, {
+          create: true,
+          readwrite: true,
+        });
+        traceDatabase.exec(SQLITE_PRAGMAS.journalWal);
+        traceDatabase.exec(SQLITE_PRAGMAS.synchronousOff);
+        traceDatabase.exec(SQLITE_PRAGMAS.cacheSize64Mb);
+        traceDatabase.exec(SQLITE_PRAGMAS.tempStoreMemory);
+        traceDatabase.exec(SQLITE_PRAGMAS.mmapSize30Gb);
+        this.ensureImportTraceSchema(traceDatabase);
+        this.clearImportTraceData(traceDatabase);
+        traceDatabase.exec(MIGRATOR_SQL.beginTransaction);
+        traceTransactionOpen = true;
+      }
+
+      const sourceReferenceSummaries = new Map<
+        string,
+        ImportSourceReferenceSummary
+      >();
+
+      sourceReferenceStatement =
+        sourceReferenceMode === "full"
+          ? traceDatabase?.prepare(
+              `INSERT INTO ImportSourceReference (
+                 source_table,
+                 source_page,
+                 source_pk_name,
+                 source_pk_value,
+                 scraped_at,
+                 migrated_at
+               ) VALUES (?, ?, ?, ?, ?, ?)`,
+            ) ?? null
+          : null;
       const recordSourceReference = (
         row: Record<string, any>,
         fallback: SourceReferenceFallback,
       ) => {
         const sourceReference = normalizeSourceReference(row, fallback);
+        if (sourceReferenceMode !== "off") {
+          this.updateImportSourceReferenceSummary(
+            sourceReferenceSummaries,
+            sourceReference,
+            reportStartedAt,
+          );
+        }
+
+        if (!sourceReferenceStatement) return;
+
         sourceReferenceStatement.run(
           sourceReference.sourceTable,
           sourceReference.sourcePage,
@@ -1549,6 +1814,27 @@ export class MigratorController {
         });
       }
 
+      if (sourceReferenceStatement) {
+        sourceReferenceStatement.finalize();
+        sourceReferenceStatement = null;
+      }
+
+      if (sourceReferenceMode !== "off") {
+        console.log("🧾 Persisting import source summaries...");
+        if (!traceDatabase) {
+          throw new Error(
+            "Trace database was not initialized while source reference mode is enabled",
+          );
+        }
+        this.persistImportSourceReferenceSummaries(
+          traceDatabase,
+          sourceReferenceSummaries,
+        );
+        console.log(
+          `✅ Import source summaries persisted (${sourceReferenceSummaries.size} tables)`,
+        );
+      }
+
       this.sendMessage({
         type: "progress",
         data: {
@@ -1617,7 +1903,10 @@ export class MigratorController {
         },
       });
       console.log("🔎 Rebuilding federated search index...");
-      const federatedSearchRows = this.rebuildFederatedSearchIndex(targetDatabase);
+      const federatedSearchRows = this.rebuildFederatedSearchIndex(
+        targetDatabase,
+        federatedSearchBodyMaxChars,
+      );
       console.log(
         `✅ Federated search index rebuilt (${federatedSearchRows} rows)`,
       );
@@ -1678,9 +1967,51 @@ export class MigratorController {
       targetDatabase.exec(SQLITE_PRAGMAS.synchronousFull);
       console.log("💾 Flushing WAL checkpoint...");
       targetDatabase.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+      if (shouldVacuumAfterImport) {
+        this.sendMessage({
+          type: "progress",
+          data: {
+            message: "Compacting database file (VACUUM)...",
+            currentTable: null,
+            tablesCompleted,
+            totalTables: tablesToImport.length,
+          },
+        });
+        const databasePath = getDatabasePath();
+        const sizeBeforeBytes = fs.existsSync(databasePath)
+          ? fs.statSync(databasePath).size
+          : 0;
+        console.log("🗜️  Running VACUUM to compact database file...");
+        targetDatabase.exec("VACUUM;");
+        const sizeAfterBytes = fs.existsSync(databasePath)
+          ? fs.statSync(databasePath).size
+          : 0;
+        const toMb = (bytes: number) => (bytes / (1024 * 1024)).toFixed(1);
+        console.log(
+          `✅ VACUUM complete (${toMb(sizeBeforeBytes)} MB -> ${toMb(sizeAfterBytes)} MB)`,
+        );
+      } else {
+        console.log("⏭️  Skipping VACUUM (MIGRATOR_VACUUM_AFTER_IMPORT disabled)");
+      }
+
+      if (traceDatabase && traceTransactionOpen) {
+        traceDatabase.exec(MIGRATOR_SQL.commit);
+        traceTransactionOpen = false;
+        traceDatabase.exec(SQLITE_PRAGMAS.synchronousFull);
+        traceDatabase.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+      }
+
       console.log("✅ Safety features restored");
 
       targetDatabase.close();
+      if (sourceReferenceStatement) {
+        sourceReferenceStatement.finalize();
+        sourceReferenceStatement = null;
+      }
+      if (traceDatabase) {
+        traceDatabase.close();
+        traceDatabase = null;
+      }
       await this.publishLatestDatabaseArtifact({
         runId: reportRunId,
         migratedAt: timestamp,
@@ -1703,6 +2034,27 @@ export class MigratorController {
         },
       });
     } catch (error: any) {
+      if (sourceReferenceStatement) {
+        sourceReferenceStatement.finalize();
+        sourceReferenceStatement = null;
+      }
+      if (traceDatabase && traceTransactionOpen) {
+        try {
+          traceDatabase.exec(MIGRATOR_SQL.rollback);
+        } catch (_rollbackError) {
+          // best effort rollback
+        }
+        traceTransactionOpen = false;
+      }
+      if (traceDatabase) {
+        try {
+          traceDatabase.close();
+        } catch (_closeError) {
+          // ignore close error
+        }
+        traceDatabase = null;
+      }
+
       migrationStatus = this.shouldStop ? "stopped" : "failed";
       migrationError = error?.message || String(error);
       if (this.shouldStop) {
