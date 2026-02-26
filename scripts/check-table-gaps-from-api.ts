@@ -206,7 +206,7 @@ async function readLocalMissingIds(
   const pages = keys
     .map((k) => ({
       key: k.key,
-      page: StorageKeyBuilder.parseKey(k.key)?.page ?? 0,
+      page: StorageKeyBuilder.parseKey(k.key)?.firstPk ?? 0,
     }))
     .sort((a, b) => a.page - b.page);
 

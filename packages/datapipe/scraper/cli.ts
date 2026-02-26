@@ -23,35 +23,35 @@ async function main() {
   const tableName = args[0];
   let mode: ScrapeMode = { type: "auto-resume" };
 
-  // Check for flags
-  if (args.length > 1) {
-    const flag = args[1];
-    const value = args[2];
+  // Check for flags — supports both "--flag value" and "--flag=value"
+  function parseFlagValue(flag: string, nextArg: string | undefined): string | null {
+    const eqIndex = flag.indexOf("=");
+    if (eqIndex !== -1) return flag.slice(eqIndex + 1);
+    return nextArg ?? null;
+  }
 
-    if (flag === "--from" || flag === "-f") {
-      const page = parseInt(value, 10);
-      if (Number.isNaN(page) || page < 1) {
-        console.error("❌ Error: Page number must be a positive integer");
+  if (args.length > 1) {
+    const flag = args[1].split("=")[0];
+    const value = parseFlagValue(args[1], args[2]);
+
+    if (flag === "--from-pk" || flag === "-f") {
+      const pk = parseInt(value ?? "", 10);
+      if (Number.isNaN(pk) || pk < 0) {
+        console.error("❌ Error: PK value must be a non-negative integer");
         process.exit(1);
       }
-      mode = { type: "start-from", page };
-    } else if (flag === "--page" || flag === "-p") {
-      const page = parseInt(value, 10);
-      if (Number.isNaN(page) || page < 1) {
-        console.error("❌ Error: Page number must be a positive integer");
+      mode = { type: "start-from-pk", pkStartValue: pk };
+    } else if (flag === "--patch-pk") {
+      const pk = parseInt(value ?? "", 10);
+      if (Number.isNaN(pk) || pk < 0) {
+        console.error("❌ Error: PK value must be a non-negative integer");
         process.exit(1);
       }
-      mode = { type: "single-page", page };
+      mode = { type: "patch-from-pk", pkStartValue: pk };
     } else {
-      // Backward compatibility: treat as page number for start-from
-      const page = parseInt(flag, 10);
-      if (!Number.isNaN(page) && page >= 1) {
-        mode = { type: "start-from", page };
-      } else {
-        console.error(`❌ Error: Unknown flag: ${flag}`);
-        printHelp();
-        process.exit(1);
-      }
+      console.error(`❌ Error: Unknown flag: ${args[1]}`);
+      printHelp();
+      process.exit(1);
     }
   }
 
@@ -65,55 +65,29 @@ async function main() {
 }
 
 async function showStatus() {
-  const { getStorage, listAllStorageKeys, StorageKeyBuilder } = await import(
-    "#storage"
+  const { hasSourceStageStatus, loadSourceStageStatusMap } = await import(
+    "#storage/source-status"
   );
-  const storage = getStorage();
+
+  if (!(await hasSourceStageStatus())) {
+    console.error("❌ Status metadata file not found.");
+    console.error(
+      "   Run the scraper first to populate it: bun run scrape <TableName>",
+    );
+    process.exit(1);
+  }
 
   console.log("📊 Scraping Status\n");
 
-  const data = await getExactTableCountsByRows();
+  const [data, snapshots] = await Promise.all([
+    getExactTableCountsByRows(),
+    loadSourceStageStatusMap(),
+  ]);
 
   for (const table of data) {
-    const prefix = StorageKeyBuilder.listPrefixForTable("raw", table.tableName);
-    const keys = await listAllStorageKeys(storage, { prefix });
-
-    const pageCount = keys.length;
-
-    // Calculate exact row count: ((pageCount - 1) * 100) + rows in last page
-    let exactRows = 0;
-    if (pageCount > 0) {
-      // Parse page numbers to find the highest page
-      const pageNumbers = keys
-        .map((key) => StorageKeyBuilder.parseKey(key.key))
-        .filter((ref) => ref !== null)
-        .map((ref) => ref?.page);
-
-      const lastPage = Math.max(...pageNumbers);
-
-      // Read the last page to get exact row count
-      const lastPageKey = StorageKeyBuilder.forPage(
-        "raw",
-        table.tableName,
-        lastPage,
-      );
-      const lastPageData = await storage.get(lastPageKey);
-
-      if (lastPageData) {
-        try {
-          const lastPageContent = JSON.parse(lastPageData) as {
-            rowCount: number;
-          };
-          exactRows = (pageCount - 1) * 100 + lastPageContent.rowCount;
-        } catch (_error) {
-          // Fallback to estimate if parsing fails
-          exactRows = pageCount * 100;
-        }
-      } else {
-        // Fallback to estimate if reading fails
-        exactRows = pageCount * 100;
-      }
-    }
+    const snapshot = snapshots[`raw:${table.tableName}`];
+    const pageCount = snapshot?.pageCount ?? 0;
+    const exactRows = snapshot?.totalRowCount ?? 0;
 
     const percentComplete =
       table.rowCount > 0 ? (exactRows / table.rowCount) * 100 : 0;
@@ -142,18 +116,17 @@ Usage:
 Modes:
   Auto-resume (default)
     bun cli.ts <TableName>
-    Automatically continues from last scraped page
+    Automatically continues from last scraped batch (by primary key)
 
-  Start from page
-    bun cli.ts <TableName> --from <page>
-    bun cli.ts <TableName> -f <page>
-    bun cli.ts <TableName> <page>          (shorthand)
-    Starts from specified page and continues until end
+  Start from PK
+    bun cli.ts <TableName> --from-pk <pk>
+    bun cli.ts <TableName> -f <pk>
+    Starts from the given primary key value and continues until end
 
-  Single page
-    bun cli.ts <TableName> --page <page>
-    bun cli.ts <TableName> -p <page>
-    Scrapes only the specified page
+  Patch from PK
+    bun cli.ts <TableName> --patch-pk <pk>
+    Scrapes patch page [A,B] from pk, deletes subsumed pages with firstPk in (A,B],
+    then scrapes one follow-up page from B+1 and stops (max 2 API calls)
 
 Commands:
   status                Show scraping status for all tables
@@ -161,9 +134,8 @@ Commands:
 
 Examples:
   bun cli.ts MemberOfParliament
-  bun cli.ts MemberOfParliament --from 5
-  bun cli.ts MemberOfParliament -p 10
-  bun cli.ts SaliDBAanestys 5
+  bun cli.ts MemberOfParliament --from-pk 401
+  bun cli.ts MemberOfParliament --patch-pk 82310
   bun cli.ts status
 
 Environment Variables:
@@ -179,8 +151,8 @@ Common Tables:
 
 Notes:
   - Auto-resume is the default behavior
-  - Use --from to re-scrape from a specific point
-  - Use --page to scrape/re-scrape a single page (useful for debugging)
+  - Auto-resume is the default — use --from-pk to re-scrape from a specific point
+  - Use --patch-pk to fix a missing row by re-scraping its page + one follow-up (max 2 API calls)
   - Each page contains ~100 rows from the API
 
 For more information, see: shared/storage/README.md

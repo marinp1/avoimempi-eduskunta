@@ -27,15 +27,10 @@ async function validateDataset(
 
   try {
     const files = await readdir(datasetPath);
+    // Match page_{firstPk12}+{lastPk12}.json — lexicographic sort is correct since names are zero-padded
     const pageFiles = files
-      .filter((f) => f.startsWith("page_") && f.endsWith(".json"))
-      .sort((a, b) => {
-        const aMatch = a.match(/page_(\d+)/);
-        const bMatch = b.match(/page_(\d+)/);
-        const aNum = aMatch ? Number(aMatch[1]) : Number.MAX_SAFE_INTEGER;
-        const bNum = bMatch ? Number(bMatch[1]) : Number.MAX_SAFE_INTEGER;
-        return aNum - bNum;
-      });
+      .filter((f) => /^page_\d{12}\+\d{12}\.json$/.test(f))
+      .sort();
 
     console.log(`\n${"=".repeat(60)}`);
     console.log(`Dataset: ${datasetName} (${dataDir})`);
@@ -192,8 +187,8 @@ async function findAnomalies(
 ) {
   const datasetPath = join("data", dataDir, datasetName);
   const files = await readdir(datasetPath);
-  const pageFiles = files.filter(
-    (f) => f.startsWith("page_") && f.endsWith(".json"),
+  const pageFiles = files.filter((f) =>
+    /^page_\d{12}\+\d{12}\.json$/.test(f),
   );
 
   const sizes: [string, number][] = [];

@@ -2,7 +2,7 @@
  * Storage abstraction types for offline-first, cloud-agnostic data storage
  */
 
-export type StorageKey = string; // e.g., "raw/MemberOfParliament/page_1.json"
+export type StorageKey = string; // e.g., "raw/MemberOfParliament/page_000000000001+000000000100.json"
 
 export interface StorageMetadata {
   key: StorageKey;
@@ -96,7 +96,8 @@ export type DataStage = "raw" | "parsed";
 
 export interface PageReference {
   table: string;
-  page: number;
+  firstPk: number;
+  lastPk: number;
   stage: DataStage;
 }
 
@@ -104,22 +105,28 @@ export interface PageReference {
  * Helper to construct storage keys
  */
 export class StorageKeyBuilder {
-  static forPage(
+  static forPkRange(
     stage: DataStage,
     tableName: string,
-    pageNumber: number,
+    firstPk: number,
+    lastPk: number,
   ): StorageKey {
-    return `${stage}/${tableName}/page_${pageNumber}.json`;
+    const fKey = String(firstPk).padStart(12, "0");
+    const lKey = String(lastPk).padStart(12, "0");
+    return `${stage}/${tableName}/page_${fKey}+${lKey}.json`;
   }
 
   static parseKey(key: StorageKey): PageReference | null {
-    const match = key.match(/^(raw|parsed)\/([^/]+)\/page_(\d+)\.json$/);
+    const match = key.match(
+      /^(raw|parsed)\/([^/]+)\/page_(\d{12})\+(\d{12})\.json$/,
+    );
     if (!match) return null;
 
     return {
       stage: match[1] as DataStage,
       table: match[2],
-      page: parseInt(match[3], 10),
+      firstPk: parseInt(match[3], 10),
+      lastPk: parseInt(match[4], 10),
     };
   }
 

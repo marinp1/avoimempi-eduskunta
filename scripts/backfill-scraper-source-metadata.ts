@@ -4,14 +4,15 @@ import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getStorageConfig } from "../packages/shared/storage/config";
 
-const PAGE_FILE_PATTERN = /^page_(\d+)\.json$/i;
+const PAGE_FILE_PATTERN = /^page_(\d{12})\+(\d{12})\.json$/i;
 const STAGES = ["raw", "parsed"] as const;
 type Stage = (typeof STAGES)[number];
 
 type RawPagePayload = Record<string, unknown> & {
   source?: {
     tableName?: string;
-    page?: number;
+    firstPk?: number;
+    lastPk?: number;
     scrapedAt?: string;
   };
 };
@@ -118,7 +119,7 @@ function shouldSkipExistingSource(
 
   return (
     typeof payload.source.tableName === "string" &&
-    typeof payload.source.page === "number" &&
+    typeof payload.source.firstPk === "number" &&
     typeof payload.source.scrapedAt === "string" &&
     payload.source.tableName.trim() !== "" &&
     payload.source.scrapedAt.trim() !== ""
@@ -130,8 +131,8 @@ function isSourceMetadataComplete(payload: RawPagePayload): boolean {
     !!payload.source &&
     typeof payload.source.tableName === "string" &&
     payload.source.tableName.trim() !== "" &&
-    typeof payload.source.page === "number" &&
-    Number.isFinite(payload.source.page) &&
+    typeof payload.source.firstPk === "number" &&
+    Number.isFinite(payload.source.firstPk) &&
     typeof payload.source.scrapedAt === "string" &&
     payload.source.scrapedAt.trim() !== ""
   );
@@ -179,14 +180,16 @@ async function listTableDirectories(stageDir: string): Promise<string[]> {
 function backfillRawPayload(
   payload: RawPagePayload,
   tableName: string,
-  page: number,
+  firstPk: number,
+  lastPk: number,
   scrapedAt: string,
 ): { nextPayload: RawPagePayload; changed: boolean } {
   const nextPayload: RawPagePayload = {
     ...payload,
     source: {
       tableName,
-      page,
+      firstPk,
+      lastPk,
       scrapedAt,
     },
   };
@@ -200,7 +203,8 @@ function backfillRawPayload(
 function backfillParsedPayload(
   payload: RawPagePayload,
   tableName: string,
-  page: number,
+  firstPk: number,
+  lastPk: number,
   scrapedAt: string,
   overwrite: boolean,
 ): { nextPayload: RawPagePayload; changed: boolean } {
@@ -212,16 +216,20 @@ function backfillParsedPayload(
   const source =
     !overwrite && isSourceMetadataComplete(payload)
       ? payload.source
-      : { tableName, page, scrapedAt };
+      : { tableName, firstPk, lastPk, scrapedAt };
 
   const sourceTable =
     typeof source?.tableName === "string" && source.tableName.trim() !== ""
       ? source.tableName
       : tableName;
-  const sourcePage =
-    typeof source?.page === "number" && Number.isFinite(source.page)
-      ? source.page
-      : page;
+  const sourceFirstPk =
+    typeof source?.firstPk === "number" && Number.isFinite(source.firstPk)
+      ? source.firstPk
+      : firstPk;
+  const sourceLastPk =
+    typeof source?.lastPk === "number" && Number.isFinite(source.lastPk)
+      ? source.lastPk
+      : lastPk;
   const sourceScrapedAt =
     typeof source?.scrapedAt === "string" && source.scrapedAt.trim() !== ""
       ? source.scrapedAt
@@ -252,7 +260,7 @@ function backfillParsedPayload(
           return {
             ...rowObject,
             [IMPORT_METADATA_FIELDS.sourceTable]: sourceTable,
-            [IMPORT_METADATA_FIELDS.sourcePage]: sourcePage,
+            [IMPORT_METADATA_FIELDS.sourcePage]: sourceFirstPk,
             [IMPORT_METADATA_FIELDS.scrapedAt]: sourceScrapedAt,
             [IMPORT_METADATA_FIELDS.sourcePrimaryKeyName]: pkName,
             [IMPORT_METADATA_FIELDS.sourcePrimaryKeyValue]:
@@ -264,7 +272,8 @@ function backfillParsedPayload(
     ...payload,
     source: {
       tableName: sourceTable,
-      page: sourcePage,
+      firstPk: sourceFirstPk,
+      lastPk: sourceLastPk,
       scrapedAt: sourceScrapedAt,
     },
     rowData: nextRowData,
@@ -301,8 +310,9 @@ async function processTable(
       continue;
     }
 
-    const page = Number.parseInt(match[1], 10);
-    if (!Number.isFinite(page)) {
+    const firstPk = Number.parseInt(match[1], 10);
+    const lastPk = Number.parseInt(match[2], 10);
+    if (!Number.isFinite(firstPk) || !Number.isFinite(lastPk)) {
       counters.unsupportedFile++;
       continue;
     }
@@ -344,11 +354,12 @@ async function processTable(
 
     const { nextPayload, changed } =
       stage === "raw"
-        ? backfillRawPayload(payload, tableName, page, createdAt.toISOString())
+        ? backfillRawPayload(payload, tableName, firstPk, lastPk, createdAt.toISOString())
         : backfillParsedPayload(
             payload,
             tableName,
-            page,
+            firstPk,
+            lastPk,
             createdAt.toISOString(),
             options.overwrite,
           );

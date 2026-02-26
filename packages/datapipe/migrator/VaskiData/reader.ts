@@ -77,23 +77,21 @@ export async function* readVaskiRowsByDocumentType(
 
   const storage = getStorage();
   const seenIds = new Set<string>();
-  const pages = Object.keys(entry.pages)
-    .map((page) => parseInt(page, 10))
-    .filter((page) => !Number.isNaN(page))
-    .sort((a, b) => a - b);
+  // Storage keys are zero-padded, so lexicographic sort = chronological order
+  const storageKeys = Object.keys(entry.pages).sort();
 
-  for (const page of pages) {
-    const idsInPage = new Set(entry.pages[String(page)] ?? []);
+  for (const storageKey of storageKeys) {
+    const idsInPage = new Set(entry.pages[storageKey] ?? []);
     if (idsInPage.size === 0) continue;
 
-    const pageKey = StorageKeyBuilder.forPage("parsed", "VaskiData", page);
-    const rawPage = await storage.get(pageKey);
+    const rawPage = await storage.get(storageKey);
     if (!rawPage) continue;
 
     const parsedPage = JSON.parse(rawPage) as {
       rowData?: Array<Record<string, any>>;
     };
     const rows = Array.isArray(parsedPage.rowData) ? parsedPage.rowData : [];
+    const filename = storageKey.split("/").pop()!;
 
     for (const row of rows) {
       if (!row || row._skip) continue;
@@ -111,9 +109,9 @@ export async function* readVaskiRowsByDocumentType(
       yield {
         ...(row as VaskiEntry),
         _source: {
-          page,
-          parsedKey: pageKey,
-          vaskiPath: `vaski-data/${documentType}/page_${page}.json`,
+          page: StorageKeyBuilder.parseKey(storageKey)?.firstPk ?? 0,
+          parsedKey: storageKey,
+          vaskiPath: `vaski-data/${documentType}/${filename}`,
         },
       };
     }

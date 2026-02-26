@@ -32,7 +32,7 @@ describe("buildConsolidatedMigrationReport", () => {
       details: "Parsed with warnings",
       id: "100",
       source: {
-        vaskiPath: "vaski-data/hallituksen_esitys/page_1.json",
+        vaskiPath: "vaski-data/hallituksen_esitys/page_000000000001+000000000100.json",
       },
       issue_count: 1,
       issues: [{ level: "warning", code: "x" }],
@@ -43,7 +43,7 @@ describe("buildConsolidatedMigrationReport", () => {
       details: "No body content",
       id: "101",
       source: {
-        vaskiPath: "vaski-data/hallituksen_esitys/page_2.json",
+        vaskiPath: "vaski-data/hallituksen_esitys/page_000000000002+000000000101.json",
       },
     });
 
@@ -52,7 +52,7 @@ describe("buildConsolidatedMigrationReport", () => {
       details: "Could not parse",
       id: "102",
       source: {
-        vaskiPath: "vaski-data/lakialoite/page_1.json",
+        vaskiPath: "vaski-data/lakialoite/page_000000000001+000000000100.json",
       },
     });
 
@@ -65,7 +65,7 @@ describe("buildConsolidatedMigrationReport", () => {
       reason: "missing_edk_identifier",
       details: "Skipped row",
       source: {
-        vaskiPath: "vaski-data/nimenhuutoraportti/page_1.json",
+        vaskiPath: "vaski-data/nimenhuutoraportti/page_000000000001+000000000100.json",
       },
     });
 

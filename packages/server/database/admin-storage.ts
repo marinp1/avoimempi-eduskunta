@@ -87,48 +87,24 @@ export class AdminStorageService {
     return (Object.values(TableName) as string[]).sort();
   }
 
-  private async buildTableStatus(
+  private buildTableStatus(
     tableName: string,
     apiCounts: Record<string, number>,
     stageSnapshots: Record<string, SourceStageStatusSnapshot>,
-  ): Promise<TableStorageStatus> {
+  ): TableStorageStatus {
     const rawSnapshot =
       stageSnapshots[this.buildStageSnapshotKey("raw", tableName)];
     const parsedSnapshot =
       stageSnapshots[this.buildStageSnapshotKey("parsed", tableName)];
 
-    const rawFiles = rawSnapshot
-      ? []
-      : await this.getTableFiles("raw", tableName);
-    const parsedFiles = parsedSnapshot
-      ? []
-      : await this.getTableFiles("parsed", tableName);
-
-    const rawPageCount = rawSnapshot ? rawSnapshot.pageCount : rawFiles.length;
-    const parsedPageCount = parsedSnapshot
-      ? parsedSnapshot.pageCount
-      : parsedFiles.length;
-
-    const hasRaw = rawSnapshot
-      ? rawSnapshot.pageCount > 0
-      : rawFiles.length > 0;
-    const hasParsed = parsedSnapshot
-      ? parsedSnapshot.pageCount > 0
-      : parsedFiles.length > 0;
-
+    const rawPageCount = rawSnapshot?.pageCount ?? 0;
+    const parsedPageCount = parsedSnapshot?.pageCount ?? 0;
     const rawEstimatedRows = rawSnapshot
       ? this.estimateRowsFromSnapshot(rawSnapshot)
-      : await this.getExactRowCount("raw", tableName, rawFiles);
+      : 0;
     const parsedEstimatedRows = parsedSnapshot
       ? this.estimateRowsFromSnapshot(parsedSnapshot)
-      : await this.getExactRowCount("parsed", tableName, parsedFiles);
-
-    const rawLastUpdated = rawSnapshot
-      ? rawSnapshot.lastUpdated
-      : this.getMostRecentTimestamp(rawFiles);
-    const parsedLastUpdated = parsedSnapshot
-      ? parsedSnapshot.lastUpdated
-      : this.getMostRecentTimestamp(parsedFiles);
+      : 0;
 
     const totalRowsInApi = apiCounts[tableName] || 0;
     const effectiveTotal = Math.max(totalRowsInApi, rawEstimatedRows);
@@ -141,10 +117,10 @@ export class AdminStorageService {
       table_name: tableName,
       raw_page_count: rawPageCount,
       parsed_page_count: parsedPageCount,
-      has_raw_data: hasRaw,
-      has_parsed_data: hasParsed,
-      raw_last_updated: rawLastUpdated,
-      parsed_last_updated: parsedLastUpdated,
+      has_raw_data: rawPageCount > 0,
+      has_parsed_data: parsedPageCount > 0,
+      raw_last_updated: rawSnapshot?.lastUpdated ?? null,
+      parsed_last_updated: parsedSnapshot?.lastUpdated ?? null,
       raw_estimated_rows: rawEstimatedRows,
       parsed_estimated_rows: parsedEstimatedRows,
       total_rows_in_api: totalRowsInApi,
@@ -176,72 +152,6 @@ export class AdminStorageService {
   /**
    * Get the most recent modification date from a list of files
    */
-  private getMostRecentTimestamp(files: StorageMetadata[]): string | null {
-    if (files.length === 0) return null;
-
-    const mostRecent = files.reduce((latest, file) => {
-      return file.lastModified > latest.lastModified ? file : latest;
-    });
-
-    return mostRecent.lastModified.toISOString();
-  }
-
-  /**
-   * Get exact row count by reading only the last page file
-   * Formula: (pageCount - 1) * 100 + lastPageRowCount
-   */
-  private async getExactRowCount(
-    _stage: DataStage,
-    _tableName: string,
-    files: StorageMetadata[],
-  ): Promise<number> {
-    if (files.length === 0) return 0;
-    if (files.length === 1) {
-      // Just one page, read it to get exact count
-      const storage = getStorage();
-      try {
-        const data = await storage.get(files[0].key);
-        if (data) {
-          const pageData = JSON.parse(data) as { rowCount: number };
-          return pageData.rowCount || 0;
-        }
-      } catch (error) {
-        console.error(`Error reading ${files[0].key}:`, error);
-        return 100; // Fallback estimate
-      }
-    }
-
-    const storage = getStorage();
-
-    // Find the last page (highest page number)
-    const sortedFiles = files
-      .map((f) => ({ file: f, parsed: StorageKeyBuilder.parseKey(f.key) }))
-      .filter((f) => f.parsed !== null)
-      .sort((a, b) => (b.parsed?.page || 0) - (a.parsed?.page || 0));
-
-    if (sortedFiles.length === 0) {
-      // Fallback: estimate all pages as 100 rows
-      return files.length * 100;
-    }
-
-    const lastFile = sortedFiles[0].file;
-
-    try {
-      const data = await storage.get(lastFile.key);
-      if (data) {
-        const pageData = JSON.parse(data) as { rowCount: number };
-        const lastPageRows = pageData.rowCount || 0;
-        // (pageCount - 1) * 100 + lastPageRows
-        return (files.length - 1) * 100 + lastPageRows;
-      }
-    } catch (error) {
-      console.error(`Error reading last page ${lastFile.key}:`, error);
-    }
-
-    // Fallback to estimation
-    return files.length * 100;
-  }
-
   private buildStageSnapshotKey(stage: DataStage, tableName: string): string {
     return `${stage}:${tableName}`;
   }
@@ -250,6 +160,7 @@ export class AdminStorageService {
     snapshot: SourceStageStatusSnapshot,
   ): number {
     if (snapshot.pageCount === 0) return 0;
+    if (snapshot.totalRowCount > 0) return snapshot.totalRowCount;
     return (snapshot.pageCount - 1) * 100 + snapshot.lastPageRowCount;
   }
 
@@ -302,10 +213,8 @@ export class AdminStorageService {
         tableNames: tables,
         candidateRowCounts,
       });
-      const data = await Promise.all(
-        tables.map((tableName) =>
-          this.buildTableStatus(tableName, apiCounts, stageSnapshots),
-        ),
+      const data = tables.map((tableName) =>
+        this.buildTableStatus(tableName, apiCounts, stageSnapshots),
       );
       AdminStorageService.statusCache = {
         data,
@@ -337,7 +246,7 @@ export class AdminStorageService {
       tableNames: [tableName],
       candidateRowCounts,
     });
-    return await this.buildTableStatus(tableName, apiCounts, stageSnapshots);
+    return this.buildTableStatus(tableName, apiCounts, stageSnapshots);
   }
 
   /**
@@ -345,16 +254,16 @@ export class AdminStorageService {
    */
   async getTablePages(tableName: string, stage: DataStage): Promise<number[]> {
     const files = await this.getTableFiles(stage, tableName);
-    const pageNumbers: number[] = [];
+    const firstPks: number[] = [];
 
     for (const file of files) {
       const parsed = StorageKeyBuilder.parseKey(file.key);
       if (parsed) {
-        pageNumbers.push(parsed.page);
+        firstPks.push(parsed.firstPk);
       }
     }
 
-    return pageNumbers.sort((a, b) => a - b);
+    return firstPks.sort((a, b) => a - b);
   }
 
   /**

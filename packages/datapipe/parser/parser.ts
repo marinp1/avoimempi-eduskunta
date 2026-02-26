@@ -18,7 +18,8 @@ interface EduskuntaApiResponse {
   hasMore: boolean;
   source?: {
     tableName?: string;
-    page?: number;
+    firstPk?: number;
+    lastPk?: number;
     scrapedAt?: string;
   };
 }
@@ -52,7 +53,7 @@ export type ParserFunction = (
  * default ParserFunction.
  */
 export interface ParserHooks {
-  onPageParsed?: (pageNumber: number, rows: ParsedRow[]) => Promise<void>;
+  onPageParsed?: (storageKey: string, rows: ParsedRow[]) => Promise<void>;
   onParsingComplete?: () => Promise<void>;
 }
 
@@ -158,13 +159,13 @@ export async function parseTable(options: ParseOptions): Promise<void> {
   console.log(`📋 Found ${sourceKeys.length} pages to parse`);
 
   let pagesToParse: typeof sourceKeys;
-  let alreadyParsedPages = new Set<number>();
+  let alreadyParsedCount = 0;
 
   if (force) {
     console.log(`🔄 Force mode: re-parsing all ${sourceKeys.length} pages`);
     pagesToParse = sourceKeys;
   } else {
-    // Check which pages are already parsed
+    // Check which pages are already parsed by matching filenames
     const targetPrefix = StorageKeyBuilder.listPrefixForTable(
       targetStage,
       tableName,
@@ -174,28 +175,39 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       pageSize: 10_000,
     });
 
-    alreadyParsedPages = new Set(
-      parsedKeys
-        .map((key) => StorageKeyBuilder.parseKey(key.key))
-        .filter((ref) => ref !== null)
-        .map((ref) => ref?.page),
+    // Build set of already-parsed filenames (e.g. "page_000000000001+000000000100.json")
+    const parsedFilenames = new Set(
+      parsedKeys.map((k) => k.key.split("/").pop()!),
     );
 
-    // Always re-parse the last page in case it was incomplete
-    const lastParsedPage =
-      alreadyParsedPages.size > 0 ? Math.max(...alreadyParsedPages) : 0;
-    if (lastParsedPage > 0) {
-      alreadyParsedPages.delete(lastParsedPage);
+    // Find the last parsed file (highest lastPk) to re-parse it
+    const parsedRefs = parsedKeys
+      .map((k) => StorageKeyBuilder.parseKey(k.key))
+      .filter((ref): ref is NonNullable<ReturnType<typeof StorageKeyBuilder.parseKey>> => ref !== null);
+
+    if (parsedRefs.length > 0) {
+      const lastParsedRef = parsedRefs.reduce((max, curr) =>
+        curr.lastPk > max.lastPk ? curr : max,
+      );
+      const lastFilename = StorageKeyBuilder.forPkRange(
+        targetStage,
+        tableName,
+        lastParsedRef.firstPk,
+        lastParsedRef.lastPk,
+      ).split("/").pop()!;
+      parsedFilenames.delete(lastFilename);
     }
 
+    alreadyParsedCount = parsedFilenames.size;
+
     pagesToParse = sourceKeys.filter((key) => {
-      const pageRef = StorageKeyBuilder.parseKey(key.key);
-      return pageRef && !alreadyParsedPages.has(pageRef.page);
+      const filename = key.key.split("/").pop()!;
+      return !parsedFilenames.has(filename);
     });
 
-    if (alreadyParsedPages.size > 0) {
+    if (alreadyParsedCount > 0) {
       console.log(
-        `✅ Already parsed: ${alreadyParsedPages.size} pages (complete)`,
+        `✅ Already parsed: ${alreadyParsedCount} pages (complete)`,
       );
       console.log(
         `🔄 Re-parsing last page and continuing: ${pagesToParse.length} pages remaining`,
@@ -215,24 +227,32 @@ export async function parseTable(options: ParseOptions): Promise<void> {
 
   console.log();
 
+  // Sort pages by firstPk ascending so we process in order
+  const sortedPagesToParse = [...pagesToParse].sort((a, b) => {
+    const ra = StorageKeyBuilder.parseKey(a.key);
+    const rb = StorageKeyBuilder.parseKey(b.key);
+    return (ra?.firstPk ?? 0) - (rb?.firstPk ?? 0);
+  });
+
   const totalPages = sourceKeys.length;
   let pagesParsed = 0;
+  let internalPageCounter = alreadyParsedCount + 1;
   let totalRowsParsed = 0;
 
   // Process each page
-  for (const keyMetadata of pagesToParse) {
+  for (const keyMetadata of sortedPagesToParse) {
     const pageRef = StorageKeyBuilder.parseKey(keyMetadata.key);
     if (!pageRef) {
       console.warn(`⚠️  Could not parse key: ${keyMetadata.key}`);
       continue;
     }
 
-    console.log(`📄 Processing page ${pageRef.page}...`);
+    console.log(`📄 Processing page_${String(pageRef.firstPk).padStart(12, "0")}+${String(pageRef.lastPk).padStart(12, "0")}...`);
 
     // Read raw page data
     const rawData = await storage.get(keyMetadata.key);
     if (!rawData) {
-      console.warn(`⚠️  Could not read page ${pageRef.page}`);
+      console.warn(`⚠️  Could not read ${keyMetadata.key}`);
       continue;
     }
 
@@ -242,11 +262,11 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       apiResponse.source.tableName.trim() !== ""
         ? apiResponse.source.tableName
         : tableName;
-    const sourcePage =
-      typeof apiResponse.source?.page === "number" &&
-      Number.isFinite(apiResponse.source.page)
-        ? apiResponse.source.page
-        : pageRef.page;
+    const sourcePk =
+      typeof apiResponse.source?.firstPk === "number" &&
+      Number.isFinite(apiResponse.source.firstPk)
+        ? apiResponse.source.firstPk
+        : pageRef.firstPk;
     const sourceScrapedAt =
       typeof apiResponse.source?.scrapedAt === "string"
         ? apiResponse.source.scrapedAt
@@ -268,7 +288,7 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       parsedRows.push({
         ...parsedData,
         [IMPORT_METADATA_FIELDS.sourceTable]: sourceTableName,
-        [IMPORT_METADATA_FIELDS.sourcePage]: sourcePage,
+        [IMPORT_METADATA_FIELDS.sourcePage]: sourcePk,
         [IMPORT_METADATA_FIELDS.scrapedAt]: sourceScrapedAt,
         [IMPORT_METADATA_FIELDS.sourcePrimaryKeyName]: apiResponse.pkName,
         [IMPORT_METADATA_FIELDS.sourcePrimaryKeyValue]:
@@ -277,7 +297,7 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       totalRowsParsed++;
     }
 
-    // Create parsed page structure
+    // Create parsed page structure — same PK-range filename as source
     const parsedPage = {
       columnNames: apiResponse.columnNames,
       pkName: apiResponse.pkName,
@@ -287,47 +307,51 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       hasMore: apiResponse.hasMore,
       source: {
         tableName: sourceTableName,
-        page: sourcePage,
+        firstPk: sourcePk,
+        lastPk: pageRef.lastPk,
         scrapedAt: sourceScrapedAt,
       },
     };
 
-    // Write parsed page to storage
-    const targetKey = StorageKeyBuilder.forPage(
+    // Write parsed page using same PK-range key
+    const targetKey = StorageKeyBuilder.forPkRange(
       targetStage,
       tableName,
-      pageRef.page,
+      pageRef.firstPk,
+      pageRef.lastPk,
     );
     await storage.put(targetKey, JSON.stringify(parsedPage, null, 2));
     await recordSourceStagePage(
       tableName,
       targetStage,
-      pageRef.page,
+      internalPageCounter,
       parsedPage.rowCount,
     );
 
     // Call page hook if the parser module exports one
     if (hooks.onPageParsed) {
-      await hooks.onPageParsed(pageRef.page, parsedRows);
+      await hooks.onPageParsed(targetKey, parsedRows);
     }
 
     pagesParsed++;
-    const totalPagesParsed = alreadyParsedPages.size + pagesParsed;
+    const totalPagesParsed = alreadyParsedCount + pagesParsed;
     const percentComplete = (totalPagesParsed / totalPages) * 100;
 
     console.log(
-      `✅ Parsed page ${pageRef.page} (${apiResponse.rowCount} rows) - ${percentComplete.toFixed(1)}% complete`,
+      `✅ Parsed page_${String(pageRef.firstPk).padStart(12, "0")}+${String(pageRef.lastPk).padStart(12, "0")} (${apiResponse.rowCount} rows) - ${percentComplete.toFixed(1)}% complete`,
     );
 
     // Call progress callback
     if (onProgress) {
       onProgress({
-        page: pageRef.page,
+        page: internalPageCounter,
         rowsParsed: totalRowsParsed,
         totalPages,
         percentComplete,
       });
     }
+
+    internalPageCounter++;
   }
 
   // Call completion hook if the parser module exports one

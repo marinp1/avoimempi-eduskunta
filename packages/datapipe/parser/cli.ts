@@ -24,7 +24,7 @@ async function main() {
     return;
   }
 
-  if (runAll) {
+  if (tableName === "all" || runAll) {
     const tablesToParse = TableNames.map((name) => name);
     await parseTables(tablesToParse, { force });
     return;
@@ -132,16 +132,23 @@ function printHelp() {
 
 Usage:
   bun cli.ts <TableName>
+  bun cli.ts all
   bun cli.ts status
 
 Commands:
   <TableName>           Parse a specific table from raw to parsed stage
+  all                   Parse all tables (same as --all flag)
   status                Show parsing status for all tables
   help                  Show this help message
 
+Flags:
+  --force               Re-parse pages that are already parsed
+  --all                 Parse all tables (alternative to 'all' command)
+
 Examples:
   bun cli.ts MemberOfParliament
-  bun cli.ts SaliDBAanestys
+  bun cli.ts all
+  bun cli.ts all --force
   bun cli.ts status
 
 How it works:

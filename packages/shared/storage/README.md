@@ -6,8 +6,8 @@ Offline-first, cloud-agnostic storage system for the Eduskunta data pipeline.
 
 ```
 Data Pipeline:
-  Scraper  →  raw/<table>/page_N.json
-  Parser   →  parsed/<table>/page_N.json
+  Scraper  →  raw/<table>/page_{firstPk}+{lastPk}.json
+  Parser   →  parsed/<table>/page_{firstPk}+{lastPk}.json
   Migrator →  SQLite (rebuilt from parsed/)
 ```
 
@@ -25,15 +25,15 @@ Data Pipeline:
 data/
 ├── raw/
 │   ├── MemberOfParliament/
-│   │   ├── page_1.json
-│   │   ├── page_2.json
+│   │   ├── page_000000000001+000000000100.json
+│   │   ├── page_000000000101+000000000200.json
 │   │   └── ...
 │   └── SaliDBAanestys/
-│       ├── page_1.json
+│       ├── page_000000000001+000000000100.json
 │       └── ...
 └── parsed/
     ├── MemberOfParliament/
-    │   ├── page_1.json
+    │   ├── page_000000000001+000000000100.json
     │   └── ...
     └── ...
 ```
@@ -48,7 +48,7 @@ import { getStorage, StorageKeyBuilder } from "#storage";
 const storage = getStorage();
 
 // Write data
-const key = StorageKeyBuilder.forPage("raw", "MemberOfParliament", 1);
+const key = StorageKeyBuilder.forPkRange("raw", "MemberOfParliament", 1, 100);
 await storage.put(key, JSON.stringify(data));
 
 // Read data
@@ -73,32 +73,35 @@ console.log(`Size: ${meta.size}, Last modified: ${meta.lastModified}`);
 ### Scraper Example
 
 ```typescript
-import { getStorage, StorageKeyBuilder } from "#storage";
+import { getStorage, StorageKeyBuilder, listAllStorageKeys } from "#storage";
 
 const storage = getStorage();
 const tableName = "MemberOfParliament";
 
 // Check what pages already exist
 const prefix = StorageKeyBuilder.listPrefixForTable("raw", tableName);
-const existing = await storage.list({ prefix });
+const existing = await listAllStorageKeys(storage, { prefix, pageSize: 10_000 });
 
-// Find last page number
-const lastPage = existing.keys.length > 0
-  ? Math.max(...existing.keys.map(k => StorageKeyBuilder.parseKey(k)?.page ?? 0))
-  : 0;
+// Find the last scraped page by highest lastPk
+const lastRef = existing.length > 0
+  ? existing
+      .map(k => StorageKeyBuilder.parseKey(k.key))
+      .filter(Boolean)
+      .reduce((max, curr) => curr!.lastPk > max!.lastPk ? curr : max)
+  : null;
 
-// Resume from next page
-let page = lastPage + 1;
+let pkStartValue = lastRef ? lastRef.firstPk : 0; // re-scrape last page from its firstPk
 let hasMore = true;
 
 while (hasMore) {
-  const data = await fetchFromAPI(tableName, page);
-  
-  const key = StorageKeyBuilder.forPage("raw", tableName, page);
+  const data = await fetchFromAPI(tableName, pkStartValue);
+  const { firstPk, lastPk } = extractPkRange(data);
+
+  const key = StorageKeyBuilder.forPkRange("raw", tableName, firstPk, lastPk);
   await storage.put(key, JSON.stringify(data));
-  
-  hasMore = data.length > 0;
-  page++;
+
+  hasMore = data.hasMore;
+  pkStartValue = lastPk + 1;
 }
 ```
 
@@ -185,8 +188,8 @@ Parser  → eduskunta-parsed-data.db
 
 New:
 ```
-Scraper → data/raw/<table>/page_N.json
-Parser  → data/parsed/<table>/page_N.json
+Scraper → data/raw/<table>/page_{firstPk}+{lastPk}.json
+Parser  → data/parsed/<table>/page_{firstPk}+{lastPk}.json
 ```
 
 The scraper and parser will be updated to use this storage abstraction.
@@ -198,17 +201,17 @@ The scraper and parser will be updated to use this storage abstraction.
 Helper class for constructing storage keys:
 
 ```typescript
-// Create key for a page
-StorageKeyBuilder.forPage("raw", "MemberOfParliament", 1)
-// Returns: "raw/MemberOfParliament/page_1.json"
+// Create key for a PK range
+StorageKeyBuilder.forPkRange("raw", "MemberOfParliament", 1, 100)
+// Returns: "raw/MemberOfParliament/page_000000000001+000000000100.json"
 
 // Create prefix for listing table pages
 StorageKeyBuilder.listPrefixForTable("parsed", "SaliDBAanestys")
 // Returns: "parsed/SaliDBAanestys/"
 
 // Parse a key back to components
-StorageKeyBuilder.parseKey("raw/MemberOfParliament/page_5.json")
-// Returns: { stage: "raw", table: "MemberOfParliament", page: 5 }
+StorageKeyBuilder.parseKey("raw/MemberOfParliament/page_000000000001+000000000100.json")
+// Returns: { stage: "raw", table: "MemberOfParliament", firstPk: 1, lastPk: 100 }
 ```
 
 ### IStorageProvider

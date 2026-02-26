@@ -100,7 +100,8 @@ describe("VaskiData parser", () => {
       const parsedDir = path.join(workspace, "data", "parsed", "VaskiData");
       await mkdir(parsedDir, { recursive: true });
 
-      const page2 = {
+      // Files use PK-range naming: page_{firstPk}+{lastPk}.json (12-digit zero-padded)
+      const pageA = {
         rowData: [
           {
             id: "3",
@@ -112,7 +113,7 @@ describe("VaskiData parser", () => {
           },
         ],
       };
-      const page10 = {
+      const pageB = {
         rowData: [
           {
             id: "1",
@@ -126,13 +127,18 @@ describe("VaskiData parser", () => {
         ],
       };
 
+      const pageAFilename = "page_000000000003+000000000004.json";
+      const pageBFilename = "page_000000000001+000000000002.json";
+      const pageAKey = `parsed/VaskiData/${pageAFilename}`;
+      const pageBKey = `parsed/VaskiData/${pageBFilename}`;
+
       await writeFile(
-        path.join(parsedDir, "page_2.json"),
-        JSON.stringify(page2, null, 2),
+        path.join(parsedDir, pageAFilename),
+        JSON.stringify(pageA, null, 2),
       );
       await writeFile(
-        path.join(parsedDir, "page_10.json"),
-        JSON.stringify(page10, null, 2),
+        path.join(parsedDir, pageBFilename),
+        JSON.stringify(pageB, null, 2),
       );
 
       await onParsingComplete();
@@ -144,14 +150,14 @@ describe("VaskiData parser", () => {
         hallituksen_esitys: {
           totalRecords: 1,
           pages: {
-            "2": ["3"],
+            [pageAKey]: ["3"],
           },
         },
         nimenhuutoraportti: {
           totalRecords: 2,
           pages: {
-            "2": ["4"],
-            "10": ["1"],
+            [pageBKey]: ["1"],
+            [pageAKey]: ["4"],
           },
         },
       });
@@ -160,36 +166,38 @@ describe("VaskiData parser", () => {
         workspace,
         "vaski-data",
         "nimenhuutoraportti",
-        "page_10.json",
+        pageBFilename,
       );
       const linkStats = await lstat(symlinkPath);
       expect(linkStats.isSymbolicLink()).toBe(true);
 
       const symlinkTarget = await readlink(symlinkPath);
-      expect(symlinkTarget).toBe("../../data/parsed/VaskiData/page_10.json");
+      expect(symlinkTarget).toBe(`../../data/parsed/VaskiData/${pageBFilename}`);
     });
   });
 
   test("onPageParsed creates per-document-type symlink for parsed page", async () => {
     await withTempWorkspace(async (workspace) => {
-      await onPageParsed(42, [
+      const storageKey = "parsed/VaskiData/page_000000000042+000000000042.json";
+      await onPageParsed(storageKey, [
         {
           id: "1001",
           "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
         },
       ]);
 
+      const filename = "page_000000000042+000000000042.json";
       const symlinkPath = path.join(
         workspace,
         "vaski-data",
         "nimenhuutoraportti",
-        "page_42.json",
+        filename,
       );
       const linkStats = await lstat(symlinkPath);
       expect(linkStats.isSymbolicLink()).toBe(true);
 
       const symlinkTarget = await readlink(symlinkPath);
-      expect(symlinkTarget).toBe("../../data/parsed/VaskiData/page_42.json");
+      expect(symlinkTarget).toBe(`../../data/parsed/VaskiData/${filename}`);
     });
   });
 });

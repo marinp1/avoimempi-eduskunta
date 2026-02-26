@@ -146,8 +146,8 @@ function makeRow(
     rootType,
     _source: {
       page: 30,
-      parsedKey: "parsed/VaskiData/page_30.json",
-      vaskiPath: "vaski-data/pöytäkirja/page_30.json",
+      parsedKey: "parsed/VaskiData/page_000000000030+000000000129.json",
+      vaskiPath: "vaski-data/pöytäkirja/page_000000000030+000000000129.json",
     },
     contents: {
       Siirto: {

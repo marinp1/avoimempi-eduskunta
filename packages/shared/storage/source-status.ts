@@ -10,6 +10,7 @@ export interface SourceStageStatusSnapshot {
   stage: DataStage;
   pageCount: number;
   lastPageRowCount: number;
+  totalRowCount: number;
   lastUpdated: string;
 }
 
@@ -53,14 +54,25 @@ async function readStatusMap(): Promise<
         return acc;
       }
 
+      const safePageCount =
+        Number.isFinite(pageCount) && pageCount >= 0 ? pageCount : 0;
+      const safeLastPageRowCount =
+        Number.isFinite(lastPageRowCount) && lastPageRowCount >= 0
+          ? lastPageRowCount
+          : 0;
+      const safeTotalRowCount =
+        Number.isFinite(entry.totalRowCount) && entry.totalRowCount >= 0
+          ? entry.totalRowCount
+          : safePageCount > 0
+            ? (safePageCount - 1) * 100 + safeLastPageRowCount
+            : 0;
+
       acc[buildSnapshotKey(tableName, stage)] = {
         tableName,
         stage,
-        pageCount: Number.isFinite(pageCount) && pageCount >= 0 ? pageCount : 0,
-        lastPageRowCount:
-          Number.isFinite(lastPageRowCount) && lastPageRowCount >= 0
-            ? lastPageRowCount
-            : 0,
+        pageCount: safePageCount,
+        lastPageRowCount: safeLastPageRowCount,
+        totalRowCount: safeTotalRowCount,
         lastUpdated:
           typeof lastUpdated === "string"
             ? lastUpdated
@@ -89,6 +101,12 @@ export async function loadSourceStageStatusMap(): Promise<
   return await readStatusMap();
 }
 
+export async function hasSourceStageStatus(): Promise<boolean> {
+  const storage = getStorage();
+  const raw = await storage.get(SOURCE_STATUS_KEY);
+  return raw !== null;
+}
+
 export async function recordSourceStagePage(
   tableName: string,
   stage: DataStage,
@@ -108,11 +126,26 @@ export async function recordSourceStagePage(
     ? normalizedRowCount
     : (existing?.lastPageRowCount ?? 0);
 
+  // Accumulate exact total row count:
+  // - New page (beyond current max): add its rowCount
+  // - Re-scraping the current last page: replace its contribution
+  // - Earlier page re-scraped: leave total unchanged (no per-page history)
+  const prevTotal = existing?.totalRowCount ?? 0;
+  let totalRowCount: number;
+  if (!existing || normalizedPage > existing.pageCount) {
+    totalRowCount = prevTotal + normalizedRowCount;
+  } else if (normalizedPage === existing.pageCount) {
+    totalRowCount = prevTotal - (existing.lastPageRowCount ?? 0) + normalizedRowCount;
+  } else {
+    totalRowCount = prevTotal;
+  }
+
   map[key] = {
     tableName,
     stage,
     pageCount: nextPageCount,
     lastPageRowCount,
+    totalRowCount,
     lastUpdated: new Date().toISOString(),
   };
 
