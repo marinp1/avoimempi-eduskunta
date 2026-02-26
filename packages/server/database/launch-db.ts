@@ -1,12 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
-import { getDatabasePath } from "#database";
+import { getDatabasePath, getTraceDatabasePath } from "#database";
 import { getStorage } from "#storage";
 
 const SQLITE_LATEST_MANIFEST_STORAGE_KEY =
   "artifacts/sqlite/latest/manifest.json";
 
 type LaunchMode = "local" | "latest" | "storage-key";
+
+type LaunchArtifactKeys = {
+  dbArtifactKey: string;
+  traceDbArtifactKey: string | null;
+};
 
 function parseLaunchMode(value: string | undefined): LaunchMode {
   const normalized = (value || "local").trim().toLowerCase();
@@ -25,19 +30,24 @@ function cleanupWalSidecars(databasePath: string): void {
   }
 }
 
-async function resolveSourceKey(mode: LaunchMode): Promise<string | null> {
+async function resolveSourceKeys(mode: LaunchMode): Promise<LaunchArtifactKeys | null> {
   if (mode === "local") return null;
 
   const storage = getStorage();
 
   if (mode === "storage-key") {
-    const explicitKey = process.env.SERVER_DB_LAUNCH_STORAGE_KEY?.trim();
-    if (!explicitKey) {
+    const explicitDbKey = process.env.SERVER_DB_LAUNCH_STORAGE_KEY?.trim();
+    if (!explicitDbKey) {
       throw new Error(
         "SERVER_DB_LAUNCH_STORAGE_KEY is required when SERVER_DB_LAUNCH_MODE=storage-key",
       );
     }
-    return explicitKey;
+    const explicitTraceKey =
+      process.env.SERVER_TRACE_DB_LAUNCH_STORAGE_KEY?.trim() || null;
+    return {
+      dbArtifactKey: explicitDbKey,
+      traceDbArtifactKey: explicitTraceKey,
+    };
   }
 
   const manifestRaw = await storage.get(SQLITE_LATEST_MANIFEST_STORAGE_KEY);
@@ -58,6 +68,10 @@ async function resolveSourceKey(mode: LaunchMode): Promise<string | null> {
     parsed && typeof parsed === "object"
       ? (parsed as { dbArtifactKey?: unknown }).dbArtifactKey
       : null;
+  const traceDbArtifactKey =
+    parsed && typeof parsed === "object"
+      ? (parsed as { traceDbArtifactKey?: unknown }).traceDbArtifactKey
+      : null;
 
   if (typeof dbArtifactKey !== "string" || dbArtifactKey.trim() === "") {
     throw new Error(
@@ -65,7 +79,35 @@ async function resolveSourceKey(mode: LaunchMode): Promise<string | null> {
     );
   }
 
-  return dbArtifactKey.trim();
+  return {
+    dbArtifactKey: dbArtifactKey.trim(),
+    traceDbArtifactKey:
+      typeof traceDbArtifactKey === "string" && traceDbArtifactKey.trim() !== ""
+        ? traceDbArtifactKey.trim()
+        : null,
+  };
+}
+
+async function downloadArtifact(params: {
+  getFile: (key: string, destinationPath: string) => Promise<void>;
+  sourceKey: string;
+  targetPath: string;
+}): Promise<void> {
+  const targetDir = path.dirname(params.targetPath);
+  const tempPath = `${params.targetPath}.download`;
+
+  fs.mkdirSync(targetDir, { recursive: true });
+
+  try {
+    await params.getFile(params.sourceKey, tempPath);
+    fs.renameSync(tempPath, params.targetPath);
+    cleanupWalSidecars(params.targetPath);
+  } catch (error) {
+    if (fs.existsSync(tempPath)) {
+      fs.rmSync(tempPath, { force: true });
+    }
+    throw error;
+  }
 }
 
 export async function prepareDatabaseForServerStartup(): Promise<void> {
@@ -74,10 +116,11 @@ export async function prepareDatabaseForServerStartup(): Promise<void> {
     return;
   }
 
-  const sourceKey = await resolveSourceKey(mode);
-  if (!sourceKey) return;
+  const artifactKeys = await resolveSourceKeys(mode);
+  if (!artifactKeys) return;
 
   const databasePath = getDatabasePath();
+  const traceDatabasePath = getTraceDatabasePath();
   const storage = getStorage();
 
   if (typeof storage.getFile !== "function") {
@@ -85,23 +128,28 @@ export async function prepareDatabaseForServerStartup(): Promise<void> {
       `Storage provider '${storage.name}' does not implement getFile(); required for SERVER_DB_LAUNCH_MODE=${mode}`,
     );
   }
+  const getFile = storage.getFile.bind(storage);
 
-  const targetDir = path.dirname(databasePath);
-  const tempPath = `${databasePath}.download`;
-  fs.mkdirSync(targetDir, { recursive: true });
+  await downloadArtifact({
+    getFile,
+    sourceKey: artifactKeys.dbArtifactKey,
+    targetPath: databasePath,
+  });
 
-  try {
-    await storage.getFile(sourceKey, tempPath);
-    fs.renameSync(tempPath, databasePath);
-    cleanupWalSidecars(databasePath);
-  } catch (error) {
-    if (fs.existsSync(tempPath)) {
-      fs.rmSync(tempPath, { force: true });
-    }
-    throw error;
+  if (artifactKeys.traceDbArtifactKey) {
+    await downloadArtifact({
+      getFile,
+      sourceKey: artifactKeys.traceDbArtifactKey,
+      targetPath: traceDatabasePath,
+    });
   }
 
   console.log(
-    `🗄️  Boot database loaded from storage (${mode}) key='${sourceKey}' -> ${databasePath}`,
+    `🗄️  Boot database loaded from storage (${mode}) key='${artifactKeys.dbArtifactKey}' -> ${databasePath}`,
   );
+  if (artifactKeys.traceDbArtifactKey) {
+    console.log(
+      `🧾 Trace database loaded from storage (${mode}) key='${artifactKeys.traceDbArtifactKey}' -> ${traceDatabasePath}`,
+    );
+  }
 }
