@@ -1,5 +1,6 @@
 import type { Database } from "bun:sqlite";
-import * as queries from "../queries";
+import currentComposition from "../queries/CURRENT_COMPOSITION.sql";
+import hallituskaudet from "../queries/HALLITUSKAUDET.sql";
 
 export class MetadataRepository {
   constructor(private readonly db: Database) {}
@@ -11,7 +12,7 @@ export class MetadataRepository {
     const stmt = this.db.query<
       DatabaseQueries.GetParliamentComposition,
       { $date: string }
-    >(queries.currentComposition);
+    >(currentComposition);
     const data = stmt.all({ $date });
     stmt.finalize();
     return data;
@@ -25,7 +26,7 @@ export class MetadataRepository {
         end_date: string | null;
       },
       []
-    >(queries.hallituskaudet);
+    >(hallituskaudet);
     const rows = stmt.all();
     stmt.finalize();
 

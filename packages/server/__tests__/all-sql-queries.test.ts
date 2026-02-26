@@ -2,7 +2,6 @@ import type { Database } from "bun:sqlite";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import * as queries from "../database/queries";
 import { createTestDb, seedFullDataset } from "./helpers/setup-db";
 
 const QUERIES_DIR = join(import.meta.dirname, "../database/queries");
@@ -55,39 +54,32 @@ afterAll(() => {
 });
 
 describe("All SQL query files", () => {
-  test("every SQL file is exported by database/queries.ts", () => {
-    const exportedSqlQueries = Object.values(queries).filter(
-      (value): value is string => typeof value === "string",
-    );
-    const exportedSqlSet = new Set(
-      exportedSqlQueries.map((sqlText) => normalizeSql(sqlText)),
-    );
-
+  test("every SQL file has content", () => {
     const queryFiles = readdirSync(QUERIES_DIR)
       .filter((filename) => filename.endsWith(".sql"))
       .sort();
 
     expect(queryFiles.length).toBeGreaterThan(0);
-    expect(exportedSqlQueries.length).toBe(queryFiles.length);
 
     for (const queryFile of queryFiles) {
       const fileSql = readFileSync(join(QUERIES_DIR, queryFile), "utf-8");
-      expect(exportedSqlSet.has(normalizeSql(fileSql))).toBe(true);
+      expect(normalizeSql(fileSql).length).toBeGreaterThan(0);
     }
   });
 
-  test("every exported SQL query executes with default bindings", () => {
-    const queryEntries = Object.entries(queries).filter(
-      ([, value]) => typeof value === "string",
-    ) as Array<[string, string]>;
+  test("every SQL query file executes with default bindings", () => {
+    const queryFiles = readdirSync(QUERIES_DIR)
+      .filter((filename) => filename.endsWith(".sql"))
+      .sort();
 
-    for (const [queryName, querySql] of queryEntries) {
+    for (const queryFile of queryFiles) {
+      const querySql = readFileSync(join(QUERIES_DIR, queryFile), "utf-8");
       const stmt = db.prepare(querySql);
       const bindings = getBindingsForSql(querySql);
       stmt.all(bindings);
       stmt.finalize();
 
-      expect(queryName.length).toBeGreaterThan(0);
+      expect(queryFile.length).toBeGreaterThan(0);
       expect(querySql.length).toBeGreaterThan(0);
     }
   });

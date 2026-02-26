@@ -1,5 +1,9 @@
 import { Database } from "bun:sqlite";
-import * as q from "../database/queries";
+import ageDivisionOverTime from "../database/queries/AGE_DIVISION_OVER_TIME.sql";
+import partyDiscipline from "../database/queries/PARTY_DISCIPLINE.sql";
+import partyParticipationByGovernment from "../database/queries/PARTY_PARTICIPATION_BY_GOVERNMENT.sql";
+import partySummary from "../database/queries/PARTY_SUMMARY.sql";
+import sessionSections from "../database/queries/SESSION_SECTIONS.sql";
 
 type Target = {
   name: string;
@@ -10,17 +14,17 @@ type Target = {
 const targets: Target[] = [
   {
     name: "sessionSections",
-    sql: q.sessionSections,
+    sql: sessionSections,
     params: { $sessionKey: "2021/129" },
   },
-  { name: "partySummary", sql: q.partySummary, params: {} },
-  { name: "partyDiscipline", sql: q.partyDiscipline, params: {} },
+  { name: "partySummary", sql: partySummary, params: {} },
+  { name: "partyDiscipline", sql: partyDiscipline, params: {} },
   {
     name: "partyParticipationByGovernment",
-    sql: q.partyParticipationByGovernment,
+    sql: partyParticipationByGovernment,
     params: { $startDate: null, $endDateExclusive: null },
   },
-  { name: "ageDivisionOverTime", sql: q.ageDivisionOverTime, params: {} },
+  { name: "ageDivisionOverTime", sql: ageDivisionOverTime, params: {} },
 ];
 
 const db = new Database(

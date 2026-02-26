@@ -1,5 +1,17 @@
 import type { Database } from "bun:sqlite";
-import * as queries from "../queries";
+import governmentMemberships from "../queries/GOVERNMENT_MEMBERSHIPS.sql";
+import leavingParliamentRecords from "../queries/LEAVING_PARLIAMENT.sql";
+import personCommittees from "../queries/PERSON_COMMITTEES.sql";
+import personDissents from "../queries/PERSON_DISSENTS.sql";
+import personGroupMemberships from "../queries/PERSON_GROUP_MEMBERSHIPS.sql";
+import personQuestions from "../queries/PERSON_QUESTIONS.sql";
+import personSpeeches from "../queries/PERSON_SPEECHES.sql";
+import personTerms from "../queries/PERSON_TERMS.sql";
+import representativeDetails from "../queries/REPRESENTATIVE_DETAILS.sql";
+import representativeDistricts from "../queries/REPRESENTATIVE_DISTRICTS.sql";
+import representativesPaginated from "../queries/REPRESENTATIVES_PAGINATED.sql";
+import trustPositions from "../queries/TRUST_POSITIONS.sql";
+import votesByPerson from "../queries/VOTES_BY_PERSON.sql";
 
 export class PersonRepository {
   constructor(private readonly db: Database) {}
@@ -12,7 +24,7 @@ export class PersonRepository {
         $limit: number;
         $offset: number;
       }
-    >(queries.representativesPaginated);
+    >(representativesPaginated);
     const data = stmt.all({ $limit: params.limit, $offset: offset });
     stmt.finalize();
     return data;
@@ -22,7 +34,7 @@ export class PersonRepository {
     const stmt = this.db.prepare<
       DatabaseTables.ParliamentGroupMembership,
       { $personId: number }
-    >(queries.personGroupMemberships);
+    >(personGroupMemberships);
     const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
     return data;
@@ -30,7 +42,7 @@ export class PersonRepository {
 
   public fetchPersonTerms(params: { id: string }) {
     const stmt = this.db.prepare<DatabaseTables.Term, { $personId: number }>(
-      queries.personTerms,
+      personTerms,
     );
     const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
@@ -41,7 +53,7 @@ export class PersonRepository {
     const stmt = this.db.prepare<
       DatabaseQueries.VotesByPerson,
       { $personId: number }
-    >(queries.votesByPerson);
+    >(votesByPerson);
     const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
     return data;
@@ -51,7 +63,7 @@ export class PersonRepository {
     const stmt = this.db.prepare<
       DatabaseTables.Representative,
       { $personId: number }
-    >(queries.representativeDetails);
+    >(representativeDetails);
     const data = stmt.get({ $personId: +params.id });
     stmt.finalize();
     return data;
@@ -67,7 +79,7 @@ export class PersonRepository {
         end_date: string;
       },
       { $personId: number }
-    >(queries.representativeDistricts);
+    >(representativeDistricts);
     const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
     return data;
@@ -77,7 +89,7 @@ export class PersonRepository {
     const stmt = this.db.prepare<
       DatabaseTables.PeopleLeavingParliament,
       { $personId: number }
-    >(queries.leavingParliamentRecords);
+    >(leavingParliamentRecords);
     const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
     return data;
@@ -87,7 +99,7 @@ export class PersonRepository {
     const stmt = this.db.prepare<
       DatabaseTables.TrustPosition,
       { $personId: number }
-    >(queries.trustPositions);
+    >(trustPositions);
     const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
     return data;
@@ -97,7 +109,7 @@ export class PersonRepository {
     const stmt = this.db.prepare<
       DatabaseTables.GovernmentMembership,
       { $personId: number }
-    >(queries.governmentMemberships);
+    >(governmentMemberships);
     const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
     return data;
@@ -126,7 +138,7 @@ export class PersonRepository {
         word_count: number;
       },
       { $personId: number; $limit: number; $offset: number }
-    >(queries.personSpeeches);
+    >(personSpeeches);
     const data = stmt.all({
       $personId: +params.personId,
       $limit: params.limit ?? 50,
@@ -147,7 +159,7 @@ export class PersonRepository {
         relation_role: "asker" | "first_signer" | "signer";
       },
       { $personId: number; $limit: number }
-    >(queries.personQuestions);
+    >(personQuestions);
     const data = stmt.all({
       $personId: +params.personId,
       $limit: params.limit ?? 500,
@@ -167,7 +179,7 @@ export class PersonRepository {
         end_date: string | null;
       },
       { $personId: number }
-    >(queries.personCommittees);
+    >(personCommittees);
     const data = stmt.all({ $personId: +params.personId });
     stmt.finalize();
     return data;
@@ -185,7 +197,7 @@ export class PersonRepository {
         party_name: string;
       },
       { $personId: number; $limit: number }
-    >(queries.personDissents);
+    >(personDissents);
     const data = stmt.all({
       $personId: +params.personId,
       $limit: params.limit ?? 100,

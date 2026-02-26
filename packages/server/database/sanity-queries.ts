@@ -1,4 +1,4 @@
-import { sql } from "./queries";
+import { sql } from "./sql-tag";
 
 export const EXPECTED_SANITY_TABLES = [
   "Representative",

@@ -1,7 +1,103 @@
 import type { Database } from "bun:sqlite";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import * as queries from "../database/queries";
+import ageDivisionOverTime from "../database/queries/AGE_DIVISION_OVER_TIME.sql";
+import closeVotes from "../database/queries/CLOSE_VOTES.sql";
+import coalitionVsOpposition from "../database/queries/COALITION_VS_OPPOSITION.sql";
+import committeeOverview from "../database/queries/COMMITTEE_OVERVIEW.sql";
+import currentComposition from "../database/queries/CURRENT_COMPOSITION.sql";
+import dissentTracking from "../database/queries/DISSENT_TRACKING.sql";
+import federatedSearch from "../database/queries/FEDERATED_SEARCH.sql";
+import genderDivisionOverTime from "../database/queries/GENDER_DIVISION_OVER_TIME.sql";
+import governmentMemberships from "../database/queries/GOVERNMENT_MEMBERSHIPS.sql";
+import leavingParliamentRecords from "../database/queries/LEAVING_PARLIAMENT.sql";
+import mpActivityRanking from "../database/queries/MP_ACTIVITY_RANKING.sql";
+import partyDiscipline from "../database/queries/PARTY_DISCIPLINE.sql";
+import partyMembers from "../database/queries/PARTY_MEMBERS.sql";
+import partyParticipationByGovernment from "../database/queries/PARTY_PARTICIPATION_BY_GOVERNMENT.sql";
+import partySummary from "../database/queries/PARTY_SUMMARY.sql";
+import personCommittees from "../database/queries/PERSON_COMMITTEES.sql";
+import personDissents from "../database/queries/PERSON_DISSENTS.sql";
+import personGroupMemberships from "../database/queries/PERSON_GROUP_MEMBERSHIPS.sql";
+import personQuestions from "../database/queries/PERSON_QUESTIONS.sql";
+import personSpeeches from "../database/queries/PERSON_SPEECHES.sql";
+import personTerms from "../database/queries/PERSON_TERMS.sql";
+import recentActivity from "../database/queries/RECENT_ACTIVITY.sql";
+import representativeDetails from "../database/queries/REPRESENTATIVE_DETAILS.sql";
+import representativeDistricts from "../database/queries/REPRESENTATIVE_DISTRICTS.sql";
+import representativesPaginated from "../database/queries/REPRESENTATIVES_PAGINATED.sql";
+import sectionDocumentLinks from "../database/queries/SECTION_DOCUMENT_LINKS.sql";
+import sectionSpeechCount from "../database/queries/SECTION_SPEECH_COUNT.sql";
+import sectionSpeeches from "../database/queries/SECTION_SPEECHES.sql";
+import sectionVotings from "../database/queries/SECTION_VOTINGS.sql";
+import sessionByDate from "../database/queries/SESSION_BY_DATE.sql";
+import sessionCount from "../database/queries/SESSION_COUNT.sql";
+import sessionDates from "../database/queries/SESSION_DATES.sql";
+import sessionDocuments from "../database/queries/SESSION_DOCUMENTS.sql";
+import sessionNotices from "../database/queries/SESSION_NOTICES.sql";
+import sessionSections from "../database/queries/SESSION_SECTIONS.sql";
+import sessionVotingCount from "../database/queries/SESSION_VOTING_COUNT.sql";
+import sessions from "../database/queries/SESSIONS.sql";
+import sessionsPaginated from "../database/queries/SESSIONS_PAGINATED.sql";
+import speechActivity from "../database/queries/SPEECH_ACTIVITY.sql";
+import speechesByDate from "../database/queries/SPEECHES_BY_DATE.sql";
+import trustPositions from "../database/queries/TRUST_POSITIONS.sql";
+import votesByPerson from "../database/queries/VOTES_BY_PERSON.sql";
+import votingParticipation from "../database/queries/VOTING_PARTICIPATION.sql";
+import votingParticipationByGovernment from "../database/queries/VOTING_PARTICIPATION_BY_GOVERNMENT.sql";
+import votingRelatedById from "../database/queries/VOTING_RELATED_BY_ID.sql";
+import votingsByDocument from "../database/queries/VOTINGS_BY_DOCUMENT.sql";
+import votingsSearch from "../database/queries/VOTINGS_SEARCH.sql";
 import { createTestDb, seedFullDataset } from "./helpers/setup-db";
+
+const queries = {
+  ageDivisionOverTime,
+  closeVotes,
+  coalitionVsOpposition,
+  committeeOverview,
+  currentComposition,
+  dissentTracking,
+  federatedSearch,
+  genderDivisionOverTime,
+  governmentMemberships,
+  leavingParliamentRecords,
+  mpActivityRanking,
+  partyDiscipline,
+  partyMembers,
+  partyParticipationByGovernment,
+  partySummary,
+  personCommittees,
+  personDissents,
+  personGroupMemberships,
+  personQuestions,
+  personSpeeches,
+  personTerms,
+  recentActivity,
+  representativeDetails,
+  representativeDistricts,
+  representativesPaginated,
+  sectionDocumentLinks,
+  sectionSpeechCount,
+  sectionSpeeches,
+  sectionVotings,
+  sessionByDate,
+  sessionCount,
+  sessionDates,
+  sessionDocuments,
+  sessionNotices,
+  sessions,
+  sessionSections,
+  sessionsPaginated,
+  sessionVotingCount,
+  speechActivity,
+  speechesByDate,
+  trustPositions,
+  votesByPerson,
+  votingParticipation,
+  votingParticipationByGovernment,
+  votingRelatedById,
+  votingsByDocument,
+  votingsSearch,
+} as const;
 
 /**
  * These tests validate that all SQL queries execute without errors
@@ -49,7 +145,7 @@ describe("Query compilation", () => {
 
 describe("Representative queries", () => {
   test("SELECT * FROM Representative returns paginated results", () => {
-    const stmt = db.prepare(queries.representativesPaginated);
+    const stmt = db.prepare(representativesPaginated);
     const rows = stmt.all({ $limit: 10, $offset: 0 }) as any[];
     stmt.finalize();
 
@@ -60,7 +156,7 @@ describe("Representative queries", () => {
   });
 
   test("REPRESENTATIVE_DETAILS returns single rep by id", () => {
-    const stmt = db.prepare(queries.representativeDetails);
+    const stmt = db.prepare(representativeDetails);
     const row = stmt.get({ $personId: 1000 }) as any;
     stmt.finalize();
 
@@ -71,7 +167,7 @@ describe("Representative queries", () => {
   });
 
   test("REPRESENTATIVE_DETAILS returns null for non-existent id", () => {
-    const stmt = db.prepare(queries.representativeDetails);
+    const stmt = db.prepare(representativeDetails);
     const row = stmt.get({ $personId: 9999 });
     stmt.finalize();
 
@@ -79,7 +175,7 @@ describe("Representative queries", () => {
   });
 
   test("REPRESENTATIVE_DISTRICTS returns districts with names", () => {
-    const stmt = db.prepare(queries.representativeDistricts);
+    const stmt = db.prepare(representativeDistricts);
     const rows = stmt.all({ $personId: 1000 }) as any[];
     stmt.finalize();
 
@@ -89,7 +185,7 @@ describe("Representative queries", () => {
   });
 
   test("REPRESENTATIVE_DISTRICTS returns empty for non-existent id", () => {
-    const stmt = db.prepare(queries.representativeDistricts);
+    const stmt = db.prepare(representativeDistricts);
     const rows = stmt.all({ $personId: 9999 }) as any[];
     stmt.finalize();
 
@@ -101,7 +197,7 @@ describe("Representative queries", () => {
 
 describe("Group membership queries", () => {
   test("returns group memberships for a person", () => {
-    const stmt = db.prepare(queries.personGroupMemberships);
+    const stmt = db.prepare(personGroupMemberships);
     const rows = stmt.all({ $personId: 1000 }) as any[];
     stmt.finalize();
 
@@ -114,7 +210,7 @@ describe("Group membership queries", () => {
 
 describe("Term queries", () => {
   test("returns terms for a person", () => {
-    const stmt = db.prepare(queries.personTerms);
+    const stmt = db.prepare(personTerms);
     const rows = stmt.all({ $personId: 1000 }) as any[];
     stmt.finalize();
 
@@ -128,7 +224,7 @@ describe("Term queries", () => {
 
 describe("Votes by person queries", () => {
   test("VOTES_BY_PERSON returns votes with voting details", () => {
-    const stmt = db.prepare(queries.votesByPerson);
+    const stmt = db.prepare(votesByPerson);
     const rows = stmt.all({ $personId: 1000 }) as any[];
     stmt.finalize();
 
@@ -139,7 +235,7 @@ describe("Votes by person queries", () => {
   });
 
   test("returns empty for person with no votes", () => {
-    const stmt = db.prepare(queries.votesByPerson);
+    const stmt = db.prepare(votesByPerson);
     const rows = stmt.all({ $personId: 9999 }) as any[];
     stmt.finalize();
 
@@ -208,7 +304,7 @@ describe("Person question queries", () => {
     );
 
     try {
-      const stmt = db.prepare(queries.personQuestions);
+      const stmt = db.prepare(personQuestions);
       const rows = stmt.all({ $personId: 1000, $limit: 50 }) as any[];
       stmt.finalize();
 
@@ -249,7 +345,7 @@ describe("Person question queries", () => {
   });
 
   test("PERSON_QUESTIONS returns empty for person with no matches", () => {
-    const stmt = db.prepare(queries.personQuestions);
+    const stmt = db.prepare(personQuestions);
     const rows = stmt.all({ $personId: 9999, $limit: 50 }) as any[];
     stmt.finalize();
 
@@ -261,7 +357,7 @@ describe("Person question queries", () => {
 
 describe("Session queries", () => {
   test("SESSIONS returns all sessions with agenda info", () => {
-    const stmt = db.prepare(queries.sessions);
+    const stmt = db.prepare(sessions);
     const rows = stmt.all() as any[];
     stmt.finalize();
 
@@ -271,7 +367,7 @@ describe("Session queries", () => {
   });
 
   test("SESSION_COUNT returns total session count", () => {
-    const stmt = db.prepare(queries.sessionCount);
+    const stmt = db.prepare(sessionCount);
     const row = stmt.get() as any;
     stmt.finalize();
 
@@ -279,7 +375,7 @@ describe("Session queries", () => {
   });
 
   test("SESSIONS_PAGINATED respects limit and offset", () => {
-    const stmt = db.prepare(queries.sessionsPaginated);
+    const stmt = db.prepare(sessionsPaginated);
     const rows = stmt.all({ $limit: 1, $offset: 0 }) as any[];
     stmt.finalize();
 
@@ -288,7 +384,7 @@ describe("Session queries", () => {
   });
 
   test("SESSION_SECTIONS returns sections for a session", () => {
-    const stmt = db.prepare(queries.sessionSections);
+    const stmt = db.prepare(sessionSections);
     const rows = stmt.all({ $sessionKey: "2024/1" }) as any[];
     stmt.finalize();
 
@@ -298,7 +394,7 @@ describe("Session queries", () => {
   });
 
   test("SESSION_SECTIONS returns empty for non-existent session", () => {
-    const stmt = db.prepare(queries.sessionSections);
+    const stmt = db.prepare(sessionSections);
     const rows = stmt.all({ $sessionKey: "nonexistent" }) as any[];
     stmt.finalize();
 
@@ -346,7 +442,7 @@ describe("Session queries", () => {
         "2025/136",
       ]);
 
-      const stmt = db.prepare(queries.sessionSections);
+      const stmt = db.prepare(sessionSections);
       const rows = stmt.all({ $sessionKey: "2025/136" }) as any[];
       stmt.finalize();
 
@@ -373,7 +469,7 @@ describe("Session queries", () => {
         [9100, 9101, 9102, "2025/140"],
       );
 
-      const stmt = db.prepare(queries.sessionDocuments);
+      const stmt = db.prepare(sessionDocuments);
       const rows = stmt.all({ $sessionKey: "2025/140" }) as any[];
       stmt.finalize();
 
@@ -399,7 +495,7 @@ describe("Session queries", () => {
         "2025/141",
       ]);
 
-      const stmt = db.prepare(queries.sessionDocuments);
+      const stmt = db.prepare(sessionDocuments);
       const rows = stmt.all({ $sessionKey: "2025/141" }) as any[];
       stmt.finalize();
 
@@ -431,7 +527,7 @@ describe("Session queries", () => {
         ],
       );
 
-      const stmt = db.prepare(queries.sessionNotices);
+      const stmt = db.prepare(sessionNotices);
       const rows = stmt.all({ $sessionKey: "2025/142" }) as any[];
       stmt.finalize();
 
@@ -471,7 +567,7 @@ describe("Session queries", () => {
         ],
       );
 
-      const stmt = db.prepare(queries.sectionDocumentLinks);
+      const stmt = db.prepare(sectionDocumentLinks);
       const rows = stmt.all({ $sectionKey: "2025/144/1" }) as any[];
       stmt.finalize();
 
@@ -511,7 +607,7 @@ describe("Session queries", () => {
         [51450, "2025/145/1", "Nimenhuuto", "2025/145", 1],
       );
 
-      const stmt = db.prepare(queries.sectionDocumentLinks);
+      const stmt = db.prepare(sectionDocumentLinks);
       const rows = stmt.all({ $sectionKey: "2025/145/1" }) as any[];
       stmt.finalize();
 
@@ -566,7 +662,7 @@ describe("Session queries", () => {
         ],
       );
 
-      const stmt = db.prepare(queries.sectionDocumentLinks);
+      const stmt = db.prepare(sectionDocumentLinks);
       const rows = stmt.all({ $sectionKey: "2025/146/1" }) as any[];
       stmt.finalize();
 
@@ -585,7 +681,7 @@ describe("Session queries", () => {
   });
 
   test("SESSION_BY_DATE returns sessions on a specific date", () => {
-    const stmt = db.prepare(queries.sessionByDate);
+    const stmt = db.prepare(sessionByDate);
     const rows = stmt.all({ $date: "2024-01-15" }) as any[];
     stmt.finalize();
 
@@ -595,7 +691,7 @@ describe("Session queries", () => {
   });
 
   test("SESSION_BY_DATE returns empty for date with no sessions", () => {
-    const stmt = db.prepare(queries.sessionByDate);
+    const stmt = db.prepare(sessionByDate);
     const rows = stmt.all({ $date: "2099-01-01" }) as any[];
     stmt.finalize();
 
@@ -603,7 +699,7 @@ describe("Session queries", () => {
   });
 
   test("SESSION_DATES returns distinct dates in descending order", () => {
-    const stmt = db.prepare(queries.sessionDates);
+    const stmt = db.prepare(sessionDates);
     const rows = stmt.all() as any[];
     stmt.finalize();
 
@@ -617,7 +713,7 @@ describe("Session queries", () => {
 
 describe("Speech queries", () => {
   test("SECTION_SPEECH_COUNT returns count for one section", () => {
-    const stmt = db.prepare(queries.sectionSpeechCount);
+    const stmt = db.prepare(sectionSpeechCount);
     const row = stmt.get({ $sectionKey: "2024/1/3" }) as any;
     stmt.finalize();
 
@@ -625,7 +721,7 @@ describe("Speech queries", () => {
   });
 
   test("SECTION_SPEECHES returns speeches with nullable content fields", () => {
-    const stmt = db.prepare(queries.sectionSpeeches);
+    const stmt = db.prepare(sectionSpeeches);
     const rows = stmt.all({
       $sectionKey: "2024/1/3",
       $limit: 20,
@@ -661,7 +757,7 @@ describe("Speech queries", () => {
       ],
     );
 
-    const stmt = db.prepare(queries.sectionSpeeches);
+    const stmt = db.prepare(sectionSpeeches);
     const rows = stmt.all({
       $sectionKey: "2024/1/3",
       $limit: 20,
@@ -676,7 +772,7 @@ describe("Speech queries", () => {
   });
 
   test("SECTION_SPEECHES returns empty for non-existent section", () => {
-    const stmt = db.prepare(queries.sectionSpeeches);
+    const stmt = db.prepare(sectionSpeeches);
     const rows = stmt.all({
       $sectionKey: "nonexistent",
       $limit: 20,
@@ -688,7 +784,7 @@ describe("Speech queries", () => {
   });
 
   test("PERSON_SPEECHES returns speeches by person with word count", () => {
-    const stmt = db.prepare(queries.personSpeeches);
+    const stmt = db.prepare(personSpeeches);
     const rows = stmt.all({ $personId: 1000, $limit: 50, $offset: 0 }) as any[];
     stmt.finalize();
 
@@ -704,7 +800,7 @@ describe("Speech queries", () => {
 
 describe("Voting queries", () => {
   test("SESSION_VOTING_COUNT returns votings in one session", () => {
-    const stmt = db.prepare(queries.sessionVotingCount);
+    const stmt = db.prepare(sessionVotingCount);
     const row = stmt.get({ $sessionKey: "2024/1" }) as any;
     stmt.finalize();
 
@@ -712,7 +808,7 @@ describe("Voting queries", () => {
   });
 
   test("VOTINGS_SEARCH returns computed context_title", () => {
-    const stmt = db.prepare(queries.votingsSearch);
+    const stmt = db.prepare(votingsSearch);
     const rows = stmt.all({
       $query: "Äänestys",
     }) as Array<DatabaseQueries.VotingSearchResult>;
@@ -733,7 +829,7 @@ describe("Voting queries", () => {
     );
 
     try {
-      const stmt = db.prepare(queries.votingsByDocument);
+      const stmt = db.prepare(votingsByDocument);
       const rows = stmt.all({ $identifier: "HE 1/2024 vp" }) as any[];
       stmt.finalize();
 
@@ -772,7 +868,7 @@ describe("Voting queries", () => {
     );
 
     try {
-      const stmt = db.prepare(queries.votingsByDocument);
+      const stmt = db.prepare(votingsByDocument);
       const rows = stmt.all({ $identifier: "HE 1/2024 vp" }) as any[];
       stmt.finalize();
 
@@ -824,7 +920,7 @@ describe("Voting queries", () => {
     );
 
     try {
-      const stmt = db.prepare(queries.votingRelatedById);
+      const stmt = db.prepare(votingRelatedById);
       const rows = stmt.all({ $id: 9301 }) as any[];
       stmt.finalize();
 
@@ -878,7 +974,7 @@ describe("Voting queries", () => {
     );
 
     try {
-      const stmt = db.prepare(queries.votingRelatedById);
+      const stmt = db.prepare(votingRelatedById);
       const rows = stmt.all({ $id: 9311 }) as any[];
       stmt.finalize();
 
@@ -892,7 +988,7 @@ describe("Voting queries", () => {
   });
 
   test("SECTION_VOTINGS returns votings for a section key", () => {
-    const stmt = db.prepare(queries.sectionVotings);
+    const stmt = db.prepare(sectionVotings);
     const rows = stmt.all({ $sectionKey: "2024/1/3" }) as any[];
     stmt.finalize();
 
@@ -902,7 +998,7 @@ describe("Voting queries", () => {
   });
 
   test("CLOSE_VOTES returns votings with small margin", () => {
-    const stmt = db.prepare(queries.closeVotes);
+    const stmt = db.prepare(closeVotes);
     const rows = stmt.all({ $threshold: 10, $limit: 50 }) as any[];
     stmt.finalize();
 
@@ -916,7 +1012,7 @@ describe("Voting queries", () => {
   });
 
   test("CLOSE_VOTES excludes votings with large margin", () => {
-    const stmt = db.prepare(queries.closeVotes);
+    const stmt = db.prepare(closeVotes);
     const rows = stmt.all({ $threshold: 3, $limit: 50 }) as any[];
     stmt.finalize();
 
@@ -930,7 +1026,7 @@ describe("Voting queries", () => {
 
 describe("Voting participation queries", () => {
   test("VOTING_PARTICIPATION returns participation rates", () => {
-    const stmt = db.prepare(queries.votingParticipation);
+    const stmt = db.prepare(votingParticipation);
     const rows = stmt.all({
       $startDate: null,
       $endDateExclusive: null,
@@ -952,7 +1048,7 @@ describe("Voting participation queries", () => {
   });
 
   test("VOTING_PARTICIPATION filters by date range", () => {
-    const stmt = db.prepare(queries.votingParticipation);
+    const stmt = db.prepare(votingParticipation);
     const rows = stmt.all({
       $startDate: "2024-01-15",
       $endDateExclusive: "2024-01-16",
@@ -963,7 +1059,7 @@ describe("Voting participation queries", () => {
   });
 
   test("VOTING_PARTICIPATION returns empty for date range with no votings", () => {
-    const stmt = db.prepare(queries.votingParticipation);
+    const stmt = db.prepare(votingParticipation);
     const rows = stmt.all({
       $startDate: "2099-01-01",
       $endDateExclusive: "2100-01-01",
@@ -978,7 +1074,7 @@ describe("Voting participation queries", () => {
 
 describe("Parliament composition query", () => {
   test("CURRENT_COMPOSITION returns active representatives on date", () => {
-    const stmt = db.prepare(queries.currentComposition);
+    const stmt = db.prepare(currentComposition);
     const rows = stmt.all({
       $date: new Date("2024-01-15").toISOString(),
     }) as any[];
@@ -992,7 +1088,7 @@ describe("Parliament composition query", () => {
   });
 
   test("CURRENT_COMPOSITION returns empty before term start", () => {
-    const stmt = db.prepare(queries.currentComposition);
+    const stmt = db.prepare(currentComposition);
     const rows = stmt.all({
       $date: new Date("2020-01-01").toISOString(),
     }) as any[];
@@ -1006,7 +1102,7 @@ describe("Parliament composition query", () => {
 
 describe("Government and trust position queries", () => {
   test("GOVERNMENT_MEMBERSHIPS returns memberships for a person", () => {
-    const stmt = db.prepare(queries.governmentMemberships);
+    const stmt = db.prepare(governmentMemberships);
     const rows = stmt.all({ $personId: 1002 }) as any[];
     stmt.finalize();
 
@@ -1016,7 +1112,7 @@ describe("Government and trust position queries", () => {
   });
 
   test("GOVERNMENT_MEMBERSHIPS returns empty for non-minister", () => {
-    const stmt = db.prepare(queries.governmentMemberships);
+    const stmt = db.prepare(governmentMemberships);
     const rows = stmt.all({ $personId: 1000 }) as any[];
     stmt.finalize();
 
@@ -1024,7 +1120,7 @@ describe("Government and trust position queries", () => {
   });
 
   test("TRUST_POSITIONS returns positions for a person", () => {
-    const stmt = db.prepare(queries.trustPositions);
+    const stmt = db.prepare(trustPositions);
     const rows = stmt.all({ $personId: 1000 }) as any[];
     stmt.finalize();
 
@@ -1033,7 +1129,7 @@ describe("Government and trust position queries", () => {
   });
 
   test("LEAVING_PARLIAMENT returns records", () => {
-    const stmt = db.prepare(queries.leavingParliamentRecords);
+    const stmt = db.prepare(leavingParliamentRecords);
     const rows = stmt.all({ $personId: 1000 }) as any[];
     stmt.finalize();
 
@@ -1046,7 +1142,7 @@ describe("Government and trust position queries", () => {
 
 describe("Committee queries", () => {
   test("PERSON_COMMITTEES returns committee memberships with names", () => {
-    const stmt = db.prepare(queries.personCommittees);
+    const stmt = db.prepare(personCommittees);
     const rows = stmt.all({ $personId: 1000 }) as any[];
     stmt.finalize();
 
@@ -1056,7 +1152,7 @@ describe("Committee queries", () => {
   });
 
   test("COMMITTEE_OVERVIEW returns committees with member counts", () => {
-    const stmt = db.prepare(queries.committeeOverview);
+    const stmt = db.prepare(committeeOverview);
     const rows = stmt.all() as any[];
     stmt.finalize();
 
@@ -1072,7 +1168,7 @@ describe("Committee queries", () => {
 
 describe("Party discipline query", () => {
   test("PARTY_DISCIPLINE executes and returns discipline rates", () => {
-    const stmt = db.prepare(queries.partyDiscipline);
+    const stmt = db.prepare(partyDiscipline);
     const rows = stmt.all() as any[];
     stmt.finalize();
 
@@ -1092,7 +1188,7 @@ describe("Party discipline query", () => {
 
 describe("Coalition vs opposition query", () => {
   test("COALITION_VS_OPPOSITION splits votes by government membership", () => {
-    const stmt = db.prepare(queries.coalitionVsOpposition);
+    const stmt = db.prepare(coalitionVsOpposition);
     const rows = stmt.all({ $limit: 50 }) as any[];
     stmt.finalize();
 
@@ -1110,7 +1206,7 @@ describe("Coalition vs opposition query", () => {
 
 describe("Dissent tracking query", () => {
   test("DISSENT_TRACKING executes without error", () => {
-    const stmt = db.prepare(queries.dissentTracking);
+    const stmt = db.prepare(dissentTracking);
     const rows = stmt.all({ $personId: null, $limit: 100 }) as any[];
     stmt.finalize();
 
@@ -1123,7 +1219,7 @@ describe("Dissent tracking query", () => {
   });
 
   test("PERSON_DISSENTS executes for a specific person", () => {
-    const stmt = db.prepare(queries.personDissents);
+    const stmt = db.prepare(personDissents);
     const rows = stmt.all({ $personId: 1001, $limit: 100 }) as any[];
     stmt.finalize();
 
@@ -1135,7 +1231,7 @@ describe("Dissent tracking query", () => {
 
 describe("Speech activity query", () => {
   test("SPEECH_ACTIVITY returns speech counts and word stats", () => {
-    const stmt = db.prepare(queries.speechActivity);
+    const stmt = db.prepare(speechActivity);
     const rows = stmt.all({ $limit: 50 }) as any[];
     stmt.finalize();
 
@@ -1153,7 +1249,7 @@ describe("Speech activity query", () => {
 
 describe("MP activity ranking query", () => {
   test("MP_ACTIVITY_RANKING returns activity scores", () => {
-    const stmt = db.prepare(queries.mpActivityRanking);
+    const stmt = db.prepare(mpActivityRanking);
     const rows = stmt.all({ $limit: 50 }) as any[];
     stmt.finalize();
 
@@ -1178,7 +1274,7 @@ describe("MP activity ranking query", () => {
 
 describe("Recent activity query", () => {
   test("RECENT_ACTIVITY returns session activity summaries", () => {
-    const stmt = db.prepare(queries.recentActivity);
+    const stmt = db.prepare(recentActivity);
     const rows = stmt.all({ $limit: 20 }) as any[];
     stmt.finalize();
 
@@ -1196,7 +1292,7 @@ describe("Recent activity query", () => {
 
 describe("Party queries", () => {
   test("PARTY_SUMMARY returns party stats", () => {
-    const stmt = db.prepare(queries.partySummary);
+    const stmt = db.prepare(partySummary);
     const rows = stmt.all({
       $asOfDate: "2024-01-15",
       $startDate: null,
@@ -1216,7 +1312,7 @@ describe("Party queries", () => {
   });
 
   test("PARTY_MEMBERS returns members of a specific party", () => {
-    const stmt = db.prepare(queries.partyMembers);
+    const stmt = db.prepare(partyMembers);
     const rows = stmt.all({
       $partyCode: "kesk",
       $asOfDate: "2024-01-15",
@@ -1233,7 +1329,7 @@ describe("Party queries", () => {
   });
 
   test("PARTY_MEMBERS returns empty for non-existent party", () => {
-    const stmt = db.prepare(queries.partyMembers);
+    const stmt = db.prepare(partyMembers);
     const rows = stmt.all({
       $partyCode: "xxx",
       $asOfDate: "2024-01-15",
@@ -1252,7 +1348,7 @@ describe("Party queries", () => {
 
 describe("Federated search query", () => {
   test("FEDERATED_SEARCH finds MPs by name", () => {
-    const stmt = db.prepare(queries.federatedSearch);
+    const stmt = db.prepare(federatedSearch);
     const rows = stmt.all({ $q: "Meikäläinen", $limit: 30 }) as any[];
     stmt.finalize();
 
@@ -1262,7 +1358,7 @@ describe("Federated search query", () => {
   });
 
   test("FEDERATED_SEARCH finds votings by section title", () => {
-    const stmt = db.prepare(queries.federatedSearch);
+    const stmt = db.prepare(federatedSearch);
     const rows = stmt.all({ $q: "Hallituksen", $limit: 30 }) as any[];
     stmt.finalize();
 
@@ -1271,7 +1367,7 @@ describe("Federated search query", () => {
   });
 
   test("FEDERATED_SEARCH returns empty for no-match query", () => {
-    const stmt = db.prepare(queries.federatedSearch);
+    const stmt = db.prepare(federatedSearch);
     const rows = stmt.all({ $q: "zzzznonexistent", $limit: 30 }) as any[];
     stmt.finalize();
 
@@ -1283,7 +1379,7 @@ describe("Federated search query", () => {
 
 describe("Demographic queries", () => {
   test("GENDER_DIVISION_OVER_TIME returns gender stats by year", () => {
-    const stmt = db.prepare(queries.genderDivisionOverTime);
+    const stmt = db.prepare(genderDivisionOverTime);
     const rows = stmt.all() as any[];
     stmt.finalize();
 
@@ -1300,7 +1396,7 @@ describe("Demographic queries", () => {
   });
 
   test("AGE_DIVISION_OVER_TIME returns age stats by year", () => {
-    const stmt = db.prepare(queries.ageDivisionOverTime);
+    const stmt = db.prepare(ageDivisionOverTime);
     const rows = stmt.all() as any[];
     stmt.finalize();
 
@@ -1322,7 +1418,7 @@ describe("Demographic queries", () => {
 
 describe("Government-period queries", () => {
   test("PARTY_PARTICIPATION_BY_GOVERNMENT returns participation by gov period", () => {
-    const stmt = db.prepare(queries.partyParticipationByGovernment);
+    const stmt = db.prepare(partyParticipationByGovernment);
     const rows = stmt.all({
       $startDate: null,
       $endDateExclusive: null,
@@ -1339,7 +1435,7 @@ describe("Government-period queries", () => {
   });
 
   test("VOTING_PARTICIPATION_BY_GOVERNMENT returns per-person gov breakdown", () => {
-    const stmt = db.prepare(queries.votingParticipationByGovernment);
+    const stmt = db.prepare(votingParticipationByGovernment);
     const rows = stmt.all({
       $personId: 1000,
       $startDate: null,
@@ -1360,7 +1456,7 @@ describe("Government-period queries", () => {
 
 describe("Speeches by date query", () => {
   test("SPEECHES_BY_DATE returns speeches with section info", () => {
-    const stmt = db.prepare(queries.speechesByDate);
+    const stmt = db.prepare(speechesByDate);
     const rows = stmt.all({ $date: "2024-01-15" }) as any[];
     stmt.finalize();
 
@@ -1373,7 +1469,7 @@ describe("Speeches by date query", () => {
   });
 
   test("SPEECHES_BY_DATE returns empty for date with no speeches", () => {
-    const stmt = db.prepare(queries.speechesByDate);
+    const stmt = db.prepare(speechesByDate);
     const rows = stmt.all({ $date: "2099-01-01" }) as any[];
     stmt.finalize();
 
