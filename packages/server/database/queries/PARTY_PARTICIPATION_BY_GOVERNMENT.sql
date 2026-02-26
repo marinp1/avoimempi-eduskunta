@@ -72,17 +72,15 @@ VotingGovernment AS (
 VotePerVotingParty AS (
     SELECT
         vg.government_id,
-        v.voting_id,
-        v.group_abbreviation AS party,
-        SUM(CASE WHEN v.vote != 'Poissa' THEN 1 ELSE 0 END) AS votes_cast,
-        COUNT(*) AS total_votings,
-        COUNT(DISTINCT v.person_id) AS party_member_count
+        vps.voting_id,
+        vps.party,
+        vps.votes_cast,
+        vps.total_votings,
+        vps.party_member_count
     FROM VotingGovernment vg
-    JOIN Vote v INDEXED BY idx_vote_voting_group_vote ON v.voting_id = vg.voting_id
+    JOIN VotingPartyStats vps ON vps.voting_id = vg.voting_id
     WHERE
         vg.government_id IS NOT NULL
-        AND v.group_abbreviation IS NOT NULL
-    GROUP BY vg.government_id, v.voting_id, v.group_abbreviation
 ),
 PartyVotingStats AS (
     SELECT

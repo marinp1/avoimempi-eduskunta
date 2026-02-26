@@ -17,12 +17,22 @@ const targets: Target[] = [
     sql: sessionSections,
     params: { $sessionKey: "2021/129" },
   },
-  { name: "partySummary", sql: partySummary, params: {} },
+  {
+    name: "partySummary",
+    sql: partySummary,
+    params: {
+      $asOfDate: "2024-01-15",
+      $startDate: "2023-01-01",
+      $endDateExclusive: "2025-01-01",
+      $governmentName: null,
+      $governmentStartDate: null,
+    },
+  },
   { name: "partyDiscipline", sql: partyDiscipline, params: {} },
   {
     name: "partyParticipationByGovernment",
     sql: partyParticipationByGovernment,
-    params: { $startDate: null, $endDateExclusive: null },
+    params: { $startDate: "2023-01-01", $endDateExclusive: "2025-01-01" },
   },
   { name: "ageDivisionOverTime", sql: ageDivisionOverTime, params: {} },
 ];

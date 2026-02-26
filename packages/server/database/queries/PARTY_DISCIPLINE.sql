@@ -1,16 +1,15 @@
 WITH party_vote_counts AS (
   SELECT
-    v.voting_id,
-    v.group_abbreviation AS party,
-    SUM(CASE WHEN v.vote = 'Jaa' THEN 1 ELSE 0 END) AS n_jaa,
-    SUM(CASE WHEN v.vote = 'Ei' THEN 1 ELSE 0 END) AS n_ei,
-    SUM(CASE WHEN v.vote = 'Tyhjää' THEN 1 ELSE 0 END) AS n_tyhjaa
-  FROM Vote v
-  JOIN Voting vt ON vt.id = v.voting_id
-  WHERE v.group_abbreviation IS NOT NULL
+    vps.voting_id,
+    vps.party,
+    vps.n_jaa,
+    vps.n_ei,
+    vps.n_tyhjaa
+  FROM VotingPartyStats vps
+  JOIN Voting vt ON vt.id = vps.voting_id
+  WHERE vps.party IS NOT NULL
     AND ($startDate IS NULL OR vt.start_date >= $startDate)
     AND ($endDateExclusive IS NULL OR vt.start_date < $endDateExclusive)
-  GROUP BY v.voting_id, v.group_abbreviation
 ),
 discipline_stats AS (
   SELECT
