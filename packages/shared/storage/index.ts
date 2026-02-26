@@ -9,7 +9,7 @@
  * const storage = getStorage();
  *
  * // Write data
- * const key = StorageKeyBuilder.forPage("raw", "MemberOfParliament", 1);
+ * const key = StorageKeyBuilder.forPkRange("raw", "MemberOfParliament", 1, 100);
  * await storage.put(key, JSON.stringify(data));
  *
  * // Read data

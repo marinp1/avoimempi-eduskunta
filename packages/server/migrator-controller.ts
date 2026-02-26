@@ -339,13 +339,14 @@ type ParsedPageEnvelope = {
   pkName?: string;
   source?: {
     tableName?: string;
-    page?: number;
+    firstPk?: number;
+    lastPk?: number;
     scrapedAt?: string | null;
   };
 };
 
 type ParsedPageBatch = {
-  page: number;
+  firstPk: number;
   rows: any[];
   pkName: string | null;
   sourceTable: string;
@@ -511,11 +512,11 @@ export class MigratorController {
       pageSize: 10_000,
     });
 
-    // Sort pages by page number
+    // Sort pages by firstPk ascending
     const sortedPages = keys
       .map((k) => ({ key: k, parsed: StorageKeyBuilder.parseKey(k.key) }))
       .filter((p) => p.parsed !== null)
-      .sort((a, b) => (a.parsed?.page || 0) - (b.parsed?.page || 0));
+      .sort((a, b) => (a.parsed?.firstPk || 0) - (b.parsed?.firstPk || 0));
 
     for (const pageInfo of sortedPages) {
       if (!pageInfo.parsed) {
@@ -528,12 +529,13 @@ export class MigratorController {
         const rows = Array.isArray(pageData.rowData) ? pageData.rowData : [];
 
         yield {
-          page: pageInfo.parsed.page,
+          firstPk: pageInfo.parsed.firstPk,
           rows,
           pkName: normalizeText(pageData.pkName),
           sourceTable: normalizeText(pageData.source?.tableName) ?? tableName,
           sourcePage:
-            normalizeNumber(pageData.source?.page) ?? pageInfo.parsed.page,
+            normalizeNumber(pageData.source?.firstPk) ??
+            pageInfo.parsed.firstPk,
           scrapedAt: normalizeText(pageData.source?.scrapedAt),
         };
       }

@@ -24,14 +24,14 @@ API → Scraper → raw/*.json → Parser → parsed/*.json → Migrator → SQL
 data/
 ├── raw/
 │   ├── MemberOfParliament/
-│   │   ├── page_1.json
-│   │   ├── page_2.json
-│   │   └── page_3.json
+│   │   ├── page_000000000001+000000000100.json
+│   │   ├── page_000000000101+000000000200.json
+│   │   └── page_000000000201+000000000250.json
 │   └── SaliDBAanestys/
-│       └── page_1.json
+│       └── page_000000000001+000000000100.json
 └── parsed/
     └── MemberOfParliament/
-        └── page_1.json
+        └── page_000000000001+000000000100.json
 ```
 
 ## Getting Started
@@ -55,9 +55,9 @@ bun run scrape MemberOfParliament
 
 The scraper automatically resumes from the last scraped page.
 
-#### Scrape from a specific page:
+#### Scrape from a specific PK value:
 ```bash
-bun run scrape MemberOfParliament 5
+bun run scrape MemberOfParliament --from-pk=500
 ```
 
 #### Check status:
@@ -71,7 +71,13 @@ Shows progress for all tables.
 
 ```bash
 # Scrape a table (auto-resumes from last page)
-bun scraper/cli.ts <TableName> [startPage]
+bun scraper/cli.ts <TableName>
+
+# Scrape from a specific PK value
+bun scraper/cli.ts <TableName> --from-pk=<pkValue>
+
+# Scrape a single page starting at a PK
+bun scraper/cli.ts <TableName> --page-pk=<pkValue>
 
 # Show status
 bun scraper/cli.ts status
@@ -93,12 +99,12 @@ bun run scrape MemberOfParliament
 # 📁 Storage: local
 # 📊 Stage: raw
 # 📋 Total rows in API: 1,234
-# 🚀 Starting from page: 1
-# 
-# 📡 Fetching page 1 (pk=0)...
-# ✅ Saved page 1 (100 rows) - 8.1% complete
-# 📡 Fetching page 2 (pk=100)...
-# ✅ Saved page 2 (100 rows) - 16.2% complete
+# 🚀 Starting fresh
+#
+# 📡 Fetching batch from PK 0...
+# ✅ Saved page_000000000001+000000000100 (100 rows) - 8.1% complete
+# 📡 Fetching batch from PK 101...
+# ✅ Saved page_000000000101+000000000200 (100 rows) - 16.2% complete
 # ...
 ```
 
@@ -110,8 +116,8 @@ bun run scrape MemberOfParliament
 
 # Output:
 # 📥 Scraping table: MemberOfParliament
-# ✅ Already scraped: 5 pages
-# 🚀 Starting from page: 6
+# ✅ Already scraped: 5 pages (complete)
+# 🔄 Re-scraping last page from PK: 401
 ```
 
 ### Check Progress

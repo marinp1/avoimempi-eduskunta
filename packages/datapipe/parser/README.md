@@ -288,8 +288,8 @@ bun run parse YourTableName
 # Check the output in storage
 ls -la data/parsed/YourTableName/
 
-# View a parsed page
-cat data/parsed/YourTableName/page_1.json | jq .
+# View a parsed page (filenames use PK ranges: page_{firstPk}+{lastPk}.json)
+cat data/parsed/YourTableName/page_000000000001+000000000100.json | jq .
 ```
 
 ## Next Steps

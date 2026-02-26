@@ -17,8 +17,8 @@ function makeAloiteRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
     attachmentGroupId: "1",
     _source: {
       page: 1,
-      parsedKey: "parsed/VaskiData/page_1.json",
-      vaskiPath: "vaski-data/talousarvioaloite/page_1.json",
+      parsedKey: "parsed/VaskiData/page_000000000001+000000000100.json",
+      vaskiPath: "vaski-data/talousarvioaloite/page_000000000001+000000000100.json",
     },
     contents: {
       Siirto: {
@@ -64,8 +64,8 @@ function makeKasittelyRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
     attachmentGroupId: "2",
     _source: {
       page: 2,
-      parsedKey: "parsed/VaskiData/page_2.json",
-      vaskiPath: "vaski-data/talousarvioaloite/page_2.json",
+      parsedKey: "parsed/VaskiData/page_000000000002+000000000101.json",
+      vaskiPath: "vaski-data/talousarvioaloite/page_000000000002+000000000101.json",
     },
     contents: {
       Siirto: {

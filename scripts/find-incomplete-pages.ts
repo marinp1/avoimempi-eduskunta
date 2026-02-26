@@ -76,7 +76,7 @@ async function findIncompletePages(): Promise<IncompletePageInfo[]> {
         if (data.rowCount !== 100) {
           incompletePages.push({
             tableName: parsed.table,
-            fileName: `page_${parsed.page}.json`,
+            fileName: metadata.key.split("/").pop()!,
             storageKey: metadata.key,
             rowCount: data.rowCount ?? null,
           });

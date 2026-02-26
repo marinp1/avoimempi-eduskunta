@@ -92,8 +92,8 @@ function makeRow(
     attachmentGroupId: "555",
     _source: {
       page: 1,
-      parsedKey: "parsed/VaskiData/page_1.json",
-      vaskiPath: "vaski-data/nimenhuutoraportti/page_1.json",
+      parsedKey: "parsed/VaskiData/page_000000000001+000000000100.json",
+      vaskiPath: "vaski-data/nimenhuutoraportti/page_000000000001+000000000100.json",
     },
     contents: {
       Siirto: {
@@ -150,7 +150,7 @@ describe("Vaski nimenhuutoraportti submigrator", () => {
     expect(report.roll_call_start_time).toBe("2024-01-01T14:00:00");
     expect(report.roll_call_end_time).toBe("2024-01-01T14:30:00");
     expect(report.source_path).toContain(
-      "vaski-data/nimenhuutoraportti/page_1.json",
+      "vaski-data/nimenhuutoraportti/page_000000000001+000000000100.json",
     );
 
     const entries = db

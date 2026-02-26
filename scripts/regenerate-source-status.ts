@@ -8,11 +8,12 @@ interface SourceStageStatusSnapshot {
   stage: Stage;
   pageCount: number;
   lastPageRowCount: number;
+  totalRowCount: number;
   lastUpdated: string;
 }
 
 const SOURCE_STATUS_PATH = "metadata/source-status.json";
-const PAGE_FILE_REGEX = /^page_(\d+)\.json$/i;
+const PAGE_FILE_REGEX = /^page_(\d{12})\+(\d{12})\.json$/i;
 
 const args = process.argv.slice(2);
 const stageArg = args.find((arg) => arg.startsWith("--stage="));
@@ -102,53 +103,63 @@ async function scanStage(
       if (!tableEntry.isDirectory()) continue;
       const tableName = tableEntry.name;
       const tableDir = path.join(stageDir, tableName);
-      const pageFiles = await readdir(tableDir, { withFileTypes: true });
+      const dirEntries = await readdir(tableDir, { withFileTypes: true });
 
-      let maxPage = 0;
-      let lastPageFile: string | null = null;
-      let lastPageStatTime: string | null = null;
-
-      for (const fileEntry of pageFiles) {
+      // Collect all valid page files with their parsed PK ranges
+      const pages: Array<{ name: string; firstPk: number; lastPk: number }> =
+        [];
+      for (const fileEntry of dirEntries) {
         if (!fileEntry.isFile()) continue;
         const match = fileEntry.name.match(PAGE_FILE_REGEX);
         if (!match) continue;
-        const pageNumber = parseInt(match[1], 10);
-        if (!Number.isFinite(pageNumber)) continue;
-        if (pageNumber >= maxPage) {
-          const filePath = path.join(tableDir, fileEntry.name);
-          try {
-            const stats = await stat(filePath);
-            lastPageStatTime = stats.mtime.toISOString();
-          } catch {
-            // ignore
+        const firstPk = parseInt(match[1], 10);
+        const lastPk = parseInt(match[2], 10);
+        if (!Number.isFinite(firstPk) || !Number.isFinite(lastPk)) continue;
+        pages.push({ name: fileEntry.name, firstPk, lastPk });
+      }
+
+      if (pages.length === 0) continue;
+
+      // Last page = highest lastPk
+      const lastPage = pages.reduce((max, p) =>
+        p.lastPk > max.lastPk ? p : max,
+      );
+
+      // Sum rowCount from all pages; track last page's rowCount and mtime
+      let totalRowCount = 0;
+      let lastPageRowCount = 0;
+      let lastUpdated: string | null = null;
+
+      for (const page of pages) {
+        const filePath = path.join(tableDir, page.name);
+        try {
+          const raw = await readFile(filePath, "utf-8");
+          const parsed = JSON.parse(raw) as { rowCount?: number };
+          const rowCount = Number.isFinite(parsed.rowCount ?? NaN)
+            ? (parsed.rowCount as number)
+            : 0;
+          totalRowCount += rowCount;
+          if (page.name === lastPage.name) {
+            lastPageRowCount = rowCount;
+            try {
+              const fileStats = await stat(filePath);
+              lastUpdated = fileStats.mtime.toISOString();
+            } catch {
+              // ignore
+            }
           }
-          maxPage = pageNumber;
-          lastPageFile = fileEntry.name;
+        } catch (error) {
+          console.warn(`Failed to read ${filePath}:`, error);
         }
-      }
-
-      if (maxPage === 0 || !lastPageFile) {
-        continue;
-      }
-
-      const lastPagePath = path.join(tableDir, lastPageFile);
-      let lastRowCount = 0;
-      try {
-        const raw = await readFile(lastPagePath, "utf-8");
-        const parsed = JSON.parse(raw) as { rowCount?: number };
-        lastRowCount = Number.isFinite(parsed.rowCount ?? NaN)
-          ? (parsed.rowCount as number)
-          : 0;
-      } catch (error) {
-        console.warn(`Failed to read ${lastPagePath}:`, error);
       }
 
       const snapshot: SourceStageStatusSnapshot = {
         tableName,
         stage,
-        pageCount: maxPage,
-        lastPageRowCount: lastRowCount,
-        lastUpdated: lastPageStatTime ?? new Date().toISOString(),
+        pageCount: pages.length,
+        lastPageRowCount,
+        totalRowCount,
+        lastUpdated: lastUpdated ?? new Date().toISOString(),
       };
 
       result.set(`${stage}:${tableName}`, snapshot);

@@ -22,7 +22,8 @@ interface EduskuntaApiResponse {
   hasMore: boolean;
   source?: {
     tableName: string;
-    page: number;
+    firstPk: number;
+    lastPk: number;
     scrapedAt: string;
   };
 }
@@ -45,30 +46,38 @@ async function getTableColumns(tableName: string) {
 }
 
 /**
- * Get the last page number scraped for a table
+ * Get info about the last scraped page (highest lastPk) for a table.
+ * Returns null if no pages exist yet.
  */
-async function getLastScrapedPage(
+async function getLastScrapedPageRef(
   storage: ReturnType<typeof getStorage>,
   tableName: string,
   stage: DataStage,
-): Promise<number> {
+): Promise<{ key: string; firstPk: number; lastPk: number; pageCount: number } | null> {
   const prefix = StorageKeyBuilder.listPrefixForTable(stage, tableName);
   const keys = await listAllStorageKeys(storage, {
     prefix,
     pageSize: 10_000,
   });
 
-  if (keys.length === 0) {
-    return 0;
-  }
+  if (keys.length === 0) return null;
 
-  // Parse page numbers from keys
-  const pageNumbers = keys
-    .map((key) => StorageKeyBuilder.parseKey(key.key))
-    .filter((ref) => ref !== null)
-    .map((ref) => ref?.page);
+  const refs = keys
+    .map((k) => ({ key: k.key, ref: StorageKeyBuilder.parseKey(k.key) }))
+    .filter((r): r is { key: string; ref: NonNullable<ReturnType<typeof StorageKeyBuilder.parseKey>> } => r.ref !== null);
 
-  return pageNumbers.length > 0 ? Math.max(...pageNumbers) : 0;
+  if (refs.length === 0) return null;
+
+  const last = refs.reduce((max, curr) =>
+    curr.ref.lastPk > max.ref.lastPk ? curr : max,
+  );
+
+  return {
+    key: last.key,
+    firstPk: last.ref.firstPk,
+    lastPk: last.ref.lastPk,
+    pageCount: refs.length,
+  };
 }
 
 /**
@@ -76,8 +85,8 @@ async function getLastScrapedPage(
  */
 export type ScrapeMode =
   | { type: "auto-resume" }
-  | { type: "start-from"; page: number }
-  | { type: "single-page"; page: number };
+  | { type: "start-from-pk"; pkStartValue: number }
+  | { type: "patch-from-pk"; pkStartValue: number };
 
 /**
  * Scrape options
@@ -117,152 +126,73 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
 
   console.log(`📋 Total rows in API: ${totalRows.toLocaleString()}`);
 
-  // Determine starting page based on mode
-  const lastScrapedPage = await getLastScrapedPage(storage, tableName, stage);
-
-  let startPage: number;
-  let singlePageMode = false;
-
-  switch (mode.type) {
-    case "auto-resume":
-      // Always re-scrape the last page in case it was incomplete
-      startPage = lastScrapedPage > 0 ? lastScrapedPage : 1;
-      if (lastScrapedPage > 0) {
-        console.log(
-          `✅ Already scraped: ${lastScrapedPage - 1} pages (complete)`,
-        );
-        console.log(
-          `🔄 Re-scraping last page and continuing from page: ${startPage}`,
-        );
-      } else {
-        console.log(`🚀 Starting fresh from page: ${startPage}`);
-      }
-      break;
-
-    case "start-from":
-      startPage = mode.page;
-      console.log(
-        `🚀 Starting from page: ${startPage} (will continue until end)`,
-      );
-      break;
-
-    case "single-page":
-      startPage = mode.page;
-      singlePageMode = true;
-      console.log(`📄 Scraping single page: ${startPage}`);
-      break;
-  }
-
-  console.log();
-
-  let currentPage = startPage;
-  let loopCount = 0;
-  let rowsScrapedThisRun = 0;
+  let pkStartValue: number;
+  let patchMode = false;
+  let patchFollowUpDone = false;
+  let internalPageCounter = 1;
+  let totalRowsScraped = 0;
 
   const formatPercent = (value: number): string => {
     if (value >= 100) return "100.0";
     return Math.min(value, 99.9).toFixed(1);
   };
 
-  // Calculate total rows already scraped (for progress calculation)
-  // Since we re-scrape the last page, count only complete pages (startPage - 1)
-  let totalRowsScraped = 0;
-
-  if (startPage > 1) {
-    // Calculate rows from complete pages only (excluding the last page we're re-scraping)
-    const completePageCount = startPage - 1;
-
-    if (completePageCount > 0) {
-      // Read the page before the one we're re-scraping to get exact row count
-      const lastCompletePageKey = StorageKeyBuilder.forPage(
-        stage,
-        tableName,
-        completePageCount,
-      );
-      const lastCompletePageData = await storage.get(lastCompletePageKey);
-
-      if (lastCompletePageData) {
-        try {
-          const lastCompletePageContent = JSON.parse(
-            lastCompletePageData,
-          ) as EduskuntaApiResponse;
-          // (n-1) pages with 100 rows + last complete page's actual row count
-          totalRowsScraped =
-            (completePageCount - 1) * 100 + lastCompletePageContent.rowCount;
-        } catch (_error) {
-          console.warn(
-            `⚠️  Could not read page ${completePageCount} for progress calculation`,
+  switch (mode.type) {
+    case "auto-resume": {
+      const lastPage = await getLastScrapedPageRef(storage, tableName, stage);
+      if (lastPage) {
+        // Delete the last page file — it will be re-scraped (may have been incomplete)
+        await storage.delete(lastPage.key);
+        pkStartValue = lastPage.firstPk;
+        internalPageCounter = lastPage.pageCount; // start counter where we left off
+        totalRowsScraped = (lastPage.pageCount - 1) * 100; // estimate from complete pages
+        console.log(
+          `✅ Already scraped: ${lastPage.pageCount - 1} pages (complete)`,
+        );
+        console.log(
+          `🔄 Re-scraping last page from PK: ${pkStartValue}`,
+        );
+        if (totalRowsScraped > 0) {
+          const percentComplete =
+            totalRows > 0
+              ? Math.min((totalRowsScraped / totalRows) * 100, 100)
+              : 0;
+          console.log(
+            `📊 Already scraped: ~${totalRowsScraped.toLocaleString()} rows (${formatPercent(percentComplete)}%)`,
           );
-          // Fallback: assume all pages have 100 rows
-          totalRowsScraped = completePageCount * 100;
         }
       } else {
-        // Fallback: assume all pages have 100 rows
-        totalRowsScraped = completePageCount * 100;
+        pkStartValue = 0;
+        console.log(`🚀 Starting fresh`);
       }
+      break;
     }
 
-    if (totalRowsScraped > 0) {
-      const percentComplete =
-        totalRows > 0 ? Math.min((totalRowsScraped / totalRows) * 100, 100) : 0;
+    case "start-from-pk":
+      pkStartValue = mode.pkStartValue;
       console.log(
-        `📊 Already scraped: ${totalRowsScraped.toLocaleString()} rows (${formatPercent(percentComplete)}%)`,
+        `🚀 Starting from PK: ${pkStartValue} (will continue until end)`,
       );
-    }
+      break;
+
+    case "patch-from-pk":
+      pkStartValue = mode.pkStartValue;
+      patchMode = true;
+      console.log(`🩹 Patch mode from PK: ${pkStartValue} (scrapes patch page + 1 follow-up page)`);
+      break;
   }
 
-  // Determine starting primary key value
-  let pkStartValue: number;
-
-  if (startPage === 1) {
-    // Starting from beginning
-    pkStartValue = 0;
-  } else {
-    // Need to read the last primary key from the previous page
-    const prevPage = startPage - 1;
-    const prevPageKey = StorageKeyBuilder.forPage(stage, tableName, prevPage);
-    const prevPageData = await storage.get(prevPageKey);
-
-    if (!prevPageData) {
-      console.error(
-        `⚠️  Cannot find page ${prevPage}, required to start from page ${startPage}`,
-      );
-      console.error(`⚠️  Please scrape from page 1 or use auto-resume mode`);
-      throw new Error(
-        `Missing page ${prevPage} - cannot determine starting primary key`,
-      );
-    }
-
-    const prevContent = JSON.parse(prevPageData) as EduskuntaApiResponse;
-
-    if (prevContent.pkLastValue !== null) {
-      pkStartValue = prevContent.pkLastValue + 1;
-    } else {
-      // Fallback: use last row's primary key
-      const indexOfPrimaryKey = prevContent.columnNames.indexOf(primaryColumn);
-      const lastRow = prevContent.rowData[prevContent.rowData.length - 1];
-      if (lastRow && lastRow[indexOfPrimaryKey] !== undefined) {
-        // Convert to number if it's a string, then add 1
-        const lastPkValue = lastRow[indexOfPrimaryKey];
-        pkStartValue =
-          (typeof lastPkValue === "string"
-            ? parseInt(lastPkValue, 10)
-            : lastPkValue) + 1;
-      } else {
-        throw new Error(`Cannot determine primary key from page ${prevPage}`);
-      }
-    }
-
-    console.log(
-      `📌 Starting from primary key: ${pkStartValue} (from previous page)`,
-    );
-  }
+  console.log();
 
   const baseUrl = new URL(
     `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/batch`,
   );
   baseUrl.searchParams.set("pkName", primaryColumn);
   baseUrl.searchParams.set("perPage", "100");
+
+  let loopCount = 0;
+  let rowsScrapedThisRun = 0;
+  let pagesScrapedThisRun = 0;
 
   do {
     if (loopCount >= MAX_LOOP_LIMIT) {
@@ -273,7 +203,7 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     // Update URL with current pkStartValue
     baseUrl.searchParams.set("pkStartValue", String(pkStartValue));
 
-    console.log(`📡 Fetching page ${currentPage} (pk=${pkStartValue})...`);
+    console.log(`📡 Fetching batch from PK ${pkStartValue}...`);
 
     // Fetch from API
     const response = await fetch(baseUrl.toString(), {
@@ -294,13 +224,47 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
       break;
     }
 
-    // Save page to storage
-    const key = StorageKeyBuilder.forPage(stage, tableName, currentPage);
+    // Extract actual first and last PK from row data
+    const indexOfPrimaryKey = content.columnNames.indexOf(primaryColumn);
+    const firstRowPkRaw = content.rowData[0][indexOfPrimaryKey];
+    const lastRowPkRaw =
+      content.rowData[content.rowData.length - 1][indexOfPrimaryKey];
+    const firstPk =
+      typeof firstRowPkRaw === "string"
+        ? parseInt(firstRowPkRaw, 10)
+        : (firstRowPkRaw as number);
+    const lastPk =
+      content.pkLastValue !== null
+        ? content.pkLastValue
+        : typeof lastRowPkRaw === "string"
+          ? parseInt(lastRowPkRaw, 10)
+          : (lastRowPkRaw as number);
+
+    // Save page to storage with PK-range filename.
+    // Before writing, delete any existing file for the same firstPk but a different lastPk.
+    // This handles the case where a mid-dataset gap closes: the page range shrinks (e.g.
+    // old file covered PKs 100-299, new fetch returns PKs 100-199), so the new file gets
+    // a different name and both would otherwise coexist — causing duplicates downstream.
+    const existingKeysForRange = await listAllStorageKeys(storage, {
+      prefix: StorageKeyBuilder.listPrefixForTable(stage, tableName),
+      pageSize: 10_000,
+    });
+    for (const existing of existingKeysForRange) {
+      const existingRef = StorageKeyBuilder.parseKey(existing.key);
+      if (existingRef && existingRef.firstPk === firstPk && existingRef.lastPk !== lastPk) {
+        console.log(
+          `🗑️  Deleting stale page (firstPk=${firstPk}, old lastPk=${existingRef.lastPk}, new lastPk=${lastPk})`,
+        );
+        await storage.delete(existing.key);
+      }
+    }
+    const key = StorageKeyBuilder.forPkRange(stage, tableName, firstPk, lastPk);
     const contentWithSource: EduskuntaApiResponse = {
       ...content,
       source: {
         tableName,
-        page: currentPage,
+        firstPk,
+        lastPk,
         scrapedAt: new Date().toISOString(),
       },
     };
@@ -309,15 +273,15 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     await recordSourceStagePage(
       tableName,
       stage,
-      currentPage,
+      internalPageCounter,
       content.rowCount,
     );
 
     totalRowsScraped += content.rowCount;
     rowsScrapedThisRun += content.rowCount;
+    pagesScrapedThisRun++;
 
     // Dynamically adjust total if we've exceeded the API's initial estimate
-    // This handles cases where the API count is stale
     const adjustedTotal = Math.max(totalRows, totalRowsScraped);
     const percentComplete =
       adjustedTotal > 0
@@ -325,23 +289,46 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
         : 0;
 
     console.log(
-      `✅ Saved page ${currentPage} (${content.rowCount} rows) - ${formatPercent(percentComplete)}% complete`,
+      `✅ Saved page_${String(firstPk).padStart(12, "0")}+${String(lastPk).padStart(12, "0")} (${content.rowCount} rows) - ${formatPercent(percentComplete)}% complete`,
     );
 
     // Call progress callback
     if (onProgress) {
       onProgress({
-        page: currentPage,
+        page: internalPageCounter,
         rowCount: content.rowCount,
         totalRows: totalRowsScraped,
         percentComplete,
       });
     }
 
-    // Stop if in single-page mode
-    if (singlePageMode) {
-      console.log("✅ Single page scraping complete");
-      break;
+    // Patch mode: after writing each page, delete subsumed pages (firstPk within the
+    // just-written range), then stop after the follow-up page.
+    if (patchMode) {
+      // Delete existing pages whose firstPk falls strictly within (firstPk, lastPk].
+      // Those pages were part of the gap that this patch fills; they are now subsumed.
+      for (const existing of existingKeysForRange) {
+        const existingRef = StorageKeyBuilder.parseKey(existing.key);
+        if (
+          existingRef &&
+          existingRef.firstPk > firstPk &&
+          existingRef.firstPk <= lastPk
+        ) {
+          console.log(
+            `🗑️  Deleting subsumed page (firstPk=${existingRef.firstPk}, lastPk=${existingRef.lastPk})`,
+          );
+          await storage.delete(existing.key);
+        }
+      }
+
+      if (patchFollowUpDone) {
+        // We just finished the follow-up page — stop.
+        console.log("✅ Patch complete (patch page + follow-up page scraped)");
+        break;
+      }
+
+      // Mark that the next page is the follow-up page.
+      patchFollowUpDone = true;
     }
 
     // Check if there's more data
@@ -353,15 +340,12 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     // Wait before next call
     await scheduler.wait(TIME_BETWEEN_QUERIES);
 
-    // Update for next iteration
+    // Update pkStartValue for next iteration
     if (content.pkLastValue !== null) {
       pkStartValue = content.pkLastValue + 1;
     } else {
-      // Fallback: use last row's primary key
-      const indexOfPrimaryKey = content.columnNames.indexOf(primaryColumn);
       const lastRow = content.rowData[content.rowData.length - 1];
       if (lastRow && lastRow[indexOfPrimaryKey] !== undefined) {
-        // Convert to number if it's a string, then add 1
         const lastPkValue = lastRow[indexOfPrimaryKey];
         pkStartValue =
           (typeof lastPkValue === "string"
@@ -373,12 +357,12 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
       }
     }
 
-    currentPage++;
+    internalPageCounter++;
     loopCount++;
   } while (true);
 
   console.log(`\n✅ Scraping complete for ${tableName}`);
-  console.log(`📊 Total pages scraped: ${currentPage - startPage + 1}`);
+  console.log(`📊 Pages scraped in this run: ${pagesScrapedThisRun}`);
   console.log(
     `📊 Rows scraped in this run: ${rowsScrapedThisRun.toLocaleString()}`,
   );

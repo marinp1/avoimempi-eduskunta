@@ -17,8 +17,8 @@ function makeRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
     attachmentGroupId: "2",
     _source: {
       page: 20,
-      parsedKey: "parsed/VaskiData/page_20.json",
-      vaskiPath: "vaski-data/suullinen_kysymys/page_20.json",
+      parsedKey: "parsed/VaskiData/page_000000000020+000000000119.json",
+      vaskiPath: "vaski-data/suullinen_kysymys/page_000000000020+000000000119.json",
     },
     contents: {
       Siirto: {
