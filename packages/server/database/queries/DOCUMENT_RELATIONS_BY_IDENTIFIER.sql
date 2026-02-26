@@ -1,9 +1,11 @@
-WITH input_ids AS (
-  SELECT $idA AS id
-  UNION
-  SELECT $idB
-  UNION
-  SELECT $idC
+WITH input_ids(id) AS (
+  VALUES ($idA), ($idB), ($idC)
+),
+valid_input_ids AS (
+  SELECT DISTINCT TRIM(id) AS id
+  FROM input_ids
+  WHERE id IS NOT NULL
+    AND TRIM(id) <> ''
 ),
 same_section_relations AS (
   SELECT
@@ -20,7 +22,8 @@ same_section_relations AS (
     ON sec.key = r1.section_key
   LEFT JOIN Session sess
     ON sess.key = sec.session_key
-  WHERE r1.document_identifier IN (SELECT id FROM input_ids)
+  JOIN valid_input_ids i
+    ON i.id = r1.document_identifier
   GROUP BY r2.document_identifier
 ),
 written_answer_outgoing AS (
@@ -30,9 +33,10 @@ written_answer_outgoing AS (
     COUNT(*) AS evidence_count,
     NULL AS first_date,
     NULL AS last_date
-  FROM WrittenQuestion wq
-  WHERE wq.parliament_identifier IN (SELECT id FROM input_ids)
-    AND wq.answer_parliament_identifier IS NOT NULL
+  FROM valid_input_ids i
+  JOIN WrittenQuestion wq
+    ON wq.parliament_identifier = i.id
+  WHERE wq.answer_parliament_identifier IS NOT NULL
     AND TRIM(wq.answer_parliament_identifier) <> ''
   GROUP BY wq.answer_parliament_identifier
 ),
@@ -43,8 +47,9 @@ written_answer_incoming AS (
     COUNT(*) AS evidence_count,
     NULL AS first_date,
     NULL AS last_date
-  FROM WrittenQuestion wq
-  WHERE wq.answer_parliament_identifier IN (SELECT id FROM input_ids)
+  FROM valid_input_ids i
+  JOIN WrittenQuestion wq
+    ON wq.answer_parliament_identifier = i.id
   GROUP BY wq.parliament_identifier
 ),
 committee_source_outgoing AS (
@@ -54,9 +59,10 @@ committee_source_outgoing AS (
     COUNT(*) AS evidence_count,
     NULL AS first_date,
     NULL AS last_date
-  FROM CommitteeReport cr
-  WHERE cr.parliament_identifier IN (SELECT id FROM input_ids)
-    AND cr.source_reference IS NOT NULL
+  FROM valid_input_ids i
+  JOIN CommitteeReport cr
+    ON cr.parliament_identifier = i.id
+  WHERE cr.source_reference IS NOT NULL
     AND TRIM(cr.source_reference) <> ''
   GROUP BY cr.source_reference
 ),
@@ -67,8 +73,9 @@ committee_source_incoming AS (
     COUNT(*) AS evidence_count,
     NULL AS first_date,
     NULL AS last_date
-  FROM CommitteeReport cr
-  WHERE cr.source_reference IN (SELECT id FROM input_ids)
+  FROM valid_input_ids i
+  JOIN CommitteeReport cr
+    ON cr.source_reference = i.id
   GROUP BY cr.parliament_identifier
 ),
 all_relations AS (
@@ -83,14 +90,16 @@ all_relations AS (
   SELECT * FROM committee_source_incoming
 )
 SELECT
-  related_identifier,
-  GROUP_CONCAT(relation_type, '||') AS relation_types,
-  SUM(evidence_count) AS evidence_count,
-  MIN(first_date) AS first_date,
-  MAX(last_date) AS last_date
-FROM all_relations
-WHERE related_identifier IS NOT NULL
-  AND TRIM(related_identifier) <> ''
-  AND related_identifier NOT IN (SELECT id FROM input_ids)
-GROUP BY related_identifier
-ORDER BY evidence_count DESC, related_identifier ASC;
+  ar.related_identifier,
+  GROUP_CONCAT(ar.relation_type, '||') AS relation_types,
+  SUM(ar.evidence_count) AS evidence_count,
+  MIN(ar.first_date) AS first_date,
+  MAX(ar.last_date) AS last_date
+FROM all_relations ar
+LEFT JOIN valid_input_ids i
+  ON i.id = ar.related_identifier
+WHERE ar.related_identifier IS NOT NULL
+  AND TRIM(ar.related_identifier) <> ''
+  AND i.id IS NULL
+GROUP BY ar.related_identifier
+ORDER BY evidence_count DESC, ar.related_identifier ASC;

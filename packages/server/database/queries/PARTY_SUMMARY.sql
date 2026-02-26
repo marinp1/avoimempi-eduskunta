@@ -4,30 +4,28 @@ WITH window AS (
     COALESCE(DATE($endDateExclusive, '-1 day'), $asOfDate) AS end_date
 ),
 active_members AS (
-  SELECT DISTINCT
+  SELECT
     pgm.group_code,
     pgm.group_name,
     pgm.group_abbreviation,
     pgm.person_id
   FROM ParliamentaryGroupMembership pgm
-  JOIN Term t ON t.person_id = pgm.person_id
   WHERE pgm.start_date <= $asOfDate
     AND (pgm.end_date IS NULL OR pgm.end_date >= $asOfDate)
-    AND t.start_date <= $asOfDate
-    AND (t.end_date IS NULL OR t.end_date >= $asOfDate)
-),
-active_groups AS (
-  SELECT
-    am.group_code,
-    am.group_name,
-    am.group_abbreviation AS group_abbreviation
-  FROM active_members am
-  GROUP BY am.group_code, am.group_name, am.group_abbreviation
+    AND EXISTS (
+      SELECT 1
+      FROM Term t INDEXED BY idx_term_person_dates
+      WHERE t.person_id = pgm.person_id
+        AND t.start_date <= $asOfDate
+        AND (t.end_date IS NULL OR t.end_date >= $asOfDate)
+    )
+  GROUP BY pgm.group_code, pgm.group_name, pgm.group_abbreviation, pgm.person_id
 ),
 member_stats AS (
   SELECT
     am.group_code,
     am.group_name,
+    MIN(am.group_abbreviation) AS group_abbreviation,
     COUNT(*) AS member_count
   FROM active_members am
   GROUP BY am.group_code, am.group_name
@@ -48,7 +46,7 @@ vote_stats AS (
       1
     ) AS participation_rate
   FROM recent_votings rv
-  JOIN Vote v INDEXED BY idx_vote_voting_id ON v.voting_id = rv.id
+  JOIN Vote v INDEXED BY idx_vote_voting_group_vote ON v.voting_id = rv.id
   GROUP BY v.group_abbreviation
 ),
 gov_groups AS (
@@ -97,8 +95,7 @@ SELECT
   COALESCE(ds.male_count, 0) AS male_count,
   ROUND(COALESCE(ds.avg_age, 0), 1) AS average_age
 FROM member_stats ms
-JOIN active_groups ag ON ag.group_code = ms.group_code
 LEFT JOIN gov_groups gg ON gg.group_code = ms.group_code
 LEFT JOIN demo_stats ds ON ds.group_code = ms.group_code
-LEFT JOIN vote_stats vs ON vs.party = ag.group_abbreviation
+LEFT JOIN vote_stats vs ON vs.party = ms.group_abbreviation
 ORDER BY ms.member_count DESC;

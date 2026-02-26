@@ -19,23 +19,21 @@ CoalitionParties AS (
 ),
 GroupMap AS (
     SELECT
-        ranked.party,
-        ranked.group_name
-    FROM (
-        SELECT
-            pgm.group_abbreviation AS party,
-            pgm.group_name,
-            ROW_NUMBER() OVER (
-                PARTITION BY pgm.group_abbreviation
-                ORDER BY
-                    CASE WHEN pgm.end_date IS NULL THEN 0 ELSE 1 END,
-                    pgm.end_date DESC,
-                    pgm.start_date DESC,
-                    pgm.id DESC
-            ) AS rn
-        FROM ParliamentaryGroupMembership pgm
-    ) ranked
-    WHERE ranked.rn = 1
+        pgm.group_abbreviation AS party,
+        pgm.group_name
+    FROM ParliamentaryGroupMembership pgm
+    WHERE pgm.group_abbreviation IS NOT NULL
+        AND pgm.id = (
+            SELECT pgm2.id
+            FROM ParliamentaryGroupMembership pgm2
+            WHERE pgm2.group_abbreviation = pgm.group_abbreviation
+            ORDER BY
+                CASE WHEN pgm2.end_date IS NULL THEN 0 ELSE 1 END,
+                pgm2.end_date DESC,
+                pgm2.start_date DESC,
+                pgm2.id DESC
+            LIMIT 1
+        )
 ),
 VotingBase AS (
     SELECT
@@ -52,22 +50,16 @@ VotingDates AS (
 ),
 DateGovernment AS (
     SELECT
-        ranked.voting_date,
-        ranked.government_id
-    FROM (
-        SELECT
-            vd.voting_date,
-            gp.government_id,
-            ROW_NUMBER() OVER (
-                PARTITION BY vd.voting_date
-                ORDER BY gp.government_start DESC
-            ) AS rn
-        FROM VotingDates vd
-        JOIN GovernmentPeriods gp
-            ON vd.voting_date >= gp.government_start
-            AND (gp.government_end IS NULL OR vd.voting_date <= gp.government_end)
-    ) ranked
-    WHERE ranked.rn = 1
+        vd.voting_date,
+        (
+            SELECT g.id
+            FROM Government g
+            WHERE g.start_date <= vd.voting_date
+                AND (g.end_date IS NULL OR g.end_date >= vd.voting_date)
+            ORDER BY g.start_date DESC
+            LIMIT 1
+        ) AS government_id
+    FROM VotingDates vd
 ),
 VotingGovernment AS (
     SELECT
@@ -77,38 +69,39 @@ VotingGovernment AS (
     FROM VotingBase vb
     JOIN DateGovernment dg ON dg.voting_date = vb.voting_date
 ),
-VoteAgg AS (
+VotePerVotingParty AS (
     SELECT
+        vg.government_id,
         v.voting_id,
         v.group_abbreviation AS party,
         SUM(CASE WHEN v.vote != 'Poissa' THEN 1 ELSE 0 END) AS votes_cast,
         COUNT(*) AS total_votings,
         COUNT(DISTINCT v.person_id) AS party_member_count
-    FROM Vote v
-    WHERE v.group_abbreviation IS NOT NULL
-    GROUP BY v.voting_id, v.group_abbreviation
+    FROM VotingGovernment vg
+    JOIN Vote v INDEXED BY idx_vote_voting_group_vote ON v.voting_id = vg.voting_id
+    WHERE
+        vg.government_id IS NOT NULL
+        AND v.group_abbreviation IS NOT NULL
+    GROUP BY vg.government_id, v.voting_id, v.group_abbreviation
 ),
 PartyVotingStats AS (
     SELECT
-        vg.government_id,
-        va.party,
-        SUM(va.votes_cast) AS votes_cast,
-        SUM(va.total_votings) AS total_votings,
+        vpp.government_id,
+        vpp.party,
+        SUM(vpp.votes_cast) AS votes_cast,
+        SUM(vpp.total_votings) AS total_votings,
         ROUND(
-            CAST(SUM(va.votes_cast) AS REAL) * 100.0 /
-            NULLIF(SUM(va.total_votings), 0),
+            CAST(SUM(vpp.votes_cast) AS REAL) * 100.0 /
+            NULLIF(SUM(vpp.total_votings), 0),
             2
         ) AS participation_rate,
-        MAX(va.party_member_count) AS party_member_count
-    FROM VotingGovernment vg
-    JOIN VoteAgg va ON vg.voting_id = va.voting_id
-    WHERE
-        vg.government_id IS NOT NULL
+        MAX(vpp.party_member_count) AS party_member_count
+    FROM VotePerVotingParty vpp
     GROUP BY
-        vg.government_id,
-        va.party
+        vpp.government_id,
+        vpp.party
     HAVING
-        SUM(va.total_votings) >= 10
+        SUM(vpp.total_votings) >= 10
 )
 SELECT
     gp.government,

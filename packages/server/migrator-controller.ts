@@ -693,6 +693,283 @@ export class MigratorController {
     };
   }
 
+  private normalizeImportedTextData(db: Database): void {
+    const normalizeTransaction = db.transaction(() => {
+      if (objectExists(db, "table", "Interpellation")) {
+        db.run(
+          `UPDATE Interpellation
+           SET
+             title = NULLIF(TRIM(title), ''),
+             question_text = NULLIF(TRIM(question_text), ''),
+             resolution_text = NULLIF(TRIM(resolution_text), '')`,
+        );
+      }
+
+      if (objectExists(db, "table", "GovernmentProposal")) {
+        db.run(
+          `UPDATE GovernmentProposal
+           SET
+             title = NULLIF(TRIM(title), ''),
+             author = NULLIF(TRIM(author), ''),
+             summary_text = NULLIF(TRIM(summary_text), ''),
+             justification_text = NULLIF(TRIM(justification_text), ''),
+             proposal_text = NULLIF(TRIM(proposal_text), ''),
+             appendix_text = NULLIF(TRIM(appendix_text), '')`,
+        );
+      }
+
+      if (objectExists(db, "table", "WrittenQuestion")) {
+        db.run(
+          `UPDATE WrittenQuestion
+           SET
+             title = NULLIF(TRIM(title), ''),
+             question_text = NULLIF(TRIM(question_text), ''),
+             answer_minister_title = NULLIF(TRIM(answer_minister_title), ''),
+             answer_minister_first_name = NULLIF(TRIM(answer_minister_first_name), ''),
+             answer_minister_last_name = NULLIF(TRIM(answer_minister_last_name), '')`,
+        );
+      }
+
+      if (objectExists(db, "table", "WrittenQuestionResponse")) {
+        db.run(
+          `UPDATE WrittenQuestionResponse
+           SET
+             title = NULLIF(TRIM(title), ''),
+             minister_title = NULLIF(TRIM(minister_title), ''),
+             minister_first_name = NULLIF(TRIM(minister_first_name), ''),
+             minister_last_name = NULLIF(TRIM(minister_last_name), '')`,
+        );
+      }
+
+      if (objectExists(db, "table", "OralQuestion")) {
+        db.run(
+          `UPDATE OralQuestion
+           SET
+             title = NULLIF(TRIM(title), ''),
+             question_text = NULLIF(TRIM(question_text), ''),
+             asker_text = NULLIF(TRIM(asker_text), '')`,
+        );
+      }
+
+      if (objectExists(db, "table", "LegislativeInitiative")) {
+        db.run(
+          `UPDATE LegislativeInitiative
+           SET
+             title = NULLIF(TRIM(title), ''),
+             justification_text = NULLIF(TRIM(justification_text), ''),
+             proposal_text = NULLIF(TRIM(proposal_text), ''),
+             law_text = NULLIF(TRIM(law_text), '')`,
+        );
+      }
+
+      if (objectExists(db, "table", "CommitteeReport")) {
+        db.run(
+          `UPDATE CommitteeReport
+           SET
+             title = NULLIF(TRIM(title), ''),
+             committee_name = NULLIF(TRIM(committee_name), ''),
+             recipient_committee = NULLIF(TRIM(recipient_committee), ''),
+             source_reference = NULLIF(TRIM(source_reference), '')`,
+        );
+      }
+
+      if (objectExists(db, "table", "SectionDocumentLink")) {
+        db.run(
+          `UPDATE SectionDocumentLink
+           SET
+             link_text_fi = NULLIF(TRIM(link_text_fi), ''),
+             name_fi = NULLIF(TRIM(name_fi), ''),
+             key = NULLIF(TRIM(key), ''),
+             link_url_fi = NULLIF(TRIM(link_url_fi), '')`,
+        );
+      }
+
+      if (objectExists(db, "table", "SaliDBDocumentReference")) {
+        db.run(
+          `UPDATE SaliDBDocumentReference
+           SET
+             source_text = NULLIF(TRIM(source_text), ''),
+             source_url = NULLIF(TRIM(source_url), ''),
+             source_type = NULLIF(TRIM(source_type), ''),
+             document_tunnus = NULLIF(TRIM(document_tunnus), '')`,
+        );
+      }
+
+      if (objectExists(db, "table", "Vote")) {
+        db.run(
+          `UPDATE Vote
+           SET group_abbreviation = LOWER(NULLIF(TRIM(group_abbreviation), ''))`,
+        );
+      }
+
+      if (objectExists(db, "table", "Representative")) {
+        db.run(
+          `UPDATE Representative
+           SET
+             first_name = NULLIF(TRIM(first_name), ''),
+             last_name = NULLIF(TRIM(last_name), ''),
+             sort_name = NULLIF(TRIM(sort_name), ''),
+             party = LOWER(NULLIF(TRIM(party), ''))`,
+        );
+      }
+    });
+
+    normalizeTransaction.immediate();
+  }
+
+  private rebuildFederatedSearchIndex(db: Database): number {
+    if (!objectExists(db, "table", "FederatedSearchFts")) {
+      return 0;
+    }
+
+    const rebuildTransaction = db.transaction(() => {
+      db.run("DELETE FROM FederatedSearchFts");
+
+      db.run(
+        `INSERT INTO FederatedSearchFts (type, record_id, title, subtitle, body, date)
+         SELECT
+           'mp',
+           CAST(r.person_id AS TEXT),
+           COALESCE(
+             NULLIF(TRIM(COALESCE(r.first_name, '') || ' ' || COALESCE(r.last_name, '')), ''),
+             NULLIF(TRIM(r.sort_name), ''),
+             CAST(r.person_id AS TEXT)
+           ),
+           NULLIF(TRIM(r.party), ''),
+           TRIM(
+             COALESCE(r.first_name, '') || ' ' ||
+             COALESCE(r.last_name, '') || ' ' ||
+             COALESCE(r.party, '') || ' ' ||
+             COALESCE(r.profession, '')
+           ),
+           NULL
+         FROM Representative r
+         WHERE EXISTS (
+           SELECT 1
+           FROM Term t
+           WHERE t.person_id = r.person_id
+             AND t.end_date IS NULL
+         )`,
+      );
+
+      db.run(
+        `INSERT INTO FederatedSearchFts (type, record_id, title, subtitle, body, date)
+         SELECT
+           'voting',
+           CAST(v.id AS TEXT),
+           COALESCE(
+             NULLIF(TRIM(v.section_title), ''),
+             NULLIF(TRIM(v.title), ''),
+             'Voting ' || CAST(v.id AS TEXT)
+           ),
+           'Jaa: ' || COALESCE(v.n_yes, 0) || ' / Ei: ' || COALESCE(v.n_no, 0),
+           TRIM(
+             COALESCE(v.title, '') || ' ' ||
+             COALESCE(v.section_title, '') || ' ' ||
+             COALESCE(v.main_section_title, '') || ' ' ||
+             COALESCE(v.agenda_title, '') || ' ' ||
+             COALESCE(v.section_processing_title, '') || ' ' ||
+             COALESCE(v.session_key, '')
+           ),
+           v.start_time
+         FROM Voting v`,
+      );
+
+      db.run(
+        `INSERT INTO FederatedSearchFts (type, record_id, title, subtitle, body, date)
+         SELECT
+           'interpellation',
+           CAST(i.id AS TEXT),
+           COALESCE(NULLIF(TRIM(i.title), ''), i.parliament_identifier),
+           i.parliament_identifier,
+           TRIM(
+             COALESCE(i.title, '') || ' ' ||
+             COALESCE(i.parliament_identifier, '') || ' ' ||
+             COALESCE(i.question_text, '') || ' ' ||
+             COALESCE(i.resolution_text, '')
+           ),
+           i.submission_date
+         FROM Interpellation i`,
+      );
+
+      db.run(
+        `INSERT INTO FederatedSearchFts (type, record_id, title, subtitle, body, date)
+         SELECT
+           'government-proposal',
+           CAST(g.id AS TEXT),
+           COALESCE(NULLIF(TRIM(g.title), ''), g.parliament_identifier),
+           g.parliament_identifier,
+           TRIM(
+             COALESCE(g.title, '') || ' ' ||
+             COALESCE(g.parliament_identifier, '') || ' ' ||
+             COALESCE(g.summary_text, '') || ' ' ||
+             COALESCE(g.justification_text, '')
+           ),
+           g.submission_date
+         FROM GovernmentProposal g`,
+      );
+
+      db.run(
+        `INSERT INTO FederatedSearchFts (type, record_id, title, subtitle, body, date)
+         SELECT
+           'written-question',
+           CAST(wq.id AS TEXT),
+           COALESCE(NULLIF(TRIM(wq.title), ''), wq.parliament_identifier),
+           wq.parliament_identifier,
+           TRIM(
+             COALESCE(wq.title, '') || ' ' ||
+             COALESCE(wq.parliament_identifier, '') || ' ' ||
+             COALESCE(wq.question_text, '')
+           ),
+           wq.submission_date
+         FROM WrittenQuestion wq`,
+      );
+
+      db.run(
+        `INSERT INTO FederatedSearchFts (type, record_id, title, subtitle, body, date)
+         SELECT
+           'oral-question',
+           CAST(oq.id AS TEXT),
+           COALESCE(NULLIF(TRIM(oq.title), ''), oq.parliament_identifier),
+           oq.parliament_identifier,
+           TRIM(
+             COALESCE(oq.title, '') || ' ' ||
+             COALESCE(oq.parliament_identifier, '') || ' ' ||
+             COALESCE(oq.question_text, '') || ' ' ||
+             COALESCE(oq.asker_text, '')
+           ),
+           oq.submission_date
+         FROM OralQuestion oq`,
+      );
+
+      db.run(
+        `INSERT INTO FederatedSearchFts (type, record_id, title, subtitle, body, date)
+         SELECT
+           'legislative-initiative',
+           CAST(li.id AS TEXT),
+           COALESCE(NULLIF(TRIM(li.title), ''), li.parliament_identifier),
+           li.parliament_identifier,
+           TRIM(
+             COALESCE(li.title, '') || ' ' ||
+             COALESCE(li.parliament_identifier, '') || ' ' ||
+             COALESCE(li.justification_text, '') || ' ' ||
+             COALESCE(li.proposal_text, '')
+           ),
+           li.submission_date
+         FROM LegislativeInitiative li`,
+      );
+    });
+
+    rebuildTransaction.immediate();
+
+    const row = db
+      .query<{ count: number }, []>(
+        "SELECT COUNT(*) AS count FROM FederatedSearchFts",
+      )
+      .get();
+    return row?.count ?? 0;
+  }
+
   /**
    * Start database migration from parsed storage
    */
@@ -1140,6 +1417,34 @@ export class MigratorController {
           },
         });
       }
+
+      this.sendMessage({
+        type: "progress",
+        data: {
+          message: "Normalizing imported text values...",
+          currentTable: null,
+          tablesCompleted,
+          totalTables: tablesToImport.length,
+        },
+      });
+      console.log("\n🧹 Normalizing imported text values...");
+      this.normalizeImportedTextData(targetDatabase);
+      console.log("✅ Text normalization complete");
+
+      this.sendMessage({
+        type: "progress",
+        data: {
+          message: "Rebuilding federated search index...",
+          currentTable: null,
+          tablesCompleted,
+          totalTables: tablesToImport.length,
+        },
+      });
+      console.log("🔎 Rebuilding federated search index...");
+      const federatedSearchRows = this.rebuildFederatedSearchIndex(targetDatabase);
+      console.log(
+        `✅ Federated search index rebuilt (${federatedSearchRows} rows)`,
+      );
 
       // Update database timestamp
       const timestamp = new Date().toISOString();

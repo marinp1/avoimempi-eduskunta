@@ -11,6 +11,22 @@ export const buildSearchQuery = (
   return tokens.join("%");
 };
 
+const sanitizeFtsToken = (token: string): string =>
+  token.replaceAll('"', "").replaceAll("*", "").trim();
+
+export const buildFtsSearchQuery = (
+  raw: string | null | undefined,
+): string | null => {
+  if (!raw) return null;
+  const tokens = raw
+    .trim()
+    .split(/\s+/)
+    .map((token) => sanitizeFtsToken(token))
+    .filter((token) => token.length > 0);
+  if (tokens.length === 0) return null;
+  return tokens.map((token) => `"${token}"*`).join(" AND ");
+};
+
 export const endDateExclusive = (
   endDate: string | null | undefined,
 ): string | null => {

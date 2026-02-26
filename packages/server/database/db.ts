@@ -15,5 +15,7 @@ export class DatabaseConnection {
     });
     this.db.exec(SQLITE_PRAGMAS.queryOnlyOn);
     this.db.exec(SQLITE_PRAGMAS.tempStoreMemory);
+    this.db.exec(SQLITE_PRAGMAS.cacheSize64Mb);
+    this.db.exec(SQLITE_PRAGMAS.mmapSize30Gb);
   }
 }
