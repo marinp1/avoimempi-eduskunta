@@ -24,7 +24,10 @@ async function main() {
   let mode: ScrapeMode = { type: "auto-resume" };
 
   // Check for flags — supports both "--flag value" and "--flag=value"
-  function parseFlagValue(flag: string, nextArg: string | undefined): string | null {
+  function parseFlagValue(
+    flag: string,
+    nextArg: string | undefined,
+  ): string | null {
     const eqIndex = flag.indexOf("=");
     if (eqIndex !== -1) return flag.slice(eqIndex + 1);
     return nextArg ?? null;

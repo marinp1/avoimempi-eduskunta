@@ -354,7 +354,13 @@ async function processTable(
 
     const { nextPayload, changed } =
       stage === "raw"
-        ? backfillRawPayload(payload, tableName, firstPk, lastPk, createdAt.toISOString())
+        ? backfillRawPayload(
+            payload,
+            tableName,
+            firstPk,
+            lastPk,
+            createdAt.toISOString(),
+          )
         : backfillParsedPayload(
             payload,
             tableName,

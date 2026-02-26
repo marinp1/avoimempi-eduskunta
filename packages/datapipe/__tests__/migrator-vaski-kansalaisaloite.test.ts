@@ -18,7 +18,8 @@ function makeKasittelyRow(overrides: Partial<VaskiEntry> = {}): VaskiEntry {
     _source: {
       page: 2,
       parsedKey: "parsed/VaskiData/page_000000000002+000000000101.json",
-      vaskiPath: "vaski-data/kansalaisaloite/page_000000000002+000000000101.json",
+      vaskiPath:
+        "vaski-data/kansalaisaloite/page_000000000002+000000000101.json",
     },
     contents: {
       Siirto: {

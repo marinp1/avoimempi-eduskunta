@@ -135,7 +135,8 @@ export async function recordSourceStagePage(
   if (!existing || normalizedPage > existing.pageCount) {
     totalRowCount = prevTotal + normalizedRowCount;
   } else if (normalizedPage === existing.pageCount) {
-    totalRowCount = prevTotal - (existing.lastPageRowCount ?? 0) + normalizedRowCount;
+    totalRowCount =
+      prevTotal - (existing.lastPageRowCount ?? 0) + normalizedRowCount;
   } else {
     totalRowCount = prevTotal;
   }
