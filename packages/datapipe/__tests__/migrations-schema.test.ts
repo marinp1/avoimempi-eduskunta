@@ -69,6 +69,12 @@ describe("Migration schema", () => {
       "V001.023__vaski_expert_statement_schema.sql",
       "V001.024__import_source_reference_schema.sql",
       "V001.025__government_reference_schema.sql",
+      "V001.026__interpellation_submission_date_index.sql",
+      "V001.027__search_index_and_query_indexes.sql",
+      "V001.028__voting_party_stats.sql",
+      "V001.029__analytics_aggregate_tables.sql",
+      "V001.030__import_source_reference_summary.sql",
+      "V001.031__database_size_reduction_indexes.sql",
     ]);
   });
 
@@ -308,6 +314,59 @@ describe("Migration schema", () => {
       const gmColumns = getColumnNames(db, "GovernmentMembership");
       expect(gmColumns).toContain("government");
       expect(gmColumns).toContain("government_id");
+    } finally {
+      db.close();
+    }
+  });
+
+  test("creates import source summary and analytics aggregate tables", () => {
+    const db = createTestDb(30);
+    try {
+      const tableNames = getTableNames(db);
+      expect(tableNames).toContain("ImportSourceReferenceSummary");
+      expect(tableNames).toContain("VotingPartyStats");
+      expect(tableNames).toContain("PersonVotingDailyStats");
+      expect(tableNames).toContain("PersonSpeechDailyStats");
+
+      const sourceSummaryColumns = getColumnNames(
+        db,
+        "ImportSourceReferenceSummary",
+      );
+      expect(sourceSummaryColumns).toContain("source_table");
+      expect(sourceSummaryColumns).toContain("imported_rows");
+      expect(sourceSummaryColumns).toContain("distinct_pages");
+
+      const votingPartyStatsColumns = getColumnNames(db, "VotingPartyStats");
+      expect(votingPartyStatsColumns).toContain("n_jaa");
+      expect(votingPartyStatsColumns).toContain("n_ei");
+      expect(votingPartyStatsColumns).toContain("n_tyhjaa");
+      expect(votingPartyStatsColumns).toContain("n_poissa");
+    } finally {
+      db.close();
+    }
+  });
+
+  test("drops redundant indexes to reduce database size", () => {
+    const db = createTestDb(31);
+    try {
+      const indexNames = (
+        db
+          .query(
+            "SELECT name FROM sqlite_master WHERE type='index' ORDER BY name",
+          )
+          .all() as Array<{ name: string }>
+      ).map((row) => row.name);
+
+      expect(indexNames).toContain("idx_import_source_reference_source_table");
+      expect(indexNames).not.toContain("idx_import_source_reference_lookup");
+      expect(indexNames).not.toContain(
+        "idx_import_source_reference_scraped_at",
+      );
+      expect(indexNames).not.toContain("idx_govproposal_outcome");
+      expect(indexNames).not.toContain("idx_committeereportmember_person");
+      expect(indexNames).not.toContain("idx_speech_content_session");
+      expect(indexNames).not.toContain("idx_speech_content_section");
+      expect(indexNames).not.toContain("idx_speech_content_source_document");
     } finally {
       db.close();
     }

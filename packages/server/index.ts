@@ -21,13 +21,16 @@ import { createSessionRoutes } from "./routes/session-routes";
 import { createStaticPageRoutes } from "./routes/static-page-routes";
 import { createVotingRoutes } from "./routes/voting-routes";
 import { handleDevelopmentWebSocketUpgrade } from "./routes/websocket-upgrade";
+import { getTraceDatabasePath } from "../shared/database";
 
 await prepareDatabaseForServerStartup();
 const databaseConnection = new DatabaseConnection();
 const db = databaseConnection.db;
 const analyticsRepository = new AnalyticsRepository(db);
 const documentRepository = new DocumentRepository(db);
-const importSourceRepository = new ImportSourceRepository(db);
+const importSourceRepository = new ImportSourceRepository(db, {
+  traceDatabasePath: getTraceDatabasePath(),
+});
 const metadataRepository = new MetadataRepository(db);
 const personRepository = new PersonRepository(db);
 const sessionRepository = new SessionRepository(db);
