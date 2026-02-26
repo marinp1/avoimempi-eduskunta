@@ -91,6 +91,19 @@ export class ImportSourceRepository {
     return (row?.count ?? 0) > 0;
   }
 
+  private hasImportSourceReferenceData(database: Database): boolean {
+    if (!this.hasImportSourceReferenceTable(database)) {
+      return false;
+    }
+
+    const stmt = database.prepare<{ count: number }, []>(
+      "SELECT COUNT(*) AS count FROM ImportSourceReference",
+    );
+    const row = stmt.get();
+    stmt.finalize();
+    return (row?.count ?? 0) > 0;
+  }
+
   private fetchFromSummaryTable(database: Database, tableNames: string[]) {
     const summaryStmt = database.prepare<
       ImportSourceSummaryRow,
@@ -182,7 +195,7 @@ export class ImportSourceRepository {
     }
 
     for (const database of this.getCandidateDatabases()) {
-      if (this.hasImportSourceReferenceTable(database)) {
+      if (this.hasImportSourceReferenceData(database)) {
         return this.fetchFromReferenceTable(database, uniqueTableNames);
       }
     }

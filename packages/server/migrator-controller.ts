@@ -363,6 +363,11 @@ const parseSourceReferenceMode = (
   return "summary";
 };
 
+const isNotADatabaseError = (error: unknown): boolean => {
+  const text = String(error).toLowerCase();
+  return text.includes("sqlite_notadb") || text.includes("not a database");
+};
+
 const IMPORT_METADATA_FIELDS = {
   sourceTable: "__sourceTable",
   sourcePage: "__sourcePage",
@@ -648,8 +653,11 @@ export class MigratorController {
   }): Promise<void> {
     const storage = getStorage();
     const databasePath = getDatabasePath();
+    const traceDatabasePath = getTraceDatabasePath();
     const databaseFileName = path.basename(databasePath);
+    const traceDatabaseFileName = path.basename(traceDatabasePath);
     const artifactKey = `${SQLITE_ARTIFACTS_STORAGE_PREFIX}/latest/${databaseFileName}`;
+    const traceArtifactKey = `${SQLITE_ARTIFACTS_STORAGE_PREFIX}/latest/${traceDatabaseFileName}`;
     const shouldPublishSnapshot = isTruthyEnv(
       process.env.MIGRATOR_PUBLISH_SNAPSHOT,
     );
@@ -669,8 +677,18 @@ export class MigratorController {
     const snapshotKey = shouldPublishSnapshot
       ? `${SQLITE_ARTIFACTS_STORAGE_PREFIX}/snapshots/${params.runId}/${databaseFileName}`
       : null;
+    const traceSnapshotKey = shouldPublishSnapshot
+      ? `${SQLITE_ARTIFACTS_STORAGE_PREFIX}/snapshots/${params.runId}/${traceDatabaseFileName}`
+      : null;
     if (snapshotKey) {
       await storage.putFile(snapshotKey, databasePath);
+    }
+    const hasTraceDatabase = fs.existsSync(traceDatabasePath);
+    if (hasTraceDatabase) {
+      await storage.putFile(traceArtifactKey, traceDatabasePath);
+      if (traceSnapshotKey) {
+        await storage.putFile(traceSnapshotKey, traceDatabasePath);
+      }
     }
 
     const stats = fs.statSync(databasePath);
@@ -680,8 +698,14 @@ export class MigratorController {
       storageProvider: storage.name,
       dbArtifactKey: artifactKey,
       snapshotKey,
+      traceDbArtifactKey: hasTraceDatabase ? traceArtifactKey : null,
+      traceSnapshotKey: hasTraceDatabase ? traceSnapshotKey : null,
       dbFileName: databaseFileName,
       dbSizeBytes: stats.size,
+      traceDbFileName: hasTraceDatabase ? traceDatabaseFileName : null,
+      traceDbSizeBytes: hasTraceDatabase
+        ? fs.statSync(traceDatabasePath).size
+        : null,
       updatedAt: new Date().toISOString(),
     };
 
@@ -863,6 +887,62 @@ export class MigratorController {
     }
     if (objectExists(db, "table", "ImportSourceReference")) {
       db.run("DELETE FROM ImportSourceReference");
+    }
+  }
+
+  private configureTraceDatabase(db: Database): void {
+    db.exec(SQLITE_PRAGMAS.journalWal);
+    db.exec(SQLITE_PRAGMAS.synchronousOff);
+    db.exec(SQLITE_PRAGMAS.cacheSize64Mb);
+    db.exec(SQLITE_PRAGMAS.tempStoreMemory);
+    db.exec(SQLITE_PRAGMAS.mmapSize30Gb);
+  }
+
+  private openTraceDatabaseForMigration(traceDatabasePath: string): Database {
+    fs.mkdirSync(path.dirname(traceDatabasePath), { recursive: true });
+
+    let traceDb: Database | null = null;
+    try {
+      traceDb = sqlite.open(traceDatabasePath, {
+        create: true,
+        readwrite: true,
+      });
+      this.configureTraceDatabase(traceDb);
+      return traceDb;
+    } catch (error) {
+      if (traceDb) {
+        try {
+          traceDb.close();
+        } catch (_closeError) {
+          // best effort
+        }
+      }
+
+      if (!isNotADatabaseError(error)) {
+        throw error;
+      }
+
+      const backupPath = `${traceDatabasePath}.invalid-${Date.now()}`;
+      try {
+        if (fs.existsSync(traceDatabasePath)) {
+          fs.renameSync(traceDatabasePath, backupPath);
+          console.warn(
+            `⚠️  Trace database is invalid, moved to '${backupPath}' and recreating...`,
+          );
+        }
+      } catch (_renameError) {
+        fs.rmSync(traceDatabasePath, { force: true });
+        console.warn(
+          `⚠️  Trace database is invalid and could not be renamed, deleting and recreating '${traceDatabasePath}'...`,
+        );
+      }
+
+      const recreatedTraceDb = sqlite.open(traceDatabasePath, {
+        create: true,
+        readwrite: true,
+      });
+      this.configureTraceDatabase(recreatedTraceDb);
+      return recreatedTraceDb;
     }
   }
 
@@ -1456,19 +1536,11 @@ export class MigratorController {
       );
 
       if (sourceReferenceMode !== "off") {
-        traceDatabase = sqlite.open(traceDatabasePath, {
-          create: true,
-          readwrite: true,
-        });
-        traceDatabase.exec(SQLITE_PRAGMAS.journalWal);
-        traceDatabase.exec(SQLITE_PRAGMAS.synchronousOff);
-        traceDatabase.exec(SQLITE_PRAGMAS.cacheSize64Mb);
-        traceDatabase.exec(SQLITE_PRAGMAS.tempStoreMemory);
-        traceDatabase.exec(SQLITE_PRAGMAS.mmapSize30Gb);
+        traceDatabase = this.openTraceDatabaseForMigration(traceDatabasePath);
         this.ensureImportTraceSchema(traceDatabase);
-        this.clearImportTraceData(traceDatabase);
         traceDatabase.exec(MIGRATOR_SQL.beginTransaction);
         traceTransactionOpen = true;
+        this.clearImportTraceData(traceDatabase);
       }
 
       const sourceReferenceSummaries = new Map<
