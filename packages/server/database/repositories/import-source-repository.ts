@@ -1,5 +1,5 @@
 import type { Database } from "bun:sqlite";
-import * as queries from "../queries";
+import importSourceTableSummary from "../queries/IMPORT_SOURCE_TABLE_SUMMARY.sql";
 
 export class ImportSourceRepository {
   constructor(private readonly db: Database) {}
@@ -56,7 +56,7 @@ export class ImportSourceRepository {
       {
         $tableName: string;
       }
-    >(queries.importSourceTableSummary);
+    >(importSourceTableSummary);
 
     const tables = uniqueTableNames.map((tableName) => {
       const row = stmt.get({

@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
 import { getDatabasePath } from "../../shared/database";
-import { currentComposition } from "../database/queries";
+import currentComposition from "../database/queries/CURRENT_COMPOSITION.sql";
 
 type SessionDateRow = {
   date: string;

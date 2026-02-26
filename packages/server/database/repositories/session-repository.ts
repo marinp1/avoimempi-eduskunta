@@ -1,5 +1,22 @@
 import type { Database } from "bun:sqlite";
-import * as queries from "../queries";
+import rollCallEntries from "../queries/ROLL_CALL_ENTRIES.sql";
+import sectionByKey from "../queries/SECTION_BY_KEY.sql";
+import sectionDocumentLinks from "../queries/SECTION_DOCUMENT_LINKS.sql";
+import sectionRollCallReport from "../queries/SECTION_ROLL_CALL_REPORT.sql";
+import sectionSpeechCount from "../queries/SECTION_SPEECH_COUNT.sql";
+import sectionSpeeches from "../queries/SECTION_SPEECHES.sql";
+import sectionSubSections from "../queries/SECTION_SUBSECTIONS.sql";
+import sectionVotings from "../queries/SECTION_VOTINGS.sql";
+import sessionByDate from "../queries/SESSION_BY_DATE.sql";
+import sessionCount from "../queries/SESSION_COUNT.sql";
+import sessionDates from "../queries/SESSION_DATES.sql";
+import sessionDatesCompleted from "../queries/SESSION_DATES_COMPLETED.sql";
+import sessionDocuments from "../queries/SESSION_DOCUMENTS.sql";
+import sessionNotices from "../queries/SESSION_NOTICES.sql";
+import sessionSections from "../queries/SESSION_SECTIONS.sql";
+import sessionVotingCount from "../queries/SESSION_VOTING_COUNT.sql";
+import sessionsPaginated from "../queries/SESSIONS_PAGINATED.sql";
+import speechesByDate from "../queries/SPEECHES_BY_DATE.sql";
 
 const buildSectionRows = (
   sessionKey: string,
@@ -23,9 +40,7 @@ export class SessionRepository {
   public fetchSessions(params: { page: number; limit: number }) {
     const offset = (params.page - 1) * params.limit;
 
-    const countStmt = this.db.prepare<{ count: number }, []>(
-      queries.sessionCount,
-    );
+    const countStmt = this.db.prepare<{ count: number }, []>(sessionCount);
     const countResult = countStmt.get();
     const totalCount = countResult?.count || 0;
     countStmt.finalize();
@@ -33,7 +48,7 @@ export class SessionRepository {
     const stmt = this.db.prepare<
       DatabaseTables.Session & { agenda_title?: string; agenda_state?: string },
       { $limit: number; $offset: number }
-    >(queries.sessionsPaginated);
+    >(sessionsPaginated);
     const sessions = stmt.all({ $limit: params.limit, $offset: offset });
     stmt.finalize();
 
@@ -74,12 +89,12 @@ export class SessionRepository {
         minutes_match_mode?: string | null;
       },
       { $sessionKey: string }
-    >(queries.sessionSections);
+    >(sessionSections);
 
     const votingCountStmt = this.db.prepare<
       { voting_count: number },
       { $sessionKey: string }
-    >(queries.sessionVotingCount);
+    >(sessionVotingCount);
 
     const sessionsWithSections = sessions.map((session) => ({
       ...session,
@@ -109,7 +124,7 @@ export class SessionRepository {
     const countStmt = this.db.prepare<
       { count: number },
       { $sectionKey: string }
-    >(queries.sectionSpeechCount);
+    >(sectionSpeechCount);
     const countResult = countStmt.get({ $sectionKey: params.sectionKey });
     const total = countResult?.count || 0;
     countStmt.finalize();
@@ -117,7 +132,7 @@ export class SessionRepository {
     const stmt = this.db.prepare<
       DatabaseTables.Speech,
       { $sectionKey: string; $limit: number; $offset: number }
-    >(queries.sectionSpeeches);
+    >(sectionSpeeches);
     const speeches = stmt.all({
       $sectionKey: params.sectionKey,
       $limit: limit,
@@ -146,7 +161,7 @@ export class SessionRepository {
         minutes_content_text: string | null;
       },
       { $sectionKey: string }
-    >(queries.sectionByKey);
+    >(sectionByKey);
     const data = stmt.get({ $sectionKey: params.sectionKey });
     stmt.finalize();
     return data || null;
@@ -156,7 +171,7 @@ export class SessionRepository {
     const stmt = this.db.prepare<
       DatabaseTables.Voting,
       { $sectionKey: string }
-    >(queries.sectionVotings);
+    >(sectionVotings);
     const votings = stmt.all({ $sectionKey: params.sectionKey });
     stmt.finalize();
     return votings;
@@ -166,7 +181,7 @@ export class SessionRepository {
     const stmt = this.db.prepare<
       DatabaseTables.SubSection,
       { $sectionKey: string }
-    >(queries.sectionSubSections);
+    >(sectionSubSections);
     const rows = stmt.all({ $sectionKey: params.sectionKey });
     stmt.finalize();
     return rows;
@@ -186,7 +201,7 @@ export class SessionRepository {
         created_at: string;
       },
       { $sectionKey: string }
-    >(queries.sectionRollCallReport);
+    >(sectionRollCallReport);
     const info = infoStmt.get({ $sectionKey: params.sectionKey });
     infoStmt.finalize();
     if (!info) return null;
@@ -204,7 +219,7 @@ export class SessionRepository {
         arrival_time?: string | null;
       },
       { $rollCallId: number }
-    >(queries.rollCallEntries);
+    >(rollCallEntries);
     const entries = entriesStmt.all({ $rollCallId: info.id });
     entriesStmt.finalize();
 
@@ -218,7 +233,7 @@ export class SessionRepository {
     const stmt = this.db.prepare<
       DatabaseTables.Session & { agenda_title?: string; agenda_state?: string },
       { $date: string }
-    >(queries.sessionByDate);
+    >(sessionByDate);
     const data = stmt.all({ $date: params.date });
     stmt.finalize();
     return data;
@@ -264,12 +279,12 @@ export class SessionRepository {
         minutes_match_mode?: string | null;
       },
       { $sessionKey: string }
-    >(queries.sessionSections);
+    >(sessionSections);
 
     const votingCountStmt = this.db.prepare<
       { voting_count: number },
       { $sessionKey: string }
-    >(queries.sessionVotingCount);
+    >(sessionVotingCount);
 
     const sessionsWithSections = sessions.map((session) => ({
       ...session,
@@ -299,7 +314,7 @@ export class SessionRepository {
         created_at: string | null;
       },
       { $sessionKey: string }
-    >(queries.sessionDocuments);
+    >(sessionDocuments);
     const data = stmt.all({ $sessionKey: params.sessionKey });
     stmt.finalize();
     return data;
@@ -309,7 +324,7 @@ export class SessionRepository {
     const stmt = this.db.prepare<
       DatabaseTables.SessionNotice,
       { $sessionKey: string }
-    >(queries.sessionNotices);
+    >(sessionNotices);
     const data = stmt.all({ $sessionKey: params.sessionKey });
     stmt.finalize();
     return data;
@@ -331,7 +346,7 @@ export class SessionRepository {
         source_type: string | null;
       },
       { $sectionKey: string }
-    >(queries.sectionDocumentLinks);
+    >(sectionDocumentLinks);
     const data = stmt.all({ $sectionKey: params.sectionKey });
     stmt.finalize();
     return data;
@@ -360,23 +375,21 @@ export class SessionRepository {
         section_ordinal?: number;
       },
       { $date: string }
-    >(queries.speechesByDate);
+    >(speechesByDate);
     const data = stmt.all({ $date: params.date });
     stmt.finalize();
     return data;
   }
 
   public fetchSessionDates() {
-    const stmt = this.db.prepare<{ date: string }, []>(queries.sessionDates);
+    const stmt = this.db.prepare<{ date: string }, []>(sessionDates);
     const data = stmt.all();
     stmt.finalize();
     return data;
   }
 
   public fetchCompletedSessionDates() {
-    const stmt = this.db.prepare<{ date: string }, []>(
-      queries.sessionDatesCompleted,
-    );
+    const stmt = this.db.prepare<{ date: string }, []>(sessionDatesCompleted);
     const data = stmt.all();
     stmt.finalize();
     return data;

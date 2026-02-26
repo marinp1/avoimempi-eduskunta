@@ -2,7 +2,7 @@ import { Database } from "bun:sqlite";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import * as queries from "../database/queries";
+import partySummary from "../database/queries/PARTY_SUMMARY.sql";
 import { EXPECTED_SANITY_TABLES } from "../database/sanity-queries";
 import {
   buildKnownDataExceptions,
@@ -1060,7 +1060,7 @@ describe.skipIf(!DB_EXISTS)("Real database sanity checks", () => {
     });
 
     test("PARTY_SUMMARY returns at least one coalition party for every official government", () => {
-      const stmt = db.prepare(queries.partySummary);
+      const stmt = db.prepare(partySummary);
       const governmentsWithNoCoalition: string[] = [];
 
       for (const expected of OFFICIAL_GOVERNMENT_REFERENCES) {

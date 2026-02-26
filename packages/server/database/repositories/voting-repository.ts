@@ -1,5 +1,12 @@
 import type { Database } from "bun:sqlite";
-import * as queries from "../queries";
+import documentRelationsByIdentifier from "../queries/DOCUMENT_RELATIONS_BY_IDENTIFIER.sql";
+import votingById from "../queries/VOTING_BY_ID.sql";
+import votingGovernmentOppositionById from "../queries/VOTING_GOVERNMENT_OPPOSITION_BY_ID.sql";
+import votingMemberVotesById from "../queries/VOTING_MEMBER_VOTES_BY_ID.sql";
+import votingPartyBreakdownById from "../queries/VOTING_PARTY_BREAKDOWN_BY_ID.sql";
+import votingRelatedById from "../queries/VOTING_RELATED_BY_ID.sql";
+import votingsByDocument from "../queries/VOTINGS_BY_DOCUMENT.sql";
+import votingsSearch from "../queries/VOTINGS_SEARCH.sql";
 import {
   buildDocumentIdentifierVariants,
   buildSearchQuery,
@@ -24,7 +31,7 @@ export class VotingRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.votingsSearch);
+    >(votingsSearch);
     const data = stmt.all({
       $query: searchQuery,
       $startDate: params.startDate ?? null,
@@ -40,7 +47,7 @@ export class VotingRepository {
     const stmt = this.db.prepare<
       DatabaseQueries.VotingSearchResult,
       { $id: number }
-    >(queries.votingById);
+    >(votingById);
     const data = stmt.get({ $id: votingId });
     stmt.finalize();
     return data ?? null;
@@ -63,7 +70,7 @@ export class VotingRepository {
         n_total: number;
       },
       { $id: number }
-    >(queries.votingPartyBreakdownById);
+    >(votingPartyBreakdownById);
     const partyBreakdown = partyStmt.all({ $id: votingId });
     partyStmt.finalize();
 
@@ -77,7 +84,7 @@ export class VotingRepository {
         is_government: 0 | 1;
       },
       { $id: number }
-    >(queries.votingMemberVotesById);
+    >(votingMemberVotesById);
     const memberVotes = memberStmt.all({ $id: votingId });
     memberStmt.finalize();
 
@@ -95,7 +102,7 @@ export class VotingRepository {
         opposition_total: number;
       },
       { $id: number }
-    >(queries.votingGovernmentOppositionById);
+    >(votingGovernmentOppositionById);
     const governmentOpposition = govStmt.get({ $id: votingId });
     govStmt.finalize();
 
@@ -113,7 +120,7 @@ export class VotingRepository {
         session_key: string | null;
       },
       { $id: number }
-    >(queries.votingRelatedById);
+    >(votingRelatedById);
     const relatedVotings = relatedStmt.all({ $id: votingId });
     relatedStmt.finalize();
 
@@ -130,7 +137,7 @@ export class VotingRepository {
     const stmt = this.db.prepare<
       DatabaseQueries.VotingSearchResult,
       { $identifier: string }
-    >(queries.votingsByDocument);
+    >(votingsByDocument);
     const data = stmt.all({ $identifier: params.identifier });
     stmt.finalize();
     return data;
@@ -147,7 +154,7 @@ export class VotingRepository {
         last_date: string | null;
       },
       { $idA: string; $idB: string; $idC: string }
-    >(queries.documentRelationsByIdentifier);
+    >(documentRelationsByIdentifier);
     const rows = stmt.all({ $idA: idA, $idB: idB, $idC: idC });
     stmt.finalize();
 

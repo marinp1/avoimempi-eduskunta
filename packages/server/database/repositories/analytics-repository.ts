@@ -1,5 +1,19 @@
 import type { Database } from "bun:sqlite";
-import * as queries from "../queries";
+import ageDivisionOverTime from "../queries/AGE_DIVISION_OVER_TIME.sql";
+import closeVotes from "../queries/CLOSE_VOTES.sql";
+import coalitionVsOpposition from "../queries/COALITION_VS_OPPOSITION.sql";
+import committeeOverview from "../queries/COMMITTEE_OVERVIEW.sql";
+import dissentTracking from "../queries/DISSENT_TRACKING.sql";
+import genderDivisionOverTime from "../queries/GENDER_DIVISION_OVER_TIME.sql";
+import mpActivityRanking from "../queries/MP_ACTIVITY_RANKING.sql";
+import partyDiscipline from "../queries/PARTY_DISCIPLINE.sql";
+import partyMembers from "../queries/PARTY_MEMBERS.sql";
+import partyParticipationByGovernment from "../queries/PARTY_PARTICIPATION_BY_GOVERNMENT.sql";
+import partySummary from "../queries/PARTY_SUMMARY.sql";
+import recentActivity from "../queries/RECENT_ACTIVITY.sql";
+import speechActivity from "../queries/SPEECH_ACTIVITY.sql";
+import votingParticipation from "../queries/VOTING_PARTICIPATION.sql";
+import votingParticipationByGovernment from "../queries/VOTING_PARTICIPATION_BY_GOVERNMENT.sql";
 import { endDateExclusive } from "../query-helpers";
 
 export class AnalyticsRepository {
@@ -24,7 +38,7 @@ export class AnalyticsRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.votingParticipation);
+    >(votingParticipation);
     const data = stmt.all({
       $startDate: params?.startDate || null,
       $endDateExclusive: endDateExclusiveValue,
@@ -57,7 +71,7 @@ export class AnalyticsRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.votingParticipationByGovernment);
+    >(votingParticipationByGovernment);
     const data = stmt.all({
       $personId: +params.personId,
       $startDate: params?.startDate || null,
@@ -78,7 +92,7 @@ export class AnalyticsRepository {
         male_percentage: number;
       },
       []
-    >(queries.genderDivisionOverTime);
+    >(genderDivisionOverTime);
     const data = stmt.all();
     stmt.finalize();
     return data;
@@ -99,7 +113,7 @@ export class AnalyticsRepository {
         total_count: number;
       },
       []
-    >(queries.ageDivisionOverTime);
+    >(ageDivisionOverTime);
     const data = stmt.all();
     stmt.finalize();
     return data;
@@ -126,7 +140,7 @@ export class AnalyticsRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.partyParticipationByGovernment);
+    >(partyParticipationByGovernment);
     const data = stmt.all({
       $startDate: params?.startDate || null,
       $endDateExclusive: endDateExclusiveValue,
@@ -149,7 +163,7 @@ export class AnalyticsRepository {
         discipline_rate: number;
       },
       { $startDate: string | null; $endDateExclusive: string | null }
-    >(queries.partyDiscipline);
+    >(partyDiscipline);
     const data = stmt.all({
       $startDate: params?.startDate || null,
       $endDateExclusive: endDateExclusiveValue,
@@ -188,7 +202,7 @@ export class AnalyticsRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.closeVotes);
+    >(closeVotes);
     const data = stmt.all({
       $threshold: params.threshold ?? 10,
       $limit: params.limit ?? 50,
@@ -213,7 +227,7 @@ export class AnalyticsRepository {
         activity_score: number;
       },
       { $limit: number }
-    >(queries.mpActivityRanking);
+    >(mpActivityRanking);
     const data = stmt.all({ $limit: params.limit ?? 50 });
     stmt.finalize();
     return data;
@@ -245,7 +259,7 @@ export class AnalyticsRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.coalitionVsOpposition);
+    >(coalitionVsOpposition);
     const data = stmt.all({
       $limit: params.limit ?? 50,
       $startDate: params.startDate || null,
@@ -282,7 +296,7 @@ export class AnalyticsRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.dissentTracking);
+    >(dissentTracking);
     const data = stmt.all({
       $personId: params.personId ?? null,
       $limit: params.limit ?? 100,
@@ -316,7 +330,7 @@ export class AnalyticsRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.speechActivity);
+    >(speechActivity);
     const data = stmt.all({
       $limit: params.limit ?? 50,
       $startDate: params.startDate || null,
@@ -336,7 +350,7 @@ export class AnalyticsRepository {
         current_chairs: string | null;
       },
       []
-    >(queries.committeeOverview);
+    >(committeeOverview);
     const data = stmt.all();
     stmt.finalize();
     return data;
@@ -355,7 +369,7 @@ export class AnalyticsRepository {
         close_vote_count: number;
       },
       { $limit: number }
-    >(queries.recentActivity);
+    >(recentActivity);
     const data = stmt.all({ $limit: params.limit ?? 20 });
     stmt.finalize();
     return data;
@@ -392,7 +406,7 @@ export class AnalyticsRepository {
         $governmentName: string | null;
         $governmentStartDate: string | null;
       }
-    >(queries.partySummary);
+    >(partySummary);
     const data = stmt.all({
       $asOfDate: asOfDate,
       $startDate: startDate,
@@ -439,7 +453,7 @@ export class AnalyticsRepository {
         $governmentName: string | null;
         $governmentStartDate: string | null;
       }
-    >(queries.partyMembers);
+    >(partyMembers);
     const data = stmt.all({
       $partyCode: params.partyCode,
       $asOfDate: asOfDate,

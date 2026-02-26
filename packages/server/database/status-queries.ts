@@ -1,4 +1,4 @@
-import { sql } from "./queries";
+import { sql } from "./sql-tag";
 
 const INTERNAL_STATUS_TABLES = ["_bun_migrations", "_migration_info"] as const;
 

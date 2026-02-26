@@ -1,7 +1,8 @@
 import { Database } from "bun:sqlite";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { performance } from "node:perf_hooks";
 import { getDatabasePath } from "../../shared/database";
-import * as appQueries from "../database/queries";
 import { sanityQueries } from "../database/sanity-queries";
 
 type Row = {
@@ -90,10 +91,18 @@ function analyzeQuery(
 
 const db = new Database(getDatabasePath(), { create: false, readonly: true });
 const results: Row[] = [];
+const appQueriesDir = join(import.meta.dirname, "../database/queries");
+const appQueries = readdirSync(appQueriesDir)
+  .filter((filename) => filename.endsWith(".sql"))
+  .sort()
+  .map((filename) => {
+    const queryName = filename.replace(/\.sql$/i, "");
+    const querySql = readFileSync(join(appQueriesDir, filename), "utf-8");
+    return [queryName, querySql] as const;
+  });
 
-for (const [name, value] of Object.entries(appQueries)) {
-  if (typeof value !== "string") continue;
-  results.push(analyzeQuery(db, "app", name, value));
+for (const [name, sql] of appQueries) {
+  results.push(analyzeQuery(db, "app", name, sql));
 }
 
 for (const [name, value] of Object.entries(sanityQueries)) {

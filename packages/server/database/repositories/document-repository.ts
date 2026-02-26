@@ -1,5 +1,73 @@
 import type { Database } from "bun:sqlite";
-import * as queries from "../queries";
+import committeeReportById from "../queries/COMMITTEE_REPORT_BY_ID.sql";
+import committeeReportByIdentifier from "../queries/COMMITTEE_REPORT_BY_IDENTIFIER.sql";
+import committeeReportExperts from "../queries/COMMITTEE_REPORT_EXPERTS.sql";
+import committeeReportMembers from "../queries/COMMITTEE_REPORT_MEMBERS.sql";
+import committeeReportRecipientCommittees from "../queries/COMMITTEE_REPORT_RECIPIENT_COMMITTEES.sql";
+import committeeReportSessions from "../queries/COMMITTEE_REPORT_SESSIONS.sql";
+import committeeReportSourceCommittees from "../queries/COMMITTEE_REPORT_SOURCE_COMMITTEES.sql";
+import committeeReportYears from "../queries/COMMITTEE_REPORT_YEARS.sql";
+import committeeReportsCount from "../queries/COMMITTEE_REPORTS_COUNT.sql";
+import committeeReportsList from "../queries/COMMITTEE_REPORTS_LIST.sql";
+import expertStatementCommittees from "../queries/EXPERT_STATEMENT_COMMITTEES.sql";
+import expertStatementYears from "../queries/EXPERT_STATEMENT_YEARS.sql";
+import expertStatementsCount from "../queries/EXPERT_STATEMENTS_COUNT.sql";
+import expertStatementsList from "../queries/EXPERT_STATEMENTS_LIST.sql";
+import federatedSearch from "../queries/FEDERATED_SEARCH.sql";
+import govProposalById from "../queries/GOV_PROPOSAL_BY_ID.sql";
+import govProposalByIdentifier from "../queries/GOV_PROPOSAL_BY_IDENTIFIER.sql";
+import govProposalLaws from "../queries/GOV_PROPOSAL_LAWS.sql";
+import govProposalSessions from "../queries/GOV_PROPOSAL_SESSIONS.sql";
+import govProposalSignatories from "../queries/GOV_PROPOSAL_SIGNATORIES.sql";
+import govProposalStages from "../queries/GOV_PROPOSAL_STAGES.sql";
+import govProposalSubjects from "../queries/GOV_PROPOSAL_SUBJECTS.sql";
+import govProposalYears from "../queries/GOV_PROPOSAL_YEARS.sql";
+import govProposalsCount from "../queries/GOV_PROPOSALS_COUNT.sql";
+import govProposalsList from "../queries/GOV_PROPOSALS_LIST.sql";
+import govProposalsSubjectsList from "../queries/GOV_PROPOSALS_SUBJECTS_LIST.sql";
+import interpellationById from "../queries/INTERPELLATION_BY_ID.sql";
+import interpellationByIdentifier from "../queries/INTERPELLATION_BY_IDENTIFIER.sql";
+import interpellationSessions from "../queries/INTERPELLATION_SESSIONS.sql";
+import interpellationSigners from "../queries/INTERPELLATION_SIGNERS.sql";
+import interpellationStages from "../queries/INTERPELLATION_STAGES.sql";
+import interpellationSubjects from "../queries/INTERPELLATION_SUBJECTS.sql";
+import interpellationYears from "../queries/INTERPELLATION_YEARS.sql";
+import interpellationsCount from "../queries/INTERPELLATIONS_COUNT.sql";
+import interpellationsList from "../queries/INTERPELLATIONS_LIST.sql";
+import interpellationsSubjectsList from "../queries/INTERPELLATIONS_SUBJECTS_LIST.sql";
+import legislativeInitiativeById from "../queries/LEGISLATIVE_INITIATIVE_BY_ID.sql";
+import legislativeInitiativeByIdentifier from "../queries/LEGISLATIVE_INITIATIVE_BY_IDENTIFIER.sql";
+import legislativeInitiativeSessions from "../queries/LEGISLATIVE_INITIATIVE_SESSIONS.sql";
+import legislativeInitiativeSigners from "../queries/LEGISLATIVE_INITIATIVE_SIGNERS.sql";
+import legislativeInitiativeStages from "../queries/LEGISLATIVE_INITIATIVE_STAGES.sql";
+import legislativeInitiativeSubjects from "../queries/LEGISLATIVE_INITIATIVE_SUBJECTS.sql";
+import legislativeInitiativeYears from "../queries/LEGISLATIVE_INITIATIVE_YEARS.sql";
+import legislativeInitiativesCount from "../queries/LEGISLATIVE_INITIATIVES_COUNT.sql";
+import legislativeInitiativesList from "../queries/LEGISLATIVE_INITIATIVES_LIST.sql";
+import legislativeInitiativesSubjectsList from "../queries/LEGISLATIVE_INITIATIVES_SUBJECTS_LIST.sql";
+import oralQuestionById from "../queries/ORAL_QUESTION_BY_ID.sql";
+import oralQuestionByIdentifier from "../queries/ORAL_QUESTION_BY_IDENTIFIER.sql";
+import oralQuestionSessions from "../queries/ORAL_QUESTION_SESSIONS.sql";
+import oralQuestionStages from "../queries/ORAL_QUESTION_STAGES.sql";
+import oralQuestionSubjects from "../queries/ORAL_QUESTION_SUBJECTS.sql";
+import oralQuestionYears from "../queries/ORAL_QUESTION_YEARS.sql";
+import oralQuestionsCount from "../queries/ORAL_QUESTIONS_COUNT.sql";
+import oralQuestionsList from "../queries/ORAL_QUESTIONS_LIST.sql";
+import oralQuestionsSubjectsList from "../queries/ORAL_QUESTIONS_SUBJECTS_LIST.sql";
+import writtenQuestionById from "../queries/WRITTEN_QUESTION_BY_ID.sql";
+import writtenQuestionByIdentifier from "../queries/WRITTEN_QUESTION_BY_IDENTIFIER.sql";
+import writtenQuestionResponseSubjects from "../queries/WRITTEN_QUESTION_RESPONSE_SUBJECTS.sql";
+import writtenQuestionResponsesCount from "../queries/WRITTEN_QUESTION_RESPONSES_COUNT.sql";
+import writtenQuestionResponsesList from "../queries/WRITTEN_QUESTION_RESPONSES_LIST.sql";
+import writtenQuestionResponsesYears from "../queries/WRITTEN_QUESTION_RESPONSES_YEARS.sql";
+import writtenQuestionSessions from "../queries/WRITTEN_QUESTION_SESSIONS.sql";
+import writtenQuestionSigners from "../queries/WRITTEN_QUESTION_SIGNERS.sql";
+import writtenQuestionStages from "../queries/WRITTEN_QUESTION_STAGES.sql";
+import writtenQuestionSubjects from "../queries/WRITTEN_QUESTION_SUBJECTS.sql";
+import writtenQuestionYears from "../queries/WRITTEN_QUESTION_YEARS.sql";
+import writtenQuestionsCount from "../queries/WRITTEN_QUESTIONS_COUNT.sql";
+import writtenQuestionsList from "../queries/WRITTEN_QUESTIONS_LIST.sql";
+import writtenQuestionsSubjectsList from "../queries/WRITTEN_QUESTIONS_SUBJECTS_LIST.sql";
 import {
   buildSearchQuery,
   endDateExclusive,
@@ -33,7 +101,7 @@ export class DocumentRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.interpellationsCount);
+    >(interpellationsCount);
     const countResult = countStmt.get({
       $query,
       $year,
@@ -69,7 +137,7 @@ export class DocumentRepository {
         $limit: number;
         $offset: number;
       }
-    >(queries.interpellationsList);
+    >(interpellationsList);
     const rows = stmt.all({
       $query,
       $year,
@@ -106,7 +174,7 @@ export class DocumentRepository {
         resolution_rich_text: string | null;
       },
       { $id: number }
-    >(queries.interpellationById);
+    >(interpellationById);
     const detail = detailStmt.get({ $id: +params.id });
     detailStmt.finalize();
     if (!detail) return null;
@@ -122,7 +190,7 @@ export class DocumentRepository {
         is_first_signer: number;
       },
       { $interpellationId: number }
-    >(queries.interpellationSigners);
+    >(interpellationSigners);
     const signers = signersStmt.all({ $interpellationId: detail.id });
     signersStmt.finalize();
 
@@ -137,14 +205,14 @@ export class DocumentRepository {
         event_description: string | null;
       },
       { $interpellationId: number }
-    >(queries.interpellationStages);
+    >(interpellationStages);
     const stages = stagesStmt.all({ $interpellationId: detail.id });
     stagesStmt.finalize();
 
     const subjectsStmt = this.db.prepare<
       { interpellation_id: number; subject_text: string },
       { $interpellationId: number }
-    >(queries.interpellationSubjects);
+    >(interpellationSubjects);
     const subjects = subjectsStmt.all({ $interpellationId: detail.id });
     subjectsStmt.finalize();
 
@@ -159,7 +227,7 @@ export class DocumentRepository {
         section_key: string;
       },
       { $identifier: string }
-    >(queries.interpellationSessions);
+    >(interpellationSessions);
     const sessions = sessionsStmt.all({
       $identifier: detail.parliament_identifier,
     });
@@ -190,7 +258,7 @@ export class DocumentRepository {
         resolution_rich_text: string | null;
       },
       { $identifier: string }
-    >(queries.interpellationByIdentifier);
+    >(interpellationByIdentifier);
     const detail = detailStmt.get({ $identifier: params.identifier });
     detailStmt.finalize();
     if (!detail) return null;
@@ -198,7 +266,7 @@ export class DocumentRepository {
     const subjectsStmt = this.db.prepare<
       { interpellation_id: number; subject_text: string },
       { $interpellationId: number }
-    >(queries.interpellationSubjects);
+    >(interpellationSubjects);
     const subjects = subjectsStmt.all({ $interpellationId: detail.id });
     subjectsStmt.finalize();
 
@@ -213,7 +281,7 @@ export class DocumentRepository {
         event_description: string | null;
       },
       { $interpellationId: number }
-    >(queries.interpellationStages);
+    >(interpellationStages);
     const stages = stagesStmt.all({ $interpellationId: detail.id });
     stagesStmt.finalize();
 
@@ -221,9 +289,7 @@ export class DocumentRepository {
   }
 
   public fetchInterpellationYears() {
-    const stmt = this.db.prepare<{ year: string }, []>(
-      queries.interpellationYears,
-    );
+    const stmt = this.db.prepare<{ year: string }, []>(interpellationYears);
     const data = stmt.all();
     stmt.finalize();
     return data;
@@ -231,7 +297,7 @@ export class DocumentRepository {
 
   public fetchInterpellationsSubjects() {
     const stmt = this.db.prepare<{ subject_text: string; count: number }, []>(
-      queries.interpellationsSubjectsList,
+      interpellationsSubjectsList,
     );
     const data = stmt.all();
     stmt.finalize();
@@ -262,7 +328,7 @@ export class DocumentRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.govProposalsCount);
+    >(govProposalsCount);
     const countResult = countStmt.get({
       $query,
       $year,
@@ -297,7 +363,7 @@ export class DocumentRepository {
         $limit: number;
         $offset: number;
       }
-    >(queries.govProposalsList);
+    >(govProposalsList);
     const rows = stmt.all({
       $query,
       $year,
@@ -338,7 +404,7 @@ export class DocumentRepository {
         end_date: string | null;
       },
       { $id: number }
-    >(queries.govProposalById);
+    >(govProposalById);
     const detail = detailStmt.get({ $id: +params.id });
     detailStmt.finalize();
     if (!detail) return null;
@@ -352,7 +418,7 @@ export class DocumentRepository {
         title_text: string | null;
       },
       { $proposalId: number }
-    >(queries.govProposalSignatories);
+    >(govProposalSignatories);
     const signatories = signatoriesStmt.all({ $proposalId: detail.id });
     signatoriesStmt.finalize();
 
@@ -367,14 +433,14 @@ export class DocumentRepository {
         event_description: string | null;
       },
       { $proposalId: number }
-    >(queries.govProposalStages);
+    >(govProposalStages);
     const stages = stagesStmt.all({ $proposalId: detail.id });
     stagesStmt.finalize();
 
     const subjectsStmt = this.db.prepare<
       { proposal_id: number; subject_text: string; yso_uri: string | null },
       { $proposalId: number }
-    >(queries.govProposalSubjects);
+    >(govProposalSubjects);
     const subjects = subjectsStmt.all({ $proposalId: detail.id });
     subjectsStmt.finalize();
 
@@ -386,7 +452,7 @@ export class DocumentRepository {
         law_name: string | null;
       },
       { $proposalId: number }
-    >(queries.govProposalLaws);
+    >(govProposalLaws);
     const laws = lawsStmt.all({ $proposalId: detail.id });
     lawsStmt.finalize();
 
@@ -401,7 +467,7 @@ export class DocumentRepository {
         section_key: string;
       },
       { $identifier: string }
-    >(queries.govProposalSessions);
+    >(govProposalSessions);
     const sessions = sessionsStmt.all({
       $identifier: detail.parliament_identifier,
     });
@@ -432,7 +498,7 @@ export class DocumentRepository {
         justification_rich_text: string | null;
       },
       { $identifier: string }
-    >(queries.govProposalByIdentifier);
+    >(govProposalByIdentifier);
     const detail = detailStmt.get({ $identifier: params.identifier });
     detailStmt.finalize();
     if (!detail) return null;
@@ -440,7 +506,7 @@ export class DocumentRepository {
     const subjectsStmt = this.db.prepare<
       { proposal_id: number; subject_text: string; yso_uri: string | null },
       { $proposalId: number }
-    >(queries.govProposalSubjects);
+    >(govProposalSubjects);
     const subjects = subjectsStmt.all({ $proposalId: detail.id });
     subjectsStmt.finalize();
 
@@ -448,9 +514,7 @@ export class DocumentRepository {
   }
 
   public fetchGovernmentProposalYears() {
-    const stmt = this.db.prepare<{ year: string }, []>(
-      queries.govProposalYears,
-    );
+    const stmt = this.db.prepare<{ year: string }, []>(govProposalYears);
     const data = stmt.all();
     stmt.finalize();
     return data;
@@ -458,7 +522,7 @@ export class DocumentRepository {
 
   public fetchGovernmentProposalsSubjects() {
     const stmt = this.db.prepare<{ subject_text: string; count: number }, []>(
-      queries.govProposalsSubjectsList,
+      govProposalsSubjectsList,
     );
     const data = stmt.all();
     stmt.finalize();
@@ -489,7 +553,7 @@ export class DocumentRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.writtenQuestionsCount);
+    >(writtenQuestionsCount);
     const countResult = countStmt.get({
       $query,
       $year,
@@ -531,7 +595,7 @@ export class DocumentRepository {
         $limit: number;
         $offset: number;
       }
-    >(queries.writtenQuestionsList);
+    >(writtenQuestionsList);
     const rows = stmt.all({
       $query,
       $year,
@@ -573,7 +637,7 @@ export class DocumentRepository {
         end_date: string | null;
       },
       { $id: number }
-    >(queries.writtenQuestionById);
+    >(writtenQuestionById);
     const detail = detailStmt.get({ $id: +params.id });
     detailStmt.finalize();
     if (!detail) return null;
@@ -589,7 +653,7 @@ export class DocumentRepository {
         is_first_signer: number;
       },
       { $questionId: number }
-    >(queries.writtenQuestionSigners);
+    >(writtenQuestionSigners);
     const signers = signersStmt.all({ $questionId: detail.id });
     signersStmt.finalize();
 
@@ -604,14 +668,14 @@ export class DocumentRepository {
         event_description: string | null;
       },
       { $questionId: number }
-    >(queries.writtenQuestionStages);
+    >(writtenQuestionStages);
     const stages = stagesStmt.all({ $questionId: detail.id });
     stagesStmt.finalize();
 
     const subjectsStmt = this.db.prepare<
       { question_id: number; subject_text: string },
       { $questionId: number }
-    >(queries.writtenQuestionSubjects);
+    >(writtenQuestionSubjects);
     const subjects = subjectsStmt.all({ $questionId: detail.id });
     subjectsStmt.finalize();
 
@@ -626,7 +690,7 @@ export class DocumentRepository {
         section_key: string;
       },
       { $identifier: string }
-    >(queries.writtenQuestionSessions);
+    >(writtenQuestionSessions);
     const sessions = sessionsStmt.all({
       $identifier: detail.parliament_identifier,
     });
@@ -637,7 +701,7 @@ export class DocumentRepository {
       const responseSubjectsStmt = this.db.prepare<
         { subject_text: string },
         { $questionId: number }
-      >(queries.writtenQuestionResponseSubjects);
+      >(writtenQuestionResponseSubjects);
       response_subjects = responseSubjectsStmt.all({ $questionId: detail.id });
       responseSubjectsStmt.finalize();
     } catch {
@@ -678,7 +742,7 @@ export class DocumentRepository {
         question_rich_text: string | null;
       },
       { $identifier: string }
-    >(queries.writtenQuestionByIdentifier);
+    >(writtenQuestionByIdentifier);
     const detail = detailStmt.get({ $identifier: params.identifier });
     detailStmt.finalize();
     if (!detail) return null;
@@ -686,7 +750,7 @@ export class DocumentRepository {
     const subjectsStmt = this.db.prepare<
       { question_id: number; subject_text: string },
       { $questionId: number }
-    >(queries.writtenQuestionSubjects);
+    >(writtenQuestionSubjects);
     const subjects = subjectsStmt.all({ $questionId: detail.id });
     subjectsStmt.finalize();
 
@@ -694,9 +758,7 @@ export class DocumentRepository {
   }
 
   public fetchWrittenQuestionYears() {
-    const stmt = this.db.prepare<{ year: string }, []>(
-      queries.writtenQuestionYears,
-    );
+    const stmt = this.db.prepare<{ year: string }, []>(writtenQuestionYears);
     const data = stmt.all();
     stmt.finalize();
     return data;
@@ -704,7 +766,7 @@ export class DocumentRepository {
 
   public fetchWrittenQuestionsSubjects() {
     const stmt = this.db.prepare<{ subject_text: string; count: number }, []>(
-      queries.writtenQuestionsSubjectsList,
+      writtenQuestionsSubjectsList,
     );
     const data = stmt.all();
     stmt.finalize();
@@ -738,7 +800,7 @@ export class DocumentRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.expertStatementsCount);
+    >(expertStatementsCount);
     const countResult = countStmt.get({
       $query,
       $year,
@@ -773,7 +835,7 @@ export class DocumentRepository {
         $limit: number;
         $offset: number;
       }
-    >(queries.expertStatementsList);
+    >(expertStatementsList);
     const rows = stmt.all({
       $query,
       $year,
@@ -790,9 +852,7 @@ export class DocumentRepository {
   }
 
   public fetchExpertStatementYears() {
-    const stmt = this.db.prepare<{ year: string }, []>(
-      queries.expertStatementYears,
-    );
+    const stmt = this.db.prepare<{ year: string }, []>(expertStatementYears);
     const data = stmt.all();
     stmt.finalize();
     return data;
@@ -800,7 +860,7 @@ export class DocumentRepository {
 
   public fetchExpertStatementCommittees() {
     const stmt = this.db.prepare<{ committee_name: string; count: number }, []>(
-      queries.expertStatementCommittees,
+      expertStatementCommittees,
     );
     const data = stmt.all();
     stmt.finalize();
@@ -831,7 +891,7 @@ export class DocumentRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.writtenQuestionResponsesCount);
+    >(writtenQuestionResponsesCount);
     const countResult = countStmt.get({
       $query,
       $year,
@@ -867,7 +927,7 @@ export class DocumentRepository {
         $limit: number;
         $offset: number;
       }
-    >(queries.writtenQuestionResponsesList);
+    >(writtenQuestionResponsesList);
     const rows = stmt.all({
       $query,
       $year,
@@ -884,7 +944,7 @@ export class DocumentRepository {
 
   public fetchWrittenQuestionResponseYears() {
     const stmt = this.db.prepare<{ year: string }, []>(
-      queries.writtenQuestionResponsesYears,
+      writtenQuestionResponsesYears,
     );
     const data = stmt.all();
     stmt.finalize();
@@ -915,7 +975,7 @@ export class DocumentRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.oralQuestionsCount);
+    >(oralQuestionsCount);
     const countResult = countStmt.get({
       $query,
       $year,
@@ -951,7 +1011,7 @@ export class DocumentRepository {
         $limit: number;
         $offset: number;
       }
-    >(queries.oralQuestionsList);
+    >(oralQuestionsList);
     const rows = stmt.all({
       $query,
       $year,
@@ -983,7 +1043,7 @@ export class DocumentRepository {
         end_date: string | null;
       },
       { $id: number }
-    >(queries.oralQuestionById);
+    >(oralQuestionById);
     const detail = detailStmt.get({ $id: +params.id });
     detailStmt.finalize();
     if (!detail) return null;
@@ -999,14 +1059,14 @@ export class DocumentRepository {
         event_description: string | null;
       },
       { $questionId: number }
-    >(queries.oralQuestionStages);
+    >(oralQuestionStages);
     const stages = stagesStmt.all({ $questionId: detail.id });
     stagesStmt.finalize();
 
     const subjectsStmt = this.db.prepare<
       { question_id: number; subject_text: string; yso_uri: string | null },
       { $questionId: number }
-    >(queries.oralQuestionSubjects);
+    >(oralQuestionSubjects);
     const subjects = subjectsStmt.all({ $questionId: detail.id });
     subjectsStmt.finalize();
 
@@ -1021,7 +1081,7 @@ export class DocumentRepository {
         section_key: string;
       },
       { $identifier: string }
-    >(queries.oralQuestionSessions);
+    >(oralQuestionSessions);
     const sessions = sessionsStmt.all({
       $identifier: detail.parliament_identifier,
     });
@@ -1047,7 +1107,7 @@ export class DocumentRepository {
         end_date: string | null;
       },
       { $identifier: string }
-    >(queries.oralQuestionByIdentifier);
+    >(oralQuestionByIdentifier);
     const detail = detailStmt.get({ $identifier: params.identifier });
     detailStmt.finalize();
     if (!detail) return null;
@@ -1055,7 +1115,7 @@ export class DocumentRepository {
     const subjectsStmt = this.db.prepare<
       { question_id: number; subject_text: string; yso_uri: string | null },
       { $questionId: number }
-    >(queries.oralQuestionSubjects);
+    >(oralQuestionSubjects);
     const subjects = subjectsStmt.all({ $questionId: detail.id });
     subjectsStmt.finalize();
 
@@ -1063,9 +1123,7 @@ export class DocumentRepository {
   }
 
   public fetchOralQuestionYears() {
-    const stmt = this.db.prepare<{ year: string }, []>(
-      queries.oralQuestionYears,
-    );
+    const stmt = this.db.prepare<{ year: string }, []>(oralQuestionYears);
     const data = stmt.all();
     stmt.finalize();
     return data;
@@ -1073,7 +1131,7 @@ export class DocumentRepository {
 
   public fetchOralQuestionsSubjects() {
     const stmt = this.db.prepare<{ subject_text: string; count: number }, []>(
-      queries.oralQuestionsSubjectsList,
+      oralQuestionsSubjectsList,
     );
     const data = stmt.all();
     stmt.finalize();
@@ -1107,7 +1165,7 @@ export class DocumentRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.committeeReportsCount);
+    >(committeeReportsCount);
     const countResult = countStmt.get({
       $query,
       $year,
@@ -1143,7 +1201,7 @@ export class DocumentRepository {
         $limit: number;
         $offset: number;
       }
-    >(queries.committeeReportsList);
+    >(committeeReportsList);
     const rows = stmt.all({
       $query,
       $year,
@@ -1189,7 +1247,7 @@ export class DocumentRepository {
         resolution_rich_text: string | null;
       },
       { $id: number }
-    >(queries.committeeReportById);
+    >(committeeReportById);
     const detail = detailStmt.get({ $id: +params.id });
     detailStmt.finalize();
     if (!detail) return null;
@@ -1205,7 +1263,7 @@ export class DocumentRepository {
         role: string | null;
       },
       { $reportId: number }
-    >(queries.committeeReportMembers);
+    >(committeeReportMembers);
     const members = membersStmt.all({ $reportId: detail.id });
     membersStmt.finalize();
 
@@ -1220,7 +1278,7 @@ export class DocumentRepository {
         organization: string | null;
       },
       { $reportId: number }
-    >(queries.committeeReportExperts);
+    >(committeeReportExperts);
     const experts = expertsStmt.all({ $reportId: detail.id });
     expertsStmt.finalize();
 
@@ -1235,7 +1293,7 @@ export class DocumentRepository {
         section_key: string;
       },
       { $identifier: string }
-    >(queries.committeeReportSessions);
+    >(committeeReportSessions);
     const sessions = sessionsStmt.all({
       $identifier: detail.parliament_identifier,
     });
@@ -1268,7 +1326,7 @@ export class DocumentRepository {
         legislation_amendment_rich_text: string | null;
       },
       { $identifier: string }
-    >(queries.committeeReportByIdentifier);
+    >(committeeReportByIdentifier);
     const detail = detailStmt.get({ $identifier: params.identifier });
     detailStmt.finalize();
     if (!detail) return null;
@@ -1277,9 +1335,7 @@ export class DocumentRepository {
   }
 
   public fetchCommitteeReportYears() {
-    const stmt = this.db.prepare<{ year: string }, []>(
-      queries.committeeReportYears,
-    );
+    const stmt = this.db.prepare<{ year: string }, []>(committeeReportYears);
     const data = stmt.all();
     stmt.finalize();
     return data;
@@ -1305,7 +1361,7 @@ export class DocumentRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.committeeReportSourceCommittees);
+    >(committeeReportSourceCommittees);
     const data = stmt.all({
       $query,
       $year,
@@ -1337,7 +1393,7 @@ export class DocumentRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.committeeReportRecipientCommittees);
+    >(committeeReportRecipientCommittees);
     const data = stmt.all({
       $query,
       $year,
@@ -1376,7 +1432,7 @@ export class DocumentRepository {
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
-    >(queries.legislativeInitiativesCount);
+    >(legislativeInitiativesCount);
     const countResult = countStmt.get({
       $query,
       $year,
@@ -1416,7 +1472,7 @@ export class DocumentRepository {
         $limit: number;
         $offset: number;
       }
-    >(queries.legislativeInitiativesList);
+    >(legislativeInitiativesList);
     const rows = stmt.all({
       $query,
       $year,
@@ -1458,7 +1514,7 @@ export class DocumentRepository {
         end_date: string | null;
       },
       { $id: number }
-    >(queries.legislativeInitiativeById);
+    >(legislativeInitiativeById);
     const detail = detailStmt.get({ $id: +params.id });
     detailStmt.finalize();
     if (!detail) return null;
@@ -1474,7 +1530,7 @@ export class DocumentRepository {
         is_first_signer: number;
       },
       { $initiativeId: number }
-    >(queries.legislativeInitiativeSigners);
+    >(legislativeInitiativeSigners);
     const signers = signersStmt.all({ $initiativeId: detail.id });
     signersStmt.finalize();
 
@@ -1489,14 +1545,14 @@ export class DocumentRepository {
         event_description: string | null;
       },
       { $initiativeId: number }
-    >(queries.legislativeInitiativeStages);
+    >(legislativeInitiativeStages);
     const stages = stagesStmt.all({ $initiativeId: detail.id });
     stagesStmt.finalize();
 
     const subjectsStmt = this.db.prepare<
       { initiative_id: number; subject_text: string; yso_uri: string | null },
       { $initiativeId: number }
-    >(queries.legislativeInitiativeSubjects);
+    >(legislativeInitiativeSubjects);
     const subjects = subjectsStmt.all({ $initiativeId: detail.id });
     subjectsStmt.finalize();
 
@@ -1511,7 +1567,7 @@ export class DocumentRepository {
         section_key: string;
       },
       { $identifier: string }
-    >(queries.legislativeInitiativeSessions);
+    >(legislativeInitiativeSessions);
     const sessions = sessionsStmt.all({
       $identifier: detail.parliament_identifier,
     });
@@ -1546,7 +1602,7 @@ export class DocumentRepository {
         decision_outcome_code: string | null;
       },
       { $identifier: string }
-    >(queries.legislativeInitiativeByIdentifier);
+    >(legislativeInitiativeByIdentifier);
     const detail = detailStmt.get({ $identifier: params.identifier });
     detailStmt.finalize();
     if (!detail) return null;
@@ -1554,7 +1610,7 @@ export class DocumentRepository {
     const subjectsStmt = this.db.prepare<
       { initiative_id: number; subject_text: string; yso_uri: string | null },
       { $initiativeId: number }
-    >(queries.legislativeInitiativeSubjects);
+    >(legislativeInitiativeSubjects);
     const subjects = subjectsStmt.all({ $initiativeId: detail.id });
     subjectsStmt.finalize();
 
@@ -1568,7 +1624,7 @@ export class DocumentRepository {
     const stmt = this.db.prepare<
       { year: string },
       { $typeCode: string | null }
-    >(queries.legislativeInitiativeYears);
+    >(legislativeInitiativeYears);
     const data = stmt.all({ $typeCode });
     stmt.finalize();
     return data;
@@ -1576,7 +1632,7 @@ export class DocumentRepository {
 
   public fetchLegislativeInitiativesSubjects() {
     const stmt = this.db.prepare<{ subject_text: string; count: number }, []>(
-      queries.legislativeInitiativesSubjectsList,
+      legislativeInitiativesSubjectsList,
     );
     const data = stmt.all();
     stmt.finalize();
@@ -1595,7 +1651,7 @@ export class DocumentRepository {
         date: string | null;
       },
       { $q: string; $limit: number }
-    >(queries.federatedSearch);
+    >(federatedSearch);
     const data = stmt.all({
       $q: searchQuery,
       $limit: params.limit ?? 30,
