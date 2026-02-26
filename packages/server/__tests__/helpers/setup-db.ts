@@ -515,4 +515,34 @@ export function seedFullDataset(db: Database) {
     `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbreviation) VALUES (?, ?, ?, ?, ?)`,
     [5005, 101, 1002, "Poissa", "kok"],
   );
+
+  if (tableExists(db, "FederatedSearchFts")) {
+    db.run(`DELETE FROM FederatedSearchFts`);
+
+    db.run(
+      `INSERT INTO FederatedSearchFts (type, record_id, title, subtitle, body, date)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        "mp",
+        "1000",
+        "Matti Meikäläinen",
+        "kesk",
+        "Matti Meikäläinen kesk",
+        null,
+      ],
+    );
+
+    db.run(
+      `INSERT INTO FederatedSearchFts (type, record_id, title, subtitle, body, date)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        "voting",
+        "100",
+        "Hallituksen esitys",
+        "Jaa: 100 / Ei: 50",
+        "Hallituksen esitys Äänestys 1 2024/1",
+        "2024-01-15T10:00:00",
+      ],
+    );
+  }
 }

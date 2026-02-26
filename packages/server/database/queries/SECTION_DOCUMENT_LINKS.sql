@@ -13,23 +13,10 @@ WITH section_link_rows AS (
     'section_link' AS source_type,
     COALESCE(NULLIF(TRIM(sdl.link_url_fi), ''), 'section_link:' || CAST(sdl.id AS TEXT)) AS dedupe_key,
     2 AS source_priority
-  FROM (
-    SELECT
-      *,
-      ROW_NUMBER() OVER (
-        PARTITION BY
-          section_key,
-          COALESCE(NULLIF(TRIM(link_url_fi), ''), ''),
-          COALESCE(NULLIF(TRIM(link_text_fi), ''), ''),
-          COALESCE(NULLIF(TRIM(name_fi), ''), '')
-        ORDER BY id ASC
-      ) AS rn
-    FROM SectionDocumentLink
-    WHERE section_key = $sectionKey
-      AND link_url_fi IS NOT NULL
-      AND TRIM(link_url_fi) != ''
-  ) sdl
-  WHERE sdl.rn = 1
+  FROM SectionDocumentLink sdl
+  WHERE sdl.section_key = $sectionKey
+    AND sdl.link_url_fi IS NOT NULL
+    AND TRIM(sdl.link_url_fi) != ''
 ),
 section_reference_rows AS (
   SELECT
@@ -50,64 +37,53 @@ section_reference_rows AS (
       'section_document:' || CAST(dr.id AS TEXT)
     ) AS dedupe_key,
     1 AS source_priority
-  FROM (
-    SELECT
-      *,
-      ROW_NUMBER() OVER (
-        PARTITION BY
-          section_key,
-          COALESCE(NULLIF(TRIM(document_tunnus), ''), ''),
-          COALESCE(NULLIF(TRIM(source_url), ''), ''),
-          COALESCE(NULLIF(TRIM(source_text), ''), ''),
-          COALESCE(NULLIF(TRIM(source_type), ''), '')
-        ORDER BY id ASC
-      ) AS rn
-    FROM SaliDBDocumentReference
-    WHERE section_key = $sectionKey
-      AND source_url IS NOT NULL
-      AND TRIM(source_url) != ''
-  ) dr
-  WHERE dr.rn = 1
+  FROM SaliDBDocumentReference dr
+  WHERE dr.section_key = $sectionKey
+    AND dr.source_url IS NOT NULL
+    AND TRIM(dr.source_url) != ''
 ),
 candidate_rows AS (
   SELECT * FROM section_reference_rows
   UNION ALL
   SELECT * FROM section_link_rows
 ),
-ranked_rows AS (
+dedupe_priority AS (
   SELECT
-    cr.source_id,
     cr.section_key,
-    cr.label,
-    cr.url,
-    cr.document_tunnus,
-    cr.document_id,
-    cr.document_type_name,
-    cr.document_type_code,
-    cr.document_title,
-    cr.document_created_at,
-    cr.source_type,
-    cr.source_priority,
-    ROW_NUMBER() OVER (
-      PARTITION BY cr.section_key, cr.dedupe_key
-      ORDER BY
-        cr.source_priority ASC,
-        cr.source_id ASC
-    ) AS rn
+    cr.dedupe_key,
+    MIN(cr.source_priority) AS source_priority
   FROM candidate_rows cr
+  GROUP BY cr.section_key, cr.dedupe_key
+),
+dedupe_source AS (
+  SELECT
+    cr.section_key,
+    cr.dedupe_key,
+    cr.source_priority,
+    MIN(cr.source_id) AS min_source_id
+  FROM candidate_rows cr
+  JOIN dedupe_priority dp
+    ON dp.section_key = cr.section_key
+   AND dp.dedupe_key = cr.dedupe_key
+   AND dp.source_priority = cr.source_priority
+  GROUP BY cr.section_key, cr.dedupe_key, cr.source_priority
 )
 SELECT
-  rr.source_id AS id,
-  rr.section_key,
-  rr.label,
-  rr.url,
-  rr.document_tunnus,
-  rr.document_id,
-  rr.document_type_name,
-  rr.document_type_code,
-  rr.document_title,
-  rr.document_created_at,
-  rr.source_type
-FROM ranked_rows rr
-WHERE rr.rn = 1
-ORDER BY rr.source_priority ASC, rr.source_id ASC;
+  cr.source_id AS id,
+  cr.section_key,
+  cr.label,
+  cr.url,
+  cr.document_tunnus,
+  cr.document_id,
+  cr.document_type_name,
+  cr.document_type_code,
+  cr.document_title,
+  cr.document_created_at,
+  cr.source_type
+FROM candidate_rows cr
+JOIN dedupe_source ds
+  ON ds.section_key = cr.section_key
+ AND ds.dedupe_key = cr.dedupe_key
+ AND ds.source_priority = cr.source_priority
+ AND ds.min_source_id = cr.source_id
+ORDER BY cr.source_priority ASC, cr.source_id ASC;

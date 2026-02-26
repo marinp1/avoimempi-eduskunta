@@ -69,6 +69,7 @@ import writtenQuestionsCount from "../queries/WRITTEN_QUESTIONS_COUNT.sql";
 import writtenQuestionsList from "../queries/WRITTEN_QUESTIONS_LIST.sql";
 import writtenQuestionsSubjectsList from "../queries/WRITTEN_QUESTIONS_SUBJECTS_LIST.sql";
 import {
+  buildFtsSearchQuery,
   buildSearchQuery,
   endDateExclusive,
   paginatedResult,
@@ -1640,7 +1641,7 @@ export class DocumentRepository {
   }
 
   public federatedSearch(params: { q: string; limit?: number }) {
-    const searchQuery = buildSearchQuery(params.q);
+    const searchQuery = buildFtsSearchQuery(params.q);
     if (!searchQuery) return [];
     const stmt = this.db.prepare<
       {

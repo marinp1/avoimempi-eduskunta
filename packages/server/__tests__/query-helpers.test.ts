@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   buildDocumentIdentifierVariants,
+  buildFtsSearchQuery,
   buildSearchQuery,
   endDateExclusive,
   paginatedResult,
@@ -12,6 +13,16 @@ describe("database query helpers", () => {
     expect(buildSearchQuery("")).toBeNull();
     expect(buildSearchQuery("   ")).toBeNull();
     expect(buildSearchQuery(undefined)).toBeNull();
+  });
+
+  test("buildFtsSearchQuery tokenizes and builds prefix match expression", () => {
+    expect(buildFtsSearchQuery("  climate   act ")).toBe(
+      '"climate"* AND "act"*',
+    );
+    expect(buildFtsSearchQuery(' "he" * 1/2024 ')).toBe('"he"* AND "1/2024"*');
+    expect(buildFtsSearchQuery("")).toBeNull();
+    expect(buildFtsSearchQuery("   ")).toBeNull();
+    expect(buildFtsSearchQuery(undefined)).toBeNull();
   });
 
   test("endDateExclusive returns next date", () => {

@@ -27,6 +27,7 @@ function buildParams(sql: string): Record<string, unknown> {
     else if (name === "threshold") params[key] = 10;
     else if (name === "personId") params[key] = 1000;
     else if (name === "sessionKey") params[key] = "2024/1";
+    else if (name === "sessionKeysJson") params[key] = '["2024/1","2024/2"]';
     else if (name === "partyCode") params[key] = "kesk";
     else if (name === "id") params[key] = 100;
     else if (name === "query") params[key] = "%hallitus%";

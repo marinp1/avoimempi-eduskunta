@@ -13,29 +13,132 @@ import sessionDates from "../queries/SESSION_DATES.sql";
 import sessionDatesCompleted from "../queries/SESSION_DATES_COMPLETED.sql";
 import sessionDocuments from "../queries/SESSION_DOCUMENTS.sql";
 import sessionNotices from "../queries/SESSION_NOTICES.sql";
-import sessionSections from "../queries/SESSION_SECTIONS.sql";
-import sessionVotingCount from "../queries/SESSION_VOTING_COUNT.sql";
+import sessionSectionsBySessionKeys from "../queries/SESSION_SECTIONS_BY_SESSION_KEYS.sql";
+import sessionVotingCountsBySessionKeys from "../queries/SESSION_VOTING_COUNTS_BY_SESSION_KEYS.sql";
 import sessionsPaginated from "../queries/SESSIONS_PAGINATED.sql";
 import speechesByDate from "../queries/SPEECHES_BY_DATE.sql";
 
-const buildSectionRows = (
-  sessionKey: string,
-  sectionsStmt: ReturnType<Database["prepare"]>,
-  votingCountStmt: ReturnType<Database["prepare"]>,
-) => {
-  const sections = sectionsStmt.all({ $sessionKey: sessionKey });
-  const votingCountResult = votingCountStmt.get({
-    $sessionKey: sessionKey,
-  }) as { voting_count?: number } | null;
-  return {
-    sections,
-    section_count: sections.length,
-    voting_count: votingCountResult?.voting_count || 0,
-  };
+type SessionRow = DatabaseTables.Session & {
+  agenda_title?: string;
+  agenda_state?: string;
+};
+
+type SessionSectionRow = DatabaseTables.Section & {
+  voting_count: number;
+  speech_count: number;
+  speaker_count: number;
+  party_count: number;
+  vaski_document_id?: number | null;
+  vaski_document_type_name?: string | null;
+  vaski_document_type_code?: string | null;
+  vaski_eduskunta_tunnus?: string | null;
+  vaski_document_number?: number | null;
+  vaski_parliamentary_year?: string | null;
+  vaski_title?: string | null;
+  vaski_summary?: string | null;
+  vaski_author_first_name?: string | null;
+  vaski_author_last_name?: string | null;
+  vaski_author_role?: string | null;
+  vaski_author_organization?: string | null;
+  vaski_creation_date?: string | null;
+  vaski_status?: string | null;
+  vaski_source_reference?: string | null;
+  vaski_subjects?: string | null;
+  minutes_entry_kind?: string | null;
+  minutes_entry_order?: number | null;
+  minutes_item_identifier?: number | null;
+  minutes_parent_item_identifier?: string | null;
+  minutes_item_number?: string | null;
+  minutes_item_order?: number | null;
+  minutes_item_title?: string | null;
+  minutes_related_document_identifier?: string | null;
+  minutes_related_document_type?: string | null;
+  minutes_processing_phase_code?: string | null;
+  minutes_general_processing_phase_code?: string | null;
+  minutes_content_text?: string | null;
+  minutes_match_mode?: string | null;
+};
+
+type SessionWithSectionsRow = SessionRow & {
+  sections: SessionSectionRow[];
+  section_count: number;
+  voting_count: number;
 };
 
 export class SessionRepository {
   constructor(private readonly db: Database) {}
+
+  private fetchSectionRowsBySessionKeys(
+    sessionKeys: string[],
+  ): Map<string, SessionSectionRow[]> {
+    if (sessionKeys.length === 0) {
+      return new Map<string, SessionSectionRow[]>();
+    }
+
+    const stmt = this.db.prepare<
+      SessionSectionRow,
+      { $sessionKeysJson: string }
+    >(sessionSectionsBySessionKeys);
+    const sections = stmt.all({
+      $sessionKeysJson: JSON.stringify(sessionKeys),
+    });
+    stmt.finalize();
+
+    const sectionsBySessionKey = new Map<string, SessionSectionRow[]>();
+    for (const section of sections) {
+      const rows = sectionsBySessionKey.get(section.session_key);
+      if (rows) {
+        rows.push(section);
+      } else {
+        sectionsBySessionKey.set(section.session_key, [section]);
+      }
+    }
+
+    return sectionsBySessionKey;
+  }
+
+  private fetchVotingCountsBySessionKeys(
+    sessionKeys: string[],
+  ): Map<string, number> {
+    if (sessionKeys.length === 0) {
+      return new Map<string, number>();
+    }
+
+    const stmt = this.db.prepare<
+      { session_key: string; voting_count: number },
+      { $sessionKeysJson: string }
+    >(sessionVotingCountsBySessionKeys);
+    const rows = stmt.all({
+      $sessionKeysJson: JSON.stringify(sessionKeys),
+    });
+    stmt.finalize();
+
+    const votingCountBySessionKey = new Map<string, number>();
+    for (const row of rows) {
+      votingCountBySessionKey.set(row.session_key, row.voting_count);
+    }
+
+    return votingCountBySessionKey;
+  }
+
+  private attachSectionsAndVotingCounts(
+    sessions: SessionRow[],
+  ): SessionWithSectionsRow[] {
+    const sessionKeys = sessions.map((session) => session.key);
+    const sectionsBySessionKey = this.fetchSectionRowsBySessionKeys(sessionKeys);
+    const votingCountBySessionKey =
+      this.fetchVotingCountsBySessionKeys(sessionKeys);
+
+    return sessions.map((session) => {
+      const sections = sectionsBySessionKey.get(session.key) ?? [];
+      return {
+        ...session,
+        sections,
+        section_count: sections.length,
+        voting_count: votingCountBySessionKey.get(session.key) ?? 0,
+      };
+    });
+  }
 
   public fetchSessions(params: { page: number; limit: number }) {
     const offset = (params.page - 1) * params.limit;
@@ -46,63 +149,13 @@ export class SessionRepository {
     countStmt.finalize();
 
     const stmt = this.db.prepare<
-      DatabaseTables.Session & { agenda_title?: string; agenda_state?: string },
+      SessionRow,
       { $limit: number; $offset: number }
     >(sessionsPaginated);
     const sessions = stmt.all({ $limit: params.limit, $offset: offset });
     stmt.finalize();
 
-    const sectionsStmt = this.db.prepare<
-      DatabaseTables.Section & {
-        voting_count: number;
-        speech_count: number;
-        speaker_count: number;
-        party_count: number;
-        vaski_document_id?: number | null;
-        vaski_document_type_name?: string | null;
-        vaski_document_type_code?: string | null;
-        vaski_eduskunta_tunnus?: string | null;
-        vaski_document_number?: number | null;
-        vaski_parliamentary_year?: string | null;
-        vaski_title?: string | null;
-        vaski_summary?: string | null;
-        vaski_author_first_name?: string | null;
-        vaski_author_last_name?: string | null;
-        vaski_author_role?: string | null;
-        vaski_author_organization?: string | null;
-        vaski_creation_date?: string | null;
-        vaski_status?: string | null;
-        vaski_source_reference?: string | null;
-        vaski_subjects?: string | null;
-        minutes_entry_kind?: string | null;
-        minutes_entry_order?: number | null;
-        minutes_item_identifier?: number | null;
-        minutes_parent_item_identifier?: string | null;
-        minutes_item_number?: string | null;
-        minutes_item_order?: number | null;
-        minutes_item_title?: string | null;
-        minutes_related_document_identifier?: string | null;
-        minutes_related_document_type?: string | null;
-        minutes_processing_phase_code?: string | null;
-        minutes_general_processing_phase_code?: string | null;
-        minutes_content_text?: string | null;
-        minutes_match_mode?: string | null;
-      },
-      { $sessionKey: string }
-    >(sessionSections);
-
-    const votingCountStmt = this.db.prepare<
-      { voting_count: number },
-      { $sessionKey: string }
-    >(sessionVotingCount);
-
-    const sessionsWithSections = sessions.map((session) => ({
-      ...session,
-      ...buildSectionRows(session.key, sectionsStmt, votingCountStmt),
-    }));
-
-    sectionsStmt.finalize();
-    votingCountStmt.finalize();
+    const sessionsWithSections = this.attachSectionsAndVotingCounts(sessions);
 
     return {
       sessions: sessionsWithSections,
@@ -231,7 +284,7 @@ export class SessionRepository {
 
   public fetchSessionByDate(params: { date: string }) {
     const stmt = this.db.prepare<
-      DatabaseTables.Session & { agenda_title?: string; agenda_state?: string },
+      SessionRow,
       { $date: string }
     >(sessionByDate);
     const data = stmt.all({ $date: params.date });
@@ -241,60 +294,7 @@ export class SessionRepository {
 
   public fetchSessionWithSectionsByDate(params: { date: string }) {
     const sessions = this.fetchSessionByDate(params);
-
-    const sectionsStmt = this.db.prepare<
-      DatabaseTables.Section & {
-        voting_count: number;
-        speech_count: number;
-        speaker_count: number;
-        party_count: number;
-        vaski_document_id?: number | null;
-        vaski_document_type_name?: string | null;
-        vaski_document_type_code?: string | null;
-        vaski_eduskunta_tunnus?: string | null;
-        vaski_document_number?: number | null;
-        vaski_parliamentary_year?: string | null;
-        vaski_title?: string | null;
-        vaski_summary?: string | null;
-        vaski_author_first_name?: string | null;
-        vaski_author_last_name?: string | null;
-        vaski_author_role?: string | null;
-        vaski_author_organization?: string | null;
-        vaski_creation_date?: string | null;
-        vaski_status?: string | null;
-        vaski_source_reference?: string | null;
-        vaski_subjects?: string | null;
-        minutes_entry_kind?: string | null;
-        minutes_entry_order?: number | null;
-        minutes_item_identifier?: number | null;
-        minutes_parent_item_identifier?: string | null;
-        minutes_item_number?: string | null;
-        minutes_item_order?: number | null;
-        minutes_item_title?: string | null;
-        minutes_related_document_identifier?: string | null;
-        minutes_related_document_type?: string | null;
-        minutes_processing_phase_code?: string | null;
-        minutes_general_processing_phase_code?: string | null;
-        minutes_content_text?: string | null;
-        minutes_match_mode?: string | null;
-      },
-      { $sessionKey: string }
-    >(sessionSections);
-
-    const votingCountStmt = this.db.prepare<
-      { voting_count: number },
-      { $sessionKey: string }
-    >(sessionVotingCount);
-
-    const sessionsWithSections = sessions.map((session) => ({
-      ...session,
-      ...buildSectionRows(session.key, sectionsStmt, votingCountStmt),
-    }));
-
-    sectionsStmt.finalize();
-    votingCountStmt.finalize();
-
-    return sessionsWithSections;
+    return this.attachSectionsAndVotingCounts(sessions);
   }
 
   public fetchSessionDocuments(params: { sessionKey: string }) {

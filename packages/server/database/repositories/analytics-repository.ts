@@ -24,7 +24,7 @@ export class AnalyticsRepository {
     endDate?: string;
   }) {
     const endDateExclusiveValue = endDateExclusive(params?.endDate);
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         person_id: number;
         first_name: string;
@@ -43,7 +43,6 @@ export class AnalyticsRepository {
       $startDate: params?.startDate || null,
       $endDateExclusive: endDateExclusiveValue,
     });
-    stmt.finalize();
     return data;
   }
 
@@ -53,7 +52,7 @@ export class AnalyticsRepository {
     endDate?: string;
   }) {
     const endDateExclusiveValue = endDateExclusive(params?.endDate);
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         person_id: number;
         first_name: string;
@@ -77,12 +76,11 @@ export class AnalyticsRepository {
       $startDate: params?.startDate || null,
       $endDateExclusive: endDateExclusiveValue,
     });
-    stmt.finalize();
     return data;
   }
 
   public fetchGenderDivisionOverTime() {
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         year: number;
         female_count: number;
@@ -94,12 +92,11 @@ export class AnalyticsRepository {
       []
     >(genderDivisionOverTime);
     const data = stmt.all();
-    stmt.finalize();
     return data;
   }
 
   public fetchAgeDivisionOverTime() {
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         year: number;
         age_under_30: number;
@@ -115,7 +112,6 @@ export class AnalyticsRepository {
       []
     >(ageDivisionOverTime);
     const data = stmt.all();
-    stmt.finalize();
     return data;
   }
 
@@ -124,7 +120,7 @@ export class AnalyticsRepository {
     endDate?: string;
   }) {
     const endDateExclusiveValue = endDateExclusive(params?.endDate);
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         government: string;
         government_start: string;
@@ -145,7 +141,6 @@ export class AnalyticsRepository {
       $startDate: params?.startDate || null,
       $endDateExclusive: endDateExclusiveValue,
     });
-    stmt.finalize();
     return data;
   }
 
@@ -154,7 +149,7 @@ export class AnalyticsRepository {
     endDate?: string;
   }) {
     const endDateExclusiveValue = endDateExclusive(params?.endDate);
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         party_name: string;
         party_code: string;
@@ -168,7 +163,6 @@ export class AnalyticsRepository {
       $startDate: params?.startDate || null,
       $endDateExclusive: endDateExclusiveValue,
     });
-    stmt.finalize();
     return data;
   }
 
@@ -179,7 +173,7 @@ export class AnalyticsRepository {
     endDate?: string;
   }) {
     const endDateExclusiveValue = endDateExclusive(params.endDate);
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         id: number;
         start_time: string;
@@ -209,12 +203,11 @@ export class AnalyticsRepository {
       $startDate: params.startDate || null,
       $endDateExclusive: endDateExclusiveValue,
     });
-    stmt.finalize();
     return data;
   }
 
   public fetchMpActivityRanking(params: { limit?: number }) {
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         person_id: number;
         first_name: string;
@@ -229,7 +222,6 @@ export class AnalyticsRepository {
       { $limit: number }
     >(mpActivityRanking);
     const data = stmt.all({ $limit: params.limit ?? 50 });
-    stmt.finalize();
     return data;
   }
 
@@ -239,7 +231,7 @@ export class AnalyticsRepository {
     endDate?: string;
   }) {
     const endDateExclusiveValue = endDateExclusive(params.endDate);
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         voting_id: number;
         start_time: string;
@@ -265,7 +257,6 @@ export class AnalyticsRepository {
       $startDate: params.startDate || null,
       $endDateExclusive: endDateExclusiveValue,
     });
-    stmt.finalize();
     return data;
   }
 
@@ -276,7 +267,7 @@ export class AnalyticsRepository {
     endDate?: string;
   }) {
     const endDateExclusiveValue = endDateExclusive(params.endDate);
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         person_id: number;
         first_name: string;
@@ -303,7 +294,6 @@ export class AnalyticsRepository {
       $startDate: params.startDate || null,
       $endDateExclusive: endDateExclusiveValue,
     });
-    stmt.finalize();
     return data;
   }
 
@@ -313,7 +303,7 @@ export class AnalyticsRepository {
     endDate?: string;
   }) {
     const endDateExclusiveValue = endDateExclusive(params.endDate);
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         person_id: number;
         first_name: string;
@@ -336,12 +326,11 @@ export class AnalyticsRepository {
       $startDate: params.startDate || null,
       $endDateExclusive: endDateExclusiveValue,
     });
-    stmt.finalize();
     return data;
   }
 
   public fetchCommitteeOverview() {
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         committee_code: string;
         committee_name: string;
@@ -352,12 +341,11 @@ export class AnalyticsRepository {
       []
     >(committeeOverview);
     const data = stmt.all();
-    stmt.finalize();
     return data;
   }
 
   public fetchRecentActivity(params: { limit?: number }) {
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         date: string;
         session_key: string;
@@ -371,7 +359,6 @@ export class AnalyticsRepository {
       { $limit: number }
     >(recentActivity);
     const data = stmt.all({ $limit: params.limit ?? 20 });
-    stmt.finalize();
     return data;
   }
 
@@ -388,7 +375,7 @@ export class AnalyticsRepository {
     const endDateExclusiveValue = endDateExclusive(params?.endDate);
     const governmentName = params?.governmentName ?? null;
     const governmentStartDate = params?.governmentStartDate ?? null;
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         party_code: string;
         party_name: string;
@@ -414,7 +401,6 @@ export class AnalyticsRepository {
       $governmentName: governmentName,
       $governmentStartDate: governmentStartDate,
     });
-    stmt.finalize();
     return data;
   }
 
@@ -432,7 +418,7 @@ export class AnalyticsRepository {
     const endDateExclusiveValue = endDateExclusive(params.endDate);
     const governmentName = params.governmentName ?? null;
     const governmentStartDate = params.governmentStartDate ?? null;
-    const stmt = this.db.prepare<
+    const stmt = this.db.query<
       {
         person_id: number;
         first_name: string;
@@ -462,7 +448,6 @@ export class AnalyticsRepository {
       $governmentName: governmentName,
       $governmentStartDate: governmentStartDate,
     });
-    stmt.finalize();
     return data;
   }
 }

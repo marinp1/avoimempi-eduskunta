@@ -18,6 +18,7 @@ const DEFAULT_BINDINGS: Record<string, number | string | null> = {
   $query: "Äänestys",
   $rollCallId: 1,
   $sectionKey: "2024/1/3",
+  $sessionKeysJson: '["2024/1","2024/2"]',
   $sessionKey: "2024/1",
   $startDate: "2024-01-01",
   $threshold: 10,
