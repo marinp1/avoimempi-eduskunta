@@ -53,7 +53,12 @@ async function getLastScrapedPageRef(
   storage: ReturnType<typeof getStorage>,
   tableName: string,
   stage: DataStage,
-): Promise<{ key: string; firstPk: number; lastPk: number; pageCount: number } | null> {
+): Promise<{
+  key: string;
+  firstPk: number;
+  lastPk: number;
+  pageCount: number;
+} | null> {
   const prefix = StorageKeyBuilder.listPrefixForTable(stage, tableName);
   const keys = await listAllStorageKeys(storage, {
     prefix,
@@ -64,7 +69,14 @@ async function getLastScrapedPageRef(
 
   const refs = keys
     .map((k) => ({ key: k.key, ref: StorageKeyBuilder.parseKey(k.key) }))
-    .filter((r): r is { key: string; ref: NonNullable<ReturnType<typeof StorageKeyBuilder.parseKey>> } => r.ref !== null);
+    .filter(
+      (
+        r,
+      ): r is {
+        key: string;
+        ref: NonNullable<ReturnType<typeof StorageKeyBuilder.parseKey>>;
+      } => r.ref !== null,
+    );
 
   if (refs.length === 0) return null;
 
@@ -149,9 +161,7 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
         console.log(
           `✅ Already scraped: ${lastPage.pageCount - 1} pages (complete)`,
         );
-        console.log(
-          `🔄 Re-scraping last page from PK: ${pkStartValue}`,
-        );
+        console.log(`🔄 Re-scraping last page from PK: ${pkStartValue}`);
         if (totalRowsScraped > 0) {
           const percentComplete =
             totalRows > 0
@@ -178,7 +188,9 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     case "patch-from-pk":
       pkStartValue = mode.pkStartValue;
       patchMode = true;
-      console.log(`🩹 Patch mode from PK: ${pkStartValue} (scrapes patch page + 1 follow-up page)`);
+      console.log(
+        `🩹 Patch mode from PK: ${pkStartValue} (scrapes patch page + 1 follow-up page)`,
+      );
       break;
   }
 
@@ -251,7 +263,11 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     });
     for (const existing of existingKeysForRange) {
       const existingRef = StorageKeyBuilder.parseKey(existing.key);
-      if (existingRef && existingRef.firstPk === firstPk && existingRef.lastPk !== lastPk) {
+      if (
+        existingRef &&
+        existingRef.firstPk === firstPk &&
+        existingRef.lastPk !== lastPk
+      ) {
         console.log(
           `🗑️  Deleting stale page (firstPk=${firstPk}, old lastPk=${existingRef.lastPk}, new lastPk=${lastPk})`,
         );

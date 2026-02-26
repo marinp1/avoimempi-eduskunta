@@ -232,14 +232,12 @@ describe("MemberOfParliament migrator", () => {
       .query(
         "SELECT id, name, start_date, end_date FROM Government WHERE name = ?",
       )
-      .get("Testihallitus") as
-      | {
-          id: number;
-          name: string;
-          start_date: string;
-          end_date: string | null;
-        }
-      | null;
+      .get("Testihallitus") as {
+      id: number;
+      name: string;
+      start_date: string;
+      end_date: string | null;
+    } | null;
 
     expect(government).not.toBeNull();
     expect(government?.start_date).toBe("2000-01-01");
@@ -250,11 +248,11 @@ describe("MemberOfParliament migrator", () => {
         "SELECT name, ministry, government, government_id FROM GovernmentMembership WHERE person_id = ? ORDER BY start_date",
       )
       .all(177) as Array<{
-        name: string | null;
-        ministry: string | null;
-        government: string;
-        government_id: number;
-      }>;
+      name: string | null;
+      ministry: string | null;
+      government: string;
+      government_id: number;
+    }>;
 
     expect(memberships).toHaveLength(2);
     expect(memberships[0].name).toBe("Ministeri");

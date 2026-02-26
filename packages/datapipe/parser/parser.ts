@@ -183,7 +183,12 @@ export async function parseTable(options: ParseOptions): Promise<void> {
     // Find the last parsed file (highest lastPk) to re-parse it
     const parsedRefs = parsedKeys
       .map((k) => StorageKeyBuilder.parseKey(k.key))
-      .filter((ref): ref is NonNullable<ReturnType<typeof StorageKeyBuilder.parseKey>> => ref !== null);
+      .filter(
+        (
+          ref,
+        ): ref is NonNullable<ReturnType<typeof StorageKeyBuilder.parseKey>> =>
+          ref !== null,
+      );
 
     if (parsedRefs.length > 0) {
       const lastParsedRef = parsedRefs.reduce((max, curr) =>
@@ -194,7 +199,9 @@ export async function parseTable(options: ParseOptions): Promise<void> {
         tableName,
         lastParsedRef.firstPk,
         lastParsedRef.lastPk,
-      ).split("/").pop()!;
+      )
+        .split("/")
+        .pop()!;
       parsedFilenames.delete(lastFilename);
     }
 
@@ -206,9 +213,7 @@ export async function parseTable(options: ParseOptions): Promise<void> {
     });
 
     if (alreadyParsedCount > 0) {
-      console.log(
-        `✅ Already parsed: ${alreadyParsedCount} pages (complete)`,
-      );
+      console.log(`✅ Already parsed: ${alreadyParsedCount} pages (complete)`);
       console.log(
         `🔄 Re-parsing last page and continuing: ${pagesToParse.length} pages remaining`,
       );
@@ -247,7 +252,9 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       continue;
     }
 
-    console.log(`📄 Processing page_${String(pageRef.firstPk).padStart(12, "0")}+${String(pageRef.lastPk).padStart(12, "0")}...`);
+    console.log(
+      `📄 Processing page_${String(pageRef.firstPk).padStart(12, "0")}+${String(pageRef.lastPk).padStart(12, "0")}...`,
+    );
 
     // Read raw page data
     const rawData = await storage.get(keyMetadata.key);

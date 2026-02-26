@@ -187,9 +187,7 @@ async function findAnomalies(
 ) {
   const datasetPath = join("data", dataDir, datasetName);
   const files = await readdir(datasetPath);
-  const pageFiles = files.filter((f) =>
-    /^page_\d{12}\+\d{12}\.json$/.test(f),
-  );
+  const pageFiles = files.filter((f) => /^page_\d{12}\+\d{12}\.json$/.test(f));
 
   const sizes: [string, number][] = [];
   for (const filename of pageFiles) {

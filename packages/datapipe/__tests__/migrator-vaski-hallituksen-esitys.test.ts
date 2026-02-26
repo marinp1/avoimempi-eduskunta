@@ -18,7 +18,8 @@ function makeHallituksenEsitysRow(
     _source: {
       page: 1,
       parsedKey: "parsed/VaskiData/page_000000000001+000000000100.json",
-      vaskiPath: "vaski-data/hallituksen_esitys/page_000000000001+000000000100.json",
+      vaskiPath:
+        "vaski-data/hallituksen_esitys/page_000000000001+000000000100.json",
     },
     contents: {
       Siirto: {

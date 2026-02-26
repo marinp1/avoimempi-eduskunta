@@ -172,7 +172,9 @@ describe("VaskiData parser", () => {
       expect(linkStats.isSymbolicLink()).toBe(true);
 
       const symlinkTarget = await readlink(symlinkPath);
-      expect(symlinkTarget).toBe(`../../data/parsed/VaskiData/${pageBFilename}`);
+      expect(symlinkTarget).toBe(
+        `../../data/parsed/VaskiData/${pageBFilename}`,
+      );
     });
   });
 
