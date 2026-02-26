@@ -9,7 +9,7 @@ let controller: StatusController;
 beforeAll(() => {
   db = createTestDb();
   seedFullDataset(db);
-  controller = new StatusController({ db } as any);
+  controller = new StatusController(db);
 });
 
 afterAll(() => {

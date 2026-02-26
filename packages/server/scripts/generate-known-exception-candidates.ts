@@ -453,7 +453,7 @@ const run = async () => {
   const db = new Database(databasePath, { readonly: true });
   db.exec("PRAGMA query_only = ON;");
 
-  const statusController = new StatusController(new DatabaseConnection());
+  const statusController = new StatusController(new DatabaseConnection().db);
   const sanity = await statusController.getSanityChecks();
   const unresolvedChecks = sanity.checks.filter(
     (check) => !check.passed && !check.knownExceptions?.length,

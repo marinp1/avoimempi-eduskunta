@@ -1,7 +1,7 @@
 // Status controller for public-facing data quality dashboard
 
+import type { Database } from "bun:sqlite";
 import { AdminStorageService } from "../database/admin-storage";
-import type { DatabaseConnection } from "../database/db";
 import {
   getStatusTableCountQuery,
   getStatusTableInfoQuery,
@@ -61,20 +61,15 @@ export class StatusController {
   private sanityCheckService: SanityCheckService;
   private cachedSanityChecks: SanityCheckResult | null = null;
 
-  constructor(private db: DatabaseConnection) {
+  constructor(private db: Database) {
     this.adminStorageService = new AdminStorageService();
-    this.sanityCheckService = new SanityCheckService(this.database);
-  }
-
-  private get database() {
-    // Access the internal database connection
-    return (this.db as any).db as import("bun:sqlite").Database;
+    this.sanityCheckService = new SanityCheckService(this.db);
   }
 
   /** Clear cached results. Call after database rebuild. */
   invalidateCache(): void {
     this.cachedSanityChecks = null;
-    this.sanityCheckService = new SanityCheckService(this.database);
+    this.sanityCheckService = new SanityCheckService(this.db);
     this.adminStorageService.invalidateStatusCache();
   }
 
@@ -91,7 +86,7 @@ export class StatusController {
 
     for (const tableName of tableNames) {
       try {
-        const stmt = this.database.prepare<{ count: number }, []>(
+        const stmt = this.db.prepare<{ count: number }, []>(
           getStatusTableCountQuery(tableName),
         );
         const row = stmt.get();
@@ -189,7 +184,7 @@ export class StatusController {
       throw new Error(`Invalid table name: ${tableName}`);
     }
 
-    const countStmt = this.database.prepare<{ count: number }, []>(
+    const countStmt = this.db.prepare<{ count: number }, []>(
       getStatusTableCountQuery(tableName),
     );
     const countRow = countStmt.get();
@@ -197,7 +192,7 @@ export class StatusController {
     const rowCount = countRow?.count ?? 0;
 
     // Get column info
-    const columnsStmt = this.database.prepare<
+    const columnsStmt = this.db.prepare<
       {
         name: string;
         type: string;
@@ -216,7 +211,7 @@ export class StatusController {
   }
 
   private getTableNames(): string[] {
-    const stmt = this.database.prepare<{ name: string }, []>(
+    const stmt = this.db.prepare<{ name: string }, []>(
       getStatusTableNamesQuery(),
     );
     const rows = stmt.all();
