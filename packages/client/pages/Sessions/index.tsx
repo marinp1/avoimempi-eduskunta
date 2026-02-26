@@ -1034,7 +1034,10 @@ export default () => {
     target.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
-  const findSectionInCurrentSessions = (sectionId: number, sectionKey: string) =>
+  const findSectionInCurrentSessions = (
+    sectionId: number,
+    sectionKey: string,
+  ) =>
     sessions
       .flatMap((session) => session.sections || [])
       .find(
@@ -1841,7 +1844,10 @@ export default () => {
       }
     }
 
-    const hasSubSectionsData = Object.hasOwn(sectionSubSections, targetSectionId);
+    const hasSubSectionsData = Object.hasOwn(
+      sectionSubSections,
+      targetSectionId,
+    );
     if (!hasSubSectionsData) {
       setLoadingSubSections((prev) => new Set(prev).add(targetSectionId));
       try {
@@ -2606,20 +2612,22 @@ export default () => {
                     const vaskiInfoCompact = renderVaskiInfo(section, true);
                     const vaskiInfoContent = renderVaskiInfo(section, false);
                     const minutesInfoCompact = renderMinutesInfo(section, true);
-                    const minutesInfoContent = renderMinutesInfo(section, false);
-                    const sectionSubSectionsContent = renderSectionSubSections(
+                    const minutesInfoContent = renderMinutesInfo(
                       section,
+                      false,
                     );
-                    const sectionMinutesContent = renderSectionMinutesContent(
-                      section,
-                    );
+                    const sectionSubSectionsContent =
+                      renderSectionSubSections(section);
+                    const sectionMinutesContent =
+                      renderSectionMinutesContent(section);
                     const docRefs = extractSectionDocRefs(section);
                     const sectionLinksContent = renderSectionLinks(section);
                     const sectionNoticesContent = renderSectionNotices(
                       session,
                       section.key,
                     );
-                    const sectionRollCallContent = renderSectionRollCall(section);
+                    const sectionRollCallContent =
+                      renderSectionRollCall(section);
                     const sectionVotingsContent = renderSectionVotings(
                       votings,
                       session,
@@ -2818,275 +2826,266 @@ export default () => {
                         }
                       >
                         {sectionErrorReasons.length > 0 && (
-                              <Alert
-                                severity="warning"
-                                sx={{ mt: 1.5, mb: 0.5 }}
-                                action={
-                                  <Button
-                                    color="inherit"
-                                    size="small"
-                                    onClick={() =>
-                                      void loadSectionData(
-                                        section.id,
-                                        section.key,
-                                      )
-                                    }
-                                    sx={{
-                                      ...commonStyles.compactTextMd,
-                                      textTransform: "none",
-                                    }}
-                                  >
-                                    {t("common.retry")}
-                                  </Button>
+                          <Alert
+                            severity="warning"
+                            sx={{ mt: 1.5, mb: 0.5 }}
+                            action={
+                              <Button
+                                color="inherit"
+                                size="small"
+                                onClick={() =>
+                                  void loadSectionData(section.id, section.key)
                                 }
-                              >
-                                {t("errors.loadFailedWithReason", {
-                                  reason: sectionErrorReasons.join(", "),
-                                })}
-                              </Alert>
-                            )}
-                            {vaskiInfoContent}
-                            {minutesInfoContent}
-                            {sectionSubSectionsContent}
-                            {sectionMinutesContent}
-                            {docRefs.map((ref) => (
-                              <DocumentCard key={ref.identifier} docRef={ref} />
-                            ))}
-                            {docRefs.length > 0 && section.voting_count === 0 && (
-                              <RelatedVotings
-                                identifiers={docRefs.map((r) => r.identifier)}
-                              />
-                            )}
-                            {sectionLinksContent}
-                            {sectionNoticesContent}
-                            {sectionRollCallContent}
-                            {/* Votings */}
-                            {loadingVotings.has(section.id) ? (
-                              <Box
-                                sx={{ py: 2, textAlign: "center" }}
-                                role="status"
-                                aria-live="polite"
-                                aria-label={t("app.loading")}
-                              >
-                                <CircularProgress
-                                  size={20}
-                                  sx={{ color: themedColors.primary }}
-                                />
-                                <Typography
-                                  sx={{
-                                    ...commonStyles.compactTextXs,
-                                    color: colors.textTertiary,
-                                  }}
-                                >
-                                  {t("app.loading")}
-                                </Typography>
-                              </Box>
-                            ) : (
-                              sectionVotingsContent
-                            )}
-
-                            {/* Speeches */}
-                            {loadingSpeeches.has(section.id) ? (
-                              <Box
-                                sx={{ py: 2, textAlign: "center" }}
-                                role="status"
-                                aria-live="polite"
-                                aria-label={t("app.loading")}
-                              >
-                                <CircularProgress
-                                  size={20}
-                                  sx={{ color: themedColors.primary }}
-                                />
-                                <Typography
-                                  sx={{
-                                    ...commonStyles.compactTextXs,
-                                    color: colors.textTertiary,
-                                  }}
-                                >
-                                  {t("app.loading")}
-                                </Typography>
-                              </Box>
-                            ) : speeches.length > 0 ? (
-                              <Box
                                 sx={{
-                                  mt: 1.5,
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: 0.75,
+                                  ...commonStyles.compactTextMd,
+                                  textTransform: "none",
                                 }}
                               >
-                                <Typography
+                                {t("common.retry")}
+                              </Button>
+                            }
+                          >
+                            {t("errors.loadFailedWithReason", {
+                              reason: sectionErrorReasons.join(", "),
+                            })}
+                          </Alert>
+                        )}
+                        {vaskiInfoContent}
+                        {minutesInfoContent}
+                        {sectionSubSectionsContent}
+                        {sectionMinutesContent}
+                        {docRefs.map((ref) => (
+                          <DocumentCard key={ref.identifier} docRef={ref} />
+                        ))}
+                        {docRefs.length > 0 && section.voting_count === 0 && (
+                          <RelatedVotings
+                            identifiers={docRefs.map((r) => r.identifier)}
+                          />
+                        )}
+                        {sectionLinksContent}
+                        {sectionNoticesContent}
+                        {sectionRollCallContent}
+                        {/* Votings */}
+                        {loadingVotings.has(section.id) ? (
+                          <Box
+                            sx={{ py: 2, textAlign: "center" }}
+                            role="status"
+                            aria-live="polite"
+                            aria-label={t("app.loading")}
+                          >
+                            <CircularProgress
+                              size={20}
+                              sx={{ color: themedColors.primary }}
+                            />
+                            <Typography
+                              sx={{
+                                ...commonStyles.compactTextXs,
+                                color: colors.textTertiary,
+                              }}
+                            >
+                              {t("app.loading")}
+                            </Typography>
+                          </Box>
+                        ) : (
+                          sectionVotingsContent
+                        )}
+
+                        {/* Speeches */}
+                        {loadingSpeeches.has(section.id) ? (
+                          <Box
+                            sx={{ py: 2, textAlign: "center" }}
+                            role="status"
+                            aria-live="polite"
+                            aria-label={t("app.loading")}
+                          >
+                            <CircularProgress
+                              size={20}
+                              sx={{ color: themedColors.primary }}
+                            />
+                            <Typography
+                              sx={{
+                                ...commonStyles.compactTextXs,
+                                color: colors.textTertiary,
+                              }}
+                            >
+                              {t("app.loading")}
+                            </Typography>
+                          </Box>
+                        ) : speeches.length > 0 ? (
+                          <Box
+                            sx={{
+                              mt: 1.5,
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 0.75,
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                ...commonStyles.compactTextLg,
+                                fontWeight: 600,
+                                color: colors.textSecondary,
+                                textTransform: "uppercase",
+                              }}
+                            >
+                              {t("sessions.speeches")} (
+                              {speechData?.total ?? speeches.length})
+                            </Typography>
+                            {!hasSpeechContent && (
+                              <Typography
+                                sx={{
+                                  ...commonStyles.compactTextLg,
+                                  color: colors.textTertiary,
+                                }}
+                              >
+                                {t("sessions.speechContentPending")}
+                              </Typography>
+                            )}
+                            {!hasSpeechContent && vaskiLatestSpeechDate && (
+                              <Typography
+                                sx={{
+                                  ...commonStyles.compactTextLg,
+                                  color: colors.textTertiary,
+                                }}
+                              >
+                                {speechContentLatestLabel(
+                                  formatDate(vaskiLatestSpeechDate),
+                                )}
+                              </Typography>
+                            )}
+                            {speeches.map((speech) => {
+                              const speechTime = formatSpeechTimeRange(speech);
+                              return (
+                                <Box
+                                  key={speech.id}
                                   sx={{
-                                    ...commonStyles.compactTextLg,
-                                    fontWeight: 600,
-                                    color: colors.textSecondary,
-                                    textTransform: "uppercase",
+                                    p: 1.5,
+                                    borderRadius: 1,
+                                    background: colors.backgroundSubtle,
                                   }}
                                 >
-                                  {t("sessions.speeches")} (
-                                  {speechData?.total ?? speeches.length})
-                                </Typography>
-                                {!hasSpeechContent && (
-                                  <Typography
+                                  <Box
                                     sx={{
-                                      ...commonStyles.compactTextLg,
-                                      color: colors.textTertiary,
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: 1,
+                                      mb: speech.content ? 1 : 0,
                                     }}
                                   >
-                                    {t("sessions.speechContentPending")}
-                                  </Typography>
-                                )}
-                                {!hasSpeechContent && vaskiLatestSpeechDate && (
-                                  <Typography
-                                    sx={{
-                                      ...commonStyles.compactTextLg,
-                                      color: colors.textTertiary,
-                                    }}
-                                  >
-                                    {speechContentLatestLabel(
-                                      formatDate(vaskiLatestSpeechDate),
+                                    <Chip
+                                      label={
+                                        speech.ordinal_number ?? speech.ordinal
+                                      }
+                                      size="small"
+                                      sx={{
+                                        background: `${colors.primaryLight}30`,
+                                        color: colors.primaryLight,
+                                        fontWeight: 600,
+                                        fontSize: "0.625rem",
+                                        height: 18,
+                                        minWidth: 24,
+                                      }}
+                                    />
+                                    <Typography
+                                      sx={{
+                                        fontWeight: 600,
+                                        fontSize: "0.8125rem",
+                                        flex: 1,
+                                      }}
+                                    >
+                                      {speech.first_name} {speech.last_name}
+                                    </Typography>
+                                    {speech.party_abbreviation && (
+                                      <Chip
+                                        label={speech.party_abbreviation}
+                                        size="small"
+                                        sx={{
+                                          fontSize: "0.625rem",
+                                          height: 18,
+                                        }}
+                                      />
                                     )}
-                                  </Typography>
-                                )}
-                                {speeches.map((speech) => {
-                                  const speechTime =
-                                    formatSpeechTimeRange(speech);
-                                  return (
+                                    {speech.speech_type && (
+                                      <Typography
+                                        sx={{
+                                          fontSize: "0.6875rem",
+                                          color: colors.textTertiary,
+                                        }}
+                                      >
+                                        {speech.speech_type}
+                                      </Typography>
+                                    )}
+                                    {speechTime && (
+                                      <Typography
+                                        sx={{
+                                          fontSize: "0.6875rem",
+                                          color: colors.textTertiary,
+                                        }}
+                                      >
+                                        {speechTime}
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                  {speech.content && (
                                     <Box
-                                      key={speech.id}
                                       sx={{
                                         p: 1.5,
                                         borderRadius: 1,
-                                        background: colors.backgroundSubtle,
+                                        borderLeft: `3px solid ${colors.primaryLight}`,
+                                        background: colors.backgroundDefault,
                                       }}
                                     >
-                                      <Box
+                                      <Typography
                                         sx={{
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: 1,
-                                          mb: speech.content ? 1 : 0,
-                                        }}
-                                      >
-                                        <Chip
-                                          label={
-                                            speech.ordinal_number ??
-                                            speech.ordinal
-                                          }
-                                          size="small"
-                                          sx={{
-                                            background: `${colors.primaryLight}30`,
-                                            color: colors.primaryLight,
-                                            fontWeight: 600,
-                                            fontSize: "0.625rem",
-                                            height: 18,
-                                            minWidth: 24,
-                                          }}
-                                        />
-                                        <Typography
-                                          sx={{
-                                            fontWeight: 600,
-                                            fontSize: "0.8125rem",
-                                            flex: 1,
-                                          }}
-                                        >
-                                          {speech.first_name} {speech.last_name}
-                                        </Typography>
-                                        {speech.party_abbreviation && (
-                                          <Chip
-                                            label={speech.party_abbreviation}
-                                            size="small"
-                                            sx={{
-                                              fontSize: "0.625rem",
-                                              height: 18,
-                                            }}
-                                          />
-                                        )}
-                                        {speech.speech_type && (
-                                          <Typography
-                                            sx={{
-                                              fontSize: "0.6875rem",
-                                              color: colors.textTertiary,
-                                            }}
-                                          >
-                                            {speech.speech_type}
-                                          </Typography>
-                                        )}
-                                        {speechTime && (
-                                          <Typography
-                                            sx={{
-                                              fontSize: "0.6875rem",
-                                              color: colors.textTertiary,
-                                            }}
-                                          >
-                                            {speechTime}
-                                          </Typography>
-                                        )}
-                                      </Box>
-                                      {speech.content && (
-                                        <Box
-                                          sx={{
-                                            p: 1.5,
-                                            borderRadius: 1,
-                                            borderLeft: `3px solid ${colors.primaryLight}`,
-                                            background:
-                                              colors.backgroundDefault,
-                                          }}
-                                        >
-                                          <Typography
-                                            sx={{
-                                              fontSize: "0.8125rem",
-                                              color: colors.textPrimary,
-                                              whiteSpace: "pre-wrap",
-                                              lineHeight: 1.6,
-                                            }}
-                                          >
-                                            {speech.content}
-                                          </Typography>
-                                        </Box>
-                                      )}
-                                    </Box>
-                                  );
-                                })}
-                                {/* Load more button */}
-                                {speechData &&
-                                  speechData.page < speechData.totalPages && (
-                                    <Box sx={{ textAlign: "center", mt: 1 }}>
-                                      <Button
-                                        size="small"
-                                        variant="outlined"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          loadMoreSpeeches(
-                                            section.id,
-                                            section.key,
-                                          );
-                                        }}
-                                        disabled={loadingMoreSpeeches.has(
-                                          section.id,
-                                        )}
-                                        sx={{
-                                          textTransform: "none",
-                                          borderColor: colors.primaryLight,
-                                          color: colors.primaryLight,
                                           fontSize: "0.8125rem",
+                                          color: colors.textPrimary,
+                                          whiteSpace: "pre-wrap",
+                                          lineHeight: 1.6,
                                         }}
                                       >
-                                        {loadingMoreSpeeches.has(section.id) ? (
-                                          <CircularProgress
-                                            size={16}
-                                            sx={{ mr: 1 }}
-                                          />
-                                        ) : null}
-                                        {t("sessions.loadMoreProgress", {
-                                          loaded: speeches.length,
-                                          total: speechData.total,
-                                        })}
-                                      </Button>
+                                        {speech.content}
+                                      </Typography>
                                     </Box>
                                   )}
-                              </Box>
-                            ) : null}
+                                </Box>
+                              );
+                            })}
+                            {/* Load more button */}
+                            {speechData &&
+                              speechData.page < speechData.totalPages && (
+                                <Box sx={{ textAlign: "center", mt: 1 }}>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      loadMoreSpeeches(section.id, section.key);
+                                    }}
+                                    disabled={loadingMoreSpeeches.has(
+                                      section.id,
+                                    )}
+                                    sx={{
+                                      textTransform: "none",
+                                      borderColor: colors.primaryLight,
+                                      color: colors.primaryLight,
+                                      fontSize: "0.8125rem",
+                                    }}
+                                  >
+                                    {loadingMoreSpeeches.has(section.id) ? (
+                                      <CircularProgress
+                                        size={16}
+                                        sx={{ mr: 1 }}
+                                      />
+                                    ) : null}
+                                    {t("sessions.loadMoreProgress", {
+                                      loaded: speeches.length,
+                                      total: speechData.total,
+                                    })}
+                                  </Button>
+                                </Box>
+                              )}
+                          </Box>
+                        ) : null}
                         {!loadingSpeeches.has(section.id) &&
                           !loadingVotings.has(section.id) &&
                           speeches.length === 0 &&
