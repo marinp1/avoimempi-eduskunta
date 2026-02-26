@@ -3,39 +3,24 @@ SELECT
   r.first_name,
   r.last_name,
   r.party,
-  COUNT(*) AS speech_count,
-  SUM(
-    CASE
-      WHEN sc.content IS NULL OR TRIM(sc.content) = '' THEN 0
-      ELSE LENGTH(TRIM(sc.content)) - LENGTH(REPLACE(TRIM(sc.content), ' ', '')) + 1
-    END
-  ) AS total_words,
+  SUM(psds.speech_count) AS speech_count,
+  SUM(psds.total_words) AS total_words,
   ROUND(
-    (
-      SUM(
-        CASE
-          WHEN sc.content IS NULL OR TRIM(sc.content) = '' THEN 0
-          ELSE LENGTH(TRIM(sc.content)) - LENGTH(REPLACE(TRIM(sc.content), ' ', '')) + 1
-        END
-      ) * 1.0
-    ) / COUNT(*),
+    (SUM(psds.total_words) * 1.0) / NULLIF(SUM(psds.speech_count), 0),
     2
   ) AS avg_words_per_speech,
-  MIN(COALESCE(sp.request_time, sp.modified_datetime)) AS first_speech,
-  MAX(COALESCE(sp.request_time, sp.modified_datetime)) AS last_speech
-FROM Speech sp
-JOIN Representative r ON sp.person_id = r.person_id
-JOIN Term t ON r.person_id = t.person_id AND t.end_date IS NULL
-LEFT JOIN SpeechContent sc ON sc.speech_id = sp.id
-WHERE COALESCE(sp.has_spoken, 1) = 1
-  AND (
-    $startDate IS NULL
-    OR COALESCE(SUBSTR(sp.request_time, 1, 10), SUBSTR(sp.modified_datetime, 1, 10)) >= $startDate
+  MIN(psds.first_speech) AS first_speech,
+  MAX(psds.last_speech) AS last_speech
+FROM PersonSpeechDailyStats psds
+JOIN Representative r ON psds.person_id = r.person_id
+WHERE EXISTS (
+    SELECT 1
+    FROM Term t
+    WHERE t.person_id = r.person_id
+      AND t.end_date IS NULL
   )
-  AND (
-    $endDateExclusive IS NULL
-    OR COALESCE(SUBSTR(sp.request_time, 1, 10), SUBSTR(sp.modified_datetime, 1, 10)) < $endDateExclusive
-  )
+  AND ($startDate IS NULL OR psds.speech_date >= $startDate)
+  AND ($endDateExclusive IS NULL OR psds.speech_date < $endDateExclusive)
 GROUP BY r.person_id, r.first_name, r.last_name, r.party
 ORDER BY speech_count DESC
 LIMIT $limit;

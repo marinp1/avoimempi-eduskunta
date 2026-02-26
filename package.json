@@ -47,6 +47,8 @@
     "test": "bun test",
     "report:exception-candidates": "bun run packages/server/scripts/generate-known-exception-candidates.ts",
     "check:parliament-size-exact": "bun run packages/server/scripts/check-parliament-composition-exact-200.ts",
+    "bench:sql": "bun run packages/server/scripts/benchmark-query-latency.ts",
+    "bench:http": "bun run packages/server/scripts/benchmark-http-load.ts",
     "lint": "bunx biome check",
     "lint:fix": "bunx biome check --write"
   }

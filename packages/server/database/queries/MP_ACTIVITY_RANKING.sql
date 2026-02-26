@@ -14,26 +14,25 @@ SELECT
     1
   ) AS activity_score
 FROM Representative r
-JOIN Term t ON r.person_id = t.person_id
-  AND t.end_date IS NULL
 LEFT JOIN (
   SELECT
-    v.person_id,
-    COUNT(CASE WHEN v.vote IN ('Jaa', 'Ei', 'Tyhjää') THEN 1 END) AS votes_cast,
-    COUNT(*) AS total_votings,
-    ROUND(100.0 * COUNT(CASE WHEN v.vote IN ('Jaa', 'Ei', 'Tyhjää') THEN 1 END) / COUNT(*), 1) AS participation_rate
-  FROM Vote v
-  JOIN Voting vt ON v.voting_id = vt.id
-  WHERE vt.start_time >= DATE('now', '-1 year')
-  GROUP BY v.person_id
+    pvds.person_id,
+    SUM(pvds.votes_cast) AS votes_cast,
+    SUM(pvds.total_votings) AS total_votings,
+    ROUND(
+      100.0 * SUM(pvds.votes_cast) / NULLIF(SUM(pvds.total_votings), 0),
+      1
+    ) AS participation_rate
+  FROM PersonVotingDailyStats pvds
+  WHERE pvds.voting_date >= DATE('now', '-1 year')
+  GROUP BY pvds.person_id
 ) vote_stats ON r.person_id = vote_stats.person_id
 LEFT JOIN (
   SELECT
-    sp.person_id,
-    COUNT(*) AS speech_count
-  FROM Speech sp
-  WHERE COALESCE(sp.has_spoken, 1) = 1
-  GROUP BY sp.person_id
+    psds.person_id,
+    SUM(psds.speech_count) AS speech_count
+  FROM PersonSpeechDailyStats psds
+  GROUP BY psds.person_id
 ) speech_stats ON r.person_id = speech_stats.person_id
 LEFT JOIN (
   SELECT
@@ -43,5 +42,11 @@ LEFT JOIN (
   WHERE cm.end_date IS NULL OR cm.end_date >= DATE('now')
   GROUP BY cm.person_id
 ) committee_stats ON r.person_id = committee_stats.person_id
+WHERE EXISTS (
+  SELECT 1
+  FROM Term t
+  WHERE t.person_id = r.person_id
+    AND t.end_date IS NULL
+)
 ORDER BY activity_score DESC
 LIMIT $limit;

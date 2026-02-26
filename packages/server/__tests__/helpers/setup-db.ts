@@ -516,6 +516,118 @@ export function seedFullDataset(db: Database) {
     [5005, 101, 1002, "Poissa", "kok"],
   );
 
+  if (tableExists(db, "VotingPartyStats")) {
+    db.run(`DELETE FROM VotingPartyStats`);
+    db.run(
+      `INSERT INTO VotingPartyStats (
+         voting_id,
+         party,
+         votes_cast,
+         total_votings,
+         party_member_count,
+         n_jaa,
+         n_ei,
+         n_tyhjaa,
+         n_poissa
+       )
+       SELECT
+         v.voting_id,
+         v.group_abbreviation AS party,
+         SUM(CASE WHEN v.vote != 'Poissa' THEN 1 ELSE 0 END) AS votes_cast,
+         COUNT(*) AS total_votings,
+         COUNT(DISTINCT v.person_id) AS party_member_count,
+         SUM(CASE WHEN v.vote = 'Jaa' THEN 1 ELSE 0 END) AS n_jaa,
+         SUM(CASE WHEN v.vote = 'Ei' THEN 1 ELSE 0 END) AS n_ei,
+         SUM(CASE WHEN v.vote = 'Tyhjää' THEN 1 ELSE 0 END) AS n_tyhjaa,
+         SUM(CASE WHEN v.vote = 'Poissa' THEN 1 ELSE 0 END) AS n_poissa
+       FROM Vote v
+       WHERE v.group_abbreviation IS NOT NULL
+         AND TRIM(v.group_abbreviation) != ''
+       GROUP BY v.voting_id, v.group_abbreviation`,
+    );
+  }
+
+  if (tableExists(db, "PersonVotingDailyStats")) {
+    db.run(`DELETE FROM PersonVotingDailyStats`);
+    db.run(
+      `INSERT INTO PersonVotingDailyStats (
+         person_id,
+         voting_date,
+         votes_cast,
+         total_votings
+       )
+       SELECT
+         v.person_id,
+         vt.start_date AS voting_date,
+         SUM(CASE WHEN v.vote != 'Poissa' THEN 1 ELSE 0 END) AS votes_cast,
+         COUNT(*) AS total_votings
+       FROM Vote v
+       JOIN Voting vt ON vt.id = v.voting_id
+       WHERE v.person_id IS NOT NULL
+         AND vt.start_date IS NOT NULL
+       GROUP BY v.person_id, vt.start_date`,
+    );
+  }
+
+  if (tableExists(db, "PersonSpeechDailyStats")) {
+    db.run(`DELETE FROM PersonSpeechDailyStats`);
+    if (tableExists(db, "SpeechContent")) {
+      db.run(
+        `INSERT INTO PersonSpeechDailyStats (
+           person_id,
+           speech_date,
+           speech_count,
+           total_words,
+           first_speech,
+           last_speech
+         )
+         SELECT
+           sp.person_id,
+           SUBSTR(COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date), 1, 10) AS speech_date,
+           COUNT(*) AS speech_count,
+           SUM(
+             CASE
+               WHEN sc.content IS NULL OR TRIM(sc.content) = '' THEN 0
+               ELSE LENGTH(TRIM(sc.content)) - LENGTH(REPLACE(TRIM(sc.content), ' ', '')) + 1
+             END
+           ) AS total_words,
+           MIN(COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date)) AS first_speech,
+           MAX(COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date)) AS last_speech
+         FROM Speech sp
+         LEFT JOIN SpeechContent sc ON sc.speech_id = sp.id
+         LEFT JOIN Session sess ON sess.key = sp.session_key
+         WHERE COALESCE(sp.has_spoken, 1) = 1
+           AND sp.person_id IS NOT NULL
+           AND COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date) IS NOT NULL
+         GROUP BY sp.person_id, SUBSTR(COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date), 1, 10)`,
+      );
+    } else {
+      db.run(
+        `INSERT INTO PersonSpeechDailyStats (
+           person_id,
+           speech_date,
+           speech_count,
+           total_words,
+           first_speech,
+           last_speech
+         )
+         SELECT
+           sp.person_id,
+           SUBSTR(COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date), 1, 10) AS speech_date,
+           COUNT(*) AS speech_count,
+           0 AS total_words,
+           MIN(COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date)) AS first_speech,
+           MAX(COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date)) AS last_speech
+         FROM Speech sp
+         LEFT JOIN Session sess ON sess.key = sp.session_key
+         WHERE COALESCE(sp.has_spoken, 1) = 1
+           AND sp.person_id IS NOT NULL
+           AND COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date) IS NOT NULL
+         GROUP BY sp.person_id, SUBSTR(COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date), 1, 10)`,
+      );
+    }
+  }
+
   if (tableExists(db, "FederatedSearchFts")) {
     db.run(`DELETE FROM FederatedSearchFts`);
 

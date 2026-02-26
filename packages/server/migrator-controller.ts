@@ -817,6 +817,137 @@ export class MigratorController {
     normalizeTransaction.immediate();
   }
 
+  private rebuildVotingPartyStats(db: Database): number {
+    if (!objectExists(db, "table", "VotingPartyStats")) {
+      return 0;
+    }
+
+    const rebuildTransaction = db.transaction(() => {
+      db.run("DELETE FROM VotingPartyStats");
+      db.run(
+        `INSERT INTO VotingPartyStats (
+           voting_id,
+           party,
+           votes_cast,
+           total_votings,
+           party_member_count,
+           n_jaa,
+           n_ei,
+           n_tyhjaa,
+           n_poissa
+         )
+         SELECT
+           v.voting_id,
+           v.group_abbreviation AS party,
+           SUM(CASE WHEN v.vote != 'Poissa' THEN 1 ELSE 0 END) AS votes_cast,
+           COUNT(*) AS total_votings,
+           COUNT(DISTINCT v.person_id) AS party_member_count,
+           SUM(CASE WHEN v.vote = 'Jaa' THEN 1 ELSE 0 END) AS n_jaa,
+           SUM(CASE WHEN v.vote = 'Ei' THEN 1 ELSE 0 END) AS n_ei,
+           SUM(CASE WHEN v.vote = 'Tyhjää' THEN 1 ELSE 0 END) AS n_tyhjaa,
+           SUM(CASE WHEN v.vote = 'Poissa' THEN 1 ELSE 0 END) AS n_poissa
+         FROM Vote v INDEXED BY idx_vote_voting_group_person_vote
+         WHERE v.group_abbreviation IS NOT NULL
+           AND TRIM(v.group_abbreviation) != ''
+         GROUP BY v.voting_id, v.group_abbreviation`,
+      );
+    });
+
+    rebuildTransaction.immediate();
+
+    const row = db
+      .query<{ count: number }, []>(
+        "SELECT COUNT(*) AS count FROM VotingPartyStats",
+      )
+      .get();
+    return row?.count ?? 0;
+  }
+
+  private rebuildPersonVotingDailyStats(db: Database): number {
+    if (!objectExists(db, "table", "PersonVotingDailyStats")) {
+      return 0;
+    }
+
+    const rebuildTransaction = db.transaction(() => {
+      db.run("DELETE FROM PersonVotingDailyStats");
+      db.run(
+        `INSERT INTO PersonVotingDailyStats (
+           person_id,
+           voting_date,
+           votes_cast,
+           total_votings
+         )
+         SELECT
+           v.person_id,
+           vt.start_date AS voting_date,
+           SUM(CASE WHEN v.vote != 'Poissa' THEN 1 ELSE 0 END) AS votes_cast,
+           COUNT(*) AS total_votings
+         FROM Vote v INDEXED BY idx_vote_person_voting
+         JOIN Voting vt ON vt.id = v.voting_id
+         WHERE v.person_id IS NOT NULL
+           AND vt.start_date IS NOT NULL
+         GROUP BY v.person_id, vt.start_date`,
+      );
+    });
+
+    rebuildTransaction.immediate();
+
+    const row = db
+      .query<{ count: number }, []>(
+        "SELECT COUNT(*) AS count FROM PersonVotingDailyStats",
+      )
+      .get();
+    return row?.count ?? 0;
+  }
+
+  private rebuildPersonSpeechDailyStats(db: Database): number {
+    if (!objectExists(db, "table", "PersonSpeechDailyStats")) {
+      return 0;
+    }
+
+    const rebuildTransaction = db.transaction(() => {
+      db.run("DELETE FROM PersonSpeechDailyStats");
+      db.run(
+        `INSERT INTO PersonSpeechDailyStats (
+           person_id,
+           speech_date,
+           speech_count,
+           total_words,
+           first_speech,
+           last_speech
+         )
+         SELECT
+           sp.person_id,
+           SUBSTR(COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date), 1, 10) AS speech_date,
+           COUNT(*) AS speech_count,
+           SUM(
+             CASE
+               WHEN sc.content IS NULL OR TRIM(sc.content) = '' THEN 0
+               ELSE LENGTH(TRIM(sc.content)) - LENGTH(REPLACE(TRIM(sc.content), ' ', '')) + 1
+             END
+           ) AS total_words,
+           MIN(COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date)) AS first_speech,
+           MAX(COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date)) AS last_speech
+         FROM Speech sp
+         LEFT JOIN SpeechContent sc ON sc.speech_id = sp.id
+         LEFT JOIN Session sess ON sess.key = sp.session_key
+         WHERE COALESCE(sp.has_spoken, 1) = 1
+           AND sp.person_id IS NOT NULL
+           AND COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date) IS NOT NULL
+         GROUP BY sp.person_id, SUBSTR(COALESCE(sp.request_time, sp.modified_datetime, sp.created_datetime, sess.date), 1, 10)`,
+      );
+    });
+
+    rebuildTransaction.immediate();
+
+    const row = db
+      .query<{ count: number }, []>(
+        "SELECT COUNT(*) AS count FROM PersonSpeechDailyStats",
+      )
+      .get();
+    return row?.count ?? 0;
+  }
+
   private rebuildFederatedSearchIndex(db: Database): number {
     if (!objectExists(db, "table", "FederatedSearchFts")) {
       return 0;
@@ -1430,6 +1561,51 @@ export class MigratorController {
       console.log("\n🧹 Normalizing imported text values...");
       this.normalizeImportedTextData(targetDatabase);
       console.log("✅ Text normalization complete");
+
+      this.sendMessage({
+        type: "progress",
+        data: {
+          message: "Rebuilding voting-party aggregates...",
+          currentTable: null,
+          tablesCompleted,
+          totalTables: tablesToImport.length,
+        },
+      });
+      console.log("🧮 Rebuilding voting-party aggregate table...");
+      const votingPartyStatsRows = this.rebuildVotingPartyStats(targetDatabase);
+      console.log(
+        `✅ Voting-party aggregate table rebuilt (${votingPartyStatsRows} rows)`,
+      );
+
+      this.sendMessage({
+        type: "progress",
+        data: {
+          message: "Rebuilding person-voting aggregates...",
+          currentTable: null,
+          tablesCompleted,
+          totalTables: tablesToImport.length,
+        },
+      });
+      console.log("🧮 Rebuilding person-voting aggregate table...");
+      const personVotingRows = this.rebuildPersonVotingDailyStats(targetDatabase);
+      console.log(
+        `✅ Person-voting aggregate table rebuilt (${personVotingRows} rows)`,
+      );
+
+      this.sendMessage({
+        type: "progress",
+        data: {
+          message: "Rebuilding person-speech aggregates...",
+          currentTable: null,
+          tablesCompleted,
+          totalTables: tablesToImport.length,
+        },
+      });
+      console.log("🧮 Rebuilding person-speech aggregate table...");
+      const personSpeechRows = this.rebuildPersonSpeechDailyStats(targetDatabase);
+      console.log(
+        `✅ Person-speech aggregate table rebuilt (${personSpeechRows} rows)`,
+      );
 
       this.sendMessage({
         type: "progress",
