@@ -46,10 +46,10 @@ async function getTableColumns(tableName: string) {
 }
 
 /**
- * Get info about the last scraped page (highest lastPk) for a table.
+ * Get info about the last scraped page (highest firstPk) for a table.
  * Returns null if no pages exist yet.
  */
-async function getLastScrapedPageRef(
+export async function getLastScrapedPageRef(
   storage: ReturnType<typeof getStorage>,
   tableName: string,
   stage: DataStage,
@@ -81,7 +81,11 @@ async function getLastScrapedPageRef(
   if (refs.length === 0) return null;
 
   const last = refs.reduce((max, curr) =>
-    curr.ref.lastPk > max.ref.lastPk ? curr : max,
+    curr.ref.firstPk > max.ref.firstPk ||
+    (curr.ref.firstPk === max.ref.firstPk &&
+      curr.ref.lastPk > max.ref.lastPk)
+      ? curr
+      : max,
   );
 
   return {
@@ -99,6 +103,59 @@ export type ScrapeMode =
   | { type: "auto-resume" }
   | { type: "start-from-pk"; pkStartValue: number }
   | { type: "patch-from-pk"; pkStartValue: number };
+
+function parseNonNegativeInteger(value: unknown): number | null {
+  if (typeof value === "number" && Number.isInteger(value) && value >= 0) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isInteger(parsed) && parsed >= 0) {
+      return parsed;
+    }
+  }
+
+  return null;
+}
+
+export function normalizeScrapeMode(mode: unknown): ScrapeMode {
+  if (mode && typeof mode === "object") {
+    const modeType = (mode as { type?: unknown }).type;
+
+    if (modeType === "auto-resume") {
+      return { type: "auto-resume" };
+    }
+
+    if (modeType === "start-from-pk") {
+      const pkStartValue = parseNonNegativeInteger(
+        (mode as { pkStartValue?: unknown }).pkStartValue,
+      );
+      if (pkStartValue !== null) {
+        return { type: "start-from-pk", pkStartValue };
+      }
+    }
+
+    if (modeType === "patch-from-pk") {
+      const pkStartValue = parseNonNegativeInteger(
+        (mode as { pkStartValue?: unknown }).pkStartValue,
+      );
+      if (pkStartValue !== null) {
+        return { type: "patch-from-pk", pkStartValue };
+      }
+    }
+
+    if (modeType === "continue") {
+      return { type: "auto-resume" };
+    }
+  }
+
+  if (mode === "continue" || mode === "auto-resume") {
+    return { type: "auto-resume" };
+  }
+
+  return { type: "auto-resume" };
+}
 
 /**
  * Scrape options
@@ -121,10 +178,11 @@ export interface ScrapeOptions {
 export async function scrapeTable(options: ScrapeOptions): Promise<void> {
   const {
     tableName,
-    mode = { type: "auto-resume" },
+    mode: requestedMode,
     stage = "raw",
     onProgress,
   } = options;
+  const mode = normalizeScrapeMode(requestedMode);
 
   const storage = getStorage();
 
@@ -153,8 +211,6 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     case "auto-resume": {
       const lastPage = await getLastScrapedPageRef(storage, tableName, stage);
       if (lastPage) {
-        // Delete the last page file — it will be re-scraped (may have been incomplete)
-        await storage.delete(lastPage.key);
         pkStartValue = lastPage.firstPk;
         internalPageCounter = lastPage.pageCount; // start counter where we left off
         totalRowsScraped = (lastPage.pageCount - 1) * 100; // estimate from complete pages

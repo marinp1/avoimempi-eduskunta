@@ -118,7 +118,7 @@ export class StorageKeyBuilder {
 
   static parseKey(key: StorageKey): PageReference | null {
     const match = key.match(
-      /^(raw|parsed)\/([^/]+)\/page_(\d{12})\+(\d{12})\.json$/,
+      /^(raw|parsed)\/([^/]+)\/page_(-?\d+)\+(-?\d+)\.json$/,
     );
     if (!match) return null;
 
