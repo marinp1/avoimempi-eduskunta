@@ -161,29 +161,240 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
 
   console.log(`📋 Total rows in API: ${totalRows.toLocaleString()}`);
 
-  let pkStartValue: number;
-  let rangeStartValue: number | null = null;
-  let pkEndValue: number | null = null;
-  let patchMode = false;
-  let patchFollowUpDone = false;
-  let internalPageCounter = 1;
   let totalRowsScraped = await rawStore.count(tableName);
+  let rowsScrapedThisRun = 0;
+  let pagesScrapedThisRun = 0;
+  let progressPageCounter = 1;
 
   const formatPercent = (value: number): string => {
     if (value >= 100) return "100.0";
     return Math.min(value, 99.9).toFixed(1);
   };
 
+  type ScrapePassOptions = {
+    pkStartValue: number;
+    pkEndValue: number | null;
+    rangeStartValue: number | null;
+    patchMode: boolean;
+    emitProgress: boolean;
+  };
+
+  type ScrapePassResult = {
+    rowsWritten: number;
+    pagesScraped: number;
+    totalRowsStored: number;
+  };
+
+  const runScrapePass = async (
+    passOptions: ScrapePassOptions,
+  ): Promise<ScrapePassResult> => {
+    const { pkEndValue, rangeStartValue, patchMode, emitProgress } = passOptions;
+    let pkStartValue = passOptions.pkStartValue;
+    let patchFollowUpDone = false;
+    let loopCount = 0;
+    let rowsWritten = 0;
+    let pagesScraped = 0;
+
+    const baseUrl = new URL(
+      `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/batch`,
+    );
+    baseUrl.searchParams.set("pkName", primaryColumn);
+
+    do {
+      if (loopCount >= MAX_LOOP_LIMIT) {
+        console.error("⚠️  Reached maximum loop limit!");
+        throw new Error("Sanity check error: MAX_LOOP_LIMIT reached");
+      }
+
+      const perPage =
+        pkEndValue === null
+          ? 100
+          : Math.max(1, Math.min(100, pkEndValue - pkStartValue + 1));
+      baseUrl.searchParams.set("perPage", String(perPage));
+      baseUrl.searchParams.set("pkStartValue", String(pkStartValue));
+
+      console.log(`📡 Fetching batch from PK ${pkStartValue}...`);
+
+      const response = await fetch(baseUrl.toString(), {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const content = (await response.json()) as EduskuntaApiResponse;
+
+      if (content.rowCount === 0) {
+        totalRowsScraped = await rawStore.count(tableName);
+        console.log("✅ No more data to scrape");
+        break;
+      }
+
+      const indexOfPrimaryKey = content.columnNames.indexOf(primaryColumn);
+      const firstRowPkRaw = content.rowData[0][indexOfPrimaryKey];
+      const firstPk =
+        typeof firstRowPkRaw === "string"
+          ? parseInt(firstRowPkRaw, 10)
+          : (firstRowPkRaw as number);
+      const lastRowPkRaw =
+        content.rowData[content.rowData.length - 1][indexOfPrimaryKey];
+      const lastPk =
+        content.pkLastValue !== null
+          ? content.pkLastValue
+          : typeof lastRowPkRaw === "string"
+            ? parseInt(lastRowPkRaw, 10)
+            : (lastRowPkRaw as number);
+
+      // Build rows for upsert (respect optional PK range end bound)
+      const batchRows = content.rowData.flatMap((rowData) => {
+        const pkRaw = rowData[indexOfPrimaryKey];
+        const pk =
+          typeof pkRaw === "string" ? parseInt(pkRaw, 10) : (pkRaw as number);
+        if (pkEndValue !== null && pk > pkEndValue) {
+          return [];
+        }
+        return [{ pk, data: JSON.stringify(rowData) }];
+      });
+
+      if (batchRows.length > 0) {
+        await rawStore.upsertBatch(
+          tableName,
+          primaryColumn,
+          content.columnNames,
+          batchRows,
+        );
+        rowsWritten += batchRows.length;
+      }
+
+      totalRowsScraped = await rawStore.count(tableName);
+      pagesScraped++;
+
+      const percentComplete =
+        pkEndValue !== null && rangeStartValue !== null
+          ? (() => {
+              const rangeTotal = pkEndValue - rangeStartValue + 1;
+              const coveredEnd = Math.min(lastPk, pkEndValue);
+              const covered =
+                coveredEnd >= rangeStartValue
+                  ? coveredEnd - rangeStartValue + 1
+                  : 0;
+              return Math.min((covered / rangeTotal) * 100, 100);
+            })()
+          : (() => {
+              const adjustedTotal = Math.max(totalRows, totalRowsScraped);
+              return adjustedTotal > 0
+                ? Math.min((totalRowsScraped / adjustedTotal) * 100, 100)
+                : 0;
+            })();
+
+      console.log(
+        `✅ Upserted ${batchRows.length} rows (PK ${firstPk}–${lastPk}) - ${formatPercent(percentComplete)}% complete`,
+      );
+
+      if (emitProgress && onProgress) {
+        onProgress({
+          page: progressPageCounter,
+          rowCount: batchRows.length,
+          totalRows: totalRowsScraped,
+          percentComplete,
+        });
+      }
+      progressPageCounter++;
+
+      if (patchMode) {
+        if (patchFollowUpDone) {
+          console.log("✅ Patch complete (patch page + follow-up page scraped)");
+          break;
+        }
+        patchFollowUpDone = true;
+      }
+
+      if (pkEndValue !== null) {
+        if (firstPk > pkEndValue) {
+          console.log(
+            `✅ Range complete (no rows at or below PK ${pkEndValue} in this batch)`,
+          );
+          break;
+        }
+
+        if (lastPk >= pkEndValue) {
+          console.log(`✅ Range complete at PK ${pkEndValue}`);
+          break;
+        }
+      }
+
+      if (!content.hasMore) {
+        console.log("✅ Reached end of data");
+        break;
+      }
+
+      await scheduler.wait(TIME_BETWEEN_QUERIES);
+
+      if (content.pkLastValue !== null) {
+        pkStartValue = content.pkLastValue + 1;
+      } else {
+        const lastRow = content.rowData[content.rowData.length - 1];
+        if (lastRow && lastRow[indexOfPrimaryKey] !== undefined) {
+          const lastPkValue = lastRow[indexOfPrimaryKey];
+          pkStartValue =
+            (typeof lastPkValue === "string"
+              ? parseInt(lastPkValue, 10)
+              : lastPkValue) + 1;
+        } else {
+          console.error("❌ Could not determine next primary key value");
+          break;
+        }
+      }
+
+      loopCount++;
+    } while (true);
+
+    return {
+      rowsWritten,
+      pagesScraped,
+      totalRowsStored: totalRowsScraped,
+    };
+  };
+
+  const collectInternalMissingRanges = async (): Promise<
+    Array<{ start: number; end: number; count: number }>
+  > => {
+    const ranges: Array<{ start: number; end: number; count: number }> = [];
+    let previousPk: number | null = null;
+
+    for await (const row of rawStore.list(tableName)) {
+      if (previousPk !== null && row.pk - previousPk > 1) {
+        const start = previousPk + 1;
+        const end = row.pk - 1;
+        ranges.push({
+          start,
+          end,
+          count: end - start + 1,
+        });
+      }
+      previousPk = row.pk;
+    }
+
+    return ranges;
+  };
+
+  let initialPassStartPk: number;
+  let initialPassRangeStart: number | null = null;
+  let initialPassEndPk: number | null = null;
+  let initialPassPatchMode = false;
+
   switch (mode.type) {
     case "auto-resume": {
       const maxPk = await rawStore.maxPk(tableName);
       if (maxPk !== null) {
-        pkStartValue = maxPk + 1;
+        initialPassStartPk = maxPk + 1;
         totalRowsScraped = await rawStore.count(tableName);
         console.log(
           `✅ Already scraped: ${totalRowsScraped.toLocaleString()} rows`,
         );
-        console.log(`🔄 Resuming from PK: ${pkStartValue}`);
+        console.log(`🔄 Resuming from PK: ${initialPassStartPk}`);
         if (totalRowsScraped > 0) {
           const percentComplete =
             totalRows > 0
@@ -194,198 +405,83 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
           );
         }
       } else {
-        pkStartValue = 0;
+        initialPassStartPk = 0;
         console.log(`🚀 Starting fresh`);
       }
       break;
     }
 
     case "start-from-pk":
-      pkStartValue = mode.pkStartValue;
+      initialPassStartPk = mode.pkStartValue;
       console.log(
-        `🚀 Starting from PK: ${pkStartValue} (will continue until end)`,
+        `🚀 Starting from PK: ${initialPassStartPk} (will continue until end)`,
       );
       break;
 
     case "patch-from-pk":
-      pkStartValue = mode.pkStartValue;
-      patchMode = true;
+      initialPassStartPk = mode.pkStartValue;
+      initialPassPatchMode = true;
       console.log(
-        `🩹 Patch mode from PK: ${pkStartValue} (scrapes patch page + 1 follow-up page)`,
+        `🩹 Patch mode from PK: ${initialPassStartPk} (scrapes patch page + 1 follow-up page)`,
       );
       break;
 
     case "range":
-      pkStartValue = mode.pkStartValue;
-      rangeStartValue = mode.pkStartValue;
-      pkEndValue = mode.pkEndValue;
+      initialPassStartPk = mode.pkStartValue;
+      initialPassRangeStart = mode.pkStartValue;
+      initialPassEndPk = mode.pkEndValue;
       console.log(
-        `🎯 Range mode: scraping PK ${pkStartValue}..${pkEndValue} (inclusive)`,
+        `🎯 Range mode: scraping PK ${initialPassStartPk}..${initialPassEndPk} (inclusive)`,
       );
       break;
   }
 
   console.log();
 
-  const baseUrl = new URL(
-    `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/batch`,
-  );
-  baseUrl.searchParams.set("pkName", primaryColumn);
+  const firstPassResult = await runScrapePass({
+    pkStartValue: initialPassStartPk,
+    pkEndValue: initialPassEndPk,
+    rangeStartValue: initialPassRangeStart,
+    patchMode: initialPassPatchMode,
+    emitProgress: true,
+  });
+  rowsScrapedThisRun += firstPassResult.rowsWritten;
+  pagesScrapedThisRun += firstPassResult.pagesScraped;
+  totalRowsScraped = firstPassResult.totalRowsStored;
 
-  let loopCount = 0;
-  let rowsScrapedThisRun = 0;
-  let pagesScrapedThisRun = 0;
+  const shouldAutoRepairGaps =
+    mode.type === "auto-resume" ||
+    (mode.type === "start-from-pk" && mode.pkStartValue === 0);
+  if (shouldAutoRepairGaps && totalRows > totalRowsScraped) {
+    const missingRanges = await collectInternalMissingRanges();
 
-  do {
-    if (loopCount >= MAX_LOOP_LIMIT) {
-      console.error("⚠️  Reached maximum loop limit!");
-      throw new Error("Sanity check error: MAX_LOOP_LIMIT reached");
-    }
-
-    const perPage =
-      pkEndValue === null
-        ? 100
-        : Math.max(1, Math.min(100, pkEndValue - pkStartValue + 1));
-    baseUrl.searchParams.set("perPage", String(perPage));
-    baseUrl.searchParams.set("pkStartValue", String(pkStartValue));
-
-    console.log(`📡 Fetching batch from PK ${pkStartValue}...`);
-
-    const response = await fetch(baseUrl.toString(), {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const content = (await response.json()) as EduskuntaApiResponse;
-
-    if (content.rowCount === 0) {
-      totalRowsScraped = await rawStore.count(tableName);
-      console.log("✅ No more data to scrape");
-      break;
-    }
-
-    const indexOfPrimaryKey = content.columnNames.indexOf(primaryColumn);
-    const firstRowPkRaw = content.rowData[0][indexOfPrimaryKey];
-    const firstPk =
-      typeof firstRowPkRaw === "string"
-        ? parseInt(firstRowPkRaw, 10)
-        : (firstRowPkRaw as number);
-    const lastRowPkRaw =
-      content.rowData[content.rowData.length - 1][indexOfPrimaryKey];
-    const lastPk =
-      content.pkLastValue !== null
-        ? content.pkLastValue
-        : typeof lastRowPkRaw === "string"
-          ? parseInt(lastRowPkRaw, 10)
-          : (lastRowPkRaw as number);
-
-    // Build rows for upsert (respect optional PK range end bound)
-    const batchRows = content.rowData.flatMap((rowData) => {
-      const pkRaw = rowData[indexOfPrimaryKey];
-      const pk =
-        typeof pkRaw === "string" ? parseInt(pkRaw, 10) : (pkRaw as number);
-      if (pkEndValue !== null && pk > pkEndValue) {
-        return [];
-      }
-      return [{ pk, data: JSON.stringify(rowData) }];
-    });
-
-    if (batchRows.length > 0) {
-      await rawStore.upsertBatch(
-        tableName,
-        primaryColumn,
-        content.columnNames,
-        batchRows,
+    if (missingRanges.length > 0) {
+      const gapIdCount = missingRanges.reduce((sum, item) => sum + item.count, 0);
+      console.log(
+        `\n🩹 Auto-repair: found ${missingRanges.length.toLocaleString()} internal gaps (${gapIdCount.toLocaleString()} PKs), attempting range repairs...`,
       );
-      rowsScrapedThisRun += batchRows.length;
-    }
 
-    totalRowsScraped = await rawStore.count(tableName);
-    pagesScrapedThisRun++;
+      for (const range of missingRanges) {
+        if (totalRowsScraped >= totalRows) {
+          break;
+        }
 
-    const percentComplete =
-      pkEndValue !== null && rangeStartValue !== null
-        ? (() => {
-            const rangeTotal = pkEndValue - rangeStartValue + 1;
-            const coveredEnd = Math.min(lastPk, pkEndValue);
-            const covered =
-              coveredEnd >= rangeStartValue
-                ? coveredEnd - rangeStartValue + 1
-                : 0;
-            return Math.min((covered / rangeTotal) * 100, 100);
-          })()
-        : (() => {
-            const adjustedTotal = Math.max(totalRows, totalRowsScraped);
-            return adjustedTotal > 0
-              ? Math.min((totalRowsScraped / adjustedTotal) * 100, 100)
-              : 0;
-          })();
-
-    console.log(
-      `✅ Upserted ${batchRows.length} rows (PK ${firstPk}–${lastPk}) - ${formatPercent(percentComplete)}% complete`,
-    );
-
-    if (onProgress) {
-      onProgress({
-        page: internalPageCounter,
-        rowCount: batchRows.length,
-        totalRows: totalRowsScraped,
-        percentComplete,
-      });
-    }
-
-    if (patchMode) {
-      if (patchFollowUpDone) {
-        console.log("✅ Patch complete (patch page + follow-up page scraped)");
-        break;
-      }
-      patchFollowUpDone = true;
-    }
-
-    if (pkEndValue !== null) {
-      if (firstPk > pkEndValue) {
         console.log(
-          `✅ Range complete (no rows at or below PK ${pkEndValue} in this batch)`,
+          `🩹 Repairing gap PK ${range.start}..${range.end} (${range.count.toLocaleString()} IDs)`,
         );
-        break;
-      }
-
-      if (lastPk >= pkEndValue) {
-        console.log(`✅ Range complete at PK ${pkEndValue}`);
-        break;
-      }
-    }
-
-    if (!content.hasMore) {
-      console.log("✅ Reached end of data");
-      break;
-    }
-
-    await scheduler.wait(TIME_BETWEEN_QUERIES);
-
-    if (content.pkLastValue !== null) {
-      pkStartValue = content.pkLastValue + 1;
-    } else {
-      const lastRow = content.rowData[content.rowData.length - 1];
-      if (lastRow && lastRow[indexOfPrimaryKey] !== undefined) {
-        const lastPkValue = lastRow[indexOfPrimaryKey];
-        pkStartValue =
-          (typeof lastPkValue === "string"
-            ? parseInt(lastPkValue, 10)
-            : lastPkValue) + 1;
-      } else {
-        console.error("❌ Could not determine next primary key value");
-        break;
+        const gapRepairResult = await runScrapePass({
+          pkStartValue: range.start,
+          pkEndValue: range.end,
+          rangeStartValue: range.start,
+          patchMode: false,
+          emitProgress: false,
+        });
+        rowsScrapedThisRun += gapRepairResult.rowsWritten;
+        pagesScrapedThisRun += gapRepairResult.pagesScraped;
+        totalRowsScraped = gapRepairResult.totalRowsStored;
       }
     }
-
-    internalPageCounter++;
-    loopCount++;
-  } while (true);
+  }
 
   console.log(`\n✅ Scraping complete for ${tableName}`);
   console.log(`📊 Batches scraped in this run: ${pagesScrapedThisRun}`);
