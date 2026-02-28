@@ -158,7 +158,10 @@ async function bootstrapQueues(): Promise<void> {
   }
 }
 
-async function enqueueInspectorTasks(tableArg: string): Promise<void> {
+async function enqueueInspectorTasks(
+  tableArg: string,
+  skipGapDetection: boolean,
+): Promise<void> {
   const config = getPipelineConfig();
   const broker = new SqsQueueAdapter(config.sqs);
 
@@ -177,11 +180,12 @@ async function enqueueInspectorTasks(tableArg: string): Promise<void> {
       const envelope = createTaskEnvelope({
         type: PipelineTaskTypes.inspectTable,
         tableName,
+        ...(skipGapDetection ? { skipGapDetection: true } : {}),
       });
 
       await broker.send(config.queueNames.inspector, JSON.stringify(envelope));
       console.log(
-        `🧾 Enqueued inspect task ${envelope.taskId} for ${tableName}`,
+        `🧾 Enqueued inspect task ${envelope.taskId} for ${tableName}${skipGapDetection ? " (skip-gap-detection)" : ""}`,
       );
     }
   } finally {
@@ -225,6 +229,7 @@ async function runWorker(kind: WorkerKind, pollOnce: boolean): Promise<void> {
       const handler = createScraperHandler({
         broker,
         queueNames: config.queueNames,
+        changeLog,
       });
 
       await runWorkerLoop({
@@ -285,11 +290,14 @@ Commands:
 Flags:
   --poll-once              Execute one ReceiveMessage poll, process the batch, then exit.
                            Useful for smoke-testing. Does NOT drain the full queue.
+  --skip-gap-detection     (inspect only) Skip the O(N) raw-store gap scan. Use after a
+                           fresh full scrape when gaps are known not to exist.
 
 Examples:
   bun cli.ts bootstrap
   bun cli.ts inspect all
   bun cli.ts inspect MemberOfParliament
+  bun cli.ts inspect all --skip-gap-detection
   bun cli.ts worker inspect
   bun cli.ts worker scrape
   bun cli.ts worker parse
@@ -317,7 +325,8 @@ async function main(): Promise<void> {
 
   if (args[0] === "inspect") {
     const tableArg = args[1] || "all";
-    await enqueueInspectorTasks(tableArg);
+    const skipGapDetection = args.includes("--skip-gap-detection");
+    await enqueueInspectorTasks(tableArg, skipGapDetection);
     return;
   }
 

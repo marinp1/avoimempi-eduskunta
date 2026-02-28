@@ -108,7 +108,9 @@ export function createInspectorHandler(deps: InspectorHandlerDependencies) {
       getExactTableCountByRows(payload.tableName),
       rawStore.count(payload.tableName),
       rawStore.maxPk(payload.tableName),
-      collectMissingRanges(payload.tableName),
+      payload.skipGapDetection
+        ? Promise.resolve<MissingRange[]>([])
+        : collectMissingRanges(payload.tableName),
     ]);
 
     const scrapeTasks = toScrapeTasks({

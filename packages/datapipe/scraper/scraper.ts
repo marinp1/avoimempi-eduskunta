@@ -145,9 +145,22 @@ export interface ScrapeOptions {
 }
 
 /**
+ * Result returned by scrapeTable().
+ */
+export interface ScrapeResult {
+  rowsScraped: number;
+  pagesScraped: number;
+  totalRowsStored: number;
+  /** First PK actually written to the store in this run. Null if nothing was written. */
+  pkStartValue: number | null;
+  /** Last PK actually written to the store in this run. Null if nothing was written. */
+  pkEndValue: number | null;
+}
+
+/**
  * Scrape a table from Eduskunta API and save to the row store (DB-backed, upsert semantics).
  */
-export async function scrapeTable(options: ScrapeOptions): Promise<void> {
+export async function scrapeTable(options: ScrapeOptions): Promise<ScrapeResult> {
   const { tableName, mode: requestedMode, onProgress } = options;
   const mode = normalizeScrapeMode(requestedMode);
 
@@ -183,6 +196,8 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     rowsWritten: number;
     pagesScraped: number;
     totalRowsStored: number;
+    firstPkWritten: number | null;
+    lastPkWritten: number | null;
   };
 
   const runScrapePass = async (
@@ -194,6 +209,8 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     let loopCount = 0;
     let rowsWritten = 0;
     let pagesScraped = 0;
+    let firstPkWritten: number | null = null;
+    let lastPkWritten: number | null = null;
 
     const baseUrl = new URL(
       `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/batch`,
@@ -259,6 +276,8 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
       });
 
       if (batchRows.length > 0) {
+        if (firstPkWritten === null) firstPkWritten = batchRows[0].pk;
+        lastPkWritten = batchRows[batchRows.length - 1].pk;
         await rawStore.upsertBatch(
           tableName,
           primaryColumn,
@@ -355,6 +374,8 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
       rowsWritten,
       pagesScraped,
       totalRowsStored: totalRowsScraped,
+      firstPkWritten,
+      lastPkWritten,
     };
   };
 
@@ -449,6 +470,9 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
   pagesScrapedThisRun += firstPassResult.pagesScraped;
   totalRowsScraped = firstPassResult.totalRowsStored;
 
+  let aggregatedFirstPk = firstPassResult.firstPkWritten;
+  let aggregatedLastPk = firstPassResult.lastPkWritten;
+
   const shouldAutoRepairGaps =
     mode.type === "auto-resume" ||
     (mode.type === "start-from-pk" && mode.pkStartValue === 0);
@@ -479,6 +503,17 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
         rowsScrapedThisRun += gapRepairResult.rowsWritten;
         pagesScrapedThisRun += gapRepairResult.pagesScraped;
         totalRowsScraped = gapRepairResult.totalRowsStored;
+
+        if (gapRepairResult.firstPkWritten !== null) {
+          if (aggregatedFirstPk === null || gapRepairResult.firstPkWritten < aggregatedFirstPk) {
+            aggregatedFirstPk = gapRepairResult.firstPkWritten;
+          }
+        }
+        if (gapRepairResult.lastPkWritten !== null) {
+          if (aggregatedLastPk === null || gapRepairResult.lastPkWritten > aggregatedLastPk) {
+            aggregatedLastPk = gapRepairResult.lastPkWritten;
+          }
+        }
       }
     }
   }
@@ -502,6 +537,14 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
       `⚠️  Stored rows (${totalRowsScraped.toLocaleString()}) differ from API counts (${totalRows.toLocaleString()}) by ${Math.abs(diff).toLocaleString()} (${relation} than API count).`,
     );
   }
+
+  return {
+    rowsScraped: rowsScrapedThisRun,
+    pagesScraped: pagesScrapedThisRun,
+    totalRowsStored: totalRowsScraped,
+    pkStartValue: aggregatedFirstPk,
+    pkEndValue: aggregatedLastPk,
+  };
 }
 
 /**
