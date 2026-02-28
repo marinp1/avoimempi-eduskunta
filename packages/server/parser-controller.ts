@@ -22,6 +22,9 @@ export class ParserController {
   private isRunning = false;
   private shouldStop = false;
   private currentTable: string | null = null;
+  private currentPage = 0;
+  private totalRows = 0;
+  private percentComplete = 0;
   private ws: ServerWebSocket<unknown> | null = null;
 
   private constructor() {}
@@ -41,13 +44,38 @@ export class ParserController {
     return {
       isRunning: this.isRunning,
       currentTable: this.currentTable,
-      currentPage: 0,
-      totalRows: 0,
-      percentComplete: 0,
+      currentPage: this.currentPage,
+      totalRows: this.totalRows,
+      percentComplete: this.percentComplete,
     };
   }
 
   private sendMessage(message: ParserMessage) {
+    const data = message.data ?? {};
+
+    if (message.type === "status" && data.status === "started") {
+      this.currentPage = 0;
+      this.totalRows = 0;
+      this.percentComplete = 0;
+    } else if (message.type === "progress") {
+      if (typeof data.page === "number") {
+        this.currentPage = data.page;
+      }
+      if (typeof data.totalPages === "number") {
+        this.totalRows = data.totalPages;
+      }
+      if (typeof data.overallPercentComplete === "number") {
+        this.percentComplete = Math.max(
+          0,
+          Math.min(100, data.overallPercentComplete),
+        );
+      } else if (typeof data.percentComplete === "number") {
+        this.percentComplete = Math.max(0, Math.min(100, data.percentComplete));
+      }
+    } else if (message.type === "complete") {
+      this.percentComplete = 100;
+    }
+
     if (this.ws && this.ws.readyState === 1) {
       this.ws.send(JSON.stringify(message));
     }

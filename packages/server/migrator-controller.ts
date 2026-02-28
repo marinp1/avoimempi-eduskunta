@@ -473,6 +473,8 @@ export class MigratorController {
   private isRunning = false;
   private shouldStop = false;
   private currentTable: string | null = null;
+  private progress = 0;
+  private totalTables = 0;
   private ws: ServerWebSocket<unknown> | null = null;
 
   private constructor() {}
@@ -492,12 +494,47 @@ export class MigratorController {
     return {
       isRunning: this.isRunning,
       currentTable: this.currentTable,
-      progress: 0,
-      totalTables: 0,
+      progress: this.progress,
+      totalTables: this.totalTables,
     };
   }
 
   private sendMessage(message: MigratorMessage) {
+    const data = message.data ?? {};
+
+    if (message.type === "status" && data.status === "started") {
+      this.progress = 0;
+      if (typeof data.totalTables === "number") {
+        this.totalTables = data.totalTables;
+      } else {
+        this.totalTables = 0;
+      }
+    } else if (message.type === "progress") {
+      if (typeof data.totalTables === "number") {
+        this.totalTables = data.totalTables;
+      }
+
+      if (typeof data.percentComplete === "number") {
+        this.progress = Math.max(0, Math.min(100, data.percentComplete));
+      } else if (typeof data.overallPercentComplete === "number") {
+        this.progress = Math.max(
+          0,
+          Math.min(100, data.overallPercentComplete),
+        );
+      } else if (
+        typeof data.tablesCompleted === "number" &&
+        typeof data.totalTables === "number" &&
+        data.totalTables > 0
+      ) {
+        this.progress = Math.max(
+          0,
+          Math.min(100, (data.tablesCompleted / data.totalTables) * 100),
+        );
+      }
+    } else if (message.type === "complete") {
+      this.progress = 100;
+    }
+
     if (this.ws && this.ws.readyState === 1) {
       this.ws.send(JSON.stringify(message));
     }
