@@ -78,7 +78,6 @@ export class ScraperController {
       await scrapeTable({
         tableName,
         mode,
-        stage: "raw",
         onProgress: (progress) => {
           // Check if we should stop
           if (this.shouldStop) {
@@ -194,7 +193,6 @@ export class ScraperController {
           await scrapeTable({
             tableName,
             mode,
-            stage: "raw",
             onProgress: (progress) => {
               if (this.shouldStop) {
                 throw new Error("Scraping stopped by user");

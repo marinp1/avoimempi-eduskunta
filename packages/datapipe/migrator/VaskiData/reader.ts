@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { getStorage, StorageKeyBuilder } from "#storage";
+import { getParsedRowStore } from "#storage/row-store/factory";
 
 export interface VaskiClassificationMeta {
   yhteiso: string;
@@ -33,13 +33,7 @@ export interface VaskiEntry {
   };
 }
 
-export type VaskiIndex = Record<
-  string,
-  {
-    totalRecords: number;
-    pages: Record<string, string[]>;
-  }
->;
+export type VaskiIndex = Record<string, { totalRecords: number }>;
 
 function findRepoRoot(): string {
   let dir = process.cwd();
@@ -69,51 +63,24 @@ export async function listIndexedDocumentTypes(): Promise<string[]> {
 
 export async function* readVaskiRowsByDocumentType(
   documentType: string,
-  indexInput?: VaskiIndex,
+  _indexInput?: VaskiIndex,
 ): AsyncGenerator<VaskiEntry> {
-  const index = indexInput ?? (await readVaskiIndex());
-  const entry = index[documentType];
-  if (!entry) return;
+  const parsedStore = getParsedRowStore();
 
-  const storage = getStorage();
-  const seenIds = new Set<string>();
-  // Storage keys are zero-padded, so lexicographic sort = chronological order
-  const storageKeys = Object.keys(entry.pages).sort();
+  for await (const row of parsedStore.list("VaskiData")) {
+    const parsed = JSON.parse(row.data) as Record<string, any>;
+    if (!parsed || parsed._skip) continue;
 
-  for (const storageKey of storageKeys) {
-    const idsInPage = new Set(entry.pages[storageKey] ?? []);
-    if (idsInPage.size === 0) continue;
+    const rowDocumentType = parsed["#avoimempieduskunta"]?.documentType;
+    if (rowDocumentType !== documentType) continue;
 
-    const rawPage = await storage.get(storageKey);
-    if (!rawPage) continue;
-
-    const parsedPage = JSON.parse(rawPage) as {
-      rowData?: Array<Record<string, any>>;
+    yield {
+      ...(parsed as VaskiEntry),
+      _source: {
+        page: row.pk,
+        parsedKey: `parsed/VaskiData/pk_${row.pk}`,
+        vaskiPath: `vaski-data/${documentType}/${row.pk}`,
+      },
     };
-    const rows = Array.isArray(parsedPage.rowData) ? parsedPage.rowData : [];
-    const filename = storageKey.split("/").pop()!;
-
-    for (const row of rows) {
-      if (!row || row._skip) continue;
-
-      const rowIdValue = row.id ?? row.Id;
-      if (rowIdValue === undefined || rowIdValue === null) continue;
-      const rowId = String(rowIdValue);
-
-      if (!idsInPage.has(rowId) || seenIds.has(rowId)) continue;
-
-      const rowDocumentType = row["#avoimempieduskunta"]?.documentType;
-      if (rowDocumentType !== documentType) continue;
-
-      seenIds.add(rowId);
-      yield {
-        ...(row as VaskiEntry),
-        _source: {
-          page: StorageKeyBuilder.parseKey(storageKey)?.firstPk ?? 0,
-          parsedKey: storageKey,
-          vaskiPath: `vaski-data/${documentType}/${filename}`,
-        },
-      };
-    }
   }
 }
