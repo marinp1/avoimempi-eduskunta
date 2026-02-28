@@ -27,7 +27,8 @@ interface RunWorkerLoopOptions {
   visibilityTimeoutSeconds: number;
   retryVisibilityTimeoutSeconds: number;
   idleDelayMs: number;
-  runOnce: boolean;
+  /** Exit after a single ReceiveMessage poll (drains one batch, then stops). */
+  pollOnce: boolean;
   handleTask: (envelope: AnyPipelineTaskEnvelope) => Promise<void>;
 }
 
@@ -54,7 +55,7 @@ async function runWorkerLoop(options: RunWorkerLoopOptions): Promise<void> {
       });
 
       if (messages.length === 0) {
-        if (options.runOnce) {
+        if (options.pollOnce) {
           break;
         }
 
@@ -69,7 +70,7 @@ async function runWorkerLoop(options: RunWorkerLoopOptions): Promise<void> {
           envelope = parseTaskEnvelope(message.body);
         } catch (error) {
           console.error(
-            `[${options.workerName}] Dropping invalid message ${message.messageId}:`,
+            `[${options.workerName}] Dropping unparseable message ${message.messageId}:`,
             error,
           );
           await options.broker.ack(options.queueName, message.receiptHandle);
@@ -77,10 +78,17 @@ async function runWorkerLoop(options: RunWorkerLoopOptions): Promise<void> {
         }
 
         if (!options.acceptedTaskTypes.includes(envelope.payload.type)) {
+          // Message type does not belong to this worker. Reset visibility to 0
+          // so it re-appears immediately and the DLQ redrive policy can catch it
+          // after max_receive_count attempts rather than silently discarding it.
           console.warn(
-            `[${options.workerName}] Message ${envelope.taskId} has type '${envelope.payload.type}' which does not belong to this worker. Acknowledging to avoid poison-loop.`,
+            `[${options.workerName}] Message ${envelope.taskId} has unexpected type '${envelope.payload.type}'. Returning to queue for DLQ routing.`,
           );
-          await options.broker.ack(options.queueName, message.receiptHandle);
+          await options.broker.retry(
+            options.queueName,
+            message.receiptHandle,
+            0,
+          );
           continue;
         }
 
@@ -100,7 +108,7 @@ async function runWorkerLoop(options: RunWorkerLoopOptions): Promise<void> {
         }
       }
 
-      if (options.runOnce) {
+      if (options.pollOnce) {
         break;
       }
     }
@@ -112,22 +120,26 @@ async function runWorkerLoop(options: RunWorkerLoopOptions): Promise<void> {
 
 async function ensureQueues(broker: SqsQueueAdapter): Promise<void> {
   const config = getPipelineConfig();
+  const vt = config.workerVisibilityTimeoutSeconds;
 
   await broker.ensureQueue(config.queueNames.inspector, {
-    attributes: {
-      VisibilityTimeout: String(config.visibilityTimeoutSeconds),
-    },
+    attributes: { VisibilityTimeout: String(vt.inspector) },
   });
   await broker.ensureQueue(config.queueNames.scraper, {
-    attributes: {
-      VisibilityTimeout: String(config.visibilityTimeoutSeconds),
-    },
+    attributes: { VisibilityTimeout: String(vt.scraper) },
   });
   await broker.ensureQueue(config.queueNames.parser, {
-    attributes: {
-      VisibilityTimeout: String(config.visibilityTimeoutSeconds),
-    },
+    attributes: { VisibilityTimeout: String(vt.parser) },
   });
+}
+
+async function verifyQueues(broker: SqsQueueAdapter): Promise<void> {
+  const config = getPipelineConfig();
+  await Promise.all([
+    broker.verifyQueue(config.queueNames.inspector),
+    broker.verifyQueue(config.queueNames.scraper),
+    broker.verifyQueue(config.queueNames.parser),
+  ]);
 }
 
 async function bootstrapQueues(): Promise<void> {
@@ -161,8 +173,6 @@ async function enqueueInspectorTasks(tableArg: string): Promise<void> {
         })();
 
   try {
-    await broker.ensureQueue(config.queueNames.inspector);
-
     for (const tableName of tableNames) {
       const envelope = createTaskEnvelope({
         type: PipelineTaskTypes.inspectTable,
@@ -179,13 +189,13 @@ async function enqueueInspectorTasks(tableArg: string): Promise<void> {
   }
 }
 
-async function runWorker(kind: WorkerKind, runOnce: boolean): Promise<void> {
+async function runWorker(kind: WorkerKind, pollOnce: boolean): Promise<void> {
   const config = getPipelineConfig();
   const broker = new SqsQueueAdapter(config.sqs);
   const changeLog = new ParsedUpsertChangeLog(config.changeLogDbPath);
 
   try {
-    await ensureQueues(broker);
+    await verifyQueues(broker);
 
     if (kind === "inspect") {
       const handler = createInspectorHandler({
@@ -200,10 +210,11 @@ async function runWorker(kind: WorkerKind, runOnce: boolean): Promise<void> {
         acceptedTaskTypes: [PipelineTaskTypes.inspectTable],
         waitTimeSeconds: config.waitTimeSeconds,
         maxMessages: config.maxMessages,
-        visibilityTimeoutSeconds: config.visibilityTimeoutSeconds,
+        visibilityTimeoutSeconds:
+          config.workerVisibilityTimeoutSeconds.inspector,
         retryVisibilityTimeoutSeconds: config.retryVisibilityTimeoutSeconds,
         idleDelayMs: config.idleDelayMs,
-        runOnce,
+        pollOnce,
         handleTask: (envelope) =>
           handler(envelope as Parameters<typeof handler>[0]),
       });
@@ -223,10 +234,10 @@ async function runWorker(kind: WorkerKind, runOnce: boolean): Promise<void> {
         acceptedTaskTypes: [PipelineTaskTypes.scrapeTable],
         waitTimeSeconds: config.waitTimeSeconds,
         maxMessages: config.maxMessages,
-        visibilityTimeoutSeconds: config.visibilityTimeoutSeconds,
+        visibilityTimeoutSeconds: config.workerVisibilityTimeoutSeconds.scraper,
         retryVisibilityTimeoutSeconds: config.retryVisibilityTimeoutSeconds,
         idleDelayMs: config.idleDelayMs,
-        runOnce,
+        pollOnce,
         handleTask: (envelope) =>
           handler(envelope as Parameters<typeof handler>[0]),
       });
@@ -244,10 +255,10 @@ async function runWorker(kind: WorkerKind, runOnce: boolean): Promise<void> {
       acceptedTaskTypes: [PipelineTaskTypes.parseTable],
       waitTimeSeconds: config.waitTimeSeconds,
       maxMessages: config.maxMessages,
-      visibilityTimeoutSeconds: config.visibilityTimeoutSeconds,
+      visibilityTimeoutSeconds: config.workerVisibilityTimeoutSeconds.parser,
       retryVisibilityTimeoutSeconds: config.retryVisibilityTimeoutSeconds,
       idleDelayMs: config.idleDelayMs,
-      runOnce,
+      pollOnce,
       handleTask: (envelope) =>
         handler(envelope as Parameters<typeof handler>[0]),
     });
@@ -264,15 +275,16 @@ Queue Orchestrator CLI
 Usage:
   bun cli.ts bootstrap
   bun cli.ts inspect <TableName|all>
-  bun cli.ts worker <inspect|scrape|parse> [--once]
+  bun cli.ts worker <inspect|scrape|parse> [--poll-once]
 
 Commands:
-  bootstrap                Create/verify the queue topology
+  bootstrap                Create/verify the queue topology (local dev / ElasticMQ only)
   inspect <table|all>      Enqueue inspector tasks
   worker <kind>            Start a long-running worker
 
 Flags:
-  --once                   Process one polling round and exit
+  --poll-once              Execute one ReceiveMessage poll, process the batch, then exit.
+                           Useful for smoke-testing. Does NOT drain the full queue.
 
 Examples:
   bun cli.ts bootstrap
@@ -281,6 +293,7 @@ Examples:
   bun cli.ts worker inspect
   bun cli.ts worker scrape
   bun cli.ts worker parse
+  bun cli.ts worker scrape --poll-once
 `);
 }
 
@@ -310,13 +323,13 @@ async function main(): Promise<void> {
 
   if (args[0] === "worker") {
     const kind = args[1] as WorkerKind | undefined;
-    const runOnce = args.includes("--once");
+    const pollOnce = args.includes("--poll-once");
 
     if (!kind || !["inspect", "scrape", "parse"].includes(kind)) {
       throw new Error("worker command requires <inspect|scrape|parse>");
     }
 
-    await runWorker(kind, runOnce);
+    await runWorker(kind, pollOnce);
     return;
   }
 

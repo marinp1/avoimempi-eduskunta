@@ -1,4 +1,3 @@
-import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { getStorageConfig } from "#storage";
 
@@ -16,11 +15,17 @@ export interface SqsConfig {
   sessionToken?: string;
 }
 
+export interface WorkerVisibilityTimeouts {
+  inspector: number;
+  scraper: number;
+  parser: number;
+}
+
 export interface PipelineConfig {
   queueNames: PipelineQueueNames;
   maxMessages: number;
   waitTimeSeconds: number;
-  visibilityTimeoutSeconds: number;
+  workerVisibilityTimeoutSeconds: WorkerVisibilityTimeouts;
   retryVisibilityTimeoutSeconds: number;
   idleDelayMs: number;
   changeLogDbPath: string;
@@ -58,7 +63,6 @@ function resolvePipelineBaseDir(): string {
 
 export function getPipelineConfig(): PipelineConfig {
   const baseDir = resolvePipelineBaseDir();
-  mkdirSync(baseDir, { recursive: true });
 
   const changeLogDbPath = path.resolve(
     process.env.PIPELINE_CHANGELOG_DB_PATH ||
@@ -71,13 +75,25 @@ export function getPipelineConfig(): PipelineConfig {
       scraper: process.env.PIPELINE_QUEUE_SCRAPER || "datapipe-scraper",
       parser: process.env.PIPELINE_QUEUE_PARSER || "datapipe-parser",
     },
-    maxMessages: readPositiveInt("PIPELINE_QUEUE_MAX_MESSAGES", 5, 1),
+    maxMessages: readPositiveInt("PIPELINE_QUEUE_MAX_MESSAGES", 1, 1),
     waitTimeSeconds: readPositiveInt("PIPELINE_QUEUE_WAIT_SECONDS", 10, 0),
-    visibilityTimeoutSeconds: readPositiveInt(
-      "PIPELINE_QUEUE_VISIBILITY_TIMEOUT_SECONDS",
-      120,
-      1,
-    ),
+    workerVisibilityTimeoutSeconds: {
+      inspector: readPositiveInt(
+        "PIPELINE_QUEUE_INSPECTOR_VISIBILITY_TIMEOUT_SECONDS",
+        60,
+        1,
+      ),
+      scraper: readPositiveInt(
+        "PIPELINE_QUEUE_SCRAPER_VISIBILITY_TIMEOUT_SECONDS",
+        600,
+        1,
+      ),
+      parser: readPositiveInt(
+        "PIPELINE_QUEUE_PARSER_VISIBILITY_TIMEOUT_SECONDS",
+        300,
+        1,
+      ),
+    },
     retryVisibilityTimeoutSeconds: readPositiveInt(
       "PIPELINE_QUEUE_RETRY_VISIBILITY_TIMEOUT_SECONDS",
       15,
