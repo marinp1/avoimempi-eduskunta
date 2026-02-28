@@ -88,6 +88,7 @@ export interface ParseOptions {
   force?: boolean;
   pkStartValue?: number;
   pkEndValue?: number;
+  onRowsUpserted?: (event: ParseRowsUpsertedEvent) => Promise<void> | void;
   onProgress?: (progress: {
     page: number;
     rowsParsed: number;
@@ -96,15 +97,29 @@ export interface ParseOptions {
   }) => void;
 }
 
+export interface ParseRowsUpsertedEvent {
+  tableName: string;
+  rowCount: number;
+  pkStartValue: number;
+  pkEndValue: number;
+}
+
+export interface ParseResult {
+  rowsProcessed: number;
+  rowsParsed: number;
+  rowsSkipped: number;
+}
+
 /**
  * Parse a table from raw.db to parsed.db with hash-based skip.
  */
-export async function parseTable(options: ParseOptions): Promise<void> {
+export async function parseTable(options: ParseOptions): Promise<ParseResult> {
   const {
     tableName,
     force = false,
     pkStartValue,
     pkEndValue,
+    onRowsUpserted,
     onProgress,
   } = options;
 
@@ -147,7 +162,11 @@ export async function parseTable(options: ParseOptions): Promise<void> {
     if (hooks.onParsingComplete) {
       await hooks.onParsingComplete();
     }
-    return;
+    return {
+      rowsProcessed: 0,
+      rowsParsed: 0,
+      rowsSkipped: 0,
+    };
   }
 
   console.log(`📋 Total raw rows: ${totalRawRows.toLocaleString()}`);
@@ -187,12 +206,26 @@ export async function parseTable(options: ParseOptions): Promise<void> {
 
   async function flushBuffer(): Promise<void> {
     if (writeBuffer.length === 0) return;
+    const pkStart = writeBuffer[0].pk;
+    const pkEnd = writeBuffer[writeBuffer.length - 1].pk;
+    const rowCount = writeBuffer.length;
+
     await parsedStore.upsertBatch(
       tableName,
       pkNameForBatch,
       columnNamesForBatch,
       writeBuffer,
     );
+
+    if (onRowsUpserted) {
+      await onRowsUpserted({
+        tableName,
+        rowCount,
+        pkStartValue: pkStart,
+        pkEndValue: pkEnd,
+      });
+    }
+
     writeBuffer.length = 0;
   }
 
@@ -244,7 +277,8 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       [IMPORT_METADATA_FIELDS.sourcePage]: rawRow.pk,
       [IMPORT_METADATA_FIELDS.scrapedAt]: rawRow.updatedAt,
       [IMPORT_METADATA_FIELDS.sourcePrimaryKeyName]: schema.pkName,
-      [IMPORT_METADATA_FIELDS.sourcePrimaryKeyValue]: rowObject[schema.pkName] ?? null,
+      [IMPORT_METADATA_FIELDS.sourcePrimaryKeyValue]:
+        rowObject[schema.pkName] ?? null,
     };
 
     writeBuffer.push({
@@ -302,6 +336,12 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       percentComplete: 100,
     });
   }
+
+  return {
+    rowsProcessed,
+    rowsParsed,
+    rowsSkipped,
+  };
 }
 
 /**
