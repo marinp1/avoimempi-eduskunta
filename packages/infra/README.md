@@ -1,12 +1,21 @@
-# Scaleway Infra (Single Bucket)
+# Scaleway Infra (Bucket + SQS Queues)
 
-This folder provisions one hardcoded Scaleway Object Storage bucket for pipeline data.
+This folder provisions:
+
+- one hardcoded Scaleway Object Storage bucket for pipeline data
+- Scaleway Queues (SQS API) resources for datapipe orchestration
 
 ## What it creates
 
 - Bucket: `bkt-avoimempi-eduskunta-pipeline`
 - Region: `nl-ams`
 - ACL: `private` (not public)
+- Queues service activation (`scaleway_mnq_sqs`)
+- One SQS credential for pipeline workers (manage/publish/receive)
+- Three SQS queues:
+  - `datapipe-inspector`
+  - `datapipe-scraper`
+  - `datapipe-parser`
 - Logical prefixes used by the app:
   - `raw/`
   - `parsed/`
@@ -17,12 +26,38 @@ Note: S3-compatible storage does not require explicit folder resources. Prefixes
 
 ## Usage
 
+Optional (recommended) override for project ID used for queue resources:
+
+```bash
+export TF_VAR_project_id="<your-scaleway-project-id>"
+```
+
+Then run:
+
 ```bash
 cd packages/infra
 tofu init
 tofu plan
 tofu apply
 ```
+
+If `TF_VAR_project_id` is omitted, the provider default project configuration is used.
+
+## Useful outputs
+
+After apply, inspect outputs:
+
+```bash
+tofu output pipeline_queue_names
+tofu output pipeline_queue_urls
+tofu output pipeline_queue_env_template
+tofu output -json pipeline_sqs_credentials
+```
+
+`pipeline_sqs_credentials` is marked sensitive and contains:
+
+- `PIPELINE_SQS_ACCESS_KEY_ID`
+- `PIPELINE_SQS_SECRET_ACCESS_KEY`
 
 ## Upload existing local data
 
