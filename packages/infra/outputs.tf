@@ -1,21 +1,45 @@
-output "pipeline_bucket_name" {
-  description = "Primary pipeline bucket."
-  value       = scaleway_object_bucket.pipeline.name
-}
-
-output "storage_endpoint" {
-  description = "S3-compatible endpoint for this bucket region."
-  value       = "https://s3.nl-ams.scw.cloud"
-}
-
 output "pipeline_storage_env" {
-  description = "Environment values to wire the pipeline to this bucket."
+  description = "Environment values to wire the pipeline to local block storage mounted on VM."
   value       = local.pipeline_storage_env
 }
 
-output "pipeline_prefixes" {
-  description = "Logical prefixes used by the data pipeline."
-  value       = ["raw/", "parsed/", "metadata/", "artifacts/"]
+output "pipeline_private_network" {
+  description = "VPC and Private Network created for private row-store traffic."
+  value = {
+    vpc_id             = scaleway_vpc.pipeline.id
+    private_network_id = scaleway_vpc_private_network.pipeline.id
+    region             = var.pipeline_region
+  }
+}
+
+output "pipeline_block_storage" {
+  description = "Block-storage expectations for VM deployment (define/attach/mount in instance infrastructure)."
+  value       = local.pipeline_block_storage
+}
+
+output "pipeline_row_store_env" {
+  description = "Row-store environment values (private managed PostgreSQL) for pipeline workers."
+  sensitive   = true
+  value       = local.pipeline_row_store_env
+}
+
+output "pipeline_row_store_connection" {
+  description = "Non-secret private row-store connection metadata."
+  value = {
+    host          = module.pipeline_private_row_store.instance_ip
+    port          = var.pipeline_row_store_port
+    user_name     = var.pipeline_row_store_user_name
+    database_name = var.pipeline_row_store_database_name
+  }
+}
+
+output "pipeline_row_store_public_endpoint" {
+  description = "Public row-store endpoint metadata (if provisioned by module/provider)."
+  value = {
+    has_public_endpoint = length(module.pipeline_private_row_store.load_balancer) > 0
+    endpoint            = length(module.pipeline_private_row_store.load_balancer) > 0 ? module.pipeline_private_row_store.load_balancer[0].ip : null
+    temporary_seed_cidrs = var.temporary_seed_cidrs
+  }
 }
 
 output "pipeline_queue_names" {
@@ -57,33 +81,39 @@ output "pipeline_sqs_credentials_worker" {
   }
 }
 
-output "pipeline_row_store_env" {
-  description = "Environment variables to activate the PostgreSQL row store in pipeline workers."
-  sensitive   = true
-  value       = local.pipeline_row_store_env
-}
-
 output "pipeline_queue_env_template" {
   description = "Shared environment values for queue workers (credentials injected separately per role)."
   value = local.pipeline_queue_env_template
 }
 
 output "cloud_function_namespace" {
-  description = "Serverless function namespace (created when enable_cloud_functions=true)."
-  value       = var.enable_cloud_functions ? scaleway_function_namespace.pipeline[0].id : null
+  description = "Serverless function namespace."
+  value       = scaleway_function_namespace.pipeline.id
 }
 
 output "cloud_functions" {
-  description = "IDs for serverless functions and their triggers (when enabled)."
-  value = var.enable_cloud_functions ? {
-    inspector_dispatcher_function_id = scaleway_function.inspector_dispatcher[0].id
-    inspector_cron_id                = scaleway_function_cron.inspector[0].id
-    inspector_worker_function_id     = scaleway_function.inspector_worker[0].id
-    inspector_worker_trigger_id      = scaleway_function_trigger.inspector_worker[0].id
-    scraper_function_id              = scaleway_function.scraper_worker[0].id
-    scraper_trigger_id               = scaleway_function_trigger.scraper_worker[0].id
-    parser_function_id               = scaleway_function.parser_worker[0].id
-    parser_trigger_id                = scaleway_function_trigger.parser_worker[0].id
-    migrator_function_id             = length(scaleway_function.migrator) > 0 ? scaleway_function.migrator[0].id : null
-  } : null
+  description = "IDs for serverless functions and their triggers."
+  value = {
+    inspector_dispatcher_function_id = scaleway_function.inspector_dispatcher.id
+    inspector_cron_id                = scaleway_function_cron.inspector.id
+    inspector_worker_function_id     = scaleway_function.inspector_worker.id
+    inspector_worker_trigger_id      = scaleway_function_trigger.inspector_worker.id
+    scraper_function_id              = scaleway_function.scraper_worker.id
+    scraper_trigger_id               = scaleway_function_trigger.scraper_worker.id
+    parser_function_id               = scaleway_function.parser_worker.id
+    parser_trigger_id                = scaleway_function_trigger.parser_worker.id
+    migrator_function_id             = scaleway_function.migrator.id
+  }
+}
+
+output "cloud_functions_network" {
+  description = "Private Network attachment for serverless functions."
+  value = {
+    private_network_id = scaleway_vpc_private_network.pipeline.id
+    inspector_dispatcher_function_private_network_id = scaleway_function.inspector_dispatcher.private_network_id
+    inspector_worker_function_private_network_id     = scaleway_function.inspector_worker.private_network_id
+    scraper_function_private_network_id              = scaleway_function.scraper_worker.private_network_id
+    parser_function_private_network_id               = scaleway_function.parser_worker.private_network_id
+    migrator_function_private_network_id             = scaleway_function.migrator.private_network_id
+  }
 }
