@@ -34,22 +34,13 @@
     "start": "NODE_ENV=development bun run packages/server/index.ts",
     "scrape": "cd packages/datapipe && bun run scraper/cli.ts",
     "parse": "cd packages/datapipe && bun run parser/cli.ts",
-    "import:raw-pages-to-db": "bun run scripts/import-raw-pages-to-db.ts",
-    "backfill:scraper-source-metadata": "bun run scripts/backfill-scraper-source-metadata.ts",
-    "check:table-id-ranges": "bun run scripts/check-table-id-ranges.ts",
-    "check:table-gaps-api": "bun run scripts/check-table-gaps-from-api.ts",
-    "check:table-count-vs-api": "bun run scripts/validate-table-count-vs-api.ts",
-    "check:vaski-id-ranges": "bun run scripts/check-table-id-ranges.ts VaskiData",
-    "check:vaski-gaps-api": "bun run scripts/check-table-gaps-from-api.ts VaskiData",
     "migrate": "cd packages/datapipe && bun run migrator/cli.ts",
     "migrate:fresh": "cd packages/datapipe && bun run migrator/cli.ts recreate",
-    "sync:storage:s3": "bun run scripts/sync-storage-to-s3.mts",
     "test": "bun test",
-    "report:exception-candidates": "bun run packages/server/scripts/generate-known-exception-candidates.ts",
-    "check:parliament-size-exact": "bun run packages/server/scripts/check-parliament-composition-exact-200.ts",
     "bench:sql": "bun run packages/server/scripts/benchmark-query-latency.ts",
     "bench:http": "bun run packages/server/scripts/benchmark-http-load.ts",
     "lint": "bunx biome check",
-    "lint:fix": "bunx biome check --write"
+    "lint:fix": "bunx biome check --write",
+    "check:table-coverage": "bun run scripts/check-table-coverage-vs-api.ts"
   }
 }
