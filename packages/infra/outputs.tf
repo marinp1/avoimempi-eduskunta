@@ -10,12 +10,7 @@ output "storage_endpoint" {
 
 output "pipeline_storage_env" {
   description = "Environment values to wire the pipeline to this bucket."
-  value = {
-    STORAGE_PROVIDER    = "s3"
-    STORAGE_S3_REGION   = "nl-ams"
-    STORAGE_S3_BUCKET   = scaleway_object_bucket.pipeline.name
-    STORAGE_S3_ENDPOINT = "https://s3.nl-ams.scw.cloud"
-  }
+  value       = local.pipeline_storage_env
 }
 
 output "pipeline_prefixes" {
@@ -65,22 +60,30 @@ output "pipeline_sqs_credentials_worker" {
 output "pipeline_row_store_env" {
   description = "Environment variables to activate the PostgreSQL row store in pipeline workers."
   sensitive   = true
-  value = {
-    ROW_STORE_PROVIDER     = "postgres"
-    ROW_STORE_DATABASE_URL = "postgresql://${scaleway_iam_api_key.pipeline_db.access_key}:${scaleway_iam_api_key.pipeline_db.secret_key}@${scaleway_sdb_sql_database.pipeline_row_store.endpoint}/${scaleway_sdb_sql_database.pipeline_row_store.name}?sslmode=require"
-  }
+  value       = local.pipeline_row_store_env
 }
 
 output "pipeline_queue_env_template" {
   description = "Shared environment values for queue workers (credentials injected separately per role)."
-  value = {
-    PIPELINE_SQS_ENDPOINT        = "https://sqs.mnq.nl-ams.scw.cloud"
-    PIPELINE_SQS_REGION          = "nl-ams"
-    PIPELINE_QUEUE_INSPECTOR     = scaleway_mnq_sqs_queue.pipeline_inspector.name
-    PIPELINE_QUEUE_SCRAPER       = scaleway_mnq_sqs_queue.pipeline_scraper.name
-    PIPELINE_QUEUE_PARSER        = scaleway_mnq_sqs_queue.pipeline_parser.name
-    PIPELINE_QUEUE_WAIT_SECONDS  = "10"
-    PIPELINE_QUEUE_MAX_MESSAGES  = "1"
-    PIPELINE_QUEUE_IDLE_DELAY_MS = "300"
-  }
+  value = local.pipeline_queue_env_template
+}
+
+output "cloud_function_namespace" {
+  description = "Serverless function namespace (created when enable_cloud_functions=true)."
+  value       = var.enable_cloud_functions ? scaleway_function_namespace.pipeline[0].id : null
+}
+
+output "cloud_functions" {
+  description = "IDs for serverless functions and their triggers (when enabled)."
+  value = var.enable_cloud_functions ? {
+    inspector_dispatcher_function_id = scaleway_function.inspector_dispatcher[0].id
+    inspector_cron_id                = scaleway_function_cron.inspector[0].id
+    inspector_worker_function_id     = scaleway_function.inspector_worker[0].id
+    inspector_worker_trigger_id      = scaleway_function_trigger.inspector_worker[0].id
+    scraper_function_id              = scaleway_function.scraper_worker[0].id
+    scraper_trigger_id               = scaleway_function_trigger.scraper_worker[0].id
+    parser_function_id               = scaleway_function.parser_worker[0].id
+    parser_trigger_id                = scaleway_function_trigger.parser_worker[0].id
+    migrator_function_id             = length(scaleway_function.migrator) > 0 ? scaleway_function.migrator[0].id : null
+  } : null
 }
