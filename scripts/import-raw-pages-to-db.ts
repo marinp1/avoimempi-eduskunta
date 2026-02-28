@@ -15,7 +15,6 @@
  *   --dry-run   Scan and report without writing to the DB
  *   TableName   Optional list of tables to import (default: all)
  *
- * Tables skipped: VaskiData (stays on file-based storage).
  */
 
 import { readdir, readFile } from "node:fs/promises";
@@ -24,7 +23,6 @@ import { getStorageConfig } from "../packages/shared/storage/config";
 import { SqliteRowStore } from "../packages/shared/storage/row-store/providers/sqlite";
 
 const PAGE_FILE_RE = /^page_(\d+)\+(\d+)\.json$/i;
-const SKIP_TABLES = new Set(["VaskiData"]);
 const BATCH_SIZE = 500; // rows flushed per upsertBatch call
 
 interface RawPageFile {
@@ -56,7 +54,7 @@ function parsePage(raw: unknown): RawPageFile | null {
 async function getTableDirs(rawDir: string): Promise<string[]> {
   const entries = await readdir(rawDir, { withFileTypes: true });
   return entries
-    .filter((e) => e.isDirectory() && !SKIP_TABLES.has(e.name))
+    .filter((e) => e.isDirectory())
     .map((e) => e.name)
     .sort();
 }
@@ -141,6 +139,21 @@ async function importTable(
 
 async function main() {
   const args = process.argv.slice(2);
+  if (args.includes("--help") || args.includes("-h") || args.includes("help")) {
+    console.log(`
+One-shot migration: import existing raw page files into data/raw.db.
+
+Usage:
+  bun scripts/import-raw-pages-to-db.ts [--dry-run] [TableName ...]
+
+Options:
+  --dry-run   Scan and report without writing to the DB
+  --help      Show this help message
+  TableName   Optional list of tables to import (default: all)
+`);
+    process.exit(0);
+  }
+
   const dryRun = args.includes("--dry-run");
   const requestedTables = args.filter((a) => !a.startsWith("--"));
 
