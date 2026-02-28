@@ -23,39 +23,95 @@ async function main() {
   const tableName = args[0];
   let mode: ScrapeMode = { type: "auto-resume" };
 
-  // Check for flags — supports both "--flag value" and "--flag=value"
-  function parseFlagValue(
-    flag: string,
-    nextArg: string | undefined,
-  ): string | null {
-    const eqIndex = flag.indexOf("=");
-    if (eqIndex !== -1) return flag.slice(eqIndex + 1);
-    return nextArg ?? null;
-  }
-
-  if (args.length > 1) {
-    const flag = args[1].split("=")[0];
-    const value = parseFlagValue(args[1], args[2]);
-
-    if (flag === "--from-pk" || flag === "-f") {
-      const pk = parseInt(value ?? "", 10);
-      if (Number.isNaN(pk) || pk < 0) {
-        console.error("❌ Error: PK value must be a non-negative integer");
-        process.exit(1);
-      }
-      mode = { type: "start-from-pk", pkStartValue: pk };
-    } else if (flag === "--patch-pk") {
-      const pk = parseInt(value ?? "", 10);
-      if (Number.isNaN(pk) || pk < 0) {
-        console.error("❌ Error: PK value must be a non-negative integer");
-        process.exit(1);
-      }
-      mode = { type: "patch-from-pk", pkStartValue: pk };
-    } else {
-      console.error(`❌ Error: Unknown flag: ${args[1]}`);
-      printHelp();
+  const parsePk = (value: string | null, flagName: string): number => {
+    const pk = parseInt(value ?? "", 10);
+    if (Number.isNaN(pk) || pk < 0) {
+      console.error(`❌ Error: ${flagName} value must be a non-negative integer`);
       process.exit(1);
     }
+    return pk;
+  };
+
+  const readFlagValue = (
+    rawArg: string,
+    argIndex: number,
+  ): { value: string | null; consumedNext: boolean } => {
+    const eqIndex = rawArg.indexOf("=");
+    if (eqIndex !== -1) {
+      return { value: rawArg.slice(eqIndex + 1), consumedNext: false };
+    }
+    return { value: args[argIndex + 1] ?? null, consumedNext: true };
+  };
+
+  let fromPk: number | null = null;
+  let toPk: number | null = null;
+  let patchPk: number | null = null;
+  let singlePk: number | null = null;
+
+  for (let i = 1; i < args.length; i++) {
+    const rawArg = args[i];
+    const flag = rawArg.split("=")[0];
+
+    if (
+      flag === "--from-pk" ||
+      flag === "-f" ||
+      flag === "--to-pk" ||
+      flag === "-t" ||
+      flag === "--patch-pk" ||
+      flag === "--single-pk"
+    ) {
+      const { value, consumedNext } = readFlagValue(rawArg, i);
+      if (consumedNext) i++;
+
+      if (flag === "--from-pk" || flag === "-f") {
+        fromPk = parsePk(value, flag);
+      } else if (flag === "--to-pk" || flag === "-t") {
+        toPk = parsePk(value, flag);
+      } else if (flag === "--patch-pk") {
+        patchPk = parsePk(value, flag);
+      } else if (flag === "--single-pk") {
+        singlePk = parsePk(value, flag);
+      }
+      continue;
+    }
+
+    console.error(`❌ Error: Unknown flag: ${rawArg}`);
+    printHelp();
+    process.exit(1);
+  }
+
+  if (patchPk !== null && (fromPk !== null || toPk !== null || singlePk !== null)) {
+    console.error(
+      "❌ Error: --patch-pk cannot be combined with --from-pk/--to-pk/--single-pk",
+    );
+    process.exit(1);
+  }
+
+  if (singlePk !== null && (fromPk !== null || toPk !== null)) {
+    console.error(
+      "❌ Error: --single-pk cannot be combined with --from-pk/--to-pk",
+    );
+    process.exit(1);
+  }
+
+  if (toPk !== null && fromPk === null) {
+    console.error("❌ Error: --to-pk requires --from-pk");
+    process.exit(1);
+  }
+
+  if (fromPk !== null && toPk !== null && toPk < fromPk) {
+    console.error("❌ Error: --to-pk must be greater than or equal to --from-pk");
+    process.exit(1);
+  }
+
+  if (patchPk !== null) {
+    mode = { type: "patch-from-pk", pkStartValue: patchPk };
+  } else if (singlePk !== null) {
+    mode = { type: "range", pkStartValue: singlePk, pkEndValue: singlePk };
+  } else if (fromPk !== null && toPk !== null) {
+    mode = { type: "range", pkStartValue: fromPk, pkEndValue: toPk };
+  } else if (fromPk !== null) {
+    mode = { type: "start-from-pk", pkStartValue: fromPk };
   }
 
   await scrapeTable({
@@ -120,10 +176,18 @@ Modes:
     bun cli.ts <TableName> -f <pk>
     Starts from the given primary key value and continues until end
 
+  Range (inclusive)
+    bun cli.ts <TableName> --from-pk <start> --to-pk <end>
+    bun cli.ts <TableName> -f <start> -t <end>
+    Scrapes only PK range [start, end] and stops
+
+  Single PK refresh
+    bun cli.ts <TableName> --single-pk <pk>
+    Equivalent to --from-pk <pk> --to-pk <pk>
+
   Patch from PK
     bun cli.ts <TableName> --patch-pk <pk>
-    Scrapes patch page [A,B] from pk, deletes subsumed pages with firstPk in (A,B],
-    then scrapes one follow-up page from B+1 and stops (max 2 API calls)
+    Scrapes patch page from PK and one follow-up page (max 2 API calls)
 
 Commands:
   status                Show scraping status for all tables
@@ -132,12 +196,14 @@ Commands:
 Examples:
   bun cli.ts MemberOfParliament
   bun cli.ts MemberOfParliament --from-pk 401
+  bun cli.ts MemberOfParliament --from-pk 82300 --to-pk 82400
+  bun cli.ts MemberOfParliament --single-pk 82310
   bun cli.ts MemberOfParliament --patch-pk 82310
   bun cli.ts status
 
 Environment Variables:
-  STORAGE_PROVIDER      Storage backend (local, s3, r2, minio) [default: local]
-  STORAGE_LOCAL_DIR     Local storage directory [default: ./data]
+  ROW_STORE_DIR         Row-store directory (contains raw.db, parsed.db)
+  STORAGE_LOCAL_DIR     Fallback directory if ROW_STORE_DIR is not set
 
 Common Tables:
   MemberOfParliament
@@ -148,7 +214,8 @@ Common Tables:
 
 Notes:
   - Auto-resume is the default behavior
-  - Auto-resume is the default — use --from-pk to re-scrape from a specific point
+  - Use --from-pk / --to-pk for targeted re-scraping and gap repairs
+  - Use --single-pk to re-fetch one exact PK from source
   - Use --patch-pk to fix a missing row by re-scraping its page + one follow-up (max 2 API calls)
   - Each page contains ~100 rows from the API
 
