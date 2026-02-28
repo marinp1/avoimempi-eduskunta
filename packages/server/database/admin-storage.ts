@@ -1,10 +1,7 @@
 import { TableName } from "#constants/index";
 import { getStorage } from "#storage/factory";
 import { listAllStorageKeys } from "#storage/list-all";
-import {
-  loadSourceStageStatusMap,
-  type SourceStageStatusSnapshot,
-} from "#storage/source-status";
+import { getParsedRowStore, getRawRowStore } from "#storage/row-store/factory";
 import {
   type DataStage,
   StorageKeyBuilder,
@@ -87,103 +84,34 @@ export class AdminStorageService {
     return (Object.values(TableName) as string[]).sort();
   }
 
-  private buildTableStatus(
+  private buildTableStatusFromCounts(
     tableName: string,
     apiCounts: Record<string, number>,
-    stageSnapshots: Record<string, SourceStageStatusSnapshot>,
+    rawCount: number,
+    parsedCount: number,
+    rawLastUpdated: string | null,
+    parsedLastUpdated: string | null,
   ): TableStorageStatus {
-    const rawSnapshot =
-      stageSnapshots[this.buildStageSnapshotKey("raw", tableName)];
-    const parsedSnapshot =
-      stageSnapshots[this.buildStageSnapshotKey("parsed", tableName)];
-
-    const rawPageCount = rawSnapshot?.pageCount ?? 0;
-    const parsedPageCount = parsedSnapshot?.pageCount ?? 0;
-    const rawEstimatedRows = rawSnapshot
-      ? this.estimateRowsFromSnapshot(rawSnapshot)
-      : 0;
-    const parsedEstimatedRows = parsedSnapshot
-      ? this.estimateRowsFromSnapshot(parsedSnapshot)
-      : 0;
-
     const totalRowsInApi = apiCounts[tableName] || 0;
-    const effectiveTotal = Math.max(totalRowsInApi, rawEstimatedRows);
+    const effectiveTotal = Math.max(totalRowsInApi, rawCount);
     const scrapeProgressPercent =
       effectiveTotal > 0
-        ? Math.min((rawEstimatedRows / effectiveTotal) * 100, 100)
+        ? Math.min((rawCount / effectiveTotal) * 100, 100)
         : 0;
 
     return {
       table_name: tableName,
-      raw_page_count: rawPageCount,
-      parsed_page_count: parsedPageCount,
-      has_raw_data: rawPageCount > 0,
-      has_parsed_data: parsedPageCount > 0,
-      raw_last_updated: rawSnapshot?.lastUpdated ?? null,
-      parsed_last_updated: parsedSnapshot?.lastUpdated ?? null,
-      raw_estimated_rows: rawEstimatedRows,
-      parsed_estimated_rows: parsedEstimatedRows,
+      raw_page_count: rawCount,
+      parsed_page_count: parsedCount,
+      has_raw_data: rawCount > 0,
+      has_parsed_data: parsedCount > 0,
+      raw_last_updated: rawLastUpdated,
+      parsed_last_updated: parsedLastUpdated,
+      raw_estimated_rows: rawCount,
+      parsed_estimated_rows: parsedCount,
       total_rows_in_api: totalRowsInApi,
       scrape_progress_percent: scrapeProgressPercent,
     };
-  }
-
-  /**
-   * Get all files for a specific stage and table
-   */
-  private async getTableFiles(
-    stage: DataStage,
-    tableName: string,
-  ): Promise<StorageMetadata[]> {
-    const storage = getStorage();
-    const prefix = StorageKeyBuilder.listPrefixForTable(stage, tableName);
-
-    try {
-      return await listAllStorageKeys(storage, {
-        prefix,
-        pageSize: 10_000,
-      });
-    } catch (error) {
-      console.error(`Error listing files for ${stage}/${tableName}:`, error);
-      return [];
-    }
-  }
-
-  /**
-   * Get the most recent modification date from a list of files
-   */
-  private buildStageSnapshotKey(stage: DataStage, tableName: string): string {
-    return `${stage}:${tableName}`;
-  }
-
-  private estimateRowsFromSnapshot(
-    snapshot: SourceStageStatusSnapshot,
-  ): number {
-    if (snapshot.pageCount === 0) return 0;
-    if (snapshot.totalRowCount > 0) return snapshot.totalRowCount;
-    return (snapshot.pageCount - 1) * 100 + snapshot.lastPageRowCount;
-  }
-
-  private buildCandidateRowCounts(
-    stageSnapshots: Record<string, SourceStageStatusSnapshot>,
-    tableNames: string[],
-  ): Record<string, number> {
-    const candidates: Record<string, number> = {};
-
-    for (const tableName of tableNames) {
-      const rawSnapshot =
-        stageSnapshots[this.buildStageSnapshotKey("raw", tableName)];
-      const parsedSnapshot =
-        stageSnapshots[this.buildStageSnapshotKey("parsed", tableName)];
-      const preferredSnapshot = rawSnapshot ?? parsedSnapshot;
-
-      if (preferredSnapshot) {
-        candidates[tableName] =
-          this.estimateRowsFromSnapshot(preferredSnapshot);
-      }
-    }
-
-    return candidates;
   }
 
   /**
@@ -204,18 +132,38 @@ export class AdminStorageService {
 
     AdminStorageService.statusFetchInFlight = (async () => {
       const tables = this.getTableNames();
-      const stageSnapshots = await loadSourceStageStatusMap();
-      const candidateRowCounts = this.buildCandidateRowCounts(
-        stageSnapshots,
-        tables,
-      );
+      const rawStore = getRawRowStore();
+      const parsedStore = getParsedRowStore();
+
+      const [rawCounts, parsedCounts, rawUpdatedAts, parsedUpdatedAts] =
+        await Promise.all([
+          Promise.all(tables.map((t) => rawStore.count(t))),
+          Promise.all(tables.map((t) => parsedStore.count(t))),
+          Promise.all(tables.map((t) => rawStore.lastUpdatedAt(t))),
+          Promise.all(tables.map((t) => parsedStore.lastUpdatedAt(t))),
+        ]);
+
+      const candidateRowCounts: Record<string, number> = {};
+      for (let i = 0; i < tables.length; i++) {
+        if (rawCounts[i] > 0) candidateRowCounts[tables[i]] = rawCounts[i];
+      }
+
       const apiCounts = await this.fetchApiTableCounts({
         tableNames: tables,
         candidateRowCounts,
       });
-      const data = tables.map((tableName) =>
-        this.buildTableStatus(tableName, apiCounts, stageSnapshots),
+
+      const data = tables.map((tableName, i) =>
+        this.buildTableStatusFromCounts(
+          tableName,
+          apiCounts,
+          rawCounts[i],
+          parsedCounts[i],
+          rawUpdatedAts[i],
+          parsedUpdatedAts[i],
+        ),
       );
+
       AdminStorageService.statusCache = {
         data,
         expiresAt: Date.now() + AdminStorageService.STATUS_CACHE_TTL,
@@ -238,32 +186,43 @@ export class AdminStorageService {
       return null;
     }
 
-    const stageSnapshots = await loadSourceStageStatusMap();
-    const candidateRowCounts = this.buildCandidateRowCounts(stageSnapshots, [
-      tableName,
-    ]);
+    const rawStore = getRawRowStore();
+    const parsedStore = getParsedRowStore();
+
+    const [rawCount, parsedCount, rawLastUpdated, parsedLastUpdated] =
+      await Promise.all([
+        rawStore.count(tableName),
+        parsedStore.count(tableName),
+        rawStore.lastUpdatedAt(tableName),
+        parsedStore.lastUpdatedAt(tableName),
+      ]);
+
+    const candidateRowCounts =
+      rawCount > 0 ? { [tableName]: rawCount } : {};
     const apiCounts = await this.fetchApiTableCounts({
       tableNames: [tableName],
       candidateRowCounts,
     });
-    return this.buildTableStatus(tableName, apiCounts, stageSnapshots);
+
+    return this.buildTableStatusFromCounts(
+      tableName,
+      apiCounts,
+      rawCount,
+      parsedCount,
+      rawLastUpdated,
+      parsedLastUpdated,
+    );
   }
 
   /**
-   * Get list of available pages for a table
+   * Get list of available PKs for a table (replaces legacy page-based listing).
+   * Returns empty array — individual PKs are now in the row store.
    */
-  async getTablePages(tableName: string, stage: DataStage): Promise<number[]> {
-    const files = await this.getTableFiles(stage, tableName);
-    const firstPks: number[] = [];
-
-    for (const file of files) {
-      const parsed = StorageKeyBuilder.parseKey(file.key);
-      if (parsed) {
-        firstPks.push(parsed.firstPk);
-      }
-    }
-
-    return firstPks.sort((a, b) => a - b);
+  async getTablePages(
+    _tableName: string,
+    _stage: DataStage,
+  ): Promise<number[]> {
+    return [];
   }
 
   /**

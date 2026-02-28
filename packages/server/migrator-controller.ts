@@ -19,6 +19,7 @@ import {
   listAllStorageKeys,
   StorageKeyBuilder,
 } from "../shared/storage";
+import { getParsedRowStore } from "../shared/storage/row-store/factory";
 import {
   getDeleteAllRowsQuery,
   MIGRATOR_SQL,
@@ -530,20 +531,32 @@ export class MigratorController {
   }
 
   /**
-   * Check which tables have parsed data available
+   * Check which tables have parsed data available.
+   * VaskiData is checked via legacy file storage; all others via the parsed row store.
    */
   private async getTablesWithParsedData(): Promise<string[]> {
-    const storage = getStorage();
     const allTables = this.getOrderedTables().filter(
       (tableName) => !DISABLED_IMPORT_TABLES.has(tableName),
     );
+
+    const parsedStore = getParsedRowStore();
+    const tablesInDb = new Set(await parsedStore.tableNames());
+
+    // For VaskiData, fall back to legacy file storage check
+    const storage = getStorage();
     const tablesWithData: string[] = [];
 
     for (const tableName of allTables) {
-      const prefix = StorageKeyBuilder.listPrefixForTable("parsed", tableName);
-      const result = await storage.list({ prefix, maxKeys: 1 });
-      if (result.keys.length > 0) {
-        tablesWithData.push(tableName);
+      if (tableName === TableName.VaskiData) {
+        const prefix = StorageKeyBuilder.listPrefixForTable("parsed", tableName);
+        const result = await storage.list({ prefix, maxKeys: 1 });
+        if (result.keys.length > 0) {
+          tablesWithData.push(tableName);
+        }
+      } else {
+        if (tablesInDb.has(tableName)) {
+          tablesWithData.push(tableName);
+        }
       }
     }
 
@@ -551,9 +564,61 @@ export class MigratorController {
   }
 
   /**
-   * Read all parsed pages for a table
+   * Read all parsed rows for a table as page batches.
+   * VaskiData uses legacy file storage; all others use the parsed row store.
    */
   private async *readParsedData(
+    tableName: string,
+  ): AsyncGenerator<ParsedPageBatch> {
+    if (tableName === TableName.VaskiData) {
+      yield* this.readParsedDataLegacyFileStorage(tableName);
+      return;
+    }
+
+    const parsedStore = getParsedRowStore();
+    const BATCH_SIZE = 100;
+    let batch: any[] = [];
+    let firstBatchPk: number | null = null;
+
+    for await (const storedRow of parsedStore.list(tableName)) {
+      const rowData = JSON.parse(storedRow.data);
+      if (firstBatchPk === null) firstBatchPk = storedRow.pk;
+      batch.push(rowData);
+
+      if (batch.length >= BATCH_SIZE) {
+        yield {
+          firstPk: firstBatchPk,
+          rows: batch,
+          pkName: normalizeText(batch[0][IMPORT_METADATA_FIELDS.sourcePrimaryKeyName]),
+          sourceTable:
+            normalizeText(batch[0][IMPORT_METADATA_FIELDS.sourceTable]) ??
+            tableName,
+          sourcePage: normalizeNumber(batch[0][IMPORT_METADATA_FIELDS.sourcePage]),
+          scrapedAt: normalizeText(batch[0][IMPORT_METADATA_FIELDS.scrapedAt]),
+        };
+        batch = [];
+        firstBatchPk = null;
+      }
+    }
+
+    if (batch.length > 0 && firstBatchPk !== null) {
+      yield {
+        firstPk: firstBatchPk,
+        rows: batch,
+        pkName: normalizeText(batch[0][IMPORT_METADATA_FIELDS.sourcePrimaryKeyName]),
+        sourceTable:
+          normalizeText(batch[0][IMPORT_METADATA_FIELDS.sourceTable]) ??
+          tableName,
+        sourcePage: normalizeNumber(batch[0][IMPORT_METADATA_FIELDS.sourcePage]),
+        scrapedAt: normalizeText(batch[0][IMPORT_METADATA_FIELDS.scrapedAt]),
+      };
+    }
+  }
+
+  /**
+   * Legacy file-based parsed data reader for VaskiData.
+   */
+  private async *readParsedDataLegacyFileStorage(
     tableName: string,
   ): AsyncGenerator<ParsedPageBatch> {
     const storage = getStorage();
@@ -563,7 +628,6 @@ export class MigratorController {
       pageSize: 10_000,
     });
 
-    // Sort pages by firstPk ascending
     const sortedPages = keys
       .map((k) => ({ key: k, parsed: StorageKeyBuilder.parseKey(k.key) }))
       .filter((p) => p.parsed !== null)
