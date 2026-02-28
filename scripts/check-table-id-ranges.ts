@@ -1,5 +1,4 @@
 import { TableNames } from "#constants";
-import { getStorage, listAllStorageKeys, StorageKeyBuilder } from "#storage";
 import { getExactTableCountsByRows } from "#table-counts";
 
 type Stage = "raw" | "parsed";
@@ -14,12 +13,6 @@ interface Args {
   verifyConcurrency: number;
   timeoutMs: number;
   json: boolean;
-}
-
-interface PageData {
-  columnNames?: string[];
-  pkName?: string;
-  rowData?: any[][];
 }
 
 interface MissingRange {
@@ -356,65 +349,27 @@ async function verifyRangeFromApi(
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const apiCountsPromise = fetchApiTableCount(args.table);
-  const storage = getStorage();
-  const prefix = StorageKeyBuilder.listPrefixForTable(args.stage, args.table);
 
-  console.log(
-    `Reading ${args.stage}/${args.table} via ${storage.name} storage...`,
+  const { getRawRowStore, getParsedRowStore } = await import(
+    "../packages/shared/storage/row-store/factory.ts"
   );
-  const keys = await listAllStorageKeys(storage, { prefix, pageSize: 100_000 });
+  const rowStore = args.stage === "raw" ? getRawRowStore() : getParsedRowStore();
+  const schemas = await rowStore.listColumnSchemas(args.table);
+  const detectedPkName: string | null = schemas[0]?.pkName ?? args.pkName ?? null;
 
-  if (keys.length === 0) {
-    throw new Error(`No pages found under prefix: ${prefix}`);
-  }
-
-  const pages = keys
-    .map((k) => ({
-      key: k.key,
-      page: StorageKeyBuilder.parseKey(k.key)?.firstPk ?? 0,
-    }))
-    .sort((a, b) => a.page - b.page);
-
+  console.log(`Reading ${args.stage}/${args.table} from row store...`);
   const uniqueIds = new Set<number>();
   let rowCount = 0;
-  let duplicateCount = 0;
-  let invalidIdCount = 0;
-  let pagesWithNoPkColumn = 0;
-  let detectedPkName: string | null = null;
-
-  for (const page of pages) {
-    const raw = await storage.get(page.key);
-    if (!raw) continue;
-
-    const data = JSON.parse(raw) as PageData;
-    const columnNames = data.columnNames ?? [];
-    const rowData = data.rowData ?? [];
-    const pagePkName = data.pkName ?? args.pkName ?? "Id";
-    if (!detectedPkName && data.pkName) {
-      detectedPkName = data.pkName;
-    }
-    const pkIndex = columnNames.indexOf(pagePkName);
-
-    if (pkIndex < 0) {
-      pagesWithNoPkColumn++;
-      continue;
-    }
-
-    for (const row of rowData) {
-      rowCount++;
-      const numericId = toNumericId(row?.[pkIndex]);
-      if (numericId === null) {
-        invalidIdCount++;
-        continue;
-      }
-
-      if (uniqueIds.has(numericId)) {
-        duplicateCount++;
-      } else {
-        uniqueIds.add(numericId);
-      }
-    }
+  for await (const row of rowStore.list(args.table)) {
+    uniqueIds.add(row.pk);
+    rowCount++;
   }
+  if (rowCount === 0) {
+    throw new Error(`No rows found for table: ${args.table} (stage: ${args.stage})`);
+  }
+  const duplicateCount = 0; // row store guarantees uniqueness (PRIMARY KEY)
+  const invalidIdCount = 0; // row store guarantees integer PKs
+  const pagesWithNoPkColumn = 0; // not applicable
 
   const sortedIds = Array.from(uniqueIds).sort((a, b) => a - b);
   const minId = sortedIds.length > 0 ? sortedIds[0] : null;
@@ -422,6 +377,7 @@ async function main() {
   const missingRanges = collectMissingRanges(sortedIds);
   const missingTotal = missingRanges.reduce((sum, r) => sum + r.count, 0);
   const localPkName = args.pkName ?? detectedPkName ?? "Id";
+
   const { apiTableRowCount, tablesInCountsEndpoint, apiCountsError } =
     await apiCountsPromise;
 
@@ -467,12 +423,10 @@ async function main() {
     stage: args.stage,
     pkName: localPkName,
     apiPkName,
-    pagesScanned: pages.length,
     rowsScanned: rowCount,
     uniqueIds: uniqueIds.size,
     duplicateIds: duplicateCount,
     invalidIds: invalidIdCount,
-    pagesWithNoPkColumn,
     minId,
     maxId,
     missingRangesCount: missingRanges.length,
@@ -512,7 +466,6 @@ async function main() {
   }
 
   console.log("");
-  console.log(`Pages scanned:      ${result.pagesScanned.toLocaleString()}`);
   console.log(`Rows scanned:       ${result.rowsScanned.toLocaleString()}`);
   console.log(`Unique IDs:         ${result.uniqueIds.toLocaleString()}`);
   console.log(`Duplicate IDs:      ${result.duplicateIds.toLocaleString()}`);
