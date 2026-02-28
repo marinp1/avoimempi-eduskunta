@@ -73,7 +73,6 @@ export class ParserController {
     try {
       await parseTable({
         tableName,
-        sourceStage: "raw",
         targetStage: "parsed",
         force,
         onProgress: (progress) => {
@@ -187,7 +186,6 @@ export class ParserController {
         try {
           await parseTable({
             tableName,
-            sourceStage: "raw",
             targetStage: "parsed",
             force,
             onProgress: (progress) => {

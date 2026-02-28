@@ -1,20 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import {
-  lstat,
-  mkdir,
-  mkdtemp,
-  readFile,
-  readlink,
-  rm,
-  writeFile,
-} from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { StorageFactory } from "#storage";
-import parser, {
-  onPageParsed,
-  onParsingComplete,
-} from "../parser/fn/VaskiData";
+import { resetRowStores } from "#storage/row-store/factory";
+import { SqliteRowStore } from "#storage/row-store/providers/sqlite";
+import parser, { onParsingComplete } from "../parser/fn/VaskiData";
 
 async function withTempWorkspace(fn: (workspace: string) => Promise<void>) {
   const originalCwd = process.cwd();
@@ -27,10 +18,12 @@ async function withTempWorkspace(fn: (workspace: string) => Promise<void>) {
     process.env.STORAGE_PROVIDER = "local";
     process.env.STORAGE_LOCAL_DIR = path.join(workspace, "data");
     StorageFactory.reset();
+    resetRowStores();
     await fn(workspace);
   } finally {
     process.chdir(originalCwd);
     StorageFactory.reset();
+    resetRowStores();
 
     if (originalStorageProvider === undefined) {
       delete process.env.STORAGE_PROVIDER;
@@ -95,51 +88,48 @@ describe("VaskiData parser", () => {
     expect(parsed._skip).toBe(true);
   });
 
-  test("onParsingComplete rebuilds full index from parsed storage and writes symlinks", async () => {
+  test("onParsingComplete rebuilds full index from parsed row store and writes index.json", async () => {
     await withTempWorkspace(async (workspace) => {
-      const parsedDir = path.join(workspace, "data", "parsed", "VaskiData");
-      await mkdir(parsedDir, { recursive: true });
+      const dataDir = path.join(workspace, "data");
+      await mkdir(dataDir, { recursive: true });
 
-      // Files use PK-range naming: page_{firstPk}+{lastPk}.json (12-digit zero-padded)
-      const pageA = {
-        rowData: [
-          {
+      // Seed the parsed row store directly
+      const parsedStore = new SqliteRowStore(
+        path.join(dataDir, "parsed.db"),
+        "parsed",
+      );
+      await parsedStore.upsertBatch("VaskiData", "Id", [], [
+        {
+          pk: 3,
+          data: JSON.stringify({
             id: "3",
             "#avoimempieduskunta": { documentType: "hallituksen_esitys" },
-          },
-          {
+          }),
+        },
+        {
+          pk: 4,
+          data: JSON.stringify({
             id: "4",
             "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
-          },
-        ],
-      };
-      const pageB = {
-        rowData: [
-          {
+          }),
+        },
+        {
+          pk: 1,
+          data: JSON.stringify({
             id: "1",
             "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
-          },
-          {
+          }),
+        },
+        {
+          pk: 2,
+          data: JSON.stringify({
             id: "2",
             _skip: true,
             "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
-          },
-        ],
-      };
-
-      const pageAFilename = "page_000000000003+000000000004.json";
-      const pageBFilename = "page_000000000001+000000000002.json";
-      const pageAKey = `parsed/VaskiData/${pageAFilename}`;
-      const pageBKey = `parsed/VaskiData/${pageBFilename}`;
-
-      await writeFile(
-        path.join(parsedDir, pageAFilename),
-        JSON.stringify(pageA, null, 2),
-      );
-      await writeFile(
-        path.join(parsedDir, pageBFilename),
-        JSON.stringify(pageB, null, 2),
-      );
+          }),
+        },
+      ]);
+      parsedStore.close();
 
       await onParsingComplete();
 
@@ -147,59 +137,9 @@ describe("VaskiData parser", () => {
       const indexRaw = await readFile(indexPath, "utf-8");
       const index = JSON.parse(indexRaw);
       expect(index).toEqual({
-        hallituksen_esitys: {
-          totalRecords: 1,
-          pages: {
-            [pageAKey]: ["3"],
-          },
-        },
-        nimenhuutoraportti: {
-          totalRecords: 2,
-          pages: {
-            [pageBKey]: ["1"],
-            [pageAKey]: ["4"],
-          },
-        },
+        hallituksen_esitys: { totalRecords: 1 },
+        nimenhuutoraportti: { totalRecords: 2 },
       });
-
-      const symlinkPath = path.join(
-        workspace,
-        "vaski-data",
-        "nimenhuutoraportti",
-        pageBFilename,
-      );
-      const linkStats = await lstat(symlinkPath);
-      expect(linkStats.isSymbolicLink()).toBe(true);
-
-      const symlinkTarget = await readlink(symlinkPath);
-      expect(symlinkTarget).toBe(
-        `../../data/parsed/VaskiData/${pageBFilename}`,
-      );
-    });
-  });
-
-  test("onPageParsed creates per-document-type symlink for parsed page", async () => {
-    await withTempWorkspace(async (workspace) => {
-      const storageKey = "parsed/VaskiData/page_000000000042+000000000042.json";
-      await onPageParsed(storageKey, [
-        {
-          id: "1001",
-          "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
-        },
-      ]);
-
-      const filename = "page_000000000042+000000000042.json";
-      const symlinkPath = path.join(
-        workspace,
-        "vaski-data",
-        "nimenhuutoraportti",
-        filename,
-      );
-      const linkStats = await lstat(symlinkPath);
-      expect(linkStats.isSymbolicLink()).toBe(true);
-
-      const symlinkTarget = await readlink(symlinkPath);
-      expect(symlinkTarget).toBe(`../../data/parsed/VaskiData/${filename}`);
     });
   });
 });

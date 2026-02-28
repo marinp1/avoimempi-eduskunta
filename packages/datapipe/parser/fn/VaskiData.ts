@@ -1,13 +1,8 @@
 import { existsSync } from "node:fs";
-import { mkdir, symlink, unlink, writeFile } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { XMLParser } from "fast-xml-parser";
-import {
-  getStorage,
-  getStorageConfig,
-  listAllStorageKeys,
-  StorageKeyBuilder,
-} from "#storage";
+import { getParsedRowStore } from "#storage/row-store/factory";
 import type { ParserFunction } from "../parser";
 
 const xmlParser = new XMLParser({
@@ -133,102 +128,23 @@ function findRepoRoot(): string {
 }
 
 type ParsedRow = Record<string, any>;
-type VaskiIndex = Record<
-  string,
-  { totalRecords: number; pages: Record<string, string[]> }
->;
-
-function getParsedPageAbsolutePath(storageKey: string): string {
-  const storageConfig = getStorageConfig();
-  if (storageConfig.provider === "local" && storageConfig.local) {
-    return join(storageConfig.local.baseDir, storageKey);
-  }
-
-  // Non-local storage providers are not currently supported for symlink output.
-  const repoRoot = findRepoRoot();
-  return join(repoRoot, "data", storageKey);
-}
-
-function collectDocumentTypeRows(rows: ParsedRow[]): Map<string, string[]> {
-  const docTypeRecords = new Map<string, string[]>();
-
-  for (const row of rows) {
-    if (!row || row._skip) continue;
-
-    const id = row.id ?? row.Id;
-    const meta = row["#avoimempieduskunta"];
-    const documentType = meta?.documentType;
-    if (!documentType || id === undefined || id === null) continue;
-
-    const ids = docTypeRecords.get(documentType) ?? [];
-    ids.push(String(id));
-    docTypeRecords.set(documentType, ids);
-  }
-
-  return docTypeRecords;
-}
-
-async function ensureDocumentTypeSymlink(
-  repoRoot: string,
-  documentType: string,
-  storageKey: string,
-): Promise<void> {
-  const filename = storageKey.split("/").pop()!;
-  const symlinkDir = join(repoRoot, "vaski-data", documentType);
-  const symlinkPath = join(symlinkDir, filename);
-
-  await mkdir(symlinkDir, { recursive: true });
-
-  const parsedFile = getParsedPageAbsolutePath(storageKey);
-  const target = relative(symlinkDir, parsedFile);
-
-  try {
-    await symlink(target, symlinkPath);
-  } catch (e: any) {
-    if (e.code !== "EEXIST") {
-      throw e;
-    }
-
-    await unlink(symlinkPath);
-    await symlink(target, symlinkPath);
-  }
-}
+type VaskiIndex = Record<string, { totalRecords: number }>;
 
 async function buildIndexFromParsedStorage(): Promise<VaskiIndex> {
-  const storage = getStorage();
-  const prefix = StorageKeyBuilder.listPrefixForTable("parsed", "VaskiData");
-  const keys = await listAllStorageKeys(storage, {
-    prefix,
-    pageSize: 10_000,
-  });
-
-  const sortedPages = keys
-    .map((keyMeta) => ({
-      key: keyMeta.key,
-      parsed: StorageKeyBuilder.parseKey(keyMeta.key),
-    }))
-    .filter((item) => item.parsed !== null)
-    .sort((a, b) => (a.parsed?.firstPk || 0) - (b.parsed?.firstPk || 0));
-
+  const parsedStore = getParsedRowStore();
   const index: VaskiIndex = {};
 
-  for (const pageInfo of sortedPages) {
-    const rawPage = await storage.get(pageInfo.key);
-    if (!rawPage) continue;
+  for await (const row of parsedStore.list("VaskiData")) {
+    const parsed = JSON.parse(row.data) as ParsedRow;
+    if (!parsed || parsed._skip) continue;
 
-    const page = JSON.parse(rawPage) as { rowData?: ParsedRow[] };
-    const rows = Array.isArray(page.rowData) ? page.rowData : [];
-    const storageKey = pageInfo.key;
-    const docTypeRows = collectDocumentTypeRows(rows);
+    const documentType = parsed["#avoimempieduskunta"]?.documentType;
+    if (!documentType) continue;
 
-    for (const [documentType, ids] of docTypeRows.entries()) {
-      if (!index[documentType]) {
-        index[documentType] = { totalRecords: 0, pages: {} };
-      }
-
-      index[documentType].pages[storageKey] = ids;
-      index[documentType].totalRecords += ids.length;
+    if (!index[documentType]) {
+      index[documentType] = { totalRecords: 0 };
     }
+    index[documentType].totalRecords++;
   }
 
   return index;
@@ -284,22 +200,7 @@ const parser: ParserFunction = async (row, primaryKey) => {
 export default parser;
 
 /**
- * Called after each parsed page is written to storage.
- * Creates per-documentType symlinks for quick local browsing.
- */
-export async function onPageParsed(
-  storageKey: string,
-  rows: ParsedRow[],
-): Promise<void> {
-  const repoRoot = findRepoRoot();
-  const docTypeRows = collectDocumentTypeRows(rows);
-  for (const documentType of docTypeRows.keys()) {
-    await ensureDocumentTypeSymlink(repoRoot, documentType, storageKey);
-  }
-}
-
-/**
- * Called after all pages have been parsed.
+ * Called after all rows have been parsed.
  * Writes the vaski-data/index.json metadata index.
  */
 export async function onParsingComplete(): Promise<void> {
@@ -307,13 +208,6 @@ export async function onParsingComplete(): Promise<void> {
   const repoRoot = findRepoRoot();
   const vaskiDir = join(repoRoot, "vaski-data");
   await mkdir(vaskiDir, { recursive: true });
-
-  for (const [documentType, info] of Object.entries(index)) {
-    const storageKeys = Object.keys(info.pages);
-    for (const storageKey of storageKeys) {
-      await ensureDocumentTypeSymlink(repoRoot, documentType, storageKey);
-    }
-  }
 
   const indexPath = join(vaskiDir, "index.json");
   await writeFile(indexPath, JSON.stringify(index, null, 2));
