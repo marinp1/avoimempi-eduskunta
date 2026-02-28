@@ -29,6 +29,8 @@ export interface PipelineConfig {
   retryVisibilityTimeoutSeconds: number;
   idleDelayMs: number;
   changeLogDbPath: string;
+  /** Max API pages per scraper invocation. Undefined = unlimited (local default). */
+  scraperMaxPagesPerInvocation: number | undefined;
   sqs: SqsConfig;
 }
 
@@ -100,6 +102,10 @@ export function getPipelineConfig(): PipelineConfig {
       1,
     ),
     idleDelayMs: readPositiveInt("PIPELINE_QUEUE_IDLE_DELAY_MS", 300, 1),
+    scraperMaxPagesPerInvocation: process.env
+      .PIPELINE_SCRAPER_MAX_PAGES_PER_INVOCATION
+      ? readPositiveInt("PIPELINE_SCRAPER_MAX_PAGES_PER_INVOCATION", 200, 1)
+      : undefined,
     changeLogDbPath,
     sqs: {
       endpoint:

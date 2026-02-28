@@ -230,6 +230,7 @@ async function runWorker(kind: WorkerKind, pollOnce: boolean): Promise<void> {
         broker,
         queueNames: config.queueNames,
         changeLog,
+        maxPagesPerInvocation: config.scraperMaxPagesPerInvocation,
       });
 
       await runWorkerLoop({

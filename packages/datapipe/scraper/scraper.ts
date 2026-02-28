@@ -136,6 +136,12 @@ export function normalizeScrapeMode(mode: unknown): ScrapeMode {
 export interface ScrapeOptions {
   tableName: string;
   mode?: ScrapeMode;
+  /**
+   * Stop after this many API pages and signal the caller to re-enqueue the
+   * remainder. Useful for cloud functions with a hard execution time limit.
+   * Unlimited by default.
+   */
+  maxPagesPerInvocation?: number;
   onProgress?: (progress: {
     page: number;
     rowCount: number;
@@ -155,6 +161,13 @@ export interface ScrapeResult {
   pkStartValue: number | null;
   /** Last PK actually written to the store in this run. Null if nothing was written. */
   pkEndValue: number | null;
+  /**
+   * True when maxPagesPerInvocation was reached before the pass completed.
+   * The caller should re-enqueue a continuation task starting from continuationPk.
+   */
+  truncated: boolean;
+  /** Next PK to start from in the continuation task. Only set when truncated=true. */
+  continuationPk: number | null;
 }
 
 /**
@@ -198,7 +211,11 @@ export async function scrapeTable(options: ScrapeOptions): Promise<ScrapeResult>
     totalRowsStored: number;
     firstPkWritten: number | null;
     lastPkWritten: number | null;
+    truncated: boolean;
+    continuationPk: number | null;
   };
+
+  const maxPages = options.maxPagesPerInvocation;
 
   const runScrapePass = async (
     passOptions: ScrapePassOptions,
@@ -290,6 +307,34 @@ export async function scrapeTable(options: ScrapeOptions): Promise<ScrapeResult>
       totalRowsScraped = await rawStore.count(tableName);
       pagesScraped++;
 
+      // Page cap: stop and signal continuation if there is more data to fetch.
+      if (maxPages !== undefined && pagesScraped >= maxPages && content.hasMore) {
+        let continuationPk: number | null = null;
+        if (content.pkLastValue !== null) {
+          continuationPk = content.pkLastValue + 1;
+        } else {
+          const lastRow = content.rowData[content.rowData.length - 1];
+          if (lastRow?.[indexOfPrimaryKey] !== undefined) {
+            const v = lastRow[indexOfPrimaryKey];
+            continuationPk = (typeof v === "string" ? parseInt(v, 10) : v) + 1;
+          }
+        }
+        if (continuationPk !== null) {
+          console.log(
+            `⏱️  Page cap reached (${pagesScraped}/${maxPages}), continuation from PK ${continuationPk}`,
+          );
+          return {
+            rowsWritten,
+            pagesScraped,
+            totalRowsStored: totalRowsScraped,
+            firstPkWritten,
+            lastPkWritten,
+            truncated: true,
+            continuationPk,
+          };
+        }
+      }
+
       const percentComplete =
         pkEndValue !== null && rangeStartValue !== null
           ? (() => {
@@ -376,6 +421,8 @@ export async function scrapeTable(options: ScrapeOptions): Promise<ScrapeResult>
       totalRowsStored: totalRowsScraped,
       firstPkWritten,
       lastPkWritten,
+      truncated: false,
+      continuationPk: null,
     };
   };
 
@@ -473,6 +520,20 @@ export async function scrapeTable(options: ScrapeOptions): Promise<ScrapeResult>
   let aggregatedFirstPk = firstPassResult.firstPkWritten;
   let aggregatedLastPk = firstPassResult.lastPkWritten;
 
+  // If the page cap was hit, skip gap repair — the forward pass isn't done yet.
+  // The handler will re-enqueue a continuation task.
+  if (firstPassResult.truncated) {
+    return {
+      rowsScraped: rowsScrapedThisRun,
+      pagesScraped: pagesScrapedThisRun,
+      totalRowsStored: totalRowsScraped,
+      pkStartValue: aggregatedFirstPk,
+      pkEndValue: aggregatedLastPk,
+      truncated: true,
+      continuationPk: firstPassResult.continuationPk,
+    };
+  }
+
   const shouldAutoRepairGaps =
     mode.type === "auto-resume" ||
     (mode.type === "start-from-pk" && mode.pkStartValue === 0);
@@ -544,6 +605,8 @@ export async function scrapeTable(options: ScrapeOptions): Promise<ScrapeResult>
     totalRowsStored: totalRowsScraped,
     pkStartValue: aggregatedFirstPk,
     pkEndValue: aggregatedLastPk,
+    truncated: false,
+    continuationPk: null,
   };
 }
 
