@@ -116,7 +116,7 @@ Commands:
   help                  Show this help message
 
 Flags:
-  --force               Re-parse pages that are already parsed
+  --force               Re-parse rows that are already parsed
   --all                 Parse all tables (alternative to 'all' command)
 
 Examples:
@@ -126,10 +126,10 @@ Examples:
   bun cli.ts status
 
 How it works:
-  - Reads raw data from storage (created by scraper)
+  - Reads raw data from raw.db (created by scraper)
   - Applies custom parser function if available (fn/<TableName>.ts)
   - Falls back to default parser if no custom parser exists
-  - Writes parsed data to storage in 'parsed' stage
+  - Writes parsed rows to parsed.db
 
 Custom Parsers:
   Create fn/<TableName>.ts with a default export:
@@ -140,12 +140,12 @@ Custom Parsers:
   };
 
 Environment Variables:
-  STORAGE_PROVIDER      Storage backend (local, s3, r2, minio) [default: local]
-  STORAGE_LOCAL_DIR     Local storage directory [default: ./data]
+  ROW_STORE_DIR         Row-store directory (contains raw.db, parsed.db)
+  STORAGE_LOCAL_DIR     Fallback directory if ROW_STORE_DIR is not set
 
 Notes:
-  - Parser reads from 'raw' stage and writes to 'parsed' stage
-  - Each page is processed independently
+  - Parser reads from raw.db and writes to parsed.db
+  - Processing is row-based with hash-skip for unchanged rows
   - Custom parsers allow for data transformation and cleanup
   - Default parser passes data through unchanged
 

@@ -49,7 +49,8 @@ async function getTableColumns(tableName: string) {
 export type ScrapeMode =
   | { type: "auto-resume" }
   | { type: "start-from-pk"; pkStartValue: number }
-  | { type: "patch-from-pk"; pkStartValue: number };
+  | { type: "patch-from-pk"; pkStartValue: number }
+  | { type: "range"; pkStartValue: number; pkEndValue: number };
 
 function parseNonNegativeInteger(value: unknown): number | null {
   if (typeof value === "number" && Number.isInteger(value) && value >= 0) {
@@ -89,6 +90,31 @@ export function normalizeScrapeMode(mode: unknown): ScrapeMode {
       );
       if (pkStartValue !== null) {
         return { type: "patch-from-pk", pkStartValue };
+      }
+    }
+
+    if (modeType === "range") {
+      const pkStartValue = parseNonNegativeInteger(
+        (mode as { pkStartValue?: unknown }).pkStartValue,
+      );
+      const pkEndValue = parseNonNegativeInteger(
+        (mode as { pkEndValue?: unknown }).pkEndValue,
+      );
+      if (
+        pkStartValue !== null &&
+        pkEndValue !== null &&
+        pkEndValue >= pkStartValue
+      ) {
+        return { type: "range", pkStartValue, pkEndValue };
+      }
+    }
+
+    if (modeType === "single-pk") {
+      const pkValue = parseNonNegativeInteger(
+        (mode as { pkValue?: unknown }).pkValue,
+      );
+      if (pkValue !== null) {
+        return { type: "range", pkStartValue: pkValue, pkEndValue: pkValue };
       }
     }
 
@@ -136,10 +162,12 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
   console.log(`📋 Total rows in API: ${totalRows.toLocaleString()}`);
 
   let pkStartValue: number;
+  let rangeStartValue: number | null = null;
+  let pkEndValue: number | null = null;
   let patchMode = false;
   let patchFollowUpDone = false;
   let internalPageCounter = 1;
-  let totalRowsScraped = 0;
+  let totalRowsScraped = await rawStore.count(tableName);
 
   const formatPercent = (value: number): string => {
     if (value >= 100) return "100.0";
@@ -186,6 +214,15 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
         `🩹 Patch mode from PK: ${pkStartValue} (scrapes patch page + 1 follow-up page)`,
       );
       break;
+
+    case "range":
+      pkStartValue = mode.pkStartValue;
+      rangeStartValue = mode.pkStartValue;
+      pkEndValue = mode.pkEndValue;
+      console.log(
+        `🎯 Range mode: scraping PK ${pkStartValue}..${pkEndValue} (inclusive)`,
+      );
+      break;
   }
 
   console.log();
@@ -194,7 +231,6 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/batch`,
   );
   baseUrl.searchParams.set("pkName", primaryColumn);
-  baseUrl.searchParams.set("perPage", "100");
 
   let loopCount = 0;
   let rowsScrapedThisRun = 0;
@@ -206,6 +242,11 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
       throw new Error("Sanity check error: MAX_LOOP_LIMIT reached");
     }
 
+    const perPage =
+      pkEndValue === null
+        ? 100
+        : Math.max(1, Math.min(100, pkEndValue - pkStartValue + 1));
+    baseUrl.searchParams.set("perPage", String(perPage));
     baseUrl.searchParams.set("pkStartValue", String(pkStartValue));
 
     console.log(`📡 Fetching batch from PK ${pkStartValue}...`);
@@ -222,11 +263,17 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     const content = (await response.json()) as EduskuntaApiResponse;
 
     if (content.rowCount === 0) {
+      totalRowsScraped = await rawStore.count(tableName);
       console.log("✅ No more data to scrape");
       break;
     }
 
     const indexOfPrimaryKey = content.columnNames.indexOf(primaryColumn);
+    const firstRowPkRaw = content.rowData[0][indexOfPrimaryKey];
+    const firstPk =
+      typeof firstRowPkRaw === "string"
+        ? parseInt(firstRowPkRaw, 10)
+        : (firstRowPkRaw as number);
     const lastRowPkRaw =
       content.rowData[content.rowData.length - 1][indexOfPrimaryKey];
     const lastPk =
@@ -236,45 +283,56 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
           ? parseInt(lastRowPkRaw, 10)
           : (lastRowPkRaw as number);
 
-    // Build rows for upsert
-    const batchRows = content.rowData.map((rowData) => {
+    // Build rows for upsert (respect optional PK range end bound)
+    const batchRows = content.rowData.flatMap((rowData) => {
       const pkRaw = rowData[indexOfPrimaryKey];
       const pk =
         typeof pkRaw === "string" ? parseInt(pkRaw, 10) : (pkRaw as number);
-      return { pk, data: JSON.stringify(rowData) };
+      if (pkEndValue !== null && pk > pkEndValue) {
+        return [];
+      }
+      return [{ pk, data: JSON.stringify(rowData) }];
     });
 
-    await rawStore.upsertBatch(
-      tableName,
-      primaryColumn,
-      content.columnNames,
-      batchRows,
-    );
+    if (batchRows.length > 0) {
+      await rawStore.upsertBatch(
+        tableName,
+        primaryColumn,
+        content.columnNames,
+        batchRows,
+      );
+      rowsScrapedThisRun += batchRows.length;
+    }
 
-    totalRowsScraped += content.rowCount;
-    rowsScrapedThisRun += content.rowCount;
+    totalRowsScraped = await rawStore.count(tableName);
     pagesScrapedThisRun++;
 
-    const adjustedTotal = Math.max(totalRows, totalRowsScraped);
     const percentComplete =
-      adjustedTotal > 0
-        ? Math.min((totalRowsScraped / adjustedTotal) * 100, 100)
-        : 0;
-
-    const firstPkRaw = content.rowData[0][indexOfPrimaryKey];
-    const firstPk =
-      typeof firstPkRaw === "string"
-        ? parseInt(firstPkRaw, 10)
-        : (firstPkRaw as number);
+      pkEndValue !== null && rangeStartValue !== null
+        ? (() => {
+            const rangeTotal = pkEndValue - rangeStartValue + 1;
+            const coveredEnd = Math.min(lastPk, pkEndValue);
+            const covered =
+              coveredEnd >= rangeStartValue
+                ? coveredEnd - rangeStartValue + 1
+                : 0;
+            return Math.min((covered / rangeTotal) * 100, 100);
+          })()
+        : (() => {
+            const adjustedTotal = Math.max(totalRows, totalRowsScraped);
+            return adjustedTotal > 0
+              ? Math.min((totalRowsScraped / adjustedTotal) * 100, 100)
+              : 0;
+          })();
 
     console.log(
-      `✅ Upserted ${content.rowCount} rows (PK ${firstPk}–${lastPk}) - ${formatPercent(percentComplete)}% complete`,
+      `✅ Upserted ${batchRows.length} rows (PK ${firstPk}–${lastPk}) - ${formatPercent(percentComplete)}% complete`,
     );
 
     if (onProgress) {
       onProgress({
         page: internalPageCounter,
-        rowCount: content.rowCount,
+        rowCount: batchRows.length,
         totalRows: totalRowsScraped,
         percentComplete,
       });
@@ -286,6 +344,20 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
         break;
       }
       patchFollowUpDone = true;
+    }
+
+    if (pkEndValue !== null) {
+      if (firstPk > pkEndValue) {
+        console.log(
+          `✅ Range complete (no rows at or below PK ${pkEndValue} in this batch)`,
+        );
+        break;
+      }
+
+      if (lastPk >= pkEndValue) {
+        console.log(`✅ Range complete at PK ${pkEndValue}`);
+        break;
+      }
     }
 
     if (!content.hasMore) {
@@ -324,7 +396,10 @@ export async function scrapeTable(options: ScrapeOptions): Promise<void> {
     `📊 Total rows currently stored: ${totalRowsScraped.toLocaleString()}`,
   );
 
-  if (totalRows > 0 && totalRowsScraped !== totalRows) {
+  const shouldWarnOnCountDrift =
+    mode.type === "auto-resume" ||
+    (mode.type === "start-from-pk" && mode.pkStartValue === 0);
+  if (shouldWarnOnCountDrift && totalRows > 0 && totalRowsScraped !== totalRows) {
     const diff = totalRows - totalRowsScraped;
     const relation = diff > 0 ? "less" : "more";
     console.warn(
