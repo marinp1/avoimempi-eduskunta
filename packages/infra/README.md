@@ -34,10 +34,17 @@ bun --env-file=.env.sync-storage-s3 run sync:storage:s3 --dry-run
 bun --env-file=.env.sync-storage-s3 run sync:storage:s3
 ```
 
-Defaults to uploading `data/raw` and `data/parsed`. Use `--all` to include `metadata` and `artifacts`:
+Defaults to uploading `data/raw` and `data/parsed`, and row-store DB backups (`raw.db`, `parsed.db`) to `artifacts/row-store/latest/`.
+Use `--all` to include `metadata` and `artifacts`:
 
 ```bash
 bun --env-file=.env.sync-storage-s3 run sync:storage:s3 --all
+```
+
+Optional: also write timestamped row-store DB snapshots:
+
+```bash
+bun --env-file=.env.sync-storage-s3 run sync:storage:s3 --snapshot-row-store-dbs
 ```
 
 ## Local requirements for sync script

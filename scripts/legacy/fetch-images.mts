@@ -1,7 +1,7 @@
 import { Database } from "bun:sqlite";
 import fs from "node:fs";
 import path from "node:path";
-import { getDatabasePath } from "../packages/shared/database";
+import { getDatabasePath } from "../../packages/shared/database";
 
 const hrefs = [
   "https://www.eduskunta.fi/FI/kansanedustajat/Edustajakuvat1907/Aalto_Touko_web_7152.jpg",
