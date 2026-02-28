@@ -14,6 +14,8 @@ interface Options {
   prefixes: PipelinePrefix[];
   includeDelete: boolean;
   dryRun: boolean;
+  includeRowStoreDbs: boolean;
+  snapshotRowStoreDbs: boolean;
 }
 
 interface AuthResolution {
@@ -32,6 +34,10 @@ Options:
   --prefixes=...   Comma separated prefixes (default: raw,parsed)
   --delete         Delete remote objects not present locally
   --dry-run        Show what would change without uploading
+  --no-row-store-dbs
+                   Skip uploading row-store databases (raw.db, parsed.db)
+  --snapshot-row-store-dbs
+                   Also upload timestamped row-store DB snapshots
   --help           Show this help
 
 Environment:
@@ -42,6 +48,7 @@ Environment:
   STORAGE_S3_SECRET_ACCESS_KEY   Optional (explicit credentials)
   SCW_PROFILE                    Optional (resolve creds from scaleway profile via scw CLI)
   STORAGE_LOCAL_DIR              Optional (default: ./data at repo root)
+  ROW_STORE_DIR                  Optional (default: STORAGE_LOCAL_DIR)
 `);
 }
 
@@ -72,6 +79,8 @@ function parseOptions(argv: string[]): Options {
     prefixes: ["raw", "parsed"],
     includeDelete: false,
     dryRun: false,
+    includeRowStoreDbs: true,
+    snapshotRowStoreDbs: false,
   };
 
   for (const arg of argv) {
@@ -85,6 +94,14 @@ function parseOptions(argv: string[]): Options {
     }
     if (arg === "--dry-run") {
       options.dryRun = true;
+      continue;
+    }
+    if (arg === "--no-row-store-dbs") {
+      options.includeRowStoreDbs = false;
+      continue;
+    }
+    if (arg === "--snapshot-row-store-dbs") {
+      options.snapshotRowStoreDbs = true;
       continue;
     }
     if (arg === "--help" || arg === "-h") {
@@ -222,12 +239,41 @@ async function ensureAwsCliAvailable(
   }
 }
 
+async function uploadFileToStorage(params: {
+  sourcePath: string;
+  targetUri: string;
+  endpoint: string;
+  region: string;
+  dryRun: boolean;
+  env: Record<string, string>;
+}): Promise<void> {
+  const args = [
+    "s3",
+    "cp",
+    params.sourcePath,
+    params.targetUri,
+    "--endpoint-url",
+    params.endpoint,
+    "--region",
+    params.region,
+    "--no-progress",
+    "--only-show-errors",
+  ];
+
+  if (params.dryRun) {
+    args.push("--dryrun");
+  }
+
+  await runCommand(["aws", ...args], params.env);
+}
+
 async function main() {
   const options = parseOptions(process.argv.slice(2));
   const repoRoot = path.resolve(import.meta.dirname, "..");
   const localBaseDir = path.resolve(
     process.env.STORAGE_LOCAL_DIR || path.join(repoRoot, "data"),
   );
+  const rowStoreDir = path.resolve(process.env.ROW_STORE_DIR || localBaseDir);
 
   const bucket = process.env.STORAGE_S3_BUCKET;
   if (!bucket) {
@@ -257,6 +303,9 @@ async function main() {
 
   console.log(`Sync start: ${localBaseDir} -> s3://${bucket}`);
   console.log(`Prefixes: ${options.prefixes.join(", ")}`);
+  console.log(
+    `Row-store DB backup: ${options.includeRowStoreDbs ? "enabled" : "disabled"} (${rowStoreDir})`,
+  );
   console.log(`Auth: ${auth.source}`);
   if (options.includeDelete) {
     console.log("Mode: --delete enabled");
@@ -296,6 +345,58 @@ async function main() {
 
     console.log(`\nSyncing ${prefix}/ ...`);
     await runCommand(["aws", ...args], env);
+  }
+
+  if (options.includeRowStoreDbs) {
+    const rowStoreFiles = [
+      {
+        fileName: "raw.db",
+        sourcePath: path.join(rowStoreDir, "raw.db"),
+      },
+      {
+        fileName: "parsed.db",
+        sourcePath: path.join(rowStoreDir, "parsed.db"),
+      },
+    ];
+
+    const snapshotKeyPrefix = options.snapshotRowStoreDbs
+      ? `artifacts/row-store/snapshots/${new Date()
+          .toISOString()
+          .replace(/[:.]/g, "-")}`
+      : null;
+
+    for (const file of rowStoreFiles) {
+      if (!fs.existsSync(file.sourcePath)) {
+        console.log(`Skip row-store DB: missing ${file.sourcePath}`);
+        continue;
+      }
+
+      const latestTargetUri = `s3://${bucket}/artifacts/row-store/latest/${file.fileName}`;
+      console.log(`\nUploading row-store DB ${file.fileName} -> latest/ ...`);
+      await uploadFileToStorage({
+        sourcePath: file.sourcePath,
+        targetUri: latestTargetUri,
+        endpoint,
+        region,
+        dryRun: options.dryRun,
+        env,
+      });
+
+      if (snapshotKeyPrefix) {
+        const snapshotTargetUri = `s3://${bucket}/${snapshotKeyPrefix}/${file.fileName}`;
+        console.log(
+          `Uploading row-store DB ${file.fileName} -> snapshots/ ...`,
+        );
+        await uploadFileToStorage({
+          sourcePath: file.sourcePath,
+          targetUri: snapshotTargetUri,
+          endpoint,
+          region,
+          dryRun: options.dryRun,
+          env,
+        });
+      }
+    }
   }
 
   console.log("\nSync completed.");

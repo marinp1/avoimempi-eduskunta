@@ -355,7 +355,26 @@ async function main() {
   );
   const rowStore = args.stage === "raw" ? getRawRowStore() : getParsedRowStore();
   const schemas = await rowStore.listColumnSchemas(args.table);
-  const detectedPkName: string | null = schemas[0]?.pkName ?? args.pkName ?? null;
+  const detectedPkName: string | null = schemas[0]?.pkName ?? null;
+  let pkNameResolutionWarning: string | null = null;
+
+  let localPkName: string | null = args.pkName ?? detectedPkName;
+  if (!localPkName) {
+    try {
+      localPkName = await resolvePkNameFromApi(args.table, undefined, args.timeoutMs);
+    } catch (error) {
+      if (args.verifyApi && args.verifyLimit > 0) {
+        throw new Error(
+          `Failed to resolve PK name from API for verification. Provide --pk-name explicitly. Original error: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        );
+      }
+      localPkName = "Id";
+      pkNameResolutionWarning =
+        "PK name could not be resolved from local schema/API; falling back to 'Id'.";
+    }
+  }
 
   console.log(`Reading ${args.stage}/${args.table} from row store...`);
   const uniqueIds = new Set<number>();
@@ -376,7 +395,6 @@ async function main() {
   const maxId = sortedIds.length > 0 ? sortedIds[sortedIds.length - 1] : null;
   const missingRanges = collectMissingRanges(sortedIds);
   const missingTotal = missingRanges.reduce((sum, r) => sum + r.count, 0);
-  const localPkName = args.pkName ?? detectedPkName ?? "Id";
 
   const { apiTableRowCount, tablesInCountsEndpoint, apiCountsError } =
     await apiCountsPromise;
@@ -390,11 +408,7 @@ async function main() {
   let rangeVerifications: RangeVerification[] = [];
 
   if (rangesToVerify.length > 0) {
-    apiPkName = await resolvePkNameFromApi(
-      args.table,
-      localPkName,
-      args.timeoutMs,
-    );
+    apiPkName = await resolvePkNameFromApi(args.table, localPkName, args.timeoutMs);
     console.log(
       `Verifying ${rangesToVerify.length.toLocaleString()} missing ranges against API...`,
     );
@@ -422,6 +436,7 @@ async function main() {
     table: args.table,
     stage: args.stage,
     pkName: localPkName,
+    pkNameResolutionWarning,
     apiPkName,
     rowsScanned: rowCount,
     uniqueIds: uniqueIds.size,
@@ -502,6 +517,9 @@ async function main() {
   console.log(
     `Gap IDs total:      ${result.missingIdsTotal.toLocaleString()} (compare vs deltas above)`,
   );
+  if (result.pkNameResolutionWarning) {
+    console.log(`PK name warning:    ${result.pkNameResolutionWarning}`);
+  }
 
   if (args.verifyApi) {
     console.log("");
