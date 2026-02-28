@@ -4,18 +4,94 @@ import { parseTable, parseTables } from "./parser";
 
 async function main() {
   const args = process.argv.slice(2);
-  const flags = new Set(args.filter((arg) => arg.startsWith("--")));
-  const positionalArgs = args.filter((arg) => !arg.startsWith("--"));
-
-  const force = flags.has("--force");
-  const runAll = flags.has("--all");
-  const requestedHelp = positionalArgs.some((arg) =>
+  const requestedHelp = args.some((arg) =>
     ["help", "--help", "-h"].includes(arg),
   );
 
   if (args.length === 0 || requestedHelp) {
     printHelp();
     process.exit(0);
+  }
+
+  const parsePk = (value: string | null, flagName: string): number => {
+    const pk = Number.parseInt(value ?? "", 10);
+    if (!Number.isFinite(pk) || pk < 0) {
+      console.error(`❌ Error: ${flagName} value must be a non-negative integer`);
+      process.exit(1);
+    }
+    return Math.floor(pk);
+  };
+
+  const readFlagValue = (
+    rawArg: string,
+    argIndex: number,
+  ): { value: string | null; consumedNext: boolean } => {
+    const eqIndex = rawArg.indexOf("=");
+    if (eqIndex !== -1) {
+      return { value: rawArg.slice(eqIndex + 1), consumedNext: false };
+    }
+    return { value: args[argIndex + 1] ?? null, consumedNext: true };
+  };
+
+  let force = false;
+  let runAll = false;
+  let pkStartValue: number | undefined;
+  let pkEndValue: number | undefined;
+  const positionalArgs: string[] = [];
+
+  for (let i = 0; i < args.length; i++) {
+    const rawArg = args[i];
+    const flag = rawArg.split("=")[0];
+
+    if (flag === "--force") {
+      force = true;
+      continue;
+    }
+
+    if (flag === "--all") {
+      runAll = true;
+      continue;
+    }
+
+    if (flag === "--pk-start" || flag === "--pk-end") {
+      const { value, consumedNext } = readFlagValue(rawArg, i);
+      if (consumedNext) i++;
+
+      if (flag === "--pk-start") {
+        pkStartValue = parsePk(value, flag);
+      } else {
+        pkEndValue = parsePk(value, flag);
+      }
+      continue;
+    }
+
+    if (rawArg.startsWith("-")) {
+      console.error(`❌ Error: Unknown flag: ${rawArg}`);
+      printHelp();
+      process.exit(1);
+    }
+
+    positionalArgs.push(rawArg);
+  }
+
+  if (positionalArgs.length > 1) {
+    console.error(`❌ Error: Unexpected argument '${positionalArgs[1]}'`);
+    printHelp();
+    process.exit(1);
+  }
+
+  if (pkEndValue !== undefined && pkStartValue === undefined) {
+    console.error("❌ Error: --pk-end requires --pk-start");
+    process.exit(1);
+  }
+
+  if (
+    pkStartValue !== undefined &&
+    pkEndValue !== undefined &&
+    pkEndValue < pkStartValue
+  ) {
+    console.error("❌ Error: --pk-end must be greater than or equal to --pk-start");
+    process.exit(1);
   }
 
   const tableName = positionalArgs[0];
@@ -26,7 +102,7 @@ async function main() {
 
   if (tableName === "all" || runAll) {
     const tablesToParse = TableNames.map((name) => name);
-    await parseTables(tablesToParse, { force });
+    await parseTables(tablesToParse, { force, pkStartValue, pkEndValue });
     return;
   }
 
@@ -39,6 +115,8 @@ async function main() {
   await parseTable({
     tableName,
     force,
+    pkStartValue,
+    pkEndValue,
     onProgress: (_progress) => {
       // Progress is already logged in parseTable
     },
@@ -118,9 +196,13 @@ Commands:
 Flags:
   --force               Re-parse rows that are already parsed
   --all                 Parse all tables (alternative to 'all' command)
+  --pk-start <pk>       Parse only rows with PK >= <pk>
+  --pk-end <pk>         Parse only rows with PK <= <pk> (requires --pk-start)
 
 Examples:
   bun cli.ts MemberOfParliament
+  bun cli.ts MemberOfParliament --pk-start 82310 --pk-end 82310
+  bun cli.ts MemberOfParliament --pk-start 82000 --pk-end 83000
   bun cli.ts all
   bun cli.ts all --force
   bun cli.ts status

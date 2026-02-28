@@ -86,6 +86,8 @@ function rowArrayToObject(columnNames: string[], rowData: any[]): ParsedRow {
 export interface ParseOptions {
   tableName: string;
   force?: boolean;
+  pkStartValue?: number;
+  pkEndValue?: number;
   onProgress?: (progress: {
     page: number;
     rowsParsed: number;
@@ -98,7 +100,36 @@ export interface ParseOptions {
  * Parse a table from raw.db to parsed.db with hash-based skip.
  */
 export async function parseTable(options: ParseOptions): Promise<void> {
-  const { tableName, force = false, onProgress } = options;
+  const {
+    tableName,
+    force = false,
+    pkStartValue,
+    pkEndValue,
+    onProgress,
+  } = options;
+
+  if (
+    pkStartValue !== undefined &&
+    (!Number.isInteger(pkStartValue) || pkStartValue < 0)
+  ) {
+    throw new Error("pkStartValue must be a non-negative integer");
+  }
+  if (
+    pkEndValue !== undefined &&
+    (!Number.isInteger(pkEndValue) || pkEndValue < 0)
+  ) {
+    throw new Error("pkEndValue must be a non-negative integer");
+  }
+  if (pkEndValue !== undefined && pkStartValue === undefined) {
+    throw new Error("pkEndValue requires pkStartValue");
+  }
+  if (
+    pkStartValue !== undefined &&
+    pkEndValue !== undefined &&
+    pkEndValue < pkStartValue
+  ) {
+    throw new Error("pkEndValue must be greater than or equal to pkStartValue");
+  }
 
   const rawStore = getRawRowStore();
   const parsedStore = getParsedRowStore();
@@ -120,6 +151,11 @@ export async function parseTable(options: ParseOptions): Promise<void> {
   }
 
   console.log(`📋 Total raw rows: ${totalRawRows.toLocaleString()}`);
+  if (pkStartValue !== undefined && pkEndValue !== undefined) {
+    console.log(`🎯 PK range: [${pkStartValue}, ${pkEndValue}]`);
+  } else if (pkStartValue !== undefined) {
+    console.log(`🎯 PK range: [${pkStartValue}, ∞)`);
+  }
 
   // Schema cache to avoid per-row DB lookups
   const schemaCache = new Map<string, ColumnSchema>();
@@ -134,6 +170,10 @@ export async function parseTable(options: ParseOptions): Promise<void> {
   let rowsProcessed = 0;
   let rowsSkipped = 0;
   let rowsParsed = 0;
+  const progressTotalRows =
+    pkStartValue !== undefined && pkEndValue !== undefined
+      ? Math.max(pkEndValue - pkStartValue + 1, 1)
+      : Math.max(totalRawRows, 1);
 
   // Write buffer: accumulate rows and flush in batches
   const WRITE_BATCH = 500;
@@ -157,6 +197,13 @@ export async function parseTable(options: ParseOptions): Promise<void> {
   }
 
   for await (const rawRow of rawStore.list(tableName)) {
+    if (pkStartValue !== undefined && rawRow.pk < pkStartValue) {
+      continue;
+    }
+    if (pkEndValue !== undefined && rawRow.pk > pkEndValue) {
+      break;
+    }
+
     rowsProcessed++;
 
     // Hash-based skip: if parsed row exists with same hash, skip re-parsing
@@ -166,9 +213,12 @@ export async function parseTable(options: ParseOptions): Promise<void> {
         rowsSkipped++;
 
         if (rowsProcessed % 1000 === 0) {
-          const percentComplete = (rowsProcessed / totalRawRows) * 100;
+          const percentComplete = Math.min(
+            (rowsProcessed / progressTotalRows) * 100,
+            100,
+          );
           console.log(
-            `📊 Progress: ${rowsProcessed.toLocaleString()} / ${totalRawRows.toLocaleString()} rows (${percentComplete.toFixed(1)}%) - ${rowsSkipped.toLocaleString()} skipped`,
+            `📊 Progress: ${rowsProcessed.toLocaleString()} rows (${percentComplete.toFixed(1)}%) - ${rowsSkipped.toLocaleString()} skipped`,
           );
         }
         continue;
@@ -214,16 +264,19 @@ export async function parseTable(options: ParseOptions): Promise<void> {
     }
 
     if (rowsProcessed % 1000 === 0) {
-      const percentComplete = (rowsProcessed / totalRawRows) * 100;
+      const percentComplete = Math.min(
+        (rowsProcessed / progressTotalRows) * 100,
+        100,
+      );
       console.log(
-        `📊 Progress: ${rowsProcessed.toLocaleString()} / ${totalRawRows.toLocaleString()} rows (${percentComplete.toFixed(1)}%) - ${rowsParsed.toLocaleString()} parsed, ${rowsSkipped.toLocaleString()} skipped`,
+        `📊 Progress: ${rowsProcessed.toLocaleString()} rows (${percentComplete.toFixed(1)}%) - ${rowsParsed.toLocaleString()} parsed, ${rowsSkipped.toLocaleString()} skipped`,
       );
 
       if (onProgress) {
         onProgress({
           page: rowsProcessed,
           rowsParsed,
-          totalPages: totalRawRows,
+          totalPages: progressTotalRows,
           percentComplete,
         });
       }
@@ -245,7 +298,7 @@ export async function parseTable(options: ParseOptions): Promise<void> {
     onProgress({
       page: rowsProcessed,
       rowsParsed,
-      totalPages: totalRawRows,
+      totalPages: progressTotalRows,
       percentComplete: 100,
     });
   }
