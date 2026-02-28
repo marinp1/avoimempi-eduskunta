@@ -2,12 +2,29 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-APP_DIR="${APP_DIR:-${SCRIPT_DIR}}"
+APP_DIR="${APP_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 PID_FILE="${PID_FILE:-app.pid}"
 LOG_FILE="${LOG_FILE:-app.log}"
 NODE_ENV="${NODE_ENV:-production}"
 DIST_DIR="${APP_DIR}/dist"
 INDEX_FILE="${DIST_DIR}/index.js"
+LOCK_FILE="${MIGRATION_LOCK_FILE:-${APP_DIR}/data/migration.lock}"
+ACTION="${1:-start}"
+
+run_rebuild() {
+  MIGRATION_LOCK_FILE="${LOCK_FILE}" APP_DIR="${APP_DIR}" LOG_FILE="${LOG_FILE}" \
+    "${SCRIPT_DIR}/rebuild-db.sh"
+}
+
+if [[ "${ACTION}" == "rebuild-db" ]]; then
+  run_rebuild
+  exit 0
+fi
+
+if [[ "${ACTION}" != "start" ]]; then
+  echo "Usage: $0 [start|rebuild-db]" >&2
+  exit 1
+fi
 
 echo "Starting app from '${DIST_DIR}'..."
 
@@ -37,7 +54,7 @@ fi
 
 (
   cd "${DIST_DIR}"
-  nohup env NODE_ENV="${NODE_ENV}" "${bun_bin}" run index.js >> "${APP_DIR}/${LOG_FILE}" 2>&1 &
+  nohup env NODE_ENV="${NODE_ENV}" MIGRATION_LOCK_FILE="${LOCK_FILE}" "${bun_bin}" run index.js >> "${APP_DIR}/${LOG_FILE}" 2>&1 &
   echo "$!" > "${APP_DIR}/${PID_FILE}"
 )
 new_pid="$(cat "${APP_DIR}/${PID_FILE}")"

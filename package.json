@@ -34,6 +34,10 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "NODE_ENV=development bun run packages/server/index.ts",
+    "rebuild-db": "./scripts/start.sh rebuild-db",
+    "cron:install": "./scripts/install-cron.sh install",
+    "cron:remove": "./scripts/install-cron.sh remove",
+    "cron:status": "./scripts/install-cron.sh status",
     "scrape": "cd packages/datapipe && bun run scraper/cli.ts",
     "parse": "cd packages/datapipe && bun run parser/cli.ts",
     "pipeline:bootstrap": "cd packages/datapipe && bun run orchestration/cli.ts bootstrap",
