@@ -6,6 +6,89 @@ const [, , type] = process.argv;
 
 const INSTANCE_ALIAS = "scalewaybox";
 const APP_FOLDER = "/root/avoimempi-eduskunta";
+const MIGRATOR_FUNCTION_FOLDER = `${APP_FOLDER}/functions/migrator`;
+
+function resolveMigratorFunctionEnv(): Record<string, string> {
+  const storageProvider = process.env.STORAGE_PROVIDER ?? "local";
+  const storageLocalDir =
+    process.env.STORAGE_LOCAL_DIR ?? "/mnt/pipeline-data/data";
+  const rowStoreProvider = process.env.ROW_STORE_PROVIDER ?? "";
+  const rowStoreDatabaseUrl =
+    process.env.ROW_STORE_DATABASE_URL ??
+    process.env.PIPELINE_ROW_STORE_DATABASE_URL ??
+    "";
+
+  if (rowStoreProvider === "postgres" && rowStoreDatabaseUrl === "") {
+    throw new Error(
+      "Missing ROW_STORE_DATABASE_URL (or PIPELINE_ROW_STORE_DATABASE_URL) for migrator function with ROW_STORE_PROVIDER=postgres",
+    );
+  }
+
+  const env: Record<string, string> = {
+    NODE_ENV: process.env.NODE_ENV ?? "production",
+    STORAGE_PROVIDER: storageProvider,
+    STORAGE_LOCAL_DIR: storageLocalDir,
+  };
+
+  if (rowStoreProvider) {
+    env.ROW_STORE_PROVIDER = rowStoreProvider;
+  }
+
+  if (rowStoreDatabaseUrl !== "") {
+    env.ROW_STORE_DATABASE_URL = rowStoreDatabaseUrl;
+  }
+
+  const optionalEnvNames = [
+    "MIGRATOR_PUBLISH_SNAPSHOT",
+    "MIGRATOR_FOREIGN_KEY_CHECK",
+    "MIGRATOR_FOREIGN_KEY_CHECK_SAMPLE_LIMIT",
+    "MIGRATOR_VACUUM_AFTER_IMPORT",
+    "MIGRATOR_SOURCE_REFERENCE_MODE",
+  ];
+  for (const name of optionalEnvNames) {
+    const value = process.env[name];
+    if (value) env[name] = value;
+  }
+
+  return env;
+}
+
+async function writeEnvFile(
+  targetFilePath: string,
+  values: Record<string, string>,
+) {
+  const lines = Object.entries(values)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}=${JSON.stringify(value)}`);
+  await fs.promises.writeFile(targetFilePath, `${lines.join("\n")}\n`, "utf8");
+}
+
+async function uploadMigratorFunctionEntrypoint() {
+  const outdir = path.join(import.meta.dirname, "../dist/functions/migrator");
+  const entrypoint = path.join(
+    import.meta.dirname,
+    "migrator-function-entrypoint.ts",
+  );
+
+  if (!fs.existsSync(entrypoint)) {
+    throw new Error("migrator function entrypoint script not found");
+  }
+
+  await fs.promises.rm(outdir, { recursive: true, force: true });
+
+  await build({
+    outdir,
+    entrypoints: [entrypoint],
+    target: "bun",
+  });
+
+  const envFilePath = path.join(outdir, ".env");
+  await writeEnvFile(envFilePath, resolveMigratorFunctionEnv());
+
+  console.log("Upload migrator function build to Scaleway");
+  await $`ssh ${INSTANCE_ALIAS} mkdir -p ${MIGRATOR_FUNCTION_FOLDER}`;
+  await $`scp -r ${outdir}/. ${INSTANCE_ALIAS}:${MIGRATOR_FUNCTION_FOLDER}`;
+}
 
 switch (type) {
   case "build": {
@@ -47,6 +130,7 @@ switch (type) {
     console.log("Upload start script to Scaleway");
     await $`scp ${startScript} ${INSTANCE_ALIAS}:${APP_FOLDER}/start.sh`;
     await $`ssh ${INSTANCE_ALIAS} chmod +x ${APP_FOLDER}/start.sh`;
+    await uploadMigratorFunctionEntrypoint();
     break;
   }
   case "database": {
@@ -56,9 +140,13 @@ switch (type) {
     await $`scp ${db} ${INSTANCE_ALIAS}:${APP_FOLDER}`;
     break;
   }
+  case "migrator-function": {
+    await uploadMigratorFunctionEntrypoint();
+    break;
+  }
   default:
     throw new Error(
-      `Unknown deploy type ${type ?? "<none>"}, please use build or database.`,
+      `Unknown deploy type ${type ?? "<none>"}, please use build, database or migrator-function.`,
     );
 }
 

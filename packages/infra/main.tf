@@ -15,10 +15,10 @@ variable "project_id" {
   default     = null
 }
 
-variable "enable_cloud_functions" {
-  description = "When true, provision serverless functions + triggers for inspector/scraper/parser."
-  type        = bool
-  default     = false
+variable "pipeline_region" {
+  description = "Scaleway region used for regional resources."
+  type        = string
+  default     = "nl-ams"
 }
 
 variable "pipeline_function_runtime" {
@@ -60,57 +60,98 @@ variable "pipeline_migrator_handler" {
 variable "pipeline_inspector_zip_file" {
   description = "Zip artifact path for the scheduled inspector-dispatch function."
   type        = string
-  default     = null
-
-  validation {
-    condition     = !var.enable_cloud_functions || var.pipeline_inspector_zip_file != null
-    error_message = "pipeline_inspector_zip_file must be set when enable_cloud_functions=true."
-  }
 }
 
 variable "pipeline_inspector_worker_zip_file" {
   description = "Zip artifact path for the inspector-queue worker function."
   type        = string
-  default     = null
-
-  validation {
-    condition     = !var.enable_cloud_functions || var.pipeline_inspector_worker_zip_file != null
-    error_message = "pipeline_inspector_worker_zip_file must be set when enable_cloud_functions=true."
-  }
 }
 
 variable "pipeline_scraper_zip_file" {
   description = "Zip artifact path for the scraper function."
   type        = string
-  default     = null
-
-  validation {
-    condition     = !var.enable_cloud_functions || var.pipeline_scraper_zip_file != null
-    error_message = "pipeline_scraper_zip_file must be set when enable_cloud_functions=true."
-  }
 }
 
 variable "pipeline_parser_zip_file" {
   description = "Zip artifact path for the parser function."
   type        = string
-  default     = null
-
-  validation {
-    condition     = !var.enable_cloud_functions || var.pipeline_parser_zip_file != null
-    error_message = "pipeline_parser_zip_file must be set when enable_cloud_functions=true."
-  }
 }
 
 variable "pipeline_migrator_zip_file" {
-  description = "Zip artifact path for the optional migrator function."
+  description = "Zip artifact path for the migrator function."
   type        = string
-  default     = null
+}
+
+variable "pipeline_storage_local_dir" {
+  description = "Directory used by the pipeline for local storage on mounted block volume."
+  type        = string
+  default     = "/mnt/pipeline-data/data"
+}
+
+variable "pipeline_block_volume_mount_path" {
+  description = "Expected mount path for the data block volume on the VM."
+  type        = string
+  default     = "/mnt/pipeline-data"
+}
+
+variable "pipeline_block_volume_name" {
+  description = "Logical name for the pipeline block volume."
+  type        = string
+  default     = "avoimempi-eduskunta-data"
+}
+
+variable "pipeline_block_volume_size_gb" {
+  description = "Recommended block volume size in GB for local row-store and artifacts."
+  type        = number
+  default     = 100
+}
+
+variable "pipeline_row_store_name" {
+  description = "Name for the private managed PostgreSQL row-store."
+  type        = string
+  default     = "avoimempi-eduskunta-row-store"
+}
+
+variable "pipeline_row_store_engine" {
+  description = "Managed PostgreSQL engine version."
+  type        = string
+  default     = "PostgreSQL-15"
+}
+
+variable "pipeline_row_store_node_type" {
+  description = "Managed PostgreSQL node type."
+  type        = string
+  default     = "DB-DEV-S"
+}
+
+variable "pipeline_row_store_user_name" {
+  description = "Initial PostgreSQL user name for row-store."
+  type        = string
+  default     = "pipeline"
+}
+
+variable "pipeline_row_store_database_name" {
+  description = "Database name used in ROW_STORE_DATABASE_URL."
+  type        = string
+  default     = "rdb"
+}
+
+variable "pipeline_row_store_port" {
+  description = "PostgreSQL port used in ROW_STORE_DATABASE_URL."
+  type        = number
+  default     = 5432
+}
+
+variable "temporary_seed_cidrs" {
+  description = "Temporary public CIDR allowlist for one-off local seeding (for example [\"203.0.113.10/32\"]). Set to [] to close."
+  type        = list(string)
+  default     = []
 }
 
 locals {
   pipeline_queue_env_template = {
     PIPELINE_SQS_ENDPOINT        = "https://sqs.mnq.nl-ams.scw.cloud"
-    PIPELINE_SQS_REGION          = "nl-ams"
+    PIPELINE_SQS_REGION          = var.pipeline_region
     PIPELINE_QUEUE_INSPECTOR     = scaleway_mnq_sqs_queue.pipeline_inspector.name
     PIPELINE_QUEUE_SCRAPER       = scaleway_mnq_sqs_queue.pipeline_scraper.name
     PIPELINE_QUEUE_PARSER        = scaleway_mnq_sqs_queue.pipeline_parser.name
@@ -119,16 +160,20 @@ locals {
     PIPELINE_QUEUE_IDLE_DELAY_MS = "300"
   }
 
-  pipeline_row_store_env = {
-    ROW_STORE_PROVIDER     = "postgres"
-    ROW_STORE_DATABASE_URL = "postgresql://${scaleway_iam_api_key.pipeline_db.access_key}:${scaleway_iam_api_key.pipeline_db.secret_key}@${scaleway_sdb_sql_database.pipeline_row_store.endpoint}/${scaleway_sdb_sql_database.pipeline_row_store.name}?sslmode=require"
+  pipeline_storage_env = {
+    STORAGE_PROVIDER  = "local"
+    STORAGE_LOCAL_DIR = var.pipeline_storage_local_dir
   }
 
-  pipeline_storage_env = {
-    STORAGE_PROVIDER    = "s3"
-    STORAGE_S3_REGION   = "nl-ams"
-    STORAGE_S3_BUCKET   = scaleway_object_bucket.pipeline.name
-    STORAGE_S3_ENDPOINT = "https://s3.nl-ams.scw.cloud"
+  pipeline_block_storage = {
+    PIPELINE_BLOCK_VOLUME_NAME       = var.pipeline_block_volume_name
+    PIPELINE_BLOCK_VOLUME_SIZE_GB    = tostring(var.pipeline_block_volume_size_gb)
+    PIPELINE_BLOCK_VOLUME_MOUNT_PATH = var.pipeline_block_volume_mount_path
+  }
+
+  pipeline_row_store_env = {
+    ROW_STORE_PROVIDER = "postgres"
+    ROW_STORE_DATABASE_URL = "postgresql://${var.pipeline_row_store_user_name}:${module.pipeline_private_row_store.user_password}@${module.pipeline_private_row_store.instance_ip}:${var.pipeline_row_store_port}/${var.pipeline_row_store_database_name}?sslmode=require"
   }
 
   cloud_worker_env_common = merge(local.pipeline_queue_env_template, {
@@ -140,16 +185,48 @@ locals {
   })
 }
 
-resource "scaleway_object_bucket" "pipeline" {
-  # Keep this hardcoded and simple. Change the name once if already taken.
-  name   = "bkt-avoimempi-eduskunta-pipeline"
-  region = "nl-ams"
+resource "scaleway_vpc" "pipeline" {
+  name       = "vpc-avoimempi-eduskunta"
+  project_id = var.project_id
 }
 
-resource "scaleway_object_bucket_acl" "pipeline_private" {
-  bucket = scaleway_object_bucket.pipeline.name
-  region = "nl-ams"
-  acl    = "private"
+resource "scaleway_vpc_private_network" "pipeline" {
+  name      = "pn-avoimempi-eduskunta"
+  project_id = var.project_id
+  vpc_id    = scaleway_vpc.pipeline.id
+  region    = var.pipeline_region
+}
+
+module "pipeline_private_row_store" {
+  source  = "scaleway-terraform-modules/rdb/scaleway"
+  version = "1.1.0"
+
+  project_id      = var.project_id
+  region          = var.pipeline_region
+  name            = var.pipeline_row_store_name
+  engine          = var.pipeline_row_store_engine
+  node_type       = var.pipeline_row_store_node_type
+  user_name       = var.pipeline_row_store_user_name
+  replica_enabled = false
+
+  private_network = {
+    pn_id       = scaleway_vpc_private_network.pipeline.id
+    enable_ipam = true
+  }
+}
+
+resource "scaleway_rdb_acl" "temporary_seed_access" {
+  count       = length(var.temporary_seed_cidrs) > 0 ? 1 : 0
+  instance_id = module.pipeline_private_row_store.instance_id
+  region      = var.pipeline_region
+
+  dynamic "acl_rules" {
+    for_each = toset(var.temporary_seed_cidrs)
+    content {
+      ip          = acl_rules.value
+      description = "temporary-seed-access"
+    }
+  }
 }
 
 resource "scaleway_mnq_sqs" "pipeline" {
@@ -243,41 +320,6 @@ resource "scaleway_mnq_sqs_queue" "pipeline_scraper" {
   }
 }
 
-# ---------------------------------------------------------------------------
-# Serverless SQL Database — shared row store for scraper and parser workers.
-# Scales to 0 vCPUs when idle; billed per second when active.
-# Estimated cost: ~€2/month at 3 sync cycles/day.
-# ---------------------------------------------------------------------------
-
-resource "scaleway_sdb_sql_database" "pipeline_row_store" {
-  name    = "avoimempi-eduskunta-row-store"
-  min_cpu = 0 # true scale-to-zero
-  max_cpu = 2 # sufficient for 20 parallel function writes
-}
-
-# IAM application that pipeline workers authenticate as when connecting.
-resource "scaleway_iam_application" "pipeline_db" {
-  name = "pipeline-row-store-access"
-}
-
-resource "scaleway_iam_api_key" "pipeline_db" {
-  application_id = scaleway_iam_application.pipeline_db.id
-  description    = "Pipeline row store database credentials"
-}
-
-# Grant read/write access to the Serverless SQL Database.
-# Verify the permission set name in the Scaleway console under IAM > Permission sets
-# if apply fails — Scaleway occasionally renames these.
-resource "scaleway_iam_policy" "pipeline_db" {
-  name           = "policy-pipeline-row-store"
-  application_id = scaleway_iam_application.pipeline_db.id
-
-  rule {
-    project_ids          = [var.project_id]
-    permission_set_names = ["ServerlessSQLDatabaseReadWrite"]
-  }
-}
-
 resource "scaleway_mnq_sqs_queue" "pipeline_parser" {
   project_id                 = scaleway_mnq_sqs.pipeline.project_id
   name                       = "datapipe-parser"
@@ -292,22 +334,22 @@ resource "scaleway_mnq_sqs_queue" "pipeline_parser" {
 }
 
 # ---------------------------------------------------------------------------
-# Optional: serverless functions for inspector (cron), scraper worker, parser
-# worker, and migrator trigger. Disabled by default; enable by setting
-# enable_cloud_functions=true and supplying zip artifacts.
+# Serverless functions for inspector (cron), scraper worker, parser
+# worker, and migrator trigger.
 # ---------------------------------------------------------------------------
 
 resource "scaleway_function_namespace" "pipeline" {
-  count      = var.enable_cloud_functions ? 1 : 0
   name       = "avoimempi-eduskunta"
   project_id = var.project_id
-  region     = "nl-ams"
+  region     = var.pipeline_region
+  # Required for function-level Private Network attachment.
+  # Provider marks this as deprecated in newer versions because it is always true.
+  activate_vpc_integration = true
 }
 
 resource "scaleway_function" "inspector_dispatcher" {
-  count        = var.enable_cloud_functions ? 1 : 0
   name          = "datapipe-inspector-dispatcher"
-  namespace_id  = scaleway_function_namespace.pipeline[0].id
+  namespace_id  = scaleway_function_namespace.pipeline.id
   runtime       = var.pipeline_function_runtime
   handler       = var.pipeline_inspector_handler
   privacy       = "private"
@@ -318,6 +360,7 @@ resource "scaleway_function" "inspector_dispatcher" {
   max_scale     = 1
   memory_limit  = 512
   timeout       = 300
+  private_network_id = scaleway_vpc_private_network.pipeline.id
 
   environment_variables = merge(
     local.cloud_worker_env_common,
@@ -335,15 +378,13 @@ resource "scaleway_function" "inspector_dispatcher" {
 }
 
 resource "scaleway_function_cron" "inspector" {
-  count       = var.enable_cloud_functions ? 1 : 0
-  function_id = scaleway_function.inspector_dispatcher[0].id
+  function_id = scaleway_function.inspector_dispatcher.id
   schedule     = "0 */8 * * *" # every 8 hours
 }
 
 resource "scaleway_function" "inspector_worker" {
-  count          = var.enable_cloud_functions ? 1 : 0
   name           = "datapipe-inspector-worker"
-  namespace_id   = scaleway_function_namespace.pipeline[0].id
+  namespace_id   = scaleway_function_namespace.pipeline.id
   runtime        = var.pipeline_function_runtime
   handler        = var.pipeline_inspector_worker_handler
   privacy        = "private"
@@ -354,6 +395,7 @@ resource "scaleway_function" "inspector_worker" {
   max_scale      = 20
   memory_limit   = 1024
   timeout        = 300
+  private_network_id = scaleway_vpc_private_network.pipeline.id
 
   environment_variables = merge(
     local.cloud_worker_env_common,
@@ -371,21 +413,19 @@ resource "scaleway_function" "inspector_worker" {
 }
 
 resource "scaleway_function_trigger" "inspector_worker" {
-  count       = var.enable_cloud_functions ? 1 : 0
-  function_id = scaleway_function.inspector_worker[0].id
+  function_id = scaleway_function.inspector_worker.id
   name        = "datapipe-inspector-trigger"
 
   sqs {
     project_id = scaleway_mnq_sqs.pipeline.project_id
-    region     = "nl-ams"
+    region     = var.pipeline_region
     queue      = scaleway_mnq_sqs_queue.pipeline_inspector.name
   }
 }
 
 resource "scaleway_function" "scraper_worker" {
-  count          = var.enable_cloud_functions ? 1 : 0
   name           = "datapipe-scraper-worker"
-  namespace_id   = scaleway_function_namespace.pipeline[0].id
+  namespace_id   = scaleway_function_namespace.pipeline.id
   runtime        = var.pipeline_function_runtime
   handler        = var.pipeline_scraper_handler
   privacy        = "private"
@@ -396,6 +436,7 @@ resource "scaleway_function" "scraper_worker" {
   max_scale      = 20
   memory_limit   = 1024
   timeout        = 300
+  private_network_id = scaleway_vpc_private_network.pipeline.id
 
   environment_variables = merge(
     local.cloud_worker_env_common,
@@ -413,21 +454,19 @@ resource "scaleway_function" "scraper_worker" {
 }
 
 resource "scaleway_function_trigger" "scraper_worker" {
-  count       = var.enable_cloud_functions ? 1 : 0
-  function_id = scaleway_function.scraper_worker[0].id
+  function_id = scaleway_function.scraper_worker.id
   name        = "datapipe-scraper-trigger"
 
   sqs {
     project_id = scaleway_mnq_sqs.pipeline.project_id
-    region     = "nl-ams"
+    region     = var.pipeline_region
     queue      = scaleway_mnq_sqs_queue.pipeline_scraper.name
   }
 }
 
 resource "scaleway_function" "parser_worker" {
-  count          = var.enable_cloud_functions ? 1 : 0
   name           = "datapipe-parser-worker"
-  namespace_id   = scaleway_function_namespace.pipeline[0].id
+  namespace_id   = scaleway_function_namespace.pipeline.id
   runtime        = var.pipeline_function_runtime
   handler        = var.pipeline_parser_handler
   privacy        = "private"
@@ -438,11 +477,12 @@ resource "scaleway_function" "parser_worker" {
   max_scale      = 20
   memory_limit   = 1024
   timeout        = 300
+  private_network_id = scaleway_vpc_private_network.pipeline.id
 
   environment_variables = merge(
     local.cloud_worker_env_common,
     local.pipeline_storage_env,
-    local.pipeline_row_store_env,
+    local.pipeline_row_store_env
   )
 
   secret_environment_variables = {
@@ -452,21 +492,19 @@ resource "scaleway_function" "parser_worker" {
 }
 
 resource "scaleway_function_trigger" "parser_worker" {
-  count       = var.enable_cloud_functions ? 1 : 0
-  function_id = scaleway_function.parser_worker[0].id
+  function_id = scaleway_function.parser_worker.id
   name        = "datapipe-parser-trigger"
 
   sqs {
     project_id = scaleway_mnq_sqs.pipeline.project_id
-    region     = "nl-ams"
+    region     = var.pipeline_region
     queue      = scaleway_mnq_sqs_queue.pipeline_parser.name
   }
 }
 
 resource "scaleway_function" "migrator" {
-  count          = var.enable_cloud_functions && var.pipeline_migrator_zip_file != null ? 1 : 0
   name           = "datapipe-migrator"
-  namespace_id   = scaleway_function_namespace.pipeline[0].id
+  namespace_id   = scaleway_function_namespace.pipeline.id
   runtime        = var.pipeline_function_runtime
   handler        = var.pipeline_migrator_handler
   privacy        = "private"
@@ -477,6 +515,7 @@ resource "scaleway_function" "migrator" {
   max_scale      = 1
   memory_limit   = 2048
   timeout        = 1800
+  private_network_id = scaleway_vpc_private_network.pipeline.id
 
   environment_variables = merge(
     local.pipeline_storage_env,

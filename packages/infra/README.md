@@ -1,60 +1,60 @@
-# Scaleway Infra (Bucket + SQS Queues + Optional Cloud Functions)
+# Scaleway Infra (Full Stack, No Feature Flags)
 
-This folder provisions:
+This Terraform defines all pipeline resources unconditionally:
 
-- one hardcoded Scaleway Object Storage bucket for pipeline data
-- Scaleway Queues (SQS API) resources for datapipe orchestration
-- optional serverless functions + triggers for inspector/scraper/parser/migrator
+- VPC + Private Network
+- private managed PostgreSQL row-store
+- SQS queues + credentials + DLQs
+- serverless functions + triggers for inspector/scraper/parser/migrator
+- local block-storage env contract for VM-side storage paths
 
-## What it creates
+## Storage model
 
-- Bucket: `bkt-avoimempi-eduskunta-pipeline`
-- Region: `nl-ams`
-- ACL: `private` (not public)
-- Queues service activation (`scaleway_mnq_sqs`)
-- SQS credentials for:
-  - queue provisioning (manage-only)
-  - inspector dispatcher (publish-only)
-  - queue workers (receive+publish)
-- Three SQS queues:
-  - `datapipe-inspector`
-  - `datapipe-scraper`
-  - `datapipe-parser`
-- Logical prefixes used by the app:
-  - `raw/`
-  - `parsed/`
-  - `metadata/`
-  - `artifacts/`
-- Optional serverless functions (behind `enable_cloud_functions`):
-  - inspector dispatcher function (cron every 8h) enqueues inspect tasks
-  - inspector worker function triggered from `datapipe-inspector` queue
-  - scraper function triggered from `datapipe-scraper` queue
-  - parser function triggered from `datapipe-parser` queue
-  - migrator function (manual trigger; only created when `pipeline_migrator_zip_file` is set)
-  - queue failures are retried and then sent to DLQ after `max_receive_count = 3`
+Local filesystem path contract:
 
-Note: S3-compatible storage does not require explicit folder resources. Prefixes appear automatically when objects are written.
+- `STORAGE_PROVIDER=local`
+- `STORAGE_LOCAL_DIR=/mnt/pipeline-data/data` (configurable via Terraform var)
 
-## Usage
+Durable shared worker row-store:
 
-Optional (recommended) override for project ID used for queue resources:
+- private managed PostgreSQL attached to Private Network
+- exported as sensitive `ROW_STORE_DATABASE_URL`
+
+## Required variables
+
+These zip artifact vars are required (no optional function toggles):
 
 ```bash
-export TF_VAR_project_id="<your-scaleway-project-id>"
-```
-
-Enable cloud functions and point to function zip artifacts (built separately):
-
-```bash
-export TF_VAR_enable_cloud_functions=true
 export TF_VAR_pipeline_inspector_zip_file="/absolute/path/to/inspector.zip"
 export TF_VAR_pipeline_inspector_worker_zip_file="/absolute/path/to/inspector-worker.zip"
 export TF_VAR_pipeline_scraper_zip_file="/absolute/path/to/scraper.zip"
 export TF_VAR_pipeline_parser_zip_file="/absolute/path/to/parser.zip"
-export TF_VAR_pipeline_migrator_zip_file="/absolute/path/to/migrator.zip" # optional
+export TF_VAR_pipeline_migrator_zip_file="/absolute/path/to/migrator.zip"
 ```
 
-Then run:
+Common overrides:
+
+```bash
+export TF_VAR_project_id="<your-scaleway-project-id>"
+export TF_VAR_pipeline_region="nl-ams"
+export TF_VAR_pipeline_storage_local_dir="/mnt/pipeline-data/data"
+export TF_VAR_pipeline_block_volume_mount_path="/mnt/pipeline-data"
+export TF_VAR_pipeline_block_volume_name="avoimempi-eduskunta-data"
+export TF_VAR_pipeline_block_volume_size_gb=100
+```
+
+Row-store tuning overrides (optional):
+
+```bash
+export TF_VAR_pipeline_row_store_name="avoimempi-eduskunta-row-store"
+export TF_VAR_pipeline_row_store_engine="PostgreSQL-15"
+export TF_VAR_pipeline_row_store_node_type="DB-DEV-S"
+export TF_VAR_pipeline_row_store_user_name="pipeline"
+export TF_VAR_pipeline_row_store_database_name="rdb"
+export TF_VAR_pipeline_row_store_port=5432
+```
+
+## Apply
 
 ```bash
 cd packages/infra
@@ -63,13 +63,52 @@ tofu plan
 tofu apply
 ```
 
-If `TF_VAR_project_id` is omitted, the provider default project configuration is used.
+## Temporary seed access (open -> seed -> close)
+
+Use this only for one-off local seeding when your local machine needs direct DB access.
+
+1. Open temporary access for your current public IP (`/32`):
+
+```bash
+export MY_IP="$(curl -s https://ifconfig.me)"
+export TF_VAR_temporary_seed_cidrs="[\"${MY_IP}/32\"]"
+cd packages/infra
+tofu apply
+```
+
+2. Check whether a public DB endpoint exists:
+
+```bash
+tofu output pipeline_row_store_public_endpoint
+```
+
+If `has_public_endpoint = false`, local public seeding cannot connect until a public endpoint exists for the DB instance.
+
+3. Seed from your local machine:
+
+```bash
+export ROW_STORE_DATABASE_URL="$(tofu output -json pipeline_row_store_env | jq -r '.ROW_STORE_DATABASE_URL')"
+export ROW_STORE_DIR="/path/to/data"
+bun run scripts/seed-postgres-row-store.ts
+```
+
+4. Close temporary access immediately:
+
+```bash
+export TF_VAR_temporary_seed_cidrs='[]'
+cd packages/infra
+tofu apply
+```
 
 ## Useful outputs
 
-After apply, inspect outputs:
-
 ```bash
+tofu output pipeline_private_network
+tofu output pipeline_storage_env
+tofu output pipeline_block_storage
+tofu output -json pipeline_row_store_env
+tofu output pipeline_row_store_connection
+tofu output pipeline_row_store_public_endpoint
 tofu output pipeline_queue_names
 tofu output pipeline_queue_urls
 tofu output pipeline_queue_env_template
@@ -79,102 +118,9 @@ tofu output cloud_function_namespace
 tofu output cloud_functions
 ```
 
-`pipeline_sqs_credentials_inspector` and `pipeline_sqs_credentials_worker` are marked sensitive and contain:
+## Security notes
 
-- `PIPELINE_SQS_ACCESS_KEY_ID`
-- `PIPELINE_SQS_SECRET_ACCESS_KEY`
-
-## Data update lifecycle (functions)
-
-```mermaid
-flowchart TD
-  CRON["Cron (every 8h)"]
-  IDF["Inspector dispatcher function"]
-  IQ["SQS: datapipe-inspector"]
-  IWF["Inspector worker function (SQS trigger)"]
-  SQ["SQS: datapipe-scraper"]
-  SCF["Scraper function (SQS trigger)"]
-  PQ["SQS: datapipe-parser"]
-  PF["Parser function (SQS trigger)"]
-  DLQI["DLQ: inspector"]
-  DLQS["DLQ: scraper"]
-  DLQP["DLQ: parser"]
-  API["Eduskunta Open API"]
-  RAW["Row store (raw)"]
-  PARSED["Row store (parsed)"]
-
-  CRON --> IDF --> IQ --> IWF
-  IWF --> SQ
-  SCF --> API
-  SCF --> RAW
-  SCF --> PQ
-  PF --> RAW
-  PF --> PARSED
-
-  IQ -. max_receive_count=3 .-> DLQI
-  SQ -. max_receive_count=3 .-> DLQS
-  PQ -. max_receive_count=3 .-> DLQP
-```
-
-Function behavior constraints:
-
-- Every function has finite timeout (`300s`, migrator `1800s`).
-- Queue workers are event-driven, not infinite polling loops.
-- Retries are bounded by SQS redrive policy and end in DLQ.
-
-## Upload existing local data
-
-After bucket creation, sync local pipeline folders:
-
-```bash
-cp .env.sync-storage-s3.example .env.sync-storage-s3
-bun --env-file=.env.sync-storage-s3 run sync:storage:s3 --dry-run
-bun --env-file=.env.sync-storage-s3 run sync:storage:s3
-```
-
-Defaults to uploading `data/raw` and `data/parsed`, and row-store DB backups (`raw.db`, `parsed.db`) to `artifacts/row-store/latest/`.
-Use `--all` to include `metadata` and `artifacts`:
-
-```bash
-bun --env-file=.env.sync-storage-s3 run sync:storage:s3 --all
-```
-
-Optional: also write timestamped row-store DB snapshots:
-
-```bash
-bun --env-file=.env.sync-storage-s3 run sync:storage:s3 --snapshot-row-store-dbs
-```
-
-## Local requirements for sync script
-
-`bun run sync:storage:s3` requires:
-
-- Bun installed (repo runtime)
-- AWS CLI installed (`aws` command) for S3-compatible sync operations
-- Network access to `https://s3.nl-ams.scw.cloud`
-- A filled `.env.sync-storage-s3` file with:
-  - `STORAGE_S3_BUCKET`
-  - `STORAGE_S3_REGION`
-  - `STORAGE_S3_ENDPOINT`
-  - credentials via one of:
-    - `STORAGE_S3_ACCESS_KEY_ID` + `STORAGE_S3_SECRET_ACCESS_KEY`
-    - `SCW_ACCESS_KEY` + `SCW_SECRET_KEY`
-    - `SCW_PROFILE` (requires `scw` CLI installed and profile configured)
-
-Quick checks:
-
-```bash
-command -v bun
-command -v aws
-```
-
-If using `SCW_PROFILE`:
-
-```bash
-command -v scw
-scw config get access-key
-```
-
-## If bucket name is taken
-
-Edit `packages/infra/main.tf` and change `scaleway_object_bucket.pipeline.name`.
+- All serverless functions are attached to the created Private Network (`private_network_id`).
+- Row-store is provisioned on private networking (module `private_network` input), not intended for public exposure.
+- SQS/MNQ endpoints are managed public control-plane endpoints by design; access is credential-controlled.
+- Keep sensitive outputs (`pipeline_row_store_env`, SQS credentials) out of logs.
