@@ -9,6 +9,9 @@ NODE_ENV="${NODE_ENV:-production}"
 DIST_DIR="${APP_DIR}/dist"
 INDEX_FILE="${DIST_DIR}/index.js"
 LOCK_FILE="${MIGRATION_LOCK_FILE:-${APP_DIR}/data/migration.lock}"
+# DB_PATH: absolute path to the SQLite DB on the app VM (e.g. /mnt/app-db/avoimempi-eduskunta.db).
+# Defaults to the repo-relative path used in development if unset.
+DB_PATH="${DB_PATH:-}"
 ACTION="${1:-start}"
 
 run_rebuild() {
@@ -54,7 +57,7 @@ fi
 
 (
   cd "${DIST_DIR}"
-  nohup env NODE_ENV="${NODE_ENV}" MIGRATION_LOCK_FILE="${LOCK_FILE}" "${bun_bin}" run index.js >> "${APP_DIR}/${LOG_FILE}" 2>&1 &
+  nohup env NODE_ENV="${NODE_ENV}" MIGRATION_LOCK_FILE="${LOCK_FILE}" ${DB_PATH:+DB_PATH="${DB_PATH}"} "${bun_bin}" run index.js >> "${APP_DIR}/${LOG_FILE}" 2>&1 &
   echo "$!" > "${APP_DIR}/${PID_FILE}"
 )
 new_pid="$(cat "${APP_DIR}/${PID_FILE}")"

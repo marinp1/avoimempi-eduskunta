@@ -34,7 +34,7 @@ function ensureMigratorEnv(): string[] {
     process.env.STORAGE_PROVIDER === "local" &&
     !process.env.STORAGE_LOCAL_DIR
   ) {
-    process.env.STORAGE_LOCAL_DIR = "/mnt/pipeline-data/data";
+    process.env.STORAGE_LOCAL_DIR = "/mnt/pipeline-raw-parsed/data";
   }
 
   const effectiveProvider = process.env.ROW_STORE_PROVIDER;

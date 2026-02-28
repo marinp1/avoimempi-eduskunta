@@ -205,7 +205,7 @@ async function loadSubMigrator(
 }
 
 /**
- * New orchestration entrypoint for Vaski migration.
+ * Main entrypoint for Vaski migration.
  * This migrates each indexed document type via its registered submigrator.
  */
 export async function migrateVaskiData(

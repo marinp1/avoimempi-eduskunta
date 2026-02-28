@@ -4,7 +4,7 @@ output "pipeline_storage_env" {
 }
 
 output "pipeline_private_network" {
-  description = "VPC and Private Network created for private row-store traffic."
+  description = "VPC and Private Network created for app/pipeline VM traffic."
   value = {
     vpc_id             = scaleway_vpc.pipeline.id
     private_network_id = scaleway_vpc_private_network.pipeline.id
@@ -17,103 +17,45 @@ output "pipeline_block_storage" {
   value       = local.pipeline_block_storage
 }
 
-output "pipeline_row_store_env" {
-  description = "Row-store environment values (private managed PostgreSQL) for pipeline workers."
-  sensitive   = true
-  value       = local.pipeline_row_store_env
-}
-
-output "pipeline_row_store_connection" {
-  description = "Non-secret private row-store connection metadata."
+output "app_vm" {
+  description = "App VM details."
   value = {
-    host          = module.pipeline_private_row_store.instance_ip
-    port          = var.pipeline_row_store_port
-    user_name     = var.pipeline_row_store_user_name
-    database_name = var.pipeline_row_store_database_name
+    id                  = scaleway_instance_server.app.id
+    name                = scaleway_instance_server.app.name
+    commercial_type     = var.app_server_type
+    zone                = var.pipeline_zone
+    public_ip           = scaleway_instance_ip.app.address
+    private_nic_id      = scaleway_instance_private_nic.app.id
+    private_network_id  = scaleway_vpc_private_network.pipeline.id
+    db_mount_path       = var.app_db_mount_path
   }
 }
 
-output "pipeline_row_store_public_endpoint" {
-  description = "Public row-store endpoint metadata (if provisioned by module/provider)."
+output "sync_config" {
+  description = "Rsync DB sync configuration: pipeline pushes finished DB to app VM over the private network."
   value = {
-    has_public_endpoint = length(module.pipeline_private_row_store.load_balancer) > 0
-    endpoint            = length(module.pipeline_private_row_store.load_balancer) > 0 ? module.pipeline_private_row_store.load_balancer[0].ip : null
-    temporary_seed_cidrs = var.temporary_seed_cidrs
+    source           = "${var.pipeline_db_volume_mount_path}/avoimempi-eduskunta.db"
+    destination      = "${var.app_db_mount_path}/avoimempi-eduskunta.db"
+    app_private_host = "${var.app_server_name}.${scaleway_vpc_private_network.pipeline.name}.priv"
+    rsync_command    = "rsync -az --delay-updates ${var.pipeline_db_volume_mount_path}/avoimempi-eduskunta.db ${var.app_server_name}.${scaleway_vpc_private_network.pipeline.name}.priv:${var.app_db_mount_path}/avoimempi-eduskunta.db"
   }
 }
 
-output "pipeline_queue_names" {
-  description = "SQS queue names used by datapipe orchestration."
+output "pipeline_vm" {
+  description = "Pipeline VM details. No public IP — access via app VM as jump host: ssh -J <app-ip> <pipeline-private-host>"
   value = {
-    PIPELINE_QUEUE_INSPECTOR = scaleway_mnq_sqs_queue.pipeline_inspector.name
-    PIPELINE_QUEUE_SCRAPER   = scaleway_mnq_sqs_queue.pipeline_scraper.name
-    PIPELINE_QUEUE_PARSER    = scaleway_mnq_sqs_queue.pipeline_parser.name
-  }
-}
-
-output "pipeline_queue_urls" {
-  description = "Created queue URLs (main and dead-letter)."
-  value = {
-    inspector     = scaleway_mnq_sqs_queue.pipeline_inspector.url
-    scraper       = scaleway_mnq_sqs_queue.pipeline_scraper.url
-    parser        = scaleway_mnq_sqs_queue.pipeline_parser.url
-    inspector_dlq = scaleway_mnq_sqs_queue.pipeline_inspector_dlq.url
-    scraper_dlq   = scaleway_mnq_sqs_queue.pipeline_scraper_dlq.url
-    parser_dlq    = scaleway_mnq_sqs_queue.pipeline_parser_dlq.url
-  }
-}
-
-output "pipeline_sqs_credentials_inspector" {
-  description = "Publish-only credentials for the inspector service."
-  sensitive   = true
-  value = {
-    PIPELINE_SQS_ACCESS_KEY_ID     = scaleway_mnq_sqs_credentials.pipeline_inspector.access_key
-    PIPELINE_SQS_SECRET_ACCESS_KEY = scaleway_mnq_sqs_credentials.pipeline_inspector.secret_key
-  }
-}
-
-output "pipeline_sqs_credentials_worker" {
-  description = "Receive + publish credentials for scraper and parser workers."
-  sensitive   = true
-  value = {
-    PIPELINE_SQS_ACCESS_KEY_ID     = scaleway_mnq_sqs_credentials.pipeline_worker.access_key
-    PIPELINE_SQS_SECRET_ACCESS_KEY = scaleway_mnq_sqs_credentials.pipeline_worker.secret_key
-  }
-}
-
-output "pipeline_queue_env_template" {
-  description = "Shared environment values for queue workers (credentials injected separately per role)."
-  value = local.pipeline_queue_env_template
-}
-
-output "cloud_function_namespace" {
-  description = "Serverless function namespace."
-  value       = scaleway_function_namespace.pipeline.id
-}
-
-output "cloud_functions" {
-  description = "IDs for serverless functions and their triggers."
-  value = {
-    inspector_dispatcher_function_id = scaleway_function.inspector_dispatcher.id
-    inspector_cron_id                = scaleway_function_cron.inspector.id
-    inspector_worker_function_id     = scaleway_function.inspector_worker.id
-    inspector_worker_trigger_id      = scaleway_function_trigger.inspector_worker.id
-    scraper_function_id              = scaleway_function.scraper_worker.id
-    scraper_trigger_id               = scaleway_function_trigger.scraper_worker.id
-    parser_function_id               = scaleway_function.parser_worker.id
-    parser_trigger_id                = scaleway_function_trigger.parser_worker.id
-    migrator_function_id             = scaleway_function.migrator.id
-  }
-}
-
-output "cloud_functions_network" {
-  description = "Private Network attachment for serverless functions."
-  value = {
-    private_network_id = scaleway_vpc_private_network.pipeline.id
-    inspector_dispatcher_function_private_network_id = scaleway_function.inspector_dispatcher.private_network_id
-    inspector_worker_function_private_network_id     = scaleway_function.inspector_worker.private_network_id
-    scraper_function_private_network_id              = scaleway_function.scraper_worker.private_network_id
-    parser_function_private_network_id               = scaleway_function.parser_worker.private_network_id
-    migrator_function_private_network_id             = scaleway_function.migrator.private_network_id
+    id                         = scaleway_instance_server.pipeline.id
+    name                       = scaleway_instance_server.pipeline.name
+    commercial_type            = var.pipeline_server_type
+    zone                       = var.pipeline_zone
+    private_nic_id             = scaleway_instance_private_nic.pipeline.id
+    private_network_id         = scaleway_vpc_private_network.pipeline.id
+    private_hostname           = "${var.pipeline_server_name}.${scaleway_vpc_private_network.pipeline.name}.priv"
+    raw_parsed_volume_id       = scaleway_instance_volume.pipeline_raw_parsed.id
+    raw_parsed_volume_size_gb  = var.pipeline_raw_parsed_volume_size_gb
+    raw_parsed_mount_path      = var.pipeline_raw_parsed_volume_mount_path
+    db_volume_id               = scaleway_instance_volume.pipeline_db.id
+    db_volume_size_gb          = var.pipeline_db_volume_size_gb
+    db_mount_path              = var.pipeline_db_volume_mount_path
   }
 }

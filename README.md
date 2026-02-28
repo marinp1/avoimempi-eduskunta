@@ -155,7 +155,7 @@ Use `/admin` in development mode for table-by-table and bulk scraper/parser cont
 
 ### Manual terminal runbook
 
-For a clear manual `sync -> parse -> rebuild` guide (queue mode and direct CLI mode), including a queue/process flow diagram and inspector behavior, see [packages/datapipe/README.md](./packages/datapipe/README.md#manual-sync-and-rebuild-runbook).
+For a clear manual `sync -> parse -> rebuild` guide, see [packages/datapipe/README.md](./packages/datapipe/README.md#manual-sync-and-rebuild-runbook).
 
 ## Development commands
 
