@@ -2,7 +2,7 @@ import type { Database } from "bun:sqlite";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { VaskiEntry } from "../reader";
-import { readVaskiIndex, readVaskiRowsByDocumentType } from "../reader";
+import { readVaskiRowsByDocumentType } from "../reader";
 import { convertVaskiNodeToRichText } from "../rich-text";
 
 function normalizeText(value: unknown): string | null {
@@ -707,10 +707,8 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
       let skippedCount = 0;
 
       try {
-        const index = await readVaskiIndex();
         for await (const row of readVaskiRowsByDocumentType(
           "vastaus_kirjalliseen_kysymykseen",
-          index,
         )) {
           const meta = getMeta(row);
           const identOsa = meta?.IdentifiointiOsa;

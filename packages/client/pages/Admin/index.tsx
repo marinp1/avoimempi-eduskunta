@@ -405,7 +405,7 @@ export default () => {
               );
             } else if (message.data.page) {
               setParserProgress(
-                `[${message.data.currentTableIndex}/${message.data.totalTables}] ${message.data.tableName}: Page ${message.data.page}/${message.data.totalPages} - ${message.data.rowsParsed?.toLocaleString() || "N/A"} rows`,
+                `[${message.data.currentTableIndex}/${message.data.totalTables}] ${message.data.tableName}: Rows ${message.data.page}/${message.data.totalPages} processed - ${message.data.rowsParsed?.toLocaleString() || "N/A"} parsed`,
               );
             } else {
               setParserProgress(
@@ -418,7 +418,7 @@ export default () => {
             );
           } else {
             setParserProgress(
-              `${message.data.tableName}: Page ${message.data.page}/${message.data.totalPages} - ${message.data.rowsParsed.toLocaleString()} rows (${message.data.percentComplete.toFixed(1)}%)`,
+              `${message.data.tableName}: Rows ${message.data.page}/${message.data.totalPages} processed - ${message.data.rowsParsed.toLocaleString()} parsed (${message.data.percentComplete.toFixed(1)}%)`,
             );
             setParserPercent(message.data.percentComplete);
           }
@@ -1209,9 +1209,11 @@ export default () => {
                             }}
                           >
                             {row.total_rows_in_api
-                              ? `${row.raw_page_count} / ${Math.ceil(row.total_rows_in_api / 100)}`
+                              ? `${Math.ceil(row.raw_page_count / 100)} / ${Math.ceil(row.total_rows_in_api / 100)}`
                               : row.has_raw_data
-                                ? row.raw_page_count.toLocaleString("fi-FI")
+                                ? Math.ceil(row.raw_page_count / 100).toLocaleString(
+                                    "fi-FI",
+                                  )
                                 : "-"}
                           </Typography>
                         </TableCell>
@@ -1474,7 +1476,7 @@ export default () => {
                                       </Button>
                                       {row.has_parsed_data && (
                                         <Chip
-                                          label={`${row.parsed_page_count} pages - ${row.parsed_estimated_rows.toLocaleString("fi-FI")}`}
+                                          label={`${Math.ceil(row.parsed_page_count / 100)} pages - ${row.parsed_estimated_rows.toLocaleString("fi-FI")}`}
                                           size="small"
                                           variant="outlined"
                                           color="success"

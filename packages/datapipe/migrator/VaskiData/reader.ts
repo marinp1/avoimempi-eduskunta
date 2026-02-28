@@ -50,21 +50,56 @@ function getVaskiIndexPath(): string {
   return join(findRepoRoot(), "vaski-data", "index.json");
 }
 
+async function buildIndexFromParsedRowStore(): Promise<VaskiIndex> {
+  const parsedStore = getParsedRowStore();
+  const index: VaskiIndex = {};
+
+  for await (const row of parsedStore.list("VaskiData")) {
+    const parsed = JSON.parse(row.data) as Record<string, any>;
+    if (!parsed || parsed._skip) continue;
+
+    const documentType = parsed["#avoimempieduskunta"]?.documentType;
+    if (!documentType) continue;
+
+    if (!index[documentType]) {
+      index[documentType] = { totalRecords: 0 };
+    }
+    index[documentType].totalRecords++;
+  }
+
+  return index;
+}
+
 export async function readVaskiIndex(): Promise<VaskiIndex> {
   const indexPath = getVaskiIndexPath();
-  const data = await readFile(indexPath, "utf-8");
-  return JSON.parse(data) as VaskiIndex;
+  if (existsSync(indexPath)) {
+    try {
+      const data = await readFile(indexPath, "utf-8");
+      return JSON.parse(data) as VaskiIndex;
+    } catch (error) {
+      console.warn(
+        `⚠️  Failed to read ${indexPath}, rebuilding index from parsed row store`,
+        error,
+      );
+    }
+  }
+
+  return buildIndexFromParsedRowStore();
 }
 
 export async function listIndexedDocumentTypes(): Promise<string[]> {
-  const index = await readVaskiIndex();
+  const index = await buildIndexFromParsedRowStore();
   return Object.keys(index).sort();
 }
 
 export async function* readVaskiRowsByDocumentType(
   documentType: string,
-  _indexInput?: VaskiIndex,
+  indexInput?: VaskiIndex,
 ): AsyncGenerator<VaskiEntry> {
+  if (indexInput && !indexInput[documentType]) {
+    return;
+  }
+
   const parsedStore = getParsedRowStore();
 
   for await (const row of parsedStore.list("VaskiData")) {
