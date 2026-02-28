@@ -29,6 +29,11 @@ packages/datapipe/
 │   ├── cli.ts
 │   ├── parser.ts
 │   └── fn/<TableName>.ts
+├── orchestration/
+│   ├── cli.ts
+│   ├── contracts.ts
+│   ├── adapters/sqs.ts
+│   └── handlers/*.ts
 └── migrator/
     ├── cli.ts
     ├── migrations/V*.sql
@@ -43,6 +48,11 @@ From repository root:
 bun run scrape <TableName>
 bun run parse <TableName>
 bun run migrate
+bun run pipeline:bootstrap
+bun run pipeline:inspect
+bun run pipeline:worker:inspect
+bun run pipeline:worker:scrape
+bun run pipeline:worker:parse
 ```
 
 Equivalent direct commands from `packages/datapipe`:
@@ -51,6 +61,11 @@ Equivalent direct commands from `packages/datapipe`:
 bun run scraper/cli.ts <TableName>
 bun run parser/cli.ts <TableName>
 bun run migrator/cli.ts start
+bun run orchestration/cli.ts bootstrap
+bun run orchestration/cli.ts inspect all
+bun run orchestration/cli.ts worker inspect
+bun run orchestration/cli.ts worker scrape
+bun run orchestration/cli.ts worker parse
 ```
 
 ## Stage details
@@ -149,6 +164,40 @@ bun run migrate status
 # fresh recreate (deletes DB files first, then imports)
 bun run migrate:fresh
 ```
+
+### Queue orchestration (inspector -> scraper -> parser)
+
+Use orchestration when you want structured reprocessing via queues:
+
+1. `inspector` compares API row counts and current raw store state, then queues targeted scrape tasks (gap ranges + tail continuation).
+2. `scraper` consumes scrape tasks and queues parse tasks for the same PK scope.
+3. `parser` consumes parse tasks and writes upsert-range logs to `ParsedUpsertLog` (SQLite) for migrator preparation.
+4. `migrator` remains a separate process.
+
+Prerequisite:
+
+```bash
+bun add @aws-sdk/client-sqs
+```
+
+Commands:
+
+```bash
+# 1) Bootstrap queues in ElasticMQ
+bun run pipeline:bootstrap
+
+# 2) Enqueue inspect tasks
+bun run pipeline:inspect
+# or single table:
+cd packages/datapipe && bun run orchestration/cli.ts inspect MemberOfParliament
+
+# 3) Start workers (separate terminals/processes)
+bun run pipeline:worker:inspect
+bun run pipeline:worker:scrape
+bun run pipeline:worker:parse
+```
+
+Parser upsert logs are stored by default in `data/pipeline-orchestration.db` table `ParsedUpsertLog`.
 
 ## End-to-end examples
 
