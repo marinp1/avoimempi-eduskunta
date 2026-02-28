@@ -6,7 +6,20 @@ APP_DIR="${APP_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 LOG_FILE="${LOG_FILE:-app.log}"
 LOCK_FILE="${MIGRATION_LOCK_FILE:-${APP_DIR}/data/migration.lock}"
 
+# Block-storage paths (pipeline VM defaults; override via env for local dev)
+DB_PATH="${DB_PATH:-/mnt/pipeline-db/avoimempi-eduskunta.db}"
+STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR:-/mnt/pipeline-raw-parsed/data}"
+
+# Rsync target on app VM — set APP_VM_SYNC_HOST to enable post-migration sync.
+# Format: user@hostname  (hostname resolves over the private network)
+# Example: APP_VM_SYNC_HOST=root@avoimempi-eduskunta-app.pn-avoimempi-eduskunta.priv
+APP_VM_SYNC_HOST="${APP_VM_SYNC_HOST:-}"
+APP_SYNC_DEST="${APP_SYNC_DEST:-/mnt/app-db/avoimempi-eduskunta.db}"
+
+export DB_PATH STORAGE_LOCAL_DIR
+
 mkdir -p "$(dirname "${LOCK_FILE}")"
+mkdir -p "$(dirname "${DB_PATH}")"
 
 if [[ -f "${LOCK_FILE}" ]]; then
   echo "Migration lock exists at ${LOCK_FILE}; another rebuild may be running."
@@ -32,8 +45,10 @@ else
 fi
 
 echo "Starting DB rebuild..."
-echo "Lock file: ${LOCK_FILE}"
-echo "Log file: ${APP_DIR}/${LOG_FILE}"
+echo "  Lock file:    ${LOCK_FILE}"
+echo "  Log file:     ${APP_DIR}/${LOG_FILE}"
+echo "  DB path:      ${DB_PATH}"
+echo "  Storage dir:  ${STORAGE_LOCAL_DIR}"
 
 (
   cd "${APP_DIR}"
@@ -41,3 +56,11 @@ echo "Log file: ${APP_DIR}/${LOG_FILE}"
 )
 
 echo "DB rebuild completed."
+
+if [[ -n "${APP_VM_SYNC_HOST}" ]]; then
+  echo "Syncing DB to app VM (${APP_VM_SYNC_HOST}:${APP_SYNC_DEST})..."
+  rsync -az --delay-updates "${DB_PATH}" "${APP_VM_SYNC_HOST}:${APP_SYNC_DEST}"
+  echo "Sync complete."
+else
+  echo "APP_VM_SYNC_HOST not set; skipping DB sync to app VM."
+fi

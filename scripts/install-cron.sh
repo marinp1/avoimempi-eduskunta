@@ -7,7 +7,14 @@ START_SCRIPT="${APP_DIR}/scripts/start.sh"
 LOG_FILE="${LOG_FILE:-${APP_DIR}/app.log}"
 CRON_TZ_VALUE="${CRON_TZ_VALUE:-Etc/GMT-2}"
 CRON_SCHEDULE="${CRON_SCHEDULE:-0 3 * * *}"
-CRON_CMD="cd ${APP_DIR} && ./scripts/start.sh rebuild-db >> ${LOG_FILE} 2>&1"
+# Block-storage paths embedded in the cron entry so they are available in
+# the minimal cron environment (which does not inherit the user's shell env).
+DB_PATH="${DB_PATH:-/mnt/pipeline-db/avoimempi-eduskunta.db}"
+STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR:-/mnt/pipeline-raw-parsed/data}"
+APP_VM_SYNC_HOST="${APP_VM_SYNC_HOST:-}"
+APP_SYNC_DEST="${APP_SYNC_DEST:-/mnt/app-db/avoimempi-eduskunta.db}"
+CRON_ENV="DB_PATH=${DB_PATH} STORAGE_LOCAL_DIR=${STORAGE_LOCAL_DIR}${APP_VM_SYNC_HOST:+ APP_VM_SYNC_HOST=${APP_VM_SYNC_HOST} APP_SYNC_DEST=${APP_SYNC_DEST}}"
+CRON_CMD="cd ${APP_DIR} && ${CRON_ENV} ./scripts/start.sh rebuild-db >> ${LOG_FILE} 2>&1"
 
 if [[ ! -x "${START_SCRIPT}" ]]; then
   echo "Error: start script not found or not executable at ${START_SCRIPT}" >&2
@@ -24,10 +31,14 @@ Commands:
   status    Show current rebuild cron entries
 
 Environment overrides:
-  APP_DIR          Application root (default: repo root)
-  LOG_FILE         Log destination (default: \${APP_DIR}/app.log)
-  CRON_TZ_VALUE    Cron timezone (default: Etc/GMT-2)
-  CRON_SCHEDULE    Cron schedule (default: "0 3 * * *")
+  APP_DIR              Application root (default: repo root)
+  LOG_FILE             Log destination (default: \${APP_DIR}/app.log)
+  CRON_TZ_VALUE        Cron timezone (default: Etc/GMT-2)
+  CRON_SCHEDULE        Cron schedule (default: "0 3 * * *")
+  DB_PATH              SQLite DB output path (default: /mnt/pipeline-db/avoimempi-eduskunta.db)
+  STORAGE_LOCAL_DIR    Raw/parsed data directory (default: /mnt/pipeline-raw-parsed/data)
+  APP_VM_SYNC_HOST     rsync target host after migration (e.g. root@app.priv); skipped if unset
+  APP_SYNC_DEST        rsync destination path on app VM (default: /mnt/app-db/avoimempi-eduskunta.db)
 EOF
 }
 
