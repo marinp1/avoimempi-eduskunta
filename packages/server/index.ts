@@ -21,6 +21,7 @@ import { createSessionRoutes } from "./routes/session-routes";
 import { createStaticPageRoutes } from "./routes/static-page-routes";
 import { createVotingRoutes } from "./routes/voting-routes";
 import { handleDevelopmentWebSocketUpgrade } from "./routes/websocket-upgrade";
+import { getMigrationLockInfo } from "./services/maintenance-lock";
 import { getTraceDatabasePath } from "../shared/database";
 
 await prepareDatabaseForServerStartup();
@@ -54,6 +55,18 @@ const server = Bun.serve<{
   idleTimeout,
   routes: {
     ...createStaticPageRoutes(homepage, isDev),
+    "/api/system/maintenance": {
+      GET: async () => {
+        const lockInfo = getMigrationLockInfo();
+        const payload = {
+          migrationOngoing: lockInfo.migrationOngoing,
+          startedAt: lockInfo.startedAt,
+        };
+        return Response.json(payload, {
+          headers: { "Cache-Control": "no-store" },
+        });
+      },
+    },
     ...createCoreRoutes(coreRoutesDataAccess),
     ...(isDev ? createDevStatusRoutes(statusController) : {}),
     ...createPersonRoutes(personRepository),
