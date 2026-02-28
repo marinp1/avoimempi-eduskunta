@@ -13,6 +13,8 @@ export type PipelineTaskType = "inspect-table" | "scrape-table" | "parse-table";
 export interface InspectTableTaskPayload {
   type: "inspect-table";
   tableName: string;
+  /** Skip the full raw-store gap scan. Use when the table was recently fully scraped. */
+  skipGapDetection?: boolean;
 }
 
 export interface ScrapeTableTaskPayload {

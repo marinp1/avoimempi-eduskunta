@@ -1,4 +1,5 @@
-import { scrapeTable } from "../../scraper/scraper";
+import { scrapeTable, type ScrapeResult } from "../../scraper/scraper";
+import type { ParsedUpsertChangeLog } from "../change-log";
 import type { SqsQueueAdapter } from "../adapters/sqs";
 import type { PipelineQueueNames } from "../config";
 import {
@@ -13,10 +14,12 @@ import {
 export interface ScraperHandlerDependencies {
   broker: SqsQueueAdapter;
   queueNames: PipelineQueueNames;
+  changeLog: ParsedUpsertChangeLog;
 }
 
-function createParseTaskFromScrapeTask(
+function createParseTaskFromScrapeResult(
   task: ScrapeTableTaskPayload,
+  result: ScrapeResult,
 ): ParseTableTaskPayload {
   if (task.mode.type === "range") {
     return {
@@ -24,6 +27,17 @@ function createParseTaskFromScrapeTask(
       tableName: task.tableName,
       pkStartValue: task.mode.pkStartValue,
       pkEndValue: task.mode.pkEndValue,
+      sourceTaskId: task.sourceTaskId,
+    };
+  }
+
+  if (task.mode.type === "patch-from-pk") {
+    // Use the actual last PK written so the parser doesn't scan the full table.
+    return {
+      type: PipelineTaskTypes.parseTable,
+      tableName: task.tableName,
+      pkStartValue: task.mode.pkStartValue,
+      pkEndValue: result.pkEndValue ?? undefined,
       sourceTaskId: task.sourceTaskId,
     };
   }
@@ -37,15 +51,7 @@ function createParseTaskFromScrapeTask(
     };
   }
 
-  if (task.mode.type === "patch-from-pk") {
-    return {
-      type: PipelineTaskTypes.parseTable,
-      tableName: task.tableName,
-      pkStartValue: task.mode.pkStartValue,
-      sourceTaskId: task.sourceTaskId,
-    };
-  }
-
+  // auto-resume: full table parse (hash skip makes this efficient)
   return {
     type: PipelineTaskTypes.parseTable,
     tableName: task.tableName,
@@ -67,7 +73,7 @@ export function createScraperHandler(deps: ScraperHandlerDependencies) {
       `[scraper] Running scrape task ${envelope.taskId} for ${payload.tableName} in mode ${payload.mode.type}`,
     );
 
-    await scrapeTable({
+    const result = await scrapeTable({
       tableName: payload.tableName,
       mode: payload.mode,
       onProgress: (_progress) => {
@@ -75,7 +81,17 @@ export function createScraperHandler(deps: ScraperHandlerDependencies) {
       },
     });
 
-    const parseTask = createParseTaskFromScrapeTask(payload);
+    deps.changeLog.appendScrape({
+      taskId: envelope.taskId,
+      traceId: envelope.traceId,
+      tableName: payload.tableName,
+      mode: payload.mode.type,
+      pkStartValue: result.pkStartValue,
+      pkEndValue: result.pkEndValue,
+      rowsScraped: result.rowsScraped,
+    });
+
+    const parseTask = createParseTaskFromScrapeResult(payload, result);
     const parseEnvelope = createTaskEnvelope(parseTask, {
       traceId: envelope.traceId,
     });
@@ -86,7 +102,7 @@ export function createScraperHandler(deps: ScraperHandlerDependencies) {
     );
 
     console.log(
-      `[scraper] Completed task ${envelope.taskId}; queued parse task ${parseEnvelope.taskId}`,
+      `[scraper] Completed task ${envelope.taskId}: scraped=${result.rowsScraped} rows (PK ${result.pkStartValue ?? "none"}–${result.pkEndValue ?? "none"}); queued parse task ${parseEnvelope.taskId}`,
     );
   };
 }
