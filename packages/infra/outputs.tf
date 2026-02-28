@@ -62,6 +62,15 @@ output "pipeline_sqs_credentials_worker" {
   }
 }
 
+output "pipeline_row_store_env" {
+  description = "Environment variables to activate the PostgreSQL row store in pipeline workers."
+  sensitive   = true
+  value = {
+    ROW_STORE_PROVIDER     = "postgres"
+    ROW_STORE_DATABASE_URL = "postgresql://${scaleway_iam_api_key.pipeline_db.access_key}:${scaleway_iam_api_key.pipeline_db.secret_key}@${scaleway_sdb_sql_database.pipeline_row_store.endpoint}/${scaleway_sdb_sql_database.pipeline_row_store.name}?sslmode=require"
+  }
+}
+
 output "pipeline_queue_env_template" {
   description = "Shared environment values for queue workers (credentials injected separately per role)."
   value = {

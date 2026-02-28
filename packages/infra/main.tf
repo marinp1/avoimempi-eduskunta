@@ -118,6 +118,41 @@ resource "scaleway_mnq_sqs_queue" "pipeline_scraper" {
   }
 }
 
+# ---------------------------------------------------------------------------
+# Serverless SQL Database — shared row store for scraper and parser workers.
+# Scales to 0 vCPUs when idle; billed per second when active.
+# Estimated cost: ~€2/month at 3 sync cycles/day.
+# ---------------------------------------------------------------------------
+
+resource "scaleway_sdb_sql_database" "pipeline_row_store" {
+  name    = "avoimempi-eduskunta-row-store"
+  min_cpu = 0 # true scale-to-zero
+  max_cpu = 2 # sufficient for 20 parallel function writes
+}
+
+# IAM application that pipeline workers authenticate as when connecting.
+resource "scaleway_iam_application" "pipeline_db" {
+  name = "pipeline-row-store-access"
+}
+
+resource "scaleway_iam_api_key" "pipeline_db" {
+  application_id = scaleway_iam_application.pipeline_db.id
+  description    = "Pipeline row store database credentials"
+}
+
+# Grant read/write access to the Serverless SQL Database.
+# Verify the permission set name in the Scaleway console under IAM > Permission sets
+# if apply fails — Scaleway occasionally renames these.
+resource "scaleway_iam_policy" "pipeline_db" {
+  name           = "policy-pipeline-row-store"
+  application_id = scaleway_iam_application.pipeline_db.id
+
+  rule {
+    project_ids          = [var.project_id]
+    permission_set_names = ["ServerlessSQLDatabaseReadWrite"]
+  }
+}
+
 resource "scaleway_mnq_sqs_queue" "pipeline_parser" {
   project_id                 = scaleway_mnq_sqs.pipeline.project_id
   name                       = "datapipe-parser"
