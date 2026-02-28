@@ -1,258 +1,185 @@
-# Eduskunta Data Pipeline (v2)
+# Eduskunta Data Pipeline
 
-Modern, offline-first data pipeline for Finnish Parliament data with cloud-agnostic storage.
+`packages/datapipe` contains the three ETL stages used to build the application database:
 
-## Architecture
+1. `scraper`: fetches source rows from Eduskunta Open API into `data/raw.db`
+2. `parser`: transforms raw rows into normalized rows in `data/parsed.db`
+3. `migrator`: imports parsed rows into `avoimempi-eduskunta.db`
 
-```
-API → Scraper → raw/*.json → Parser → parsed/*.json → Migrator → SQLite
-```
+## Pipeline flow
 
-### Key Improvements over v1:
-
-- ✅ **Offline-first**: Works without cloud dependencies
-- ✅ **Cloud-agnostic**: Easy sync to S3/R2/MinIO when needed
-- ✅ **Immutable storage**: Append-only, never modify existing files
-- ✅ **Incremental**: Resume from where you left off
-- ✅ **Inspectable**: JSON files are human-readable
-- ✅ **Reproducible**: SQLite can be rebuilt anytime
-- ✅ **Parallel**: Process different tables/pages concurrently
-
-## Storage Structure
-
-```
-data/
-├── raw/
-│   ├── MemberOfParliament/
-│   │   ├── page_000000000001+000000000100.json
-│   │   ├── page_000000000101+000000000200.json
-│   │   └── page_000000000201+000000000250.json
-│   └── SaliDBAanestys/
-│       └── page_000000000001+000000000100.json
-└── parsed/
-    └── MemberOfParliament/
-        └── page_000000000001+000000000100.json
+```mermaid
+flowchart LR
+  A[Eduskunta Open API] --> B[scraper]
+  B --> C[data/raw.db]
+  C --> D[parser]
+  D --> E[data/parsed.db]
+  E --> F[migrator]
+  F --> G[avoimempi-eduskunta.db]
 ```
 
-## Getting Started
+## Directory structure
 
-### 1. Configuration
+```txt
+packages/datapipe/
+├── scraper/
+│   ├── cli.ts
+│   └── scraper.ts
+├── parser/
+│   ├── cli.ts
+│   ├── parser.ts
+│   └── fn/<TableName>.ts
+└── migrator/
+    ├── cli.ts
+    ├── migrations/V*.sql
+    └── <TableName>/migrator.ts
+```
 
-Copy `.env.example` to `.env` (optional - defaults work out of the box):
+## Running commands
+
+From repository root:
 
 ```bash
-cp ../.env.example ../.env
+bun run scrape <TableName>
+bun run parse <TableName>
+bun run migrate
 ```
 
-Default configuration uses local filesystem storage in `./data` directory.
+Equivalent direct commands from `packages/datapipe`:
 
-### 2. Scrape Data
-
-#### Scrape a table:
 ```bash
-bun run scrape MemberOfParliament
+bun run scraper/cli.ts <TableName>
+bun run parser/cli.ts <TableName>
+bun run migrator/cli.ts start
 ```
 
-The scraper automatically resumes from the last scraped page.
+## Stage details
 
-#### Scrape from a specific PK value:
-```bash
-bun run scrape MemberOfParliament --from-pk=500
-```
+### 1) Scraper
 
-#### Check status:
-```bash
-bun run scrape:status
-```
+Reads table columns and paginated batches from:
 
-Shows progress for all tables.
+- `https://avoindata.eduskunta.fi/api/v1/tables/<TableName>/columns`
+- `https://avoindata.eduskunta.fi/api/v1/tables/<TableName>/batch`
 
-## CLI Commands
+Writes to row-store `data/raw.db` using PK-based upserts and resume logic.
+
+Common commands:
 
 ```bash
-# Scrape a table (auto-resumes from last page)
-bun scraper/cli.ts <TableName>
-
-# Scrape from a specific PK value
-bun scraper/cli.ts <TableName> --from-pk=<pkValue>
-
-# Scrape a single page starting at a PK
-bun scraper/cli.ts <TableName> --page-pk=<pkValue>
-
-# Show status
-bun scraper/cli.ts status
-
-# Help
-bun scraper/cli.ts help
-```
-
-## Examples
-
-### Basic Usage
-
-```bash
-# Start scraping a table
+# auto-resume
 bun run scrape MemberOfParliament
 
-# Output:
-# 📥 Scraping table: MemberOfParliament
-# 📁 Storage: local
-# 📊 Stage: raw
-# 📋 Total rows in API: 1,234
-# 🚀 Starting fresh
-#
-# 📡 Fetching batch from PK 0...
-# ✅ Saved page_000000000001+000000000100 (100 rows) - 8.1% complete
-# 📡 Fetching batch from PK 101...
-# ✅ Saved page_000000000101+000000000200 (100 rows) - 16.2% complete
-# ...
+# start from PK
+bun run scrape MemberOfParliament --from-pk 500
+
+# scrape inclusive PK range
+bun run scrape MemberOfParliament --from-pk 82000 --to-pk 83000
+
+# refresh one PK
+bun run scrape MemberOfParliament --single-pk 82310
+
+# patch from PK (patch page + one follow-up page)
+bun run scrape MemberOfParliament --patch-pk 82310
+
+# status
+bun run scrape status
 ```
 
-### Resume After Interruption
+Notes:
+
+- default batch size is up to 100 rows per request
+- auto-resume continues from max stored PK for the table
+- gap repair is attempted automatically in auto-resume/full runs
+
+### 2) Parser
+
+Reads rows from `data/raw.db`, reconstructs typed row objects from stored column schema, applies optional custom parser logic, then writes to `data/parsed.db`.
+
+Common commands:
 
 ```bash
-# Scraper automatically resumes from last page
+# parse one table
+bun run parse MemberOfParliament
+
+# parse all known tables
+bun run parse all
+
+# force re-parse (ignore hash-based skip)
+bun run parse MemberOfParliament --force
+
+# parse PK range
+bun run parse MemberOfParliament --pk-start 82000 --pk-end 83000
+
+# status
+bun run parse status
+```
+
+Custom parser modules:
+
+- location: `packages/datapipe/parser/fn/<TableName>.ts`
+- default export: async parser function `(row, primaryKey) => [id, transformedRow]`
+
+### 3) Migrator
+
+Rebuilds/imports the app database from parsed rows.
+
+Core behavior:
+
+- opens/creates target DB (`avoimempi-eduskunta.db`)
+- applies SQL migrations from `packages/datapipe/migrator/migrations`
+- clears import target tables
+- imports tables in dependency-aware order via table migrators
+- updates migration metadata
+- writes import trace/source-reference data (`avoimempi-eduskunta-trace.db`)
+- publishes latest SQLite artifact metadata to storage
+
+Common commands:
+
+```bash
+# default (same as "start")
+bun run migrate
+
+# explicit
+bun run migrate start
+
+# status
+bun run migrate status
+
+# fresh recreate (deletes DB files first, then imports)
+bun run migrate:fresh
+```
+
+## End-to-end examples
+
+Single table:
+
+```bash
 bun run scrape MemberOfParliament
-
-# Output:
-# 📥 Scraping table: MemberOfParliament
-# ✅ Already scraped: 5 pages (complete)
-# 🔄 Re-scraping last page from PK: 401
+bun run parse MemberOfParliament
+bun run migrate
 ```
 
-### Check Progress
+Targeted repair:
 
 ```bash
-bun run scrape:status
-
-# Output:
-# 📊 Scraping Status
-#
-# ✅ Complete MemberOfParliament          - 13 pages (100.0%)
-# ⏳ In progress SaliDBAanestys           - 25 pages (45.2%)
-# ❌ Not started SaliDBIstunto            - 0 pages (0.0%)
+bun run scrape MemberOfParliament --from-pk 82000 --to-pk 83000
+bun run parse MemberOfParliament --pk-start 82000 --pk-end 83000
+bun run migrate
 ```
 
-## Storage Configuration
+## Configuration
 
-### Local Storage (Default)
+Key environment variables:
 
-No configuration needed. Data stored in `./data` directory.
+- `ROW_STORE_DIR`: directory containing `raw.db` and `parsed.db`
+- `STORAGE_LOCAL_DIR`: fallback base dir used when `ROW_STORE_DIR` is not set
+- `DB_PATH`: override final app DB path
+- `TRACE_DB_PATH`: override trace DB path
+- `MIGRATOR_*`: migration tuning and reporting flags (see root `.env.example`)
 
-```bash
-# Optional: customize directory
-export STORAGE_LOCAL_DIR=/path/to/data
-```
+## See also
 
-### Cloud Storage (Future)
-
-When ready to sync to cloud, update `.env`:
-
-```bash
-# For AWS S3
-STORAGE_PROVIDER=s3
-STORAGE_S3_REGION=us-east-1
-STORAGE_S3_BUCKET=eduskunta-data
-STORAGE_S3_ACCESS_KEY_ID=your-key
-STORAGE_S3_SECRET_ACCESS_KEY=your-secret
-
-# For Cloudflare R2
-STORAGE_PROVIDER=r2
-STORAGE_S3_REGION=auto
-STORAGE_S3_BUCKET=eduskunta-data
-STORAGE_S3_ACCESS_KEY_ID=your-key
-STORAGE_S3_SECRET_ACCESS_KEY=your-secret
-STORAGE_S3_ENDPOINT=https://account-id.r2.cloudflarestorage.com
-```
-
-## Programmatic Usage
-
-```typescript
-import { scrapeTable, scrapeTables } from "./scraper/scraper";
-
-// Scrape single table
-await scrapeTable({
-  tableName: "MemberOfParliament",
-  onProgress: (progress) => {
-    console.log(`Page ${progress.page}: ${progress.percentComplete}%`);
-  },
-});
-
-// Scrape multiple tables
-await scrapeTables(["MemberOfParliament", "SaliDBAanestys"]);
-```
-
-## Data Format
-
-Each page is saved as a JSON file with the following structure:
-
-```json
-{
-  "columnNames": ["personId", "lastName", "firstName", ...],
-  "pkName": "personId",
-  "pkLastValue": 199,
-  "rowData": [
-    [100, "Virtanen", "Matti", ...],
-    [101, "Korhonen", "Liisa", ...],
-    ...
-  ],
-  "rowCount": 100,
-  "hasMore": true
-}
-```
-
-This is the raw API response from Eduskunta, saved as-is for reproducibility.
-
-## Migration from Old Pipeline
-
-The old pipeline (`functions/scraper`) is still available and functional. The new pipeline (`datapipe/scraper`) is designed to work alongside it.
-
-**Key differences:**
-
-| Old Pipeline | New Pipeline |
-|--------------|--------------|
-| SQLite storage | JSON file storage |
-| Single database | One file per page |
-| Hard to sync | Easy to sync |
-| Binary format | Human-readable |
-| Monolithic | Modular |
-
-**Migration strategy:**
-
-1. Start using new scraper for new data
-2. Old SQLite databases can coexist
-3. Eventually migrate old data to JSON format (optional)
-4. New parser will read from JSON files
-
-## Troubleshooting
-
-### "No more data to scrape" immediately
-
-The API might have rate limiting. Wait a few minutes and try again.
-
-### Storage permission errors
-
-Check that the `STORAGE_LOCAL_DIR` is writable:
-
-```bash
-mkdir -p data
-chmod 755 data
-```
-
-### Large file sizes
-
-Each page is ~10-50KB of JSON. For tables with 10,000 rows (100 pages), expect ~5MB total.
-
-## Next Steps
-
-- [ ] Implement parser to convert `raw/*.json` → `parsed/*.json`
-- [ ] Implement migrator to convert `parsed/*.json` → SQLite
-- [ ] Add S3-compatible storage provider
-- [ ] Add sync commands for cloud storage
-- [ ] Add parallel processing for faster scraping
-
-## See Also
-
-- Storage abstraction: `../shared/storage/README.md`
-- Old scraper: `../functions/scraper/`
-- Parser (coming soon): `./parser/`
+- Root overview: `../../README.md`
+- Parser details: `./parser/README.md`
+- Shared storage docs: `../shared/storage/README.md`
