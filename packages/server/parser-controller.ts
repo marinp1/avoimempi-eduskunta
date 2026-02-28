@@ -73,7 +73,6 @@ export class ParserController {
     try {
       await parseTable({
         tableName,
-        targetStage: "parsed",
         force,
         onProgress: (progress) => {
           // Check if we should stop
@@ -186,7 +185,6 @@ export class ParserController {
         try {
           await parseTable({
             tableName,
-            targetStage: "parsed",
             force,
             onProgress: (progress) => {
               if (this.shouldStop) {

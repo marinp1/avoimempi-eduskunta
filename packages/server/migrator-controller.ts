@@ -14,11 +14,7 @@ import {
 import { clearStatementCache } from "../datapipe/migrator/utils";
 import { migrateVaskiData } from "../datapipe/migrator/VaskiData/migrator";
 import { getDatabasePath, getTraceDatabasePath } from "../shared/database";
-import {
-  getStorage,
-  listAllStorageKeys,
-  StorageKeyBuilder,
-} from "../shared/storage";
+import { getStorage } from "../shared/storage";
 import { getParsedRowStore } from "../shared/storage/row-store/factory";
 import {
   getDeleteAllRowsQuery,
@@ -377,17 +373,6 @@ const IMPORT_METADATA_FIELDS = {
   sourcePrimaryKeyValue: "__sourcePrimaryKeyValue",
 } as const;
 
-type ParsedPageEnvelope = {
-  rowData?: any[];
-  pkName?: string;
-  source?: {
-    tableName?: string;
-    firstPk?: number;
-    lastPk?: number;
-    scrapedAt?: string | null;
-  };
-};
-
 type ParsedPageBatch = {
   firstPk: number;
   rows: any[];
@@ -532,7 +517,7 @@ export class MigratorController {
 
   /**
    * Check which tables have parsed data available.
-   * VaskiData is checked via legacy file storage; all others via the parsed row store.
+   * Uses parsed row store for all tables (including VaskiData).
    */
   private async getTablesWithParsedData(): Promise<string[]> {
     const allTables = this.getOrderedTables().filter(
@@ -541,40 +526,16 @@ export class MigratorController {
 
     const parsedStore = getParsedRowStore();
     const tablesInDb = new Set(await parsedStore.tableNames());
-
-    // For VaskiData, fall back to legacy file storage check
-    const storage = getStorage();
-    const tablesWithData: string[] = [];
-
-    for (const tableName of allTables) {
-      if (tableName === TableName.VaskiData) {
-        const prefix = StorageKeyBuilder.listPrefixForTable("parsed", tableName);
-        const result = await storage.list({ prefix, maxKeys: 1 });
-        if (result.keys.length > 0) {
-          tablesWithData.push(tableName);
-        }
-      } else {
-        if (tablesInDb.has(tableName)) {
-          tablesWithData.push(tableName);
-        }
-      }
-    }
-
-    return tablesWithData;
+    return allTables.filter((tableName) => tablesInDb.has(tableName));
   }
 
   /**
    * Read all parsed rows for a table as page batches.
-   * VaskiData uses legacy file storage; all others use the parsed row store.
+   * Uses parsed row store for all tables.
    */
   private async *readParsedData(
     tableName: string,
   ): AsyncGenerator<ParsedPageBatch> {
-    if (tableName === TableName.VaskiData) {
-      yield* this.readParsedDataLegacyFileStorage(tableName);
-      return;
-    }
-
     const parsedStore = getParsedRowStore();
     const BATCH_SIZE = 100;
     let batch: any[] = [];
@@ -612,48 +573,6 @@ export class MigratorController {
         sourcePage: normalizeNumber(batch[0][IMPORT_METADATA_FIELDS.sourcePage]),
         scrapedAt: normalizeText(batch[0][IMPORT_METADATA_FIELDS.scrapedAt]),
       };
-    }
-  }
-
-  /**
-   * Legacy file-based parsed data reader for VaskiData.
-   */
-  private async *readParsedDataLegacyFileStorage(
-    tableName: string,
-  ): AsyncGenerator<ParsedPageBatch> {
-    const storage = getStorage();
-    const prefix = StorageKeyBuilder.listPrefixForTable("parsed", tableName);
-    const keys = await listAllStorageKeys(storage, {
-      prefix,
-      pageSize: 10_000,
-    });
-
-    const sortedPages = keys
-      .map((k) => ({ key: k, parsed: StorageKeyBuilder.parseKey(k.key) }))
-      .filter((p) => p.parsed !== null)
-      .sort((a, b) => (a.parsed?.firstPk || 0) - (b.parsed?.firstPk || 0));
-
-    for (const pageInfo of sortedPages) {
-      if (!pageInfo.parsed) {
-        continue;
-      }
-
-      const data = await storage.get(pageInfo.key.key);
-      if (data) {
-        const pageData = JSON.parse(data) as ParsedPageEnvelope;
-        const rows = Array.isArray(pageData.rowData) ? pageData.rowData : [];
-
-        yield {
-          firstPk: pageInfo.parsed.firstPk,
-          rows,
-          pkName: normalizeText(pageData.pkName),
-          sourceTable: normalizeText(pageData.source?.tableName) ?? tableName,
-          sourcePage:
-            normalizeNumber(pageData.source?.firstPk) ??
-            pageInfo.parsed.firstPk,
-          scrapedAt: normalizeText(pageData.source?.scrapedAt),
-        };
-      }
     }
   }
 
