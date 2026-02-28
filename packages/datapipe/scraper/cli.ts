@@ -68,12 +68,12 @@ async function main() {
 }
 
 async function showStatus() {
-  const { hasSourceStageStatus, loadSourceStageStatusMap } = await import(
-    "#storage/source-status"
-  );
+  const { getRawRowStore } = await import("#storage/row-store/factory");
+  const rawStore = getRawRowStore();
+  const tablesWithData = await rawStore.tableNames();
 
-  if (!(await hasSourceStageStatus())) {
-    console.error("❌ Status metadata file not found.");
+  if (tablesWithData.length === 0) {
+    console.error("❌ No data found in raw store.");
     console.error(
       "   Run the scraper first to populate it: bun run scrape <TableName>",
     );
@@ -82,28 +82,22 @@ async function showStatus() {
 
   console.log("📊 Scraping Status\n");
 
-  const [data, snapshots] = await Promise.all([
-    getExactTableCountsByRows(),
-    loadSourceStageStatusMap(),
-  ]);
+  const data = await getExactTableCountsByRows();
 
   for (const table of data) {
-    const snapshot = snapshots[`raw:${table.tableName}`];
-    const pageCount = snapshot?.pageCount ?? 0;
-    const exactRows = snapshot?.totalRowCount ?? 0;
-
+    const exactRows = await rawStore.count(table.tableName);
     const percentComplete =
       table.rowCount > 0 ? (exactRows / table.rowCount) * 100 : 0;
 
     const status =
-      pageCount === 0
+      exactRows === 0
         ? "❌ Not started"
         : percentComplete >= 99.9
           ? "✅ Complete"
           : "⏳ In progress";
 
     console.log(
-      `${status} ${table.tableName.padEnd(30)} - ${pageCount} pages (${exactRows.toLocaleString()} / ${table.rowCount.toLocaleString()} rows, ${percentComplete.toFixed(1)}%)`,
+      `${status} ${table.tableName.padEnd(30)} - ${exactRows.toLocaleString()} / ${table.rowCount.toLocaleString()} rows (${percentComplete.toFixed(1)}%)`,
     );
   }
 }

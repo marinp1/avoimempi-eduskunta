@@ -4,10 +4,18 @@ import {
   listAllStorageKeys,
   StorageKeyBuilder,
 } from "#storage";
-import { recordSourceStagePage } from "#storage/source-status";
+import { getParsedRowStore, getRawRowStore } from "#storage/row-store/factory";
+import type { ColumnSchema } from "#storage/row-store/types";
 
 /**
- * API Response structure from storage (created by scraper)
+ * Tables that continue to use the legacy file-based storage.
+ * VaskiData has special parser hooks (onPageParsed, onParsingComplete) that
+ * depend on file paths and build a local index for the VaskiData migrator.
+ */
+const LEGACY_FILE_STORAGE_TABLES = new Set(["VaskiData"]);
+
+/**
+ * API Response structure from storage (created by scraper, legacy path only)
  */
 interface EduskuntaApiResponse {
   columnNames: string[];
@@ -123,9 +131,179 @@ export interface ParseOptions {
 }
 
 /**
- * Parse a table from raw storage to parsed storage
+ * Parse a table from raw storage to parsed storage.
+ * VaskiData is routed to the legacy file-based path.
  */
 export async function parseTable(options: ParseOptions): Promise<void> {
+  if (LEGACY_FILE_STORAGE_TABLES.has(options.tableName)) {
+    return parseTableLegacyFileStorage(options);
+  }
+  return parseTableFromRowStore(options);
+}
+
+/**
+ * DB-backed parser: reads from raw.db, writes to parsed.db with hash-based skip.
+ */
+async function parseTableFromRowStore(options: ParseOptions): Promise<void> {
+  const { tableName, force = false, onProgress } = options;
+
+  const rawStore = getRawRowStore();
+  const parsedStore = getParsedRowStore();
+
+  console.log(`\n🔄 Parsing table: ${tableName}`);
+  console.log(`📁 Raw store: ${rawStore.name}`);
+  console.log(`📁 Parsed store: ${parsedStore.name}`);
+
+  const { parse: parseData, hooks } = await getParserModule(tableName);
+
+  const totalRawRows = await rawStore.count(tableName);
+
+  if (totalRawRows === 0) {
+    console.log(`⚠️  No raw data found for ${tableName}`);
+    if (hooks.onParsingComplete) {
+      await hooks.onParsingComplete();
+    }
+    return;
+  }
+
+  console.log(`📋 Total raw rows: ${totalRawRows.toLocaleString()}`);
+
+  // Schema cache to avoid per-row DB lookups
+  const schemaCache = new Map<string, ColumnSchema>();
+
+  async function getSchema(columnHash: string): Promise<ColumnSchema | null> {
+    if (schemaCache.has(columnHash)) return schemaCache.get(columnHash)!;
+    const schema = await rawStore.getColumnSchema(columnHash);
+    if (schema) schemaCache.set(columnHash, schema);
+    return schema;
+  }
+
+  let rowsProcessed = 0;
+  let rowsSkipped = 0;
+  let rowsParsed = 0;
+
+  // Write buffer: accumulate rows and flush in batches
+  const WRITE_BATCH = 500;
+  const writeBuffer: Array<{
+    pk: number;
+    data: string;
+    hash: string;
+  }> = [];
+  let pkNameForBatch = "";
+  let columnNamesForBatch: string[] = [];
+
+  async function flushBuffer(): Promise<void> {
+    if (writeBuffer.length === 0) return;
+    await parsedStore.upsertBatch(
+      tableName,
+      pkNameForBatch,
+      columnNamesForBatch,
+      writeBuffer,
+    );
+    writeBuffer.length = 0;
+  }
+
+  for await (const rawRow of rawStore.list(tableName)) {
+    rowsProcessed++;
+
+    // Hash-based skip: if parsed row exists with same hash, skip re-parsing
+    if (!force) {
+      const existingParsed = await parsedStore.get(tableName, rawRow.pk);
+      if (existingParsed && existingParsed.hash === rawRow.hash) {
+        rowsSkipped++;
+
+        if (rowsProcessed % 1000 === 0) {
+          const percentComplete = (rowsProcessed / totalRawRows) * 100;
+          console.log(
+            `📊 Progress: ${rowsProcessed.toLocaleString()} / ${totalRawRows.toLocaleString()} rows (${percentComplete.toFixed(1)}%) - ${rowsSkipped.toLocaleString()} skipped`,
+          );
+        }
+        continue;
+      }
+    }
+
+    const schema = await getSchema(rawRow.columnHash);
+    if (!schema) {
+      console.warn(
+        `⚠️  No column schema found for hash ${rawRow.columnHash}, skipping PK ${rawRow.pk}`,
+      );
+      continue;
+    }
+
+    const values = JSON.parse(rawRow.data) as any[];
+    const rowObject = rowArrayToObject(schema.columnNames, values);
+
+    const [_identifier, parsedData] = await parseData(rowObject, schema.pkName);
+
+    const parsedRow: ParsedRow = {
+      ...parsedData,
+      [IMPORT_METADATA_FIELDS.sourceTable]: tableName,
+      [IMPORT_METADATA_FIELDS.sourcePage]: rawRow.pk,
+      [IMPORT_METADATA_FIELDS.scrapedAt]: rawRow.updatedAt,
+      [IMPORT_METADATA_FIELDS.sourcePrimaryKeyName]: schema.pkName,
+      [IMPORT_METADATA_FIELDS.sourcePrimaryKeyValue]: rowObject[schema.pkName] ?? null,
+    };
+
+    writeBuffer.push({
+      pk: rawRow.pk,
+      data: JSON.stringify(parsedRow),
+      hash: rawRow.hash,
+    });
+
+    // Track pkName and columnNames for the upsertBatch call (parsed store ignores these)
+    pkNameForBatch = schema.pkName;
+    columnNamesForBatch = schema.columnNames;
+
+    rowsParsed++;
+
+    if (writeBuffer.length >= WRITE_BATCH) {
+      await flushBuffer();
+    }
+
+    if (rowsProcessed % 1000 === 0) {
+      const percentComplete = (rowsProcessed / totalRawRows) * 100;
+      console.log(
+        `📊 Progress: ${rowsProcessed.toLocaleString()} / ${totalRawRows.toLocaleString()} rows (${percentComplete.toFixed(1)}%) - ${rowsParsed.toLocaleString()} parsed, ${rowsSkipped.toLocaleString()} skipped`,
+      );
+
+      if (onProgress) {
+        onProgress({
+          page: rowsProcessed,
+          rowsParsed,
+          totalPages: totalRawRows,
+          percentComplete,
+        });
+      }
+    }
+  }
+
+  await flushBuffer();
+
+  if (hooks.onParsingComplete) {
+    await hooks.onParsingComplete();
+  }
+
+  console.log(`\n✅ Parsing complete for ${tableName}`);
+  console.log(`📊 Total rows processed: ${rowsProcessed.toLocaleString()}`);
+  console.log(`📊 Rows parsed (new/changed): ${rowsParsed.toLocaleString()}`);
+  console.log(`📊 Rows skipped (unchanged): ${rowsSkipped.toLocaleString()}`);
+
+  if (onProgress) {
+    onProgress({
+      page: rowsProcessed,
+      rowsParsed,
+      totalPages: totalRawRows,
+      percentComplete: 100,
+    });
+  }
+}
+
+/**
+ * Legacy file-based parser for tables that require file storage (VaskiData).
+ */
+async function parseTableLegacyFileStorage(
+  options: ParseOptions,
+): Promise<void> {
   const {
     tableName,
     sourceStage = "raw",
@@ -136,15 +314,13 @@ export async function parseTable(options: ParseOptions): Promise<void> {
 
   const storage = getStorage();
 
-  console.log(`\n🔄 Parsing table: ${tableName}`);
+  console.log(`\n🔄 Parsing table: ${tableName} (legacy file storage)`);
   console.log(`📁 Storage: ${storage.name}`);
   console.log(`📊 Source stage: ${sourceStage}`);
   console.log(`📊 Target stage: ${targetStage}`);
 
-  // Get parser function and hooks
   const { parse: parseData, hooks } = await getParserModule(tableName);
 
-  // List all pages for this table (use high maxKeys to get all pages)
   const prefix = StorageKeyBuilder.listPrefixForTable(sourceStage, tableName);
   const sourceKeys = await listAllStorageKeys(storage, {
     prefix,
@@ -165,7 +341,6 @@ export async function parseTable(options: ParseOptions): Promise<void> {
     console.log(`🔄 Force mode: re-parsing all ${sourceKeys.length} pages`);
     pagesToParse = sourceKeys;
   } else {
-    // Check which pages are already parsed by matching filenames
     const targetPrefix = StorageKeyBuilder.listPrefixForTable(
       targetStage,
       tableName,
@@ -175,12 +350,10 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       pageSize: 10_000,
     });
 
-    // Build set of already-parsed filenames (e.g. "page_000000000001+000000000100.json")
     const parsedFilenames = new Set(
       parsedKeys.map((k) => k.key.split("/").pop()!),
     );
 
-    // Find the last parsed file (highest lastPk) to re-parse it
     const parsedRefs = parsedKeys
       .map((k) => StorageKeyBuilder.parseKey(k.key))
       .filter(
@@ -232,7 +405,6 @@ export async function parseTable(options: ParseOptions): Promise<void> {
 
   console.log();
 
-  // Sort pages by firstPk ascending so we process in order
   const sortedPagesToParse = [...pagesToParse].sort((a, b) => {
     const ra = StorageKeyBuilder.parseKey(a.key);
     const rb = StorageKeyBuilder.parseKey(b.key);
@@ -244,7 +416,6 @@ export async function parseTable(options: ParseOptions): Promise<void> {
   let internalPageCounter = alreadyParsedCount + 1;
   let totalRowsParsed = 0;
 
-  // Process each page
   for (const keyMetadata of sortedPagesToParse) {
     const pageRef = StorageKeyBuilder.parseKey(keyMetadata.key);
     if (!pageRef) {
@@ -256,7 +427,6 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       `📄 Processing page_${String(pageRef.firstPk).padStart(12, "0")}+${String(pageRef.lastPk).padStart(12, "0")}...`,
     );
 
-    // Read raw page data
     const rawData = await storage.get(keyMetadata.key);
     if (!rawData) {
       console.warn(`⚠️  Could not read ${keyMetadata.key}`);
@@ -279,14 +449,11 @@ export async function parseTable(options: ParseOptions): Promise<void> {
         ? apiResponse.source.scrapedAt
         : null;
 
-    // Parse each row in the page
     const parsedRows: ParsedRow[] = [];
 
     for (const rowData of apiResponse.rowData) {
-      // Convert array to object
       const rowObject = rowArrayToObject(apiResponse.columnNames, rowData);
 
-      // Apply parser
       const [_identifier, parsedData] = await parseData(
         rowObject,
         apiResponse.pkName,
@@ -304,7 +471,6 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       totalRowsParsed++;
     }
 
-    // Create parsed page structure — same PK-range filename as source
     const parsedPage = {
       columnNames: apiResponse.columnNames,
       pkName: apiResponse.pkName,
@@ -320,7 +486,6 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       },
     };
 
-    // Write parsed page using same PK-range key
     const targetKey = StorageKeyBuilder.forPkRange(
       targetStage,
       tableName,
@@ -328,14 +493,7 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       pageRef.lastPk,
     );
     await storage.put(targetKey, JSON.stringify(parsedPage, null, 2));
-    await recordSourceStagePage(
-      tableName,
-      targetStage,
-      internalPageCounter,
-      parsedPage.rowCount,
-    );
 
-    // Call page hook if the parser module exports one
     if (hooks.onPageParsed) {
       await hooks.onPageParsed(targetKey, parsedRows);
     }
@@ -348,7 +506,6 @@ export async function parseTable(options: ParseOptions): Promise<void> {
       `✅ Parsed page_${String(pageRef.firstPk).padStart(12, "0")}+${String(pageRef.lastPk).padStart(12, "0")} (${apiResponse.rowCount} rows) - ${percentComplete.toFixed(1)}% complete`,
     );
 
-    // Call progress callback
     if (onProgress) {
       onProgress({
         page: internalPageCounter,
@@ -361,7 +518,6 @@ export async function parseTable(options: ParseOptions): Promise<void> {
     internalPageCounter++;
   }
 
-  // Call completion hook if the parser module exports one
   if (hooks.onParsingComplete) {
     await hooks.onParsingComplete();
   }

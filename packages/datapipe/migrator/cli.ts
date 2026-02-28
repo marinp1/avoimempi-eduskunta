@@ -51,9 +51,15 @@ function showStatus() {
 }
 
 async function hasAnyParsedData(): Promise<boolean> {
-  const storage = getStorage();
+  // Check parsed row store (non-VaskiData tables)
+  const { getParsedRowStore } = await import("../../shared/storage/row-store/factory");
+  const parsedStore = getParsedRowStore();
+  const tables = await parsedStore.tableNames();
+  if (tables.length > 0) return true;
+
+  // Fall back to legacy file storage check for VaskiData
   const parsedPrefix = StorageKeyBuilder.listPrefixForStage("parsed");
-  const result = await storage.list({ prefix: parsedPrefix, maxKeys: 1 });
+  const result = await getStorage().list({ prefix: parsedPrefix, maxKeys: 1 });
   return result.keys.length > 0;
 }
 
