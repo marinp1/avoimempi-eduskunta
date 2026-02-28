@@ -1,5 +1,4 @@
 import { TableNames } from "#constants";
-import { getStorage, listAllStorageKeys, StorageKeyBuilder } from "#storage";
 import { getExactTableCountsByRows } from "#table-counts";
 
 type Stage = "raw" | "parsed";
@@ -10,14 +9,6 @@ interface Args {
   pkName?: string;
   timeoutMs: number;
   json: boolean;
-}
-
-interface PageData {
-  columnNames?: string[];
-  pkName?: string;
-  rowCount?: number;
-  rowData?: any[][];
-  hasMore?: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -198,147 +189,48 @@ async function probeNextId(
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const storage = getStorage();
-  const prefix = StorageKeyBuilder.listPrefixForTable(args.stage, args.table);
 
-  const [{ apiRowCount, tablesInEndpoint }, keys] = await Promise.all([
-    fetchApiCount(args.table),
-    listAllStorageKeys(storage, { prefix, pageSize: 10_000 }),
-  ]);
+  const { getRawRowStore, getParsedRowStore } = await import(
+    "../packages/shared/storage/row-store/factory.ts"
+  );
+  const rowStore = args.stage === "raw" ? getRawRowStore() : getParsedRowStore();
 
-  if (keys.length === 0) {
-    throw new Error(`No pages found under prefix: ${prefix}`);
+  const [{ apiRowCount, tablesInEndpoint }, localRowCount, localMaxPk] =
+    await Promise.all([
+      fetchApiCount(args.table),
+      rowStore.count(args.table),
+      rowStore.maxPk(args.table),
+    ]);
+
+  if (localRowCount === 0) {
+    throw new Error(
+      `No rows found for table: ${args.table} (stage: ${args.stage})`,
+    );
   }
 
   const resolvedPkName =
     args.pkName ?? (await fetchApiPkName(args.table, args.timeoutMs));
 
-  const pages = keys
-    .map((k) => ({
-      key: k.key,
-      page: StorageKeyBuilder.parseKey(k.key)?.firstPk ?? 0,
-    }))
-    .sort((a, b) => a.page - b.page);
-
-  let localRowsByRowData = 0;
-  let localRowsByRowCountField = 0;
-  let pagesWithNoPkColumn = 0;
-  let pagesWithRowCountMismatch = 0;
-  const rowCountMismatchPages: Array<{
-    page: number;
-    rowDataLength: number;
-    rowCountField: number | null;
-  }> = [];
-
-  const uniqueIds = new Set<number>();
-  let duplicateIds = 0;
-  let invalidIds = 0;
-  let minId: number | null = null;
-  let maxId: number | null = null;
-
-  let lastPageHasMore: boolean | null = null;
-  let lastPageNumber = 0;
-
-  for (const page of pages) {
-    const raw = await storage.get(page.key);
-    if (!raw) continue;
-
-    const data = JSON.parse(raw) as PageData;
-    const rowData = data.rowData ?? [];
-    const rowCountField =
-      typeof data.rowCount === "number" && Number.isFinite(data.rowCount)
-        ? data.rowCount
-        : null;
-    const pagePkName = data.pkName ?? resolvedPkName;
-    const columnNames = data.columnNames ?? [];
-    const pkIndex = columnNames.indexOf(pagePkName);
-
-    localRowsByRowData += rowData.length;
-    if (rowCountField !== null) {
-      localRowsByRowCountField += rowCountField;
-      if (rowCountField !== rowData.length) {
-        pagesWithRowCountMismatch++;
-        if (rowCountMismatchPages.length < 25) {
-          rowCountMismatchPages.push({
-            page: page.page,
-            rowDataLength: rowData.length,
-            rowCountField,
-          });
-        }
-      }
-    } else {
-      localRowsByRowCountField += rowData.length;
-    }
-
-    if (pkIndex < 0) {
-      pagesWithNoPkColumn++;
-    } else {
-      for (const row of rowData) {
-        const numericId = toNumericId(row?.[pkIndex]);
-        if (numericId === null) {
-          invalidIds++;
-          continue;
-        }
-        if (uniqueIds.has(numericId)) {
-          duplicateIds++;
-        } else {
-          uniqueIds.add(numericId);
-          minId = minId === null ? numericId : Math.min(minId, numericId);
-          maxId = maxId === null ? numericId : Math.max(maxId, numericId);
-        }
-      }
-    }
-
-    if (page.page >= lastPageNumber) {
-      lastPageNumber = page.page;
-      if (typeof data.hasMore === "boolean") {
-        lastPageHasMore = data.hasMore;
-      }
-    }
-  }
-
   const probe =
-    maxId !== null
-      ? await probeNextId(args.table, resolvedPkName, maxId + 1, args.timeoutMs)
+    localMaxPk !== null
+      ? await probeNextId(
+          args.table,
+          resolvedPkName,
+          localMaxPk + 1,
+          args.timeoutMs,
+        )
       : null;
 
   const diffRowsVsApi =
-    apiRowCount !== null ? localRowsByRowData - apiRowCount : null;
-  const diffUniqueVsApi =
-    apiRowCount !== null ? uniqueIds.size - apiRowCount : null;
+    apiRowCount !== null ? localRowCount - apiRowCount : null;
 
   const reasons: string[] = [];
   if (apiRowCount === null) {
     reasons.push("Table not found in API counts endpoint.");
   }
-  if (lastPageHasMore === true) {
-    reasons.push(
-      "Local last page indicates hasMore=true, so scraping likely incomplete.",
-    );
-  }
   if (probe?.hasRow) {
     reasons.push(
-      `API returned at least one row for ${resolvedPkName} >= ${maxId! + 1}, so local data likely behind API.`,
-    );
-  }
-  if (duplicateIds > 0) {
-    reasons.push(
-      `Local data contains duplicate primary keys (${duplicateIds.toLocaleString()}).`,
-    );
-  }
-  if (invalidIds > 0) {
-    reasons.push(
-      `Local data has non-numeric/invalid PK values (${invalidIds.toLocaleString()}).`,
-    );
-  }
-  if (pagesWithNoPkColumn > 0) {
-    reasons.push(
-      `Some pages are missing the PK column (${pagesWithNoPkColumn.toLocaleString()} pages).`,
-    );
-  }
-  if (pagesWithRowCountMismatch > 0) {
-    reasons.push(
-      `Some pages have rowCount != rowData.length (${pagesWithRowCountMismatch.toLocaleString()} pages).`,
+      `API returned at least one row for ${resolvedPkName} >= ${localMaxPk! + 1}, so local data likely behind API.`,
     );
   }
   reasons.push(
@@ -349,33 +241,21 @@ async function main() {
     table: args.table,
     stage: args.stage,
     pkName: resolvedPkName,
-    pagesScanned: pages.length,
     apiRowCount,
     apiCountsTablesListed: tablesInEndpoint,
-    localRowsByRowData,
-    localRowsByRowCountField,
-    localUniqueIds: uniqueIds.size,
-    duplicateIds,
-    invalidIds,
-    pagesWithNoPkColumn,
-    pagesWithRowCountMismatch,
-    rowCountMismatchPages,
-    minId,
-    maxId,
-    lastPageNumber,
-    lastPageHasMore,
+    localRowCount,
+    maxId: localMaxPk,
     probeFromNextId:
-      maxId === null
+      localMaxPk === null
         ? null
         : {
-            startAtId: maxId + 1,
+            startAtId: localMaxPk + 1,
             hasRow: probe?.hasRow ?? false,
             returnedPk: probe?.returnedPk ?? null,
             rowCount: probe?.rowCount ?? 0,
             error: probe?.error,
           },
     diffRowsVsApi,
-    diffUniqueVsApi,
     likelyReasons: reasons,
   };
 
@@ -387,25 +267,11 @@ async function main() {
   console.log(`Table:                ${result.table}`);
   console.log(`Stage:                ${result.stage}`);
   console.log(`PK column:            ${result.pkName}`);
-  console.log(`Pages scanned:        ${result.pagesScanned.toLocaleString()}`);
   console.log(`API row count:        ${result.apiRowCount ?? "n/a"}`);
-  console.log(
-    `Local rows (rowData): ${result.localRowsByRowData.toLocaleString()}`,
-  );
-  console.log(
-    `Local unique IDs:     ${result.localUniqueIds.toLocaleString()}`,
-  );
-  console.log(`Duplicate IDs:        ${result.duplicateIds.toLocaleString()}`);
-  console.log(`Invalid IDs:          ${result.invalidIds.toLocaleString()}`);
-  console.log(
-    `ID span:              ${result.minId ?? "-"} .. ${result.maxId ?? "-"}`,
-  );
-  console.log(`Last page hasMore:    ${result.lastPageHasMore ?? "unknown"}`);
+  console.log(`Local row count:      ${result.localRowCount.toLocaleString()}`);
+  console.log(`Max local ID:         ${result.maxId ?? "-"}`);
   console.log(
     `Diff rows vs API:     ${result.diffRowsVsApi === null ? "n/a" : result.diffRowsVsApi.toLocaleString()}`,
-  );
-  console.log(
-    `Diff unique vs API:   ${result.diffUniqueVsApi === null ? "n/a" : result.diffUniqueVsApi.toLocaleString()}`,
   );
 
   if (result.probeFromNextId) {
@@ -414,16 +280,6 @@ async function main() {
     console.log(
       `  startAtId=${result.probeFromNextId.startAtId}, hasRow=${result.probeFromNextId.hasRow}, returnedPk=${result.probeFromNextId.returnedPk ?? "null"}, rowCount=${result.probeFromNextId.rowCount}, error=${result.probeFromNextId.error ?? "-"}`,
     );
-  }
-
-  if (result.rowCountMismatchPages.length > 0) {
-    console.log("");
-    console.log("Pages with rowCount mismatch (first 25):");
-    for (const page of result.rowCountMismatchPages) {
-      console.log(
-        `  page=${page.page}, rowCountField=${page.rowCountField ?? "null"}, rowDataLength=${page.rowDataLength}`,
-      );
-    }
   }
 
   console.log("");

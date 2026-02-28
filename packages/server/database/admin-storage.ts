@@ -1,12 +1,6 @@
 import { TableName } from "#constants/index";
-import { getStorage } from "#storage/factory";
-import { listAllStorageKeys } from "#storage/list-all";
 import { getParsedRowStore, getRawRowStore } from "#storage/row-store/factory";
-import {
-  type DataStage,
-  StorageKeyBuilder,
-  type StorageMetadata,
-} from "#storage/types";
+import type { DataStage } from "#storage/types";
 import { getCachedTableCountMapByRows } from "#table-counts";
 
 export interface TableStorageStatus {

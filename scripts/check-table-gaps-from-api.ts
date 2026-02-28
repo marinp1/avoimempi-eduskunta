@@ -1,5 +1,3 @@
-import { getStorage, listAllStorageKeys, StorageKeyBuilder } from "#storage";
-
 type Stage = "raw" | "parsed";
 
 interface Args {
@@ -10,12 +8,6 @@ interface Args {
   concurrency: number;
   timeoutMs: number;
   json: boolean;
-}
-
-interface PageData {
-  columnNames?: string[];
-  pkName?: string;
-  rowData?: any[][];
 }
 
 interface MissingRange {
@@ -189,51 +181,32 @@ async function resolvePkName(
 async function readLocalMissingIds(
   table: string,
   stage: Stage,
-  pkName: string,
+  _pkName: string, // pkName not needed; PKs are stored directly
   maxIds: number,
 ): Promise<{
   missingRanges: MissingRange[];
   missingIds: number[];
   totalRows: number;
 }> {
-  const storage = getStorage();
-  const prefix = StorageKeyBuilder.listPrefixForTable(stage, table);
-  const keys = await listAllStorageKeys(storage, { prefix, pageSize: 10_000 });
-  if (keys.length === 0) {
-    throw new Error(`No pages found under prefix: ${prefix}`);
-  }
-
-  const pages = keys
-    .map((k) => ({
-      key: k.key,
-      page: StorageKeyBuilder.parseKey(k.key)?.firstPk ?? 0,
-    }))
-    .sort((a, b) => a.page - b.page);
-
+  const { getRawRowStore, getParsedRowStore } = await import(
+    "../packages/shared/storage/row-store/factory.ts"
+  );
+  const rowStore = stage === "raw" ? getRawRowStore() : getParsedRowStore();
   const uniqueIds = new Set<number>();
   let totalRows = 0;
 
-  for (const page of pages) {
-    const raw = await storage.get(page.key);
-    if (!raw) continue;
-    const data = JSON.parse(raw) as PageData;
-    const columnNames = data.columnNames ?? [];
-    const rowData = data.rowData ?? [];
-    const pagePkName = data.pkName ?? pkName;
-    const pkIndex = columnNames.indexOf(pagePkName);
-    if (pkIndex < 0) continue;
+  for await (const row of rowStore.list(table)) {
+    uniqueIds.add(row.pk);
+    totalRows++;
+  }
 
-    for (const row of rowData) {
-      totalRows++;
-      const id = toNumericId(row?.[pkIndex]);
-      if (id !== null) uniqueIds.add(id);
-    }
+  if (totalRows === 0) {
+    throw new Error(`No rows found for table: ${table} (stage: ${stage})`);
   }
 
   const sortedIds = Array.from(uniqueIds).sort((a, b) => a - b);
   const ranges = collectMissingRanges(sortedIds);
   const missingIds = expandMissingIds(ranges, maxIds);
-
   return { missingRanges: ranges, missingIds, totalRows };
 }
 
