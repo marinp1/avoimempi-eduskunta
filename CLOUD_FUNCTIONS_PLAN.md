@@ -63,77 +63,46 @@ The migrator output is uploaded to Object Storage and the server picks it up.
 
 ---
 
-## The One Real Blocker: Shared Storage
+## The One Real Blocker: Shared Storage (solved)
 
 `raw.db` and `parsed.db` are local SQLite files. Cloud functions are
 stateless and cannot share local files between invocations.
 
 **Block volumes do NOT work here.** Scaleway Block Storage attaches only
-to Instances (VMs), not to Serverless Containers or Functions. There is
-no shared filesystem option in the Scaleway serverless offering.
+to Instances (VMs), not to Serverless Containers or Functions.
 
-The `IRowStore` interface is already provider-agnostic. Two practical options:
+### Solution: Scaleway Serverless SQL Database (~€2/month)
 
-### Option A — Managed PostgreSQL (~€15/month)
+A PostgreSQL-compatible serverless database that scales to zero when idle.
+Billing is per vCPU-second with a 5-minute minimum window per active session.
 
-Implement `PostgresRowStore` satisfying the existing `IRowStore` interface.
-The schema maps directly from SQLite:
+**Cost for this workload**:
+- 3 runs/day × 5-min minimum window × €0.13572/vCPU/hour ≈ **€1/month compute**
+- ~5–10 GB storage × €0.000272/GB/hour ≈ **€1/month storage**
+- **Total: ~€2/month**
 
+**Implementation**: `PostgresRowStore` is already implemented in
+`packages/shared/storage/row-store/providers/postgres.ts`. It satisfies
+the same `IRowStore` interface as `SqliteRowStore` with identical semantics.
+
+Schema (auto-created on first connection):
 ```sql
 -- raw store
-CREATE TABLE raw_rows (
-  table_name TEXT NOT NULL, pk INTEGER NOT NULL,
-  column_hash TEXT, data JSONB NOT NULL, hash TEXT NOT NULL,
-  updated_at TIMESTAMPTZ NOT NULL,
-  PRIMARY KEY (table_name, pk)
-);
-CREATE TABLE raw_column_schemas (
-  hash TEXT PRIMARY KEY, table_name TEXT NOT NULL,
-  pk_name TEXT NOT NULL, column_names TEXT[] NOT NULL,
-  first_seen TIMESTAMPTZ NOT NULL
-);
+raw_column_schemas(hash PK, table_name, pk_name, column_names, first_seen)
+raw_rows(table_name, pk, column_hash, data, hash, updated_at, PK(table_name,pk))
 
--- parsed store (same structure, no column_schemas table)
-CREATE TABLE parsed_rows (
-  table_name TEXT NOT NULL, pk INTEGER NOT NULL,
-  data JSONB NOT NULL, hash TEXT NOT NULL,
-  updated_at TIMESTAMPTZ NOT NULL,
-  PRIMARY KEY (table_name, pk)
-);
+-- parsed store
+parsed_rows(table_name, pk, data, hash, updated_at, PK(table_name,pk))
 ```
 
-All key operations map directly:
-- `count(tableName)` → `SELECT COUNT(*) WHERE table_name = ?`
-- `maxPk(tableName)` → `SELECT MAX(pk) WHERE table_name = ?`
-- `list(tableName)` → streaming cursor `WHERE table_name = ? ORDER BY pk`
-- `upsertBatch(...)` → `INSERT ... ON CONFLICT DO UPDATE`
+Enable via env vars:
+```bash
+ROW_STORE_PROVIDER=postgres
+ROW_STORE_DATABASE_URL=postgres://user:pass@host:5432/dbname
+```
 
-Concurrent access from all functions is safe with no special handling.
-Seed once by importing locally-built SQLite data via a migration script.
-
-**Verdict**: Cleanest option. Minimal implementation complexity.
-
-### Option B — Object Storage + metadata sidecar (~€0–1/month)
-
-Implement `S3RowStore`. Store each row as `{store}/{tableName}/{pk}.json`.
-The expensive operations (`count`, `maxPk`) need a sidecar:
-`{store}/{tableName}/_meta.json` — updated on every `upsertBatch` with
-`{ count, maxPk, updatedAt }`. Since concurrent upserts could race on
-the sidecar, accept occasional stale counts (fine for this workload —
-inspector only uses them for an approximate comparison).
-
-- Lower running cost than PostgreSQL.
-- Higher implementation complexity.
-- `list()` requires a prefix LIST + individual GETs — acceptable for
-  sequential parser reads but slower than a DB cursor.
-
-**Verdict**: Worth it only if the €15/month PostgreSQL cost is a concern.
-
-### Recommendation
-
-**Start with Managed PostgreSQL (Option A).** It maps cleanly to the
-existing interface and handles all edge cases correctly. The €15/month
-cost is negligible versus the engineering time of implementing S3 locking.
+Seed once by importing locally-built SQLite data into PostgreSQL.
+Cloud functions then append incrementally via `upsertBatch`.
 
 ---
 
@@ -180,23 +149,26 @@ Run after schema migrations or full resyncs. Upload the resulting
 
 ## Implementation Order
 
-1. **Implement `PostgresRowStore`** — new file in
-   `packages/shared/storage/row-store/providers/postgres.ts`, factory
-   selection via `ROW_STORE_PROVIDER=postgres` env var.
+1. ✅ **`PostgresRowStore` implemented** — `providers/postgres.ts`, factory
+   selection via `ROW_STORE_PROVIDER=postgres` + `ROW_STORE_DATABASE_URL`.
 
-2. **Seed PostgreSQL** — one-off script to import locally-built `raw.db`
-   and `parsed.db` into the Postgres tables.
+2. ✅ **`maxPagesPerInvocation` implemented** — scraper self-limits and
+   re-enqueues remainder; `PIPELINE_SCRAPER_MAX_PAGES_PER_INVOCATION=200`.
 
-3. **Deploy Inspector** — Serverless Container, cron trigger every 8h,
+3. **Provision Scaleway Serverless SQL Database** — Terraform resource,
+   output the connection URL as a secret.
+
+4. **Seed PostgreSQL** — one-off local script to stream `raw.db` /
+   `parsed.db` rows into the Postgres tables via `PostgresRowStore`.
+
+5. **Deploy Inspector** — Serverless Container, cron trigger every 8h,
    `skipGapDetection: true`, `ROW_STORE_PROVIDER=postgres`.
 
-4. **Deploy Scraper** — Serverless Container, SQS trigger, concurrency 20,
+6. **Deploy Scraper** — Serverless Container, SQS trigger, concurrency 20,
    5-min timeout, `PIPELINE_SCRAPER_MAX_PAGES_PER_INVOCATION=200`.
 
-5. **Deploy Parser** — Serverless Container, SQS trigger, concurrency 20,
+7. **Deploy Parser** — Serverless Container, SQS trigger, concurrency 20,
    5-min timeout.
-
-6. **(Later) Object Storage row store** — if running cost becomes a concern.
 
 ---
 
