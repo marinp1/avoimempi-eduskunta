@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import path from "node:path";
 import { getStorageConfig } from "../config";
+import { PostgresRowStore } from "./providers/postgres";
 import { SqliteRowStore } from "./providers/sqlite";
 import type { IRowStore } from "./types";
 
@@ -19,18 +20,30 @@ function getRowStoreDir(): string {
 
 export function getRawRowStore(): IRowStore {
   if (!rawStore) {
-    const dir = getRowStoreDir();
-    mkdirSync(dir, { recursive: true });
-    rawStore = new SqliteRowStore(path.join(dir, "raw.db"), "raw");
+    if (process.env.ROW_STORE_PROVIDER === "postgres") {
+      const url = process.env.ROW_STORE_DATABASE_URL;
+      if (!url) throw new Error("ROW_STORE_DATABASE_URL is required when ROW_STORE_PROVIDER=postgres");
+      rawStore = new PostgresRowStore(url, "raw");
+    } else {
+      const dir = getRowStoreDir();
+      mkdirSync(dir, { recursive: true });
+      rawStore = new SqliteRowStore(path.join(dir, "raw.db"), "raw");
+    }
   }
   return rawStore;
 }
 
 export function getParsedRowStore(): IRowStore {
   if (!parsedStore) {
-    const dir = getRowStoreDir();
-    mkdirSync(dir, { recursive: true });
-    parsedStore = new SqliteRowStore(path.join(dir, "parsed.db"), "parsed");
+    if (process.env.ROW_STORE_PROVIDER === "postgres") {
+      const url = process.env.ROW_STORE_DATABASE_URL;
+      if (!url) throw new Error("ROW_STORE_DATABASE_URL is required when ROW_STORE_PROVIDER=postgres");
+      parsedStore = new PostgresRowStore(url, "parsed");
+    } else {
+      const dir = getRowStoreDir();
+      mkdirSync(dir, { recursive: true });
+      parsedStore = new SqliteRowStore(path.join(dir, "parsed.db"), "parsed");
+    }
   }
   return parsedStore;
 }

@@ -8,6 +8,7 @@
   "description": "Data aggregation and analysis platform for Finnish Parliament",
   "dependencies": {
     "@aws-sdk/client-sqs": "3.1000.0",
+    "postgres": "3.4.8",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
     "@mui/icons-material": "7.3.4",
