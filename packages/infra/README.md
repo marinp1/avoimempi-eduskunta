@@ -1,9 +1,10 @@
-# Scaleway Infra (Bucket + SQS Queues)
+# Scaleway Infra (Bucket + SQS Queues + Optional Cloud Functions)
 
 This folder provisions:
 
 - one hardcoded Scaleway Object Storage bucket for pipeline data
 - Scaleway Queues (SQS API) resources for datapipe orchestration
+- optional serverless functions + triggers for inspector/scraper/parser/migrator
 
 ## What it creates
 
@@ -11,7 +12,10 @@ This folder provisions:
 - Region: `nl-ams`
 - ACL: `private` (not public)
 - Queues service activation (`scaleway_mnq_sqs`)
-- One SQS credential for pipeline workers (manage/publish/receive)
+- SQS credentials for:
+  - queue provisioning (manage-only)
+  - inspector dispatcher (publish-only)
+  - queue workers (receive+publish)
 - Three SQS queues:
   - `datapipe-inspector`
   - `datapipe-scraper`
@@ -21,6 +25,13 @@ This folder provisions:
   - `parsed/`
   - `metadata/`
   - `artifacts/`
+- Optional serverless functions (behind `enable_cloud_functions`):
+  - inspector dispatcher function (cron every 8h) enqueues inspect tasks
+  - inspector worker function triggered from `datapipe-inspector` queue
+  - scraper function triggered from `datapipe-scraper` queue
+  - parser function triggered from `datapipe-parser` queue
+  - migrator function (manual trigger; only created when `pipeline_migrator_zip_file` is set)
+  - queue failures are retried and then sent to DLQ after `max_receive_count = 3`
 
 Note: S3-compatible storage does not require explicit folder resources. Prefixes appear automatically when objects are written.
 
@@ -30,6 +41,17 @@ Optional (recommended) override for project ID used for queue resources:
 
 ```bash
 export TF_VAR_project_id="<your-scaleway-project-id>"
+```
+
+Enable cloud functions and point to function zip artifacts (built separately):
+
+```bash
+export TF_VAR_enable_cloud_functions=true
+export TF_VAR_pipeline_inspector_zip_file="/absolute/path/to/inspector.zip"
+export TF_VAR_pipeline_inspector_worker_zip_file="/absolute/path/to/inspector-worker.zip"
+export TF_VAR_pipeline_scraper_zip_file="/absolute/path/to/scraper.zip"
+export TF_VAR_pipeline_parser_zip_file="/absolute/path/to/parser.zip"
+export TF_VAR_pipeline_migrator_zip_file="/absolute/path/to/migrator.zip" # optional
 ```
 
 Then run:
@@ -51,13 +73,54 @@ After apply, inspect outputs:
 tofu output pipeline_queue_names
 tofu output pipeline_queue_urls
 tofu output pipeline_queue_env_template
-tofu output -json pipeline_sqs_credentials
+tofu output -json pipeline_sqs_credentials_inspector
+tofu output -json pipeline_sqs_credentials_worker
+tofu output cloud_function_namespace
+tofu output cloud_functions
 ```
 
-`pipeline_sqs_credentials` is marked sensitive and contains:
+`pipeline_sqs_credentials_inspector` and `pipeline_sqs_credentials_worker` are marked sensitive and contain:
 
 - `PIPELINE_SQS_ACCESS_KEY_ID`
 - `PIPELINE_SQS_SECRET_ACCESS_KEY`
+
+## Data update lifecycle (functions)
+
+```mermaid
+flowchart TD
+  CRON["Cron (every 8h)"]
+  IDF["Inspector dispatcher function"]
+  IQ["SQS: datapipe-inspector"]
+  IWF["Inspector worker function (SQS trigger)"]
+  SQ["SQS: datapipe-scraper"]
+  SCF["Scraper function (SQS trigger)"]
+  PQ["SQS: datapipe-parser"]
+  PF["Parser function (SQS trigger)"]
+  DLQI["DLQ: inspector"]
+  DLQS["DLQ: scraper"]
+  DLQP["DLQ: parser"]
+  API["Eduskunta Open API"]
+  RAW["Row store (raw)"]
+  PARSED["Row store (parsed)"]
+
+  CRON --> IDF --> IQ --> IWF
+  IWF --> SQ
+  SCF --> API
+  SCF --> RAW
+  SCF --> PQ
+  PF --> RAW
+  PF --> PARSED
+
+  IQ -. max_receive_count=3 .-> DLQI
+  SQ -. max_receive_count=3 .-> DLQS
+  PQ -. max_receive_count=3 .-> DLQP
+```
+
+Function behavior constraints:
+
+- Every function has finite timeout (`300s`, migrator `1800s`).
+- Queue workers are event-driven, not infinite polling loops.
+- Retries are bounded by SQS redrive policy and end in DLQ.
 
 ## Upload existing local data
 
