@@ -41,6 +41,7 @@
     "parse": "cd packages/datapipe && bun run parser/cli.ts",
     "migrate": "cd packages/datapipe && bun run migrator/cli.ts",
     "migrate:fresh": "cd packages/datapipe && bun run migrator/cli.ts recreate",
+    "rowstore:compact": "bun run scripts/compact-row-stores.ts",
     "test": "bun test",
     "bench:sql": "bun run packages/server/scripts/benchmark-query-latency.ts",
     "bench:http": "bun run packages/server/scripts/benchmark-http-load.ts",
