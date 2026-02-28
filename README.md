@@ -1,226 +1,200 @@
 # Avoimempi Eduskunta (More Open Parliament)
 
-Aggregate data from multiple open sources for analysis.
+Data aggregation and analysis platform for Finnish Parliament (Eduskunta) data.
+
+The project ingests source data from the Eduskunta Open API, transforms it through a three-stage pipeline, imports it into SQLite, and serves it through a Bun + React web app.
 
 ## Requirements
 
-- **bun** v1.2.2
-- **podman** or **docker**
+- `bun` v1.2.2
+- `podman` or `docker` (optional, for containerized workflows)
 
-## Project structure
+## Monorepo structure
 
 ```txt
-# migration files
-migrations/
-└── *.sql
-modules/
-│ # common constants and utils
-├── common/
-│   ├── constants/
-│   └── typings/
-│ # code to fetch raw data
-├── scraper/
-│   ├── data/
-│   │   └── <TableName>/
-│   │       └── page-*.json
-│   ├── fn/
-│   │   └── <TableName>.mts
-│   └── scrape-table.mts
-│ # code to import parsed data
-├── migrator/
-│   ├── <TableName>/
-│   │   ├── migrator.mts
-│   │   ├── DataModel.mts
-│   │   ├── SQLModel.mts
-│   │   └── schema.json
-│   └── import-data.mts
-│ # code to parse fetched raw data
-├── parser/
-│   ├── data/
-│   │   └── <TableName>/
-│   │       └── *.json
-│   ├── fn/
-│   │   └── <TableName>.mts
-│   └── parse-data.mts
-│ # other random scripts and transformation files
-└── scripts/
+packages/
+├── client/      React frontend (Material UI)
+├── server/      Bun HTTP API + admin controllers + database access
+├── datapipe/    Scraper, parser, and migrator CLIs
+└── shared/      Shared constants, types, storage, and DB utilities
+
+data/
+├── raw.db       Raw rows from scraper
+└── parsed.db    Parsed rows from parser
+
+avoimempi-eduskunta.db         Final application SQLite database
+avoimempi-eduskunta-trace.db   Import/source-reference trace database
 ```
 
-## Data import status
+## Quick start
 
-Status of data import.
+```bash
+bun install
+cp .env.example .env
+bun run start
+```
 
-| source | name                    | description                             | status    | info            |
-| ------ | ----------------------- | --------------------------------------- | --------- | --------------- |
-| API    | Attachment              | TBD                                     | unstarted |
-| API    | AttachmentGroup         | TBD                                     | unstarted |
-| API    | HetekaData              | TBD                                     | unstarted |
-| API    | MemberOfParliament      | Representatives and their related data. | imported  | partial support |
-| API    | PrimaryKeys             | TBD                                     | unstarted |
-| API    | SaliDBAanestys          | Voting sessions in parliament.          | parsed    |
-| API    | SaliDBAanestysAsiakirja | Document refs extracted only (no dedicated table) | imported |
-| API    | SaliDBAanestysEdustaja  | Votes by representatives.               | parsed    |
-| API    | SaliDBAanestysJakauma   | Removed from DB (redundant with Vote aggregates) | skipped |
-| API    | SaliDBAanestysKieli     | TBD                                     | unstarted |
-| API    | SaliDBIstunto           | TBD                                     | unstarted |
-| API    | SaliDBKohta             | TBD                                     | unstarted |
-| API    | SaliDBKohtaAanestys     | TBD                                     | unstarted |
-| API    | SaliDBKohtaAsiakirja    | TBD                                     | unstarted |
-| API    | SaliDBMessageLog        | TBD                                     | unstarted |
-| API    | SaliDBPuheenvuoro       | TBD                                     | unstarted |
-| API    | SaliDBTiedote           | TBD                                     | unstarted |
-| API    | SeatingOfParliament     | TBD                                     | unstarted |
-| API    | VaskiData               | TBD                                     | unstarted |
+In development mode (`bun run start`), the server runs on `http://localhost:3000` by default and enables:
 
-## Database ER diagram
+- main app routes
+- dev/admin routes including `/admin`
+- WebSocket progress updates for scraper/parser/migrator runs
 
-The imported data is transformed into the the following tables.
+## Data pipeline
 
 ```mermaid
-erDiagram
-    Representative {
-        INT person_id PK
-        VARCHAR(100) last_name
-        VARCHAR(100) first_name
-        VARCHAR(100) sort_name
-        VARCHAR(100) marticle_name
-        VARCHAR(100) party
-        BOOLEAN minister
-        VARCHAR(50) phone
-        VARCHAR(100) email
-        VARCHAR(100) current_municipality
-        VARCHAR(100) profession
-        TEXT website
-        TEXT additional_info
-        DATE birth_date
-        VARCHAR(100) birth_place
-        DATE death_date
-        VARCHAR(100) death_place
-        VARCHAR(16) gender
-        DATE term_end_date
-    }
-
-    Education {
-        INT id PK
-        INT person_id FK
-        VARCHAR(255) name
-        VARCHAR(255) institution
-        INT year
-    }
-
-    WorkHistory {
-        INT id PK
-        INT person_id FK
-        VARCHAR(255) position
-        VARCHAR(50) period
-    }
-
-    Committee {
-        VARCHAR(50) code PK
-        VARCHAR(255) name
-    }
-
-    CommitteeMembership {
-        INT id PK
-        INT person_id FK
-        VARCHAR(50) committee_code FK
-        VARCHAR(255) role
-        DATE start_date
-        DATE end_date
-    }
-
-    TrustPosition {
-        INT id PK
-        INT person_id FK
-        VARCHAR(50) position_type
-        VARCHAR(255) name
-        VARCHAR(50) period
-    }
-
-    GovernmentMembership {
-        INT id PK
-        INT person_id FK
-        VARCHAR(255) name
-        VARCHAR(255) ministry
-        VARCHAR(255) government
-        DATE start_date
-        DATE end_date
-    }
-
-    Publications {
-        INT id PK
-        INT person_id FK
-        VARCHAR(255) title
-        INT year
-        TEXT authors
-    }
-
-    ParliamentaryGroup {
-        VARCHAR(50) code PK
-        VARCHAR(255) name
-    }
-
-    ParliamentaryGroupMembership {
-        INT id PK
-        INT person_id FK
-        VARCHAR(50) group_code FK
-        DATE start_date
-        DATE end_date
-    }
-
-    ParliamentaryGroupAssignment {
-        INT id PK
-        INT person_id FK
-        VARCHAR(50) group_code FK
-        VARCHAR(255) role
-        VARCHAR(255) time_period
-        DATE start_date
-        DATE end_date
-    }
-
-    District {
-        INT id PK
-        VARCHAR(50) code
-        VARCHAR(255) name
-    }
-
-    RepresentativeDistrict {
-        INT id PK
-        INT person_id FK
-        VARCHAR(50) district_code FK
-        DATE start_date
-        DATE end_date
-    }
-
-    Term {
-        INT id PK
-        INT person_id FK
-        DATE start_date
-        DATE end_date
-    }
-
-    Interruption {
-        INT id PK
-        INT person_id FK
-        TEXT description
-        VARCHAR(50) replacement_person
-        DATE start_date
-        DATE end_date
-    }
-
-    Representative ||--o{ Education : has
-    Representative ||--o{ WorkHistory : has
-    Representative ||--o{ CommitteeMembership : has
-    Committee ||--o{ CommitteeMembership : has
-    Representative ||--o{ TrustPosition : has
-    Representative ||--o{ GovernmentMembership : has
-    Representative ||--o{ Publications : has
-    Representative ||--o{ ParliamentaryGroupMembership : has
-    ParliamentaryGroup ||--o{ ParliamentaryGroupMembership : has
-    Representative ||--o{ ParliamentaryGroupAssignment : has
-    ParliamentaryGroup ||--o{ ParliamentaryGroupAssignment : has
-    Representative ||--o{ RepresentativeDistrict : has
-    District ||--o{ RepresentativeDistrict : has
-    Representative ||--o{ Term : has
-    Representative ||--o{ Interruption : has
+flowchart LR
+  A[Eduskunta Open API] --> B[Scraper]
+  B --> C[data/raw.db]
+  C --> D[Parser]
+  D --> E[data/parsed.db]
+  E --> F[Migrator]
+  F --> G[avoimempi-eduskunta.db]
 ```
+
+### 1) Fetching (`scrape`)
+
+Command:
+
+```bash
+bun run scrape <TableName>
+```
+
+What it does:
+
+- reads table metadata from `/columns`
+- fetches rows from `/batch` using PK-based pagination
+- writes to `data/raw.db` through row-store abstraction
+- auto-resumes from the highest stored PK
+- supports targeted repair/range runs (`--from-pk`, `--to-pk`, `--single-pk`, `--patch-pk`)
+
+Status command:
+
+```bash
+bun run scrape status
+```
+
+### 2) Parsing (`parse`)
+
+Command:
+
+```bash
+bun run parse <TableName>
+```
+
+What it does:
+
+- reads raw rows from `data/raw.db`
+- reconstructs row objects from stored column schema
+- applies optional per-table parser from `packages/datapipe/parser/fn/<TableName>.ts`
+- writes normalized rows to `data/parsed.db`
+- skips unchanged rows by hash by default (`--force` to reparse)
+
+Status command:
+
+```bash
+bun run parse status
+```
+
+Parse all known tables:
+
+```bash
+bun run parse all
+```
+
+### 3) Migrating to app DB (`migrate`)
+
+Command:
+
+```bash
+bun run migrate
+```
+
+What it does:
+
+- opens/creates `avoimempi-eduskunta.db`
+- applies SQL migrations from `packages/datapipe/migrator/migrations`
+- clears import target tables
+- imports parsed data in dependency-aware order using table migrators
+- writes migration metadata and trace/source-reference data to `avoimempi-eduskunta-trace.db`
+- publishes latest SQLite artifact metadata to storage
+
+Status command:
+
+```bash
+bun run migrate status
+```
+
+Fresh rebuild (deletes DB files first, then imports):
+
+```bash
+bun run migrate:fresh
+```
+
+## Typical workflows
+
+### Single-table development loop
+
+```bash
+bun run scrape MemberOfParliament
+bun run parse MemberOfParliament
+bun run migrate
+```
+
+### Refreshing a targeted PK range
+
+```bash
+bun run scrape MemberOfParliament --from-pk 82000 --to-pk 83000
+bun run parse MemberOfParliament --pk-start 82000 --pk-end 83000
+bun run migrate
+```
+
+### Bulk operations from UI
+
+Use `/admin` in development mode for table-by-table and bulk scraper/parser control with live progress over WebSockets.
+
+## Development commands
+
+```bash
+# Start server in development mode
+bun run start
+
+# Type checking
+bun run typecheck
+
+# Tests
+bun run test
+
+# Linting
+bun run lint
+bun run lint:fix
+
+# Benchmarks
+bun run bench:sql
+bun run bench:http
+
+# API coverage sanity helper
+bun run check:table-coverage
+```
+
+## Configuration highlights
+
+Copy `.env.example` and adjust only what you need.
+
+Common variables:
+
+- `STORAGE_PROVIDER` (`local` by default)
+- `STORAGE_LOCAL_DIR` (defaults to `./data`)
+- `SERVER_DB_LAUNCH_MODE` (`local`, `latest`, or `storage-key`)
+- `DB_PATH` and `TRACE_DB_PATH` for custom DB file locations
+- migrator tuning flags such as:
+  - `MIGRATOR_SOURCE_REFERENCE_MODE`
+  - `MIGRATOR_PUBLISH_SNAPSHOT`
+  - `MIGRATOR_FOREIGN_KEY_CHECK`
+  - `MIGRATOR_VACUUM_AFTER_IMPORT`
+
+## Notes
+
+- Pipeline status is operationally tracked via CLI/Admin commands rather than a static README table.
+- Schema evolves through SQL migrations in `packages/datapipe/migrator/migrations`.
+- The README intentionally does not include a static ER diagram to avoid drift from the live schema.
