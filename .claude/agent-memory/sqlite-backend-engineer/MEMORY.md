@@ -33,6 +33,16 @@
 - VaskiDocument.status mixes text labels with numeric codes ("5", "8", "1234")
 - ExcelSpeech.speech_type: many hyphenated/broken word variants from PDF extraction
 
+## Row Store Architecture
+- `IRowStore` interface in `packages/shared/storage/row-store/types.ts`
+- SQLite provider: `packages/shared/storage/row-store/providers/sqlite.ts`
+- Postgres provider: `packages/shared/storage/row-store/providers/postgres.ts`
+- Factory switches on `ROW_STORE_PROVIDER=postgres` + `ROW_STORE_DATABASE_URL` env vars
+- `TransactionSql` from postgres.js doesn't expose call signatures due to `Omit<Sql,...>` — cast to `postgres.Sql` inside `sql.begin` callback via `as unknown as postgres.Sql`
+- Postgres COUNT() returns string — parse with `parseInt(rows[0]?.cnt ?? "0", 10)`
+- Schema init is lazy: `this.initPromise = this.initSchema()` in constructor; every public method awaits it
+- Upserts chunked at 500 rows; `list()` uses keyset pagination `pk > lastPk`, batch 1000
+
 ## Query Patterns & Gotchas
 - **NEVER JOIN Voting → Section → Session**: 97.8% of votings have empty section_key ('')
 - Use `Voting.session_key` directly for counting votings per session
