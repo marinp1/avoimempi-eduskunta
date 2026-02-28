@@ -7,6 +7,7 @@ import { resetRowStores } from "#storage/row-store/factory";
 import { SqliteRowStore } from "#storage/row-store/providers/sqlite";
 import {
   listIndexedDocumentTypes,
+  readAllVaskiRows,
   readVaskiIndex,
 } from "../migrator/VaskiData/reader";
 
@@ -91,6 +92,41 @@ describe("VaskiData reader", () => {
       expect(index).toEqual({
         hallituksen_esitys: { totalRecords: 1 },
         nimenhuutoraportti: { totalRecords: 1 },
+      });
+    });
+  });
+
+  test("iterates typed rows with _source metadata", async () => {
+    await withTempWorkspace(async (workspace) => {
+      const dataDir = path.join(workspace, "data");
+      await mkdir(dataDir, { recursive: true });
+
+      const parsedStore = new SqliteRowStore(
+        path.join(dataDir, "parsed.db"),
+        "parsed",
+      );
+      await parsedStore.upsertBatch("VaskiData", "Id", [], [
+        {
+          pk: 10,
+          data: JSON.stringify({
+            id: "10",
+            "#avoimempieduskunta": { documentType: "kirjallinen_kysymys" },
+          }),
+        },
+      ]);
+      parsedStore.close();
+
+      const rows = [];
+      for await (const typedRow of readAllVaskiRows()) {
+        rows.push(typedRow);
+      }
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]?.documentType).toBe("kirjallinen_kysymys");
+      expect(rows[0]?.row._source).toEqual({
+        page: 10,
+        parsedKey: "parsed/VaskiData/pk_10",
+        vaskiPath: "vaski-data/kirjallinen_kysymys/10",
       });
     });
   });

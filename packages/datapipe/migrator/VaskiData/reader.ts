@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getParsedRowStore } from "#storage/row-store/factory";
+import type { StoredRow } from "#storage/row-store/types";
 
 export interface VaskiClassificationMeta {
   yhteiso: string;
@@ -34,6 +35,10 @@ export interface VaskiEntry {
 }
 
 export type VaskiIndex = Record<string, { totalRecords: number }>;
+export type VaskiRowWithDocumentType = {
+  documentType: string;
+  row: VaskiEntry;
+};
 
 function findRepoRoot(): string {
   let dir = process.cwd();
@@ -51,16 +56,9 @@ function getVaskiIndexPath(): string {
 }
 
 async function buildIndexFromParsedRowStore(): Promise<VaskiIndex> {
-  const parsedStore = getParsedRowStore();
   const index: VaskiIndex = {};
 
-  for await (const row of parsedStore.list("VaskiData")) {
-    const parsed = JSON.parse(row.data) as Record<string, any>;
-    if (!parsed || parsed._skip) continue;
-
-    const documentType = parsed["#avoimempieduskunta"]?.documentType;
-    if (!documentType) continue;
-
+  for await (const { documentType } of readAllVaskiRows()) {
     if (!index[documentType]) {
       index[documentType] = { totalRecords: 0 };
     }
@@ -88,8 +86,44 @@ export async function readVaskiIndex(): Promise<VaskiIndex> {
 }
 
 export async function listIndexedDocumentTypes(): Promise<string[]> {
-  const index = await buildIndexFromParsedRowStore();
+  const index = await readVaskiIndex();
   return Object.keys(index).sort();
+}
+
+function parseStoredVaskiRow(
+  row: StoredRow,
+): { documentType: string; entry: VaskiEntry } | null {
+  const parsed = JSON.parse(row.data) as Record<string, any>;
+  if (!parsed || parsed._skip) return null;
+
+  const documentType = parsed["#avoimempieduskunta"]?.documentType;
+  if (!documentType) return null;
+
+  return {
+    documentType,
+    entry: {
+      ...(parsed as VaskiEntry),
+      _source: {
+        page: row.pk,
+        parsedKey: `parsed/VaskiData/pk_${row.pk}`,
+        vaskiPath: `vaski-data/${documentType}/${row.pk}`,
+      },
+    },
+  };
+}
+
+export async function* readAllVaskiRows(): AsyncGenerator<VaskiRowWithDocumentType> {
+  const parsedStore = getParsedRowStore();
+
+  for await (const storedRow of parsedStore.list("VaskiData")) {
+    const parsed = parseStoredVaskiRow(storedRow);
+    if (!parsed) continue;
+
+    yield {
+      documentType: parsed.documentType,
+      row: parsed.entry,
+    };
+  }
 }
 
 export async function* readVaskiRowsByDocumentType(
@@ -100,22 +134,8 @@ export async function* readVaskiRowsByDocumentType(
     return;
   }
 
-  const parsedStore = getParsedRowStore();
-
-  for await (const row of parsedStore.list("VaskiData")) {
-    const parsed = JSON.parse(row.data) as Record<string, any>;
-    if (!parsed || parsed._skip) continue;
-
-    const rowDocumentType = parsed["#avoimempieduskunta"]?.documentType;
-    if (rowDocumentType !== documentType) continue;
-
-    yield {
-      ...(parsed as VaskiEntry),
-      _source: {
-        page: row.pk,
-        parsedKey: `parsed/VaskiData/pk_${row.pk}`,
-        vaskiPath: `vaski-data/${documentType}/${row.pk}`,
-      },
-    };
+  for await (const parsed of readAllVaskiRows()) {
+    if (parsed.documentType !== documentType) continue;
+    yield parsed.row;
   }
 }

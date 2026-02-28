@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { VaskiEntry } from "../reader";
 import { readVaskiRowsByDocumentType } from "../reader";
+import type { VaskiFlushContext } from "../migrator";
 import { convertVaskiNodeToRichText } from "../rich-text";
 
 function normalizeText(value: unknown): string | null {
@@ -702,32 +703,30 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
       }
     },
 
-    async flush() {
+    async flush(context?: VaskiFlushContext) {
       let processedCount = 0;
       let skippedCount = 0;
 
       try {
-        for await (const row of readVaskiRowsByDocumentType(
-          "vastaus_kirjalliseen_kysymykseen",
-        )) {
+        const processAnswerRow = (row: VaskiEntry) => {
           const meta = getMeta(row);
           const identOsa = meta?.IdentifiointiOsa;
           if (!identOsa) {
             skippedCount++;
-            continue;
+            return;
           }
 
           const vireilletulo = identOsa.Vireilletulo;
           const linkedKK = normalizeText(vireilletulo?.EduskuntaTunnus);
           if (!linkedKK) {
             skippedCount++;
-            continue;
+            return;
           }
 
           const kkParsed = parseParliamentIdentifier(linkedKK);
           if (!kkParsed) {
             skippedCount++;
-            continue;
+            return;
           }
 
           const kkvIdentifier = normalizeText(row.eduskuntaTunnus);
@@ -748,6 +747,21 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
             kkParsed.identifier,
           );
           processedCount++;
+        };
+
+        const answerRows =
+          context?.getRowsByDocumentType("vastaus_kirjalliseen_kysymykseen") ??
+          [];
+        for (const row of answerRows) {
+          processAnswerRow(row);
+        }
+
+        if (!context) {
+          for await (const row of readVaskiRowsByDocumentType(
+            "vastaus_kirjalliseen_kysymykseen",
+          )) {
+            processAnswerRow(row);
+          }
         }
       } catch (error) {
         console.error(
