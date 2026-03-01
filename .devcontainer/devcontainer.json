@@ -1,13 +1,6 @@
 {
     "name": "Avoimempi Eduskunta Dev Container",
-    "dockerComposeFile": "docker-compose.yml",
-    "service": "workspace",
-    "runServices": [
-        "workspace",
-        "elasticmq"
-    ],
-    "workspaceFolder": "/workspaces/avoimempi-eduskunta",
-    "shutdownAction": "stopCompose",
+    "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
     "features": {},
     "customizations": {
         "vscode": {
@@ -24,12 +17,10 @@
         }
     },
     "forwardPorts": [
-        3000,
-        9324
+        3000
     ],
     "init": true,
     "remoteUser": "node",
-    "updateRemoteUserUID": true,
-    "postCreateCommand": "sudo chown -R node:node /workspaces/avoimempi-eduskunta /workspaces/avoimempi-eduskunta/node_modules && sh ./install.sh",
+    "postCreateCommand": "./install.sh",
     "runArgs": []
 }
