@@ -8,6 +8,7 @@ This Terraform defines a simplified VM-first setup:
 - Pipeline VM (`STARDUST1-S`, Debian 13) — sequential batch ETL, 1 vCPU is sufficient
 - Raw+parsed Block Storage volume attached to the pipeline VM
 - Final DB Block Storage volume attached to the app VM
+- Cloud-init mount bootstrap for attached volumes (format-if-needed + `/etc/fstab` + mount)
 - Local block-storage env contract for datapipe storage paths
 
 ## Storage model
@@ -56,6 +57,8 @@ export TF_VAR_pipeline_local_db_path="/var/lib/avoimempi-eduskunta/avoimempi-edu
 export TF_VAR_pipeline_db_volume_name="avoimempi-eduskunta-db"
 export TF_VAR_pipeline_db_volume_size_gb=40
 export TF_VAR_app_db_mount_path="/mnt/app-db"
+export TF_VAR_app_db_device_path="/dev/vdb"
+export TF_VAR_pipeline_raw_parsed_device_path="/dev/vdb"
 ```
 
 ## Apply
@@ -87,15 +90,15 @@ From the pipeline VM, after code deploy:
 STORAGE_LOCAL_DIR=/mnt/pipeline-raw-parsed/data \
   ./scripts/bootstrap-pipeline-storage.sh
 
-# 2) Install cron jobs (scrape, parse, migrate+sync)
+# 2) Install systemd timers (scrape, parse, migrate+sync)
 APP_VM_SYNC_HOST="root@avoimempi-eduskunta-app.pn-avoimempi-eduskunta.priv" \
 STORAGE_LOCAL_DIR=/mnt/pipeline-raw-parsed/data \
 DB_PATH=/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db \
 APP_SYNC_DEST=/mnt/app-db/avoimempi-eduskunta.db \
-./scripts/install-pipeline-jobs.sh install
+./scripts/install-pipeline-systemd-jobs.sh install
 
-# 3) Verify cron entries
-./scripts/install-pipeline-jobs.sh status
+# 3) Verify timers/services
+./scripts/install-pipeline-systemd-jobs.sh status
 ```
 
 Default schedules (override with env vars if needed):

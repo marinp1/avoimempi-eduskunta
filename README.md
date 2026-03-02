@@ -197,6 +197,10 @@ Common variables:
   - `MIGRATOR_FOREIGN_KEY_CHECK`
   - `MIGRATOR_VACUUM_AFTER_IMPORT`
 
+## Production deployment notes
+
+For infrastructure/deploy review, production topology, and hardening checklist, see [PRODUCTION_SETUP.md](./PRODUCTION_SETUP.md).
+
 ## Notes
 
 - Pipeline status is operationally tracked via CLI/Admin commands rather than a static README table.

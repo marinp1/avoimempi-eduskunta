@@ -17,6 +17,14 @@ const APP_FOLDER = process.env.DEPLOY_APP_DIR ?? "/root/avoimempi-eduskunta";
 const PIPELINE_FOLDER =
   process.env.DEPLOY_PIPELINE_DIR ?? "/root/avoimempi-eduskunta";
 const MIGRATOR_FUNCTION_FOLDER = `${PIPELINE_FOLDER}/functions/migrator`;
+const APP_SERVICE_NAME =
+  process.env.DEPLOY_APP_SERVICE_NAME ?? "avoimempi-eduskunta-app";
+const PIPELINE_SERVICE_PREFIX =
+  process.env.DEPLOY_PIPELINE_SERVICE_PREFIX ??
+  "avoimempi-eduskunta-pipeline";
+const DEPLOY_PIPELINE_INSTALL_SYSTEMD =
+  (process.env.DEPLOY_PIPELINE_INSTALL_SYSTEMD ?? "true").toLowerCase() !==
+  "false";
 
 function resolveMigratorFunctionEnv(): Record<string, string> {
   const storageProvider = process.env.STORAGE_PROVIDER ?? "local";
@@ -104,11 +112,24 @@ async function deployAppBuild() {
   const dist = path.join(import.meta.dirname, "../dist");
   const config = path.join(import.meta.dirname, "../packages/server/config");
   const startScript = path.join(import.meta.dirname, "start.sh");
+  const runAppScript = path.join(import.meta.dirname, "run-app.sh");
+  const installSystemdScript = path.join(
+    import.meta.dirname,
+    "install-app-systemd-service.sh",
+  );
+  const releaseScript = path.join(import.meta.dirname, "app-release.sh");
   const nodeEnv = process.env.NODE_ENV ?? "production";
   const defaultPort = nodeEnv === "development" ? "3000" : "80";
+  const releaseId = new Date().toISOString().replace(/[:.]/g, "-");
+  const releaseDir = `${APP_FOLDER}/releases/${releaseId}`;
 
-  if (!fs.existsSync(startScript)) {
-    throw new Error("start.sh script not found");
+  if (
+    !fs.existsSync(startScript) ||
+    !fs.existsSync(runAppScript) ||
+    !fs.existsSync(installSystemdScript) ||
+    !fs.existsSync(releaseScript)
+  ) {
+    throw new Error("One or more app deploy scripts are missing");
   }
 
   await build({
@@ -119,22 +140,28 @@ async function deployAppBuild() {
     entrypoints: [
       path.join(import.meta.dirname, "../packages/server/index.ts"),
     ],
-    define: {
-      "process.env.DB_PATH": "../avoimempi-eduskunta.db",
-      "process.env.NODE_ENV": JSON.stringify(nodeEnv),
-      "process.env.PORT": JSON.stringify(process.env.PORT ?? defaultPort),
-    },
     target: "bun",
   });
 
   console.log(
     `Build mode: ${nodeEnv}, default port: ${process.env.PORT ?? defaultPort}`,
   );
-  await ensureRemoteFolder(APP_INSTANCE_ALIAS, APP_FOLDER);
-  await $`scp -r ${dist} ${APP_INSTANCE_ALIAS}:${APP_FOLDER}`;
-  await $`scp -r ${config} ${APP_INSTANCE_ALIAS}:${APP_FOLDER}`;
-  await $`scp ${startScript} ${APP_INSTANCE_ALIAS}:${APP_FOLDER}/start.sh`;
-  await $`ssh ${APP_INSTANCE_ALIAS} chmod +x ${APP_FOLDER}/start.sh`;
+  await $`ssh ${APP_INSTANCE_ALIAS} mkdir -p ${APP_FOLDER}/releases ${APP_FOLDER}/scripts ${APP_FOLDER}/shared ${releaseDir}/dist ${releaseDir}/config ${releaseDir}/scripts`;
+
+  await $`scp -r ${dist}/. ${APP_INSTANCE_ALIAS}:${releaseDir}/dist`;
+  await $`scp -r ${config}/. ${APP_INSTANCE_ALIAS}:${releaseDir}/config`;
+  await $`scp ${startScript} ${APP_INSTANCE_ALIAS}:${releaseDir}/scripts/start.sh`;
+  await $`scp ${runAppScript} ${APP_INSTANCE_ALIAS}:${releaseDir}/scripts/run-app.sh`;
+  await $`scp ${installSystemdScript} ${APP_INSTANCE_ALIAS}:${APP_FOLDER}/scripts/install-app-systemd-service.sh`;
+  await $`scp ${releaseScript} ${APP_INSTANCE_ALIAS}:${APP_FOLDER}/scripts/app-release.sh`;
+
+  await $`ssh ${APP_INSTANCE_ALIAS} chmod +x ${releaseDir}/scripts/start.sh ${releaseDir}/scripts/run-app.sh ${APP_FOLDER}/scripts/install-app-systemd-service.sh ${APP_FOLDER}/scripts/app-release.sh`;
+
+  await $`ssh ${APP_INSTANCE_ALIAS} APP_DIR=${APP_FOLDER} SERVICE_NAME=${APP_SERVICE_NAME} ${APP_FOLDER}/scripts/install-app-systemd-service.sh`;
+  await $`ssh ${APP_INSTANCE_ALIAS} APP_DIR=${APP_FOLDER} SERVICE_NAME=${APP_SERVICE_NAME} ${APP_FOLDER}/scripts/app-release.sh activate ${releaseId}`;
+  await $`ssh ${APP_INSTANCE_ALIAS} APP_DIR=${APP_FOLDER} ${APP_FOLDER}/scripts/app-release.sh cleanup`;
+
+  console.log(`Activated app release: ${releaseId}`);
 }
 
 async function buildPipelineDist() {
@@ -219,6 +246,7 @@ async function deployPipelineBuild() {
     "scripts/pipeline-parser-app.sh",
     "scripts/pipeline-migrator-app.sh",
     "scripts/install-pipeline-jobs.sh",
+    "scripts/install-pipeline-systemd-jobs.sh",
     "scripts/bootstrap-pipeline-storage.sh",
   ];
 
@@ -233,7 +261,11 @@ async function deployPipelineBuild() {
     await $`scp -r ${localPath} ${PIPELINE_INSTANCE_ALIAS}:${remotePath}`;
   }
 
-  await $`ssh ${PIPELINE_INSTANCE_ALIAS} chmod +x ${PIPELINE_FOLDER}/scripts/pipeline-jobs.sh ${PIPELINE_FOLDER}/scripts/pipeline-scraper-app.sh ${PIPELINE_FOLDER}/scripts/pipeline-parser-app.sh ${PIPELINE_FOLDER}/scripts/pipeline-migrator-app.sh ${PIPELINE_FOLDER}/scripts/install-pipeline-jobs.sh ${PIPELINE_FOLDER}/scripts/bootstrap-pipeline-storage.sh`;
+  await $`ssh ${PIPELINE_INSTANCE_ALIAS} chmod +x ${PIPELINE_FOLDER}/scripts/pipeline-jobs.sh ${PIPELINE_FOLDER}/scripts/pipeline-scraper-app.sh ${PIPELINE_FOLDER}/scripts/pipeline-parser-app.sh ${PIPELINE_FOLDER}/scripts/pipeline-migrator-app.sh ${PIPELINE_FOLDER}/scripts/install-pipeline-jobs.sh ${PIPELINE_FOLDER}/scripts/install-pipeline-systemd-jobs.sh ${PIPELINE_FOLDER}/scripts/bootstrap-pipeline-storage.sh`;
+
+  if (DEPLOY_PIPELINE_INSTALL_SYSTEMD) {
+    await $`ssh ${PIPELINE_INSTANCE_ALIAS} APP_DIR=${PIPELINE_FOLDER} SERVICE_PREFIX=${PIPELINE_SERVICE_PREFIX} ${PIPELINE_FOLDER}/scripts/install-pipeline-systemd-jobs.sh install`;
+  }
 }
 
 async function uploadDatabase() {
@@ -258,6 +290,9 @@ Environment:
   DEPLOY_HOST_ALIAS          Optional fallback alias used for both if specific aliases are unset
   DEPLOY_APP_DIR             Remote app folder (default: /root/avoimempi-eduskunta)
   DEPLOY_PIPELINE_DIR        Remote pipeline folder (default: /root/avoimempi-eduskunta)
+  DEPLOY_APP_SERVICE_NAME    systemd service name (default: avoimempi-eduskunta-app)
+  DEPLOY_PIPELINE_SERVICE_PREFIX  pipeline systemd prefix (default: avoimempi-eduskunta-pipeline)
+  DEPLOY_PIPELINE_INSTALL_SYSTEMD install/refresh pipeline systemd timers on deploy (default: true)
   NODE_ENV                   Build mode for app target (default: production)
 `);
 }
