@@ -43,15 +43,27 @@ const coreRoutesDataAccess = {
   fetchParliamentComposition: (params: { date: string }) =>
     metadataRepository.fetchParliamentComposition(params),
   fetchHallituskaudet: () => metadataRepository.fetchHallituskaudet(),
+  checkReadiness: () => {
+    try {
+      const row = db.query("SELECT 1 AS ok").get() as { ok?: number } | undefined;
+      return { ok: row?.ok === 1 };
+    } catch (error) {
+      return {
+        ok: false,
+        details: error instanceof Error ? error.message : String(error),
+      };
+    }
+  },
 };
 
 export const statusController = new StatusController(db);
-const { isDev, port, idleTimeout } = loadRuntimeConfig();
+const { isDev, port, idleTimeout, reusePort } = loadRuntimeConfig();
 
 const server = Bun.serve<{
   type: "parser" | "scraper" | "migrator";
 }>({
   port,
+  reusePort,
   idleTimeout,
   routes: {
     ...createStaticPageRoutes(homepage, isDev),

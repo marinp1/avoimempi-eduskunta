@@ -25,7 +25,10 @@ describe("Internal link integrity", () => {
   });
 
   test("refs paths are served as SPA routes by server", () => {
-    const serverIndexPath = join(import.meta.dirname, "../../server/index.ts");
+    const serverIndexPath = join(
+      import.meta.dirname,
+      "../../server/routes/static-page-routes.ts",
+    );
     const source = readFileSync(serverIndexPath, "utf-8");
     const homepageRoutes = new Set(
       [...source.matchAll(/"([^"]+)":\s*homepage/g)].map((match) => match[1]),

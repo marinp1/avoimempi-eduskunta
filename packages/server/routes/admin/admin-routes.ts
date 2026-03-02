@@ -64,6 +64,12 @@ export const createAdminRoutes = ({
   "/api/scraper/start": {
     POST: async (req: Request) => {
       try {
+        if (scraperController.getStatus().isRunning) {
+          return Response.json(
+            { success: false, error: "Scraper is already running" },
+            { status: 409 },
+          );
+        }
         const parsed = await parseScraperStartBody(req);
         if (parsed.ok === false) {
           return badRequest(parsed.error);
@@ -98,6 +104,12 @@ export const createAdminRoutes = ({
   "/api/scraper/bulk-start": {
     POST: async (req: Request) => {
       try {
+        if (scraperController.getStatus().isRunning) {
+          return Response.json(
+            { success: false, error: "Scraper is already running" },
+            { status: 409 },
+          );
+        }
         const parsed = await parseScraperBulkStartBody(req);
         if (parsed.ok === false) {
           return badRequest(parsed.error);
@@ -129,6 +141,12 @@ export const createAdminRoutes = ({
   "/api/parser/start": {
     POST: async (req: Request) => {
       try {
+        if (parserController.getStatus().isRunning) {
+          return Response.json(
+            { success: false, error: "Parser is already running" },
+            { status: 409 },
+          );
+        }
         const parsed = await parseParserStartBody(req);
         if (parsed.ok === false) {
           return badRequest(parsed.error);
@@ -162,6 +180,12 @@ export const createAdminRoutes = ({
   "/api/parser/bulk-start": {
     POST: async (req: Request) => {
       try {
+        if (parserController.getStatus().isRunning) {
+          return Response.json(
+            { success: false, error: "Parser is already running" },
+            { status: 409 },
+          );
+        }
         const parsed = await parseParserBulkStartBody(req);
         if (parsed.ok === false) {
           return badRequest(parsed.error);
@@ -192,6 +216,12 @@ export const createAdminRoutes = ({
   "/api/migrator/start": {
     POST: async () => {
       try {
+        if (migratorController.getStatus().isRunning) {
+          return Response.json(
+            { success: false, error: "Migration is already running" },
+            { status: 409 },
+          );
+        }
         migratorController
           .startMigration()
           .then(() => statusController.invalidateCache())

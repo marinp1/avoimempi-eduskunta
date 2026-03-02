@@ -13,14 +13,24 @@ export const createCommitteeLegislativeRoutes = (
   "/api/committee-reports": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
-      const params = getMappedPaginatedQueryParams(searchParams, {
-        query: "q",
-        year: "year",
-        sourceCommittee: "sourceCommittee",
-        recipientCommittee: "recipientCommittee",
-        startDate: "startDate",
-        endDate: "endDate",
-      } as const);
+      const params = getMappedPaginatedQueryParams(
+        searchParams,
+        {
+          query: "q",
+          year: "year",
+          sourceCommittee: "sourceCommittee",
+          recipientCommittee: "recipientCommittee",
+          startDate: "startDate",
+          endDate: "endDate",
+        } as const,
+        {
+          pageFallback: 1,
+          limitFallback: 20,
+          minPage: 1,
+          minLimit: 1,
+          maxLimit: 200,
+        },
+      );
       const data = await db.fetchCommitteeReports(params);
       return Response.json(data);
     },
@@ -84,14 +94,24 @@ export const createCommitteeLegislativeRoutes = (
   "/api/legislative-initiatives": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
-      const params = getMappedPaginatedQueryParams(searchParams, {
-        query: "q",
-        year: "year",
-        subject: "subject",
-        initiativeTypeCode: "initiativeTypeCode",
-        startDate: "startDate",
-        endDate: "endDate",
-      } as const);
+      const params = getMappedPaginatedQueryParams(
+        searchParams,
+        {
+          query: "q",
+          year: "year",
+          subject: "subject",
+          initiativeTypeCode: "initiativeTypeCode",
+          startDate: "startDate",
+          endDate: "endDate",
+        } as const,
+        {
+          pageFallback: 1,
+          limitFallback: 20,
+          minPage: 1,
+          minLimit: 1,
+          maxLimit: 200,
+        },
+      );
       const data = await db.fetchLegislativeInitiatives(params);
       return Response.json(data);
     },

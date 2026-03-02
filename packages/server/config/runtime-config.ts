@@ -2,12 +2,14 @@ type RuntimeEnv = {
   NODE_ENV?: string;
   PORT?: string;
   BUN_IDLE_TIMEOUT_SECONDS?: string;
+  BUN_REUSE_PORT?: string;
 };
 
 export type RuntimeConfig = {
   isDev: boolean;
   port: number;
   idleTimeout: number;
+  reusePort: boolean;
 };
 
 const parsePositiveInteger = (
@@ -38,5 +40,8 @@ export const loadRuntimeConfig = (
     isDev,
     port: configuredPort ?? (isDev ? 3000 : 80),
     idleTimeout: configuredIdleTimeout ?? 120,
+    reusePort:
+      typeof env.BUN_REUSE_PORT === "string" &&
+      ["1", "true", "yes", "on"].includes(env.BUN_REUSE_PORT.toLowerCase()),
   };
 };

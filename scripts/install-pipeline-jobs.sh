@@ -3,6 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="${APP_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
+# shellcheck source=./lib/app-db-sync.sh
+source "${SCRIPT_DIR}/lib/app-db-sync.sh"
 SCRAPER_SCRIPT="${APP_DIR}/scripts/pipeline-scraper-app.sh"
 PARSER_SCRIPT="${APP_DIR}/scripts/pipeline-parser-app.sh"
 MIGRATOR_SCRIPT="${APP_DIR}/scripts/pipeline-migrator-app.sh"
@@ -17,7 +19,7 @@ STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR:-/mnt/pipeline-raw-parsed/data}"
 DB_PATH="${DB_PATH:-/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db}"
 PIPELINE_BUILD_DIR="${PIPELINE_BUILD_DIR:-${APP_DIR}/dist/pipeline}"
 APP_VM_SYNC_HOST="${APP_VM_SYNC_HOST:-}"
-APP_SYNC_DEST="${APP_SYNC_DEST:-/mnt/app-db/avoimempi-eduskunta.db}"
+set_app_db_sync_defaults
 SCRAPER_MAX_RUNTIME_SECONDS="${SCRAPER_MAX_RUNTIME_SECONDS:-1800}"
 ACTIVE_PIPELINE_TABLES="${ACTIVE_PIPELINE_TABLES:-}"
 OMITTED_PIPELINE_TABLES="${OMITTED_PIPELINE_TABLES:-}"
@@ -56,8 +58,8 @@ build_cmd() {
   fi
 
   if [[ -n "${APP_VM_SYNC_HOST}" ]]; then
-    printf ' APP_VM_SYNC_HOST=%s APP_SYNC_DEST=%s' \
-      "${APP_VM_SYNC_HOST}" "${APP_SYNC_DEST}"
+    printf ' APP_VM_SYNC_HOST=%s' "${APP_VM_SYNC_HOST}"
+    print_app_db_sync_env_inline
   fi
 
   printf ' %s >> %s 2>&1' "${script_path}" "${LOG_FILE}"
@@ -126,7 +128,13 @@ Environment:
   ACTIVE_PIPELINE_TABLES Optional comma-separated active table list override
   OMITTED_PIPELINE_TABLES Optional comma-separated omitted table list override
   APP_VM_SYNC_HOST    App VM SSH target for rsync (user@host)
-  APP_SYNC_DEST       Destination DB path on app VM
+  APP_SYNC_CURRENT_LINK  Destination symlink path on app VM
+  APP_SYNC_RELEASES_DIR  DB release directory on app VM
+  APP_VM_ACTIVATE_SERVICE App VM systemd service restarted after DB activation
+  APP_SYNC_KEEP_RELEASES Number of DB releases retained on app VM
+  APP_READY_URL       App readiness URL checked after activation
+  APP_READY_RETRIES   Number of readiness retry attempts
+  APP_READY_SLEEP_SECONDS Seconds between readiness attempts
   LOG_FILE            Shared log file path
 EOF
 }

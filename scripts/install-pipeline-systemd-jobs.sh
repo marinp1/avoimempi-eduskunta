@@ -2,8 +2,11 @@
 set -euo pipefail
 
 ACTION="${1:-install}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 APP_DIR="${APP_DIR:-/root/avoimempi-eduskunta}"
+# shellcheck source=./lib/app-db-sync.sh
+source "${SCRIPT_DIR}/lib/app-db-sync.sh"
 SERVICE_PREFIX="${SERVICE_PREFIX:-avoimempi-eduskunta-pipeline}"
 ENV_FILE="${APP_DIR}/shared/pipeline.env"
 
@@ -18,7 +21,7 @@ STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR:-/mnt/pipeline-raw-parsed/data}"
 DB_PATH="${DB_PATH:-/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db}"
 PIPELINE_BUILD_DIR="${PIPELINE_BUILD_DIR:-${APP_DIR}/dist/pipeline}"
 APP_VM_SYNC_HOST="${APP_VM_SYNC_HOST:-}"
-APP_SYNC_DEST="${APP_SYNC_DEST:-/mnt/app-db/avoimempi-eduskunta.db}"
+set_app_db_sync_defaults
 LOG_FILE="${LOG_FILE:-${APP_DIR}/pipeline-jobs.log}"
 SCRAPER_MAX_RUNTIME_SECONDS="${SCRAPER_MAX_RUNTIME_SECONDS:-1800}"
 ACTIVE_PIPELINE_TABLES="${ACTIVE_PIPELINE_TABLES:-}"
@@ -46,7 +49,7 @@ SCRAPER_MAX_RUNTIME_SECONDS=${SCRAPER_MAX_RUNTIME_SECONDS}
 ACTIVE_PIPELINE_TABLES=${ACTIVE_PIPELINE_TABLES}
 OMITTED_PIPELINE_TABLES=${OMITTED_PIPELINE_TABLES}
 APP_VM_SYNC_HOST=${APP_VM_SYNC_HOST}
-APP_SYNC_DEST=${APP_SYNC_DEST}
+$(print_app_db_sync_env_lines)
 EOF
 }
 
@@ -146,7 +149,13 @@ Environment:
   DB_PATH             Local migration DB path
   PIPELINE_BUILD_DIR  Pipeline build directory
   APP_VM_SYNC_HOST    App VM SSH target for rsync (user@host)
-  APP_SYNC_DEST       Destination DB path on app VM
+  APP_SYNC_CURRENT_LINK  Destination symlink path on app VM
+  APP_SYNC_RELEASES_DIR  DB release directory on app VM
+  APP_VM_ACTIVATE_SERVICE App VM systemd service restarted after DB activation
+  APP_SYNC_KEEP_RELEASES Number of DB releases retained on app VM
+  APP_READY_URL       App readiness URL checked after activation
+  APP_READY_RETRIES   Number of readiness retry attempts
+  APP_READY_SLEEP_SECONDS Seconds between readiness attempts
   LOG_FILE            Pipeline jobs log path
   SCRAPER_MAX_RUNTIME_SECONDS  Max scrape-all runtime before stopping (default: 1800)
   ACTIVE_PIPELINE_TABLES   Optional comma-separated active table list override

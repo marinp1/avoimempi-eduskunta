@@ -17,10 +17,26 @@ type CoreRoutesDataAccess = {
   };
   fetchParliamentComposition: (params: { date: string }) => unknown;
   fetchHallituskaudet: () => unknown;
+  checkReadiness: () => {
+    ok: boolean;
+    details?: string;
+  };
 };
 
 export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
   "/api/health": new Response("OK"),
+  "/api/ready": {
+    GET: async () => {
+      const result = db.checkReadiness();
+      if (!result.ok) {
+        return Response.json(
+          { status: "not-ready", details: result.details ?? "unknown" },
+          { status: 503 },
+        );
+      }
+      return Response.json({ status: "ready" });
+    },
+  },
 
   "/api/import-source/table-summaries": {
     GET: async (req: Request) => {
