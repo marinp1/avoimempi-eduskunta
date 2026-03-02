@@ -58,27 +58,19 @@ with_pipeline_lock() {
 }
 
 scrape_all() {
-  local bun_bin="$1"
+  local _bun_bin="$1"
   local table_list
   local omitted_list
   local start_epoch now_epoch
 
   if [[ -n "${ACTIVE_PIPELINE_TABLES:-}" ]]; then
     table_list="$(printf '%s\n' "${ACTIVE_PIPELINE_TABLES}" | tr ',' '\n')"
-  elif [[ -f "${APP_DIR}/packages/shared/constants/index.ts" ]]; then
-    table_list="$(
-      run_in_app_dir "${bun_bin}" -e \
-        'import { ActivePipelineTableNames } from "./packages/shared/constants/index.ts"; console.log(ActivePipelineTableNames.join("\n"));'
-    )"
   else
     table_list="$(printf '%s\n' "${DEFAULT_ACTIVE_TABLES}" | tr ',' '\n')"
   fi
 
-  if [[ -f "${APP_DIR}/packages/shared/constants/index.ts" ]]; then
-    omitted_list="$(
-      run_in_app_dir "${bun_bin}" -e \
-        'import { OmittedPipelineTableNames } from "./packages/shared/constants/index.ts"; console.log(OmittedPipelineTableNames.join("\n"));'
-    )"
+  if [[ -n "${OMITTED_PIPELINE_TABLES:-}" ]]; then
+    omitted_list="$(printf '%s\n' "${OMITTED_PIPELINE_TABLES}" | tr ',' '\n')"
   else
     omitted_list="$(printf '%s\n' "${DEFAULT_OMITTED_TABLES}" | tr ',' '\n')"
   fi
@@ -172,7 +164,8 @@ Environment:
   LOG_FILE           Log path (default: \${APP_DIR}/pipeline-jobs.log)
   STORAGE_LOCAL_DIR  Row-store dir (default: /mnt/pipeline-raw-parsed/data)
   PIPELINE_BUILD_DIR Built pipeline dir (default: \${APP_DIR}/dist/pipeline)
-  ACTIVE_PIPELINE_TABLES Comma-separated table list override for scrape-all
+  ACTIVE_PIPELINE_TABLES Comma-separated active table list override for scrape-all
+  OMITTED_PIPELINE_TABLES Comma-separated omitted table list (always filtered from active list)
   SCRAPER_MAX_RUNTIME_SECONDS Max scrape-all runtime before stopping (default: 1800)
   DB_PATH            Local migration DB path (default: /var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db)
   APP_VM_SYNC_HOST   Required for migrate-sync (format: user@host)

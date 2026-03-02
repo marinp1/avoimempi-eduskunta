@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import fs from "node:fs";
+import path from "node:path";
 import { spawn } from "bun";
 
 type FunctionResponse = {
@@ -6,12 +8,25 @@ type FunctionResponse = {
   body: string;
 };
 
-const MIGRATOR_COMMAND = [
-  "bun",
-  "run",
-  "packages/datapipe/migrator/cli.ts",
-  "start",
-];
+function resolveMigratorCliPath(): string {
+  const explicit = process.env.MIGRATOR_CLI_PATH?.trim();
+  if (explicit) {
+    const absolute = path.isAbsolute(explicit)
+      ? explicit
+      : path.resolve(process.cwd(), explicit);
+    if (fs.existsSync(absolute)) return absolute;
+    throw new Error(`MIGRATOR_CLI_PATH does not exist: ${absolute}`);
+  }
+
+  const pipelineBuildDir =
+    process.env.PIPELINE_BUILD_DIR ?? "/root/avoimempi-eduskunta/dist/pipeline";
+  const bundledCandidate = path.join(pipelineBuildDir, "migrator/cli.js");
+  if (fs.existsSync(bundledCandidate)) return bundledCandidate;
+
+  throw new Error(
+    `Unable to locate migrator CLI bundle. Checked: ${bundledCandidate}`,
+  );
+}
 
 function ensureMigratorEnv(): string[] {
   const issues: string[] = [];
@@ -52,7 +67,8 @@ async function runMigrator(): Promise<{
   stdout: string;
   stderr: string;
 }> {
-  const child = spawn(MIGRATOR_COMMAND, {
+  const migratorCliPath = resolveMigratorCliPath();
+  const child = spawn(["bun", "run", migratorCliPath, "start"], {
     stdout: "pipe",
     stderr: "pipe",
     env: process.env,
