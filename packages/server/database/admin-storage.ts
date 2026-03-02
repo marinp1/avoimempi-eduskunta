@@ -1,4 +1,4 @@
-import { TableName } from "#constants/index";
+import { ActivePipelineTableNames, TableName } from "#constants/index";
 import { getParsedRowStore, getRawRowStore } from "#storage/row-store/factory";
 import type { DataStage } from "#storage/types";
 import { getCachedTableCountMapByRows } from "#table-counts";
@@ -75,7 +75,10 @@ export class AdminStorageService {
   }
 
   getTableNames(): string[] {
-    return (Object.values(TableName) as string[]).sort();
+    const activeTableNames = new Set<string>(ActivePipelineTableNames);
+    return (Object.values(TableName) as string[])
+      .filter((tableName) => activeTableNames.has(tableName))
+      .sort();
   }
 
   private buildTableStatusFromCounts(
@@ -176,7 +179,7 @@ export class AdminStorageService {
    * Get detailed status for a specific table
    */
   async getTableStatus(tableName: string): Promise<TableStorageStatus | null> {
-    if (!Object.values(TableName).includes(tableName as any)) {
+    if (!this.getTableNames().includes(tableName)) {
       return null;
     }
 

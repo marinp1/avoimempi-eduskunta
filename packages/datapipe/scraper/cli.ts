@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { ActivePipelineTableNames, OmittedPipelineTableNames } from "#constants";
 import { getExactTableCountsByRows } from "#table-counts";
 import { type ScrapeMode, scrapeTable } from "./scraper";
 
@@ -127,18 +128,27 @@ async function showStatus() {
   const { getRawRowStore } = await import("#storage/row-store/factory");
   const rawStore = getRawRowStore();
   const tablesWithData = await rawStore.tableNames();
+  const trackedTableNames = new Set<string>(ActivePipelineTableNames);
+  const trackedTablesWithData = tablesWithData.filter((tableName) =>
+    trackedTableNames.has(tableName),
+  );
 
-  if (tablesWithData.length === 0) {
+  if (trackedTablesWithData.length === 0) {
     console.error("❌ No data found in raw store.");
     console.error(
       "   Run the scraper first to populate it: bun run scrape <TableName>",
+    );
+    console.error(
+      `   Omitted from status: ${OmittedPipelineTableNames.join(", ")}`,
     );
     process.exit(1);
   }
 
   console.log("📊 Scraping Status\n");
 
-  const data = await getExactTableCountsByRows();
+  const data = await getExactTableCountsByRows({
+    tableNames: ActivePipelineTableNames,
+  });
 
   for (const table of data) {
     const exactRows = await rawStore.count(table.tableName);
@@ -156,6 +166,10 @@ async function showStatus() {
       `${status} ${table.tableName.padEnd(30)} - ${exactRows.toLocaleString()} / ${table.rowCount.toLocaleString()} rows (${percentComplete.toFixed(1)}%)`,
     );
   }
+
+  console.log(
+    `\n🚫 Omitted from scrape status: ${OmittedPipelineTableNames.join(", ")}`,
+  );
 }
 
 function printHelp() {
@@ -218,6 +232,7 @@ Notes:
   - Use --single-pk to re-fetch one exact PK from source
   - Use --patch-pk to fix a missing row by re-scraping its page + one follow-up (max 2 API calls)
   - Each page contains ~100 rows from the API
+  - Omitted from status checks: ${OmittedPipelineTableNames.join(", ")}
 
 For more information, see: shared/storage/README.md
 `);

@@ -27,6 +27,7 @@ import {
 } from "@mui/material";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { OmittedPipelineTableNames } from "#constants";
 import { colors, commonStyles, gradients, spacing } from "#client/theme";
 import { GlassCard, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -44,6 +45,7 @@ type TableStatus = {
   parsed_estimated_rows: number;
   total_rows_in_api?: number;
   scrape_progress_percent?: number;
+  is_omitted?: boolean;
 };
 
 type ScrapingOverview = {
@@ -115,20 +117,26 @@ export default () => {
     scrape_progress_percent: 0,
   });
 
+  const buildOmittedStatus = (tableName: string): TableStatus => ({
+    ...buildPlaceholderStatus(tableName),
+    is_omitted: true,
+  });
+
   const overview: ScrapingOverview = useMemo(() => {
-    const totalTables = status.length;
-    const tablesWithData = status.filter((s) => s.has_raw_data).length;
-    const tablesCompleted = status.filter(
+    const activeStatus = status.filter((s) => !s.is_omitted);
+    const totalTables = activeStatus.length;
+    const tablesWithData = activeStatus.filter((s) => s.has_raw_data).length;
+    const tablesCompleted = activeStatus.filter(
       (s) =>
         s.total_rows_in_api &&
         s.scrape_progress_percent &&
         s.scrape_progress_percent >= 99.9,
     ).length;
-    const totalApiRows = status.reduce(
+    const totalApiRows = activeStatus.reduce(
       (sum, s) => sum + (s.total_rows_in_api || 0),
       0,
     );
-    const totalScrapedRows = status.reduce(
+    const totalScrapedRows = activeStatus.reduce(
       (sum, s) => sum + s.raw_estimated_rows,
       0,
     );
@@ -136,14 +144,16 @@ export default () => {
       totalApiRows > 0
         ? Math.min((totalScrapedRows / totalApiRows) * 100, 100)
         : 0;
-    const tablesWithParsedData = status.filter((s) => s.has_parsed_data).length;
-    const tablesFullyParsed = status.filter(
+    const tablesWithParsedData = activeStatus.filter(
+      (s) => s.has_parsed_data,
+    ).length;
+    const tablesFullyParsed = activeStatus.filter(
       (s) =>
         s.has_raw_data &&
         s.has_parsed_data &&
         s.parsed_page_count >= s.raw_page_count,
     ).length;
-    const totalParsedRows = status.reduce(
+    const totalParsedRows = activeStatus.reduce(
       (sum, s) => sum + s.parsed_estimated_rows,
       0,
     );
@@ -187,7 +197,10 @@ export default () => {
         return;
       }
 
-      setStatus(tableNames.map(buildPlaceholderStatus));
+      setStatus([
+        ...tableNames.map(buildPlaceholderStatus),
+        ...OmittedPipelineTableNames.map(buildOmittedStatus),
+      ]);
       setLastMigrationTimestamp(migrationData.timestamp);
 
       if (showLoading) {
@@ -767,6 +780,10 @@ export default () => {
   };
 
   const getStatusChip = (row: TableStatus) => {
+    if (row.is_omitted) {
+      return <Chip label="Omitted" size="small" color="info" variant="outlined" />;
+    }
+
     if (
       row.has_raw_data &&
       row.has_parsed_data &&
@@ -863,6 +880,13 @@ export default () => {
           </Alert>
         </Fade>
       )}
+
+      <Fade in timeout={500}>
+        <Alert severity="info" sx={{ mb: spacing.md, borderRadius: 2 }}>
+          Omitted from scrape/parse status:{" "}
+          {OmittedPipelineTableNames.join(", ")}
+        </Alert>
+      </Fade>
 
       <Fade in timeout={500}>
         <Box sx={{ mb: spacing.md }}>
@@ -1012,7 +1036,7 @@ export default () => {
       <BulkOperationsPanel
         title={t("admin.actions.scraper")}
         description="Scrape multiple tables sequentially"
-        tableStatuses={status}
+        tableStatuses={status.filter((row) => !row.is_omitted)}
         isRunning={scraperRunning && scraperMode === "bulk"}
         progress={scraperProgress}
         progressPercent={scraperPercent}
@@ -1027,7 +1051,7 @@ export default () => {
       <BulkOperationsPanel
         title={t("admin.actions.parser")}
         description="Parse multiple tables sequentially"
-        tableStatuses={status}
+        tableStatuses={status.filter((row) => !row.is_omitted)}
         isRunning={parserRunning && parserMode === "bulk"}
         progress={parserProgress}
         progressPercent={parserPercent}
@@ -1188,7 +1212,13 @@ export default () => {
                           </Typography>
                         </TableCell>
                         <TableCell align="center" sx={{ py: 1 }}>
-                          {getStatusIcon(row.scrape_progress_percent)}
+                          {row.is_omitted ? (
+                            <Typography variant="caption" color="text.secondary">
+                              -
+                            </Typography>
+                          ) : (
+                            getStatusIcon(row.scrape_progress_percent)
+                          )}
                         </TableCell>
                         <TableCell
                           align="right"
@@ -1241,7 +1271,13 @@ export default () => {
                           </Typography>
                         </TableCell>
                         <TableCell align="center" sx={{ py: 1 }}>
-                          {getStatusIcon(row.has_parsed_data ? 100 : 0)}
+                          {row.is_omitted ? (
+                            <Typography variant="caption" color="text.secondary">
+                              -
+                            </Typography>
+                          ) : (
+                            getStatusIcon(row.has_parsed_data ? 100 : 0)
+                          )}
                         </TableCell>
                         <TableCell
                           align="right"
@@ -1292,7 +1328,13 @@ export default () => {
                                 gap: spacing.md,
                               }}
                             >
-                              {/* Scraper Controls */}
+                              {row.is_omitted ? (
+                                <Alert severity="info" sx={{ width: "100%" }}>
+                                  This table is omitted from scrape/parse workflows.
+                                </Alert>
+                              ) : (
+                                <>
+                                  {/* Scraper Controls */}
                               <Box sx={{ flex: 1 }}>
                                 <Typography
                                   variant="subtitle2"
@@ -1517,6 +1559,8 @@ export default () => {
                                   </Box>
                                 )}
                               </Box>
+                                </>
+                              )}
                             </Box>
 
                             {/* Timestamps row */}

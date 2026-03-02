@@ -66,6 +66,24 @@ export const TableNames = [
   "VaskiData",
 ] as const;
 
+export const OmittedPipelineTableNames = [
+  "HetekaData",
+  "PrimaryKeys",
+  "SaliDBAanestysAsiakirja",
+  "SaliDBAanestysJakauma",
+  "SaliDBAanestysKieli",
+  "SaliDBMessageLog",
+] as const;
+
+const omittedPipelineTableNameSet = new Set<string>(OmittedPipelineTableNames);
+
+export const isOmittedPipelineTable = (tableName: string): boolean =>
+  omittedPipelineTableNameSet.has(tableName);
+
+export const ActivePipelineTableNames = TableNames.filter(
+  (tableName) => !isOmittedPipelineTable(tableName),
+);
+
 export const VoteResults = Object.freeze({
   Yes: "Jaa",
   No: "Ei",

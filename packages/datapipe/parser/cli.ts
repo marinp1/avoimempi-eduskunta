@@ -1,5 +1,9 @@
 #!/usr/bin/env bun
-import { TableNames } from "#constants";
+import {
+  ActivePipelineTableNames,
+  OmittedPipelineTableNames,
+  isOmittedPipelineTable,
+} from "#constants";
 import { parseTable, parseTables } from "./parser";
 
 async function main() {
@@ -101,7 +105,7 @@ async function main() {
   }
 
   if (tableName === "all" || runAll) {
-    const tablesToParse = TableNames.map((name) => name);
+    const tablesToParse = [...ActivePipelineTableNames];
     await parseTables(tablesToParse, { force, pkStartValue, pkEndValue });
     return;
   }
@@ -137,7 +141,11 @@ async function showStatus() {
     parsedStore.tableNames(),
   ]);
 
-  const allTables = Array.from(new Set([...rawTables, ...parsedTables])).sort();
+  const allTables = Array.from(
+    new Set([...ActivePipelineTableNames, ...rawTables, ...parsedTables]),
+  )
+    .filter((tableName) => !isOmittedPipelineTable(tableName))
+    .sort();
 
   if (allTables.length === 0) {
     console.log("⚠️  No tables found");
@@ -176,6 +184,9 @@ async function showStatus() {
     );
   }
   console.log();
+  console.log(
+    `🚫 Omitted from parser status: ${OmittedPipelineTableNames.join(", ")}`,
+  );
 }
 
 function printHelp() {
@@ -230,6 +241,7 @@ Notes:
   - Processing is row-based with hash-skip for unchanged rows
   - Custom parsers allow for data transformation and cleanup
   - Default parser passes data through unchanged
+  - Omitted from status/all checks: ${OmittedPipelineTableNames.join(", ")}
 
 For more information, see: shared/storage/README.md
 `);
