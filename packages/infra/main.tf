@@ -57,6 +57,18 @@ variable "ssh_port" {
   default     = 22
 }
 
+variable "app_db_device_path" {
+  description = "App VM block-device path for the attached DB volume."
+  type        = string
+  default     = "/dev/vdb"
+}
+
+variable "pipeline_raw_parsed_device_path" {
+  description = "Pipeline VM block-device path for the attached raw/parsed volume."
+  type        = string
+  default     = "/dev/vdb"
+}
+
 variable "pipeline_storage_local_dir" {
   description = "Directory used by the pipeline for raw/parsed row-store files."
   type        = string
@@ -112,7 +124,7 @@ variable "app_db_mount_path" {
 }
 
 locals {
-  cloud_init = <<-CLOUDINIT
+  app_cloud_init = <<-CLOUDINIT
     #cloud-config
     package_update: false
 
@@ -124,6 +136,52 @@ locals {
           Port ${var.ssh_port}
 
     runcmd:
+      - mkdir -p ${var.app_db_mount_path}
+      - |
+        APP_DB_DEVICE="${var.app_db_device_path}"
+        if [ ! -b "${APP_DB_DEVICE}" ]; then
+          echo "Device ${APP_DB_DEVICE} not found." >&2
+          exit 1
+        fi
+        if ! blkid "${APP_DB_DEVICE}" >/dev/null 2>&1; then
+          mkfs.ext4 -F "${APP_DB_DEVICE}"
+        fi
+        APP_DB_UUID="$(blkid -s UUID -o value "${APP_DB_DEVICE}")"
+        grep -q " ${var.app_db_mount_path} " /etc/fstab || echo "UUID=${APP_DB_UUID} ${var.app_db_mount_path} ext4 defaults,nofail 0 2" >> /etc/fstab
+        mount ${var.app_db_mount_path} || mount -a
+        chmod 755 ${var.app_db_mount_path}
+      - systemctl restart sshd || systemctl restart ssh
+    CLOUDINIT
+
+  pipeline_cloud_init = <<-CLOUDINIT
+    #cloud-config
+    package_update: false
+
+    ssh_pwauth: false
+
+    write_files:
+      - path: /etc/ssh/sshd_config.d/port.conf
+        content: |
+          Port ${var.ssh_port}
+
+    runcmd:
+      - mkdir -p ${var.pipeline_raw_parsed_volume_mount_path}
+      - mkdir -p ${var.pipeline_storage_local_dir}
+      - |
+        PIPELINE_RAW_PARSED_DEVICE="${var.pipeline_raw_parsed_device_path}"
+        if [ ! -b "${PIPELINE_RAW_PARSED_DEVICE}" ]; then
+          echo "Device ${PIPELINE_RAW_PARSED_DEVICE} not found." >&2
+          exit 1
+        fi
+        if ! blkid "${PIPELINE_RAW_PARSED_DEVICE}" >/dev/null 2>&1; then
+          mkfs.ext4 -F "${PIPELINE_RAW_PARSED_DEVICE}"
+        fi
+        PIPELINE_RAW_PARSED_UUID="$(blkid -s UUID -o value "${PIPELINE_RAW_PARSED_DEVICE}")"
+        grep -q " ${var.pipeline_raw_parsed_volume_mount_path} " /etc/fstab || echo "UUID=${PIPELINE_RAW_PARSED_UUID} ${var.pipeline_raw_parsed_volume_mount_path} ext4 defaults,nofail 0 2" >> /etc/fstab
+        mount ${var.pipeline_raw_parsed_volume_mount_path} || mount -a
+        chmod 755 ${var.pipeline_raw_parsed_volume_mount_path}
+        mkdir -p ${var.pipeline_storage_local_dir}
+        chmod 755 ${var.pipeline_storage_local_dir}
       - systemctl restart sshd || systemctl restart ssh
     CLOUDINIT
 
@@ -208,7 +266,7 @@ resource "scaleway_instance_server" "app" {
   image             = "debian_trixie"
   ip_id             = scaleway_instance_ip.app.id
   security_group_id = scaleway_instance_security_group.shared.id
-  user_data         = { cloud-init = local.cloud_init }
+  user_data         = { cloud-init = local.app_cloud_init }
   additional_volume_ids = [
     scaleway_instance_volume.pipeline_db.id
   ]
@@ -225,7 +283,7 @@ resource "scaleway_instance_server" "pipeline" {
   type              = var.pipeline_server_type
   image             = "debian_trixie"
   security_group_id = scaleway_instance_security_group.shared.id
-  user_data         = { cloud-init = local.cloud_init }
+  user_data         = { cloud-init = local.pipeline_cloud_init }
   additional_volume_ids = [
     scaleway_instance_volume.pipeline_raw_parsed.id
   ]
