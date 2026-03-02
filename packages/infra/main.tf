@@ -94,7 +94,7 @@ variable "pipeline_raw_parsed_volume_size_gb" {
 }
 
 variable "pipeline_db_volume_mount_path" {
-  description = "Expected mount path for the final DB/trace block volume on the pipeline VM."
+  description = "Expected mount path for the final DB/trace block volume on the app VM."
   type        = string
   default     = "/mnt/pipeline-db"
 }
@@ -106,13 +106,13 @@ variable "pipeline_local_db_path" {
 }
 
 variable "pipeline_db_volume_name" {
-  description = "Logical name for the final DB/trace block volume."
+  description = "Logical name for the app DB/trace block volume."
   type        = string
   default     = "avoimempi-eduskunta-db"
 }
 
 variable "pipeline_db_volume_size_gb" {
-  description = "Size in GB for final SQLite DB artifacts."
+  description = "Size in GB for app SQLite DB artifacts."
   type        = number
   default     = 20
 }
@@ -194,9 +194,9 @@ locals {
     PIPELINE_RAW_PARSED_VOLUME_NAME       = var.pipeline_raw_parsed_volume_name
     PIPELINE_RAW_PARSED_VOLUME_SIZE_GB    = tostring(var.pipeline_raw_parsed_volume_size_gb)
     PIPELINE_RAW_PARSED_VOLUME_MOUNT_PATH = var.pipeline_raw_parsed_volume_mount_path
-    PIPELINE_DB_VOLUME_NAME               = var.pipeline_db_volume_name
-    PIPELINE_DB_VOLUME_SIZE_GB            = tostring(var.pipeline_db_volume_size_gb)
-    PIPELINE_DB_VOLUME_MOUNT_PATH         = var.pipeline_db_volume_mount_path
+    APP_DB_VOLUME_NAME                    = var.pipeline_db_volume_name
+    APP_DB_VOLUME_SIZE_GB                 = tostring(var.pipeline_db_volume_size_gb)
+    APP_DB_VOLUME_MOUNT_PATH              = var.app_db_mount_path
   }
 }
 
@@ -250,7 +250,7 @@ resource "scaleway_instance_volume" "pipeline_raw_parsed" {
   type       = "l_ssd"
 }
 
-resource "scaleway_instance_volume" "pipeline_db" {
+resource "scaleway_instance_volume" "app_db" {
   name       = var.pipeline_db_volume_name
   project_id = var.project_id
   zone       = var.pipeline_zone
@@ -268,7 +268,7 @@ resource "scaleway_instance_server" "app" {
   security_group_id = scaleway_instance_security_group.shared.id
   user_data         = { cloud-init = local.app_cloud_init }
   additional_volume_ids = [
-    scaleway_instance_volume.pipeline_db.id
+    scaleway_instance_volume.app_db.id
   ]
   tags = [
     "stack:avoimempi-eduskunta",

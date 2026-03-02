@@ -5,6 +5,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="${APP_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 LOG_FILE="${LOG_FILE:-${APP_DIR}/pipeline-jobs.log}"
 LOCK_DIR="${LOCK_DIR:-${APP_DIR}/data/pipeline-locks}"
+# shellcheck source=./lib/runtime.sh
+source "${SCRIPT_DIR}/lib/runtime.sh"
+# shellcheck source=./lib/app-db-sync.sh
+source "${SCRIPT_DIR}/lib/app-db-sync.sh"
 
 # Row-store location on the pipeline VM.
 STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR:-/mnt/pipeline-raw-parsed/data}"
@@ -13,7 +17,7 @@ PIPELINE_BUILD_DIR="${PIPELINE_BUILD_DIR:-${APP_DIR}/dist/pipeline}"
 # Build DB locally on pipeline root disk by default, then sync to app VM.
 DB_PATH="${DB_PATH:-/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db}"
 APP_VM_SYNC_HOST="${APP_VM_SYNC_HOST:-}"
-APP_SYNC_DEST="${APP_SYNC_DEST:-/mnt/app-db/avoimempi-eduskunta.db}"
+set_app_db_sync_defaults
 SCRAPER_MAX_RUNTIME_SECONDS="${SCRAPER_MAX_RUNTIME_SECONDS:-1800}"
 
 ACTION="${1:-help}"
@@ -22,19 +26,6 @@ DEFAULT_OMITTED_TABLES="HetekaData,PrimaryKeys,SaliDBAanestysAsiakirja,SaliDBAan
 
 log() {
   printf '[%s] %s\n' "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" "$*" | tee -a "${LOG_FILE}"
-}
-
-find_bun() {
-  if command -v bun >/dev/null 2>&1; then
-    command -v bun
-    return 0
-  fi
-  if [[ -x "${HOME}/.bun/bin/bun" ]]; then
-    printf '%s\n' "${HOME}/.bun/bin/bun"
-    return 0
-  fi
-  echo "Error: bun not found" >&2
-  return 1
 }
 
 run_in_app_dir() {
@@ -92,10 +83,15 @@ scrape_all() {
 
   # Always enforce omitted-table exclusion, even for ACTIVE_PIPELINE_TABLES overrides.
   if [[ -n "${omitted_list}" ]]; then
-    while IFS= read -r omitted_table; do
-      [[ -z "${omitted_table}" ]] && continue
-      table_list="$(printf '%s\n' "${table_list}" | awk -v t="${omitted_table}" '$0 != t')"
-    done <<< "${omitted_list}"
+    table_list="$(
+      awk '
+        NR == FNR {
+          if ($0 != "") omitted[$0] = 1;
+          next;
+        }
+        !($0 in omitted)
+      ' <(printf '%s\n' "${omitted_list}") <(printf '%s\n' "${table_list}")
+    )"
   fi
 
   if [[ -z "${table_list}" ]]; then
@@ -142,8 +138,9 @@ migrate_and_sync() {
     exit 1
   fi
 
-  log "Syncing DB to ${APP_VM_SYNC_HOST}:${APP_SYNC_DEST}"
-  rsync -az --delay-updates "${DB_PATH}" "${APP_VM_SYNC_HOST}:${APP_SYNC_DEST}" >> "${LOG_FILE}" 2>&1
+  log "Syncing and activating DB release on app VM"
+  sync_db_to_app_vm "${APP_VM_SYNC_HOST}" "${DB_PATH}" >> "${LOG_FILE}" 2>&1
+  log "DB release activation complete"
 }
 
 full_cycle() {
@@ -173,13 +170,19 @@ Environment:
   SCRAPER_MAX_RUNTIME_SECONDS Max scrape-all runtime before stopping (default: 1800)
   DB_PATH            Local migration DB path (default: /var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db)
   APP_VM_SYNC_HOST   Required for migrate-sync (format: user@host)
-  APP_SYNC_DEST      Destination file on app VM (default: /mnt/app-db/avoimempi-eduskunta.db)
+  APP_SYNC_CURRENT_LINK Destination symlink path on app VM (default: /mnt/app-db/current.db)
+  APP_SYNC_RELEASES_DIR Release directory on app VM (default: /mnt/app-db/releases)
+  APP_VM_ACTIVATE_SERVICE App VM systemd service pattern restarted after activation (default: avoimempi-eduskunta-app*.service)
+  APP_SYNC_KEEP_RELEASES Number of DB releases to keep on app VM (default: 5)
+  APP_READY_URL      App readiness URL checked after activation (default: http://127.0.0.1/api/ready)
+  APP_READY_RETRIES  Number of readiness retry attempts (default: 60)
+  APP_READY_SLEEP_SECONDS Seconds between readiness attempts (default: 1)
 EOF
 }
 
 main() {
   local bun_bin
-  bun_bin="$(find_bun)"
+  bun_bin="$(find_bun_binary)"
   mkdir -p "$(dirname "${LOG_FILE}")"
 
   case "${ACTION}" in

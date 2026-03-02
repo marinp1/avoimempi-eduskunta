@@ -7,13 +7,23 @@ export const createQuestionFamilyRoutes = (db: DocumentRoutesDataAccess) => ({
   "/api/written-questions": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
-      const params = getMappedPaginatedQueryParams(searchParams, {
-        query: "q",
-        year: "year",
-        subject: "subject",
-        startDate: "startDate",
-        endDate: "endDate",
-      } as const);
+      const params = getMappedPaginatedQueryParams(
+        searchParams,
+        {
+          query: "q",
+          year: "year",
+          subject: "subject",
+          startDate: "startDate",
+          endDate: "endDate",
+        } as const,
+        {
+          pageFallback: 1,
+          limitFallback: 20,
+          minPage: 1,
+          minLimit: 1,
+          maxLimit: 200,
+        },
+      );
       const data = await db.fetchWrittenQuestions(params);
       return Response.json(data);
     },
@@ -54,14 +64,24 @@ export const createQuestionFamilyRoutes = (db: DocumentRoutesDataAccess) => ({
   "/api/expert-statements": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
-      const params = getMappedPaginatedQueryParams(searchParams, {
-        query: "q",
-        year: "year",
-        committee: "committee",
-        docType: "docType",
-        startDate: "startDate",
-        endDate: "endDate",
-      } as const);
+      const params = getMappedPaginatedQueryParams(
+        searchParams,
+        {
+          query: "q",
+          year: "year",
+          committee: "committee",
+          docType: "docType",
+          startDate: "startDate",
+          endDate: "endDate",
+        } as const,
+        {
+          pageFallback: 1,
+          limitFallback: 20,
+          minPage: 1,
+          minLimit: 1,
+          maxLimit: 200,
+        },
+      );
       const data = await db.fetchExpertStatements(params);
       return Response.json(data);
     },
@@ -84,13 +104,23 @@ export const createQuestionFamilyRoutes = (db: DocumentRoutesDataAccess) => ({
   "/api/written-question-responses": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
-      const params = getMappedPaginatedQueryParams(searchParams, {
-        query: "q",
-        year: "year",
-        minister: "minister",
-        startDate: "startDate",
-        endDate: "endDate",
-      } as const);
+      const params = getMappedPaginatedQueryParams(
+        searchParams,
+        {
+          query: "q",
+          year: "year",
+          minister: "minister",
+          startDate: "startDate",
+          endDate: "endDate",
+        } as const,
+        {
+          pageFallback: 1,
+          limitFallback: 20,
+          minPage: 1,
+          minLimit: 1,
+          maxLimit: 200,
+        },
+      );
       const data = await db.fetchWrittenQuestionResponses(params);
       return Response.json(data);
     },
@@ -106,13 +136,23 @@ export const createQuestionFamilyRoutes = (db: DocumentRoutesDataAccess) => ({
   "/api/oral-questions": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
-      const params = getMappedPaginatedQueryParams(searchParams, {
-        query: "q",
-        year: "year",
-        subject: "subject",
-        startDate: "startDate",
-        endDate: "endDate",
-      } as const);
+      const params = getMappedPaginatedQueryParams(
+        searchParams,
+        {
+          query: "q",
+          year: "year",
+          subject: "subject",
+          startDate: "startDate",
+          endDate: "endDate",
+        } as const,
+        {
+          pageFallback: 1,
+          limitFallback: 20,
+          minPage: 1,
+          minLimit: 1,
+          maxLimit: 200,
+        },
+      );
       const data = await db.fetchOralQuestions(params);
       return Response.json(data);
     },

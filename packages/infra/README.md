@@ -20,8 +20,9 @@ Local filesystem path contract:
 
 ## DB sync model
 
-After each migration run, the pipeline VM rsync's the finished SQLite DB to the app VM over
-the private network. Use `tofu output sync_config` for the exact command and hostnames.
+After each migration run, the pipeline VM rsync's the finished SQLite DB to the app VM release
+directory over the private network, then flips a `current.db` symlink and restarts the app service.
+Use `tofu output sync_config` for the exact command and hostnames.
 
 Recommended runtime approach:
 
@@ -29,10 +30,10 @@ Recommended runtime approach:
   `STORAGE_LOCAL_DIR=/mnt/pipeline-raw-parsed/data`
 - Build the final DB on pipeline local disk (not block storage), for example:
   `DB_PATH=/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db`
-- Rsync that DB file to app VM path:
-  `/mnt/app-db/avoimempi-eduskunta.db`
+- Rsync that DB file to app VM release path under:
+  `/mnt/app-db/releases/`
 
-The app VM receives the DB at `/mnt/app-db/avoimempi-eduskunta.db` (configurable via
+The app VM serves the DB via `/mnt/app-db/current.db` symlink (configurable via
 `TF_VAR_app_db_mount_path`). Set up a systemd timer or cron job on the pipeline VM to run
 the rsync after each successful migration.
 
@@ -94,7 +95,8 @@ STORAGE_LOCAL_DIR=/mnt/pipeline-raw-parsed/data \
 APP_VM_SYNC_HOST="root@avoimempi-eduskunta-app.pn-avoimempi-eduskunta.priv" \
 STORAGE_LOCAL_DIR=/mnt/pipeline-raw-parsed/data \
 DB_PATH=/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db \
-APP_SYNC_DEST=/mnt/app-db/avoimempi-eduskunta.db \
+APP_SYNC_CURRENT_LINK=/mnt/app-db/current.db \
+APP_SYNC_RELEASES_DIR=/mnt/app-db/releases \
 ./scripts/install-pipeline-systemd-jobs.sh install
 
 # 3) Verify timers/services

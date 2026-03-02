@@ -21,6 +21,10 @@ import {
   MIGRATOR_SQL,
   SQLITE_PRAGMAS,
 } from "./database/sql-statements";
+import {
+  clearMigrationLock,
+  writeMigrationLock,
+} from "./services/maintenance-lock";
 
 type SqlMigration = {
   version: number;
@@ -1469,6 +1473,7 @@ export class MigratorController {
       run: (...args: any[]) => unknown;
       finalize: () => void;
     } | null = null;
+    let migrationLockWritten = false;
     const useExclusiveLock = isTruthyEnv(process.env.MIGRATOR_EXCLUSIVE_LOCK);
     const runForeignKeyCheck = isTruthyEnv(
       process.env.MIGRATOR_FOREIGN_KEY_CHECK,
@@ -1487,6 +1492,9 @@ export class MigratorController {
     );
 
     try {
+      writeMigrationLock(reportStartedAt);
+      migrationLockWritten = true;
+
       // Get tables with parsed data
       const tablesToImport = await this.getTablesWithParsedData();
 
@@ -2244,6 +2252,9 @@ export class MigratorController {
       this.isRunning = false;
       this.currentTable = null;
       this.shouldStop = false;
+      if (migrationLockWritten) {
+        clearMigrationLock();
+      }
     }
   }
 

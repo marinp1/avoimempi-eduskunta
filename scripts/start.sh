@@ -3,13 +3,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="${APP_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
+# shellcheck source=./lib/runtime.sh
+source "${SCRIPT_DIR}/lib/runtime.sh"
 PID_FILE="${PID_FILE:-app.pid}"
 LOG_FILE="${LOG_FILE:-app.log}"
 NODE_ENV="${NODE_ENV:-production}"
 DIST_DIR="${APP_DIR}/dist"
 INDEX_FILE="${DIST_DIR}/index.js"
 LOCK_FILE="${MIGRATION_LOCK_FILE:-${APP_DIR}/data/migration.lock}"
-# DB_PATH: absolute path to the SQLite DB on the app VM (e.g. /mnt/app-db/avoimempi-eduskunta.db).
+# DB_PATH: absolute path to the SQLite DB symlink on the app VM (e.g. /mnt/app-db/current.db).
 # Defaults to the repo-relative path used in development if unset.
 DB_PATH="${DB_PATH:-}"
 ACTION="${1:-start}"
@@ -46,14 +48,7 @@ if [[ -f "${APP_DIR}/${PID_FILE}" ]]; then
   rm -f "${APP_DIR}/${PID_FILE}"
 fi
 
-if command -v bun >/dev/null 2>&1; then
-  bun_bin="$(command -v bun)"
-elif [[ -x "${HOME}/.bun/bin/bun" ]]; then
-  bun_bin="${HOME}/.bun/bin/bun"
-else
-  echo "Error: Bun not found on server." >&2
-  exit 1
-fi
+bun_bin="$(find_bun_binary)"
 
 (
   cd "${DIST_DIR}"

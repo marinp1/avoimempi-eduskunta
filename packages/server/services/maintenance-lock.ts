@@ -49,3 +49,26 @@ export const getMigrationLockInfo = (): MigrationLockInfo => {
     };
   }
 };
+
+export const writeMigrationLock = (startedAt: string): string => {
+  const lockFilePath = getMigrationLockFilePath();
+  fs.mkdirSync(path.dirname(lockFilePath), { recursive: true });
+  fs.writeFileSync(
+    lockFilePath,
+    JSON.stringify(
+      {
+        startedAt,
+        pid: process.pid,
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  );
+  return lockFilePath;
+};
+
+export const clearMigrationLock = (): void => {
+  const lockFilePath = getMigrationLockFilePath();
+  fs.rmSync(lockFilePath, { force: true });
+};

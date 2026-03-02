@@ -92,6 +92,10 @@ export const createPersonRoutes = (db: PersonRoutesDataAccess) => ({
       const searchParams = getSearchParams(req);
       const { limit, offset } = getLimitOffsetQueryParams(searchParams, {
         limitFallback: 50,
+        offsetFallback: 0,
+        minLimit: 1,
+        minOffset: 0,
+        maxLimit: 500,
       });
       const data = await db.fetchPersonSpeeches({
         personId: req.params.id,

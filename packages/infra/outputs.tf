@@ -32,12 +32,14 @@ output "app_vm" {
 }
 
 output "sync_config" {
-  description = "Rsync DB sync configuration: pipeline pushes finished DB to app VM over the private network."
+  description = "Atomic DB sync configuration: pipeline pushes DB artifact to app VM release directory, then flips current symlink."
   value = {
-    source           = var.pipeline_local_db_path
-    destination      = "${var.app_db_mount_path}/avoimempi-eduskunta.db"
-    app_private_host = "${var.app_server_name}.${scaleway_vpc_private_network.pipeline.name}.priv"
-    rsync_command    = "rsync -az --delay-updates ${var.pipeline_local_db_path} ${var.app_server_name}.${scaleway_vpc_private_network.pipeline.name}.priv:${var.app_db_mount_path}/avoimempi-eduskunta.db"
+    source                = var.pipeline_local_db_path
+    app_current_db_link   = "${var.app_db_mount_path}/current.db"
+    app_releases_dir      = "${var.app_db_mount_path}/releases"
+    app_private_host      = "${var.app_server_name}.${scaleway_vpc_private_network.pipeline.name}.priv"
+    service_reload_command = "systemctl restart avoimempi-eduskunta-app*.service"
+    rsync_command         = "rsync -az --delay-updates ${var.pipeline_local_db_path} ${var.app_server_name}.${scaleway_vpc_private_network.pipeline.name}.priv:${var.app_db_mount_path}/releases/.incoming-<release>.db"
   }
 }
 
@@ -54,8 +56,8 @@ output "pipeline_vm" {
     raw_parsed_volume_id       = scaleway_instance_volume.pipeline_raw_parsed.id
     raw_parsed_volume_size_gb  = var.pipeline_raw_parsed_volume_size_gb
     raw_parsed_mount_path      = var.pipeline_raw_parsed_volume_mount_path
-    db_volume_id               = scaleway_instance_volume.pipeline_db.id
-    db_volume_size_gb          = var.pipeline_db_volume_size_gb
-    db_mount_path              = var.pipeline_db_volume_mount_path
+    app_db_volume_id           = scaleway_instance_volume.app_db.id
+    app_db_volume_size_gb      = var.pipeline_db_volume_size_gb
+    app_db_mount_path          = var.app_db_mount_path
   }
 }

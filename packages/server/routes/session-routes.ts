@@ -33,7 +33,13 @@ export const createSessionRoutes = (db: SessionRoutesDataAccess) => ({
   "/api/sessions": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
-      const { page, limit } = getPageLimitQueryParams(searchParams);
+      const { page, limit } = getPageLimitQueryParams(searchParams, {
+        pageFallback: 1,
+        limitFallback: 20,
+        minPage: 1,
+        minLimit: 1,
+        maxLimit: 200,
+      });
 
       const sessions = await db.fetchSessions({ page, limit });
       return Response.json(sessions);
@@ -52,7 +58,13 @@ export const createSessionRoutes = (db: SessionRoutesDataAccess) => ({
   "/api/sections/:sectionKey/speeches": {
     GET: async (req: BunRequest<"/api/sections/:sectionKey/speeches">) => {
       const searchParams = getSearchParams(req);
-      const { limit, offset } = getLimitOffsetQueryParams(searchParams);
+      const { limit, offset } = getLimitOffsetQueryParams(searchParams, {
+        limitFallback: 20,
+        offsetFallback: 0,
+        minLimit: 1,
+        minOffset: 0,
+        maxLimit: 500,
+      });
       const result = await db.fetchSectionSpeeches({
         sectionKey: req.params.sectionKey,
         limit,

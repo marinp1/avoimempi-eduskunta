@@ -9,13 +9,23 @@ export const createInterpellationGovernmentRoutes = (
   "/api/interpellations": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
-      const params = getMappedPaginatedQueryParams(searchParams, {
-        query: "q",
-        year: "year",
-        subject: "subject",
-        startDate: "startDate",
-        endDate: "endDate",
-      } as const);
+      const params = getMappedPaginatedQueryParams(
+        searchParams,
+        {
+          query: "q",
+          year: "year",
+          subject: "subject",
+          startDate: "startDate",
+          endDate: "endDate",
+        } as const,
+        {
+          pageFallback: 1,
+          limitFallback: 20,
+          minPage: 1,
+          minLimit: 1,
+          maxLimit: 200,
+        },
+      );
       const data = await db.fetchInterpellations(params);
       return Response.json(data);
     },
@@ -56,13 +66,23 @@ export const createInterpellationGovernmentRoutes = (
   "/api/government-proposals": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
-      const params = getMappedPaginatedQueryParams(searchParams, {
-        query: "q",
-        year: "year",
-        subject: "subject",
-        startDate: "startDate",
-        endDate: "endDate",
-      } as const);
+      const params = getMappedPaginatedQueryParams(
+        searchParams,
+        {
+          query: "q",
+          year: "year",
+          subject: "subject",
+          startDate: "startDate",
+          endDate: "endDate",
+        } as const,
+        {
+          pageFallback: 1,
+          limitFallback: 20,
+          minPage: 1,
+          minLimit: 1,
+          maxLimit: 200,
+        },
+      );
       const data = await db.fetchGovernmentProposals(params);
       return Response.json(data);
     },

@@ -3,6 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_DIR="${APP_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
+# shellcheck source=./lib/app-db-sync.sh
+source "${SCRIPT_DIR}/lib/app-db-sync.sh"
 START_SCRIPT="${APP_DIR}/scripts/start.sh"
 LOG_FILE="${LOG_FILE:-${APP_DIR}/app.log}"
 CRON_TZ_VALUE="${CRON_TZ_VALUE:-Etc/GMT-2}"
@@ -13,8 +15,11 @@ DB_PATH="${DB_PATH:-/mnt/pipeline-db/avoimempi-eduskunta.db}"
 STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR:-/mnt/pipeline-raw-parsed/data}"
 PIPELINE_BUILD_DIR="${PIPELINE_BUILD_DIR:-${APP_DIR}/dist/pipeline}"
 APP_VM_SYNC_HOST="${APP_VM_SYNC_HOST:-}"
-APP_SYNC_DEST="${APP_SYNC_DEST:-/mnt/app-db/avoimempi-eduskunta.db}"
-CRON_ENV="DB_PATH=${DB_PATH} STORAGE_LOCAL_DIR=${STORAGE_LOCAL_DIR} PIPELINE_BUILD_DIR=${PIPELINE_BUILD_DIR}${APP_VM_SYNC_HOST:+ APP_VM_SYNC_HOST=${APP_VM_SYNC_HOST} APP_SYNC_DEST=${APP_SYNC_DEST}}"
+set_app_db_sync_defaults
+CRON_ENV="DB_PATH=${DB_PATH} STORAGE_LOCAL_DIR=${STORAGE_LOCAL_DIR} PIPELINE_BUILD_DIR=${PIPELINE_BUILD_DIR}"
+if [[ -n "${APP_VM_SYNC_HOST}" ]]; then
+  CRON_ENV="${CRON_ENV} APP_VM_SYNC_HOST=${APP_VM_SYNC_HOST}$(print_app_db_sync_env_inline)"
+fi
 CRON_CMD="cd ${APP_DIR} && ${CRON_ENV} ./scripts/start.sh rebuild-db >> ${LOG_FILE} 2>&1"
 
 if [[ ! -x "${START_SCRIPT}" ]]; then
@@ -40,7 +45,13 @@ Environment overrides:
   STORAGE_LOCAL_DIR    Raw/parsed data directory (default: /mnt/pipeline-raw-parsed/data)
   PIPELINE_BUILD_DIR   Path to bundled pipeline CLIs (default: \${APP_DIR}/dist/pipeline)
   APP_VM_SYNC_HOST     rsync target host after migration (e.g. root@app.priv); skipped if unset
-  APP_SYNC_DEST        rsync destination path on app VM (default: /mnt/app-db/avoimempi-eduskunta.db)
+  APP_SYNC_CURRENT_LINK Destination symlink path on app VM (default: /mnt/app-db/current.db)
+  APP_SYNC_RELEASES_DIR DB release directory on app VM (default: /mnt/app-db/releases)
+  APP_VM_ACTIVATE_SERVICE App VM systemd service restarted after DB activation
+  APP_SYNC_KEEP_RELEASES Number of DB releases retained on app VM (default: 5)
+  APP_READY_URL       App readiness URL checked after activation (default: http://127.0.0.1/api/ready)
+  APP_READY_RETRIES   Number of readiness retry attempts (default: 60)
+  APP_READY_SLEEP_SECONDS Seconds between readiness attempts (default: 1)
 EOF
 }
 
