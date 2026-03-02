@@ -9,15 +9,16 @@ MIGRATOR_SCRIPT="${APP_DIR}/scripts/pipeline-migrator-app.sh"
 LOG_FILE="${LOG_FILE:-${APP_DIR}/pipeline-jobs.log}"
 
 PIPELINE_CRON_TZ="${PIPELINE_CRON_TZ:-Etc/GMT-2}"
-SCRAPE_SCHEDULE="${SCRAPE_SCHEDULE:-15 * * * *}"
-PARSE_SCHEDULE="${PARSE_SCHEDULE:-35 * * * *}"
-MIGRATE_SCHEDULE="${MIGRATE_SCHEDULE:-0 */6 * * *}"
+SCRAPE_SCHEDULE="${SCRAPE_SCHEDULE:-0 3-23/3 * * *}"
+PARSE_SCHEDULE="${PARSE_SCHEDULE:-0 5-23/3 * * *}"
+MIGRATE_SCHEDULE="${MIGRATE_SCHEDULE:-0 7-22/3 * * *}"
 
 STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR:-/mnt/pipeline-raw-parsed/data}"
 DB_PATH="${DB_PATH:-/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db}"
 PIPELINE_BUILD_DIR="${PIPELINE_BUILD_DIR:-${APP_DIR}/dist/pipeline}"
 APP_VM_SYNC_HOST="${APP_VM_SYNC_HOST:-}"
 APP_SYNC_DEST="${APP_SYNC_DEST:-/mnt/app-db/avoimempi-eduskunta.db}"
+SCRAPER_MAX_RUNTIME_SECONDS="${SCRAPER_MAX_RUNTIME_SECONDS:-1800}"
 
 SCRAPE_TAG="# AE_PIPELINE_JOB:scrape"
 PARSE_TAG="# AE_PIPELINE_JOB:parse"
@@ -42,8 +43,8 @@ remove_managed_entries() {
 
 build_cmd() {
   local script_path="$1"
-  printf 'cd %s && STORAGE_LOCAL_DIR=%s DB_PATH=%s PIPELINE_BUILD_DIR=%s' \
-    "${APP_DIR}" "${STORAGE_LOCAL_DIR}" "${DB_PATH}" "${PIPELINE_BUILD_DIR}"
+  printf 'cd %s && STORAGE_LOCAL_DIR=%s DB_PATH=%s PIPELINE_BUILD_DIR=%s SCRAPER_MAX_RUNTIME_SECONDS=%s' \
+    "${APP_DIR}" "${STORAGE_LOCAL_DIR}" "${DB_PATH}" "${PIPELINE_BUILD_DIR}" "${SCRAPER_MAX_RUNTIME_SECONDS}"
 
   if [[ -n "${APP_VM_SYNC_HOST}" ]]; then
     printf ' APP_VM_SYNC_HOST=%s APP_SYNC_DEST=%s' \
@@ -106,12 +107,13 @@ Commands:
 
 Environment:
   PIPELINE_CRON_TZ    Cron timezone (default: Etc/GMT-2)
-  SCRAPE_SCHEDULE     Scrape schedule (default: "15 * * * *")
-  PARSE_SCHEDULE      Parse schedule (default: "35 * * * *")
-  MIGRATE_SCHEDULE    Migrate+sync schedule (default: "0 */6 * * *")
+  SCRAPE_SCHEDULE     Scrape schedule (default: "0 3-23/3 * * *")
+  PARSE_SCHEDULE      Parse schedule (default: "0 5-23/3 * * *")
+  MIGRATE_SCHEDULE    Migrate+sync schedule (default: "0 7-22/3 * * *")
   STORAGE_LOCAL_DIR   Row-store directory
   DB_PATH             Local migration DB path
   PIPELINE_BUILD_DIR  Pipeline build directory
+  SCRAPER_MAX_RUNTIME_SECONDS  Max scrape-all runtime before stopping (default: 1800)
   APP_VM_SYNC_HOST    App VM SSH target for rsync (user@host)
   APP_SYNC_DEST       Destination DB path on app VM
   LOG_FILE            Shared log file path
