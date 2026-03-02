@@ -42,9 +42,10 @@ Runtime:
   - [`scripts/run-app.sh`](/workspaces/avoimempi-eduskunta/scripts/run-app.sh)
 - Pipeline jobs can be managed by `systemd` timers using:
   - [`scripts/install-pipeline-systemd-jobs.sh`](/workspaces/avoimempi-eduskunta/scripts/install-pipeline-systemd-jobs.sh)
-  - scrape hourly
-  - parse hourly
-  - migrate+sync every 6h
+  - scrape every 3 hours (default includes 03:00 start cadence)
+  - parse every 3 hours (default includes 05:00 start cadence)
+  - migrate+sync every 3 hours (default includes 07:00 start cadence)
+  - scraper service timeout defaults to 30 minutes
 - Health endpoint exists at `/api/health` in [`packages/server/routes/core-routes.ts`](/workspaces/avoimempi-eduskunta/packages/server/routes/core-routes.ts).
 
 Release activation:

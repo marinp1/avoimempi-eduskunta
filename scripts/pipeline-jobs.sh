@@ -14,9 +14,11 @@ PIPELINE_BUILD_DIR="${PIPELINE_BUILD_DIR:-${APP_DIR}/dist/pipeline}"
 DB_PATH="${DB_PATH:-/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db}"
 APP_VM_SYNC_HOST="${APP_VM_SYNC_HOST:-}"
 APP_SYNC_DEST="${APP_SYNC_DEST:-/mnt/app-db/avoimempi-eduskunta.db}"
+SCRAPER_MAX_RUNTIME_SECONDS="${SCRAPER_MAX_RUNTIME_SECONDS:-1800}"
 
 ACTION="${1:-help}"
 DEFAULT_ACTIVE_TABLES="Attachment,AttachmentGroup,MemberOfParliament,SaliDBAanestys,SaliDBAanestysEdustaja,SaliDBIstunto,SaliDBKohta,SaliDBKohtaAanestys,SaliDBKohtaAsiakirja,SaliDBPuheenvuoro,SaliDBTiedote,SeatingOfParliament,VaskiData"
+DEFAULT_OMITTED_TABLES="HetekaData,PrimaryKeys,SaliDBAanestysAsiakirja,SaliDBAanestysJakauma,SaliDBAanestysKieli,SaliDBMessageLog"
 
 log() {
   printf '[%s] %s\n' "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" "$*" | tee -a "${LOG_FILE}"
@@ -58,6 +60,8 @@ with_pipeline_lock() {
 scrape_all() {
   local bun_bin="$1"
   local table_list
+  local omitted_list
+  local start_epoch now_epoch
 
   if [[ -n "${ACTIVE_PIPELINE_TABLES:-}" ]]; then
     table_list="$(printf '%s\n' "${ACTIVE_PIPELINE_TABLES}" | tr ',' '\n')"
@@ -70,13 +74,42 @@ scrape_all() {
     table_list="$(printf '%s\n' "${DEFAULT_ACTIVE_TABLES}" | tr ',' '\n')"
   fi
 
+  if [[ -f "${APP_DIR}/packages/shared/constants/index.ts" ]]; then
+    omitted_list="$(
+      run_in_app_dir "${bun_bin}" -e \
+        'import { OmittedPipelineTableNames } from "./packages/shared/constants/index.ts"; console.log(OmittedPipelineTableNames.join("\n"));'
+    )"
+  else
+    omitted_list="$(printf '%s\n' "${DEFAULT_OMITTED_TABLES}" | tr ',' '\n')"
+  fi
+
+  table_list="$(printf '%s\n' "${table_list}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+  omitted_list="$(printf '%s\n' "${omitted_list}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+
+  # Always enforce omitted-table exclusion, even for ACTIVE_PIPELINE_TABLES overrides.
+  if [[ -n "${omitted_list}" ]]; then
+    while IFS= read -r omitted_table; do
+      [[ -z "${omitted_table}" ]] && continue
+      table_list="$(printf '%s\n' "${table_list}" | awk -v t="${omitted_table}" '$0 != t')"
+    done <<< "${omitted_list}"
+  fi
+
   if [[ -z "${table_list}" ]]; then
     echo "Error: no active pipeline tables resolved." >&2
     exit 1
   fi
 
+  start_epoch="$(date +%s)"
+
   while IFS= read -r table_name; do
     [[ -z "${table_name}" ]] && continue
+
+    now_epoch="$(date +%s)"
+    if (( now_epoch - start_epoch >= SCRAPER_MAX_RUNTIME_SECONDS )); then
+      log "Scraper runtime cap (${SCRAPER_MAX_RUNTIME_SECONDS}s) reached; stopping this run."
+      return 0
+    fi
+
     log "Scraping table: ${table_name}"
     if [[ -f "${PIPELINE_BUILD_DIR}/scraper/cli.js" ]]; then
       run_in_app_dir env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" "${bun_bin}" "${PIPELINE_BUILD_DIR}/scraper/cli.js" "${table_name}" >> "${LOG_FILE}" 2>&1
@@ -140,6 +173,7 @@ Environment:
   STORAGE_LOCAL_DIR  Row-store dir (default: /mnt/pipeline-raw-parsed/data)
   PIPELINE_BUILD_DIR Built pipeline dir (default: \${APP_DIR}/dist/pipeline)
   ACTIVE_PIPELINE_TABLES Comma-separated table list override for scrape-all
+  SCRAPER_MAX_RUNTIME_SECONDS Max scrape-all runtime before stopping (default: 1800)
   DB_PATH            Local migration DB path (default: /var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db)
   APP_VM_SYNC_HOST   Required for migrate-sync (format: user@host)
   APP_SYNC_DEST      Destination file on app VM (default: /mnt/app-db/avoimempi-eduskunta.db)

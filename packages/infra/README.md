@@ -103,9 +103,10 @@ APP_SYNC_DEST=/mnt/app-db/avoimempi-eduskunta.db \
 
 Default schedules (override with env vars if needed):
 
-- Scrape: `15 * * * *`
-- Parse: `35 * * * *`
-- Migrate + sync: `0 */6 * * *`
+- Scrape: every 3 hours starting at `03:00` (`03:00, 06:00, 09:00, ...`)
+- Parse: every 3 hours starting at `05:00` (`05:00, 08:00, 11:00, ...`)
+- Migrate + sync: every 3 hours starting at `07:00` (`07:00, 10:00, 13:00, ...`)
+- Scraper job timeout: `30m` (`SCRAPE_TIMEOUT`)
 
 To deploy scraper/parser/migrator as separate pipeline applications, use these entrypoints:
 

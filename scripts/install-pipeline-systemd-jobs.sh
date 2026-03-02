@@ -7,9 +7,12 @@ APP_DIR="${APP_DIR:-/root/avoimempi-eduskunta}"
 SERVICE_PREFIX="${SERVICE_PREFIX:-avoimempi-eduskunta-pipeline}"
 ENV_FILE="${APP_DIR}/shared/pipeline.env"
 
-SCRAPE_ON_CALENDAR="${SCRAPE_ON_CALENDAR:-*-*-* *:15:00}"
-PARSE_ON_CALENDAR="${PARSE_ON_CALENDAR:-*-*-* *:35:00}"
-MIGRATE_ON_CALENDAR="${MIGRATE_ON_CALENDAR:-*-*-* 00/6:00:00}"
+SCRAPE_ON_CALENDAR="${SCRAPE_ON_CALENDAR:-*-*-* 03/3:00:00}"
+PARSE_ON_CALENDAR="${PARSE_ON_CALENDAR:-*-*-* 05/3:00:00}"
+MIGRATE_ON_CALENDAR="${MIGRATE_ON_CALENDAR:-*-*-* 07/3:00:00}"
+SCRAPE_TIMEOUT="${SCRAPE_TIMEOUT:-30m}"
+PARSE_TIMEOUT="${PARSE_TIMEOUT:-12h}"
+MIGRATE_TIMEOUT="${MIGRATE_TIMEOUT:-12h}"
 
 STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR:-/mnt/pipeline-raw-parsed/data}"
 DB_PATH="${DB_PATH:-/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db}"
@@ -17,6 +20,7 @@ PIPELINE_BUILD_DIR="${PIPELINE_BUILD_DIR:-${APP_DIR}/dist/pipeline}"
 APP_VM_SYNC_HOST="${APP_VM_SYNC_HOST:-}"
 APP_SYNC_DEST="${APP_SYNC_DEST:-/mnt/app-db/avoimempi-eduskunta.db}"
 LOG_FILE="${LOG_FILE:-${APP_DIR}/pipeline-jobs.log}"
+SCRAPER_MAX_RUNTIME_SECONDS="${SCRAPER_MAX_RUNTIME_SECONDS:-1800}"
 
 SCRAPE_SERVICE="${SERVICE_PREFIX}-scrape.service"
 PARSE_SERVICE="${SERVICE_PREFIX}-parse.service"
@@ -36,6 +40,7 @@ STORAGE_LOCAL_DIR=${STORAGE_LOCAL_DIR}
 DB_PATH=${DB_PATH}
 PIPELINE_BUILD_DIR=${PIPELINE_BUILD_DIR}
 LOG_FILE=${LOG_FILE}
+SCRAPER_MAX_RUNTIME_SECONDS=${SCRAPER_MAX_RUNTIME_SECONDS}
 APP_VM_SYNC_HOST=${APP_VM_SYNC_HOST}
 APP_SYNC_DEST=${APP_SYNC_DEST}
 EOF
@@ -44,6 +49,7 @@ EOF
 write_service_unit() {
   local name="$1"
   local script="$2"
+  local timeout="$3"
   cat > "$(unit_path "${name}")" <<EOF
 [Unit]
 Description=Avoimempi Eduskunta pipeline job (${script})
@@ -55,7 +61,7 @@ Type=oneshot
 WorkingDirectory=${APP_DIR}
 EnvironmentFile=-${ENV_FILE}
 ExecStart=/usr/bin/env bash ${APP_DIR}/scripts/${script}
-TimeoutStartSec=12h
+TimeoutStartSec=${timeout}
 NoNewPrivileges=true
 PrivateTmp=true
 EOF
@@ -81,9 +87,9 @@ EOF
 
 install_units() {
   write_env_file
-  write_service_unit "${SCRAPE_SERVICE}" "pipeline-scraper-app.sh"
-  write_service_unit "${PARSE_SERVICE}" "pipeline-parser-app.sh"
-  write_service_unit "${MIGRATE_SERVICE}" "pipeline-migrator-app.sh"
+  write_service_unit "${SCRAPE_SERVICE}" "pipeline-scraper-app.sh" "${SCRAPE_TIMEOUT}"
+  write_service_unit "${PARSE_SERVICE}" "pipeline-parser-app.sh" "${PARSE_TIMEOUT}"
+  write_service_unit "${MIGRATE_SERVICE}" "pipeline-migrator-app.sh" "${MIGRATE_TIMEOUT}"
 
   write_timer_unit "${SCRAPE_TIMER}" "${SCRAPE_SERVICE}" "${SCRAPE_ON_CALENDAR}"
   write_timer_unit "${PARSE_TIMER}" "${PARSE_SERVICE}" "${PARSE_ON_CALENDAR}"
@@ -126,15 +132,19 @@ Usage: $0 [install|remove|status]
 Environment:
   APP_DIR             Pipeline app directory (default: /root/avoimempi-eduskunta)
   SERVICE_PREFIX      Unit name prefix (default: avoimempi-eduskunta-pipeline)
-  SCRAPE_ON_CALENDAR  systemd OnCalendar for scrape (default: *-*-* *:15:00)
-  PARSE_ON_CALENDAR   systemd OnCalendar for parse (default: *-*-* *:35:00)
-  MIGRATE_ON_CALENDAR systemd OnCalendar for migrate (default: *-*-* 00/6:00:00)
+  SCRAPE_ON_CALENDAR  systemd OnCalendar for scrape (default: *-*-* 03/3:00:00)
+  PARSE_ON_CALENDAR   systemd OnCalendar for parse (default: *-*-* 05/3:00:00)
+  MIGRATE_ON_CALENDAR systemd OnCalendar for migrate (default: *-*-* 07/3:00:00)
+  SCRAPE_TIMEOUT      systemd service timeout for scrape (default: 30m)
+  PARSE_TIMEOUT       systemd service timeout for parser (default: 12h)
+  MIGRATE_TIMEOUT     systemd service timeout for migrator (default: 12h)
   STORAGE_LOCAL_DIR   Row-store directory
   DB_PATH             Local migration DB path
   PIPELINE_BUILD_DIR  Pipeline build directory
   APP_VM_SYNC_HOST    App VM SSH target for rsync (user@host)
   APP_SYNC_DEST       Destination DB path on app VM
   LOG_FILE            Pipeline jobs log path
+  SCRAPER_MAX_RUNTIME_SECONDS  Max scrape-all runtime before stopping (default: 1800)
 EOF
 }
 
