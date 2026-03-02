@@ -22,7 +22,10 @@ export function getRawRowStore(): IRowStore {
   if (!rawStore) {
     if (process.env.ROW_STORE_PROVIDER === "postgres") {
       const url = process.env.ROW_STORE_DATABASE_URL;
-      if (!url) throw new Error("ROW_STORE_DATABASE_URL is required when ROW_STORE_PROVIDER=postgres");
+      if (!url)
+        throw new Error(
+          "ROW_STORE_DATABASE_URL is required when ROW_STORE_PROVIDER=postgres",
+        );
       rawStore = new PostgresRowStore(url, "raw");
     } else {
       const dir = getRowStoreDir();
@@ -37,7 +40,10 @@ export function getParsedRowStore(): IRowStore {
   if (!parsedStore) {
     if (process.env.ROW_STORE_PROVIDER === "postgres") {
       const url = process.env.ROW_STORE_DATABASE_URL;
-      if (!url) throw new Error("ROW_STORE_DATABASE_URL is required when ROW_STORE_PROVIDER=postgres");
+      if (!url)
+        throw new Error(
+          "ROW_STORE_DATABASE_URL is required when ROW_STORE_PROVIDER=postgres",
+        );
       parsedStore = new PostgresRowStore(url, "parsed");
     } else {
       const dir = getRowStoreDir();

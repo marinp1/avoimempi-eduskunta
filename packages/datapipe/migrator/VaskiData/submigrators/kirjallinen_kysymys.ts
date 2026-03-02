@@ -1,9 +1,9 @@
 import type { Database } from "bun:sqlite";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import type { VaskiFlushContext } from "../migrator";
 import type { VaskiEntry } from "../reader";
 import { readVaskiRowsByDocumentType } from "../reader";
-import type { VaskiFlushContext } from "../migrator";
 import { convertVaskiNodeToRichText } from "../rich-text";
 
 function normalizeText(value: unknown): string | null {

@@ -41,7 +41,8 @@ function resolveMigratorFunctionEnv(): Record<string, string> {
   };
 
   if (rowStoreProvider) env.ROW_STORE_PROVIDER = rowStoreProvider;
-  if (rowStoreDatabaseUrl !== "") env.ROW_STORE_DATABASE_URL = rowStoreDatabaseUrl;
+  if (rowStoreDatabaseUrl !== "")
+    env.ROW_STORE_DATABASE_URL = rowStoreDatabaseUrl;
 
   const optionalEnvNames = [
     "MIGRATOR_PUBLISH_SNAPSHOT",
@@ -115,7 +116,9 @@ async function deployAppBuild() {
     loader: {
       ".sql": "text",
     },
-    entrypoints: [path.join(import.meta.dirname, "../packages/server/index.ts")],
+    entrypoints: [
+      path.join(import.meta.dirname, "../packages/server/index.ts"),
+    ],
     define: {
       "process.env.DB_PATH": "../avoimempi-eduskunta.db",
       "process.env.NODE_ENV": JSON.stringify(nodeEnv),
@@ -189,7 +192,10 @@ async function buildPipelineDist() {
     });
   }
 
-  const migrationsSource = path.join(rootDir, "packages/datapipe/migrator/migrations");
+  const migrationsSource = path.join(
+    rootDir,
+    "packages/datapipe/migrator/migrations",
+  );
   const migrationsTarget = path.join(distRoot, "datapipe/migrator/migrations");
   await fs.promises.mkdir(migrationsTarget, { recursive: true });
   for (const fileName of fs.readdirSync(migrationsSource)) {
@@ -279,6 +285,7 @@ switch (target) {
   case "-h":
     printHelp();
     process.exit(0);
+    break;
   default:
     throw new Error(
       `Unknown deploy target ${target}, use: all|app|pipeline|migrator-function|database`,

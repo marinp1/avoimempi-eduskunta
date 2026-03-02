@@ -517,10 +517,7 @@ export class MigratorController {
       if (typeof data.percentComplete === "number") {
         this.progress = Math.max(0, Math.min(100, data.percentComplete));
       } else if (typeof data.overallPercentComplete === "number") {
-        this.progress = Math.max(
-          0,
-          Math.min(100, data.overallPercentComplete),
-        );
+        this.progress = Math.max(0, Math.min(100, data.overallPercentComplete));
       } else if (
         typeof data.tablesCompleted === "number" &&
         typeof data.totalTables === "number" &&
@@ -587,11 +584,15 @@ export class MigratorController {
         yield {
           firstPk: firstBatchPk,
           rows: batch,
-          pkName: normalizeText(batch[0][IMPORT_METADATA_FIELDS.sourcePrimaryKeyName]),
+          pkName: normalizeText(
+            batch[0][IMPORT_METADATA_FIELDS.sourcePrimaryKeyName],
+          ),
           sourceTable:
             normalizeText(batch[0][IMPORT_METADATA_FIELDS.sourceTable]) ??
             tableName,
-          sourcePage: normalizeNumber(batch[0][IMPORT_METADATA_FIELDS.sourcePage]),
+          sourcePage: normalizeNumber(
+            batch[0][IMPORT_METADATA_FIELDS.sourcePage],
+          ),
           scrapedAt: normalizeText(batch[0][IMPORT_METADATA_FIELDS.scrapedAt]),
         };
         batch = [];
@@ -603,11 +604,15 @@ export class MigratorController {
       yield {
         firstPk: firstBatchPk,
         rows: batch,
-        pkName: normalizeText(batch[0][IMPORT_METADATA_FIELDS.sourcePrimaryKeyName]),
+        pkName: normalizeText(
+          batch[0][IMPORT_METADATA_FIELDS.sourcePrimaryKeyName],
+        ),
         sourceTable:
           normalizeText(batch[0][IMPORT_METADATA_FIELDS.sourceTable]) ??
           tableName,
-        sourcePage: normalizeNumber(batch[0][IMPORT_METADATA_FIELDS.sourcePage]),
+        sourcePage: normalizeNumber(
+          batch[0][IMPORT_METADATA_FIELDS.sourcePage],
+        ),
         scrapedAt: normalizeText(batch[0][IMPORT_METADATA_FIELDS.scrapedAt]),
       };
     }
@@ -814,10 +819,16 @@ export class MigratorController {
     }
 
     if (sourceReference.scrapedAt) {
-      if (!summary.firstScrapedAt || sourceReference.scrapedAt < summary.firstScrapedAt) {
+      if (
+        !summary.firstScrapedAt ||
+        sourceReference.scrapedAt < summary.firstScrapedAt
+      ) {
         summary.firstScrapedAt = sourceReference.scrapedAt;
       }
-      if (!summary.lastScrapedAt || sourceReference.scrapedAt > summary.lastScrapedAt) {
+      if (
+        !summary.lastScrapedAt ||
+        sourceReference.scrapedAt > summary.lastScrapedAt
+      ) {
         summary.lastScrapedAt = sourceReference.scrapedAt;
       }
     }
@@ -1570,7 +1581,7 @@ export class MigratorController {
 
       sourceReferenceStatement =
         sourceReferenceMode === "full"
-          ? traceDatabase?.prepare(
+          ? (traceDatabase?.prepare(
               `INSERT INTO ImportSourceReference (
                  source_table,
                  source_page,
@@ -1579,7 +1590,7 @@ export class MigratorController {
                  scraped_at,
                  migrated_at
                ) VALUES (?, ?, ?, ?, ?, ?)`,
-            ) ?? null
+            ) ?? null)
           : null;
       const recordSourceReference = (
         row: Record<string, any>,
@@ -1965,7 +1976,8 @@ export class MigratorController {
         },
       });
       console.log("🧮 Rebuilding person-voting aggregate table...");
-      const personVotingRows = this.rebuildPersonVotingDailyStats(targetDatabase);
+      const personVotingRows =
+        this.rebuildPersonVotingDailyStats(targetDatabase);
       console.log(
         `✅ Person-voting aggregate table rebuilt (${personVotingRows} rows)`,
       );
@@ -1980,7 +1992,8 @@ export class MigratorController {
         },
       });
       console.log("🧮 Rebuilding person-speech aggregate table...");
-      const personSpeechRows = this.rebuildPersonSpeechDailyStats(targetDatabase);
+      const personSpeechRows =
+        this.rebuildPersonSpeechDailyStats(targetDatabase);
       console.log(
         `✅ Person-speech aggregate table rebuilt (${personSpeechRows} rows)`,
       );
@@ -2083,7 +2096,9 @@ export class MigratorController {
           `✅ VACUUM complete (${toMb(sizeBeforeBytes)} MB -> ${toMb(sizeAfterBytes)} MB)`,
         );
       } else {
-        console.log("⏭️  Skipping VACUUM (MIGRATOR_VACUUM_AFTER_IMPORT disabled)");
+        console.log(
+          "⏭️  Skipping VACUUM (MIGRATOR_VACUUM_AFTER_IMPORT disabled)",
+        );
       }
 
       if (traceDatabase && traceTransactionOpen) {

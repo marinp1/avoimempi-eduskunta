@@ -125,7 +125,8 @@ export class SessionRepository {
     sessions: SessionRow[],
   ): SessionWithSectionsRow[] {
     const sessionKeys = sessions.map((session) => session.key);
-    const sectionsBySessionKey = this.fetchSectionRowsBySessionKeys(sessionKeys);
+    const sectionsBySessionKey =
+      this.fetchSectionRowsBySessionKeys(sessionKeys);
     const votingCountBySessionKey =
       this.fetchVotingCountsBySessionKeys(sessionKeys);
 
@@ -283,10 +284,7 @@ export class SessionRepository {
   }
 
   public fetchSessionByDate(params: { date: string }) {
-    const stmt = this.db.prepare<
-      SessionRow,
-      { $date: string }
-    >(sessionByDate);
+    const stmt = this.db.prepare<SessionRow, { $date: string }>(sessionByDate);
     const data = stmt.all({ $date: params.date });
     stmt.finalize();
     return data;

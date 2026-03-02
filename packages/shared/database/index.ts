@@ -6,13 +6,14 @@ const resolvePath = (envValue: string): string => {
 };
 
 export const getDatabasePath = () => {
-  if (process.env.DB_PATH)
-    return resolvePath(process.env.DB_PATH);
+  if (process.env.DB_PATH) return resolvePath(process.env.DB_PATH);
   return path.join(import.meta.dirname, "../../../avoimempi-eduskunta.db");
 };
 
 export const getTraceDatabasePath = () => {
-  if (process.env.TRACE_DB_PATH)
-    return resolvePath(process.env.TRACE_DB_PATH);
-  return path.join(import.meta.dirname, "../../../avoimempi-eduskunta-trace.db");
+  if (process.env.TRACE_DB_PATH) return resolvePath(process.env.TRACE_DB_PATH);
+  return path.join(
+    import.meta.dirname,
+    "../../../avoimempi-eduskunta-trace.db",
+  );
 };

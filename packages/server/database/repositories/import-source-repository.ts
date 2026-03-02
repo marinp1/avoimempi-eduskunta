@@ -1,7 +1,7 @@
 import { Database } from "bun:sqlite";
 import fs from "node:fs";
-import importSourceTableSummaryAggregate from "../queries/IMPORT_SOURCE_TABLE_SUMMARY_AGGREGATE.sql";
 import importSourceTableSummary from "../queries/IMPORT_SOURCE_TABLE_SUMMARY.sql";
+import importSourceTableSummaryAggregate from "../queries/IMPORT_SOURCE_TABLE_SUMMARY_AGGREGATE.sql";
 
 type ImportSourceSummaryRow = {
   imported_rows: number;

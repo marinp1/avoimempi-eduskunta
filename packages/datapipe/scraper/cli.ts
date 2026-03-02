@@ -1,5 +1,8 @@
 #!/usr/bin/env bun
-import { ActivePipelineTableNames, OmittedPipelineTableNames } from "#constants";
+import {
+  ActivePipelineTableNames,
+  OmittedPipelineTableNames,
+} from "#constants";
 import { getExactTableCountsByRows } from "#table-counts";
 import { type ScrapeMode, scrapeTable } from "./scraper";
 
@@ -27,7 +30,9 @@ async function main() {
   const parsePk = (value: string | null, flagName: string): number => {
     const pk = parseInt(value ?? "", 10);
     if (Number.isNaN(pk) || pk < 0) {
-      console.error(`❌ Error: ${flagName} value must be a non-negative integer`);
+      console.error(
+        `❌ Error: ${flagName} value must be a non-negative integer`,
+      );
       process.exit(1);
     }
     return pk;
@@ -81,7 +86,10 @@ async function main() {
     process.exit(1);
   }
 
-  if (patchPk !== null && (fromPk !== null || toPk !== null || singlePk !== null)) {
+  if (
+    patchPk !== null &&
+    (fromPk !== null || toPk !== null || singlePk !== null)
+  ) {
     console.error(
       "❌ Error: --patch-pk cannot be combined with --from-pk/--to-pk/--single-pk",
     );
@@ -101,7 +109,9 @@ async function main() {
   }
 
   if (fromPk !== null && toPk !== null && toPk < fromPk) {
-    console.error("❌ Error: --to-pk must be greater than or equal to --from-pk");
+    console.error(
+      "❌ Error: --to-pk must be greater than or equal to --from-pk",
+    );
     process.exit(1);
   }
 

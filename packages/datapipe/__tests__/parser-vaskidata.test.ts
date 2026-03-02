@@ -98,37 +98,42 @@ describe("VaskiData parser", () => {
         path.join(dataDir, "parsed.db"),
         "parsed",
       );
-      await parsedStore.upsertBatch("VaskiData", "Id", [], [
-        {
-          pk: 3,
-          data: JSON.stringify({
-            id: "3",
-            "#avoimempieduskunta": { documentType: "hallituksen_esitys" },
-          }),
-        },
-        {
-          pk: 4,
-          data: JSON.stringify({
-            id: "4",
-            "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
-          }),
-        },
-        {
-          pk: 1,
-          data: JSON.stringify({
-            id: "1",
-            "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
-          }),
-        },
-        {
-          pk: 2,
-          data: JSON.stringify({
-            id: "2",
-            _skip: true,
-            "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
-          }),
-        },
-      ]);
+      await parsedStore.upsertBatch(
+        "VaskiData",
+        "Id",
+        [],
+        [
+          {
+            pk: 3,
+            data: JSON.stringify({
+              id: "3",
+              "#avoimempieduskunta": { documentType: "hallituksen_esitys" },
+            }),
+          },
+          {
+            pk: 4,
+            data: JSON.stringify({
+              id: "4",
+              "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
+            }),
+          },
+          {
+            pk: 1,
+            data: JSON.stringify({
+              id: "1",
+              "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
+            }),
+          },
+          {
+            pk: 2,
+            data: JSON.stringify({
+              id: "2",
+              _skip: true,
+              "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
+            }),
+          },
+        ],
+      );
       parsedStore.close();
 
       await onParsingComplete();

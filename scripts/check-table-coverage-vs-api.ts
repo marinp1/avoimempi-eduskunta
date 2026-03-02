@@ -224,7 +224,10 @@ async function runWithConcurrency<T, R>(
   return results;
 }
 
-async function fetchApiPkName(table: string, timeoutMs: number): Promise<string> {
+async function fetchApiPkName(
+  table: string,
+  timeoutMs: number,
+): Promise<string> {
   const url = `https://avoindata.eduskunta.fi/api/v1/tables/${table}/columns`;
   const resp = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
   if (!resp.ok) {
@@ -297,8 +300,7 @@ async function checkGapIdFromApi(
     }
 
     const pkIndex = columnNames.indexOf(pkName);
-    const returnedPk =
-      pkIndex >= 0 ? toNumericId(rowData[0]?.[pkIndex]) : null;
+    const returnedPk = pkIndex >= 0 ? toNumericId(rowData[0]?.[pkIndex]) : null;
     const responseStart =
       typeof data.pkStartValue === "number" ? data.pkStartValue : id;
     const responseEnd =
@@ -307,7 +309,8 @@ async function checkGapIdFromApi(
         : typeof data.pkLastValue === "number"
           ? data.pkLastValue
           : returnedPk;
-    const foundExact = returnedPk === id || (responseStart === id && responseEnd === id);
+    const foundExact =
+      returnedPk === id || (responseStart === id && responseEnd === id);
 
     return {
       id,
@@ -370,8 +373,7 @@ async function probeTailFromApi(
     }
 
     const pkIndex = columnNames.indexOf(pkName);
-    const returnedPk =
-      pkIndex >= 0 ? toNumericId(rowData[0]?.[pkIndex]) : null;
+    const returnedPk = pkIndex >= 0 ? toNumericId(rowData[0]?.[pkIndex]) : null;
 
     return {
       hasRow: true,
@@ -394,7 +396,8 @@ async function main() {
   const { getRawRowStore, getParsedRowStore } = await import(
     "../packages/shared/storage/row-store/factory.ts"
   );
-  const rowStore = args.stage === "raw" ? getRawRowStore() : getParsedRowStore();
+  const rowStore =
+    args.stage === "raw" ? getRawRowStore() : getParsedRowStore();
 
   const [apiCount, resolvedPkName] = await Promise.all([
     fetchApiCount(args.table),
@@ -412,14 +415,19 @@ async function main() {
   }
 
   if (rowsScanned === 0) {
-    throw new Error(`No rows found for table: ${args.table} (stage: ${args.stage})`);
+    throw new Error(
+      `No rows found for table: ${args.table} (stage: ${args.stage})`,
+    );
   }
 
   const sortedIds = Array.from(uniqueIds).sort((a, b) => a - b);
   const minId = sortedIds[0] ?? null;
   const maxId = sortedIds[sortedIds.length - 1] ?? null;
   const missingRanges = collectMissingRanges(sortedIds);
-  const missingIdsTotal = missingRanges.reduce((sum, range) => sum + range.count, 0);
+  const missingIdsTotal = missingRanges.reduce(
+    (sum, range) => sum + range.count,
+    0,
+  );
   const gapIdsToProbe = expandMissingIds(missingRanges, args.maxGapIds);
 
   const gapProbes: GapProbeResult[] =
@@ -438,12 +446,18 @@ async function main() {
   const tailProbe =
     maxId === null
       ? null
-      : await probeTailFromApi(args.table, resolvedPkName, maxId + 1, args.timeoutMs);
+      : await probeTailFromApi(
+          args.table,
+          resolvedPkName,
+          maxId + 1,
+          args.timeoutMs,
+        );
 
   const apiMinusLocalRows =
     apiCount.apiRowCount === null ? null : apiCount.apiRowCount - rowsScanned;
   const likelyHasNewPks =
-    !!tailProbe?.hasRow || (apiMinusLocalRows !== null && apiMinusLocalRows > 0);
+    !!tailProbe?.hasRow ||
+    (apiMinusLocalRows !== null && apiMinusLocalRows > 0);
 
   const result = {
     table: args.table,
@@ -502,8 +516,12 @@ async function main() {
   }
 
   console.log("");
-  console.log(`Rows scanned:         ${result.local.rowsScanned.toLocaleString()}`);
-  console.log(`Unique IDs:           ${result.local.uniqueIds.toLocaleString()}`);
+  console.log(
+    `Rows scanned:         ${result.local.rowsScanned.toLocaleString()}`,
+  );
+  console.log(
+    `Unique IDs:           ${result.local.uniqueIds.toLocaleString()}`,
+  );
   console.log(
     `Missing ranges:       ${result.local.missingRangesCount.toLocaleString()}`,
   );

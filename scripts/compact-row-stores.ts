@@ -1,12 +1,12 @@
+import { Database } from "bun:sqlite";
 import { existsSync, renameSync, rmSync } from "node:fs";
 import path from "node:path";
-import { Database } from "bun:sqlite";
 import {
   brotliCompressSync,
   brotliDecompressSync,
-  constants as zlibConstants,
-  gzipSync,
   gunzipSync,
+  gzipSync,
+  constants as zlibConstants,
 } from "node:zlib";
 
 type RowMode = "raw" | "parsed";
@@ -21,7 +21,8 @@ const COPY_BATCH = 2_000;
 
 function rowStoreDir(): string {
   if (process.env.ROW_STORE_DIR) return path.resolve(process.env.ROW_STORE_DIR);
-  if (process.env.STORAGE_LOCAL_DIR) return path.resolve(process.env.STORAGE_LOCAL_DIR);
+  if (process.env.STORAGE_LOCAL_DIR)
+    return path.resolve(process.env.STORAGE_LOCAL_DIR);
   return path.join(process.cwd(), "data");
 }
 
@@ -52,7 +53,10 @@ function decodeByEncoding(data: SqliteBlob, encoding: number): Buffer {
   return bytes;
 }
 
-function compressBuffer(data: Buffer, codec: CompressionCodec): { payload: Buffer; encoding: number } {
+function compressBuffer(
+  data: Buffer,
+  codec: CompressionCodec,
+): { payload: Buffer; encoding: number } {
   if (codec === "brotli") {
     return {
       payload: brotliCompressSync(data, {
@@ -138,7 +142,9 @@ function initDestinationSchema(db: Database, mode: RowMode): void {
 }
 
 function sourceHasColumn(db: Database, table: string, column: string): boolean {
-  const rows = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  const rows = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{
+    name: string;
+  }>;
   return rows.some((row) => row.name === column);
 }
 
@@ -177,7 +183,7 @@ function compactDatabase(
   src.exec("PRAGMA wal_checkpoint(TRUNCATE);");
 
   const legacyRows = sourceHasColumn(src, "rows", "table_name");
-  const sourceHasEncoding = sourceHasColumn(src, "rows", "data_encoding");
+  const _sourceHasEncoding = sourceHasColumn(src, "rows", "data_encoding");
 
   const beforeBytes = databaseBytes(src);
 
@@ -230,7 +236,10 @@ function compactDatabase(
 
     for (const table of tableRefs) {
       const tableId = table.id;
-      const compressThisTable = shouldCompressTable(table.name, compressedTables);
+      const compressThisTable = shouldCompressTable(
+        table.name,
+        compressedTables,
+      );
       let lastPk = -1;
       let processed = 0;
 
@@ -377,7 +386,9 @@ function compactDatabase(
       }
 
       if (compressThisTable) {
-        console.log(`   ${table.name}: ${processed.toLocaleString()} rows compressed`);
+        console.log(
+          `   ${table.name}: ${processed.toLocaleString()} rows compressed`,
+        );
       }
     }
   });
@@ -413,11 +424,13 @@ function main(): void {
     process.env.PARSED_ROW_STORE_COMPRESS_TABLES,
   );
   const rawCompressionCodec =
-    (process.env.RAW_ROW_STORE_COMPRESSION_CODEC as CompressionCodec | undefined) ??
-    "brotli";
+    (process.env.RAW_ROW_STORE_COMPRESSION_CODEC as
+      | CompressionCodec
+      | undefined) ?? "brotli";
   const parsedCompressionCodec =
-    (process.env.PARSED_ROW_STORE_COMPRESSION_CODEC as CompressionCodec | undefined) ??
-    "brotli";
+    (process.env.PARSED_ROW_STORE_COMPRESSION_CODEC as
+      | CompressionCodec
+      | undefined) ?? "brotli";
 
   console.log(`📁 Row store dir: ${dir}`);
   console.log(

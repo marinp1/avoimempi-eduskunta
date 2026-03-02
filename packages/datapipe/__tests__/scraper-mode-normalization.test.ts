@@ -39,9 +39,9 @@ describe("normalizeScrapeMode", () => {
     expect(normalizeScrapeMode({ type: "start-from-pk" })).toEqual({
       type: "auto-resume",
     });
-    expect(normalizeScrapeMode({ type: "patch-from-pk", pkStartValue: -1 })).toEqual(
-      { type: "auto-resume" },
-    );
+    expect(
+      normalizeScrapeMode({ type: "patch-from-pk", pkStartValue: -1 }),
+    ).toEqual({ type: "auto-resume" });
     expect(
       normalizeScrapeMode({
         type: "range",

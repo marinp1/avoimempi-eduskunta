@@ -62,13 +62,21 @@ function parseArgs(argv: string[]): CliOptions {
     scenarioRaw === "analytics-heavy" ? "analytics-heavy" : "mixed";
 
   return {
-    baseUrl: ((args.get("base-url") as string | undefined) ?? "http://127.0.0.1:3000").replace(
-      /\/+$/,
-      "",
+    baseUrl: (
+      (args.get("base-url") as string | undefined) ?? "http://127.0.0.1:3000"
+    ).replace(/\/+$/, ""),
+    durationSec: parseInteger(
+      args.get("duration-sec") as string | undefined,
+      20,
     ),
-    durationSec: parseInteger(args.get("duration-sec") as string | undefined, 20),
-    concurrency: parseInteger(args.get("concurrency") as string | undefined, 16),
-    timeoutMs: parseInteger(args.get("timeout-ms") as string | undefined, 10000),
+    concurrency: parseInteger(
+      args.get("concurrency") as string | undefined,
+      16,
+    ),
+    timeoutMs: parseInteger(
+      args.get("timeout-ms") as string | undefined,
+      10000,
+    ),
     scenario,
     json: args.has("json"),
   };
@@ -136,7 +144,9 @@ function resolveSamplesFromDatabase(): SampleValues {
   const personId =
     (
       db
-        .query("SELECT person_id FROM Representative ORDER BY person_id LIMIT 1")
+        .query(
+          "SELECT person_id FROM Representative ORDER BY person_id LIMIT 1",
+        )
         .get() as { person_id?: number } | null
     )?.person_id ?? 1000;
 

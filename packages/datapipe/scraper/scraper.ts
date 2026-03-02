@@ -173,7 +173,9 @@ export interface ScrapeResult {
 /**
  * Scrape a table from Eduskunta API and save to the row store (DB-backed, upsert semantics).
  */
-export async function scrapeTable(options: ScrapeOptions): Promise<ScrapeResult> {
+export async function scrapeTable(
+  options: ScrapeOptions,
+): Promise<ScrapeResult> {
   const { tableName, mode: requestedMode, onProgress } = options;
   const mode = normalizeScrapeMode(requestedMode);
 
@@ -220,7 +222,8 @@ export async function scrapeTable(options: ScrapeOptions): Promise<ScrapeResult>
   const runScrapePass = async (
     passOptions: ScrapePassOptions,
   ): Promise<ScrapePassResult> => {
-    const { pkEndValue, rangeStartValue, patchMode, emitProgress } = passOptions;
+    const { pkEndValue, rangeStartValue, patchMode, emitProgress } =
+      passOptions;
     let pkStartValue = passOptions.pkStartValue;
     let patchFollowUpDone = false;
     let loopCount = 0;
@@ -308,7 +311,11 @@ export async function scrapeTable(options: ScrapeOptions): Promise<ScrapeResult>
       pagesScraped++;
 
       // Page cap: stop and signal continuation if there is more data to fetch.
-      if (maxPages !== undefined && pagesScraped >= maxPages && content.hasMore) {
+      if (
+        maxPages !== undefined &&
+        pagesScraped >= maxPages &&
+        content.hasMore
+      ) {
         let continuationPk: number | null = null;
         if (content.pkLastValue !== null) {
           continuationPk = content.pkLastValue + 1;
@@ -369,7 +376,9 @@ export async function scrapeTable(options: ScrapeOptions): Promise<ScrapeResult>
 
       if (patchMode) {
         if (patchFollowUpDone) {
-          console.log("✅ Patch complete (patch page + follow-up page scraped)");
+          console.log(
+            "✅ Patch complete (patch page + follow-up page scraped)",
+          );
           break;
         }
         patchFollowUpDone = true;
@@ -541,7 +550,10 @@ export async function scrapeTable(options: ScrapeOptions): Promise<ScrapeResult>
     const missingRanges = await collectInternalMissingRanges();
 
     if (missingRanges.length > 0) {
-      const gapIdCount = missingRanges.reduce((sum, item) => sum + item.count, 0);
+      const gapIdCount = missingRanges.reduce(
+        (sum, item) => sum + item.count,
+        0,
+      );
       console.log(
         `\n🩹 Auto-repair: found ${missingRanges.length.toLocaleString()} internal gaps (${gapIdCount.toLocaleString()} PKs), attempting range repairs...`,
       );
@@ -566,12 +578,18 @@ export async function scrapeTable(options: ScrapeOptions): Promise<ScrapeResult>
         totalRowsScraped = gapRepairResult.totalRowsStored;
 
         if (gapRepairResult.firstPkWritten !== null) {
-          if (aggregatedFirstPk === null || gapRepairResult.firstPkWritten < aggregatedFirstPk) {
+          if (
+            aggregatedFirstPk === null ||
+            gapRepairResult.firstPkWritten < aggregatedFirstPk
+          ) {
             aggregatedFirstPk = gapRepairResult.firstPkWritten;
           }
         }
         if (gapRepairResult.lastPkWritten !== null) {
-          if (aggregatedLastPk === null || gapRepairResult.lastPkWritten > aggregatedLastPk) {
+          if (
+            aggregatedLastPk === null ||
+            gapRepairResult.lastPkWritten > aggregatedLastPk
+          ) {
             aggregatedLastPk = gapRepairResult.lastPkWritten;
           }
         }
@@ -591,7 +609,11 @@ export async function scrapeTable(options: ScrapeOptions): Promise<ScrapeResult>
   const shouldWarnOnCountDrift =
     mode.type === "auto-resume" ||
     (mode.type === "start-from-pk" && mode.pkStartValue === 0);
-  if (shouldWarnOnCountDrift && totalRows > 0 && totalRowsScraped !== totalRows) {
+  if (
+    shouldWarnOnCountDrift &&
+    totalRows > 0 &&
+    totalRowsScraped !== totalRows
+  ) {
     const diff = totalRows - totalRowsScraped;
     const relation = diff > 0 ? "less" : "more";
     console.warn(

@@ -56,30 +56,35 @@ describe("VaskiData reader", () => {
         path.join(dataDir, "parsed.db"),
         "parsed",
       );
-      await parsedStore.upsertBatch("VaskiData", "Id", [], [
-        {
-          pk: 1,
-          data: JSON.stringify({
-            id: "1",
-            "#avoimempieduskunta": { documentType: "hallituksen_esitys" },
-          }),
-        },
-        {
-          pk: 2,
-          data: JSON.stringify({
-            id: "2",
-            "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
-          }),
-        },
-        {
-          pk: 3,
-          data: JSON.stringify({
-            id: "3",
-            _skip: true,
-            "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
-          }),
-        },
-      ]);
+      await parsedStore.upsertBatch(
+        "VaskiData",
+        "Id",
+        [],
+        [
+          {
+            pk: 1,
+            data: JSON.stringify({
+              id: "1",
+              "#avoimempieduskunta": { documentType: "hallituksen_esitys" },
+            }),
+          },
+          {
+            pk: 2,
+            data: JSON.stringify({
+              id: "2",
+              "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
+            }),
+          },
+          {
+            pk: 3,
+            data: JSON.stringify({
+              id: "3",
+              _skip: true,
+              "#avoimempieduskunta": { documentType: "nimenhuutoraportti" },
+            }),
+          },
+        ],
+      );
       parsedStore.close();
 
       const documentTypes = await listIndexedDocumentTypes();
@@ -105,15 +110,20 @@ describe("VaskiData reader", () => {
         path.join(dataDir, "parsed.db"),
         "parsed",
       );
-      await parsedStore.upsertBatch("VaskiData", "Id", [], [
-        {
-          pk: 10,
-          data: JSON.stringify({
-            id: "10",
-            "#avoimempieduskunta": { documentType: "kirjallinen_kysymys" },
-          }),
-        },
-      ]);
+      await parsedStore.upsertBatch(
+        "VaskiData",
+        "Id",
+        [],
+        [
+          {
+            pk: 10,
+            data: JSON.stringify({
+              id: "10",
+              "#avoimempieduskunta": { documentType: "kirjallinen_kysymys" },
+            }),
+          },
+        ],
+      );
       parsedStore.close();
 
       const rows = [];

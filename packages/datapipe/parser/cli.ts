@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 import {
   ActivePipelineTableNames,
-  OmittedPipelineTableNames,
   isOmittedPipelineTable,
+  OmittedPipelineTableNames,
 } from "#constants";
 import { parseTable, parseTables } from "./parser";
 
@@ -20,7 +20,9 @@ async function main() {
   const parsePk = (value: string | null, flagName: string): number => {
     const pk = Number.parseInt(value ?? "", 10);
     if (!Number.isFinite(pk) || pk < 0) {
-      console.error(`❌ Error: ${flagName} value must be a non-negative integer`);
+      console.error(
+        `❌ Error: ${flagName} value must be a non-negative integer`,
+      );
       process.exit(1);
     }
     return Math.floor(pk);
@@ -94,7 +96,9 @@ async function main() {
     pkEndValue !== undefined &&
     pkEndValue < pkStartValue
   ) {
-    console.error("❌ Error: --pk-end must be greater than or equal to --pk-start");
+    console.error(
+      "❌ Error: --pk-end must be greater than or equal to --pk-start",
+    );
     process.exit(1);
   }
 
@@ -153,7 +157,10 @@ async function showStatus() {
   }
 
   console.log(
-    "Table".padEnd(35) + "Raw Rows".padEnd(15) + "Parsed Rows".padEnd(15) + "Status",
+    "Table".padEnd(35) +
+      "Raw Rows".padEnd(15) +
+      "Parsed Rows".padEnd(15) +
+      "Status",
   );
   console.log("─".repeat(80));
 
