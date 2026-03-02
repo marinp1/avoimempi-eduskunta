@@ -87,6 +87,12 @@ variable "pipeline_db_volume_mount_path" {
   default     = "/mnt/pipeline-db"
 }
 
+variable "pipeline_local_db_path" {
+  description = "Absolute local-disk path on pipeline VM where migrator writes SQLite before rsync."
+  type        = string
+  default     = "/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db"
+}
+
 variable "pipeline_db_volume_name" {
   description = "Logical name for the final DB/trace block volume."
   type        = string

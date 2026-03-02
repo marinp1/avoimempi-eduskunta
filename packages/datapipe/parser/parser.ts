@@ -50,23 +50,29 @@ const defaultParser: ParserFunction = async (
 async function getParserModule(
   tableName: string,
 ): Promise<{ parse: ParserFunction; hooks: ParserHooks }> {
-  try {
-    const mod = await import(`./fn/${tableName}.ts`);
-    return {
-      parse: mod.default as ParserFunction,
-      hooks: {
-        onParsingComplete:
-          typeof mod.onParsingComplete === "function"
-            ? mod.onParsingComplete
-            : undefined,
-      },
-    };
-  } catch (_e) {
-    console.warn(
-      `⚠️  No custom parser found for ${tableName}, using default parser`,
-    );
-    return { parse: defaultParser, hooks: {} };
+  const candidates = [`./fn/${tableName}.js`, `./fn/${tableName}.ts`];
+
+  for (const modulePath of candidates) {
+    try {
+      const mod = await import(modulePath);
+      return {
+        parse: mod.default as ParserFunction,
+        hooks: {
+          onParsingComplete:
+            typeof mod.onParsingComplete === "function"
+              ? mod.onParsingComplete
+              : undefined,
+        },
+      };
+    } catch (_e) {
+      // Try next candidate path.
+    }
   }
+
+  console.warn(
+    `⚠️  No custom parser found for ${tableName}, using default parser`,
+  );
+  return { parse: defaultParser, hooks: {} };
 }
 
 /**

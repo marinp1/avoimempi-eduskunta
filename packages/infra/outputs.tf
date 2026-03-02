@@ -34,10 +34,10 @@ output "app_vm" {
 output "sync_config" {
   description = "Rsync DB sync configuration: pipeline pushes finished DB to app VM over the private network."
   value = {
-    source           = "${var.pipeline_db_volume_mount_path}/avoimempi-eduskunta.db"
+    source           = var.pipeline_local_db_path
     destination      = "${var.app_db_mount_path}/avoimempi-eduskunta.db"
     app_private_host = "${var.app_server_name}.${scaleway_vpc_private_network.pipeline.name}.priv"
-    rsync_command    = "rsync -az --delay-updates ${var.pipeline_db_volume_mount_path}/avoimempi-eduskunta.db ${var.app_server_name}.${scaleway_vpc_private_network.pipeline.name}.priv:${var.app_db_mount_path}/avoimempi-eduskunta.db"
+    rsync_command    = "rsync -az --delay-updates ${var.pipeline_local_db_path} ${var.app_server_name}.${scaleway_vpc_private_network.pipeline.name}.priv:${var.app_db_mount_path}/avoimempi-eduskunta.db"
   }
 }
 

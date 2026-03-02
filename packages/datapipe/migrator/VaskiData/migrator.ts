@@ -178,30 +178,33 @@ async function loadSubMigrator(
     import.meta.dirname,
     "submigrators",
   );
-  const subMigratorPath = path.resolve(
-    subMigratorDirectory,
-    `${documentType}.ts`,
-  );
+  const candidates = [`${documentType}.js`, `${documentType}.ts`];
 
-  if (!subMigratorPath.startsWith(`${subMigratorDirectory}${path.sep}`)) {
-    return null;
+  for (const candidateName of candidates) {
+    const subMigratorPath = path.resolve(subMigratorDirectory, candidateName);
+
+    if (!subMigratorPath.startsWith(`${subMigratorDirectory}${path.sep}`)) {
+      continue;
+    }
+
+    if (!fs.existsSync(subMigratorPath)) {
+      continue;
+    }
+
+    const subMigratorModule = (await import(subMigratorPath)) as {
+      default?: VaskiSubMigratorFactory;
+    };
+
+    if (typeof subMigratorModule.default !== "function") {
+      throw new Error(
+        `Vaski submigrator '${documentType}' does not export a default factory function`,
+      );
+    }
+
+    return subMigratorModule.default(db);
   }
 
-  if (!fs.existsSync(subMigratorPath)) {
-    return null;
-  }
-
-  const subMigratorModule = (await import(subMigratorPath)) as {
-    default?: VaskiSubMigratorFactory;
-  };
-
-  if (typeof subMigratorModule.default !== "function") {
-    throw new Error(
-      `Vaski submigrator '${documentType}' does not export a default factory function`,
-    );
-  }
-
-  return subMigratorModule.default(db);
+  return null;
 }
 
 /**
