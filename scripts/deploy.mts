@@ -46,6 +46,8 @@ function resolveMigratorFunctionEnv(): Record<string, string> {
     NODE_ENV: process.env.NODE_ENV ?? "production",
     STORAGE_PROVIDER: storageProvider,
     STORAGE_LOCAL_DIR: storageLocalDir,
+    PIPELINE_BUILD_DIR:
+      process.env.PIPELINE_BUILD_DIR ?? "/root/avoimempi-eduskunta/dist/pipeline",
   };
 
   if (rowStoreProvider) env.ROW_STORE_PROVIDER = rowStoreProvider;
@@ -58,6 +60,7 @@ function resolveMigratorFunctionEnv(): Record<string, string> {
     "MIGRATOR_FOREIGN_KEY_CHECK_SAMPLE_LIMIT",
     "MIGRATOR_VACUUM_AFTER_IMPORT",
     "MIGRATOR_SOURCE_REFERENCE_MODE",
+    "MIGRATOR_CLI_PATH",
   ];
   for (const name of optionalEnvNames) {
     const value = process.env[name];

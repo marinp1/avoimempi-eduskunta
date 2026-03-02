@@ -19,6 +19,8 @@ PIPELINE_BUILD_DIR="${PIPELINE_BUILD_DIR:-${APP_DIR}/dist/pipeline}"
 APP_VM_SYNC_HOST="${APP_VM_SYNC_HOST:-}"
 APP_SYNC_DEST="${APP_SYNC_DEST:-/mnt/app-db/avoimempi-eduskunta.db}"
 SCRAPER_MAX_RUNTIME_SECONDS="${SCRAPER_MAX_RUNTIME_SECONDS:-1800}"
+ACTIVE_PIPELINE_TABLES="${ACTIVE_PIPELINE_TABLES:-}"
+OMITTED_PIPELINE_TABLES="${OMITTED_PIPELINE_TABLES:-}"
 
 SCRAPE_TAG="# AE_PIPELINE_JOB:scrape"
 PARSE_TAG="# AE_PIPELINE_JOB:parse"
@@ -45,6 +47,13 @@ build_cmd() {
   local script_path="$1"
   printf 'cd %s && STORAGE_LOCAL_DIR=%s DB_PATH=%s PIPELINE_BUILD_DIR=%s SCRAPER_MAX_RUNTIME_SECONDS=%s' \
     "${APP_DIR}" "${STORAGE_LOCAL_DIR}" "${DB_PATH}" "${PIPELINE_BUILD_DIR}" "${SCRAPER_MAX_RUNTIME_SECONDS}"
+
+  if [[ -n "${ACTIVE_PIPELINE_TABLES}" ]]; then
+    printf ' ACTIVE_PIPELINE_TABLES=%s' "${ACTIVE_PIPELINE_TABLES}"
+  fi
+  if [[ -n "${OMITTED_PIPELINE_TABLES}" ]]; then
+    printf ' OMITTED_PIPELINE_TABLES=%s' "${OMITTED_PIPELINE_TABLES}"
+  fi
 
   if [[ -n "${APP_VM_SYNC_HOST}" ]]; then
     printf ' APP_VM_SYNC_HOST=%s APP_SYNC_DEST=%s' \
@@ -114,6 +123,8 @@ Environment:
   DB_PATH             Local migration DB path
   PIPELINE_BUILD_DIR  Pipeline build directory
   SCRAPER_MAX_RUNTIME_SECONDS  Max scrape-all runtime before stopping (default: 1800)
+  ACTIVE_PIPELINE_TABLES Optional comma-separated active table list override
+  OMITTED_PIPELINE_TABLES Optional comma-separated omitted table list override
   APP_VM_SYNC_HOST    App VM SSH target for rsync (user@host)
   APP_SYNC_DEST       Destination DB path on app VM
   LOG_FILE            Shared log file path
