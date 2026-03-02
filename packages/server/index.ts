@@ -1,5 +1,6 @@
 // modules/server/server.ts
 
+import { getTraceDatabasePath } from "../shared/database";
 import { loadRuntimeConfig } from "./config/runtime-config";
 import { StatusController } from "./controllers/status-controller";
 import { DatabaseConnection } from "./database/db";
@@ -22,7 +23,6 @@ import { createStaticPageRoutes } from "./routes/static-page-routes";
 import { createVotingRoutes } from "./routes/voting-routes";
 import { handleDevelopmentWebSocketUpgrade } from "./routes/websocket-upgrade";
 import { getMigrationLockInfo } from "./services/maintenance-lock";
-import { getTraceDatabasePath } from "../shared/database";
 
 await prepareDatabaseForServerStartup();
 const databaseConnection = new DatabaseConnection();

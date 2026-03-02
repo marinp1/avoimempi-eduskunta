@@ -27,10 +27,10 @@ import {
 } from "@mui/material";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { OmittedPipelineTableNames } from "#constants";
 import { colors, commonStyles, gradients, spacing } from "#client/theme";
 import { GlassCard, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { OmittedPipelineTableNames } from "#constants";
 import { BulkOperationsPanel, ControlPanel } from "./components";
 
 type TableStatus = {
@@ -781,7 +781,9 @@ export default () => {
 
   const getStatusChip = (row: TableStatus) => {
     if (row.is_omitted) {
-      return <Chip label="Omitted" size="small" color="info" variant="outlined" />;
+      return (
+        <Chip label="Omitted" size="small" color="info" variant="outlined" />
+      );
     }
 
     if (
@@ -1213,7 +1215,10 @@ export default () => {
                         </TableCell>
                         <TableCell align="center" sx={{ py: 1 }}>
                           {row.is_omitted ? (
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               -
                             </Typography>
                           ) : (
@@ -1241,9 +1246,9 @@ export default () => {
                             {row.total_rows_in_api
                               ? `${Math.ceil(row.raw_page_count / 100)} / ${Math.ceil(row.total_rows_in_api / 100)}`
                               : row.has_raw_data
-                                ? Math.ceil(row.raw_page_count / 100).toLocaleString(
-                                    "fi-FI",
-                                  )
+                                ? Math.ceil(
+                                    row.raw_page_count / 100,
+                                  ).toLocaleString("fi-FI")
                                 : "-"}
                           </Typography>
                         </TableCell>
@@ -1272,7 +1277,10 @@ export default () => {
                         </TableCell>
                         <TableCell align="center" sx={{ py: 1 }}>
                           {row.is_omitted ? (
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
                               -
                             </Typography>
                           ) : (
@@ -1330,235 +1338,243 @@ export default () => {
                             >
                               {row.is_omitted ? (
                                 <Alert severity="info" sx={{ width: "100%" }}>
-                                  This table is omitted from scrape/parse workflows.
+                                  This table is omitted from scrape/parse
+                                  workflows.
                                 </Alert>
                               ) : (
                                 <>
                                   {/* Scraper Controls */}
-                              <Box sx={{ flex: 1 }}>
-                                <Typography
-                                  variant="subtitle2"
-                                  fontWeight="600"
-                                  sx={{
-                                    mb: 1,
-                                    color: colors.info,
-                                    textTransform: "uppercase",
-                                    letterSpacing: "0.04em",
-                                    fontSize: "0.75rem",
-                                  }}
-                                >
-                                  {t("admin.actions.scraper")}
-                                </Typography>
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1.5,
-                                    flexWrap: "wrap",
-                                  }}
-                                >
-                                  {isThisTableScraping ? (
-                                    <>
-                                      <Button
-                                        variant="outlined"
-                                        color="error"
-                                        startIcon={<StopIcon />}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleStopScraping();
-                                        }}
-                                        size="small"
-                                      >
-                                        {t("admin.actions.cancelScrape")}
-                                      </Button>
-                                      <Chip
-                                        label={t("admin.actions.scraping")}
-                                        size="small"
-                                        sx={{
-                                          background: gradients.scraper,
-                                          color: "#FFFFFF",
-                                        }}
-                                      />
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Button
-                                        variant="contained"
-                                        startIcon={<PlayArrowIcon />}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleStartScraping(row.table_name);
-                                        }}
-                                        disabled={
-                                          scraperRunning || parserRunning
-                                        }
-                                        size="small"
-                                        sx={{
-                                          background: gradients.scraper,
-                                          "&:hover": {
-                                            background:
-                                              "linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%)",
-                                          },
-                                        }}
-                                      >
-                                        {t("admin.actions.scrape")}
-                                      </Button>
-                                      {row.scrape_progress_percent !==
-                                        undefined &&
-                                        row.total_rows_in_api && (
-                                          <Chip
-                                            label={`${row.scrape_progress_percent.toFixed(1)}% - ${row.raw_estimated_rows.toLocaleString("fi-FI")} / ${Math.max(row.total_rows_in_api, row.raw_estimated_rows).toLocaleString("fi-FI")}`}
-                                            size="small"
-                                            variant="outlined"
-                                            color={
-                                              row.scrape_progress_percent >= 100
-                                                ? "success"
-                                                : "default"
-                                            }
-                                          />
-                                        )}
-                                    </>
-                                  )}
-                                </Box>
-                                {isThisTableScraping && (
-                                  <Box sx={{ mt: 1.5 }}>
+                                  <Box sx={{ flex: 1 }}>
                                     <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                      sx={{ mb: 0.5, display: "block" }}
-                                    >
-                                      {scraperProgress}
-                                    </Typography>
-                                    <LinearProgress
-                                      variant="determinate"
-                                      value={scraperPercent}
+                                      variant="subtitle2"
+                                      fontWeight="600"
                                       sx={{
-                                        height: 4,
-                                        borderRadius: 2,
-                                        bgcolor: themedColors.backgroundSubtle,
-                                        "& .MuiLinearProgress-bar": {
-                                          background: gradients.scraper,
-                                        },
+                                        mb: 1,
+                                        color: colors.info,
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.04em",
+                                        fontSize: "0.75rem",
                                       }}
-                                    />
-                                  </Box>
-                                )}
-                              </Box>
-
-                              {/* Parser Controls */}
-                              <Box sx={{ flex: 1 }}>
-                                <Typography
-                                  variant="subtitle2"
-                                  fontWeight="600"
-                                  sx={{
-                                    mb: 1,
-                                    color: colors.chartPurple,
-                                    textTransform: "uppercase",
-                                    letterSpacing: "0.04em",
-                                    fontSize: "0.75rem",
-                                  }}
-                                >
-                                  {t("admin.actions.parser")}
-                                </Typography>
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1.5,
-                                    flexWrap: "wrap",
-                                  }}
-                                >
-                                  {isThisTableParsing ? (
-                                    <>
-                                      <Button
-                                        variant="outlined"
-                                        color="error"
-                                        startIcon={<StopIcon />}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleStopParsing();
-                                        }}
-                                        size="small"
-                                      >
-                                        {t("admin.actions.cancelParse")}
-                                      </Button>
-                                      <Chip
-                                        label={t("admin.actions.parsing")}
-                                        size="small"
-                                        sx={{
-                                          background: gradients.parser,
-                                          color: "#FFFFFF",
-                                        }}
-                                      />
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Button
-                                        variant="contained"
-                                        startIcon={<PlayArrowIcon />}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleStartParsing(row.table_name);
-                                        }}
-                                        disabled={
-                                          !row.has_raw_data ||
-                                          scraperRunning ||
-                                          parserRunning
-                                        }
-                                        size="small"
-                                        sx={{
-                                          background: gradients.parser,
-                                          "&:hover": {
-                                            background:
-                                              "linear-gradient(180deg, #6D28D9 0%, #5B21B6 100%)",
-                                          },
-                                        }}
-                                      >
-                                        {t("admin.actions.parse")}
-                                      </Button>
-                                      {row.has_parsed_data && (
-                                        <Chip
-                                          label={`${Math.ceil(row.parsed_page_count / 100)} pages - ${row.parsed_estimated_rows.toLocaleString("fi-FI")}`}
-                                          size="small"
-                                          variant="outlined"
-                                          color="success"
-                                        />
+                                    >
+                                      {t("admin.actions.scraper")}
+                                    </Typography>
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1.5,
+                                        flexWrap: "wrap",
+                                      }}
+                                    >
+                                      {isThisTableScraping ? (
+                                        <>
+                                          <Button
+                                            variant="outlined"
+                                            color="error"
+                                            startIcon={<StopIcon />}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleStopScraping();
+                                            }}
+                                            size="small"
+                                          >
+                                            {t("admin.actions.cancelScrape")}
+                                          </Button>
+                                          <Chip
+                                            label={t("admin.actions.scraping")}
+                                            size="small"
+                                            sx={{
+                                              background: gradients.scraper,
+                                              color: "#FFFFFF",
+                                            }}
+                                          />
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Button
+                                            variant="contained"
+                                            startIcon={<PlayArrowIcon />}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleStartScraping(
+                                                row.table_name,
+                                              );
+                                            }}
+                                            disabled={
+                                              scraperRunning || parserRunning
+                                            }
+                                            size="small"
+                                            sx={{
+                                              background: gradients.scraper,
+                                              "&:hover": {
+                                                background:
+                                                  "linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%)",
+                                              },
+                                            }}
+                                          >
+                                            {t("admin.actions.scrape")}
+                                          </Button>
+                                          {row.scrape_progress_percent !==
+                                            undefined &&
+                                            row.total_rows_in_api && (
+                                              <Chip
+                                                label={`${row.scrape_progress_percent.toFixed(1)}% - ${row.raw_estimated_rows.toLocaleString("fi-FI")} / ${Math.max(row.total_rows_in_api, row.raw_estimated_rows).toLocaleString("fi-FI")}`}
+                                                size="small"
+                                                variant="outlined"
+                                                color={
+                                                  row.scrape_progress_percent >=
+                                                  100
+                                                    ? "success"
+                                                    : "default"
+                                                }
+                                              />
+                                            )}
+                                        </>
                                       )}
-                                      {!row.has_raw_data && (
+                                    </Box>
+                                    {isThisTableScraping && (
+                                      <Box sx={{ mt: 1.5 }}>
                                         <Typography
                                           variant="caption"
                                           color="text.secondary"
+                                          sx={{ mb: 0.5, display: "block" }}
                                         >
-                                          {t("admin.actions.scrapeFirst")}
+                                          {scraperProgress}
                                         </Typography>
-                                      )}
-                                    </>
-                                  )}
-                                </Box>
-                                {isThisTableParsing && (
-                                  <Box sx={{ mt: 1.5 }}>
-                                    <Typography
-                                      variant="caption"
-                                      color="text.secondary"
-                                      sx={{ mb: 0.5, display: "block" }}
-                                    >
-                                      {parserProgress}
-                                    </Typography>
-                                    <LinearProgress
-                                      variant="determinate"
-                                      value={parserPercent}
-                                      sx={{
-                                        height: 4,
-                                        borderRadius: 2,
-                                        bgcolor: themedColors.backgroundSubtle,
-                                        "& .MuiLinearProgress-bar": {
-                                          background: gradients.parser,
-                                        },
-                                      }}
-                                    />
+                                        <LinearProgress
+                                          variant="determinate"
+                                          value={scraperPercent}
+                                          sx={{
+                                            height: 4,
+                                            borderRadius: 2,
+                                            bgcolor:
+                                              themedColors.backgroundSubtle,
+                                            "& .MuiLinearProgress-bar": {
+                                              background: gradients.scraper,
+                                            },
+                                          }}
+                                        />
+                                      </Box>
+                                    )}
                                   </Box>
-                                )}
-                              </Box>
+
+                                  {/* Parser Controls */}
+                                  <Box sx={{ flex: 1 }}>
+                                    <Typography
+                                      variant="subtitle2"
+                                      fontWeight="600"
+                                      sx={{
+                                        mb: 1,
+                                        color: colors.chartPurple,
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.04em",
+                                        fontSize: "0.75rem",
+                                      }}
+                                    >
+                                      {t("admin.actions.parser")}
+                                    </Typography>
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1.5,
+                                        flexWrap: "wrap",
+                                      }}
+                                    >
+                                      {isThisTableParsing ? (
+                                        <>
+                                          <Button
+                                            variant="outlined"
+                                            color="error"
+                                            startIcon={<StopIcon />}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleStopParsing();
+                                            }}
+                                            size="small"
+                                          >
+                                            {t("admin.actions.cancelParse")}
+                                          </Button>
+                                          <Chip
+                                            label={t("admin.actions.parsing")}
+                                            size="small"
+                                            sx={{
+                                              background: gradients.parser,
+                                              color: "#FFFFFF",
+                                            }}
+                                          />
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Button
+                                            variant="contained"
+                                            startIcon={<PlayArrowIcon />}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleStartParsing(
+                                                row.table_name,
+                                              );
+                                            }}
+                                            disabled={
+                                              !row.has_raw_data ||
+                                              scraperRunning ||
+                                              parserRunning
+                                            }
+                                            size="small"
+                                            sx={{
+                                              background: gradients.parser,
+                                              "&:hover": {
+                                                background:
+                                                  "linear-gradient(180deg, #6D28D9 0%, #5B21B6 100%)",
+                                              },
+                                            }}
+                                          >
+                                            {t("admin.actions.parse")}
+                                          </Button>
+                                          {row.has_parsed_data && (
+                                            <Chip
+                                              label={`${Math.ceil(row.parsed_page_count / 100)} pages - ${row.parsed_estimated_rows.toLocaleString("fi-FI")}`}
+                                              size="small"
+                                              variant="outlined"
+                                              color="success"
+                                            />
+                                          )}
+                                          {!row.has_raw_data && (
+                                            <Typography
+                                              variant="caption"
+                                              color="text.secondary"
+                                            >
+                                              {t("admin.actions.scrapeFirst")}
+                                            </Typography>
+                                          )}
+                                        </>
+                                      )}
+                                    </Box>
+                                    {isThisTableParsing && (
+                                      <Box sx={{ mt: 1.5 }}>
+                                        <Typography
+                                          variant="caption"
+                                          color="text.secondary"
+                                          sx={{ mb: 0.5, display: "block" }}
+                                        >
+                                          {parserProgress}
+                                        </Typography>
+                                        <LinearProgress
+                                          variant="determinate"
+                                          value={parserPercent}
+                                          sx={{
+                                            height: 4,
+                                            borderRadius: 2,
+                                            bgcolor:
+                                              themedColors.backgroundSubtle,
+                                            "& .MuiLinearProgress-bar": {
+                                              background: gradients.parser,
+                                            },
+                                          }}
+                                        />
+                                      </Box>
+                                    )}
+                                  </Box>
                                 </>
                               )}
                             </Box>

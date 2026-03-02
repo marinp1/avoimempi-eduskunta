@@ -1,11 +1,7 @@
 import type { Database } from "bun:sqlite";
 import fs from "node:fs";
 import path from "node:path";
-import {
-  readAllVaskiRows,
-  readVaskiIndex,
-  type VaskiEntry,
-} from "./reader";
+import { readAllVaskiRows, readVaskiIndex, type VaskiEntry } from "./reader";
 
 /**
  * VaskiData migration options.

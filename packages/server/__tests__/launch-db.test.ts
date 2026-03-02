@@ -75,7 +75,8 @@ describe("prepareDatabaseForServerStartup", () => {
     process.env.SERVER_DB_LAUNCH_MODE = "latest";
 
     const artifactKey = "artifacts/sqlite/latest/avoimempi-eduskunta.db";
-    const traceArtifactKey = "artifacts/sqlite/latest/avoimempi-eduskunta-trace.db";
+    const traceArtifactKey =
+      "artifacts/sqlite/latest/avoimempi-eduskunta-trace.db";
     const manifestPath = path.join(
       storageDir,
       "artifacts/sqlite/latest/manifest.json",

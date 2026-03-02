@@ -152,7 +152,9 @@ function resolveSamples(db: Database): SampleValues {
   const personId =
     (
       db
-        .query("SELECT person_id FROM Representative ORDER BY person_id LIMIT 1")
+        .query(
+          "SELECT person_id FROM Representative ORDER BY person_id LIMIT 1",
+        )
         .get() as { person_id?: number } | null
     )?.person_id ?? 1000;
 
@@ -165,7 +167,9 @@ function resolveSamples(db: Database): SampleValues {
 
   const rollCallId =
     (
-      db.query("SELECT id FROM RollCallReport ORDER BY id DESC LIMIT 1").get() as {
+      db
+        .query("SELECT id FROM RollCallReport ORDER BY id DESC LIMIT 1")
+        .get() as {
         id?: number;
       } | null
     )?.id ?? 1;
@@ -197,13 +201,14 @@ function resolveSamples(db: Database): SampleValues {
         .get() as { document_identifier?: string } | null
     )?.document_identifier ?? "HE 1/2024 vp";
 
-  const latestGovernment =
-    db.query(
+  const latestGovernment = db
+    .query(
       `SELECT name, start_date
        FROM Government
        ORDER BY start_date DESC
        LIMIT 1`,
-    ).get() as { name?: string; start_date?: string } | null;
+    )
+    .get() as { name?: string; start_date?: string } | null;
 
   return {
     asOfDate,
@@ -295,7 +300,10 @@ function loadAllQueryCases(db: Database): BenchmarkCase[] {
   });
 }
 
-function loadHotspotCases(db: Database, includeBroad: boolean): BenchmarkCase[] {
+function loadHotspotCases(
+  db: Database,
+  includeBroad: boolean,
+): BenchmarkCase[] {
   const samples = resolveSamples(db);
   const queriesDir = join(import.meta.dirname, "../database/queries");
   const read = (filename: string) =>
@@ -389,7 +397,8 @@ function runCase(
     ).length;
 
     latencies.sort((a, b) => a - b);
-    const avgMs = latencies.reduce((sum, value) => sum + value, 0) / latencies.length;
+    const avgMs =
+      latencies.reduce((sum, value) => sum + value, 0) / latencies.length;
 
     return {
       query: item.name,

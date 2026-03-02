@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { resetRowStores, getRawRowStore } from "#storage/row-store/factory";
+import { getRawRowStore, resetRowStores } from "#storage/row-store/factory";
 import { scrapeTable } from "../scraper/scraper";
 
 async function withTempRowStore(fn: (dir: string) => Promise<void>) {
@@ -28,10 +28,10 @@ describe("scraper range mode", () => {
   test("supports exact single-PK refresh and bounded range scraping", async () => {
     await withTempRowStore(async () => {
       const originalFetch = globalThis.fetch;
-      const rows: Array<[number, string]> = Array.from({ length: 10 }, (_, i) => [
-        i + 1,
-        `name-${i + 1}`,
-      ]);
+      const rows: Array<[number, string]> = Array.from(
+        { length: 10 },
+        (_, i) => [i + 1, `name-${i + 1}`],
+      );
 
       globalThis.fetch = (async (input: RequestInfo | URL) => {
         const url = new URL(String(input));

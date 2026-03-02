@@ -70,7 +70,6 @@ import writtenQuestionsList from "../queries/WRITTEN_QUESTIONS_LIST.sql";
 import writtenQuestionsSubjectsList from "../queries/WRITTEN_QUESTIONS_SUBJECTS_LIST.sql";
 import {
   buildFtsSearchQuery,
-  buildSearchQuery,
   endDateExclusive,
   paginatedResult,
 } from "../query-helpers";

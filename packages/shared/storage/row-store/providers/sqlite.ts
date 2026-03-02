@@ -3,9 +3,9 @@ import { createHash } from "node:crypto";
 import {
   brotliCompressSync,
   brotliDecompressSync,
-  constants as zlibConstants,
-  gzipSync,
   gunzipSync,
+  gzipSync,
+  constants as zlibConstants,
 } from "node:zlib";
 import type { ColumnSchema, IRowStore, StoredRow } from "../types";
 
@@ -43,7 +43,10 @@ function parseCompressionTables(rawValue: string | undefined): Set<string> {
   );
 }
 
-function shouldCompress(tableName: string, compressedTables: Set<string>): boolean {
+function shouldCompress(
+  tableName: string,
+  compressedTables: Set<string>,
+): boolean {
   return compressedTables.has("*") || compressedTables.has(tableName);
 }
 
@@ -147,9 +150,9 @@ export class SqliteRowStore implements IRowStore {
   }
 
   private assertSchemaCompatible(): void {
-    const columns = this.db
-      .prepare(`PRAGMA table_info(rows)`)
-      .all() as Array<{ name: string }>;
+    const columns = this.db.prepare(`PRAGMA table_info(rows)`).all() as Array<{
+      name: string;
+    }>;
     const names = new Set(columns.map((column) => column.name));
 
     if (!names.has("table_id") || !names.has("data_encoding")) {
@@ -187,7 +190,10 @@ export class SqliteRowStore implements IRowStore {
     return inserted.id;
   }
 
-  private encodeData(tableName: string, data: string): { payload: Uint8Array; encoding: number } {
+  private encodeData(
+    tableName: string,
+    data: string,
+  ): { payload: Uint8Array; encoding: number } {
     if (shouldCompress(tableName, this.compressedTables)) {
       if (this.compressionCodec === "brotli") {
         return {
@@ -250,7 +256,13 @@ export class SqliteRowStore implements IRowStore {
           .prepare(
             `INSERT OR IGNORE INTO column_schemas (hash, table_name, pk_name, column_names, first_seen) VALUES (?, ?, ?, ?, ?)`,
           )
-          .run(colHashHex, tableName, pkName, JSON.stringify(columnNames), nowIso);
+          .run(
+            colHashHex,
+            tableName,
+            pkName,
+            JSON.stringify(columnNames),
+            nowIso,
+          );
 
         const stmt = this.db.prepare(
           `INSERT OR REPLACE INTO rows (table_id, pk, column_hash, data, data_encoding, hash, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -489,9 +501,7 @@ export class SqliteRowStore implements IRowStore {
     if (tableId === null) return null;
 
     const row = this.db
-      .prepare(
-        `SELECT MAX(updated_at) AS max_ts FROM rows WHERE table_id = ?`,
-      )
+      .prepare(`SELECT MAX(updated_at) AS max_ts FROM rows WHERE table_id = ?`)
       .get(tableId) as { max_ts: number | string | null } | null;
     if (!row?.max_ts) return null;
     return decodeUpdatedAt(row.max_ts);
@@ -510,7 +520,9 @@ export class SqliteRowStore implements IRowStore {
     const tableId = this.getTableId(tableName, false);
     if (tableId === null) return;
 
-    this.db.prepare(`DELETE FROM rows WHERE table_id = ? AND pk = ?`).run(tableId, pk);
+    this.db
+      .prepare(`DELETE FROM rows WHERE table_id = ? AND pk = ?`)
+      .run(tableId, pk);
   }
 
   close(): void {

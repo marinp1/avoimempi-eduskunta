@@ -30,7 +30,9 @@ function cleanupWalSidecars(databasePath: string): void {
   }
 }
 
-async function resolveSourceKeys(mode: LaunchMode): Promise<LaunchArtifactKeys | null> {
+async function resolveSourceKeys(
+  mode: LaunchMode,
+): Promise<LaunchArtifactKeys | null> {
   if (mode === "local") return null;
 
   const storage = getStorage();

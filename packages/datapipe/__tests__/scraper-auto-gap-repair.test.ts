@@ -28,12 +28,17 @@ describe("scraper auto gap repair", () => {
   test("auto-resume repairs internal PK gaps when API count is higher", async () => {
     await withTempRowStore(async () => {
       const rawStore = getRawRowStore();
-      await rawStore.upsertBatch("TestTable", "Id", ["Id", "Name"], [
-        { pk: 1, data: JSON.stringify([1, "name-1"]) },
-        { pk: 2, data: JSON.stringify([2, "name-2"]) },
-        { pk: 4, data: JSON.stringify([4, "name-4"]) },
-        { pk: 5, data: JSON.stringify([5, "name-5"]) },
-      ]);
+      await rawStore.upsertBatch(
+        "TestTable",
+        "Id",
+        ["Id", "Name"],
+        [
+          { pk: 1, data: JSON.stringify([1, "name-1"]) },
+          { pk: 2, data: JSON.stringify([2, "name-2"]) },
+          { pk: 4, data: JSON.stringify([4, "name-4"]) },
+          { pk: 5, data: JSON.stringify([5, "name-5"]) },
+        ],
+      );
 
       const apiRows: Array<[number, string]> = [
         [1, "name-1"],

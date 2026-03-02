@@ -92,9 +92,7 @@ export class AdminStorageService {
     const totalRowsInApi = apiCounts[tableName] || 0;
     const effectiveTotal = Math.max(totalRowsInApi, rawCount);
     const scrapeProgressPercent =
-      effectiveTotal > 0
-        ? Math.min((rawCount / effectiveTotal) * 100, 100)
-        : 0;
+      effectiveTotal > 0 ? Math.min((rawCount / effectiveTotal) * 100, 100) : 0;
 
     return {
       table_name: tableName,
@@ -194,8 +192,7 @@ export class AdminStorageService {
         parsedStore.lastUpdatedAt(tableName),
       ]);
 
-    const candidateRowCounts =
-      rawCount > 0 ? { [tableName]: rawCount } : {};
+    const candidateRowCounts = rawCount > 0 ? { [tableName]: rawCount } : {};
     const apiCounts = await this.fetchApiTableCounts({
       tableNames: [tableName],
       candidateRowCounts,
