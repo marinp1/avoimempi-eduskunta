@@ -3,6 +3,7 @@ import {
   ActivePipelineTableNames,
   OmittedPipelineTableNames,
 } from "#constants";
+import { getRawRowStore } from "#storage/row-store/factory";
 import { getExactTableCountsByRows } from "#table-counts";
 import { type ScrapeMode, scrapeTable } from "./scraper";
 
@@ -135,7 +136,6 @@ async function main() {
 }
 
 async function showStatus() {
-  const { getRawRowStore } = await import("#storage/row-store/factory");
   const rawStore = getRawRowStore();
   const tablesWithData = await rawStore.tableNames();
   const trackedTableNames = new Set<string>(ActivePipelineTableNames);

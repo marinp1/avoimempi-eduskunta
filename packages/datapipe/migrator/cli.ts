@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import fs from "node:fs";
 import { getDatabasePath } from "#database";
+import { getParsedRowStore } from "#storage/row-store/factory";
 import { MigratorController } from "../../server/migrator-controller";
 
 function printHelp() {
@@ -51,9 +52,6 @@ function showStatus() {
 
 async function hasAnyParsedData(): Promise<boolean> {
   // Parsed row store is the source of truth for all tables (including VaskiData).
-  const { getParsedRowStore } = await import(
-    "../../shared/storage/row-store/factory"
-  );
   const parsedStore = getParsedRowStore();
   const tables = await parsedStore.tableNames();
   return tables.length > 0;

@@ -44,6 +44,15 @@ run_in_app_dir() {
   )
 }
 
+require_bundle_entrypoint() {
+  local entrypoint="$1"
+  if [[ ! -f "${entrypoint}" ]]; then
+    echo "Error: required pipeline bundle not found: ${entrypoint}" >&2
+    echo "Deploy pipeline artifacts first (bun scripts/deploy.mts pipeline)." >&2
+    exit 1
+  fi
+}
+
 with_pipeline_lock() {
   local lock_path="${LOCK_DIR}/pipeline.lock"
   mkdir -p "${LOCK_DIR}"
@@ -58,10 +67,13 @@ with_pipeline_lock() {
 }
 
 scrape_all() {
-  local _bun_bin="$1"
+  local bun_bin="$1"
   local table_list
   local omitted_list
   local start_epoch now_epoch
+  local scraper_cli="${PIPELINE_BUILD_DIR}/scraper/cli.js"
+
+  require_bundle_entrypoint "${scraper_cli}"
 
   if [[ -n "${ACTIVE_PIPELINE_TABLES:-}" ]]; then
     table_list="$(printf '%s\n' "${ACTIVE_PIPELINE_TABLES}" | tr ',' '\n')"
@@ -103,35 +115,27 @@ scrape_all() {
     fi
 
     log "Scraping table: ${table_name}"
-    if [[ -f "${PIPELINE_BUILD_DIR}/scraper/cli.js" ]]; then
-      run_in_app_dir env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" "${bun_bin}" "${PIPELINE_BUILD_DIR}/scraper/cli.js" "${table_name}" >> "${LOG_FILE}" 2>&1
-    else
-      run_in_app_dir env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" "${bun_bin}" run scrape "${table_name}" >> "${LOG_FILE}" 2>&1
-    fi
+    run_in_app_dir env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" "${bun_bin}" "${scraper_cli}" "${table_name}" >> "${LOG_FILE}" 2>&1
   done <<< "${table_list}"
 }
 
 parse_all() {
   local bun_bin="$1"
+  local parser_cli="${PIPELINE_BUILD_DIR}/parser/cli.js"
+  require_bundle_entrypoint "${parser_cli}"
   log "Parsing all active tables"
-  if [[ -f "${PIPELINE_BUILD_DIR}/parser/cli.js" ]]; then
-    run_in_app_dir env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" "${bun_bin}" "${PIPELINE_BUILD_DIR}/parser/cli.js" all >> "${LOG_FILE}" 2>&1
-  else
-    run_in_app_dir env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" "${bun_bin}" run parse all >> "${LOG_FILE}" 2>&1
-  fi
+  run_in_app_dir env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" "${bun_bin}" "${parser_cli}" all >> "${LOG_FILE}" 2>&1
 }
 
 migrate_and_sync() {
   local bun_bin="$1"
+  local migrator_cli="${PIPELINE_BUILD_DIR}/migrator/cli.js"
+  require_bundle_entrypoint "${migrator_cli}"
 
   mkdir -p "$(dirname "${DB_PATH}")"
 
   log "Running migration (DB_PATH=${DB_PATH})"
-  if [[ -f "${PIPELINE_BUILD_DIR}/migrator/cli.js" ]]; then
-    run_in_app_dir env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" DB_PATH="${DB_PATH}" "${bun_bin}" "${PIPELINE_BUILD_DIR}/migrator/cli.js" >> "${LOG_FILE}" 2>&1
-  else
-    run_in_app_dir env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" DB_PATH="${DB_PATH}" "${bun_bin}" run migrate >> "${LOG_FILE}" 2>&1
-  fi
+  run_in_app_dir env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" DB_PATH="${DB_PATH}" "${bun_bin}" "${migrator_cli}" >> "${LOG_FILE}" 2>&1
 
   if [[ -z "${APP_VM_SYNC_HOST}" ]]; then
     echo "Error: APP_VM_SYNC_HOST must be set for migrate-sync" >&2

@@ -4,6 +4,7 @@ import {
   isOmittedPipelineTable,
   OmittedPipelineTableNames,
 } from "#constants";
+import { getParsedRowStore, getRawRowStore } from "#storage/row-store/factory";
 import { parseTable, parseTables } from "./parser";
 
 async function main() {
@@ -132,9 +133,6 @@ async function main() {
 }
 
 async function showStatus() {
-  const { getRawRowStore, getParsedRowStore } = await import(
-    "#storage/row-store/factory"
-  );
   const rawStore = getRawRowStore();
   const parsedStore = getParsedRowStore();
 
