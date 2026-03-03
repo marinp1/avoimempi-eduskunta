@@ -3,7 +3,6 @@ import {
   Container,
   CssBaseline,
   GlobalStyles,
-  LinearProgress,
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
@@ -25,35 +24,6 @@ export const App: React.FC = () => {
   const { t } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<RouteName>(getInitialTab());
-  const [migrationOngoing, setMigrationOngoing] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const refreshMaintenanceStatus = async () => {
-      try {
-        const response = await fetch("/api/system/maintenance", {
-          cache: "no-store",
-        });
-        if (!response.ok) return;
-
-        const data = (await response.json()) as { migrationOngoing?: boolean };
-        if (!cancelled) {
-          setMigrationOngoing(data.migrationOngoing === true);
-        }
-      } catch {
-        // Ignore transient network errors and retry on next interval.
-      }
-    };
-
-    refreshMaintenanceStatus();
-    const intervalId = window.setInterval(refreshMaintenanceStatus, 10_000);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
-    };
-  }, []);
 
   // Handle browser back/forward
   useEffect(() => {
@@ -168,47 +138,6 @@ export const App: React.FC = () => {
         }}
       />
       <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
-      {migrationOngoing && (
-        <Box
-          sx={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 2000,
-            backgroundColor: "rgba(10, 17, 29, 0.65)",
-            backdropFilter: "blur(3px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            p: 2,
-          }}
-        >
-          <Box
-            sx={{
-              width: "min(640px, 100%)",
-              borderRadius: 2,
-              overflow: "hidden",
-              boxShadow: "0 12px 36px rgba(0, 0, 0, 0.35)",
-              bgcolor: "background.paper",
-              border: `1px solid ${themedColors.dataBorder}`,
-            }}
-          >
-            <Box
-              sx={{
-                p: 2,
-                background:
-                  "linear-gradient(135deg, rgba(232,145,58,0.16), rgba(74,111,165,0.16))",
-              }}
-            >
-              <Typography variant="h6">Migration ongoing</Typography>
-              <Typography variant="body2" sx={{ mt: 0.5 }}>
-                The application is temporarily unavailable while the database is
-                being rebuilt.
-              </Typography>
-            </Box>
-            <LinearProgress />
-          </Box>
-        </Box>
-      )}
       <Container
         maxWidth="xl"
         sx={{

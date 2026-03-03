@@ -1,5 +1,4 @@
 import type { BunRequest } from "bun";
-import type { StatusController } from "../controllers/status-controller";
 import { getSearchParams } from "./http";
 import { badRequest } from "./route-responses";
 
@@ -72,27 +71,6 @@ export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
     GET: async () => {
       const periods = await db.fetchHallituskaudet();
       return Response.json(periods);
-    },
-  },
-});
-
-export const createDevStatusRoutes = (statusController: StatusController) => ({
-  "/api/status/overview": {
-    GET: async () => {
-      const overview = await statusController.getOverview();
-      return Response.json(overview);
-    },
-  },
-  "/api/status/sanity-checks": {
-    GET: async () => {
-      const checks = await statusController.getSanityChecks();
-      return Response.json(checks);
-    },
-  },
-  "/api/status/source-data": {
-    GET: async () => {
-      const sourceData = await statusController.getSourceDataStatus();
-      return Response.json(sourceData);
     },
   },
 });

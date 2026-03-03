@@ -2,7 +2,6 @@
 
 import { getTraceDatabasePath } from "../shared/database";
 import { loadRuntimeConfig } from "./config/runtime-config";
-import { StatusController } from "./controllers/status-controller";
 import { DatabaseConnection } from "./database/db";
 import { prepareDatabaseForServerStartup } from "./database/launch-db";
 import { AnalyticsRepository } from "./database/repositories/analytics-repository";
@@ -13,7 +12,7 @@ import { PersonRepository } from "./database/repositories/person-repository";
 import { SessionRepository } from "./database/repositories/session-repository";
 import { VotingRepository } from "./database/repositories/voting-repository";
 import homepage from "./public/index.html";
-import { createCoreRoutes, createDevStatusRoutes } from "./routes/core-routes";
+import { createCoreRoutes } from "./routes/core-routes";
 import { createDocumentRoutes } from "./routes/document-routes";
 import { createInsightAnalyticsRoutes } from "./routes/insight-analytics-routes";
 import { createPartyRoutes } from "./routes/party-routes";
@@ -21,8 +20,6 @@ import { createPersonRoutes } from "./routes/person-routes";
 import { createSessionRoutes } from "./routes/session-routes";
 import { createStaticPageRoutes } from "./routes/static-page-routes";
 import { createVotingRoutes } from "./routes/voting-routes";
-import { handleDevelopmentWebSocketUpgrade } from "./routes/websocket-upgrade";
-import { getMigrationLockInfo } from "./services/maintenance-lock";
 
 await prepareDatabaseForServerStartup();
 const databaseConnection = new DatabaseConnection();
@@ -58,45 +55,21 @@ const coreRoutesDataAccess = {
   },
 };
 
-export const statusController = new StatusController(db);
 const { isDev, port, idleTimeout, reusePort } = loadRuntimeConfig();
 
-const server = Bun.serve<{
-  type: "parser" | "scraper" | "migrator";
-}>({
+const server = Bun.serve({
   port,
   reusePort,
   idleTimeout,
   routes: {
-    ...createStaticPageRoutes(homepage, isDev),
-    "/api/system/maintenance": {
-      GET: async () => {
-        const lockInfo = getMigrationLockInfo();
-        const payload = {
-          migrationOngoing: lockInfo.migrationOngoing,
-          startedAt: lockInfo.startedAt,
-        };
-        return Response.json(payload, {
-          headers: { "Cache-Control": "no-store" },
-        });
-      },
-    },
+    ...createStaticPageRoutes(homepage),
     ...createCoreRoutes(coreRoutesDataAccess),
-    ...(isDev ? createDevStatusRoutes(statusController) : {}),
     ...createPersonRoutes(personRepository),
     ...createVotingRoutes(votingRepository),
-
     ...createSessionRoutes(sessionRepository),
     ...createInsightAnalyticsRoutes(analyticsRepository),
     ...createPartyRoutes(analyticsRepository),
-
     ...createDocumentRoutes(documentRepository),
-
-    ...(isDev
-      ? await import("./admin").then((def) =>
-          def.createAdminRoutes({ statusController }),
-        )
-      : {}),
     "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
 
@@ -106,16 +79,6 @@ const server = Bun.serve<{
       }
     : false,
 
-  fetch(req, server) {
-    if (!isDev) {
-      return new Response("Not Found", { status: 404 });
-    }
-
-    return handleDevelopmentWebSocketUpgrade(req, server);
-  },
-  websocket: isDev
-    ? await import("./admin").then((def) => def.websocketHandler)
-    : undefined,
   error(error) {
     console.error(error);
     return new Response(`Internal Error: ${error.message}`, {

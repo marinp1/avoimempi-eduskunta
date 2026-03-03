@@ -32,7 +32,6 @@ import { useTranslation } from "react-i18next";
 import { useHallituskausi } from "./filters/HallituskausiContext";
 import { type RouteName, routes } from "./pages";
 import { colors, transitions as motion, spacing } from "./theme";
-import { applicationMode } from "./utils";
 
 /** Routes to show in the main desktop navigation */
 const mainNavRoutes: RouteName[] = [
@@ -44,9 +43,6 @@ const mainNavRoutes: RouteName[] = [
   "asiakirjat",
   "analytiikka",
 ];
-
-/** Routes that are dev-only */
-const devRoutes: RouteName[] = ["tila", "admin"];
 
 /** Routes for mobile bottom tabs */
 const mobileTabRoutes: { key: RouteName; icon: React.ElementType }[] = [
@@ -102,17 +98,9 @@ export const Navigation: React.FC<{
     setDrawerOpen(false);
   };
 
-  const visibleRoutes =
-    applicationMode === "production"
-      ? mainNavRoutes
-      : [...mainNavRoutes, ...devRoutes];
+  const visibleRoutes = mainNavRoutes;
 
-  const allDrawerRoutes =
-    applicationMode === "production"
-      ? (Object.keys(routes).filter(
-          (k) => !devRoutes.includes(k as RouteName),
-        ) as RouteName[])
-      : (Object.keys(routes) as RouteName[]);
+  const allDrawerRoutes = Object.keys(routes) as RouteName[];
 
   const allLabel = t("app.hallituskausi.all");
 

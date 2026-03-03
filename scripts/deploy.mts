@@ -95,7 +95,7 @@ async function buildPipelineDist() {
     rootDir,
     "packages/datapipe/migrator/migrations",
   );
-  const migrationsTarget = path.join(distRoot, "datapipe/migrator/migrations");
+  const migrationsTarget = path.join(distRoot, "migrator/migrations");
   await fs.promises.mkdir(migrationsTarget, { recursive: true });
   for (const fileName of fs.readdirSync(migrationsSource)) {
     if (!fileName.endsWith(".sql")) continue;

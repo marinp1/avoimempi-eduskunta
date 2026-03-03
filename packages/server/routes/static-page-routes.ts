@@ -1,4 +1,4 @@
-export const createStaticPageRoutes = (homepage: unknown, isDev: boolean) => ({
+export const createStaticPageRoutes = (homepage: unknown) => ({
   "/": homepage,
   "/edustajat": homepage,
   "/puolueet": homepage,
@@ -10,10 +10,4 @@ export const createStaticPageRoutes = (homepage: unknown, isDev: boolean) => ({
   "/votings": homepage,
   "/sessions": homepage,
   "/insights": homepage,
-  ...(isDev
-    ? {
-        "/tila": homepage,
-        "/status": homepage,
-      }
-    : {}),
 });
