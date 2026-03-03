@@ -1,8 +1,8 @@
 import type { ServerWebSocket } from "bun";
 import {
   getLastMigrationTimestamp,
-  runMigration,
   type MigratorMessage,
+  runMigration,
 } from "../datapipe/migrator/migrate";
 import {
   clearMigrationLock,
@@ -78,10 +78,7 @@ export class MigratorController {
       if (typeof data.percentComplete === "number") {
         this.progress = Math.max(0, Math.min(100, data.percentComplete));
       } else if (typeof data.overallPercentComplete === "number") {
-        this.progress = Math.max(
-          0,
-          Math.min(100, data.overallPercentComplete),
-        );
+        this.progress = Math.max(0, Math.min(100, data.overallPercentComplete));
       } else if (
         typeof data.tablesCompleted === "number" &&
         typeof data.totalTables === "number" &&

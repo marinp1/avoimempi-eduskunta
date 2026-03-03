@@ -37,7 +37,9 @@ async function main() {
   const parsePk = (value: string | null, flagName: string): number => {
     const pk = parseInt(value ?? "", 10);
     if (Number.isNaN(pk) || pk < 0) {
-      console.error(`❌ Error: ${flagName} value must be a non-negative integer`);
+      console.error(
+        `❌ Error: ${flagName} value must be a non-negative integer`,
+      );
       process.exit(1);
     }
     return pk;
@@ -68,7 +70,9 @@ async function main() {
       if (consumedNext) i++;
       const secs = parseInt(value ?? "", 10);
       if (Number.isNaN(secs) || secs <= 0) {
-        console.error("❌ Error: --max-runtime value must be a positive integer (seconds)");
+        console.error(
+          "❌ Error: --max-runtime value must be a positive integer (seconds)",
+        );
         process.exit(1);
       }
       maxRuntimeSeconds = secs;
@@ -76,8 +80,10 @@ async function main() {
     }
 
     if (
-      flag === "--from-pk" || flag === "-f" ||
-      flag === "--to-pk"   || flag === "-t" ||
+      flag === "--from-pk" ||
+      flag === "-f" ||
+      flag === "--to-pk" ||
+      flag === "-t" ||
       flag === "--patch-pk" ||
       flag === "--single-pk"
     ) {
@@ -112,7 +118,9 @@ async function main() {
       if (maxRuntimeSeconds !== null) {
         const elapsedSeconds = (Date.now() - startTime) / 1000;
         if (elapsedSeconds >= maxRuntimeSeconds) {
-          console.log(`\n⏱️  Runtime cap (${maxRuntimeSeconds}s) reached after ${elapsedSeconds.toFixed(0)}s, stopping.`);
+          console.log(
+            `\n⏱️  Runtime cap (${maxRuntimeSeconds}s) reached after ${elapsedSeconds.toFixed(0)}s, stopping.`,
+          );
           break;
         }
       }
@@ -132,12 +140,19 @@ async function main() {
     process.exit(1);
   }
 
-  if (patchPk !== null && (fromPk !== null || toPk !== null || singlePk !== null)) {
-    console.error("❌ Error: --patch-pk cannot be combined with --from-pk/--to-pk/--single-pk");
+  if (
+    patchPk !== null &&
+    (fromPk !== null || toPk !== null || singlePk !== null)
+  ) {
+    console.error(
+      "❌ Error: --patch-pk cannot be combined with --from-pk/--to-pk/--single-pk",
+    );
     process.exit(1);
   }
   if (singlePk !== null && (fromPk !== null || toPk !== null)) {
-    console.error("❌ Error: --single-pk cannot be combined with --from-pk/--to-pk");
+    console.error(
+      "❌ Error: --single-pk cannot be combined with --from-pk/--to-pk",
+    );
     process.exit(1);
   }
   if (toPk !== null && fromPk === null) {
@@ -151,9 +166,12 @@ async function main() {
 
   let mode: ScrapeMode = { type: "auto-resume" };
   if (patchPk !== null) mode = { type: "patch-from-pk", pkStartValue: patchPk };
-  else if (singlePk !== null) mode = { type: "range", pkStartValue: singlePk, pkEndValue: singlePk };
-  else if (fromPk !== null && toPk !== null) mode = { type: "range", pkStartValue: fromPk, pkEndValue: toPk };
-  else if (fromPk !== null) mode = { type: "start-from-pk", pkStartValue: fromPk };
+  else if (singlePk !== null)
+    mode = { type: "range", pkStartValue: singlePk, pkEndValue: singlePk };
+  else if (fromPk !== null && toPk !== null)
+    mode = { type: "range", pkStartValue: fromPk, pkEndValue: toPk };
+  else if (fromPk !== null)
+    mode = { type: "start-from-pk", pkStartValue: fromPk };
 
   await scrapeTable({ tableName, mode, onProgress: (_progress) => {} });
 }

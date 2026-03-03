@@ -1,18 +1,11 @@
 import sqlite, { type Database } from "bun:sqlite";
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
-import { getMigrations } from "bun-sqlite-migrations";
+import { getMigrations, migrate } from "bun-sqlite-migrations";
 import { type TableName, TableNames } from "#constants/index";
-import {
-  buildConsolidatedMigrationReport,
-  type ConsolidatedMigrationReport,
-  type ConsolidatedMigrationStatus,
-  writeConsolidatedMigrationReport,
-} from "./reporting";
-import { clearStatementCache, objectExists } from "./utils";
-import { TABLE_MIGRATORS } from "./table-migrators";
-import { migrateVaskiData } from "./VaskiData/migrator";
+import { getDatabasePath } from "#database";
+import { getParsedRowStore } from "#storage/row-store/factory";
+import { migrateVaskiData } from "./fn/VaskiData/migrator";
 import {
   normalizeImportedTextData,
   rebuildFederatedSearchIndex,
@@ -20,9 +13,8 @@ import {
   rebuildPersonVotingDailyStats,
   rebuildVotingPartyStats,
 } from "./post-import";
-import { getDatabasePath, getTraceDatabasePath } from "#database";
-import { getStorage } from "#storage";
-import { getParsedRowStore } from "#storage/row-store/factory";
+import { TABLE_MIGRATORS } from "./table-migrators";
+import { clearStatementCache } from "./utils";
 
 // ---------------------------------------------------------------------------
 // Inlined SQL constants (from server/database/sql-statements — not importable
@@ -31,7 +23,6 @@ import { getParsedRowStore } from "#storage/row-store/factory";
 
 const SQLITE_PRAGMAS = {
   journalWal: "PRAGMA journal_mode = WAL;",
-  queryOnlyOn: "PRAGMA query_only = ON;",
   foreignKeysOff: "PRAGMA foreign_keys = OFF;",
   synchronousOff: "PRAGMA synchronous = OFF;",
   synchronousFull: "PRAGMA synchronous = FULL;",
@@ -76,52 +67,6 @@ export interface MigrationOptions {
 }
 
 // ---------------------------------------------------------------------------
-// Internal types
-// ---------------------------------------------------------------------------
-
-type SqlMigration = {
-  version: number;
-  up: string[];
-  down: string;
-};
-
-type SourceReferenceMode = "full" | "summary" | "off";
-
-type ParsedPageBatch = {
-  firstPk: number;
-  rows: any[];
-  pkName: string | null;
-  sourceTable: TableName;
-  sourcePage: number | null;
-  scrapedAt: string | null;
-};
-
-type SourceReferenceFallback = {
-  sourceTable: TableName;
-  sourcePage: number | null;
-  sourcePkName: string | null;
-  sourcePkValue: unknown;
-  scrapedAt: string | null;
-};
-
-type SourceReference = {
-  sourceTable: TableName;
-  sourcePage: number | null;
-  sourcePkName: string | null;
-  sourcePkValue: string | null;
-  scrapedAt: string | null;
-};
-
-type ImportSourceReferenceSummary = {
-  importedRows: number;
-  distinctPages: Set<string>;
-  firstScrapedAt: string | null;
-  lastScrapedAt: string | null;
-  firstMigratedAt: string | null;
-  lastMigratedAt: string | null;
-};
-
-// ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
@@ -145,184 +90,6 @@ const DISABLED_IMPORT_TABLES = new Set<string>([
   "SaliDBAanestysJakauma",
 ]);
 
-const IMPORT_METADATA_FIELDS = {
-  sourceTable: "__sourceTable",
-  sourcePage: "__sourcePage",
-  scrapedAt: "__sourceScrapedAt",
-  sourcePrimaryKeyName: "__sourcePrimaryKeyName",
-  sourcePrimaryKeyValue: "__sourcePrimaryKeyValue",
-} as const;
-
-const MIGRATION_RUN_REPORTS_STORAGE_PREFIX = "metadata/migration-runs";
-const MIGRATION_RUN_LATEST_STORAGE_KEY = `${MIGRATION_RUN_REPORTS_STORAGE_PREFIX}/latest.json`;
-const MIGRATION_RUN_LATEST_SUCCESS_STORAGE_KEY = `${MIGRATION_RUN_REPORTS_STORAGE_PREFIX}/latest-success.json`;
-const SQLITE_ARTIFACTS_STORAGE_PREFIX = "artifacts/sqlite";
-const SQLITE_LATEST_MANIFEST_STORAGE_KEY = `${SQLITE_ARTIFACTS_STORAGE_PREFIX}/latest/manifest.json`;
-
-// ---------------------------------------------------------------------------
-// SQL migration helpers
-// ---------------------------------------------------------------------------
-
-const getDatabaseVersion = (db: Database): number => {
-  const row = db.query("PRAGMA user_version;").get() as
-    | { user_version?: number }
-    | undefined;
-  return row?.user_version ?? 0;
-};
-
-const setDatabaseVersion = (db: Database, version: number): void => {
-  db.exec(`PRAGMA user_version = ${version}`);
-};
-
-const unquoteIdentifier = (identifier: string): string => {
-  const trimmed = identifier.trim();
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-    (trimmed.startsWith("`") && trimmed.endsWith("`")) ||
-    (trimmed.startsWith("[") && trimmed.endsWith("]"))
-  ) {
-    return trimmed.substring(1, trimmed.length - 1);
-  }
-  return trimmed;
-};
-
-const hasColumn = (
-  db: Database,
-  tableName: string,
-  columnName: string,
-): boolean => {
-  const escaped = tableName.replace(/'/g, "''");
-  const rows = db.query(`PRAGMA table_info('${escaped}')`).all() as Array<{
-    name?: string;
-  }>;
-  return rows.some((row) => row.name === columnName);
-};
-
-const shouldSkipStatement = (
-  db: Database,
-  statement: string,
-): { skip: boolean; reason?: string } => {
-  const sql = statement.trim();
-  if (!sql) return { skip: true, reason: "empty statement" };
-
-  const normalized = sql.replace(/\s+/g, " ").trim();
-
-  const alterAddColumn = normalized.match(
-    /^ALTER TABLE\s+([`"[\]\w.]+)\s+ADD COLUMN\s+([`"[\]\w.]+)/i,
-  );
-  if (alterAddColumn) {
-    const tableName = unquoteIdentifier(alterAddColumn[1]);
-    const columnName = unquoteIdentifier(alterAddColumn[2]);
-    if (hasColumn(db, tableName, columnName)) {
-      return {
-        skip: true,
-        reason: `column ${tableName}.${columnName} already exists`,
-      };
-    }
-    return { skip: false };
-  }
-
-  const createVirtualTable = normalized.match(
-    /^CREATE VIRTUAL TABLE(?: IF NOT EXISTS)?\s+([`"[\]\w.]+)/i,
-  );
-  if (createVirtualTable) {
-    const tableName = unquoteIdentifier(createVirtualTable[1]);
-    if (objectExists(db, "table", tableName)) {
-      return {
-        skip: true,
-        reason: `virtual table ${tableName} already exists`,
-      };
-    }
-    return { skip: false };
-  }
-
-  const createTrigger = normalized.match(
-    /^CREATE TRIGGER(?: IF NOT EXISTS)?\s+([`"[\]\w.]+)/i,
-  );
-  if (createTrigger) {
-    const triggerName = unquoteIdentifier(createTrigger[1]);
-    if (objectExists(db, "trigger", triggerName)) {
-      return {
-        skip: true,
-        reason: `trigger ${triggerName} already exists`,
-      };
-    }
-    return { skip: false };
-  }
-
-  const createIndex = normalized.match(
-    /^CREATE INDEX(?: IF NOT EXISTS)?\s+([`"[\]\w.]+)/i,
-  );
-  if (createIndex) {
-    const indexName = unquoteIdentifier(createIndex[1]);
-    if (objectExists(db, "index", indexName)) {
-      return {
-        skip: true,
-        reason: `index ${indexName} already exists`,
-      };
-    }
-    return { skip: false };
-  }
-
-  return { skip: false };
-};
-
-const applyMigrationsSafely = (
-  db: Database,
-  migrations: SqlMigration[],
-): void => {
-  const orderedMigrations = [...migrations].sort(
-    (a, b) => a.version - b.version,
-  );
-  if (orderedMigrations.length === 0) {
-    return;
-  }
-
-  const maxVersion = orderedMigrations[orderedMigrations.length - 1].version;
-  let currentVersion = getDatabaseVersion(db);
-
-  if (currentVersion > maxVersion) {
-    throw new Error(
-      `Database version ${currentVersion} is newer than available migrations (${maxVersion})`,
-    );
-  }
-
-  for (const migration of orderedMigrations) {
-    if (migration.version <= currentVersion) {
-      continue;
-    }
-
-    const runUpgrade = db.transaction(() => {
-      for (const statement of migration.up) {
-        const skipCheck = shouldSkipStatement(db, statement);
-        if (skipCheck.skip) {
-          console.log(
-            `  Skipping v${migration.version} statement: ${skipCheck.reason ?? "already applied"}`,
-          );
-          continue;
-        }
-
-        try {
-          db.run(statement);
-        } catch (error) {
-          const snippet =
-            statement
-              .split("\n")
-              .map((line) => line.trim())
-              .find(Boolean) ?? statement;
-          throw new Error(
-            `Migration v${migration.version} failed on statement "${snippet}": ${String(error)}`,
-          );
-        }
-      }
-      setDatabaseVersion(db, migration.version);
-    });
-
-    runUpgrade.immediate();
-    currentVersion = migration.version;
-  }
-};
-
 const getVirtualTableNames = (db: Database): Set<string> => {
   const rows = db
     .query<{ name: string }, []>(
@@ -336,7 +103,7 @@ const shouldSkipTableClear = (
   tableName: string,
   virtualTableNames: Set<string>,
 ): boolean => {
-  if (tableName === "sqlite_sequence" || tableName === "_bun_migrations") {
+  if (tableName === "sqlite_sequence") {
     return true;
   }
 
@@ -361,35 +128,6 @@ const shouldSkipTableClear = (
 // Utility helpers
 // ---------------------------------------------------------------------------
 
-const normalizeStoragePath = (value: string): string =>
-  value.replace(/\\/g, "/").replace(/^\/+/, "");
-
-const listJsonFilesRecursive = (baseDir: string): string[] => {
-  if (!fs.existsSync(baseDir)) return [];
-
-  const files: string[] = [];
-  const stack: string[] = [baseDir];
-
-  while (stack.length > 0) {
-    const current = stack.pop();
-    if (!current) continue;
-
-    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
-      const fullPath = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        stack.push(fullPath);
-        continue;
-      }
-
-      if (entry.isFile() && entry.name.endsWith(".json")) {
-        files.push(fullPath);
-      }
-    }
-  }
-
-  return files.sort((a, b) => a.localeCompare(b));
-};
-
 const isTruthyEnv = (value: string | undefined): boolean => {
   if (!value) return false;
   const normalized = value.trim().toLowerCase();
@@ -398,15 +136,6 @@ const isTruthyEnv = (value: string | undefined): boolean => {
 
 const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
   !!value && typeof (value as { then?: unknown }).then === "function";
-
-const parsePositiveInt = (
-  value: string | undefined,
-  fallback: number,
-): number => {
-  const parsed = Number.parseInt(value ?? "", 10);
-  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
-  return parsed;
-};
 
 const parseOptionalPositiveInt = (
   value: string | undefined,
@@ -422,77 +151,6 @@ const parseOptionalPositiveInt = (
   const parsed = Number.parseInt(normalized, 10);
   if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
   return parsed;
-};
-
-const parseSourceReferenceMode = (
-  value: string | undefined,
-): SourceReferenceMode => {
-  const normalized = (value ?? "summary").trim().toLowerCase();
-  if (normalized === "full") return "full";
-  if (normalized === "off") return "off";
-  return "summary";
-};
-
-const isNotADatabaseError = (error: unknown): boolean => {
-  const text = String(error).toLowerCase();
-  return text.includes("sqlite_notadb") || text.includes("not a database");
-};
-
-const normalizeText = (value: unknown): string | null => {
-  if (typeof value !== "string") return null;
-  const normalized = value.trim();
-  return normalized === "" ? null : normalized;
-};
-
-const normalizeNumber = (value: unknown): number | null => {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number.parseInt(value, 10);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-  }
-
-  return null;
-};
-
-const normalizeSourceReference = (
-  row: Record<string, any>,
-  fallback: SourceReferenceFallback,
-): SourceReference => {
-  const sourceTable = (normalizeText(row[IMPORT_METADATA_FIELDS.sourceTable]) ??
-    fallback.sourceTable) as TableName;
-  const sourcePage =
-    normalizeNumber(row[IMPORT_METADATA_FIELDS.sourcePage]) ??
-    fallback.sourcePage;
-  const sourcePkName =
-    normalizeText(row[IMPORT_METADATA_FIELDS.sourcePrimaryKeyName]) ??
-    fallback.sourcePkName;
-
-  const fallbackPkValue =
-    sourcePkName && row[sourcePkName] !== undefined
-      ? row[sourcePkName]
-      : fallback.sourcePkValue;
-  const sourcePkValueRaw =
-    row[IMPORT_METADATA_FIELDS.sourcePrimaryKeyValue] ?? fallbackPkValue;
-  const sourcePkValue =
-    sourcePkValueRaw === null || sourcePkValueRaw === undefined
-      ? null
-      : String(sourcePkValueRaw);
-
-  const scrapedAt =
-    normalizeText(row[IMPORT_METADATA_FIELDS.scrapedAt]) ?? fallback.scrapedAt;
-
-  return {
-    sourceTable,
-    sourcePage,
-    sourcePkName,
-    sourcePkValue,
-    scrapedAt,
-  };
 };
 
 // ---------------------------------------------------------------------------
@@ -521,427 +179,22 @@ async function getTablesWithParsedData(): Promise<TableName[]> {
 // Parsed data reader
 // ---------------------------------------------------------------------------
 
-async function* readParsedData(
-  tableName: string,
-): AsyncGenerator<ParsedPageBatch> {
+async function* readParsedData(tableName: string): AsyncGenerator<any[]> {
   const parsedStore = getParsedRowStore();
   const BATCH_SIZE = 100;
   let batch: any[] = [];
-  let firstBatchPk: number | null = null;
 
   for await (const storedRow of parsedStore.list(tableName)) {
-    const rowData = JSON.parse(storedRow.data);
-    if (firstBatchPk === null) firstBatchPk = storedRow.pk;
-    batch.push(rowData);
+    batch.push(JSON.parse(storedRow.data));
 
     if (batch.length >= BATCH_SIZE) {
-      yield {
-        firstPk: firstBatchPk,
-        rows: batch,
-        pkName: normalizeText(
-          batch[0][IMPORT_METADATA_FIELDS.sourcePrimaryKeyName],
-        ),
-        sourceTable: (normalizeText(
-          batch[0][IMPORT_METADATA_FIELDS.sourceTable],
-        ) ?? tableName) as TableName,
-        sourcePage: normalizeNumber(
-          batch[0][IMPORT_METADATA_FIELDS.sourcePage],
-        ),
-        scrapedAt: normalizeText(batch[0][IMPORT_METADATA_FIELDS.scrapedAt]),
-      };
+      yield batch;
       batch = [];
-      firstBatchPk = null;
     }
   }
 
-  if (batch.length > 0 && firstBatchPk !== null) {
-    yield {
-      firstPk: firstBatchPk,
-      rows: batch,
-      pkName: normalizeText(
-        batch[0][IMPORT_METADATA_FIELDS.sourcePrimaryKeyName],
-      ),
-      sourceTable: (normalizeText(
-        batch[0][IMPORT_METADATA_FIELDS.sourceTable],
-      ) ?? tableName) as TableName,
-      sourcePage: normalizeNumber(batch[0][IMPORT_METADATA_FIELDS.sourcePage]),
-      scrapedAt: normalizeText(batch[0][IMPORT_METADATA_FIELDS.scrapedAt]),
-    };
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Storage publishing
-// ---------------------------------------------------------------------------
-
-async function publishMigrationRunReports(params: {
-  runId: string;
-  localRootDir: string;
-  status: ConsolidatedMigrationStatus;
-  startedAt: string;
-  finishedAt: string;
-  consolidatedReport: ConsolidatedMigrationReport | null;
-  migrationError: string | null;
-}): Promise<void> {
-  const storage = getStorage();
-  const runStoragePrefix = `${MIGRATION_RUN_REPORTS_STORAGE_PREFIX}/${params.runId}`;
-  const localFiles = listJsonFilesRecursive(params.localRootDir);
-  const uploadedKeys: string[] = [];
-
-  for (const localFilePath of localFiles) {
-    const relativePath = normalizeStoragePath(
-      path.relative(params.localRootDir, localFilePath),
-    );
-    const storageKey = `${runStoragePrefix}/${relativePath}`;
-    const payload = fs.readFileSync(localFilePath, "utf8");
-    await storage.put(storageKey, payload);
-    uploadedKeys.push(storageKey);
-  }
-
-  const pointerPayload = {
-    runId: params.runId,
-    status: params.status,
-    startedAt: params.startedAt,
-    finishedAt: params.finishedAt,
-    reportKey: `${runStoragePrefix}/consolidated-report.json`,
-    artifactPrefix: runStoragePrefix,
-    artifactCount: uploadedKeys.length,
-    totals: params.consolidatedReport?.totals ?? null,
-    files: params.consolidatedReport?.files ?? null,
-    error: params.migrationError,
-  };
-
-  await storage.put(
-    MIGRATION_RUN_LATEST_STORAGE_KEY,
-    JSON.stringify(pointerPayload, null, 2),
-  );
-
-  if (params.status === "success") {
-    await storage.put(
-      MIGRATION_RUN_LATEST_SUCCESS_STORAGE_KEY,
-      JSON.stringify(pointerPayload, null, 2),
-    );
-  }
-
-  console.log(
-    `📦 Uploaded migration reports to storage '${storage.name}' at ${runStoragePrefix}`,
-  );
-}
-
-async function publishLatestDatabaseArtifact(params: {
-  runId: string;
-  migratedAt: string;
-}): Promise<void> {
-  const storage = getStorage();
-  const databasePath = getDatabasePath();
-  const traceDatabasePath = getTraceDatabasePath();
-  const databaseFileName = path.basename(databasePath);
-  const traceDatabaseFileName = path.basename(traceDatabasePath);
-  const artifactKey = `${SQLITE_ARTIFACTS_STORAGE_PREFIX}/latest/${databaseFileName}`;
-  const traceArtifactKey = `${SQLITE_ARTIFACTS_STORAGE_PREFIX}/latest/${traceDatabaseFileName}`;
-  const shouldPublishSnapshot = isTruthyEnv(
-    process.env.MIGRATOR_PUBLISH_SNAPSHOT,
-  );
-
-  if (!fs.existsSync(databasePath)) {
-    throw new Error(`SQLite database file not found at '${databasePath}'`);
-  }
-
-  if (typeof storage.putFile !== "function") {
-    throw new Error(
-      `Storage provider '${storage.name}' does not implement putFile(); required for large SQLite artifact uploads`,
-    );
-  }
-
-  await storage.putFile(artifactKey, databasePath);
-
-  const snapshotKey = shouldPublishSnapshot
-    ? `${SQLITE_ARTIFACTS_STORAGE_PREFIX}/snapshots/${params.runId}/${databaseFileName}`
-    : null;
-  const traceSnapshotKey = shouldPublishSnapshot
-    ? `${SQLITE_ARTIFACTS_STORAGE_PREFIX}/snapshots/${params.runId}/${traceDatabaseFileName}`
-    : null;
-  if (snapshotKey) {
-    await storage.putFile(snapshotKey, databasePath);
-  }
-  const hasTraceDatabase = fs.existsSync(traceDatabasePath);
-  if (hasTraceDatabase) {
-    await storage.putFile(traceArtifactKey, traceDatabasePath);
-    if (traceSnapshotKey) {
-      await storage.putFile(traceSnapshotKey, traceDatabasePath);
-    }
-  }
-
-  const stats = fs.statSync(databasePath);
-  const manifest = {
-    runId: params.runId,
-    migratedAt: params.migratedAt,
-    storageProvider: storage.name,
-    dbArtifactKey: artifactKey,
-    snapshotKey,
-    traceDbArtifactKey: hasTraceDatabase ? traceArtifactKey : null,
-    traceSnapshotKey: hasTraceDatabase ? traceSnapshotKey : null,
-    dbFileName: databaseFileName,
-    dbSizeBytes: stats.size,
-    traceDbFileName: hasTraceDatabase ? traceDatabaseFileName : null,
-    traceDbSizeBytes: hasTraceDatabase
-      ? fs.statSync(traceDatabasePath).size
-      : null,
-    updatedAt: new Date().toISOString(),
-  };
-
-  await storage.put(
-    SQLITE_LATEST_MANIFEST_STORAGE_KEY,
-    JSON.stringify(manifest, null, 2),
-  );
-
-  console.log(
-    `🧱 Published SQLite artifact to storage '${storage.name}' at ${artifactKey}`,
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Foreign key check
-// ---------------------------------------------------------------------------
-
-function runForeignKeyCheck(
-  db: Database,
-  sampleLimit: number,
-): {
-  checkedAt: string;
-  totalViolations: number;
-  sampleLimit: number;
-  sampleViolations: Array<{
-    childTable: string;
-    rowid: number | null;
-    parentTable: string;
-    foreignKeyIndex: number;
-  }>;
-} {
-  const safeSampleLimit = Math.max(1, sampleLimit);
-  const totalRow = db
-    .query<{ count: number }, []>(
-      "SELECT COUNT(*) AS count FROM pragma_foreign_key_check",
-    )
-    .get();
-  const sampleViolations = db
-    .query<
-      {
-        childTable: string;
-        rowid: number | null;
-        parentTable: string;
-        foreignKeyIndex: number;
-      },
-      []
-    >(
-      `SELECT "table" AS childTable, rowid, parent AS parentTable, fkid AS foreignKeyIndex
-       FROM pragma_foreign_key_check
-       LIMIT ${safeSampleLimit}`,
-    )
-    .all();
-
-  return {
-    checkedAt: new Date().toISOString(),
-    totalViolations: totalRow?.count ?? 0,
-    sampleLimit: safeSampleLimit,
-    sampleViolations,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Import source reference tracking
-// ---------------------------------------------------------------------------
-
-function updateImportSourceReferenceSummary(
-  summaries: Map<string, ImportSourceReferenceSummary>,
-  sourceReference: SourceReference,
-  migratedAt: string,
-): void {
-  const sourceTable = sourceReference.sourceTable;
-  if (!sourceTable) return;
-
-  let summary = summaries.get(sourceTable);
-  if (!summary) {
-    summary = {
-      importedRows: 0,
-      distinctPages: new Set<string>(),
-      firstScrapedAt: null,
-      lastScrapedAt: null,
-      firstMigratedAt: null,
-      lastMigratedAt: null,
-    };
-    summaries.set(sourceTable, summary);
-  }
-
-  summary.importedRows += 1;
-
-  if (
-    sourceReference.sourcePage !== null &&
-    sourceReference.sourcePage !== undefined
-  ) {
-    summary.distinctPages.add(String(sourceReference.sourcePage));
-  }
-
-  if (sourceReference.scrapedAt) {
-    if (
-      !summary.firstScrapedAt ||
-      sourceReference.scrapedAt < summary.firstScrapedAt
-    ) {
-      summary.firstScrapedAt = sourceReference.scrapedAt;
-    }
-    if (
-      !summary.lastScrapedAt ||
-      sourceReference.scrapedAt > summary.lastScrapedAt
-    ) {
-      summary.lastScrapedAt = sourceReference.scrapedAt;
-    }
-  }
-
-  if (!summary.firstMigratedAt || migratedAt < summary.firstMigratedAt) {
-    summary.firstMigratedAt = migratedAt;
-  }
-  if (!summary.lastMigratedAt || migratedAt > summary.lastMigratedAt) {
-    summary.lastMigratedAt = migratedAt;
-  }
-}
-
-function persistImportSourceReferenceSummaries(
-  db: Database,
-  summaries: Map<string, ImportSourceReferenceSummary>,
-): void {
-  if (!objectExists(db, "table", "ImportSourceReferenceSummary")) {
-    return;
-  }
-
-  const persistTransaction = db.transaction(() => {
-    db.run("DELETE FROM ImportSourceReferenceSummary");
-    const stmt = db.prepare(
-      `INSERT INTO ImportSourceReferenceSummary (
-         source_table,
-         imported_rows,
-         distinct_pages,
-         first_scraped_at,
-         last_scraped_at,
-         first_migrated_at,
-         last_migrated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    );
-
-    for (const [sourceTable, summary] of summaries.entries()) {
-      stmt.run(
-        sourceTable,
-        summary.importedRows,
-        summary.distinctPages.size,
-        summary.firstScrapedAt,
-        summary.lastScrapedAt,
-        summary.firstMigratedAt,
-        summary.lastMigratedAt,
-      );
-    }
-
-    stmt.finalize();
-  });
-
-  persistTransaction.immediate();
-}
-
-// ---------------------------------------------------------------------------
-// Trace database management
-// ---------------------------------------------------------------------------
-
-function ensureImportTraceSchema(db: Database): void {
-  db.run(
-    `CREATE TABLE IF NOT EXISTS ImportSourceReference (
-       id INTEGER PRIMARY KEY,
-       source_table TEXT NOT NULL,
-       source_page INTEGER,
-       source_pk_name TEXT,
-       source_pk_value TEXT,
-       scraped_at TEXT,
-       migrated_at TEXT NOT NULL
-     )`,
-  );
-  db.run(
-    `CREATE TABLE IF NOT EXISTS ImportSourceReferenceSummary (
-       source_table TEXT PRIMARY KEY,
-       imported_rows INTEGER NOT NULL DEFAULT 0,
-       distinct_pages INTEGER NOT NULL DEFAULT 0,
-       first_scraped_at TEXT,
-       last_scraped_at TEXT,
-       first_migrated_at TEXT,
-       last_migrated_at TEXT
-     )`,
-  );
-  db.run(
-    "CREATE INDEX IF NOT EXISTS idx_import_source_reference_lookup ON ImportSourceReference(source_table, source_pk_name, source_pk_value)",
-  );
-  db.run(
-    "CREATE INDEX IF NOT EXISTS idx_import_source_reference_source_table ON ImportSourceReference(source_table)",
-  );
-}
-
-function clearImportTraceData(db: Database): void {
-  if (objectExists(db, "table", "ImportSourceReferenceSummary")) {
-    db.run("DELETE FROM ImportSourceReferenceSummary");
-  }
-  if (objectExists(db, "table", "ImportSourceReference")) {
-    db.run("DELETE FROM ImportSourceReference");
-  }
-}
-
-function configureTraceDatabase(db: Database): void {
-  db.exec(SQLITE_PRAGMAS.journalWal);
-  db.exec(SQLITE_PRAGMAS.synchronousOff);
-  db.exec(SQLITE_PRAGMAS.cacheSize64Mb);
-  db.exec(SQLITE_PRAGMAS.tempStoreMemory);
-  db.exec(SQLITE_PRAGMAS.mmapSize30Gb);
-}
-
-function openTraceDatabaseForMigration(traceDatabasePath: string): Database {
-  fs.mkdirSync(path.dirname(traceDatabasePath), { recursive: true });
-
-  let traceDb: Database | null = null;
-  try {
-    traceDb = sqlite.open(traceDatabasePath, {
-      create: true,
-      readwrite: true,
-    });
-    configureTraceDatabase(traceDb);
-    return traceDb;
-  } catch (error) {
-    if (traceDb) {
-      try {
-        traceDb.close();
-      } catch (_closeError) {
-        // best effort
-      }
-    }
-
-    if (!isNotADatabaseError(error)) {
-      throw error;
-    }
-
-    const backupPath = `${traceDatabasePath}.invalid-${Date.now()}`;
-    try {
-      if (fs.existsSync(traceDatabasePath)) {
-        fs.renameSync(traceDatabasePath, backupPath);
-        console.warn(
-          `⚠️  Trace database is invalid, moved to '${backupPath}' and recreating...`,
-        );
-      }
-    } catch (_renameError) {
-      fs.rmSync(traceDatabasePath, { force: true });
-      console.warn(
-        `⚠️  Trace database is invalid and could not be renamed, deleting and recreating '${traceDatabasePath}'...`,
-      );
-    }
-
-    const recreatedTraceDb = sqlite.open(traceDatabasePath, {
-      create: true,
-      readwrite: true,
-    });
-    configureTraceDatabase(recreatedTraceDb);
-    return recreatedTraceDb;
+  if (batch.length > 0) {
+    yield batch;
   }
 }
 
@@ -968,47 +221,7 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
     },
   });
 
-  const reportStartedAt = new Date().toISOString();
-  const reportRunId = reportStartedAt.replace(/[:.]/g, "-");
-  const reportRootDir = path.join(
-    os.tmpdir(),
-    "avoimempi-eduskunta",
-    "migration-run-reports",
-    reportRunId,
-  );
-  const reportDirs = {
-    reports: path.join(reportRootDir, "reports"),
-    overwrites: path.join(reportRootDir, "overwrites"),
-    knownIssues: path.join(reportRootDir, "known-issues"),
-  };
-
-  const previousReportEnv = {
-    report: process.env.MIGRATOR_REPORT_LOG_DIR,
-    overwrite: process.env.MIGRATOR_OVERWRITE_LOG_DIR,
-    knownIssue: process.env.MIGRATOR_KNOWN_ISSUE_LOG_DIR,
-  };
-
-  process.env.MIGRATOR_REPORT_LOG_DIR = reportDirs.reports;
-  process.env.MIGRATOR_OVERWRITE_LOG_DIR = reportDirs.overwrites;
-  process.env.MIGRATOR_KNOWN_ISSUE_LOG_DIR = reportDirs.knownIssues;
-
-  let migrationStatus: ConsolidatedMigrationStatus = "failed";
-  let migrationError: string | null = null;
-  let consolidatedReport: ConsolidatedMigrationReport | null = null;
-  let traceDatabase: Database | null = null;
-  let traceTransactionOpen = false;
-  let sourceReferenceStatement: {
-    run: (...args: any[]) => unknown;
-    finalize: () => void;
-  } | null = null;
   const useExclusiveLock = isTruthyEnv(process.env.MIGRATOR_EXCLUSIVE_LOCK);
-  const doRunForeignKeyCheck = isTruthyEnv(
-    process.env.MIGRATOR_FOREIGN_KEY_CHECK,
-  );
-  const foreignKeyCheckSampleLimit = parsePositiveInt(
-    process.env.MIGRATOR_FOREIGN_KEY_CHECK_SAMPLE_LIMIT,
-    1000,
-  );
   const shouldVacuumAfterImport =
     process.env.MIGRATOR_VACUUM_AFTER_IMPORT === undefined
       ? true
@@ -1019,7 +232,6 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
   );
 
   try {
-    // Get tables with parsed data
     const tablesToImport = await getTablesWithParsedData();
 
     if (tablesToImport.length === 0) {
@@ -1036,35 +248,28 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
       },
     });
 
-    // Open target database
     const targetDatabase = sqlite.open(getDatabasePath(), {
       create: true,
       readwrite: true,
     });
 
-    targetDatabase.exec(SQLITE_PRAGMAS.journalWal);
+    targetDatabase.run(SQLITE_PRAGMAS.journalWal);
 
-    // Apply performance optimizations for bulk inserts
     console.log("⚙️  Applying SQLite performance optimizations...");
-    targetDatabase.exec(SQLITE_PRAGMAS.synchronousOff);
-    targetDatabase.exec(SQLITE_PRAGMAS.cacheSize64Mb);
-    targetDatabase.exec(SQLITE_PRAGMAS.tempStoreMemory);
-    targetDatabase.exec(SQLITE_PRAGMAS.mmapSize30Gb);
-    targetDatabase.exec(SQLITE_PRAGMAS.foreignKeysOff);
+    targetDatabase.run(SQLITE_PRAGMAS.synchronousOff);
+    targetDatabase.run(SQLITE_PRAGMAS.cacheSize64Mb);
+    targetDatabase.run(SQLITE_PRAGMAS.tempStoreMemory);
+    targetDatabase.run(SQLITE_PRAGMAS.mmapSize30Gb);
+    targetDatabase.run(SQLITE_PRAGMAS.foreignKeysOff);
     if (useExclusiveLock) {
-      targetDatabase.exec(SQLITE_PRAGMAS.lockingModeExclusive);
+      targetDatabase.run(SQLITE_PRAGMAS.lockingModeExclusive);
     }
 
-    // Run schema migrations
     const migrationsPath = path.resolve(import.meta.dirname, "migrations");
     console.log("🔄 Running database migrations...");
-    applyMigrationsSafely(
-      targetDatabase,
-      getMigrations(migrationsPath) as SqlMigration[],
-    );
+    migrate(targetDatabase, getMigrations(migrationsPath));
     console.log("✅ Migrations completed");
 
-    // Clear all tables
     console.log("🗑️  Clearing existing data...");
     const tables = targetDatabase
       .query<{ name: string }, []>(MIGRATOR_SQL.listTables)
@@ -1075,79 +280,16 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
       if (shouldSkipTableClear(table.name, virtualTableNames)) {
         continue;
       }
-
       console.log(`  Clearing ${table.name}...`);
       targetDatabase.run(getDeleteAllRowsQuery(table.name));
     }
     console.log("✅ Tables cleared");
 
-    // Clear prepared statement cache before starting
     clearStatementCache();
-    const sourceReferenceMode = parseSourceReferenceMode(
-      process.env.MIGRATOR_SOURCE_REFERENCE_MODE,
-    );
-    console.log(
-      `🧾 Source reference mode: ${sourceReferenceMode} (${sourceReferenceMode === "full" ? "store detailed rows + summary" : sourceReferenceMode === "summary" ? "store summary only" : "skip source reference storage"})`,
-    );
-    const traceDatabasePath = getTraceDatabasePath();
-    console.log(`🧾 Trace database: ${traceDatabasePath}`);
     console.log(
       `🔎 Federated search body limit: ${federatedSearchBodyMaxChars === null ? "unlimited" : `${federatedSearchBodyMaxChars} chars`}`,
     );
 
-    if (sourceReferenceMode !== "off") {
-      traceDatabase = openTraceDatabaseForMigration(traceDatabasePath);
-      ensureImportTraceSchema(traceDatabase);
-      traceDatabase.exec(MIGRATOR_SQL.beginTransaction);
-      traceTransactionOpen = true;
-      clearImportTraceData(traceDatabase);
-    }
-
-    const sourceReferenceSummaries = new Map<
-      string,
-      ImportSourceReferenceSummary
-    >();
-
-    sourceReferenceStatement =
-      sourceReferenceMode === "full"
-        ? (traceDatabase?.prepare(
-            `INSERT INTO ImportSourceReference (
-               source_table,
-               source_page,
-               source_pk_name,
-               source_pk_value,
-               scraped_at,
-               migrated_at
-             ) VALUES (?, ?, ?, ?, ?, ?)`,
-          ) ?? null)
-        : null;
-
-    const recordSourceReference = (
-      row: Record<string, any>,
-      fallback: SourceReferenceFallback,
-    ) => {
-      const sourceReference = normalizeSourceReference(row, fallback);
-      if (sourceReferenceMode !== "off") {
-        updateImportSourceReferenceSummary(
-          sourceReferenceSummaries,
-          sourceReference,
-          reportStartedAt,
-        );
-      }
-
-      if (!sourceReferenceStatement) return;
-
-      sourceReferenceStatement.run(
-        sourceReference.sourceTable,
-        sourceReference.sourcePage,
-        sourceReference.sourcePkName,
-        sourceReference.sourcePkValue,
-        sourceReference.scrapedAt,
-        reportStartedAt,
-      );
-    };
-
-    // Import each table
     let tablesCompleted = 0;
     const startTime = Date.now();
 
@@ -1173,21 +315,12 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
         let totalDocumentTypes = 0;
         let rowsImported = 0;
 
-        targetDatabase.exec(MIGRATOR_SQL.beginTransaction);
+        targetDatabase.run(MIGRATOR_SQL.beginTransaction);
 
         try {
           const summary = await migrateVaskiData(targetDatabase, {
             shouldStop: checkStop,
             documentTypeProgressRowInterval: 5000,
-            onSourceRow: (row) => {
-              recordSourceReference(row as Record<string, any>, {
-                sourceTable: "VaskiData",
-                sourcePage: normalizeNumber(row?._source?.page),
-                sourcePkName: "id",
-                sourcePkValue: row?.id ?? null,
-                scrapedAt: null,
-              });
-            },
             onDocumentTypeStart: ({ documentType, index, total }) => {
               totalDocumentTypes = total;
               onMessage({
@@ -1247,12 +380,7 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
                 },
               });
             },
-            onDocumentTypeSkipped: ({
-              documentType,
-              index,
-              total,
-              reason,
-            }) => {
+            onDocumentTypeSkipped: ({ documentType, index, total, reason }) => {
               totalDocumentTypes = total;
               onMessage({
                 type: "progress",
@@ -1274,7 +402,7 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
             0,
           );
 
-          targetDatabase.exec(MIGRATOR_SQL.commit);
+          targetDatabase.run(MIGRATOR_SQL.commit);
 
           const tableTime = ((Date.now() - tableStartTime) / 1000).toFixed(2);
           const rowsPerSecond = (
@@ -1303,7 +431,7 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
             },
           });
         } catch (error) {
-          targetDatabase.exec(MIGRATOR_SQL.rollback);
+          targetDatabase.run(MIGRATOR_SQL.rollback);
           throw error;
         }
 
@@ -1331,18 +459,17 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
         let rowsImported = 0;
         let pagesProcessed = 0;
 
-        // Start a single transaction for the entire table
-        targetDatabase.exec(MIGRATOR_SQL.beginTransaction);
+        targetDatabase.run(MIGRATOR_SQL.beginTransaction);
 
         try {
-          for await (const pageData of readParsedData(tableName)) {
+          for await (const rows of readParsedData(tableName)) {
             if (checkStop()) {
               throw new Error("Migration stopped by user");
             }
 
             pagesProcessed++;
 
-            for (const row of pageData.rows) {
+            for (const row of rows) {
               const rowForMigrator = { ...row };
 
               // Handle XmlDataFi field specifically (used in MemberOfParliament)
@@ -1354,16 +481,6 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
                   rowForMigrator.XmlDataFi,
                 );
               }
-
-              recordSourceReference(rowForMigrator, {
-                sourceTable: pageData.sourceTable,
-                sourcePage: pageData.sourcePage,
-                sourcePkName: pageData.pkName,
-                sourcePkValue: pageData.pkName
-                  ? rowForMigrator[pageData.pkName]
-                  : null,
-                scrapedAt: pageData.scrapedAt,
-              });
 
               const result = migrator(rowForMigrator);
               if (isPromiseLike(result)) {
@@ -1402,18 +519,17 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
             }
           }
 
-          // Commit the transaction
-          targetDatabase.exec(MIGRATOR_SQL.commit);
+          targetDatabase.run(MIGRATOR_SQL.commit);
 
           const tableTime = ((Date.now() - tableStartTime) / 1000).toFixed(2);
-          const rowsPerSecond = (
-            rowsImported / parseFloat(tableTime)
-          ).toFixed(0);
+          const rowsPerSecond = (rowsImported / parseFloat(tableTime)).toFixed(
+            0,
+          );
           console.log(
             `✅ Imported ${rowsImported} rows from ${tableName} in ${tableTime}s (${rowsPerSecond} rows/s)`,
           );
         } catch (error) {
-          targetDatabase.exec(MIGRATOR_SQL.rollback);
+          targetDatabase.run(MIGRATOR_SQL.rollback);
           throw error;
         }
       } else {
@@ -1431,27 +547,6 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
           totalTables: tablesToImport.length,
         },
       });
-    }
-
-    if (sourceReferenceStatement) {
-      sourceReferenceStatement.finalize();
-      sourceReferenceStatement = null;
-    }
-
-    if (sourceReferenceMode !== "off") {
-      console.log("🧾 Persisting import source summaries...");
-      if (!traceDatabase) {
-        throw new Error(
-          "Trace database was not initialized while source reference mode is enabled",
-        );
-      }
-      persistImportSourceReferenceSummaries(
-        traceDatabase,
-        sourceReferenceSummaries,
-      );
-      console.log(
-        `✅ Import source summaries persisted (${sourceReferenceSummaries.size} tables)`,
-      );
     }
 
     onMessage({
@@ -1530,62 +625,18 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
       `✅ Federated search index rebuilt (${federatedSearchRows} rows)`,
     );
 
-    // Update database timestamp
     const timestamp = new Date().toISOString();
     targetDatabase.run(MIGRATOR_SQL.createMigrationInfoTable);
     targetDatabase.run(MIGRATOR_SQL.upsertMigrationTimestamp, [timestamp]);
 
-    if (doRunForeignKeyCheck) {
-      try {
-        const foreignKeyCheck = runForeignKeyCheck(
-          targetDatabase,
-          foreignKeyCheckSampleLimit,
-        );
-        const foreignKeyCheckPath = path.join(
-          reportDirs.reports,
-          "foreign_key_check.json",
-        );
-        fs.mkdirSync(reportDirs.reports, { recursive: true });
-        fs.writeFileSync(
-          foreignKeyCheckPath,
-          JSON.stringify(
-            {
-              reason: "foreign_key_check",
-              details:
-                foreignKeyCheck.totalViolations > 0
-                  ? `Found ${foreignKeyCheck.totalViolations} foreign key violation(s)`
-                  : "No foreign key violations found",
-              issue_count: foreignKeyCheck.totalViolations,
-              ...foreignKeyCheck,
-            },
-            null,
-            2,
-          ),
-          "utf8",
-        );
-
-        if (foreignKeyCheck.totalViolations > 0) {
-          console.warn(
-            `⚠️  Foreign key check found ${foreignKeyCheck.totalViolations} violation(s); see ${foreignKeyCheckPath}`,
-          );
-        } else {
-          console.log("✅ Foreign key check found no violations");
-        }
-      } catch (foreignKeyCheckError) {
-        console.warn(
-          `⚠️  Foreign key check failed (non-blocking): ${String(foreignKeyCheckError)}`,
-        );
-      }
-    }
-
-    // Re-enable safety features
     console.log("\n⚙️  Re-enabling safety features...");
     if (useExclusiveLock) {
-      targetDatabase.exec(SQLITE_PRAGMAS.lockingModeNormal);
+      targetDatabase.run(SQLITE_PRAGMAS.lockingModeNormal);
     }
-    targetDatabase.exec(SQLITE_PRAGMAS.synchronousFull);
+    targetDatabase.run(SQLITE_PRAGMAS.synchronousFull);
     console.log("💾 Flushing WAL checkpoint...");
-    targetDatabase.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+    targetDatabase.run("PRAGMA wal_checkpoint(TRUNCATE);");
+
     if (shouldVacuumAfterImport) {
       onMessage({
         type: "progress",
@@ -1601,7 +652,7 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
         ? fs.statSync(databasePath).size
         : 0;
       console.log("🗜️  Running VACUUM to compact database file...");
-      targetDatabase.exec("VACUUM;");
+      targetDatabase.run("VACUUM;");
       const sizeAfterBytes = fs.existsSync(databasePath)
         ? fs.statSync(databasePath).size
         : 0;
@@ -1610,40 +661,16 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
         `✅ VACUUM complete (${toMb(sizeBeforeBytes)} MB -> ${toMb(sizeAfterBytes)} MB)`,
       );
     } else {
-      console.log(
-        "⏭️  Skipping VACUUM (MIGRATOR_VACUUM_AFTER_IMPORT disabled)",
-      );
-    }
-
-    if (traceDatabase && traceTransactionOpen) {
-      traceDatabase.exec(MIGRATOR_SQL.commit);
-      traceTransactionOpen = false;
-      traceDatabase.exec(SQLITE_PRAGMAS.synchronousFull);
-      traceDatabase.exec("PRAGMA wal_checkpoint(TRUNCATE);");
+      console.log("⏭️  Skipping VACUUM (MIGRATOR_VACUUM_AFTER_IMPORT disabled)");
     }
 
     console.log("✅ Safety features restored");
-
     targetDatabase.close();
-    if (sourceReferenceStatement) {
-      sourceReferenceStatement.finalize();
-      sourceReferenceStatement = null;
-    }
-    if (traceDatabase) {
-      traceDatabase.close();
-      traceDatabase = null;
-    }
-    await publishLatestDatabaseArtifact({
-      runId: reportRunId,
-      migratedAt: timestamp,
-    });
 
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`\n🎉 Migration completed successfully in ${totalTime}s!`);
     console.log(`   Tables imported: ${tablesToImport.length}`);
     console.log(`   Timestamp: ${timestamp}`);
-
-    migrationStatus = "success";
 
     onMessage({
       type: "complete",
@@ -1655,29 +682,6 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
       },
     });
   } catch (error: any) {
-    if (sourceReferenceStatement) {
-      sourceReferenceStatement.finalize();
-      sourceReferenceStatement = null;
-    }
-    if (traceDatabase && traceTransactionOpen) {
-      try {
-        traceDatabase.exec(MIGRATOR_SQL.rollback);
-      } catch (_rollbackError) {
-        // best effort rollback
-      }
-      traceTransactionOpen = false;
-    }
-    if (traceDatabase) {
-      try {
-        traceDatabase.close();
-      } catch (_closeError) {
-        // ignore close error
-      }
-      traceDatabase = null;
-    }
-
-    migrationStatus = checkStop() ? "stopped" : "failed";
-    migrationError = error?.message || String(error);
     if (checkStop()) {
       onMessage({
         type: "stopped",
@@ -1690,66 +694,6 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
       });
     }
     throw error;
-  } finally {
-    const reportFinishedAt = new Date().toISOString();
-    try {
-      consolidatedReport = buildConsolidatedMigrationReport({
-        runId: reportRunId,
-        status: migrationStatus,
-        startedAt: reportStartedAt,
-        finishedAt: reportFinishedAt,
-        error: migrationError,
-        reportDir: reportDirs.reports,
-        overwriteDir: reportDirs.overwrites,
-        knownIssueDir: reportDirs.knownIssues,
-        rootDir: reportRootDir,
-      });
-      const consolidatedReportPath = path.join(
-        reportRootDir,
-        "consolidated-report.json",
-      );
-      writeConsolidatedMigrationReport(
-        consolidatedReport,
-        consolidatedReportPath,
-      );
-      console.log(
-        `📄 Consolidated migration report: ${consolidatedReportPath}`,
-      );
-
-      await publishMigrationRunReports({
-        runId: reportRunId,
-        localRootDir: reportRootDir,
-        status: migrationStatus,
-        startedAt: reportStartedAt,
-        finishedAt: reportFinishedAt,
-        consolidatedReport,
-        migrationError,
-      });
-    } catch (reportError) {
-      console.warn(
-        `⚠️  Failed to publish migration reports: ${String(reportError)}`,
-      );
-    }
-
-    fs.rmSync(reportRootDir, { recursive: true, force: true });
-
-    if (previousReportEnv.report === undefined) {
-      delete process.env.MIGRATOR_REPORT_LOG_DIR;
-    } else {
-      process.env.MIGRATOR_REPORT_LOG_DIR = previousReportEnv.report;
-    }
-
-    if (previousReportEnv.overwrite === undefined) {
-      delete process.env.MIGRATOR_OVERWRITE_LOG_DIR;
-    } else {
-      process.env.MIGRATOR_OVERWRITE_LOG_DIR = previousReportEnv.overwrite;
-    }
-
-    if (previousReportEnv.knownIssue === undefined) {
-      delete process.env.MIGRATOR_KNOWN_ISSUE_LOG_DIR;
-    } else {
-      process.env.MIGRATOR_KNOWN_ISSUE_LOG_DIR = previousReportEnv.knownIssue;
-    }
   }
 }
 

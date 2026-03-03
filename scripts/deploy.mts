@@ -20,13 +20,21 @@ async function deployAppBuild() {
   const config = path.join(import.meta.dirname, "../packages/server/config");
   const appVmDir = path.join(import.meta.dirname, "app-vm");
   const runAppScript = path.join(appVmDir, "run-app.sh");
-  const installSystemdScript = path.join(appVmDir, "install-app-systemd-service.sh");
+  const installSystemdScript = path.join(
+    appVmDir,
+    "install-app-systemd-service.sh",
+  );
   const releaseScript = path.join(appVmDir, "app-release.sh");
   const provisionScript = path.join(appVmDir, "provision-app-vm.sh");
   const releaseId = new Date().toISOString().replace(/[:.]/g, "-");
   const releaseDir = `${APP_DIR}/releases/${releaseId}`;
 
-  for (const p of [runAppScript, installSystemdScript, releaseScript, provisionScript]) {
+  for (const p of [
+    runAppScript,
+    installSystemdScript,
+    releaseScript,
+    provisionScript,
+  ]) {
     if (!fs.existsSync(p)) throw new Error(`App VM script missing: ${p}`);
   }
 
@@ -112,7 +120,9 @@ async function deployPipelineBuild() {
 
   for (const script of scripts) {
     if (!fs.existsSync(path.join(vmScriptsDir, script))) {
-      throw new Error(`Pipeline VM script missing: scripts/pipeline-vm/${script}`);
+      throw new Error(
+        `Pipeline VM script missing: scripts/pipeline-vm/${script}`,
+      );
     }
   }
 

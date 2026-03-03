@@ -1,34 +1,11 @@
 import { Database } from "bun:sqlite";
-import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { getMigrations, migrate } from "bun-sqlite-migrations";
 
 const MIGRATIONS_DIR = join(
   import.meta.dirname,
   "../../../datapipe/migrator/migrations",
 );
-
-const getMigrationFiles = () =>
-  readdirSync(MIGRATIONS_DIR)
-    .filter((file) => /^V001\.\d+__.+\.sql$/.test(file))
-    .sort((a, b) => {
-      const aVersion = parseInt(a.match(/^V001\.(\d+)__/)?.[1] || "0", 10);
-      const bVersion = parseInt(b.match(/^V001\.(\d+)__/)?.[1] || "0", 10);
-      return aVersion - bVersion;
-    });
-
-/**
- * Strip SQL inline comments (-- ...) from each line.
- */
-function stripInlineComments(sql: string): string {
-  return sql
-    .split("\n")
-    .map((line) => {
-      const commentIdx = line.indexOf("--");
-      if (commentIdx === -1) return line;
-      return line.substring(0, commentIdx);
-    })
-    .join("\n");
-}
 
 function tableExists(db: Database, tableName: string): boolean {
   const row = db
@@ -43,13 +20,7 @@ export function createTestDb(): Database {
   const db = new Database(":memory:");
   db.exec("PRAGMA journal_mode = WAL;");
   db.exec("PRAGMA foreign_keys = ON;");
-
-  for (const file of getMigrationFiles()) {
-    const raw = readFileSync(join(MIGRATIONS_DIR, file), "utf-8");
-    const sql = stripInlineComments(raw);
-    db.exec(sql);
-  }
-
+  migrate(db, getMigrations(MIGRATIONS_DIR));
   return db;
 }
 

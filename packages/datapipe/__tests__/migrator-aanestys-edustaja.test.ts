@@ -2,7 +2,7 @@ import type { Database } from "bun:sqlite";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import createMigrator, {
   flushVotes,
-} from "../migrator/SaliDBAanestysEdustaja/migrator";
+} from "../migrator/fn/SaliDBAanestysEdustaja";
 import { clearStatementCache } from "../migrator/utils";
 import {
   createTestDb,

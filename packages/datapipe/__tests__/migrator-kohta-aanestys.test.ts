@@ -1,6 +1,6 @@
 import type { Database } from "bun:sqlite";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import createMigrator from "../migrator/SaliDBKohtaAanestys/migrator";
+import createMigrator from "../migrator/fn/SaliDBKohtaAanestys";
 import { createTestDb } from "./helpers/setup-db";
 
 const makeKohtaAanestysRow = (

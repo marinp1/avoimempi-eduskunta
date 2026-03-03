@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { VaskiEntry } from "../migrator/fn/VaskiData/reader";
+import createSubMigrator from "../migrator/fn/VaskiData/submigrators/pöytäkirja";
 import { clearStatementCache } from "../migrator/utils";
-import type { VaskiEntry } from "../migrator/VaskiData/reader";
-import createSubMigrator from "../migrator/VaskiData/submigrators/pöytäkirja";
 import {
   createTestDb,
   seedSection,

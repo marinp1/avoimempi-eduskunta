@@ -5,7 +5,7 @@ import {
   type RichTextDocumentReference,
   type RichTextInline,
   type RichTextMark,
-} from "../../../shared/typings/RichText";
+} from "../../../../shared/typings/RichText";
 
 const INLINE_STYLE_ITALIC_KEYS = new Set([
   "KursiiviTeksti",

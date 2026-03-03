@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { parseRichTextDocument } from "../../shared/typings/RichText";
-import { convertVaskiNodeToRichText } from "../migrator/VaskiData/rich-text";
+import { convertVaskiNodeToRichText } from "../migrator/fn/VaskiData/rich-text";
 
 describe("Vaski rich text conversion", () => {
   test("converts formatted Vaski nodes into AST and plain text", () => {

@@ -35,7 +35,10 @@ export interface ParserHooks {
   onParsingComplete?: () => Promise<void>;
 }
 
-type ParserModule = { default: ParserFunction; onParsingComplete?: () => Promise<void> };
+type ParserModule = {
+  default: ParserFunction;
+  onParsingComplete?: () => Promise<void>;
+};
 
 const PARSER_MODULES: Record<string, ParserModule> = {
   MemberOfParliament: MemberOfParliamentModule,
@@ -56,9 +59,10 @@ const defaultParser: ParserFunction = async (
  * Load a parser module for a table.
  * Returns the parse function and any lifecycle hooks the module exports.
  */
-function getParserModule(
-  tableName: string,
-): { parse: ParserFunction; hooks: ParserHooks } {
+function getParserModule(tableName: string): {
+  parse: ParserFunction;
+  hooks: ParserHooks;
+} {
   const mod = PARSER_MODULES[tableName];
   if (!mod) {
     console.warn(

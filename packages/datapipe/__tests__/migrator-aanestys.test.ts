@@ -1,6 +1,6 @@
 import type { Database } from "bun:sqlite";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import createMigrator from "../migrator/SaliDBAanestys/migrator";
+import createMigrator from "../migrator/fn/SaliDBAanestys";
 import { clearStatementCache } from "../migrator/utils";
 import { createTestDb } from "./helpers/setup-db";
 

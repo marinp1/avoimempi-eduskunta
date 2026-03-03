@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import createMigrator from "../migrator/SaliDBKohta/migrator";
+import createMigrator from "../migrator/fn/SaliDBKohta";
 import { clearStatementCache } from "../migrator/utils";
 import { createTestDb } from "./helpers/setup-db";
 
