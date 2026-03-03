@@ -1,6 +1,4 @@
 import {
-  AdminPanelSettings,
-  Assessment,
   Description,
   Event,
   Groups,
@@ -48,16 +46,6 @@ export const routes = {
     title: "Analytiikka",
     icon: Insights,
     Component: React.lazy(() => import("./Insights")),
-  },
-  tila: {
-    title: "Tila",
-    icon: Assessment,
-    Component: React.lazy(() => import("./Status")),
-  },
-  admin: {
-    title: "Yllapito",
-    icon: AdminPanelSettings,
-    Component: React.lazy(() => import("./Admin")),
   },
 } as const satisfies Record<
   string,

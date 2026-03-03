@@ -110,8 +110,6 @@ const PAGE_SOURCES: Record<RouteName, TableSourceDefinition[]> = {
     },
     { tableName: "SaliDBPuheenvuoro", purpose: "Puheaktiivisuuden tilastot" },
   ],
-  tila: [],
-  admin: [],
 };
 
 const formatDateTime = (value: string | null): string => {
