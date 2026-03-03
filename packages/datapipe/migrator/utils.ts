@@ -215,3 +215,16 @@ export const parseYear = (year: string): number | null => {
   if (Number.isNaN(parsed)) return null;
   return parsed;
 };
+
+export const objectExists = (
+  db: Database,
+  type: "table" | "index" | "trigger",
+  name: string,
+): boolean => {
+  const row = db
+    .query(
+      "SELECT 1 AS exists_flag FROM sqlite_master WHERE type = $type AND name = $name LIMIT 1",
+    )
+    .get({ $type: type, $name: name }) as { exists_flag?: number } | undefined;
+  return !!row?.exists_flag;
+};

@@ -1,5 +1,7 @@
 import { getParsedRowStore, getRawRowStore } from "#storage/row-store/factory";
 import type { ColumnSchema } from "#storage/row-store/types";
+import * as MemberOfParliamentModule from "./fn/MemberOfParliament.ts";
+import * as VaskiDataModule from "./fn/VaskiData.ts";
 
 /**
  * Parsed row structure - normalized to object format
@@ -33,6 +35,13 @@ export interface ParserHooks {
   onParsingComplete?: () => Promise<void>;
 }
 
+type ParserModule = { default: ParserFunction; onParsingComplete?: () => Promise<void> };
+
+const PARSER_MODULES: Record<string, ParserModule> = {
+  MemberOfParliament: MemberOfParliamentModule,
+  VaskiData: VaskiDataModule,
+};
+
 /**
  * Default parser - passes through data unchanged
  */
@@ -47,32 +56,25 @@ const defaultParser: ParserFunction = async (
  * Load a parser module for a table.
  * Returns the parse function and any lifecycle hooks the module exports.
  */
-async function getParserModule(
+function getParserModule(
   tableName: string,
-): Promise<{ parse: ParserFunction; hooks: ParserHooks }> {
-  const candidates = [`./fn/${tableName}.js`, `./fn/${tableName}.ts`];
-
-  for (const modulePath of candidates) {
-    try {
-      const mod = await import(modulePath);
-      return {
-        parse: mod.default as ParserFunction,
-        hooks: {
-          onParsingComplete:
-            typeof mod.onParsingComplete === "function"
-              ? mod.onParsingComplete
-              : undefined,
-        },
-      };
-    } catch (_e) {
-      // Try next candidate path.
-    }
+): { parse: ParserFunction; hooks: ParserHooks } {
+  const mod = PARSER_MODULES[tableName];
+  if (!mod) {
+    console.warn(
+      `⚠️  No custom parser found for ${tableName}, using default parser`,
+    );
+    return { parse: defaultParser, hooks: {} };
   }
-
-  console.warn(
-    `⚠️  No custom parser found for ${tableName}, using default parser`,
-  );
-  return { parse: defaultParser, hooks: {} };
+  return {
+    parse: mod.default,
+    hooks: {
+      onParsingComplete:
+        typeof mod.onParsingComplete === "function"
+          ? mod.onParsingComplete
+          : undefined,
+    },
+  };
 }
 
 /**
@@ -159,7 +161,7 @@ export async function parseTable(options: ParseOptions): Promise<ParseResult> {
   console.log(`📁 Raw store: ${rawStore.name}`);
   console.log(`📁 Parsed store: ${parsedStore.name}`);
 
-  const { parse: parseData, hooks } = await getParserModule(tableName);
+  const { parse: parseData, hooks } = getParserModule(tableName);
 
   const totalRawRows = await rawStore.count(tableName);
 
