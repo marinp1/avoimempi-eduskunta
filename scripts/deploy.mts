@@ -83,27 +83,6 @@ async function buildPipelineDist() {
     target: "bun",
   });
 
-  const parserFnDir = path.join(rootDir, "packages/datapipe/parser/fn");
-  for (const fileName of fs.readdirSync(parserFnDir).filter((n) => n.endsWith(".ts"))) {
-    await build({
-      outdir: path.join(distRoot, "parser/fn"),
-      entrypoints: [path.join(parserFnDir, fileName)],
-      target: "bun",
-    });
-  }
-
-  const submigratorDir = path.join(
-    rootDir,
-    "packages/datapipe/migrator/VaskiData/submigrators",
-  );
-  for (const fileName of fs.readdirSync(submigratorDir).filter((n) => n.endsWith(".ts"))) {
-    await build({
-      outdir: path.join(distRoot, "migrator/submigrators"),
-      entrypoints: [path.join(submigratorDir, fileName)],
-      target: "bun",
-    });
-  }
-
   const migrationsSource = path.join(
     rootDir,
     "packages/datapipe/migrator/migrations",

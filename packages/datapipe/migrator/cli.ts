@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import { getDatabasePath } from "#database";
 import { getParsedRowStore } from "#storage/row-store/factory";
-import { MigratorController } from "../../server/migrator-controller";
+import { getLastMigrationTimestamp, runMigration } from "./migrate";
 
 function printHelp() {
   console.log(`
@@ -41,12 +41,9 @@ How it works:
 }
 
 function showStatus() {
-  const status = MigratorController.getInstance().getStatus();
-  const lastMigration = MigratorController.getLastMigrationTimestamp();
+  const lastMigration = getLastMigrationTimestamp();
 
   console.log("📊 Migrator Status\n");
-  console.log(`Running: ${status.isRunning ? "yes" : "no"}`);
-  console.log(`Current table: ${status.currentTable ?? "-"}`);
   console.log(`Last migration: ${lastMigration ?? "-"}`);
 }
 
@@ -78,7 +75,7 @@ function recreateDatabaseFiles() {
   }
 }
 
-async function runMigration(options?: { fresh?: boolean }) {
+async function runMigrationCommand(options?: { fresh?: boolean }) {
   if (options?.fresh) {
     const hasParsedData = await hasAnyParsedData();
     if (!hasParsedData) {
@@ -90,7 +87,7 @@ async function runMigration(options?: { fresh?: boolean }) {
   }
 
   console.log("🚀 Starting migration...");
-  await MigratorController.getInstance().startMigration();
+  await runMigration();
   console.log("✅ Migration completed");
 }
 
@@ -115,12 +112,12 @@ async function main() {
   }
 
   if (command === "start") {
-    await runMigration({ fresh });
+    await runMigrationCommand({ fresh });
     return;
   }
 
   if (command === "recreate") {
-    await runMigration({ fresh: true });
+    await runMigrationCommand({ fresh: true });
     return;
   }
 

@@ -1,7 +1,44 @@
 import type { Database } from "bun:sqlite";
-import fs from "node:fs";
-import path from "node:path";
 import { readAllVaskiRows, readVaskiIndex, type VaskiEntry } from "./reader";
+import createAsiantuntijalausunnonLiite from "./submigrators/asiantuntijalausunnon_liite.ts";
+import createAsiantuntijalausunto from "./submigrators/asiantuntijalausunto.ts";
+import createAsiantuntijasuunnitelma from "./submigrators/asiantuntijasuunnitelma.ts";
+import createHallituksenEsitys from "./submigrators/hallituksen_esitys.ts";
+import createKansalaisaloite from "./submigrators/kansalaisaloite.ts";
+import createKeskustelualoite from "./submigrators/keskustelualoite.ts";
+import createKirjallinenKysymys from "./submigrators/kirjallinen_kysymys.ts";
+import createLakialoite from "./submigrators/lakialoite.ts";
+import createLisatalousarvioaloite from "./submigrators/lisätalousarvioaloite.ts";
+import createNimenhuutoraportti from "./submigrators/nimenhuutoraportti.ts";
+import createPoytakirja from "./submigrators/pöytäkirja.ts";
+import createSuullinenKysymys from "./submigrators/suullinen_kysymys.ts";
+import createTalousarvioaloite from "./submigrators/talousarvioaloite.ts";
+import createToimenpidealoite from "./submigrators/toimenpidealoite.ts";
+import createValiokunnanLausunto from "./submigrators/valiokunnan_lausunto.ts";
+import createValiokunnanMietinto from "./submigrators/valiokunnan_mietintö.ts";
+import createVastausKirjalliseenKysymykseen from "./submigrators/vastaus_kirjalliseen_kysymykseen.ts";
+import createValikysymys from "./submigrators/välikysymys.ts";
+
+const SUBMIGRATOR_FACTORIES: Record<string, VaskiSubMigratorFactory> = {
+  asiantuntijalausunnon_liite: createAsiantuntijalausunnonLiite,
+  asiantuntijalausunto: createAsiantuntijalausunto,
+  asiantuntijasuunnitelma: createAsiantuntijasuunnitelma,
+  hallituksen_esitys: createHallituksenEsitys,
+  kansalaisaloite: createKansalaisaloite,
+  keskustelualoite: createKeskustelualoite,
+  kirjallinen_kysymys: createKirjallinenKysymys,
+  lakialoite: createLakialoite,
+  lisätalousarvioaloite: createLisatalousarvioaloite,
+  nimenhuutoraportti: createNimenhuutoraportti,
+  pöytäkirja: createPoytakirja,
+  suullinen_kysymys: createSuullinenKysymys,
+  talousarvioaloite: createTalousarvioaloite,
+  toimenpidealoite: createToimenpidealoite,
+  valiokunnan_lausunto: createValiokunnanLausunto,
+  valiokunnan_mietintö: createValiokunnanMietinto,
+  vastaus_kirjalliseen_kysymykseen: createVastausKirjalliseenKysymykseen,
+  välikysymys: createValikysymys,
+};
 
 /**
  * VaskiData migration options.
@@ -155,52 +192,12 @@ const normalizeDocumentTypes = (documentTypes: string[]): string[] =>
     ),
   );
 
-const isSafeDocumentType = (documentType: string): boolean => {
-  if (!documentType) return false;
-  if (documentType.includes("/") || documentType.includes("\\")) return false;
-  if (documentType.includes("..")) return false;
-  return true;
-};
-
-async function loadSubMigrator(
+function loadSubMigrator(
   db: Database,
   documentType: string,
-): Promise<VaskiSubMigrator | null> {
-  if (!isSafeDocumentType(documentType)) {
-    throw new Error(`Not valid documentType ${documentType}`);
-  }
-
-  const subMigratorDirectory = path.resolve(
-    import.meta.dirname,
-    "submigrators",
-  );
-  const candidates = [`${documentType}.js`, `${documentType}.ts`];
-
-  for (const candidateName of candidates) {
-    const subMigratorPath = path.resolve(subMigratorDirectory, candidateName);
-
-    if (!subMigratorPath.startsWith(`${subMigratorDirectory}${path.sep}`)) {
-      continue;
-    }
-
-    if (!fs.existsSync(subMigratorPath)) {
-      continue;
-    }
-
-    const subMigratorModule = (await import(subMigratorPath)) as {
-      default?: VaskiSubMigratorFactory;
-    };
-
-    if (typeof subMigratorModule.default !== "function") {
-      throw new Error(
-        `Vaski submigrator '${documentType}' does not export a default factory function`,
-      );
-    }
-
-    return subMigratorModule.default(db);
-  }
-
-  return null;
+): VaskiSubMigrator | null {
+  const factory = SUBMIGRATOR_FACTORIES[documentType];
+  return factory ? factory(db) : null;
 }
 
 /**
@@ -229,7 +226,7 @@ export async function migrateVaskiData(
   const dependencyDocumentTypes = new Set<string>();
 
   for (const [index, documentType] of requestedDocumentTypes.entries()) {
-    const subMigrator = await loadSubMigrator(db, documentType);
+    const subMigrator = loadSubMigrator(db, documentType);
     if (!subMigrator) {
       skippedDocumentTypes.push(documentType);
       if (options?.onDocumentTypeSkipped) {
