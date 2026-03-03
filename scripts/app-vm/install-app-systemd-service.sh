@@ -1,27 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SERVICE_NAME="${SERVICE_NAME:-avoimempi-eduskunta-app}"
-APP_DIR="${APP_DIR:-/root/avoimempi-eduskunta}"
-APP_SERVICE_USER="${APP_SERVICE_USER:-root}"
-APP_SERVICE_GROUP="${APP_SERVICE_GROUP:-root}"
-UNIT_PATH="/etc/systemd/system/${SERVICE_NAME}.service"
+# Deployment constants
+APP_DIR="/root/avoimempi-eduskunta"
+SERVICE_NAME="avoimempi-eduskunta-app"
+APP_SERVICE_USER="root"
+APP_SERVICE_GROUP="root"
+APP_REPLICA_COUNT=2
 ENV_FILE="${APP_DIR}/shared/app.env"
-APP_REPLICA_COUNT="${APP_REPLICA_COUNT:-2}"
 
 mkdir -p "${APP_DIR}/shared"
-
-if [[ ! -f "${ENV_FILE}" ]]; then
-  cat > "${ENV_FILE}" <<'EOF'
-NODE_ENV=production
-DB_PATH=/mnt/app-db/current.db
-PORT=80
-BUN_IDLE_TIMEOUT_SECONDS=120
-BUN_REUSE_PORT=true
-EOF
-elif ! grep -q '^BUN_REUSE_PORT=' "${ENV_FILE}"; then
-  printf '\nBUN_REUSE_PORT=true\n' >> "${ENV_FILE}"
-fi
 
 write_service_unit() {
   local idx="$1"
@@ -72,5 +60,5 @@ for ((idx=1; idx<=APP_REPLICA_COUNT; idx++)); do
   fi
 done
 
-echo "Installed systemd unit at ${UNIT_PATH}"
-echo "Environment file: ${ENV_FILE}"
+echo "Installed ${APP_REPLICA_COUNT} systemd service unit(s): ${SERVICE_NAME}"
+echo "Config: ${ENV_FILE}"
