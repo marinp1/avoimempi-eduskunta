@@ -1,51 +1,11 @@
 import { Database } from "bun:sqlite";
-import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { getMigrations, migrate } from "bun-sqlite-migrations";
 
 const MIGRATIONS_DIR = join(import.meta.dirname, "../../migrator/migrations");
 
-const getMigrationFiles = () =>
-  readdirSync(MIGRATIONS_DIR)
-    .filter((file) => /^V001\.\d+__.+\.sql$/.test(file))
-    .sort((a, b) => {
-      const aVersion = parseInt(a.match(/^V001\.(\d+)__/)?.[1] || "0", 10);
-      const bVersion = parseInt(b.match(/^V001\.(\d+)__/)?.[1] || "0", 10);
-      return aVersion - bVersion;
-    });
-
-/**
- * Strip SQL inline comments (-- ...) from a line, preserving string literals.
- */
-function stripInlineComments(sql: string): string {
-  return sql
-    .split("\n")
-    .map((line) => {
-      // Remove inline comments (-- ...) but not inside string literals
-      const commentIdx = line.indexOf("--");
-      if (commentIdx === -1) return line;
-      // Simple heuristic: if -- appears, strip from there
-      // This works for our migration files which don't have -- inside strings
-      return line.substring(0, commentIdx);
-    })
-    .join("\n");
-}
-
-/**
- * Apply migration SQL files up to and including the given version number.
- * Note: migration versions can be non-contiguous after consolidation.
- * e.g. upToVersion = 11 applies all migrations with version <= 11.
- */
 export function applyMigrations(db: Database, upToVersion = 12) {
-  for (const file of getMigrationFiles()) {
-    const versionMatch = file.match(/V001\.(\d+)/);
-    if (!versionMatch) continue;
-    const version = parseInt(versionMatch[1], 10);
-    if (version > upToVersion) break;
-
-    const raw = readFileSync(join(MIGRATIONS_DIR, file), "utf-8");
-    const sql = stripInlineComments(raw);
-    db.exec(sql);
-  }
+  migrate(db, getMigrations(MIGRATIONS_DIR), upToVersion);
 }
 
 /**

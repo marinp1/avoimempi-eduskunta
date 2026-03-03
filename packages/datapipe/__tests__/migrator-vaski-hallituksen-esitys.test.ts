@@ -1,9 +1,9 @@
 import type { Database } from "bun:sqlite";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { parseRichTextDocument } from "../../shared/typings/RichText";
+import type { VaskiEntry } from "../migrator/fn/VaskiData/reader";
+import createSubMigrator from "../migrator/fn/VaskiData/submigrators/hallituksen_esitys";
 import { clearStatementCache } from "../migrator/utils";
-import type { VaskiEntry } from "../migrator/VaskiData/reader";
-import createSubMigrator from "../migrator/VaskiData/submigrators/hallituksen_esitys";
 import { createTestDb } from "./helpers/setup-db";
 
 function makeHallituksenEsitysRow(

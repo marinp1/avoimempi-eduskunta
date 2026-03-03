@@ -1,7 +1,7 @@
 import type { Database } from "bun:sqlite";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { extractDocumentTunnusCandidates } from "../../salidb-document-ref";
+import { extractDocumentTunnusCandidates } from "../../../salidb-document-ref";
 import type { VaskiEntry } from "../reader";
 
 type MinutesItemKind = "asiakohta" | "muu_asiakohta";

@@ -9,7 +9,7 @@ import {
   listIndexedDocumentTypes,
   readAllVaskiRows,
   readVaskiIndex,
-} from "../migrator/VaskiData/reader";
+} from "../migrator/fn/VaskiData/reader";
 
 async function withTempWorkspace(fn: (workspace: string) => Promise<void>) {
   const originalCwd = process.cwd();
