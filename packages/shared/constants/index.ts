@@ -1,6 +1,9 @@
 import path from "node:path";
 
-export const TableName = Object.freeze({
+/**
+ * All tables present in API.
+ */
+export const TableNameMap = Object.freeze({
   Attachment: "Attachment",
   AttachmentGroup: "AttachmentGroup",
   HetekaData: "HetekaData",
@@ -22,7 +25,11 @@ export const TableName = Object.freeze({
   VaskiData: "VaskiData",
 });
 
-export const PrimaryKeys: Record<keyof typeof TableName, string> = {
+export const TableNames = Object.values(TableNameMap);
+
+export type TableName = (typeof TableNames)[number];
+
+export const PrimaryKeys: Record<TableName, string> = {
   Attachment: "",
   AttachmentGroup: "",
   HetekaData: "",
@@ -44,41 +51,22 @@ export const PrimaryKeys: Record<keyof typeof TableName, string> = {
   VaskiData: "Id",
 };
 
-export const TableNames = [
-  "Attachment",
-  "AttachmentGroup",
-  "HetekaData",
-  "MemberOfParliament",
-  "PrimaryKeys",
-  "SaliDBAanestys",
-  "SaliDBAanestysAsiakirja",
-  "SaliDBAanestysEdustaja",
-  "SaliDBAanestysJakauma",
-  "SaliDBAanestysKieli",
-  "SaliDBIstunto",
-  "SaliDBKohta",
-  "SaliDBKohtaAanestys",
-  "SaliDBKohtaAsiakirja",
-  "SaliDBMessageLog",
-  "SaliDBPuheenvuoro",
-  "SaliDBTiedote",
-  "SeatingOfParliament",
-  "VaskiData",
-] as const;
-
+/**
+ * Tables omitted from data pipeline.
+ */
 export const OmittedPipelineTableNames = [
-  "HetekaData",
-  "PrimaryKeys",
-  "SaliDBAanestysAsiakirja",
-  "SaliDBAanestysJakauma",
-  "SaliDBAanestysKieli",
-  "SaliDBMessageLog",
-] as const;
-
-const omittedPipelineTableNameSet = new Set<string>(OmittedPipelineTableNames);
+  "HetekaData", // Empty
+  "PrimaryKeys", // Unnecessary
+  "SaliDBAanestysAsiakirja", // Unnecessary
+  "SaliDBAanestysJakauma", // Unnecessary
+  "SaliDBAanestysKieli", // Unnecessary
+  "SaliDBMessageLog", // Empty
+] as const satisfies Array<(typeof TableNames)[number]>;
 
 export const isOmittedPipelineTable = (tableName: string): boolean =>
-  omittedPipelineTableNameSet.has(tableName);
+  OmittedPipelineTableNames.includes(
+    tableName as (typeof OmittedPipelineTableNames)[number],
+  );
 
 export const ActivePipelineTableNames = TableNames.filter(
   (tableName) => !isOmittedPipelineTable(tableName),

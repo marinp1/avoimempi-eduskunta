@@ -1,4 +1,4 @@
-import { TableName } from "#constants/index";
+import { TableNameMap } from "#constants/index";
 
 type StringifiedNumber = string;
 type StringifiedDate = string;
@@ -8,7 +8,7 @@ type DataStatus = string;
 
 declare global {
   interface RawDataModels {
-    [TableName.MemberOfParliament]: {
+    [TableNameMap.MemberOfParliament]: {
       personId: StringifiedNumber;
       XmlData: string;
       XmlDataEn: string;
@@ -19,7 +19,7 @@ declare global {
       minister: string;
       party: string;
     };
-    [TableName.SaliDBAanestys]: {
+    [TableNameMap.SaliDBAanestys]: {
       AanestysId: StringifiedNumber;
       AanestysAlkuaika: string;
       AanestysLisaOtsikko: string;
@@ -56,14 +56,14 @@ declare global {
       PaaKohtaTunniste: string;
       Url: string;
     };
-    [TableName.SaliDBAanestysAsiakirja]: {
+    [TableNameMap.SaliDBAanestysAsiakirja]: {
       AsiakirjaId: StringifiedNumber;
       AanestysId: StringifiedNumber;
       Asiakirja: string;
       AsiakirjaUrl: string;
       Imported: StringifiedDate;
     };
-    [TableName.SaliDBAanestysEdustaja]: {
+    [TableNameMap.SaliDBAanestysEdustaja]: {
       EdustajaId: StringifiedNumber;
       AanestysId: StringifiedNumber;
       EdustajaAanestys: Modules.Common.VoteResult;
@@ -73,7 +73,7 @@ declare global {
       EdustajaSukunimi: string;
       Imported: StringifiedDate;
     };
-    [TableName.SaliDBAanestysJakauma]: {
+    [TableNameMap.SaliDBAanestysJakauma]: {
       JakaumaId: StringifiedNumber;
       AanestysId: StringifiedNumber;
       Ryhma: string;
@@ -85,7 +85,7 @@ declare global {
       Tyyppi: string;
       Imported: StringifiedDate;
     };
-    [TableName.VaskiData]: {
+    [TableNameMap.VaskiData]: {
       Id: StringifiedNumber;
       AttachmentGroupId: StringifiedNumber;
       Created: StringifiedDate;
@@ -94,7 +94,7 @@ declare global {
       Status: DataStatus;
       XmlData: string;
     };
-    [TableName.SaliDBIstunto]: {
+    [TableNameMap.SaliDBIstunto]: {
       Id: StringifiedNumber;
       AttachmentGroupId: string;
       Created: StringifiedDate;
@@ -121,7 +121,7 @@ declare global {
       TekninenAvain: string;
       XmlData: string | null;
     };
-    [TableName.SaliDBKohta]: {
+    [TableNameMap.SaliDBKohta]: {
       Id: StringifiedNumber;
       Created: StringifiedDate;
       HuomautuSV: string;
@@ -144,7 +144,7 @@ declare global {
       VoikoPyytaaPV: StringifiedBoolean;
       XmlData: string;
     };
-    [TableName.SaliDBKohtaAsiakirja]: {
+    [TableNameMap.SaliDBKohtaAsiakirja]: {
       Id: StringifiedNumber;
       KohtaTekninenAvain: string;
       TekninenAvain: string;
@@ -158,7 +158,7 @@ declare global {
       Modified: StringifiedDate;
       Imported: StringifiedDate;
     };
-    [TableName.SaliDBKohtaAanestys]: {
+    [TableNameMap.SaliDBKohtaAanestys]: {
       Id: StringifiedNumber;
       Aanestysnumero: StringifiedNumber;
       Created: StringifiedDate;
@@ -167,7 +167,7 @@ declare global {
       KohtaTekninenAvain: string;
       Modified: StringifiedDate;
     };
-    [TableName.SaliDBPuheenvuoro]: {
+    [TableNameMap.SaliDBPuheenvuoro]: {
       Id: StringifiedNumber;
       IstuntoTekninenAvain: string;
       KohtaTekninenAvain: string;
@@ -192,7 +192,7 @@ declare global {
       MinisteriysSV: string;
       Imported: StringifiedDate;
     };
-    [TableName.SaliDBTiedote]: {
+    [TableNameMap.SaliDBTiedote]: {
       Id: StringifiedNumber;
       TekninenAvain: string;
       IstuntoTekninenAvain: string;

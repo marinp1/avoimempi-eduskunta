@@ -1,6 +1,9 @@
-import { ActivePipelineTableNames, TableName } from "#constants/index";
+import {
+  ActivePipelineTableNames,
+  type TableName,
+  TableNames,
+} from "#constants/index";
 import { getParsedRowStore, getRawRowStore } from "#storage/row-store/factory";
-import type { DataStage } from "#storage/types";
 import { getCachedTableCountMapByRows } from "#table-counts";
 
 export interface TableStorageStatus {
@@ -45,7 +48,7 @@ export class AdminStorageService {
    * Fetch table row counts from Eduskunta API
    */
   private async fetchApiTableCounts(options?: {
-    tableNames?: string[];
+    tableNames?: TableName[];
     candidateRowCounts?: Record<string, number>;
   }): Promise<Record<string, number>> {
     const requestedTableNames = options?.tableNames;
@@ -74,11 +77,10 @@ export class AdminStorageService {
     });
   }
 
-  getTableNames(): string[] {
-    const activeTableNames = new Set<string>(ActivePipelineTableNames);
-    return (Object.values(TableName) as string[])
-      .filter((tableName) => activeTableNames.has(tableName))
-      .sort();
+  getTableNames(): TableName[] {
+    return TableNames.filter((tableName) =>
+      ActivePipelineTableNames.includes(tableName),
+    ).sort();
   }
 
   private buildTableStatusFromCounts(
@@ -176,7 +178,9 @@ export class AdminStorageService {
   /**
    * Get detailed status for a specific table
    */
-  async getTableStatus(tableName: string): Promise<TableStorageStatus | null> {
+  async getTableStatus(
+    tableName: TableName,
+  ): Promise<TableStorageStatus | null> {
     if (!this.getTableNames().includes(tableName)) {
       return null;
     }
@@ -206,17 +210,6 @@ export class AdminStorageService {
       rawLastUpdated,
       parsedLastUpdated,
     );
-  }
-
-  /**
-   * Get list of available PKs for a table (replaces legacy page-based listing).
-   * Returns empty array — individual PKs are now in the row store.
-   */
-  async getTablePages(
-    _tableName: string,
-    _stage: DataStage,
-  ): Promise<number[]> {
-    return [];
   }
 
   /**

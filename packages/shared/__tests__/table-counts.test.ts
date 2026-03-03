@@ -214,7 +214,7 @@ describe("table-counts", () => {
   test("throws when unknown table is requested", async () => {
     await expect(
       getExactTableCountsByRows({
-        tableName: "NotATable",
+        tableName: "NotATable" as any,
       }),
     ).rejects.toThrow("Unknown table name");
   });

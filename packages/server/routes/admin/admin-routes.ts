@@ -1,3 +1,4 @@
+import type { TableName } from "#constants";
 import type { ScrapeMode } from "../../../datapipe/scraper/scraper";
 import { AdminStorageService } from "../../database/admin-storage";
 import { MigratorController } from "../../migrator-controller";
@@ -37,7 +38,7 @@ export const createAdminRoutes = ({
         return badRequest("tableName is required");
       }
 
-      const status = await adminService.getTableStatus(tableName);
+      const status = await adminService.getTableStatus(tableName as TableName);
       if (!status) {
         return badRequest("Invalid tableName");
       }

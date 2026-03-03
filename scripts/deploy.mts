@@ -20,8 +20,7 @@ const MIGRATOR_FUNCTION_FOLDER = `${PIPELINE_FOLDER}/functions/migrator`;
 const APP_SERVICE_NAME =
   process.env.DEPLOY_APP_SERVICE_NAME ?? "avoimempi-eduskunta-app";
 const PIPELINE_SERVICE_PREFIX =
-  process.env.DEPLOY_PIPELINE_SERVICE_PREFIX ??
-  "avoimempi-eduskunta-pipeline";
+  process.env.DEPLOY_PIPELINE_SERVICE_PREFIX ?? "avoimempi-eduskunta-pipeline";
 const DEPLOY_PIPELINE_INSTALL_SYSTEMD =
   (process.env.DEPLOY_PIPELINE_INSTALL_SYSTEMD ?? "true").toLowerCase() !==
   "false";
@@ -47,7 +46,8 @@ function resolveMigratorFunctionEnv(): Record<string, string> {
     STORAGE_PROVIDER: storageProvider,
     STORAGE_LOCAL_DIR: storageLocalDir,
     PIPELINE_BUILD_DIR:
-      process.env.PIPELINE_BUILD_DIR ?? "/root/avoimempi-eduskunta/dist/pipeline",
+      process.env.PIPELINE_BUILD_DIR ??
+      "/root/avoimempi-eduskunta/dist/pipeline",
   };
 
   if (rowStoreProvider) env.ROW_STORE_PROVIDER = rowStoreProvider;

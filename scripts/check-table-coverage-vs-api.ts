@@ -1,4 +1,4 @@
-import { TableNames } from "#constants";
+import { type TableName, TableNames } from "#constants";
 import { getExactTableCountsByRows } from "#table-counts";
 
 type Stage = "raw" | "parsed";
@@ -245,7 +245,7 @@ async function fetchApiPkName(
 }
 
 async function fetchApiCount(
-  table: string,
+  table: TableName,
 ): Promise<{ apiRowCount: number | null; tablesInEndpoint: number }> {
   const data = await getExactTableCountsByRows({ tableName: table });
   const target = data[0];
@@ -256,7 +256,7 @@ async function fetchApiCount(
 }
 
 async function checkGapIdFromApi(
-  table: string,
+  table: TableName,
   pkName: string,
   id: number,
   timeoutMs: number,
@@ -400,7 +400,7 @@ async function main() {
     args.stage === "raw" ? getRawRowStore() : getParsedRowStore();
 
   const [apiCount, resolvedPkName] = await Promise.all([
-    fetchApiCount(args.table),
+    fetchApiCount(args.table as TableName),
     args.pkName
       ? Promise.resolve(args.pkName)
       : fetchApiPkName(args.table, args.timeoutMs),
@@ -434,7 +434,12 @@ async function main() {
     args.skipGapProbe || gapIdsToProbe.length === 0
       ? []
       : await runWithConcurrency(gapIdsToProbe, args.concurrency, (id) =>
-          checkGapIdFromApi(args.table, resolvedPkName, id, args.timeoutMs),
+          checkGapIdFromApi(
+            args.table as TableName,
+            resolvedPkName,
+            id,
+            args.timeoutMs,
+          ),
         );
 
   const gapProbeFoundInApi = gapProbes.filter((item) => item.foundExact);

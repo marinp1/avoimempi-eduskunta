@@ -45,7 +45,9 @@ const coreRoutesDataAccess = {
   fetchHallituskaudet: () => metadataRepository.fetchHallituskaudet(),
   checkReadiness: () => {
     try {
-      const row = db.query("SELECT 1 AS ok").get() as { ok?: number } | undefined;
+      const row = db.query("SELECT 1 AS ok").get() as
+        | { ok?: number }
+        | undefined;
       return { ok: row?.ok === 1 };
     } catch (error) {
       return {
