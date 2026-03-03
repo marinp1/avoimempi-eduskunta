@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import type { ServerWebSocket } from "bun";
 import { getMigrations } from "bun-sqlite-migrations";
-import { TableName } from "#constants/index";
+import { type TableName, TableNames } from "#constants/index";
 import {
   buildConsolidatedMigrationReport,
   type ConsolidatedMigrationReport,
@@ -381,13 +381,13 @@ type ParsedPageBatch = {
   firstPk: number;
   rows: any[];
   pkName: string | null;
-  sourceTable: string;
+  sourceTable: TableName;
   sourcePage: number | null;
   scrapedAt: string | null;
 };
 
 type SourceReferenceFallback = {
-  sourceTable: string;
+  sourceTable: TableName;
   sourcePage: number | null;
   sourcePkName: string | null;
   sourcePkValue: unknown;
@@ -395,7 +395,7 @@ type SourceReferenceFallback = {
 };
 
 type SourceReference = {
-  sourceTable: string;
+  sourceTable: TableName;
   sourcePage: number | null;
   sourcePkName: string | null;
   sourcePkValue: string | null;
@@ -436,9 +436,8 @@ const normalizeSourceReference = (
   row: Record<string, any>,
   fallback: SourceReferenceFallback,
 ): SourceReference => {
-  const sourceTable =
-    normalizeText(row[IMPORT_METADATA_FIELDS.sourceTable]) ??
-    fallback.sourceTable;
+  const sourceTable = (normalizeText(row[IMPORT_METADATA_FIELDS.sourceTable]) ??
+    fallback.sourceTable) as TableName;
   const sourcePage =
     normalizeNumber(row[IMPORT_METADATA_FIELDS.sourcePage]) ??
     fallback.sourcePage;
@@ -544,8 +543,8 @@ export class MigratorController {
   /**
    * Get ordered list of tables to import
    */
-  private getOrderedTables(): string[] {
-    const allTables = Object.values(TableName) as string[];
+  private getOrderedTables(): TableName[] {
+    const allTables = TableNames as unknown as TableName[];
     return allTables.sort(
       (a, b) =>
         (IMPORT_ORDER[a] ?? Number.MAX_SAFE_INTEGER) -
@@ -557,7 +556,7 @@ export class MigratorController {
    * Check which tables have parsed data available.
    * Uses parsed row store for all tables (including VaskiData).
    */
-  private async getTablesWithParsedData(): Promise<string[]> {
+  private async getTablesWithParsedData(): Promise<TableName[]> {
     const allTables = this.getOrderedTables().filter(
       (tableName) => !DISABLED_IMPORT_TABLES.has(tableName),
     );
@@ -591,9 +590,9 @@ export class MigratorController {
           pkName: normalizeText(
             batch[0][IMPORT_METADATA_FIELDS.sourcePrimaryKeyName],
           ),
-          sourceTable:
-            normalizeText(batch[0][IMPORT_METADATA_FIELDS.sourceTable]) ??
-            tableName,
+          sourceTable: (normalizeText(
+            batch[0][IMPORT_METADATA_FIELDS.sourceTable],
+          ) ?? tableName) as TableName,
           sourcePage: normalizeNumber(
             batch[0][IMPORT_METADATA_FIELDS.sourcePage],
           ),
@@ -611,9 +610,9 @@ export class MigratorController {
         pkName: normalizeText(
           batch[0][IMPORT_METADATA_FIELDS.sourcePrimaryKeyName],
         ),
-        sourceTable:
-          normalizeText(batch[0][IMPORT_METADATA_FIELDS.sourceTable]) ??
-          tableName,
+        sourceTable: (normalizeText(
+          batch[0][IMPORT_METADATA_FIELDS.sourceTable],
+        ) ?? tableName) as TableName,
         sourcePage: normalizeNumber(
           batch[0][IMPORT_METADATA_FIELDS.sourcePage],
         ),
@@ -1648,7 +1647,7 @@ export class MigratorController {
           },
         });
 
-        if (tableName === TableName.VaskiData) {
+        if (tableName === "VaskiData") {
           let totalDocumentTypes = 0;
           let rowsImported = 0;
 
@@ -1660,7 +1659,7 @@ export class MigratorController {
               documentTypeProgressRowInterval: 5000,
               onSourceRow: (row) => {
                 recordSourceReference(row as Record<string, any>, {
-                  sourceTable: TableName.VaskiData,
+                  sourceTable: "VaskiData",
                   sourcePage: normalizeNumber(row?._source?.page),
                   sourcePkName: "id",
                   sourcePkValue: row?.id ?? null,

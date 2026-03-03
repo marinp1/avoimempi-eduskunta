@@ -28,15 +28,6 @@ export class StorageFactory {
           throw new Error("Local storage configuration missing");
         }
         return new LocalStorageProvider(config.local.baseDir);
-
-      case "s3":
-      case "r2":
-      case "minio":
-        // TODO: Implement S3-compatible provider
-        throw new Error(
-          `Storage provider '${config.provider}' not yet implemented. Use 'local' for now.`,
-        );
-
       default:
         throw new Error(`Unknown storage provider: ${config.provider}`);
     }

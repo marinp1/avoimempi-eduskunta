@@ -1,8 +1,8 @@
-import { TableNames } from "#constants";
+import { type TableName, TableNames } from "#constants";
 import { getStorage } from "#storage";
 
 export interface TableCountRow {
-  tableName: string;
+  tableName: TableName;
   rowCount: number;
 }
 
@@ -22,8 +22,8 @@ export interface ExactTableCountOptions {
   timeoutMs?: number;
   concurrency?: number;
   log?: boolean;
-  tableName?: string;
-  tableNames?: readonly string[];
+  tableName?: TableName;
+  tableNames?: readonly TableName[];
   candidateRowCount?: number;
   candidateRowCounts?: Record<string, number>;
   skipOnError?: boolean;
@@ -55,7 +55,11 @@ interface CacheStore {
 }
 
 interface PersistedCacheFile {
-  entries?: Array<{ tableName: string; rowCount: number; updatedAt: string }>;
+  entries?: Array<{
+    tableName: TableName;
+    rowCount: number;
+    updatedAt: string;
+  }>;
 }
 
 const cacheStoresByKey = new Map<string, CacheStore>();
@@ -76,8 +80,10 @@ function getCacheStore(cacheKey: string): CacheStore {
   return created;
 }
 
-function resolveTargetTableNames(options?: ExactTableCountOptions): string[] {
-  const requestedNames: string[] = [];
+function resolveTargetTableNames(
+  options?: ExactTableCountOptions,
+): TableName[] {
+  const requestedNames: TableName[] = [];
 
   if (options?.tableName) {
     requestedNames.push(options.tableName);
@@ -91,17 +97,15 @@ function resolveTargetTableNames(options?: ExactTableCountOptions): string[] {
     return [...TableNames];
   }
 
-  const uniqueOrderedNames: string[] = [];
-  const seen = new Set<string>();
+  const uniqueOrderedNames: TableName[] = [];
 
   for (const tableName of requestedNames) {
     if (!KNOWN_TABLE_NAMES.has(tableName)) {
       throw new Error(`Unknown table name: ${tableName}`);
     }
 
-    if (!seen.has(tableName)) {
+    if (!uniqueOrderedNames.includes(tableName)) {
       uniqueOrderedNames.push(tableName);
-      seen.add(tableName);
     }
   }
 
@@ -441,7 +445,7 @@ async function persistCache(
 
 function isCacheFresh(
   cache: CacheStore,
-  tableName: string,
+  tableName: TableName,
   nowMs: number,
   cacheTtlMs: number,
 ): boolean {
@@ -452,7 +456,7 @@ function isCacheFresh(
 
 function updateCacheCount(
   cache: CacheStore,
-  tableName: string,
+  tableName: TableName,
   rowCount: number,
   nowMs: number,
 ) {
@@ -463,7 +467,7 @@ function updateCacheCount(
 async function fetchAndStoreCounts(params: {
   cacheKey: string;
   cache: CacheStore;
-  tableNames: string[];
+  tableNames: TableName[];
   options?: CachedTableCountOptions;
 }): Promise<Record<string, number>> {
   const nowMs = Date.now();
@@ -502,9 +506,9 @@ export async function getCachedTableCountMapByRows(
   await ensureCacheLoaded(cacheKey, cache);
 
   const nowMs = Date.now();
-  const cachedResult: Record<string, number> = {};
-  const missing: string[] = [];
-  const stale: string[] = [];
+  const cachedResult: Partial<Record<TableName, number>> = {};
+  const missing: TableName[] = [];
+  const stale: TableName[] = [];
 
   for (const tableName of tableNames) {
     const cached = cache.counts[tableName];
