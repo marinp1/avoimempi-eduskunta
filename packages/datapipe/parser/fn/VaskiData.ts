@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { XMLParser } from "fast-xml-parser";
 import { getParsedRowStore } from "#storage/row-store/factory";
 import type { ParserFunction } from "../parser";
@@ -127,6 +127,13 @@ function findRepoRoot(): string {
   return process.cwd();
 }
 
+function getVaskiDataDir(): string {
+  if (process.env.STORAGE_LOCAL_DIR) {
+    return join(dirname(process.env.STORAGE_LOCAL_DIR), "vaski-data");
+  }
+  return join(findRepoRoot(), "vaski-data");
+}
+
 type ParsedRow = Record<string, any>;
 type VaskiIndex = Record<string, { totalRecords: number }>;
 
@@ -205,8 +212,7 @@ export default parser;
  */
 export async function onParsingComplete(): Promise<void> {
   const index = await buildIndexFromParsedStorage();
-  const repoRoot = findRepoRoot();
-  const vaskiDir = join(repoRoot, "vaski-data");
+  const vaskiDir = getVaskiDataDir();
   await mkdir(vaskiDir, { recursive: true });
 
   const indexPath = join(vaskiDir, "index.json");

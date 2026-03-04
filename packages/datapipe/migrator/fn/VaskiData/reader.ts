@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { getParsedRowStore } from "#storage/row-store/factory";
 import type { StoredRow } from "#storage/row-store/types";
 
@@ -51,8 +51,15 @@ function findRepoRoot(): string {
   return process.cwd();
 }
 
+function getVaskiDataDir(): string {
+  if (process.env.STORAGE_LOCAL_DIR) {
+    return join(dirname(process.env.STORAGE_LOCAL_DIR), "vaski-data");
+  }
+  return join(findRepoRoot(), "vaski-data");
+}
+
 function getVaskiIndexPath(): string {
-  return join(findRepoRoot(), "vaski-data", "index.json");
+  return join(getVaskiDataDir(), "index.json");
 }
 
 async function buildIndexFromParsedRowStore(): Promise<VaskiIndex> {
