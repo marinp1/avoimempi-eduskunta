@@ -18,6 +18,7 @@ import { colors } from "#client/theme/index";
 import { formatDateFi } from "#client/utils/date-time";
 import {
   isEduskuntaOfficialUrl,
+  isSafeExternalUrl,
   toEduskuntaUrl,
 } from "#client/utils/eduskunta-links";
 
@@ -339,7 +340,7 @@ export function InlineRelatedSessions({
                                 size="small"
                                 component="a"
                                 clickable
-                                href={link.url || undefined}
+                                href={isSafeExternalUrl(link.url) ? link.url : undefined}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 label={

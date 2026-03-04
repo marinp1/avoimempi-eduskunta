@@ -35,6 +35,7 @@ import { refs } from "#client/references";
 import theme, { colors } from "#client/theme";
 import { VoteMarginBar } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { isSafeExternalUrl } from "#client/utils/eduskunta-links";
 
 type RepresentativeDetailsType = DatabaseTables.Representative;
 
@@ -484,7 +485,7 @@ const OverviewTab: React.FC<{
                 label={t("composition.details.website")}
                 value={
                   <a
-                    href={details.representativeDetails.website}
+                    href={isSafeExternalUrl(details.representativeDetails.website) ? details.representativeDetails.website : undefined}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
