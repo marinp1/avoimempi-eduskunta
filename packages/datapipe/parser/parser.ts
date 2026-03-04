@@ -8,13 +8,6 @@ import * as VaskiDataModule from "./fn/VaskiData.ts";
  */
 type ParsedRow = Record<string, any>;
 
-const IMPORT_METADATA_FIELDS = {
-  sourceTable: "__sourceTable",
-  sourcePage: "__sourcePage",
-  scrapedAt: "__sourceScrapedAt",
-  sourcePrimaryKeyName: "__sourcePrimaryKeyName",
-  sourcePrimaryKeyValue: "__sourcePrimaryKeyValue",
-} as const;
 
 /**
  * Parser function type - transforms raw row data
@@ -283,15 +276,7 @@ export async function parseTable(options: ParseOptions): Promise<ParseResult> {
 
     const [_identifier, parsedData] = await parseData(rowObject, schema.pkName);
 
-    const parsedRow: ParsedRow = {
-      ...parsedData,
-      [IMPORT_METADATA_FIELDS.sourceTable]: tableName,
-      [IMPORT_METADATA_FIELDS.sourcePage]: rawRow.pk,
-      [IMPORT_METADATA_FIELDS.scrapedAt]: rawRow.updatedAt,
-      [IMPORT_METADATA_FIELDS.sourcePrimaryKeyName]: schema.pkName,
-      [IMPORT_METADATA_FIELDS.sourcePrimaryKeyValue]:
-        rowObject[schema.pkName] ?? null,
-    };
+    const parsedRow: ParsedRow = { ...parsedData };
 
     writeBuffer.push({
       pk: rawRow.pk,

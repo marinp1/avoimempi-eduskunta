@@ -24,6 +24,18 @@ export const App: React.FC = () => {
   const { t } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<RouteName>(getInitialTab());
+  const [lastMigrationTimestamp, setLastMigrationTimestamp] = useState<
+    string | null
+  >(null);
+
+  useEffect(() => {
+    fetch("/api/db-info")
+      .then((res) => res.json())
+      .then((data: { lastMigrationTimestamp: string | null }) => {
+        setLastMigrationTimestamp(data.lastMigrationTimestamp);
+      })
+      .catch(() => {});
+  }, []);
 
   // Handle browser back/forward
   useEffect(() => {
@@ -197,6 +209,23 @@ export const App: React.FC = () => {
           >
             {t("app.disclaimer.unofficial")}
           </Typography>
+          {lastMigrationTimestamp && (
+            <Typography
+              variant="caption"
+              sx={{
+                color: themedColors.textTertiary,
+                display: "block",
+                mt: 0.5,
+                lineHeight: 1.6,
+              }}
+            >
+              {t("app.disclaimer.dbBuildTimestamp", {
+                timestamp: new Date(lastMigrationTimestamp).toLocaleString(
+                  "fi-FI",
+                ),
+              })}
+            </Typography>
+          )}
         </Box>
       </Container>
       <PageDataSourcesDrawer activeRoute={activeTab} />
