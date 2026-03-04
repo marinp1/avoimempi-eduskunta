@@ -18,6 +18,11 @@ export const toEduskuntaUrl = (href: string): string => {
   return `${EDUSKUNTA_BASE_URL}/${normalized}`;
 };
 
+export const isSafeExternalUrl = (href?: string | null): boolean => {
+  if (!href) return false;
+  return HTTP_URL_PATTERN.test(href.trim());
+};
+
 export const isEduskuntaOfficialUrl = (href?: string | null): boolean => {
   if (!href) return false;
   const normalized = href.trim();
