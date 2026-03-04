@@ -41,10 +41,9 @@ async function deployAppBuild() {
   await $`scp ${runAppScript} ${HOST}:${releaseDir}/scripts/run-app.sh`;
   await $`scp ${installSystemdScript} ${HOST}:${APP_DIR}/scripts/app/install-app-systemd-service.sh`;
   await $`scp ${releaseScript} ${HOST}:${APP_DIR}/scripts/app/app-release.sh`;
-  // restart-app.sh is the sudoers target — must stay owned by root, world-readable
-  await $`scp ${restartScript} ${HOST}:${APP_DIR}/scripts/restart-app.sh`;
+  await $`scp ${restartScript} ${HOST}:${APP_DIR}/scripts/app/restart-app.sh`;
 
-  await $`ssh ${HOST} chmod +x ${releaseDir}/scripts/run-app.sh ${APP_DIR}/scripts/app/install-app-systemd-service.sh ${APP_DIR}/scripts/app/app-release.sh ${APP_DIR}/scripts/restart-app.sh`;
+  await $`ssh ${HOST} chmod +x ${releaseDir}/scripts/run-app.sh ${APP_DIR}/scripts/app/install-app-systemd-service.sh ${APP_DIR}/scripts/app/app-release.sh ${APP_DIR}/scripts/app/restart-app.sh`;
   await $`ssh ${HOST} chmod -R a+rX ${releaseDir}`;
 
   await $`ssh ${HOST} ${APP_DIR}/scripts/app/install-app-systemd-service.sh`;
@@ -118,13 +117,11 @@ async function deployPipelineBuild() {
   const distPipeline = path.join(rootDir, "dist/pipeline");
   await $`scp -r ${distPipeline} ${HOST}:${APP_DIR}/dist/pipeline`;
 
-  // pipeline-jobs.sh stays at scripts/ root — systemd units reference it there
-  await $`scp ${path.join(pipelineScriptsDir, "pipeline-jobs.sh")} ${HOST}:${APP_DIR}/scripts/pipeline-jobs.sh`;
-  // install-pipeline-systemd-jobs.sh goes to scripts/pipeline/ — provision-vm.sh calls it from there
+  await $`scp ${path.join(pipelineScriptsDir, "pipeline-jobs.sh")} ${HOST}:${APP_DIR}/scripts/pipeline/pipeline-jobs.sh`;
   await $`scp ${path.join(pipelineScriptsDir, "install-pipeline-systemd-jobs.sh")} ${HOST}:${APP_DIR}/scripts/pipeline/install-pipeline-systemd-jobs.sh`;
   await $`scp ${provisionScript} ${HOST}:${APP_DIR}/scripts/provision-vm.sh`;
 
-  await $`ssh ${HOST} chmod +x ${APP_DIR}/scripts/pipeline-jobs.sh ${APP_DIR}/scripts/pipeline/install-pipeline-systemd-jobs.sh ${APP_DIR}/scripts/provision-vm.sh`;
+  await $`ssh ${HOST} chmod +x ${APP_DIR}/scripts/pipeline/pipeline-jobs.sh ${APP_DIR}/scripts/pipeline/install-pipeline-systemd-jobs.sh ${APP_DIR}/scripts/provision-vm.sh`;
   await $`ssh ${HOST} chmod -R a+rX ${APP_DIR}/dist ${APP_DIR}/scripts`;
 }
 

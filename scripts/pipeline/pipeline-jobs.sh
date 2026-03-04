@@ -17,7 +17,7 @@ APP_SYNC_KEEP_RELEASES=5
 APP_READY_URL="http://127.0.0.1/api/ready"
 APP_READY_RETRIES=60
 APP_READY_SLEEP_SECONDS=1
-RESTART_APP_SCRIPT="${APP_DIR}/scripts/restart-app.sh"
+RESTART_APP_SCRIPT="${APP_DIR}/scripts/app/restart-app.sh"
 
 ACTION="${1:-help}"
 
@@ -121,8 +121,6 @@ full_cycle() {
 }
 
 main() {
-  mkdir -p "$(dirname "${LOG_FILE}")"
-
   case "${ACTION}" in
     scrape-all)   with_lock scrape_all ;;
     parse-all)    with_lock parse_all ;;
