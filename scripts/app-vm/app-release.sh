@@ -5,7 +5,7 @@ ACTION="${1:-help}"
 RELEASE_ID="${2:-}"
 
 # Deployment constants
-APP_DIR="/root/avoimempi-eduskunta"
+APP_DIR="/opt/avoimempi-eduskunta"
 RELEASES_DIR="${APP_DIR}/releases"
 CURRENT_LINK="${APP_DIR}/current"
 SERVICE_NAME="avoimempi-eduskunta-app"
@@ -44,6 +44,9 @@ activate_release() {
     echo "Error: release directory not found: ${release_path}" >&2
     exit 1
   fi
+
+  # Ensure the service user can read all release files (deployed as root via scp)
+  chmod -R a+rX "${release_path}"
 
   local previous_target=""
   if [[ -L "${CURRENT_LINK}" || -d "${CURRENT_LINK}" ]]; then

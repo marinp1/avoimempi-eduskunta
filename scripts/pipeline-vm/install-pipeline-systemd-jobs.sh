@@ -4,9 +4,12 @@ set -euo pipefail
 ACTION="${1:-install}"
 
 # Deployment constants
-APP_DIR="/root/avoimempi-eduskunta"
+APP_DIR="/opt/avoimempi-eduskunta"
+SERVICE_USER="avoimempi-eduskunta"
 SERVICE_PREFIX="avoimempi-eduskunta-pipeline"
 ENV_FILE="${APP_DIR}/shared/pipeline.env"
+LOG_FILE="/var/log/avoimempi-eduskunta/pipeline-jobs.log"
+LOGROTATE_CONF="/etc/logrotate.d/avoimempi-eduskunta-pipeline"
 
 # Schedules and timeouts
 SCRAPE_ON_CALENDAR="*-*-* 03/3:00:00"
@@ -41,10 +44,14 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+User=${SERVICE_USER}
+Group=${SERVICE_USER}
 WorkingDirectory=${APP_DIR}
 EnvironmentFile=-${ENV_FILE}
 ExecStart=/usr/bin/env bash ${APP_DIR}/scripts/pipeline-jobs.sh ${action}
 TimeoutStartSec=${timeout}
+StateDirectory=avoimempi-eduskunta
+LogsDirectory=avoimempi-eduskunta
 NoNewPrivileges=true
 PrivateTmp=true
 EOF
@@ -66,6 +73,21 @@ WantedBy=timers.target
 EOF
 }
 
+write_logrotate_config() {
+  cat > "${LOGROTATE_CONF}" <<EOF
+${LOG_FILE} {
+    weekly
+    rotate 8
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 640 ${SERVICE_USER} ${SERVICE_USER}
+}
+EOF
+  echo "Logrotate config written: ${LOGROTATE_CONF}"
+}
+
 install_units() {
   write_service_unit "${SCRAPE_SERVICE}" "scrape-all"   "${SCRAPE_TIMEOUT}"
   write_service_unit "${PARSE_SERVICE}"  "parse-all"    "${PARSE_TIMEOUT}"
@@ -73,6 +95,7 @@ install_units() {
   write_timer_unit "${SCRAPE_TIMER}"  "${SCRAPE_SERVICE}"  "${SCRAPE_ON_CALENDAR}"
   write_timer_unit "${PARSE_TIMER}"   "${PARSE_SERVICE}"   "${PARSE_ON_CALENDAR}"
   write_timer_unit "${MIGRATE_TIMER}" "${MIGRATE_SERVICE}" "${MIGRATE_ON_CALENDAR}"
+  write_logrotate_config
   systemctl daemon-reload
   systemctl enable --now "${SCRAPE_TIMER}" "${PARSE_TIMER}" "${MIGRATE_TIMER}"
   echo "Pipeline timers installed."
@@ -83,6 +106,7 @@ remove_units() {
   systemctl disable --now "${SCRAPE_TIMER}" "${PARSE_TIMER}" "${MIGRATE_TIMER}" 2>/dev/null || true
   rm -f "$(unit_path "${SCRAPE_SERVICE}")" "$(unit_path "${PARSE_SERVICE}")" "$(unit_path "${MIGRATE_SERVICE}")" \
         "$(unit_path "${SCRAPE_TIMER}")"   "$(unit_path "${PARSE_TIMER}")"   "$(unit_path "${MIGRATE_TIMER}")"
+  rm -f "${LOGROTATE_CONF}"
   systemctl daemon-reload
   echo "Removed pipeline systemd units."
 }

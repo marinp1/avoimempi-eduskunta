@@ -5,16 +5,26 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-APP_DIR="/root/avoimempi-eduskunta"
+APP_DIR="/opt/avoimempi-eduskunta"
+SERVICE_USER="avoimempi-eduskunta"
 ENV_FILE="${APP_DIR}/shared/app.env"
 
 # Ensure bun is on PATH for systemd services (which don't inherit shell profiles)
 if [[ ! -x /usr/local/bin/bun ]] && [[ -x "${HOME}/.bun/bin/bun" ]]; then
-  ln -sf "${HOME}/.bun/bin/bun" /usr/local/bin/bun
-  echo "Linked bun -> /usr/local/bin/bun"
+  cp "${HOME}/.bun/bin/bun" /usr/local/bin/bun
+  chmod 755 /usr/local/bin/bun
+  echo "Copied bun -> /usr/local/bin/bun"
+fi
+
+# Create service user if not present
+if ! id "${SERVICE_USER}" &>/dev/null; then
+  useradd --system --shell /usr/sbin/nologin --home-dir "${APP_DIR}" "${SERVICE_USER}"
+  echo "Created service user: ${SERVICE_USER}"
 fi
 
 mkdir -p "${APP_DIR}/shared"
+# shared/ must be writable by the service user (migration.lock is written there)
+chown "${SERVICE_USER}:${SERVICE_USER}" "${APP_DIR}/shared"
 
 if [[ ! -f "${ENV_FILE}" ]]; then
   cat > "${ENV_FILE}" <<'EOF'
