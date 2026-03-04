@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Deployment constants
 APP_DIR="/opt/avoimempi-eduskunta"
 SERVICE_NAME="avoimempi-eduskunta-app"
-APP_SERVICE_USER="avoimempi-eduskunta"
-APP_SERVICE_GROUP="avoimempi-eduskunta"
+APP_SERVICE_USER="avoimempi-eduskunta-app"
+APP_SERVICE_GROUP="avoimempi-eduskunta-app"
 APP_REPLICA_COUNT=2
 ENV_FILE="${APP_DIR}/shared/app.env"
 

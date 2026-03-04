@@ -1,65 +1,82 @@
-# Scaleway Infra (VM-Only)
+# Hetzner Infra
 
-This Terraform defines a simplified VM-first setup:
+Single VM running both the app and the data pipeline on built-in disk storage.
 
-- Shared security group (SSH + HTTP/HTTPS inbound)
-- VPC + Private Network
-- App VM (`DEV1-S`, Debian 13) — 2 vCPUs for concurrent HTTP/SQLite read handling
-- Pipeline VM (`STARDUST1-S`, Debian 13) — sequential batch ETL, 1 vCPU is sufficient
-- Raw+parsed Block Storage volume attached to the pipeline VM
-- Final DB Block Storage volume attached to the app VM
-- Cloud-init mount bootstrap for attached volumes (format-if-needed + `/etc/fstab` + mount)
-- Local block-storage env contract for datapipe storage paths
+- **Server:** `cpx22` (2 AMD vCPU, 4 GB RAM, 80 GB SSD), Debian 13, Helsinki (`hel1`)
+- **Firewall:** inbound TCP 1363 (SSH), 80 (HTTP), 443 (HTTPS), ICMP — all else blocked
+- **Outbound:** unrestricted (needed for apt, Parliament API, etc.)
+- **Cloud-init:** configures SSH port, creates data directories
 
-## Storage model
+## How the firewall works
 
-Local filesystem path contract:
+Hetzner Cloud firewalls are stateful and applied at the hypervisor level — traffic is
+filtered before it reaches the VM's network interface. The default policy blocks all
+inbound that isn't explicitly allowed. Outbound is unrestricted by default when no
+outbound rules are defined, which is what we want (the pipeline needs to reach external APIs).
 
-- `STORAGE_PROVIDER=local`
-- `STORAGE_LOCAL_DIR=/mnt/pipeline-raw-parsed/data` (configurable via Terraform var)
+ICMP is allowed explicitly because blocking it breaks IPv6 path MTU discovery, which can
+cause silent connectivity failures.
 
-## DB sync model
+## How deploy and provision work
 
-After each migration run, the pipeline VM rsync's the finished SQLite DB to the app VM release
-directory over the private network, then flips a `current.db` symlink and restarts the app service.
-Use `tofu output sync_config` for the exact command and hostnames.
+### Infrastructure lifecycle
 
-Recommended runtime approach:
+```
+tofu apply          → provisions VM + firewall, runs cloud-init on first boot
+bun deploy          → builds app + pipeline, uploads to VM via SSH/SCP
+ssh hetzner ".../provision-vm.sh"  → creates users, dirs, sudoers, installs systemd units
+```
 
-- Keep scraper/parser row stores on the mounted pipeline volume:
-  `STORAGE_LOCAL_DIR=/mnt/pipeline-raw-parsed/data`
-- Build the final DB on pipeline local disk (not block storage), for example:
-  `DB_PATH=/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db`
-- Rsync that DB file to app VM release path under:
-  `/mnt/app-db/releases/`
+### Applications
 
-The app VM serves the DB via `/mnt/app-db/current.db` symlink (configurable via
-`TF_VAR_app_db_mount_path`). Set up a systemd timer or cron job on the pipeline VM to run
-the rsync after each successful migration.
+Two systemd-managed applications run under separate users:
 
-`--delay-updates` ensures the app VM never reads a half-written file.
+| | `avoimempi-eduskunta-app` | `avoimempi-eduskunta-pipeline` |
+|---|---|---|
+| What | Bun HTTP server | scraper / parser / migrator timers |
+| Port | 80 | — |
+| Data reads | `/var/lib/avoimempi-eduskunta-app/current.db` | Parliament API, row stores |
+| Data writes | `shared/migration.lock` | row stores, SQLite DB, app releases dir |
+| Special | `CAP_NET_BIND_SERVICE` | `sudo /opt/.../scripts/restart-app.sh` only |
 
-## Common overrides
+After migration the pipeline user copies the finished SQLite DB into
+`/var/lib/avoimempi-eduskunta-app/releases/` (group-writable via shared group membership),
+flips the `current.db` symlink, then calls the restricted restart script.
+
+## Prerequisites
+
+### 1. Upload SSH key to Hetzner Cloud
+
+Your Scaleway key (`~/.ssh/scaleway/id_ed25519.pub`) can be reused directly.
+Upload it with the `hcloud` CLI or the Hetzner Cloud Console:
 
 ```bash
-export TF_VAR_project_id="<your-scaleway-project-id>"
-export TF_VAR_pipeline_region="nl-ams"
-export TF_VAR_pipeline_zone="nl-ams-1"
-export TF_VAR_server_image_name="Debian 12"
-export TF_VAR_app_server_type="DEV1-S"
-export TF_VAR_pipeline_server_type="STARDUST1-S"
-export TF_VAR_ssh_port=22  # set to a non-standard port to avoid exposing 22 publicly
-export TF_VAR_pipeline_storage_local_dir="/mnt/pipeline-raw-parsed/data"
-export TF_VAR_pipeline_raw_parsed_volume_mount_path="/mnt/pipeline-raw-parsed"
-export TF_VAR_pipeline_raw_parsed_volume_name="avoimempi-eduskunta-raw-parsed"
-export TF_VAR_pipeline_raw_parsed_volume_size_gb=100
-export TF_VAR_pipeline_db_volume_mount_path="/mnt/pipeline-db"
-export TF_VAR_pipeline_local_db_path="/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db"
-export TF_VAR_pipeline_db_volume_name="avoimempi-eduskunta-db"
-export TF_VAR_pipeline_db_volume_size_gb=40
-export TF_VAR_app_db_mount_path="/mnt/app-db"
-export TF_VAR_app_db_device_path="/dev/vdb"
-export TF_VAR_pipeline_raw_parsed_device_path="/dev/vdb"
+# CLI (install: https://github.com/hetznercloud/cli)
+hcloud ssh-key create --name scaleway --public-key-from-file ~/.ssh/scaleway/id_ed25519.pub
+```
+
+Or via the web console: **Project → Security → SSH Keys → Add SSH Key**.
+
+Then set the key name for Terraform:
+
+```bash
+export TF_VAR_ssh_key_name="scaleway"
+```
+
+### 2. Hetzner API token
+
+Create a token in the Hetzner Cloud Console under **Project → Security → API Tokens**
+(Read & Write). Then:
+
+```bash
+export TF_VAR_hcloud_token="<your-token>"
+```
+
+Or add to `packages/infra/terraform.tfvars` (gitignored):
+
+```hcl
+hcloud_token  = "<your-token>"
+ssh_key_name  = "scaleway"
 ```
 
 ## Apply
@@ -71,56 +88,63 @@ tofu plan
 tofu apply
 ```
 
-## Useful outputs
+## Outputs
 
 ```bash
-tofu output pipeline_private_network
-tofu output pipeline_storage_env
-tofu output pipeline_block_storage
-tofu output app_vm
-tofu output pipeline_vm
-tofu output sync_config
+tofu output server        # public IPv4/IPv6, name, type
+tofu output storage_env   # env vars for pipeline configuration
 ```
 
-## Pipeline job setup
+## First-time VM setup
 
-From the pipeline VM, after code deploy:
+After `tofu apply`, set up the SSH alias first, then follow this order exactly.
+Provision **must** run before deploy because the deploy script activates a release
+and health-checks the app — which requires the service user to exist.
+
+SSH config entry (`~/.ssh/config`):
+
+```
+Host hetzner
+  HostName <ipv4-from-tofu-output>
+  User root
+  Port 1363
+  IdentityFile ~/.ssh/scaleway/id_ed25519
+```
 
 ```bash
-# 1) Move existing row-store DBs onto mounted pipeline storage
-STORAGE_LOCAL_DIR=/mnt/pipeline-raw-parsed/data \
-  ./scripts/bootstrap-pipeline-storage.sh
+# 1. Install bun on the VM (required before provisioning)
+ssh hetzner "curl -fsSL https://bun.sh/install | bash"
 
-# 2) Install systemd timers (scrape, parse, migrate+sync)
-APP_VM_SYNC_HOST="root@avoimempi-eduskunta-app.pn-avoimempi-eduskunta.priv" \
-STORAGE_LOCAL_DIR=/mnt/pipeline-raw-parsed/data \
-DB_PATH=/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db \
-APP_SYNC_CURRENT_LINK=/mnt/app-db/current.db \
-APP_SYNC_RELEASES_DIR=/mnt/app-db/releases \
-./scripts/install-pipeline-systemd-jobs.sh install
+# 2. Provision: creates users, directories, sudoers entry, installs systemd units
+ssh hetzner "/opt/avoimempi-eduskunta/scripts/provision-vm.sh"
 
-# 3) Verify timers/services
-./scripts/install-pipeline-systemd-jobs.sh status
+# 3. Deploy app + pipeline builds (activates a release and health-checks the app)
+bun run deploy
+
+# 4. Upload and activate the SQLite DB so the app can serve data immediately
+bun scripts/deploy.mts database
+
+# 5. Upload row stores so the pipeline can do incremental scraping (runs in background)
+bun scripts/deploy.mts data
 ```
 
-Default schedules (override with env vars if needed):
+## Routine operations
 
-- Scrape: every 3 hours starting at `03:00` (`03:00, 06:00, 09:00, ...`)
-- Parse: every 3 hours starting at `05:00` (`05:00, 08:00, 11:00, ...`)
-- Migrate + sync: every 3 hours starting at `07:00` (`07:00, 10:00, 13:00, ...`)
-- Scraper job timeout: `30m` (`SCRAPE_TIMEOUT`)
+```bash
+bun run deploy            # deploy new app + pipeline release
+bun run deploy:app        # app only
+bun run deploy:pipeline   # pipeline only
 
-To deploy scraper/parser/migrator as separate pipeline applications, use these entrypoints:
+ssh hetzner "systemctl status avoimempi-eduskunta-app"
+ssh hetzner "systemctl list-timers 'avoimempi-eduskunta-pipeline-*'"
+ssh hetzner "journalctl -u avoimempi-eduskunta-app -n 50 --no-pager"
+```
 
-- `./scripts/pipeline-scraper-app.sh`
-- `./scripts/pipeline-parser-app.sh`
-- `./scripts/pipeline-migrator-app.sh`
+## Common overrides
 
-## Notes
-
-- Queue and cloud-function resources are intentionally removed in this topology.
-- This stack is intended for running scraper/parser/migrator directly on the pipeline VM.
-- Both VMs share the same security group; private network traffic between them is unrestricted.
-- Both VMs use a non-standard SSH port (default 22) set via cloud-init. Use `-p $TF_VAR_ssh_port` in SSH commands.
-- Pipeline VM has no public IP. Access it via the app VM as a jump host:
-  `ssh -J user@<app-public-ip>:<port> -p <port> user@avoimempi-eduskunta-pipeline.pn-avoimempi-eduskunta.priv`
+```bash
+export TF_VAR_location="hel1"       # hel1, nbg1, fsn1, ash, hil, sin
+export TF_VAR_server_type="cpx22"
+export TF_VAR_server_image="debian-12"
+export TF_VAR_ssh_port=1363
+```

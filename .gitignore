@@ -5,6 +5,7 @@ functions/parser/data
 tsconfig.tsbuildinfo
 .DS_Store
 .env
+.env.local
 .env.sync-storage-s3
 db_dump.sql
 .quokka
@@ -23,8 +24,9 @@ dist
 .claude/settings.local.json
 validation-results.json
 
-# OpenTofu/Terraform state
+# OpenTofu/Terraform state and secrets
 *.tfstate
 *.tfstate.*
 *.tfplan
 .terraform/
+*.tfvars

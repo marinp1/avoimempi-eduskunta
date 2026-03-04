@@ -2,67 +2,53 @@
 
 ## Architecture
 
-Two Scaleway VMs connected via private network (`172.16.0.0/22`):
+Single Hetzner VM running two applications as separate system users:
 
-- **App VM** (`scaleway-app`, `172.16.0.2`) — Bun HTTP server, public-facing
-- **Pipeline VM** (`scaleway-pipeline`, `172.16.0.3`) — scraper, parser, migrator (systemd timers)
+- **`avoimempi-eduskunta-app`** — Bun HTTP server, public-facing, reads DB only
+- **`avoimempi-eduskunta-pipeline`** — scraper, parser, migrator (systemd timers), writes storage and DB
 
-Both run services as the `avoimempi-eduskunta` system user (non-root).
-The pipeline VM pushes a new DB to the app VM after each migration via rsync over the private network.
+After each migration the pipeline user copies the finished SQLite DB to the app's releases
+directory and flips a `current.db` symlink. A narrow sudoers entry allows the pipeline user to
+restart the app service without any broader privileges.
 
-SSH host aliases are configured in your local `~/.ssh/config`.
-Deploy env vars (`DEPLOY_APP_HOST_ALIAS`, `DEPLOY_PIPELINE_HOST_ALIAS`) can be set in `.env.local`.
+SSH host alias is configured in your local `~/.ssh/config`. The deploy env var
+(`DEPLOY_HOST_ALIAS`) can be set in `.env.local`.
 
 ---
 
 ## First-time setup
 
-### 1. Deploy
+Provision **must** run before deploy — the deploy script activates a release and
+health-checks the app, which requires the service user to already exist.
+
+### 1. Install bun on the VM
 
 ```bash
-bun scripts/deploy.mts app       # build + activate on app VM
-bun scripts/deploy.mts pipeline  # build + upload scripts to pipeline VM
+ssh hetzner "curl -fsSL https://bun.sh/install | bash"
 ```
 
-### 2. Provision app VM
+### 2. Provision VM
+
+SSH in once to create users, directories, sudoers entry, and install systemd units:
 
 ```bash
-ssh scaleway-app "/opt/avoimempi-eduskunta/scripts/provision-app-vm.sh"
+ssh hetzner "/opt/avoimempi-eduskunta/scripts/provision-vm.sh"
 ```
 
-### 3. Provision pipeline VM
+### 3. Deploy
 
 ```bash
-ssh scaleway-pipeline "/opt/avoimempi-eduskunta/scripts/provision-pipeline-vm.sh"
-# Edit pipeline.env if APP_VM_SYNC_HOST needs adjusting
-ssh scaleway-pipeline "cat /opt/avoimempi-eduskunta/shared/pipeline.env"
+bun scripts/deploy.mts all
 ```
 
-### 4. Set up pipeline → app VM SSH trust
+### 4. Upload and activate the database
 
 ```bash
-# Args: APP_PRIV_HOST  APP_PRIV_PORT (SSH port on the private interface)
-bash scripts/setup-vm-ssh-trust.sh root@172.16.0.2 1363
+bun scripts/deploy.mts database   # uploads DB, activates symlink, restarts app
+bun scripts/deploy.mts data       # uploads row stores for incremental pipeline runs
 ```
 
-### 5. Install pipeline systemd timers
-
-```bash
-ssh scaleway-pipeline "/opt/avoimempi-eduskunta/scripts/install-pipeline-systemd-jobs.sh install"
-```
-
-### 6. Mount block storage on pipeline VM
-
-```bash
-ssh scaleway-pipeline "
-  mkfs.ext4 /dev/vda
-  mkdir -p /mnt/pipeline-raw-parsed
-  mount /dev/vda /mnt/pipeline-raw-parsed
-  echo '/dev/vda /mnt/pipeline-raw-parsed ext4 defaults 0 2' >> /etc/fstab
-  mkdir -p /mnt/pipeline-raw-parsed/data
-  chown avoimempi-eduskunta:avoimempi-eduskunta /mnt/pipeline-raw-parsed /mnt/pipeline-raw-parsed/data
-"
-```
+The pipeline timers start automatically after provisioning.
 
 ---
 
@@ -73,37 +59,34 @@ bun scripts/deploy.mts app       # deploy new app release
 bun scripts/deploy.mts pipeline  # deploy updated pipeline build
 ```
 
-After deploying pipeline, re-install timers if the job scripts changed:
+After deploying pipeline, re-install timers if job scripts changed:
 
 ```bash
-ssh scaleway-pipeline "/opt/avoimempi-eduskunta/scripts/install-pipeline-systemd-jobs.sh install"
+ssh hetzner "/opt/avoimempi-eduskunta/scripts/pipeline/install-pipeline-systemd-jobs.sh install"
 ```
 
 ---
 
 ## Manually running pipeline jobs
 
-SSH into the pipeline VM and run as the service user:
-
 ```bash
-ssh scaleway-pipeline
+ssh hetzner
 
-# Individual stages
-sudo -u avoimempi-eduskunta /opt/avoimempi-eduskunta/scripts/pipeline-jobs.sh scrape-all
-sudo -u avoimempi-eduskunta /opt/avoimempi-eduskunta/scripts/pipeline-jobs.sh parse-all
-sudo -u avoimempi-eduskunta /opt/avoimempi-eduskunta/scripts/pipeline-jobs.sh migrate-sync
+sudo -u avoimempi-eduskunta-pipeline /opt/avoimempi-eduskunta/scripts/pipeline-jobs.sh scrape-all
+sudo -u avoimempi-eduskunta-pipeline /opt/avoimempi-eduskunta/scripts/pipeline-jobs.sh parse-all
+sudo -u avoimempi-eduskunta-pipeline /opt/avoimempi-eduskunta/scripts/pipeline-jobs.sh migrate-sync
 
 # All three in sequence
-sudo -u avoimempi-eduskunta /opt/avoimempi-eduskunta/scripts/pipeline-jobs.sh full-cycle
+sudo -u avoimempi-eduskunta-pipeline /opt/avoimempi-eduskunta/scripts/pipeline-jobs.sh full-cycle
 ```
 
 If a previous job crashed and left a stale lock:
 
 ```bash
-rm -rf /var/lib/avoimempi-eduskunta/pipeline-locks/pipeline.lock
+rm -rf /var/lib/avoimempi-eduskunta-pipeline/locks/pipeline.lock
 ```
 
-Follow logs in real time:
+Follow pipeline logs in real time:
 
 ```bash
 tail -f /var/log/avoimempi-eduskunta/pipeline-jobs.log
@@ -115,19 +98,19 @@ tail -f /var/log/avoimempi-eduskunta/pipeline-jobs.log
 
 ```bash
 # Pipeline timers and last run times
-ssh scaleway-pipeline "systemctl list-timers 'avoimempi-eduskunta-pipeline-*'"
+ssh hetzner "systemctl list-timers 'avoimempi-eduskunta-pipeline-*'"
 
 # Pipeline timer status
-ssh scaleway-pipeline "/opt/avoimempi-eduskunta/scripts/install-pipeline-systemd-jobs.sh status"
+ssh hetzner "/opt/avoimempi-eduskunta/scripts/pipeline/install-pipeline-systemd-jobs.sh status"
 
 # App service
-ssh scaleway-app "systemctl status avoimempi-eduskunta-app"
+ssh hetzner "systemctl status avoimempi-eduskunta-app"
 
 # App logs
-ssh scaleway-app "journalctl -u avoimempi-eduskunta-app -n 50 --no-pager"
+ssh hetzner "journalctl -u avoimempi-eduskunta-app -n 50 --no-pager"
 
 # Pipeline logs
-ssh scaleway-pipeline "journalctl -u 'avoimempi-eduskunta-pipeline-*' -n 50 --no-pager"
+ssh hetzner "journalctl -u 'avoimempi-eduskunta-pipeline-*' -n 50 --no-pager"
 ```
 
 ---
@@ -136,20 +119,15 @@ ssh scaleway-pipeline "journalctl -u 'avoimempi-eduskunta-pipeline-*' -n 50 --no
 
 **Stale lock file** — a job crashed without releasing the lock:
 ```bash
-ssh scaleway-pipeline "rm -rf /var/lib/avoimempi-eduskunta/pipeline-locks/pipeline.lock"
+ssh hetzner "rm -rf /var/lib/avoimempi-eduskunta-pipeline/locks/pipeline.lock"
 ```
 
 **App fails to start** — check journal for the actual error:
 ```bash
-ssh scaleway-app "journalctl -u avoimempi-eduskunta-app -n 100 --no-pager"
+ssh hetzner "journalctl -u avoimempi-eduskunta-app -n 100 --no-pager"
 ```
 
-**DB not updated after migration** — test the sync manually:
+**DB not updated after migration** — run migrate-sync manually:
 ```bash
-ssh scaleway-pipeline "sudo -u avoimempi-eduskunta /opt/avoimempi-eduskunta/scripts/pipeline-jobs.sh migrate-sync"
-```
-
-**Block volume not mounted after reboot** — verify `/etc/fstab` has the entry and remount:
-```bash
-ssh scaleway-pipeline "mount -a && df -h /mnt/pipeline-raw-parsed"
+ssh hetzner "sudo -u avoimempi-eduskunta-pipeline /opt/avoimempi-eduskunta/scripts/pipeline-jobs.sh migrate-sync"
 ```
