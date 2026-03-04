@@ -182,6 +182,7 @@
     "expertStatement": "Lausunto",
     "expertStatementAttachment": "Lausunnon liite",
     "expertStatements": "Asiantuntijalausunnot",
+    "nonPublic": "Ei julkinen",
     "lawTextToggle_hide": "Piilota lakiteksti",
     "questionToggle_hide": "Piilota kysymys",
     "inlineCounts": "Äänestyksiä: {{votings}} · Asiakirjalinkkejä: {{links}} · Alakohtia: {{subsections}}",

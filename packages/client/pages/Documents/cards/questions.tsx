@@ -439,6 +439,31 @@ export function WrittenQuestionResponseCard({
   );
 }
 
+/**
+ * Extracts expert name+role and organization from the structured title field.
+ * Title format: "{bill} {committee_abbr} {DD.MM.YYYY} {expert[, org]} Asiantuntijalausunto"
+ */
+const parseExpertInfo = (
+  title: string | null,
+): { expert: string; organization: string | null } | null => {
+  if (!title) return null;
+  const withoutSuffix = title
+    .replace(/\s*Asiantuntijalausunnon?\s+liite\s*$/i, "")
+    .replace(/\s*Asiantuntijalausunto\s*$/i, "")
+    .trim();
+  const dateMatch = withoutSuffix.match(/\d{2}\.\d{2}\.\d{4}\s+(.+)$/);
+  if (!dateMatch) return null;
+  const rest = dateMatch[1].trim();
+  const commaMatch = rest.match(/^(.+?)\s*,\s*(.+)$/);
+  if (commaMatch) {
+    return {
+      expert: commaMatch[1].trim(),
+      organization: commaMatch[2].trim(),
+    };
+  }
+  return { expert: rest, organization: null };
+};
+
 export function ExpertStatementCard({
   item,
 }: {
@@ -455,83 +480,116 @@ export function ExpertStatementCard({
       } as Record<string, string>
     )[item.document_type] ?? item.document_type;
 
+  // Only parse for statement types, not hearing plans (which have filename-style titles)
+  const expertInfo =
+    item.document_type !== "asiantuntijasuunnitelma"
+      ? parseExpertInfo(item.title)
+      : null;
+
+  const isNonPublic = item.publicity === "Ei julkinen";
+
   return (
     <DataCard>
       <Box sx={{ p: 2 }}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="flex-start"
-          spacing={1}
+        {/* Top row: chips + date */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            mb: expertInfo || item.title ? 0.75 : 0,
+            gap: 1,
+          }}
         >
-          <Box sx={{ flex: 1 }}>
-            <Stack
-              direction="row"
-              spacing={1}
-              alignItems="center"
-              flexWrap="wrap"
-              gap={0.5}
-              sx={{ mb: 0.5 }}
-            >
-              <Typography
-                variant="caption"
-                sx={{ color: colors.textSecondary, fontFamily: "monospace" }}
-              >
-                {item.edk_identifier}
-              </Typography>
+          <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+            <Chip
+              label={docTypeLabel}
+              size="small"
+              sx={{
+                backgroundColor: `${colors.info}18`,
+                color: colors.info,
+                fontSize: "0.7rem",
+                fontWeight: 500,
+              }}
+            />
+            {item.bill_identifier && (
               <Chip
-                label={docTypeLabel}
+                label={item.bill_identifier}
                 size="small"
                 sx={{
-                  backgroundColor: colors.info,
-                  color: "#fff",
+                  backgroundColor: `${colors.primary}12`,
+                  color: colors.primary,
+                  fontFamily: "monospace",
                   fontSize: "0.7rem",
                 }}
               />
-              {item.bill_identifier && (
-                <Chip
-                  label={item.bill_identifier}
-                  size="small"
-                  sx={{
-                    backgroundColor: colors.primaryLight,
-                    color: colors.primary,
-                    fontFamily: "monospace",
-                    fontSize: "0.7rem",
-                  }}
-                />
-              )}
-            </Stack>
-
-            {item.title && (
-              <Typography
-                variant="body1"
-                sx={{ fontWeight: 500, color: colors.textPrimary, mb: 0.5 }}
-              >
-                {item.title}
-              </Typography>
             )}
+            {isNonPublic && (
+              <Chip
+                label={t("documents.nonPublic")}
+                size="small"
+                sx={{
+                  backgroundColor: `${colors.error}15`,
+                  color: colors.error,
+                  fontSize: "0.7rem",
+                }}
+              />
+            )}
+          </Stack>
+          {item.meeting_date && (
+            <Typography
+              variant="caption"
+              sx={{ color: colors.textTertiary, flexShrink: 0 }}
+            >
+              {formatDate(item.meeting_date)}
+            </Typography>
+          )}
+        </Box>
 
-            {item.committee_name && (
+        {/* Expert identity (parsed from title) */}
+        {expertInfo ? (
+          <>
+            <Typography
+              variant="subtitle2"
+              sx={{
+                fontWeight: 600,
+                color: colors.textPrimary,
+                lineHeight: 1.35,
+              }}
+            >
+              {expertInfo.expert}
+            </Typography>
+            {expertInfo.organization && (
               <Typography
                 variant="body2"
-                sx={{ color: colors.textSecondary, mb: 0.25 }}
+                sx={{ color: colors.textSecondary, mt: 0.25 }}
               >
-                {item.committee_name}
+                {expertInfo.organization}
               </Typography>
             )}
+          </>
+        ) : (
+          item.title && (
+            <Typography
+              variant="body2"
+              sx={{ color: colors.textSecondary, fontStyle: "italic" }}
+            >
+              {item.title}
+            </Typography>
+          )
+        )}
 
-            {(item.meeting_date || item.meeting_identifier) && (
-              <Typography
-                variant="caption"
-                sx={{ color: colors.textSecondary }}
-              >
-                {item.meeting_identifier && `${item.meeting_identifier}`}
-                {item.meeting_date && item.meeting_identifier && " · "}
-                {item.meeting_date && formatDate(item.meeting_date)}
-              </Typography>
-            )}
-          </Box>
-        </Stack>
+        {/* Footer: committee + EDK identifier */}
+        {(item.committee_name || item.meeting_identifier) && (
+          <Typography
+            variant="caption"
+            sx={{ color: colors.textTertiary, display: "block", mt: 0.75 }}
+          >
+            {[item.committee_name, item.meeting_identifier]
+              .filter(Boolean)
+              .join(" · ")}
+          </Typography>
+        )}
       </Box>
     </DataCard>
   );
