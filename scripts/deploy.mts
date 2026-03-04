@@ -12,8 +12,8 @@ const PIPELINE_HOST =
   process.env.DEPLOY_PIPELINE_HOST_ALIAS ?? "scaleway-pipeline";
 
 // Deployment constants — single target, no overrides needed.
-const APP_DIR = "/root/avoimempi-eduskunta";
-const PIPELINE_DIR = "/root/avoimempi-eduskunta";
+const APP_DIR = "/opt/avoimempi-eduskunta";
+const PIPELINE_DIR = "/opt/avoimempi-eduskunta";
 
 async function deployAppBuild() {
   const dist = path.join(import.meta.dirname, "../dist");
@@ -57,6 +57,8 @@ async function deployAppBuild() {
   await $`scp ${provisionScript} ${APP_HOST}:${APP_DIR}/scripts/provision-app-vm.sh`;
 
   await $`ssh ${APP_HOST} chmod +x ${releaseDir}/scripts/run-app.sh ${APP_DIR}/scripts/install-app-systemd-service.sh ${APP_DIR}/scripts/app-release.sh ${APP_DIR}/scripts/provision-app-vm.sh`;
+  // Ensure the service user (non-root) can read all release files
+  await $`ssh ${APP_HOST} chmod -R a+rX ${releaseDir}`;
 
   await $`ssh ${APP_HOST} ${APP_DIR}/scripts/install-app-systemd-service.sh`;
   await $`ssh ${APP_HOST} ${APP_DIR}/scripts/app-release.sh activate ${releaseId}`;
@@ -137,12 +139,25 @@ async function deployPipelineBuild() {
 
   const remoteScripts = scripts.map((s) => `${PIPELINE_DIR}/scripts/${s}`);
   await $`ssh ${PIPELINE_HOST} chmod +x ${remoteScripts}`;
+  // Ensure the service user (non-root) can read dist and scripts
+  await $`ssh ${PIPELINE_HOST} chmod -R a+rX ${PIPELINE_DIR}/dist ${PIPELINE_DIR}/scripts`;
 }
 
 async function uploadDatabase() {
   const db = path.join(import.meta.dirname, "../avoimempi-eduskunta.db");
   if (!fs.existsSync(db)) throw new Error("db file not found");
   await $`scp ${db} ${APP_HOST}:${APP_DIR}`;
+}
+
+async function uploadData() {
+  const [rawDb, parsedDb] = [
+    path.join(import.meta.dirname, "../data/raw.db"),
+    path.join(import.meta.dirname, "../data/parsed.db"),
+  ];
+  if (!fs.existsSync(rawDb)) throw new Error("rawDb file not found");
+  if (!fs.existsSync(parsedDb)) throw new Error("parsedDb file not found");
+  await $`scp ${rawDb} ${PIPELINE_HOST}:${PIPELINE_DIR}/data/raw.db`;
+  await $`scp ${parsedDb} ${PIPELINE_HOST}:${PIPELINE_DIR}/data/parsed.db`;
 }
 
 function printHelp() {
@@ -176,6 +191,9 @@ switch (target) {
     break;
   case "pipeline":
     await deployPipelineBuild();
+    break;
+  case "data":
+    await uploadData();
     break;
   case "database":
     await uploadDatabase();

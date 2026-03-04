@@ -14,6 +14,8 @@ MIGRATION_LOCK_FILE="${MIGRATION_LOCK_FILE:-${APP_ROOT_DIR}/shared/migration.loc
 
 mkdir -p "${APP_ROOT_DIR}/shared"
 
+cd "${APP_RELEASE_DIR}/dist"
+
 exec env \
   NODE_ENV="${NODE_ENV}" \
   DB_PATH="${DB_PATH}" \
@@ -21,4 +23,4 @@ exec env \
   BUN_IDLE_TIMEOUT_SECONDS="${BUN_IDLE_TIMEOUT_SECONDS}" \
   BUN_REUSE_PORT="${BUN_REUSE_PORT}" \
   MIGRATION_LOCK_FILE="${MIGRATION_LOCK_FILE}" \
-  bun run "${APP_RELEASE_DIR}/dist/index.js"
+  bun run index.js

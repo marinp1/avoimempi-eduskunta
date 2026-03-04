@@ -2,10 +2,10 @@
 set -euo pipefail
 
 # Deployment constants
-APP_DIR="/root/avoimempi-eduskunta"
+APP_DIR="/opt/avoimempi-eduskunta"
 SERVICE_NAME="avoimempi-eduskunta-app"
-APP_SERVICE_USER="root"
-APP_SERVICE_GROUP="root"
+APP_SERVICE_USER="avoimempi-eduskunta"
+APP_SERVICE_GROUP="avoimempi-eduskunta"
 APP_REPLICA_COUNT=2
 ENV_FILE="${APP_DIR}/shared/app.env"
 
@@ -39,6 +39,8 @@ Restart=always
 RestartSec=3
 TimeoutStopSec=20
 KillSignal=SIGTERM
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 NoNewPrivileges=true
 PrivateTmp=true
 

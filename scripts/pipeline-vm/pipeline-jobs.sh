@@ -4,12 +4,12 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Deployment constants
-APP_DIR="/root/avoimempi-eduskunta"
+APP_DIR="/opt/avoimempi-eduskunta"
 STORAGE_LOCAL_DIR="/mnt/pipeline-raw-parsed/data"
 DB_PATH="/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db"
 PIPELINE_BUILD_DIR="${APP_DIR}/dist/pipeline"
-LOG_FILE="${APP_DIR}/pipeline-jobs.log"
-LOCK_DIR="${APP_DIR}/data/pipeline-locks"
+LOG_FILE="/var/log/avoimempi-eduskunta/pipeline-jobs.log"
+LOCK_DIR="/var/lib/avoimempi-eduskunta/pipeline-locks"
 SCRAPER_MAX_RUNTIME_SECONDS=1800
 
 # DB sync constants (pipeline VM -> app VM)
@@ -50,7 +50,7 @@ with_lock() {
     log "Another pipeline job is running; skipping ${ACTION}."
     exit 0
   fi
-  trap 'rm -rf "${lock_path}"' EXIT
+  trap "rm -rf '${lock_path}'" EXIT
   "$@"
 }
 
@@ -83,11 +83,13 @@ sync_db_to_app_vm() {
 set -euo pipefail
 mkdir -p "$(dirname "${REMOTE_RELEASE}")" "$(dirname "${CURRENT_LINK}")"
 mv "${REMOTE_TMP}" "${REMOTE_RELEASE}"
+chmod 644 "${REMOTE_RELEASE}"
 ln -sfn "${REMOTE_RELEASE}" "${CURRENT_LINK}"
 ls -1t "$(dirname "${REMOTE_RELEASE}")"/avoimempi-eduskunta-*.db 2>/dev/null \
   | tail -n +$((KEEP_RELEASES + 1)) | xargs -r rm -f --
 if [[ -n "${ACTIVATE_SERVICE}" ]]; then
-  systemctl restart "${ACTIVATE_SERVICE}"
+  readarray -t _units < <(systemctl list-units --plain --no-legend --full --all "${ACTIVATE_SERVICE}" 2>/dev/null | awk '{print $1}')
+  [[ ${#_units[@]} -gt 0 ]] && systemctl restart "${_units[@]}"
 fi
 attempt=1
 while [[ "${attempt}" -le "${READY_RETRIES}" ]]; do
