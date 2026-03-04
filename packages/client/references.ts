@@ -52,4 +52,6 @@ export const refs = {
       session: sessionKey ?? undefined,
       date: dateOnly(date),
     }),
+  documents: (type: string, q?: string | null) =>
+    buildPath("/asiakirjat", { type, q: q ?? undefined }),
 };

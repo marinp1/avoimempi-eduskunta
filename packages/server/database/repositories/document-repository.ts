@@ -11,6 +11,7 @@ import committeeReportsCount from "../queries/COMMITTEE_REPORTS_COUNT.sql";
 import committeeReportsList from "../queries/COMMITTEE_REPORTS_LIST.sql";
 import expertStatementCommittees from "../queries/EXPERT_STATEMENT_COMMITTEES.sql";
 import expertStatementYears from "../queries/EXPERT_STATEMENT_YEARS.sql";
+import expertStatementsByBill from "../queries/EXPERT_STATEMENTS_BY_BILL.sql";
 import expertStatementsCount from "../queries/EXPERT_STATEMENTS_COUNT.sql";
 import expertStatementsList from "../queries/EXPERT_STATEMENTS_LIST.sql";
 import federatedSearch from "../queries/FEDERATED_SEARCH.sql";
@@ -863,6 +864,23 @@ export class DocumentRepository {
       expertStatementCommittees,
     );
     const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
+  public fetchExpertStatementsByBill(identifier: string) {
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        document_type: string;
+        edk_identifier: string;
+        committee_name: string | null;
+        meeting_date: string | null;
+        title: string | null;
+      },
+      { $identifier: string }
+    >(expertStatementsByBill);
+    const data = stmt.all({ $identifier: identifier });
     stmt.finalize();
     return data;
   }

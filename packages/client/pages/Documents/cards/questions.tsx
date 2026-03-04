@@ -27,13 +27,16 @@ import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
+import { refs } from "#client/references";
 import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import {
+  buildEdkDocumentUrl,
   buildKysymysPdfUrl,
   formatDate,
   getOutcomeColor,
   InlineRelatedSessions,
+  parseExpertInfo,
 } from "./shared";
 
 // ─── Written question types and card ───
@@ -439,29 +442,45 @@ export function WrittenQuestionResponseCard({
   );
 }
 
-/**
- * Extracts expert name+role and organization from the structured title field.
- * Title format: "{bill} {committee_abbr} {DD.MM.YYYY} {expert[, org]} Asiantuntijalausunto"
- */
-const parseExpertInfo = (
-  title: string | null,
-): { expert: string; organization: string | null } | null => {
-  if (!title) return null;
-  const withoutSuffix = title
-    .replace(/\s*Asiantuntijalausunnon?\s+liite\s*$/i, "")
-    .replace(/\s*Asiantuntijalausunto\s*$/i, "")
-    .trim();
-  const dateMatch = withoutSuffix.match(/\d{2}\.\d{2}\.\d{4}\s+(.+)$/);
-  if (!dateMatch) return null;
-  const rest = dateMatch[1].trim();
-  const commaMatch = rest.match(/^(.+?)\s*,\s*(.+)$/);
-  if (commaMatch) {
-    return {
-      expert: commaMatch[1].trim(),
-      organization: commaMatch[2].trim(),
-    };
-  }
-  return { expert: rest, organization: null };
+const inferDocumentType = (identifier: string | null): string | null => {
+  if (!identifier) return null;
+  const prefix = identifier.trim().split(/\s+/)[0]?.toUpperCase();
+  const map: Record<string, string> = {
+    HE: "government-proposals",
+    VK: "interpellations",
+    KK: "written-questions",
+    KKV: "written-questions",
+    LA: "legislative-initiatives-law",
+    TAA: "legislative-initiatives-budget",
+    LTA: "legislative-initiatives-supplementary-budget",
+    TPA: "legislative-initiatives-action",
+    KA: "legislative-initiatives-discussion",
+    KAA: "legislative-initiatives-citizens",
+    MIE: "committee-reports",
+    MIL: "committee-reports",
+  };
+  return map[prefix ?? ""] ?? null;
+};
+
+const getBillApiPath = (docType: string): string | null => {
+  const map: Record<string, string> = {
+    "government-proposals": "/api/government-proposals/by-identifier",
+    "interpellations": "/api/interpellations/by-identifier",
+    "written-questions": "/api/written-questions/by-identifier",
+    "committee-reports": "/api/committee-reports/by-identifier",
+    "legislative-initiatives-law": "/api/legislative-initiatives/by-identifier",
+    "legislative-initiatives-budget":
+      "/api/legislative-initiatives/by-identifier",
+    "legislative-initiatives-supplementary-budget":
+      "/api/legislative-initiatives/by-identifier",
+    "legislative-initiatives-action":
+      "/api/legislative-initiatives/by-identifier",
+    "legislative-initiatives-discussion":
+      "/api/legislative-initiatives/by-identifier",
+    "legislative-initiatives-citizens":
+      "/api/legislative-initiatives/by-identifier",
+  };
+  return map[docType] ?? null;
 };
 
 export function ExpertStatementCard({
@@ -470,6 +489,15 @@ export function ExpertStatementCard({
   item: ExpertStatementListItem;
 }) {
   const { t } = useTranslation();
+
+  const [showBillPreview, setShowBillPreview] = useState(false);
+  const [billPreview, setBillPreview] = useState<{
+    title: string | null;
+    submission_date: string | null;
+    decision_outcome: string | null;
+    parliament_identifier: string;
+  } | null>(null);
+  const [billPreviewLoading, setBillPreviewLoading] = useState(false);
 
   const docTypeLabel =
     (
@@ -512,18 +540,51 @@ export function ExpertStatementCard({
                 fontWeight: 500,
               }}
             />
-            {item.bill_identifier && (
-              <Chip
-                label={item.bill_identifier}
-                size="small"
-                sx={{
-                  backgroundColor: `${colors.primary}12`,
-                  color: colors.primary,
-                  fontFamily: "monospace",
-                  fontSize: "0.7rem",
-                }}
-              />
-            )}
+            {item.bill_identifier && (() => {
+              const docType = inferDocumentType(item.bill_identifier);
+              return (
+                <Chip
+                  label={item.bill_identifier}
+                  size="small"
+                  clickable={!!docType}
+                  onClick={
+                    docType
+                      ? async (e: React.MouseEvent) => {
+                          e.preventDefault();
+                          const next = !showBillPreview;
+                          setShowBillPreview(next);
+                          if (next && !billPreview) {
+                            const apiPath = getBillApiPath(docType);
+                            if (apiPath) {
+                              setBillPreviewLoading(true);
+                              try {
+                                const r = await fetch(
+                                  `${apiPath}/${encodeURIComponent(item.bill_identifier!)}`,
+                                );
+                                if (r.ok) setBillPreview(await r.json());
+                              } finally {
+                                setBillPreviewLoading(false);
+                              }
+                            }
+                          }
+                        }
+                      : undefined
+                  }
+                  sx={{
+                    backgroundColor: showBillPreview
+                      ? `${colors.primary}20`
+                      : `${colors.primary}12`,
+                    color: colors.primary,
+                    fontFamily: "monospace",
+                    fontSize: "0.7rem",
+                    cursor: docType ? "pointer" : "default",
+                    "&:hover": docType
+                      ? { backgroundColor: `${colors.primary}20` }
+                      : {},
+                  }}
+                />
+              );
+            })()}
             {isNonPublic && (
               <Chip
                 label={t("documents.nonPublic")}
@@ -579,17 +640,109 @@ export function ExpertStatementCard({
           )
         )}
 
-        {/* Footer: committee + EDK identifier */}
-        {(item.committee_name || item.meeting_identifier) && (
-          <Typography
-            variant="caption"
-            sx={{ color: colors.textTertiary, display: "block", mt: 0.75 }}
+        {/* Footer: committee + meeting + external link */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+            mt: 0.75,
+            gap: 1,
+          }}
+        >
+          {(item.committee_name || item.meeting_identifier) && (
+            <Typography
+              variant="caption"
+              sx={{ color: colors.textTertiary }}
+            >
+              {[item.committee_name, item.meeting_identifier]
+                .filter(Boolean)
+                .join(" · ")}
+            </Typography>
+          )}
+          {buildEdkDocumentUrl(item.edk_identifier) && (
+            <EduskuntaSourceLink
+              href={buildEdkDocumentUrl(item.edk_identifier) as string}
+              stopPropagation
+              sx={{ fontSize: "0.7rem", flexShrink: 0 }}
+            >
+              PDF
+            </EduskuntaSourceLink>
+          )}
+        </Box>
+
+        {/* Inline bill preview (toggled by chip click) */}
+        <Collapse in={showBillPreview} timeout="auto" unmountOnExit>
+          <Box
+            sx={{
+              mt: 1,
+              p: 1.5,
+              backgroundColor: `${colors.primary}08`,
+              borderRadius: 1,
+              borderLeft: `3px solid ${colors.primary}`,
+            }}
           >
-            {[item.committee_name, item.meeting_identifier]
-              .filter(Boolean)
-              .join(" · ")}
-          </Typography>
-        )}
+            {billPreviewLoading && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <CircularProgress size={14} />
+                <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                  Ladataan...
+                </Typography>
+              </Box>
+            )}
+            {billPreview && (
+              <Stack spacing={0.5}>
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 500, color: colors.textPrimary, lineHeight: 1.35 }}
+                >
+                  {billPreview.title || item.bill_identifier}
+                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" gap={0.5}>
+                  {billPreview.submission_date && (
+                    <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                      {formatDate(billPreview.submission_date)}
+                    </Typography>
+                  )}
+                  {billPreview.decision_outcome && (
+                    <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                      · {billPreview.decision_outcome}
+                    </Typography>
+                  )}
+                </Stack>
+                {item.bill_identifier && (() => {
+                  const docType = inferDocumentType(item.bill_identifier);
+                  if (!docType) return null;
+                  const href = refs.documents(docType, item.bill_identifier);
+                  return (
+                    <Typography
+                      variant="caption"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.history.pushState({}, "", href);
+                        window.dispatchEvent(new PopStateEvent("popstate"));
+                      }}
+                      sx={{
+                        color: colors.primary,
+                        cursor: "pointer",
+                        "&:hover": { textDecoration: "underline" },
+                        display: "inline-block",
+                        mt: 0.25,
+                      }}
+                    >
+                      Avaa asiakirjaluettelossa →
+                    </Typography>
+                  );
+                })()}
+              </Stack>
+            )}
+            {!billPreviewLoading && !billPreview && (
+              <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                Ei lisätietoja saatavilla.
+              </Typography>
+            )}
+          </Box>
+        </Collapse>
       </Box>
     </DataCard>
   );

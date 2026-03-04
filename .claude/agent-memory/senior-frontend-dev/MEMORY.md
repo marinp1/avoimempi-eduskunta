@@ -68,6 +68,25 @@ Both Home (`packages/client/pages/Home/index.tsx`) and Sessions (`packages/clien
 When a section expands: speeches (paginated), votings, links (`/api/sections/{key}/links`),
 subsections (`/api/sections/{key}/subsections`), roll call if `isRollCallSection` (`/api/sections/{key}/roll-call`)
 
+## SPA Navigation Pattern
+
+Client-side navigation uses `window.history.pushState({}, "", href)` + `window.dispatchEvent(new PopStateEvent("popstate"))`. No React Router. The Documents page reads URL params on mount via `useEffect(fn, [])` to initialize state from `?type=...&q=...`.
+
+## Documents Page Cross-Linking
+
+- `refs.documents(type, q?)` in `packages/client/references.ts` builds `/asiakirjat?type=...&q=...`
+- `inferDocumentType(identifier)` in `questions.tsx` maps bill identifier prefixes (HE, KK, LA, etc.) to document type strings
+- Expert statement `bill_identifier` chip navigates to the referenced document type filtered by that identifier
+- `GovernmentProposalCard` fetches `/api/expert-statements/by-bill?identifier=...` on expand and shows a count chip that navigates to expert-statements filtered by the proposal identifier
+
+## Server Route Structure
+
+Routes live in `packages/server/routes/documents/` split by domain:
+- `question-family-routes.ts` - written questions, expert statements, oral questions
+- `interpellation-government-routes.ts` - interpellations, government proposals
+- `committee-legislative-routes.ts` - committee reports, legislative initiatives
+- `document-routes.ts` - combines all routes + defines `DocumentRoutesDataAccess` interface (must be updated when adding new repo methods)
+
 ## Database Tables
 
 ### Voting

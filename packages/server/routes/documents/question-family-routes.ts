@@ -101,6 +101,15 @@ export const createQuestionFamilyRoutes = (db: DocumentRoutesDataAccess) => ({
     },
   },
 
+  "/api/expert-statements/by-bill": {
+    GET: async (req: Request) => {
+      const identifier = new URL(req.url).searchParams.get("identifier");
+      if (!identifier) return Response.json([], { status: 400 });
+      const data = await db.fetchExpertStatementsByBill(identifier);
+      return Response.json(data);
+    },
+  },
+
   "/api/written-question-responses": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
