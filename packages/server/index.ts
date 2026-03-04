@@ -40,6 +40,18 @@ const coreRoutesDataAccess = {
   fetchParliamentComposition: (params: { date: string }) =>
     metadataRepository.fetchParliamentComposition(params),
   fetchHallituskaudet: () => metadataRepository.fetchHallituskaudet(),
+  fetchLastMigrationTimestamp: () => {
+    try {
+      const row = db
+        .query<{ value: string }, []>(
+          `SELECT value FROM _migration_info WHERE key = 'last_migration'`,
+        )
+        .get();
+      return row?.value ?? null;
+    } catch {
+      return null;
+    }
+  },
   checkReadiness: () => {
     try {
       const row = db.query("SELECT 1 AS ok").get() as

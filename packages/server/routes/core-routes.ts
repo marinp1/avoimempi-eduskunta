@@ -16,6 +16,7 @@ type CoreRoutesDataAccess = {
   };
   fetchParliamentComposition: (params: { date: string }) => unknown;
   fetchHallituskaudet: () => unknown;
+  fetchLastMigrationTimestamp: () => string | null;
   checkReadiness: () => {
     ok: boolean;
     details?: string;
@@ -71,6 +72,13 @@ export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
     GET: async () => {
       const periods = await db.fetchHallituskaudet();
       return Response.json(periods);
+    },
+  },
+
+  "/api/db-info": {
+    GET: async () => {
+      const lastMigrationTimestamp = db.fetchLastMigrationTimestamp();
+      return Response.json({ lastMigrationTimestamp });
     },
   },
 });
