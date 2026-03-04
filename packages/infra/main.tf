@@ -1,130 +1,74 @@
 terraform {
   required_providers {
-    scaleway = {
-      source = "scaleway/scaleway"
+    hcloud = {
+      source  = "hetznercloud/hcloud"
+      version = "~> 1.45"
     }
   }
-  required_version = ">= 0.13"
 }
 
-provider "scaleway" {}
-
-variable "project_id" {
-  description = "Scaleway project ID used for all resources."
-  type        = string
-  default     = null
+variable "hcloud_token" {
+  sensitive = true
 }
 
-variable "pipeline_region" {
-  description = "Scaleway region used for regional resources (VPC/Private Network)."
-  type        = string
-  default     = "nl-ams"
+# Configure the Hetzner Cloud Provider
+provider "hcloud" {
+  token = var.hcloud_token
 }
 
-variable "pipeline_zone" {
-  description = "Scaleway zone used for compute and block storage."
+variable "location" {
+  description = "Hetzner Cloud location (hel1, nbg1, fsn1, ash, hil, sin)."
   type        = string
-  default     = "nl-ams-1"
+  default     = "hel1"
 }
 
-variable "app_server_name" {
-  description = "Name of the app VM."
+variable "ssh_key_name" {
+  description = "Name of the SSH key already uploaded to Hetzner Cloud (required)."
   type        = string
-  default     = "avoimempi-eduskunta-app"
 }
 
-variable "pipeline_server_name" {
-  description = "Name of the pipeline VM."
+variable "server_name" {
+  description = "Name of the VM."
   type        = string
-  default     = "avoimempi-eduskunta-pipeline"
+  default     = "avoimempi-eduskunta"
 }
 
-variable "app_server_type" {
-  description = "Scaleway commercial type for the app VM."
+variable "server_type" {
+  description = "Hetzner server type."
   type        = string
-  default     = "DEV1-S"
+  default     = "cpx22"
 }
 
-variable "pipeline_server_type" {
-  description = "Scaleway commercial type for the pipeline VM."
+variable "server_image" {
+  description = "Hetzner OS image."
   type        = string
-  default     = "STARDUST1-S"
+  default     = "debian-13"
 }
 
 variable "ssh_port" {
-  description = "Non-standard SSH port configured via cloud-init on both VMs."
+  description = "SSH port configured via cloud-init."
   type        = number
-  default     = 22
+  default     = 1363
 }
 
-variable "app_db_device_path" {
-  description = "App VM block-device path for the attached DB volume."
+variable "storage_local_dir" {
+  description = "Directory for raw/parsed pipeline row-store files."
   type        = string
-  default     = "/dev/vdb"
+  default     = "/var/lib/avoimempi-eduskunta/data"
 }
 
-variable "pipeline_raw_parsed_device_path" {
-  description = "Pipeline VM block-device path for the attached raw/parsed volume."
-  type        = string
-  default     = "/dev/vdb"
-}
-
-variable "pipeline_storage_local_dir" {
-  description = "Directory used by the pipeline for raw/parsed row-store files."
-  type        = string
-  default     = "/mnt/pipeline-raw-parsed/data"
-}
-
-variable "pipeline_raw_parsed_volume_mount_path" {
-  description = "Expected mount path for the raw+parsed block volume on the pipeline VM."
-  type        = string
-  default     = "/mnt/pipeline-raw-parsed"
-}
-
-variable "pipeline_raw_parsed_volume_name" {
-  description = "Logical name for the raw+parsed block volume."
-  type        = string
-  default     = "avoimempi-eduskunta-raw-parsed"
-}
-
-variable "pipeline_raw_parsed_volume_size_gb" {
-  description = "Size in GB for raw+parsed row-store volume."
-  type        = number
-  default     = 10
-}
-
-variable "pipeline_db_volume_mount_path" {
-  description = "Expected mount path for the final DB/trace block volume on the app VM."
-  type        = string
-  default     = "/mnt/pipeline-db"
-}
-
-variable "pipeline_local_db_path" {
-  description = "Absolute local-disk path on pipeline VM where migrator writes SQLite before rsync."
+variable "db_path" {
+  description = "Absolute path where the migrator writes the SQLite DB."
   type        = string
   default     = "/var/lib/avoimempi-eduskunta/avoimempi-eduskunta.db"
 }
 
-variable "pipeline_db_volume_name" {
-  description = "Logical name for the app DB/trace block volume."
-  type        = string
-  default     = "avoimempi-eduskunta-db"
-}
-
-variable "pipeline_db_volume_size_gb" {
-  description = "Size in GB for app SQLite DB artifacts."
-  type        = number
-  default     = 20
-}
-
-variable "app_db_mount_path" {
-  description = "Directory on the app VM where the pipeline rsync's the finished SQLite DB."
-  type        = string
-  default     = "/mnt/app-db"
+data "hcloud_ssh_key" "default" {
+  name = var.ssh_key_name
 }
 
 locals {
-  app_cloud_init = <<-CLOUDINIT
+  cloud_init = <<-CLOUDINIT
     #cloud-config
     package_update: false
 
@@ -136,169 +80,59 @@ locals {
           Port ${var.ssh_port}
 
     runcmd:
-      - mkdir -p ${var.app_db_mount_path}
-      - |
-        APP_DB_DEVICE="${var.app_db_device_path}"
-        if [ ! -b "${APP_DB_DEVICE}" ]; then
-          echo "Device ${APP_DB_DEVICE} not found." >&2
-          exit 1
-        fi
-        if ! blkid "${APP_DB_DEVICE}" >/dev/null 2>&1; then
-          mkfs.ext4 -F "${APP_DB_DEVICE}"
-        fi
-        APP_DB_UUID="$(blkid -s UUID -o value "${APP_DB_DEVICE}")"
-        grep -q " ${var.app_db_mount_path} " /etc/fstab || echo "UUID=${APP_DB_UUID} ${var.app_db_mount_path} ext4 defaults,nofail 0 2" >> /etc/fstab
-        mount ${var.app_db_mount_path} || mount -a
-        chmod 755 ${var.app_db_mount_path}
+      - mkdir -p ${var.storage_local_dir}
+      - mkdir -p $(dirname ${var.db_path})
       - systemctl restart sshd || systemctl restart ssh
     CLOUDINIT
+}
 
-  pipeline_cloud_init = <<-CLOUDINIT
-    #cloud-config
-    package_update: false
+resource "hcloud_firewall" "main" {
+  name = "fw-avoimempi-eduskunta"
 
-    ssh_pwauth: false
-
-    write_files:
-      - path: /etc/ssh/sshd_config.d/port.conf
-        content: |
-          Port ${var.ssh_port}
-
-    runcmd:
-      - mkdir -p ${var.pipeline_raw_parsed_volume_mount_path}
-      - mkdir -p ${var.pipeline_storage_local_dir}
-      - |
-        PIPELINE_RAW_PARSED_DEVICE="${var.pipeline_raw_parsed_device_path}"
-        if [ ! -b "${PIPELINE_RAW_PARSED_DEVICE}" ]; then
-          echo "Device ${PIPELINE_RAW_PARSED_DEVICE} not found." >&2
-          exit 1
-        fi
-        if ! blkid "${PIPELINE_RAW_PARSED_DEVICE}" >/dev/null 2>&1; then
-          mkfs.ext4 -F "${PIPELINE_RAW_PARSED_DEVICE}"
-        fi
-        PIPELINE_RAW_PARSED_UUID="$(blkid -s UUID -o value "${PIPELINE_RAW_PARSED_DEVICE}")"
-        grep -q " ${var.pipeline_raw_parsed_volume_mount_path} " /etc/fstab || echo "UUID=${PIPELINE_RAW_PARSED_UUID} ${var.pipeline_raw_parsed_volume_mount_path} ext4 defaults,nofail 0 2" >> /etc/fstab
-        mount ${var.pipeline_raw_parsed_volume_mount_path} || mount -a
-        chmod 755 ${var.pipeline_raw_parsed_volume_mount_path}
-        mkdir -p ${var.pipeline_storage_local_dir}
-        chmod 755 ${var.pipeline_storage_local_dir}
-      - systemctl restart sshd || systemctl restart ssh
-    CLOUDINIT
-
-  pipeline_storage_env = {
-    STORAGE_PROVIDER  = "local"
-    STORAGE_LOCAL_DIR = var.pipeline_storage_local_dir
+  rule {
+    direction  = "in"
+    protocol   = "tcp"
+    port       = tostring(var.ssh_port)
+    source_ips = ["0.0.0.0/0", "::/0"]
   }
 
-  pipeline_block_storage = {
-    PIPELINE_RAW_PARSED_VOLUME_NAME       = var.pipeline_raw_parsed_volume_name
-    PIPELINE_RAW_PARSED_VOLUME_SIZE_GB    = tostring(var.pipeline_raw_parsed_volume_size_gb)
-    PIPELINE_RAW_PARSED_VOLUME_MOUNT_PATH = var.pipeline_raw_parsed_volume_mount_path
-    APP_DB_VOLUME_NAME                    = var.pipeline_db_volume_name
-    APP_DB_VOLUME_SIZE_GB                 = tostring(var.pipeline_db_volume_size_gb)
-    APP_DB_VOLUME_MOUNT_PATH              = var.app_db_mount_path
+  rule {
+    direction  = "in"
+    protocol   = "tcp"
+    port       = "80"
+    source_ips = ["0.0.0.0/0", "::/0"]
+  }
+
+  rule {
+    direction  = "in"
+    protocol   = "tcp"
+    port       = "443"
+    source_ips = ["0.0.0.0/0", "::/0"]
+  }
+
+  # ICMP — needed for path MTU discovery (required for IPv6 correctness)
+  rule {
+    direction  = "in"
+    protocol   = "icmp"
+    source_ips = ["0.0.0.0/0", "::/0"]
   }
 }
 
-resource "scaleway_instance_security_group" "shared" {
-  name                    = "sg-avoimempi-eduskunta"
-  project_id              = var.project_id
-  inbound_default_policy  = "drop"
-  outbound_default_policy = "accept"
+resource "hcloud_server" "main" {
+  name         = var.server_name
+  server_type  = var.server_type
+  image        = var.server_image
+  location     = var.location
+  ssh_keys     = [data.hcloud_ssh_key.default.id]
+  user_data    = local.cloud_init
+  firewall_ids = [hcloud_firewall.main.id]
 
-  inbound_rule {
-    action   = "accept"
-    protocol = "TCP"
-    port     = var.ssh_port
+  public_net {
+    ipv4_enabled = true
+    ipv6_enabled = true
   }
 
-  inbound_rule {
-    action   = "accept"
-    protocol = "TCP"
-    port     = 80
+  labels = {
+    "stack" = "avoimempi-eduskunta"
   }
-
-  inbound_rule {
-    action   = "accept"
-    protocol = "TCP"
-    port     = 443
-  }
-}
-
-resource "scaleway_vpc" "pipeline" {
-  name       = "vpc-avoimempi-eduskunta"
-  project_id = var.project_id
-}
-
-resource "scaleway_vpc_private_network" "pipeline" {
-  name      = "pn-avoimempi-eduskunta"
-  project_id = var.project_id
-  vpc_id    = scaleway_vpc.pipeline.id
-  region    = var.pipeline_region
-}
-
-resource "scaleway_instance_ip" "app" {
-  project_id = var.project_id
-  zone       = var.pipeline_zone
-}
-
-resource "scaleway_instance_volume" "pipeline_raw_parsed" {
-  name       = var.pipeline_raw_parsed_volume_name
-  project_id = var.project_id
-  zone       = var.pipeline_zone
-  size_in_gb = var.pipeline_raw_parsed_volume_size_gb
-  type       = "l_ssd"
-}
-
-resource "scaleway_instance_volume" "app_db" {
-  name       = var.pipeline_db_volume_name
-  project_id = var.project_id
-  zone       = var.pipeline_zone
-  size_in_gb = var.pipeline_db_volume_size_gb
-  type       = "l_ssd"
-}
-
-resource "scaleway_instance_server" "app" {
-  project_id        = var.project_id
-  zone              = var.pipeline_zone
-  name              = var.app_server_name
-  type              = var.app_server_type
-  image             = "debian_trixie"
-  ip_id             = scaleway_instance_ip.app.id
-  security_group_id = scaleway_instance_security_group.shared.id
-  user_data         = { cloud-init = local.app_cloud_init }
-  additional_volume_ids = [
-    scaleway_instance_volume.app_db.id
-  ]
-  tags = [
-    "stack:avoimempi-eduskunta",
-    "role:app",
-  ]
-}
-
-resource "scaleway_instance_server" "pipeline" {
-  project_id        = var.project_id
-  zone              = var.pipeline_zone
-  name              = var.pipeline_server_name
-  type              = var.pipeline_server_type
-  image             = "debian_trixie"
-  security_group_id = scaleway_instance_security_group.shared.id
-  user_data         = { cloud-init = local.pipeline_cloud_init }
-  additional_volume_ids = [
-    scaleway_instance_volume.pipeline_raw_parsed.id
-  ]
-  tags = [
-    "stack:avoimempi-eduskunta",
-    "role:pipeline",
-  ]
-}
-
-resource "scaleway_instance_private_nic" "app" {
-  server_id          = scaleway_instance_server.app.id
-  private_network_id = scaleway_vpc_private_network.pipeline.id
-}
-
-resource "scaleway_instance_private_nic" "pipeline" {
-  server_id          = scaleway_instance_server.pipeline.id
-  private_network_id = scaleway_vpc_private_network.pipeline.id
 }

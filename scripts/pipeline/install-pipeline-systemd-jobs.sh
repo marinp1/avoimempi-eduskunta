@@ -3,27 +3,20 @@ set -euo pipefail
 
 ACTION="${1:-install}"
 
-# Deployment constants
 APP_DIR="/opt/avoimempi-eduskunta"
-SERVICE_USER="avoimempi-eduskunta"
+SERVICE_USER="avoimempi-eduskunta-pipeline"
+SERVICE_GROUP="avoimempi-eduskunta-pipeline"
 SERVICE_PREFIX="avoimempi-eduskunta-pipeline"
 ENV_FILE="${APP_DIR}/shared/pipeline.env"
 LOG_FILE="/var/log/avoimempi-eduskunta/pipeline-jobs.log"
 LOGROTATE_CONF="/etc/logrotate.d/avoimempi-eduskunta-pipeline"
 
-# Schedules and timeouts
-SCRAPE_ON_CALENDAR="*-*-* 03/3:00:00"
-PARSE_ON_CALENDAR="*-*-* 05/3:00:00"
-MIGRATE_ON_CALENDAR="*-*-* 07/3:00:00"
-SCRAPE_TIMEOUT="30m"
-PARSE_TIMEOUT="12h"
-MIGRATE_TIMEOUT="12h"
-
-if [[ ! -f "${ENV_FILE}" ]]; then
-  echo "Error: ${ENV_FILE} not found." >&2
-  echo "Run ./scripts/provision-pipeline-vm.sh first." >&2
-  exit 1
-fi
+SCRAPE_ON_CALENDAR="${SCRAPE_ON_CALENDAR:-*-*-* 03/3:00:00}"
+PARSE_ON_CALENDAR="${PARSE_ON_CALENDAR:-*-*-* 05/3:00:00}"
+MIGRATE_ON_CALENDAR="${MIGRATE_ON_CALENDAR:-*-*-* 07/3:00:00}"
+SCRAPE_TIMEOUT="${SCRAPE_TIMEOUT:-30m}"
+PARSE_TIMEOUT="${PARSE_TIMEOUT:-12h}"
+MIGRATE_TIMEOUT="${MIGRATE_TIMEOUT:-12h}"
 
 SCRAPE_SERVICE="${SERVICE_PREFIX}-scrape.service"
 PARSE_SERVICE="${SERVICE_PREFIX}-parse.service"
@@ -45,13 +38,11 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 User=${SERVICE_USER}
-Group=${SERVICE_USER}
+Group=${SERVICE_GROUP}
 WorkingDirectory=${APP_DIR}
 EnvironmentFile=-${ENV_FILE}
 ExecStart=/usr/bin/env bash ${APP_DIR}/scripts/pipeline-jobs.sh ${action}
 TimeoutStartSec=${timeout}
-StateDirectory=avoimempi-eduskunta
-LogsDirectory=avoimempi-eduskunta
 NoNewPrivileges=true
 PrivateTmp=true
 EOF
@@ -89,8 +80,10 @@ EOF
 }
 
 install_units() {
-  write_service_unit "${SCRAPE_SERVICE}" "scrape-all"   "${SCRAPE_TIMEOUT}"
-  write_service_unit "${PARSE_SERVICE}"  "parse-all"    "${PARSE_TIMEOUT}"
+  mkdir -p "$(dirname "${LOG_FILE}")"
+  chown "${SERVICE_USER}:${SERVICE_USER}" "$(dirname "${LOG_FILE}")" 2>/dev/null || true
+  write_service_unit "${SCRAPE_SERVICE}"  "scrape-all"   "${SCRAPE_TIMEOUT}"
+  write_service_unit "${PARSE_SERVICE}"   "parse-all"    "${PARSE_TIMEOUT}"
   write_service_unit "${MIGRATE_SERVICE}" "migrate-sync" "${MIGRATE_TIMEOUT}"
   write_timer_unit "${SCRAPE_TIMER}"  "${SCRAPE_SERVICE}"  "${SCRAPE_ON_CALENDAR}"
   write_timer_unit "${PARSE_TIMER}"   "${PARSE_SERVICE}"   "${PARSE_ON_CALENDAR}"
@@ -125,7 +118,6 @@ case "${ACTION}" in
   status)  status_units ;;
   help|-h|--help)
     echo "Usage: $0 [install|remove|status]"
-    echo "Reads APP_VM_SYNC_HOST from ${ENV_FILE}."
     ;;
   *)
     echo "Usage: $0 [install|remove|status]" >&2

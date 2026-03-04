@@ -6,7 +6,7 @@ APP_RELEASE_DIR="${APP_RELEASE_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
 APP_ROOT_DIR="${APP_ROOT_DIR:-$(cd "${APP_RELEASE_DIR}/.." && pwd)}"
 
 NODE_ENV="${NODE_ENV:-production}"
-DB_PATH="${DB_PATH:-/mnt/app-db/current.db}"
+DB_PATH="${DB_PATH:-/var/lib/avoimempi-eduskunta-app/current.db}"
 PORT="${PORT:-80}"
 BUN_IDLE_TIMEOUT_SECONDS="${BUN_IDLE_TIMEOUT_SECONDS:-120}"
 BUN_REUSE_PORT="${BUN_REUSE_PORT:-true}"
