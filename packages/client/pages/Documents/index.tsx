@@ -151,6 +151,39 @@ export default function Documents() {
   const { apiBase, initiativeTypeCode } = getDocumentApiConfig(documentType);
   const isLegislativeInitiativeType = initiativeTypeCode !== null;
 
+  // Read URL params on mount and on every SPA popstate navigation
+  useEffect(() => {
+    const validTypes: DocumentType[] = [
+      "interpellations",
+      "government-proposals",
+      "written-questions",
+      "written-question-responses",
+      "oral-questions",
+      "committee-reports",
+      "legislative-initiatives-law",
+      "legislative-initiatives-budget",
+      "legislative-initiatives-supplementary-budget",
+      "legislative-initiatives-action",
+      "legislative-initiatives-discussion",
+      "legislative-initiatives-citizens",
+      "expert-statements",
+    ];
+
+    const applyUrlState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const typeParam = params.get("type") as DocumentType | null;
+      const qParam = params.get("q");
+      if (typeParam && validTypes.includes(typeParam)) {
+        handleDocumentTypeChange(typeParam);
+      }
+      if (qParam !== null) setSearchQuery(qParam);
+    };
+
+    applyUrlState();
+    window.addEventListener("popstate", applyUrlState);
+    return () => window.removeEventListener("popstate", applyUrlState);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {

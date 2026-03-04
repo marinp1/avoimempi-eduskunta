@@ -57,6 +57,7 @@ export type DocumentRoutesDataAccess = {
   }) => unknown;
   fetchExpertStatementYears: () => unknown;
   fetchExpertStatementCommittees: () => unknown;
+  fetchExpertStatementsByBill: (identifier: string) => unknown;
   fetchWrittenQuestionResponses: (params: {
     query?: string;
     year?: string;

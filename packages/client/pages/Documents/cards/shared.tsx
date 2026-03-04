@@ -22,6 +22,29 @@ import {
   toEduskuntaUrl,
 } from "#client/utils/eduskunta-links";
 
+/**
+ * Extracts expert name+role and organization from the structured title field.
+ * Title format: "{bill} {committee_abbr} {DD.MM.YYYY} {expert[, org]} Asiantuntijalausunto"
+ */
+export type ParsedExpertInfo = { expert: string; organization: string | null };
+export const parseExpertInfo = (
+  title: string | null,
+): ParsedExpertInfo | null => {
+  if (!title) return null;
+  const withoutSuffix = title
+    .replace(/\s*Asiantuntijalausunnon?\s+liite\s*$/i, "")
+    .replace(/\s*Asiantuntijalausunto\s*$/i, "")
+    .trim();
+  const dateMatch = withoutSuffix.match(/\d{2}\.\d{2}\.\d{4}\s+(.+)$/);
+  if (!dateMatch) return null;
+  const rest = dateMatch[1].trim();
+  const commaMatch = rest.match(/^(.+?)\s*,\s*(.+)$/);
+  if (commaMatch) {
+    return { expert: commaMatch[1].trim(), organization: commaMatch[2].trim() };
+  }
+  return { expert: rest, organization: null };
+};
+
 export const buildKysymysPdfUrl = (
   identifier: string | null,
 ): string | null => {
@@ -30,6 +53,15 @@ export const buildKysymysPdfUrl = (
   if (!m) return null;
   return toEduskuntaUrl(
     `/FI/vaski/Kysymys/Documents/${m[1].toUpperCase()}_${parseInt(m[2], 10)}+${m[3]}.pdf`,
+  );
+};
+
+export const buildEdkDocumentUrl = (
+  edkIdentifier: string | null | undefined,
+): string | null => {
+  if (!edkIdentifier) return null;
+  return toEduskuntaUrl(
+    `/FI/vaski/JulkaisuMetatieto/Documents/${edkIdentifier}.pdf`,
   );
 };
 

@@ -26,10 +26,18 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
+import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
+import { refs } from "#client/references";
 import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
-import { formatDate, getOutcomeColor, InlineRelatedSessions } from "./shared";
+import {
+  buildEdkDocumentUrl,
+  formatDate,
+  getOutcomeColor,
+  InlineRelatedSessions,
+  parseExpertInfo,
+} from "./shared";
 
 // ─── Government proposal types and card ───
 
@@ -115,6 +123,14 @@ export function GovernmentProposalCard({
   const [error, setError] = useState<string | null>(null);
   const [showSummary, setShowSummary] = useState(false);
   const [showProposalText, setShowProposalText] = useState(false);
+  const [expertStatements, setExpertStatements] = useState<Array<{
+    id: number;
+    document_type: string;
+    edk_identifier: string | null;
+    committee_name: string | null;
+    meeting_date: string | null;
+    title: string | null;
+  }> | null>(null);
 
   const subjects = item.subjects
     ? item.subjects.split("||").filter(Boolean)
@@ -138,6 +154,12 @@ export function GovernmentProposalCard({
       } finally {
         setLoading(false);
       }
+      fetch(
+        `/api/expert-statements/by-bill?identifier=${encodeURIComponent(item.parliament_identifier)}`,
+      )
+        .then((r) => (r.ok ? r.json() : []))
+        .then((data) => setExpertStatements(data))
+        .catch(() => setExpertStatements([]));
     }
     setExpanded(!expanded);
   };
@@ -587,6 +609,122 @@ export function GovernmentProposalCard({
               />
 
               <InlineRelatedSessions sessions={detail.sessions} />
+
+              {expertStatements !== null && expertStatements.length > 0 && (
+                <Box>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    justifyContent="space-between"
+                    sx={{ mb: 1.5 }}
+                  >
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <ArticleIcon sx={{ color: colors.info }} />
+                      <Typography
+                        variant="subtitle1"
+                        sx={{ fontWeight: 600, color: colors.textPrimary }}
+                      >
+                        Asiantuntijalausunnot ({expertStatements.length})
+                      </Typography>
+                    </Stack>
+                    <Typography
+                      variant="caption"
+                      onClick={() => {
+                        const href = refs.documents(
+                          "expert-statements",
+                          item.parliament_identifier,
+                        );
+                        window.history.pushState({}, "", href);
+                        window.dispatchEvent(new PopStateEvent("popstate"));
+                      }}
+                      sx={{
+                        color: colors.info,
+                        cursor: "pointer",
+                        "&:hover": { textDecoration: "underline" },
+                      }}
+                    >
+                      Näytä kaikki →
+                    </Typography>
+                  </Stack>
+                  <Stack spacing={0.75}>
+                    {expertStatements.map((stmt) => {
+                      const parsed = parseExpertInfo(stmt.title);
+                      const pdfUrl = buildEdkDocumentUrl(stmt.edk_identifier);
+                      return (
+                        <Box
+                          key={stmt.id}
+                          sx={{
+                            pl: 1.5,
+                            py: 0.75,
+                            borderLeft: `3px solid ${colors.info}`,
+                            backgroundColor: `${colors.info}06`,
+                            borderRadius: "0 4px 4px 0",
+                          }}
+                        >
+                          <Stack
+                            direction="row"
+                            justifyContent="space-between"
+                            alignItems="flex-start"
+                            gap={1}
+                          >
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  fontWeight: 500,
+                                  color: colors.textPrimary,
+                                  lineHeight: 1.35,
+                                }}
+                              >
+                                {parsed?.expert ?? stmt.title ?? "—"}
+                              </Typography>
+                              {parsed?.organization && (
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    color: colors.textSecondary,
+                                    display: "block",
+                                  }}
+                                >
+                                  {parsed.organization}
+                                </Typography>
+                              )}
+                              {(stmt.committee_name || stmt.meeting_date) && (
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    color: colors.textTertiary,
+                                    display: "block",
+                                  }}
+                                >
+                                  {[
+                                    stmt.committee_name,
+                                    stmt.meeting_date
+                                      ? formatDate(stmt.meeting_date)
+                                      : null,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(" · ")}
+                                </Typography>
+                              )}
+                            </Box>
+                            {pdfUrl && (
+                              <EduskuntaSourceLink
+                                href={pdfUrl}
+                                stopPropagation
+                                sx={{ fontSize: "0.7rem", flexShrink: 0 }}
+                              >
+                                PDF
+                              </EduskuntaSourceLink>
+                            )}
+                          </Stack>
+                        </Box>
+                      );
+                    })}
+                  </Stack>
+                </Box>
+              )}
 
               <RelatedVotings identifiers={[item.parliament_identifier]} />
             </Stack>

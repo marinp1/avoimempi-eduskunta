@@ -84,12 +84,14 @@ const generationKey = (() => {
   }
 })();
 
-const cache = createResponseCache({ generationKey });
+const cache = createResponseCache({ generationKey: isDev ? null : generationKey });
 
 console.log(
-  generationKey
-    ? `Response cache enabled (generation: ${generationKey})`
-    : "Response cache disabled (no migration timestamp found)",
+  isDev
+    ? "Response cache disabled (dev mode)"
+    : generationKey
+      ? `Response cache enabled (generation: ${generationKey})`
+      : "Response cache disabled (no migration timestamp found)",
 );
 
 const UNCACHED_ROUTES = new Set(["/api/ready"]);
