@@ -89,6 +89,20 @@ export default () => {
         </Box>
       </DataCard>
 
+      {!deferredQuery && !focusVotingId && (
+        <Typography
+          variant="overline"
+          sx={{
+            color: themedColors.textTertiary,
+            display: "block",
+            mb: 1.5,
+            letterSpacing: "0.08em",
+          }}
+        >
+          {t("votings.recentVotes")}
+        </Typography>
+      )}
+
       <React.Suspense
         fallback={
           <Box sx={{ ...commonStyles.centeredFlex, py: spacing.xl }}>

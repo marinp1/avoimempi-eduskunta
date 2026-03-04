@@ -53,11 +53,6 @@ export const App: React.FC = () => {
       <CssBaseline />
       <GlobalStyles
         styles={{
-          ":root": {
-            "--ae-ambient-primary": "rgba(74, 111, 165, 0.18)",
-            "--ae-ambient-accent": "rgba(232, 145, 58, 0.1)",
-            "--ae-ambient-neutral": "rgba(27, 42, 74, 0.06)",
-          },
           "html, body, #root": {
             minHeight: "100%",
           },
@@ -76,56 +71,6 @@ export const App: React.FC = () => {
             position: "relative",
             zIndex: 1,
           },
-          "body::before": {
-            content: '""',
-            position: "fixed",
-            width: "38vw",
-            minWidth: 320,
-            height: "38vw",
-            minHeight: 320,
-            top: "-14vw",
-            right: "-12vw",
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, var(--ae-ambient-primary) 0%, transparent 72%)",
-            filter: "blur(16px)",
-            pointerEvents: "none",
-            zIndex: 0,
-            animation: `ambientFloatA ${transitions.extraSlow * 3}ms ${transitions.easing.smooth} infinite alternate`,
-          },
-          "body::after": {
-            content: '""',
-            position: "fixed",
-            width: "28vw",
-            minWidth: 250,
-            height: "28vw",
-            minHeight: 250,
-            bottom: "-11vw",
-            left: "-10vw",
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, var(--ae-ambient-neutral) 0%, transparent 74%)",
-            filter: "blur(16px)",
-            pointerEvents: "none",
-            zIndex: 0,
-            animation: `ambientFloatB ${transitions.extraSlow * 4}ms ${transitions.easing.smooth} infinite alternate`,
-          },
-          "@keyframes ambientFloatA": {
-            from: {
-              transform: "translate3d(0, 0, 0) scale(1)",
-            },
-            to: {
-              transform: "translate3d(-2.5vw, 2vw, 0) scale(1.08)",
-            },
-          },
-          "@keyframes ambientFloatB": {
-            from: {
-              transform: "translate3d(0, 0, 0) scale(1)",
-            },
-            to: {
-              transform: "translate3d(2vw, -1.5vw, 0) scale(1.04)",
-            },
-          },
           "@keyframes pageEnter": {
             from: {
               opacity: 0,
@@ -142,9 +87,6 @@ export const App: React.FC = () => {
               animationIterationCount: "1 !important",
               transitionDuration: "0.01ms !important",
               scrollBehavior: "auto !important",
-            },
-            "body::before, body::after": {
-              display: "none",
             },
           },
         }}

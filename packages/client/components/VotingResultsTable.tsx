@@ -1,6 +1,7 @@
 import {
   Box,
   Button,
+  Link,
   Table,
   TableBody,
   TableCell,
@@ -11,6 +12,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { refs } from "#client/references";
 import { colors, commonStyles } from "#client/theme";
 
 const tableHeadCellSx = { ...commonStyles.compactTextXs, py: 0.5 };
@@ -154,7 +156,13 @@ export const VotingResultsTable: React.FC<{
               {memberVotes.map((member) => (
                 <TableRow key={member.person_id}>
                   <TableCell sx={tableBodyCellSx}>
-                    {member.last_name}, {member.first_name}
+                    <Link
+                      href={refs.member(member.person_id)}
+                      underline="hover"
+                      sx={{ color: "inherit", fontWeight: 500 }}
+                    >
+                      {member.last_name}, {member.first_name}
+                    </Link>
                   </TableCell>
                   <TableCell sx={tableBodyCellSx}>
                     {member.party_code}

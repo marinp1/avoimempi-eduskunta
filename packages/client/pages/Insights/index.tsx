@@ -1,15 +1,16 @@
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import BalanceIcon from "@mui/icons-material/Balance";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import GavelIcon from "@mui/icons-material/Gavel";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import MicIcon from "@mui/icons-material/Mic";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import {
   Box,
+  CardActionArea,
   CardContent,
   Drawer,
-  Fade,
   Grid,
   Typography,
 } from "@mui/material";
@@ -17,7 +18,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type fi from "#client/i18n/locales/fi.json";
 import { spacing } from "#client/theme";
-import { GlassCard } from "#client/theme/components";
+import { DataCard, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import CloseVotes from "./CloseVotes";
 import CoalitionOpposition from "./CoalitionOpposition";
@@ -42,16 +43,11 @@ type InsightsCardTranslationName = keyof (typeof fi)["insights"]["cards"];
 type InsightsTitleKey = `insights.cards.${InsightsCardTranslationName}.title`;
 type InsightsDescriptionKey =
   `insights.cards.${InsightsCardTranslationName}.description`;
-type InsightsActionKey = `insights.cards.${InsightsCardTranslationName}.action`;
 type InsightCard = {
   key: DrawerKey;
   icon: React.ReactNode;
-  iconColor: string;
   titleKey: InsightsTitleKey;
   descriptionKey: InsightsDescriptionKey;
-  actionKey: InsightsActionKey;
-  actionColor: string;
-  actionBg: string;
 };
 
 export default () => {
@@ -60,15 +56,18 @@ export default () => {
   const [activeDrawer, setActiveDrawer] = useState<DrawerType>(null);
   const [initialPersonId, setInitialPersonId] = useState<number | null>(null);
 
-  // URL-based state for voting activity drawer
-  const updateUrl = (open: boolean, personId?: number | null) => {
+  // URL-based state
+  const updateUrl = (open: boolean, drawer?: DrawerKey, personId?: number | null) => {
     const params = new URLSearchParams(window.location.search);
-    if (open) {
-      params.set("participation", "true");
-      if (personId) params.set("personId", personId.toString());
-      else params.delete("personId");
+    if (open && drawer) {
+      params.set("insight", drawer);
+      if (drawer === "votingActivity" && personId) {
+        params.set("personId", personId.toString());
+      } else {
+        params.delete("personId");
+      }
     } else {
-      params.delete("participation");
+      params.delete("insight");
       params.delete("personId");
     }
     const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ""}`;
@@ -78,12 +77,15 @@ export default () => {
   useEffect(() => {
     const handleUrlChange = () => {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("participation") === "true") {
-        setActiveDrawer("votingActivity");
-        const personIdParam = params.get("personId");
-        if (personIdParam) {
-          const personId = parseInt(personIdParam, 10);
-          if (!Number.isNaN(personId)) setInitialPersonId(personId);
+      const insight = params.get("insight") as DrawerKey | null;
+      if (insight) {
+        setActiveDrawer(insight);
+        if (insight === "votingActivity") {
+          const personIdParam = params.get("personId");
+          if (personIdParam) {
+            const personId = parseInt(personIdParam, 10);
+            if (!Number.isNaN(personId)) setInitialPersonId(personId);
+          }
         }
       }
     };
@@ -94,90 +96,58 @@ export default () => {
 
   const openDrawer = (drawer: DrawerKey, personId?: number) => {
     setActiveDrawer(drawer);
-    if (drawer === "votingActivity") {
-      if (personId) setInitialPersonId(personId);
-      updateUrl(true, personId);
-    }
+    if (drawer === "votingActivity" && personId) setInitialPersonId(personId);
+    updateUrl(true, drawer, personId);
   };
 
   const closeDrawer = () => {
-    if (activeDrawer === "votingActivity") {
-      setInitialPersonId(null);
-      updateUrl(false);
-    }
+    if (activeDrawer === "votingActivity") setInitialPersonId(null);
     setActiveDrawer(null);
+    updateUrl(false);
   };
 
   const cards = [
     {
       key: "timeSeries",
-      icon: <TimelineIcon sx={{ fontSize: 40 }} />,
-      iconColor: themedColors.primary,
+      icon: <TimelineIcon sx={{ fontSize: 24 }} />,
       titleKey: "insights.cards.timeSeriesStats.title",
       descriptionKey: "insights.cards.timeSeriesStats.description",
-      actionKey: "insights.cards.timeSeriesStats.action",
-      actionColor: themedColors.primary,
-      actionBg: "rgba(102, 126, 234, 0.1)",
     },
     {
       key: "partyParticipation",
-      icon: <AssessmentIcon sx={{ fontSize: 40 }} />,
-      iconColor: themedColors.success,
+      icon: <AssessmentIcon sx={{ fontSize: 24 }} />,
       titleKey: "insights.cards.partyParticipation.title",
       descriptionKey: "insights.cards.partyParticipation.description",
-      actionKey: "insights.cards.partyParticipation.action",
-      actionColor: themedColors.success,
-      actionBg: "rgba(76, 175, 80, 0.1)",
     },
     {
       key: "partyDiscipline",
-      icon: <GavelIcon sx={{ fontSize: 40 }} />,
-      iconColor: themedColors.warning,
+      icon: <GavelIcon sx={{ fontSize: 24 }} />,
       titleKey: "insights.cards.partyDiscipline.title",
       descriptionKey: "insights.cards.partyDiscipline.description",
-      actionKey: "insights.cards.partyDiscipline.action",
-      actionColor: themedColors.warning,
-      actionBg: "rgba(255, 152, 0, 0.1)",
     },
     {
       key: "votingActivity",
-      icon: <HowToVoteIcon sx={{ fontSize: 40 }} />,
-      iconColor: themedColors.success,
+      icon: <HowToVoteIcon sx={{ fontSize: 24 }} />,
       titleKey: "insights.cards.votingActivity.title",
       descriptionKey: "insights.cards.votingActivity.description",
-      actionKey: "insights.cards.votingActivity.action",
-      actionColor: themedColors.success,
-      actionBg: "rgba(76, 175, 80, 0.1)",
     },
     {
       key: "closeVotes",
-      icon: <BalanceIcon sx={{ fontSize: 40 }} />,
-      iconColor: themedColors.primary,
+      icon: <BalanceIcon sx={{ fontSize: 24 }} />,
       titleKey: "insights.cards.closeVotes.title",
       descriptionKey: "insights.cards.closeVotes.description",
-      actionKey: "insights.cards.closeVotes.action",
-      actionColor: themedColors.primary,
-      actionBg: "rgba(102, 126, 234, 0.1)",
     },
     {
       key: "coalitionOpposition",
-      icon: <AccountBalanceIcon sx={{ fontSize: 40 }} />,
-      iconColor: themedColors.primary,
+      icon: <AccountBalanceIcon sx={{ fontSize: 24 }} />,
       titleKey: "insights.cards.coalitionOpposition.title",
       descriptionKey: "insights.cards.coalitionOpposition.description",
-      actionKey: "insights.cards.coalitionOpposition.action",
-      actionColor: themedColors.primary,
-      actionBg: "rgba(102, 126, 234, 0.1)",
     },
     {
       key: "speechActivity",
-      icon: <MicIcon sx={{ fontSize: 40 }} />,
-      iconColor: themedColors.warning,
+      icon: <MicIcon sx={{ fontSize: 24 }} />,
       titleKey: "insights.cards.speechActivity.title",
       descriptionKey: "insights.cards.speechActivity.description",
-      actionKey: "insights.cards.speechActivity.action",
-      actionColor: themedColors.warning,
-      actionBg: "rgba(255, 152, 0, 0.1)",
     },
   ] as const satisfies readonly InsightCard[];
 
@@ -190,111 +160,84 @@ export default () => {
 
   return (
     <Box>
-      {/* Header Card */}
-      <Fade in timeout={500}>
-        <Box>
-          <GlassCard
-            sx={{
-              mb: spacing.lg,
-              background: themedColors.glassBackground,
-              border: `1px solid ${themedColors.glassBorder}`,
-            }}
-          >
-            <CardContent
-              sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}
-            >
-              <Typography
-                variant="h4"
-                component="h1"
-                gutterBottom
+      <PageHeader
+        title={t("insights.title")}
+        subtitle={t("insights.subtitle")}
+      />
+
+      <Grid container spacing={spacing.sm}>
+        {cards.map((card) => (
+          <Grid key={card.key} size={{ xs: 12, sm: 6, lg: 4 }}>
+            <DataCard sx={{ height: "100%", p: 0 }}>
+              <CardActionArea
+                onClick={() => openDrawer(card.key)}
                 sx={{
-                  background: themedColors.primaryGradient,
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  fontWeight: 700,
-                  mb: spacing.md,
-                  fontSize: { xs: "1.5rem", sm: "2.125rem" },
+                  height: "100%",
+                  borderRadius: "inherit",
+                  display: "flex",
+                  alignItems: "stretch",
                 }}
               >
-                {t("insights.title")}
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                {t("insights.subtitle")}
-              </Typography>
-            </CardContent>
-          </GlassCard>
-        </Box>
-      </Fade>
-
-      {/* Insights Grid */}
-      <Fade in timeout={600}>
-        <Box>
-          <Grid container spacing={spacing.md}>
-            {cards.map((card) => (
-              <Grid key={card.key} size={{ xs: 12, md: 6 }}>
-                <Box
-                  onClick={() => openDrawer(card.key)}
-                  sx={{ height: "100%" }}
+                <CardContent
+                  sx={{
+                    p: spacing.md,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                    width: "100%",
+                  }}
                 >
-                  <GlassCard
+                  <Box
                     sx={{
-                      height: "100%",
-                      background: themedColors.glassBackground,
-                      border: `1px solid ${themedColors.glassBorder}`,
-                      transition: "all 0.3s ease",
-                      cursor: "pointer",
-                      "&:hover": {
-                        transform: "translateY(-4px)",
-                        boxShadow: "0 12px 24px rgba(102, 126, 234, 0.2)",
-                      },
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
                     }}
                   >
-                    <CardContent sx={{ p: spacing.lg }}>
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", mb: 2 }}
-                      >
-                        <Box sx={{ color: card.iconColor, mr: spacing.sm }}>
-                          {card.icon}
-                        </Box>
-                        <Typography
-                          variant="h5"
-                          sx={{
-                            background: themedColors.primaryGradient,
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                            fontWeight: 700,
-                          }}
-                        >
-                          {t(card.titleKey)}
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary">
-                        {t(card.descriptionKey)}
-                      </Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.25,
+                      }}
+                    >
                       <Box
                         sx={{
-                          mt: spacing.md,
-                          p: spacing.md,
-                          borderRadius: 2,
-                          background: card.actionBg,
-                          textAlign: "center",
+                          color: themedColors.primary,
+                          display: "flex",
+                          alignItems: "center",
                         }}
                       >
-                        <Typography
-                          variant="body2"
-                          sx={{ color: card.actionColor, fontWeight: 600 }}
-                        >
-                          {t(card.actionKey)}
-                        </Typography>
+                        {card.icon}
                       </Box>
-                    </CardContent>
-                  </GlassCard>
-                </Box>
-              </Grid>
-            ))}
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: "0.9375rem",
+                          color: themedColors.textPrimary,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {t(card.titleKey)}
+                      </Typography>
+                    </Box>
+                    <ChevronRightIcon
+                      sx={{ fontSize: 18, color: themedColors.textTertiary, flexShrink: 0, ml: 1 }}
+                    />
+                  </Box>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: themedColors.textSecondary, lineHeight: 1.5 }}
+                  >
+                    {t(card.descriptionKey)}
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
+            </DataCard>
           </Grid>
-        </Box>
-      </Fade>
+        ))}
+      </Grid>
 
       {/* Drawers */}
       <Drawer

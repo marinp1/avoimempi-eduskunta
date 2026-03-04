@@ -593,6 +593,13 @@ export const createLightTheme = () => {
           },
         },
       },
+      MuiDrawer: {
+        styleOverrides: {
+          paper: {
+            borderRadius: 0,
+          },
+        },
+      },
       MuiButton: {
         styleOverrides: {
           root: {

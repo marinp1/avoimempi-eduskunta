@@ -1,6 +1,5 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
-import InsightsIcon from "@mui/icons-material/Insights";
 import {
   Alert,
   Box,
@@ -102,6 +101,11 @@ type VotingInlineDetails = {
   }[];
 };
 
+type RecentState = {
+  loading: boolean;
+  rows: VotingSearchRow[];
+};
+
 const emptyState: SearchState = {
   loading: false,
   error: null,
@@ -112,6 +116,11 @@ const emptyFocusState: FocusVotingState = {
   loading: false,
   error: null,
   row: null,
+};
+
+const emptyRecentState: RecentState = {
+  loading: false,
+  rows: [],
 };
 
 const voteMargin = (vote: VotingSearchRow) => Math.abs(vote.n_yes - vote.n_no);
@@ -851,6 +860,8 @@ export const VoteResults: React.FC<{
   const [state, setState] = React.useState<SearchState>(emptyState);
   const [focusVoting, setFocusVoting] =
     React.useState<FocusVotingState>(emptyFocusState);
+  const [recentState, setRecentState] =
+    React.useState<RecentState>(emptyRecentState);
   const [phaseFilter, setPhaseFilter] = React.useState<string>("all");
   const [sessionFilter, setSessionFilter] = React.useState<string>(
     initialSessionFilter || "all",
@@ -1027,23 +1038,80 @@ export const VoteResults: React.FC<{
 
   const noSearch = normalizedQuery.length < 3 && !focusVotingId;
 
+  React.useEffect(() => {
+    if (!noSearch) return;
+    const ac = new AbortController();
+    const run = async () => {
+      setRecentState({ loading: true, rows: [] });
+      try {
+        const params = new URLSearchParams();
+        if (selectedHallituskausi) {
+          params.set("startDate", selectedHallituskausi.startDate);
+          if (selectedHallituskausi.endDate)
+            params.set("endDate", selectedHallituskausi.endDate);
+        }
+        const url = `/api/votings/recent${params.toString() ? `?${params.toString()}` : ""}`;
+        const res = await fetch(url, { signal: ac.signal });
+        if (!res.ok) throw new Error(`${res.status}`);
+        const rows: VotingSearchRow[] = await res.json();
+        setRecentState({ loading: false, rows });
+      } catch {
+        if (!ac.signal.aborted) setRecentState({ loading: false, rows: [] });
+      }
+    };
+    run();
+    return () => ac.abort();
+  }, [noSearch, selectedHallituskausi]);
+
+  const recentGrouped = React.useMemo(() => {
+    if (!noSearch) return [];
+    const groups: VotingSearchRow[][] = [];
+    const keyToIndex = new Map<string, number>();
+    for (const vote of recentState.rows) {
+      const key = getDocumentGroupKey(vote);
+      if (key) {
+        const existingIdx = keyToIndex.get(key);
+        if (existingIdx !== undefined) {
+          groups[existingIdx].push(vote);
+        } else {
+          keyToIndex.set(key, groups.length);
+          groups.push([vote]);
+        }
+      } else {
+        groups.push([vote]);
+      }
+    }
+    return groups;
+  }, [noSearch, recentState.rows]);
+
   return (
     <Box>
-      {noSearch && (
-        <DataCard sx={{ p: 4, textAlign: "center" }}>
-          <InsightsIcon
-            sx={{ fontSize: 36, color: themedColors.textTertiary, mb: 1 }}
-          />
-          <Typography variant="h6" sx={{ color: themedColors.textSecondary }}>
-            {t("votings.startSearch")}
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{ color: themedColors.textTertiary, mt: 0.5 }}
-          >
-            {t("votings.startSearchHint")}
-          </Typography>
-        </DataCard>
+      {noSearch && recentState.loading && (
+        <Box sx={{ ...commonStyles.centeredFlex, py: 5 }}>
+          <CircularProgress size={28} sx={{ color: themedColors.primary }} />
+        </Box>
+      )}
+
+      {noSearch && !recentState.loading && recentGrouped.length > 0 && (
+        <Stack spacing={1.5}>
+          {recentGrouped.map((group) =>
+            group.length === 1 ? (
+              <VotingCard
+                key={group[0].id}
+                vote={group[0]}
+                themedColors={themedColors}
+                voteColors={voteColors}
+              />
+            ) : (
+              <VotingGroupCard
+                key={group.map((v) => v.id).join("-")}
+                votes={group}
+                themedColors={themedColors}
+                voteColors={voteColors}
+              />
+            ),
+          )}
+        </Stack>
       )}
 
       {!noSearch && (state.loading || focusVoting.loading) && (

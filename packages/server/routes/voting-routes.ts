@@ -8,6 +8,10 @@ type VotingRoutesDataAccess = {
     startDate?: string;
     endDate?: string;
   }) => unknown;
+  fetchRecentVotings: (params: {
+    startDate?: string;
+    endDate?: string;
+  }) => unknown;
   fetchVotingsByDocument: (params: { identifier: string }) => unknown;
   fetchDocumentRelations: (params: { identifier: string }) => unknown;
   fetchVotingById: (params: { id: string }) => unknown;
@@ -15,6 +19,16 @@ type VotingRoutesDataAccess = {
 };
 
 export const createVotingRoutes = (db: VotingRoutesDataAccess) => ({
+  "/api/votings/recent": {
+    GET: async (req: BunRequest<"/api/votings/recent">) => {
+      const searchParams = getSearchParams(req);
+      const startDate = getOptionalQueryParam(searchParams, "startDate");
+      const endDate = getOptionalQueryParam(searchParams, "endDate");
+      const rows = await db.fetchRecentVotings({ startDate, endDate });
+      return Response.json(rows);
+    },
+  },
+
   "/api/votings/search": {
     GET: async (req: BunRequest<"/api/votings/search">) => {
       const searchParams = getSearchParams(req);

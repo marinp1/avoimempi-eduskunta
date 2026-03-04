@@ -3,7 +3,6 @@ import {
   Event,
   Home,
   HowToVote,
-  Menu as MenuIcon,
   MoreHoriz,
   People,
 } from "@mui/icons-material";
@@ -412,7 +411,6 @@ export const Navigation: React.FC<{
             py: 0,
             px: 2,
             minHeight: 48,
-            justifyContent: "space-between",
           }}
         >
           <Typography
@@ -427,21 +425,6 @@ export const Navigation: React.FC<{
           >
             {t("app.title")}
           </Typography>
-          <IconButton
-            aria-label={t("navigation.openMenu")}
-            onClick={() => setDrawerOpen(true)}
-            sx={{
-              color: "rgba(255,255,255,0.8)",
-              p: 0.75,
-              transition: `background-color ${motion.fast}ms ${motion.easing.standard}, transform ${motion.fast}ms ${motion.easing.standard}`,
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.12)",
-                transform: "translateY(-1px)",
-              },
-            }}
-          >
-            <MenuIcon fontSize="small" />
-          </IconButton>
         </Toolbar>
       </AppBar>
 
