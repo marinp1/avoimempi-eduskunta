@@ -41,10 +41,12 @@ User=${SERVICE_USER}
 Group=${SERVICE_GROUP}
 WorkingDirectory=${APP_DIR}
 EnvironmentFile=-${ENV_FILE}
-ExecStart=/usr/bin/env bash ${APP_DIR}/scripts/pipeline-jobs.sh ${action}
+ExecStart=/usr/bin/env bash ${APP_DIR}/scripts/pipeline/pipeline-jobs.sh ${action}
 TimeoutStartSec=${timeout}
 NoNewPrivileges=true
 PrivateTmp=true
+LogsDirectory=avoimempi-eduskunta
+LogsDirectoryMode=0750
 EOF
 }
 
@@ -80,8 +82,6 @@ EOF
 }
 
 install_units() {
-  mkdir -p "$(dirname "${LOG_FILE}")"
-  chown "${SERVICE_USER}:${SERVICE_USER}" "$(dirname "${LOG_FILE}")" 2>/dev/null || true
   write_service_unit "${SCRAPE_SERVICE}"  "scrape-all"   "${SCRAPE_TIMEOUT}"
   write_service_unit "${PARSE_SERVICE}"   "parse-all"    "${PARSE_TIMEOUT}"
   write_service_unit "${MIGRATE_SERVICE}" "migrate-sync" "${MIGRATE_TIMEOUT}"
