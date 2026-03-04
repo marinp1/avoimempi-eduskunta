@@ -1,6 +1,7 @@
 // modules/server/server.ts
 
 import { getTraceDatabasePath } from "../shared/database";
+import { createResponseCache } from "./cache/response-cache";
 import { loadRuntimeConfig } from "./config/runtime-config";
 import { DatabaseConnection } from "./database/db";
 import { prepareDatabaseForServerStartup } from "./database/launch-db";
@@ -69,19 +70,45 @@ const coreRoutesDataAccess = {
 
 const { isDev, port, idleTimeout, reusePort } = loadRuntimeConfig();
 
+const generationKey = (() => {
+  try {
+    return (
+      db
+        .query<{ value: string }, []>(
+          `SELECT value FROM _migration_info WHERE key = 'last_migration'`,
+        )
+        .get()?.value ?? null
+    );
+  } catch {
+    return null;
+  }
+})();
+
+const cache = createResponseCache({ generationKey });
+
+console.log(
+  generationKey
+    ? `Response cache enabled (generation: ${generationKey})`
+    : "Response cache disabled (no migration timestamp found)",
+);
+
+const UNCACHED_ROUTES = new Set(["/api/ready"]);
+
 const server = Bun.serve({
   port,
   reusePort,
   idleTimeout,
   routes: {
     ...createStaticPageRoutes(homepage),
-    ...createCoreRoutes(coreRoutesDataAccess),
-    ...createPersonRoutes(personRepository),
-    ...createVotingRoutes(votingRepository),
-    ...createSessionRoutes(sessionRepository),
-    ...createInsightAnalyticsRoutes(analyticsRepository),
-    ...createPartyRoutes(analyticsRepository),
-    ...createDocumentRoutes(documentRepository),
+    ...cache.wrapRoutes(createCoreRoutes(coreRoutesDataAccess), {
+      exclude: UNCACHED_ROUTES,
+    }),
+    ...cache.wrapRoutes(createPersonRoutes(personRepository)),
+    ...cache.wrapRoutes(createVotingRoutes(votingRepository)),
+    ...cache.wrapRoutes(createSessionRoutes(sessionRepository)),
+    ...cache.wrapRoutes(createInsightAnalyticsRoutes(analyticsRepository)),
+    ...cache.wrapRoutes(createPartyRoutes(analyticsRepository)),
+    ...cache.wrapRoutes(createDocumentRoutes(documentRepository)),
     "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
 
