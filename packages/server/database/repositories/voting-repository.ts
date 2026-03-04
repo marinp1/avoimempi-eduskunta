@@ -6,6 +6,7 @@ import votingMemberVotesById from "../queries/VOTING_MEMBER_VOTES_BY_ID.sql";
 import votingPartyBreakdownById from "../queries/VOTING_PARTY_BREAKDOWN_BY_ID.sql";
 import votingRelatedById from "../queries/VOTING_RELATED_BY_ID.sql";
 import votingsByDocument from "../queries/VOTINGS_BY_DOCUMENT.sql";
+import votingsRecent from "../queries/VOTINGS_RECENT.sql";
 import votingsSearch from "../queries/VOTINGS_SEARCH.sql";
 import {
   buildDocumentIdentifierVariants,
@@ -34,6 +35,23 @@ export class VotingRepository {
     >(votingsSearch);
     const data = stmt.all({
       $query: searchQuery,
+      $startDate: params.startDate ?? null,
+      $endDateExclusive: endDateExclusiveValue,
+    });
+    stmt.finalize();
+    return data;
+  }
+
+  public fetchRecentVotings(params: {
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const endDateExclusiveValue = endDateExclusive(params.endDate);
+    const stmt = this.db.prepare<
+      DatabaseQueries.VotingSearchResult,
+      { $startDate: string | null; $endDateExclusive: string | null }
+    >(votingsRecent);
+    const data = stmt.all({
       $startDate: params.startDate ?? null,
       $endDateExclusive: endDateExclusiveValue,
     });

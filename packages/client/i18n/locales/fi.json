@@ -406,6 +406,7 @@
     "search": "Hae äänestyksiä otsikolla",
     "searchPlaceholder": "Kirjoita vähintään 3 merkkiä...",
     "searchHelp": "Haku kohdistuu otsikoihin ja tukee analyysiä suoraan tulosjoukosta.",
+    "recentVotes": "Viimeisimmät äänestykset",
     "startSearch": "Aloita kirjoittamalla hakusana",
     "startSearchHint": "Näytämme analyysin, kun hakuehto on vähintään 3 merkkiä.",
     "noResults": "Ei äänestyksiä tällä haulla.",
