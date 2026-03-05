@@ -1,11 +1,4 @@
-import {
-  Box,
-  Button,
-  Card,
-  type SxProps,
-  type Theme,
-  Typography,
-} from "@mui/material";
+import { Box, Card, type SxProps, type Theme, Typography } from "@mui/material";
 import type React from "react";
 import { useTranslation } from "react-i18next";
 import { colors, commonStyles } from "./index";
@@ -20,11 +13,6 @@ export const DataCard: React.FC<{
 }> = ({ children, sx }) => (
   <Card sx={{ ...commonStyles.dataCard, ...sx }}>{children}</Card>
 );
-
-/**
- * GlassCard - kept as alias for DataCard during migration
- */
-export const GlassCard = DataCard;
 
 /**
  * PageHeader - consistent title + subtitle + optional actions
@@ -227,131 +215,5 @@ export const VoteMarginBar: React.FC<{
         }}
       />
     </Box>
-  );
-};
-
-/**
- * Primary button
- */
-export const GradientButton: React.FC<{
-  children: React.ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-  startIcon?: React.ReactNode;
-  sx?: SxProps<Theme>;
-}> = ({ children, onClick, disabled, startIcon, sx }) => (
-  <Button
-    variant="contained"
-    onClick={onClick}
-    disabled={disabled}
-    startIcon={startIcon}
-    sx={{ ...commonStyles.gradientButton, ...sx }}
-  >
-    {children}
-  </Button>
-);
-
-/**
- * Header box for sections
- */
-export const GradientHeader: React.FC<{
-  children: React.ReactNode;
-  sx?: SxProps<Theme>;
-}> = ({ children, sx }) => (
-  <Box sx={{ ...commonStyles.gradientHeader, p: 2, ...sx }}>{children}</Box>
-);
-
-/**
- * Semantic status box components
- */
-export const SuccessBox: React.FC<{
-  children: React.ReactNode;
-  sx?: SxProps<Theme>;
-}> = ({ children, sx }) => (
-  <Box sx={{ ...commonStyles.successBox, ...sx }}>{children}</Box>
-);
-
-export const ErrorBox: React.FC<{
-  children: React.ReactNode;
-  sx?: SxProps<Theme>;
-}> = ({ children, sx }) => (
-  <Box sx={{ ...commonStyles.errorBox, ...sx }}>{children}</Box>
-);
-
-export const WarningBox: React.FC<{
-  children: React.ReactNode;
-  sx?: SxProps<Theme>;
-}> = ({ children, sx }) => (
-  <Box sx={{ ...commonStyles.warningBox, ...sx }}>{children}</Box>
-);
-
-export const InfoBox: React.FC<{
-  children: React.ReactNode;
-  sx?: SxProps<Theme>;
-}> = ({ children, sx }) => (
-  <Box sx={{ ...commonStyles.infoBox, ...sx }}>{children}</Box>
-);
-
-/**
- * Gradient text component (now just uses primary color)
- */
-export const GradientText: React.FC<{
-  children: React.ReactNode;
-  sx?: SxProps<Theme>;
-  component?: React.ElementType;
-}> = ({ children, sx, component: Component = "span" }) => (
-  <Component sx={{ ...commonStyles.gradientText, ...sx }}>{children}</Component>
-);
-
-/**
- * StatCard - kept for backwards compat, prefer MetricCard
- */
-export const StatCard: React.FC<{
-  title: string;
-  value: string | number;
-  icon?: React.ReactNode;
-  gradient?: string;
-  sx?: SxProps<Theme>;
-}> = ({ title, value, icon, sx }) => {
-  const themedColors = useThemedColors();
-
-  return (
-    <Card
-      sx={{
-        ...commonStyles.dataCard,
-        p: 3,
-        ...sx,
-      }}
-    >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
-        {icon && (
-          <Box
-            sx={{
-              p: 1,
-              borderRadius: 2,
-              background: colors.backgroundSubtle,
-              color: colors.primaryLight,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {icon}
-          </Box>
-        )}
-        <Box sx={{ fontSize: "0.8125rem", color: themedColors.textSecondary }}>
-          {title}
-        </Box>
-      </Box>
-      <Box
-        sx={{
-          fontSize: "1.75rem",
-          fontWeight: 700,
-          color: themedColors.textPrimary,
-        }}
-      >
-        {value}
-      </Box>
-    </Card>
   );
 };

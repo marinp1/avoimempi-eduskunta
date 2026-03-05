@@ -465,7 +465,7 @@ const inferDocumentType = (identifier: string | null): string | null => {
 const getBillApiPath = (docType: string): string | null => {
   const map: Record<string, string> = {
     "government-proposals": "/api/government-proposals/by-identifier",
-    "interpellations": "/api/interpellations/by-identifier",
+    interpellations: "/api/interpellations/by-identifier",
     "written-questions": "/api/written-questions/by-identifier",
     "committee-reports": "/api/committee-reports/by-identifier",
     "legislative-initiatives-law": "/api/legislative-initiatives/by-identifier",
@@ -540,51 +540,52 @@ export function ExpertStatementCard({
                 fontWeight: 500,
               }}
             />
-            {item.bill_identifier && (() => {
-              const docType = inferDocumentType(item.bill_identifier);
-              return (
-                <Chip
-                  label={item.bill_identifier}
-                  size="small"
-                  clickable={!!docType}
-                  onClick={
-                    docType
-                      ? async (e: React.MouseEvent) => {
-                          e.preventDefault();
-                          const next = !showBillPreview;
-                          setShowBillPreview(next);
-                          if (next && !billPreview) {
-                            const apiPath = getBillApiPath(docType);
-                            if (apiPath) {
-                              setBillPreviewLoading(true);
-                              try {
-                                const r = await fetch(
-                                  `${apiPath}/${encodeURIComponent(item.bill_identifier!)}`,
-                                );
-                                if (r.ok) setBillPreview(await r.json());
-                              } finally {
-                                setBillPreviewLoading(false);
+            {item.bill_identifier &&
+              (() => {
+                const docType = inferDocumentType(item.bill_identifier);
+                return (
+                  <Chip
+                    label={item.bill_identifier}
+                    size="small"
+                    clickable={!!docType}
+                    onClick={
+                      docType
+                        ? async (e: React.MouseEvent) => {
+                            e.preventDefault();
+                            const next = !showBillPreview;
+                            setShowBillPreview(next);
+                            if (next && !billPreview) {
+                              const apiPath = getBillApiPath(docType);
+                              if (apiPath) {
+                                setBillPreviewLoading(true);
+                                try {
+                                  const r = await fetch(
+                                    `${apiPath}/${encodeURIComponent(item.bill_identifier!)}`,
+                                  );
+                                  if (r.ok) setBillPreview(await r.json());
+                                } finally {
+                                  setBillPreviewLoading(false);
+                                }
                               }
                             }
                           }
-                        }
-                      : undefined
-                  }
-                  sx={{
-                    backgroundColor: showBillPreview
-                      ? `${colors.primary}20`
-                      : `${colors.primary}12`,
-                    color: colors.primary,
-                    fontFamily: "monospace",
-                    fontSize: "0.7rem",
-                    cursor: docType ? "pointer" : "default",
-                    "&:hover": docType
-                      ? { backgroundColor: `${colors.primary}20` }
-                      : {},
-                  }}
-                />
-              );
-            })()}
+                        : undefined
+                    }
+                    sx={{
+                      backgroundColor: showBillPreview
+                        ? `${colors.primary}20`
+                        : `${colors.primary}12`,
+                      color: colors.primary,
+                      fontFamily: "monospace",
+                      fontSize: "0.7rem",
+                      cursor: docType ? "pointer" : "default",
+                      "&:hover": docType
+                        ? { backgroundColor: `${colors.primary}20` }
+                        : {},
+                    }}
+                  />
+                );
+              })()}
             {isNonPublic && (
               <Chip
                 label={t("documents.nonPublic")}
@@ -651,10 +652,7 @@ export function ExpertStatementCard({
           }}
         >
           {(item.committee_name || item.meeting_identifier) && (
-            <Typography
-              variant="caption"
-              sx={{ color: colors.textTertiary }}
-            >
+            <Typography variant="caption" sx={{ color: colors.textTertiary }}>
               {[item.committee_name, item.meeting_identifier]
                 .filter(Boolean)
                 .join(" · ")}
@@ -685,7 +683,10 @@ export function ExpertStatementCard({
             {billPreviewLoading && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <CircularProgress size={14} />
-                <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: colors.textSecondary }}
+                >
                   Ladataan...
                 </Typography>
               </Box>
@@ -694,50 +695,70 @@ export function ExpertStatementCard({
               <Stack spacing={0.5}>
                 <Typography
                   variant="body2"
-                  sx={{ fontWeight: 500, color: colors.textPrimary, lineHeight: 1.35 }}
+                  sx={{
+                    fontWeight: 500,
+                    color: colors.textPrimary,
+                    lineHeight: 1.35,
+                  }}
                 >
                   {billPreview.title || item.bill_identifier}
                 </Typography>
-                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" gap={0.5}>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  alignItems="center"
+                  flexWrap="wrap"
+                  gap={0.5}
+                >
                   {billPreview.submission_date && (
-                    <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: colors.textSecondary }}
+                    >
                       {formatDate(billPreview.submission_date)}
                     </Typography>
                   )}
                   {billPreview.decision_outcome && (
-                    <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: colors.textSecondary }}
+                    >
                       · {billPreview.decision_outcome}
                     </Typography>
                   )}
                 </Stack>
-                {item.bill_identifier && (() => {
-                  const docType = inferDocumentType(item.bill_identifier);
-                  if (!docType) return null;
-                  const href = refs.documents(docType, item.bill_identifier);
-                  return (
-                    <Typography
-                      variant="caption"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        window.history.pushState({}, "", href);
-                        window.dispatchEvent(new PopStateEvent("popstate"));
-                      }}
-                      sx={{
-                        color: colors.primary,
-                        cursor: "pointer",
-                        "&:hover": { textDecoration: "underline" },
-                        display: "inline-block",
-                        mt: 0.25,
-                      }}
-                    >
-                      Avaa asiakirjaluettelossa →
-                    </Typography>
-                  );
-                })()}
+                {item.bill_identifier &&
+                  (() => {
+                    const docType = inferDocumentType(item.bill_identifier);
+                    if (!docType) return null;
+                    const href = refs.documents(docType, item.bill_identifier);
+                    return (
+                      <Typography
+                        variant="caption"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          window.history.pushState({}, "", href);
+                          window.dispatchEvent(new PopStateEvent("popstate"));
+                        }}
+                        sx={{
+                          color: colors.primary,
+                          cursor: "pointer",
+                          "&:hover": { textDecoration: "underline" },
+                          display: "inline-block",
+                          mt: 0.25,
+                        }}
+                      >
+                        Avaa asiakirjaluettelossa →
+                      </Typography>
+                    );
+                  })()}
               </Stack>
             )}
             {!billPreviewLoading && !billPreview && (
-              <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+              <Typography
+                variant="caption"
+                sx={{ color: colors.textSecondary }}
+              >
                 Ei lisätietoja saatavilla.
               </Typography>
             )}

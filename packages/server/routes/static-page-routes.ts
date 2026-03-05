@@ -6,8 +6,4 @@ export const createStaticPageRoutes = (homepage: unknown) => ({
   "/aanestykset": homepage,
   "/asiakirjat": homepage,
   "/analytiikka": homepage,
-  "/composition": homepage,
-  "/votings": homepage,
-  "/sessions": homepage,
-  "/insights": homepage,
 });

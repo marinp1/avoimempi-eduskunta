@@ -15,8 +15,7 @@ import {
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { colors, commonStyles, gradients } from "#client/theme";
-import { GlassCard } from "#client/theme/components";
-import { useThemedColors } from "#client/theme/ThemeContext";
+import { DataCard } from "#client/theme/components";
 import type { ParticipationData, SortDirection, SortField } from "./types";
 
 interface ParticipationTableProps {
@@ -29,7 +28,6 @@ export function ParticipationTable({
   onSelectPerson,
 }: ParticipationTableProps) {
   const { t } = useTranslation();
-  const _themedColors = useThemedColors();
   const [sortField, setSortField] = useState<SortField>("participation_rate");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [page, setPage] = useState(0);
@@ -88,7 +86,7 @@ export function ParticipationTable({
   };
 
   return (
-    <GlassCard>
+    <DataCard>
       <TableContainer>
         <Table>
           <TableHead>
@@ -150,7 +148,7 @@ export function ParticipationTable({
                     },
                   }}
                 >
-                  Osallistuminen
+                  {t("parties.table.participation")}
                 </TableSortLabel>
               </TableCell>
             </TableRow>
@@ -231,6 +229,6 @@ export function ParticipationTable({
           }`
         }
       />
-    </GlassCard>
+    </DataCard>
   );
 }

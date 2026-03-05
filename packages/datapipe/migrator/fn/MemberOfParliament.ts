@@ -45,7 +45,6 @@ const DatabaseTables = Object.freeze({
   CommitteeMembership: "CommitteeMembership",
   TrustPosition: "TrustPosition",
   GovernmentMembership: "GovernmentMembership",
-  Publications: "Publications",
   ParliamentaryGroup: "ParliamentaryGroup",
   ParliamentaryGroupMembership: "ParliamentaryGroupMembership",
   District: "District",
@@ -609,9 +608,6 @@ export default (db: Database) => {
       year: parseYear(v.Vuosi),
     }));
 
-    // TODO: Publications
-    const _publicationRows: DatabaseTables.Publication[] = [];
-
     const insert = insertRows(db);
 
     insert(DatabaseTables.Representative, [trimRowStrings(representativeRow)]);
@@ -645,8 +641,6 @@ export default (db: Database) => {
     );
     insert(DatabaseTables.WorkHistory, trimRows(workRows));
     insert(DatabaseTables.Education, trimRows(educationRows));
-
-    // await insertRows(DatabaseTables.Publication, publicationRows); TODO: NOT IMPLEMENTED YET
 
     if (process.env.DEBUG) console.log("Mapped", dataToImport.personId);
   };

@@ -485,7 +485,11 @@ const OverviewTab: React.FC<{
                 label={t("composition.details.website")}
                 value={
                   <a
-                    href={isSafeExternalUrl(details.representativeDetails.website) ? details.representativeDetails.website : undefined}
+                    href={
+                      isSafeExternalUrl(details.representativeDetails.website)
+                        ? details.representativeDetails.website
+                        : undefined
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{

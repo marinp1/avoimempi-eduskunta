@@ -28,11 +28,6 @@ const parseElement = (
             ) ?? [];
           // Return undefined if empty, this is then be removed during stringify
           if (!element.attributes && data.length === 0) return undefined;
-          const entries: Array<[string, any]> = [];
-          // FIXME: Entries are not used in any shape or form.
-          if (element.attributes) {
-            entries.push(["attributes", element.attributes]);
-          }
           // Handle case where there is exactly one array element
           if (data.length === 1 && typeof data[0] === "string") {
             if (element.attributes) {

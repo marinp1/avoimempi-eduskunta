@@ -24,7 +24,7 @@ import {
 } from "recharts";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { colors, spacing } from "#client/theme";
-import { GlassCard } from "#client/theme/components";
+import { DataCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 
 interface GenderData {
@@ -212,7 +212,7 @@ export default function TimeSeriesStatistics({
       )}
       <Fade in timeout={500}>
         <Box sx={{ mb: spacing.xl }}>
-          <GlassCard>
+          <DataCard>
             <CardContent sx={{ p: spacing.lg }}>
               <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
                 {t("insights.timeSeries.gender.title")}
@@ -392,14 +392,14 @@ export default function TimeSeriesStatistics({
                 </Box>
               </Box>
             </CardContent>
-          </GlassCard>
+          </DataCard>
         </Box>
       </Fade>
 
       {/* Age Distribution Section */}
       <Fade in timeout={600}>
         <Box>
-          <GlassCard>
+          <DataCard>
             <CardContent sx={{ p: spacing.lg }}>
               <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
                 {t("insights.timeSeries.age.title")}
@@ -601,7 +601,7 @@ export default function TimeSeriesStatistics({
                 </Box>
               </Box>
             </CardContent>
-          </GlassCard>
+          </DataCard>
         </Box>
       </Fade>
     </Box>

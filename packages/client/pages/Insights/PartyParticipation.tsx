@@ -31,7 +31,7 @@ import {
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
 import { colors, commonStyles, spacing } from "#client/theme";
-import { GlassCard } from "#client/theme/components";
+import { DataCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 
 interface PartyParticipationData {
@@ -196,7 +196,7 @@ export default function PartyParticipation({
             backgroundColor: themedColors.backgroundPaper,
             padding: spacing.md,
             borderRadius: 2,
-            border: `1px solid ${themedColors.glassBorder}`,
+            border: `1px solid ${themedColors.dataBorder}`,
             boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
             maxHeight: "400px",
             overflowY: "auto",
@@ -314,7 +314,7 @@ export default function PartyParticipation({
       {/* Filters */}
       <Fade in timeout={400}>
         <Box sx={{ mb: spacing.lg }}>
-          <GlassCard>
+          <DataCard>
             <CardContent sx={{ p: spacing.md }}>
               <Typography variant="h6" sx={{ mb: spacing.sm, fontWeight: 600 }}>
                 {t("insights.partyParticipation.filters")}
@@ -351,14 +351,14 @@ export default function PartyParticipation({
                 </Alert>
               )}
             </CardContent>
-          </GlassCard>
+          </DataCard>
         </Box>
       </Fade>
 
       {/* Party Selection */}
       <Fade in timeout={500}>
         <Box sx={{ mb: spacing.lg }}>
-          <GlassCard>
+          <DataCard>
             <CardContent sx={{ p: spacing.md }}>
               <Typography variant="h6" sx={{ mb: spacing.sm, fontWeight: 600 }}>
                 {t("insights.partyParticipation.selectParties")}
@@ -404,14 +404,14 @@ export default function PartyParticipation({
                 ))}
               </FormGroup>
             </CardContent>
-          </GlassCard>
+          </DataCard>
         </Box>
       </Fade>
 
       {/* Chart */}
       <Fade in timeout={600}>
         <Box>
-          <GlassCard>
+          <DataCard>
             <CardContent sx={{ p: spacing.lg }}>
               <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
                 {t("insights.partyParticipation.chartTitle")}
@@ -480,7 +480,7 @@ export default function PartyParticipation({
                 </Alert>
               )}
             </CardContent>
-          </GlassCard>
+          </DataCard>
         </Box>
       </Fade>
 
@@ -488,7 +488,7 @@ export default function PartyParticipation({
       {data.length > 0 && (
         <Fade in timeout={700}>
           <Box sx={{ mt: spacing.lg }}>
-            <GlassCard>
+            <DataCard>
               <CardContent sx={{ p: spacing.lg }}>
                 <Typography
                   variant="h5"
@@ -555,7 +555,7 @@ export default function PartyParticipation({
                   </Box>
                 </Box>
               </CardContent>
-            </GlassCard>
+            </DataCard>
           </Box>
         </Fade>
       )}

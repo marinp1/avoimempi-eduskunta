@@ -84,7 +84,9 @@ const generationKey = (() => {
   }
 })();
 
-const cache = createResponseCache({ generationKey: isDev ? null : generationKey });
+const cache = createResponseCache({
+  generationKey: isDev ? null : generationKey,
+});
 
 console.log(
   isDev

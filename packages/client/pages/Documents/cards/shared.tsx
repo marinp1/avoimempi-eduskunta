@@ -372,7 +372,11 @@ export function InlineRelatedSessions({
                                 size="small"
                                 component="a"
                                 clickable
-                                href={isSafeExternalUrl(link.url) ? link.url : undefined}
+                                href={
+                                  isSafeExternalUrl(link.url)
+                                    ? link.url
+                                    : undefined
+                                }
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 label={

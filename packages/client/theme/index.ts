@@ -15,7 +15,6 @@ export const colors = {
 
   // Accent - amber, used sparingly
   accent: "#E8913A",
-  accentLight: "#F0A85C",
 
   // Semantic colors
   success: "#1B7D3A",
@@ -27,7 +26,6 @@ export const colors = {
   info: "#2563EB",
   infoLight: "#3B82F6",
   neutral: "#64748B",
-  neutralLight: "#94A3B8",
 
   // Chart colors
   chartPurple: "#8B5CF6",
@@ -36,9 +34,6 @@ export const colors = {
   chartOrange: "#F59E0B",
   chartRed: "#EF4444",
   chartPink: "#EC4899",
-  chartCyan: "#06B6D4",
-  chartTeal: "#14B8A6",
-  chartGray: "#94A3B8",
 
   // Semantic role colors
   ministerColor: "#8B5CF6",
@@ -51,14 +46,7 @@ export const colors = {
   // Background colors - Nordic clean
   backgroundDefault: "#FAFBFC",
   backgroundPaper: "#FFFFFF",
-  backgroundGradientStart: "#FAFBFC",
-  backgroundGradientEnd: "#F3F5F7",
   backgroundSubtle: "#F3F5F7",
-
-  // Glass-morphism (kept for backwards compat, but de-emphasized)
-  glassBackground: "rgba(255,255,255,0.98)",
-  glassBorder: "rgba(27,42,74,0.08)",
-  glassBackdrop: "blur(16px)",
 
   // Text colors - Clear hierarchy
   textPrimary: "#1A1A2E",
@@ -66,8 +54,6 @@ export const colors = {
   textTertiary: "#9A9AB0",
 
   // Data display
-  dataHighlight: "#1B2A4A",
-  dataLabel: "#5A5A72",
   dataBorder: "#E2E8F0",
 } as const;
 
@@ -76,22 +62,10 @@ export const colors = {
  */
 export const gradients = {
   primary: "#1B2A4A",
-  primaryHover: "#0F1B33",
-  primarySubtle: "linear-gradient(180deg, #4A6FA5 0%, #1B2A4A 100%)",
-  success: "linear-gradient(180deg, #1B7D3A 0%, #2E9E50 100%)",
-  accent: "linear-gradient(180deg, #E8913A 0%, #F0A85C 100%)",
   background: `linear-gradient(180deg, ${colors.backgroundDefault} 0%, ${colors.backgroundSubtle} 100%)`,
-  backgroundAlt: `linear-gradient(to bottom, #FFFFFF 0%, ${colors.backgroundDefault} 100%)`,
 
-  // Admin UI specific
+  // Stat cards / voting UI
   scraper: "linear-gradient(180deg, #3B82F6 0%, #2563EB 100%)",
-  parser: "linear-gradient(180deg, #8B5CF6 0%, #6D28D9 100%)",
-  migrator: "linear-gradient(180deg, #1B7D3A 0%, #2E9E50 100%)",
-
-  // Semantic
-  danger: "linear-gradient(180deg, #C13030 0%, #D04848 100%)",
-  info: "linear-gradient(180deg, #2563EB 0%, #3B82F6 100%)",
-  warning: "linear-gradient(180deg, #D97706 0%, #E89220 100%)",
 } as const;
 
 /**
@@ -146,17 +120,6 @@ export const transitions = {
  */
 export const commonStyles = {
   /**
-   * Glass-morphism card style (deprecated - use dataCard instead)
-   */
-  glassCard: {
-    borderRadius: borderRadius.md,
-    background: colors.backgroundPaper,
-    border: `1px solid ${colors.dataBorder}`,
-    boxShadow: shadows.card,
-    transition: `box-shadow ${transitions.normal}ms ${transitions.easing.standard}, border-color ${transitions.normal}ms ${transitions.easing.standard}`,
-  } satisfies SxProps<Theme>,
-
-  /**
    * Data card - clean, flat styling with 1px border
    */
   dataCard: {
@@ -181,27 +144,6 @@ export const commonStyles = {
   gradientText: {
     color: colors.primary,
     fontWeight: 700,
-  } satisfies SxProps<Theme>,
-
-  /**
-   * Primary button style
-   */
-  gradientButton: {
-    background: colors.primary,
-    color: "white",
-    fontWeight: 500,
-    transition: `transform ${transitions.fast}ms ${transitions.easing.standard}, background-color ${transitions.fast}ms ${transitions.easing.standard}`,
-    "@media (hover: hover) and (pointer: fine)": {
-      "&:hover": {
-        transform: "translateY(-1px)",
-      },
-    },
-    "&:hover": {
-      background: colors.primaryDark,
-    },
-    "&:active": {
-      transform: "translateY(0)",
-    },
   } satisfies SxProps<Theme>,
 
   /**
@@ -331,37 +273,6 @@ export const commonStyles = {
   } satisfies SxProps<Theme>,
 
   /**
-   * Semantic color boxes
-   */
-  successBox: {
-    background: "rgba(34, 197, 94, 0.08)",
-    border: "1px solid rgba(34, 197, 94, 0.2)",
-    borderRadius: borderRadius.sm,
-    padding: spacing.sm,
-  } satisfies SxProps<Theme>,
-
-  errorBox: {
-    background: "rgba(239, 68, 68, 0.08)",
-    border: "1px solid rgba(239, 68, 68, 0.2)",
-    borderRadius: borderRadius.sm,
-    padding: spacing.sm,
-  } satisfies SxProps<Theme>,
-
-  warningBox: {
-    background: "rgba(245, 158, 11, 0.08)",
-    border: "1px solid rgba(245, 158, 11, 0.2)",
-    borderRadius: borderRadius.sm,
-    padding: spacing.sm,
-  } satisfies SxProps<Theme>,
-
-  infoBox: {
-    background: "rgba(59, 130, 246, 0.08)",
-    border: "1px solid rgba(59, 130, 246, 0.2)",
-    borderRadius: borderRadius.sm,
-    padding: spacing.sm,
-  } satisfies SxProps<Theme>,
-
-  /**
    * Styled text field
    */
   styledTextField: {
@@ -379,29 +290,6 @@ export const commonStyles = {
   } satisfies SxProps<Theme>,
 
   /**
-   * Header bar
-   */
-  gradientHeader: {
-    background: colors.primary,
-    color: "white",
-    borderRadius: `12px 12px 0 0`,
-  } satisfies SxProps<Theme>,
-
-  /**
-   * Fade-in animation
-   */
-  fadeIn: (delay: number = 0) =>
-    ({
-      animation: `fadeIn ${transitions.normal}ms ${transitions.easing.emphasized}`,
-      animationDelay: `${delay}ms`,
-      animationFillMode: "both",
-      "@keyframes fadeIn": {
-        from: { opacity: 0, transform: "translateY(4px)" },
-        to: { opacity: 1, transform: "translateY(0)" },
-      },
-    }) satisfies SxProps<Theme>,
-
-  /**
    * Centered flex container
    */
   centeredFlex: {
@@ -409,16 +297,6 @@ export const commonStyles = {
     alignItems: "center",
     justifyContent: "center",
   } satisfies SxProps<Theme>,
-
-  /**
-   * Flex container with gap
-   */
-  flexWithGap: (gap: number = spacing.sm) =>
-    ({
-      display: "flex",
-      alignItems: "center",
-      gap,
-    }) satisfies SxProps<Theme>,
 
   /**
    * Responsive grid layout
@@ -429,16 +307,6 @@ export const commonStyles = {
       gridTemplateColumns: `repeat(auto-fit, minmax(${minWidth}px, 1fr))`,
       gap: spacing.sm,
     }) satisfies SxProps<Theme>,
-
-  /**
-   * Sticky table header
-   */
-  stickyTableHeader: {
-    position: "sticky",
-    top: 0,
-    zIndex: 10,
-    background: colors.primary,
-  } satisfies SxProps<Theme>,
 } as const;
 
 /**

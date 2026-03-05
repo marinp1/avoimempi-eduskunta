@@ -57,7 +57,11 @@ export default () => {
   const [initialPersonId, setInitialPersonId] = useState<number | null>(null);
 
   // URL-based state
-  const updateUrl = (open: boolean, drawer?: DrawerKey, personId?: number | null) => {
+  const updateUrl = (
+    open: boolean,
+    drawer?: DrawerKey,
+    personId?: number | null,
+  ) => {
     const params = new URLSearchParams(window.location.search);
     if (open && drawer) {
       params.set("insight", drawer);
@@ -223,7 +227,12 @@ export default () => {
                       </Typography>
                     </Box>
                     <ChevronRightIcon
-                      sx={{ fontSize: 18, color: themedColors.textTertiary, flexShrink: 0, ml: 1 }}
+                      sx={{
+                        fontSize: 18,
+                        color: themedColors.textTertiary,
+                        flexShrink: 0,
+                        ml: 1,
+                      }}
                     />
                   </Box>
                   <Typography

@@ -23,9 +23,7 @@
       "istunnot": "Istunnot",
       "aanestykset": "Äänestykset",
       "asiakirjat": "Asiakirjat",
-      "analytiikka": "Analytiikka",
-      "tila": "Tietoja",
-      "admin": "Admin"
+      "analytiikka": "Analytiikka"
     }
   },
   "home": {
@@ -693,59 +691,6 @@
       }
     }
   },
-  "admin": {
-    "title": "Ylläpidon hallintapaneeli",
-    "subtitle": "Tietokannan tietojen noutamisen ja jäsennyksen tila",
-    "refreshStatus": "Päivitä tila",
-    "overview": {
-      "overallProgress": "Yleinen edistyminen",
-      "tablesWithData": "Tauluja, joissa on dataa",
-      "completedTables": "Valmiit taulut",
-      "scraped100": "100% noudettu",
-      "tablesParsed": "Tauluja jäsennetty",
-      "parsedRows": "jäsennettyä riviä"
-    },
-    "table": {
-      "tableName": "Taulun nimi",
-      "rawData": "Raakadata",
-      "rawPages": "Raakasivu",
-      "rawRows": "Raakarivit",
-      "rawLastUpdatedLine": "Raaka päivitetty: {{value}}",
-      "parsedData": "Jäsennetty data",
-      "parsedRows": "Jäsennetyt rivit",
-      "parsedLastUpdatedLine": "Jäsennetty päivitetty: {{value}}",
-      "status": "Tila"
-    },
-    "status": {
-      "complete": "Valmis",
-      "needsReparsing": "Vaatii uudelleenjäsennystä",
-      "needsParsing": "Vaatii jäsennystä",
-      "needsScraping": "Vaatii noutamista"
-    },
-    "actions": {
-      "scraper": "Nouto",
-      "cancelScrape": "Peruuta nouto",
-      "scraping": "Noudetaan...",
-      "scrape": "Nouda",
-      "parser": "Jäsennys",
-      "cancelParse": "Peruuta jäsennys",
-      "parsing": "Jäsennetään...",
-      "parse": "Jäsennä",
-      "scrapeFirst": "(Nouda data ensin)"
-    },
-    "bulkOperations": {
-      "selectTables": "Valitse taulut",
-      "selectAtLeastOne": "Valitse vähintään yksi taulu",
-      "tablesSelected_one": "{{count}} taulu valittu",
-      "tablesSelected_other": "{{count}} taulua valittu",
-      "current": "Nykyinen:"
-    },
-    "controlPanel": {
-      "start": "Aloita",
-      "stop": "Pysäytä",
-      "lastUpdate": "Viimeisin päivitys:"
-    }
-  },
   "pageSources": {
     "buttonLabel": "Lähteet",
     "drawerTitle": "Sivun tietolähteet",
@@ -755,46 +700,5 @@
     "noMapping": "Tälle sivulle ei ole vielä määritetty tietolähdekartoitusta.",
     "openTooltip": "Näytä sivun tietolähteet ja aikaleimat",
     "summaryCounts": "Tuotuja rivejä: {{rows}} | Lähdesivuja: {{pages}}"
-  },
-  "status": {
-    "title": "Tietolähteiden tila",
-    "subtitle": "Tietokantaan tuodun datan tilanne ja laatu",
-    "lastUpdated": "Viimeksi päivitetty",
-    "lastUpdatedLine": "Viimeksi päivitetty: {{value}}",
-    "overview": {
-      "totalTables": "Tauluja yhteensä",
-      "completeness": "Täyttöaste",
-      "totalRows": "Rivejä yhteensä"
-    },
-    "databaseTables": {
-      "title": "Tietokantataulut",
-      "description": "Rivimäärä jokaisessa tietokannan taulussa",
-      "rowCount": "Rivimäärä",
-      "ok": "OK",
-      "empty": "Tyhjä"
-    },
-    "sourceData": {
-      "title": "Lähdedatan tila",
-      "description": "Raw- ja parsed-vaiheiden eteneminen sekä API-rivimäärät tauluittain",
-      "sourceTables": "Lähdetauluja",
-      "rawUpdated": "Raw päivitetty",
-      "parsedUpdated": "Parsed päivitetty",
-      "unavailable": "Lähdedatan tilaa ei ole saatavilla."
-    },
-    "sanity": {
-      "title": "Tietojen validointi",
-      "description": "Automaattiset tarkistukset tietojen laadun ja eheyden varmistamiseksi",
-      "totalChecks": "Tarkistuksia yhteensä",
-      "passed": "Läpäisty",
-      "failed": "Epäonnistunut",
-      "failedCount_one": "{{count}} epäonnistui",
-      "failedCount_other": "{{count}} epäonnistuivat",
-      "exceptionCount_one": "{{count}} poikkeama",
-      "exceptionCount_other": "{{count}} poikkeamaa",
-      "passedWithExceptions": "Läpäisty tunnetuilla poikkeamilla",
-      "errorLine": "Virhe: {{value}}",
-      "lastRunLine": "Viimeksi ajettu: {{value}}"
-    },
-    "footerNote": "Tiedot päivitetään automaattisesti Eduskunnan avoimen datan rajapinnasta. Tyhjät taulut eivät välttämättä tarkoita virhettä - joitain tauluja ei ole vielä tuotu järjestelmään."
   }
 }

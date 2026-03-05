@@ -9,7 +9,6 @@ import { colors, createLightTheme, gradients } from "./index";
 export const useThemedColors = () => {
   return {
     // Background colors
-    backgroundDefault: colors.backgroundDefault,
     backgroundPaper: colors.backgroundPaper,
     backgroundSubtle: colors.backgroundSubtle,
 
@@ -19,38 +18,18 @@ export const useThemedColors = () => {
     textTertiary: colors.textTertiary,
 
     // Data colors
-    dataHighlight: colors.dataHighlight,
-    dataLabel: colors.dataLabel,
     dataBorder: colors.dataBorder,
 
-    // Glass morphism (deprecated)
-    glassBackground: colors.glassBackground,
-    glassBorder: colors.glassBorder,
-
     // Gradients
-    background: gradients.background,
-    backgroundAlt: gradients.backgroundAlt,
     primaryGradient: gradients.primary,
-    primaryHover: gradients.primaryHover,
 
     // Brand colors
     primary: colors.primary,
-    primaryLight: colors.primaryLight,
     accent: colors.accent,
-    accentLight: colors.accentLight,
     success: colors.success,
-    successLight: colors.successLight,
     error: colors.error,
-    errorLight: colors.errorLight,
     warning: colors.warning,
-    warningLight: colors.warningLight,
     info: colors.info,
-    infoLight: colors.infoLight,
-
-    // Chart colors
-    chartPurple: colors.chartPurple,
-    chartBlue: colors.chartBlue,
-    chartGray: colors.chartGray,
 
     // Role colors
     ministerColor: colors.ministerColor,
