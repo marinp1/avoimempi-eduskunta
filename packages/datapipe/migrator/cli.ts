@@ -12,6 +12,7 @@ Usage:
   bun cli.ts
   bun cli.ts start
   bun cli.ts start --fresh
+  bun cli.ts start --force
   bun cli.ts recreate
   bun cli.ts status
   bun cli.ts help
@@ -22,10 +23,15 @@ Commands:
   status                Show migrator status and last migration timestamp
   help                  Show this help message
 
+Flags:
+  --fresh               Delete existing DB files before migrating
+  --force               Skip change-detection and always re-run migration
+
 Examples:
   bun cli.ts
   bun cli.ts start
   bun cli.ts start --fresh
+  bun cli.ts start --force
   bun cli.ts recreate
   bun cli.ts status
 
@@ -75,7 +81,10 @@ function recreateDatabaseFiles() {
   }
 }
 
-async function runMigrationCommand(options?: { fresh?: boolean }) {
+async function runMigrationCommand(options?: {
+  fresh?: boolean;
+  force?: boolean;
+}) {
   if (options?.fresh) {
     const hasParsedData = await hasAnyParsedData();
     if (!hasParsedData) {
@@ -87,7 +96,7 @@ async function runMigrationCommand(options?: { fresh?: boolean }) {
   }
 
   console.log("🚀 Starting migration...");
-  await runMigration();
+  await runMigration({ force: options?.force });
   console.log("✅ Migration completed");
 }
 
@@ -103,7 +112,8 @@ async function main() {
   }
 
   const fresh = rawArgs.includes("--fresh");
-  const args = rawArgs.filter((arg) => arg !== "--fresh");
+  const force = rawArgs.includes("--force");
+  const args = rawArgs.filter((arg) => arg !== "--fresh" && arg !== "--force");
   const command = args[0] ?? "start";
 
   if (command === "status") {
@@ -112,12 +122,12 @@ async function main() {
   }
 
   if (command === "start") {
-    await runMigrationCommand({ fresh });
+    await runMigrationCommand({ fresh, force });
     return;
   }
 
   if (command === "recreate") {
-    await runMigrationCommand({ fresh: true });
+    await runMigrationCommand({ fresh: true, force });
     return;
   }
 

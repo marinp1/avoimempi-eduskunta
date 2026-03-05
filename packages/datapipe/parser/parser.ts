@@ -174,6 +174,35 @@ export async function parseTable(options: ParseOptions): Promise<ParseResult> {
     };
   }
 
+  // Table-level skip: if raw hasn't changed since the last parse, skip entirely.
+  // Only applies when no PK range is specified (full-table parse).
+  if (!force && pkStartValue === undefined && pkEndValue === undefined) {
+    const [rawLastUpdated, parsedCount, parsedLastUpdated] = await Promise.all([
+      rawStore.lastUpdatedAt(tableName),
+      parsedStore.count(tableName),
+      parsedStore.lastUpdatedAt(tableName),
+    ]);
+
+    if (
+      rawLastUpdated &&
+      parsedLastUpdated &&
+      parsedCount === totalRawRows &&
+      new Date(rawLastUpdated) <= new Date(parsedLastUpdated)
+    ) {
+      console.log(
+        `⏭️  Skipping ${tableName}: no changes since last parse (${totalRawRows.toLocaleString()} rows already up-to-date)`,
+      );
+      if (hooks.onParsingComplete) {
+        await hooks.onParsingComplete();
+      }
+      return {
+        rowsProcessed: 0,
+        rowsParsed: 0,
+        rowsSkipped: totalRawRows,
+      };
+    }
+  }
+
   console.log(`📋 Total raw rows: ${totalRawRows.toLocaleString()}`);
   if (pkStartValue !== undefined && pkEndValue !== undefined) {
     console.log(`🎯 PK range: [${pkStartValue}, ${pkEndValue}]`);
