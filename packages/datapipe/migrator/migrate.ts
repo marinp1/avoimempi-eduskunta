@@ -64,6 +64,8 @@ export interface MigratorMessage {
 export interface MigrationOptions {
   onMessage?: (message: MigratorMessage) => void;
   shouldStop?: () => boolean;
+  /** Skip the "nothing changed" guard and always re-run migration. */
+  force?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -212,6 +214,7 @@ async function* readParsedData(tableName: string): AsyncGenerator<any[]> {
 export async function runMigration(options?: MigrationOptions): Promise<void> {
   const checkStop = () => options?.shouldStop?.() ?? false;
   const onMessage = (msg: MigratorMessage) => options?.onMessage?.(msg);
+  const force = options?.force ?? false;
 
   onMessage({
     type: "status",
@@ -236,6 +239,37 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
 
     if (tablesToImport.length === 0) {
       throw new Error("No parsed data found to migrate");
+    }
+
+    // Change-detection: skip migration if no parsed table has been updated
+    // since the last migration ran.
+    if (!force) {
+      const lastMigrationTs = getLastMigrationTimestamp();
+      if (lastMigrationTs) {
+        const parsedStore = getParsedRowStore();
+        const lastUpdates = await Promise.all(
+          tablesToImport.map((t) => parsedStore.lastUpdatedAt(t)),
+        );
+        const lastMigrationDate = new Date(lastMigrationTs);
+        const anyChanged = lastUpdates.some(
+          (ts) => ts && new Date(ts) > lastMigrationDate,
+        );
+        if (!anyChanged) {
+          console.log(
+            `⏭️  Skipping migration: parsed data has not changed since last migration (${lastMigrationTs})`,
+          );
+          onMessage({
+            type: "complete",
+            data: {
+              message: `Skipped: parsed data has not changed since last migration (${lastMigrationTs})`,
+              skipped: true,
+              tablesImported: 0,
+              timestamp: lastMigrationTs,
+            },
+          });
+          return;
+        }
+      }
     }
 
     onMessage({
