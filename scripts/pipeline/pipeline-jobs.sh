@@ -8,6 +8,7 @@ PIPELINE_BUILD_DIR="${APP_DIR}/dist/pipeline"
 LOG_FILE="/var/log/avoimempi-eduskunta/pipeline-jobs.log"
 LOCK_DIR="/var/lib/avoimempi-eduskunta-pipeline/locks"
 SCRAPER_MAX_RUNTIME_SECONDS=1800
+FETCH_COUNTS_CLI="${PIPELINE_BUILD_DIR}/scraper/fetch-counts-cli.js"
 
 # DB activation constants (local — no rsync, same VM)
 APP_DATA_DIR="/var/lib/avoimempi-eduskunta-app"
@@ -86,12 +87,19 @@ activate_on_app() {
   return 1
 }
 
+fetch_counts() {
+  require_bundle "${FETCH_COUNTS_CLI}"
+  log "Fetching API table row counts"
+  (cd "${APP_DIR}" && env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" \
+    bun "${FETCH_COUNTS_CLI}" >> "${LOG_FILE}" 2>&1)
+}
+
 scrape_all() {
   local scraper_cli="${PIPELINE_BUILD_DIR}/scraper/cli.js"
   require_bundle "${scraper_cli}"
   log "Scraping all active tables (max runtime: ${SCRAPER_MAX_RUNTIME_SECONDS}s)"
   (cd "${APP_DIR}" && env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" \
-    bun "${scraper_cli}" all --max-runtime "${SCRAPER_MAX_RUNTIME_SECONDS}" >> "${LOG_FILE}" 2>&1)
+    bun "${scraper_cli}" all --max-runtime "${SCRAPER_MAX_RUNTIME_SECONDS}" --skip-if-unchanged >> "${LOG_FILE}" 2>&1)
 }
 
 parse_all() {
@@ -115,6 +123,7 @@ migrate_and_sync() {
 }
 
 full_cycle() {
+  fetch_counts
   scrape_all
   parse_all
   migrate_and_sync
@@ -122,16 +131,17 @@ full_cycle() {
 
 main() {
   case "${ACTION}" in
+    fetch-counts) with_lock fetch_counts ;;
     scrape-all)   with_lock scrape_all ;;
     parse-all)    with_lock parse_all ;;
     migrate-sync) with_lock migrate_and_sync ;;
     full-cycle)   with_lock full_cycle ;;
     help|-h|--help)
-      echo "Usage: $0 <scrape-all|parse-all|migrate-sync|full-cycle>"
+      echo "Usage: $0 <fetch-counts|scrape-all|parse-all|migrate-sync|full-cycle>"
       ;;
     *)
       echo "Error: unknown action '${ACTION}'" >&2
-      echo "Usage: $0 <scrape-all|parse-all|migrate-sync|full-cycle>" >&2
+      echo "Usage: $0 <fetch-counts|scrape-all|parse-all|migrate-sync|full-cycle>" >&2
       exit 1
       ;;
   esac

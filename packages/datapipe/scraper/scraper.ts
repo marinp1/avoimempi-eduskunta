@@ -1,6 +1,10 @@
 import { scheduler } from "node:timers/promises";
 import { getRawRowStore } from "#storage/row-store/factory";
-import { getExactTableCountByRows } from "#table-counts";
+import {
+  getExactTableCountByRows,
+  readPersistedTableCount,
+} from "#table-counts";
+import type { TableName } from "#constants";
 
 /** Time to wait (in ms) between API calls. */
 const TIME_BETWEEN_QUERIES = 25;
@@ -142,6 +146,12 @@ export interface ScrapeOptions {
    * Unlimited by default.
    */
   maxPagesPerInvocation?: number;
+  /**
+   * When true, read the persisted API row count (saved by fetch-counts-cli)
+   * and skip scraping if the local store already has at least that many rows.
+   * No-op when no persisted count is found.
+   */
+  skipIfUnchanged?: boolean;
   onProgress?: (progress: {
     page: number;
     rowCount: number;
@@ -184,8 +194,34 @@ export async function scrapeTable(
   console.log(`\n📥 Scraping table: ${tableName}`);
   console.log(`📁 Store: ${rawStore.name}`);
 
+  // Resolve total API row count: prefer the persisted count to avoid a live
+  // network request; fall back to a live fetch when no persisted count exists.
+  const cachedCount = await readPersistedTableCount(tableName as TableName);
+
+  // Skip scraping if local data is already up-to-date according to the saved count.
+  if (options.skipIfUnchanged && cachedCount !== null) {
+    const localCount = await rawStore.count(tableName);
+    if (localCount >= cachedCount) {
+      console.log(
+        `⏭️  Skipping ${tableName}: API has ${cachedCount.toLocaleString()} rows, already stored ${localCount.toLocaleString()} rows`,
+      );
+      return {
+        rowsScraped: 0,
+        pagesScraped: 0,
+        totalRowsStored: localCount,
+        pkStartValue: null,
+        pkEndValue: null,
+        truncated: false,
+        continuationPk: null,
+      };
+    }
+  }
+
   const { primaryColumn } = await getTableColumns(tableName);
-  const totalRows = await getExactTableCountByRows(tableName);
+  const totalRows =
+    cachedCount !== null
+      ? cachedCount
+      : await getExactTableCountByRows(tableName);
 
   console.log(`📋 Total rows in API: ${totalRows.toLocaleString()}`);
 
