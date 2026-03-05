@@ -82,6 +82,9 @@ if [[ ! -f "${PIPELINE_ENV_FILE}" ]]; then
   cat > "${PIPELINE_ENV_FILE}" <<EOF
 STORAGE_LOCAL_DIR=${PIPELINE_DATA_DIR}/data
 DB_PATH=${PIPELINE_DATA_DIR}/avoimempi-eduskunta.db
+MIGRATOR_OVERWRITE_LOG_DIR=${PIPELINE_DATA_DIR}/migration-overwrites
+MIGRATOR_REPORT_LOG_DIR=${PIPELINE_DATA_DIR}/migration-reports
+MIGRATOR_KNOWN_ISSUE_LOG_DIR=${PIPELINE_DATA_DIR}/migration-known-issues
 EOF
   chown "${PIPELINE_USER}:${PIPELINE_USER}" "${PIPELINE_ENV_FILE}"
   chmod 640 "${PIPELINE_ENV_FILE}"
@@ -91,7 +94,7 @@ fi
 # --- Sudoers: allow pipeline user to restart the app service ---
 
 SUDOERS_FILE="/etc/sudoers.d/avoimempi-eduskunta-pipeline"
-RESTART_SCRIPT="${APP_DIR}/scripts/restart-app.sh"
+RESTART_SCRIPT="${APP_DIR}/scripts/app/restart-app.sh"
 cat > "${SUDOERS_FILE}" <<EOF
 ${PIPELINE_USER} ALL=(ALL) NOPASSWD: ${RESTART_SCRIPT}
 EOF
@@ -107,4 +110,4 @@ echo ""
 echo "VM provisioned."
 echo "  App service:       systemctl start ${APP_USER}"
 echo "  Pipeline timers:   systemctl list-timers 'avoimempi-eduskunta-pipeline-*'"
-echo "  Run pipeline now:  sudo -u ${PIPELINE_USER} ${APP_DIR}/scripts/pipeline-jobs.sh full-cycle"
+echo "  Run pipeline now:  sudo -u ${PIPELINE_USER} ${APP_DIR}/scripts/pipeline/pipeline-jobs.sh full-cycle"

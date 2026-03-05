@@ -43,7 +43,6 @@ WorkingDirectory=${APP_DIR}
 EnvironmentFile=-${ENV_FILE}
 ExecStart=/usr/bin/env bash ${APP_DIR}/scripts/pipeline/pipeline-jobs.sh ${action}
 TimeoutStartSec=${timeout}
-NoNewPrivileges=true
 PrivateTmp=true
 LogsDirectory=avoimempi-eduskunta
 LogsDirectoryMode=0750
