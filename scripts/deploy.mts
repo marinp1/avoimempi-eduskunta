@@ -62,7 +62,10 @@ async function buildPipelineDist() {
 
   await build({
     outdir: path.join(distRoot, "scraper"),
-    entrypoints: [path.join(rootDir, "packages/datapipe/scraper/cli.ts")],
+    entrypoints: [
+      path.join(rootDir, "packages/datapipe/scraper/cli.ts"),
+      path.join(rootDir, "packages/datapipe/scraper/fetch-counts-cli.ts"),
+    ],
     target: "bun",
   });
 
@@ -113,6 +116,7 @@ async function deployPipelineBuild() {
   }
 
   await $`ssh ${HOST} mkdir -p ${APP_DIR}/dist ${APP_DIR}/scripts/pipeline`;
+  await $`ssh ${HOST} rm -rf ${APP_DIR}/dist/pipeline`;
 
   const distPipeline = path.join(rootDir, "dist/pipeline");
   await $`scp -r ${distPipeline} ${HOST}:${APP_DIR}/dist/pipeline`;

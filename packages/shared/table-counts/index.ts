@@ -495,6 +495,43 @@ async function fetchAndStoreCounts(params: {
   return result;
 }
 
+/**
+ * Force-fetch fresh row counts from the API for all (or specified) tables
+ * and persist them to storage. Returns the fetched counts.
+ */
+export async function fetchAndPersistTableCounts(
+  options?: ExactTableCountOptions,
+): Promise<TableCountRow[]> {
+  const tableNames = resolveTargetTableNames(options);
+  const cacheKey = DEFAULT_CACHE_KEY;
+  const cache = getCacheStore(cacheKey);
+  await ensureCacheLoaded(cacheKey, cache);
+  const result = await fetchAndStoreCounts({
+    cacheKey,
+    cache,
+    tableNames,
+    options,
+  });
+  return tableNames
+    .filter((t) => t in result)
+    .map((t) => ({ tableName: t, rowCount: result[t] }));
+}
+
+/**
+ * Read the persisted row count for a single table without triggering any
+ * network refresh. Returns null if no cached value is available.
+ */
+export async function readPersistedTableCount(
+  tableName: TableName,
+  cacheKey?: string,
+): Promise<number | null> {
+  const key = cacheKey ?? DEFAULT_CACHE_KEY;
+  const cache = getCacheStore(key);
+  await ensureCacheLoaded(key, cache);
+  const count = cache.counts[tableName];
+  return typeof count === "number" && Number.isFinite(count) ? count : null;
+}
+
 export async function getCachedTableCountMapByRows(
   options?: CachedTableCountOptions,
 ): Promise<Record<string, number>> {

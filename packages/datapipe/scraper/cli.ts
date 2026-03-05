@@ -27,6 +27,7 @@ async function main() {
 
   // Parse flags
   let runAll = false;
+  let skipIfUnchanged = false;
   let maxRuntimeSeconds: number | null = null;
   let fromPk: number | null = null;
   let toPk: number | null = null;
@@ -62,6 +63,11 @@ async function main() {
 
     if (rawArg === "all" || flag === "--all") {
       runAll = true;
+      continue;
+    }
+
+    if (flag === "--skip-if-unchanged") {
+      skipIfUnchanged = true;
       continue;
     }
 
@@ -125,7 +131,11 @@ async function main() {
         }
       }
       try {
-        await scrapeTable({ tableName: table, mode: { type: "auto-resume" } });
+        await scrapeTable({
+          tableName: table,
+          mode: { type: "auto-resume" },
+          skipIfUnchanged,
+        });
       } catch (error) {
         console.error(`❌ Error scraping ${table}:`, error);
       }
@@ -173,7 +183,12 @@ async function main() {
   else if (fromPk !== null)
     mode = { type: "start-from-pk", pkStartValue: fromPk };
 
-  await scrapeTable({ tableName, mode, onProgress: (_progress) => {} });
+  await scrapeTable({
+    tableName,
+    mode,
+    skipIfUnchanged,
+    onProgress: (_progress) => {},
+  });
 }
 
 async function showStatus() {
@@ -236,7 +251,9 @@ Single-table flags:
   --patch-pk <pk>         Re-scrape the page containing this PK + one follow-up
 
 All-tables flags:
-  --max-runtime <seconds> Stop after this many seconds (default: unlimited)
+  --max-runtime <seconds>  Stop after this many seconds (default: unlimited)
+  --skip-if-unchanged      Skip tables whose stored count matches the saved API count
+                           (requires prior run of fetch-counts-cli)
 
 Examples:
   bun cli.ts MemberOfParliament
