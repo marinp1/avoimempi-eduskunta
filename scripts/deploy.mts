@@ -17,20 +17,30 @@ async function deployAppBuild() {
   const config = path.join(import.meta.dirname, "../packages/server/config");
   const appScriptsDir = path.join(import.meta.dirname, "app");
   const runAppScript = path.join(appScriptsDir, "run-app.sh");
-  const installSystemdScript = path.join(appScriptsDir, "install-app-systemd-service.sh");
+  const installSystemdScript = path.join(
+    appScriptsDir,
+    "install-app-systemd-service.sh",
+  );
   const releaseScript = path.join(appScriptsDir, "app-release.sh");
   const restartScript = path.join(appScriptsDir, "restart-app.sh");
   const releaseId = new Date().toISOString().replace(/[:.]/g, "-");
   const releaseDir = `${APP_DIR}/releases/${releaseId}`;
 
-  for (const p of [runAppScript, installSystemdScript, releaseScript, restartScript]) {
+  for (const p of [
+    runAppScript,
+    installSystemdScript,
+    releaseScript,
+    restartScript,
+  ]) {
     if (!fs.existsSync(p)) throw new Error(`App script missing: ${p}`);
   }
 
   await build({
     outdir: dist,
     loader: { ".sql": "text" },
-    entrypoints: [path.join(import.meta.dirname, "../packages/server/index.ts")],
+    entrypoints: [
+      path.join(import.meta.dirname, "../packages/server/index.ts"),
+    ],
     target: "bun",
   });
 
@@ -82,7 +92,10 @@ async function buildPipelineDist() {
     target: "bun",
   });
 
-  const migrationsSource = path.join(rootDir, "packages/datapipe/migrator/migrations");
+  const migrationsSource = path.join(
+    rootDir,
+    "packages/datapipe/migrator/migrations",
+  );
   const migrationsTarget = path.join(distRoot, "migrator/migrations");
   await fs.promises.mkdir(migrationsTarget, { recursive: true });
   for (const fileName of fs.readdirSync(migrationsSource)) {
@@ -99,10 +112,7 @@ async function deployPipelineBuild() {
 
   const rootDir = path.join(import.meta.dirname, "..");
   const pipelineScriptsDir = path.join(import.meta.dirname, "pipeline");
-  const scripts = [
-    "pipeline-jobs.sh",
-    "install-pipeline-systemd-jobs.sh",
-  ];
+  const scripts = ["pipeline-jobs.sh", "install-pipeline-systemd-jobs.sh"];
 
   for (const script of scripts) {
     if (!fs.existsSync(path.join(pipelineScriptsDir, script))) {
@@ -200,7 +210,9 @@ switch (target) {
       printHelp();
       process.exit(0);
     }
-    throw new Error(`Unknown deploy target: ${target}. Use: all|app|pipeline|database`);
+    throw new Error(
+      `Unknown deploy target: ${target}. Use: all|app|pipeline|database`,
+    );
 }
 
 console.log("Done!");

@@ -46,7 +46,7 @@ export default (db: Database) =>
       main_section_title: dataToImport.PaaKohtaOtsikko || null,
       sub_section_identifier: dataToImport.AliKohtaTunniste || null,
       agenda_title: dataToImport.PJOtsikko || null,
-      modified_datetime: "", // TODO: To be added
+      modified_datetime: null,
       imported_datetime: parseDateTime(dataToImport.Imported),
       section_key: "", // To be added
     };

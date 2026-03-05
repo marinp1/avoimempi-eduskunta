@@ -15,9 +15,8 @@ import {
   intersectDateRangeWithHallituskausi,
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
-import { colors, commonStyles, gradients, spacing } from "#client/theme";
-import { GlassCard, StatCard } from "#client/theme/components";
-import { useThemedColors } from "#client/theme/ThemeContext";
+import { colors, commonStyles, spacing } from "#client/theme";
+import { DataCard, MetricCard } from "#client/theme/components";
 import { HistoricalComparison } from "./HistoricalComparison";
 import { ParticipationTable } from "./ParticipationTable";
 import type { ParticipationData } from "./types";
@@ -32,7 +31,6 @@ export default function Osallistumisaktiivisuus({
   initialPersonId,
 }: OsallistumisaktiivisuusProps) {
   const { t } = useTranslation();
-  const _themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<ParticipationData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -188,34 +186,30 @@ export default function Osallistumisaktiivisuus({
             <Box>
               <Grid container spacing={spacing.sm} sx={{ mb: spacing.md }}>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <StatCard
-                    title={t("insights.votingActivity.members")}
+                  <MetricCard
+                    label={t("insights.votingActivity.members")}
                     value={stats.totalRepresentatives.toString()}
-                    gradient={gradients.info}
                     icon="👥"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <StatCard
-                    title={t("insights.votingActivity.average")}
+                  <MetricCard
+                    label={t("insights.votingActivity.average")}
                     value={`${stats.averageParticipation}%`}
-                    gradient={gradients.primary}
                     icon="📊"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <StatCard
-                    title={t("insights.votingActivity.highest")}
+                  <MetricCard
+                    label={t("insights.votingActivity.highest")}
                     value={`${stats.highestParticipation}%`}
-                    gradient={gradients.success}
                     icon="🏆"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <StatCard
-                    title={t("insights.votingActivity.lowest")}
+                  <MetricCard
+                    label={t("insights.votingActivity.lowest")}
                     value={`${stats.lowestParticipation}%`}
-                    gradient={gradients.warning}
                     icon="⚠️"
                   />
                 </Grid>
@@ -225,7 +219,7 @@ export default function Osallistumisaktiivisuus({
 
           {/* Filters */}
           <Box>
-            <GlassCard sx={{ mb: spacing.md }}>
+            <DataCard sx={{ mb: spacing.md }}>
               <Box sx={{ p: spacing.md }}>
                 <Typography
                   variant="h6"
@@ -265,7 +259,7 @@ export default function Osallistumisaktiivisuus({
                   </Alert>
                 )}
               </Box>
-            </GlassCard>
+            </DataCard>
           </Box>
 
           {/* Loading State */}

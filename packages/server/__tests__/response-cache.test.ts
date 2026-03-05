@@ -9,9 +9,9 @@ describe("createResponseCache", () => {
   describe("when generationKey is null", () => {
     test("wrapRoutes returns routes unchanged", () => {
       const cache = createResponseCache({ generationKey: null });
-      let calls = 0;
+      let _calls = 0;
       const handler = async () => {
-        calls++;
+        _calls++;
         return Response.json({ ok: true });
       };
       const wrapped = cache.wrapRoutes({ "/api/test": { GET: handler } });

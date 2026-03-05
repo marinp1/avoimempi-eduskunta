@@ -42,10 +42,7 @@ export class VotingRepository {
     return data;
   }
 
-  public fetchRecentVotings(params: {
-    startDate?: string;
-    endDate?: string;
-  }) {
+  public fetchRecentVotings(params: { startDate?: string; endDate?: string }) {
     const endDateExclusiveValue = endDateExclusive(params.endDate);
     const stmt = this.db.prepare<
       DatabaseQueries.VotingSearchResult,

@@ -8,11 +8,7 @@ import { fetchAndPersistTableCounts } from "#table-counts";
 async function main() {
   const args = process.argv.slice(2);
 
-  if (
-    args.includes("help") ||
-    args.includes("--help") ||
-    args.includes("-h")
-  ) {
+  if (args.includes("help") || args.includes("--help") || args.includes("-h")) {
     printHelp();
     process.exit(0);
   }

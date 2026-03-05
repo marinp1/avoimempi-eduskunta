@@ -36,7 +36,9 @@ export type ResponseCache = {
   size: () => number;
 };
 
-export function createResponseCache(options: ResponseCacheOptions): ResponseCache {
+export function createResponseCache(
+  options: ResponseCacheOptions,
+): ResponseCache {
   const { generationKey, ttlMs = 5 * 60 * 1000, maxEntries = 2000 } = options;
   const disabled = generationKey === null;
   const store = new Map<string, CacheEntry>();

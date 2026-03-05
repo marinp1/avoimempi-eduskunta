@@ -19,7 +19,7 @@ import {
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { colors, gradients, spacing } from "#client/theme";
-import { GlassCard } from "#client/theme/components";
+import { DataCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import type { ParticipationByGovernmentData } from "./types";
 
@@ -95,10 +95,6 @@ export function HistoricalComparison({
     return <TrendingFlatIcon fontSize="small" sx={{ color: colors.neutral }} />;
   };
 
-  const formatGovernment = (name: string): string => {
-    return name;
-  };
-
   const getParticipationColor = (rate: number): string => {
     if (rate >= 90) return colors.success;
     if (rate >= 70) return colors.warning;
@@ -146,7 +142,7 @@ export function HistoricalComparison({
   };
 
   return (
-    <GlassCard>
+    <DataCard>
       <Box sx={{ p: spacing.md }}>
         <Box
           sx={{
@@ -221,7 +217,7 @@ export function HistoricalComparison({
                     align="right"
                     sx={{ color: "white", fontWeight: 600 }}
                   >
-                    Osallistuminen
+                    {t("parties.table.participation")}
                   </TableCell>
                   <TableCell
                     align="center"
@@ -249,7 +245,7 @@ export function HistoricalComparison({
                     >
                       <TableCell>
                         <Typography variant="body2" fontWeight={500}>
-                          {formatGovernment(row.government)}
+                          {row.government}
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
@@ -316,6 +312,6 @@ export function HistoricalComparison({
           </Box>
         )}
       </Box>
-    </GlassCard>
+    </DataCard>
   );
 }

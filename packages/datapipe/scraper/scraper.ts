@@ -1,10 +1,10 @@
 import { scheduler } from "node:timers/promises";
+import type { TableName } from "#constants";
 import { getRawRowStore } from "#storage/row-store/factory";
 import {
   getExactTableCountByRows,
   readPersistedTableCount,
 } from "#table-counts";
-import type { TableName } from "#constants";
 
 /** Time to wait (in ms) between API calls. */
 const TIME_BETWEEN_QUERIES = 25;

@@ -8,7 +8,6 @@ import * as VaskiDataModule from "./fn/VaskiData.ts";
  */
 type ParsedRow = Record<string, any>;
 
-
 /**
  * Parser function type - transforms raw row data
  * @param row - Row data as object with column names as keys

@@ -49,13 +49,6 @@ declare global {
       replacement_person: string | null;
     };
 
-    export type Publication = {
-      person_id: number;
-      name: string;
-      year: number;
-      authors: string;
-    };
-
     export type Committee = {
       code: string;
       name: string;
