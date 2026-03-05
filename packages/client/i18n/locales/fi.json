@@ -255,7 +255,9 @@
     "showMore": "Näytä lisää",
     "retry": "Yritä uudelleen",
     "voteMarginAria": "Jaa {{yes}}, Ei {{no}}, Tyhjää {{empty}}, Poissa {{absent}}",
-    "votingTargetLine": "Äänestyksen kohde: {{value}}"
+    "votingTargetLine": "Äänestyksen kohde: {{value}}",
+    "government": "Hallitus",
+    "opposition": "Oppositio"
   },
   "errors": {
     "loadFailedWithReason": "Tietojen lataaminen epäonnistui: {{reason}}",
@@ -431,6 +433,8 @@
       "results": "Tulokset",
       "minutes": "Pöytäkirja"
     },
+    "passed": "Hyväksytty",
+    "failed": "Hylätty",
     "votingCount": "äänestystä",
     "votingCount_one": "{{count}} äänestys",
     "votingCount_other": "{{count}} äänestystä",

@@ -1,7 +1,6 @@
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import EventIcon from "@mui/icons-material/Event";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import TimelineIcon from "@mui/icons-material/Timeline";
@@ -25,7 +24,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DocumentCard, RelatedVotings } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
-import { VotingResultsTable } from "#client/components/VotingResultsTable";
+import { VotingSubRow } from "#client/components/VotingCard";
 import {
   isDateWithinHallituskausi,
   useHallituskausi,
@@ -41,7 +40,6 @@ import type {
   SpeechData,
   SubSection,
   Voting,
-  VotingInlineDetails,
 } from "#client/pages/Sessions/shared/types";
 import {
   buildFallbackSubSections,
@@ -56,7 +54,7 @@ import {
 } from "#client/pages/Sessions/shared/utils";
 import { refs } from "#client/references";
 import { commonStyles } from "#client/theme";
-import { DataCard, PageHeader, VoteMarginBar } from "#client/theme/components";
+import { DataCard, PageHeader } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import {
@@ -154,15 +152,6 @@ export default () => {
   const [sectionLoadErrors, setSectionLoadErrors] = useState<
     Record<number, Partial<Record<SectionLoadErrorKey, string>>>
   >({});
-  const [expandedVotingIds, setExpandedVotingIds] = useState<Set<number>>(
-    new Set(),
-  );
-  const [votingDetailsById, setVotingDetailsById] = useState<
-    Record<number, VotingInlineDetails>
-  >({});
-  const [loadingVotingDetails, setLoadingVotingDetails] = useState<Set<number>>(
-    new Set(),
-  );
   const [focusedSessionKey, setFocusedSessionKey] = useState<string | null>(
     getInitialSessionKey(),
   );
@@ -201,9 +190,6 @@ export default () => {
         setSectionSubSections({});
         setExpandedMinutesSessions(new Set());
         setExpandedAttachmentSessions(new Set());
-        setExpandedVotingIds(new Set());
-        setVotingDetailsById({});
-        setLoadingVotingDetails(new Set());
         if (!isDateWithinHallituskausi(date, selectedHallituskausi)) {
           setSessions([]);
           setVaskiLatestSpeechDate(null);
@@ -1940,37 +1926,6 @@ export default () => {
     }
   };
 
-  const fetchVotingDetails = async (votingId: number) => {
-    if (votingDetailsById[votingId] || loadingVotingDetails.has(votingId))
-      return;
-    setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
-    try {
-      const res = await fetch(`/api/votings/${votingId}/details`);
-      if (!res.ok) return;
-      const data: VotingInlineDetails = await res.json();
-      setVotingDetailsById((prev) => ({ ...prev, [votingId]: data }));
-    } finally {
-      setLoadingVotingDetails((prev) => {
-        const next = new Set(prev);
-        next.delete(votingId);
-        return next;
-      });
-    }
-  };
-
-  const toggleVotingDetails = (votingId: number) => {
-    const nextExpanded = !expandedVotingIds.has(votingId);
-    setExpandedVotingIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(votingId)) next.delete(votingId);
-      else next.add(votingId);
-      return next;
-    });
-    if (nextExpanded) {
-      void fetchVotingDetails(votingId);
-    }
-  };
-
   const renderSectionVotings = (
     votings: Voting[],
     session: SessionWithSections,
@@ -1978,14 +1933,7 @@ export default () => {
     if (votings.length === 0) return null;
 
     return (
-      <Box
-        sx={{
-          mt: 1.5,
-          display: "flex",
-          flexDirection: "column",
-          gap: 1,
-        }}
-      >
+      <Box sx={{ mt: 1.5, display: "flex", flexDirection: "column", gap: 1 }}>
         <Typography
           sx={{
             ...commonStyles.compactTextLg,
@@ -1996,219 +1944,31 @@ export default () => {
         >
           {t("sessions.votingsLabel", { count: votings.length })}
         </Typography>
-        {votings.map((voting) => {
-          const isPassed = voting.n_yes > voting.n_no;
-          const isExpanded = expandedVotingIds.has(voting.id);
-          const details = votingDetailsById[voting.id];
-          const detailsLoading = loadingVotingDetails.has(voting.id);
-          return (
-            <Box
-              key={voting.id}
-              sx={{
-                p: 1.25,
-                borderRadius: 1,
-                border: `1px solid ${isPassed ? `${themedColors.success}40` : `${themedColors.error}40`}`,
-                background: isPassed
-                  ? `${themedColors.success}08`
-                  : `${themedColors.error}08`,
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  mb: 0.75,
-                  flexWrap: "wrap",
-                }}
-              >
-                <HowToVoteIcon
-                  sx={{
-                    fontSize: 16,
-                    color: isPassed ? themedColors.success : themedColors.error,
-                  }}
-                />
-                <Typography
-                  sx={{
-                    fontWeight: 600,
-                    fontSize: "0.8125rem",
-                    flex: 1,
-                    minWidth: 0,
-                    color: colors.textPrimary,
-                  }}
-                >
-                  {voting.title}
-                </Typography>
-                <Button
-                  size="small"
-                  onClick={() => toggleVotingDetails(voting.id)}
-                  sx={{
-                    textTransform: "none",
-                    ...commonStyles.compactTextMd,
-                    minWidth: 0,
-                    px: 1,
-                  }}
-                  endIcon={
-                    <ExpandMoreIcon
-                      sx={{
-                        fontSize: 14,
-                        transform: isExpanded
-                          ? "rotate(180deg)"
-                          : "rotate(0deg)",
-                        transition: "transform 0.2s",
-                      }}
-                    />
-                  }
-                >
-                  {isExpanded
-                    ? t("common.detailsToggle", { context: "hide" })
-                    : t("common.detailsToggle", { context: "show" })}
-                </Button>
-                <Button
-                  size="small"
-                  sx={{
-                    textTransform: "none",
-                    ...commonStyles.compactTextMd,
-                    minWidth: 0,
-                    px: 1,
-                  }}
-                  endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
-                  onClick={() => {
-                    window.history.pushState(
-                      {},
-                      "",
-                      refs.voting(voting.id, session.key, session.date),
-                    );
-                    window.dispatchEvent(new PopStateEvent("popstate"));
-                  }}
-                >
-                  {t("common.openView")}
-                </Button>
-              </Box>
-              <VoteMarginBar
-                yes={voting.n_yes}
-                no={voting.n_no}
-                empty={voting.n_abstain}
-                absent={voting.n_absent}
-                height={8}
-              />
-              <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                <Box
-                  sx={{
-                    mt: 0.75,
-                    p: 1,
-                    borderRadius: 1,
-                    border: `1px solid ${colors.dataBorder}60`,
-                    backgroundColor: `${colors.primaryLight}04`,
-                  }}
-                >
-                  {detailsLoading && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <CircularProgress size={12} />
-                      <Typography
-                        sx={{
-                          ...commonStyles.compactTextMd,
-                          color: colors.textSecondary,
-                        }}
-                      >
-                        {t("common.loadingVotingDetails")}
-                      </Typography>
-                    </Box>
-                  )}
-                  {!detailsLoading && details && (
-                    <Box
-                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                    >
-                      <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                        <Chip
-                          size="small"
-                          label={`Jaa ${details.voting.n_yes}`}
-                          sx={{
-                            height: 20,
-                            color: colors.success,
-                            borderColor: colors.success,
-                          }}
-                          variant="outlined"
-                        />
-                        <Chip
-                          size="small"
-                          label={`Ei ${details.voting.n_no}`}
-                          sx={{
-                            height: 20,
-                            color: colors.error,
-                            borderColor: colors.error,
-                          }}
-                          variant="outlined"
-                        />
-                        <Chip
-                          size="small"
-                          label={t("common.emptyCount", {
-                            count: details.voting.n_abstain,
-                          })}
-                          sx={{ height: 20 }}
-                        />
-                        <Chip
-                          size="small"
-                          label={`Poissa ${details.voting.n_absent}`}
-                          sx={{ height: 20 }}
-                        />
-                      </Box>
-                      {details.governmentOpposition && (
-                        <Typography
-                          sx={{
-                            ...commonStyles.compactTextMd,
-                            color: colors.textSecondary,
-                          }}
-                        >
-                          Hallitus:{" "}
-                          {details.governmentOpposition.government_yes} jaa /{" "}
-                          {details.governmentOpposition.government_no} ei,
-                          Oppositio:{" "}
-                          {details.governmentOpposition.opposition_yes} jaa /{" "}
-                          {details.governmentOpposition.opposition_no} ei
-                        </Typography>
-                      )}
-                      <VotingResultsTable
-                        partyBreakdown={details.partyBreakdown}
-                        memberVotes={details.memberVotes}
-                      />
-                      {details.relatedVotings.length > 0 && (
-                        <Box
-                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
-                        >
-                          {details.relatedVotings.slice(0, 6).map((related) => (
-                            <Chip
-                              key={related.id}
-                              size="small"
-                              variant="outlined"
-                              label={`${related.id}: ${related.n_yes}-${related.n_no}`}
-                              aria-label={t("sessions.relatedVotingAria", {
-                                id: related.id,
-                                yes: related.n_yes,
-                                no: related.n_no,
-                              })}
-                              sx={{ height: 20, ...commonStyles.compactTextXs }}
-                            />
-                          ))}
-                          {details.relatedVotings.length > 6 && (
-                            <Typography
-                              sx={{
-                                ...commonStyles.compactTextXs,
-                                color: colors.textSecondary,
-                              }}
-                            >
-                              +{details.relatedVotings.length - 6} muuta
-                            </Typography>
-                          )}
-                        </Box>
-                      )}
-                    </Box>
-                  )}
-                </Box>
-              </Collapse>
-            </Box>
-          );
-        })}
+        {votings.map((voting) => (
+          <VotingSubRow
+            key={voting.id}
+            voting={{
+              id: voting.id,
+              number: voting.number,
+              title: voting.title,
+              n_yes: voting.n_yes,
+              n_no: voting.n_no,
+              n_abstain: voting.n_abstain,
+              n_absent: voting.n_absent,
+              n_total: voting.n_total,
+              session_key: session.key,
+            }}
+            showTitle
+            onOpenInView={() => {
+              window.history.pushState(
+                {},
+                "",
+                refs.voting(voting.id, session.key, session.date),
+              );
+              window.dispatchEvent(new PopStateEvent("popstate"));
+            }}
+          />
+        ))}
       </Box>
     );
   };
