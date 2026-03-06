@@ -163,6 +163,48 @@ export class ImportSourceRepository {
     };
   }
 
+  public fetchRowTrace(params: {
+    table: string;
+    pkName: string;
+    pkValue: string;
+  }): {
+    scrapedAt: string | null;
+    migratedAt: string | null;
+    apiUrl: string;
+  } | null {
+    const apiUrl = `https://avoindata.eduskunta.fi/api/v1/tables/${encodeURIComponent(params.table)}/batch?pkName=${encodeURIComponent(params.pkName)}&pkStartValue=${encodeURIComponent(params.pkValue)}&perPage=1`;
+
+    for (const database of this.getCandidateDatabases()) {
+      if (!this.hasImportSourceReferenceTable(database)) continue;
+
+      const stmt = database.prepare<
+        { scraped_at: string | null; migrated_at: string },
+        { $table: string; $pkName: string; $pkValue: string }
+      >(
+        `SELECT scraped_at, migrated_at FROM ImportSourceReference
+         WHERE source_table = $table AND source_pk_name = $pkName AND source_pk_value = $pkValue
+         LIMIT 1`,
+      );
+
+      const row = stmt.get({
+        $table: params.table,
+        $pkName: params.pkName,
+        $pkValue: params.pkValue,
+      });
+      stmt.finalize();
+
+      if (row) {
+        return {
+          scrapedAt: row.scraped_at,
+          migratedAt: row.migrated_at,
+          apiUrl,
+        };
+      }
+    }
+
+    return null;
+  }
+
   public fetchImportSourceTableSummaries(params: { tableNames: string[] }) {
     const uniqueTableNames = Array.from(
       new Set(

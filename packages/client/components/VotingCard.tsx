@@ -19,6 +19,7 @@ import {
   extractDocumentIdentifiers,
 } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
+import { ItemTraceIcon } from "#client/components/ItemTraceIcon";
 import {
   VotingResultsTable,
   type VotingMemberVote,
@@ -387,6 +388,7 @@ export const VotingCard: React.FC<{
 
   return (
     <DataCard
+      className="trace-hover-parent"
       sx={{
         p: 0,
         borderLeft: `3px solid ${borderColor}`,
@@ -482,6 +484,14 @@ export const VotingCard: React.FC<{
               }}
             />
           )}
+          <Box sx={{ ml: "auto" }}>
+            <ItemTraceIcon
+              table="SaliDBAanestys"
+              pkName="AanestysId"
+              pkValue={String(voting.id)}
+              label={`Äänestys #${voting.number ?? voting.id}${voting.start_time ? ` – ${formatDate(voting.start_time)}` : ""}`}
+            />
+          </Box>
         </Box>
 
         {/* Title + status badge */}

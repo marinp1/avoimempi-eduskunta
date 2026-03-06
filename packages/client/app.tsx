@@ -9,6 +9,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "@mui/material";
 import { PageDataSourcesDrawer } from "./components/PageDataSourcesDrawer";
+import { TraceProvider } from "./context/TraceContext";
 import { Navigation } from "./Navigation";
 import { type RouteName, routes } from "./pages";
 import { colors, spacing, transitions } from "./theme";
@@ -66,6 +67,7 @@ export const App: React.FC = () => {
   const ActivePage = routes[activeTab];
 
   return (
+    <TraceProvider>
     <>
       <CssBaseline />
       <GlobalStyles
@@ -214,6 +216,7 @@ export const App: React.FC = () => {
       </Container>
       <PageDataSourcesDrawer activeRoute={activeTab} />
     </>
+    </TraceProvider>
   );
 };
 

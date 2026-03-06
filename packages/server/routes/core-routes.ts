@@ -4,6 +4,11 @@ import { getSearchParams } from "./http";
 import { badRequest } from "./route-responses";
 
 type CoreRoutesDataAccess = {
+  fetchRowTrace: (params: {
+    table: string;
+    pkName: string;
+    pkValue: string;
+  }) => { scrapedAt: string | null; migratedAt: string | null; apiUrl: string } | null;
   fetchImportSourceTableSummaries: (params: { tableNames: string[] }) => {
     tables: Array<{
       tableName: string;
@@ -36,6 +41,25 @@ export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
         );
       }
       return Response.json({ status: "ready" });
+    },
+  },
+
+  "/api/import-source/row-trace": {
+    GET: async (req: Request) => {
+      const searchParams = getSearchParams(req);
+      const table = searchParams.get("table");
+      const pkName = searchParams.get("pkName");
+      const pkValue = searchParams.get("pkValue");
+
+      if (!table || !pkName || !pkValue) {
+        return badRequest("Missing required query parameters: table, pkName, pkValue");
+      }
+
+      const result = db.fetchRowTrace({ table, pkName, pkValue });
+      if (!result) {
+        return Response.json({ error: "No trace found" }, { status: 404 });
+      }
+      return Response.json(result);
     },
   },
 
