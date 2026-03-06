@@ -59,7 +59,9 @@ export async function rebuildTraceDatabase(): Promise<void> {
     );
 
     const runBatch = traceDb.transaction(
-      (batch: Array<[string, string | null, string, string | null, string]>) => {
+      (
+        batch: Array<[string, string | null, string, string | null, string]>,
+      ) => {
         for (const vals of batch) {
           insertStmt.run(...vals);
         }

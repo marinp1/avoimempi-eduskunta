@@ -21,9 +21,9 @@ import {
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { ItemTraceIcon } from "#client/components/ItemTraceIcon";
 import {
-  VotingResultsTable,
   type VotingMemberVote,
   type VotingPartyBreakdown,
+  VotingResultsTable,
 } from "#client/components/VotingResultsTable";
 import { refs } from "#client/references";
 import { colors, commonStyles } from "#client/theme";
@@ -123,8 +123,9 @@ const formatTime = (s?: string | null) => formatTimeFi(s, "");
 
 const useVotingDetails = (votingId: number) => {
   const [expanded, setExpanded] = React.useState(false);
-  const [details, setDetails] =
-    React.useState<VotingFetchedDetails | null>(null);
+  const [details, setDetails] = React.useState<VotingFetchedDetails | null>(
+    null,
+  );
   const [loading, setLoading] = React.useState(false);
 
   const toggle = React.useCallback(async () => {
@@ -541,9 +542,7 @@ export const VotingCard: React.FC<{
                 ? `${themedColors.success}12`
                 : `${themedColors.error}12`,
               border: `1px solid ${
-                passed
-                  ? `${themedColors.success}35`
-                  : `${themedColors.error}35`
+                passed ? `${themedColors.success}35` : `${themedColors.error}35`
               }`,
             }}
           >
@@ -722,7 +721,8 @@ export const VotingSubRow: React.FC<{
         }}
       >
         {/* Phase chip */}
-        {(voting.section_processing_phase || voting.section_processing_title) && (
+        {(voting.section_processing_phase ||
+          voting.section_processing_title) && (
           <Chip
             size="small"
             label={
@@ -959,7 +959,8 @@ export const VotingGroupCard: React.FC<{
               key={vote.id}
               voting={vote}
               showTitle={
-                vote.title != null && vote.title !== getPrimaryVotingTitle(first)
+                vote.title != null &&
+                vote.title !== getPrimaryVotingTitle(first)
               }
             />
           ))}

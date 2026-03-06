@@ -7,7 +7,6 @@ import { getDatabasePath } from "#database";
 import { getParsedRowStore } from "#storage/row-store/factory";
 import { generateAndSaveChangesReport } from "./changes-report";
 import { migrateVaskiData } from "./fn/VaskiData/migrator";
-import { rebuildTraceDatabase } from "./trace-db";
 import {
   normalizeImportedTextData,
   rebuildFederatedSearchIndex,
@@ -16,6 +15,7 @@ import {
   rebuildVotingPartyStats,
 } from "./post-import";
 import { TABLE_MIGRATORS } from "./table-migrators";
+import { rebuildTraceDatabase } from "./trace-db";
 import { clearStatementCache } from "./utils";
 
 // ---------------------------------------------------------------------------

@@ -24,7 +24,8 @@
       "aanestykset": "Äänestykset",
       "asiakirjat": "Asiakirjat",
       "analytiikka": "Analytiikka",
-      "muutokset": "Muutokset"
+      "muutokset": "Muutokset",
+      "hallitukset": "Hallitukset"
     }
   },
   "home": {
@@ -259,6 +260,25 @@
     "votingTargetLine": "Äänestyksen kohde: {{value}}",
     "government": "Hallitus",
     "opposition": "Oppositio"
+  },
+  "hallitukset": {
+    "title": "Hallitukset",
+    "subtitle": "Suomen hallitukset ja niiden kokoonpanot",
+    "current": "Nykyinen hallitus",
+    "past": "Entinen hallitus",
+    "ministers": "ministeriä",
+    "coalition": "Koalitio",
+    "period": "Kausi",
+    "members": "Ministerit",
+    "ministry": "Ministeriö",
+    "name": "Nimi",
+    "party": "Puolue",
+    "noMembers": "Ei ministeritietoja saatavilla.",
+    "loadError": "Hallitusten lataaminen epäonnistui.",
+    "membersLoadError": "Ministerien lataaminen epäonnistui.",
+    "returnToPresent": "Palaa nykyhetkeen",
+    "historicalView": "Historiallinen näkymä",
+    "clickToExpand": "Napsauta nähdäksesi ministerit"
   },
   "errors": {
     "loadFailedWithReason": "Tietojen lataaminen epäonnistui: {{reason}}",

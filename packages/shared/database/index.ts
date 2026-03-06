@@ -11,12 +11,17 @@ export const getDatabasePath = () => {
 };
 
 export const getChangesReportPath = () => {
-  if (process.env.CHANGES_REPORT_PATH) return resolvePath(process.env.CHANGES_REPORT_PATH);
+  if (process.env.CHANGES_REPORT_PATH)
+    return resolvePath(process.env.CHANGES_REPORT_PATH);
   // In production the storage dir is set explicitly via env; prefer that over
   // import.meta.dirname which resolves to the bundle directory at runtime.
   const storageDir = process.env.ROW_STORE_DIR ?? process.env.STORAGE_LOCAL_DIR;
-  if (storageDir) return path.join(path.resolve(storageDir), "metadata/changes-report.json");
-  return path.join(import.meta.dirname, "../../../data/metadata/changes-report.json");
+  if (storageDir)
+    return path.join(path.resolve(storageDir), "metadata/changes-report.json");
+  return path.join(
+    import.meta.dirname,
+    "../../../data/metadata/changes-report.json",
+  );
 };
 
 export const getTraceDatabasePath = () => {

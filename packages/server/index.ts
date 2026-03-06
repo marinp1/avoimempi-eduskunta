@@ -15,6 +15,7 @@ import { VotingRepository } from "./database/repositories/voting-repository";
 import homepage from "./public/index.html";
 import { createCoreRoutes } from "./routes/core-routes";
 import { createDocumentRoutes } from "./routes/document-routes";
+import { createGovernmentRoutes } from "./routes/government-routes";
 import { createInsightAnalyticsRoutes } from "./routes/insight-analytics-routes";
 import { createPartyRoutes } from "./routes/party-routes";
 import { createPersonRoutes } from "./routes/person-routes";
@@ -115,6 +116,13 @@ const server = Bun.serve({
     ...cache.wrapRoutes(createInsightAnalyticsRoutes(analyticsRepository)),
     ...cache.wrapRoutes(createPartyRoutes(analyticsRepository)),
     ...cache.wrapRoutes(createDocumentRoutes(documentRepository)),
+    ...cache.wrapRoutes(
+      createGovernmentRoutes({
+        fetchGovernments: () => metadataRepository.fetchGovernments(),
+        fetchGovernmentMembers: (params) =>
+          metadataRepository.fetchGovernmentMembers(params),
+      }),
+    ),
     "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
 

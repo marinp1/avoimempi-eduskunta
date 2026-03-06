@@ -8,15 +8,15 @@ import { SqliteRowStore } from "../../shared/storage/row-store/providers/sqlite"
 // Indices 5-8 are the XML blobs — the expensive columns we must NOT copy on
 // every revision when only a small field like party changes.
 const MOP_COLUMNS = [
-  "personId",   // 0
-  "lastname",   // 1
-  "firstname",  // 2
-  "party",      // 3
-  "minister",   // 4
-  "XmlData",    // 5  (null or large XML)
-  "XmlDataSv",  // 6  (large XML)
-  "XmlDataFi",  // 7  (large XML)
-  "XmlDataEn",  // 8  (large XML)
+  "personId", // 0
+  "lastname", // 1
+  "firstname", // 2
+  "party", // 3
+  "minister", // 4
+  "XmlData", // 5  (null or large XML)
+  "XmlDataSv", // 6  (large XML)
+  "XmlDataFi", // 7  (large XML)
+  "XmlDataEn", // 8  (large XML)
 ];
 
 // Realistic but self-contained XML representing an MP record (~1 KB each).
@@ -104,7 +104,9 @@ describe("row store — insert vs update detection", () => {
 
       expect(after!.createdAt).toBe(before!.createdAt);
       expect(after!.updatedAt).not.toBe(before!.updatedAt);
-      expect(new Date(after!.updatedAt) > new Date(before!.updatedAt)).toBe(true);
+      expect(new Date(after!.updatedAt) > new Date(before!.updatedAt)).toBe(
+        true,
+      );
     });
   });
 
@@ -359,7 +361,7 @@ describe("row store — reconstruction correctness", () => {
       // Revisions are oldest→newest: [v1, v2].
       expect(revisions).toHaveLength(2);
       expect(JSON.parse(revisions[0]!.data)[3]).toBe("kok"); // v1
-      expect(JSON.parse(revisions[1]!.data)[3]).toBe("sd");  // v2
+      expect(JSON.parse(revisions[1]!.data)[3]).toBe("sd"); // v2
 
       // Full data integrity: all 9 columns present in each revision.
       expect(JSON.parse(revisions[0]!.data)).toHaveLength(9);

@@ -1,5 +1,7 @@
 import type { Database } from "bun:sqlite";
 import currentComposition from "../queries/CURRENT_COMPOSITION.sql";
+import governmentMembers from "../queries/GOVERNMENT_MEMBERS.sql";
+import governmentsList from "../queries/GOVERNMENTS_LIST.sql";
 import hallituskaudet from "../queries/HALLITUSKAUDET.sql";
 
 export class MetadataRepository {
@@ -16,6 +18,47 @@ export class MetadataRepository {
     const data = stmt.all({ $date });
     stmt.finalize();
     return data;
+  }
+
+  public fetchGovernments() {
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        name: string;
+        start_date: string;
+        end_date: string | null;
+        member_count: number;
+        parties: string | null;
+      },
+      []
+    >(governmentsList);
+    const rows = stmt.all();
+    stmt.finalize();
+    return rows.map((row) => ({
+      ...row,
+      parties: row.parties ? row.parties.split("|").filter(Boolean) : [],
+    }));
+  }
+
+  public fetchGovernmentMembers(params: { id: number }) {
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        person_id: number | null;
+        name: string | null;
+        ministry: string | null;
+        start_date: string | null;
+        end_date: string | null;
+        first_name: string | null;
+        last_name: string | null;
+        party: string | null;
+        gender: string | null;
+      },
+      { $id: number }
+    >(governmentMembers);
+    const rows = stmt.all({ $id: params.id });
+    stmt.finalize();
+    return rows;
   }
 
   public fetchHallituskaudet() {

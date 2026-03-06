@@ -1,7 +1,11 @@
 #!/usr/bin/env bun
 import { ActivePipelineTableNames } from "#constants";
 import { getRawRowStore } from "#storage/row-store/factory";
-import type { ColumnSchema, StoredRevision, StoredRow } from "#storage/row-store/types";
+import type {
+  ColumnSchema,
+  StoredRevision,
+  StoredRow,
+} from "#storage/row-store/types";
 
 // ---------------------------------------------------------------------------
 // XML / text diffing
@@ -85,8 +89,10 @@ function renderHunks(
     }
 
     const { op, text } = diff[idx];
-    const prefix = op === "add" ? "    + " : op === "remove" ? "    - " : "      ";
-    const line = text.length > maxLineLen ? `${text.slice(0, maxLineLen)}…` : text;
+    const prefix =
+      op === "add" ? "    + " : op === "remove" ? "    - " : "      ";
+    const line =
+      text.length > maxLineLen ? `${text.slice(0, maxLineLen)}…` : text;
     output.push(`${prefix}${line}`);
     prevShown = idx;
   }
@@ -210,7 +216,11 @@ async function cmdHistory(tableName: string, pk: number): Promise<void> {
       const prevColNames = prevSchema?.columnNames ?? colNames;
 
       const changed: Array<{ name: string; from: unknown; to: unknown }> = [];
-      const maxLen = Math.max(prevColNames.length, data.length, colNames.length);
+      const maxLen = Math.max(
+        prevColNames.length,
+        data.length,
+        colNames.length,
+      );
       for (let ci = 0; ci < maxLen; ci++) {
         const fromVal = prevData[ci];
         const toVal = data[ci];
@@ -221,9 +231,7 @@ async function cmdHistory(tableName: string, pk: number): Promise<void> {
       }
 
       if (changed.length === 0) {
-        console.log(
-          "    (no field changes — hash differs from metadata only)",
-        );
+        console.log("    (no field changes — hash differs from metadata only)");
       } else {
         const nameLen = Math.max(...changed.map((c) => c.name.length));
         for (const { name, from, to } of changed) {

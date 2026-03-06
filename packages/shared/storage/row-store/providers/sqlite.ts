@@ -7,7 +7,12 @@ import {
   gzipSync,
   constants as zlibConstants,
 } from "node:zlib";
-import type { ColumnSchema, IRowStore, StoredRevision, StoredRow } from "../types";
+import type {
+  ColumnSchema,
+  IRowStore,
+  StoredRevision,
+  StoredRow,
+} from "../types";
 
 type RowMode = "raw" | "parsed";
 type CompressionCodec = "gzip" | "brotli";
@@ -387,7 +392,10 @@ export class SqliteRowStore implements IRowStore {
           } | null;
 
           if (existing && decodeHexHash(existing.hash) !== rowHashHex) {
-            const oldDataJson = this.decodeData(existing.data, existing.data_encoding);
+            const oldDataJson = this.decodeData(
+              existing.data,
+              existing.data_encoding,
+            );
             const diff = computeRowDiff(oldDataJson, row.data);
             insertRevStmt.run(
               tableId,
@@ -726,7 +734,10 @@ export class SqliteRowStore implements IRowStore {
     }));
   }
 
-  async listRevisions(tableName: string, pk: number): Promise<StoredRevision[]> {
+  async listRevisions(
+    tableName: string,
+    pk: number,
+  ): Promise<StoredRevision[]> {
     if (this.mode !== "raw") return [];
 
     const tableId = this.getTableId(tableName, false);
