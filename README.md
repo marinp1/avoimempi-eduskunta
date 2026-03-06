@@ -1,4 +1,4 @@
-# Avoimempi Eduskunta (More Open Parliament)
+# Eduskuntapeili.fi
 
 Data aggregation and analysis platform for Finnish Parliament (Eduskunta) data.
 
