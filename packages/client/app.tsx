@@ -68,95 +68,106 @@ export const App: React.FC = () => {
 
   return (
     <TraceProvider>
-      <>
-        <CssBaseline />
-        <GlobalStyles
-          styles={{
-            "html, body, #root": {
-              minHeight: "100%",
-            },
-            body: {
-              position: "relative",
-              background: `
+      <CssBaseline />
+      <GlobalStyles
+        styles={{
+          "html, body, #root": {
+            minHeight: "100%",
+          },
+          body: {
+            position: "relative",
+            background: `
               radial-gradient(1100px 620px at 8% -10%, var(--ae-ambient-primary), transparent 70%),
               radial-gradient(900px 540px at 98% 0%, var(--ae-ambient-accent), transparent 72%),
               linear-gradient(180deg, ${colors.backgroundDefault} 0%, ${colors.backgroundSubtle} 100%)
-            `,
-              backgroundAttachment: "fixed",
-              minHeight: "100vh",
-              overflowX: "hidden",
+          `,
+            backgroundAttachment: "fixed",
+            minHeight: "100vh",
+            overflowX: "hidden",
+          },
+          "#root": {
+            position: "relative",
+            zIndex: 1,
+          },
+          "@keyframes pageEnter": {
+            from: {
+              opacity: 0,
+              transform: "translateY(10px)",
             },
-            "#root": {
-              position: "relative",
-              zIndex: 1,
+            to: {
+              opacity: 1,
+              transform: "translateY(0)",
             },
-            "@keyframes pageEnter": {
-              from: {
-                opacity: 0,
-                transform: "translateY(10px)",
-              },
-              to: {
-                opacity: 1,
-                transform: "translateY(0)",
-              },
+          },
+          "@media (prefers-reduced-motion: reduce)": {
+            "*, *::before, *::after": {
+              animationDuration: "0.01ms !important",
+              animationIterationCount: "1 !important",
+              transitionDuration: "0.01ms !important",
+              scrollBehavior: "auto !important",
             },
-            "@media (prefers-reduced-motion: reduce)": {
-              "*, *::before, *::after": {
-                animationDuration: "0.01ms !important",
-                animationIterationCount: "1 !important",
-                transitionDuration: "0.01ms !important",
-                scrollBehavior: "auto !important",
-              },
-            },
-          }}
-        />
-        <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
-        <Container
-          maxWidth="xl"
+          },
+        }}
+      />
+      <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Container
+        maxWidth="xl"
+        sx={{
+          mt: { xs: 2, sm: spacing.md },
+          px: { xs: 1.5, sm: 3 },
+          pb: { xs: 10, lg: spacing.xl },
+        }}
+      >
+        <Box
+          key={activeTab}
           sx={{
-            mt: { xs: 2, sm: spacing.md },
-            px: { xs: 1.5, sm: 3 },
-            pb: { xs: 10, lg: spacing.xl },
+            position: "relative",
+            animation: `pageEnter ${transitions.slow}ms ${transitions.easing.emphasized}`,
+            transformOrigin: "top center",
+            "@media (prefers-reduced-motion: reduce)": {
+              animation: "none",
+            },
           }}
         >
-          <Box
-            key={activeTab}
-            sx={{
-              position: "relative",
-              animation: `pageEnter ${transitions.slow}ms ${transitions.easing.emphasized}`,
-              transformOrigin: "top center",
-              "@media (prefers-reduced-motion: reduce)": {
-                animation: "none",
-              },
-            }}
+          <React.Suspense
+            fallback={<Typography variant="body2">{t("loading")}</Typography>}
           >
-            <React.Suspense
-              fallback={<Typography variant="body2">{t("loading")}</Typography>}
-            >
-              <ActivePage.Component />
-            </React.Suspense>
-          </Box>
+            <ActivePage.Component />
+          </React.Suspense>
+        </Box>
 
-          <Box
-            component="footer"
+        <Box
+          component="footer"
+          sx={{
+            mt: spacing.lg,
+            pt: spacing.md,
+            pb: spacing.sm,
+            textAlign: "center",
+            borderTop: `1px solid ${themedColors.dataBorder}`,
+          }}
+        >
+          <Typography
+            variant="caption"
             sx={{
-              mt: spacing.lg,
-              pt: spacing.md,
-              pb: spacing.sm,
-              textAlign: "center",
-              borderTop: `1px solid ${themedColors.dataBorder}`,
+              color: themedColors.textTertiary,
+              display: "block",
+              lineHeight: 1.6,
             }}
           >
-            <Typography
-              variant="caption"
-              sx={{
-                color: themedColors.textTertiary,
-                display: "block",
-                lineHeight: 1.6,
-              }}
-            >
-              {t("disclaimer.source")}
-            </Typography>
+            {t("disclaimer.source")}
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{
+              color: themedColors.textTertiary,
+              display: "block",
+              mt: 0.5,
+              lineHeight: 1.6,
+            }}
+          >
+            {t("disclaimer.unofficial")}
+          </Typography>
+          {lastMigrationTimestamp && (
             <Typography
               variant="caption"
               sx={{
@@ -166,55 +177,41 @@ export const App: React.FC = () => {
                 lineHeight: 1.6,
               }}
             >
-              {t("disclaimer.unofficial")}
+              {t("disclaimer.dbBuildTimestamp", {
+                timestamp: new Date(lastMigrationTimestamp).toLocaleString(
+                  "fi-FI",
+                ),
+              })}
             </Typography>
-            {lastMigrationTimestamp && (
-              <Typography
-                variant="caption"
-                sx={{
-                  color: themedColors.textTertiary,
-                  display: "block",
-                  mt: 0.5,
-                  lineHeight: 1.6,
+          )}
+          {changeSummary && (
+            <Typography
+              variant="caption"
+              sx={{
+                color: themedColors.textTertiary,
+                display: "block",
+                mt: 0.5,
+                lineHeight: 1.6,
+              }}
+            >
+              <Link
+                href="/muutokset"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.history.pushState({}, "", "/muutokset");
+                  window.dispatchEvent(new PopStateEvent("popstate"));
                 }}
+                sx={{ color: "inherit", textDecorationColor: "inherit" }}
               >
-                {t("disclaimer.dbBuildTimestamp", {
-                  timestamp: new Date(lastMigrationTimestamp).toLocaleString(
-                    "fi-FI",
-                  ),
-                })}
-              </Typography>
-            )}
-            {changeSummary && (
-              <Typography
-                variant="caption"
-                sx={{
-                  color: themedColors.textTertiary,
-                  display: "block",
-                  mt: 0.5,
-                  lineHeight: 1.6,
-                }}
-              >
-                <Link
-                  href="/muutokset"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.history.pushState({}, "", "/muutokset");
-                    window.dispatchEvent(new PopStateEvent("popstate"));
-                  }}
-                  sx={{ color: "inherit", textDecorationColor: "inherit" }}
-                >
-                  {changeSummary.totalNewRows + changeSummary.totalChangedRows >
-                  0
-                    ? `${changeSummary.totalNewRows + changeSummary.totalChangedRows} muutosta viime päivityksessä`
-                    : "Ei muutoksia viime päivityksessä"}
-                </Link>
-              </Typography>
-            )}
-          </Box>
-        </Container>
-        <PageDataSourcesDrawer activeRoute={activeTab} />
-      </>
+                {changeSummary.totalNewRows + changeSummary.totalChangedRows > 0
+                  ? `${changeSummary.totalNewRows + changeSummary.totalChangedRows} muutosta viime päivityksessä`
+                  : "Ei muutoksia viime päivityksessä"}
+              </Link>
+            </Typography>
+          )}
+        </Box>
+      </Container>
+      <PageDataSourcesDrawer activeRoute={activeTab} />
     </TraceProvider>
   );
 };

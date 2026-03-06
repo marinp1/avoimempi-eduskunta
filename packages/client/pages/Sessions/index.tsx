@@ -23,12 +23,12 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { DocumentCard, RelatedVotings } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import { VotingSubRow } from "#client/components/VotingCard";
 import {
   isDateWithinHallituskausi,
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import type {
   MinutesContentReference,
   RollCallEntry,

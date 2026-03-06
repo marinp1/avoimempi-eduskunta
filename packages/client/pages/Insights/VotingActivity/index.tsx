@@ -10,11 +10,11 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import {
   intersectDateRangeWithHallituskausi,
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, commonStyles, spacing } from "#client/theme";
 import { DataCard, MetricCard } from "#client/theme/components";
 import { HistoricalComparison } from "./HistoricalComparison";

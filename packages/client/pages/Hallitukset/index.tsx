@@ -21,11 +21,11 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import {
   type HallituskausiPeriod,
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { commonStyles, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
 
@@ -83,7 +83,7 @@ const TimelineSelector: React.FC<{
 
   const formatLabel = (ms: number) => {
     const [yr, mo, dy] = toDate(ms).split("-");
-    return `${parseInt(dy)}.${parseInt(mo)}.${yr}`;
+    return `${parseInt(dy, 10)}.${parseInt(mo, 10)}.${yr}`;
   };
 
   type Seg =
@@ -296,7 +296,7 @@ const GovernmentCard: React.FC<{
   const formatDate = (d: string | null) => {
     if (!d) return "...";
     const [yr, mo, dy] = d.split("-");
-    return `${parseInt(dy)}.${parseInt(mo)}.${yr}`;
+    return `${parseInt(dy, 10)}.${parseInt(mo, 10)}.${yr}`;
   };
 
   // Group members by ministry
@@ -554,7 +554,7 @@ export default () => {
 
   const formatFinnishDate = (d: string) => {
     const [yr, mo, dy] = d.split("-");
-    return `${parseInt(dy)}.${parseInt(mo)}.${yr}`;
+    return `${parseInt(dy, 10)}.${parseInt(mo, 10)}.${yr}`;
   };
 
   return (

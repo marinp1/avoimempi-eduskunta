@@ -232,9 +232,7 @@ export default function CoalitionOpposition({
       )}
 
       {data.length === 0 ? (
-        <Alert severity="info">
-          {tInsights("coalitionOpposition.noData")}
-        </Alert>
+        <Alert severity="info">{tInsights("coalitionOpposition.noData")}</Alert>
       ) : (
         <>
           {/* Summary metrics */}

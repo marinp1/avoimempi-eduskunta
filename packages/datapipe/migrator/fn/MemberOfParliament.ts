@@ -262,7 +262,8 @@ export default (db: Database) => {
 
     let current = governmentCache.get(normalizedName);
     if (!current) {
-      current = selectGovernmentByName.get({ $name: normalizedName });
+      current =
+        selectGovernmentByName.get({ $name: normalizedName }) ?? undefined;
       if (!current) {
         insertGovernment.run({
           $name: normalizedName,
@@ -565,31 +566,34 @@ export default (db: Database) => {
           };
         });
 
-    const governmentMembershipRows: DatabaseTables.GovernmentMembership[] =
-      mergeArrays(XmlDataFi.Henkilo.ValtioneuvostonJasenyydet?.Jasenyys)
-        .map((v) => {
-          const startDate = parseDate(v.AlkuPvm);
-          const governmentName = normalizeGovernmentName(v.Hallitus);
-          if (!startDate || !governmentName) return null;
+    const governmentMembershipRows = mergeArrays(
+      XmlDataFi.Henkilo.ValtioneuvostonJasenyydet?.Jasenyys,
+    )
+      .map((v): DatabaseTables.GovernmentMembership | null => {
+        const startDate = parseDate(v.AlkuPvm);
+        const governmentName = normalizeGovernmentName(v.Hallitus);
+        if (!startDate || !governmentName) return null;
 
-          const endDate = parseDate(v.LoppuPvm);
-          const governmentId = resolveGovernmentId(
-            governmentName,
-            startDate,
-            endDate,
-          );
+        const endDate = parseDate(v.LoppuPvm);
+        const governmentId = resolveGovernmentId(
+          governmentName,
+          startDate,
+          endDate,
+        );
 
-          return {
-            person_id: +dataToImport.personId,
-            name: v.Nimi,
-            ministry: v.Ministeriys,
-            government: governmentName,
-            government_id: governmentId,
-            start_date: startDate,
-            end_date: endDate,
-          };
-        })
-        .filter((row): row is DatabaseTables.GovernmentMembership => !!row);
+        return {
+          person_id: +dataToImport.personId,
+          name: v.Nimi,
+          ministry: v.Ministeriys,
+          government: governmentName,
+          government_id: governmentId,
+          start_date: startDate,
+          end_date: endDate,
+        };
+      })
+      .filter(
+        (row): row is DatabaseTables.GovernmentMembership => row !== null,
+      );
 
     const workRows: DatabaseTables.WorkExperience[] = mergeArrays(
       XmlDataFi.Henkilo.TyoUra?.Tyo,

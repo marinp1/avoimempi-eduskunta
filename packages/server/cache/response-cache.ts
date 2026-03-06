@@ -1,6 +1,4 @@
 type RouteHandler = (req: Request) => Promise<Response>;
-type RouteValue = Response | { GET: RouteHandler };
-type RouteMap = Record<string, RouteValue>;
 
 type CacheEntry = {
   body: string;
@@ -31,7 +29,10 @@ export type ResponseCache = {
    * Wraps all GET handlers in `routes` with caching. Static `Response`
    * instances and any paths listed in `exclude` are passed through unchanged.
    */
-  wrapRoutes: (routes: RouteMap, opts?: { exclude?: Set<string> }) => RouteMap;
+  wrapRoutes: <T extends Record<string, any>>(
+    routes: T,
+    opts?: { exclude?: Set<string> },
+  ) => T;
   /** Number of live (non-expired) entries currently held in the cache. */
   size: () => number;
 };
@@ -95,10 +96,10 @@ export function createResponseCache(
     };
   }
 
-  function wrapRoutes(
-    routes: RouteMap,
+  function wrapRoutes<T extends Record<string, any>>(
+    routes: T,
     opts?: { exclude?: Set<string> },
-  ): RouteMap {
+  ): T {
     if (disabled) return routes;
 
     return Object.fromEntries(
@@ -107,7 +108,7 @@ export function createResponseCache(
         if (opts?.exclude?.has(path)) return [path, value];
         return [path, { GET: wrapHandler(value.GET) }];
       }),
-    );
+    ) as T;
   }
 
   return {

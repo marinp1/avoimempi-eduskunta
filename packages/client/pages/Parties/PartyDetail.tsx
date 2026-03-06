@@ -36,9 +36,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
 import theme, { colors } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";

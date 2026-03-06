@@ -7,6 +7,7 @@ import {
 } from "#table-counts";
 
 type FetchMock = typeof fetch;
+type FetchInput = Parameters<FetchMock>[0];
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -60,7 +61,7 @@ describe("table-counts", () => {
   test("resolves exact count for multi-page data with 0-based formula", async () => {
     const requestedPages: number[] = [];
 
-    globalThis.fetch = (async (input) => {
+    globalThis.fetch = (async (input: FetchInput) => {
       const url = new URL(String(input));
       const page = Number(url.searchParams.get("page") || "0");
       requestedPages.push(page);
@@ -83,7 +84,7 @@ describe("table-counts", () => {
   test("uses candidate row count as a probe hint", async () => {
     const requestedPages: number[] = [];
 
-    globalThis.fetch = (async (input) => {
+    globalThis.fetch = (async (input: FetchInput) => {
       const url = new URL(String(input));
       const page = Number(url.searchParams.get("page") || "0");
       requestedPages.push(page);
@@ -118,7 +119,7 @@ describe("table-counts", () => {
   });
 
   test("returns /tables/counts-compatible shape for all tables", async () => {
-    globalThis.fetch = (async (input) => {
+    globalThis.fetch = (async (input: FetchInput) => {
       const url = new URL(String(input));
       const page = Number(url.searchParams.get("page") || "0");
       const tableMatch = url.pathname.match(/\/tables\/([^/]+)\/rows$/);
@@ -147,7 +148,7 @@ describe("table-counts", () => {
   });
 
   test("returns only requested table when tableName is provided", async () => {
-    globalThis.fetch = (async (input) => {
+    globalThis.fetch = (async (input: FetchInput) => {
       const url = new URL(String(input));
       const tableMatch = url.pathname.match(/\/tables\/([^/]+)\/rows$/);
       const tableName = tableMatch ? decodeURIComponent(tableMatch[1]) : "";
@@ -170,7 +171,7 @@ describe("table-counts", () => {
   });
 
   test("returns map output for all tables", async () => {
-    globalThis.fetch = (async (input) => {
+    globalThis.fetch = (async (input: FetchInput) => {
       const url = new URL(String(input));
       const page = Number(url.searchParams.get("page") || "0");
       if (page !== 0) {
@@ -186,7 +187,7 @@ describe("table-counts", () => {
   });
 
   test("returns map output for selected tableNames subset", async () => {
-    globalThis.fetch = (async (input) => {
+    globalThis.fetch = (async (input: FetchInput) => {
       const url = new URL(String(input));
       const tableMatch = url.pathname.match(/\/tables\/([^/]+)\/rows$/);
       const tableName = tableMatch ? decodeURIComponent(tableMatch[1]) : "";
@@ -238,7 +239,7 @@ describe("table-counts", () => {
   });
 
   test("skips failed tables when skipOnError is true", async () => {
-    globalThis.fetch = (async (input) => {
+    globalThis.fetch = (async (input: FetchInput) => {
       const url = new URL(String(input));
       const tableMatch = url.pathname.match(/\/tables\/([^/]+)\/rows$/);
       const tableName = tableMatch ? decodeURIComponent(tableMatch[1]) : "";
@@ -265,7 +266,7 @@ describe("table-counts", () => {
   test("calls the rows endpoint with correct query params", async () => {
     const requestedUrls: URL[] = [];
 
-    globalThis.fetch = (async (input) => {
+    globalThis.fetch = (async (input: FetchInput) => {
       const url = new URL(String(input));
       requestedUrls.push(url);
 

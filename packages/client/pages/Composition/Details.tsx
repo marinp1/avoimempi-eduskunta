@@ -28,9 +28,9 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import React from "react";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
 import theme, { colors } from "#client/theme";
 import { VoteMarginBar } from "#client/theme/components";
@@ -537,15 +537,8 @@ const OverviewTab: React.FC<{
                       variant="caption"
                       sx={{ color: themedColors.textSecondary }}
                     >
-                      {displayDate(
-                        district.start_date,
-                        t("details.ongoing"),
-                      )}{" "}
-                      -{" "}
-                      {displayDate(
-                        district.end_date,
-                        t("details.ongoing"),
-                      )}
+                      {displayDate(district.start_date, t("details.ongoing"))} -{" "}
+                      {displayDate(district.end_date, t("details.ongoing"))}
                     </Typography>
                   }
                 />
@@ -569,13 +562,16 @@ const OverviewTab: React.FC<{
           <List dense sx={{ p: 0, mb: 2 }}>
             {details.groupMemberships.map((membership, i) => {
               const leavingRecord = details.leavingRecords?.find((record) => {
+                if (!membership.end_date || !record.end_date) {
+                  return false;
+                }
                 const recordDate = new Date(record.end_date);
-                const membershipEndDate = new Date(membership.end_date || "");
+                const membershipEndDate = new Date(membership.end_date);
                 const diffDays = Math.abs(
                   (recordDate.getTime() - membershipEndDate.getTime()) /
                     (1000 * 60 * 60 * 24),
                 );
-                return diffDays < 30 && membership.end_date;
+                return diffDays < 30;
               });
               return (
                 <ListItem key={i} sx={{ px: 0, py: 0.5 }}>
@@ -1270,7 +1266,9 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                         variant="caption"
                         sx={{ color: themedColors.textSecondary }}
                       >
-                        {tComposition("details.votes.drawer.relatedVotingsTitle")}
+                        {tComposition(
+                          "details.votes.drawer.relatedVotingsTitle",
+                        )}
                       </Typography>
                       <Box
                         sx={{
@@ -1289,7 +1287,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                               onClick={() =>
                                 openVoting(
                                   related.id,
-                                  selectedVoting.start_time,
+                                  selectedVoting?.start_time,
                                 )
                               }
                               sx={{
@@ -1466,7 +1464,9 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
             ...prev,
             [selectedSectionKey]: true,
           }));
-          setContextError(tComposition("details.speeches.missingSpeechInThread"));
+          setContextError(
+            tComposition("details.speeches.missingSpeechInThread"),
+          );
         }
       })
       .catch(() => {
@@ -1916,7 +1916,9 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                         display: "block",
                       }}
                     >
-                      {tComposition("details.speeches.drawer.loadingSectionContent")}
+                      {tComposition(
+                        "details.speeches.drawer.loadingSectionContent",
+                      )}
                     </Typography>
                   )}
                 {sectionContextContent && (
@@ -2539,15 +2541,8 @@ const PositionsTab: React.FC<{
                       variant="caption"
                       sx={{ color: themedColors.textSecondary }}
                     >
-                      {displayDate(
-                        c.start_date,
-                        t("details.ongoing"),
-                      )}{" "}
-                      -{" "}
-                      {displayDate(
-                        c.end_date,
-                        t("details.ongoing"),
-                      )}
+                      {displayDate(c.start_date, t("details.ongoing"))} -{" "}
+                      {displayDate(c.end_date, t("details.ongoing"))}
                     </Typography>
                   }
                 />
@@ -2598,15 +2593,8 @@ const PositionsTab: React.FC<{
                       variant="caption"
                       sx={{ color: themedColors.textSecondary }}
                     >
-                      {displayDate(
-                        gm.start_date,
-                        t("details.ongoing"),
-                      )}{" "}
-                      -{" "}
-                      {displayDate(
-                        gm.end_date,
-                        t("details.ongoing"),
-                      )}
+                      {displayDate(gm.start_date, t("details.ongoing"))} -{" "}
+                      {displayDate(gm.end_date, t("details.ongoing"))}
                     </Typography>
                   }
                 />
