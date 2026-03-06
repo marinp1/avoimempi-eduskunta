@@ -697,13 +697,17 @@
     }
   },
   "pageSources": {
-    "buttonLabel": "Lähteet",
-    "drawerTitle": "Sivun tietolähteet",
+    "buttonLabel": "Tietolähteet",
+    "drawerTitle": "Tietolähteet",
     "fetchFailed": "Tietolähteiden haku epäonnistui",
     "lastMigrationLine": "Viimeisin migraatio: {{value}}",
-    "lastScrapeLine": "Viimeisin scraping: {{value}}",
+    "lastScrapeLine": "Viimeisin haku: {{value}}",
     "noMapping": "Tälle sivulle ei ole vielä määritetty tietolähdekartoitusta.",
-    "openTooltip": "Näytä sivun tietolähteet ja aikaleimat",
-    "summaryCounts": "Tuotuja rivejä: {{rows}} | Lähdesivuja: {{pages}}"
+    "openTooltip": "Näytä tietolähteet ja alkuperä",
+    "summaryCounts": "Tuotuja rivejä: {{rows}} | Lähdesivuja: {{pages}}",
+    "itemTraceTitle": "Alkuperä",
+    "pageLevelTitle": "Sivun tietolähteet",
+    "openApiSource": "Avaa lähde (Eduskunta API)",
+    "rowTraceNotFound": "Tälle tietueelle ei löydy jäljitystietoja. Aja tietokantapäivitys ensin."
   }
 }

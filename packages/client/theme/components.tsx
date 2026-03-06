@@ -10,8 +10,9 @@ import { useThemedColors } from "./ThemeContext";
 export const DataCard: React.FC<{
   children: React.ReactNode;
   sx?: SxProps<Theme>;
-}> = ({ children, sx }) => (
-  <Card sx={{ ...commonStyles.dataCard, ...sx }}>{children}</Card>
+  className?: string;
+}> = ({ children, sx, className }) => (
+  <Card className={className} sx={{ ...commonStyles.dataCard, ...sx }}>{children}</Card>
 );
 
 /**

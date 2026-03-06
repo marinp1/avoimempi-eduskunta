@@ -26,6 +26,7 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ItemTraceIcon } from "#client/components/ItemTraceIcon";
 import {
   isDateWithinHallituskausi,
   useHallituskausi,
@@ -804,6 +805,7 @@ export default () => {
                   {filteredMembers.map((m) => (
                     <Card
                       key={m.person_id}
+                      className="trace-hover-parent"
                       role="button"
                       tabIndex={0}
                       onClick={() => handleRowClick(m)}
@@ -833,15 +835,23 @@ export default () => {
                             mb: 1,
                           }}
                         >
-                          <Typography
-                            variant="subtitle1"
-                            sx={{
-                              fontWeight: 600,
-                              color: themedColors.textPrimary,
-                            }}
-                          >
-                            {m.first_name} {m.last_name}
-                          </Typography>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            <Typography
+                              variant="subtitle1"
+                              sx={{
+                                fontWeight: 600,
+                                color: themedColors.textPrimary,
+                              }}
+                            >
+                              {m.first_name} {m.last_name}
+                            </Typography>
+                            <ItemTraceIcon
+                              table="MemberOfParliament"
+                              pkName="personId"
+                              pkValue={String(m.person_id)}
+                              label={`${m.first_name} ${m.last_name}`}
+                            />
+                          </Box>
                           {m.is_in_government === 1 && (
                             <CheckCircleIcon
                               sx={{
@@ -942,6 +952,7 @@ export default () => {
                       {filteredMembers.map((m, index) => (
                         <TableRow
                           key={m.person_id}
+                          className="trace-hover-parent"
                           hover
                           tabIndex={0}
                           onClick={() => handleRowClick(m)}
@@ -981,7 +992,15 @@ export default () => {
                               py: 2.5,
                             }}
                           >
-                            {m.first_name} {m.last_name}
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                              {m.first_name} {m.last_name}
+                              <ItemTraceIcon
+                                table="MemberOfParliament"
+                                pkName="personId"
+                                pkValue={String(m.person_id)}
+                                label={`${m.first_name} ${m.last_name}`}
+                              />
+                            </Box>
                           </TableCell>
                           <TableCell sx={{ py: 2.5 }}>
                             {m.party_name ? (

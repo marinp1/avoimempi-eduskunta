@@ -38,6 +38,8 @@ const votingRepository = new VotingRepository(db);
 const coreRoutesDataAccess = {
   fetchImportSourceTableSummaries: (params: { tableNames: string[] }) =>
     importSourceRepository.fetchImportSourceTableSummaries(params),
+  fetchRowTrace: (params: { table: string; pkName: string; pkValue: string }) =>
+    importSourceRepository.fetchRowTrace(params),
   fetchParliamentComposition: (params: { date: string }) =>
     metadataRepository.fetchParliamentComposition(params),
   fetchHallituskaudet: () => metadataRepository.fetchHallituskaudet(),

@@ -7,6 +7,7 @@ import { getDatabasePath } from "#database";
 import { getParsedRowStore } from "#storage/row-store/factory";
 import { generateAndSaveChangesReport } from "./changes-report";
 import { migrateVaskiData } from "./fn/VaskiData/migrator";
+import { rebuildTraceDatabase } from "./trace-db";
 import {
   normalizeImportedTextData,
   rebuildFederatedSearchIndex,
@@ -665,6 +666,8 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
 
     console.log("\n📋 Generating changes report...");
     await generateAndSaveChangesReport(previousRebuildAt);
+
+    await rebuildTraceDatabase();
 
     const timestamp = new Date().toISOString();
     targetDatabase.run(MIGRATOR_SQL.createMigrationInfoTable);
