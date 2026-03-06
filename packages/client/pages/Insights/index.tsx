@@ -15,8 +15,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import type fi from "#client/i18n/locales/fi.json";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { spacing } from "#client/theme";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -40,9 +40,8 @@ type DrawerType =
 
 type DrawerKey = Exclude<DrawerType, null>;
 type InsightsCardTranslationName = keyof (typeof fi)["insights"]["cards"];
-type InsightsTitleKey = `insights.cards.${InsightsCardTranslationName}.title`;
-type InsightsDescriptionKey =
-  `insights.cards.${InsightsCardTranslationName}.description`;
+type InsightsTitleKey = `cards.${InsightsCardTranslationName}.title`;
+type InsightsDescriptionKey = `cards.${InsightsCardTranslationName}.description`;
 type InsightCard = {
   key: DrawerKey;
   icon: React.ReactNode;
@@ -52,7 +51,7 @@ type InsightCard = {
 
 export default () => {
   const themedColors = useThemedColors();
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("insights");
   const [activeDrawer, setActiveDrawer] = useState<DrawerType>(null);
   const [initialPersonId, setInitialPersonId] = useState<number | null>(null);
 
@@ -114,44 +113,44 @@ export default () => {
     {
       key: "timeSeries",
       icon: <TimelineIcon sx={{ fontSize: 24 }} />,
-      titleKey: "insights.cards.timeSeriesStats.title",
-      descriptionKey: "insights.cards.timeSeriesStats.description",
+      titleKey: "cards.timeSeriesStats.title",
+      descriptionKey: "cards.timeSeriesStats.description",
     },
     {
       key: "partyParticipation",
       icon: <AssessmentIcon sx={{ fontSize: 24 }} />,
-      titleKey: "insights.cards.partyParticipation.title",
-      descriptionKey: "insights.cards.partyParticipation.description",
+      titleKey: "cards.partyParticipation.title",
+      descriptionKey: "cards.partyParticipation.description",
     },
     {
       key: "partyDiscipline",
       icon: <GavelIcon sx={{ fontSize: 24 }} />,
-      titleKey: "insights.cards.partyDiscipline.title",
-      descriptionKey: "insights.cards.partyDiscipline.description",
+      titleKey: "cards.partyDiscipline.title",
+      descriptionKey: "cards.partyDiscipline.description",
     },
     {
       key: "votingActivity",
       icon: <HowToVoteIcon sx={{ fontSize: 24 }} />,
-      titleKey: "insights.cards.votingActivity.title",
-      descriptionKey: "insights.cards.votingActivity.description",
+      titleKey: "cards.votingActivity.title",
+      descriptionKey: "cards.votingActivity.description",
     },
     {
       key: "closeVotes",
       icon: <BalanceIcon sx={{ fontSize: 24 }} />,
-      titleKey: "insights.cards.closeVotes.title",
-      descriptionKey: "insights.cards.closeVotes.description",
+      titleKey: "cards.closeVotes.title",
+      descriptionKey: "cards.closeVotes.description",
     },
     {
       key: "coalitionOpposition",
       icon: <AccountBalanceIcon sx={{ fontSize: 24 }} />,
-      titleKey: "insights.cards.coalitionOpposition.title",
-      descriptionKey: "insights.cards.coalitionOpposition.description",
+      titleKey: "cards.coalitionOpposition.title",
+      descriptionKey: "cards.coalitionOpposition.description",
     },
     {
       key: "speechActivity",
       icon: <MicIcon sx={{ fontSize: 24 }} />,
-      titleKey: "insights.cards.speechActivity.title",
-      descriptionKey: "insights.cards.speechActivity.description",
+      titleKey: "cards.speechActivity.title",
+      descriptionKey: "cards.speechActivity.description",
     },
   ] as const satisfies readonly InsightCard[];
 
@@ -165,8 +164,8 @@ export default () => {
   return (
     <Box>
       <PageHeader
-        title={t("insights.title")}
-        subtitle={t("insights.subtitle")}
+        title={t("title")}
+        subtitle={t("subtitle")}
       />
 
       <Grid container spacing={spacing.sm}>

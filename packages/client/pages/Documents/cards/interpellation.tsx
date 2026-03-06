@@ -22,9 +22,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
@@ -94,7 +94,8 @@ export function InterpellationCard({
   item: InterpellationListItem;
   onSubjectClick?: (subject: string) => void;
 }) {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
 
   const [expanded, setExpanded] = useState(false);
   const [detail, setDetail] = useState<InterpellationDetail | null>(null);
@@ -159,7 +160,7 @@ export function InterpellationCard({
                 fontWeight: 500,
               }}
             >
-              {item.title || t("documents.noTitle")}
+              {item.title || tDocuments("noTitle")}
             </Typography>
             <Chip
               label={item.parliament_identifier}
@@ -181,7 +182,7 @@ export function InterpellationCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDateLine", {
+                {tDocuments("submissionDateLine", {
                   value: formatDate(item.submission_date),
                 })}
               </Typography>
@@ -301,7 +302,7 @@ export function InterpellationCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.signers")}
+                      {tDocuments("signers")}
                     </Typography>
                   </Stack>
                   <TableContainer>
@@ -309,8 +310,8 @@ export function InterpellationCard({
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>{t("documents.author")}</TableCell>
-                          <TableCell>{t("common.party")}</TableCell>
+                          <TableCell>{tDocuments("author")}</TableCell>
+                          <TableCell>{tCommon("party")}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -352,7 +353,7 @@ export function InterpellationCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.stages")}
+                      {tDocuments("stages")}
                     </Typography>
                   </Stack>
                   <Stack spacing={1.5}>
@@ -417,8 +418,8 @@ export function InterpellationCard({
                     }}
                   >
                     {showJustification
-                      ? t("documents.justificationToggle", { context: "hide" })
-                      : t("documents.justificationToggle", { context: "show" })}
+                      ? tDocuments("justificationToggle", { context: "hide" })
+                      : tDocuments("justificationToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showJustification}>
                     <Box
@@ -451,8 +452,8 @@ export function InterpellationCard({
                     }}
                   >
                     {showClauses
-                      ? t("documents.clausesToggle", { context: "hide" })
-                      : t("documents.clausesToggle", { context: "show" })}
+                      ? tDocuments("clausesToggle", { context: "hide" })
+                      : tDocuments("clausesToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showClauses}>
                     <Box

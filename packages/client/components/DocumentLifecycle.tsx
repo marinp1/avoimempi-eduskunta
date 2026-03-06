@@ -2,7 +2,7 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import {
   DocumentCard,
   extractDocumentIdentifiers,
@@ -82,7 +82,7 @@ export const DocumentLifecycle: React.FC<DocumentLifecycleProps> = ({
   directReferenceValues = [],
   richTextValues = [],
 }) => {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("documents");
   const [showAll, setShowAll] = useState(false);
   const [apiIdentifiers, setApiIdentifiers] = useState<string[]>([]);
   const [apiLoading, setApiLoading] = useState(false);
@@ -154,19 +154,19 @@ export const DocumentLifecycle: React.FC<DocumentLifecycleProps> = ({
           variant="subtitle1"
           sx={{ fontWeight: 600, color: colors.textPrimary }}
         >
-          {t("documents.lifecycle")}
+          {t("lifecycle")}
         </Typography>
       </Stack>
 
       {apiLoading && (
         <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 1 }}>
-          {t("documents.lifecycleLoading")}
+          {t("lifecycleLoading")}
         </Typography>
       )}
 
       {documentRefs.length === 0 && (
         <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-          {t("documents.lifecycleNoReferences")}
+          {t("lifecycleNoReferences")}
         </Typography>
       )}
 
@@ -190,8 +190,8 @@ export const DocumentLifecycle: React.FC<DocumentLifecycleProps> = ({
           }
         >
           {showAll
-            ? t("documents.lifecycleShowLess")
-            : t("documents.lifecycleShowMore", {
+            ? t("lifecycleShowLess")
+            : t("lifecycleShowMore", {
                 count: hiddenReferenceCount,
               })}
         </Button>

@@ -11,7 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
 import { colors, commonStyles } from "#client/theme";
 
@@ -41,7 +41,8 @@ export const VotingResultsTable: React.FC<{
   partyBreakdown: VotingPartyBreakdown[];
   memberVotes: VotingMemberVote[];
 }> = ({ partyBreakdown, memberVotes }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tVotings } = useScopedTranslation("votings");
   const [groupBy, setGroupBy] = useState<"party" | "representative">("party");
 
   if (partyBreakdown.length === 0 && memberVotes.length === 0) return null;
@@ -50,7 +51,7 @@ export const VotingResultsTable: React.FC<{
     <Box sx={{ mt: 0.5 }}>
       <Box
         role="group"
-        aria-label={t("votings.resultsTable.title")}
+        aria-label={tVotings("resultsTable.title")}
         sx={{
           display: "flex",
           alignItems: "center",
@@ -62,7 +63,7 @@ export const VotingResultsTable: React.FC<{
         <Typography
           sx={{ ...commonStyles.compactTextSm, color: colors.textSecondary }}
         >
-          {t("votings.resultsTable.title")}
+          {tVotings("resultsTable.title")}
         </Typography>
         <Button
           size="small"
@@ -75,7 +76,7 @@ export const VotingResultsTable: React.FC<{
           }}
           onClick={() => setGroupBy("party")}
         >
-          {t("votings.resultsTable.groupByParty")}
+          {tVotings("resultsTable.groupByParty")}
         </Button>
         <Button
           size="small"
@@ -88,7 +89,7 @@ export const VotingResultsTable: React.FC<{
           }}
           onClick={() => setGroupBy("representative")}
         >
-          {t("votings.resultsTable.groupByRepresentative")}
+          {tVotings("resultsTable.groupByRepresentative")}
         </Button>
       </Box>
       <TableContainer
@@ -98,21 +99,21 @@ export const VotingResultsTable: React.FC<{
           <Table size="small">
             <TableHead>
               <TableRow>
-                <TableCell sx={tableHeadCellSx}>{t("common.party")}</TableCell>
+                <TableCell sx={tableHeadCellSx}>{tCommon("party")}</TableCell>
                 <TableCell sx={tableHeadCellSx} align="right">
-                  {t("common.yes")}
+                  {tCommon("yes")}
                 </TableCell>
                 <TableCell sx={tableHeadCellSx} align="right">
-                  {t("common.no")}
+                  {tCommon("no")}
                 </TableCell>
                 <TableCell sx={tableHeadCellSx} align="right">
-                  {t("common.empty")}
+                  {tCommon("empty")}
                 </TableCell>
                 <TableCell sx={tableHeadCellSx} align="right">
-                  {t("common.absent")}
+                  {tCommon("absent")}
                 </TableCell>
                 <TableCell sx={tableHeadCellSx} align="right">
-                  {t("votings.results.total")}
+                  {tVotings("results.total")}
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -144,11 +145,11 @@ export const VotingResultsTable: React.FC<{
             <TableHead>
               <TableRow>
                 <TableCell sx={tableHeadCellSx}>
-                  {t("votings.resultsTable.representative")}
+                  {tVotings("resultsTable.representative")}
                 </TableCell>
-                <TableCell sx={tableHeadCellSx}>{t("common.party")}</TableCell>
+                <TableCell sx={tableHeadCellSx}>{tCommon("party")}</TableCell>
                 <TableCell sx={tableHeadCellSx}>
-                  {t("votings.resultsTable.vote")}
+                  {tVotings("resultsTable.vote")}
                 </TableCell>
               </TableRow>
             </TableHead>

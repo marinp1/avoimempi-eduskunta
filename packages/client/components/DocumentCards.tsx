@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import type React from "react";
 import { useEffect, useId, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { colors, commonStyles } from "#client/theme/index";
@@ -164,7 +164,7 @@ const ExpandableSnippet: React.FC<{
   text: string | null | undefined;
   maxLength?: number;
 }> = ({ label, text, maxLength = 280 }) => {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("common");
   const normalized = normalizeSnippet(text);
   const [expanded, setExpanded] = useState(false);
   const snippetContentId = useId();
@@ -198,7 +198,7 @@ const ExpandableSnippet: React.FC<{
             color: colors.primary,
           }}
         >
-          {expanded ? t("common.showLess") : t("common.showMore")}
+          {expanded ? t("showLess") : t("showMore")}
         </Button>
       )}
     </Box>
@@ -211,7 +211,7 @@ const ExpandableRichSnippet: React.FC<{
   richText: string | null | undefined;
   maxLength?: number;
 }> = ({ label, text, richText, maxLength = 280 }) => {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("common");
   const normalized = normalizeSnippet(text);
   const [expanded, setExpanded] = useState(false);
   const snippetContentId = useId();
@@ -262,7 +262,7 @@ const ExpandableRichSnippet: React.FC<{
             color: colors.primary,
           }}
         >
-          {expanded ? t("common.showLess") : t("common.showMore")}
+          {expanded ? t("showLess") : t("showMore")}
         </Button>
       )}
     </Box>
@@ -356,7 +356,8 @@ const LoadingPlaceholder: React.FC<{ text: string }> = ({ text }) => (
 export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
   const { data, loading } = useFetchByIdentifier<
     WithAuthor & {
       summary_text: string | null;
@@ -370,7 +371,7 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
 
   if (loading)
     return (
-      <LoadingPlaceholder text={t("documents.loadingGovernmentProposal")} />
+      <LoadingPlaceholder text={tDocuments("loadingGovernmentProposal")} />
     );
   if (!data) return null;
 
@@ -386,7 +387,7 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
       tabIndex={0}
       onClick={openDocument}
       onKeyDown={(event) => handleActivateOnKeyDown(event, openDocument)}
-      aria-label={`${t("common.openView")}: ${data.parliament_identifier}`}
+      aria-label={`${tCommon("openView")}: ${data.parliament_identifier}`}
     >
       <Box
         sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
@@ -397,7 +398,7 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
           sx={identifierChipSx}
         />
         <Typography sx={titleSx}>
-          {data.title || t("documents.noTitle")}
+          {data.title || tDocuments("noTitle")}
         </Typography>
         {data.decision_outcome && (
           <Chip
@@ -423,19 +424,19 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
         {data.author && <Typography sx={metaTextSx}>{data.author}</Typography>}
       </Box>
       <ExpandableRichSnippet
-        label={t("documents.summary")}
+        label={tDocuments("summary")}
         text={data.summary_text}
         richText={data.summary_rich_text}
         maxLength={280}
       />
       <ExpandableRichSnippet
-        label={t("documents.proposalText")}
+        label={tDocuments("proposalText")}
         text={data.proposal_text}
         richText={data.proposal_rich_text}
         maxLength={220}
       />
       <ExpandableRichSnippet
-        label={t("documents.justificationText")}
+        label={tDocuments("justificationText")}
         text={data.justification_text}
         richText={data.justification_rich_text}
         maxLength={220}
@@ -448,7 +449,8 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
 export const InterpellationCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
   const { data, loading } = useFetchByIdentifier<
     WithSigner & {
       question_text: string | null;
@@ -467,7 +469,7 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
   >("/api/interpellations/by-identifier", identifier);
 
   if (loading)
-    return <LoadingPlaceholder text={t("documents.loadingInterpellation")} />;
+    return <LoadingPlaceholder text={tDocuments("loadingInterpellation")} />;
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -489,7 +491,7 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
       tabIndex={0}
       onClick={openDocument}
       onKeyDown={(event) => handleActivateOnKeyDown(event, openDocument)}
-      aria-label={`${t("common.openView")}: ${data.parliament_identifier}`}
+      aria-label={`${tCommon("openView")}: ${data.parliament_identifier}`}
     >
       <Box
         sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
@@ -500,7 +502,7 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
           sx={identifierChipSx}
         />
         <Typography sx={titleSx}>
-          {data.title || t("documents.noTitle")}
+          {data.title || tDocuments("noTitle")}
         </Typography>
         {data.decision_outcome && (
           <Chip
@@ -526,13 +528,13 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
         {signerLabel && <Typography sx={metaTextSx}>{signerLabel}</Typography>}
       </Box>
       <ExpandableRichSnippet
-        label={t("documents.question")}
+        label={tDocuments("question")}
         text={data.question_text}
         richText={data.question_rich_text}
         maxLength={280}
       />
       <ExpandableRichSnippet
-        label={t("documents.committeeResolution")}
+        label={tDocuments("committeeResolution")}
         text={data.resolution_text}
         richText={data.resolution_rich_text}
         maxLength={220}
@@ -548,7 +550,7 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
               fontWeight: 600,
             }}
           >
-            {t("documents.answerProcessingStatus")}
+            {tDocuments("answerProcessingStatus")}
           </Typography>
           {latestStage.event_date && (
             <Typography sx={metaTextSx}>
@@ -564,7 +566,7 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
           )}
           {latestStage.event_description && (
             <ExpandableSnippet
-              label={t("documents.additionalInfo")}
+              label={tDocuments("additionalInfo")}
               text={latestStage.event_description}
               maxLength={220}
             />
@@ -579,7 +581,8 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
 export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
   const { data, loading } = useFetchByIdentifier<
     WithSigner & {
       initiative_type_code: string;
@@ -594,7 +597,7 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
 
   if (loading)
     return (
-      <LoadingPlaceholder text={t("documents.loadingLegislativeInitiative")} />
+      <LoadingPlaceholder text={tDocuments("loadingLegislativeInitiative")} />
     );
   if (!data) return null;
 
@@ -616,7 +619,7 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
       tabIndex={0}
       onClick={openDocument}
       onKeyDown={(event) => handleActivateOnKeyDown(event, openDocument)}
-      aria-label={`${t("common.openView")}: ${data.parliament_identifier}`}
+      aria-label={`${tCommon("openView")}: ${data.parliament_identifier}`}
     >
       <Box
         sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
@@ -627,7 +630,7 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
           sx={identifierChipSx}
         />
         <Typography sx={titleSx}>
-          {data.title || t("documents.noTitle")}
+          {data.title || tDocuments("noTitle")}
         </Typography>
         {data.decision_outcome && (
           <Chip
@@ -659,19 +662,19 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
         {signerLabel && <Typography sx={metaTextSx}>{signerLabel}</Typography>}
       </Box>
       <ExpandableRichSnippet
-        label={t("documents.justificationText")}
+        label={tDocuments("justificationText")}
         text={data.justification_text}
         richText={data.justification_rich_text}
         maxLength={260}
       />
       <ExpandableRichSnippet
-        label={t("documents.clausesText")}
+        label={tDocuments("clausesText")}
         text={data.proposal_text}
         richText={data.proposal_rich_text}
         maxLength={220}
       />
       <ExpandableRichSnippet
-        label={t("documents.proposalLaws")}
+        label={tDocuments("proposalLaws")}
         text={data.law_text}
         richText={data.law_rich_text}
         maxLength={220}
@@ -684,7 +687,8 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
 export const OralQuestionCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
   const { data, loading } = useFetchByIdentifier<
     DocCardData & {
       question_text: string | null;
@@ -694,7 +698,7 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
   >("/api/oral-questions/by-identifier", identifier);
 
   if (loading)
-    return <LoadingPlaceholder text={t("documents.loadingOralQuestion")} />;
+    return <LoadingPlaceholder text={tDocuments("loadingOralQuestion")} />;
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -709,7 +713,7 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
       tabIndex={0}
       onClick={openDocument}
       onKeyDown={(event) => handleActivateOnKeyDown(event, openDocument)}
-      aria-label={`${t("common.openView")}: ${data.parliament_identifier}`}
+      aria-label={`${tCommon("openView")}: ${data.parliament_identifier}`}
     >
       <Box
         sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
@@ -720,7 +724,7 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
           sx={identifierChipSx}
         />
         <Typography sx={titleSx}>
-          {data.title || t("documents.noTitle")}
+          {data.title || tDocuments("noTitle")}
         </Typography>
         {data.decision_outcome && (
           <Chip
@@ -756,7 +760,7 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
         )}
       </Box>
       <ExpandableSnippet
-        label={t("documents.question")}
+        label={tDocuments("question")}
         text={data.question_text}
         maxLength={260}
       />
@@ -768,7 +772,8 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
 export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
   const { data, loading } = useFetchByIdentifier<
     WithSigner & {
       answer_minister_title: string | null;
@@ -780,7 +785,7 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
   >("/api/written-questions/by-identifier", identifier);
 
   if (loading)
-    return <LoadingPlaceholder text={t("documents.loadingWrittenQuestion")} />;
+    return <LoadingPlaceholder text={tDocuments("loadingWrittenQuestion")} />;
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -801,7 +806,7 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
       tabIndex={0}
       onClick={openDocument}
       onKeyDown={(event) => handleActivateOnKeyDown(event, openDocument)}
-      aria-label={`${t("common.openView")}: ${data.parliament_identifier}`}
+      aria-label={`${tCommon("openView")}: ${data.parliament_identifier}`}
     >
       <Box
         sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
@@ -812,7 +817,7 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
           sx={identifierChipSx}
         />
         <Typography sx={titleSx}>
-          {data.title || t("documents.noTitle")}
+          {data.title || tDocuments("noTitle")}
         </Typography>
         {data.decision_outcome && (
           <Chip
@@ -838,7 +843,7 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
         {signerLabel && <Typography sx={metaTextSx}>{signerLabel}</Typography>}
       </Box>
       <ExpandableRichSnippet
-        label={t("documents.question")}
+        label={tDocuments("question")}
         text={data.question_text}
         richText={data.question_rich_text}
         maxLength={280}
@@ -851,7 +856,8 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
 export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
   const { data, loading } = useFetchByIdentifier<{
     id: number;
     parliament_identifier: string;
@@ -871,7 +877,7 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
   }>("/api/committee-reports/by-identifier", identifier);
 
   if (loading)
-    return <LoadingPlaceholder text={t("documents.loadingCommitteeReport")} />;
+    return <LoadingPlaceholder text={tDocuments("loadingCommitteeReport")} />;
   if (!data) return null;
   const openDocument = () => {
     window.location.href = `/asiakirjat?id=${data.id}&type=committee-reports`;
@@ -884,7 +890,7 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
       tabIndex={0}
       onClick={openDocument}
       onKeyDown={(event) => handleActivateOnKeyDown(event, openDocument)}
-      aria-label={`${t("common.openView")}: ${data.parliament_identifier}`}
+      aria-label={`${tCommon("openView")}: ${data.parliament_identifier}`}
     >
       <Box
         sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
@@ -901,7 +907,7 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
           sx={subjectChipSx}
         />
         <Typography sx={titleSx}>
-          {data.title || t("documents.noTitle")}
+          {data.title || tDocuments("noTitle")}
         </Typography>
       </Box>
       <Box
@@ -929,25 +935,25 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
         )}
       </Box>
       <ExpandableRichSnippet
-        label={t("documents.summary")}
+        label={tDocuments("summary")}
         text={data.summary_text}
         richText={data.summary_rich_text}
         maxLength={280}
       />
       <ExpandableRichSnippet
-        label={t("documents.decisionProposal")}
+        label={tDocuments("decisionProposal")}
         text={data.decision_text}
         richText={data.decision_rich_text}
         maxLength={220}
       />
       <ExpandableRichSnippet
-        label={t("documents.committeeResolution")}
+        label={tDocuments("committeeResolution")}
         text={data.resolution_text}
         richText={data.resolution_rich_text}
         maxLength={220}
       />
       <ExpandableRichSnippet
-        label={t("documents.proposalLaws")}
+        label={tDocuments("proposalLaws")}
         text={data.legislation_amendment_text}
         richText={data.legislation_amendment_rich_text}
         maxLength={220}
@@ -986,7 +992,8 @@ export const DocumentCard: React.FC<{ docRef: DocRef }> = ({ docRef }) => {
 export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
   identifiers,
 }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
   type VotingSummary = {
     id: number;
     section_title: string | null;
@@ -1120,7 +1127,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
         sx={{ display: "flex", alignItems: "center", gap: 1, py: 0.5, mt: 0.5 }}
       >
         <CircularProgress size={14} />
-        <Typography sx={metaTextSx}>{t("documents.loadingVotings")}</Typography>
+        <Typography sx={metaTextSx}>{tDocuments("loadingVotings")}</Typography>
       </Box>
     );
   }
@@ -1138,7 +1145,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
             color: colors.textPrimary,
           }}
         >
-          {t("documents.relatedVotings")}
+          {tDocuments("relatedVotings")}
         </Typography>
       </Box>
       {votings.map((v) => {
@@ -1216,8 +1223,8 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                 }
               >
                 {isExpanded
-                  ? t("common.detailsToggle", { context: "hide" })
-                  : t("common.detailsToggle", { context: "show" })}
+                  ? tCommon("detailsToggle", { context: "hide" })
+                  : tCommon("detailsToggle", { context: "show" })}
               </Button>
               <Button
                 size="small"
@@ -1235,7 +1242,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                 }}
                 endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
               >
-                {t("common.openView")}
+                {tCommon("openView")}
               </Button>
             </Box>
             <Box
@@ -1296,7 +1303,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <CircularProgress size={12} />
                     <Typography sx={metaTextSx}>
-                      {t("common.loadingVotingDetails")}
+                      {tCommon("loadingVotingDetails")}
                     </Typography>
                   </Box>
                 )}
@@ -1307,7 +1314,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                     <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                       <Chip
                         size="small"
-                        label={t("common.yesCount", {
+                        label={tCommon("yesCount", {
                           count: details.voting.n_yes,
                         })}
                         sx={{
@@ -1319,7 +1326,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                       />
                       <Chip
                         size="small"
-                        label={t("common.noCount", {
+                        label={tCommon("noCount", {
                           count: details.voting.n_no,
                         })}
                         sx={{
@@ -1331,14 +1338,14 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                       />
                       <Chip
                         size="small"
-                        label={t("common.emptyCount", {
+                        label={tCommon("emptyCount", {
                           count: details.voting.n_abstain,
                         })}
                         sx={{ ...commonStyles.compactChipSm }}
                       />
                       <Chip
                         size="small"
-                        label={t("common.absentCount", {
+                        label={tCommon("absentCount", {
                           count: details.voting.n_absent,
                         })}
                         sx={{ ...commonStyles.compactChipSm }}
@@ -1347,12 +1354,12 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                     <Typography
                       sx={{ fontSize: "0.72rem", color: colors.textSecondary }}
                     >
-                      {t("common.votingTargetLine", {
+                      {tCommon("votingTargetLine", {
                         value:
                           details.voting.context_title ||
                           details.voting.section_title ||
                           details.voting.title ||
-                          t("documents.noTitle"),
+                          tDocuments("noTitle"),
                       })}
                     </Typography>
                     {details.voting.parliamentary_item && (
@@ -1399,7 +1406,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                             color: colors.textSecondary,
                           }}
                         >
-                          {t("documents.relatedVotingsSameSection")}
+                          {tDocuments("relatedVotingsSameSection")}
                         </Typography>
                         <Box
                           sx={{
@@ -1425,7 +1432,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                                 color: colors.textSecondary,
                               }}
                             >
-                              {t("documents.moreOther", {
+                              {tDocuments("moreOther", {
                                 count: details.relatedVotings.length - 6,
                               })}
                             </Typography>

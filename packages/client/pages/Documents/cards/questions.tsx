@@ -22,10 +22,10 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { refs } from "#client/references";
 import { DataCard } from "#client/theme/components";
@@ -191,7 +191,7 @@ export function WrittenQuestionResponseCard({
   item: WrittenQuestionResponseListItem;
   onSubjectClick?: (subject: string) => void;
 }) {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("documents");
 
   const [expanded, setExpanded] = useState(false);
   const [questionDetail, setQuestionDetail] = useState<Pick<
@@ -256,7 +256,7 @@ export function WrittenQuestionResponseCard({
             </Typography>
             {item.answer_date && (
               <Chip
-                label={t("documents.answeredLine", {
+                label={t("answeredLine", {
                   value: formatDate(item.answer_date),
                 })}
                 size="small"
@@ -296,7 +296,7 @@ export function WrittenQuestionResponseCard({
 
           {/* Parent question identifier */}
           <Typography variant="caption" sx={{ color: colors.textSecondary }}>
-            {t("documents.writtenQuestionLine", {
+            {t("writtenQuestionLine", {
               value: item.question_identifier,
             })}
           </Typography>
@@ -371,7 +371,7 @@ export function WrittenQuestionResponseCard({
             >
               {eduskuntaUrl && (
                 <EduskuntaSourceLink href={eduskuntaUrl} stopPropagation>
-                  {t("documents.viewResponseOnEduskunta")}
+                  {t("viewResponseOnEduskunta")}
                 </EduskuntaSourceLink>
               )}
               {questionEduskuntaUrl && (
@@ -379,7 +379,7 @@ export function WrittenQuestionResponseCard({
                   href={questionEduskuntaUrl}
                   stopPropagation
                 >
-                  {t("documents.viewQuestionOnEduskunta")}
+                  {t("viewQuestionOnEduskunta")}
                 </EduskuntaSourceLink>
               )}
             </Stack>
@@ -392,7 +392,7 @@ export function WrittenQuestionResponseCard({
                 variant="subtitle2"
                 sx={{ color: colors.textSecondary, mb: 1 }}
               >
-                {t("documents.questionText")}
+                {t("questionText")}
               </Typography>
               <Box
                 sx={{
@@ -413,7 +413,7 @@ export function WrittenQuestionResponseCard({
                 variant="subtitle2"
                 sx={{ color: colors.textSecondary, mb: 1 }}
               >
-                {t("documents.questionText")}
+                {t("questionText")}
               </Typography>
               <Box
                 sx={{
@@ -433,7 +433,7 @@ export function WrittenQuestionResponseCard({
             </Box>
           ) : !loading && questionDetail ? (
             <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-              {t("documents.noQuestionText")}
+              {t("noQuestionText")}
             </Typography>
           ) : null}
         </Box>
@@ -488,7 +488,7 @@ export function ExpertStatementCard({
 }: {
   item: ExpertStatementListItem;
 }) {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("documents");
 
   const [showBillPreview, setShowBillPreview] = useState(false);
   const [billPreview, setBillPreview] = useState<{
@@ -502,9 +502,9 @@ export function ExpertStatementCard({
   const docTypeLabel =
     (
       {
-        asiantuntijalausunto: t("documents.expertStatement"),
-        asiantuntijalausunnon_liite: t("documents.expertStatementAttachment"),
-        asiantuntijasuunnitelma: t("documents.expertHearingPlan"),
+        asiantuntijalausunto: t("expertStatement"),
+        asiantuntijalausunnon_liite: t("expertStatementAttachment"),
+        asiantuntijasuunnitelma: t("expertHearingPlan"),
       } as Record<string, string>
     )[item.document_type] ?? item.document_type;
 
@@ -588,7 +588,7 @@ export function ExpertStatementCard({
               })()}
             {isNonPublic && (
               <Chip
-                label={t("documents.nonPublic")}
+                label={t("nonPublic")}
                 size="small"
                 sx={{
                   backgroundColor: `${colors.error}15`,
@@ -776,7 +776,7 @@ export function OralQuestionCard({
   item: OralQuestionListItem;
   onSubjectClick?: (subject: string) => void;
 }) {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("documents");
 
   const [expanded, setExpanded] = useState(false);
   const [detail, setDetail] = useState<OralQuestionDetail | null>(null);
@@ -839,7 +839,7 @@ export function OralQuestionCard({
                 fontWeight: 500,
               }}
             >
-              {item.title || t("documents.noTitle")}
+              {item.title || t("noTitle")}
             </Typography>
             <Chip
               label={item.parliament_identifier}
@@ -860,7 +860,7 @@ export function OralQuestionCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDateLine", {
+                {t("submissionDateLine", {
                   value: formatDate(item.submission_date),
                 })}
               </Typography>
@@ -946,7 +946,7 @@ export function OralQuestionCard({
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {t("documents.loadErrorLine", { value: error })}
+              {t("loadErrorLine", { value: error })}
             </Alert>
           )}
 
@@ -960,8 +960,8 @@ export function OralQuestionCard({
                     sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
                   >
                     {showQuestionText
-                      ? t("documents.questionToggle", { context: "hide" })
-                      : t("documents.questionToggle", { context: "show" })}
+                      ? t("questionToggle", { context: "hide" })
+                      : t("questionToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showQuestionText}>
                     <Box
@@ -1013,7 +1013,8 @@ export function WrittenQuestionCard({
   item: WrittenQuestionListItem;
   onSubjectClick?: (subject: string) => void;
 }) {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
 
   const [expanded, setExpanded] = useState(false);
   const [detail, setDetail] = useState<WrittenQuestionDetail | null>(null);
@@ -1093,7 +1094,7 @@ export function WrittenQuestionCard({
                 fontWeight: 500,
               }}
             >
-              {item.title || t("documents.noTitle")}
+              {item.title || tDocuments("noTitle")}
             </Typography>
             <Chip
               label={item.parliament_identifier}
@@ -1115,7 +1116,7 @@ export function WrittenQuestionCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDateLine", {
+                {tDocuments("submissionDateLine", {
                   value: formatDate(item.submission_date),
                 })}
               </Typography>
@@ -1168,7 +1169,7 @@ export function WrittenQuestionCard({
 
             {item.answer_date && (
               <Chip
-                label={t("documents.answeredLine", {
+                label={tDocuments("answeredLine", {
                   value: formatDate(item.answer_date),
                 })}
                 size="small"
@@ -1257,7 +1258,7 @@ export function WrittenQuestionCard({
                 <Stack direction="row" spacing={1} flexWrap="wrap" gap={0.5}>
                   {kkPdfUrl && (
                     <EduskuntaSourceLink href={kkPdfUrl} stopPropagation>
-                      {t("documents.viewQuestionPdf")}
+                      {tDocuments("viewQuestionPdf")}
                     </EduskuntaSourceLink>
                   )}
                   {(() => {
@@ -1266,7 +1267,7 @@ export function WrittenQuestionCard({
                     );
                     return url ? (
                       <EduskuntaSourceLink href={url} stopPropagation>
-                        {t("documents.viewResponsePdf")}
+                        {tDocuments("viewResponsePdf")}
                       </EduskuntaSourceLink>
                     ) : null;
                   })()}
@@ -1286,7 +1287,7 @@ export function WrittenQuestionCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.signers")}
+                      {tDocuments("signers")}
                     </Typography>
                   </Stack>
                   <TableContainer>
@@ -1294,8 +1295,8 @@ export function WrittenQuestionCard({
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>{t("documents.author")}</TableCell>
-                          <TableCell>{t("common.party")}</TableCell>
+                          <TableCell>{tDocuments("author")}</TableCell>
+                          <TableCell>{tCommon("party")}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -1338,7 +1339,7 @@ export function WrittenQuestionCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.answerMinister")}
+                      {tDocuments("answerMinister")}
                     </Typography>
                   </Stack>
                   <Box sx={{ pl: 2 }}>
@@ -1400,7 +1401,7 @@ export function WrittenQuestionCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.stages")}
+                      {tDocuments("stages")}
                     </Typography>
                   </Stack>
                   <Stack spacing={1.5}>
@@ -1465,8 +1466,8 @@ export function WrittenQuestionCard({
                     }}
                   >
                     {showQuestionText
-                      ? t("documents.questionTextToggle", { context: "hide" })
-                      : t("documents.questionTextToggle", { context: "show" })}
+                      ? tDocuments("questionTextToggle", { context: "hide" })
+                      : tDocuments("questionTextToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showQuestionText}>
                     <Box

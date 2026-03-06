@@ -28,7 +28,7 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { refs } from "#client/references";
@@ -405,7 +405,7 @@ const SectionLabel: React.FC<{
 const OverviewTab: React.FC<{
   details: Awaited<ReturnType<typeof fetchPersonDetails>>;
 }> = ({ details }) => {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("composition");
   const themedColors = useThemedColors();
 
   return (
@@ -413,18 +413,18 @@ const OverviewTab: React.FC<{
       {/* Basic Info */}
       <SectionLabel
         icon={<PersonIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
-        label={t("composition.details.basicInfo")}
+        label={t("details.basicInfo")}
       />
       <Box sx={{ mb: 2 }}>
         {details.representativeDetails?.gender && (
           <InfoRow
-            label={t("composition.details.gender")}
+            label={t("details.gender")}
             value={details.representativeDetails.gender}
           />
         )}
         {details.representativeDetails?.birth_date && (
           <InfoRow
-            label={t("composition.details.birthDate")}
+            label={t("details.birthDate")}
             value={
               <>
                 {displayDate(details.representativeDetails.birth_date)}
@@ -436,21 +436,21 @@ const OverviewTab: React.FC<{
         )}
         {details.representativeDetails?.death_date && (
           <InfoRow
-            label={t("composition.details.deathDate")}
+            label={t("details.deathDate")}
             value={
               <>
                 {displayDate(details.representativeDetails.death_date)}
                 {details.representativeDetails.death_place &&
                   ` (${details.representativeDetails.death_place})`}
                 {details.representativeDetails.birth_date &&
-                  ` - ${calculateAge(details.representativeDetails.birth_date, details.representativeDetails.death_date)} ${t("composition.details.years")}`}
+                  ` - ${calculateAge(details.representativeDetails.birth_date, details.representativeDetails.death_date)} ${t("details.years")}`}
               </>
             }
           />
         )}
         {details.representativeDetails?.profession && (
           <InfoRow
-            label={t("composition.details.profession")}
+            label={t("details.profession")}
             value={details.representativeDetails.profession}
           />
         )}
@@ -465,24 +465,24 @@ const OverviewTab: React.FC<{
             icon={
               <EmailIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />
             }
-            label={t("composition.details.contactInfo")}
+            label={t("details.contactInfo")}
           />
           <Box sx={{ mb: 2 }}>
             {details.representativeDetails.email && (
               <InfoRow
-                label={t("composition.details.email")}
+                label={t("details.email")}
                 value={details.representativeDetails.email}
               />
             )}
             {details.representativeDetails.phone && (
               <InfoRow
-                label={t("composition.details.phone")}
+                label={t("details.phone")}
                 value={details.representativeDetails.phone}
               />
             )}
             {details.representativeDetails.website && (
               <InfoRow
-                label={t("composition.details.website")}
+                label={t("details.website")}
                 value={
                   <a
                     href={
@@ -516,7 +516,7 @@ const OverviewTab: React.FC<{
                 sx={{ color: colors.primaryLight, fontSize: 20 }}
               />
             }
-            label={t("composition.details.electoralDistricts")}
+            label={t("details.electoralDistricts")}
           />
           <List dense sx={{ p: 0, mb: 2 }}>
             {details.districts.map((district) => (
@@ -539,12 +539,12 @@ const OverviewTab: React.FC<{
                     >
                       {displayDate(
                         district.start_date,
-                        t("composition.details.ongoing"),
+                        t("details.ongoing"),
                       )}{" "}
                       -{" "}
                       {displayDate(
                         district.end_date,
-                        t("composition.details.ongoing"),
+                        t("details.ongoing"),
                       )}
                     </Typography>
                   }
@@ -564,7 +564,7 @@ const OverviewTab: React.FC<{
                 sx={{ color: colors.primaryLight, fontSize: 20 }}
               />
             }
-            label={t("composition.details.membership")}
+            label={t("details.membership")}
           />
           <List dense sx={{ p: 0, mb: 2 }}>
             {details.groupMemberships.map((membership, i) => {
@@ -598,15 +598,15 @@ const OverviewTab: React.FC<{
                         >
                           {displayDate(
                             membership.start_date,
-                            t("composition.details.ongoing"),
+                            t("details.ongoing"),
                           )}{" "}
                           -{" "}
                           {displayDate(
                             membership.end_date,
-                            t("composition.details.ongoing"),
+                            t("details.ongoing"),
                           )}
                           {leavingRecord?.replacement_person &&
-                            ` (${t("composition.details.successorLine", { value: leavingRecord.replacement_person })})`}
+                            ` (${t("details.successorLine", { value: leavingRecord.replacement_person })})`}
                         </Typography>
                         {leavingRecord?.description && (
                           <Typography
@@ -641,7 +641,7 @@ const OverviewTab: React.FC<{
                   sx={{ color: colors.primaryLight, fontSize: 20 }}
                 />
               }
-              label={t("composition.details.governmentCoalitionParticipation")}
+              label={t("details.governmentCoalitionParticipation")}
             />
             <List dense sx={{ p: 0 }}>
               {details.governmentMemberships.map((membership, i) => (
@@ -683,12 +683,12 @@ const OverviewTab: React.FC<{
                         >
                           {displayDate(
                             membership.start_date,
-                            t("composition.details.ongoing"),
+                            t("details.ongoing"),
                           )}{" "}
                           -{" "}
                           {displayDate(
                             membership.end_date,
-                            t("composition.details.ongoing"),
+                            t("details.ongoing"),
                           )}
                         </Typography>
                       </Box>
@@ -706,7 +706,8 @@ const OverviewTab: React.FC<{
 // ──────────────────────────── Tab: Aanestykset ────────────────────────────
 
 const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tComposition } = useScopedTranslation("composition");
   const themedColors = useThemedColors();
   const [votes, setVotes] = React.useState<VotesByPersonType[] | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -851,7 +852,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
             variant="caption"
             sx={{ color: themedColors.textSecondary }}
           >
-            {t("composition.details.votes.participation")}
+            {tComposition("details.votes.participation")}
           </Typography>
         </Box>
         <Box
@@ -875,7 +876,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
             variant="caption"
             sx={{ color: themedColors.textSecondary }}
           >
-            {t("composition.details.votes.totalVotes")}
+            {tComposition("details.votes.totalVotes")}
           </Typography>
         </Box>
         <Box
@@ -898,7 +899,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
             variant="caption"
             sx={{ color: themedColors.textSecondary }}
           >
-            {t("composition.details.votes.voteBreakdown", {
+            {tComposition("details.votes.voteBreakdown", {
               yes: yesVotes,
               no: noVotes,
               empty: emptyVotes,
@@ -916,7 +917,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                 sx={{ color: colors.primaryLight, fontSize: 20 }}
               />
             }
-            label={t("composition.details.votes.recentVotes")}
+            label={tComposition("details.votes.recentVotes")}
           />
           <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
             {votes.slice(0, 30).map((v) => (
@@ -963,7 +964,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                       }}
                       onClick={() => openVotingDetails(v)}
                     >
-                      {t("common.detailsToggle", { context: "show" })}
+                      {tCommon("detailsToggle", { context: "show" })}
                     </Button>
                     <Button
                       size="small"
@@ -976,7 +977,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                       endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
                       onClick={() => openVoting(v.id, v.start_time)}
                     >
-                      {t("common.openView")}
+                      {tCommon("openView")}
                     </Button>
                   </Box>
                 </Box>
@@ -1017,7 +1018,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
           variant="body2"
           sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4 }}
         >
-          {t("composition.details.votes.noData")}
+          {tComposition("details.votes.noData")}
         </Typography>
       )}
 
@@ -1054,7 +1055,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   fontWeight={700}
                   sx={{ color: themedColors.textPrimary }}
                 >
-                  {t("composition.details.votes.drawer.title")}
+                  {tComposition("details.votes.drawer.title")}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -1070,7 +1071,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
               <IconButton
                 size="small"
                 onClick={closeVotingDetails}
-                aria-label={t("composition.details.votes.drawer.closeAria")}
+                aria-label={tComposition("details.votes.drawer.closeAria")}
               >
                 <CloseIcon fontSize="small" />
               </IconButton>
@@ -1095,14 +1096,14 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                 >
                   <Chip
                     size="small"
-                    label={t("composition.details.votes.drawer.voteLine", {
+                    label={tComposition("details.votes.drawer.voteLine", {
                       value: selectedVoting.vote,
                     })}
                     sx={{ height: 20, fontSize: "0.65rem" }}
                   />
                   <Chip
                     size="small"
-                    label={t("composition.details.votes.drawer.groupLine", {
+                    label={tComposition("details.votes.drawer.groupLine", {
                       value: selectedVoting.group_abbreviation,
                     })}
                     sx={{ height: 20, fontSize: "0.65rem" }}
@@ -1122,7 +1123,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     alignSelf: "flex-start",
                   }}
                 >
-                  {t("composition.details.votes.drawer.openFullVoting")}
+                  {tComposition("details.votes.drawer.openFullVoting")}
                 </Button>
               </>
             )}
@@ -1145,7 +1146,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   variant="body2"
                   sx={{ color: themedColors.textSecondary }}
                 >
-                  {t("common.loadingVotingDetails")}
+                  {tCommon("loadingVotingDetails")}
                 </Typography>
               </Box>
             )}
@@ -1158,7 +1159,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     variant="body2"
                     sx={{ color: themedColors.textTertiary }}
                   >
-                    {t("composition.details.votes.drawer.detailsLoadError")}
+                    {tComposition("details.votes.drawer.detailsLoadError")}
                   </Typography>
                   <Button
                     size="small"
@@ -1174,7 +1175,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                       fontSize: "0.72rem",
                     }}
                   >
-                    {t("common.retry")}
+                    {tCommon("retry")}
                   </Button>
                 </Box>
               )}
@@ -1195,7 +1196,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     fontWeight={700}
                     sx={{ color: themedColors.textPrimary, mb: 0.75 }}
                   >
-                    {t("composition.details.votes.drawer.summaryTitle")}
+                    {tComposition("details.votes.drawer.summaryTitle")}
                   </Typography>
                   <VoteMarginBar
                     yes={selectedVotingDetails.voting.n_yes}
@@ -1208,28 +1209,28 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                     <Chip
                       size="small"
-                      label={t("common.yesCount", {
+                      label={tCommon("yesCount", {
                         count: selectedVotingDetails.voting.n_yes,
                       })}
                       sx={{ height: 20 }}
                     />
                     <Chip
                       size="small"
-                      label={t("common.noCount", {
+                      label={tCommon("noCount", {
                         count: selectedVotingDetails.voting.n_no,
                       })}
                       sx={{ height: 20 }}
                     />
                     <Chip
                       size="small"
-                      label={t("common.emptyCount", {
+                      label={tCommon("emptyCount", {
                         count: selectedVotingDetails.voting.n_abstain,
                       })}
                       sx={{ height: 20 }}
                     />
                     <Chip
                       size="small"
-                      label={t("common.absentCount", {
+                      label={tCommon("absentCount", {
                         count: selectedVotingDetails.voting.n_absent,
                       })}
                       sx={{ height: 20 }}
@@ -1244,8 +1245,8 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                         display: "block",
                       }}
                     >
-                      {t(
-                        "composition.details.votes.drawer.governmentOppositionSummary",
+                      {tComposition(
+                        "details.votes.drawer.governmentOppositionSummary",
                         {
                           governmentYes:
                             selectedVotingDetails.governmentOpposition
@@ -1269,9 +1270,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                         variant="caption"
                         sx={{ color: themedColors.textSecondary }}
                       >
-                        {t(
-                          "composition.details.votes.drawer.relatedVotingsTitle",
-                        )}
+                        {tComposition("details.votes.drawer.relatedVotingsTitle")}
                       </Typography>
                       <Box
                         sx={{
@@ -1325,7 +1324,8 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
 // ──────────────────────────── Tab: Puheenvuorot ────────────────────────────
 
 const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tComposition } = useScopedTranslation("composition");
   const themedColors = useThemedColors();
   const [speeches, setSpeeches] = React.useState<SpeechType[] | null>(null);
   const [selectedSpeech, setSelectedSpeech] = React.useState<SpeechType | null>(
@@ -1377,7 +1377,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
       })
       .catch(() => {
         if (ignore) return;
-        setLoadError(t("composition.details.speeches.loadError"));
+        setLoadError(tComposition("details.speeches.loadError"));
       })
       .finally(() => {
         if (ignore) return;
@@ -1386,7 +1386,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
     return () => {
       ignore = true;
     };
-  }, [personId, t]);
+  }, [personId, tComposition]);
 
   const selectedSectionKey = selectedSpeech?.section_key || null;
   const selectedConversation = selectedSectionKey
@@ -1466,9 +1466,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
             ...prev,
             [selectedSectionKey]: true,
           }));
-          setContextError(
-            t("composition.details.speeches.missingSpeechInThread"),
-          );
+          setContextError(tComposition("details.speeches.missingSpeechInThread"));
         }
       })
       .catch(() => {
@@ -1477,7 +1475,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
           ...prev,
           [selectedSectionKey]: true,
         }));
-        setContextError(t("composition.details.speeches.contextLoadError"));
+        setContextError(tComposition("details.speeches.contextLoadError"));
       })
       .finally(() => {
         if (contextLoadRequestRef.current !== requestId) return;
@@ -1491,7 +1489,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
     sectionConversations,
     failedContextSections,
     loadingContextSection,
-    t,
+    tComposition,
   ]);
 
   React.useEffect(() => {
@@ -1540,7 +1538,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
     setSelectedSpeech(speech);
     setActiveSpeechId(speech.id);
     if (!speech.section_key) {
-      setContextError(t("composition.details.speeches.missingSectionKey"));
+      setContextError(tComposition("details.speeches.missingSectionKey"));
       return;
     }
     setContextError(null);
@@ -1640,7 +1638,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
             variant="caption"
             sx={{ color: themedColors.textSecondary }}
           >
-            {t("composition.details.speeches.count")}
+            {tComposition("details.speeches.count")}
           </Typography>
         </Box>
         <Box
@@ -1666,7 +1664,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
             variant="caption"
             sx={{ color: themedColors.textSecondary }}
           >
-            {t("composition.details.speeches.totalWords")}
+            {tComposition("details.speeches.totalWords")}
           </Typography>
         </Box>
       </Box>
@@ -1723,7 +1721,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   variant="caption"
                   sx={{ color: themedColors.textTertiary }}
                 >
-                  {s.word_count} {t("composition.details.speeches.words")}
+                  {s.word_count} {tComposition("details.speeches.words")}
                 </Typography>
               </Box>
               {s.content && (
@@ -1766,7 +1764,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                 >
                   {s.section_identifier ||
                     s.section_title ||
-                    t("composition.details.speeches.noSectionTitle")}
+                    tComposition("details.speeches.noSectionTitle")}
                 </Typography>
                 <Button
                   size="small"
@@ -1782,7 +1780,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     textTransform: "none",
                   }}
                 >
-                  {t("composition.details.speeches.showConversation")}
+                  {tComposition("details.speeches.showConversation")}
                 </Button>
               </Box>
             </Box>
@@ -1793,7 +1791,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
           variant="body2"
           sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4 }}
         >
-          {t("composition.details.speeches.noData")}
+          {tComposition("details.speeches.noData")}
         </Typography>
       )}
 
@@ -1837,7 +1835,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   fontWeight={700}
                   sx={{ color: themedColors.textPrimary }}
                 >
-                  {t("composition.details.speeches.drawer.title")}
+                  {tComposition("details.speeches.drawer.title")}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -1851,7 +1849,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
               <IconButton
                 size="small"
                 onClick={closeSpeechConversation}
-                aria-label={t("composition.details.speeches.drawer.closeAria")}
+                aria-label={tComposition("details.speeches.drawer.closeAria")}
               >
                 <CloseIcon fontSize="small" />
               </IconButton>
@@ -1864,7 +1862,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   sx={{ color: themedColors.textSecondary, mt: 1 }}
                 >
                   {selectedSpeech.document ||
-                    t("composition.details.speeches.drawer.missingDocument")}
+                    tComposition("details.speeches.drawer.missingDocument")}
                 </Typography>
                 <Box
                   sx={{
@@ -1918,9 +1916,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                         display: "block",
                       }}
                     >
-                      {t(
-                        "composition.details.speeches.drawer.loadingSectionContent",
-                      )}
+                      {tComposition("details.speeches.drawer.loadingSectionContent")}
                     </Typography>
                   )}
                 {sectionContextContent && (
@@ -1980,7 +1976,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                       alignSelf: "flex-start",
                     }}
                   >
-                    {t("composition.details.speeches.drawer.openSection")}
+                    {tComposition("details.speeches.drawer.openSection")}
                   </Button>
                 )}
               </>
@@ -2000,7 +1996,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
               fontWeight={700}
               sx={{ color: themedColors.textPrimary, mb: 1 }}
             >
-              {t("composition.details.speeches.drawer.conversationHeading")}
+              {tComposition("details.speeches.drawer.conversationHeading")}
             </Typography>
             {selectedSectionKey &&
               loadingContextSection === selectedSectionKey && (
@@ -2031,7 +2027,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                         fontSize: "0.72rem",
                       }}
                     >
-                      {t("common.retry")}
+                      {tCommon("retry")}
                     </Button>
                   )}
               </Box>
@@ -2043,13 +2039,10 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   variant="caption"
                   sx={{ color: themedColors.textSecondary }}
                 >
-                  {t(
-                    "composition.details.speeches.drawer.conversationSummary",
-                    {
-                      current: selectedSpeechPosition,
-                      total: selectedConversation.total,
-                    },
-                  )}
+                  {tComposition("details.speeches.drawer.conversationSummary", {
+                    current: selectedSpeechPosition,
+                    total: selectedConversation.total,
+                  })}
                 </Typography>
                 {selectedConversation.truncated && (
                   <Typography
@@ -2060,7 +2053,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                       mt: 0.5,
                     }}
                   >
-                    {t("composition.details.speeches.drawer.truncatedNotice", {
+                    {tComposition("details.speeches.drawer.truncatedNotice", {
                       shown: selectedConversation.speeches.length,
                       total: selectedConversation.total,
                     })}
@@ -2166,7 +2159,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                           }}
                         >
                           {speech.content ||
-                            t("composition.details.speeches.drawer.noContent")}
+                            tComposition("details.speeches.drawer.noContent")}
                         </Typography>
                       </Box>
                     );
@@ -2184,7 +2177,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
 // ─────────────────────────── Tab: Kysymykset ─────────────────────────────
 
 const QuestionsTab: React.FC<{ personId: number }> = ({ personId }) => {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("composition");
   const themedColors = useThemedColors();
   const [questions, setQuestions] = React.useState<PersonQuestionType[] | null>(
     null,
@@ -2221,9 +2214,9 @@ const QuestionsTab: React.FC<{ personId: number }> = ({ personId }) => {
   );
 
   const roleLabelByKey: Record<PersonQuestionType["relation_role"], string> = {
-    asker: t("composition.details.questions.role.asker"),
-    first_signer: t("composition.details.questions.role.firstSigner"),
-    signer: t("composition.details.questions.role.signer"),
+    asker: t("details.questions.role.asker"),
+    first_signer: t("details.questions.role.firstSigner"),
+    signer: t("details.questions.role.signer"),
   };
 
   const totalQuestions = questions?.length || 0;
@@ -2346,7 +2339,7 @@ const QuestionsTab: React.FC<{ personId: number }> = ({ personId }) => {
             variant="caption"
             sx={{ color: themedColors.textSecondary }}
           >
-            {t("composition.details.questions.total", {
+            {t("details.questions.total", {
               count: totalQuestions,
             })}
           </Typography>
@@ -2372,7 +2365,7 @@ const QuestionsTab: React.FC<{ personId: number }> = ({ personId }) => {
             variant="caption"
             sx={{ color: themedColors.textSecondary }}
           >
-            {t("composition.details.questions.interpellations", {
+            {t("details.questions.interpellations", {
               count: interpellationsCount,
             })}
           </Typography>
@@ -2398,7 +2391,7 @@ const QuestionsTab: React.FC<{ personId: number }> = ({ personId }) => {
             variant="caption"
             sx={{ color: themedColors.textSecondary }}
           >
-            {t("composition.details.questions.oralQuestions", {
+            {t("details.questions.oralQuestions", {
               count: oralQuestionsCount,
             })}
           </Typography>
@@ -2424,7 +2417,7 @@ const QuestionsTab: React.FC<{ personId: number }> = ({ personId }) => {
             variant="caption"
             sx={{ color: themedColors.textSecondary }}
           >
-            {t("composition.details.questions.writtenQuestions", {
+            {t("details.questions.writtenQuestions", {
               count: writtenQuestionsCount,
             })}
           </Typography>
@@ -2437,35 +2430,35 @@ const QuestionsTab: React.FC<{ personId: number }> = ({ personId }) => {
             sx={{ color: colors.primaryLight, fontSize: 20 }}
           />
         }
-        label={t("composition.details.questions.interpellationsSection", {
+        label={t("details.questions.interpellationsSection", {
           count: interpellationsCount,
         })}
       />
       {renderQuestionList(
         groupedQuestions.interpellation,
-        t("composition.details.questions.noInterpellations"),
+        t("details.questions.noInterpellations"),
       )}
 
       <SectionLabel
         icon={<MicIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
-        label={t("composition.details.questions.oralQuestionsSection", {
+        label={t("details.questions.oralQuestionsSection", {
           count: oralQuestionsCount,
         })}
       />
       {renderQuestionList(
         groupedQuestions.oral_question,
-        t("composition.details.questions.noOralQuestions"),
+        t("details.questions.noOralQuestions"),
       )}
 
       <SectionLabel
         icon={<EmailIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
-        label={t("composition.details.questions.writtenQuestionsSection", {
+        label={t("details.questions.writtenQuestionsSection", {
           count: writtenQuestionsCount,
         })}
       />
       {renderQuestionList(
         groupedQuestions.written_question,
-        t("composition.details.questions.noWrittenQuestions"),
+        t("details.questions.noWrittenQuestions"),
       )}
     </Box>
   );
@@ -2478,7 +2471,7 @@ const PositionsTab: React.FC<{
   trustPositions: DatabaseTables.TrustPosition[];
   governmentMemberships: DatabaseTables.GovernmentMembership[];
 }> = ({ personId, trustPositions, governmentMemberships }) => {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("composition");
   const themedColors = useThemedColors();
   const [committees, setCommittees] = React.useState<CommitteeType[] | null>(
     null,
@@ -2509,7 +2502,7 @@ const PositionsTab: React.FC<{
             icon={
               <GroupsIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />
             }
-            label={t("composition.details.positions.committeesTitle", {
+            label={t("details.positions.committeesTitle", {
               count: committees.length,
             })}
           />
@@ -2548,12 +2541,12 @@ const PositionsTab: React.FC<{
                     >
                       {displayDate(
                         c.start_date,
-                        t("composition.details.ongoing"),
+                        t("details.ongoing"),
                       )}{" "}
                       -{" "}
                       {displayDate(
                         c.end_date,
-                        t("composition.details.ongoing"),
+                        t("details.ongoing"),
                       )}
                     </Typography>
                   }
@@ -2573,7 +2566,7 @@ const PositionsTab: React.FC<{
                 sx={{ color: colors.primaryLight, fontSize: 20 }}
               />
             }
-            label={t("composition.details.positions.governmentPositionsTitle", {
+            label={t("details.positions.governmentPositionsTitle", {
               count: governmentMemberships.length,
             })}
           />
@@ -2607,12 +2600,12 @@ const PositionsTab: React.FC<{
                     >
                       {displayDate(
                         gm.start_date,
-                        t("composition.details.ongoing"),
+                        t("details.ongoing"),
                       )}{" "}
                       -{" "}
                       {displayDate(
                         gm.end_date,
-                        t("composition.details.ongoing"),
+                        t("details.ongoing"),
                       )}
                     </Typography>
                   }
@@ -2630,7 +2623,7 @@ const PositionsTab: React.FC<{
             icon={
               <WorkIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />
             }
-            label={t("composition.details.positions.otherPositionsTitle", {
+            label={t("details.positions.otherPositionsTitle", {
               count: trustPositions.length,
             })}
           />
@@ -2683,7 +2676,7 @@ const PositionsTab: React.FC<{
               py: 4,
             }}
           >
-            {t("composition.details.positions.noData")}
+            {t("details.positions.noData")}
           </Typography>
         )}
     </Box>
@@ -2698,7 +2691,7 @@ export const RepresentativeDetails: React.FC<{
   selectedRepresentative: DatabaseQueries.GetParliamentComposition | null;
   selectedDate: string;
 }> = ({ open, onClose, selectedRepresentative, selectedDate }) => {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("composition");
   const themedColors = useThemedColors();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [tabIndex, setTabIndex] = React.useState(0);
@@ -2719,11 +2712,9 @@ export const RepresentativeDetails: React.FC<{
   if (!selectedRepresentative) return null;
 
   const currentParty =
-    details?.groupMemberships?.[0]?.group_name ||
-    t("composition.details.unknownParty");
+    details?.groupMemberships?.[0]?.group_name || t("details.unknownParty");
   const currentDistrict =
-    details?.districts?.[0]?.district_name ||
-    t("composition.details.unknownDistrict");
+    details?.districts?.[0]?.district_name || t("details.unknownDistrict");
 
   const selectedDateObj = new Date(selectedDate);
   const deathDateObj = selectedRepresentative.death_date
@@ -2863,15 +2854,15 @@ export const RepresentativeDetails: React.FC<{
                           variant="body2"
                           sx={{ color: "rgba(255,255,255,0.85)" }}
                         >
-                          {age} {t("composition.details.years")}
+                          {age} {t("details.years")}
                         </Typography>
                       </>
                     )}
                     <Chip
                       label={
                         selectedRepresentative.is_in_government === 1
-                          ? t("composition.details.header.government")
-                          : t("composition.details.header.opposition")
+                          ? t("details.header.government")
+                          : t("details.header.opposition")
                       }
                       size="small"
                       sx={{
@@ -2919,27 +2910,27 @@ export const RepresentativeDetails: React.FC<{
               }}
             >
               <Tab
-                label={t("composition.details.tabs.overview")}
+                label={t("details.tabs.overview")}
                 icon={<PersonIcon sx={{ fontSize: 18 }} />}
                 iconPosition="start"
               />
               <Tab
-                label={t("composition.details.tabs.votes")}
+                label={t("details.tabs.votes")}
                 icon={<HowToVoteIcon sx={{ fontSize: 18 }} />}
                 iconPosition="start"
               />
               <Tab
-                label={t("composition.details.tabs.speeches")}
+                label={t("details.tabs.speeches")}
                 icon={<MicIcon sx={{ fontSize: 18 }} />}
                 iconPosition="start"
               />
               <Tab
-                label={t("composition.details.tabs.questions")}
+                label={t("details.tabs.questions")}
                 icon={<QuizIcon sx={{ fontSize: 18 }} />}
                 iconPosition="start"
               />
               <Tab
-                label={t("composition.details.tabs.positions")}
+                label={t("details.tabs.positions")}
                 icon={<WorkIcon sx={{ fontSize: 18 }} />}
                 iconPosition="start"
               />

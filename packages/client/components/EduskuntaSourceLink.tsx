@@ -1,7 +1,7 @@
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Box, Link, type LinkProps } from "@mui/material";
 import type { ReactNode } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { toEduskuntaUrl } from "#client/utils/eduskunta-links";
 
 type EduskuntaSourceLinkProps = Omit<LinkProps, "href" | "children"> & {
@@ -24,7 +24,7 @@ export function EduskuntaSourceLink({
   onClick,
   ...rest
 }: EduskuntaSourceLinkProps) {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("common");
   return (
     <Link
       href={toEduskuntaUrl(href)}
@@ -69,7 +69,7 @@ export function EduskuntaSourceLink({
             opacity: 0.85,
           }}
         >
-          {t("common.officialSourceEduskunta")}
+          {t("officialSourceEduskunta")}
         </Box>
       )}
       {showExternalIcon && <OpenInNewIcon sx={{ fontSize: 12 }} />}

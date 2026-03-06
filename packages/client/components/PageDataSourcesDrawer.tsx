@@ -21,7 +21,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { useTrace } from "#client/context/TraceContext";
 import type { RouteName } from "../pages";
 import { useThemedColors } from "../theme/ThemeContext";
@@ -149,7 +149,8 @@ export const PageDataSourcesDrawer = ({
 }: {
   activeRoute: RouteName;
 }) => {
-  const { t } = useTranslation();
+  const { t: tPageSources } = useScopedTranslation("pageSources");
+  const { t: tNavigation } = useScopedTranslation("navigation");
   const themedColors = useThemedColors();
   const { traceItem, setTraceItem, registerOpenDrawer } = useTrace();
 
@@ -205,7 +206,7 @@ export const PageDataSourcesDrawer = ({
           `/api/import-source/table-summaries?${params.toString()}`,
           { signal: abortController.signal },
         );
-        if (!response.ok) throw new Error(t("pageSources.fetchFailed"));
+        if (!response.ok) throw new Error(tPageSources("fetchFailed"));
         const data = (await response.json()) as { tables: TableSummary[] };
         if (!mounted) return;
         const next: Record<string, TableSummary> = {};
@@ -216,7 +217,7 @@ export const PageDataSourcesDrawer = ({
       } catch (err) {
         if (abortController.signal.aborted || !mounted) return;
         setSummariesError(
-          err instanceof Error ? err.message : t("pageSources.fetchFailed"),
+          err instanceof Error ? err.message : tPageSources("fetchFailed"),
         );
       } finally {
         if (mounted) setSummariesLoading(false);
@@ -228,7 +229,7 @@ export const PageDataSourcesDrawer = ({
       mounted = false;
       abortController.abort();
     };
-  }, [open, tablesKey, tableNames, t]);
+  }, [open, tablesKey, tableNames, tPageSources]);
 
   // Fetch row-level trace when traceItem changes and drawer is open
   useEffect(() => {
@@ -257,15 +258,15 @@ export const PageDataSourcesDrawer = ({
         if (!mounted) return;
         if (response.status === 404) {
           setRowTrace(null);
-          setRowTraceError(t("pageSources.rowTraceNotFound"));
+          setRowTraceError(tPageSources("rowTraceNotFound"));
           return;
         }
-        if (!response.ok) throw new Error(t("pageSources.fetchFailed"));
+        if (!response.ok) throw new Error(tPageSources("fetchFailed"));
         setRowTrace((await response.json()) as RowTrace);
       } catch (err) {
         if (abortController.signal.aborted || !mounted) return;
         setRowTraceError(
-          err instanceof Error ? err.message : t("pageSources.fetchFailed"),
+          err instanceof Error ? err.message : tPageSources("fetchFailed"),
         );
       } finally {
         if (mounted) setRowTraceLoading(false);
@@ -277,7 +278,7 @@ export const PageDataSourcesDrawer = ({
       mounted = false;
       abortController.abort();
     };
-  }, [open, traceItem, t]);
+  }, [open, tPageSources, traceItem]);
 
   const handleClose = () => {
     setOpen(false);
@@ -290,7 +291,7 @@ export const PageDataSourcesDrawer = ({
 
   return (
     <>
-      <Tooltip title={t("pageSources.openTooltip")}>
+      <Tooltip title={tPageSources("openTooltip")}>
         <Fab
           color="primary"
           variant="extended"
@@ -304,7 +305,7 @@ export const PageDataSourcesDrawer = ({
           }}
         >
           <TravelExploreIcon sx={{ mr: 1 }} />
-          {t("pageSources.buttonLabel")}
+          {tPageSources("buttonLabel")}
         </Fab>
       </Tooltip>
 
@@ -340,7 +341,7 @@ export const PageDataSourcesDrawer = ({
                   variant="h6"
                   sx={{ fontSize: "1rem", fontWeight: 600 }}
                 >
-                  {t("pageSources.drawerTitle")}
+                  {tPageSources("drawerTitle")}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -348,7 +349,7 @@ export const PageDataSourcesDrawer = ({
                 >
                   {traceItem
                     ? traceItem.label
-                    : t(`navigation.routes.${activeRoute}`)}
+                    : tNavigation(`routes.${activeRoute}`)}
                 </Typography>
               </Box>
             </Box>
@@ -369,7 +370,7 @@ export const PageDataSourcesDrawer = ({
                     mb: 1,
                   }}
                 >
-                  {t("pageSources.itemTraceTitle")}
+                  {tPageSources("itemTraceTitle")}
                 </Typography>
 
                 {rowTraceLoading ? (
@@ -414,7 +415,7 @@ export const PageDataSourcesDrawer = ({
                       variant="caption"
                       sx={{ display: "block", mb: 0.5 }}
                     >
-                      {t("pageSources.lastScrapeLine", {
+                      {tPageSources("lastScrapeLine", {
                         value: formatDateTime(rowTrace.scrapedAt),
                       })}
                     </Typography>
@@ -422,7 +423,7 @@ export const PageDataSourcesDrawer = ({
                       variant="caption"
                       sx={{ display: "block", mb: 1 }}
                     >
-                      {t("pageSources.lastMigrationLine", {
+                      {tPageSources("lastMigrationLine", {
                         value: formatDateTime(rowTrace.migratedAt),
                       })}
                     </Typography>
@@ -438,7 +439,7 @@ export const PageDataSourcesDrawer = ({
                       }
                       sx={{ textTransform: "none", fontSize: "0.75rem" }}
                     >
-                      {t("pageSources.openApiSource")}
+                      {tPageSources("openApiSource")}
                     </Button>
                   </Box>
                 ) : null}
@@ -466,7 +467,7 @@ export const PageDataSourcesDrawer = ({
                     variant="overline"
                     sx={{ color: themedColors.textTertiary }}
                   >
-                    {t("pageSources.pageLevelTitle")}
+                    {tPageSources("pageLevelTitle")}
                   </Typography>
                 </AccordionSummary>
                 <AccordionDetails sx={{ px: 0 }}>
@@ -476,7 +477,6 @@ export const PageDataSourcesDrawer = ({
                     summariesLoading={summariesLoading}
                     summariesError={summariesError}
                     themedColors={themedColors}
-                    t={t}
                   />
                 </AccordionDetails>
               </Accordion>
@@ -487,7 +487,6 @@ export const PageDataSourcesDrawer = ({
                 summariesLoading={summariesLoading}
                 summariesError={summariesError}
                 themedColors={themedColors}
-                t={t}
               />
             )}
           </Box>
@@ -503,7 +502,6 @@ const PageSourcesList = ({
   summariesLoading,
   summariesError,
   themedColors,
-  t,
 }: {
   sourceDefinitions: TableSourceDefinition[];
   summaries: Record<string, TableSummary>;
@@ -512,12 +510,13 @@ const PageSourcesList = ({
   themedColors: ReturnType<
     typeof import("../theme/ThemeContext").useThemedColors
   >;
-  t: ReturnType<typeof import("react-i18next").useTranslation>["t"];
 }) => {
+  const { t } = useScopedTranslation("pageSources");
+
   if (sourceDefinitions.length === 0) {
     return (
       <Alert severity="info" role="status" aria-live="polite">
-        {t("pageSources.noMapping")}
+        {t("noMapping")}
       </Alert>
     );
   }
@@ -569,17 +568,17 @@ const PageSourcesList = ({
             </Box>
             <Divider sx={{ mb: 1 }} />
             <Typography variant="caption" sx={{ display: "block", mb: 0.5 }}>
-              {t("pageSources.lastScrapeLine", {
+              {t("lastScrapeLine", {
                 value: formatDateTime(summary?.lastScrapedAt ?? null),
               })}
             </Typography>
             <Typography variant="caption" sx={{ display: "block", mb: 0.5 }}>
-              {t("pageSources.lastMigrationLine", {
+              {t("lastMigrationLine", {
                 value: formatDateTime(summary?.lastMigratedAt ?? null),
               })}
             </Typography>
             <Typography variant="caption" sx={{ display: "block" }}>
-              {t("pageSources.summaryCounts", {
+              {t("summaryCounts", {
                 rows: summary?.importedRows ?? 0,
                 pages: summary?.distinctPages ?? 0,
               })}

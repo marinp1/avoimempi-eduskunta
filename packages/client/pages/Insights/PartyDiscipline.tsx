@@ -14,7 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import {
   Bar,
   BarChart,
@@ -55,7 +55,8 @@ interface PartyDisciplineProps {
 
 export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
   const themedColors = useThemedColors();
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tInsights } = useScopedTranslation("insights");
   const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<PartyDisciplineData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -132,7 +133,7 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
         <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
           <GavelIcon sx={{ fontSize: 36, color: colors.primary }} />
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            {t("insights.partyDiscipline.title")}
+            {tInsights("partyDiscipline.title")}
           </Typography>
         </Box>
         <IconButton onClick={onClose} size="large">
@@ -145,7 +146,7 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
         color="text.secondary"
         sx={{ mb: spacing.lg }}
       >
-        {t("insights.partyDiscipline.description")}
+        {tInsights("partyDiscipline.description")}
       </Typography>
       {selectedHallituskausi && (
         <Alert severity="info" sx={{ mb: spacing.md }}>
@@ -154,7 +155,7 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
       )}
 
       {data.length === 0 ? (
-        <Alert severity="info">{t("insights.partyDiscipline.noData")}</Alert>
+        <Alert severity="info">{tInsights("partyDiscipline.noData")}</Alert>
       ) : (
         <>
           <Box sx={{ mb: spacing.lg }}>
@@ -180,7 +181,7 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
                 <Tooltip
                   formatter={(value: number) => [
                     `${value.toFixed(1)}%`,
-                    t("insights.partyDiscipline.disciplineRate"),
+                    tInsights("partyDiscipline.disciplineRate"),
                   ]}
                   labelFormatter={(label) => {
                     const item = chartData.find((d) => d.name === label);
@@ -204,16 +205,16 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 600 }}>
-                    {t("common.party")}
+                    {tCommon("party")}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600 }} align="right">
-                    {t("insights.partyDiscipline.disciplineRate")}
+                    {tInsights("partyDiscipline.disciplineRate")}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600 }} align="right">
-                    {t("insights.partyDiscipline.withMajority")}
+                    {tInsights("partyDiscipline.withMajority")}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600 }} align="right">
-                    {t("insights.partyDiscipline.totalVotes")}
+                    {tInsights("partyDiscipline.totalVotes")}
                   </TableCell>
                 </TableRow>
               </TableHead>

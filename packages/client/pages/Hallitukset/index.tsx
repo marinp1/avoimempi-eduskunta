@@ -21,7 +21,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import {
   type HallituskausiPeriod,
   useHallituskausi,
@@ -273,7 +273,7 @@ const GovernmentCard: React.FC<{
   isCurrent: boolean;
   isActive: boolean;
 }> = ({ gov, isCurrent, isActive }) => {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("hallitukset");
   const tc = useThemedColors();
   const [members, setMembers] = useState<GovernmentMember[] | null>(null);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -289,7 +289,7 @@ const GovernmentCard: React.FC<{
         return res.json() as Promise<GovernmentMember[]>;
       })
       .then((data) => setMembers(data))
-      .catch(() => setMembersError(t("hallitukset.membersLoadError")))
+      .catch(() => setMembersError(t("membersLoadError")))
       .finally(() => setMembersLoading(false));
   }, [expanded, gov.id, members, t]);
 
@@ -375,7 +375,7 @@ const GovernmentCard: React.FC<{
                 </Typography>
                 {isCurrent && (
                   <Chip
-                    label={t("hallitukset.current")}
+                    label={t("current")}
                     size="small"
                     sx={{
                       height: 20,
@@ -420,7 +420,7 @@ const GovernmentCard: React.FC<{
                     ml: "auto",
                   }}
                 >
-                  {gov.member_count} {t("hallitukset.ministers")}
+                  {gov.member_count} {t("ministers")}
                 </Typography>
               )}
             </Stack>
@@ -446,7 +446,7 @@ const GovernmentCard: React.FC<{
                 variant="body2"
                 sx={{ color: tc.textTertiary, py: 1 }}
               >
-                {t("hallitukset.noMembers")}
+                {t("noMembers")}
               </Typography>
             ) : (
               <TableContainer
@@ -462,13 +462,13 @@ const GovernmentCard: React.FC<{
                   <TableHead>
                     <TableRow sx={{ background: tc.primaryGradient }}>
                       <TableCell sx={{ ...commonStyles.tableHeader }}>
-                        {t("hallitukset.name")}
+                        {t("name")}
                       </TableCell>
                       <TableCell sx={{ ...commonStyles.tableHeader }}>
-                        {t("hallitukset.ministry")}
+                        {t("ministry")}
                       </TableCell>
                       <TableCell sx={{ ...commonStyles.tableHeader }}>
-                        {t("hallitukset.party")}
+                        {t("party")}
                       </TableCell>
                     </TableRow>
                   </TableHead>
@@ -521,7 +521,7 @@ const GovernmentCard: React.FC<{
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default () => {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("hallitukset");
   const tc = useThemedColors();
   const { hallituskaudet } = useHallituskausi();
 
@@ -539,7 +539,7 @@ export default () => {
         return res.json() as Promise<Government[]>;
       })
       .then(setGovernments)
-      .catch(() => setError(t("hallitukset.loadError")))
+      .catch(() => setError(t("loadError")))
       .finally(() => setLoading(false));
   }, [t]);
 
@@ -565,10 +565,10 @@ export default () => {
           component="h1"
           sx={{ fontWeight: 700, color: tc.textPrimary, mb: 0.5 }}
         >
-          {t("hallitukset.title")}
+          {t("title")}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {t("hallitukset.subtitle")}
+          {t("subtitle")}
         </Typography>
       </Box>
 
@@ -605,7 +605,7 @@ export default () => {
               component="span"
               sx={{ fontWeight: 600, color: tc.textPrimary }}
             >
-              {t("hallitukset.historicalView")}
+              {t("historicalView")}
             </Box>
             {" · "}
             {formatFinnishDate(date)}
@@ -628,7 +628,7 @@ export default () => {
               },
             }}
           >
-            {t("hallitukset.returnToPresent")}
+            {t("returnToPresent")}
           </Button>
         </Box>
       )}

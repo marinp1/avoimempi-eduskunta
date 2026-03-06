@@ -10,7 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import {
   intersectDateRangeWithHallituskausi,
   useHallituskausi,
@@ -30,7 +30,8 @@ export default function Osallistumisaktiivisuus({
   onClose,
   initialPersonId,
 }: OsallistumisaktiivisuusProps) {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tInsights } = useScopedTranslation("insights");
   const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<ParticipationData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -158,7 +159,7 @@ export default function Osallistumisaktiivisuus({
             >
               <HowToVoteIcon sx={{ fontSize: 32, color: colors.primary }} />
               <Typography variant="h4" sx={commonStyles.gradientText}>
-                {t("insights.votingActivity.title")}
+                {tInsights("votingActivity.title")}
               </Typography>
             </Box>
             <IconButton onClick={onClose} size="large">
@@ -166,7 +167,7 @@ export default function Osallistumisaktiivisuus({
             </IconButton>
           </Box>
           <Typography variant="body1" color="text.secondary">
-            {t("insights.votingActivity.description")}
+            {tInsights("votingActivity.description")}
           </Typography>
         </Box>
       </Box>
@@ -187,28 +188,28 @@ export default function Osallistumisaktiivisuus({
               <Grid container spacing={spacing.sm} sx={{ mb: spacing.md }}>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <MetricCard
-                    label={t("insights.votingActivity.members")}
+                    label={tInsights("votingActivity.members")}
                     value={stats.totalRepresentatives.toString()}
                     icon="👥"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <MetricCard
-                    label={t("insights.votingActivity.average")}
+                    label={tInsights("votingActivity.average")}
                     value={`${stats.averageParticipation}%`}
                     icon="📊"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <MetricCard
-                    label={t("insights.votingActivity.highest")}
+                    label={tInsights("votingActivity.highest")}
                     value={`${stats.highestParticipation}%`}
                     icon="🏆"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                   <MetricCard
-                    label={t("insights.votingActivity.lowest")}
+                    label={tInsights("votingActivity.lowest")}
                     value={`${stats.lowestParticipation}%`}
                     icon="⚠️"
                   />
@@ -225,14 +226,14 @@ export default function Osallistumisaktiivisuus({
                   variant="h6"
                   sx={{ mb: spacing.sm, fontWeight: 600 }}
                 >
-                  {t("insights.votingActivity.filters")}
+                  {tInsights("votingActivity.filters")}
                 </Typography>
                 <Grid container spacing={spacing.sm}>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
                       fullWidth
                       type="date"
-                      label={t("insights.votingActivity.startDate")}
+                      label={tInsights("votingActivity.startDate")}
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
                       InputLabelProps={{ shrink: true }}
@@ -243,7 +244,7 @@ export default function Osallistumisaktiivisuus({
                     <TextField
                       fullWidth
                       type="date"
-                      label={t("insights.votingActivity.endDate")}
+                      label={tInsights("votingActivity.endDate")}
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
                       InputLabelProps={{ shrink: true }}
@@ -253,7 +254,7 @@ export default function Osallistumisaktiivisuus({
                 </Grid>
                 {selectedHallituskausi && (
                   <Alert severity="info" sx={{ mt: spacing.sm }}>
-                    {t("common.filteredByGovernmentPeriodLine", {
+                    {tCommon("filteredByGovernmentPeriodLine", {
                       value: selectedHallituskausi.label,
                     })}
                   </Alert>
@@ -300,13 +301,13 @@ export default function Osallistumisaktiivisuus({
 
           {/* No Data State */}
           {!loading && !error && data.length === 0 && (
-            <Alert severity="info">{t("insights.votingActivity.noData")}</Alert>
+            <Alert severity="info">{tInsights("votingActivity.noData")}</Alert>
           )}
 
           {/* Footer */}
           <Box sx={{ mt: spacing.lg, textAlign: "center" }}>
             <Typography variant="body2" color="text.secondary">
-              {t("insights.votingActivity.source")}
+              {tInsights("votingActivity.source")}
             </Typography>
           </Box>
         </Box>

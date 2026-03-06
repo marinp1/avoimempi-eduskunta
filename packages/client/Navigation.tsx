@@ -27,7 +27,7 @@ import {
 } from "@mui/material";
 import type React from "react";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { useHallituskausi } from "./filters/HallituskausiContext";
 import { type RouteName, routes } from "./pages";
 import { colors, transitions as motion, spacing } from "./theme";
@@ -59,7 +59,8 @@ export const Navigation: React.FC<{
   activeTab: string;
   setActiveTab: (tab: RouteName) => void;
 }> = ({ activeTab, setActiveTab }) => {
-  const { t } = useTranslation();
+  const { t: tApp } = useScopedTranslation("app");
+  const { t: tNavigation } = useScopedTranslation("navigation");
   const {
     hallituskaudet,
     selectedHallituskausiId,
@@ -67,7 +68,7 @@ export const Navigation: React.FC<{
     loading,
   } = useHallituskausi();
 
-  const appTitle = t("app.title") as string;
+  const appTitle = tApp("title") as string;
   const titleDotFi = appTitle.endsWith(".fi");
   const titleBase = titleDotFi ? appTitle.slice(0, -3) : appTitle;
   const titleSuffix = titleDotFi ? ".fi" : null;
@@ -107,7 +108,7 @@ export const Navigation: React.FC<{
 
   const allDrawerRoutes = Object.keys(routes) as RouteName[];
 
-  const allLabel = t("app.hallituskausi.all");
+  const allLabel = tApp("hallituskausi.all");
 
   const DrawerContent = (
     <Box
@@ -151,7 +152,7 @@ export const Navigation: React.FC<{
               mt: 0.25,
             }}
           >
-            {t("app.subtitle")}
+            {tApp("subtitle")}
           </Typography>
         </Box>
         <IconButton
@@ -170,12 +171,12 @@ export const Navigation: React.FC<{
       <Box sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}>
         <FormControl size="small" fullWidth>
           <InputLabel id="drawer-hallituskausi-label">
-            {t("app.hallituskausi.label")}
+            {tApp("hallituskausi.label")}
           </InputLabel>
           <Select
             labelId="drawer-hallituskausi-label"
             value={selectedHallituskausiId}
-            label={t("app.hallituskausi.label")}
+            label={tApp("hallituskausi.label")}
             onChange={(event) => setSelectedHallituskausiId(event.target.value)}
             disabled={loading}
           >
@@ -221,7 +222,7 @@ export const Navigation: React.FC<{
                   <Icon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText
-                  primary={t(`navigation.routes.${path}`)}
+                  primary={tNavigation(`routes.${path}`)}
                   primaryTypographyProps={{
                     fontWeight: isActive ? 600 : 400,
                     fontSize: "0.875rem",
@@ -338,7 +339,7 @@ export const Navigation: React.FC<{
               {visibleRoutes.map((key) => (
                 <Tab
                   key={key}
-                  label={t(`navigation.routes.${key}`)}
+                  label={tNavigation(`routes.${key}`)}
                   value={key}
                 />
               ))}
@@ -515,13 +516,13 @@ export const Navigation: React.FC<{
             <Tab
               key={key}
               icon={<Icon sx={{ fontSize: 22 }} />}
-              label={t(`navigation.routes.${key}`)}
+              label={tNavigation(`routes.${key}`)}
               value={key}
             />
           ))}
           <Tab
             icon={<MoreHoriz sx={{ fontSize: 22 }} />}
-            label={t("navigation.more")}
+            label={tNavigation("more")}
             value={MOBILE_MORE_TAB_VALUE}
           />
         </Tabs>

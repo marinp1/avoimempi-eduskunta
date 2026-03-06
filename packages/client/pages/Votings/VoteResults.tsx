@@ -9,7 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { extractDocumentIdentifiers } from "#client/components/DocumentCards";
 import {
   VotingCard,
@@ -88,7 +88,9 @@ export const VoteResults: React.FC<{
   focusVotingId?: number | null;
   initialSessionFilter?: string | null;
 }> = ({ query, focusVotingId, initialSessionFilter }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tErrors } = useScopedTranslation("errors");
+  const { t: tVotings } = useScopedTranslation("votings");
   const themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
 
@@ -138,7 +140,7 @@ export const VoteResults: React.FC<{
         setState({
           loading: false,
           error:
-            error instanceof Error ? error.message : t("errors.unknownError"),
+            error instanceof Error ? error.message : tErrors("unknownError"),
           rows: [],
         });
       }
@@ -146,7 +148,7 @@ export const VoteResults: React.FC<{
 
     run();
     return () => ac.abort();
-  }, [normalizedQuery, selectedHallituskausi, t]);
+  }, [normalizedQuery, selectedHallituskausi, tErrors]);
 
   React.useEffect(() => {
     if (!focusVotingId) {
@@ -165,8 +167,8 @@ export const VoteResults: React.FC<{
         if (res.status === 404) {
           setFocusVoting({
             loading: false,
-            error: t("errors.loadFailedWithReason", {
-              reason: t("common.none"),
+            error: tErrors("loadFailedWithReason", {
+              reason: tCommon("none"),
             }),
             row: null,
           });
@@ -180,7 +182,7 @@ export const VoteResults: React.FC<{
         setFocusVoting({
           loading: false,
           error:
-            error instanceof Error ? error.message : t("errors.unknownError"),
+            error instanceof Error ? error.message : tErrors("unknownError"),
           row: null,
         });
       }
@@ -188,7 +190,7 @@ export const VoteResults: React.FC<{
 
     run();
     return () => ac.abort();
-  }, [focusVotingId, t]);
+  }, [focusVotingId, tCommon, tErrors]);
 
   const combinedRows = React.useMemo(() => {
     const rows = [...state.rows];
@@ -359,7 +361,7 @@ export const VoteResults: React.FC<{
         !focusVoting.loading &&
         (state.error || focusVoting.error) && (
           <Alert severity="error" sx={{ mb: 3 }}>
-            {t("errors.loadFailedWithReason", {
+            {tErrors("loadFailedWithReason", {
               reason: state.error || focusVoting.error,
             })}
           </Alert>
@@ -374,7 +376,7 @@ export const VoteResults: React.FC<{
             <DataCard sx={{ p: 2.5 }}>
               {selectedHallituskausi && (
                 <Alert severity="info" sx={{ mb: 2 }}>
-                  {t("common.filteredByGovernmentPeriodLine", {
+                  {tCommon("filteredByGovernmentPeriodLine", {
                     value: selectedHallituskausi.label,
                   })}
                 </Alert>
@@ -391,7 +393,7 @@ export const VoteResults: React.FC<{
               >
                 <Box>
                   <InputLabel sx={{ mb: 0.5, ...commonStyles.compactTextLg }}>
-                    {t("votings.filters.phase")}
+                    {tVotings("filters.phase")}
                   </InputLabel>
                   <Select
                     value={phaseFilter}
@@ -399,7 +401,7 @@ export const VoteResults: React.FC<{
                     onChange={(event) => setPhaseFilter(event.target.value)}
                     fullWidth
                   >
-                    <MenuItem value="all">{t("votings.filters.all")}</MenuItem>
+                    <MenuItem value="all">{tVotings("filters.all")}</MenuItem>
                     {phases.map((phase) => (
                       <MenuItem key={phase} value={phase}>
                         {phase}
@@ -409,7 +411,7 @@ export const VoteResults: React.FC<{
                 </Box>
                 <Box>
                   <InputLabel sx={{ mb: 0.5, ...commonStyles.compactTextLg }}>
-                    {t("votings.filters.session")}
+                    {tVotings("filters.session")}
                   </InputLabel>
                   <Select
                     value={sessionFilter}
@@ -417,7 +419,7 @@ export const VoteResults: React.FC<{
                     onChange={(event) => setSessionFilter(event.target.value)}
                     fullWidth
                   >
-                    <MenuItem value="all">{t("votings.filters.all")}</MenuItem>
+                    <MenuItem value="all">{tVotings("filters.all")}</MenuItem>
                     {sessions.map((session) => (
                       <MenuItem key={session} value={session}>
                         {session}
@@ -427,7 +429,7 @@ export const VoteResults: React.FC<{
                 </Box>
                 <Box>
                   <InputLabel sx={{ mb: 0.5, ...commonStyles.compactTextLg }}>
-                    {t("votings.filters.sort")}
+                    {tVotings("filters.sort")}
                   </InputLabel>
                   <Select
                     value={sortMode}
@@ -438,16 +440,16 @@ export const VoteResults: React.FC<{
                     fullWidth
                   >
                     <MenuItem value="newest">
-                      {t("votings.sort.newest")}
+                      {tVotings("sort.newest")}
                     </MenuItem>
                     <MenuItem value="oldest">
-                      {t("votings.sort.oldest")}
+                      {tVotings("sort.oldest")}
                     </MenuItem>
                     <MenuItem value="closest">
-                      {t("votings.sort.closest")}
+                      {tVotings("sort.closest")}
                     </MenuItem>
                     <MenuItem value="largest">
-                      {t("votings.sort.largest")}
+                      {tVotings("sort.largest")}
                     </MenuItem>
                   </Select>
                 </Box>
@@ -460,13 +462,13 @@ export const VoteResults: React.FC<{
                   variant="h6"
                   sx={{ color: themedColors.textSecondary, mb: 0.5 }}
                 >
-                  {t("votings.noResults")}
+                  {tVotings("noResults")}
                 </Typography>
                 <Typography
                   variant="body2"
                   sx={{ color: themedColors.textTertiary }}
                 >
-                  {t("votings.noResultsHint")}
+                  {tVotings("noResultsHint")}
                 </Typography>
               </DataCard>
             ) : (

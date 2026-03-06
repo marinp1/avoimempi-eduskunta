@@ -9,7 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { VotingCard, type VotingCardData } from "#client/components/VotingCard";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { colors, spacing } from "#client/theme";
@@ -36,7 +36,8 @@ interface CloseVotesProps {
 }
 
 export default function CloseVotes({ onClose }: CloseVotesProps) {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tInsights } = useScopedTranslation("insights");
   const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<CloseVoteData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,7 +104,7 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
         <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
           <BalanceIcon sx={{ fontSize: 36, color: colors.primary }} />
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            {t("insights.closeVotes.title")}
+            {tInsights("closeVotes.title")}
           </Typography>
         </Box>
         <IconButton onClick={onClose} size="large">
@@ -116,18 +117,18 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
         color="text.secondary"
         sx={{ mb: spacing.lg }}
       >
-        {t("insights.closeVotes.description")}
+        {tInsights("closeVotes.description")}
       </Typography>
       {selectedHallituskausi && (
         <Alert severity="info" sx={{ mb: spacing.md }}>
-          {t("common.filteredByGovernmentPeriodLine", {
+          {tCommon("filteredByGovernmentPeriodLine", {
             value: selectedHallituskausi.label,
           })}
         </Alert>
       )}
 
       {data.length === 0 ? (
-        <Alert severity="info">{t("insights.closeVotes.noData")}</Alert>
+        <Alert severity="info">{tInsights("closeVotes.noData")}</Alert>
       ) : (
         <Stack spacing={1.5}>
           {data.map((vote) => {

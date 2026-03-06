@@ -19,9 +19,9 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { DocumentCard, RelatedVotings } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import {
   isDateWithinHallituskausi,
@@ -92,9 +92,13 @@ type SectionLoadErrorKey =
   | "rollCall";
 
 const Home = () => {
-  const { t } = useTranslation();
+  const { t: tApp } = useScopedTranslation("app");
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tErrors } = useScopedTranslation("errors");
+  const { t: tHome } = useScopedTranslation("home");
+  const { t: tSessions } = useScopedTranslation("sessions");
   const speechContentLatestLabel = (date: string) =>
-    t("sessions.speechContentLatest", { date });
+    tSessions("speechContentLatest", { date });
   const themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
 
@@ -193,13 +197,13 @@ const Home = () => {
         setSectionLoadErrors({});
         setVaskiLatestSpeechDate(payload.vaskiLatestSpeechDate ?? null);
       } catch {
-        setError(t("home.loadingError"));
+        setError(tHome("loadingError"));
       } finally {
         setLoadingSessions(false);
       }
     };
     fetchLatestSession();
-  }, [selectedHallituskausi, t]);
+  }, [selectedHallituskausi, tHome]);
 
   const [compositionError, setCompositionError] = useState<string | null>(null);
 
@@ -231,11 +235,11 @@ const Home = () => {
       setMembers(data);
     } catch {
       setMembers([]);
-      setCompositionError(t("home.loadingError"));
+      setCompositionError(tHome("loadingError"));
     } finally {
       setLoadingComposition(false);
     }
-  }, [latestDate, selectedHallituskausi, t]);
+  }, [latestDate, selectedHallituskausi, tHome]);
 
   // Fetch current composition
   useEffect(() => {
@@ -319,14 +323,14 @@ const Home = () => {
   };
 
   const getErrorReason = (error: unknown) =>
-    error instanceof Error ? error.message : t("errors.unknownError");
+    error instanceof Error ? error.message : tErrors("unknownError");
 
   const sectionLoadErrorLabels: Record<SectionLoadErrorKey, string> = {
-    speeches: t("sessions.loadErrorSpeeches"),
-    votings: t("sessions.loadErrorVotings"),
-    links: t("sessions.loadErrorLinks"),
-    subSections: t("sessions.loadErrorSubSections"),
-    rollCall: t("sessions.loadErrorRollCall"),
+    speeches: tSessions("loadErrorSpeeches"),
+    votings: tSessions("loadErrorVotings"),
+    links: tSessions("loadErrorLinks"),
+    subSections: tSessions("loadErrorSubSections"),
+    rollCall: tSessions("loadErrorRollCall"),
   };
 
   const setSectionLoadError = (
@@ -589,7 +593,7 @@ const Home = () => {
             textTransform: "uppercase",
           }}
         >
-          {t("sessions.vaskiDocument")}
+          {tSessions("vaskiDocument")}
         </Typography>
         {(section.vaski_document_type_name ||
           section.vaski_document_type_code ||
@@ -606,11 +610,11 @@ const Home = () => {
                   color: colors.textSecondary,
                 }}
               >
-                {t("sessions.vaskiTypeLine", {
+                {tSessions("vaskiTypeLine", {
                   value:
                     section.vaski_document_type_name ||
                     section.vaski_document_type_code ||
-                    t("common.none"),
+                    tCommon("none"),
                 })}
               </Typography>
             )}
@@ -621,7 +625,7 @@ const Home = () => {
                   color: colors.textSecondary,
                 }}
               >
-                {t("sessions.vaskiTunnusLine", {
+                {tSessions("vaskiTunnusLine", {
                   value: section.vaski_eduskunta_tunnus,
                 })}
               </Typography>
@@ -633,7 +637,7 @@ const Home = () => {
                   color: colors.textSecondary,
                 }}
               >
-                {t("sessions.vaskiDocNumberLine", { value: docNumber })}
+                {tSessions("vaskiDocNumberLine", { value: docNumber })}
               </Typography>
             )}
             {section.vaski_status && (
@@ -643,7 +647,7 @@ const Home = () => {
                   color: colors.textSecondary,
                 }}
               >
-                {t("sessions.vaskiStatusLine", { value: section.vaski_status })}
+                {tSessions("vaskiStatusLine", { value: section.vaski_status })}
               </Typography>
             )}
             {section.vaski_creation_date && (
@@ -653,7 +657,7 @@ const Home = () => {
                   color: colors.textSecondary,
                 }}
               >
-                {t("sessions.vaskiCreatedLine", {
+                {tSessions("vaskiCreatedLine", {
                   value: section.vaski_creation_date,
                 })}
               </Typography>
@@ -680,7 +684,7 @@ const Home = () => {
               mt: 0.25,
             }}
           >
-            {t("sessions.vaskiAuthorLine", { value: authorLine })}
+            {tSessions("vaskiAuthorLine", { value: authorLine })}
           </Typography>
         )}
         {section.vaski_source_reference && (
@@ -691,7 +695,7 @@ const Home = () => {
               mt: 0.25,
             }}
           >
-            {t("sessions.vaskiSourceReferenceLine", {
+            {tSessions("vaskiSourceReferenceLine", {
               value: section.vaski_source_reference,
             })}
           </Typography>
@@ -712,7 +716,7 @@ const Home = () => {
                 : {}),
             }}
           >
-            {t("sessions.vaskiSummaryLine", { value: section.vaski_summary })}
+            {tSessions("vaskiSummaryLine", { value: section.vaski_summary })}
           </Typography>
         )}
         {subjects.length > 0 && (
@@ -724,7 +728,7 @@ const Home = () => {
                 mr: 0.5,
               }}
             >
-              {t("sessions.vaskiSubjects")}:
+              {tSessions("vaskiSubjects")}:
             </Typography>
             {subjects.map((subject) => (
               <Chip
@@ -772,13 +776,13 @@ const Home = () => {
             textTransform: "uppercase",
           }}
         >
-          {t("sessions.minutesMetadata")}
+          {tSessions("minutesMetadata")}
         </Typography>
         {minutesItemTitle && minutesItemTitle !== section.title && (
           <Typography
             sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
           >
-            {t("sessions.minutesItemTitleLine", { value: minutesItemTitle })}
+            {tSessions("minutesItemTitleLine", { value: minutesItemTitle })}
           </Typography>
         )}
         {(section.minutes_processing_phase_code ||
@@ -786,7 +790,7 @@ const Home = () => {
           <Typography
             sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
           >
-            {t("sessions.minutesProcessingCodesLine", {
+            {tSessions("minutesProcessingCodesLine", {
               value: [
                 section.minutes_processing_phase_code,
                 section.minutes_general_processing_phase_code,
@@ -859,7 +863,7 @@ const Home = () => {
             mb: 1,
           }}
         >
-          {t("sessions.minutesContent")}
+          {tSessions("minutesContent")}
         </Typography>
 
         {parsed.narrativeBlocks.length > 0 && (
@@ -896,8 +900,8 @@ const Home = () => {
               const migratedAsRollCall =
                 isReferenceMigratedAsRollCall(reference);
               const tooltipTitle = migratedAsRollCall
-                ? t("sessions.minutesReferenceMigratedRollCall")
-                : t("sessions.minutesReferenceNotMigrated");
+                ? tSessions("minutesReferenceMigratedRollCall")
+                : tSessions("minutesReferenceNotMigrated");
               const chipSx = {
                 fontFamily: "monospace",
                 ...commonStyles.compactTextLg,
@@ -992,7 +996,7 @@ const Home = () => {
             mb: 0.75,
           }}
         >
-          {t("sessions.subSections")}
+          {tSessions("subSections")}
         </Typography>
         <Box sx={{ overflowX: "auto" }}>
           <Box
@@ -1020,10 +1024,10 @@ const Home = () => {
           >
             <thead>
               <tr>
-                <th>{t("sessions.subSectionNumber")}</th>
-                <th>{t("sessions.subSectionTitle")}</th>
-                <th>{t("sessions.subSectionDocument")}</th>
-                <th>{t("sessions.subSectionType")}</th>
+                <th>{tSessions("subSectionNumber")}</th>
+                <th>{tSessions("subSectionTitle")}</th>
+                <th>{tSessions("subSectionDocument")}</th>
+                <th>{tSessions("subSectionType")}</th>
               </tr>
             </thead>
             <tbody>
@@ -1082,7 +1086,7 @@ const Home = () => {
             mb: 1,
           }}
         >
-          {t("sessions.sessionNotices")}
+          {tSessions("sessionNotices")}
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           {notices.map((notice) => (
@@ -1122,7 +1126,7 @@ const Home = () => {
                       color: colors.textTertiary,
                     }}
                   >
-                    {t("sessions.noticeSentLine", {
+                    {tSessions("noticeSentLine", {
                       value: formatDateTime(notice.sent_at),
                     })}
                   </Typography>
@@ -1134,7 +1138,7 @@ const Home = () => {
                       color: colors.textTertiary,
                     }}
                   >
-                    {t("sessions.noticeValidUntilLine", {
+                    {tSessions("noticeValidUntilLine", {
                       value: formatDateTime(notice.valid_until),
                     })}
                   </Typography>
@@ -1174,7 +1178,7 @@ const Home = () => {
             mb: 0.75,
           }}
         >
-          {t("sessions.sectionNotices")}
+          {tSessions("sectionNotices")}
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
           {notices.map((notice) => (
@@ -1214,7 +1218,7 @@ const Home = () => {
                       color: colors.textTertiary,
                     }}
                   >
-                    {t("sessions.noticeSentLine", {
+                    {tSessions("noticeSentLine", {
                       value: formatDateTime(notice.sent_at),
                     })}
                   </Typography>
@@ -1226,7 +1230,7 @@ const Home = () => {
                       color: colors.textTertiary,
                     }}
                   >
-                    {t("sessions.noticeValidUntilLine", {
+                    {tSessions("noticeValidUntilLine", {
                       value: formatDateTime(notice.valid_until),
                     })}
                   </Typography>
@@ -1273,7 +1277,7 @@ const Home = () => {
               textTransform: "uppercase",
             }}
           >
-            {t("sessions.minutesOutline")}
+            {tSessions("minutesOutline")}
           </Typography>
           <Button
             size="small"
@@ -1286,8 +1290,8 @@ const Home = () => {
             }}
           >
             {isExpanded
-              ? t("sessions.minutesToggle", { context: "hide" })
-              : t("sessions.minutesToggle", { context: "show" })}
+              ? tSessions("minutesToggle", { context: "hide" })
+              : tSessions("minutesToggle", { context: "show" })}
           </Button>
         </Box>
         <Collapse
@@ -1335,7 +1339,7 @@ const Home = () => {
                   >
                     {item.title ||
                       item.processing_title ||
-                      t("sessions.noTitle")}
+                      tSessions("noTitle")}
                   </Typography>
                 </Box>
                 <Box
@@ -1348,7 +1352,7 @@ const Home = () => {
                         color: colors.textTertiary,
                       }}
                     >
-                      {t("sessions.identifierLine", {
+                      {tSessions("identifierLine", {
                         value: item.identifier_text,
                       })}
                     </Typography>
@@ -1361,7 +1365,7 @@ const Home = () => {
                           color: colors.textTertiary,
                         }}
                       >
-                        {t("sessions.processingLine", {
+                        {tSessions("processingLine", {
                           value: item.processing_title,
                         })}
                       </Typography>
@@ -1410,7 +1414,7 @@ const Home = () => {
               textTransform: "uppercase",
             }}
           >
-            {t("sessions.minutesAttachments")}
+            {tSessions("minutesAttachments")}
           </Typography>
           <Button
             size="small"
@@ -1423,8 +1427,8 @@ const Home = () => {
             }}
           >
             {isExpanded
-              ? t("sessions.attachmentsToggle", { context: "hide" })
-              : t("sessions.attachmentsToggle", { context: "show" })}
+              ? tSessions("attachmentsToggle", { context: "hide" })
+              : tSessions("attachmentsToggle", { context: "show" })}
           </Button>
         </Box>
         <Collapse
@@ -1453,7 +1457,7 @@ const Home = () => {
                 >
                   {attachment.title ||
                     attachment.file_name ||
-                    t("sessions.attachment")}
+                    tSessions("attachment")}
                 </Typography>
                 <Box
                   sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mt: 0.5 }}
@@ -1465,7 +1469,7 @@ const Home = () => {
                         color: colors.textTertiary,
                       }}
                     >
-                      {t("sessions.relatedDocumentLine", {
+                      {tSessions("relatedDocumentLine", {
                         value: attachment.related_document_tunnus,
                       })}
                     </Typography>
@@ -1477,7 +1481,7 @@ const Home = () => {
                         color: colors.textTertiary,
                       }}
                     >
-                      {t("sessions.fileNameLine", {
+                      {tSessions("fileNameLine", {
                         value: attachment.file_name,
                       })}
                     </Typography>
@@ -1489,7 +1493,7 @@ const Home = () => {
                         color: colors.textTertiary,
                       }}
                     >
-                      {t("sessions.nativeIdLine", {
+                      {tSessions("nativeIdLine", {
                         value: attachment.native_id,
                       })}
                     </Typography>
@@ -1511,13 +1515,13 @@ const Home = () => {
           sx={{ py: 1, textAlign: "center" }}
           role="status"
           aria-live="polite"
-          aria-label={t("app.loading")}
+          aria-label={tApp("loading")}
         >
           <CircularProgress size={18} sx={{ color: themedColors.primary }} />
           <Typography
             sx={{ ...commonStyles.compactTextXs, color: colors.textTertiary }}
           >
-            {t("app.loading")}
+            {tApp("loading")}
           </Typography>
         </Box>
       );
@@ -1535,7 +1539,7 @@ const Home = () => {
             mb: 0.75,
           }}
         >
-          {t("sessions.sectionDocuments")}
+          {tSessions("sectionDocuments")}
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
           {links.map((link) => (
@@ -1619,7 +1623,7 @@ const Home = () => {
                         color: colors.textTertiary,
                       }}
                     >
-                      {t("sessions.vaskiCreatedLine", {
+                      {tSessions("vaskiCreatedLine", {
                         value: link.document_created_at,
                       })}
                     </Typography>
@@ -1645,13 +1649,13 @@ const Home = () => {
           sx={{ mt: 1.5, py: 1, textAlign: "center" }}
           role="status"
           aria-live="polite"
-          aria-label={t("app.loading")}
+          aria-label={tApp("loading")}
         >
           <CircularProgress size={18} sx={{ color: themedColors.primary }} />
           <Typography
             sx={{ ...commonStyles.compactTextXs, color: colors.textTertiary }}
           >
-            {t("app.loading")}
+            {tApp("loading")}
           </Typography>
         </Box>
       );
@@ -1668,19 +1672,19 @@ const Home = () => {
 
     const formatEntryType = (entryType: RollCallEntry["entry_type"]) =>
       entryType === "late"
-        ? t("sessions.rollCallLate")
-        : t("sessions.rollCallAbsent");
+        ? tSessions("rollCallLate")
+        : tSessions("rollCallAbsent");
 
     const formatAbsenceReason = (reasonCode?: string | null) => {
       if (!reasonCode) return "-";
       const code = reasonCode.toLowerCase();
       if (code === "e") {
-        return t("sessions.rollCallReasonE");
+        return tSessions("rollCallReasonE");
       }
       if (code === "h") {
-        return t("sessions.rollCallReasonH");
+        return tSessions("rollCallReasonH");
       }
-      return t("sessions.rollCallReasonUnknown");
+      return tSessions("rollCallReasonUnknown");
     };
 
     const unknownReasonCodes = Array.from(
@@ -1711,7 +1715,7 @@ const Home = () => {
             textTransform: "uppercase",
           }}
         >
-          {t("sessions.rollCallReport")}
+          {tSessions("rollCallReport")}
         </Typography>
         {report.title && (
           <Typography
@@ -1728,7 +1732,7 @@ const Home = () => {
           <Typography
             sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
           >
-            {t("sessions.rollCallDocumentLine", {
+            {tSessions("rollCallDocumentLine", {
               value: report.edk_identifier,
             })}
           </Typography>
@@ -1740,7 +1744,7 @@ const Home = () => {
               color: colors.primaryLight,
             }}
           >
-            {t("sessions.rollCallOpenDocument")}
+            {tSessions("rollCallOpenDocument")}
           </EduskuntaSourceLink>
           {report.roll_call_start_time && (
             <Typography
@@ -1749,7 +1753,7 @@ const Home = () => {
                 color: colors.textSecondary,
               }}
             >
-              {t("sessions.rollCallStartLine", {
+              {tSessions("rollCallStartLine", {
                 value: formatTime(report.roll_call_start_time),
               })}
             </Typography>
@@ -1761,7 +1765,7 @@ const Home = () => {
                 color: colors.textSecondary,
               }}
             >
-              {t("sessions.rollCallEndLine", {
+              {tSessions("rollCallEndLine", {
                 value: formatTime(report.roll_call_end_time),
               })}
             </Typography>
@@ -1769,7 +1773,7 @@ const Home = () => {
         </Box>
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 0.75 }}>
           <Chip
-            label={t("sessions.rollCallAbsentLine", {
+            label={tSessions("rollCallAbsentLine", {
               count: report.absent_count,
             })}
             size="small"
@@ -1781,7 +1785,7 @@ const Home = () => {
             }}
           />
           <Chip
-            label={t("sessions.rollCallLateLine", { count: report.late_count })}
+            label={tSessions("rollCallLateLine", { count: report.late_count })}
             size="small"
             sx={{
               ...commonStyles.compactChipSm,
@@ -1800,7 +1804,7 @@ const Home = () => {
               color: colors.textTertiary,
             }}
           >
-            {t("sessions.rollCallNoEntries")}
+            {tSessions("rollCallNoEntries")}
           </Typography>
         )}
 
@@ -1838,17 +1842,17 @@ const Home = () => {
                   pb: 0.5,
                 }}
               >
-                {t("sessions.rollCallReport")}: {report.title || "-"}
+                {tSessions("rollCallReport")}: {report.title || "-"}
               </Box>
               <thead>
                 <tr>
-                  <th>{t("sessions.rollCallTableNumber")}</th>
-                  <th>{t("sessions.rollCallTableName")}</th>
-                  <th>{t("sessions.rollCallTableParty")}</th>
-                  <th>{t("sessions.rollCallTableType")}</th>
-                  <th>{t("sessions.rollCallTableCode")}</th>
-                  <th>{t("sessions.rollCallTableReason")}</th>
-                  <th>{t("sessions.rollCallTableArrival")}</th>
+                  <th>{tSessions("rollCallTableNumber")}</th>
+                  <th>{tSessions("rollCallTableName")}</th>
+                  <th>{tSessions("rollCallTableParty")}</th>
+                  <th>{tSessions("rollCallTableType")}</th>
+                  <th>{tSessions("rollCallTableCode")}</th>
+                  <th>{tSessions("rollCallTableReason")}</th>
+                  <th>{tSessions("rollCallTableArrival")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1884,9 +1888,9 @@ const Home = () => {
           <Typography
             sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
           >
-            {t("sessions.rollCallReasonLegend")}: <strong>(e)</strong>{" "}
-            {t("sessions.rollCallReasonE")}; <strong>(h)</strong>{" "}
-            {t("sessions.rollCallReasonH")}
+            {tSessions("rollCallReasonLegend")}: <strong>(e)</strong>{" "}
+            {tSessions("rollCallReasonE")}; <strong>(h)</strong>{" "}
+            {tSessions("rollCallReasonH")}
           </Typography>
           {unknownReasonCodes.length > 0 && (
             <Typography
@@ -1896,7 +1900,7 @@ const Home = () => {
                 color: colors.textTertiary,
               }}
             >
-              {t("sessions.rollCallUnknownCodesLine", {
+              {tSessions("rollCallUnknownCodesLine", {
                 value: unknownReasonCodes.map((code) => `(${code})`).join(", "),
               })}
             </Typography>
@@ -1929,7 +1933,7 @@ const Home = () => {
             textTransform: "uppercase",
           }}
         >
-          {t("sessions.votingsLabel", { count: votings.length })}
+          {tSessions("votingsLabel", { count: votings.length })}
         </Typography>
         {votings.map((voting) => {
           const isPassed = voting.n_yes > voting.n_no;
@@ -1999,8 +2003,8 @@ const Home = () => {
                   }
                 >
                   {isExpanded
-                    ? t("common.detailsToggle", { context: "hide" })
-                    : t("common.detailsToggle", { context: "show" })}
+                    ? tCommon("detailsToggle", { context: "hide" })
+                    : tCommon("detailsToggle", { context: "show" })}
                 </Button>
                 <Button
                   size="small"
@@ -2011,7 +2015,7 @@ const Home = () => {
                   endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
                   href={refs.voting(voting.id, session.key, session.date)}
                 >
-                  {t("common.openView")}
+                  {tCommon("openView")}
                 </Button>
               </Box>
               <VoteMarginBar
@@ -2046,7 +2050,7 @@ const Home = () => {
                           color: colors.textSecondary,
                         }}
                       >
-                        {t("common.loadingVotingDetails")}
+                        {tCommon("loadingVotingDetails")}
                       </Typography>
                     </Box>
                   )}
@@ -2077,7 +2081,7 @@ const Home = () => {
                         />
                         <Chip
                           size="small"
-                          label={t("common.emptyCount", {
+                          label={tCommon("emptyCount", {
                             count: details.voting.n_abstain,
                           })}
                           sx={{ ...commonStyles.compactChipSm }}
@@ -2117,7 +2121,7 @@ const Home = () => {
                               size="small"
                               variant="outlined"
                               label={`${related.id}: ${related.n_yes}-${related.n_no}`}
-                              aria-label={t("sessions.relatedVotingAria", {
+                              aria-label={tSessions("relatedVotingAria", {
                                 id: related.id,
                                 yes: related.n_yes,
                                 no: related.n_no,
@@ -2150,7 +2154,7 @@ const Home = () => {
 
   return (
     <Box>
-      <PageHeader title={t("home.title")} subtitle={t("home.subtitle")} />
+      <PageHeader title={tHome("title")} subtitle={tHome("subtitle")} />
 
       {error && (
         <Alert severity="error" role="status" aria-live="polite" sx={{ mb: 3 }}>
@@ -2220,7 +2224,7 @@ const Home = () => {
                 onClick={() => void loadComposition()}
                 sx={{ ...commonStyles.compactTextMd, textTransform: "none" }}
               >
-                {t("common.retry")}
+                {tCommon("retry")}
               </Button>
             }
           >
@@ -2233,21 +2237,21 @@ const Home = () => {
           <Grid container spacing={2} sx={{ mb: 2.5 }}>
             <Grid size={{ xs: 12, sm: 4 }}>
               <MetricCard
-                label={t("home.totalMPs")}
+                label={tHome("totalMPs")}
                 value={stats.totalMembers}
                 icon={<GroupsIcon fontSize="small" />}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <MetricCard
-                label={t("home.government")}
+                label={tHome("government")}
                 value={stats.inGovernment}
                 icon={<AccountBalanceIcon fontSize="small" />}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 4 }}>
               <MetricCard
-                label={t("home.opposition")}
+                label={tHome("opposition")}
                 value={stats.inOpposition}
                 icon={<PieChartIcon fontSize="small" />}
               />
@@ -2267,7 +2271,7 @@ const Home = () => {
                   fontSize: "1rem",
                 }}
               >
-                {t("home.partyBreakdown")}
+                {tHome("partyBreakdown")}
               </Typography>
             </Box>
             <Box
@@ -2313,7 +2317,7 @@ const Home = () => {
                     </Typography>
                     {data.inGovernment > 0 ? (
                       <Chip
-                        label={t("home.governmentChip")}
+                        label={tHome("governmentChip")}
                         size="small"
                         sx={{
                           ...commonStyles.compactChipXs,
@@ -2324,7 +2328,7 @@ const Home = () => {
                       />
                     ) : (
                       <Chip
-                        label={t("home.oppositionChip")}
+                        label={tHome("oppositionChip")}
                         size="small"
                         sx={{
                           ...commonStyles.compactChipXs,
@@ -2336,7 +2340,7 @@ const Home = () => {
                     )}
                   </Box>
                   <Chip
-                    label={t("home.seatCount", { count: data.total })}
+                    label={tHome("seatCount", { count: data.total })}
                     size="small"
                     sx={{
                       background: colors.primaryLight,
@@ -2353,7 +2357,7 @@ const Home = () => {
         </Box>
       ) : (
         <Box sx={{ mb: 4 }}>
-          <Alert severity="info">{t("home.noData")}</Alert>
+          <Alert severity="info">{tHome("noData")}</Alert>
         </Box>
       )}
 
@@ -2370,7 +2374,7 @@ const Home = () => {
                 fontSize: "1rem",
               }}
             >
-              {t("home.latestCompletedSession")}
+              {tHome("latestCompletedSession")}
             </Typography>
           </Box>
           {latestDate && (
@@ -2389,7 +2393,7 @@ const Home = () => {
         ) : sessions.length === 0 ? (
           <Box sx={{ p: 3, textAlign: "center" }}>
             <Typography sx={{ color: colors.textSecondary }}>
-              {t("home.noData")}
+              {tHome("noData")}
             </Typography>
           </Box>
         ) : (
@@ -2465,7 +2469,7 @@ const Home = () => {
               >
                 {session.section_count > 0 && (
                   <Chip
-                    label={t("home.sectionCount", {
+                    label={tHome("sectionCount", {
                       count: session.section_count,
                     })}
                     size="small"
@@ -2479,7 +2483,7 @@ const Home = () => {
                 {session.voting_count > 0 && (
                   <Chip
                     icon={<HowToVoteIcon sx={{ fontSize: 14 }} />}
-                    label={t("home.votingCount", {
+                    label={tHome("votingCount", {
                       count: session.voting_count,
                     })}
                     size="small"
@@ -2497,7 +2501,7 @@ const Home = () => {
                       color: colors.textSecondary,
                     }}
                   >
-                    {t("sessions.agendaStateLine", {
+                    {tSessions("agendaStateLine", {
                       value: session.agenda_state,
                     })}
                   </Typography>
@@ -2519,7 +2523,7 @@ const Home = () => {
                   >
                     <Alert severity="info" sx={{ alignItems: "center" }}>
                       <Typography sx={{ fontSize: "0.8125rem" }}>
-                        {t("sessions.speechContentPending")}
+                        {tSessions("speechContentPending")}
                       </Typography>
                       <Typography sx={{ fontSize: "0.8125rem" }}>
                         {speechContentLatestLabel(
@@ -2611,7 +2615,7 @@ const Home = () => {
                           >
                             {section.title ||
                               section.processing_title ||
-                              t("sessions.noTitle")}
+                              tSessions("noTitle")}
                           </Typography>
                           {section.minutes_item_order != null && (
                             <Typography
@@ -2620,7 +2624,7 @@ const Home = () => {
                                 color: colors.textTertiary,
                               }}
                             >
-                              {t("sessions.minutesOrder")}{" "}
+                              {tSessions("minutesOrder")}{" "}
                               {section.minutes_item_order}
                             </Typography>
                           )}
@@ -2642,7 +2646,7 @@ const Home = () => {
                                   color: colors.textTertiary,
                                 }}
                               >
-                                {t("sessions.processingLine", {
+                                {tSessions("processingLine", {
                                   value: section.processing_title,
                                 })}
                               </Typography>
@@ -2654,7 +2658,7 @@ const Home = () => {
                                 color: colors.textTertiary,
                               }}
                             >
-                              {t("sessions.resolutionLine", {
+                              {tSessions("resolutionLine", {
                                 value: section.resolution,
                               })}
                             </Typography>
@@ -2670,7 +2674,7 @@ const Home = () => {
                             }}
                           >
                             <Chip
-                              label={t("sessions.votingsCount", {
+                              label={tSessions("votingsCount", {
                                 count: section.voting_count ?? 0,
                               })}
                               size="small"
@@ -2682,7 +2686,7 @@ const Home = () => {
                               }}
                             />
                             <Chip
-                              label={t("sessions.speechesCount", {
+                              label={tSessions("speechesCount", {
                                 count: section.speech_count ?? 0,
                               })}
                               size="small"
@@ -2694,7 +2698,7 @@ const Home = () => {
                               }}
                             />
                             <Chip
-                              label={t("sessions.speakersCount", {
+                              label={tSessions("speakersCount", {
                                 count: section.speaker_count ?? 0,
                               })}
                               size="small"
@@ -2704,7 +2708,7 @@ const Home = () => {
                               }}
                             />
                             <Chip
-                              label={t("sessions.partiesCount", {
+                              label={tSessions("partiesCount", {
                                 count: section.party_count ?? 0,
                               })}
                               size="small"
@@ -2734,11 +2738,11 @@ const Home = () => {
                               textTransform: "none",
                             }}
                           >
-                            {t("common.retry")}
+                            {tCommon("retry")}
                           </Button>
                         }
                       >
-                        {t("errors.loadFailedWithReason", {
+                        {tErrors("loadFailedWithReason", {
                           reason: sectionErrorReasons.join(", "),
                         })}
                       </Alert>
@@ -2765,7 +2769,7 @@ const Home = () => {
                         sx={{ py: 2, textAlign: "center" }}
                         role="status"
                         aria-live="polite"
-                        aria-label={t("app.loading")}
+                        aria-label={tApp("loading")}
                       >
                         <CircularProgress
                           size={20}
@@ -2777,7 +2781,7 @@ const Home = () => {
                             color: colors.textTertiary,
                           }}
                         >
-                          {t("app.loading")}
+                          {tApp("loading")}
                         </Typography>
                       </Box>
                     ) : (
@@ -2790,7 +2794,7 @@ const Home = () => {
                         sx={{ py: 2, textAlign: "center" }}
                         role="status"
                         aria-live="polite"
-                        aria-label={t("app.loading")}
+                        aria-label={tApp("loading")}
                       >
                         <CircularProgress
                           size={20}
@@ -2802,7 +2806,7 @@ const Home = () => {
                             color: colors.textTertiary,
                           }}
                         >
-                          {t("app.loading")}
+                          {tApp("loading")}
                         </Typography>
                       </Box>
                     ) : speeches.length > 0 ? (
@@ -2822,7 +2826,7 @@ const Home = () => {
                             textTransform: "uppercase",
                           }}
                         >
-                          {t("sessions.speeches")} (
+                          {tSessions("speeches")} (
                           {speechData?.total ?? speeches.length})
                         </Typography>
                         {!hasSpeechContent && (
@@ -2832,7 +2836,7 @@ const Home = () => {
                               color: colors.textTertiary,
                             }}
                           >
-                            {t("sessions.speechContentPending")}
+                            {tSessions("speechContentPending")}
                           </Typography>
                         )}
                         {!hasSpeechContent && vaskiLatestSpeechDate && (
@@ -2968,7 +2972,7 @@ const Home = () => {
                                 {loadingMoreSpeeches.has(section.id) ? (
                                   <CircularProgress size={16} sx={{ mr: 1 }} />
                                 ) : null}
-                                {t("sessions.loadMoreProgress", {
+                                {tSessions("loadMoreProgress", {
                                   loaded: speeches.length,
                                   total: speechData.total,
                                 })}
@@ -2980,7 +2984,7 @@ const Home = () => {
                                   color: colors.textTertiary,
                                 }}
                               >
-                                {t("sessions.loadMorePageProgress", {
+                                {tSessions("loadMorePageProgress", {
                                   current: speechData.page,
                                   total: speechData.totalPages,
                                 })}
@@ -3004,7 +3008,7 @@ const Home = () => {
                             color: colors.textTertiary,
                           }}
                         >
-                          {t("sessions.noSectionContent")}
+                          {tSessions("noSectionContent")}
                         </Typography>
                       )}
                   </SessionSectionPanel>

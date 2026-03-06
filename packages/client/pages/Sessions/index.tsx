@@ -21,9 +21,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { DocumentCard, RelatedVotings } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { VotingSubRow } from "#client/components/VotingCard";
 import {
   isDateWithinHallituskausi,
@@ -98,9 +98,13 @@ const getInitialSectionKey = (): string | null => {
 };
 
 export default () => {
-  const { t } = useTranslation();
+  const { t: tApp } = useScopedTranslation("app");
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tErrors } = useScopedTranslation("errors");
+  const { t: tHome } = useScopedTranslation("home");
+  const { t: tSessions } = useScopedTranslation("sessions");
   const speechContentLatestLabel = (date: string) =>
-    t("sessions.speechContentLatest", { date });
+    tSessions("speechContentLatest", { date });
   const themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
 
@@ -204,13 +208,13 @@ export default () => {
         setSessions(payload.sessions || []);
         setVaskiLatestSpeechDate(payload.vaskiLatestSpeechDate ?? null);
       } catch {
-        setError(t("errors.loadSessionFailed"));
+        setError(tErrors("loadSessionFailed"));
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [date, selectedHallituskausi, t]);
+  }, [date, selectedHallituskausi, tErrors]);
 
   useEffect(() => {
     const fetchValidDates = async () => {
@@ -333,7 +337,7 @@ export default () => {
             textTransform: "uppercase",
           }}
         >
-          {t("sessions.vaskiDocument")}
+          {tSessions("vaskiDocument")}
         </Typography>
         {(section.vaski_document_type_name ||
           section.vaski_document_type_code ||
@@ -350,11 +354,11 @@ export default () => {
                   color: colors.textSecondary,
                 }}
               >
-                {t("sessions.vaskiTypeLine", {
+                {tSessions("vaskiTypeLine", {
                   value:
                     section.vaski_document_type_name ||
                     section.vaski_document_type_code ||
-                    t("common.none"),
+                    tCommon("none"),
                 })}
               </Typography>
             )}
@@ -365,7 +369,7 @@ export default () => {
                   color: colors.textSecondary,
                 }}
               >
-                {t("sessions.vaskiTunnusLine", {
+                {tSessions("vaskiTunnusLine", {
                   value: section.vaski_eduskunta_tunnus,
                 })}
               </Typography>
@@ -377,7 +381,7 @@ export default () => {
                   color: colors.textSecondary,
                 }}
               >
-                {t("sessions.vaskiDocNumberLine", { value: docNumber })}
+                {tSessions("vaskiDocNumberLine", { value: docNumber })}
               </Typography>
             )}
             {section.vaski_status && (
@@ -387,7 +391,7 @@ export default () => {
                   color: colors.textSecondary,
                 }}
               >
-                {t("sessions.vaskiStatusLine", { value: section.vaski_status })}
+                {tSessions("vaskiStatusLine", { value: section.vaski_status })}
               </Typography>
             )}
             {section.vaski_creation_date && (
@@ -397,7 +401,7 @@ export default () => {
                   color: colors.textSecondary,
                 }}
               >
-                {t("sessions.vaskiCreatedLine", {
+                {tSessions("vaskiCreatedLine", {
                   value: section.vaski_creation_date,
                 })}
               </Typography>
@@ -424,7 +428,7 @@ export default () => {
               mt: 0.25,
             }}
           >
-            {t("sessions.vaskiAuthorLine", { value: authorLine })}
+            {tSessions("vaskiAuthorLine", { value: authorLine })}
           </Typography>
         )}
         {section.vaski_source_reference && (
@@ -435,7 +439,7 @@ export default () => {
               mt: 0.25,
             }}
           >
-            {t("sessions.vaskiSourceReferenceLine", {
+            {tSessions("vaskiSourceReferenceLine", {
               value: section.vaski_source_reference,
             })}
           </Typography>
@@ -456,7 +460,7 @@ export default () => {
                 : {}),
             }}
           >
-            {t("sessions.vaskiSummaryLine", { value: section.vaski_summary })}
+            {tSessions("vaskiSummaryLine", { value: section.vaski_summary })}
           </Typography>
         )}
         {subjects.length > 0 && (
@@ -468,7 +472,7 @@ export default () => {
                 mr: 0.5,
               }}
             >
-              {t("sessions.vaskiSubjects")}:
+              {tSessions("vaskiSubjects")}:
             </Typography>
             {subjects.map((subject) => (
               <Chip
@@ -516,13 +520,13 @@ export default () => {
             textTransform: "uppercase",
           }}
         >
-          {t("sessions.minutesMetadata")}
+          {tSessions("minutesMetadata")}
         </Typography>
         {minutesItemTitle && minutesItemTitle !== section.title && (
           <Typography
             sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
           >
-            {t("sessions.minutesItemTitleLine", { value: minutesItemTitle })}
+            {tSessions("minutesItemTitleLine", { value: minutesItemTitle })}
           </Typography>
         )}
         {(section.minutes_processing_phase_code ||
@@ -530,7 +534,7 @@ export default () => {
           <Typography
             sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
           >
-            {t("sessions.minutesProcessingCodesLine", {
+            {tSessions("minutesProcessingCodesLine", {
               value: [
                 section.minutes_processing_phase_code,
                 section.minutes_general_processing_phase_code,
@@ -609,7 +613,7 @@ export default () => {
             mb: 1,
           }}
         >
-          {t("sessions.minutesContent")}
+          {tSessions("minutesContent")}
         </Typography>
 
         {parsed.narrativeBlocks.length > 0 && (
@@ -646,8 +650,8 @@ export default () => {
               const migratedAsRollCall =
                 isReferenceMigratedAsRollCall(reference);
               const tooltipTitle = migratedAsRollCall
-                ? t("sessions.minutesReferenceMigratedRollCall")
-                : t("sessions.minutesReferenceNotMigrated");
+                ? tSessions("minutesReferenceMigratedRollCall")
+                : tSessions("minutesReferenceNotMigrated");
               const chipSx = {
                 fontFamily: "monospace",
                 ...commonStyles.compactTextLg,
@@ -742,7 +746,7 @@ export default () => {
             mb: 0.75,
           }}
         >
-          {t("sessions.subSections")}
+          {tSessions("subSections")}
         </Typography>
         <Box sx={{ overflowX: "auto" }}>
           <Box
@@ -770,10 +774,10 @@ export default () => {
           >
             <thead>
               <tr>
-                <th>{t("sessions.subSectionNumber")}</th>
-                <th>{t("sessions.subSectionTitle")}</th>
-                <th>{t("sessions.subSectionDocument")}</th>
-                <th>{t("sessions.subSectionType")}</th>
+                <th>{tSessions("subSectionNumber")}</th>
+                <th>{tSessions("subSectionTitle")}</th>
+                <th>{tSessions("subSectionDocument")}</th>
+                <th>{tSessions("subSectionType")}</th>
               </tr>
             </thead>
             <tbody>
@@ -850,7 +854,7 @@ export default () => {
             mb: 1,
           }}
         >
-          {t("sessions.sessionNotices")}
+          {tSessions("sessionNotices")}
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           {notices.map((notice) => (
@@ -890,7 +894,7 @@ export default () => {
                       color: colors.textTertiary,
                     }}
                   >
-                    {t("sessions.noticeSentLine", {
+                    {tSessions("noticeSentLine", {
                       value: formatDateTime(notice.sent_at),
                     })}
                   </Typography>
@@ -902,7 +906,7 @@ export default () => {
                       color: colors.textTertiary,
                     }}
                   >
-                    {t("sessions.noticeValidUntilLine", {
+                    {tSessions("noticeValidUntilLine", {
                       value: formatDateTime(notice.valid_until),
                     })}
                   </Typography>
@@ -942,7 +946,7 @@ export default () => {
             mb: 0.75,
           }}
         >
-          {t("sessions.sectionNotices")}
+          {tSessions("sectionNotices")}
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
           {notices.map((notice) => (
@@ -982,7 +986,7 @@ export default () => {
                       color: colors.textTertiary,
                     }}
                   >
-                    {t("sessions.noticeSentLine", {
+                    {tSessions("noticeSentLine", {
                       value: formatDateTime(notice.sent_at),
                     })}
                   </Typography>
@@ -994,7 +998,7 @@ export default () => {
                       color: colors.textTertiary,
                     }}
                   >
-                    {t("sessions.noticeValidUntilLine", {
+                    {tSessions("noticeValidUntilLine", {
                       value: formatDateTime(notice.valid_until),
                     })}
                   </Typography>
@@ -1057,7 +1061,7 @@ export default () => {
               textTransform: "uppercase",
             }}
           >
-            {t("sessions.minutesOutline")}
+            {tSessions("minutesOutline")}
           </Typography>
           <Button
             size="small"
@@ -1071,8 +1075,8 @@ export default () => {
             }}
           >
             {isExpanded
-              ? t("sessions.minutesToggle", { context: "hide" })
-              : t("sessions.minutesToggle", { context: "show" })}
+              ? tSessions("minutesToggle", { context: "hide" })
+              : tSessions("minutesToggle", { context: "show" })}
           </Button>
         </Box>
         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
@@ -1116,7 +1120,7 @@ export default () => {
                   >
                     {item.title ||
                       item.processing_title ||
-                      t("sessions.noTitle")}
+                      tSessions("noTitle")}
                   </Typography>
                   {item.section_id && item.section_key && (
                     <Button
@@ -1144,7 +1148,7 @@ export default () => {
                         ...commonStyles.compactTextLg,
                       }}
                     >
-                      {t("sessions.openSection")}
+                      {tSessions("openSection")}
                     </Button>
                   )}
                 </Box>
@@ -1158,7 +1162,7 @@ export default () => {
                         color: colors.textTertiary,
                       }}
                     >
-                      {t("sessions.identifierLine", {
+                      {tSessions("identifierLine", {
                         value: item.identifier_text,
                       })}
                     </Typography>
@@ -1171,7 +1175,7 @@ export default () => {
                           color: colors.textTertiary,
                         }}
                       >
-                        {t("sessions.processingLine", {
+                        {tSessions("processingLine", {
                           value: item.processing_title,
                         })}
                       </Typography>
@@ -1219,7 +1223,7 @@ export default () => {
               textTransform: "uppercase",
             }}
           >
-            {t("sessions.minutesAttachments")}
+            {tSessions("minutesAttachments")}
           </Typography>
           <Button
             size="small"
@@ -1233,8 +1237,8 @@ export default () => {
             }}
           >
             {isExpanded
-              ? t("sessions.attachmentsToggle", { context: "hide" })
-              : t("sessions.attachmentsToggle", { context: "show" })}
+              ? tSessions("attachmentsToggle", { context: "hide" })
+              : tSessions("attachmentsToggle", { context: "show" })}
           </Button>
         </Box>
         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
@@ -1258,7 +1262,7 @@ export default () => {
                 >
                   {attachment.title ||
                     attachment.file_name ||
-                    t("sessions.attachment")}
+                    tSessions("attachment")}
                 </Typography>
                 <Box
                   sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", mt: 0.5 }}
@@ -1270,7 +1274,7 @@ export default () => {
                         color: colors.textTertiary,
                       }}
                     >
-                      {t("sessions.relatedDocumentLine", {
+                      {tSessions("relatedDocumentLine", {
                         value: attachment.related_document_tunnus,
                       })}
                     </Typography>
@@ -1282,7 +1286,7 @@ export default () => {
                         color: colors.textTertiary,
                       }}
                     >
-                      {t("sessions.fileNameLine", {
+                      {tSessions("fileNameLine", {
                         value: attachment.file_name,
                       })}
                     </Typography>
@@ -1294,7 +1298,7 @@ export default () => {
                         color: colors.textTertiary,
                       }}
                     >
-                      {t("sessions.nativeIdLine", {
+                      {tSessions("nativeIdLine", {
                         value: attachment.native_id,
                       })}
                     </Typography>
@@ -1316,13 +1320,13 @@ export default () => {
           sx={{ py: 1, textAlign: "center" }}
           role="status"
           aria-live="polite"
-          aria-label={t("app.loading")}
+          aria-label={tApp("loading")}
         >
           <CircularProgress size={18} sx={{ color: themedColors.primary }} />
           <Typography
             sx={{ ...commonStyles.compactTextXs, color: colors.textTertiary }}
           >
-            {t("app.loading")}
+            {tApp("loading")}
           </Typography>
         </Box>
       );
@@ -1340,7 +1344,7 @@ export default () => {
             mb: 0.75,
           }}
         >
-          {t("sessions.sectionDocuments")}
+          {tSessions("sectionDocuments")}
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
           {links.map((link) => (
@@ -1425,7 +1429,7 @@ export default () => {
                         color: colors.textTertiary,
                       }}
                     >
-                      {t("sessions.vaskiCreatedLine", {
+                      {tSessions("vaskiCreatedLine", {
                         value: link.document_created_at,
                       })}
                     </Typography>
@@ -1451,13 +1455,13 @@ export default () => {
           sx={{ mt: 1.5, py: 1, textAlign: "center" }}
           role="status"
           aria-live="polite"
-          aria-label={t("app.loading")}
+          aria-label={tApp("loading")}
         >
           <CircularProgress size={18} sx={{ color: themedColors.primary }} />
           <Typography
             sx={{ ...commonStyles.compactTextXs, color: colors.textTertiary }}
           >
-            {t("app.loading")}
+            {tApp("loading")}
           </Typography>
         </Box>
       );
@@ -1474,19 +1478,19 @@ export default () => {
 
     const formatEntryType = (entryType: RollCallEntry["entry_type"]) =>
       entryType === "late"
-        ? t("sessions.rollCallLate")
-        : t("sessions.rollCallAbsent");
+        ? tSessions("rollCallLate")
+        : tSessions("rollCallAbsent");
 
     const formatAbsenceReason = (reasonCode?: string | null) => {
       if (!reasonCode) return "-";
       const code = reasonCode.toLowerCase();
       if (code === "e") {
-        return t("sessions.rollCallReasonE");
+        return tSessions("rollCallReasonE");
       }
       if (code === "h") {
-        return t("sessions.rollCallReasonH");
+        return tSessions("rollCallReasonH");
       }
-      return t("sessions.rollCallReasonUnknown");
+      return tSessions("rollCallReasonUnknown");
     };
 
     const unknownReasonCodes = Array.from(
@@ -1517,7 +1521,7 @@ export default () => {
             textTransform: "uppercase",
           }}
         >
-          {t("sessions.rollCallReport")}
+          {tSessions("rollCallReport")}
         </Typography>
         {report.title && (
           <Typography
@@ -1534,7 +1538,7 @@ export default () => {
           <Typography
             sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
           >
-            {t("sessions.rollCallDocumentLine", {
+            {tSessions("rollCallDocumentLine", {
               value: report.edk_identifier,
             })}
           </Typography>
@@ -1546,7 +1550,7 @@ export default () => {
               color: colors.primaryLight,
             }}
           >
-            {t("sessions.rollCallOpenDocument")}
+            {tSessions("rollCallOpenDocument")}
           </EduskuntaSourceLink>
           {report.roll_call_start_time && (
             <Typography
@@ -1555,7 +1559,7 @@ export default () => {
                 color: colors.textSecondary,
               }}
             >
-              {t("sessions.rollCallStartLine", {
+              {tSessions("rollCallStartLine", {
                 value: formatTime(report.roll_call_start_time),
               })}
             </Typography>
@@ -1567,7 +1571,7 @@ export default () => {
                 color: colors.textSecondary,
               }}
             >
-              {t("sessions.rollCallEndLine", {
+              {tSessions("rollCallEndLine", {
                 value: formatTime(report.roll_call_end_time),
               })}
             </Typography>
@@ -1575,7 +1579,7 @@ export default () => {
         </Box>
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 0.75 }}>
           <Chip
-            label={t("sessions.rollCallAbsentLine", {
+            label={tSessions("rollCallAbsentLine", {
               count: report.absent_count,
             })}
             size="small"
@@ -1587,7 +1591,7 @@ export default () => {
             }}
           />
           <Chip
-            label={t("sessions.rollCallLateLine", { count: report.late_count })}
+            label={tSessions("rollCallLateLine", { count: report.late_count })}
             size="small"
             sx={{
               fontSize: "0.6875rem",
@@ -1606,7 +1610,7 @@ export default () => {
               color: colors.textTertiary,
             }}
           >
-            {t("sessions.rollCallNoEntries")}
+            {tSessions("rollCallNoEntries")}
           </Typography>
         )}
 
@@ -1637,13 +1641,13 @@ export default () => {
             >
               <thead>
                 <tr>
-                  <th>{t("sessions.rollCallTableNumber")}</th>
-                  <th>{t("sessions.rollCallTableName")}</th>
-                  <th>{t("sessions.rollCallTableParty")}</th>
-                  <th>{t("sessions.rollCallTableType")}</th>
-                  <th>{t("sessions.rollCallTableCode")}</th>
-                  <th>{t("sessions.rollCallTableReason")}</th>
-                  <th>{t("sessions.rollCallTableArrival")}</th>
+                  <th>{tSessions("rollCallTableNumber")}</th>
+                  <th>{tSessions("rollCallTableName")}</th>
+                  <th>{tSessions("rollCallTableParty")}</th>
+                  <th>{tSessions("rollCallTableType")}</th>
+                  <th>{tSessions("rollCallTableCode")}</th>
+                  <th>{tSessions("rollCallTableReason")}</th>
+                  <th>{tSessions("rollCallTableArrival")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1679,9 +1683,9 @@ export default () => {
           <Typography
             sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
           >
-            {t("sessions.rollCallReasonLegend")}: <strong>(e)</strong>{" "}
-            {t("sessions.rollCallReasonE")}; <strong>(h)</strong>{" "}
-            {t("sessions.rollCallReasonH")}
+            {tSessions("rollCallReasonLegend")}: <strong>(e)</strong>{" "}
+            {tSessions("rollCallReasonE")}; <strong>(h)</strong>{" "}
+            {tSessions("rollCallReasonH")}
           </Typography>
           {unknownReasonCodes.length > 0 && (
             <Typography
@@ -1691,7 +1695,7 @@ export default () => {
                 color: colors.textTertiary,
               }}
             >
-              {t("sessions.rollCallUnknownCodesLine", {
+              {tSessions("rollCallUnknownCodesLine", {
                 value: unknownReasonCodes.map((code) => `(${code})`).join(", "),
               })}
             </Typography>
@@ -1732,14 +1736,14 @@ export default () => {
   };
 
   const getErrorReason = (error: unknown) =>
-    error instanceof Error ? error.message : t("errors.unknownError");
+    error instanceof Error ? error.message : tErrors("unknownError");
 
   const sectionLoadErrorLabels: Record<SectionLoadErrorKey, string> = {
-    speeches: t("sessions.loadErrorSpeeches"),
-    votings: t("sessions.loadErrorVotings"),
-    links: t("sessions.loadErrorLinks"),
-    subSections: t("sessions.loadErrorSubSections"),
-    rollCall: t("sessions.loadErrorRollCall"),
+    speeches: tSessions("loadErrorSpeeches"),
+    votings: tSessions("loadErrorVotings"),
+    links: tSessions("loadErrorLinks"),
+    subSections: tSessions("loadErrorSubSections"),
+    rollCall: tSessions("loadErrorRollCall"),
   };
 
   const setSectionLoadError = (
@@ -1942,7 +1946,7 @@ export default () => {
             textTransform: "uppercase",
           }}
         >
-          {t("sessions.votingsLabel", { count: votings.length })}
+          {tSessions("votingsLabel", { count: votings.length })}
         </Typography>
         {votings.map((voting) => (
           <VotingSubRow
@@ -1976,8 +1980,8 @@ export default () => {
   return (
     <Box>
       <PageHeader
-        title={t("sessions.title")}
-        subtitle={t("sessions.subtitle")}
+        title={tSessions("title")}
+        subtitle={tSessions("subtitle")}
         actions={
           <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
             {selectedHallituskausi && (
@@ -2036,7 +2040,7 @@ export default () => {
                 error={!datesLoading && !isValidDate(date)}
                 helperText={
                   !datesLoading && !isValidDate(date)
-                    ? t("sessions.noSessionsSelected")
+                    ? tSessions("noSessionsSelected")
                     : undefined
                 }
                 sx={{
@@ -2071,7 +2075,7 @@ export default () => {
       ) : sessions.length === 0 ? (
         <Box>
           <Alert severity="info" sx={{ mb: 2 }}>
-            {t("sessions.noSessionsForDate")}
+            {tSessions("noSessionsForDate")}
           </Alert>
           {!datesLoading &&
             validDates.size > 0 &&
@@ -2087,7 +2091,7 @@ export default () => {
                       mb: 1.5,
                     }}
                   >
-                    {t("sessions.nearestSessions")}
+                    {tSessions("nearestSessions")}
                   </Typography>
                   <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                     {before && (
@@ -2176,11 +2180,11 @@ export default () => {
                       color: colors.textPrimary,
                     }}
                   >
-                    {session.key || t("sessions.session")}
+                    {session.key || tSessions("session")}
                   </Link>
                   {session.number !== undefined && (
                     <Chip
-                      label={t("sessions.sessionNumberLine", {
+                      label={tSessions("sessionNumberLine", {
                         value: session.number,
                       })}
                       size="small"
@@ -2194,7 +2198,7 @@ export default () => {
                   )}
                   {session.type && (
                     <Chip
-                      label={t("sessions.sessionTypeLine", {
+                      label={tSessions("sessionTypeLine", {
                         value: session.type,
                       })}
                       size="small"
@@ -2250,7 +2254,7 @@ export default () => {
                   }}
                 >
                   <Chip
-                    label={t("home.sectionCount", {
+                    label={tHome("sectionCount", {
                       count: session.section_count,
                     })}
                     size="small"
@@ -2263,7 +2267,7 @@ export default () => {
                   />
                   <Chip
                     icon={<HowToVoteIcon sx={{ fontSize: 14 }} />}
-                    label={t("home.votingCount", {
+                    label={tHome("votingCount", {
                       count: session.voting_count,
                     })}
                     size="small"
@@ -2281,7 +2285,7 @@ export default () => {
                         color: colors.textSecondary,
                       }}
                     >
-                      {t("sessions.startReportedLine", {
+                      {tSessions("startReportedLine", {
                         value: formatTime(session.start_time_reported),
                       })}
                     </Typography>
@@ -2293,7 +2297,7 @@ export default () => {
                         color: colors.textSecondary,
                       }}
                     >
-                      {t("sessions.startActualLine", {
+                      {tSessions("startActualLine", {
                         value: formatTime(session.start_time_actual),
                       })}
                     </Typography>
@@ -2305,7 +2309,7 @@ export default () => {
                         color: colors.textSecondary,
                       }}
                     >
-                      {t("sessions.agendaStateLine", {
+                      {tSessions("agendaStateLine", {
                         value: session.agenda_state,
                       })}
                     </Typography>
@@ -2317,7 +2321,7 @@ export default () => {
                         color: colors.textSecondary,
                       }}
                     >
-                      {t("sessions.sessionYearLine", { value: session.year })}
+                      {tSessions("sessionYearLine", { value: session.year })}
                     </Typography>
                   )}
                 </Box>
@@ -2337,7 +2341,7 @@ export default () => {
                     >
                       <Alert severity="info" sx={{ alignItems: "center" }}>
                         <Typography sx={{ fontSize: "0.8125rem" }}>
-                          {t("sessions.speechContentPending")}
+                          {tSessions("speechContentPending")}
                         </Typography>
                         <Typography sx={{ fontSize: "0.8125rem" }}>
                           {speechContentLatestLabel(
@@ -2436,7 +2440,7 @@ export default () => {
                               >
                                 {section.title ||
                                   section.processing_title ||
-                                  t("sessions.noTitle")}
+                                  tSessions("noTitle")}
                               </Typography>
                               {section.minutes_item_order != null && (
                                 <Typography
@@ -2445,7 +2449,7 @@ export default () => {
                                     color: colors.textTertiary,
                                   }}
                                 >
-                                  {t("sessions.minutesOrder")}{" "}
+                                  {tSessions("minutesOrder")}{" "}
                                   {section.minutes_item_order}
                                 </Typography>
                               )}
@@ -2467,7 +2471,7 @@ export default () => {
                                       color: colors.textTertiary,
                                     }}
                                   >
-                                    {t("sessions.processingLine", {
+                                    {tSessions("processingLine", {
                                       value: section.processing_title,
                                     })}
                                   </Typography>
@@ -2479,7 +2483,7 @@ export default () => {
                                     color: colors.textTertiary,
                                   }}
                                 >
-                                  {t("sessions.resolutionLine", {
+                                  {tSessions("resolutionLine", {
                                     value: section.resolution,
                                   })}
                                 </Typography>
@@ -2495,7 +2499,7 @@ export default () => {
                                 }}
                               >
                                 <Chip
-                                  label={t("sessions.votingsCount", {
+                                  label={tSessions("votingsCount", {
                                     count: section.voting_count ?? 0,
                                   })}
                                   size="small"
@@ -2507,7 +2511,7 @@ export default () => {
                                   }}
                                 />
                                 <Chip
-                                  label={t("sessions.speechesCount", {
+                                  label={tSessions("speechesCount", {
                                     count: section.speech_count ?? 0,
                                   })}
                                   size="small"
@@ -2519,14 +2523,14 @@ export default () => {
                                   }}
                                 />
                                 <Chip
-                                  label={t("sessions.speakersCount", {
+                                  label={tSessions("speakersCount", {
                                     count: section.speaker_count ?? 0,
                                   })}
                                   size="small"
                                   sx={{ fontSize: "0.6875rem", height: 20 }}
                                 />
                                 <Chip
-                                  label={t("sessions.partiesCount", {
+                                  label={tSessions("partiesCount", {
                                     count: section.party_count ?? 0,
                                   })}
                                   size="small"
@@ -2548,7 +2552,7 @@ export default () => {
                                       color: colors.textTertiary,
                                     }}
                                   >
-                                    {t("sessions.agendaKeyLine", {
+                                    {tSessions("agendaKeyLine", {
                                       value: section.agenda_key,
                                     })}
                                   </Typography>
@@ -2561,7 +2565,7 @@ export default () => {
                                         color: colors.textTertiary,
                                       }}
                                     >
-                                      {t("sessions.vaskiIdLine", {
+                                      {tSessions("vaskiIdLine", {
                                         value: section.vaski_id,
                                       })}
                                     </Typography>
@@ -2573,7 +2577,7 @@ export default () => {
                                       color: colors.textTertiary,
                                     }}
                                   >
-                                    {t("sessions.sectionUpdatedLine", {
+                                    {tSessions("sectionUpdatedLine", {
                                       value: formatDateTime(
                                         section.modified_datetime,
                                       ),
@@ -2601,11 +2605,11 @@ export default () => {
                                   textTransform: "none",
                                 }}
                               >
-                                {t("common.retry")}
+                                {tCommon("retry")}
                               </Button>
                             }
                           >
-                            {t("errors.loadFailedWithReason", {
+                            {tErrors("loadFailedWithReason", {
                               reason: sectionErrorReasons.join(", "),
                             })}
                           </Alert>
@@ -2631,7 +2635,7 @@ export default () => {
                             sx={{ py: 2, textAlign: "center" }}
                             role="status"
                             aria-live="polite"
-                            aria-label={t("app.loading")}
+                            aria-label={tApp("loading")}
                           >
                             <CircularProgress
                               size={20}
@@ -2643,7 +2647,7 @@ export default () => {
                                 color: colors.textTertiary,
                               }}
                             >
-                              {t("app.loading")}
+                              {tApp("loading")}
                             </Typography>
                           </Box>
                         ) : (
@@ -2656,7 +2660,7 @@ export default () => {
                             sx={{ py: 2, textAlign: "center" }}
                             role="status"
                             aria-live="polite"
-                            aria-label={t("app.loading")}
+                            aria-label={tApp("loading")}
                           >
                             <CircularProgress
                               size={20}
@@ -2668,7 +2672,7 @@ export default () => {
                                 color: colors.textTertiary,
                               }}
                             >
-                              {t("app.loading")}
+                              {tApp("loading")}
                             </Typography>
                           </Box>
                         ) : speeches.length > 0 ? (
@@ -2688,7 +2692,7 @@ export default () => {
                                 textTransform: "uppercase",
                               }}
                             >
-                              {t("sessions.speeches")} (
+                              {tSessions("speeches")} (
                               {speechData?.total ?? speeches.length})
                             </Typography>
                             {!hasSpeechContent && (
@@ -2698,7 +2702,7 @@ export default () => {
                                   color: colors.textTertiary,
                                 }}
                               >
-                                {t("sessions.speechContentPending")}
+                                {tSessions("speechContentPending")}
                               </Typography>
                             )}
                             {!hasSpeechContent && vaskiLatestSpeechDate && (
@@ -2837,7 +2841,7 @@ export default () => {
                                         sx={{ mr: 1 }}
                                       />
                                     ) : null}
-                                    {t("sessions.loadMoreProgress", {
+                                    {tSessions("loadMoreProgress", {
                                       loaded: speeches.length,
                                       total: speechData.total,
                                     })}
@@ -2860,7 +2864,7 @@ export default () => {
                                 color: colors.textTertiary,
                               }}
                             >
-                              {t("sessions.noSectionContent")}
+                              {tSessions("noSectionContent")}
                             </Typography>
                           )}
                       </SessionSectionPanel>
@@ -2963,7 +2967,7 @@ export default () => {
                                 >
                                   {section.title ||
                                     section.processing_title ||
-                                    t("sessions.noTitle")}
+                                    tSessions("noTitle")}
                                 </Typography>
                               </Box>
                               {section.minutes_item_order != null && (
@@ -2974,7 +2978,7 @@ export default () => {
                                     mt: 0.25,
                                   }}
                                 >
-                                  {t("sessions.minutesOrder")}{" "}
+                                  {tSessions("minutesOrder")}{" "}
                                   {section.minutes_item_order}
                                 </Typography>
                               )}
@@ -2998,7 +3002,7 @@ export default () => {
                                       mt: 0.25,
                                     }}
                                   >
-                                    {t("sessions.processingLine", {
+                                    {tSessions("processingLine", {
                                       value: section.processing_title,
                                     })}
                                   </Typography>
@@ -3011,7 +3015,7 @@ export default () => {
                                     mt: 0.25,
                                   }}
                                 >
-                                  {t("sessions.resolutionLine", {
+                                  {tSessions("resolutionLine", {
                                     value: section.resolution,
                                   })}
                                 </Typography>
@@ -3028,7 +3032,7 @@ export default () => {
                                 }}
                               >
                                 <Chip
-                                  label={t("sessions.votingsCount", {
+                                  label={tSessions("votingsCount", {
                                     count: votingCount,
                                   })}
                                   size="small"
@@ -3040,7 +3044,7 @@ export default () => {
                                   }}
                                 />
                                 <Chip
-                                  label={t("sessions.speechesCount", {
+                                  label={tSessions("speechesCount", {
                                     count: speechCount,
                                   })}
                                   size="small"
@@ -3052,14 +3056,14 @@ export default () => {
                                   }}
                                 />
                                 <Chip
-                                  label={t("sessions.speakersCount", {
+                                  label={tSessions("speakersCount", {
                                     count: section.speaker_count ?? 0,
                                   })}
                                   size="small"
                                   sx={{ fontSize: "0.6875rem", height: 22 }}
                                 />
                                 <Chip
-                                  label={t("sessions.partiesCount", {
+                                  label={tSessions("partiesCount", {
                                     count: section.party_count ?? 0,
                                   })}
                                   size="small"
@@ -3072,7 +3076,7 @@ export default () => {
                                       color: colors.textTertiary,
                                     }}
                                   >
-                                    {t("sessions.speechContentPending")}
+                                    {tSessions("speechContentPending")}
                                   </Typography>
                                 )}
                                 {!hasSpeechContent &&
@@ -3105,7 +3109,7 @@ export default () => {
                                       color: colors.textTertiary,
                                     }}
                                   >
-                                    {t("sessions.agendaKeyLine", {
+                                    {tSessions("agendaKeyLine", {
                                       value: section.agenda_key,
                                     })}
                                   </Typography>
@@ -3118,7 +3122,7 @@ export default () => {
                                         color: colors.textTertiary,
                                       }}
                                     >
-                                      {t("sessions.vaskiIdLine", {
+                                      {tSessions("vaskiIdLine", {
                                         value: section.vaski_id,
                                       })}
                                     </Typography>
@@ -3130,7 +3134,7 @@ export default () => {
                                       color: colors.textTertiary,
                                     }}
                                   >
-                                    {t("sessions.sectionUpdatedLine", {
+                                    {tSessions("sectionUpdatedLine", {
                                       value: formatDateTime(
                                         section.modified_datetime,
                                       ),
@@ -3154,10 +3158,10 @@ export default () => {
                                   }}
                                 >
                                   {isExpanded
-                                    ? t("sessions.detailsToggle", {
+                                    ? tSessions("detailsToggle", {
                                         context: "hide",
                                       })
-                                    : t("sessions.detailsToggle", {
+                                    : tSessions("detailsToggle", {
                                         context: "show",
                                       })}
                                 </Button>
@@ -3188,11 +3192,11 @@ export default () => {
                                             textTransform: "none",
                                           }}
                                         >
-                                          {t("common.retry")}
+                                          {tCommon("retry")}
                                         </Button>
                                       }
                                     >
-                                      {t("errors.loadFailedWithReason", {
+                                      {tErrors("loadFailedWithReason", {
                                         reason: sectionErrorReasons.join(", "),
                                       })}
                                     </Alert>
@@ -3230,7 +3234,7 @@ export default () => {
                                       sx={{ py: 1, textAlign: "center" }}
                                       role="status"
                                       aria-live="polite"
-                                      aria-label={t("app.loading")}
+                                      aria-label={tApp("loading")}
                                     >
                                       <CircularProgress
                                         size={20}
@@ -3242,7 +3246,7 @@ export default () => {
                                           color: colors.textTertiary,
                                         }}
                                       >
-                                        {t("app.loading")}
+                                        {tApp("loading")}
                                       </Typography>
                                     </Box>
                                   ) : (
@@ -3254,7 +3258,7 @@ export default () => {
                                       sx={{ py: 1, textAlign: "center" }}
                                       role="status"
                                       aria-live="polite"
-                                      aria-label={t("app.loading")}
+                                      aria-label={tApp("loading")}
                                     >
                                       <CircularProgress
                                         size={20}
@@ -3266,7 +3270,7 @@ export default () => {
                                           color: colors.textTertiary,
                                         }}
                                       >
-                                        {t("app.loading")}
+                                        {tApp("loading")}
                                       </Typography>
                                     </Box>
                                   ) : speeches.length > 0 ? (
@@ -3285,7 +3289,7 @@ export default () => {
                                             color: colors.textTertiary,
                                           }}
                                         >
-                                          {t("sessions.speechContentPending")}
+                                          {tSessions("speechContentPending")}
                                         </Typography>
                                       )}
                                       {!hasSpeechContent &&

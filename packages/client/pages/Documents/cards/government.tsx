@@ -23,10 +23,10 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { refs } from "#client/references";
 import { DataCard } from "#client/theme/components";
@@ -115,7 +115,8 @@ export function GovernmentProposalCard({
   item: GovernmentProposalListItem;
   onSubjectClick?: (subject: string) => void;
 }) {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
 
   const [expanded, setExpanded] = useState(false);
   const [detail, setDetail] = useState<GovernmentProposalDetail | null>(null);
@@ -194,7 +195,7 @@ export function GovernmentProposalCard({
                 fontWeight: 500,
               }}
             >
-              {item.title || t("documents.noTitle")}
+              {item.title || tDocuments("noTitle")}
             </Typography>
             <Chip
               label={item.parliament_identifier}
@@ -216,7 +217,7 @@ export function GovernmentProposalCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDateLine", {
+                {tDocuments("submissionDateLine", {
                   value: formatDate(item.submission_date),
                 })}
               </Typography>
@@ -248,7 +249,7 @@ export function GovernmentProposalCard({
 
             {item.latest_stage_code && !item.decision_outcome && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.latestStageLine", {
+                {tDocuments("latestStageLine", {
                   value: item.latest_stage_code,
                 })}
               </Typography>
@@ -342,7 +343,7 @@ export function GovernmentProposalCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.proposalSignatories")}
+                      {tDocuments("proposalSignatories")}
                     </Typography>
                   </Stack>
                   {detail.signature_date && (
@@ -358,8 +359,8 @@ export function GovernmentProposalCard({
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>{t("common.name")}</TableCell>
-                          <TableCell>{t("documents.signatoryTitle")}</TableCell>
+                          <TableCell>{tCommon("name")}</TableCell>
+                          <TableCell>{tDocuments("signatoryTitle")}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -392,7 +393,7 @@ export function GovernmentProposalCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.proposalLaws")}
+                      {tDocuments("proposalLaws")}
                     </Typography>
                   </Stack>
                   <TableContainer>
@@ -400,8 +401,8 @@ export function GovernmentProposalCard({
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>{t("documents.lawType")}</TableCell>
-                          <TableCell>{t("documents.lawName")}</TableCell>
+                          <TableCell>{tDocuments("lawType")}</TableCell>
+                          <TableCell>{tDocuments("lawName")}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -432,7 +433,7 @@ export function GovernmentProposalCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.lawDecisions")}
+                      {tDocuments("lawDecisions")}
                     </Typography>
                   </Stack>
                   <Box
@@ -470,7 +471,7 @@ export function GovernmentProposalCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.stages")}
+                      {tDocuments("stages")}
                     </Typography>
                   </Stack>
                   <Stack spacing={1.5}>
@@ -536,8 +537,8 @@ export function GovernmentProposalCard({
                     }}
                   >
                     {showSummary
-                      ? t("documents.summaryToggle", { context: "hide" })
-                      : t("documents.summaryToggle", { context: "show" })}
+                      ? tDocuments("summaryToggle", { context: "hide" })
+                      : tDocuments("summaryToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showSummary}>
                     <Box
@@ -571,8 +572,8 @@ export function GovernmentProposalCard({
                     }}
                   >
                     {showProposalText
-                      ? t("documents.proposalTextToggle", { context: "hide" })
-                      : t("documents.proposalTextToggle", { context: "show" })}
+                      ? tDocuments("proposalTextToggle", { context: "hide" })
+                      : tDocuments("proposalTextToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showProposalText}>
                     <Box

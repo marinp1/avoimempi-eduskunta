@@ -7,14 +7,14 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { commonStyles, spacing } from "#client/theme";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { VoteResults } from "./VoteResults";
 
 export default () => {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("votings");
   const themedColors = useThemedColors();
   const getInitialParams = React.useCallback(() => {
     const params = new URLSearchParams(window.location.search);
@@ -50,16 +50,16 @@ export default () => {
 
   return (
     <Box>
-      <PageHeader title={t("votings.title")} subtitle={t("votings.subtitle")} />
+      <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
       <DataCard sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
         <Box sx={{ maxWidth: 900, mx: "auto" }}>
           <TextField
             fullWidth
-            label={t("votings.search")}
+            label={t("search")}
             value={search}
             onChange={(event) => setSearch(event.target.value ?? "")}
-            placeholder={t("votings.searchPlaceholder")}
+            placeholder={t("searchPlaceholder")}
             size="small"
             InputProps={{
               startAdornment: (
@@ -84,7 +84,7 @@ export default () => {
               mt: 1,
             }}
           >
-            {t("votings.searchHelp")}
+            {t("searchHelp")}
           </Typography>
         </Box>
       </DataCard>
@@ -99,7 +99,7 @@ export default () => {
             letterSpacing: "0.08em",
           }}
         >
-          {t("votings.recentVotes")}
+          {t("recentVotes")}
         </Typography>
       )}
 

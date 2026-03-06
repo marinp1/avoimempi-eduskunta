@@ -15,7 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { PageHeader } from "#client/theme/components";
 import { colors } from "#client/theme/index";
@@ -99,7 +99,7 @@ const getDocumentApiConfig = (
 };
 
 export default function Documents() {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("documents");
   const { selectedHallituskausi } = useHallituskausi();
 
   // State
@@ -462,15 +462,15 @@ export default function Documents() {
   return (
     <Box sx={{ p: { xs: 2, md: 3 } }}>
       <PageHeader
-        title={t("documents.title")}
-        subtitle={t("documents.subtitle")}
+        title={t("title")}
+        subtitle={t("subtitle")}
       />
 
       <Stack spacing={3}>
         {/* Search field */}
         <TextField
           fullWidth
-          placeholder={t("documents.searchPlaceholder")}
+          placeholder={t("searchPlaceholder")}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           InputProps={{
@@ -493,10 +493,10 @@ export default function Documents() {
         {/* Filter row */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <FormControl fullWidth>
-            <InputLabel>{t("documents.type")}</InputLabel>
+            <InputLabel>{t("type")}</InputLabel>
             <Select
               value={documentType}
-              label={t("documents.type")}
+              label={t("type")}
               onChange={(e) =>
                 handleDocumentTypeChange(e.target.value as DocumentType)
               }
@@ -505,59 +505,59 @@ export default function Documents() {
               }}
             >
               <MenuItem value="interpellations">
-                {t("documents.interpellations")}
+                {t("interpellations")}
               </MenuItem>
               <MenuItem value="government-proposals">
-                {t("documents.governmentProposals")}
+                {t("governmentProposals")}
               </MenuItem>
               <MenuItem value="written-questions">
-                {t("documents.writtenQuestions")}
+                {t("writtenQuestions")}
               </MenuItem>
               <MenuItem value="written-question-responses">
-                {t("documents.writtenQuestionResponses")}
+                {t("writtenQuestionResponses")}
               </MenuItem>
               <MenuItem value="expert-statements">
-                {t("documents.expertStatements")}
+                {t("expertStatements")}
               </MenuItem>
               <MenuItem value="oral-questions">
-                {t("documents.oralQuestions")}
+                {t("oralQuestions")}
               </MenuItem>
               <MenuItem value="committee-reports">
-                {t("documents.committeeReports")}
+                {t("committeeReports")}
               </MenuItem>
               <MenuItem value="legislative-initiatives-law">
-                {t("documents.legislativeInitiativesLaw")}
+                {t("legislativeInitiativesLaw")}
               </MenuItem>
               <MenuItem value="legislative-initiatives-budget">
-                {t("documents.legislativeInitiativesBudget")}
+                {t("legislativeInitiativesBudget")}
               </MenuItem>
               <MenuItem value="legislative-initiatives-supplementary-budget">
-                {t("documents.legislativeInitiativesSupplementaryBudget")}
+                {t("legislativeInitiativesSupplementaryBudget")}
               </MenuItem>
               <MenuItem value="legislative-initiatives-action">
-                {t("documents.legislativeInitiativesAction")}
+                {t("legislativeInitiativesAction")}
               </MenuItem>
               <MenuItem value="legislative-initiatives-discussion">
-                {t("documents.legislativeInitiativesDiscussion")}
+                {t("legislativeInitiativesDiscussion")}
               </MenuItem>
               <MenuItem value="legislative-initiatives-citizens">
-                {t("documents.legislativeInitiativesCitizens")}
+                {t("legislativeInitiativesCitizens")}
               </MenuItem>
             </Select>
           </FormControl>
 
           <FormControl fullWidth>
-            <InputLabel>{t("documents.year")}</InputLabel>
+            <InputLabel>{t("year")}</InputLabel>
             <Select
               value={selectedYear}
-              label={t("documents.year")}
+              label={t("year")}
               onChange={(e) => setSelectedYear(e.target.value)}
               disabled={yearsLoading}
               sx={{
                 backgroundColor: colors.backgroundDefault,
               }}
             >
-              <MenuItem value="all">{t("documents.allYears")}</MenuItem>
+              <MenuItem value="all">{t("allYears")}</MenuItem>
               {years.map((year) => (
                 <MenuItem key={year} value={year.toString()}>
                   {year}
@@ -570,10 +570,10 @@ export default function Documents() {
         {documentType === "committee-reports" && (
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <FormControl fullWidth>
-              <InputLabel>{t("documents.sourceCommitteeFilter")}</InputLabel>
+              <InputLabel>{t("sourceCommitteeFilter")}</InputLabel>
               <Select
                 value={selectedSourceCommittee}
-                label={t("documents.sourceCommitteeFilter")}
+                label={t("sourceCommitteeFilter")}
                 onChange={(e) => setSelectedSourceCommittee(e.target.value)}
                 disabled={committeeFiltersLoading}
                 sx={{
@@ -581,7 +581,7 @@ export default function Documents() {
                 }}
               >
                 <MenuItem value="all">
-                  {t("documents.allSourceCommittees")}
+                  {t("allSourceCommittees")}
                 </MenuItem>
                 {sourceCommittees.map((item) => (
                   <MenuItem
@@ -595,10 +595,10 @@ export default function Documents() {
             </FormControl>
 
             <FormControl fullWidth>
-              <InputLabel>{t("documents.targetCommitteeFilter")}</InputLabel>
+              <InputLabel>{t("targetCommitteeFilter")}</InputLabel>
               <Select
                 value={selectedRecipientCommittee}
-                label={t("documents.targetCommitteeFilter")}
+                label={t("targetCommitteeFilter")}
                 onChange={(e) => setSelectedRecipientCommittee(e.target.value)}
                 disabled={committeeFiltersLoading}
                 sx={{
@@ -606,7 +606,7 @@ export default function Documents() {
                 }}
               >
                 <MenuItem value="all">
-                  {t("documents.allTargetCommittees")}
+                  {t("allTargetCommittees")}
                 </MenuItem>
                 {recipientCommittees.map((item) => (
                   <MenuItem
@@ -624,15 +624,15 @@ export default function Documents() {
         {documentType === "expert-statements" && (
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <FormControl fullWidth>
-              <InputLabel>{t("documents.committeeFilter")}</InputLabel>
+              <InputLabel>{t("committeeFilter")}</InputLabel>
               <Select
                 value={selectedExpertCommittee}
-                label={t("documents.committeeFilter")}
+                label={t("committeeFilter")}
                 onChange={(e) => setSelectedExpertCommittee(e.target.value)}
                 disabled={expertFiltersLoading}
                 sx={{ backgroundColor: colors.backgroundDefault }}
               >
-                <MenuItem value="all">{t("documents.allCommittees")}</MenuItem>
+                <MenuItem value="all">{t("allCommittees")}</MenuItem>
                 {expertCommittees.map((item) => (
                   <MenuItem
                     key={item.committee_name}
@@ -644,22 +644,22 @@ export default function Documents() {
               </Select>
             </FormControl>
             <FormControl fullWidth>
-              <InputLabel>{t("documents.documentSubtype")}</InputLabel>
+              <InputLabel>{t("documentSubtype")}</InputLabel>
               <Select
                 value={selectedExpertDocType}
-                label={t("documents.documentSubtype")}
+                label={t("documentSubtype")}
                 onChange={(e) => setSelectedExpertDocType(e.target.value)}
                 sx={{ backgroundColor: colors.backgroundDefault }}
               >
-                <MenuItem value="all">{t("documents.allTypes")}</MenuItem>
+                <MenuItem value="all">{t("allTypes")}</MenuItem>
                 <MenuItem value="asiantuntijalausunto">
-                  {t("documents.expertStatement")}
+                  {t("expertStatement")}
                 </MenuItem>
                 <MenuItem value="asiantuntijalausunnon_liite">
-                  {t("documents.expertStatementAttachment")}
+                  {t("expertStatementAttachment")}
                 </MenuItem>
                 <MenuItem value="asiantuntijasuunnitelma">
-                  {t("documents.expertHearingPlan")}
+                  {t("expertHearingPlan")}
                 </MenuItem>
               </Select>
             </FormControl>
@@ -677,7 +677,7 @@ export default function Documents() {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label={t("documents.subjectFilter")}
+                  label={t("subjectFilter")}
                   sx={{
                     backgroundColor: colors.backgroundDefault,
                     "& .MuiOutlinedInput-root": {
@@ -702,7 +702,7 @@ export default function Documents() {
           }}
         >
           <Typography variant="body2" color={colors.textSecondary}>
-            {t("documents.resultsSummary", {
+            {t("resultsSummary", {
               shown: items.length,
               total: totalCount,
               count: totalCount,
@@ -723,10 +723,10 @@ export default function Documents() {
         ) : items.length === 0 ? (
           <Box sx={{ textAlign: "center", py: 6 }}>
             <Typography variant="h6" color={colors.textSecondary}>
-              {t("documents.noResults")}
+              {t("noResults")}
             </Typography>
             <Typography variant="body2" color={colors.textSecondary}>
-              {t("documents.noResultsDescription")}
+              {t("noResultsDescription")}
             </Typography>
           </Box>
         ) : (
@@ -808,7 +808,7 @@ export default function Documents() {
                   {loading ? (
                     <CircularProgress size={24} />
                   ) : (
-                    t("documents.loadMore")
+                    t("loadMore")
                   )}
                 </Button>
               </Box>

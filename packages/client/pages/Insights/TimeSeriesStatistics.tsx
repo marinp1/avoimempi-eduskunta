@@ -9,7 +9,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 import {
   Area,
   AreaChart,
@@ -23,6 +22,7 @@ import {
   YAxis,
 } from "recharts";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
 import { DataCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -56,7 +56,8 @@ interface TimeSeriesStatisticsProps {
 export default function TimeSeriesStatistics({
   onClose,
 }: TimeSeriesStatisticsProps) {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tInsights } = useScopedTranslation("insights");
   const themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
   const [genderData, setGenderData] = useState<GenderData[]>([]);
@@ -197,7 +198,7 @@ export default function TimeSeriesStatistics({
         }}
       >
         <Typography variant="h4" sx={{ fontWeight: 600 }}>
-          {t("insights.timeSeries.title")}
+          {tInsights("timeSeries.title")}
         </Typography>
         <IconButton onClick={onClose} size="large">
           <CloseIcon />
@@ -215,14 +216,14 @@ export default function TimeSeriesStatistics({
           <DataCard>
             <CardContent sx={{ p: spacing.lg }}>
               <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
-                {t("insights.timeSeries.gender.title")}
+                {tInsights("timeSeries.gender.title")}
               </Typography>
               <Typography
                 variant="body2"
                 color="text.secondary"
                 sx={{ mb: spacing.lg }}
               >
-                {t("insights.timeSeries.gender.description")}
+                {tInsights("timeSeries.gender.description")}
               </Typography>
 
               {/* Percentage Chart */}
@@ -231,7 +232,7 @@ export default function TimeSeriesStatistics({
                   variant="h6"
                   sx={{ mb: spacing.md, fontWeight: 600 }}
                 >
-                  {t("insights.timeSeries.gender.percentageDistribution")}
+                  {tInsights("timeSeries.gender.percentageDistribution")}
                 </Typography>
                 <ResponsiveContainer width="100%" height={400}>
                   <AreaChart
@@ -248,7 +249,7 @@ export default function TimeSeriesStatistics({
                       style={{ fontSize: "14px" }}
                       tick={{ fill: themedColors.textSecondary }}
                       label={{
-                        value: t("insights.timeSeries.gender.sharePercent"),
+                        value: tInsights("timeSeries.gender.sharePercent"),
                         angle: -90,
                         position: "insideLeft",
                       }}
@@ -262,7 +263,7 @@ export default function TimeSeriesStatistics({
                       stroke={colors.chartPink}
                       fill={colors.chartPink}
                       fillOpacity={0.6}
-                      name={t("insights.timeSeries.gender.womenPercent")}
+                      name={tInsights("timeSeries.gender.womenPercent")}
                     />
                     <Area
                       type="monotone"
@@ -271,7 +272,7 @@ export default function TimeSeriesStatistics({
                       stroke={colors.chartBlue}
                       fill={colors.chartBlue}
                       fillOpacity={0.6}
-                      name={t("insights.timeSeries.gender.menPercent")}
+                      name={tInsights("timeSeries.gender.menPercent")}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -283,7 +284,7 @@ export default function TimeSeriesStatistics({
                   variant="h6"
                   sx={{ mb: spacing.md, fontWeight: 600 }}
                 >
-                  {t("insights.timeSeries.gender.countDistribution")}
+                  {tInsights("timeSeries.gender.countDistribution")}
                 </Typography>
                 <ResponsiveContainer width="100%" height={400}>
                   <LineChart
@@ -300,7 +301,7 @@ export default function TimeSeriesStatistics({
                       style={{ fontSize: "14px" }}
                       tick={{ fill: themedColors.textSecondary }}
                       label={{
-                        value: t("insights.timeSeries.count"),
+                        value: tInsights("timeSeries.count"),
                         angle: -90,
                         position: "insideLeft",
                       }}
@@ -313,7 +314,7 @@ export default function TimeSeriesStatistics({
                       stroke={colors.chartPink}
                       strokeWidth={2}
                       dot={{ fill: colors.chartPink }}
-                      name={t("insights.timeSeries.gender.women")}
+                      name={tInsights("timeSeries.gender.women")}
                     />
                     <Line
                       type="monotone"
@@ -321,7 +322,7 @@ export default function TimeSeriesStatistics({
                       stroke={colors.chartBlue}
                       strokeWidth={2}
                       dot={{ fill: colors.chartBlue }}
-                      name={t("insights.timeSeries.gender.men")}
+                      name={tInsights("timeSeries.gender.men")}
                     />
                     <Line
                       type="monotone"
@@ -330,7 +331,7 @@ export default function TimeSeriesStatistics({
                       strokeWidth={2}
                       dot={{ fill: colors.chartGreen }}
                       strokeDasharray="5 5"
-                      name={t("common.total")}
+                      name={tCommon("total")}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -353,7 +354,7 @@ export default function TimeSeriesStatistics({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    {t("insights.timeSeries.gender.womenLatest")}
+                    {tInsights("timeSeries.gender.womenLatest")}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {genderData[genderData.length - 1]?.female_count || 0} (
@@ -369,7 +370,7 @@ export default function TimeSeriesStatistics({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    {t("insights.timeSeries.gender.menLatest")}
+                    {tInsights("timeSeries.gender.menLatest")}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {genderData[genderData.length - 1]?.male_count || 0} (
@@ -384,7 +385,7 @@ export default function TimeSeriesStatistics({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    {t("insights.timeSeries.totalLatest")}
+                    {tInsights("timeSeries.totalLatest")}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {genderData[genderData.length - 1]?.total_count || 0}
@@ -402,14 +403,14 @@ export default function TimeSeriesStatistics({
           <DataCard>
             <CardContent sx={{ p: spacing.lg }}>
               <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
-                {t("insights.timeSeries.age.title")}
+                {tInsights("timeSeries.age.title")}
               </Typography>
               <Typography
                 variant="body2"
                 color="text.secondary"
                 sx={{ mb: spacing.lg }}
               >
-                {t("insights.timeSeries.age.description")}
+                {tInsights("timeSeries.age.description")}
               </Typography>
 
               {/* Age Groups Stacked Area Chart */}
@@ -418,7 +419,7 @@ export default function TimeSeriesStatistics({
                   variant="h6"
                   sx={{ mb: spacing.md, fontWeight: 600 }}
                 >
-                  {t("insights.timeSeries.age.groups")}
+                  {tInsights("timeSeries.age.groups")}
                 </Typography>
                 <ResponsiveContainer width="100%" height={400}>
                   <AreaChart
@@ -435,7 +436,7 @@ export default function TimeSeriesStatistics({
                       style={{ fontSize: "14px" }}
                       tick={{ fill: themedColors.textSecondary }}
                       label={{
-                        value: t("insights.timeSeries.count"),
+                        value: tInsights("timeSeries.count"),
                         angle: -90,
                         position: "insideLeft",
                       }}
@@ -497,7 +498,7 @@ export default function TimeSeriesStatistics({
                   variant="h6"
                   sx={{ mb: spacing.md, fontWeight: 600 }}
                 >
-                  {t("insights.timeSeries.age.averageAge")}
+                  {tInsights("timeSeries.age.averageAge")}
                 </Typography>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart
@@ -515,7 +516,7 @@ export default function TimeSeriesStatistics({
                       style={{ fontSize: "14px" }}
                       tick={{ fill: themedColors.textSecondary }}
                       label={{
-                        value: t("insights.timeSeries.age.years"),
+                        value: tInsights("timeSeries.age.years"),
                         angle: -90,
                         position: "insideLeft",
                       }}
@@ -528,7 +529,7 @@ export default function TimeSeriesStatistics({
                       stroke={colors.primary}
                       strokeWidth={3}
                       dot={{ fill: colors.primary, r: 4 }}
-                      name={t("insights.timeSeries.age.averageAge")}
+                      name={tInsights("timeSeries.age.averageAge")}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -551,7 +552,7 @@ export default function TimeSeriesStatistics({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    {t("insights.timeSeries.age.averageLatest")}
+                    {tInsights("timeSeries.age.averageLatest")}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {ageData[ageData.length - 1]?.average_age || 0} v
@@ -565,7 +566,7 @@ export default function TimeSeriesStatistics({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    {t("insights.timeSeries.age.youngestLatest")}
+                    {tInsights("timeSeries.age.youngestLatest")}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {ageData[ageData.length - 1]?.min_age || 0} v
@@ -579,7 +580,7 @@ export default function TimeSeriesStatistics({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    {t("insights.timeSeries.age.oldestLatest")}
+                    {tInsights("timeSeries.age.oldestLatest")}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {ageData[ageData.length - 1]?.max_age || 0} v
@@ -593,7 +594,7 @@ export default function TimeSeriesStatistics({
                   }}
                 >
                   <Typography variant="body2" color="text.secondary">
-                    {t("insights.timeSeries.totalLatest")}
+                    {tInsights("timeSeries.totalLatest")}
                   </Typography>
                   <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     {ageData[ageData.length - 1]?.total_count || 0}

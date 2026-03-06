@@ -1,10 +1,10 @@
-import type fi from "../i18n/locales/fi.json";
-type Namespace = keyof typeof fi;
+import type { defaultNS, TranslationResources } from "../i18n/resources";
 
 declare module "i18next" {
   interface CustomTypeOptions {
-    defaultNS: readonly Namespace[];
-    nsSeparator: ".";
-    resources: typeof fi;
+    defaultNS: typeof defaultNS;
+    nsSeparator: ":";
+    keySeparator: ".";
+    resources: TranslationResources;
   }
 }

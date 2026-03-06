@@ -1,18 +1,16 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import fi from "./locales/fi.json";
+import { defaultNS, resources } from "./resources";
 
 i18n.use(initReactI18next).init({
-  resources: {
-    fi: {
-      translations: fi,
-    },
-  },
-  lng: "fi", // Default language
+  resources,
+  lng: "fi",
   fallbackLng: "fi",
-  defaultNS: "translations",
+  defaultNS,
+  nsSeparator: ":",
+  keySeparator: ".",
   interpolation: {
-    escapeValue: false, // React already escapes values
+    escapeValue: false,
   },
 });
 

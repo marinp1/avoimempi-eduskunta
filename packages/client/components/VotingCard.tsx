@@ -13,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import {
   DocumentCard,
   extractDocumentIdentifiers,
@@ -157,13 +157,13 @@ const VoteCountsDisplay: React.FC<{
   n_absent: number;
   compact?: boolean;
 }> = ({ n_yes, n_no, n_abstain, n_absent, compact = false }) => {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("common");
   const themedColors = useThemedColors();
 
-  const yesLabel = String(t("common.yes")).toLowerCase();
-  const noLabel = String(t("common.no")).toLowerCase();
-  const emptyLabel = String(t("common.empty")).toLowerCase();
-  const absentLabel = String(t("common.absent")).toLowerCase();
+  const yesLabel = String(t("yes")).toLowerCase();
+  const noLabel = String(t("no")).toLowerCase();
+  const emptyLabel = String(t("empty")).toLowerCase();
+  const absentLabel = String(t("absent")).toLowerCase();
 
   if (compact) {
     return (
@@ -251,7 +251,8 @@ const VotingDetailsPanel: React.FC<{
   details: VotingFetchedDetails | null;
   loading: boolean;
 }> = ({ details, loading }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tVotings } = useScopedTranslation("votings");
   const themedColors = useThemedColors();
 
   if (loading) {
@@ -262,7 +263,7 @@ const VotingDetailsPanel: React.FC<{
           variant="caption"
           sx={{ color: themedColors.textSecondary }}
         >
-          {t("common.loadingVotingDetails")}
+          {tCommon("loadingVotingDetails")}
         </Typography>
       </Box>
     );
@@ -270,8 +271,8 @@ const VotingDetailsPanel: React.FC<{
 
   if (!details) return null;
 
-  const yesLabel = String(t("common.yes")).toLowerCase();
-  const noLabel = String(t("common.no")).toLowerCase();
+  const yesLabel = String(tCommon("yes")).toLowerCase();
+  const noLabel = String(tCommon("no")).toLowerCase();
 
   const docRefs = extractDocumentIdentifiers([
     details.voting.parliamentary_item,
@@ -299,7 +300,7 @@ const VotingDetailsPanel: React.FC<{
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
             <Chip
               size="small"
-              label={t("common.government")}
+              label={tCommon("government")}
               sx={{
                 height: 20,
                 fontSize: "0.65rem",
@@ -324,7 +325,7 @@ const VotingDetailsPanel: React.FC<{
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
             <Chip
               size="small"
-              label={t("common.opposition")}
+              label={tCommon("opposition")}
               sx={{
                 height: 20,
                 fontSize: "0.65rem",
@@ -368,7 +369,8 @@ const VotingDetailsPanel: React.FC<{
 export const VotingCard: React.FC<{
   voting: VotingCardData;
 }> = ({ voting }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tVotings } = useScopedTranslation("votings");
   const themedColors = useThemedColors();
   const { expanded, details, loading, toggle } = useVotingDetails(voting.id);
 
@@ -462,7 +464,7 @@ export const VotingCard: React.FC<{
           {close && (
             <Chip
               size="small"
-              label={`${t("votings.closeVote")} (${margin})`}
+              label={`${tVotings("closeVote")} (${margin})`}
               icon={<FlashOnIcon sx={{ fontSize: "12px !important" }} />}
               variant="outlined"
               sx={{
@@ -513,7 +515,7 @@ export const VotingCard: React.FC<{
                 lineHeight: 1.4,
               }}
             >
-              {primaryTitle || t("common.none")}
+              {primaryTitle || tCommon("none")}
             </Typography>
             {secondaryTitle && (
               <Typography
@@ -564,7 +566,7 @@ export const VotingCard: React.FC<{
                 textTransform: "uppercase",
               }}
             >
-              {passed ? t("votings.passed") : t("votings.failed")}
+              {passed ? tVotings("passed") : tVotings("failed")}
             </Typography>
           </Box>
         </Box>
@@ -613,8 +615,8 @@ export const VotingCard: React.FC<{
             }
           >
             {expanded
-              ? t("common.detailsToggle", { context: "hide" })
-              : t("common.detailsToggle", { context: "show" })}
+              ? tCommon("detailsToggle", { context: "hide" })
+              : tCommon("detailsToggle", { context: "show" })}
           </Button>
           <Link
             href={refs.voting(voting.id, voting.session_key, voting.start_time)}
@@ -631,7 +633,7 @@ export const VotingCard: React.FC<{
               href={voting.result_url}
               sx={{ fontSize: "0.8rem" }}
             >
-              {t("votings.results.results")}
+              {tVotings("results.results")}
             </EduskuntaSourceLink>
           )}
           {voting.proceedings_url && (
@@ -639,7 +641,7 @@ export const VotingCard: React.FC<{
               href={voting.proceedings_url}
               sx={{ fontSize: "0.8rem" }}
             >
-              {t("votings.results.minutes")}
+              {tVotings("results.minutes")}
             </EduskuntaSourceLink>
           )}
         </Box>
@@ -680,7 +682,8 @@ export const VotingSubRow: React.FC<{
   /** SPA navigate callback (e.g. Sessions "open in Votings page") */
   onOpenInView?: () => void;
 }> = ({ voting, showTitle = false, onOpenInView }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tVotings } = useScopedTranslation("votings");
   const themedColors = useThemedColors();
   const { expanded, details, loading, toggle } = useVotingDetails(voting.id);
 
@@ -775,8 +778,8 @@ export const VotingSubRow: React.FC<{
             }
           >
             {expanded
-              ? t("common.detailsToggle", { context: "hide" })
-              : t("common.detailsToggle", { context: "show" })}
+              ? tCommon("detailsToggle", { context: "hide" })
+              : tCommon("detailsToggle", { context: "show" })}
           </Button>
           {onOpenInView ? (
             <Button
@@ -784,7 +787,7 @@ export const VotingSubRow: React.FC<{
               onClick={onOpenInView}
               sx={{ ...commonStyles.compactActionButton }}
             >
-              {t("common.openView")}
+              {tCommon("openView")}
             </Button>
           ) : (
             <Link
@@ -807,7 +810,7 @@ export const VotingSubRow: React.FC<{
               href={voting.result_url}
               sx={{ ...commonStyles.compactTextLg }}
             >
-              {t("votings.results.results")}
+              {tVotings("results.results")}
             </EduskuntaSourceLink>
           )}
         </Box>
@@ -836,7 +839,8 @@ export const VotingSubRow: React.FC<{
 export const VotingGroupCard: React.FC<{
   votes: VotingCardData[];
 }> = ({ votes }) => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tVotings } = useScopedTranslation("votings");
   const themedColors = useThemedColors();
 
   const first = votes[0];
@@ -919,7 +923,7 @@ export const VotingGroupCard: React.FC<{
           )}
           <Chip
             size="small"
-            label={t("votings.votingCount", { count: votes.length })}
+            label={tVotings("votingCount", { count: votes.length })}
             sx={{
               ...commonStyles.compactChipSm,
               ...commonStyles.compactTextMd,
@@ -940,7 +944,7 @@ export const VotingGroupCard: React.FC<{
             lineHeight: 1.4,
           }}
         >
-          {groupTitle || t("common.none")}
+          {groupTitle || tCommon("none")}
         </Typography>
 
         {/* Document cards */}
