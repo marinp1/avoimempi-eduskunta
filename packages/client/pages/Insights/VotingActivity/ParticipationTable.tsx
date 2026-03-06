@@ -13,7 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, commonStyles, gradients } from "#client/theme";
 import { DataCard } from "#client/theme/components";
 import type { ParticipationData, SortDirection, SortField } from "./types";
@@ -27,7 +27,10 @@ export function ParticipationTable({
   data,
   onSelectPerson,
 }: ParticipationTableProps) {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tComposition } = useScopedTranslation("composition");
+  const { t: tInsights } = useScopedTranslation("insights");
+  const { t: tParties } = useScopedTranslation("parties");
   const [sortField, setSortField] = useState<SortField>("participation_rate");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [page, setPage] = useState(0);
@@ -96,7 +99,7 @@ export function ParticipationTable({
               }}
             >
               <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                {t("insights.votingActivity.rank")}
+                {tInsights("votingActivity.rank")}
               </TableCell>
               <TableCell sx={{ color: "white", fontWeight: 600 }}>
                 <TableSortLabel
@@ -111,7 +114,7 @@ export function ParticipationTable({
                     },
                   }}
                 >
-                  {t("composition.table.name")}
+                  {tComposition("table.name")}
                 </TableSortLabel>
               </TableCell>
               <TableCell align="right" sx={{ color: "white", fontWeight: 600 }}>
@@ -127,11 +130,11 @@ export function ParticipationTable({
                     },
                   }}
                 >
-                  {t("insights.votingActivity.votings")}
+                  {tInsights("votingActivity.votings")}
                 </TableSortLabel>
               </TableCell>
               <TableCell align="right" sx={{ color: "white", fontWeight: 600 }}>
-                {t("common.total")}
+                {tCommon("total")}
               </TableCell>
               <TableCell align="right" sx={{ color: "white", fontWeight: 600 }}>
                 <TableSortLabel
@@ -148,7 +151,7 @@ export function ParticipationTable({
                     },
                   }}
                 >
-                  {t("parties.table.participation")}
+                  {tParties("table.participation")}
                 </TableSortLabel>
               </TableCell>
             </TableRow>
@@ -185,7 +188,7 @@ export function ParticipationTable({
                   </TableCell>
                   <TableCell align="right">
                     <Tooltip
-                      title={t("insights.votingActivity.voteRatioTooltip", {
+                      title={tInsights("votingActivity.voteRatioTooltip", {
                         cast: row.votes_cast,
                         total: row.total_votings,
                       })}
@@ -222,10 +225,10 @@ export function ParticipationTable({
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
-        labelRowsPerPage={t("common.rowsPerPage")}
+        labelRowsPerPage={tCommon("rowsPerPage")}
         labelDisplayedRows={({ from, to, count }) =>
           `${from}-${to} / ${
-            count !== -1 ? count : t("common.moreThan", { value: to })
+            count !== -1 ? count : tCommon("moreThan", { value: to })
           }`
         }
       />

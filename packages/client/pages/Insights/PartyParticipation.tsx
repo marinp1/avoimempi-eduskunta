@@ -15,7 +15,6 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import {
   CartesianGrid,
   Legend,
@@ -30,6 +29,7 @@ import {
   intersectDateRangeWithHallituskausi,
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, commonStyles, spacing } from "#client/theme";
 import { DataCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -67,7 +67,8 @@ const PARTY_COLORS: Record<string, string> = {
 export default function PartyParticipation({
   onClose,
 }: PartyParticipationProps) {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tInsights } = useScopedTranslation("insights");
   const themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<PartyParticipationData[]>([]);
@@ -249,7 +250,7 @@ export default function PartyParticipation({
             variant="caption"
             sx={{ display: "block", mt: spacing.sm, color: "text.secondary" }}
           >
-            ★ = {t("insights.partyParticipation.governmentPartyIndicator")}
+            ★ = {tInsights("partyParticipation.governmentPartyIndicator")}
           </Typography>
         </Box>
       );
@@ -295,7 +296,7 @@ export default function PartyParticipation({
         <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
           <HowToVoteIcon sx={{ fontSize: 36, color: colors.primary }} />
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            {t("insights.partyParticipation.title")}
+            {tInsights("partyParticipation.title")}
           </Typography>
         </Box>
         <IconButton onClick={onClose} size="large">
@@ -308,7 +309,7 @@ export default function PartyParticipation({
         color="text.secondary"
         sx={{ mb: spacing.lg }}
       >
-        {t("insights.partyParticipation.description")}
+        {tInsights("partyParticipation.description")}
       </Typography>
 
       {/* Filters */}
@@ -317,14 +318,14 @@ export default function PartyParticipation({
           <DataCard>
             <CardContent sx={{ p: spacing.md }}>
               <Typography variant="h6" sx={{ mb: spacing.sm, fontWeight: 600 }}>
-                {t("insights.partyParticipation.filters")}
+                {tInsights("partyParticipation.filters")}
               </Typography>
               <Grid container spacing={spacing.sm}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     fullWidth
                     type="date"
-                    label={t("insights.partyParticipation.startDate")}
+                    label={tInsights("partyParticipation.startDate")}
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     InputLabelProps={{ shrink: true }}
@@ -335,7 +336,7 @@ export default function PartyParticipation({
                   <TextField
                     fullWidth
                     type="date"
-                    label={t("insights.partyParticipation.endDate")}
+                    label={tInsights("partyParticipation.endDate")}
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     InputLabelProps={{ shrink: true }}
@@ -345,7 +346,7 @@ export default function PartyParticipation({
               </Grid>
               {selectedHallituskausi && (
                 <Alert severity="info" sx={{ mt: spacing.sm }}>
-                  {t("common.filteredByGovernmentPeriodLine", {
+                  {tCommon("filteredByGovernmentPeriodLine", {
                     value: selectedHallituskausi.label,
                   })}
                 </Alert>
@@ -361,7 +362,7 @@ export default function PartyParticipation({
           <DataCard>
             <CardContent sx={{ p: spacing.md }}>
               <Typography variant="h6" sx={{ mb: spacing.sm, fontWeight: 600 }}>
-                {t("insights.partyParticipation.selectParties")}
+                {tInsights("partyParticipation.selectParties")}
               </Typography>
               <FormGroup
                 sx={{
@@ -414,14 +415,14 @@ export default function PartyParticipation({
           <DataCard>
             <CardContent sx={{ p: spacing.lg }}>
               <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
-                {t("insights.partyParticipation.chartTitle")}
+                {tInsights("partyParticipation.chartTitle")}
               </Typography>
               <Typography
                 variant="body2"
                 color="text.secondary"
                 sx={{ mb: spacing.lg }}
               >
-                {t("insights.partyParticipation.chartSubtitle")}
+                {tInsights("partyParticipation.chartSubtitle")}
               </Typography>
 
               {chartData.length > 0 ? (
@@ -476,7 +477,7 @@ export default function PartyParticipation({
                 </ResponsiveContainer>
               ) : (
                 <Alert severity="info">
-                  {t("insights.partyParticipation.noData")}
+                  {tInsights("partyParticipation.noData")}
                 </Alert>
               )}
             </CardContent>
@@ -494,7 +495,7 @@ export default function PartyParticipation({
                   variant="h5"
                   sx={{ mb: spacing.md, fontWeight: 600 }}
                 >
-                  {t("insights.partyParticipation.summary")}
+                  {tInsights("partyParticipation.summary")}
                 </Typography>
                 <Box
                   sx={{
@@ -515,7 +516,7 @@ export default function PartyParticipation({
                     }}
                   >
                     <Typography variant="body2" color="text.secondary">
-                      {t("insights.partyParticipation.totalGovernments")}
+                      {tInsights("partyParticipation.totalGovernments")}
                     </Typography>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       {new Set(data.map((d) => d.government)).size}
@@ -529,7 +530,7 @@ export default function PartyParticipation({
                     }}
                   >
                     <Typography variant="body2" color="text.secondary">
-                      {t("insights.partyParticipation.totalParties")}
+                      {tInsights("partyParticipation.totalParties")}
                     </Typography>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       {allParties.length}
@@ -543,7 +544,7 @@ export default function PartyParticipation({
                     }}
                   >
                     <Typography variant="body2" color="text.secondary">
-                      {t("insights.partyParticipation.averageParticipation")}
+                      {tInsights("partyParticipation.averageParticipation")}
                     </Typography>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       {(

@@ -15,9 +15,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
@@ -100,7 +100,7 @@ export function LegislativeInitiativeCard({
   item: LegislativeInitiativeListItem;
   onSubjectClick?: (subject: string) => void;
 }) {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("documents");
   const [expanded, setExpanded] = useState(false);
   const [detail, setDetail] = useState<LegislativeInitiativeDetail | null>(
     null,
@@ -173,7 +173,7 @@ export function LegislativeInitiativeCard({
                 fontWeight: 500,
               }}
             >
-              {item.title || t("documents.noTitle")}
+              {item.title || t("noTitle")}
             </Typography>
             <Chip
               label={item.parliament_identifier}
@@ -199,7 +199,7 @@ export function LegislativeInitiativeCard({
           >
             {item.submission_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDateLine", {
+                {t("submissionDateLine", {
                   value: formatDate(item.submission_date),
                 })}
               </Typography>
@@ -225,7 +225,7 @@ export function LegislativeInitiativeCard({
 
             {item.latest_stage_code && !item.decision_outcome && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.latestStageLine", {
+                {t("latestStageLine", {
                   value: item.latest_stage_code,
                 })}
               </Typography>
@@ -293,7 +293,7 @@ export function LegislativeInitiativeCard({
 
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {t("documents.loadErrorLine", { value: error })}
+              {t("loadErrorLine", { value: error })}
             </Alert>
           )}
 
@@ -308,8 +308,8 @@ export function LegislativeInitiativeCard({
                     sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
                   >
                     {showJustification
-                      ? t("documents.justificationToggle", { context: "hide" })
-                      : t("documents.justificationToggle", { context: "show" })}
+                      ? t("justificationToggle", { context: "hide" })
+                      : t("justificationToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showJustification}>
                     <Box
@@ -338,8 +338,8 @@ export function LegislativeInitiativeCard({
                     sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
                   >
                     {showProposalText
-                      ? t("documents.clausesToggle", { context: "hide" })
-                      : t("documents.clausesToggle", { context: "show" })}
+                      ? t("clausesToggle", { context: "hide" })
+                      : t("clausesToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showProposalText}>
                     <Box
@@ -368,8 +368,8 @@ export function LegislativeInitiativeCard({
                     sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
                   >
                     {showLawText
-                      ? t("documents.lawTextToggle", { context: "hide" })
-                      : t("documents.lawTextToggle", { context: "show" })}
+                      ? t("lawTextToggle", { context: "hide" })
+                      : t("lawTextToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showLawText}>
                     <Box

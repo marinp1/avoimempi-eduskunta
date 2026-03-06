@@ -17,7 +17,7 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, gradients, spacing } from "#client/theme";
 import { DataCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -36,7 +36,11 @@ export function HistoricalComparison({
   startDate,
   endDate,
 }: HistoricalComparisonProps) {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tComposition } = useScopedTranslation("composition");
+  const { t: tDocuments } = useScopedTranslation("documents");
+  const { t: tInsights } = useScopedTranslation("insights");
+  const { t: tParties } = useScopedTranslation("parties");
   const themedColors = useThemedColors();
   const [data, setData] = React.useState<ParticipationByGovernmentData[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
@@ -105,7 +109,7 @@ export function HistoricalComparison({
     if (wasInGovernment) {
       return (
         <Chip
-          label={t("composition.details.minister")}
+          label={tComposition("details.minister")}
           size="small"
           sx={{
             backgroundColor: themedColors.ministerBackground,
@@ -117,7 +121,7 @@ export function HistoricalComparison({
     } else if (wasInCoalition) {
       return (
         <Chip
-          label={t("composition.details.filters.government")}
+          label={tComposition("details.filters.government")}
           size="small"
           sx={{
             backgroundColor: themedColors.coalitionBackground,
@@ -129,7 +133,7 @@ export function HistoricalComparison({
     } else {
       return (
         <Chip
-          label={t("composition.details.filters.opposition")}
+          label={tComposition("details.filters.opposition")}
           size="small"
           sx={{
             backgroundColor: themedColors.oppositionBackground,
@@ -154,7 +158,7 @@ export function HistoricalComparison({
         >
           <Typography variant="h6" fontWeight={600}>
             {representativeName} -{" "}
-            {t("insights.votingActivity.historicalComparison")}
+            {tInsights("votingActivity.historicalComparison")}
           </Typography>
           <IconButton onClick={onClose} size="small">
             <CloseIcon />
@@ -166,7 +170,7 @@ export function HistoricalComparison({
           color="text.secondary"
           sx={{ mb: spacing.md }}
         >
-          {t("insights.votingActivity.historicalSubtitle")}
+          {tInsights("votingActivity.historicalSubtitle")}
         </Typography>
 
         {loading && (
@@ -193,37 +197,37 @@ export function HistoricalComparison({
                   }}
                 >
                   <TableCell sx={{ color: "white", fontWeight: 600 }}>
-                    {t("parties.government")}
+                    {tParties("government")}
                   </TableCell>
                   <TableCell
                     align="center"
                     sx={{ color: "white", fontWeight: 600 }}
                   >
-                    {t("documents.committeeRole")}
+                    {tDocuments("committeeRole")}
                   </TableCell>
                   <TableCell
                     align="right"
                     sx={{ color: "white", fontWeight: 600 }}
                   >
-                    {t("insights.votingActivity.votings")}
+                    {tInsights("votingActivity.votings")}
                   </TableCell>
                   <TableCell
                     align="right"
                     sx={{ color: "white", fontWeight: 600 }}
                   >
-                    {t("common.total")}
+                    {tCommon("total")}
                   </TableCell>
                   <TableCell
                     align="right"
                     sx={{ color: "white", fontWeight: 600 }}
                   >
-                    {t("parties.table.participation")}
+                    {tParties("table.participation")}
                   </TableCell>
                   <TableCell
                     align="center"
                     sx={{ color: "white", fontWeight: 600 }}
                   >
-                    {t("insights.votingActivity.trend")}
+                    {tInsights("votingActivity.trend")}
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -292,7 +296,7 @@ export function HistoricalComparison({
         {!loading && !error && sortedData.length === 0 && (
           <Box sx={{ textAlign: "center", py: spacing.md }}>
             <Typography variant="body2" color="text.secondary">
-              {t("insights.votingActivity.noPersonData")}
+              {tInsights("votingActivity.noPersonData")}
             </Typography>
           </Box>
         )}
@@ -307,7 +311,7 @@ export function HistoricalComparison({
             }}
           >
             <Typography variant="body2" color={colors.info}>
-              {t("insights.votingActivity.historicalNeedsMoreData")}
+              {tInsights("votingActivity.historicalNeedsMoreData")}
             </Typography>
           </Box>
         )}

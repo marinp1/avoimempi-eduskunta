@@ -11,7 +11,7 @@
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "strict": false,
+    "strict": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "types": [
@@ -20,7 +20,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "paths": {
       "#constants": [
         "./packages/shared/constants/index.ts"
@@ -45,9 +45,6 @@
       ],
       "#client/*": [
         "./packages/client/*"
-      ],
-      "react": [
-        "./node_modules/@types/react"
       ],
     },
   },

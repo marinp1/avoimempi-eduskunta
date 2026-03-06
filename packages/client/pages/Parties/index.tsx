@@ -17,7 +17,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { colors, spacing } from "#client/theme";
 import { DataCard, PageHeader } from "#client/theme/components";
@@ -56,7 +56,8 @@ type SortField =
 type SortDirection = "asc" | "desc";
 
 const Parties = () => {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tParties } = useScopedTranslation("parties");
   const themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
   const [parties, setParties] = useState<PartySummary[]>([]);
@@ -208,8 +209,8 @@ const Parties = () => {
     return (
       <Box>
         <PageHeader
-          title={t("parties.title")}
-          subtitle={t("parties.subtitle")}
+          title={tParties("title")}
+          subtitle={tParties("subtitle")}
         />
         <Alert severity="error">{error}</Alert>
       </Box>
@@ -217,7 +218,10 @@ const Parties = () => {
 
   return (
     <Box>
-      <PageHeader title={t("parties.title")} subtitle={t("parties.subtitle")} />
+      <PageHeader
+        title={tParties("title")}
+        subtitle={tParties("subtitle")}
+      />
       {selectedHallituskausi && (
         <Alert severity="info" sx={{ mb: spacing.md }}>
           Rajattu hallituskauteen: {selectedHallituskausi.label}
@@ -231,7 +235,7 @@ const Parties = () => {
               variant="caption"
               sx={{ color: themedColors.textSecondary }}
             >
-              {t("parties.totalParties")}
+              {tParties("totalParties")}
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, mt: 0.5 }}>
               {parties.length}
@@ -244,7 +248,7 @@ const Parties = () => {
               variant="caption"
               sx={{ color: themedColors.textSecondary }}
             >
-              {t("parties.totalMembers")}
+              {tParties("totalMembers")}
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, mt: 0.5 }}>
               {summary.totalMembers}
@@ -257,7 +261,7 @@ const Parties = () => {
               variant="caption"
               sx={{ color: themedColors.textSecondary }}
             >
-              {t("parties.government")} / {t("parties.opposition")}
+              {tParties("government")} / {tParties("opposition")}
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, mt: 0.5 }}>
               {summary.governmentParties} / {summary.oppositionParties}
@@ -270,7 +274,7 @@ const Parties = () => {
               variant="caption"
               sx={{ color: themedColors.textSecondary }}
             >
-              {t("parties.weightedParticipation")}
+              {tParties("weightedParticipation")}
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, mt: 0.5 }}>
               {summary.weightedParticipation.toFixed(1)}%
@@ -292,8 +296,8 @@ const Parties = () => {
             size="small"
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
-            label={t("common.search")}
-            placeholder={t("parties.searchPlaceholder")}
+            label={tCommon("search")}
+            placeholder={tParties("searchPlaceholder")}
             sx={{
               minWidth: { xs: "100%", sm: 280 },
               "& .MuiInputBase-input": { fontSize: "0.9rem" },
@@ -303,10 +307,10 @@ const Parties = () => {
             const selected = roleFilter === role;
             const label =
               role === "all"
-                ? t("parties.filters.all")
+                ? tParties("filters.all")
                 : role === "government"
-                  ? t("parties.government")
-                  : t("parties.opposition");
+                  ? tParties("government")
+                  : tParties("opposition");
             return (
               <Chip
                 key={role}
@@ -328,7 +332,7 @@ const Parties = () => {
             variant="body2"
             sx={{ ml: "auto", color: themedColors.textSecondary }}
           >
-            {t("parties.showingResults", {
+            {tParties("showingResults", {
               shown: visibleParties.length,
               total: parties.length,
             })}
@@ -337,7 +341,7 @@ const Parties = () => {
       </DataCard>
 
       {visibleParties.length === 0 && (
-        <Alert severity="info">{t("common.noData")}</Alert>
+        <Alert severity="info">{tCommon("noData")}</Alert>
       )}
 
       {visibleParties.length > 0 && (
@@ -369,11 +373,11 @@ const Parties = () => {
                       },
                     }}
                   >
-                    {t("parties.table.party")}
+                    {tParties("table.party")}
                   </TableSortLabel>
                 </TableCell>
                 <TableCell sx={{ color: "white", fontWeight: 700 }}>
-                  {t("parties.table.status")}
+                  {tParties("table.status")}
                 </TableCell>
                 <TableCell
                   align="right"
@@ -392,7 +396,7 @@ const Parties = () => {
                       },
                     }}
                   >
-                    {t("parties.table.members")}
+                    {tParties("table.members")}
                   </TableSortLabel>
                 </TableCell>
                 <TableCell
@@ -414,11 +418,11 @@ const Parties = () => {
                       },
                     }}
                   >
-                    {t("parties.table.participation")}
+                    {tParties("table.participation")}
                   </TableSortLabel>
                 </TableCell>
                 <TableCell sx={{ color: "white", fontWeight: 700 }}>
-                  {t("parties.table.genderSplit")}
+                  {tParties("table.genderSplit")}
                 </TableCell>
                 <TableCell
                   align="right"
@@ -437,7 +441,7 @@ const Parties = () => {
                       },
                     }}
                   >
-                    {t("parties.table.averageAge")}
+                    {tParties("table.averageAge")}
                   </TableSortLabel>
                 </TableCell>
               </TableRow>
@@ -494,8 +498,8 @@ const Parties = () => {
                         size="small"
                         label={
                           party.is_in_government === 1
-                            ? t("parties.government")
-                            : t("parties.opposition")
+                            ? tParties("government")
+                            : tParties("opposition")
                         }
                         sx={{
                           fontWeight: 700,
@@ -534,10 +538,10 @@ const Parties = () => {
                         variant="caption"
                         sx={{ color: themedColors.textSecondary }}
                       >
-                        {t("parties.genderSplitLine", {
-                          womenLabel: t("parties.womenShort"),
+                        {tParties("genderSplitLine", {
+                          womenLabel: tParties("womenShort"),
                           female,
-                          menLabel: t("parties.menShort"),
+                          menLabel: tParties("menShort"),
                           male,
                         })}
                       </Typography>
@@ -647,7 +651,7 @@ const Parties = () => {
                             variant="caption"
                             sx={{ color: themedColors.textSecondary }}
                           >
-                            {t("parties.members")}
+                            {tParties("members")}
                           </Typography>
                           <Typography fontWeight={700}>
                             {party.member_count}
@@ -658,7 +662,7 @@ const Parties = () => {
                             variant="caption"
                             sx={{ color: themedColors.textSecondary }}
                           >
-                            {t("parties.participation")}
+                            {tParties("participation")}
                           </Typography>
                           <Typography fontWeight={700}>
                             {(party.participation_rate ?? 0).toFixed(1)}%
@@ -669,7 +673,7 @@ const Parties = () => {
                             variant="caption"
                             sx={{ color: themedColors.textSecondary }}
                           >
-                            {t("parties.table.averageAge")}
+                            {tParties("table.averageAge")}
                           </Typography>
                           <Typography fontWeight={700}>
                             {(party.average_age ?? 0).toFixed(1)}
@@ -680,12 +684,12 @@ const Parties = () => {
                             variant="caption"
                             sx={{ color: themedColors.textSecondary }}
                           >
-                            {t("parties.table.status")}
+                            {tParties("table.status")}
                           </Typography>
                           <Typography fontWeight={700}>
                             {party.is_in_government === 1
-                              ? t("parties.government")
-                              : t("parties.opposition")}
+                              ? tParties("government")
+                              : tParties("opposition")}
                           </Typography>
                         </Box>
                       </Box>
@@ -694,10 +698,10 @@ const Parties = () => {
                         variant="caption"
                         sx={{ color: themedColors.textSecondary }}
                       >
-                        {t("parties.genderSplitLine", {
-                          womenLabel: t("parties.womenShort"),
+                        {tParties("genderSplitLine", {
+                          womenLabel: tParties("womenShort"),
                           female,
-                          menLabel: t("parties.menShort"),
+                          menLabel: tParties("menShort"),
                           male,
                         })}
                       </Typography>

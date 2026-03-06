@@ -24,9 +24,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
@@ -110,13 +110,14 @@ export function CommitteeReportCard({
 }: {
   item: CommitteeReportListItem;
 }) {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
   const reportKind = getCommitteeReportKind(item.report_type_code);
   const reportKindLabel =
     reportKind === "report"
-      ? t("documents.committeeReportTypeReport")
+      ? tDocuments("committeeReportTypeReport")
       : reportKind === "statement"
-        ? t("documents.committeeReportTypeStatement")
+        ? tDocuments("committeeReportTypeStatement")
         : item.report_type_code;
 
   const [expanded, setExpanded] = useState(false);
@@ -179,7 +180,7 @@ export function CommitteeReportCard({
                 fontWeight: 500,
               }}
             >
-              {item.title || t("documents.noTitle")}
+              {item.title || tDocuments("noTitle")}
             </Typography>
             <Chip
               label={item.parliament_identifier}
@@ -211,14 +212,14 @@ export function CommitteeReportCard({
           >
             {item.draft_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.submissionDateLine", {
+                {tDocuments("submissionDateLine", {
                   value: formatDate(item.draft_date),
                 })}
               </Typography>
             )}
             {item.signature_date && (
               <Typography variant="body2" color={colors.textSecondary}>
-                {t("documents.signatureDateLine", {
+                {tDocuments("signatureDateLine", {
                   value: formatDate(item.signature_date),
                 })}
               </Typography>
@@ -237,7 +238,7 @@ export function CommitteeReportCard({
             )}
             {item.recipient_committee && (
               <Chip
-                label={t("documents.recipientCommitteeLine", {
+                label={tDocuments("recipientCommitteeLine", {
                   value: item.recipient_committee,
                 })}
                 size="small"
@@ -311,7 +312,7 @@ export function CommitteeReportCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.committeeMembers")}
+                      {tDocuments("committeeMembers")}
                     </Typography>
                   </Stack>
                   <TableContainer>
@@ -319,9 +320,9 @@ export function CommitteeReportCard({
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>{t("common.name")}</TableCell>
-                          <TableCell>{t("common.party")}</TableCell>
-                          <TableCell>{t("documents.committeeRole")}</TableCell>
+                          <TableCell>{tCommon("name")}</TableCell>
+                          <TableCell>{tCommon("party")}</TableCell>
+                          <TableCell>{tDocuments("committeeRole")}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -355,7 +356,7 @@ export function CommitteeReportCard({
                       variant="subtitle1"
                       sx={{ fontWeight: 600, color: colors.textPrimary }}
                     >
-                      {t("documents.committeeExperts")}
+                      {tDocuments("committeeExperts")}
                     </Typography>
                   </Stack>
                   <TableContainer>
@@ -363,10 +364,10 @@ export function CommitteeReportCard({
                       <TableHead>
                         <TableRow>
                           <TableCell>#</TableCell>
-                          <TableCell>{t("common.name")}</TableCell>
-                          <TableCell>{t("documents.expertTitle")}</TableCell>
+                          <TableCell>{tCommon("name")}</TableCell>
+                          <TableCell>{tDocuments("expertTitle")}</TableCell>
                           <TableCell>
-                            {t("documents.expertOrganization")}
+                            {tDocuments("expertOrganization")}
                           </TableCell>
                         </TableRow>
                       </TableHead>
@@ -402,8 +403,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showSummary
-                      ? t("documents.summaryToggle", { context: "hide" })
-                      : t("documents.summaryToggle", { context: "show" })}
+                      ? tDocuments("summaryToggle", { context: "hide" })
+                      : tDocuments("summaryToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showSummary}>
                     <Box
@@ -440,8 +441,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showReasoning
-                      ? t("documents.justificationToggle", { context: "hide" })
-                      : t("documents.justificationToggle", { context: "show" })}
+                      ? tDocuments("justificationToggle", { context: "hide" })
+                      : tDocuments("justificationToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showReasoning}>
                     <Box
@@ -488,8 +489,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showDecision
-                      ? t("documents.decisionToggle", { context: "hide" })
-                      : t("documents.decisionToggle", { context: "show" })}
+                      ? tDocuments("decisionToggle", { context: "hide" })
+                      : tDocuments("decisionToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showDecision}>
                     <Box
@@ -524,8 +525,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showLegislation
-                      ? t("documents.legislationToggle", { context: "hide" })
-                      : t("documents.legislationToggle", { context: "show" })}
+                      ? tDocuments("legislationToggle", { context: "hide" })
+                      : tDocuments("legislationToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showLegislation}>
                     <Box
@@ -560,8 +561,8 @@ export function CommitteeReportCard({
                     }}
                   >
                     {showMinority
-                      ? t("documents.minorityToggle", { context: "hide" })
-                      : t("documents.minorityToggle", { context: "show" })}
+                      ? tDocuments("minorityToggle", { context: "hide" })
+                      : tDocuments("minorityToggle", { context: "show" })}
                   </Button>
                   <Collapse in={showMinority}>
                     <Box
@@ -596,7 +597,7 @@ export function CommitteeReportCard({
                     variant="subtitle2"
                     sx={{ fontWeight: 600, color: colors.textPrimary, mb: 1 }}
                   >
-                    {t("documents.committeeResolution")}
+                    {tDocuments("committeeResolution")}
                   </Typography>
                   <RichTextRenderer
                     document={detail.resolution_rich_text}

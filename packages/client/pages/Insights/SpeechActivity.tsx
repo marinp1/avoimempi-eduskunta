@@ -14,7 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import {
   Bar,
   BarChart,
@@ -46,7 +46,8 @@ interface SpeechActivityProps {
 
 export default function SpeechActivity({ onClose }: SpeechActivityProps) {
   const themedColors = useThemedColors();
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tInsights } = useScopedTranslation("insights");
   const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<SpeechActivityData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,7 +117,7 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
         <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
           <MicIcon sx={{ fontSize: 36, color: colors.primary }} />
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            {t("insights.speechActivity.title")}
+            {tInsights("speechActivity.title")}
           </Typography>
         </Box>
         <IconButton onClick={onClose} size="large">
@@ -129,7 +130,7 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
         color="text.secondary"
         sx={{ mb: spacing.lg }}
       >
-        {t("insights.speechActivity.description")}
+        {tInsights("speechActivity.description")}
       </Typography>
       {selectedHallituskausi && (
         <Alert severity="info" sx={{ mb: spacing.md }}>
@@ -138,7 +139,7 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
       )}
 
       {data.length === 0 ? (
-        <Alert severity="info">{t("insights.speechActivity.noData")}</Alert>
+        <Alert severity="info">{tInsights("speechActivity.noData")}</Alert>
       ) : (
         <>
           <Box sx={{ mb: spacing.lg }}>
@@ -162,7 +163,7 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
                 <Tooltip
                   formatter={(value: number) => [
                     value.toLocaleString("fi-FI"),
-                    t("insights.speechActivity.speechCount"),
+                    tInsights("speechActivity.speechCount"),
                   ]}
                 />
                 <Bar
@@ -179,13 +180,13 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
               <TableHead>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 600 }}>
-                    {t("common.name")}
+                    {tCommon("name")}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>
-                    {t("common.party")}
+                    {tCommon("party")}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600 }} align="right">
-                    {t("insights.speechActivity.speechCount")}
+                    {tInsights("speechActivity.speechCount")}
                   </TableCell>
                   <TableCell
                     sx={{
@@ -194,7 +195,7 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
                     }}
                     align="right"
                   >
-                    {t("insights.speechActivity.totalWords")}
+                    {tInsights("speechActivity.totalWords")}
                   </TableCell>
                   <TableCell
                     sx={{
@@ -203,7 +204,7 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
                     }}
                     align="right"
                   >
-                    {t("insights.speechActivity.avgWords")}
+                    {tInsights("speechActivity.avgWords")}
                   </TableCell>
                 </TableRow>
               </TableHead>

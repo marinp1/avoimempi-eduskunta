@@ -26,7 +26,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { ItemTraceIcon } from "#client/components/ItemTraceIcon";
 import {
   type HallituskausiPeriod,
@@ -338,7 +338,7 @@ const TimelineSelector: React.FC<{
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default () => {
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("composition");
   const themedColors = useThemedColors();
   const { hallituskaudet, selectedHallituskausi, setSelectedHallituskausiId } =
     useHallituskausi();
@@ -586,10 +586,10 @@ export default () => {
           component="h1"
           sx={{ fontWeight: 700, color: themedColors.textPrimary, mb: 0.5 }}
         >
-          {t("composition.title")}
+          {t("title")}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {t("composition.subtitle")}
+          {t("subtitle")}
         </Typography>
       </Box>
 
@@ -597,7 +597,7 @@ export default () => {
       <Box sx={{ mb: 1.5 }}>
         <TextField
           size="small"
-          placeholder={t("composition.searchPlaceholder")}
+          placeholder={t("searchPlaceholder")}
           value={nameSearch}
           onChange={(e) => setNameSearch(e.target.value)}
           slotProps={{
@@ -651,10 +651,10 @@ export default () => {
               key={g}
               label={
                 g === "all"
-                  ? t("composition.details.filters.all")
+                  ? t("details.filters.all")
                   : g === "government"
-                    ? t("composition.details.filters.government")
-                    : t("composition.details.filters.opposition")
+                    ? t("details.filters.government")
+                    : t("details.filters.opposition")
               }
               size="small"
               onClick={() => setGovFilter(g)}
@@ -771,7 +771,7 @@ export default () => {
                   component="span"
                   sx={{ fontWeight: 600, color: themedColors.textPrimary }}
                 >
-                  {t("composition.historicalView")}
+                  {t("historicalView")}
                 </Box>
                 {" · "}
                 {formatFinnishDate(date)}
@@ -796,7 +796,7 @@ export default () => {
               },
             }}
           >
-            {t("composition.returnToPresent")}
+            {t("returnToPresent")}
           </Button>
         </Box>
       )}
@@ -901,13 +901,13 @@ export default () => {
                   variant="body1"
                   sx={{ color: themedColors.textPrimary, fontWeight: 600 }}
                 >
-                  {t("composition.noResults")}
+                  {t("noResults")}
                 </Typography>
                 <Typography
                   variant="body2"
                   sx={{ color: themedColors.textSecondary, mt: 0.5 }}
                 >
-                  {t("composition.noResultsHint")}
+                  {t("noResultsHint")}
                 </Typography>
                 {(partyFilter || govFilter !== "all") && (
                   <Button
@@ -919,7 +919,7 @@ export default () => {
                       setGovFilter("all");
                     }}
                   >
-                    {t("composition.resetFilters")}
+                    {t("resetFilters")}
                   </Button>
                 )}
               </Paper>
@@ -1053,28 +1053,28 @@ export default () => {
                         }}
                       >
                         <TableCell sx={{ ...commonStyles.tableHeader }}>
-                          {t("composition.table.name")}
+                          {t("table.name")}
                         </TableCell>
                         <TableCell sx={{ ...commonStyles.tableHeader }}>
-                          {t("composition.table.party")}
+                          {t("table.party")}
                         </TableCell>
                         <TableCell
                           sx={{ ...commonStyles.tableHeader }}
                           align="center"
                         >
-                          {t("composition.table.government")}
+                          {t("table.government")}
                         </TableCell>
                         <TableCell sx={{ ...commonStyles.tableHeader }}>
-                          {t("composition.table.gender")}
+                          {t("table.gender")}
                         </TableCell>
                         <TableCell sx={{ ...commonStyles.tableHeader }}>
-                          {t("composition.table.birthDate")}
+                          {t("table.birthDate")}
                         </TableCell>
                         <TableCell sx={{ ...commonStyles.tableHeader }}>
-                          {t("composition.table.birthPlace")}
+                          {t("table.birthPlace")}
                         </TableCell>
                         <TableCell sx={{ ...commonStyles.tableHeader }}>
-                          {t("composition.table.occupation")}
+                          {t("table.occupation")}
                         </TableCell>
                       </TableRow>
                     </TableHead>

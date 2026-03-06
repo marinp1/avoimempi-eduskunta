@@ -12,8 +12,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors } from "#client/theme/index";
 import { formatDateFi } from "#client/utils/date-time";
 import {
@@ -114,7 +114,8 @@ export function InlineRelatedSessions({
 }: {
   sessions: RelatedSessionItem[];
 }) {
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
   const [expandedSectionKey, setExpandedSectionKey] = useState<string | null>(
     null,
   );
@@ -186,7 +187,7 @@ export function InlineRelatedSessions({
           variant="subtitle1"
           sx={{ fontWeight: 600, color: colors.textPrimary }}
         >
-          {t("documents.relatedSessions")}
+          {tDocuments("relatedSessions")}
         </Typography>
       </Stack>
       <Stack spacing={1}>
@@ -245,8 +246,8 @@ export function InlineRelatedSessions({
                   }}
                 >
                   {isExpanded
-                    ? t("common.detailsToggle", { context: "hide" })
-                    : t("common.detailsToggle", { context: "show" })}
+                    ? tCommon("detailsToggle", { context: "hide" })
+                    : tCommon("detailsToggle", { context: "show" })}
                 </Button>
                 <Button
                   size="small"
@@ -261,7 +262,7 @@ export function InlineRelatedSessions({
                     window.dispatchEvent(new PopStateEvent("popstate"));
                   }}
                 >
-                  {t("documents.openSession")}
+                  {tDocuments("openSession")}
                 </Button>
               </Box>
               {session.section_title && (
@@ -288,7 +289,7 @@ export function InlineRelatedSessions({
                         variant="caption"
                         sx={{ color: colors.textSecondary }}
                       >
-                        {t("documents.loadingSessionDetails")}
+                        {tDocuments("loadingSessionDetails")}
                       </Typography>
                     </Box>
                   )}
@@ -298,7 +299,7 @@ export function InlineRelatedSessions({
                         variant="caption"
                         sx={{ color: colors.textSecondary }}
                       >
-                        {t("documents.inlineCounts", {
+                        {tDocuments("inlineCounts", {
                           votings: details.votings.length,
                           links: details.links.length,
                           subsections: details.subsections.length,
@@ -322,7 +323,7 @@ export function InlineRelatedSessions({
                               variant="caption"
                               sx={{ color: colors.textSecondary }}
                             >
-                              {t("documents.moreVotings", {
+                              {tDocuments("moreVotings", {
                                 count: details.votings.length - 6,
                               })}
                             </Typography>
@@ -346,7 +347,7 @@ export function InlineRelatedSessions({
                               {subsection.item_title ||
                                 subsection.related_document_identifier ||
                                 subsection.content_text ||
-                                t("documents.subsectionFallback")}
+                                tDocuments("subsectionFallback")}
                             </Typography>
                           ))}
                         </Box>
@@ -364,7 +365,7 @@ export function InlineRelatedSessions({
                               >
                                 {link.document_tunnus ||
                                   link.label ||
-                                  t("documents.documentLink")}
+                                  tDocuments("documentLink")}
                               </EduskuntaSourceLink>
                             ) : (
                               <Chip
@@ -374,7 +375,7 @@ export function InlineRelatedSessions({
                                 clickable
                                 href={
                                   isSafeExternalUrl(link.url)
-                                    ? link.url
+                                    ? (link.url ?? undefined)
                                     : undefined
                                 }
                                 target="_blank"
@@ -382,7 +383,7 @@ export function InlineRelatedSessions({
                                 label={
                                   link.document_tunnus ||
                                   link.label ||
-                                  t("documents.documentLink")
+                                  tDocuments("documentLink")
                                 }
                                 sx={{ height: 20, fontSize: "0.65rem" }}
                               />
@@ -393,7 +394,7 @@ export function InlineRelatedSessions({
                               variant="caption"
                               sx={{ color: colors.textSecondary }}
                             >
-                              {t("documents.moreLinks", {
+                              {tDocuments("moreLinks", {
                                 count: details.links.length - 4,
                               })}
                             </Typography>

@@ -12,7 +12,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import {
   Bar,
   BarChart,
@@ -25,6 +24,7 @@ import {
 } from "recharts";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
 
@@ -71,7 +71,8 @@ export default function CoalitionOpposition({
   onClose,
 }: CoalitionOppositionProps) {
   const themedColors = useThemedColors();
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tInsights } = useScopedTranslation("insights");
   const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<CoalitionOppositionData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -175,16 +176,16 @@ export default function CoalitionOpposition({
   const agreementRate =
     data.length > 0 ? ((agreementCount / data.length) * 100).toFixed(1) : "0";
 
-  const coalitionYesLabel = t("insights.coalitionOpposition.coalition", {
+  const coalitionYesLabel = tInsights("coalitionOpposition.coalition", {
     context: "yes",
   });
-  const coalitionNoLabel = t("insights.coalitionOpposition.coalition", {
+  const coalitionNoLabel = tInsights("coalitionOpposition.coalition", {
     context: "no",
   });
-  const oppositionYesLabel = t("insights.coalitionOpposition.opposition", {
+  const oppositionYesLabel = tInsights("coalitionOpposition.opposition", {
     context: "yes",
   });
-  const oppositionNoLabel = t("insights.coalitionOpposition.opposition", {
+  const oppositionNoLabel = tInsights("coalitionOpposition.opposition", {
     context: "no",
   });
 
@@ -209,7 +210,7 @@ export default function CoalitionOpposition({
         <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
           <AccountBalanceIcon sx={{ fontSize: 36, color: colors.primary }} />
           <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            {t("insights.coalitionOpposition.title")}
+            {tInsights("coalitionOpposition.title")}
           </Typography>
         </Box>
         <IconButton onClick={onClose} size="large">
@@ -222,7 +223,7 @@ export default function CoalitionOpposition({
         color="text.secondary"
         sx={{ mb: spacing.lg }}
       >
-        {t("insights.coalitionOpposition.description")}
+        {tInsights("coalitionOpposition.description")}
       </Typography>
       {selectedHallituskausi && (
         <Alert severity="info" sx={{ mb: spacing.md }}>
@@ -232,7 +233,7 @@ export default function CoalitionOpposition({
 
       {data.length === 0 ? (
         <Alert severity="info">
-          {t("insights.coalitionOpposition.noData")}
+          {tInsights("coalitionOpposition.noData")}
         </Alert>
       ) : (
         <>
@@ -257,7 +258,7 @@ export default function CoalitionOpposition({
                 variant="body2"
                 sx={{ color: themedColors.textSecondary }}
               >
-                {t("insights.coalitionOpposition.agreementRate")}
+                {tInsights("coalitionOpposition.agreementRate")}
               </Typography>
               <Typography
                 sx={{
@@ -281,7 +282,7 @@ export default function CoalitionOpposition({
                 variant="body2"
                 sx={{ color: themedColors.textSecondary }}
               >
-                {t("insights.coalitionOpposition.agreements")}
+                {tInsights("coalitionOpposition.agreements")}
               </Typography>
               <Typography
                 sx={{
@@ -305,7 +306,7 @@ export default function CoalitionOpposition({
                 variant="body2"
                 sx={{ color: themedColors.textSecondary }}
               >
-                {t("insights.coalitionOpposition.votings")}
+                {tInsights("coalitionOpposition.votings")}
               </Typography>
               <Typography
                 sx={{
@@ -357,7 +358,7 @@ export default function CoalitionOpposition({
 
           <Box sx={{ mt: spacing.lg }}>
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 1.5 }}>
-              {t("insights.coalitionOpposition.inlineVotings")}
+              {tInsights("coalitionOpposition.inlineVotings")}
             </Typography>
             {data.slice(0, 20).map((vote) => {
               const isExpanded = expandedVotingIds.has(vote.voting_id);
@@ -420,8 +421,8 @@ export default function CoalitionOpposition({
                       onClick={() => toggleVotingDetails(vote.voting_id)}
                     >
                       {isExpanded
-                        ? t("common.detailsToggle", { context: "hide" })
-                        : t("common.detailsToggle", { context: "show" })}
+                        ? tCommon("detailsToggle", { context: "hide" })
+                        : tCommon("detailsToggle", { context: "show" })}
                     </Button>
                   </Box>
                   <Collapse in={isExpanded} timeout="auto" unmountOnExit>
@@ -443,7 +444,7 @@ export default function CoalitionOpposition({
                             variant="caption"
                             sx={{ color: themedColors.textSecondary }}
                           >
-                            {t("common.loadingVotingDetails")}
+                            {tCommon("loadingVotingDetails")}
                           </Typography>
                         </Box>
                       )}

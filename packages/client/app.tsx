@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { PageDataSourcesDrawer } from "./components/PageDataSourcesDrawer";
 import { TraceProvider } from "./context/TraceContext";
 import { Navigation } from "./Navigation";
@@ -23,7 +23,7 @@ const getInitialTab = (): RouteName => {
 
 export const App: React.FC = () => {
   const themedColors = useThemedColors();
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("app");
 
   const [activeTab, setActiveTab] = useState<RouteName>(getInitialTab());
   const [lastMigrationTimestamp, setLastMigrationTimestamp] = useState<
@@ -131,9 +131,7 @@ export const App: React.FC = () => {
             }}
           >
             <React.Suspense
-              fallback={
-                <Typography variant="body2">{t("app.loading")}</Typography>
-              }
+              fallback={<Typography variant="body2">{t("loading")}</Typography>}
             >
               <ActivePage.Component />
             </React.Suspense>
@@ -157,7 +155,7 @@ export const App: React.FC = () => {
                 lineHeight: 1.6,
               }}
             >
-              {t("app.disclaimer.source")}
+              {t("disclaimer.source")}
             </Typography>
             <Typography
               variant="caption"
@@ -168,7 +166,7 @@ export const App: React.FC = () => {
                 lineHeight: 1.6,
               }}
             >
-              {t("app.disclaimer.unofficial")}
+              {t("disclaimer.unofficial")}
             </Typography>
             {lastMigrationTimestamp && (
               <Typography
@@ -180,7 +178,7 @@ export const App: React.FC = () => {
                   lineHeight: 1.6,
                 }}
               >
-                {t("app.disclaimer.dbBuildTimestamp", {
+                {t("disclaimer.dbBuildTimestamp", {
                   timestamp: new Date(lastMigrationTimestamp).toLocaleString(
                     "fi-FI",
                   ),

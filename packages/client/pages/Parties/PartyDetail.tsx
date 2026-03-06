@@ -27,7 +27,6 @@ import {
 } from "@mui/material";
 import type React from "react";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 import {
   Bar,
   BarChart,
@@ -37,6 +36,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { refs } from "#client/references";
@@ -147,7 +147,8 @@ const MembersTab: React.FC<{
   governmentStartDate,
 }) => {
   const themedColors = useThemedColors();
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tParties } = useScopedTranslation("parties");
   const [members, setMembers] = useState<PartyMember[] | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -188,7 +189,7 @@ const MembersTab: React.FC<{
         variant="body2"
         sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4 }}
       >
-        {t("parties.detail.noMembers")}
+        {tParties("detail.noMembers")}
       </Typography>
     );
 
@@ -197,9 +198,9 @@ const MembersTab: React.FC<{
       <Table size="small" stickyHeader>
         <TableHead>
           <TableRow>
-            <TableCell sx={{ fontWeight: 600 }}>{t("common.name")}</TableCell>
+            <TableCell sx={{ fontWeight: 600 }}>{tCommon("name")}</TableCell>
             <TableCell sx={{ fontWeight: 600 }}>
-              {t("parties.detail.municipality")}
+              {tParties("detail.municipality")}
             </TableCell>
             <TableCell
               sx={{
@@ -207,7 +208,7 @@ const MembersTab: React.FC<{
                 display: { xs: "none", sm: "table-cell" },
               }}
             >
-              {t("parties.detail.profession")}
+              {tParties("detail.profession")}
             </TableCell>
             <TableCell sx={{ fontWeight: 600 }} />
           </TableRow>
@@ -237,7 +238,7 @@ const MembersTab: React.FC<{
               <TableCell>
                 {m.is_minister === 1 && (
                   <Chip
-                    label={t("parties.detail.minister")}
+                    label={tParties("detail.minister")}
                     size="small"
                     sx={{
                       height: 22,
@@ -262,7 +263,8 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
   isGovernment: _isGovernment,
 }) => {
   const themedColors = useThemedColors();
-  const { t } = useTranslation();
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tParties } = useScopedTranslation("parties");
   const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<CoalitionOppositionRow[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -340,16 +342,16 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
         variant="body2"
         sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4 }}
       >
-        {t("parties.detail.noVotingData")}
+        {tParties("detail.noVotingData")}
       </Typography>
     );
 
-  const coalitionYesLabel = t("parties.detail.coalition", { context: "yes" });
-  const coalitionNoLabel = t("parties.detail.coalition", { context: "no" });
-  const oppositionYesLabel = t("parties.detail.opposition", {
+  const coalitionYesLabel = tParties("detail.coalition", { context: "yes" });
+  const coalitionNoLabel = tParties("detail.coalition", { context: "no" });
+  const oppositionYesLabel = tParties("detail.opposition", {
     context: "yes",
   });
-  const oppositionNoLabel = t("parties.detail.opposition", {
+  const oppositionNoLabel = tParties("detail.opposition", {
     context: "no",
   });
 
@@ -364,7 +366,7 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
   return (
     <Box>
       <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-        {t("parties.detail.coalitionVoting")}
+        {tParties("detail.coalitionVoting")}
       </Typography>
       <ResponsiveContainer width="100%" height={350}>
         <BarChart
@@ -460,8 +462,8 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
                   onClick={() => toggleVotingDetails(vote.voting_id)}
                 >
                   {isExpanded
-                    ? t("common.detailsToggle", { context: "hide" })
-                    : t("common.detailsToggle", { context: "show" })}
+                    ? tCommon("detailsToggle", { context: "hide" })
+                    : tCommon("detailsToggle", { context: "show" })}
                 </Button>
                 <Button
                   size="small"
@@ -481,7 +483,7 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
                     window.dispatchEvent(new PopStateEvent("popstate"));
                   }}
                 >
-                  {t("common.openView")}
+                  {tCommon("openView")}
                 </Button>
               </Box>
               <Collapse in={isExpanded} timeout="auto" unmountOnExit>
@@ -501,7 +503,7 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
                         variant="caption"
                         sx={{ color: themedColors.textSecondary }}
                       >
-                        {t("common.loadingVotingDetails")}
+                        {tCommon("loadingVotingDetails")}
                       </Typography>
                     </Box>
                   )}
@@ -548,7 +550,7 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
   partyName,
 }) => {
   const themedColors = useThemedColors();
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("parties");
   const { selectedHallituskausi } = useHallituskausi();
   const [disciplineData, setDisciplineData] =
     useState<PartyDisciplineRow | null>(null);
@@ -597,7 +599,7 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
         variant="body2"
         sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4 }}
       >
-        {t("parties.detail.noDisciplineData")}
+        {t("detail.noDisciplineData")}
       </Typography>
     );
 
@@ -635,7 +637,7 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
           variant="body2"
           sx={{ color: themedColors.textSecondary, mb: 1 }}
         >
-          {t("parties.detail.disciplineScore")} - {partyName}
+          {t("detail.disciplineScore")} - {partyName}
         </Typography>
         <Typography
           sx={{
@@ -658,7 +660,7 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
       {topDissenters.length > 0 && (
         <>
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-            {t("parties.detail.topDissenters")}
+            {t("detail.topDissenters")}
           </Typography>
           <Box sx={{ maxHeight: 300, overflowY: "auto" }}>
             {topDissenters.map((person) => (
@@ -677,7 +679,7 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
                   {person.name}
                 </Typography>
                 <Chip
-                  label={t("parties.detail.dissentCount", {
+                  label={t("detail.dissentCount", {
                     count: person.count,
                   })}
                   size="small"
@@ -719,7 +721,7 @@ export const PartyDetail: React.FC<{
   governmentStartDate,
 }) => {
   const themedColors = useThemedColors();
-  const { t } = useTranslation();
+  const { t } = useScopedTranslation("parties");
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [tabIndex, setTabIndex] = useState(0);
 
@@ -788,13 +790,13 @@ export const PartyDetail: React.FC<{
                 variant="body2"
                 sx={{ color: "rgba(255,255,255,0.85)" }}
               >
-                {party.member_count} {t("parties.members")}
+                {party.member_count} {t("members")}
               </Typography>
               <Chip
                 label={
                   party.is_in_government === 1
-                    ? t("parties.government")
-                    : t("parties.opposition")
+                    ? t("government")
+                    : t("opposition")
                 }
                 size="small"
                 sx={{
@@ -837,17 +839,17 @@ export const PartyDetail: React.FC<{
           }}
         >
           <Tab
-            label={t("parties.detail.tabs.members")}
+            label={t("detail.tabs.members")}
             icon={<GroupsIcon sx={{ fontSize: 18 }} />}
             iconPosition="start"
           />
           <Tab
-            label={t("parties.detail.tabs.voting")}
+            label={t("detail.tabs.voting")}
             icon={<HowToVoteIcon sx={{ fontSize: 18 }} />}
             iconPosition="start"
           />
           <Tab
-            label={t("parties.detail.tabs.discipline")}
+            label={t("detail.tabs.discipline")}
             icon={<GavelIcon sx={{ fontSize: 18 }} />}
             iconPosition="start"
           />
