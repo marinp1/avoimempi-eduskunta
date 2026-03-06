@@ -65,6 +65,11 @@ export const Navigation: React.FC<{
     setSelectedHallituskausiId,
     loading,
   } = useHallituskausi();
+
+  const appTitle = t("app.title") as string;
+  const titleDotFi = appTitle.endsWith(".fi");
+  const titleBase = titleDotFi ? appTitle.slice(0, -3) : appTitle;
+  const titleSuffix = titleDotFi ? ".fi" : null;
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const navigate = (path: RouteName) => {
@@ -127,7 +132,15 @@ export const Navigation: React.FC<{
               fontSize: "1.0625rem",
             }}
           >
-            {t("app.title")}
+            {titleBase}
+            {titleSuffix && (
+              <Box
+                component="span"
+                sx={{ opacity: 0.5, fontWeight: 400, fontSize: "0.88em" }}
+              >
+                {titleSuffix}
+              </Box>
+            )}
           </Typography>
           <Typography
             variant="caption"
@@ -266,7 +279,15 @@ export const Navigation: React.FC<{
                 textOverflow: "ellipsis",
               }}
             >
-              {t("app.title")}
+              {titleBase}
+              {titleSuffix && (
+                <Box
+                  component="span"
+                  sx={{ opacity: 0.5, fontWeight: 400, fontSize: "0.88em" }}
+                >
+                  {titleSuffix}
+                </Box>
+              )}
             </Typography>
           </Box>
 
@@ -323,73 +344,53 @@ export const Navigation: React.FC<{
             </Tabs>
           </Box>
 
-          <Box
-            sx={{
-              flexShrink: 0,
-              width: { lg: 240, xl: 300 },
-              minWidth: { lg: 220, xl: 260 },
-            }}
-          >
-            <FormControl
+          <Box sx={{ flexShrink: 0 }}>
+            <Select
+              value={selectedHallituskausiId}
+              onChange={(event) =>
+                setSelectedHallituskausiId(event.target.value)
+              }
+              disabled={loading}
+              displayEmpty
               size="small"
-              fullWidth
+              renderValue={(value) =>
+                hallituskaudet.find((row) => row.id === value)?.label ||
+                allLabel
+              }
               sx={{
-                "& .MuiInputLabel-root": {
-                  color: "rgba(255,255,255,0.75)",
-                },
-                "& .MuiInputLabel-root.Mui-focused": {
+                fontSize: "0.8125rem",
+                color: "white",
+                ".MuiSelect-icon": { color: "rgba(255,255,255,0.7)" },
+                "& .MuiSelect-select": {
                   color: "white",
+                  py: "6px",
+                  px: "14px",
                 },
-                "& .MuiInputLabel-root.MuiInputLabel-shrink": {
-                  color: "rgba(255,255,255,0.9)",
+                ".MuiOutlinedInput-notchedOutline": {
+                  borderColor: "rgba(255,255,255,0.25)",
+                  borderRadius: "20px",
                 },
+                "&:hover .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "rgba(255,255,255,0.55)",
+                },
+                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "rgba(255,255,255,0.75)",
+                  borderWidth: "1px",
+                },
+                "&:hover": {
+                  backgroundColor: "rgba(255,255,255,0.08)",
+                  borderRadius: "20px",
+                },
+                transition: `background-color ${motion.fast}ms ${motion.easing.standard}`,
               }}
             >
-              <InputLabel id="header-hallituskausi-label" shrink>
-                {t("app.hallituskausi.label")}
-              </InputLabel>
-              <Select
-                labelId="header-hallituskausi-label"
-                value={selectedHallituskausiId}
-                label={t("app.hallituskausi.label")}
-                onChange={(event) =>
-                  setSelectedHallituskausiId(event.target.value)
-                }
-                disabled={loading}
-                displayEmpty
-                renderValue={(value) =>
-                  hallituskaudet.find((row) => row.id === value)?.label ||
-                  allLabel
-                }
-                sx={{
-                  color: "white",
-                  ".MuiSelect-icon": { color: "white" },
-                  transition: `background-color ${motion.fast}ms ${motion.easing.standard}`,
-                  "& .MuiSelect-select": {
-                    color: "white",
-                  },
-                  ".MuiOutlinedInput-notchedOutline": {
-                    borderColor: "rgba(255,255,255,0.35)",
-                  },
-                  "&:hover .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "rgba(255,255,255,0.65)",
-                  },
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "white",
-                  },
-                  "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.08)",
-                  },
-                }}
-              >
-                <MenuItem value="">{allLabel}</MenuItem>
-                {hallituskaudet.map((row) => (
-                  <MenuItem key={row.id} value={row.id}>
-                    {row.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+              <MenuItem value="">{allLabel}</MenuItem>
+              {hallituskaudet.map((row) => (
+                <MenuItem key={row.id} value={row.id}>
+                  {row.label}
+                </MenuItem>
+              ))}
+            </Select>
           </Box>
         </Toolbar>
       </AppBar>
@@ -423,7 +424,15 @@ export const Navigation: React.FC<{
               letterSpacing: "-0.01em",
             }}
           >
-            {t("app.title")}
+            {titleBase}
+            {titleSuffix && (
+              <Box
+                component="span"
+                sx={{ opacity: 0.5, fontWeight: 400, fontSize: "0.88em" }}
+              >
+                {titleSuffix}
+              </Box>
+            )}
           </Typography>
         </Toolbar>
       </AppBar>
