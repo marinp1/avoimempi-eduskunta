@@ -85,6 +85,24 @@ export interface IRowStore {
    */
   listRevisions(tableName: string, pk: number): Promise<StoredRevision[]>;
 
+  /**
+   * List all rows that have been updated at least once (i.e., have at least one revision).
+   * Results are ordered by updated_at descending (most recently changed first).
+   * Optionally filtered to rows updated at or after `sinceMs` (Unix ms timestamp).
+   * Only meaningful for raw-mode stores.
+   */
+  listChangedRows(
+    tableName: string,
+    sinceMs?: number,
+  ): Promise<ChangedRowSummary[]>;
+
   /** Close DB connections. */
   close(): void;
+}
+
+export interface ChangedRowSummary {
+  pk: number;
+  revisionCount: number;
+  createdAt: string;
+  updatedAt: string;
 }

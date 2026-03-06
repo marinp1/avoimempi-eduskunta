@@ -339,6 +339,13 @@ export class PostgresRowStore implements IRowStore {
     return [];
   }
 
+  async listChangedRows(
+    _tableName: string,
+    _sinceMs?: number,
+  ): Promise<import("../types").ChangedRowSummary[]> {
+    return [];
+  }
+
   async delete(tableName: string, pk: number): Promise<void> {
     await this.initPromise;
 
