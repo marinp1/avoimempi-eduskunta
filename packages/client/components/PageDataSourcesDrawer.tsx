@@ -49,48 +49,84 @@ type RowTrace = {
 
 const PAGE_SOURCES: Record<RouteName, TableSourceDefinition[]> = {
   "": [
-    { tableName: "MemberOfParliament", purpose: "Kansanedustajien perustiedot" },
+    {
+      tableName: "MemberOfParliament",
+      purpose: "Kansanedustajien perustiedot",
+    },
     { tableName: "SaliDBIstunto", purpose: "Istuntojen nosto etusivulle" },
-    { tableName: "SaliDBAanestys", purpose: "Aanestysnostot ja viimeisimmat tiedot" },
+    {
+      tableName: "SaliDBAanestys",
+      purpose: "Aanestysnostot ja viimeisimmat tiedot",
+    },
     { tableName: "VaskiData", purpose: "Asiakirja- ja dokumenttinostot" },
   ],
   edustajat: [
     { tableName: "MemberOfParliament", purpose: "Henkilotiedot ja ryhmat" },
-    { tableName: "SaliDBAanestysEdustaja", purpose: "Edustajakohtainen aanestysdata" },
+    {
+      tableName: "SaliDBAanestysEdustaja",
+      purpose: "Edustajakohtainen aanestysdata",
+    },
     { tableName: "SaliDBAanestys", purpose: "Aanestysten metatiedot" },
     { tableName: "SaliDBPuheenvuoro", purpose: "Puheenvuorojen tilastot" },
   ],
   puolueet: [
     { tableName: "MemberOfParliament", purpose: "Puolueiden kokoonpano" },
-    { tableName: "SaliDBAanestysEdustaja", purpose: "Puoluekohtaiset aanestykset" },
-    { tableName: "SaliDBAanestys", purpose: "Aanestyksen konteksti ja ajankohta" },
+    {
+      tableName: "SaliDBAanestysEdustaja",
+      purpose: "Puoluekohtaiset aanestykset",
+    },
+    {
+      tableName: "SaliDBAanestys",
+      purpose: "Aanestyksen konteksti ja ajankohta",
+    },
   ],
   istunnot: [
     { tableName: "SaliDBIstunto", purpose: "Istuntojen runko ja paivat" },
     { tableName: "SaliDBKohta", purpose: "Asiakohtien sisalto" },
-    { tableName: "SaliDBPuheenvuoro", purpose: "Puheenvuorot istuntojen sisalla" },
+    {
+      tableName: "SaliDBPuheenvuoro",
+      purpose: "Puheenvuorot istuntojen sisalla",
+    },
     { tableName: "SaliDBAanestys", purpose: "Istuntoon liittyvat aanestykset" },
-    { tableName: "SaliDBKohtaAanestys", purpose: "Asiakohdan ja aanestyksen linkitys" },
-    { tableName: "SaliDBKohtaAsiakirja", purpose: "Asiakohdan asiakirjalinkit" },
+    {
+      tableName: "SaliDBKohtaAanestys",
+      purpose: "Asiakohdan ja aanestyksen linkitys",
+    },
+    {
+      tableName: "SaliDBKohtaAsiakirja",
+      purpose: "Asiakohdan asiakirjalinkit",
+    },
     { tableName: "SaliDBTiedote", purpose: "Istuntoihin liittyvat tiedotteet" },
     { tableName: "VaskiData", purpose: "Asiakirjat, poytakirjat ja liitteet" },
   ],
   aanestykset: [
     { tableName: "SaliDBAanestys", purpose: "Aanestyksen paatiedot" },
     { tableName: "SaliDBAanestysEdustaja", purpose: "Edustajakohtaiset aanet" },
-    { tableName: "SaliDBKohtaAanestys", purpose: "Aanestyksen kytkenta asiakohtaan" },
+    {
+      tableName: "SaliDBKohtaAanestys",
+      purpose: "Aanestyksen kytkenta asiakohtaan",
+    },
     { tableName: "SaliDBIstunto", purpose: "Istuntokonteksti" },
     { tableName: "SaliDBKohta", purpose: "Aanestettavan asian kuvaus" },
   ],
   asiakirjat: [
     { tableName: "VaskiData", purpose: "Asiakirjojen runkosisalto" },
-    { tableName: "SaliDBKohtaAsiakirja", purpose: "Asiakirjan linkitys istuntoihin" },
+    {
+      tableName: "SaliDBKohtaAsiakirja",
+      purpose: "Asiakirjan linkitys istuntoihin",
+    },
   ],
   analytiikka: [
     { tableName: "MemberOfParliament", purpose: "Edustaja- ja puoluejakaumat" },
     { tableName: "SaliDBAanestys", purpose: "Aanestysaktiivisuuden pohjadata" },
-    { tableName: "SaliDBAanestysEdustaja", purpose: "Henkilo- ja puoluekohtainen aanestysdata" },
+    {
+      tableName: "SaliDBAanestysEdustaja",
+      purpose: "Henkilo- ja puoluekohtainen aanestysdata",
+    },
     { tableName: "SaliDBPuheenvuoro", purpose: "Puheaktiivisuuden tilastot" },
+  ],
+  hallitukset: [
+    { tableName: "MemberOfParliament", purpose: "Ministerien henkilotiedot" },
   ],
   muutokset: [],
 };
@@ -225,7 +261,7 @@ export const PageDataSourcesDrawer = ({
           return;
         }
         if (!response.ok) throw new Error(t("pageSources.fetchFailed"));
-        setRowTrace(await response.json() as RowTrace);
+        setRowTrace((await response.json()) as RowTrace);
       } catch (err) {
         if (abortController.signal.aborted || !mounted) return;
         setRowTraceError(
@@ -300,10 +336,16 @@ export const PageDataSourcesDrawer = ({
                 </IconButton>
               )}
               <Box>
-                <Typography variant="h6" sx={{ fontSize: "1rem", fontWeight: 600 }}>
+                <Typography
+                  variant="h6"
+                  sx={{ fontSize: "1rem", fontWeight: 600 }}
+                >
                   {t("pageSources.drawerTitle")}
                 </Typography>
-                <Typography variant="caption" sx={{ color: themedColors.textTertiary }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: themedColors.textTertiary }}
+                >
                   {traceItem
                     ? traceItem.label
                     : t(`navigation.routes.${activeRoute}`)}
@@ -321,13 +363,19 @@ export const PageDataSourcesDrawer = ({
               <Box sx={{ mb: 2 }}>
                 <Typography
                   variant="overline"
-                  sx={{ color: themedColors.textTertiary, display: "block", mb: 1 }}
+                  sx={{
+                    color: themedColors.textTertiary,
+                    display: "block",
+                    mb: 1,
+                  }}
                 >
                   {t("pageSources.itemTraceTitle")}
                 </Typography>
 
                 {rowTraceLoading ? (
-                  <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+                  <Box
+                    sx={{ display: "flex", justifyContent: "center", py: 3 }}
+                  >
                     <CircularProgress size={22} />
                   </Box>
                 ) : rowTraceError ? (
@@ -362,12 +410,18 @@ export const PageDataSourcesDrawer = ({
                       />
                     </Box>
                     <Divider sx={{ mb: 1 }} />
-                    <Typography variant="caption" sx={{ display: "block", mb: 0.5 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block", mb: 0.5 }}
+                    >
                       {t("pageSources.lastScrapeLine", {
                         value: formatDateTime(rowTrace.scrapedAt),
                       })}
                     </Typography>
-                    <Typography variant="caption" sx={{ display: "block", mb: 1 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{ display: "block", mb: 1 }}
+                    >
                       {t("pageSources.lastMigrationLine", {
                         value: formatDateTime(rowTrace.migratedAt),
                       })}
@@ -379,7 +433,9 @@ export const PageDataSourcesDrawer = ({
                       rel="noopener noreferrer"
                       size="small"
                       variant="outlined"
-                      endIcon={<OpenInNewIcon sx={{ fontSize: "0.9rem !important" }} />}
+                      endIcon={
+                        <OpenInNewIcon sx={{ fontSize: "0.9rem !important" }} />
+                      }
                       sx={{ textTransform: "none", fontSize: "0.75rem" }}
                     >
                       {t("pageSources.openApiSource")}
@@ -397,9 +453,15 @@ export const PageDataSourcesDrawer = ({
                 disableGutters
                 elevation={0}
                 defaultExpanded={false}
-                sx={{ "&:before": { display: "none" }, background: "transparent" }}
+                sx={{
+                  "&:before": { display: "none" },
+                  background: "transparent",
+                }}
               >
-                <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  sx={{ px: 0 }}
+                >
                   <Typography
                     variant="overline"
                     sx={{ color: themedColors.textTertiary }}
@@ -447,7 +509,9 @@ const PageSourcesList = ({
   summaries: Record<string, TableSummary>;
   summariesLoading: boolean;
   summariesError: string | null;
-  themedColors: ReturnType<typeof import("../theme/ThemeContext").useThemedColors>;
+  themedColors: ReturnType<
+    typeof import("../theme/ThemeContext").useThemedColors
+  >;
   t: ReturnType<typeof import("react-i18next").useTranslation>["t"];
 }) => {
   if (sourceDefinitions.length === 0) {

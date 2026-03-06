@@ -1,4 +1,5 @@
 import {
+  AccountBalance,
   Description,
   Event,
   Groups,
@@ -47,6 +48,11 @@ export const routes = {
     title: "Analytiikka",
     icon: Insights,
     Component: React.lazy(() => import("./Insights")),
+  },
+  hallitukset: {
+    title: "Hallitukset",
+    icon: AccountBalance,
+    Component: React.lazy(() => import("./Hallitukset")),
   },
   muutokset: {
     title: "Muutokset",

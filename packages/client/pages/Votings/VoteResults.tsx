@@ -10,13 +10,12 @@ import {
 } from "@mui/material";
 import React from "react";
 import { useTranslation } from "react-i18next";
+import { extractDocumentIdentifiers } from "#client/components/DocumentCards";
 import {
   VotingCard,
-  VotingGroupCard,
   type VotingCardData,
-  getPrimaryVotingTitle,
+  VotingGroupCard,
 } from "#client/components/VotingCard";
-import { extractDocumentIdentifiers } from "#client/components/DocumentCards";
 import {
   isDateWithinHallituskausi,
   useHallituskausi,

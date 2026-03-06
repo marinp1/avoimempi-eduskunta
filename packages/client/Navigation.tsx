@@ -36,6 +36,7 @@ import { colors, transitions as motion, spacing } from "./theme";
 const mainNavRoutes: RouteName[] = [
   "",
   "edustajat",
+  "hallitukset",
   "puolueet",
   "istunnot",
   "aanestykset",

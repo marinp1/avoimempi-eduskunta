@@ -624,7 +624,8 @@ export async function scrapeTable(
 
   const shouldAutoRepairGaps =
     effectiveMode.type === "auto-resume" ||
-    (effectiveMode.type === "start-from-pk" && effectiveMode.pkStartValue === 0);
+    (effectiveMode.type === "start-from-pk" &&
+      effectiveMode.pkStartValue === 0);
   if (shouldAutoRepairGaps && totalRows > totalRowsScraped) {
     const missingRanges = await collectInternalMissingRanges();
 
@@ -687,7 +688,8 @@ export async function scrapeTable(
 
   const shouldWarnOnCountDrift =
     effectiveMode.type === "auto-resume" ||
-    (effectiveMode.type === "start-from-pk" && effectiveMode.pkStartValue === 0);
+    (effectiveMode.type === "start-from-pk" &&
+      effectiveMode.pkStartValue === 0);
   if (
     shouldWarnOnCountDrift &&
     totalRows > 0 &&

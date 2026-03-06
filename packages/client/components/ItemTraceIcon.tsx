@@ -1,6 +1,6 @@
 import TravelExploreIcon from "@mui/icons-material/TravelExplore";
 import { IconButton, Tooltip } from "@mui/material";
-import { useTrace, type TraceItem } from "#client/context/TraceContext";
+import { type TraceItem, useTrace } from "#client/context/TraceContext";
 
 type Props = Omit<TraceItem, never> & {
   sx?: object;

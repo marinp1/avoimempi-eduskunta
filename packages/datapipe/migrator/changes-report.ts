@@ -48,10 +48,7 @@ function tokenizeXml(xml: string): string[] {
   return xml.replace(/></g, ">\n<").split("\n").filter(Boolean);
 }
 
-function computeLcsDiff(
-  oldLines: string[],
-  newLines: string[],
-): DiffHunk[] {
+function computeLcsDiff(oldLines: string[], newLines: string[]): DiffHunk[] {
   const m = oldLines.length;
   const n = newLines.length;
   const dp: number[][] = Array.from({ length: m + 1 }, () =>
@@ -96,7 +93,11 @@ function buildDiffHunks(
   const show = new Set<number>();
   for (let idx = 0; idx < n; idx++) {
     if (full[idx].op !== "keep") {
-      for (let c = Math.max(0, idx - context); c <= Math.min(n - 1, idx + context); c++) {
+      for (
+        let c = Math.max(0, idx - context);
+        c <= Math.min(n - 1, idx + context);
+        c++
+      ) {
         show.add(c);
       }
     }
@@ -109,7 +110,10 @@ function buildDiffHunks(
       result.push({ op: "keep", text: `… ${idx - prev - 1} unchanged` });
     }
     const { op, text } = full[idx];
-    result.push({ op, text: text.length > maxLineLen ? `${text.slice(0, maxLineLen)}…` : text });
+    result.push({
+      op,
+      text: text.length > maxLineLen ? `${text.slice(0, maxLineLen)}…` : text,
+    });
     prev = idx;
   }
   return result;
@@ -204,7 +208,9 @@ export async function generateChangesReport(
         const fields: FieldChange[] = [];
         const len = Math.max(stateBefore.length, stateAfter.length);
         for (let i = 0; i < len; i++) {
-          if (JSON.stringify(stateBefore[i]) !== JSON.stringify(stateAfter[i])) {
+          if (
+            JSON.stringify(stateBefore[i]) !== JSON.stringify(stateAfter[i])
+          ) {
             fields.push(
               buildFieldChange(
                 colNames[i] ?? `col[${i}]`,

@@ -8,7 +8,11 @@ type CoreRoutesDataAccess = {
     table: string;
     pkName: string;
     pkValue: string;
-  }) => { scrapedAt: string | null; migratedAt: string | null; apiUrl: string } | null;
+  }) => {
+    scrapedAt: string | null;
+    migratedAt: string | null;
+    apiUrl: string;
+  } | null;
   fetchImportSourceTableSummaries: (params: { tableNames: string[] }) => {
     tables: Array<{
       tableName: string;
@@ -52,7 +56,9 @@ export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
       const pkValue = searchParams.get("pkValue");
 
       if (!table || !pkName || !pkValue) {
-        return badRequest("Missing required query parameters: table, pkName, pkValue");
+        return badRequest(
+          "Missing required query parameters: table, pkName, pkValue",
+        );
       }
 
       const result = db.fetchRowTrace({ table, pkName, pkValue });
@@ -113,12 +119,18 @@ export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
         const file = Bun.file(getChangesReportPath());
         const exists = await file.exists();
         if (!exists) {
-          return Response.json({ error: "No changes report available yet" }, { status: 404 });
+          return Response.json(
+            { error: "No changes report available yet" },
+            { status: 404 },
+          );
         }
         const report = await file.json();
         return Response.json(report);
       } catch {
-        return Response.json({ error: "Failed to read changes report" }, { status: 500 });
+        return Response.json(
+          { error: "Failed to read changes report" },
+          { status: 500 },
+        );
       }
     },
   },

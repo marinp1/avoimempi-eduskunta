@@ -13,7 +13,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useEffect, useState, type ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 
@@ -102,7 +102,11 @@ function Changes(): ReactNode {
         }
       />
 
-      <Stack direction="row" spacing={1} sx={{ mb: 3, flexWrap: "wrap", gap: 1 }}>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{ mb: 3, flexWrap: "wrap", gap: 1 }}
+      >
         <Chip
           icon={<NewReleasesIcon />}
           label={`${report.totalNewRows} uutta riviä`}
@@ -176,7 +180,11 @@ function Changes(): ReactNode {
                         }}
                       >
                         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                          <Stack direction="row" spacing={2} alignItems="center">
+                          <Stack
+                            direction="row"
+                            spacing={2}
+                            alignItems="center"
+                          >
                             <Typography variant="body2" fontWeight={500}>
                               pk={row.pk}
                             </Typography>
@@ -274,7 +282,7 @@ function Changes(): ReactNode {
       )}
     </Box>
   );
-};
+}
 
 export default function ChangesPage(): ReactNode {
   return <Changes />;

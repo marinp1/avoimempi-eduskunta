@@ -12,7 +12,9 @@ export const DataCard: React.FC<{
   sx?: SxProps<Theme>;
   className?: string;
 }> = ({ children, sx, className }) => (
-  <Card className={className} sx={{ ...commonStyles.dataCard, ...sx }}>{children}</Card>
+  <Card className={className} sx={{ ...commonStyles.dataCard, ...sx }}>
+    {children}
+  </Card>
 );
 
 /**

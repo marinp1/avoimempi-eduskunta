@@ -1,6 +1,11 @@
 import { createHash } from "node:crypto";
 import postgres from "postgres";
-import type { ColumnSchema, IRowStore, StoredRevision, StoredRow } from "../types";
+import type {
+  ColumnSchema,
+  IRowStore,
+  StoredRevision,
+  StoredRow,
+} from "../types";
 
 type RowMode = "raw" | "parsed";
 

@@ -50,7 +50,13 @@ const TimelineSelector: React.FC<{
   date: string;
   todayIso: string;
   onDateChange: (date: string) => void;
-}> = ({ hallituskaudet, selectedHallituskausi, date, todayIso, onDateChange }) => {
+}> = ({
+  hallituskaudet,
+  selectedHallituskausi,
+  date,
+  todayIso,
+  onDateChange,
+}) => {
   const tc = useThemedColors();
 
   const rangeStart =
@@ -73,7 +79,9 @@ const TimelineSelector: React.FC<{
     Math.max(0, Math.min(100, ((toMs(d) - startMs) / span) * 100));
 
   const visible = hallituskaudet
-    .filter((p) => p.startDate <= rangeEnd && (p.endDate ?? todayIso) >= rangeStart)
+    .filter(
+      (p) => p.startDate <= rangeEnd && (p.endDate ?? todayIso) >= rangeStart,
+    )
     .sort((a, b) => (a.startDate < b.startDate ? -1 : 1));
 
   const startYear = new Date(rangeStart).getFullYear();
@@ -101,7 +109,12 @@ const TimelineSelector: React.FC<{
   type Seg =
     | { kind: "period"; p: HallituskausiPeriod; duration: number; idx: number }
     | { kind: "gap"; duration: number }
-    | { kind: "overlap"; duration: number; prev: HallituskausiPeriod; curr: HallituskausiPeriod };
+    | {
+        kind: "overlap";
+        duration: number;
+        prev: HallituskausiPeriod;
+        curr: HallituskausiPeriod;
+      };
 
   const segments: Seg[] = [];
   let cursor = startMs;
@@ -116,7 +129,12 @@ const TimelineSelector: React.FC<{
       const overlapDuration = cursor - pStart;
       const prevPeriod = visible[i - 1];
       if (overlapDuration > 2 * MS_PER_DAY && prevPeriod) {
-        segments.push({ kind: "overlap", duration: overlapDuration, prev: prevPeriod, curr: p });
+        segments.push({
+          kind: "overlap",
+          duration: overlapDuration,
+          prev: prevPeriod,
+          curr: p,
+        });
       }
       // This period's visible slice starts where the previous left off
       if (pEnd > cursor) {
@@ -168,7 +186,9 @@ const TimelineSelector: React.FC<{
             return (
               <Tooltip
                 key={`overlap-${i}`}
-                title={<span style={{ whiteSpace: "pre-line" }}>{tooltipText}</span>}
+                title={
+                  <span style={{ whiteSpace: "pre-line" }}>{tooltipText}</span>
+                }
                 placement="top"
                 arrow
               >
@@ -580,26 +600,28 @@ export default () => {
           placeholder={t("composition.searchPlaceholder")}
           value={nameSearch}
           onChange={(e) => setNameSearch(e.target.value)}
-          slotProps={{ input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon
-                  sx={{ fontSize: 18, color: themedColors.textTertiary }}
-                />
-              </InputAdornment>
-            ),
-            endAdornment: nameSearch ? (
-              <InputAdornment position="end">
-                <IconButton
-                  size="small"
-                  onClick={() => setNameSearch("")}
-                  edge="end"
-                >
-                  <ClearIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-              </InputAdornment>
-            ) : undefined,
-          } }}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon
+                    sx={{ fontSize: 18, color: themedColors.textTertiary }}
+                  />
+                </InputAdornment>
+              ),
+              endAdornment: nameSearch ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    size="small"
+                    onClick={() => setNameSearch("")}
+                    edge="end"
+                  >
+                    <ClearIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </InputAdornment>
+              ) : undefined,
+            },
+          }}
           sx={{ width: { xs: "100%", sm: 320 } }}
         />
       </Box>
@@ -644,8 +666,7 @@ export default () => {
                   govFilter === g
                     ? themedColors.primary
                     : themedColors.backgroundPaper,
-                color:
-                  govFilter === g ? "white" : themedColors.textSecondary,
+                color: govFilter === g ? "white" : themedColors.textSecondary,
                 border: `1px solid ${govFilter === g ? themedColors.primary : themedColors.dataBorder}`,
                 "&:hover": {
                   bgcolor:
@@ -791,7 +812,10 @@ export default () => {
             alignItems: "center",
           }}
         >
-          <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+          <Typography
+            variant="body2"
+            sx={{ color: themedColors.textSecondary }}
+          >
             <Box
               component="span"
               sx={{ fontWeight: 700, color: themedColors.textPrimary }}
@@ -806,7 +830,10 @@ export default () => {
           >
             ·
           </Box>
-          <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+          <Typography
+            variant="body2"
+            sx={{ color: themedColors.textSecondary }}
+          >
             <Box
               component="span"
               sx={{ fontWeight: 600, color: themedColors.success }}
@@ -821,7 +848,10 @@ export default () => {
           >
             ·
           </Box>
-          <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+          <Typography
+            variant="body2"
+            sx={{ color: themedColors.textSecondary }}
+          >
             <Box
               component="span"
               sx={{ fontWeight: 600, color: themedColors.warning }}
@@ -929,7 +959,13 @@ export default () => {
                             mb: 1,
                           }}
                         >
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                            }}
+                          >
                             <Typography
                               variant="subtitle1"
                               sx={{
@@ -1086,7 +1122,13 @@ export default () => {
                               py: 2.5,
                             }}
                           >
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                              }}
+                            >
                               {m.first_name} {m.last_name}
                               <ItemTraceIcon
                                 table="MemberOfParliament"
