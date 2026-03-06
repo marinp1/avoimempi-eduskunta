@@ -10,10 +10,11 @@ LOCK_DIR="/var/lib/avoimempi-eduskunta-pipeline/locks"
 SCRAPER_MAX_RUNTIME_SECONDS=1800
 FETCH_COUNTS_CLI="${PIPELINE_BUILD_DIR}/scraper/fetch-counts-cli.js"
 
-# DB activation constants (local — no rsync, same VM)
+# DB + report activation constants (local — no rsync, same VM)
 APP_DATA_DIR="/var/lib/avoimempi-eduskunta-app"
 APP_SYNC_RELEASES_DIR="${APP_DATA_DIR}/releases"
 APP_SYNC_CURRENT_LINK="${APP_DATA_DIR}/current.db"
+APP_CHANGES_REPORT_DEST="${APP_DATA_DIR}/metadata/changes-report.json"
 APP_SYNC_KEEP_RELEASES=5
 APP_READY_URL="http://127.0.0.1/api/ready"
 APP_READY_RETRIES=60
@@ -69,6 +70,17 @@ activate_on_app() {
   # Prune old releases
   ls -1t "${APP_SYNC_RELEASES_DIR}"/avoimempi-eduskunta-*.db 2>/dev/null \
     | tail -n +$((APP_SYNC_KEEP_RELEASES + 1)) | xargs -r rm -f --
+
+  # Copy changes report so the app process can serve it.
+  local report_src="${STORAGE_LOCAL_DIR}/metadata/changes-report.json"
+  if [[ -f "${report_src}" ]]; then
+    echo "Copying changes report to ${APP_CHANGES_REPORT_DEST}..."
+    mkdir -p "$(dirname "${APP_CHANGES_REPORT_DEST}")"
+    cp "${report_src}" "${APP_CHANGES_REPORT_DEST}"
+    chmod 644 "${APP_CHANGES_REPORT_DEST}"
+  else
+    echo "No changes report found at ${report_src}; skipping."
+  fi
 
   echo "Restarting app service..."
   sudo "${RESTART_APP_SCRIPT}"
