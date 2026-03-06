@@ -11,19 +11,21 @@ import {
   CircularProgress,
   Divider,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
+
+interface DiffHunk {
+  op: "add" | "remove" | "keep";
+  text: string;
+}
 
 interface FieldChange {
   name: string;
   summary: string;
+  diff?: DiffHunk[];
 }
 
 interface ChangedRowEntry {
@@ -193,41 +195,73 @@ function Changes(): ReactNode {
                           </Stack>
                         </AccordionSummary>
                         <AccordionDetails sx={{ pt: 0 }}>
-                          <Table size="small">
-                            <TableBody>
-                              {row.fields.map((field) => (
-                                <TableRow key={field.name}>
-                                  <TableCell
+                          <Stack spacing={1.5}>
+                            {row.fields.map((field) => (
+                              <Box key={field.name}>
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    fontFamily: "monospace",
+                                    fontWeight: 700,
+                                    color: themedColors.textSecondary,
+                                    display: "block",
+                                    mb: 0.5,
+                                  }}
+                                >
+                                  {field.name}
+                                  <Typography
+                                    component="span"
+                                    variant="caption"
                                     sx={{
                                       fontFamily: "monospace",
-                                      fontSize: "0.75rem",
-                                      fontWeight: 600,
-                                      whiteSpace: "nowrap",
-                                      color: themedColors.textSecondary,
-                                      border: 0,
-                                      py: 0.5,
-                                      pl: 0,
-                                      width: "1%",
-                                      pr: 2,
-                                    }}
-                                  >
-                                    {field.name}
-                                  </TableCell>
-                                  <TableCell
-                                    sx={{
-                                      fontFamily: "monospace",
-                                      fontSize: "0.75rem",
-                                      border: 0,
-                                      py: 0.5,
-                                      color: themedColors.textPrimary,
+                                      fontWeight: 400,
+                                      color: themedColors.textTertiary,
+                                      ml: 1,
                                     }}
                                   >
                                     {field.summary}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
+                                  </Typography>
+                                </Typography>
+                                {field.diff && (
+                                  <Box
+                                    sx={{
+                                      fontFamily: "monospace",
+                                      fontSize: "0.7rem",
+                                      lineHeight: 1.6,
+                                      borderRadius: 1,
+                                      overflow: "auto",
+                                      maxHeight: 320,
+                                      bgcolor: "action.hover",
+                                      px: 1.5,
+                                      py: 1,
+                                    }}
+                                  >
+                                    {field.diff.map((hunk, i) => (
+                                      <Box
+                                        key={i}
+                                        component="div"
+                                        sx={{
+                                          whiteSpace: "pre",
+                                          color:
+                                            hunk.op === "add"
+                                              ? "success.main"
+                                              : hunk.op === "remove"
+                                                ? "error.main"
+                                                : themedColors.textTertiary,
+                                        }}
+                                      >
+                                        {hunk.op === "add"
+                                          ? `+ ${hunk.text}`
+                                          : hunk.op === "remove"
+                                            ? `- ${hunk.text}`
+                                            : `  ${hunk.text}`}
+                                      </Box>
+                                    ))}
+                                  </Box>
+                                )}
+                              </Box>
+                            ))}
+                          </Stack>
                         </AccordionDetails>
                       </Accordion>
                     ))}
