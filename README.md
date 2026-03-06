@@ -14,7 +14,7 @@ The project ingests source data from the Eduskunta Open API, transforms it throu
 ```txt
 packages/
 ├── client/      React frontend (Material UI)
-├── server/      Bun HTTP API + admin controllers + database access
+├── server/      Bun HTTP API + database access
 ├── datapipe/    Scraper, parser, and migrator CLIs
 └── shared/      Shared constants, types, storage, and DB utilities
 
@@ -34,11 +34,7 @@ cp .env.example .env
 bun run start
 ```
 
-In development mode (`bun run start`), the server runs on `http://localhost:3000` by default and enables:
-
-- main app routes
-- dev/admin routes including `/admin`
-- WebSocket progress updates for scraper/parser/migrator runs
+In development mode (`bun run start`), the server runs on `http://localhost:3000` by default.
 
 ## Data pipeline
 
@@ -149,10 +145,6 @@ bun run parse MemberOfParliament --pk-start 82000 --pk-end 83000
 bun run migrate
 ```
 
-### Bulk operations from UI
-
-Use `/admin` in development mode for table-by-table and bulk scraper/parser control with live progress over WebSockets.
-
 ### Manual terminal runbook
 
 For a clear manual `sync -> parse -> rebuild` guide, see [packages/datapipe/README.md](./packages/datapipe/README.md#manual-sync-and-rebuild-runbook).
@@ -203,6 +195,6 @@ For infrastructure/deploy review, production topology, and hardening checklist, 
 
 ## Notes
 
-- Pipeline status is operationally tracked via CLI/Admin commands rather than a static README table.
+- Pipeline status is operationally tracked via CLI commands rather than a static README table.
 - Schema evolves through SQL migrations in `packages/datapipe/migrator/migrations`.
 - The README intentionally does not include a static ER diagram to avoid drift from the live schema.

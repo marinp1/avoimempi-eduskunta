@@ -25,7 +25,6 @@
 - **Primary**: Purple/blue (`themedColors.primary`) - used for sessions, main actions
 - **Success**: Green (`themedColors.success`) - used for passed votes, positive states
 - **Error**: Red (`themedColors.error`) - used for failed votes, negative states
-- **Admin UI**: Purple/blue (scraper), Pink/red (parser), Green/teal (migrator)
 
 ### Common Components
 - Use `GlassCard` for hero sections

@@ -345,5 +345,5 @@ These are known issues that should be fixed in migrators:
 
 1. **sanity.test.ts** - Zero-tolerance tests that MUST pass
 2. **data-quality.test.ts** - Known issues to fix in migrators
-3. **SanityCheckService** - Runtime checks exposed via Admin UI
+3. **SanityCheckService** - Runtime checks (internal server service)
 4. All tests skip if database doesn't exist (allow CI to pass)
