@@ -95,7 +95,9 @@ bun run parse:status                 # Check parsing status
 ```
 
 **3. Migration (import to final schema)**
-Use the Admin UI (`/admin` route) to trigger database rebuild from parsed data.
+```bash
+bun run migrate
+```
 
 ## Key Architecture Patterns
 
@@ -105,17 +107,17 @@ Each table goes through a three-stage ETL process:
 
 1. **Scraper** (`packages/datapipe/scraper/`):
    - Fetches paginated data from `https://avoindata.eduskunta.fi/api/v1/tables/{TableName}/batch`
-   - Stores raw responses to `data/raw/{TableName}/page_*.json` using storage abstraction
+   - Stores raw responses in `data/raw.db` using the row-store abstraction
    - Uses primary key-based pagination (`pkStartValue`)
    - Rate-limited with 10ms between requests
-   - Controlled via Admin UI with WebSocket progress updates
+   - Controlled via `bun run scrape` CLI
 
 2. **Parser** (`packages/datapipe/parser/`):
    - Reads from raw storage table by table
    - Applies custom parser functions from `fn/{TableName}.ts` if available
    - Falls back to default parser if no custom parser exists
-   - Writes transformed data to `data/parsed/{TableName}/page_*.json`
-   - Controlled via Admin UI with WebSocket progress updates
+   - Writes transformed data to `data/parsed.db`
+   - Controlled via `bun run parse` CLI
 
 3. **Migrator** (`packages/datapipe/migrator/`):
    - Uses `bun-sqlite-migrations` for schema management
@@ -123,7 +125,7 @@ Each table goes through a three-stage ETL process:
    - Each table has a migrator function in `{TableName}/migrator.ts`
    - Imports occur in specific order (defined in `IMPORT_ORDER`)
    - Clears all tables before importing to ensure clean state
-   - Triggered via Admin UI "Rebuild Database" button
+   - Triggered via `bun run migrate` CLI
 
 ### Application Architecture
 
@@ -133,14 +135,11 @@ The web application is split into clear client/server separation:
   - `index.ts` - Main server with type-safe routing
   - `database/` - Database access layer with `DatabaseConnection` class
   - `public/` - Static assets and HTML entry point
-  - Controllers: `scraper-controller.ts`, `parser-controller.ts`, `migrator-controller.ts`
-  - WebSocket support for real-time progress updates
 
 - **packages/client/** - React SPA
-  - Pages: `About/`, `Edustajat/`, `Votings/`, `Admin/`
+  - Pages: `Etusivu/`, `Edustajat/`, `Puolueet/`, `Istunnot/`, `Äänestykset/`, `Asiakirjat/`, `Analytiikka/`, `Muutokset/`
   - Entry point: `root.tsx` → `app.tsx`
   - Material-UI components with Emotion styling
-  - Admin UI with real-time progress tracking
 
 - **packages/shared/** - Shared code
   - `constants/` - Table names, primary keys, etc.
@@ -177,7 +176,7 @@ Common tables:
 3. Create migrator: `packages/datapipe/migrator/{TableName}/migrator.ts`
 4. Add migration SQL if needed: `packages/datapipe/migrator/migrations/V*.sql`
 5. Update `IMPORT_ORDER` in `packages/datapipe/migrator/import-data.ts` if dependencies exist
-6. Run the pipeline: scrape → parse → migrate (via CLI or Admin UI)
+6. Run the pipeline: `bun run scrape <TableName>` → `bun run parse <TableName>` → `bun run migrate`
 
 ### Migration File Best Practices
 
@@ -224,12 +223,3 @@ The storage layer is designed to be cloud-agnostic and offline-first:
 
 The scraper has a safety limit (`MAX_LOOP_LIMIT = 10_000`) to prevent infinite loops. If this limit is reached, it throws a "Sanity check error". This can be adjusted for large tables.
 
-### Admin UI
-
-The Admin UI (`/admin` route) provides:
-- Overview of scraping, parsing, and migration status
-- Table-by-table status tracking
-- Control buttons to start/stop scraper and parser
-- Real-time progress updates via WebSocket
-- "Rebuild Database" button to trigger migration
-- Color-coded UI: Purple/blue (scraper), Pink/red (parser), Green/teal (migrator)

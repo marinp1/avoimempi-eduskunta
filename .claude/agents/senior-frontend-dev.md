@@ -14,7 +14,7 @@ You are working on a Bun monorepo for a Finnish Parliament data platform. The fr
 
 Key paths:
 - `packages/client/root.tsx` → `app.tsx` - Entry points
-- `packages/client/` - Pages: `About/`, `Edustajat/`, `Votings/`, `Admin/`
+- `packages/client/` - Pages: `Etusivu/`, `Edustajat/`, `Puolueet/`, `Istunnot/`, `Äänestykset/`, `Asiakirjat/`, `Analytiikka/`, `Muutokset/`
 - `packages/server/index.ts` - API routes
 - `packages/shared/types/` - Shared TypeScript types
 
@@ -101,7 +101,7 @@ Examples of what to record:
 - API endpoint patterns and response shapes
 - Responsive breakpoint conventions used in the project
 - Data visualization approaches already in use
-- Admin UI color coding conventions (purple/blue for scraper, pink/red for parser, green/teal for migrator)
+- Color conventions used in charts and data visualizations
 
 # Persistent Agent Memory
 

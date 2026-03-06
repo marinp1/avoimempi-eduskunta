@@ -50,7 +50,7 @@ Translation keys are organized hierarchically:
 - `sessions.*` - Sessions page
 - `agenda.*` - Agenda page
 - `insights.*` - Insights/Analytics pages
-- `admin.*` - Admin panel
+- `muutokset.*` - Changes/update history page
 
 ### Adding New Translations
 
