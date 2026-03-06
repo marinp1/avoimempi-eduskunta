@@ -198,26 +198,56 @@ export async function scrapeTable(
   // network request; fall back to a live fetch when no persisted count exists.
   const cachedCount = await readPersistedTableCount(tableName as TableName);
 
+  // Fetch column info early — needed both for the skip-check peek and for scraping.
+  const { primaryColumn } = await getTableColumns(tableName);
+
   // Skip scraping if local data is already up-to-date according to the saved count.
+  // The count alone is not reliable: the API may have deleted rows (lowering the
+  // count) while simultaneously adding new rows with higher PKs. When counts
+  // suggest nothing changed, do a lightweight peek just beyond our local max PK
+  // to confirm there are no new rows before skipping.
   if (options.skipIfUnchanged && cachedCount !== null) {
     const localCount = await rawStore.count(tableName);
     if (localCount >= cachedCount) {
+      const localMaxPk = await rawStore.maxPk(tableName);
+      let hasNewRowsBeyondLocalMax = false;
+
+      if (localMaxPk !== null) {
+        const peekUrl = new URL(
+          `https://avoindata.eduskunta.fi/api/v1/tables/${tableName}/batch`,
+        );
+        peekUrl.searchParams.set("pkName", primaryColumn);
+        peekUrl.searchParams.set("perPage", "1");
+        peekUrl.searchParams.set("pkStartValue", String(localMaxPk + 1));
+
+        const peekResp = await fetch(peekUrl.toString());
+        if (peekResp.ok) {
+          const peekData = (await peekResp.json()) as EduskuntaApiResponse;
+          hasNewRowsBeyondLocalMax = peekData.rowCount > 0;
+        }
+      }
+
+      if (!hasNewRowsBeyondLocalMax) {
+        console.log(
+          `⏭️  Skipping ${tableName}: API has ${cachedCount.toLocaleString()} rows, stored ${localCount.toLocaleString()} rows, no new rows beyond local max PK`,
+        );
+        return {
+          rowsScraped: 0,
+          pagesScraped: 0,
+          totalRowsStored: localCount,
+          pkStartValue: null,
+          pkEndValue: null,
+          truncated: false,
+          continuationPk: null,
+        };
+      }
+
       console.log(
-        `⏭️  Skipping ${tableName}: API has ${cachedCount.toLocaleString()} rows, already stored ${localCount.toLocaleString()} rows`,
+        `🔄 ${tableName}: API count=${cachedCount.toLocaleString()}, local=${localCount.toLocaleString()}, but new rows found beyond PK ${localMaxPk} — scraping...`,
       );
-      return {
-        rowsScraped: 0,
-        pagesScraped: 0,
-        totalRowsStored: localCount,
-        pkStartValue: null,
-        pkEndValue: null,
-        truncated: false,
-        continuationPk: null,
-      };
     }
   }
 
-  const { primaryColumn } = await getTableColumns(tableName);
   const totalRows =
     cachedCount !== null
       ? cachedCount
