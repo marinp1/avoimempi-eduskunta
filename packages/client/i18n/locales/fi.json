@@ -271,6 +271,10 @@
     "noResults": "Ei edustajia näillä suodattimilla.",
     "noResultsHint": "Kokeile laajentaa suodatusta nähdäksesi tuloksia.",
     "resetFilters": "Tyhjennä suodattimet",
+    "searchPlaceholder": "Hae nimellä...",
+    "dateWithinPeriod": "Päivä kaudella",
+    "historicalView": "Historiallinen näkymä",
+    "returnToPresent": "Palaa nykyhetkeen",
     "distribution": {
       "totalMembers": "Jäsentä yhteensä"
     },

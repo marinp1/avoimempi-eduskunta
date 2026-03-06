@@ -1,8 +1,6 @@
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import GroupsIcon from "@mui/icons-material/Groups";
-import PieChartIcon from "@mui/icons-material/PieChart";
+import ClearIcon from "@mui/icons-material/Clear";
+import SearchIcon from "@mui/icons-material/Search";
 import {
   Alert,
   Box,
@@ -12,8 +10,10 @@ import {
   Chip,
   CircularProgress,
   Fade,
+  IconButton,
   InputAdornment,
   Paper,
+  Slider,
   Stack,
   Table,
   TableBody,
@@ -22,12 +22,14 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ItemTraceIcon } from "#client/components/ItemTraceIcon";
 import {
+  type HallituskausiPeriod,
   isDateWithinHallituskausi,
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
@@ -40,10 +42,286 @@ type MemberWithExtras = DatabaseQueries.GetParliamentComposition & {
   is_in_government?: number;
 };
 
+// ─── Timeline selector ────────────────────────────────────────────────────────
+
+const TimelineSelector: React.FC<{
+  hallituskaudet: HallituskausiPeriod[];
+  selectedHallituskausi: HallituskausiPeriod | null;
+  date: string;
+  todayIso: string;
+  onDateChange: (date: string) => void;
+}> = ({ hallituskaudet, selectedHallituskausi, date, todayIso, onDateChange }) => {
+  const tc = useThemedColors();
+
+  const rangeStart =
+    selectedHallituskausi?.startDate ??
+    hallituskaudet.reduce(
+      (min, p) => (p.startDate < min ? p.startDate : min),
+      hallituskaudet[0]?.startDate ?? "2000-01-01",
+    );
+  const rangeEnd = selectedHallituskausi?.endDate ?? todayIso;
+
+  const startMs = new Date(rangeStart).getTime();
+  const endMs = new Date(rangeEnd).getTime();
+  const span = endMs - startMs;
+
+  if (span <= 0 || hallituskaudet.length === 0) return null;
+
+  const toMs = (d: string) => new Date(d).getTime();
+  const toDate = (ms: number) => new Date(ms).toISOString().split("T")[0];
+  const toPct = (d: string) =>
+    Math.max(0, Math.min(100, ((toMs(d) - startMs) / span) * 100));
+
+  const visible = hallituskaudet
+    .filter((p) => p.startDate <= rangeEnd && (p.endDate ?? todayIso) >= rangeStart)
+    .sort((a, b) => (a.startDate < b.startDate ? -1 : 1));
+
+  const startYear = new Date(rangeStart).getFullYear();
+  const endYear = new Date(rangeEnd).getFullYear();
+  const yearSpan = endYear - startYear;
+  const yearStep = yearSpan <= 5 ? 1 : yearSpan <= 10 ? 2 : 4;
+  const yearTicks: number[] = [];
+  for (let y = startYear + 1; y <= endYear; y++) {
+    if ((y - startYear) % yearStep === 0) {
+      const pct = toPct(`${y}-01-01`);
+      if (pct > 2 && pct < 98) yearTicks.push(y);
+    }
+  }
+
+  const currentMs = Math.max(startMs, Math.min(endMs, toMs(date)));
+
+  const formatLabel = (ms: number) => {
+    const [yr, mo, dy] = toDate(ms).split("-");
+    return `${parseInt(dy)}.${parseInt(mo)}.${yr}`;
+  };
+
+  // Build flex segments: periods interleaved with gap-fillers so the
+  // layout is driven by actual durations — no floating-point overlap possible.
+  // Overlapping source data is surfaced as a distinct amber "overlap" segment.
+  type Seg =
+    | { kind: "period"; p: HallituskausiPeriod; duration: number; idx: number }
+    | { kind: "gap"; duration: number }
+    | { kind: "overlap"; duration: number; prev: HallituskausiPeriod; curr: HallituskausiPeriod };
+
+  const segments: Seg[] = [];
+  let cursor = startMs;
+  for (let i = 0; i < visible.length; i++) {
+    const p = visible[i];
+    const pStart = Math.max(toMs(p.startDate), startMs);
+    const pEnd = Math.min(toMs(p.endDate ?? todayIso), endMs);
+    if (pStart < cursor) {
+      // Overlap: previous period extended into this one's range.
+      // Ignore overlaps of ≤ 2 days — same-day or off-by-one boundaries in source data.
+      const MS_PER_DAY = 86_400_000;
+      const overlapDuration = cursor - pStart;
+      const prevPeriod = visible[i - 1];
+      if (overlapDuration > 2 * MS_PER_DAY && prevPeriod) {
+        segments.push({ kind: "overlap", duration: overlapDuration, prev: prevPeriod, curr: p });
+      }
+      // This period's visible slice starts where the previous left off
+      if (pEnd > cursor) {
+        segments.push({ kind: "period", p, duration: pEnd - cursor, idx: i });
+        cursor = pEnd;
+      }
+    } else {
+      if (pStart > cursor) {
+        segments.push({ kind: "gap", duration: pStart - cursor });
+      }
+      if (pEnd > pStart) {
+        segments.push({ kind: "period", p, duration: pEnd - pStart, idx: i });
+        cursor = pEnd;
+      }
+    }
+  }
+  if (cursor < endMs) {
+    segments.push({ kind: "gap", duration: endMs - cursor });
+  }
+
+  return (
+    <Box sx={{ mb: spacing.md }}>
+      {/* Period blocks — flex layout driven by duration, no gaps/overlaps */}
+      <Box
+        sx={{
+          display: "flex",
+          height: 28,
+          borderRadius: 0.5,
+          overflow: "hidden",
+          border: `1px solid ${tc.dataBorder}`,
+        }}
+      >
+        {segments.map((seg, i) => {
+          if (seg.kind === "gap") {
+            return (
+              <Box
+                key={`gap-${i}`}
+                sx={{ flexGrow: seg.duration, flexBasis: 0, flexShrink: 1 }}
+              />
+            );
+          }
+          if (seg.kind === "overlap") {
+            const { prev, curr } = seg;
+            const tooltipText = [
+              "⚠ Päällekkäinen jakso (data-ongelma)",
+              prev.label,
+              curr.label,
+            ].join("\n");
+            return (
+              <Tooltip
+                key={`overlap-${i}`}
+                title={<span style={{ whiteSpace: "pre-line" }}>{tooltipText}</span>}
+                placement="top"
+                arrow
+              >
+                <Box
+                  sx={{
+                    flexGrow: seg.duration,
+                    flexBasis: 0,
+                    flexShrink: 1,
+                    bgcolor: `${tc.warning}30`,
+                    borderLeft: `1px solid ${tc.warning}70`,
+                    borderRight: `1px solid ${tc.warning}70`,
+                    cursor: "help",
+                  }}
+                />
+              </Tooltip>
+            );
+          }
+          const { p, duration, idx } = seg;
+          const isSelected = selectedHallituskausi?.id === p.id;
+          const nextIsPeriod = segments[i + 1]?.kind === "period";
+          return (
+            <Box
+              key={p.id}
+              title={p.label}
+              onClick={() =>
+                onDateChange(
+                  p.startDate > rangeStart ? p.startDate : rangeStart,
+                )
+              }
+              sx={{
+                flexGrow: duration,
+                flexBasis: 0,
+                flexShrink: 1,
+                position: "relative",
+                bgcolor: isSelected
+                  ? `${tc.primary}18`
+                  : idx % 2 === 0
+                    ? `${tc.primary}08`
+                    : `${tc.primary}03`,
+                display: "flex",
+                alignItems: "center",
+                overflow: "hidden",
+                px: 0.75,
+                cursor: "pointer",
+                transition: "background-color 0.15s",
+                "&:hover": { bgcolor: `${tc.primary}14` },
+              }}
+            >
+              <Typography
+                sx={{
+                  fontSize: "0.6rem",
+                  fontWeight: isSelected ? 600 : 400,
+                  color: isSelected ? tc.primary : tc.textTertiary,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  lineHeight: 1,
+                  userSelect: "none",
+                }}
+              >
+                {p.name}
+              </Typography>
+              {nextIsPeriod && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    right: 0,
+                    top: "15%",
+                    bottom: "15%",
+                    width: "1px",
+                    bgcolor: tc.dataBorder,
+                  }}
+                />
+              )}
+            </Box>
+          );
+        })}
+      </Box>
+
+      {/* Slider */}
+      <Box sx={{ px: 0.75 }}>
+        <Slider
+          value={currentMs}
+          min={startMs}
+          max={endMs}
+          step={86_400_000}
+          onChange={(_, v) => onDateChange(toDate(v as number))}
+          valueLabelDisplay="auto"
+          valueLabelFormat={formatLabel}
+          sx={{
+            py: "6px !important",
+            color: tc.primary,
+            "& .MuiSlider-thumb": {
+              width: 14,
+              height: 14,
+              "&:hover, &.Mui-focusVisible": {
+                boxShadow: `0 0 0 6px ${tc.primary}1A`,
+              },
+            },
+            "& .MuiSlider-rail": {
+              bgcolor: tc.dataBorder,
+              opacity: 1,
+              height: 4,
+            },
+            "& .MuiSlider-track": {
+              height: 4,
+              bgcolor: `${tc.primary}40`,
+              border: "none",
+            },
+            "& .MuiSlider-valueLabel": {
+              fontSize: "0.7rem",
+              py: 0.25,
+              px: 0.75,
+              bgcolor: tc.primary,
+            },
+          }}
+        />
+      </Box>
+
+      {/* Year labels */}
+      <Box sx={{ position: "relative", height: 14 }}>
+        {yearTicks.map((year) => {
+          const pct = toPct(`${year}-01-01`);
+          return (
+            <Typography
+              key={year}
+              sx={{
+                position: "absolute",
+                left: `${pct}%`,
+                transform: "translateX(-50%)",
+                fontSize: "0.6rem",
+                color: tc.textTertiary,
+                userSelect: "none",
+                lineHeight: 1,
+                top: 0,
+              }}
+            >
+              {year}
+            </Typography>
+          );
+        })}
+      </Box>
+    </Box>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default () => {
   const { t } = useTranslation();
   const themedColors = useThemedColors();
-  const { selectedHallituskausi } = useHallituskausi();
+  const { hallituskaudet, selectedHallituskausi, setSelectedHallituskausiId } =
+    useHallituskausi();
 
   // Initialize from URL
   const getInitialDate = (): string => {
@@ -74,6 +352,17 @@ export default () => {
   const [govFilter, setGovFilter] = useState<
     "all" | "government" | "opposition"
   >("all");
+  const [nameSearch, setNameSearch] = useState<string>("");
+
+  // Time domain helpers
+  const todayIso = new Date().toISOString().split("T")[0];
+  const isToday = date === todayIso;
+  const showTimeStrip = !isToday || selectedHallituskausi !== null;
+
+  const formatFinnishDate = (isoDate: string): string => {
+    const [year, month, day] = isoDate.split("-");
+    return `${parseInt(day, 10)}.${parseInt(month, 10)}.${year}`;
+  };
 
   // Compute statistics
   const stats = React.useMemo(() => {
@@ -186,6 +475,12 @@ export default () => {
     window.history.pushState({}, "", url.toString());
   };
 
+  const handleResetToPresent = () => {
+    setDate(todayIso);
+    updateURL(todayIso);
+    setSelectedHallituskausiId("");
+  };
+
   const handleDateChange = (newDate: string) => {
     if (
       selectedHallituskausi &&
@@ -245,6 +540,12 @@ export default () => {
   // Filtered members
   const filteredMembers = React.useMemo(() => {
     let result = members;
+    if (nameSearch.trim()) {
+      const q = nameSearch.trim().toLowerCase();
+      result = result.filter((m) =>
+        `${m.first_name} ${m.last_name}`.toLowerCase().includes(q),
+      );
+    }
     if (partyFilter) {
       result = result.filter((m) => m.party_name === partyFilter);
     }
@@ -254,489 +555,282 @@ export default () => {
       result = result.filter((m) => m.is_in_government !== 1);
     }
     return result;
-  }, [members, partyFilter, govFilter]);
+  }, [members, nameSearch, partyFilter, govFilter]);
 
   return (
     <Box>
-      {/* Header Card */}
-      <Fade in timeout={500}>
-        <Box>
-          <Box
-            sx={{
-              mb: spacing.lg,
-              borderRadius: 1,
-              background: themedColors.backgroundPaper,
-              border: `1px solid ${themedColors.dataBorder}`,
-              boxShadow:
-                "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
-            }}
-          >
-            <CardContent
-              sx={{ p: { xs: 2, sm: spacing.lg }, textAlign: "center" }}
-            >
-              <Typography
-                variant="h4"
-                component="h1"
-                gutterBottom
-                sx={{
-                  color: themedColors.primary,
-                  fontWeight: 600,
-                  mb: spacing.md,
-                  letterSpacing: "0",
-                  fontSize: { xs: "1.5rem", sm: "2.125rem" },
-                }}
-              >
-                {t("composition.title")}
-              </Typography>
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                sx={{ mb: spacing.md, maxWidth: 600, mx: "auto" }}
-              >
-                {t("composition.subtitle")}
-              </Typography>
-              <TextField
-                label={t("common.selectDate")}
-                type="date"
-                value={date}
-                onChange={(e) => handleDateChange(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                inputProps={{
-                  min: selectedHallituskausi?.startDate,
-                  max: selectedHallituskausi?.endDate || undefined,
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <CalendarTodayIcon sx={{ color: themedColors.primary }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  maxWidth: 280,
-                  "& .MuiOutlinedInput-root": {
-                    background: themedColors.backgroundPaper,
-                  },
-                }}
-              />
-              {selectedHallituskausi && (
-                <Alert severity="info" sx={{ mt: spacing.md }}>
-                  {t("common.filteredByGovernmentPeriodLine", {
-                    value: selectedHallituskausi.label,
-                  })}
-                </Alert>
-              )}
-            </CardContent>
-          </Box>
-        </Box>
-      </Fade>
+      {/* Page header */}
+      <Box sx={{ mb: spacing.md }}>
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{ fontWeight: 700, color: themedColors.textPrimary, mb: 0.5 }}
+        >
+          {t("composition.title")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t("composition.subtitle")}
+        </Typography>
+      </Box>
 
-      {/* Parliament Statistics */}
-      {!loading && !error && stats.totalMembers > 0 && (
-        <Fade in timeout={600}>
-          <Box>
-            <Box
-              sx={{
-                mb: spacing.lg,
-                borderRadius: 1,
-                background: themedColors.backgroundPaper,
-                border: `1px solid ${themedColors.dataBorder}`,
-                boxShadow:
-                  "0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)",
-              }}
-            >
-              <CardContent sx={{ p: { xs: 2, sm: spacing.lg } }}>
-                <Typography
-                  variant="h5"
-                  gutterBottom
-                  sx={{
-                    color: themedColors.primary,
-                    fontWeight: 600,
-                    mb: spacing.md,
-                    textAlign: "center",
-                    letterSpacing: "0",
-                    fontSize: { xs: "1.25rem", sm: "1.5rem" },
-                  }}
+      {/* Search */}
+      <Box sx={{ mb: 1.5 }}>
+        <TextField
+          size="small"
+          placeholder={t("composition.searchPlaceholder")}
+          value={nameSearch}
+          onChange={(e) => setNameSearch(e.target.value)}
+          slotProps={{ input: {
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon
+                  sx={{ fontSize: 18, color: themedColors.textTertiary }}
+                />
+              </InputAdornment>
+            ),
+            endAdornment: nameSearch ? (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  onClick={() => setNameSearch("")}
+                  edge="end"
                 >
-                  Eduskunnan jakauma
-                </Typography>
+                  <ClearIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </InputAdornment>
+            ) : undefined,
+          } }}
+          sx={{ width: { xs: "100%", sm: 320 } }}
+        />
+      </Box>
 
-                {/* Summary Stats */}
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                      xs: "1fr",
-                      sm: "repeat(3, 1fr)",
-                    },
-                    gap: { xs: spacing.sm, sm: spacing.md },
-                    mb: spacing.lg,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      textAlign: "center",
-                      p: { xs: spacing.md, sm: spacing.lg },
-                      borderRadius: 1,
-                      background: `${themedColors.primary}10`,
-                      border: `1px solid ${themedColors.primary}40`,
-                      transition: "all 0.2s ease-in-out",
-                      "&:hover": {
-                        borderColor: themedColors.primary,
-                        boxShadow: `0 2px 6px ${themedColors.primary}30`,
-                      },
-                    }}
-                  >
-                    <GroupsIcon
-                      sx={{
-                        fontSize: { xs: 36, sm: 48 },
-                        color: themedColors.primary,
-                        mb: 1,
-                      }}
-                    />
-                    <Typography
-                      variant="h2"
-                      sx={{
-                        fontWeight: 600,
-                        color: themedColors.primary,
-                        fontSize: { xs: "2rem", sm: "2.5rem" },
-                        mb: 0.5,
-                      }}
-                    >
-                      {stats.totalMembers}
-                    </Typography>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        color: themedColors.textSecondary,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {t("composition.distribution.totalMembers")}
-                    </Typography>
-                  </Box>
+      {/* Timeline date selector */}
+      <TimelineSelector
+        hallituskaudet={hallituskaudet}
+        selectedHallituskausi={selectedHallituskausi}
+        date={date}
+        todayIso={todayIso}
+        onDateChange={handleDateChange}
+      />
 
-                  <Box
-                    sx={{
-                      textAlign: "center",
-                      p: { xs: spacing.md, sm: spacing.lg },
-                      borderRadius: 1,
-                      background: `${themedColors.success}10`,
-                      border: `1px solid ${themedColors.success}40`,
-                      transition: "all 0.2s ease-in-out",
-                      "&:hover": {
-                        borderColor: themedColors.success,
-                        boxShadow: `0 2px 6px ${themedColors.success}30`,
-                      },
-                    }}
-                  >
-                    <AccountBalanceIcon
-                      sx={{
-                        fontSize: { xs: 36, sm: 48 },
-                        color: themedColors.success,
-                        mb: 1,
-                      }}
-                    />
-                    <Typography
-                      variant="h2"
-                      sx={{
-                        fontWeight: 600,
-                        color: themedColors.success,
-                        fontSize: { xs: "2rem", sm: "2.5rem" },
-                        mb: 0.5,
-                      }}
-                    >
-                      {stats.inGovernment}
-                    </Typography>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        color: themedColors.textSecondary,
-                        fontWeight: 600,
-                      }}
-                    >
-                      Hallituksessa
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{ color: themedColors.textTertiary, fontWeight: 500 }}
-                    >
-                      {(
-                        (stats.inGovernment / stats.totalMembers) *
-                        100
-                      ).toFixed(1)}
-                      % edustajista
-                    </Typography>
-                  </Box>
-
-                  <Box
-                    sx={{
-                      textAlign: "center",
-                      p: { xs: spacing.md, sm: spacing.lg },
-                      borderRadius: 1,
-                      background: `${themedColors.warning}10`,
-                      border: `1px solid ${themedColors.warning}40`,
-                      transition: "all 0.2s ease-in-out",
-                      "&:hover": {
-                        borderColor: themedColors.warning,
-                        boxShadow: `0 2px 6px ${themedColors.warning}30`,
-                      },
-                    }}
-                  >
-                    <PieChartIcon
-                      sx={{
-                        fontSize: { xs: 36, sm: 48 },
-                        color: themedColors.warning,
-                        mb: 1,
-                      }}
-                    />
-                    <Typography
-                      variant="h2"
-                      sx={{
-                        fontWeight: 600,
-                        color: themedColors.warning,
-                        fontSize: { xs: "2rem", sm: "2.5rem" },
-                        mb: 0.5,
-                      }}
-                    >
-                      {stats.inOpposition}
-                    </Typography>
-                    <Typography
-                      variant="subtitle1"
-                      sx={{
-                        color: themedColors.textSecondary,
-                        fontWeight: 600,
-                      }}
-                    >
-                      Oppositiossa
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{ color: themedColors.textTertiary, fontWeight: 500 }}
-                    >
-                      {(
-                        (stats.inOpposition / stats.totalMembers) *
-                        100
-                      ).toFixed(1)}
-                      % edustajista
-                    </Typography>
-                  </Box>
-                </Box>
-
-                {/* Party Breakdown */}
-                <Typography
-                  variant="h6"
-                  gutterBottom
-                  sx={{
-                    fontWeight: 600,
-                    color: themedColors.primary,
-                    mb: spacing.md,
-                    fontSize: "1.125rem",
-                  }}
-                >
-                  {t("composition.partyBreakdown.title")}
-                </Typography>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-                  {stats.partyGroups.map(([party, data]) => (
-                    <Box
-                      key={party}
-                      sx={{
-                        flex: { xs: "1 1 100%", sm: "1 1 300px" },
-                        p: { xs: spacing.sm, sm: spacing.md },
-                        borderRadius: 1,
-                        background: themedColors.backgroundPaper,
-                        border: `1px solid ${themedColors.dataBorder}`,
-                        transition: "all 0.2s ease-in-out",
-                        "&:hover": {
-                          borderColor: themedColors.primary,
-                          boxShadow: `0 2px 6px ${themedColors.primary}30`,
-                        },
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          mb: 1.5,
-                        }}
-                      >
-                        <Typography
-                          variant="subtitle1"
-                          sx={{
-                            fontWeight: 700,
-                            color: themedColors.textPrimary,
-                          }}
-                        >
-                          {party}
-                        </Typography>
-                        <Chip
-                          label={t("composition.partyBreakdown.members", {
-                            count: data.total,
-                          })}
-                          size="small"
-                          sx={{
-                            background: themedColors.primary,
-                            color: "white",
-                            fontWeight: 700,
-                            fontSize: "0.75rem",
-                          }}
-                        />
-                      </Box>
-                      <Box
-                        sx={{
-                          display: "flex",
-                          gap: spacing.sm,
-                          mt: spacing.sm,
-                          flexWrap: "wrap",
-                        }}
-                      >
-                        {data.inGovernment > 0 && (
-                          <Chip
-                            icon={
-                              <AccountBalanceIcon
-                                sx={{
-                                  fontSize: 16,
-                                  color: themedColors.success,
-                                }}
-                              />
-                            }
-                            label={t(
-                              "composition.partyBreakdown.governmentCountLine",
-                              { count: data.inGovernment },
-                            )}
-                            size="small"
-                            sx={{
-                              background: `${themedColors.success}20`,
-                              color: themedColors.success,
-                              fontWeight: 600,
-                              border: `1px solid ${themedColors.success}`,
-                            }}
-                          />
-                        )}
-                        {data.total - data.inGovernment > 0 && (
-                          <Chip
-                            label={t(
-                              "composition.partyBreakdown.oppositionCountLine",
-                              { count: data.total - data.inGovernment },
-                            )}
-                            size="small"
-                            sx={{
-                              background: `${themedColors.warning}20`,
-                              color: themedColors.warning,
-                              fontWeight: 600,
-                              border: `1px solid ${themedColors.warning}`,
-                            }}
-                          />
-                        )}
-                      </Box>
-                    </Box>
-                  ))}
-                </Box>
-              </CardContent>
-            </Box>
-          </Box>
-        </Fade>
-      )}
-
-      {/* Filter Chips */}
+      {/* Filter chips + count */}
       {!loading && !error && members.length > 0 && (
-        <Fade in timeout={650}>
-          <Box
-            sx={{
-              mb: spacing.lg,
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 1,
-              alignItems: "center",
-            }}
-          >
-            {/* Government/Opposition filter */}
-            {(["all", "government", "opposition"] as const).map((g) => (
-              <Chip
-                key={g}
-                label={
-                  g === "all"
-                    ? t("composition.details.filters.all")
-                    : g === "government"
-                      ? t("composition.details.filters.government")
-                      : t("composition.details.filters.opposition")
-                }
-                size="small"
-                onClick={() => setGovFilter(g)}
-                sx={{
-                  fontWeight: 600,
-                  fontSize: "0.8rem",
-                  height: 32,
+        <Box
+          sx={{
+            mb: spacing.md,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 1,
+            alignItems: "center",
+          }}
+        >
+          {(["all", "government", "opposition"] as const).map((g) => (
+            <Chip
+              key={g}
+              label={
+                g === "all"
+                  ? t("composition.details.filters.all")
+                  : g === "government"
+                    ? t("composition.details.filters.government")
+                    : t("composition.details.filters.opposition")
+              }
+              size="small"
+              onClick={() => setGovFilter(g)}
+              sx={{
+                fontWeight: 600,
+                fontSize: "0.8rem",
+                height: 32,
+                bgcolor:
+                  govFilter === g
+                    ? themedColors.primary
+                    : themedColors.backgroundPaper,
+                color:
+                  govFilter === g ? "white" : themedColors.textSecondary,
+                border: `1px solid ${govFilter === g ? themedColors.primary : themedColors.dataBorder}`,
+                "&:hover": {
                   bgcolor:
                     govFilter === g
                       ? themedColors.primary
-                      : themedColors.backgroundPaper,
-                  color: govFilter === g ? "white" : themedColors.textSecondary,
-                  border: `1px solid ${govFilter === g ? themedColors.primary : themedColors.dataBorder}`,
-                  "&:hover": {
-                    bgcolor:
-                      govFilter === g
-                        ? themedColors.primary
-                        : `${themedColors.primary}10`,
-                  },
+                      : `${themedColors.primary}10`,
+                },
+              }}
+            />
+          ))}
+          <Box
+            sx={{
+              width: 1,
+              height: 24,
+              borderLeft: `1px solid ${themedColors.dataBorder}`,
+              mx: 0.5,
+            }}
+          />
+          {partyFilter && (
+            <Chip
+              label={`${partyFilter} ✕`}
+              size="small"
+              onClick={() => setPartyFilter(null)}
+              sx={{
+                fontWeight: 600,
+                fontSize: "0.8rem",
+                height: 32,
+                bgcolor: themedColors.primary,
+                color: "white",
+                "&:hover": { bgcolor: themedColors.primary },
+              }}
+            />
+          )}
+          {!partyFilter &&
+            uniqueParties.map((p) => (
+              <Chip
+                key={p}
+                label={p}
+                size="small"
+                onClick={() => setPartyFilter(p)}
+                sx={{
+                  fontWeight: 500,
+                  fontSize: "0.75rem",
+                  height: 28,
+                  bgcolor: themedColors.backgroundPaper,
+                  color: themedColors.textSecondary,
+                  border: `1px solid ${themedColors.dataBorder}`,
+                  "&:hover": { bgcolor: `${themedColors.primary}10` },
                 }}
               />
             ))}
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textTertiary, ml: "auto" }}
+          >
+            {filteredMembers.length} / {members.length} edustajaa
+          </Typography>
+        </Box>
+      )}
 
-            <Box
-              sx={{
-                width: 1,
-                height: 24,
-                borderLeft: `1px solid ${themedColors.dataBorder}`,
-                mx: 0.5,
-              }}
-            />
-
-            {/* Party filter */}
-            {partyFilter && (
-              <Chip
-                label={`${partyFilter} ✕`}
-                size="small"
-                onClick={() => setPartyFilter(null)}
-                sx={{
-                  fontWeight: 600,
-                  fontSize: "0.8rem",
-                  height: 32,
-                  bgcolor: themedColors.primary,
-                  color: "white",
-                  "&:hover": { bgcolor: themedColors.primary },
-                }}
-              />
+      {/* Time context strip — shown when viewing a non-today date or when a period filter is active */}
+      {showTimeStrip && (
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            flexWrap: "wrap",
+            px: 1.5,
+            py: 0.875,
+            mb: spacing.md,
+            borderRadius: 1,
+            bgcolor: `${themedColors.warning}08`,
+            borderTop: `1px solid ${themedColors.warning}28`,
+            borderRight: `1px solid ${themedColors.warning}28`,
+            borderBottom: `1px solid ${themedColors.warning}28`,
+            borderLeft: `3px solid ${themedColors.warning}80`,
+          }}
+        >
+          <Typography
+            variant="body2"
+            sx={{ color: themedColors.textSecondary, flexGrow: 1 }}
+          >
+            {selectedHallituskausi ? (
+              <>
+                <Box
+                  component="span"
+                  sx={{ fontWeight: 600, color: themedColors.textPrimary }}
+                >
+                  {selectedHallituskausi.label}
+                </Box>
+                {!isToday && (
+                  <>
+                    {" · "}
+                    {formatFinnishDate(date)}
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <Box
+                  component="span"
+                  sx={{ fontWeight: 600, color: themedColors.textPrimary }}
+                >
+                  {t("composition.historicalView")}
+                </Box>
+                {" · "}
+                {formatFinnishDate(date)}
+              </>
             )}
-            {!partyFilter &&
-              uniqueParties.map((p) => (
-                <Chip
-                  key={p}
-                  label={p}
-                  size="small"
-                  onClick={() => setPartyFilter(p)}
-                  sx={{
-                    fontWeight: 500,
-                    fontSize: "0.75rem",
-                    height: 28,
-                    bgcolor: themedColors.backgroundPaper,
-                    color: themedColors.textSecondary,
-                    border: `1px solid ${themedColors.dataBorder}`,
-                    "&:hover": { bgcolor: `${themedColors.primary}10` },
-                  }}
-                />
-              ))}
+          </Typography>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={handleResetToPresent}
+            sx={{
+              textTransform: "none",
+              fontSize: "0.75rem",
+              py: 0.25,
+              px: 1.25,
+              flexShrink: 0,
+              borderColor: `${themedColors.warning}60`,
+              color: themedColors.warning,
+              "&:hover": {
+                borderColor: themedColors.warning,
+                bgcolor: `${themedColors.warning}10`,
+              },
+            }}
+          >
+            {t("composition.returnToPresent")}
+          </Button>
+        </Box>
+      )}
 
-            {/* Result count */}
-            <Typography
-              variant="caption"
-              sx={{ color: themedColors.textTertiary, ml: "auto" }}
+      {/* Stats summary strip */}
+      {!loading && !error && stats.totalMembers > 0 && (
+        <Box
+          sx={{
+            mb: spacing.md,
+            display: "flex",
+            gap: 0.5,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+            <Box
+              component="span"
+              sx={{ fontWeight: 700, color: themedColors.textPrimary }}
             >
-              {filteredMembers.length} / {members.length} edustajaa
-            </Typography>
+              {stats.totalMembers}
+            </Box>{" "}
+            edustajaa
+          </Typography>
+          <Box
+            component="span"
+            sx={{ color: themedColors.dataBorder, mx: 0.75 }}
+          >
+            ·
           </Box>
-        </Fade>
+          <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+            <Box
+              component="span"
+              sx={{ fontWeight: 600, color: themedColors.success }}
+            >
+              {stats.inGovernment}
+            </Box>{" "}
+            hallituksessa
+          </Typography>
+          <Box
+            component="span"
+            sx={{ color: themedColors.dataBorder, mx: 0.75 }}
+          >
+            ·
+          </Box>
+          <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+            <Box
+              component="span"
+              sx={{ fontWeight: 600, color: themedColors.warning }}
+            >
+              {stats.inOpposition}
+            </Box>{" "}
+            oppositiossa
+          </Typography>
+        </Box>
       )}
 
       {/* Loading / Error states */}
