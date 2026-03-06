@@ -38,6 +38,7 @@
     "deploy:pipeline": "bun scripts/deploy.mts pipeline",
     "deploy:db": "bun scripts/deploy.mts database",
     "fetch-counts": "cd packages/datapipe && bun run scraper/fetch-counts-cli.ts",
+    "history": "cd packages/datapipe && bun run scraper/history-cli.ts",
     "scrape": "cd packages/datapipe && bun run scraper/cli.ts",
     "parse": "cd packages/datapipe && bun run parser/cli.ts",
     "migrate": "cd packages/datapipe && bun run migrator/cli.ts",

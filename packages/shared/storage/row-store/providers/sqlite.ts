@@ -662,6 +662,56 @@ export class SqliteRowStore implements IRowStore {
     return rows.map((row) => row.table_name);
   }
 
+  async listChangedRows(
+    tableName: string,
+    sinceMs?: number,
+  ): Promise<import("../types").ChangedRowSummary[]> {
+    if (this.mode !== "raw") return [];
+
+    const tableId = this.getTableId(tableName, false);
+    if (tableId === null) return [];
+
+    const rows =
+      sinceMs !== undefined
+        ? (this.db
+            .prepare(
+              `SELECT r.pk, r.created_at, r.updated_at, COUNT(rr.id) AS revision_count
+               FROM rows r
+               JOIN row_revisions rr ON rr.table_id = r.table_id AND rr.pk = r.pk
+               WHERE r.table_id = ? AND r.updated_at >= ?
+               GROUP BY r.pk, r.created_at, r.updated_at
+               ORDER BY r.updated_at DESC`,
+            )
+            .all(tableId, sinceMs) as Array<{
+            pk: number;
+            created_at: number;
+            updated_at: number;
+            revision_count: number;
+          }>)
+        : (this.db
+            .prepare(
+              `SELECT r.pk, r.created_at, r.updated_at, COUNT(rr.id) AS revision_count
+               FROM rows r
+               JOIN row_revisions rr ON rr.table_id = r.table_id AND rr.pk = r.pk
+               WHERE r.table_id = ?
+               GROUP BY r.pk, r.created_at, r.updated_at
+               ORDER BY r.updated_at DESC`,
+            )
+            .all(tableId) as Array<{
+            pk: number;
+            created_at: number;
+            updated_at: number;
+            revision_count: number;
+          }>);
+
+    return rows.map((row) => ({
+      pk: row.pk,
+      revisionCount: row.revision_count,
+      createdAt: decodeUpdatedAt(row.created_at),
+      updatedAt: decodeUpdatedAt(row.updated_at),
+    }));
+  }
+
   async listRevisions(tableName: string, pk: number): Promise<StoredRevision[]> {
     if (this.mode !== "raw") return [];
 
