@@ -1,4 +1,5 @@
 import type { BunRequest } from "bun";
+import { getChangesReportPath } from "#database";
 import { getSearchParams } from "./http";
 import { badRequest } from "./route-responses";
 
@@ -79,6 +80,22 @@ export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
     GET: async () => {
       const lastMigrationTimestamp = db.fetchLastMigrationTimestamp();
       return Response.json({ lastMigrationTimestamp });
+    },
+  },
+
+  "/api/changes-report": {
+    GET: async () => {
+      try {
+        const file = Bun.file(getChangesReportPath());
+        const exists = await file.exists();
+        if (!exists) {
+          return Response.json({ error: "No changes report available yet" }, { status: 404 });
+        }
+        const report = await file.json();
+        return Response.json(report);
+      } catch {
+        return Response.json({ error: "Failed to read changes report" }, { status: 500 });
+      }
     },
   },
 });
