@@ -346,6 +346,10 @@ export class PostgresRowStore implements IRowStore {
     return [];
   }
 
+  async countNewRows(_tableName: string, _sinceMs: number): Promise<number> {
+    return 0;
+  }
+
   async delete(tableName: string, pk: number): Promise<void> {
     await this.initPromise;
 

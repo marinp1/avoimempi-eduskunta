@@ -662,6 +662,20 @@ export class SqliteRowStore implements IRowStore {
     return rows.map((row) => row.table_name);
   }
 
+  async countNewRows(tableName: string, sinceMs: number): Promise<number> {
+    if (this.mode !== "raw") return 0;
+
+    const tableId = this.getTableId(tableName, false);
+    if (tableId === null) return 0;
+
+    const row = this.db
+      .prepare(
+        `SELECT COUNT(*) AS cnt FROM rows WHERE table_id = ? AND created_at >= ?`,
+      )
+      .get(tableId, sinceMs) as { cnt: number } | null;
+    return row?.cnt ?? 0;
+  }
+
   async listChangedRows(
     tableName: string,
     sinceMs?: number,

@@ -5,6 +5,7 @@ import {
   Home,
   HowToVote,
   Insights,
+  NewReleases,
   People,
 } from "@mui/icons-material";
 import type { SvgIconTypeMap } from "@mui/material";
@@ -46,6 +47,11 @@ export const routes = {
     title: "Analytiikka",
     icon: Insights,
     Component: React.lazy(() => import("./Insights")),
+  },
+  muutokset: {
+    title: "Muutokset",
+    icon: NewReleases,
+    Component: React.lazy(() => import("./Changes")),
   },
 } as const satisfies Record<
   string,

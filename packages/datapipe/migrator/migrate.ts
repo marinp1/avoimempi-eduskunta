@@ -5,6 +5,7 @@ import { getMigrations, migrate } from "bun-sqlite-migrations";
 import { type TableName, TableNames } from "#constants/index";
 import { getDatabasePath } from "#database";
 import { getParsedRowStore } from "#storage/row-store/factory";
+import { generateAndSaveChangesReport } from "./changes-report";
 import { migrateVaskiData } from "./fn/VaskiData/migrator";
 import {
   normalizeImportedTextData,
@@ -241,10 +242,13 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
       throw new Error("No parsed data found to migrate");
     }
 
+    // Read previous rebuild timestamp before we overwrite it at the end.
+    const previousRebuildAt = getLastMigrationTimestamp();
+
     // Change-detection: skip migration if no parsed table has been updated
     // since the last migration ran.
     if (!force) {
-      const lastMigrationTs = getLastMigrationTimestamp();
+      const lastMigrationTs = previousRebuildAt;
       if (lastMigrationTs) {
         const parsedStore = getParsedRowStore();
         const lastUpdates = await Promise.all(
@@ -658,6 +662,9 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
     console.log(
       `✅ Federated search index rebuilt (${federatedSearchRows} rows)`,
     );
+
+    console.log("\n📋 Generating changes report...");
+    await generateAndSaveChangesReport(previousRebuildAt);
 
     const timestamp = new Date().toISOString();
     targetDatabase.run(MIGRATOR_SQL.createMigrationInfoTable);

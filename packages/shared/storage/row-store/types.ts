@@ -96,6 +96,13 @@ export interface IRowStore {
     sinceMs?: number,
   ): Promise<ChangedRowSummary[]>;
 
+  /**
+   * Count rows whose created_at is >= sinceMs (Unix ms timestamp).
+   * Rows inserted before created_at tracking was added have created_at = 0 and are excluded.
+   * Always 0 for parsed-mode stores.
+   */
+  countNewRows(tableName: string, sinceMs: number): Promise<number>;
+
   /** Close DB connections. */
   close(): void;
 }

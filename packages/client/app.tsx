@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "@mui/material";
 import { PageDataSourcesDrawer } from "./components/PageDataSourcesDrawer";
 import { Navigation } from "./Navigation";
 import { type RouteName, routes } from "./pages";
@@ -27,12 +28,28 @@ export const App: React.FC = () => {
   const [lastMigrationTimestamp, setLastMigrationTimestamp] = useState<
     string | null
   >(null);
+  const [changeSummary, setChangeSummary] = useState<{
+    totalNewRows: number;
+    totalChangedRows: number;
+  } | null>(null);
 
   useEffect(() => {
     fetch("/api/db-info")
       .then((res) => res.json())
       .then((data: { lastMigrationTimestamp: string | null }) => {
         setLastMigrationTimestamp(data.lastMigrationTimestamp);
+      })
+      .catch(() => {});
+
+    fetch("/api/changes-report")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && typeof data.totalNewRows === "number") {
+          setChangeSummary({
+            totalNewRows: data.totalNewRows,
+            totalChangedRows: data.totalChangedRows,
+          });
+        }
       })
       .catch(() => {});
   }, []);
@@ -166,6 +183,31 @@ export const App: React.FC = () => {
                   "fi-FI",
                 ),
               })}
+            </Typography>
+          )}
+          {changeSummary && (
+            <Typography
+              variant="caption"
+              sx={{
+                color: themedColors.textTertiary,
+                display: "block",
+                mt: 0.5,
+                lineHeight: 1.6,
+              }}
+            >
+              <Link
+                href="/muutokset"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.history.pushState({}, "", "/muutokset");
+                  window.dispatchEvent(new PopStateEvent("popstate"));
+                }}
+                sx={{ color: "inherit", textDecorationColor: "inherit" }}
+              >
+                {changeSummary.totalNewRows + changeSummary.totalChangedRows > 0
+                  ? `${changeSummary.totalNewRows + changeSummary.totalChangedRows} muutosta viime päivityksessä`
+                  : "Ei muutoksia viime päivityksessä"}
+              </Link>
             </Typography>
           )}
         </Box>
