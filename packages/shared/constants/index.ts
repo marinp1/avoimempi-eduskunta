@@ -72,6 +72,21 @@ export const ActivePipelineTableNames = TableNames.filter(
   (tableName) => !isOmittedPipelineTable(tableName),
 );
 
+/**
+ * Tables where rows can be updated in-place by the API (not append-only).
+ * These are always scraped from PK 0 regardless of cached counts, and row
+ * revisions are preserved in the raw store before overwriting.
+ */
+export const AlwaysFullScrapeTables = [
+  "MemberOfParliament",
+  "SeatingOfParliament",
+] as const satisfies Array<(typeof TableNames)[number]>;
+
+export const isAlwaysFullScrapeTable = (tableName: string): boolean =>
+  AlwaysFullScrapeTables.includes(
+    tableName as (typeof AlwaysFullScrapeTables)[number],
+  );
+
 export const VoteResults = Object.freeze({
   Yes: "Jaa",
   No: "Ei",
