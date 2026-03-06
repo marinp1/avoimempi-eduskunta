@@ -9,7 +9,6 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import { extractDocumentIdentifiers } from "#client/components/DocumentCards";
 import {
   VotingCard,
@@ -20,6 +19,7 @@ import {
   isDateWithinHallituskausi,
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { commonStyles } from "#client/theme";
 import { DataCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -223,7 +223,7 @@ export const VoteResults: React.FC<{
     const rows = combinedRows.filter((row) => {
       if (
         selectedHallituskausi &&
-        !isDateWithinHallituskausi(row.start_time, selectedHallituskausi)
+        !isDateWithinHallituskausi(row.start_time ?? "", selectedHallituskausi)
       )
         return false;
       if (phaseFilter !== "all" && row.section_processing_phase !== phaseFilter)

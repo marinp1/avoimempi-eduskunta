@@ -3,11 +3,11 @@ declare global {
     export type Voting = {
       id: number; // unique
       number: number; // unique
-      start_time: Modules.Common.DateString;
+      start_time: Modules.Common.DateString | null;
       start_date: Modules.Common.DateString | null;
       end_time: Modules.Common.DateString | null;
       annulled: boolean;
-      title: string;
+      title: string | null;
       title_extra: string | null;
       proceedings_name: string;
       proceedings_url: string;
@@ -24,7 +24,7 @@ declare global {
       section_order: number | null;
       section_processing_title: string | null;
       section_processing_phase: string;
-      modified_datetime: Modules.Common.DateString;
+      modified_datetime: Modules.Common.DateString | null;
       imported_datetime: Modules.Common.DateString | null;
       section_title: string;
       main_section_note: string | null;

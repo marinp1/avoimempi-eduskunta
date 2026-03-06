@@ -41,7 +41,8 @@ type DrawerType =
 type DrawerKey = Exclude<DrawerType, null>;
 type InsightsCardTranslationName = keyof (typeof fi)["insights"]["cards"];
 type InsightsTitleKey = `cards.${InsightsCardTranslationName}.title`;
-type InsightsDescriptionKey = `cards.${InsightsCardTranslationName}.description`;
+type InsightsDescriptionKey =
+  `cards.${InsightsCardTranslationName}.description`;
 type InsightCard = {
   key: DrawerKey;
   icon: React.ReactNode;
@@ -163,10 +164,7 @@ export default () => {
 
   return (
     <Box>
-      <PageHeader
-        title={t("title")}
-        subtitle={t("subtitle")}
-      />
+      <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
       <Grid container spacing={spacing.sm}>
         {cards.map((card) => (

@@ -9,9 +9,9 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import { VotingCard, type VotingCardData } from "#client/components/VotingCard";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
 
 interface CloseVoteData {

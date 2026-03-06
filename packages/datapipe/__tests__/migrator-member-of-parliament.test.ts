@@ -4,7 +4,7 @@ import createMigrator from "../migrator/fn/MemberOfParliament";
 import { clearStatementCache } from "../migrator/utils";
 import { createTestDb } from "./helpers/setup-db";
 
-type RepresentativePayload = RawDataModels["MemberOfParliament"];
+type RepresentativePayload = DataModel.Representative;
 
 const makeRepresentativePayload = (
   overrides: Partial<RepresentativePayload> = {},
@@ -74,7 +74,9 @@ const makeRepresentativePayload = (
     minister: "f",
     XmlData: null,
     XmlDataSv: null,
-    XmlDataFi: JSON.stringify(xmlData),
+    XmlDataFi: JSON.stringify(
+      xmlData,
+    ) as unknown as RepresentativePayload["XmlDataFi"],
     XmlDataEn: null,
     ...overrides,
   } as RepresentativePayload;
@@ -82,7 +84,7 @@ const makeRepresentativePayload = (
 
 describe("MemberOfParliament migrator", () => {
   let db: Database;
-  let migrate: (data: RepresentativePayload) => void | Promise<void>;
+  let migrate: ReturnType<typeof createMigrator>;
 
   beforeEach(() => {
     clearStatementCache();
@@ -153,7 +155,7 @@ describe("MemberOfParliament migrator", () => {
           },
           Eduskuntaryhmat: {},
         },
-      }),
+      }) as unknown as RepresentativePayload["XmlDataFi"],
     });
 
     await migrate(payload);
@@ -218,7 +220,7 @@ describe("MemberOfParliament migrator", () => {
             ],
           },
         },
-      }),
+      }) as unknown as RepresentativePayload["XmlDataFi"],
     });
 
     await migrate(payload);
@@ -259,7 +261,8 @@ describe("MemberOfParliament migrator", () => {
     expect(memberships[0].ministry).toBe("Testiministeriö");
     expect(memberships[0].government).toBe("Testihallitus");
     expect(memberships[1].government).toBe("Testihallitus");
-    expect(memberships[0].government_id).toBe(government?.id);
-    expect(memberships[1].government_id).toBe(government?.id);
+    expect(government).not.toBeNull();
+    expect(memberships[0].government_id).toBe(government!.id);
+    expect(memberships[1].government_id).toBe(government!.id);
   });
 });

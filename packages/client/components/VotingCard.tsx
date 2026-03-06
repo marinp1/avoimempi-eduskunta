@@ -13,7 +13,6 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import {
   DocumentCard,
   extractDocumentIdentifiers,
@@ -25,6 +24,7 @@ import {
   type VotingPartyBreakdown,
   VotingResultsTable,
 } from "#client/components/VotingResultsTable";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
 import { colors, commonStyles } from "#client/theme";
 import { DataCard, VoteMarginBar } from "#client/theme/components";
@@ -252,7 +252,6 @@ const VotingDetailsPanel: React.FC<{
   loading: boolean;
 }> = ({ details, loading }) => {
   const { t: tCommon } = useScopedTranslation("common");
-  const { t: tVotings } = useScopedTranslation("votings");
   const themedColors = useThemedColors();
 
   if (loading) {

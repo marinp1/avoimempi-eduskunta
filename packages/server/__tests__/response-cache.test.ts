@@ -15,11 +15,6 @@ describe("createResponseCache", () => {
         return Response.json({ ok: true });
       };
       const wrapped = cache.wrapRoutes({ "/api/test": { GET: handler } });
-      expect(wrapped["/api/test"]).toBe(
-        (wrapped["/api/test"] as { GET: typeof handler }).GET === handler
-          ? wrapped["/api/test"]
-          : null,
-      );
       // Verify the handler is the original (no wrapping)
       const routeHandler = (wrapped["/api/test"] as { GET: typeof handler })
         .GET;

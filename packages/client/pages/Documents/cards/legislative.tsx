@@ -17,8 +17,8 @@ import {
 import { useState } from "react";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { formatDate, getOutcomeColor, InlineRelatedSessions } from "./shared";

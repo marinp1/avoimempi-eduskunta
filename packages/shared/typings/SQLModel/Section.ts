@@ -4,14 +4,14 @@ declare global {
       id: number; // unique
       key: string; // uniuque
       identifier: string;
-      title: string;
+      title: string | null;
       ordinal: number;
       note: string | null;
-      processing_title: string;
-      resolution: string;
+      processing_title: string | null;
+      resolution: string | null;
       session_key: string; // Session.key
       agenda_key: string; // Agenga.key
-      modified_datetime: Modules.Common.DateString;
+      modified_datetime: Modules.Common.DateString | null;
       vaski_id: number;
       default_speech_type: string | null;
       can_request_speech: boolean;

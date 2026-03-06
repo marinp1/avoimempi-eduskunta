@@ -21,8 +21,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import { useTrace } from "#client/context/TraceContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import type { RouteName } from "../pages";
 import { useThemedColors } from "../theme/ThemeContext";
 

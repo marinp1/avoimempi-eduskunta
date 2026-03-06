@@ -39,7 +39,7 @@ export default (db: Database) =>
     const stmt = db.prepare<
       void,
       {
-        $dt: string;
+        $dt: string | null;
         $section_key: string;
         $id: number;
       }

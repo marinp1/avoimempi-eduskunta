@@ -2,11 +2,11 @@ import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import {
   DocumentCard,
   extractDocumentIdentifiers,
 } from "#client/components/DocumentCards";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors } from "#client/theme";
 import {
   parseRichTextDocument,

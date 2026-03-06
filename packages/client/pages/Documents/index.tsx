@@ -15,8 +15,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { PageHeader } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import {
@@ -461,10 +461,7 @@ export default function Documents() {
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 } }}>
-      <PageHeader
-        title={t("title")}
-        subtitle={t("subtitle")}
-      />
+      <PageHeader title={t("title")} subtitle={t("subtitle")} />
 
       <Stack spacing={3}>
         {/* Search field */}
@@ -519,9 +516,7 @@ export default function Documents() {
               <MenuItem value="expert-statements">
                 {t("expertStatements")}
               </MenuItem>
-              <MenuItem value="oral-questions">
-                {t("oralQuestions")}
-              </MenuItem>
+              <MenuItem value="oral-questions">{t("oralQuestions")}</MenuItem>
               <MenuItem value="committee-reports">
                 {t("committeeReports")}
               </MenuItem>
@@ -580,9 +575,7 @@ export default function Documents() {
                   backgroundColor: colors.backgroundDefault,
                 }}
               >
-                <MenuItem value="all">
-                  {t("allSourceCommittees")}
-                </MenuItem>
+                <MenuItem value="all">{t("allSourceCommittees")}</MenuItem>
                 {sourceCommittees.map((item) => (
                   <MenuItem
                     key={item.committee_name}
@@ -605,9 +598,7 @@ export default function Documents() {
                   backgroundColor: colors.backgroundDefault,
                 }}
               >
-                <MenuItem value="all">
-                  {t("allTargetCommittees")}
-                </MenuItem>
+                <MenuItem value="all">{t("allTargetCommittees")}</MenuItem>
                 {recipientCommittees.map((item) => (
                   <MenuItem
                     key={item.committee_name}
@@ -805,11 +796,7 @@ export default function Documents() {
                     },
                   }}
                 >
-                  {loading ? (
-                    <CircularProgress size={24} />
-                  ) : (
-                    t("loadMore")
-                  )}
+                  {loading ? <CircularProgress size={24} /> : t("loadMore")}
                 </Button>
               </Box>
             )}

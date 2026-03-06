@@ -13,19 +13,19 @@ declare global {
       id: number; // unique
       number: number; // unique
       key: string; // unique
-      date: Modules.Common.DateString;
+      date: Modules.Common.DateString | null;
       year: number | null;
       type: SessionType;
       state: SessionState;
-      description: string;
-      start_time_actual: Modules.Common.DateString;
-      start_time_reported: Modules.Common.DateString;
+      description: string | null;
+      start_time_actual: Modules.Common.DateString | null;
+      start_time_reported: Modules.Common.DateString | null;
       end_time: Modules.Common.DateString | null;
       roll_call_time: Modules.Common.DateString | null;
-      article_key: string;
+      article_key: string | null;
       agenda_key: string; // Agenda.key
       speaker_id: number; // Representative.person_id (optional)
-      modified_datetime: Modules.Common.DateString;
+      modified_datetime: Modules.Common.DateString | null;
       created_datetime: Modules.Common.DateString | null;
       imported_datetime: Modules.Common.DateString | null;
       state_text_fi: string | null;

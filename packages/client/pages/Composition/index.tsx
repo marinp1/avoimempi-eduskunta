@@ -26,13 +26,13 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import { ItemTraceIcon } from "#client/components/ItemTraceIcon";
 import {
   type HallituskausiPeriod,
   isDateWithinHallituskausi,
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { commonStyles, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { RepresentativeDetails } from "./Details";
@@ -100,7 +100,7 @@ const TimelineSelector: React.FC<{
 
   const formatLabel = (ms: number) => {
     const [yr, mo, dy] = toDate(ms).split("-");
-    return `${parseInt(dy)}.${parseInt(mo)}.${yr}`;
+    return `${parseInt(dy, 10)}.${parseInt(mo, 10)}.${yr}`;
   };
 
   // Build flex segments: periods interleaved with gap-fillers so the

@@ -17,8 +17,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -208,20 +208,14 @@ const Parties = () => {
   if (error)
     return (
       <Box>
-        <PageHeader
-          title={tParties("title")}
-          subtitle={tParties("subtitle")}
-        />
+        <PageHeader title={tParties("title")} subtitle={tParties("subtitle")} />
         <Alert severity="error">{error}</Alert>
       </Box>
     );
 
   return (
     <Box>
-      <PageHeader
-        title={tParties("title")}
-        subtitle={tParties("subtitle")}
-      />
+      <PageHeader title={tParties("title")} subtitle={tParties("subtitle")} />
       {selectedHallituskausi && (
         <Alert severity="info" sx={{ mb: spacing.md }}>
           Rajattu hallituskauteen: {selectedHallituskausi.label}

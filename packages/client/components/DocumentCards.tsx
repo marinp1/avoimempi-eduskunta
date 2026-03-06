@@ -11,9 +11,9 @@ import {
 } from "@mui/material";
 import type React from "react";
 import { useEffect, useId, useState } from "react";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, commonStyles } from "#client/theme/index";
 
 export type DocRef = {

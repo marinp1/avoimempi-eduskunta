@@ -10,10 +10,10 @@ declare global {
   interface RawDataModels {
     [TableNameMap.MemberOfParliament]: {
       personId: StringifiedNumber;
-      XmlData: string;
-      XmlDataEn: string;
-      XmlDataFi: string;
-      XmlDataSv: string;
+      XmlData: string | null;
+      XmlDataEn: string | null;
+      XmlDataFi: string | null;
+      XmlDataSv: string | null;
       firstname: string;
       lastname: string;
       minister: string;

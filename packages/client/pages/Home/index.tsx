@@ -21,12 +21,12 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import { DocumentCard, RelatedVotings } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import {
   isDateWithinHallituskausi,
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { SessionSectionPanel } from "#client/pages/Sessions/components/SessionSectionPanel";
 import type {
   MinutesContentReference,

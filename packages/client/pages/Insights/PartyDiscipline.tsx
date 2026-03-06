@@ -14,7 +14,6 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import {
   Bar,
   BarChart,
@@ -26,6 +25,7 @@ import {
   YAxis,
 } from "recharts";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
 

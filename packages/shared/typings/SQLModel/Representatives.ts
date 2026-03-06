@@ -64,11 +64,11 @@ declare global {
 
     export type GovernmentMembership = {
       person_id: number;
-      ministry: string;
-      name: string;
-      government: string;
+      ministry: string | null;
+      name: string | null;
+      government: string | null;
       government_id: number;
-      start_date: DateString;
+      start_date: DateString | null;
       end_date: DateString | null;
     };
 
