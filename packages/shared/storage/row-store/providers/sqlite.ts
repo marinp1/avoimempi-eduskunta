@@ -7,7 +7,7 @@ import {
   gzipSync,
   constants as zlibConstants,
 } from "node:zlib";
-import type { ColumnSchema, IRowStore, StoredRow } from "../types";
+import type { ColumnSchema, IRowStore, StoredRevision, StoredRow } from "../types";
 
 type RowMode = "raw" | "parsed";
 type CompressionCodec = "gzip" | "brotli";
@@ -48,6 +48,38 @@ function shouldCompress(
   compressedTables: Set<string>,
 ): boolean {
   return compressedTables.has("*") || compressedTables.has(tableName);
+}
+
+/** Element-wise diff between two JSON-array rows. Stores only changed positions. */
+type ColumnDiff = Array<{ i: number; o: unknown }>;
+
+function computeRowDiff(oldJson: string, newJson: string): ColumnDiff {
+  try {
+    const oldArr = JSON.parse(oldJson) as unknown[];
+    const newArr = JSON.parse(newJson) as unknown[];
+    const diff: ColumnDiff = [];
+    const len = Math.max(oldArr.length, newArr.length);
+    for (let i = 0; i < len; i++) {
+      if (JSON.stringify(oldArr[i]) !== JSON.stringify(newArr[i])) {
+        diff.push({ i, o: oldArr[i] });
+      }
+    }
+    return diff;
+  } catch {
+    return [];
+  }
+}
+
+function applyRowDiff(baseJson: string, diff: ColumnDiff): string {
+  try {
+    const arr = JSON.parse(baseJson) as unknown[];
+    for (const { i, o } of diff) {
+      arr[i] = o;
+    }
+    return JSON.stringify(arr);
+  } catch {
+    return baseJson;
+  }
 }
 
 function encodeHexHash(hashHex: string): Uint8Array {
@@ -126,10 +158,28 @@ export class SqliteRowStore implements IRowStore {
           data          BLOB    NOT NULL,
           data_encoding INTEGER NOT NULL DEFAULT 0,
           hash          BLOB    NOT NULL,
+          created_at    INTEGER NOT NULL DEFAULT 0,
           updated_at    INTEGER NOT NULL,
           PRIMARY KEY (table_id, pk),
           FOREIGN KEY (table_id) REFERENCES table_refs(id)
         ) STRICT;
+      `);
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS row_revisions (
+          id            INTEGER PRIMARY KEY AUTOINCREMENT,
+          table_id      INTEGER NOT NULL,
+          pk            INTEGER NOT NULL,
+          column_hash   BLOB    NOT NULL,
+          hash          BLOB    NOT NULL,
+          created_at    INTEGER NOT NULL DEFAULT 0,
+          superseded_at INTEGER NOT NULL,
+          diff          TEXT    NOT NULL,
+          FOREIGN KEY (table_id) REFERENCES table_refs(id)
+        ) STRICT;
+      `);
+      this.db.exec(`
+        CREATE INDEX IF NOT EXISTS idx_row_revisions_lookup
+          ON row_revisions(table_id, pk, superseded_at);
       `);
     } else {
       this.db.exec(`
@@ -159,6 +209,43 @@ export class SqliteRowStore implements IRowStore {
       throw new Error(
         `${this.name} uses a legacy schema. Run: bun run rowstore:compact`,
       );
+    }
+
+    // Auto-migrate: add created_at if absent (existing rows get DEFAULT 0 = unknown).
+    if (!names.has("created_at")) {
+      this.db.exec(
+        `ALTER TABLE rows ADD COLUMN created_at INTEGER NOT NULL DEFAULT 0`,
+      );
+    }
+
+    // Auto-migrate row_revisions: if it exists but uses the old full-blob schema
+    // (no diff column), drop and recreate — it was newly added with no real data.
+    if (this.mode === "raw") {
+      const revCols = this.db
+        .prepare(`PRAGMA table_info(row_revisions)`)
+        .all() as Array<{ name: string }>;
+      const revNames = new Set(revCols.map((c) => c.name));
+      if (revNames.size > 0 && !revNames.has("diff")) {
+        this.db.exec(`DROP TABLE IF EXISTS row_revisions`);
+        this.db.exec(`DROP INDEX IF EXISTS idx_row_revisions_lookup`);
+        this.db.exec(`
+          CREATE TABLE row_revisions (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            table_id      INTEGER NOT NULL,
+            pk            INTEGER NOT NULL,
+            column_hash   BLOB    NOT NULL,
+            hash          BLOB    NOT NULL,
+            created_at    INTEGER NOT NULL DEFAULT 0,
+            superseded_at INTEGER NOT NULL,
+            diff          TEXT    NOT NULL,
+            FOREIGN KEY (table_id) REFERENCES table_refs(id)
+          ) STRICT;
+        `);
+        this.db.exec(`
+          CREATE INDEX idx_row_revisions_lookup
+            ON row_revisions(table_id, pk, superseded_at);
+        `);
+      }
     }
   }
 
@@ -264,27 +351,77 @@ export class SqliteRowStore implements IRowStore {
             nowIso,
           );
 
-        const stmt = this.db.prepare(
-          `INSERT OR REPLACE INTO rows (table_id, pk, column_hash, data, data_encoding, hash, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        // For any row whose hash will change, store a sparse diff of the old version.
+        const selectExistingStmt = this.db.prepare(
+          `SELECT pk, column_hash, data, data_encoding, hash, created_at FROM rows WHERE table_id = ? AND pk = ?`,
         );
+        const insertRevStmt = this.db.prepare(
+          `INSERT INTO row_revisions (table_id, pk, column_hash, hash, created_at, superseded_at, diff) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        );
+
+        // Upsert: set created_at only on insert; only update other fields when hash differs.
+        const upsertStmt = this.db.prepare(`
+          INSERT INTO rows (table_id, pk, column_hash, data, data_encoding, hash, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(table_id, pk) DO UPDATE SET
+            column_hash   = excluded.column_hash,
+            data          = excluded.data,
+            data_encoding = excluded.data_encoding,
+            hash          = excluded.hash,
+            updated_at    = excluded.updated_at
+          WHERE rows.hash != excluded.hash
+        `);
 
         for (const row of rows) {
           const rowHashHex = row.hash ?? sha256(row.data);
           const encoded = this.encodeData(tableName, row.data);
-          stmt.run(
+          const rowHashBin = encodeHexHash(rowHashHex);
+
+          const existing = selectExistingStmt.get(tableId, row.pk) as {
+            pk: number;
+            column_hash: SqliteBlob;
+            data: SqliteBlob;
+            data_encoding: number;
+            hash: SqliteBlob;
+            created_at: number;
+          } | null;
+
+          if (existing && decodeHexHash(existing.hash) !== rowHashHex) {
+            const oldDataJson = this.decodeData(existing.data, existing.data_encoding);
+            const diff = computeRowDiff(oldDataJson, row.data);
+            insertRevStmt.run(
+              tableId,
+              row.pk,
+              toBuffer(existing.column_hash),
+              toBuffer(existing.hash),
+              existing.created_at,
+              now,
+              JSON.stringify(diff),
+            );
+          }
+
+          upsertStmt.run(
             tableId,
             row.pk,
             colHash,
             encoded.payload,
             encoded.encoding,
-            encodeHexHash(rowHashHex),
-            now,
+            rowHashBin,
+            now, // created_at: only used on INSERT, ignored on UPDATE
+            now, // updated_at
           );
         }
       } else {
-        const stmt = this.db.prepare(
-          `INSERT OR REPLACE INTO rows (table_id, pk, data, data_encoding, hash, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
-        );
+        const stmt = this.db.prepare(`
+          INSERT INTO rows (table_id, pk, data, data_encoding, hash, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(table_id, pk) DO UPDATE SET
+            data          = excluded.data,
+            data_encoding = excluded.data_encoding,
+            hash          = excluded.hash,
+            updated_at    = excluded.updated_at
+          WHERE rows.hash != excluded.hash
+        `);
 
         for (const row of rows) {
           const rowHashHex = row.hash ?? sha256(row.data);
@@ -295,6 +432,7 @@ export class SqliteRowStore implements IRowStore {
             encoded.payload,
             encoded.encoding,
             encodeHexHash(rowHashHex),
+            now,
             now,
           );
         }
@@ -311,7 +449,7 @@ export class SqliteRowStore implements IRowStore {
     if (this.mode === "raw") {
       const row = this.db
         .prepare(
-          `SELECT pk, column_hash, data, data_encoding, hash, updated_at FROM rows WHERE table_id = ? AND pk = ?`,
+          `SELECT pk, column_hash, data, data_encoding, hash, created_at, updated_at FROM rows WHERE table_id = ? AND pk = ?`,
         )
         .get(tableId, pk) as {
         pk: number;
@@ -319,6 +457,7 @@ export class SqliteRowStore implements IRowStore {
         data: SqliteBlob;
         data_encoding: number;
         hash: SqliteBlob;
+        created_at: number;
         updated_at: number | string;
       } | null;
 
@@ -329,19 +468,21 @@ export class SqliteRowStore implements IRowStore {
         columnHash: decodeHexHash(row.column_hash),
         data: this.decodeData(row.data, row.data_encoding),
         hash: decodeHexHash(row.hash),
+        createdAt: decodeUpdatedAt(row.created_at),
         updatedAt: decodeUpdatedAt(row.updated_at),
       };
     }
 
     const row = this.db
       .prepare(
-        `SELECT pk, data, data_encoding, hash, updated_at FROM rows WHERE table_id = ? AND pk = ?`,
+        `SELECT pk, data, data_encoding, hash, created_at, updated_at FROM rows WHERE table_id = ? AND pk = ?`,
       )
       .get(tableId, pk) as {
       pk: number;
       data: SqliteBlob;
       data_encoding: number;
       hash: SqliteBlob;
+      created_at: number;
       updated_at: number | string;
     } | null;
 
@@ -352,6 +493,7 @@ export class SqliteRowStore implements IRowStore {
       columnHash: "",
       data: this.decodeData(row.data, row.data_encoding),
       hash: decodeHexHash(row.hash),
+      createdAt: decodeUpdatedAt(row.created_at),
       updatedAt: decodeUpdatedAt(row.updated_at),
     };
   }
@@ -362,7 +504,7 @@ export class SqliteRowStore implements IRowStore {
 
     if (this.mode === "raw") {
       const stmt = this.db.prepare(
-        `SELECT pk, column_hash, data, data_encoding, hash, updated_at FROM rows WHERE table_id = ? AND pk > ? ORDER BY pk ASC LIMIT ?`,
+        `SELECT pk, column_hash, data, data_encoding, hash, created_at, updated_at FROM rows WHERE table_id = ? AND pk > ? ORDER BY pk ASC LIMIT ?`,
       );
 
       let lastPk = -1;
@@ -373,6 +515,7 @@ export class SqliteRowStore implements IRowStore {
           data: SqliteBlob;
           data_encoding: number;
           hash: SqliteBlob;
+          created_at: number;
           updated_at: number | string;
         }>;
 
@@ -385,6 +528,7 @@ export class SqliteRowStore implements IRowStore {
             columnHash: decodeHexHash(row.column_hash),
             data: this.decodeData(row.data, row.data_encoding),
             hash: decodeHexHash(row.hash),
+            createdAt: decodeUpdatedAt(row.created_at),
             updatedAt: decodeUpdatedAt(row.updated_at),
           };
           lastPk = row.pk;
@@ -396,7 +540,7 @@ export class SqliteRowStore implements IRowStore {
     }
 
     const stmt = this.db.prepare(
-      `SELECT pk, data, data_encoding, hash, updated_at FROM rows WHERE table_id = ? AND pk > ? ORDER BY pk ASC LIMIT ?`,
+      `SELECT pk, data, data_encoding, hash, created_at, updated_at FROM rows WHERE table_id = ? AND pk > ? ORDER BY pk ASC LIMIT ?`,
     );
 
     let lastPk = -1;
@@ -406,6 +550,7 @@ export class SqliteRowStore implements IRowStore {
         data: SqliteBlob;
         data_encoding: number;
         hash: SqliteBlob;
+        created_at: number;
         updated_at: number | string;
       }>;
 
@@ -418,6 +563,7 @@ export class SqliteRowStore implements IRowStore {
           columnHash: "",
           data: this.decodeData(row.data, row.data_encoding),
           hash: decodeHexHash(row.hash),
+          createdAt: decodeUpdatedAt(row.created_at),
           updatedAt: decodeUpdatedAt(row.updated_at),
         };
         lastPk = row.pk;
@@ -514,6 +660,56 @@ export class SqliteRowStore implements IRowStore {
       )
       .all() as Array<{ table_name: string }>;
     return rows.map((row) => row.table_name);
+  }
+
+  async listRevisions(tableName: string, pk: number): Promise<StoredRevision[]> {
+    if (this.mode !== "raw") return [];
+
+    const tableId = this.getTableId(tableName, false);
+    if (tableId === null) return [];
+
+    const revRows = this.db
+      .prepare(
+        `SELECT column_hash, hash, created_at, superseded_at, diff
+         FROM row_revisions
+         WHERE table_id = ? AND pk = ?
+         ORDER BY superseded_at DESC`,
+      )
+      .all(tableId, pk) as Array<{
+      column_hash: SqliteBlob;
+      hash: SqliteBlob;
+      created_at: number;
+      superseded_at: number;
+      diff: string;
+    }>;
+
+    if (revRows.length === 0) return [];
+
+    // Reconstruct full historical data by working backwards from the current row.
+    // Each diff records what changed going from the old version to the new one,
+    // so applying it to the current state recovers the previous state.
+    const currentRow = await this.get(tableName, pk);
+    if (!currentRow) return [];
+
+    let dataJson = currentRow.data;
+    const revisions: StoredRevision[] = [];
+
+    for (const row of revRows) {
+      const diff = JSON.parse(row.diff) as ColumnDiff;
+      dataJson = applyRowDiff(dataJson, diff);
+      revisions.push({
+        tableName,
+        pk,
+        columnHash: decodeHexHash(row.column_hash),
+        data: dataJson,
+        hash: decodeHexHash(row.hash),
+        createdAt: decodeUpdatedAt(row.created_at),
+        updatedAt: decodeUpdatedAt(row.superseded_at),
+        supersededAt: decodeUpdatedAt(row.superseded_at),
+      });
+    }
+
+    return revisions.reverse(); // Return oldest → newest
   }
 
   async delete(tableName: string, pk: number): Promise<void> {

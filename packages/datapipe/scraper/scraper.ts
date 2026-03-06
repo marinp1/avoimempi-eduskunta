@@ -1,5 +1,6 @@
 import { scheduler } from "node:timers/promises";
 import type { TableName } from "#constants";
+import { isAlwaysFullScrapeTable } from "#constants";
 import { getRawRowStore } from "#storage/row-store/factory";
 import {
   getExactTableCountByRows,
@@ -523,12 +524,24 @@ export async function scrapeTable(
     return ranges;
   };
 
+  // Always-full-scrape tables are re-scraped from PK 0 on every run regardless
+  // of cached counts or current mode, because their rows may change in-place.
+  const isFullScrape = isAlwaysFullScrapeTable(tableName);
+  if (isFullScrape) {
+    console.log(
+      `🔁 ${tableName} is an always-full-scrape table — starting from PK 0 (preserving revisions)`,
+    );
+  }
+  const effectiveMode: ScrapeMode = isFullScrape
+    ? { type: "start-from-pk", pkStartValue: 0 }
+    : mode;
+
   let initialPassStartPk: number;
   let initialPassRangeStart: number | null = null;
   let initialPassEndPk: number | null = null;
   let initialPassPatchMode = false;
 
-  switch (mode.type) {
+  switch (effectiveMode.type) {
     case "auto-resume": {
       const maxPk = await rawStore.maxPk(tableName);
       if (maxPk !== null) {
@@ -555,14 +568,14 @@ export async function scrapeTable(
     }
 
     case "start-from-pk":
-      initialPassStartPk = mode.pkStartValue;
+      initialPassStartPk = effectiveMode.pkStartValue;
       console.log(
         `🚀 Starting from PK: ${initialPassStartPk} (will continue until end)`,
       );
       break;
 
     case "patch-from-pk":
-      initialPassStartPk = mode.pkStartValue;
+      initialPassStartPk = effectiveMode.pkStartValue;
       initialPassPatchMode = true;
       console.log(
         `🩹 Patch mode from PK: ${initialPassStartPk} (scrapes patch page + 1 follow-up page)`,
@@ -570,9 +583,9 @@ export async function scrapeTable(
       break;
 
     case "range":
-      initialPassStartPk = mode.pkStartValue;
-      initialPassRangeStart = mode.pkStartValue;
-      initialPassEndPk = mode.pkEndValue;
+      initialPassStartPk = effectiveMode.pkStartValue;
+      initialPassRangeStart = effectiveMode.pkStartValue;
+      initialPassEndPk = effectiveMode.pkEndValue;
       console.log(
         `🎯 Range mode: scraping PK ${initialPassStartPk}..${initialPassEndPk} (inclusive)`,
       );
@@ -610,8 +623,8 @@ export async function scrapeTable(
   }
 
   const shouldAutoRepairGaps =
-    mode.type === "auto-resume" ||
-    (mode.type === "start-from-pk" && mode.pkStartValue === 0);
+    effectiveMode.type === "auto-resume" ||
+    (effectiveMode.type === "start-from-pk" && effectiveMode.pkStartValue === 0);
   if (shouldAutoRepairGaps && totalRows > totalRowsScraped) {
     const missingRanges = await collectInternalMissingRanges();
 
@@ -673,8 +686,8 @@ export async function scrapeTable(
   );
 
   const shouldWarnOnCountDrift =
-    mode.type === "auto-resume" ||
-    (mode.type === "start-from-pk" && mode.pkStartValue === 0);
+    effectiveMode.type === "auto-resume" ||
+    (effectiveMode.type === "start-from-pk" && effectiveMode.pkStartValue === 0);
   if (
     shouldWarnOnCountDrift &&
     totalRows > 0 &&

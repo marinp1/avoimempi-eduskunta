@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import postgres from "postgres";
-import type { ColumnSchema, IRowStore, StoredRow } from "../types";
+import type { ColumnSchema, IRowStore, StoredRevision, StoredRow } from "../types";
 
 type RowMode = "raw" | "parsed";
 
@@ -165,6 +165,7 @@ export class PostgresRowStore implements IRowStore {
         columnHash: row.column_hash as string,
         data: row.data as string,
         hash: row.hash as string,
+        createdAt: row.updated_at as string,
         updatedAt: row.updated_at as string,
       };
     } else {
@@ -181,6 +182,7 @@ export class PostgresRowStore implements IRowStore {
         columnHash: "",
         data: row.data as string,
         hash: row.hash as string,
+        createdAt: row.updated_at as string,
         updatedAt: row.updated_at as string,
       };
     }
@@ -209,6 +211,7 @@ export class PostgresRowStore implements IRowStore {
             columnHash: row.column_hash as string,
             data: row.data as string,
             hash: row.hash as string,
+            createdAt: row.updated_at as string,
             updatedAt: row.updated_at as string,
           };
           lastPk = row.pk as number;
@@ -236,6 +239,7 @@ export class PostgresRowStore implements IRowStore {
             columnHash: "",
             data: row.data as string,
             hash: row.hash as string,
+            createdAt: row.updated_at as string,
             updatedAt: row.updated_at as string,
           };
           lastPk = row.pk as number;
@@ -326,6 +330,13 @@ export class PostgresRowStore implements IRowStore {
       ORDER BY table_name
     `;
     return rows.map((row) => row.table_name as string);
+  }
+
+  async listRevisions(
+    _tableName: string,
+    _pk: number,
+  ): Promise<StoredRevision[]> {
+    return [];
   }
 
   async delete(tableName: string, pk: number): Promise<void> {
