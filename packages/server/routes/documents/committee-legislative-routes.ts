@@ -1,15 +1,13 @@
 import type { BunRequest } from "bun";
-import type { DocumentRoutesDataAccess } from "../document-routes";
+import type { DocumentRepository } from "../../database/repositories/document-repository";
 import {
   getMappedOptionalQueryParams,
   getMappedPaginatedQueryParams,
   getSearchParams,
 } from "../http";
-import { jsonOrNotFound } from "../route-responses";
+import { json, jsonOrNotFound } from "../route-responses";
 
-export const createCommitteeLegislativeRoutes = (
-  db: DocumentRoutesDataAccess,
-) => ({
+export const createCommitteeLegislativeRoutes = (db: DocumentRepository) => ({
   "/api/committee-reports": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
@@ -32,14 +30,14 @@ export const createCommitteeLegislativeRoutes = (
         },
       );
       const data = await db.fetchCommitteeReports(params);
-      return Response.json(data);
+      return json(data);
     },
   },
 
   "/api/committee-reports/years": {
     GET: async () => {
       const data = await db.fetchCommitteeReportYears();
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -54,7 +52,7 @@ export const createCommitteeLegislativeRoutes = (
         endDate: "endDate",
       } as const);
       const data = await db.fetchCommitteeReportSourceCommittees(params);
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -69,7 +67,7 @@ export const createCommitteeLegislativeRoutes = (
         endDate: "endDate",
       } as const);
       const data = await db.fetchCommitteeReportRecipientCommittees(params);
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -113,14 +111,14 @@ export const createCommitteeLegislativeRoutes = (
         },
       );
       const data = await db.fetchLegislativeInitiatives(params);
-      return Response.json(data);
+      return json(data);
     },
   },
 
   "/api/legislative-initiatives/subjects": {
     GET: async () => {
       const data = await db.fetchLegislativeInitiativesSubjects();
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -131,7 +129,7 @@ export const createCommitteeLegislativeRoutes = (
         initiativeTypeCode: "initiativeTypeCode",
       } as const);
       const data = await db.fetchLegislativeInitiativeYears(params);
-      return Response.json(data);
+      return json(data);
     },
   },
 

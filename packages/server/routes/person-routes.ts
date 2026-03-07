@@ -1,89 +1,66 @@
 import type { BunRequest } from "bun";
+import type { PersonRepository } from "../database/repositories/person-repository";
 import {
   getBoundedIntegerQueryParam,
   getLimitOffsetQueryParams,
   getSearchParams,
 } from "./http";
+import { json } from "./route-responses";
 
-type PersonRoutesDataAccess = {
-  fetchPersonGroupMemberships: (params: { id: string }) => unknown;
-  fetchPersonTerms: (params: { id: string }) => unknown;
-  fetchPersonVotes: (params: { id: string }) => unknown;
-  fetchRepresentativeDetails: (params: { id: string }) => unknown;
-  fetchRepresentativeDistricts: (params: { id: string }) => unknown;
-  fetchLeavingParliamentRecords: (params: { id: string }) => unknown;
-  fetchTrustPositions: (params: { id: string }) => unknown;
-  fetchGovernmentMemberships: (params: { id: string }) => unknown;
-  fetchPersonSpeeches: (params: {
-    personId: string;
-    limit?: number;
-    offset?: number;
-  }) => unknown;
-  fetchPersonQuestions: (params: {
-    personId: string;
-    limit?: number;
-  }) => unknown;
-  fetchPersonCommittees: (params: { personId: string }) => unknown;
-  fetchPersonDissents: (params: {
-    personId: string;
-    limit?: number;
-  }) => unknown;
-};
-
-export const createPersonRoutes = (db: PersonRoutesDataAccess) => ({
+export const createPersonRoutes = (db: PersonRepository) => ({
   "/api/person/:id/group-memberships": {
     GET: async (req: BunRequest<"/api/person/:id/group-memberships">) => {
       const memberships = await db.fetchPersonGroupMemberships(req.params);
-      return Response.json(memberships);
+      return json(memberships);
     },
   },
 
   "/api/person/:id/terms": {
     GET: async (req: BunRequest<"/api/person/:id/terms">) => {
       const memberships = await db.fetchPersonTerms(req.params);
-      return Response.json(memberships);
+      return json(memberships);
     },
   },
 
   "/api/person/:id/votes": {
     GET: async (req: BunRequest<"/api/person/:id/votes">) => {
       const votes = await db.fetchPersonVotes(req.params);
-      return Response.json(votes);
+      return json(votes);
     },
   },
 
   "/api/person/:id/details": {
     GET: async (req: BunRequest<"/api/person/:id/details">) => {
       const details = await db.fetchRepresentativeDetails(req.params);
-      return Response.json(details);
+      return json(details);
     },
   },
 
   "/api/person/:id/districts": {
     GET: async (req: BunRequest<"/api/person/:id/districts">) => {
       const districts = await db.fetchRepresentativeDistricts(req.params);
-      return Response.json(districts);
+      return json(districts);
     },
   },
 
   "/api/person/:id/leaving-records": {
     GET: async (req: BunRequest<"/api/person/:id/leaving-records">) => {
       const records = await db.fetchLeavingParliamentRecords(req.params);
-      return Response.json(records);
+      return json(records);
     },
   },
 
   "/api/person/:id/trust-positions": {
     GET: async (req: BunRequest<"/api/person/:id/trust-positions">) => {
       const positions = await db.fetchTrustPositions(req.params);
-      return Response.json(positions);
+      return json(positions);
     },
   },
 
   "/api/person/:id/government-memberships": {
     GET: async (req: BunRequest<"/api/person/:id/government-memberships">) => {
       const memberships = await db.fetchGovernmentMemberships(req.params);
-      return Response.json(memberships);
+      return json(memberships);
     },
   },
 
@@ -102,7 +79,7 @@ export const createPersonRoutes = (db: PersonRoutesDataAccess) => ({
         limit,
         offset,
       });
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -117,7 +94,7 @@ export const createPersonRoutes = (db: PersonRoutesDataAccess) => ({
           max: 2_000,
         }),
       });
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -126,7 +103,7 @@ export const createPersonRoutes = (db: PersonRoutesDataAccess) => ({
       const data = await db.fetchPersonCommittees({
         personId: req.params.id,
       });
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -141,7 +118,7 @@ export const createPersonRoutes = (db: PersonRoutesDataAccess) => ({
           max: 1_000,
         }),
       });
-      return Response.json(data);
+      return json(data);
     },
   },
 });

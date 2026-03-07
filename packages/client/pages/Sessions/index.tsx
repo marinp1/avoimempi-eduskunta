@@ -66,6 +66,7 @@ import {
   isEduskuntaOfficialUrl,
   toEduskuntaUrl,
 } from "#client/utils/eduskunta-links";
+import { apiFetch } from "#client/utils/fetch";
 import { CalendarGrid } from "./components/CalendarGrid";
 import { SessionSectionPanel } from "./components/SessionSectionPanel";
 
@@ -199,12 +200,9 @@ export default () => {
           setVaskiLatestSpeechDate(null);
           return;
         }
-        const res = await fetch(`/api/day/${date}/sessions`);
+        const res = await apiFetch(`/api/day/${date}/sessions`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const payload: {
-          sessions: SessionWithSections[];
-          vaskiLatestSpeechDate?: string | null;
-        } = await res.json();
+        const payload = await res.json();
         setSessions(payload.sessions || []);
         setVaskiLatestSpeechDate(payload.vaskiLatestSpeechDate ?? null);
       } catch {
@@ -220,9 +218,9 @@ export default () => {
     const fetchValidDates = async () => {
       try {
         setDatesLoading(true);
-        const response = await fetch("/api/session-dates");
+        const response = await apiFetch("/api/session-dates");
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data: { date: string }[] = await response.json();
+        const data = await response.json();
         setAllValidDates(new Set(data.map((item) => item.date)));
       } catch {
         // non-critical
@@ -1710,29 +1708,29 @@ export default () => {
     sectionKey: string,
     offset = 0,
   ) => {
-    const res = await fetch(
+    const res = await apiFetch(
       `/api/sections/${sectionKey}/speeches?limit=${SPEECH_PAGE_SIZE}&offset=${offset}`,
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as SpeechData;
+    return await res.json();
   };
 
   const fetchSectionLinks = async (sectionKey: string) => {
-    const res = await fetch(`/api/sections/${sectionKey}/links`);
+    const res = await apiFetch(`/api/sections/${sectionKey}/links`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as SectionDocumentLink[];
+    return await res.json();
   };
 
   const fetchSectionSubSections = async (sectionKey: string) => {
-    const res = await fetch(`/api/sections/${sectionKey}/subsections`);
+    const res = await apiFetch(`/api/sections/${sectionKey}/subsections`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as SubSection[];
+    return await res.json();
   };
 
   const fetchSectionRollCall = async (sectionKey: string) => {
-    const res = await fetch(`/api/sections/${sectionKey}/roll-call`);
+    const res = await apiFetch(`/api/sections/${sectionKey}/roll-call`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as SectionRollCallData | null;
+    return await res.json();
   };
 
   const getErrorReason = (error: unknown) =>
@@ -1801,9 +1799,9 @@ export default () => {
     if (!sectionVotings[targetSectionId]) {
       setLoadingVotings((prev) => new Set(prev).add(targetSectionId));
       try {
-        const res = await fetch(`/api/sections/${targetSectionKey}/votings`);
+        const res = await apiFetch(`/api/sections/${targetSectionKey}/votings`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const votings: Voting[] = await res.json();
+        const votings = await res.json();
         setSectionVotings((prev) => ({ ...prev, [targetSectionId]: votings }));
         clearSectionLoadError(targetSectionId, "votings");
       } catch (error) {
@@ -2331,7 +2329,7 @@ export default () => {
                 {renderSessionAttachments(session)}
 
                 {vaskiLatestSpeechDate &&
-                  new Date(session.date).getTime() >
+                  new Date(session.date!).getTime() >
                     new Date(vaskiLatestSpeechDate).getTime() && (
                     <Box
                       sx={{

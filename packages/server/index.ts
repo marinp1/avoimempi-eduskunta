@@ -1,5 +1,4 @@
 // modules/server/server.ts
-
 import { getTraceDatabasePath } from "../shared/database";
 import { createResponseCache } from "./cache/response-cache";
 import { loadRuntimeConfig } from "./config/runtime-config";
@@ -36,7 +35,7 @@ const personRepository = new PersonRepository(db);
 const sessionRepository = new SessionRepository(db);
 const votingRepository = new VotingRepository(db);
 
-const coreRoutesDataAccess = {
+export const coreRoutesDataAccess = {
   fetchImportSourceTableSummaries: (params: { tableNames: string[] }) =>
     importSourceRepository.fetchImportSourceTableSummaries(params),
   fetchRowTrace: (params: { table: string; pkName: string; pkValue: string }) =>
@@ -101,28 +100,28 @@ console.log(
 
 const UNCACHED_ROUTES = new Set(["/api/ready"]);
 
+const apiRoutes = {
+  ...cache.wrapRoutes(createCoreRoutes(coreRoutesDataAccess), {
+    exclude: UNCACHED_ROUTES,
+  }),
+  ...cache.wrapRoutes(createPersonRoutes(personRepository)),
+  ...cache.wrapRoutes(createVotingRoutes(votingRepository)),
+  ...cache.wrapRoutes(createSessionRoutes(sessionRepository)),
+  ...cache.wrapRoutes(createInsightAnalyticsRoutes(analyticsRepository)),
+  ...cache.wrapRoutes(createPartyRoutes(analyticsRepository)),
+  ...cache.wrapRoutes(createDocumentRoutes(documentRepository)),
+  ...cache.wrapRoutes(createGovernmentRoutes(metadataRepository)),
+} as const satisfies Bun.Serve.Options<undefined, any>["routes"];
+
+export type ApiRoutes = typeof apiRoutes;
+
 const server = Bun.serve({
   port,
   reusePort,
   idleTimeout,
   routes: {
     ...createStaticPageRoutes(homepage),
-    ...cache.wrapRoutes(createCoreRoutes(coreRoutesDataAccess), {
-      exclude: UNCACHED_ROUTES,
-    }),
-    ...cache.wrapRoutes(createPersonRoutes(personRepository)),
-    ...cache.wrapRoutes(createVotingRoutes(votingRepository)),
-    ...cache.wrapRoutes(createSessionRoutes(sessionRepository)),
-    ...cache.wrapRoutes(createInsightAnalyticsRoutes(analyticsRepository)),
-    ...cache.wrapRoutes(createPartyRoutes(analyticsRepository)),
-    ...cache.wrapRoutes(createDocumentRoutes(documentRepository)),
-    ...cache.wrapRoutes(
-      createGovernmentRoutes({
-        fetchGovernments: () => metadataRepository.fetchGovernments(),
-        fetchGovernmentMembers: (params) =>
-          metadataRepository.fetchGovernmentMembers(params),
-      }),
-    ),
+    ...apiRoutes,
     "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
 

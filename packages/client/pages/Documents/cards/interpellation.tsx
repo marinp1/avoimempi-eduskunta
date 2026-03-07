@@ -28,6 +28,7 @@ import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
+import { apiFetch } from "#client/utils/fetch";
 import { formatDate, getOutcomeColor, InlineRelatedSessions } from "./shared";
 
 // ─── Interpellation types and card ───
@@ -35,57 +36,20 @@ import { formatDate, getOutcomeColor, InlineRelatedSessions } from "./shared";
 export interface InterpellationListItem {
   id: number;
   parliament_identifier: string;
-  document_number: string;
-  parliamentary_year: number;
+  document_number: number;
+  parliamentary_year: string;
   title: string | null;
   submission_date: string | null;
   first_signer_first_name: string | null;
   first_signer_last_name: string | null;
   first_signer_party: string | null;
-  co_signer_count: number;
+  co_signer_count: number | null;
   decision_outcome: string | null;
   decision_outcome_code: string | null;
   subjects: string | null;
 }
 
-interface InterpellationDetail {
-  id: number;
-  parliament_identifier: string;
-  document_number: string;
-  parliamentary_year: number;
-  title: string | null;
-  submission_date: string | null;
-  question_text: string | null;
-  question_rich_text: string | null;
-  resolution_text: string | null;
-  resolution_rich_text: string | null;
-  decision_outcome: string | null;
-  decision_outcome_code: string | null;
-  signers: Array<{
-    signer_order: number;
-    is_first_signer: number;
-    first_name: string | null;
-    last_name: string | null;
-    party: string | null;
-  }>;
-  stages: Array<{
-    stage_title: string | null;
-    stage_code: string | null;
-    event_date: string | null;
-    event_title: string | null;
-    event_description: string | null;
-  }>;
-  subjects: Array<{ subject_text: string }>;
-  sessions: Array<{
-    session_key: string;
-    session_date: string;
-    session_type: string;
-    session_number: number;
-    session_year: string;
-    section_title: string | null;
-    section_key: string;
-  }>;
-}
+type InterpellationDetail = ApiRouteResponse<`/api/interpellations/:id`>;
 
 export function InterpellationCard({
   item,
@@ -115,7 +79,7 @@ export function InterpellationCard({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/interpellations/${item.id}`);
+        const response = await apiFetch(`/api/interpellations/${item.id}`);
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
@@ -199,7 +163,9 @@ export function InterpellationCard({
                     .filter(Boolean)
                     .join(" ")}
                   {item.first_signer_party && ` (${item.first_signer_party})`}
-                  {item.co_signer_count > 0 && ` +${item.co_signer_count}`}
+                  {!!item.co_signer_count &&
+                    item.co_signer_count > 0 &&
+                    ` +${item.co_signer_count}`}
                 </Typography>
               </Stack>
             )}

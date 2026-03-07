@@ -19,6 +19,7 @@ import {
 import { type ReactNode, useEffect, useState } from "react";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { apiFetch } from "#client/utils/fetch";
 
 interface DiffHunk {
   op: "add" | "remove" | "keep";
@@ -68,8 +69,8 @@ function Changes(): ReactNode {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/changes-history")
-      .then((res) => res.json() as Promise<{ runs: RunEntry[] }>)
+    apiFetch("/api/changes-history")
+      .then(async (res) => await res.json())
       .then(({ runs: r }) => {
         setRuns(r);
         if (r.length > 0) setSelectedRun(r[0].id);
@@ -86,12 +87,12 @@ function Changes(): ReactNode {
     setError(null);
     const url =
       selectedRun === "latest"
-        ? "/api/changes-report"
-        : `/api/changes-report?run=${selectedRun}`;
-    fetch(url)
+        ? ("/api/changes-report" as const)
+        : (`/api/changes-report?run=${selectedRun}` as const);
+    apiFetch(url)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<ChangesReport>;
+        return res.json();
       })
       .then(setReport)
       .catch((err) => setError(String(err)))
@@ -115,8 +116,14 @@ function Changes(): ReactNode {
 
       {showRunSelector && (
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3 }}>
-          <HistoryIcon fontSize="small" sx={{ color: themedColors.textSecondary }} />
-          <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+          <HistoryIcon
+            fontSize="small"
+            sx={{ color: themedColors.textSecondary }}
+          />
+          <Typography
+            variant="body2"
+            sx={{ color: themedColors.textSecondary }}
+          >
             Päivitysajo:
           </Typography>
           <Select

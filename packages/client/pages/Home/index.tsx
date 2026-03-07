@@ -71,6 +71,7 @@ import {
   isEduskuntaOfficialUrl,
   toEduskuntaUrl,
 } from "#client/utils/eduskunta-links";
+import { apiFetch } from "#client/utils/fetch";
 
 const SPEECH_PAGE_SIZE = 20;
 
@@ -168,7 +169,7 @@ const Home = () => {
     const fetchLatestSession = async () => {
       try {
         setLoadingSessions(true);
-        const datesRes = await fetch("/api/session-dates/completed");
+        const datesRes = await apiFetch("/api/session-dates/completed");
         if (!datesRes.ok) throw new Error("Failed to fetch dates");
         const allDates: { date: string }[] = await datesRes.json();
         const dates = selectedHallituskausi
@@ -187,7 +188,7 @@ const Home = () => {
           .date;
         setLatestDate(latest);
 
-        const sessionsRes = await fetch(`/api/day/${latest}/sessions`);
+        const sessionsRes = await apiFetch(`/api/day/${latest}/sessions`);
         if (!sessionsRes.ok) throw new Error("Failed to fetch sessions");
         const payload: {
           sessions: SessionWithSections[];
@@ -229,9 +230,9 @@ const Home = () => {
           asOfDate = selectedHallituskausi.endDate;
         }
       }
-      const res = await fetch(`/api/composition/${asOfDate}`);
+      const res = await apiFetch(`/api/composition/${asOfDate}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data: Member[] = await res.json();
+      const data = await res.json();
       setMembers(data);
     } catch {
       setMembers([]);
@@ -297,29 +298,29 @@ const Home = () => {
     sectionKey: string,
     offset = 0,
   ) => {
-    const res = await fetch(
+    const res = await apiFetch(
       `/api/sections/${sectionKey}/speeches?limit=${SPEECH_PAGE_SIZE}&offset=${offset}`,
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as SpeechData;
+    return await res.json();
   };
 
   const fetchSectionLinks = async (sectionKey: string) => {
-    const res = await fetch(`/api/sections/${sectionKey}/links`);
+    const res = await apiFetch(`/api/sections/${sectionKey}/links`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as SectionDocumentLink[];
+    return await res.json();
   };
 
   const fetchSectionSubSections = async (sectionKey: string) => {
-    const res = await fetch(`/api/sections/${sectionKey}/subsections`);
+    const res = await apiFetch(`/api/sections/${sectionKey}/subsections`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as SubSection[];
+    return await res.json();
   };
 
   const fetchSectionRollCall = async (sectionKey: string) => {
-    const res = await fetch(`/api/sections/${sectionKey}/roll-call`);
+    const res = await apiFetch(`/api/sections/${sectionKey}/roll-call`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return (await res.json()) as SectionRollCallData | null;
+    return await res.json();
   };
 
   const getErrorReason = (error: unknown) =>
@@ -390,9 +391,9 @@ const Home = () => {
     if (!sectionVotings[sectionId]) {
       setLoadingVotings((prev) => new Set(prev).add(sectionId));
       try {
-        const res = await fetch(`/api/sections/${sectionKey}/votings`);
+        const res = await apiFetch(`/api/sections/${sectionKey}/votings`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const votings: Voting[] = await res.json();
+        const votings = await res.json();
         setSectionVotings((prev) => ({ ...prev, [sectionId]: votings }));
         clearSectionLoadError(sectionId, "votings");
       } catch (error) {
@@ -510,9 +511,9 @@ const Home = () => {
       return;
     setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
     try {
-      const res = await fetch(`/api/votings/${votingId}/details`);
+      const res = await apiFetch(`/api/votings/${votingId}/details`);
       if (!res.ok) return;
-      const data: VotingInlineDetails = await res.json();
+      const data = await res.json();
       setVotingDetailsById((prev) => ({ ...prev, [votingId]: data }));
     } finally {
       setLoadingVotingDetails((prev) => {
@@ -2513,7 +2514,7 @@ const Home = () => {
               {renderSessionAttachments(session)}
 
               {vaskiLatestSpeechDate &&
-                new Date(session.date).getTime() >
+                new Date(session.date!).getTime() >
                   new Date(vaskiLatestSpeechDate).getTime() && (
                   <Box
                     sx={{

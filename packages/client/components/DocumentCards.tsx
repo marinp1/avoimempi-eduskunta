@@ -15,6 +15,7 @@ import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, commonStyles } from "#client/theme/index";
+import { apiFetch, type IdentifierRouteType } from "#client/utils/fetch";
 
 export type DocRef = {
   type:
@@ -269,17 +270,20 @@ const ExpandableRichSnippet: React.FC<{
   );
 };
 
-function useFetchByIdentifier<T>(apiPath: string, identifier: string) {
-  const [data, setData] = useState<T | null>(null);
+function useFetchByIdentifier<
+  I extends IdentifierRouteType,
+  D extends ApiRouteResponse<`/api/${I}/by-identifier/:id`>,
+>(apiPath: `/api/${I}/by-identifier`, identifier: string) {
+  const [data, setData] = useState<D | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetch(`${apiPath}/${encodeURIComponent(identifier)}`)
-      .then((res) => (res.ok ? res.json() : null))
+    apiFetch(`${apiPath}/${encodeURIComponent(identifier)}` as const)
+      .then((res) => (res.ok ? (res.json() as D) : null))
       .then((json) => {
-        if (!cancelled) setData(json);
+        if (!cancelled) setData(json as D);
       })
       .catch(() => {})
       .finally(() => {
@@ -292,25 +296,6 @@ function useFetchByIdentifier<T>(apiPath: string, identifier: string) {
 
   return { data, loading };
 }
-
-type DocCardData = {
-  id: number;
-  parliament_identifier: string;
-  title: string | null;
-  decision_outcome: string | null;
-  decision_outcome_code: string | null;
-  subjects: { subject_text: string }[];
-};
-
-type WithSigner = DocCardData & {
-  first_signer_first_name: string | null;
-  first_signer_last_name: string | null;
-  first_signer_party: string | null;
-};
-
-type WithAuthor = DocCardData & {
-  author: string | null;
-};
 
 const renderSubjectChips = (
   subjects: { subject_text: string }[] | undefined,
@@ -358,16 +343,10 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const { data, loading } = useFetchByIdentifier<
-    WithAuthor & {
-      summary_text: string | null;
-      summary_rich_text: string | null;
-      proposal_text: string | null;
-      proposal_rich_text: string | null;
-      justification_text: string | null;
-      justification_rich_text: string | null;
-    }
-  >("/api/government-proposals/by-identifier", identifier);
+  const { data, loading } = useFetchByIdentifier(
+    "/api/government-proposals/by-identifier",
+    identifier,
+  );
 
   if (loading)
     return (
@@ -451,22 +430,10 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const { data, loading } = useFetchByIdentifier<
-    WithSigner & {
-      question_text: string | null;
-      question_rich_text: string | null;
-      resolution_text: string | null;
-      resolution_rich_text: string | null;
-      stages: {
-        stage_order: number;
-        stage_title: string;
-        stage_code: string | null;
-        event_date: string | null;
-        event_title: string | null;
-        event_description: string | null;
-      }[];
-    }
-  >("/api/interpellations/by-identifier", identifier);
+  const { data, loading } = useFetchByIdentifier(
+    "/api/interpellations/by-identifier",
+    identifier,
+  );
 
   if (loading)
     return <LoadingPlaceholder text={tDocuments("loadingInterpellation")} />;
@@ -583,17 +550,10 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const { data, loading } = useFetchByIdentifier<
-    WithSigner & {
-      initiative_type_code: string;
-      justification_text: string | null;
-      justification_rich_text: string | null;
-      proposal_text: string | null;
-      proposal_rich_text: string | null;
-      law_text: string | null;
-      law_rich_text: string | null;
-    }
-  >("/api/legislative-initiatives/by-identifier", identifier);
+  const { data, loading } = useFetchByIdentifier(
+    "/api/legislative-initiatives/by-identifier",
+    identifier,
+  );
 
   if (loading)
     return (
@@ -689,13 +649,10 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const { data, loading } = useFetchByIdentifier<
-    DocCardData & {
-      question_text: string | null;
-      asker_text: string | null;
-      latest_stage_code: string | null;
-    }
-  >("/api/oral-questions/by-identifier", identifier);
+  const { data, loading } = useFetchByIdentifier(
+    "/api/oral-questions/by-identifier",
+    identifier,
+  );
 
   if (loading)
     return <LoadingPlaceholder text={tDocuments("loadingOralQuestion")} />;
@@ -774,15 +731,10 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const { data, loading } = useFetchByIdentifier<
-    WithSigner & {
-      answer_minister_title: string | null;
-      answer_minister_first_name: string | null;
-      answer_minister_last_name: string | null;
-      question_text: string | null;
-      question_rich_text: string | null;
-    }
-  >("/api/written-questions/by-identifier", identifier);
+  const { data, loading } = useFetchByIdentifier(
+    "/api/written-questions/by-identifier",
+    identifier,
+  );
 
   if (loading)
     return <LoadingPlaceholder text={tDocuments("loadingWrittenQuestion")} />;
@@ -858,23 +810,10 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const { data, loading } = useFetchByIdentifier<{
-    id: number;
-    parliament_identifier: string;
-    report_type_code: string;
-    title: string | null;
-    committee_name: string | null;
-    recipient_committee: string | null;
-    source_reference: string | null;
-    summary_text: string | null;
-    summary_rich_text: string | null;
-    decision_text: string | null;
-    decision_rich_text: string | null;
-    resolution_text: string | null;
-    resolution_rich_text: string | null;
-    legislation_amendment_text: string | null;
-    legislation_amendment_rich_text: string | null;
-  }>("/api/committee-reports/by-identifier", identifier);
+  const { data, loading } = useFetchByIdentifier(
+    "/api/committee-reports/by-identifier",
+    identifier,
+  );
 
   if (loading)
     return <LoadingPlaceholder text={tDocuments("loadingCommitteeReport")} />;
@@ -994,6 +933,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
+
   type VotingSummary = {
     id: number;
     section_title: string | null;
@@ -1005,56 +945,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
     n_total: number;
   };
 
-  type VotingDetails = {
-    voting: VotingSummary & {
-      n_abstain: number;
-      n_absent: number;
-      title: string | null;
-      parliamentary_item: string | null;
-      section_key: string | null;
-    };
-    partyBreakdown: {
-      party_code: string;
-      party_name: string;
-      n_yes: number;
-      n_no: number;
-      n_abstain: number;
-      n_absent: number;
-      n_total: number;
-    }[];
-    memberVotes: {
-      person_id: number;
-      first_name: string;
-      last_name: string;
-      party_code: string;
-      vote: string;
-      is_government: 0 | 1;
-    }[];
-    governmentOpposition: {
-      government_yes: number;
-      government_no: number;
-      government_abstain: number;
-      government_absent: number;
-      government_total: number;
-      opposition_yes: number;
-      opposition_no: number;
-      opposition_abstain: number;
-      opposition_absent: number;
-      opposition_total: number;
-    } | null;
-    relatedVotings: {
-      id: number;
-      number: number | null;
-      start_time: string | null;
-      context_title: string;
-      n_yes: number;
-      n_no: number;
-      n_abstain: number;
-      n_absent: number;
-      n_total: number;
-      session_key: string | null;
-    }[];
-  };
+  type VotingDetails = ApiRouteResponse<`/api/votings/:id/details`>;
 
   const [votings, setVotings] = useState<VotingSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1071,7 +962,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
   const fetchVotingDetails = (id: number) => {
     if (detailsById[id] || detailLoadingById[id]) return;
     setDetailLoadingById((prev) => ({ ...prev, [id]: true }));
-    fetch(`/api/votings/${id}/details`)
+    apiFetch(`/api/votings/${id}/details`)
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
         if (!json) return;
@@ -1093,7 +984,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
 
     Promise.all(
       identifiers.map((id) =>
-        fetch(`/api/votings/by-document/${encodeURIComponent(id)}`)
+        apiFetch(`/api/votings/by-document/${encodeURIComponent(id)}`)
           .then((res) => (res.ok ? res.json() : []))
           .catch(() => []),
       ),

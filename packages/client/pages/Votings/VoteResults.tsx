@@ -23,6 +23,7 @@ import { useScopedTranslation } from "#client/i18n/scoped";
 import { commonStyles } from "#client/theme";
 import { DataCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { apiFetch } from "#client/utils/fetch";
 
 type SortMode = "newest" | "oldest" | "closest" | "largest";
 type VotingSearchRow = DatabaseQueries.VotingSearchResult;
@@ -129,11 +130,11 @@ export const VoteResults: React.FC<{
             params.set("endDate", selectedHallituskausi.endDate);
           }
         }
-        const res = await fetch(`/api/votings/search?${params.toString()}`, {
+        const res = await apiFetch(`/api/votings/search?${params.toString()}`, {
           signal: ac.signal,
         });
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-        const rows: VotingSearchRow[] = await res.json();
+        const rows = await res.json();
         setState({ loading: false, error: null, rows });
       } catch (error) {
         if (ac.signal.aborted) return;
@@ -161,7 +162,7 @@ export const VoteResults: React.FC<{
     const run = async () => {
       setFocusVoting({ loading: true, error: null, row: null });
       try {
-        const res = await fetch(`/api/votings/${focusVotingId}`, {
+        const res = await apiFetch(`/api/votings/${focusVotingId}`, {
           signal: ac.signal,
         });
         if (res.status === 404) {
@@ -175,7 +176,7 @@ export const VoteResults: React.FC<{
           return;
         }
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-        const row: VotingSearchRow = await res.json();
+        const row = await res.json();
         setFocusVoting({ loading: false, error: null, row });
       } catch (error) {
         if (ac.signal.aborted) return;
@@ -286,10 +287,11 @@ export const VoteResults: React.FC<{
           if (selectedHallituskausi.endDate)
             params.set("endDate", selectedHallituskausi.endDate);
         }
-        const url = `/api/votings/recent${params.toString() ? `?${params.toString()}` : ""}`;
-        const res = await fetch(url, { signal: ac.signal });
+        const url =
+          `/api/votings/recent${params.toString() ? `?${params.toString()}` : ""}` as `/api/votings/recent?${string}`;
+        const res = await apiFetch(url, { signal: ac.signal });
         if (!res.ok) throw new Error(`${res.status}`);
-        const rows: VotingSearchRow[] = await res.json();
+        const rows = await res.json();
         setRecentState({ loading: false, rows });
       } catch {
         if (!ac.signal.aborted) setRecentState({ loading: false, rows: [] });

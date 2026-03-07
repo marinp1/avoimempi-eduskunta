@@ -27,45 +27,15 @@ import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
-
-interface CoalitionOppositionData {
-  voting_id: number;
-  start_time: string;
-  title: string;
-  section_title: string;
-  n_yes: number;
-  n_no: number;
-  coalition_yes: number;
-  coalition_no: number;
-  coalition_total: number;
-  opposition_yes: number;
-  opposition_no: number;
-  opposition_total: number;
-}
+import { apiFetch } from "#client/utils/fetch";
 
 interface CoalitionOppositionProps {
   onClose: () => void;
 }
 
-type VotingInlineDetails = {
-  partyBreakdown: {
-    party_code: string;
-    party_name: string;
-    n_yes: number;
-    n_no: number;
-    n_abstain: number;
-    n_absent: number;
-    n_total: number;
-  }[];
-  memberVotes: {
-    person_id: number;
-    first_name: string;
-    last_name: string;
-    party_code: string;
-    vote: string;
-    is_government: 0 | 1;
-  }[];
-};
+type CoalitionOppositionData =
+  ApiRouteItem<`/api/analytics/coalition-opposition`>;
+type VotingInlineDetails = ApiRouteResponse<`/api/votings/:id/details`>;
 
 export default function CoalitionOpposition({
   onClose,
@@ -95,7 +65,7 @@ export default function CoalitionOpposition({
         params.set("endDate", selectedHallituskausi.endDate);
       }
     }
-    fetch(`/api/analytics/coalition-opposition?${params.toString()}`)
+    apiFetch(`/api/analytics/coalition-opposition?${params.toString()}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();
@@ -118,9 +88,9 @@ export default function CoalitionOpposition({
       return;
     setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
     try {
-      const res = await fetch(`/api/votings/${votingId}/details`);
+      const res = await apiFetch(`/api/votings/${votingId}/details`);
       if (!res.ok) return;
-      const data: VotingInlineDetails = await res.json();
+      const data = await res.json();
       setVotingDetailsById((prev) => ({ ...prev, [votingId]: data }));
     } finally {
       setLoadingVotingDetails((prev) => {

@@ -26,28 +26,10 @@ import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
 import { DataCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { apiFetch } from "#client/utils/fetch";
 
-interface GenderData {
-  year: number;
-  female_count: number;
-  male_count: number;
-  total_count: number;
-  female_percentage: number;
-  male_percentage: number;
-}
-
-interface AgeData {
-  year: number;
-  age_under_30: number;
-  age_30_39: number;
-  age_40_49: number;
-  age_50_59: number;
-  age_60_plus: number;
-  average_age: number;
-  min_age: number;
-  max_age: number;
-  total_count: number;
-}
+type GenderData = ApiRouteItem<`/api/insights/gender-division`>;
+type AgeData = ApiRouteItem<`/api/insights/age-division`>;
 
 interface TimeSeriesStatisticsProps {
   onClose: () => void;
@@ -72,8 +54,8 @@ export default function TimeSeriesStatistics({
         setError(null);
 
         const [genderResponse, ageResponse] = await Promise.all([
-          fetch("/api/insights/gender-division"),
-          fetch("/api/insights/age-division"),
+          apiFetch("/api/insights/gender-division"),
+          apiFetch("/api/insights/age-division"),
         ]);
 
         if (!genderResponse.ok || !ageResponse.ok) {

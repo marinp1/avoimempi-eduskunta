@@ -3,50 +3,26 @@ import path from "node:path";
 import type { BunRequest } from "bun";
 import { getChangesArchiveDir, getChangesReportPath } from "#database";
 import { getSearchParams } from "./http";
-import { badRequest } from "./route-responses";
+import { badRequest, json } from "./route-responses";
 
-type CoreRoutesDataAccess = {
-  fetchRowTrace: (params: {
-    table: string;
-    pkName: string;
-    pkValue: string;
-  }) => {
-    scrapedAt: string | null;
-    migratedAt: string | null;
-    apiUrl: string;
-  } | null;
-  fetchImportSourceTableSummaries: (params: { tableNames: string[] }) => {
-    tables: Array<{
-      tableName: string;
-      importedRows: number;
-      distinctPages: number;
-      firstScrapedAt: string | null;
-      lastScrapedAt: string | null;
-      firstMigratedAt: string | null;
-      lastMigratedAt: string | null;
-    }>;
-  };
-  fetchParliamentComposition: (params: { date: string }) => unknown;
-  fetchHallituskaudet: () => unknown;
-  fetchLastMigrationTimestamp: () => string | null;
-  checkReadiness: () => {
-    ok: boolean;
-    details?: string;
-  };
-};
-
-export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
-  "/api/health": new Response("OK"),
+export const createCoreRoutes = (
+  db: typeof import("../index").coreRoutesDataAccess,
+) => ({
+  "/api/health": {
+    GET: async () => {
+      return new Response("OK");
+    },
+  },
   "/api/ready": {
     GET: async () => {
       const result = db.checkReadiness();
       if (!result.ok) {
-        return Response.json(
+        return json(
           { status: "not-ready", details: result.details ?? "unknown" },
           { status: 503 },
         );
       }
-      return Response.json({ status: "ready" });
+      return json({ status: "ready" });
     },
   },
 
@@ -65,9 +41,9 @@ export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
 
       const result = db.fetchRowTrace({ table, pkName, pkValue });
       if (!result) {
-        return Response.json({ error: "No trace found" }, { status: 404 });
+        return json({ error: "No trace found" }, { status: 404 });
       }
-      return Response.json(result);
+      return json(result);
     },
   },
 
@@ -90,28 +66,28 @@ export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
       const data = await db.fetchImportSourceTableSummaries({
         tableNames,
       });
-      return Response.json(data);
+      return json(data);
     },
   },
 
   "/api/composition/:date": {
     GET: async (req: BunRequest<"/api/composition/:date">) => {
       const composition = await db.fetchParliamentComposition(req.params);
-      return Response.json(composition);
+      return json(composition);
     },
   },
 
   "/api/hallituskaudet": {
     GET: async () => {
       const periods = await db.fetchHallituskaudet();
-      return Response.json(periods);
+      return json(periods);
     },
   },
 
   "/api/db-info": {
     GET: async () => {
       const lastMigrationTimestamp = db.fetchLastMigrationTimestamp();
-      return Response.json({ lastMigrationTimestamp });
+      return json({ lastMigrationTimestamp });
     },
   },
 
@@ -125,15 +101,15 @@ export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
         const file = Bun.file(filePath);
         const exists = await file.exists();
         if (!exists) {
-          return Response.json(
+          return json(
             { error: "No changes report available yet" },
             { status: 404 },
           );
         }
         const report = await file.json();
-        return Response.json(report);
+        return json(report);
       } catch {
-        return Response.json(
+        return json(
           { error: "Failed to read changes report" },
           { status: 500 },
         );
@@ -145,7 +121,7 @@ export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
     GET: () => {
       const archiveDir = getChangesArchiveDir();
       if (!existsSync(archiveDir)) {
-        return Response.json({ runs: [] });
+        return json({ runs: [] });
       }
       const runs = readdirSync(archiveDir)
         .filter((f) => f.endsWith(".json"))
@@ -155,7 +131,7 @@ export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
           id,
           generatedAt: new Date(Number(id)).toISOString(),
         }));
-      return Response.json({ runs });
+      return json({ runs });
     },
   },
 });

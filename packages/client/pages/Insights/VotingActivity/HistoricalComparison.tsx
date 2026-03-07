@@ -21,6 +21,7 @@ import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, gradients, spacing } from "#client/theme";
 import { DataCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { apiFetch } from "#client/utils/fetch";
 import type { ParticipationByGovernmentData } from "./types";
 
 interface HistoricalComparisonProps {
@@ -56,7 +57,7 @@ export function HistoricalComparison({
         if (startDate) params.set("startDate", startDate);
         if (endDate) params.set("endDate", endDate);
 
-        const response = await fetch(
+        const response = await apiFetch(
           `/api/insights/participation/${personId}/by-government?${params.toString()}`,
         );
 

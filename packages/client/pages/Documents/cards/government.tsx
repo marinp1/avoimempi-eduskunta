@@ -31,6 +31,7 @@ import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
 import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
+import { apiFetch } from "#client/utils/fetch";
 import {
   buildEdkDocumentUrl,
   formatDate,
@@ -56,57 +57,8 @@ export interface GovernmentProposalListItem {
   subjects: string | null;
 }
 
-interface GovernmentProposalDetail {
-  id: number;
-  parliament_identifier: string;
-  document_number: number;
-  parliamentary_year: string;
-  title: string | null;
-  submission_date: string | null;
-  author: string | null;
-  summary_text: string | null;
-  summary_rich_text: string | null;
-  justification_text: string | null;
-  justification_rich_text: string | null;
-  proposal_text: string | null;
-  proposal_rich_text: string | null;
-  appendix_text: string | null;
-  appendix_rich_text: string | null;
-  signature_date: string | null;
-  decision_outcome: string | null;
-  decision_outcome_code: string | null;
-  law_decision_text: string | null;
-  latest_stage_code: string | null;
-  end_date: string | null;
-  signatories: Array<{
-    signatory_order: number;
-    first_name: string;
-    last_name: string;
-    title_text: string | null;
-  }>;
-  stages: Array<{
-    stage_title: string | null;
-    stage_code: string | null;
-    event_date: string | null;
-    event_title: string | null;
-    event_description: string | null;
-  }>;
-  subjects: Array<{ subject_text: string; yso_uri: string | null }>;
-  laws: Array<{
-    law_order: number;
-    law_type: string | null;
-    law_name: string | null;
-  }>;
-  sessions: Array<{
-    session_key: string;
-    session_date: string;
-    session_type: string;
-    session_number: number;
-    session_year: string;
-    section_title: string | null;
-    section_key: string;
-  }>;
-}
+type GovernmentProposalDetail =
+  ApiRouteResponse<`/api/government-proposals/:id`>;
 
 export function GovernmentProposalCard({
   item,
@@ -144,7 +96,7 @@ export function GovernmentProposalCard({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/government-proposals/${item.id}`);
+        const response = await apiFetch(`/api/government-proposals/${item.id}`);
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
@@ -155,7 +107,7 @@ export function GovernmentProposalCard({
       } finally {
         setLoading(false);
       }
-      fetch(
+      apiFetch(
         `/api/expert-statements/by-bill?identifier=${encodeURIComponent(item.parliament_identifier)}`,
       )
         .then((r) => (r.ok ? r.json() : []))

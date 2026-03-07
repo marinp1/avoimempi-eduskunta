@@ -28,28 +28,10 @@ import {
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { commonStyles, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { apiFetch } from "#client/utils/fetch";
 
-type Government = {
-  id: number;
-  name: string;
-  start_date: string;
-  end_date: string | null;
-  member_count: number;
-  parties: string[];
-};
-
-type GovernmentMember = {
-  id: number;
-  person_id: number | null;
-  name: string | null;
-  ministry: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  party: string | null;
-  gender: string | null;
-};
+type Government = ApiRouteItem<`/api/hallitukset`>;
+type GovernmentMember = ApiRouteItem<`/api/hallitukset/:id/members`>;
 
 // ─── Timeline selector ────────────────────────────────────────────────────────
 
@@ -283,10 +265,10 @@ const GovernmentCard: React.FC<{
   useEffect(() => {
     if (!expanded || members !== null) return;
     setMembersLoading(true);
-    fetch(`/api/hallitukset/${gov.id}/members`)
+    apiFetch(`/api/hallitukset/${gov.id}/members`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<GovernmentMember[]>;
+        return res.json();
       })
       .then((data) => setMembers(data))
       .catch(() => setMembersError(t("membersLoadError")))
@@ -533,10 +515,10 @@ export default () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/hallitukset")
+    apiFetch("/api/hallitukset")
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<Government[]>;
+        return res.json();
       })
       .then(setGovernments)
       .catch(() => setError(t("loadError")))

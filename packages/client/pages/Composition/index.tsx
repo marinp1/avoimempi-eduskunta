@@ -35,6 +35,7 @@ import {
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { commonStyles, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { apiFetch } from "#client/utils/fetch";
 import { RepresentativeDetails } from "./Details";
 
 type MemberWithExtras = DatabaseQueries.GetParliamentComposition & {
@@ -424,10 +425,9 @@ export default () => {
     const fetchMembers = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/composition/${date}`);
+        const res = await apiFetch(`/api/composition/${date}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data: DatabaseQueries.GetParliamentComposition[] =
-          await res.json();
+        const data = await res.json();
         setMembers(data);
       } catch (err) {
         console.error(err);

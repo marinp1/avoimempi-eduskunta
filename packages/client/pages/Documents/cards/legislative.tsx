@@ -21,6 +21,7 @@ import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
+import { apiFetch } from "#client/utils/fetch";
 import { formatDate, getOutcomeColor, InlineRelatedSessions } from "./shared";
 
 // ─── Legislative initiative types and card ───
@@ -43,55 +44,8 @@ export interface LegislativeInitiativeListItem {
   subjects: string | null;
 }
 
-interface LegislativeInitiativeDetail {
-  id: number;
-  initiative_type_code: string;
-  parliament_identifier: string;
-  document_number: number;
-  parliamentary_year: string;
-  title: string | null;
-  submission_date: string | null;
-  first_signer_person_id: number | null;
-  first_signer_first_name: string | null;
-  first_signer_last_name: string | null;
-  first_signer_party: string | null;
-  justification_text: string | null;
-  justification_rich_text: string | null;
-  proposal_text: string | null;
-  proposal_rich_text: string | null;
-  law_text: string | null;
-  law_rich_text: string | null;
-  decision_outcome: string | null;
-  decision_outcome_code: string | null;
-  latest_stage_code: string | null;
-  end_date: string | null;
-  signers: Array<{
-    signer_order: number;
-    person_id: number | null;
-    first_name: string;
-    last_name: string;
-    party: string | null;
-    is_first_signer: number;
-  }>;
-  stages: Array<{
-    stage_order: number;
-    stage_title: string | null;
-    stage_code: string | null;
-    event_date: string | null;
-    event_title: string | null;
-    event_description: string | null;
-  }>;
-  subjects: Array<{ subject_text: string; yso_uri: string | null }>;
-  sessions: Array<{
-    session_key: string;
-    session_date: string;
-    session_type: string;
-    session_number: number;
-    session_year: string;
-    section_title: string | null;
-    section_key: string;
-  }>;
-}
+type LegislativeInitiativeDetail =
+  ApiRouteResponse<`/api/legislative-initiatives/:id`>;
 
 export function LegislativeInitiativeCard({
   item,
@@ -122,7 +76,9 @@ export function LegislativeInitiativeCard({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/legislative-initiatives/${item.id}`);
+        const response = await apiFetch(
+          `/api/legislative-initiatives/${item.id}`,
+        );
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
