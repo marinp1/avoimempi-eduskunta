@@ -1,5 +1,6 @@
 // modules/server/server.ts
 import type { Server } from "bun";
+import packageJson from "../../package.json";
 import { getTraceDatabasePath } from "../shared/database";
 import { createResponseCache } from "./cache/response-cache";
 import { loadRuntimeConfig } from "./config/runtime-config";
@@ -43,6 +44,18 @@ const personRepository = new PersonRepository(db);
 const sessionRepository = new SessionRepository(db);
 const votingRepository = new VotingRepository(db);
 
+const gitHash = (() => {
+  try {
+    return (
+      Bun.spawnSync(["git", "rev-parse", "--short", "HEAD"])
+        .stdout.toString()
+        .trim() || null
+    );
+  } catch {
+    return null;
+  }
+})();
+
 export const coreRoutesDataAccess = {
   fetchImportSourceTableSummaries: (params: { tableNames: string[] }) =>
     importSourceRepository.fetchImportSourceTableSummaries(params),
@@ -63,6 +76,7 @@ export const coreRoutesDataAccess = {
       return null;
     }
   },
+  fetchVersionInfo: () => ({ version: packageJson.version, gitHash }),
   checkReadiness: () => {
     try {
       const row = db.query("SELECT 1 AS ok").get() as

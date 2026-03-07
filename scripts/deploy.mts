@@ -2,8 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { $, build } from "bun";
 
-const [, , rawTarget] = process.argv;
-const target = rawTarget ?? "all";
+const args = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+const flags = new Set(process.argv.slice(2).filter((a) => a.startsWith("--")));
+const target = args[0] ?? "all";
+const skipReleaseCheck = flags.has("--no-release-check");
 
 // SSH alias defined in your local ~/.ssh/config.
 // Set in .env or .env.local at the repo root (loaded automatically by bun).
@@ -11,6 +13,42 @@ const HOST = process.env.DEPLOY_HOST_ALIAS ?? "hetzner";
 
 // Deployment constants
 const APP_DIR = "/opt/avoimempi-eduskunta";
+
+function assertReleased() {
+  const pkg = JSON.parse(
+    fs.readFileSync(path.join(import.meta.dirname, "../package.json"), "utf-8"),
+  );
+  const expectedTag = `v${pkg.version}`;
+
+  const exactTag = Bun.spawnSync(
+    ["git", "describe", "--tags", "--exact-match", "HEAD"],
+    {
+      cwd: path.join(import.meta.dirname, ".."),
+    },
+  );
+
+  if (skipReleaseCheck) {
+    console.warn("Warning: skipping release check (--no-release-check).");
+    return;
+  }
+
+  if (!exactTag.success) {
+    console.error(
+      `Error: HEAD is not tagged. Run \`bun run release\` first to create tag ${expectedTag}.`,
+    );
+    process.exit(1);
+  }
+
+  const actualTag = exactTag.stdout.toString().trim();
+  if (actualTag !== expectedTag) {
+    console.error(
+      `Error: HEAD is tagged as ${actualTag} but package.json says ${pkg.version}. Run \`bun run release\` to sync them.`,
+    );
+    process.exit(1);
+  }
+
+  console.log(`Deploying ${actualTag}`);
+}
 
 async function deployAppBuild() {
   const dist = path.join(import.meta.dirname, "../dist");
@@ -190,13 +228,16 @@ First-time VM setup (SSH in once after first deploy):
 
 switch (target) {
   case "all":
+    assertReleased();
     await deployAppBuild();
     await deployPipelineBuild();
     break;
   case "app":
+    assertReleased();
     await deployAppBuild();
     break;
   case "pipeline":
+    assertReleased();
     await deployPipelineBuild();
     break;
   case "data":
