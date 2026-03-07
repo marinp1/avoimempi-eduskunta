@@ -10,6 +10,7 @@ import {
   Alert,
   Box,
   Button,
+  ButtonBase,
   Chip,
   CircularProgress,
   Divider,
@@ -152,7 +153,7 @@ export const PageDataSourcesDrawer = ({
   const { t: tPageSources } = useScopedTranslation("pageSources");
   const { t: tNavigation } = useScopedTranslation("navigation");
   const themedColors = useThemedColors();
-  const { traceItem, setTraceItem, registerOpenDrawer } = useTrace();
+  const { traceItem, setTraceItem, pageItems, registerOpenDrawer } = useTrace();
 
   const [open, setOpen] = useState(false);
   const [summariesLoading, setSummariesLoading] = useState(false);
@@ -444,6 +445,73 @@ export const PageDataSourcesDrawer = ({
                   </Box>
                 ) : null}
 
+                <Divider sx={{ mt: 2, mb: 1 }} />
+              </Box>
+            )}
+
+            {/* Page items list */}
+            {!traceItem && pageItems.length > 0 && (
+              <Box sx={{ mb: 2 }}>
+                <Typography
+                  variant="overline"
+                  sx={{
+                    color: themedColors.textTertiary,
+                    display: "block",
+                    mb: 1,
+                  }}
+                >
+                  {tPageSources("pageItemsTitle")}
+                </Typography>
+                <Box sx={{ display: "grid", gap: 0.5 }}>
+                  {pageItems.map((item) => (
+                    <ButtonBase
+                      key={`${item.table}:${item.pkValue}`}
+                      onClick={() => setTraceItem(item)}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1,
+                        px: 1.5,
+                        py: 1,
+                        borderRadius: 1.5,
+                        border: `1px solid ${themedColors.dataBorder}`,
+                        bgcolor: themedColors.backgroundSubtle,
+                        textAlign: "left",
+                        width: "100%",
+                        transition: "background-color 0.15s",
+                        "&:hover": {
+                          bgcolor: `${themedColors.primary}0F`,
+                          borderColor: `${themedColors.primary}40`,
+                        },
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          flex: 1,
+                          minWidth: 0,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          color: themedColors.textPrimary,
+                        }}
+                      >
+                        {item.label}
+                      </Typography>
+                      <Chip
+                        label={item.table}
+                        size="small"
+                        sx={{
+                          flexShrink: 0,
+                          maxWidth: 160,
+                          fontFamily: "monospace",
+                          fontSize: "0.65rem",
+                        }}
+                      />
+                    </ButtonBase>
+                  ))}
+                </Box>
                 <Divider sx={{ mt: 2, mb: 1 }} />
               </Box>
             )}

@@ -24,6 +24,13 @@ export const getChangesReportPath = () => {
   );
 };
 
+export const getChangesArchiveDir = () => {
+  const storageDir = process.env.ROW_STORE_DIR ?? process.env.STORAGE_LOCAL_DIR;
+  if (storageDir)
+    return path.join(path.resolve(storageDir), "metadata/changes");
+  return path.join(import.meta.dirname, "../../../data/metadata/changes");
+};
+
 export const getTraceDatabasePath = () => {
   if (process.env.TRACE_DB_PATH) return resolvePath(process.env.TRACE_DB_PATH);
   return path.join(

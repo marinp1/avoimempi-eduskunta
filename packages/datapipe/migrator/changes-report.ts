@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { ActivePipelineTableNames, AlwaysFullScrapeTables } from "#constants";
-import { getChangesReportPath } from "#database";
+import { getChangesArchiveDir, getChangesReportPath } from "#database";
 import { getRawRowStore } from "#storage/row-store/factory";
 
 // ---------------------------------------------------------------------------
@@ -255,11 +255,19 @@ export async function generateAndSaveChangesReport(
   previousRebuildAt: string | null,
 ): Promise<ChangesReport> {
   const report = await generateChangesReport(previousRebuildAt);
+
   const reportPath = getChangesReportPath();
   mkdirSync(path.dirname(reportPath), { recursive: true });
   writeFileSync(reportPath, JSON.stringify(report, null, 2), "utf8");
+
+  const archiveDir = getChangesArchiveDir();
+  mkdirSync(archiveDir, { recursive: true });
+  const archiveId = new Date(report.generatedAt).getTime().toString();
+  const archivePath = path.join(archiveDir, `${archiveId}.json`);
+  writeFileSync(archivePath, JSON.stringify(report, null, 2), "utf8");
+
   console.log(
-    `📋 Changes report saved: ${report.totalNewRows} new rows, ${report.totalChangedRows} changed rows`,
+    `Changes report saved: ${report.totalNewRows} new rows, ${report.totalChangedRows} changed rows`,
   );
   return report;
 }

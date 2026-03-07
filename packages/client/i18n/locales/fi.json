@@ -730,6 +730,7 @@
     "openTooltip": "Näytä tietolähteet ja alkuperä",
     "summaryCounts": "Tuotuja rivejä: {{rows}} | Lähdesivuja: {{pages}}",
     "itemTraceTitle": "Alkuperä",
+    "pageItemsTitle": "Sivulla näkyvät kohteet",
     "pageLevelTitle": "Sivun tietolähteet",
     "openApiSource": "Avaa lähde (Eduskunta API)",
     "rowTraceNotFound": "Tälle tietueelle ei löydy jäljitystietoja. Aja tietokantapäivitys ensin."
