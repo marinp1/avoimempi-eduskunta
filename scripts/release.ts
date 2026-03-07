@@ -55,7 +55,8 @@ if (cliArg && validBumps.has(cliArg)) {
 // 4. Bump version in package.json
 const pkgPath = resolve(ROOT, "package.json");
 const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
-const [maj, min, pat] = pkg.version.split(".").map(Number);
+const baseVersion = pkg.version.replace(/-.*$/, "");
+const [maj, min, pat] = baseVersion.split(".").map(Number);
 const semver =
   bump === "major"
     ? `${maj + 1}.0.0`

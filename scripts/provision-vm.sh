@@ -69,6 +69,7 @@ if [[ ! -f "${APP_ENV_FILE}" ]]; then
   cat > "${APP_ENV_FILE}" <<EOF
 NODE_ENV=production
 DB_PATH=${APP_DATA_DIR}/current.db
+QUALITY_DB_PATH=${APP_DATA_DIR}/avoimempi-eduskunta-quality.db
 PORT=80
 BUN_REUSE_PORT=true
 BUN_IDLE_TIMEOUT_SECONDS=120

@@ -33,7 +33,7 @@ health_check() {
 
 restart_service() {
   systemctl daemon-reload
-  systemctl restart "${SERVICE_NAME}.service"
+  systemctl restart "${SERVICE_NAME}*.service"
 }
 
 activate_release() {
