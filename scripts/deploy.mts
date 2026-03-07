@@ -75,6 +75,9 @@ async function deployAppBuild() {
 
   await build({
     outdir: dist,
+    define: {
+      "process.env.NODE_ENV": JSON.stringify("production"),
+    },
     loader: { ".sql": "text" },
     entrypoints: [
       path.join(import.meta.dirname, "../packages/server/index.ts"),

@@ -72,7 +72,7 @@ export const App: React.FC = () => {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  const ActivePage = routes[activeTab];
+  const ActivePage = routes[activeTab] ?? routes[""];
 
   return (
     <TraceProvider>

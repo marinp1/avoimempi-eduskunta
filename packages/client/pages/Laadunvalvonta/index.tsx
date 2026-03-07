@@ -37,6 +37,7 @@ import {
 import type React from "react";
 import { useEffect, useState } from "react";
 import { apiFetch } from "#client/utils/fetch";
+import { sanityChecksEnabled } from "#client/dev-constraints";
 import { colors, spacing } from "../../theme";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -118,8 +119,9 @@ const SeverityIcon: React.FC<{ severity: Severity }> = ({ severity }) => {
 const ResolutionPanel: React.FC<{
   checkId: string;
   resolution: CheckResolution | null;
+  editable: boolean;
   onUpdate: (checkId: string, resolution: CheckResolution | null) => void;
-}> = ({ checkId, resolution, onUpdate }) => {
+}> = ({ checkId, resolution, editable, onUpdate }) => {
   const [summaryDraft, setSummaryDraft] = useState(resolution?.summary ?? "");
 
   const save = async (status: ResolutionStatus, summary: string) => {
@@ -159,6 +161,21 @@ const ResolutionPanel: React.FC<{
       >
         Ratkaisu
       </Typography>
+      {!editable ? (
+        <>
+          <Typography variant="body2" sx={{ color: colors.textPrimary }}>
+            {RESOLUTION_LABELS[currentStatus]}
+          </Typography>
+          {summaryDraft && (
+            <Typography
+              variant="body2"
+              sx={{ mt: 0.5, color: colors.textSecondary }}
+            >
+              {summaryDraft}
+            </Typography>
+          )}
+        </>
+      ) : (
       <Box
         sx={{
           display: "flex",
@@ -205,6 +222,7 @@ const ResolutionPanel: React.FC<{
           </Tooltip>
         )}
       </Box>
+      )}
       {resolution?.updatedAt && (
         <Typography
           variant="caption"
@@ -224,12 +242,20 @@ const ViolationTable: React.FC<{
   violations: ViolationRow[];
   totalViolations: number;
   comments: Record<string, string>;
+  editable: boolean;
   onCommentSaved: (
     checkId: string,
     violationKey: string,
     comment: string,
   ) => void;
-}> = ({ checkId, violations, totalViolations, comments, onCommentSaved }) => {
+}> = ({
+  checkId,
+  violations,
+  totalViolations,
+  comments,
+  editable,
+  onCommentSaved,
+}) => {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   if (violations.length === 0) return null;
@@ -293,17 +319,29 @@ const ViolationTable: React.FC<{
                     </TableCell>
                   ))}
                   <TableCell>
-                    <TextField
-                      size="small"
-                      variant="standard"
-                      placeholder="Lisää kommentti…"
-                      value={commentValue}
-                      onChange={(e) =>
-                        setDrafts((prev) => ({ ...prev, [vk]: e.target.value }))
-                      }
-                      onBlur={() => saveComment(vk, commentValue)}
-                      fullWidth
-                    />
+                    {editable ? (
+                      <TextField
+                        size="small"
+                        variant="standard"
+                        placeholder="Lisää kommentti…"
+                        value={commentValue}
+                        onChange={(e) =>
+                          setDrafts((prev) => ({
+                            ...prev,
+                            [vk]: e.target.value,
+                          }))
+                        }
+                        onBlur={() => saveComment(vk, commentValue)}
+                        fullWidth
+                      />
+                    ) : (
+                      <Typography
+                        variant="body2"
+                        sx={{ color: colors.textSecondary }}
+                      >
+                        {commentValue || "-"}
+                      </Typography>
+                    )}
                   </TableCell>
                 </TableRow>
               );
@@ -319,6 +357,7 @@ const ViolationTable: React.FC<{
 
 const CheckCard: React.FC<{
   check: SanityCheckResult;
+  editable: boolean;
   onResolutionUpdate: (
     checkId: string,
     resolution: CheckResolution | null,
@@ -328,7 +367,7 @@ const CheckCard: React.FC<{
     violationKey: string,
     comment: string,
   ) => void;
-}> = ({ check, onResolutionUpdate, onCommentSaved }) => {
+}> = ({ check, editable, onResolutionUpdate, onCommentSaved }) => {
   const hasIssues = !check.passed || !!check.error;
   const [expanded, setExpanded] = useState(false);
 
@@ -429,6 +468,7 @@ const CheckCard: React.FC<{
             <ResolutionPanel
               checkId={check.id}
               resolution={check.resolution}
+              editable={editable}
               onUpdate={onResolutionUpdate}
             />
             {check.violations.length > 0 && (
@@ -437,6 +477,7 @@ const CheckCard: React.FC<{
                 violations={check.violations}
                 totalViolations={check.totalViolations}
                 comments={check.violationComments}
+                editable={editable}
                 onCommentSaved={onCommentSaved}
               />
             )}
@@ -451,8 +492,9 @@ const CheckCard: React.FC<{
 
 const OrphanedResolutions: React.FC<{
   orphans: OrphanedResolution[];
+  editable: boolean;
   onDelete: (checkId: string) => void;
-}> = ({ orphans, onDelete }) => {
+}> = ({ orphans, editable, onDelete }) => {
   if (orphans.length === 0) return null;
 
   const handleDelete = async (checkId: string) => {
@@ -493,11 +535,13 @@ const OrphanedResolutions: React.FC<{
                 {resolution.summary ? ` — ${resolution.summary}` : ""}
               </Typography>
             </Box>
-            <Tooltip title="Poista">
-              <IconButton size="small" onClick={() => handleDelete(checkId)}>
-                <DeleteOutline fontSize="small" />
-              </IconButton>
-            </Tooltip>
+            {editable && (
+              <Tooltip title="Poista">
+                <IconButton size="small" onClick={() => handleDelete(checkId)}>
+                  <DeleteOutline fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
           </Paper>
         ))}
       </Box>
@@ -653,16 +697,24 @@ export default function Laadunvalvonta() {
             lähdedatan ongelmasta.
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<PlayArrow />}
-          onClick={runChecks}
-          disabled={running}
-          sx={{ flexShrink: 0, mt: 0.5 }}
-        >
-          Suorita tarkistukset
-        </Button>
+        {sanityChecksEnabled && (
+          <Button
+            variant="contained"
+            startIcon={<PlayArrow />}
+            onClick={runChecks}
+            disabled={running}
+            sx={{ flexShrink: 0, mt: 0.5 }}
+          >
+            Suorita tarkistukset
+          </Button>
+        )}
       </Box>
+
+      {!sanityChecksEnabled && (
+        <Alert severity="info" sx={{ mb: spacing.md }}>
+          Tuotannossa tarkistusten tulokset ovat vain luku -tilassa.
+        </Alert>
+      )}
 
       {/* Progress bar */}
       {running && (
@@ -740,6 +792,7 @@ export default function Laadunvalvonta() {
               <CheckCard
                 key={check.id}
                 check={check}
+                editable={sanityChecksEnabled}
                 onResolutionUpdate={updateResolution}
                 onCommentSaved={saveComment}
               />
@@ -748,7 +801,11 @@ export default function Laadunvalvonta() {
         </Box>
       ))}
 
-      <OrphanedResolutions orphans={orphans} onDelete={deleteOrphan} />
+      <OrphanedResolutions
+        orphans={orphans}
+        editable={sanityChecksEnabled}
+        onDelete={deleteOrphan}
+      />
 
       {!hasResults && !running && !runError && (
         <Box
