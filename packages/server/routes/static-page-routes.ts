@@ -6,4 +6,7 @@ export const createStaticPageRoutes = (homepage: Bun.HTMLBundle) => ({
   "/aanestykset": homepage,
   "/asiakirjat": homepage,
   "/analytiikka": homepage,
+  "/hallitukset": homepage,
+  "/muutokset": homepage,
+  "/laadunvalvonta": homepage,
 });

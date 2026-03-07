@@ -131,6 +131,7 @@ const PAGE_SOURCES: Record<RouteName, TableSourceDefinition[]> = {
     { tableName: "MemberOfParliament", purpose: "Ministerien henkilotiedot" },
   ],
   muutokset: [],
+  laadunvalvonta: [],
 };
 
 const formatDateTime = (value: string | null): string => {

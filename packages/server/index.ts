@@ -1,4 +1,5 @@
 // modules/server/server.ts
+import type { Server } from "bun";
 import { getTraceDatabasePath } from "../shared/database";
 import { createResponseCache } from "./cache/response-cache";
 import { loadRuntimeConfig } from "./config/runtime-config";
@@ -18,13 +19,20 @@ import { createGovernmentRoutes } from "./routes/government-routes";
 import { createInsightAnalyticsRoutes } from "./routes/insight-analytics-routes";
 import { createPartyRoutes } from "./routes/party-routes";
 import { createPersonRoutes } from "./routes/person-routes";
+import { createSanityRoutes } from "./routes/sanity-routes";
 import { createSessionRoutes } from "./routes/session-routes";
 import { createStaticPageRoutes } from "./routes/static-page-routes";
 import { createVotingRoutes } from "./routes/voting-routes";
+import { getQualityDb } from "./sanity/quality-db";
+import { ResolutionStore } from "./sanity/resolution-store";
+import { createSanityWsHandler } from "./sanity/ws-handler";
 
 await prepareDatabaseForServerStartup();
 const databaseConnection = new DatabaseConnection();
 const db = databaseConnection.db;
+const qualityDb = getQualityDb();
+const resolutionStore = new ResolutionStore(qualityDb);
+const sanityWsHandler = createSanityWsHandler(db, resolutionStore);
 const analyticsRepository = new AnalyticsRepository(db);
 const documentRepository = new DocumentRepository(db);
 const importSourceRepository = new ImportSourceRepository(db, {
@@ -111,6 +119,8 @@ const apiRoutes = {
   ...cache.wrapRoutes(createPartyRoutes(analyticsRepository)),
   ...cache.wrapRoutes(createDocumentRoutes(documentRepository)),
   ...cache.wrapRoutes(createGovernmentRoutes(metadataRepository)),
+  // Sanity routes are intentionally not cached — executed on demand.
+  ...createSanityRoutes(db, resolutionStore),
 } as const satisfies Bun.Serve.Options<undefined, any>["routes"];
 
 export type ApiRoutes = typeof apiRoutes;
@@ -122,8 +132,17 @@ const server = Bun.serve({
   routes: {
     ...createStaticPageRoutes(homepage),
     ...apiRoutes,
+    // WebSocket upgrade — must be listed before the /api/* catch-all.
+    "/api/sanity/run-ws": {
+      GET: (req: Request, srv: Server<undefined>) => {
+        if (srv.upgrade(req)) return new Response();
+        return new Response("WebSocket upgrade failed", { status: 426 });
+      },
+    },
     "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
   },
+
+  websocket: sanityWsHandler,
 
   development: isDev
     ? {

@@ -3,7 +3,6 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { performance } from "node:perf_hooks";
 import { getDatabasePath } from "../../shared/database";
-import { sanityQueries } from "../database/sanity-queries";
 
 type Row = {
   domain: string;
@@ -104,11 +103,6 @@ const appQueries = readdirSync(appQueriesDir)
 
 for (const [name, sql] of appQueries) {
   results.push(analyzeQuery(db, "app", name, sql));
-}
-
-for (const [name, value] of Object.entries(sanityQueries)) {
-  if (typeof value !== "string") continue;
-  results.push(analyzeQuery(db, "sanity", name, value));
 }
 
 const failed = results.filter((r) => !r.ok);
