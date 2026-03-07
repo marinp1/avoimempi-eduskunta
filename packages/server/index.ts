@@ -1,8 +1,8 @@
 // modules/server/server.ts
-import type { Server } from "bun";
 import packageJson from "../../package.json";
 import { getTraceDatabasePath } from "../shared/database";
 import { createResponseCache } from "./cache/response-cache";
+import { devFeaturesEnabled } from "./dev-constraints";
 import { loadRuntimeConfig } from "./config/runtime-config";
 import { DatabaseConnection } from "./database/db";
 import { prepareDatabaseForServerStartup } from "./database/launch-db";
@@ -26,14 +26,12 @@ import { createStaticPageRoutes } from "./routes/static-page-routes";
 import { createVotingRoutes } from "./routes/voting-routes";
 import { getQualityDb } from "./sanity/quality-db";
 import { ResolutionStore } from "./sanity/resolution-store";
-import { createSanityWsHandler } from "./sanity/ws-handler";
 
 await prepareDatabaseForServerStartup();
 const databaseConnection = new DatabaseConnection();
 const db = databaseConnection.db;
 const qualityDb = getQualityDb();
 const resolutionStore = new ResolutionStore(qualityDb);
-const sanityWsHandler = createSanityWsHandler(db, resolutionStore);
 const analyticsRepository = new AnalyticsRepository(db);
 const documentRepository = new DocumentRepository(db);
 const importSourceRepository = new ImportSourceRepository(db, {
@@ -94,6 +92,10 @@ export const coreRoutesDataAccess = {
 
 const { isDev, port, idleTimeout, reusePort } = loadRuntimeConfig();
 
+const devFeatures = devFeaturesEnabled
+  ? (await import("./dev-feature")).createDevFeatures(db)
+  : null;
+
 const generationKey = (() => {
   try {
     return (
@@ -122,7 +124,7 @@ console.log(
 
 const UNCACHED_ROUTES = new Set(["/api/ready"]);
 
-const apiRoutes = {
+const baseApiRoutes = {
   ...cache.wrapRoutes(createCoreRoutes(coreRoutesDataAccess), {
     exclude: UNCACHED_ROUTES,
   }),
@@ -133,38 +135,36 @@ const apiRoutes = {
   ...cache.wrapRoutes(createPartyRoutes(analyticsRepository)),
   ...cache.wrapRoutes(createDocumentRoutes(documentRepository)),
   ...cache.wrapRoutes(createGovernmentRoutes(metadataRepository)),
-  // Sanity routes are intentionally not cached — executed on demand.
-  ...createSanityRoutes(db, resolutionStore),
+  ...createSanityRoutes(resolutionStore),
 } as const satisfies Bun.Serve.Options<undefined, any>["routes"];
 
-export type ApiRoutes = typeof apiRoutes;
+const apiRoutes = devFeatures
+  ? ({
+      ...baseApiRoutes,
+      ...devFeatures.routes,
+    } as const satisfies Bun.Serve.Options<undefined, any>["routes"])
+  : baseApiRoutes;
 
-const server = Bun.serve({
+export type ApiRoutes = typeof baseApiRoutes &
+  ReturnType<typeof import("./routes/sanity-dev-routes").createSanityDevRoutes>;
+
+const allRoutes = {
+  ...createStaticPageRoutes(homepage),
+  ...apiRoutes,
+  "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
+};
+
+const commonServeOptions = {
   port,
   reusePort,
   idleTimeout,
-  routes: {
-    ...createStaticPageRoutes(homepage),
-    ...apiRoutes,
-    // WebSocket upgrade — must be listed before the /api/* catch-all.
-    "/api/sanity/run-ws": {
-      GET: (req: Request, srv: Server<undefined>) => {
-        if (srv.upgrade(req)) return new Response();
-        return new Response("WebSocket upgrade failed", { status: 426 });
-      },
-    },
-    "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
-  },
-
-  websocket: sanityWsHandler,
-
   development: isDev
     ? {
         hmr: true,
       }
     : false,
 
-  error(error) {
+  error(error: Error) {
     console.error(error);
     return new Response(`Internal Error: ${error.message}`, {
       status: 500,
@@ -173,7 +173,18 @@ const server = Bun.serve({
       },
     });
   },
-});
+};
+
+const server = devFeatures
+  ? Bun.serve({
+      ...commonServeOptions,
+      routes: allRoutes,
+      websocket: devFeatures.websocket,
+    })
+  : Bun.serve({
+      ...commonServeOptions,
+      routes: allRoutes,
+    });
 
 console.log(
   `Listening on ${server.url} ${server.development ? "(development)" : "(production)"}`,
