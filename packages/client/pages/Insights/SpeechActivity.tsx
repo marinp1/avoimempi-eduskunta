@@ -27,18 +27,9 @@ import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { apiFetch } from "#client/utils/fetch";
 
-interface SpeechActivityData {
-  person_id: number;
-  first_name: string;
-  last_name: string;
-  party: string;
-  speech_count: number;
-  total_words: number;
-  avg_words_per_speech: number;
-  first_speech: string;
-  last_speech: string;
-}
+type SpeechActivityData = ApiRouteItem<`/api/analytics/speech-activity`>;
 
 interface SpeechActivityProps {
   onClose: () => void;
@@ -61,7 +52,7 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
         params.set("endDate", selectedHallituskausi.endDate);
       }
     }
-    fetch(`/api/analytics/speech-activity?${params.toString()}`)
+    apiFetch(`/api/analytics/speech-activity?${params.toString()}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();

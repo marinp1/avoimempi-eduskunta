@@ -1,10 +1,14 @@
-export const badRequest = (message: string) =>
-  Response.json({ message }, { status: 400 });
+export const json = <T>(data: T, init?: ResponseInit): TypedJsonResponse<T> =>
+  Response.json(data, init) as TypedJsonResponse<T>;
 
-export const notFound = (message = "Not found") =>
-  Response.json({ message }, { status: 404 });
+export const badRequest = (message: string): TypedJsonResponse<ErrorResponse> =>
+  json({ message }, { status: 400 });
+
+export const notFound = (
+  message = "Not found",
+): TypedJsonResponse<ErrorResponse> => json({ message }, { status: 404 });
 
 export const jsonOrNotFound = <T>(
   data: T | null | undefined,
   message = "Not found",
-) => (data == null ? notFound(message) : Response.json(data));
+): RouteResponse<T> => (data == null ? notFound(message) : json(data));

@@ -42,93 +42,15 @@ import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
 import theme, { colors } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { apiFetch } from "#client/utils/fetch";
 
-interface PartySummary {
-  party_code: string;
-  party_name: string;
-  member_count: number;
-  is_in_government: number;
-  participation_rate: number;
-  female_count: number;
-  male_count: number;
-  average_age: number;
-}
-
-interface PartyMember {
-  person_id: number;
-  first_name: string;
-  last_name: string;
-  party: string;
-  gender: string;
-  birth_date: string;
-  current_municipality: string;
-  profession: string;
-  is_minister: number;
-  ministry: string | null;
-}
-
-interface CoalitionOppositionRow {
-  voting_id: number;
-  start_time: string;
-  title: string;
-  section_title: string;
-  n_yes: number;
-  n_no: number;
-  coalition_yes: number;
-  coalition_no: number;
-  coalition_total: number;
-  opposition_yes: number;
-  opposition_no: number;
-  opposition_total: number;
-}
-
-type VotingInlineDetails = {
-  partyBreakdown: {
-    party_code: string;
-    party_name: string;
-    n_yes: number;
-    n_no: number;
-    n_abstain: number;
-    n_absent: number;
-    n_total: number;
-  }[];
-  memberVotes: {
-    person_id: number;
-    first_name: string;
-    last_name: string;
-    party_code: string;
-    vote: string;
-    is_government: 0 | 1;
-  }[];
-  governmentOpposition: {
-    government_yes: number;
-    government_no: number;
-    opposition_yes: number;
-    opposition_no: number;
-  } | null;
-};
-
-interface DissentRow {
-  person_id: number;
-  first_name: string;
-  last_name: string;
-  party_name: string;
-  party_code: string;
-  voting_id: number;
-  start_time: string;
-  title: string;
-  section_title: string;
-  mp_vote: string;
-  majority_vote: string;
-}
-
-interface PartyDisciplineRow {
-  party_name: string;
-  party_code: string;
-  total_votes: number;
-  votes_with_majority: number;
-  discipline_rate: number;
-}
+type PartySummary = ApiRouteItem<`/api/parties/summary`>;
+type PartyMember = ApiRouteItem<`/api/parties/:code/members`>;
+type CoalitionOppositionRow =
+  ApiRouteItem<`/api/analytics/coalition-opposition`>;
+type VotingInlineDetails = ApiRouteResponse<`/api/votings/:id/details`>;
+type DissentRow = ApiRouteItem<`/api/analytics/dissent`>;
+type PartyDisciplineRow = ApiRouteItem<`/api/analytics/party-discipline`>;
 
 // ── Members Tab ──
 const MembersTab: React.FC<{
@@ -161,7 +83,7 @@ const MembersTab: React.FC<{
       params.set("governmentName", governmentName);
       params.set("governmentStartDate", governmentStartDate);
     }
-    fetch(`/api/parties/${partyCode}/members?${params.toString()}`)
+    apiFetch(`/api/parties/${partyCode}/members?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         setMembers(data);
@@ -287,7 +209,7 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
         params.set("endDate", selectedHallituskausi.endDate);
       }
     }
-    fetch(`/api/analytics/coalition-opposition?${params.toString()}`)
+    apiFetch(`/api/analytics/coalition-opposition?${params.toString()}`)
       .then((res) => res.json())
       .then((result) => {
         setData(result);
@@ -303,9 +225,9 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
       return;
     setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
     try {
-      const res = await fetch(`/api/votings/${votingId}/details`);
+      const res = await apiFetch(`/api/votings/${votingId}/details`);
       if (!res.ok) return;
-      const data: VotingInlineDetails = await res.json();
+      const data = await res.json();
       setVotingDetailsById((prev) => ({ ...prev, [votingId]: data }));
     } finally {
       setLoadingVotingDetails((prev) => {
@@ -566,10 +488,12 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
         params.set("endDate", selectedHallituskausi.endDate);
       }
     }
-    const query = params.toString() ? `?${params.toString()}` : "";
+    const query = params.toString()
+      ? (`?${params.toString()}` as `?${string}`)
+      : "";
     Promise.all([
-      fetch(`/api/analytics/party-discipline${query}`).then((r) => r.json()),
-      fetch(
+      apiFetch(`/api/analytics/party-discipline${query}`).then((r) => r.json()),
+      apiFetch(
         `/api/analytics/dissent?limit=200${params.toString() ? `&${params.toString()}` : ""}`,
       ).then((r) => r.json()),
     ]).then(([allDiscipline, allDissents]) => {

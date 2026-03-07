@@ -1,8 +1,8 @@
-import type { DocumentRoutesDataAccess } from "../document-routes";
+import type { DocumentRepository } from "../../database/repositories/document-repository";
 import { getBoundedIntegerQueryParam, getSearchParams } from "../http";
-import { badRequest } from "../route-responses";
+import { badRequest, json } from "../route-responses";
 
-export const createSearchRoutes = (db: DocumentRoutesDataAccess) => ({
+export const createSearchRoutes = (db: DocumentRepository) => ({
   "/api/search": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
@@ -18,7 +18,7 @@ export const createSearchRoutes = (db: DocumentRoutesDataAccess) => ({
           max: 200,
         }),
       });
-      return Response.json(data);
+      return json(data);
     },
   },
 });

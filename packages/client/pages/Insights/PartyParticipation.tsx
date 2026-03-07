@@ -33,18 +33,10 @@ import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, commonStyles, spacing } from "#client/theme";
 import { DataCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { apiFetch } from "#client/utils/fetch";
 
-interface PartyParticipationData {
-  government: string;
-  government_start: string;
-  government_end: string | null;
-  party_name: string;
-  votes_cast: number;
-  total_votings: number;
-  participation_rate: number;
-  party_member_count: number;
-  was_in_coalition: number;
-}
+type PartyParticipationData =
+  ApiRouteItem<`/api/insights/party-participation-by-government`>;
 
 interface PartyParticipationProps {
   onClose: () => void;
@@ -106,7 +98,7 @@ export default function PartyParticipation({
           params.set("endDate", effectiveDateRange.endDate);
         }
 
-        const response = await fetch(
+        const response = await apiFetch(
           `/api/insights/party-participation-by-government?${params.toString()}`,
         );
 

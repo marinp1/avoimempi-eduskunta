@@ -30,6 +30,7 @@ import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
 import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
+import { apiFetch } from "#client/utils/fetch";
 import {
   buildEdkDocumentUrl,
   buildKysymysPdfUrl,
@@ -63,48 +64,7 @@ export interface WrittenQuestionListItem {
   subjects: string | null;
 }
 
-interface WrittenQuestionDetail {
-  id: number;
-  parliament_identifier: string;
-  document_number: number;
-  parliamentary_year: string;
-  title: string | null;
-  submission_date: string | null;
-  question_text: string | null;
-  question_rich_text: string | null;
-  answer_parliament_identifier: string | null;
-  answer_minister_title: string | null;
-  answer_minister_first_name: string | null;
-  answer_minister_last_name: string | null;
-  answer_date: string | null;
-  decision_outcome: string | null;
-  decision_outcome_code: string | null;
-  signers: Array<{
-    signer_order: number;
-    is_first_signer: number;
-    first_name: string | null;
-    last_name: string | null;
-    party: string | null;
-  }>;
-  stages: Array<{
-    stage_title: string | null;
-    stage_code: string | null;
-    event_date: string | null;
-    event_title: string | null;
-    event_description: string | null;
-  }>;
-  subjects: Array<{ subject_text: string }>;
-  response_subjects: Array<{ subject_text: string }>;
-  sessions: Array<{
-    session_key: string;
-    session_date: string;
-    session_type: string;
-    session_number: number;
-    session_year: string;
-    section_title: string | null;
-    section_key: string;
-  }>;
-}
+type WrittenQuestionDetail = ApiRouteResponse<`/api/written-questions/:id`>;
 
 export interface WrittenQuestionResponseListItem {
   id: number;
@@ -151,38 +111,7 @@ export interface OralQuestionListItem {
   subjects: string | null;
 }
 
-interface OralQuestionDetail {
-  id: number;
-  parliament_identifier: string;
-  document_number: number;
-  parliamentary_year: string;
-  title: string | null;
-  question_text: string | null;
-  asker_text: string | null;
-  submission_date: string | null;
-  decision_outcome: string | null;
-  decision_outcome_code: string | null;
-  latest_stage_code: string | null;
-  end_date: string | null;
-  stages: Array<{
-    stage_order: number;
-    stage_title: string;
-    stage_code: string | null;
-    event_date: string | null;
-    event_title: string | null;
-    event_description: string | null;
-  }>;
-  subjects: Array<{ subject_text: string; yso_uri: string | null }>;
-  sessions: Array<{
-    session_key: string;
-    session_date: string;
-    session_type: string;
-    session_number: number;
-    session_year: string;
-    section_title: string | null;
-    section_key: string;
-  }>;
-}
+type OralQuestionDetail = ApiRouteResponse<`/api/oral-questions/:id`>;
 
 export function WrittenQuestionResponseCard({
   item,
@@ -217,7 +146,9 @@ export function WrittenQuestionResponseCard({
     if (!expanded && !questionDetail) {
       setLoading(true);
       try {
-        const res = await fetch(`/api/written-questions/${item.question_id}`);
+        const res = await apiFetch(
+          `/api/written-questions/${item.question_id}`,
+        );
         if (res.ok) setQuestionDetail(await res.json());
       } finally {
         setLoading(false);
@@ -441,46 +372,53 @@ export function WrittenQuestionResponseCard({
     </DataCard>
   );
 }
+const DocumentPrefixMap = Object.freeze({
+  HE: "government-proposals",
+  VK: "interpellations",
+  KK: "written-questions",
+  KKV: "written-questions",
+  LA: "legislative-initiatives-law",
+  TAA: "legislative-initiatives-budget",
+  LTA: "legislative-initiatives-supplementary-budget",
+  TPA: "legislative-initiatives-action",
+  KA: "legislative-initiatives-discussion",
+  KAA: "legislative-initiatives-citizens",
+  MIE: "committee-reports",
+  MIL: "committee-reports",
+});
 
-const inferDocumentType = (identifier: string | null): string | null => {
+const inferDocumentType = (
+  identifier: string | null,
+): (typeof DocumentPrefixMap)[keyof typeof DocumentPrefixMap] | null => {
   if (!identifier) return null;
   const prefix = identifier.trim().split(/\s+/)[0]?.toUpperCase();
-  const map: Record<string, string> = {
-    HE: "government-proposals",
-    VK: "interpellations",
-    KK: "written-questions",
-    KKV: "written-questions",
-    LA: "legislative-initiatives-law",
-    TAA: "legislative-initiatives-budget",
-    LTA: "legislative-initiatives-supplementary-budget",
-    TPA: "legislative-initiatives-action",
-    KA: "legislative-initiatives-discussion",
-    KAA: "legislative-initiatives-citizens",
-    MIE: "committee-reports",
-    MIL: "committee-reports",
-  };
-  return map[prefix ?? ""] ?? null;
+  if (prefix in DocumentPrefixMap)
+    return DocumentPrefixMap[prefix as keyof typeof DocumentPrefixMap];
+  return null;
 };
 
-const getBillApiPath = (docType: string): string | null => {
-  const map: Record<string, string> = {
-    "government-proposals": "/api/government-proposals/by-identifier",
-    interpellations: "/api/interpellations/by-identifier",
-    "written-questions": "/api/written-questions/by-identifier",
-    "committee-reports": "/api/committee-reports/by-identifier",
-    "legislative-initiatives-law": "/api/legislative-initiatives/by-identifier",
-    "legislative-initiatives-budget":
-      "/api/legislative-initiatives/by-identifier",
-    "legislative-initiatives-supplementary-budget":
-      "/api/legislative-initiatives/by-identifier",
-    "legislative-initiatives-action":
-      "/api/legislative-initiatives/by-identifier",
-    "legislative-initiatives-discussion":
-      "/api/legislative-initiatives/by-identifier",
-    "legislative-initiatives-citizens":
-      "/api/legislative-initiatives/by-identifier",
-  };
-  return map[docType] ?? null;
+const BillTypeToApiPath = Object.freeze({
+  "government-proposals": "/api/government-proposals/by-identifier",
+  interpellations: "/api/interpellations/by-identifier",
+  "written-questions": "/api/written-questions/by-identifier",
+  "committee-reports": "/api/committee-reports/by-identifier",
+  "legislative-initiatives-law": "/api/legislative-initiatives/by-identifier",
+  "legislative-initiatives-budget":
+    "/api/legislative-initiatives/by-identifier",
+  "legislative-initiatives-supplementary-budget":
+    "/api/legislative-initiatives/by-identifier",
+  "legislative-initiatives-action":
+    "/api/legislative-initiatives/by-identifier",
+  "legislative-initiatives-discussion":
+    "/api/legislative-initiatives/by-identifier",
+  "legislative-initiatives-citizens":
+    "/api/legislative-initiatives/by-identifier",
+});
+
+const getBillApiPath = <T extends keyof typeof BillTypeToApiPath>(
+  docType: T,
+) => {
+  return BillTypeToApiPath[docType as keyof typeof BillTypeToApiPath];
 };
 
 export function ExpertStatementCard({
@@ -493,8 +431,8 @@ export function ExpertStatementCard({
   const [showBillPreview, setShowBillPreview] = useState(false);
   const [billPreview, setBillPreview] = useState<{
     title: string | null;
-    submission_date: string | null;
-    decision_outcome: string | null;
+    submission_date?: string | null;
+    decision_outcome?: string | null;
     parliament_identifier: string;
   } | null>(null);
   const [billPreviewLoading, setBillPreviewLoading] = useState(false);
@@ -559,10 +497,13 @@ export function ExpertStatementCard({
                               if (apiPath) {
                                 setBillPreviewLoading(true);
                                 try {
-                                  const r = await fetch(
+                                  const r = await apiFetch(
                                     `${apiPath}/${encodeURIComponent(item.bill_identifier!)}`,
                                   );
-                                  if (r.ok) setBillPreview(await r.json());
+                                  if (r.ok) {
+                                    const content = await r.json();
+                                    setBillPreview(content);
+                                  }
                                 } finally {
                                   setBillPreviewLoading(false);
                                 }
@@ -795,7 +736,7 @@ export function OralQuestionCard({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/oral-questions/${item.id}`);
+        const response = await apiFetch(`/api/oral-questions/${item.id}`);
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
@@ -1049,7 +990,7 @@ export function WrittenQuestionCard({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/written-questions/${item.id}`);
+        const response = await apiFetch(`/api/written-questions/${item.id}`);
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }

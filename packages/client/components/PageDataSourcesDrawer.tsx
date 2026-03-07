@@ -24,6 +24,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTrace } from "#client/context/TraceContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
+import { apiFetch } from "#client/utils/fetch";
 import type { RouteName } from "../pages";
 import { useThemedColors } from "../theme/ThemeContext";
 
@@ -203,7 +204,7 @@ export const PageDataSourcesDrawer = ({
         for (const tableName of tableNames) {
           params.append("tableName", tableName);
         }
-        const response = await fetch(
+        const response = await apiFetch(
           `/api/import-source/table-summaries?${params.toString()}`,
           { signal: abortController.signal },
         );
@@ -252,7 +253,7 @@ export const PageDataSourcesDrawer = ({
           pkName: traceItem.pkName,
           pkValue: traceItem.pkValue,
         });
-        const response = await fetch(
+        const response = await apiFetch(
           `/api/import-source/row-trace?${params.toString()}`,
           { signal: abortController.signal },
         );

@@ -1,4 +1,5 @@
 import type { Database } from "bun:sqlite";
+import latestSpeechDate from "../queries/LATEST_SPEECH_DATE.sql";
 import rollCallEntries from "../queries/ROLL_CALL_ENTRIES.sql";
 import sectionByKey from "../queries/SECTION_BY_KEY.sql";
 import sectionDocumentLinks from "../queries/SECTION_DOCUMENT_LINKS.sql";
@@ -184,7 +185,12 @@ export class SessionRepository {
     countStmt.finalize();
 
     const stmt = this.db.prepare<
-      DatabaseTables.Speech,
+      DatabaseTables.Speech & {
+        content: string | null;
+        start_time: string | null;
+        end_time: string | null;
+        minutes_url: string | null;
+      },
       { $sectionKey: string; $limit: number; $offset: number }
     >(sectionSpeeches);
     const speeches = stmt.all({
@@ -245,14 +251,19 @@ export class SessionRepository {
     const infoStmt = this.db.prepare<
       {
         id: number;
-        session_key: string;
         parliament_identifier: string;
-        document_kind: string;
-        document_title: string;
-        start_time: string;
-        end_time: string;
-        status: string;
-        created_at: string;
+        session_date: string;
+        roll_call_start_time: string | null;
+        roll_call_end_time: string | null;
+        title: string | null;
+        status: string | null;
+        created_at: string | null;
+        edk_identifier: string;
+        source_path: string;
+        attachment_group_id: number | null;
+        entry_count: number;
+        absent_count: number;
+        late_count: number;
       },
       { $sectionKey: string }
     >(sectionRollCallReport);
@@ -391,5 +402,12 @@ export class SessionRepository {
     const data = stmt.all();
     stmt.finalize();
     return data;
+  }
+
+  public fetchLatestSpeechDate(): string | null {
+    const stmt = this.db.prepare<{ date: string | null }, []>(latestSpeechDate);
+    const row = stmt.get();
+    stmt.finalize();
+    return row?.date ?? null;
   }
 }

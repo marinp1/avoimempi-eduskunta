@@ -1,66 +1,19 @@
 import type { BunRequest } from "bun";
+import type { AnalyticsRepository } from "../database/repositories/analytics-repository";
 import {
   getBoundedIntegerQueryParam,
   getMappedOptionalQueryParams,
   getOptionalIntegerQueryParam,
   getSearchParams,
 } from "./http";
+import { json } from "./route-responses";
 
 const dateRangeQueryParamMap = {
   startDate: "startDate",
   endDate: "endDate",
 } as const;
 
-type InsightAnalyticsDataAccess = {
-  fetchVotingParticipation: (params?: {
-    startDate?: string;
-    endDate?: string;
-  }) => unknown;
-  fetchVotingParticipationByGovernment: (params: {
-    personId: string;
-    startDate?: string;
-    endDate?: string;
-  }) => unknown;
-  fetchGenderDivisionOverTime: () => unknown;
-  fetchAgeDivisionOverTime: () => unknown;
-  fetchPartyParticipationByGovernment: (params?: {
-    startDate?: string;
-    endDate?: string;
-  }) => unknown;
-  fetchPartyDiscipline: (params?: {
-    startDate?: string;
-    endDate?: string;
-  }) => unknown;
-  fetchCloseVotes: (params: {
-    threshold?: number;
-    limit?: number;
-    startDate?: string;
-    endDate?: string;
-  }) => unknown;
-  fetchMpActivityRanking: (params: { limit?: number }) => unknown;
-  fetchCoalitionVsOpposition: (params: {
-    limit?: number;
-    startDate?: string;
-    endDate?: string;
-  }) => unknown;
-  fetchDissentTracking: (params: {
-    personId?: number;
-    limit?: number;
-    startDate?: string;
-    endDate?: string;
-  }) => unknown;
-  fetchSpeechActivity: (params: {
-    limit?: number;
-    startDate?: string;
-    endDate?: string;
-  }) => unknown;
-  fetchCommitteeOverview: () => unknown;
-  fetchRecentActivity: (params: { limit?: number }) => unknown;
-};
-
-export const createInsightAnalyticsRoutes = (
-  db: InsightAnalyticsDataAccess,
-) => ({
+export const createInsightAnalyticsRoutes = (db: AnalyticsRepository) => ({
   "/api/insights/participation": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
@@ -69,7 +22,7 @@ export const createInsightAnalyticsRoutes = (
         dateRangeQueryParamMap,
       );
       const participation = await db.fetchVotingParticipation(params);
-      return Response.json(participation);
+      return json(participation);
     },
   },
 
@@ -86,21 +39,21 @@ export const createInsightAnalyticsRoutes = (
         personId: req.params.personId,
         ...params,
       });
-      return Response.json(participation);
+      return json(participation);
     },
   },
 
   "/api/insights/gender-division": {
     GET: async () => {
       const genderDivision = await db.fetchGenderDivisionOverTime();
-      return Response.json(genderDivision);
+      return json(genderDivision);
     },
   },
 
   "/api/insights/age-division": {
     GET: async () => {
       const ageDivision = await db.fetchAgeDivisionOverTime();
-      return Response.json(ageDivision);
+      return json(ageDivision);
     },
   },
 
@@ -113,7 +66,7 @@ export const createInsightAnalyticsRoutes = (
       );
       const partyParticipation =
         await db.fetchPartyParticipationByGovernment(params);
-      return Response.json(partyParticipation);
+      return json(partyParticipation);
     },
   },
 
@@ -125,7 +78,7 @@ export const createInsightAnalyticsRoutes = (
         dateRangeQueryParamMap,
       );
       const data = await db.fetchPartyDiscipline(params);
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -151,7 +104,7 @@ export const createInsightAnalyticsRoutes = (
         limit,
         ...params,
       });
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -164,7 +117,7 @@ export const createInsightAnalyticsRoutes = (
         max: 500,
       });
       const data = await db.fetchMpActivityRanking({ limit });
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -184,7 +137,7 @@ export const createInsightAnalyticsRoutes = (
         limit,
         ...params,
       });
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -206,7 +159,7 @@ export const createInsightAnalyticsRoutes = (
         limit,
         ...params,
       });
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -226,14 +179,14 @@ export const createInsightAnalyticsRoutes = (
         limit,
         ...params,
       });
-      return Response.json(data);
+      return json(data);
     },
   },
 
   "/api/analytics/committees": {
     GET: async () => {
       const data = await db.fetchCommitteeOverview();
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -246,7 +199,7 @@ export const createInsightAnalyticsRoutes = (
         max: 200,
       });
       const data = await db.fetchRecentActivity({ limit });
-      return Response.json(data);
+      return json(data);
     },
   },
 });

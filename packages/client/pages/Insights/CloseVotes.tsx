@@ -13,23 +13,9 @@ import { VotingCard, type VotingCardData } from "#client/components/VotingCard";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
+import { apiFetch } from "#client/utils/fetch";
 
-interface CloseVoteData {
-  id: number;
-  start_time: string;
-  title: string;
-  section_title: string;
-  n_yes: number;
-  n_no: number;
-  n_abstain: number;
-  n_absent: number;
-  n_total: number;
-  margin: number;
-  session_key: string;
-  section_key: string;
-  result_url: string;
-  proceedings_url: string;
-}
+type CloseVoteData = ApiRouteItem<`/api/analytics/close-votes`>;
 
 interface CloseVotesProps {
   onClose: () => void;
@@ -54,7 +40,7 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
         params.set("endDate", selectedHallituskausi.endDate);
       }
     }
-    fetch(`/api/analytics/close-votes?${params.toString()}`)
+    apiFetch(`/api/analytics/close-votes?${params.toString()}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();

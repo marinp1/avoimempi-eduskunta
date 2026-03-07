@@ -36,33 +36,9 @@ import theme, { colors } from "#client/theme";
 import { VoteMarginBar } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { isSafeExternalUrl } from "#client/utils/eduskunta-links";
+import { apiFetch } from "#client/utils/fetch";
 
-type RepresentativeDetailsType = DatabaseTables.Representative;
-
-type DistrictHistoryType = {
-  id: number;
-  person_id: number;
-  district_name: string;
-  start_date: string;
-  end_date: string;
-};
-
-type SpeechType = {
-  id: number;
-  section_key: string | null;
-  session_key: string | null;
-  section_title: string | null;
-  section_identifier: string | null;
-  start_time: string | null;
-  end_time: string | null;
-  speech_type: string | null;
-  processing_phase: string | null;
-  document: string | null;
-  content: string | null;
-  party: string | null;
-  minutes_url: string | null;
-  word_count: number;
-};
+type SpeechType = ApiRouteItem<`/api/person/:id/speeches`>;
 
 type SectionSpeechType = Pick<
   DatabaseTables.Speech,
@@ -81,98 +57,21 @@ type SectionSpeechType = Pick<
   content: string | null;
 };
 
-type SectionSpeechData = {
-  speeches: SectionSpeechType[];
-  total: number;
-  page: number;
-  totalPages: number;
-};
-
 type SectionConversationType = {
   speeches: SectionSpeechType[];
   total: number;
   truncated: boolean;
 };
 
-type SectionDetailsType = {
-  key: string;
-  identifier: string | null;
-  title: string | null;
-  processing_title: string | null;
-  note: string | null;
-  resolution: string | null;
-  minutes_item_title: string | null;
-  minutes_content_text: string | null;
-};
+type SectionDetailsType = ApiRouteResponse<`/api/sections/:sectionKey`>;
 
-type CommitteeType = {
-  id: number;
-  committee_code: string;
-  committee_name: string;
-  role: string;
-  start_date: string;
-  end_date: string | null;
-};
+type CommitteeType = ApiRouteItem<`/api/person/:id/committees`>;
 
-type VotesByPersonType = {
-  id: number;
-  start_time: string;
-  title: string;
-  section_title: string;
-  vote: string;
-  group_abbreviation: string;
-  yes_votes: number;
-  no_votes: number;
-  empty_votes: number;
-  absent_votes: number;
-};
+type VotesByPersonType = ApiRouteItem<`/api/person/:id/votes`>;
 
-type PersonQuestionType = {
-  question_kind: "interpellation" | "oral_question" | "written_question";
-  id: number;
-  parliament_identifier: string;
-  title: string | null;
-  submission_date: string | null;
-  relation_role: "asker" | "first_signer" | "signer";
-};
+type PersonQuestionType = ApiRouteItem<`/api/person/:id/questions`>;
 
-type VotingInlineDetails = {
-  voting: {
-    id: number;
-    n_yes: number;
-    n_no: number;
-    n_abstain: number;
-    n_absent: number;
-  };
-  partyBreakdown: {
-    party_code: string;
-    party_name: string;
-    n_yes: number;
-    n_no: number;
-    n_abstain: number;
-    n_absent: number;
-    n_total: number;
-  }[];
-  memberVotes: {
-    person_id: number;
-    first_name: string;
-    last_name: string;
-    party_code: string;
-    vote: string;
-    is_government: 0 | 1;
-  }[];
-  governmentOpposition: {
-    government_yes: number;
-    government_no: number;
-    opposition_yes: number;
-    opposition_no: number;
-  } | null;
-  relatedVotings: {
-    id: number;
-    n_yes: number;
-    n_no: number;
-  }[];
-};
+type VotingInlineDetails = ApiRouteResponse<`/api/votings/:id/details`>;
 
 const fetchPersonDetails = async (personId: number) => {
   const [
@@ -184,27 +83,21 @@ const fetchPersonDetails = async (personId: number) => {
     trustPositions,
     governmentMemberships,
   ] = await Promise.all([
-    fetch<DatabaseTables.ParliamentGroupMembership[]>(
-      `/api/person/${personId}/group-memberships`,
-    ).then((res) => res.json()),
-    fetch<DatabaseTables.Term[]>(`/api/person/${personId}/terms`).then((res) =>
+    apiFetch(`/api/person/${personId}/group-memberships`).then((res) =>
       res.json(),
     ),
-    fetch<RepresentativeDetailsType>(`/api/person/${personId}/details`).then(
-      (res) => res.json(),
+    apiFetch(`/api/person/${personId}/terms`).then((res) => res.json()),
+    apiFetch(`/api/person/${personId}/details`).then((res) => res.json()),
+    apiFetch(`/api/person/${personId}/districts`).then((res) => res.json()),
+    apiFetch(`/api/person/${personId}/leaving-records`).then((res) =>
+      res.json(),
     ),
-    fetch<DistrictHistoryType[]>(`/api/person/${personId}/districts`).then(
-      (res) => res.json(),
+    apiFetch(`/api/person/${personId}/trust-positions`).then((res) =>
+      res.json(),
     ),
-    fetch<DatabaseTables.PeopleLeavingParliament[]>(
-      `/api/person/${personId}/leaving-records`,
-    ).then((res) => res.json()),
-    fetch<DatabaseTables.TrustPosition[]>(
-      `/api/person/${personId}/trust-positions`,
-    ).then((res) => res.json()),
-    fetch<DatabaseTables.GovernmentMembership[]>(
-      `/api/person/${personId}/government-memberships`,
-    ).then((res) => res.json()),
+    apiFetch(`/api/person/${personId}/government-memberships`).then((res) =>
+      res.json(),
+    ),
   ]);
   return {
     groupMemberships,
@@ -218,8 +111,8 @@ const fetchPersonDetails = async (personId: number) => {
 };
 
 const fetchPersonVotes = async (personId: number) => {
-  const res = await fetch(`/api/person/${personId}/votes`);
-  return res.json() as Promise<VotesByPersonType[]>;
+  const res = await apiFetch(`/api/person/${personId}/votes`);
+  return res.json();
 };
 
 const fetchPersonSpeeches = async (
@@ -227,10 +120,10 @@ const fetchPersonSpeeches = async (
   limit = 50,
   offset = 0,
 ) => {
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/person/${personId}/speeches?limit=${limit}&offset=${offset}`,
   );
-  return res.json() as Promise<SpeechType[]>;
+  return res.json();
 };
 
 const SECTION_SPEECH_PAGE_SIZE = 100;
@@ -249,7 +142,7 @@ const fetchSectionSpeechesPage = async (
     () => controller.abort(),
     SECTION_SPEECH_REQUEST_TIMEOUT_MS,
   );
-  const res = await fetch(
+  const res = await apiFetch(
     `/api/sections/${encodeURIComponent(sectionKey)}/speeches?limit=${limit}&offset=${offset}`,
     { signal: controller.signal },
   ).finally(() => {
@@ -258,15 +151,15 @@ const fetchSectionSpeechesPage = async (
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
   }
-  return res.json() as Promise<SectionSpeechData>;
+  return res.json();
 };
 
 const fetchSectionDetails = async (sectionKey: string) => {
-  const res = await fetch(`/api/sections/${encodeURIComponent(sectionKey)}`);
+  const res = await apiFetch(`/api/sections/${encodeURIComponent(sectionKey)}`);
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
   }
-  return res.json() as Promise<SectionDetailsType>;
+  return res.json();
 };
 
 const fetchSectionConversation = async (
@@ -314,13 +207,15 @@ const fetchSectionConversation = async (
 };
 
 const fetchPersonCommittees = async (personId: number) => {
-  const res = await fetch(`/api/person/${personId}/committees`);
-  return res.json() as Promise<CommitteeType[]>;
+  const res = await apiFetch(`/api/person/${personId}/committees`);
+  return res.json();
 };
 
 const fetchPersonQuestions = async (personId: number, limit = 500) => {
-  const res = await fetch(`/api/person/${personId}/questions?limit=${limit}`);
-  return res.json() as Promise<PersonQuestionType[]>;
+  const res = await apiFetch(
+    `/api/person/${personId}/questions?limit=${limit}`,
+  );
+  return res.json();
 };
 
 const displayDate = (date?: string | null, ongoingLabel = "-") => {
@@ -765,9 +660,9 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
     }
     setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
     try {
-      const res = await fetch(`/api/votings/${votingId}/details`);
+      const res = await apiFetch(`/api/votings/${votingId}/details`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data: VotingInlineDetails = await res.json();
+      const data = await res.json();
       setVotingDetailsById((prev) => ({ ...prev, [votingId]: data }));
     } catch {
       setFailedVotingDetails((prev) => new Set(prev).add(votingId));
@@ -940,7 +835,9 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     variant="caption"
                     sx={{ color: themedColors.textSecondary }}
                   >
-                    {new Date(v.start_time).toLocaleDateString("fi-FI")}
+                    {v.start_time
+                      ? new Date(v.start_time).toLocaleDateString("fi-FI")
+                      : "-"}
                   </Typography>
                   <Box
                     sx={{
@@ -1058,9 +955,11 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                   sx={{ color: themedColors.textSecondary }}
                 >
                   {selectedVoting
-                    ? new Date(selectedVoting.start_time).toLocaleDateString(
-                        "fi-FI",
-                      )
+                    ? selectedVoting.start_time
+                      ? new Date(selectedVoting.start_time).toLocaleDateString(
+                          "fi-FI",
+                        )
+                      : "-"
                     : "-"}
                 </Typography>
               </Box>

@@ -1,9 +1,9 @@
 import type { BunRequest } from "bun";
-import type { DocumentRoutesDataAccess } from "../document-routes";
+import type { DocumentRepository } from "../../database/repositories/document-repository";
 import { getMappedPaginatedQueryParams, getSearchParams } from "../http";
-import { jsonOrNotFound } from "../route-responses";
+import { json, jsonOrNotFound } from "../route-responses";
 
-export const createQuestionFamilyRoutes = (db: DocumentRoutesDataAccess) => ({
+export const createQuestionFamilyRoutes = (db: DocumentRepository) => ({
   "/api/written-questions": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
@@ -25,21 +25,21 @@ export const createQuestionFamilyRoutes = (db: DocumentRoutesDataAccess) => ({
         },
       );
       const data = await db.fetchWrittenQuestions(params);
-      return Response.json(data);
+      return json(data);
     },
   },
 
   "/api/written-questions/subjects": {
     GET: async () => {
       const data = await db.fetchWrittenQuestionsSubjects();
-      return Response.json(data);
+      return json(data);
     },
   },
 
   "/api/written-questions/years": {
     GET: async () => {
       const data = await db.fetchWrittenQuestionYears();
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -83,30 +83,30 @@ export const createQuestionFamilyRoutes = (db: DocumentRoutesDataAccess) => ({
         },
       );
       const data = await db.fetchExpertStatements(params);
-      return Response.json(data);
+      return json(data);
     },
   },
 
   "/api/expert-statements/years": {
     GET: async () => {
       const data = await db.fetchExpertStatementYears();
-      return Response.json(data);
+      return json(data);
     },
   },
 
   "/api/expert-statements/committees": {
     GET: async () => {
       const data = await db.fetchExpertStatementCommittees();
-      return Response.json(data);
+      return json(data);
     },
   },
 
   "/api/expert-statements/by-bill": {
     GET: async (req: Request) => {
       const identifier = new URL(req.url).searchParams.get("identifier");
-      if (!identifier) return Response.json([], { status: 400 });
+      if (!identifier) return json([], { status: 400 });
       const data = await db.fetchExpertStatementsByBill(identifier);
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -131,14 +131,14 @@ export const createQuestionFamilyRoutes = (db: DocumentRoutesDataAccess) => ({
         },
       );
       const data = await db.fetchWrittenQuestionResponses(params);
-      return Response.json(data);
+      return json(data);
     },
   },
 
   "/api/written-question-responses/years": {
     GET: async () => {
       const data = await db.fetchWrittenQuestionResponseYears();
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -163,21 +163,21 @@ export const createQuestionFamilyRoutes = (db: DocumentRoutesDataAccess) => ({
         },
       );
       const data = await db.fetchOralQuestions(params);
-      return Response.json(data);
+      return json(data);
     },
   },
 
   "/api/oral-questions/subjects": {
     GET: async () => {
       const data = await db.fetchOralQuestionsSubjects();
-      return Response.json(data);
+      return json(data);
     },
   },
 
   "/api/oral-questions/years": {
     GET: async () => {
       const data = await db.fetchOralQuestionYears();
-      return Response.json(data);
+      return json(data);
     },
   },
 

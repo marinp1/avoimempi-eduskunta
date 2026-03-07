@@ -51,6 +51,7 @@
   "include": [
     "packages/**/*.ts",
     "packages/**/*.tsx",
+    "packages/**/*.d.ts",
     "scripts"
   ],
   "exclude": [

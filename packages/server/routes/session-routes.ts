@@ -1,35 +1,13 @@
 import type { BunRequest } from "bun";
+import type { SessionRepository } from "../database/repositories/session-repository";
 import {
   getLimitOffsetQueryParams,
   getPageLimitQueryParams,
   getSearchParams,
 } from "./http";
-import { jsonOrNotFound } from "./route-responses";
+import { json, jsonOrNotFound } from "./route-responses";
 
-type SessionRoutesDataAccess = {
-  fetchSessions: (params: { page: number; limit: number }) => unknown;
-  fetchSectionByKey: (params: { sectionKey: string }) => unknown;
-  fetchSectionSpeeches: (params: {
-    sectionKey: string;
-    limit?: number;
-    offset?: number;
-  }) => unknown;
-  fetchSectionVotings: (params: { sectionKey: string }) => unknown;
-  fetchSectionSubSections: (params: { sectionKey: string }) => unknown;
-  fetchSectionRollCall: (params: { sectionKey: string }) => unknown;
-  fetchSessionByDate: (params: { date: string }) => unknown;
-  fetchSessionWithSectionsByDate: (params: { date: string }) => Array<{
-    key: string;
-  }>;
-  fetchSessionDocuments: (params: { sessionKey: string }) => unknown;
-  fetchSessionNotices: (params: { sessionKey: string }) => unknown;
-  fetchSpeechesByDate: (params: { date: string }) => unknown;
-  fetchSessionDates: () => unknown;
-  fetchCompletedSessionDates: () => unknown;
-  fetchSectionDocumentLinks: (params: { sectionKey: string }) => unknown;
-};
-
-export const createSessionRoutes = (db: SessionRoutesDataAccess) => ({
+export const createSessionRoutes = (db: SessionRepository) => ({
   "/api/sessions": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
@@ -42,7 +20,7 @@ export const createSessionRoutes = (db: SessionRoutesDataAccess) => ({
       });
 
       const sessions = await db.fetchSessions({ page, limit });
-      return Response.json(sessions);
+      return json(sessions);
     },
   },
 
@@ -70,7 +48,7 @@ export const createSessionRoutes = (db: SessionRoutesDataAccess) => ({
         limit,
         offset,
       });
-      return Response.json(result);
+      return json(result);
     },
   },
 
@@ -79,7 +57,7 @@ export const createSessionRoutes = (db: SessionRoutesDataAccess) => ({
       const votings = await db.fetchSectionVotings({
         sectionKey: req.params.sectionKey,
       });
-      return Response.json(votings);
+      return json(votings);
     },
   },
 
@@ -88,7 +66,7 @@ export const createSessionRoutes = (db: SessionRoutesDataAccess) => ({
       const subsections = await db.fetchSectionSubSections({
         sectionKey: req.params.sectionKey,
       });
-      return Response.json(subsections);
+      return json(subsections);
     },
   },
 
@@ -97,7 +75,7 @@ export const createSessionRoutes = (db: SessionRoutesDataAccess) => ({
       const rollCall = await db.fetchSectionRollCall({
         sectionKey: req.params.sectionKey,
       });
-      return Response.json(rollCall);
+      return json(rollCall);
     },
   },
 
@@ -106,7 +84,7 @@ export const createSessionRoutes = (db: SessionRoutesDataAccess) => ({
       const sessions = await db.fetchSessionByDate({
         date: req.params.date,
       });
-      return Response.json(sessions);
+      return json(sessions);
     },
   },
 
@@ -128,7 +106,8 @@ export const createSessionRoutes = (db: SessionRoutesDataAccess) => ({
           };
         }),
       );
-      return Response.json({ sessions: sessionsWithDocs });
+      const vaskiLatestSpeechDate = db.fetchLatestSpeechDate();
+      return json({ sessions: sessionsWithDocs, vaskiLatestSpeechDate });
     },
   },
 
@@ -137,21 +116,21 @@ export const createSessionRoutes = (db: SessionRoutesDataAccess) => ({
       const speeches = await db.fetchSpeechesByDate({
         date: req.params.date,
       });
-      return Response.json(speeches);
+      return json(speeches);
     },
   },
 
   "/api/session-dates": {
     GET: async () => {
       const dates = await db.fetchSessionDates();
-      return Response.json(dates);
+      return json(dates);
     },
   },
 
   "/api/session-dates/completed": {
     GET: async () => {
       const dates = await db.fetchCompletedSessionDates();
-      return Response.json(dates);
+      return json(dates);
     },
   },
 
@@ -160,7 +139,7 @@ export const createSessionRoutes = (db: SessionRoutesDataAccess) => ({
       const links = await db.fetchSectionDocumentLinks({
         sectionKey: req.params.sectionKey,
       });
-      return Response.json(links);
+      return json(links);
     },
   },
 });

@@ -21,6 +21,7 @@ import {
   isSafeExternalUrl,
   toEduskuntaUrl,
 } from "#client/utils/eduskunta-links";
+import { apiFetch } from "#client/utils/fetch";
 
 /**
  * Extracts expert name+role and organization from the structured title field.
@@ -109,6 +110,9 @@ type RelatedSessionItem = {
   section_key: string;
 };
 
+type DataLink = ApiRouteResponse<`/api/sections/:id/links`>[number];
+type DataSubsection = ApiRouteResponse<`/api/sections/:id/subsections`>[number];
+
 export function InlineRelatedSessions({
   sessions,
 }: {
@@ -126,28 +130,9 @@ export function InlineRelatedSessions({
     Record<
       string,
       {
-        votings: Array<{
-          id: number;
-          number: number;
-          start_time: string | null;
-          title: string | null;
-          section_title: string | null;
-          n_yes: number;
-          n_no: number;
-          n_total: number;
-        }>;
-        links: Array<{
-          id: number;
-          label: string | null;
-          url: string | null;
-          document_tunnus: string | null;
-        }>;
-        subsections: Array<{
-          id: number;
-          item_title: string | null;
-          content_text: string | null;
-          related_document_identifier: string | null;
-        }>;
+        votings: DatabaseTables.Voting[];
+        links: DataLink[];
+        subsections: DataSubsection[];
       }
     >
   >({});
@@ -156,13 +141,13 @@ export function InlineRelatedSessions({
     if (loadingBySection[sectionKey] || detailsBySection[sectionKey]) return;
     setLoadingBySection((prev) => ({ ...prev, [sectionKey]: true }));
     Promise.all([
-      fetch(`/api/sections/${encodeURIComponent(sectionKey)}/votings`)
+      apiFetch(`/api/sections/${encodeURIComponent(sectionKey)}/votings`)
         .then((res) => (res.ok ? res.json() : []))
         .catch(() => []),
-      fetch(`/api/sections/${encodeURIComponent(sectionKey)}/links`)
+      apiFetch(`/api/sections/${encodeURIComponent(sectionKey)}/links`)
         .then((res) => (res.ok ? res.json() : []))
         .catch(() => []),
-      fetch(`/api/sections/${encodeURIComponent(sectionKey)}/subsections`)
+      apiFetch(`/api/sections/${encodeURIComponent(sectionKey)}/subsections`)
         .then((res) => (res.ok ? res.json() : []))
         .catch(() => []),
     ])

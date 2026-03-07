@@ -19,17 +19,14 @@ import {
 } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { ItemTraceIcon } from "#client/components/ItemTraceIcon";
-import {
-  type VotingMemberVote,
-  type VotingPartyBreakdown,
-  VotingResultsTable,
-} from "#client/components/VotingResultsTable";
+import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
 import { colors, commonStyles } from "#client/theme";
 import { DataCard, VoteMarginBar } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { formatDateFi, formatTimeFi } from "#client/utils/date-time";
+import { apiFetch } from "#client/utils/fetch";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -56,43 +53,7 @@ export type VotingCardData = {
   proceedings_url?: string | null;
 };
 
-type VotingFetchedDetails = {
-  voting: VotingCardData & {
-    context_title: string | null;
-    parliamentary_item: string | null;
-    section_key: string | null;
-    title: string | null;
-    section_title: string | null;
-    main_section_title: string | null;
-    agenda_title: string | null;
-  };
-  partyBreakdown: VotingPartyBreakdown[];
-  memberVotes: VotingMemberVote[];
-  governmentOpposition: {
-    government_yes: number;
-    government_no: number;
-    government_abstain: number;
-    government_absent: number;
-    government_total: number;
-    opposition_yes: number;
-    opposition_no: number;
-    opposition_abstain: number;
-    opposition_absent: number;
-    opposition_total: number;
-  } | null;
-  relatedVotings: {
-    id: number;
-    number: number | null;
-    start_time: string | null;
-    context_title: string;
-    n_yes: number;
-    n_no: number;
-    n_abstain: number;
-    n_absent: number;
-    n_total: number;
-    session_key: string | null;
-  }[];
-};
+type VotingFetchedDetails = ApiRouteResponse<`/api/votings/:id/details`>;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -134,9 +95,9 @@ const useVotingDetails = (votingId: number) => {
     if (next && !details) {
       setLoading(true);
       try {
-        const res = await fetch(`/api/votings/${votingId}/details`);
+        const res = await apiFetch(`/api/votings/${votingId}/details`);
         if (res.ok) {
-          const data: VotingFetchedDetails = await res.json();
+          const data = await res.json();
           setDetails(data);
         }
       } finally {

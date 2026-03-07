@@ -19,6 +19,7 @@ import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { PageHeader } from "#client/theme/components";
 import { colors } from "#client/theme/index";
+import { apiFetch } from "#client/utils/fetch";
 import {
   CommitteeReportCard,
   type CommitteeReportListItem,
@@ -37,6 +38,21 @@ import {
   WrittenQuestionResponseCard,
   type WrittenQuestionResponseListItem,
 } from "./cards";
+
+type SubjectsRoute =
+  | "/api/interpellations/subjects"
+  | "/api/government-proposals/subjects"
+  | "/api/written-questions/subjects"
+  | "/api/oral-questions/subjects"
+  | "/api/legislative-initiatives/subjects";
+
+const SUBJECTS_API_PATH: Partial<Record<string, SubjectsRoute>> = {
+  "/api/interpellations": "/api/interpellations/subjects",
+  "/api/government-proposals": "/api/government-proposals/subjects",
+  "/api/written-questions": "/api/written-questions/subjects",
+  "/api/oral-questions": "/api/oral-questions/subjects",
+  "/api/legislative-initiatives": "/api/legislative-initiatives/subjects",
+};
 
 type DocumentType =
   | "interpellations"
@@ -64,38 +80,54 @@ const LEGISLATIVE_INITIATIVE_TYPE_BY_DOCUMENT_TYPE: Partial<
   "legislative-initiatives-citizens": "KAA",
 };
 
-const getDocumentApiConfig = (
-  documentType: DocumentType,
-): { apiBase: string; initiativeTypeCode: string | null } => {
+const getDocumentApiConfig = (documentType: DocumentType) => {
   if (documentType === "interpellations") {
-    return { apiBase: "/api/interpellations", initiativeTypeCode: null };
+    return {
+      apiBase: "/api/interpellations",
+      initiativeTypeCode: null,
+    } as const;
   }
   if (documentType === "government-proposals") {
-    return { apiBase: "/api/government-proposals", initiativeTypeCode: null };
+    return {
+      apiBase: "/api/government-proposals",
+      initiativeTypeCode: null,
+    } as const;
   }
   if (documentType === "oral-questions") {
-    return { apiBase: "/api/oral-questions", initiativeTypeCode: null };
+    return {
+      apiBase: "/api/oral-questions",
+      initiativeTypeCode: null,
+    } as const;
   }
   if (documentType === "committee-reports") {
-    return { apiBase: "/api/committee-reports", initiativeTypeCode: null };
+    return {
+      apiBase: "/api/committee-reports",
+      initiativeTypeCode: null,
+    } as const;
   }
   if (documentType === "written-questions") {
-    return { apiBase: "/api/written-questions", initiativeTypeCode: null };
+    return {
+      apiBase: "/api/written-questions",
+      initiativeTypeCode: null,
+    } as const;
   }
   if (documentType === "written-question-responses") {
     return {
       apiBase: "/api/written-question-responses",
       initiativeTypeCode: null,
-    };
+    } as const;
   }
   if (documentType === "expert-statements") {
-    return { apiBase: "/api/expert-statements", initiativeTypeCode: null };
+    return {
+      apiBase: "/api/expert-statements",
+      initiativeTypeCode: null,
+    } as const;
   }
   return {
     apiBase: "/api/legislative-initiatives",
     initiativeTypeCode:
       LEGISLATIVE_INITIATIVE_TYPE_BY_DOCUMENT_TYPE[documentType] || null,
-  };
+  } as const;
 };
 
 export default function Documents() {
@@ -207,11 +239,12 @@ export default function Documents() {
             params.set("endDate", selectedHallituskausi.endDate);
           }
         }
-        const yearsUrl = `${apiBase}/years${params.toString() ? `?${params}` : ""}`;
-        const response = await fetch(yearsUrl);
+        const yearsUrl =
+          `${apiBase}/years${params.toString() ? (`?${params}` as const) : ""}` as const;
+        const response = await apiFetch(yearsUrl);
         if (!response.ok) throw new Error("Failed to fetch years");
         const data = await response.json();
-        setYears(data.map((item: { year: number }) => item.year));
+        setYears(data.map((item) => +item.year));
       } catch (err) {
         console.error("Error fetching years:", err);
       } finally {
@@ -225,26 +258,24 @@ export default function Documents() {
   useEffect(() => {
     if (documentType !== "expert-statements") return;
     setExpertFiltersLoading(true);
-    fetch("/api/expert-statements/committees")
+    apiFetch("/api/expert-statements/committees")
       .then((r) => r.json())
       .then((data) => setExpertCommittees(data))
       .catch(() => {})
       .finally(() => setExpertFiltersLoading(false));
   }, [documentType]);
 
-  // Fetch subjects when document type changes (skip committee-reports and expert-statements which has no subject table)
+  // Fetch subjects when document type changes (only for types that have a subjects endpoint)
   useEffect(() => {
-    if (
-      documentType === "committee-reports" ||
-      documentType === "expert-statements"
-    ) {
+    const subjectsPath = SUBJECTS_API_PATH[apiBase];
+    if (!subjectsPath) {
       setSubjectOptions([]);
       return;
     }
     const fetchSubjects = async () => {
       setSubjectsLoading(true);
       try {
-        const response = await fetch(`${apiBase}/subjects`);
+        const response = await apiFetch(subjectsPath);
         if (!response.ok) throw new Error("Failed to fetch subjects");
         const data: { subject_text: string; count: number }[] =
           await response.json();
@@ -297,7 +328,7 @@ export default function Documents() {
           }
         }
 
-        const response = await fetch(`${apiBase}?${params}`);
+        const response = await apiFetch(`${apiBase}?${params}`);
         if (!response.ok) throw new Error("Failed to fetch documents");
 
         const data = await response.json();
@@ -377,16 +408,18 @@ export default function Documents() {
       }
     }
 
-    const sourceUrl = `/api/committee-reports/source-committees${sourceParams.toString() ? `?${sourceParams}` : ""}`;
-    const recipientUrl = `/api/committee-reports/recipient-committees${recipientParams.toString() ? `?${recipientParams}` : ""}`;
+    const sourceUrl =
+      `/api/committee-reports/source-committees${sourceParams.toString() ? (`?${sourceParams}` as const) : ""}` as const;
+    const recipientUrl =
+      `/api/committee-reports/recipient-committees${recipientParams.toString() ? (`?${recipientParams}` as const) : ""}` as const;
 
     setCommitteeFiltersLoading(true);
     Promise.all([
-      fetch(sourceUrl).then((response) => {
+      apiFetch(sourceUrl).then((response) => {
         if (!response.ok) throw new Error("Failed to fetch source committees");
         return response.json();
       }),
-      fetch(recipientUrl).then((response) => {
+      apiFetch(recipientUrl).then((response) => {
         if (!response.ok)
           throw new Error("Failed to fetch recipient committees");
         return response.json();
@@ -398,8 +431,7 @@ export default function Documents() {
         if (
           selectedSourceCommittee !== "all" &&
           !sourceData.some(
-            (item: { committee_name: string }) =>
-              item.committee_name === selectedSourceCommittee,
+            (item) => item.committee_name === selectedSourceCommittee,
           )
         ) {
           setSelectedSourceCommittee("all");
@@ -407,8 +439,7 @@ export default function Documents() {
         if (
           selectedRecipientCommittee !== "all" &&
           !recipientData.some(
-            (item: { committee_name: string }) =>
-              item.committee_name === selectedRecipientCommittee,
+            (item) => item.committee_name === selectedRecipientCommittee,
           )
         ) {
           setSelectedRecipientCommittee("all");

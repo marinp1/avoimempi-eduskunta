@@ -1,31 +1,16 @@
 import type { BunRequest } from "bun";
+import type { VotingRepository } from "../database/repositories/voting-repository";
 import { getOptionalQueryParam, getSearchParams } from "./http";
-import { badRequest, jsonOrNotFound } from "./route-responses";
+import { badRequest, json, jsonOrNotFound } from "./route-responses";
 
-type VotingRoutesDataAccess = {
-  queryVotings: (params: {
-    q: string;
-    startDate?: string;
-    endDate?: string;
-  }) => unknown;
-  fetchRecentVotings: (params: {
-    startDate?: string;
-    endDate?: string;
-  }) => unknown;
-  fetchVotingsByDocument: (params: { identifier: string }) => unknown;
-  fetchDocumentRelations: (params: { identifier: string }) => unknown;
-  fetchVotingById: (params: { id: string }) => unknown;
-  fetchVotingInlineDetails: (params: { id: string }) => unknown;
-};
-
-export const createVotingRoutes = (db: VotingRoutesDataAccess) => ({
+export const createVotingRoutes = (db: VotingRepository) => ({
   "/api/votings/recent": {
     GET: async (req: BunRequest<"/api/votings/recent">) => {
       const searchParams = getSearchParams(req);
       const startDate = getOptionalQueryParam(searchParams, "startDate");
       const endDate = getOptionalQueryParam(searchParams, "endDate");
       const rows = await db.fetchRecentVotings({ startDate, endDate });
-      return Response.json(rows);
+      return json(rows);
     },
   },
 
@@ -39,7 +24,7 @@ export const createVotingRoutes = (db: VotingRoutesDataAccess) => ({
       if (q.length < 3)
         return badRequest("Query parameter requires at least three characters");
       const titles = await db.queryVotings({ q, startDate, endDate });
-      return Response.json(titles);
+      return json(titles);
     },
   },
 
@@ -48,7 +33,7 @@ export const createVotingRoutes = (db: VotingRoutesDataAccess) => ({
       const data = await db.fetchVotingsByDocument({
         identifier: decodeURIComponent(req.params.identifier),
       });
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -59,7 +44,7 @@ export const createVotingRoutes = (db: VotingRoutesDataAccess) => ({
         return badRequest("Missing document identifier");
       }
       const data = await db.fetchDocumentRelations({ identifier });
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -83,3 +68,7 @@ export const createVotingRoutes = (db: VotingRoutesDataAccess) => ({
     },
   },
 });
+
+export type VotingRoutes = ReturnType<typeof createVotingRoutes>;
+export type VotingRouteResponse<TPath extends keyof VotingRoutes> =
+  InferRouteMethodResponse<VotingRoutes, TPath, "GET">;

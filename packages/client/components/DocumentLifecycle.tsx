@@ -8,6 +8,7 @@ import {
 } from "#client/components/DocumentCards";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors } from "#client/theme";
+import { apiFetch } from "#client/utils/fetch";
 import {
   parseRichTextDocument,
   type RichTextInline,
@@ -92,7 +93,9 @@ export const DocumentLifecycle: React.FC<DocumentLifecycleProps> = ({
     let cancelled = false;
     setApiLoading(true);
 
-    fetch(`/api/documents/${encodeURIComponent(currentIdentifier)}/relations`)
+    apiFetch(
+      `/api/documents/${encodeURIComponent(currentIdentifier)}/relations`,
+    )
       .then((res) => (res.ok ? res.json() : []))
       .then((rows: Array<{ related_identifier?: string | null }>) => {
         if (cancelled) return;

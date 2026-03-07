@@ -22,6 +22,7 @@ import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { apiFetch } from "#client/utils/fetch";
 import { PartyDetail } from "./PartyDetail";
 
 const PARTY_COLORS: Record<string, string> = {
@@ -36,16 +37,7 @@ const PARTY_COLORS: Record<string, string> = {
   LIIK: "#00A0DC",
 };
 
-interface PartySummary {
-  party_code: string;
-  party_name: string;
-  member_count: number;
-  is_in_government: number;
-  participation_rate: number;
-  female_count: number;
-  male_count: number;
-  average_age: number;
-}
+type PartySummary = ApiRouteItem<`/api/parties/summary`>;
 
 type RoleFilter = "all" | "government" | "opposition";
 type SortField =
@@ -108,7 +100,7 @@ const Parties = () => {
       params.set("governmentName", selectedHallituskausi.name);
       params.set("governmentStartDate", selectedHallituskausi.startDate);
     }
-    fetch(`/api/parties/summary?${params.toString()}`)
+    apiFetch(`/api/parties/summary?${params.toString()}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");
         return res.json();

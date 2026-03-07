@@ -30,6 +30,7 @@ import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
+import { apiFetch } from "#client/utils/fetch";
 import {
   formatDate,
   getCommitteeReportKind,
@@ -52,58 +53,7 @@ export interface CommitteeReportListItem {
   signature_date: string | null;
 }
 
-interface CommitteeReportDetail {
-  id: number;
-  parliament_identifier: string;
-  report_type_code: string;
-  document_number: number;
-  parliamentary_year: string;
-  title: string | null;
-  committee_name: string | null;
-  recipient_committee: string | null;
-  source_reference: string | null;
-  draft_date: string | null;
-  signature_date: string | null;
-  summary_text: string | null;
-  summary_rich_text: string | null;
-  general_reasoning_text: string | null;
-  general_reasoning_rich_text: string | null;
-  detailed_reasoning_text: string | null;
-  detailed_reasoning_rich_text: string | null;
-  decision_text: string | null;
-  decision_rich_text: string | null;
-  legislation_amendment_text: string | null;
-  legislation_amendment_rich_text: string | null;
-  minority_opinion_text: string | null;
-  minority_opinion_rich_text: string | null;
-  resolution_text: string | null;
-  resolution_rich_text: string | null;
-  members: Array<{
-    member_order: number;
-    person_id: number | null;
-    first_name: string;
-    last_name: string;
-    party: string | null;
-    role: string | null;
-  }>;
-  experts: Array<{
-    expert_order: number;
-    person_id: number | null;
-    first_name: string | null;
-    last_name: string | null;
-    title: string | null;
-    organization: string | null;
-  }>;
-  sessions: Array<{
-    session_key: string;
-    session_date: string;
-    session_type: string;
-    session_number: number;
-    session_year: string;
-    section_title: string | null;
-    section_key: string;
-  }>;
-}
+type CommitteeReportDetail = ApiRouteResponse<`/api/committee-reports/:id`>;
 
 export function CommitteeReportCard({
   item,
@@ -135,7 +85,7 @@ export function CommitteeReportCard({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`/api/committee-reports/${item.id}`);
+        const response = await apiFetch(`/api/committee-reports/${item.id}`);
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }

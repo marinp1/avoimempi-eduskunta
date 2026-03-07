@@ -64,6 +64,8 @@ export class AnalyticsRepository {
         votes_cast: number;
         total_votings: number;
         participation_rate: number;
+        was_in_government: 0 | 1;
+        was_in_coalition: 0 | 1;
       },
       {
         $personId: number;

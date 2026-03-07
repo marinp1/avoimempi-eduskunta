@@ -1,4 +1,5 @@
 import React from "react";
+import { apiFetch } from "#client/utils/fetch";
 
 const HALLITUSKAUSI_PARAM = "hallituskausi";
 
@@ -135,9 +136,9 @@ export const HallituskausiProvider: React.FC<{ children: React.ReactNode }> = ({
     const loadHallituskaudet = async () => {
       try {
         setLoading(true);
-        const response = await fetch("/api/hallituskaudet");
+        const response = await apiFetch("/api/hallituskaudet");
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data: HallituskausiPeriod[] = await response.json();
+        const data = (await response.json()) as HallituskausiPeriod[];
         const normalized = data.map((row) => ({
           ...row,
           label: row.label || buildHallituskausiLabel(row),

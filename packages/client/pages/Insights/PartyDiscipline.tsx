@@ -28,6 +28,7 @@ import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { apiFetch } from "#client/utils/fetch";
 
 const PARTY_COLORS: Record<string, string> = {
   KOK: "#0066CC",
@@ -41,13 +42,7 @@ const PARTY_COLORS: Record<string, string> = {
   LIIK: "#00A0DC",
 };
 
-interface PartyDisciplineData {
-  party_name: string;
-  party_code: string;
-  total_votes: number;
-  votes_with_majority: number;
-  discipline_rate: number;
-}
+type PartyDisciplineData = ApiRouteItem<`/api/analytics/party-discipline`>;
 
 interface PartyDisciplineProps {
   onClose: () => void;
@@ -70,8 +65,8 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
         params.set("endDate", selectedHallituskausi.endDate);
       }
     }
-    fetch(
-      `/api/analytics/party-discipline${params.toString() ? `?${params.toString()}` : ""}`,
+    apiFetch(
+      `/api/analytics/party-discipline${params.toString() ? (`?${params.toString()}` as const) : ""}` as const,
     )
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch");

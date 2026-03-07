@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
+import { apiFetch } from "#client/utils/fetch";
 import { PageDataSourcesDrawer } from "./components/PageDataSourcesDrawer";
 import { TraceProvider } from "./context/TraceContext";
 import { Navigation } from "./Navigation";
@@ -29,20 +30,20 @@ export const App: React.FC = () => {
   const [lastMigrationTimestamp, setLastMigrationTimestamp] = useState<
     string | null
   >(null);
-  const [changeSummary, setChangeSummary] = useState<{
-    totalNewRows: number;
-    totalChangedRows: number;
-  } | null>(null);
+  const [changeSummary, setChangeSummary] = useState<Pick<
+    ApiRouteResponse<`/api/changes-report`>,
+    "totalNewRows" | "totalChangedRows"
+  > | null>(null);
 
   useEffect(() => {
-    fetch("/api/db-info")
+    apiFetch("/api/db-info")
       .then((res) => res.json())
-      .then((data: { lastMigrationTimestamp: string | null }) => {
+      .then((data: ApiRouteResponse<`/api/db-info`>) => {
         setLastMigrationTimestamp(data.lastMigrationTimestamp);
       })
       .catch(() => {});
 
-    fetch("/api/changes-report")
+    apiFetch("/api/changes-report")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data && typeof data.totalNewRows === "number") {

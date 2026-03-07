@@ -17,6 +17,7 @@ import {
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, commonStyles, spacing } from "#client/theme";
 import { DataCard, MetricCard } from "#client/theme/components";
+import { apiFetch } from "#client/utils/fetch";
 import { HistoricalComparison } from "./HistoricalComparison";
 import { ParticipationTable } from "./ParticipationTable";
 import type { ParticipationData } from "./types";
@@ -101,7 +102,7 @@ export default function Osallistumisaktiivisuus({
           params.set("endDate", effectiveDateRange.endDate);
         }
 
-        const response = await fetch(
+        const response = await apiFetch(
           `/api/insights/participation?${params.toString()}`,
         );
 

@@ -1,25 +1,9 @@
 import type { BunRequest } from "bun";
+import type { AnalyticsRepository } from "../database/repositories/analytics-repository";
 import { getMappedOptionalQueryParams, getSearchParams } from "./http";
+import { json } from "./route-responses";
 
-type PartyRoutesDataAccess = {
-  fetchPartySummary: (params?: {
-    asOfDate?: string;
-    startDate?: string;
-    endDate?: string;
-    governmentName?: string;
-    governmentStartDate?: string;
-  }) => unknown;
-  fetchPartyMembers: (params: {
-    partyCode: string;
-    asOfDate?: string;
-    startDate?: string;
-    endDate?: string;
-    governmentName?: string;
-    governmentStartDate?: string;
-  }) => unknown;
-};
-
-export const createPartyRoutes = (db: PartyRoutesDataAccess) => ({
+export const createPartyRoutes = (db: AnalyticsRepository) => ({
   "/api/parties/summary": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
@@ -31,7 +15,7 @@ export const createPartyRoutes = (db: PartyRoutesDataAccess) => ({
         governmentStartDate: "governmentStartDate",
       } as const);
       const data = await db.fetchPartySummary(params);
-      return Response.json(data);
+      return json(data);
     },
   },
 
@@ -49,7 +33,7 @@ export const createPartyRoutes = (db: PartyRoutesDataAccess) => ({
         partyCode: req.params.code,
         ...params,
       });
-      return Response.json(data);
+      return json(data);
     },
   },
 });
