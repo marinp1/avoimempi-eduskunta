@@ -1,6 +1,6 @@
 {
   "name": "eduskunta-forum",
-  "version": "1.0.0",
+  "version": "1.0.0-alpha",
   "type": "module",
   "private": true,
   "author": "",
@@ -49,6 +49,9 @@
     "bench:http": "bun run packages/server/scripts/benchmark-http-load.ts",
     "lint": "bunx biome check",
     "lint:fix": "bunx biome check --write",
-    "check:table-coverage": "bun run scripts/check-table-coverage-vs-api.ts"
+    "check:table-coverage": "bun run scripts/check-table-coverage-vs-api.ts",
+    "release": "bun run scripts/release.ts",
+    "release:minor": "bun run scripts/release.ts minor",
+    "release:major": "bun run scripts/release.ts major"
   }
 }

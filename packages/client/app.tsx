@@ -30,6 +30,8 @@ export const App: React.FC = () => {
   const [lastMigrationTimestamp, setLastMigrationTimestamp] = useState<
     string | null
   >(null);
+  const [versionInfo, setVersionInfo] =
+    useState<ApiRouteResponse<"/api/version"> | null>(null);
   const [changeSummary, setChangeSummary] = useState<Pick<
     ApiRouteResponse<`/api/changes-report`>,
     "totalNewRows" | "totalChangedRows"
@@ -41,6 +43,11 @@ export const App: React.FC = () => {
       .then((data: ApiRouteResponse<`/api/db-info`>) => {
         setLastMigrationTimestamp(data.lastMigrationTimestamp);
       })
+      .catch(() => {});
+
+    apiFetch("/api/version")
+      .then((res) => res.json())
+      .then(setVersionInfo)
       .catch(() => {});
 
     apiFetch("/api/changes-report")
@@ -183,6 +190,19 @@ export const App: React.FC = () => {
                   "fi-FI",
                 ),
               })}
+            </Typography>
+          )}
+          {versionInfo && (
+            <Typography
+              variant="caption"
+              sx={{
+                color: themedColors.textTertiary,
+                display: "block",
+                mt: 0.5,
+                lineHeight: 1.6,
+              }}
+            >
+              {`v${versionInfo.version}${versionInfo.gitHash ? ` (${versionInfo.gitHash})` : ""}`}
             </Typography>
           )}
           {changeSummary && (

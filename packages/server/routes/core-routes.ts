@@ -91,6 +91,12 @@ export const createCoreRoutes = (
     },
   },
 
+  "/api/version": {
+    GET: async () => {
+      return json(db.fetchVersionInfo());
+    },
+  },
+
   "/api/changes-report": {
     GET: async (req: Request) => {
       try {
