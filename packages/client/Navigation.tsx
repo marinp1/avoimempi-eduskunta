@@ -42,6 +42,7 @@ const mainNavRoutes: RouteName[] = [
   "aanestykset",
   "asiakirjat",
   "analytiikka",
+  "laadunvalvonta",
 ];
 
 /** Routes for mobile bottom tabs */

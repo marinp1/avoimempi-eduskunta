@@ -8,6 +8,7 @@ import {
   Insights,
   NewReleases,
   People,
+  VerifiedUser,
 } from "@mui/icons-material";
 import type { SvgIconTypeMap } from "@mui/material";
 import type { OverridableComponent } from "@mui/material/OverridableComponent";
@@ -58,6 +59,11 @@ export const routes = {
     title: "Muutokset",
     icon: NewReleases,
     Component: React.lazy(() => import("./Changes")),
+  },
+  laadunvalvonta: {
+    title: "Laadunvalvonta",
+    icon: VerifiedUser,
+    Component: React.lazy(() => import("./Laadunvalvonta")),
   },
 } as const satisfies Record<
   string,

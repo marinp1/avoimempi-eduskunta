@@ -38,3 +38,12 @@ export const getTraceDatabasePath = () => {
     "../../../avoimempi-eduskunta-trace.db",
   );
 };
+
+export const getQualityDatabasePath = () => {
+  if (process.env.QUALITY_DB_PATH)
+    return resolvePath(process.env.QUALITY_DB_PATH);
+  return path.join(
+    import.meta.dirname,
+    "../../../avoimempi-eduskunta-quality.db",
+  );
+};
