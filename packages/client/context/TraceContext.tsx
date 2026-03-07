@@ -17,6 +17,10 @@ export type TraceItem = {
 type TraceContextValue = {
   traceItem: TraceItem | null;
   setTraceItem: (item: TraceItem | null) => void;
+  /** All traceable items currently mounted on the page. */
+  pageItems: TraceItem[];
+  /** Register a traceable item; returns an unregister cleanup function. */
+  registerPageItem: (item: TraceItem) => () => void;
   /** Opens the drawer. Injected by PageDataSourcesDrawer on mount. */
   registerOpenDrawer: (fn: () => void) => void;
   openDrawer: () => void;
@@ -26,7 +30,21 @@ const TraceContext = createContext<TraceContextValue | null>(null);
 
 export const TraceProvider = ({ children }: { children: ReactNode }) => {
   const [traceItem, setTraceItem] = useState<TraceItem | null>(null);
+  const [pageItems, setPageItems] = useState<TraceItem[]>([]);
   const openDrawerRef = useRef<(() => void) | null>(null);
+
+  const registerPageItem = useCallback((item: TraceItem) => {
+    const key = `${item.table}:${item.pkValue}`;
+    setPageItems((prev) => {
+      if (prev.some((i) => `${i.table}:${i.pkValue}` === key)) return prev;
+      return [...prev, item];
+    });
+    return () => {
+      setPageItems((prev) =>
+        prev.filter((i) => `${i.table}:${i.pkValue}` !== key),
+      );
+    };
+  }, []);
 
   const registerOpenDrawer = useCallback((fn: () => void) => {
     openDrawerRef.current = fn;
@@ -38,7 +56,14 @@ export const TraceProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <TraceContext.Provider
-      value={{ traceItem, setTraceItem, registerOpenDrawer, openDrawer }}
+      value={{
+        traceItem,
+        setTraceItem,
+        pageItems,
+        registerPageItem,
+        registerOpenDrawer,
+        openDrawer,
+      }}
     >
       {children}
     </TraceContext.Provider>

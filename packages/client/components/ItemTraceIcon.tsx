@@ -1,5 +1,6 @@
 import TravelExploreIcon from "@mui/icons-material/TravelExplore";
 import { IconButton, Tooltip } from "@mui/material";
+import { useEffect } from "react";
 import { type TraceItem, useTrace } from "#client/context/TraceContext";
 
 type Props = Omit<TraceItem, never> & {
@@ -7,7 +8,11 @@ type Props = Omit<TraceItem, never> & {
 };
 
 export const ItemTraceIcon = ({ table, pkName, pkValue, label, sx }: Props) => {
-  const { setTraceItem, openDrawer } = useTrace();
+  const { setTraceItem, openDrawer, registerPageItem } = useTrace();
+
+  useEffect(() => {
+    return registerPageItem({ table, pkName, pkValue, label });
+  }, [table, pkName, pkValue, label, registerPageItem]);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();

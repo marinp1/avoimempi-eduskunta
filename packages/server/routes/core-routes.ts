@@ -1,5 +1,7 @@
+import { existsSync, readdirSync } from "node:fs";
+import path from "node:path";
 import type { BunRequest } from "bun";
-import { getChangesReportPath } from "#database";
+import { getChangesArchiveDir, getChangesReportPath } from "#database";
 import { getSearchParams } from "./http";
 import { badRequest } from "./route-responses";
 
@@ -114,9 +116,13 @@ export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
   },
 
   "/api/changes-report": {
-    GET: async () => {
+    GET: async (req: Request) => {
       try {
-        const file = Bun.file(getChangesReportPath());
+        const runId = getSearchParams(req).get("run");
+        const filePath = runId
+          ? path.join(getChangesArchiveDir(), `${runId}.json`)
+          : getChangesReportPath();
+        const file = Bun.file(filePath);
         const exists = await file.exists();
         if (!exists) {
           return Response.json(
@@ -132,6 +138,24 @@ export const createCoreRoutes = (db: CoreRoutesDataAccess) => ({
           { status: 500 },
         );
       }
+    },
+  },
+
+  "/api/changes-history": {
+    GET: () => {
+      const archiveDir = getChangesArchiveDir();
+      if (!existsSync(archiveDir)) {
+        return Response.json({ runs: [] });
+      }
+      const runs = readdirSync(archiveDir)
+        .filter((f) => f.endsWith(".json"))
+        .map((f) => f.slice(0, -5))
+        .sort((a, b) => Number(b) - Number(a))
+        .map((id) => ({
+          id,
+          generatedAt: new Date(Number(id)).toISOString(),
+        }));
+      return Response.json({ runs });
     },
   },
 });
