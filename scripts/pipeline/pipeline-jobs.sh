@@ -15,6 +15,7 @@ FETCH_COUNTS_CLI="${PIPELINE_BUILD_DIR}/scraper/fetch-counts-cli.js"
 APP_DATA_DIR="/var/lib/avoimempi-eduskunta-app"
 APP_SYNC_RELEASES_DIR="${APP_DATA_DIR}/releases"
 APP_SYNC_CURRENT_LINK="${APP_DATA_DIR}/current.db"
+APP_SYNC_CURRENT_TRACE_LINK="${APP_DATA_DIR}/current-trace.db"
 APP_CHANGES_REPORT_DEST="${APP_DATA_DIR}/metadata/changes-report.json"
 APP_SYNC_KEEP_RELEASES=5
 APP_READY_URL="http://127.0.0.1/api/ready"
@@ -67,6 +68,17 @@ activate_on_app() {
 
   echo "Activating release (${APP_SYNC_CURRENT_LINK} -> ${dest})..."
   ln -sfn "${dest}" "${APP_SYNC_CURRENT_LINK}"
+
+  if [[ -f "${TRACE_DB_PATH}" ]]; then
+    local trace_dest="${APP_SYNC_RELEASES_DIR}/avoimempi-eduskunta-trace-${release_id}.db"
+    echo "Copying trace DB to ${trace_dest}..."
+    cp "${TRACE_DB_PATH}" "${trace_dest}"
+    chmod 644 "${trace_dest}"
+    echo "Activating trace release (${APP_SYNC_CURRENT_TRACE_LINK} -> ${trace_dest})..."
+    ln -sfn "${trace_dest}" "${APP_SYNC_CURRENT_TRACE_LINK}"
+  else
+    echo "No trace DB found at ${TRACE_DB_PATH}; skipping."
+  fi
 
   # Prune old releases
   ls -1t "${APP_SYNC_RELEASES_DIR}"/avoimempi-eduskunta-*.db 2>/dev/null \

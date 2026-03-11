@@ -7,6 +7,7 @@ APP_ROOT_DIR="${APP_ROOT_DIR:-$(cd "${APP_RELEASE_DIR}/.." && pwd)}"
 
 NODE_ENV="${NODE_ENV:-production}"
 DB_PATH="${DB_PATH:-/var/lib/avoimempi-eduskunta-app/current.db}"
+TRACE_DB_PATH="${TRACE_DB_PATH:-/var/lib/avoimempi-eduskunta-app/current-trace.db}"
 CHANGES_REPORT_PATH="${CHANGES_REPORT_PATH:-/var/lib/avoimempi-eduskunta-app/metadata/changes-report.json}"
 PORT="${PORT:-80}"
 BUN_IDLE_TIMEOUT_SECONDS="${BUN_IDLE_TIMEOUT_SECONDS:-120}"
@@ -20,6 +21,7 @@ cd "${APP_RELEASE_DIR}/dist"
 exec env \
   NODE_ENV="${NODE_ENV}" \
   DB_PATH="${DB_PATH}" \
+  TRACE_DB_PATH="${TRACE_DB_PATH}" \
   CHANGES_REPORT_PATH="${CHANGES_REPORT_PATH}" \
   PORT="${PORT}" \
   BUN_IDLE_TIMEOUT_SECONDS="${BUN_IDLE_TIMEOUT_SECONDS}" \
