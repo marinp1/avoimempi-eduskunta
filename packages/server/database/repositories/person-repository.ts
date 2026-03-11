@@ -6,6 +6,7 @@ import personDissents from "../queries/PERSON_DISSENTS.sql";
 import personGroupMemberships from "../queries/PERSON_GROUP_MEMBERSHIPS.sql";
 import personQuestions from "../queries/PERSON_QUESTIONS.sql";
 import personSpeeches from "../queries/PERSON_SPEECHES.sql";
+import personSpeechesCount from "../queries/PERSON_SPEECHES_COUNT.sql";
 import personTerms from "../queries/PERSON_TERMS.sql";
 import representativeDetails from "../queries/REPRESENTATIVE_DETAILS.sql";
 import representativeDistricts from "../queries/REPRESENTATIVE_DISTRICTS.sql";
@@ -145,7 +146,12 @@ export class PersonRepository {
       $offset: params.offset ?? 0,
     });
     stmt.finalize();
-    return data;
+    const countStmt = this.db.prepare<{ total: number }, { $personId: number }>(
+      personSpeechesCount,
+    );
+    const { total } = countStmt.get({ $personId: +params.personId })!;
+    countStmt.finalize();
+    return { speeches: data, total };
   }
 
   public fetchPersonQuestions(params: { personId: string; limit?: number }) {
