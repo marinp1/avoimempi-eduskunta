@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1-alpha.1] — 2026-03-08
+
+### Bug Fixes
+- improve versioning format (cd4233b)
+- properly resolve trace db path (be9b0da)
+- properly validate runId query parameter (5244cb9)
+
 ## [1.0.1-alpha] — 2026-03-07
 
 ### Bug Fixes
