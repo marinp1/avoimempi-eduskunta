@@ -14,25 +14,14 @@ function git(...args: string[]): string {
   return result.stdout.toString().trim();
 }
 
-// 1. Find last tag
-const lastTag = git("describe", "--tags", "--abbrev=0") || null;
-const logRange = lastTag ? `${lastTag}..HEAD` : "HEAD";
-
-// 2. Parse commits
-const log = git("log", logRange, "--pretty=format:%H|%s");
-const commits = log
-  ? log.split("\n").map((line) => {
-      const [hash, ...rest] = line.split("|");
-      return { hash: hash.slice(0, 7), subject: rest.join("|") };
-    })
-  : [];
-
-if (commits.length === 0 && !process.argv[2]) {
-  console.log("No commits since last tag. Pass bump type explicitly to force.");
-  process.exit(0);
+function escapeRegex(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// 3. Determine bump type
+// 1. Find last tag
+const lastTag = git("describe", "--tags", "--abbrev=0") || null;
+
+// 2. Validate CLI arg early so bump is known before logRange computation
 type BumpType = "major" | "minor" | "patch" | "alpha";
 const cliArg = process.argv[2] as BumpType | undefined;
 const validBumps = new Set<string>(["major", "minor", "patch", "alpha"]);
@@ -42,20 +31,60 @@ if (cliArg && !validBumps.has(cliArg)) {
   process.exit(1);
 }
 
+// 3. Parse commits for auto-detection using stable logRange
+const stableLogRange = lastTag ? `${lastTag}..HEAD` : "HEAD";
+const stableLog = git("log", stableLogRange, "--pretty=format:%H|%s");
+const stableCommits = stableLog
+  ? stableLog.split("\n").map((line) => {
+      const [hash, ...rest] = line.split("|");
+      return { hash: hash.slice(0, 7), subject: rest.join("|") };
+    })
+  : [];
+
+if (stableCommits.length === 0 && !cliArg) {
+  console.log("No commits since last tag. Pass bump type explicitly to force.");
+  process.exit(0);
+}
+
+// 4. Determine bump type
 let bump: BumpType;
 if (cliArg) {
   bump = cliArg;
 } else {
-  const hasBreaking = commits.some(
+  const hasBreaking = stableCommits.some(
     (c) =>
       c.subject.includes("BREAKING CHANGE") ||
       /^[a-z]+(\(.+\))?!:/.test(c.subject),
   );
-  const hasFeat = commits.some((c) => c.subject.startsWith("feat"));
+  const hasFeat = stableCommits.some((c) => c.subject.startsWith("feat"));
   bump = hasBreaking ? "major" : hasFeat ? "minor" : "patch";
 }
 
-// 4. Compute next version
+// 5. Compute logRange — alpha uses last release commit as boundary
+let logRange: string;
+let commits: { hash: string; subject: string }[];
+
+if (bump === "alpha") {
+  const lastReleaseCommit =
+    git("log", "--pretty=format:%H", "-1", "--grep=^chore: release v") || null;
+  logRange = lastReleaseCommit
+    ? `${lastReleaseCommit}..HEAD`
+    : lastTag
+      ? `${lastTag}..HEAD`
+      : "HEAD";
+  const alphaLog = git("log", logRange, "--pretty=format:%H|%s");
+  commits = alphaLog
+    ? alphaLog.split("\n").map((line) => {
+        const [hash, ...rest] = line.split("|");
+        return { hash: hash.slice(0, 7), subject: rest.join("|") };
+      })
+    : [];
+} else {
+  logRange = stableLogRange;
+  commits = stableCommits;
+}
+
+// 6. Compute next version
 const pkgPath = resolve(ROOT, "package.json");
 const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
 const currentVersion: string = pkg.version;
@@ -68,19 +97,22 @@ if (bump === "alpha") {
   const currentAlphaNum = alphaMatch ? Number(alphaMatch[1] ?? 0) : 0;
   next = `${baseVersion}-alpha.${currentAlphaNum + 1}`;
 } else {
+  const isPrerelease = currentVersion !== baseVersion;
   const semver =
     bump === "major"
       ? `${maj + 1}.0.0`
       : bump === "minor"
         ? `${maj}.${min + 1}.0`
-        : `${maj}.${min}.${pat + 1}`;
+        : isPrerelease
+          ? baseVersion
+          : `${maj}.${min}.${pat + 1}`;
   next = semver;
 }
 
 pkg.version = next;
 writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
 
-// 5. Categorize commits for changelog
+// 7. Categorize commits for changelog
 const features = commits.filter((c) => c.subject.startsWith("feat"));
 const fixes = commits.filter((c) => c.subject.startsWith("fix"));
 const other = commits.filter(
@@ -117,21 +149,37 @@ if (other.length) {
     "\n";
 }
 
-// 6. Prepend to CHANGELOG.md
+// 8. Prepend to CHANGELOG.md (stable release removes prior alpha entries for this base version)
 const changelogPath = resolve(ROOT, "CHANGELOG.md");
 const header = "# Changelog\n";
 const existing = existsSync(changelogPath)
   ? readFileSync(changelogPath, "utf-8")
   : header;
-const body = existing.startsWith(header)
+let body = existing.startsWith(header)
   ? existing.slice(header.length)
   : existing;
+
+if (bump !== "alpha") {
+  // Remove existing alpha pre-release entries for this base version
+  const sections = body.split(/(?=\n## \[)/);
+  const filtered = sections.filter(
+    (s) => !s.match(new RegExp(`^\\n## \\[${escapeRegex(baseVersion)}-alpha`)),
+  );
+  body = filtered.join("");
+}
+
 writeFileSync(changelogPath, header + entry + body);
 
-// 7. Commit and tag
+// 9. Commit and optionally tag
 git("add", "package.json", "CHANGELOG.md");
 git("commit", "-m", `chore: release v${next}`);
-git("tag", "-a", `v${next}`, "-m", `Release v${next}`);
+if (bump !== "alpha") {
+  git("tag", "-a", `v${next}`, "-m", `Release v${next}`);
+}
 
 console.log(`Released v${next} (${bump} bump)`);
-console.log(`Tag v${next} created — push with: git push && git push --tags`);
+if (bump !== "alpha") {
+  console.log(`Tag v${next} created — push with: git push && git push --tags`);
+} else {
+  console.log(`Alpha release committed (no tag) — push with: git push`);
+}
