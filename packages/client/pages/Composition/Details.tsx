@@ -75,6 +75,25 @@ type PersonQuestionType = ApiRouteItem<`/api/person/:id/questions`>;
 
 type VotingInlineDetails = ApiRouteResponse<`/api/votings/:id/details`>;
 
+type GovernmentPeriod = {
+  government_name: string;
+  government_start_date: string;
+  government_end_date: string | null;
+  is_coalition: 0 | 1;
+};
+
+type GovernmentVoteStat = {
+  governmentName: string;
+  governmentStartDate: string;
+  governmentEndDate: string | null;
+  isCoalition: boolean;
+  yes: number;
+  no: number;
+  abstain: number;
+  absent: number;
+  total: number;
+};
+
 const fetchPersonDetails = async (personId: number) => {
   const [
     groupMemberships,
@@ -218,6 +237,341 @@ const fetchPersonQuestions = async (personId: number, limit = 500) => {
     `/api/person/${personId}/questions?limit=${limit}`,
   );
   return res.json();
+};
+
+const DAY_MS = 86_400_000;
+
+// Layout constants for the government timeline
+const TIMELINE_LABEL_ANGLE = -32;
+const TIMELINE_LABEL_W = 120;
+const TIMELINE_LABEL_H = 36; // approximate rendered height of a label box
+const TIMELINE_CONNECTOR_GAP = 4;
+const TIMELINE_BAR_H = 36;
+// Two stagger rows: even-indexed governments sit higher, odd lower
+const TIMELINE_ROW_TOPS = [0, 20] as const;
+const TIMELINE_LABEL_RAIL_H =
+  TIMELINE_ROW_TOPS[1] + TIMELINE_LABEL_H + TIMELINE_CONNECTOR_GAP + 12; // ~72px
+const TIMELINE_MIN_SEGMENT_W = 64;
+
+const formatGovernmentYearRange = (
+  startDate: string,
+  endDate: string | null,
+) => {
+  const startYear = new Date(startDate).getFullYear();
+  const endYear = endDate ? new Date(endDate).getFullYear() : "";
+  return `${startYear}–${endYear}`;
+};
+
+const GovernmentTimelineFilter: React.FC<{
+  governments: GovernmentPeriod[];
+  selectedGovName: string | null;
+  onSelect: (governmentName: string | null) => void;
+}> = ({ governments, selectedGovName, onSelect }) => {
+  const { t } = useScopedTranslation("composition");
+  const themedColors = useThemedColors();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const orderedGovernments = React.useMemo(
+    () =>
+      [...governments].sort(
+        (a, b) =>
+          new Date(a.government_start_date).getTime() -
+          new Date(b.government_start_date).getTime(),
+      ),
+    [governments],
+  );
+
+  if (orderedGovernments.length === 0) return null;
+
+  const nowMs = Date.now();
+  const startMs = new Date(orderedGovernments[0].government_start_date).getTime();
+  const endMs = orderedGovernments.reduce((latest, gov) => {
+    return Math.max(latest, new Date(gov.government_end_date ?? nowMs).getTime());
+  }, startMs + DAY_MS);
+  const totalSpan = Math.max(endMs - startMs, DAY_MS);
+
+  const minSegmentW = isMobile ? 48 : TIMELINE_MIN_SEGMENT_W;
+  const minTimelineWidth = Math.max(
+    isMobile ? 480 : 640,
+    orderedGovernments.length * minSegmentW,
+  );
+
+  const toDuration = (gov: GovernmentPeriod) =>
+    Math.max(
+      DAY_MS,
+      new Date(gov.government_end_date ?? nowMs).getTime() -
+        new Date(gov.government_start_date).getTime(),
+    );
+
+  return (
+    <Box sx={{ mb: 1.5 }}>
+      <Box
+        sx={{
+          overflowX: "auto",
+          pb: 1,
+          mx: -0.5,
+          px: 0.5,
+          scrollbarWidth: "thin",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "flex-end",
+            gap: 1,
+            minWidth: minTimelineWidth + 88,
+          }}
+        >
+          <Chip
+            label={t("details.votes.allGovernments")}
+            size="small"
+            onClick={() => onSelect(null)}
+            aria-pressed={selectedGovName === null}
+            sx={{
+              mb: 0.25,
+              height: 28,
+              fontSize: "0.75rem",
+              fontWeight: 700,
+              cursor: "pointer",
+              flexShrink: 0,
+              ...(selectedGovName === null
+                ? { bgcolor: colors.primary, color: "white" }
+                : {
+                    bgcolor: themedColors.backgroundPaper,
+                    border: `1px solid ${themedColors.dataBorder}`,
+                    color: themedColors.textSecondary,
+                  }),
+            }}
+          />
+
+          <Box
+            sx={{
+              position: "relative",
+              flexShrink: 0,
+              minWidth: minTimelineWidth,
+              pt: `${TIMELINE_LABEL_RAIL_H}px`,
+            }}
+          >
+            {/* Floating labels — all consistently slanted at the same angle */}
+            {orderedGovernments.map((gov, index) => {
+              const segmentStartMs = new Date(gov.government_start_date).getTime();
+              const duration = toDuration(gov);
+              const leftPct = ((segmentStartMs - startMs) / totalSpan) * 100;
+              const widthPct = (duration / totalSpan) * 100;
+              const centerPct = leftPct + widthPct / 2;
+              const isSelected = selectedGovName === gov.government_name;
+              const labelTop = TIMELINE_ROW_TOPS[index % 2];
+              const connectorTop =
+                labelTop + TIMELINE_LABEL_H + TIMELINE_CONNECTOR_GAP;
+              const connectorH = TIMELINE_LABEL_RAIL_H - connectorTop;
+
+              return (
+                <Box
+                  key={gov.government_name}
+                  sx={{
+                    position: "absolute",
+                    left: `${centerPct}%`,
+                    top: 0,
+                    width: 0,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: labelTop,
+                      left: 0,
+                      width: TIMELINE_LABEL_W,
+                      transform: `translateX(-50%) rotate(${TIMELINE_LABEL_ANGLE}deg)`,
+                      transformOrigin: "bottom center",
+                      pointerEvents: "auto",
+                    }}
+                  >
+                    <Box
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={isSelected}
+                      title={gov.government_name}
+                      onClick={() => onSelect(gov.government_name)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          onSelect(gov.government_name);
+                        }
+                      }}
+                      sx={{
+                        px: 0.75,
+                        py: 0.5,
+                        borderRadius: 1.25,
+                        cursor: "pointer",
+                        userSelect: "none",
+                        bgcolor: isSelected
+                          ? `${colors.primary}16`
+                          : themedColors.backgroundPaper,
+                        border: `1px solid ${
+                          isSelected
+                            ? colors.primary
+                            : gov.is_coalition
+                              ? `${themedColors.coalitionColor}66`
+                              : `${themedColors.oppositionColor}66`
+                        }`,
+                        boxShadow: "0 6px 14px rgba(15, 23, 42, 0.06)",
+                        "&:hover": {
+                          bgcolor: isSelected
+                            ? `${colors.primary}1D`
+                            : themedColors.backgroundSubtle,
+                        },
+                        "&:focus-visible": {
+                          outline: `2px solid ${colors.primary}`,
+                          outlineOffset: "2px",
+                        },
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "0.7rem",
+                          lineHeight: 1.1,
+                          fontWeight: 700,
+                          color: isSelected
+                            ? colors.primary
+                            : themedColors.textPrimary,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {gov.government_name}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          mt: 0.2,
+                          fontSize: "0.62rem",
+                          lineHeight: 1,
+                          color: themedColors.textSecondary,
+                        }}
+                      >
+                        {formatGovernmentYearRange(
+                          gov.government_start_date,
+                          gov.government_end_date,
+                        )}
+                        {" · "}
+                        {gov.is_coalition
+                          ? t("details.votes.coalition")
+                          : t("details.votes.opposition")}
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      left: 0,
+                      top: connectorTop,
+                      width: "1px",
+                      height: connectorH,
+                      bgcolor: isSelected
+                        ? colors.primary
+                        : themedColors.dataBorder,
+                    }}
+                  />
+                </Box>
+              );
+            })}
+
+            {/* Proportional colour bar */}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "stretch",
+                height: TIMELINE_BAR_H,
+                overflow: "hidden",
+                borderRadius: 2,
+                border: `1px solid ${themedColors.dataBorder}`,
+                bgcolor: themedColors.backgroundPaper,
+              }}
+            >
+              {orderedGovernments.map((gov, index) => {
+                const duration = toDuration(gov);
+                const isSelected = selectedGovName === gov.government_name;
+
+                return (
+                  <Box
+                    key={`${gov.government_name}-segment`}
+                    title={gov.government_name}
+                    role="button"
+                    tabIndex={0}
+                    aria-pressed={isSelected}
+                    onClick={() => onSelect(gov.government_name)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        onSelect(gov.government_name);
+                      }
+                    }}
+                    sx={{
+                      flexGrow: duration,
+                      flexBasis: 0,
+                      minWidth: minSegmentW,
+                      position: "relative",
+                      cursor: "pointer",
+                      transition: "filter 0.15s ease, opacity 0.15s ease",
+                      bgcolor: gov.is_coalition
+                        ? isSelected
+                          ? themedColors.coalitionColor
+                          : themedColors.coalitionBackground
+                        : isSelected
+                          ? themedColors.oppositionColor
+                          : themedColors.oppositionBackground,
+                      opacity: selectedGovName === null || isSelected ? 1 : 0.65,
+                      "&:hover": { filter: "brightness(0.95)" },
+                      "&:focus-visible": {
+                        outline: `2px solid ${colors.primary}`,
+                        outlineOffset: "-2px",
+                      },
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        position: "absolute",
+                        inset: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        px: 0.75,
+                        fontSize: "0.62rem",
+                        fontWeight: 700,
+                        color: isSelected
+                          ? "white"
+                          : gov.is_coalition
+                            ? themedColors.coalitionColor
+                            : themedColors.oppositionColor,
+                        letterSpacing: "0.02em",
+                        userSelect: "none",
+                      }}
+                    >
+                      {new Date(gov.government_start_date).getFullYear()}
+                    </Typography>
+                    {index < orderedGovernments.length - 1 && (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: 0,
+                          right: 0,
+                          width: "1px",
+                          height: "100%",
+                          bgcolor: "rgba(15, 23, 42, 0.12)",
+                        }}
+                      />
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
 };
 
 const displayDate = (date?: string | null, ongoingLabel = "-") => {
@@ -598,7 +952,7 @@ const OverviewTab: React.FC<{
 
 // ──────────────────────────── Tab: Aanestykset ────────────────────────────
 
-const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
+const VotesTab: React.FC<{ personId: number; selectedGovName: string | null }> = ({ personId, selectedGovName }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tComposition } = useScopedTranslation("composition");
   const themedColors = useThemedColors();
@@ -615,14 +969,12 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
   const [failedVotingDetails, setFailedVotingDetails] = React.useState<
     Set<number>
   >(new Set());
-  const [selectedGovName, setSelectedGovName] = React.useState<string | null>(null);
   const DISPLAY_LIMIT = 200;
   const [displayCount, setDisplayCount] = React.useState(DISPLAY_LIMIT);
 
-  const selectGov = (name: string | null) => {
-    setSelectedGovName(name);
+  React.useEffect(() => {
     setDisplayCount(DISPLAY_LIMIT);
-  };
+  }, [selectedGovName]);
 
   React.useEffect(() => {
     let ignore = false;
@@ -635,7 +987,6 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
         setVotingDetailsById({});
         setLoadingVotingDetails(new Set());
         setFailedVotingDetails(new Set());
-        setSelectedGovName(null);
         setDisplayCount(DISPLAY_LIMIT);
       })
       .finally(() => {
@@ -708,13 +1059,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
 
   const governmentStats = React.useMemo(() => {
     if (!votes) return [];
-    const map = new Map<string, {
-      governmentName: string;
-      governmentStartDate: string;
-      governmentEndDate: string | null;
-      isCoalition: boolean;
-      yes: number; no: number; abstain: number; absent: number; total: number;
-    }>();
+    const map = new Map<string, GovernmentVoteStat>();
     for (const v of votes) {
       if (!v.government_name) continue;
       const key = v.government_name;
@@ -724,7 +1069,11 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
           governmentStartDate: v.government_start_date!,
           governmentEndDate: v.government_end_date,
           isCoalition: v.is_coalition === 1,
-          yes: 0, no: 0, abstain: 0, absent: 0, total: 0,
+          yes: 0,
+          no: 0,
+          abstain: 0,
+          absent: 0,
+          total: 0,
         });
       }
       const s = map.get(key)!;
@@ -759,10 +1108,6 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
   const noVotes = votes?.filter((v) => v.vote === "Ei").length || 0;
   const emptyVotes = votes?.filter((v) => v.vote === "Tyhjää").length || 0;
   const absentVotes = votes?.filter((v) => v.vote === "Poissa").length || 0;
-  const participationRate =
-    totalVotes > 0
-      ? (((totalVotes - absentVotes) / totalVotes) * 100).toFixed(1)
-      : "0";
 
   const selectedGovStats = selectedGovName
     ? governmentStats.find((s) => s.governmentName === selectedGovName) ?? null
@@ -801,45 +1146,6 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
             }
             label={tComposition("details.votes.recentVotes")}
           />
-          {governmentStats.length > 0 && (
-            <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", mb: 1.5 }}>
-              <Chip
-                label={tComposition("details.votes.allGovernments")}
-                size="small"
-                onClick={() => selectGov(null)}
-                sx={{
-                  height: 22,
-                  fontSize: "0.7rem",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  ...(selectedGovName === null
-                    ? { bgcolor: colors.primary, color: "white" }
-                    : { variant: "outlined", bgcolor: "transparent", border: `1px solid ${themedColors.dataBorder}`, color: themedColors.textSecondary }),
-                }}
-              />
-              {governmentStats.map((s) => (
-                <Chip
-                  key={s.governmentName}
-                  label={`${s.governmentName} (${new Date(s.governmentStartDate).getFullYear()}–${s.governmentEndDate ? new Date(s.governmentEndDate).getFullYear() : ""})`}
-                  size="small"
-                  onClick={() => selectGov(s.governmentName)}
-                  sx={{
-                    height: 22,
-                    fontSize: "0.7rem",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    ...(selectedGovName === s.governmentName
-                      ? { bgcolor: colors.primary, color: "white" }
-                      : {
-                          bgcolor: "transparent",
-                          border: `1px solid ${s.isCoalition ? "#3B82F6" : "#F97316"}`,
-                          color: s.isCoalition ? "#2563EB" : "#EA580C",
-                        }),
-                  }}
-                />
-              ))}
-            </Box>
-          )}
           {/* Metrics row — context-aware (reflects selected gov or overall) */}
           <Box
             sx={{
@@ -1355,7 +1661,7 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
 
 // ──────────────────────────── Tab: Puheenvuorot ────────────────────────────
 
-const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
+const SpeechesTab: React.FC<{ personId: number; selectedGovName: string | null }> = ({ personId }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tComposition } = useScopedTranslation("composition");
   const themedColors = useThemedColors();
@@ -2247,7 +2553,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
 
 // ─────────────────────────── Tab: Kysymykset ─────────────────────────────
 
-const QuestionsTab: React.FC<{ personId: number }> = ({ personId }) => {
+const QuestionsTab: React.FC<{ personId: number; selectedGovName: string | null }> = ({ personId }) => {
   const { t } = useScopedTranslation("composition");
   const themedColors = useThemedColors();
   const [questions, setQuestions] = React.useState<PersonQuestionType[] | null>(
@@ -2752,6 +3058,8 @@ export const RepresentativeDetails: React.FC<{
   const themedColors = useThemedColors();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [tabIndex, setTabIndex] = React.useState(0);
+  const [selectedGovName, setSelectedGovName] = React.useState<string | null>(null);
+  const [governmentPeriods, setGovernmentPeriods] = React.useState<GovernmentPeriod[]>([]);
 
   const [details, setDetails] =
     React.useState<Awaited<ReturnType<typeof fetchPersonDetails>>>();
@@ -2760,9 +3068,16 @@ export const RepresentativeDetails: React.FC<{
     if (selectedRepresentative) {
       setDetails(undefined);
       setTabIndex(0);
+      setSelectedGovName(null);
+      setGovernmentPeriods([]);
       fetchPersonDetails(selectedRepresentative.person_id).then(setDetails);
+      apiFetch(`/api/person/${selectedRepresentative.person_id}/government-periods`)
+        .then((res) => res.json())
+        .then(setGovernmentPeriods)
+        .catch(() => {});
     } else {
       setDetails(undefined);
+      setGovernmentPeriods([]);
     }
   }, [selectedRepresentative]);
 
@@ -3002,15 +3317,25 @@ export const RepresentativeDetails: React.FC<{
               overflowY: "auto",
             }}
           >
+            {/* Government period filter — cross-tab, shown above all panels */}
+            {governmentPeriods.length > 0 && (
+              <Box sx={{ mb: 2 }}>
+                <GovernmentTimelineFilter
+                  governments={governmentPeriods}
+                  selectedGovName={selectedGovName}
+                  onSelect={setSelectedGovName}
+                />
+              </Box>
+            )}
             {tabIndex === 0 && details && <OverviewTab details={details} />}
             {tabIndex === 1 && (
-              <VotesTab personId={selectedRepresentative.person_id} />
+              <VotesTab personId={selectedRepresentative.person_id} selectedGovName={selectedGovName} />
             )}
             {tabIndex === 2 && (
-              <SpeechesTab personId={selectedRepresentative.person_id} />
+              <SpeechesTab personId={selectedRepresentative.person_id} selectedGovName={selectedGovName} />
             )}
             {tabIndex === 3 && (
-              <QuestionsTab personId={selectedRepresentative.person_id} />
+              <QuestionsTab personId={selectedRepresentative.person_id} selectedGovName={selectedGovName} />
             )}
             {tabIndex === 4 && details && (
               <PositionsTab

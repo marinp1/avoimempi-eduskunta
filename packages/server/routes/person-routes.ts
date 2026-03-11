@@ -64,6 +64,13 @@ export const createPersonRoutes = (db: PersonRepository) => ({
     },
   },
 
+  "/api/person/:id/government-periods": {
+    GET: async (req: BunRequest<"/api/person/:id/government-periods">) => {
+      const periods = await db.fetchGovernmentPeriods(req.params);
+      return json(periods);
+    },
+  },
+
   "/api/person/:id/speeches": {
     GET: async (req: BunRequest<"/api/person/:id/speeches">) => {
       const searchParams = getSearchParams(req);
