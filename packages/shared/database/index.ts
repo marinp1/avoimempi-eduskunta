@@ -47,3 +47,13 @@ export const getQualityDatabasePath = () => {
     "../../../avoimempi-eduskunta-quality.db",
   );
 };
+
+export const getLastScraperRunAtPath = () => {
+  const reportPath = getChangesReportPath();
+  return path.join(path.dirname(reportPath), "last-scraper-run-at");
+};
+
+export const getLastMigratorRunAtPath = () => {
+  const reportPath = getChangesReportPath();
+  return path.join(path.dirname(reportPath), "last-migrator-run-at");
+};

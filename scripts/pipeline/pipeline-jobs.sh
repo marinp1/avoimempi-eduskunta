@@ -22,11 +22,19 @@ APP_READY_URL="http://127.0.0.1/api/ready"
 APP_READY_RETRIES=60
 APP_READY_SLEEP_SECONDS=1
 RESTART_APP_SCRIPT="${APP_DIR}/scripts/app/restart-app.sh"
+PIPELINE_STATUS_DIR="${APP_DATA_DIR}/metadata"
 
 ACTION="${1:-help}"
 
 log() {
   printf '[%s] %s\n' "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" "$*" | tee -a "${LOG_FILE}"
+}
+
+record_pipeline_stage() {
+  local stage="$1"
+  mkdir -p "${PIPELINE_STATUS_DIR}"
+  printf '%s\n' "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" > "${PIPELINE_STATUS_DIR}/last-${stage}-run-at"
+  chmod 644 "${PIPELINE_STATUS_DIR}/last-${stage}-run-at"
 }
 
 require_bundle() {
@@ -125,6 +133,7 @@ scrape_all() {
   log "Scraping all active tables (max runtime: ${SCRAPER_MAX_RUNTIME_SECONDS}s)"
   (cd "${APP_DIR}" && env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" \
     bun "${scraper_cli}" all --max-runtime "${SCRAPER_MAX_RUNTIME_SECONDS}" --skip-if-unchanged >> "${LOG_FILE}" 2>&1)
+  record_pipeline_stage "scraper"
 }
 
 parse_all() {
@@ -142,6 +151,7 @@ migrate_and_sync() {
   log "Running migration"
   (cd "${APP_DIR}" && env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" DB_PATH="${DB_PATH}" TRACE_DB_PATH="${TRACE_DB_PATH}" \
     bun "${migrator_cli}" >> "${LOG_FILE}" 2>&1)
+  record_pipeline_stage "migrator"
   log "Activating new DB on app"
   activate_on_app "${DB_PATH}" >> "${LOG_FILE}" 2>&1
   log "Done"

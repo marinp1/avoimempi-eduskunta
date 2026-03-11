@@ -27,9 +27,7 @@ export const App: React.FC = () => {
   const { t } = useScopedTranslation("app");
 
   const [activeTab, setActiveTab] = useState<RouteName>(getInitialTab());
-  const [lastMigrationTimestamp, setLastMigrationTimestamp] = useState<
-    string | null
-  >(null);
+  const [dbInfo, setDbInfo] = useState<ApiRouteResponse<"/api/db-info"> | null>(null);
   const [versionInfo, setVersionInfo] =
     useState<ApiRouteResponse<"/api/version"> | null>(null);
   const [changeSummary, setChangeSummary] = useState<Pick<
@@ -40,8 +38,8 @@ export const App: React.FC = () => {
   useEffect(() => {
     apiFetch("/api/db-info")
       .then((res) => res.json())
-      .then((data: ApiRouteResponse<`/api/db-info`>) => {
-        setLastMigrationTimestamp(data.lastMigrationTimestamp);
+      .then((data: ApiRouteResponse<"/api/db-info">) => {
+        setDbInfo(data);
       })
       .catch(() => {});
 
@@ -175,7 +173,37 @@ export const App: React.FC = () => {
           >
             {t("disclaimer.unofficial")}
           </Typography>
-          {lastMigrationTimestamp && (
+          {dbInfo?.lastScraperRunAt && (
+            <Typography
+              variant="caption"
+              sx={{
+                color: themedColors.textTertiary,
+                display: "block",
+                mt: 0.5,
+                lineHeight: 1.6,
+              }}
+            >
+              {t("disclaimer.lastScraperRunAt", {
+                timestamp: new Date(dbInfo.lastScraperRunAt).toLocaleString("fi-FI"),
+              })}
+            </Typography>
+          )}
+          {dbInfo?.lastMigratorRunAt && (
+            <Typography
+              variant="caption"
+              sx={{
+                color: themedColors.textTertiary,
+                display: "block",
+                mt: 0.5,
+                lineHeight: 1.6,
+              }}
+            >
+              {t("disclaimer.lastMigratorRunAt", {
+                timestamp: new Date(dbInfo.lastMigratorRunAt).toLocaleString("fi-FI"),
+              })}
+            </Typography>
+          )}
+          {dbInfo?.lastMigrationTimestamp && (
             <Typography
               variant="caption"
               sx={{
@@ -186,9 +214,7 @@ export const App: React.FC = () => {
               }}
             >
               {t("disclaimer.dbBuildTimestamp", {
-                timestamp: new Date(lastMigrationTimestamp).toLocaleString(
-                  "fi-FI",
-                ),
+                timestamp: new Date(dbInfo.lastMigrationTimestamp).toLocaleString("fi-FI"),
               })}
             </Typography>
           )}

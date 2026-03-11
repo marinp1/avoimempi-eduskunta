@@ -10,7 +10,9 @@
     "disclaimer": {
       "source": "Tietolähde: Eduskunnan avoin data (avoindata.eduskunta.fi)",
       "unofficial": "Tiedot haetaan ja jäsennetään päivittäin Eduskunnan avoiden datan rajapinnoista ja voivat olla puutteellisia tai virheellisiä. Varmista informaation todenmukaisuus aina virallisista lähteistä, äläkä luota satunnaisiin verkkosivustoihin. Tällä sivulla on mahdollisuuksien mukaan aina myös suora linkki eduskunnan omiin palveluihin.",
-      "dbBuildTimestamp": "Tietokanta päivitetty: {{timestamp}}"
+      "dbBuildTimestamp": "Tietokanta päivitetty: {{timestamp}}",
+      "lastScraperRunAt": "Viimeksi tarkistettu: {{timestamp}}",
+      "lastMigratorRunAt": "Migraattori ajettu: {{timestamp}}"
     }
   },
   "navigation": {
