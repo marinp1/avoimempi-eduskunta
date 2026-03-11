@@ -21,7 +21,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
@@ -113,7 +113,7 @@ export interface OralQuestionListItem {
 
 type OralQuestionDetail = ApiRouteResponse<`/api/oral-questions/:id`>;
 
-export function WrittenQuestionResponseCard({
+function WrittenQuestionResponseCardComponent({
   item,
   onSubjectClick,
 }: {
@@ -158,7 +158,7 @@ export function WrittenQuestionResponseCard({
   };
 
   return (
-    <DataCard>
+    <DataCard sx={{ contentVisibility: "auto", containIntrinsicSize: "360px" }}>
       <Box
         sx={{
           cursor: "pointer",
@@ -372,6 +372,10 @@ export function WrittenQuestionResponseCard({
     </DataCard>
   );
 }
+
+export const WrittenQuestionResponseCard = memo(
+  WrittenQuestionResponseCardComponent,
+);
 const DocumentPrefixMap = Object.freeze({
   HE: "government-proposals",
   VK: "interpellations",
@@ -421,7 +425,7 @@ const getBillApiPath = <T extends keyof typeof BillTypeToApiPath>(
   return BillTypeToApiPath[docType as keyof typeof BillTypeToApiPath];
 };
 
-export function ExpertStatementCard({
+function ExpertStatementCardComponent({
   item,
 }: {
   item: ExpertStatementListItem;
@@ -455,7 +459,7 @@ export function ExpertStatementCard({
   const isNonPublic = item.publicity === "Ei julkinen";
 
   return (
-    <DataCard>
+    <DataCard sx={{ contentVisibility: "auto", containIntrinsicSize: "300px" }}>
       <Box sx={{ p: 2 }}>
         {/* Top row: chips + date */}
         <Box
@@ -710,7 +714,9 @@ export function ExpertStatementCard({
   );
 }
 
-export function OralQuestionCard({
+export const ExpertStatementCard = memo(ExpertStatementCardComponent);
+
+function OralQuestionCardComponent({
   item,
   onSubjectClick,
 }: {
@@ -752,7 +758,7 @@ export function OralQuestionCard({
   };
 
   return (
-    <DataCard>
+    <DataCard sx={{ contentVisibility: "auto", containIntrinsicSize: "380px" }}>
       <Box
         sx={{
           cursor: "pointer",
@@ -947,7 +953,9 @@ export function OralQuestionCard({
   );
 }
 
-export function WrittenQuestionCard({
+export const OralQuestionCard = memo(OralQuestionCardComponent);
+
+function WrittenQuestionCardComponent({
   item,
   onSubjectClick,
 }: {
@@ -1006,7 +1014,7 @@ export function WrittenQuestionCard({
   };
 
   return (
-    <DataCard>
+    <DataCard sx={{ contentVisibility: "auto", containIntrinsicSize: "400px" }}>
       <Box
         sx={{
           cursor: "pointer",
@@ -1475,3 +1483,5 @@ export function WrittenQuestionCard({
     </DataCard>
   );
 }
+
+export const WrittenQuestionCard = memo(WrittenQuestionCardComponent);

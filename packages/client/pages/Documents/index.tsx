@@ -12,7 +12,14 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-import { memo, startTransition, useCallback, useEffect, useState } from "react";
+import {
+  memo,
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors } from "#client/theme/index";
@@ -376,17 +383,21 @@ export default function Documents() {
   }, []);
 
   const clearFilters = useCallback(() => {
-    setSearchQuery("");
-    setDebouncedQuery("");
-    resetTypeScopedFilters();
+    startTransition(() => {
+      setSearchQuery("");
+      setDebouncedQuery("");
+      resetTypeScopedFilters();
+    });
   }, [resetTypeScopedFilters]);
 
   const handleDocumentTypeChange = useCallback(
     (newType: DocumentType) => {
-      setDocumentType(newType);
-      setSearchQuery("");
-      setDebouncedQuery("");
-      resetTypeScopedFilters();
+      startTransition(() => {
+        setDocumentType(newType);
+        setSearchQuery("");
+        setDebouncedQuery("");
+        resetTypeScopedFilters();
+      });
     },
     [resetTypeScopedFilters],
   );
@@ -699,11 +710,11 @@ export default function Documents() {
     selectedYear,
   ]);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     const nextPage = page + 1;
     setPage(nextPage);
     fetchDocuments(nextPage, true);
-  };
+  }, [fetchDocuments, page]);
 
   const handleSubjectClick = useCallback((subject: string) => {
     setSelectedSubject(subject);
@@ -718,64 +729,79 @@ export default function Documents() {
     selectedExpertCommittee !== "all" ||
     selectedExpertDocType !== "all";
 
-  const activeFilters = [
-    searchQuery.trim()
-      ? {
-          key: "q",
-          label: `${t("searchLabel")}: ${searchQuery.trim()}`,
-          onDelete: () => {
-            setSearchQuery("");
-            setDebouncedQuery("");
-          },
-        }
-      : null,
-    selectedYear !== "all"
-      ? {
-          key: "year",
-          label: `${t("year")}: ${selectedYear}`,
-          onDelete: () => setSelectedYear("all"),
-        }
-      : null,
-    selectedSubject
-      ? {
-          key: "subject",
-          label: `${t("subjectFilter")}: ${selectedSubject}`,
-          onDelete: () => setSelectedSubject(null),
-        }
-      : null,
-    selectedSourceCommittee !== "all"
-      ? {
-          key: "sourceCommittee",
-          label: `${t("sourceCommitteeFilter")}: ${selectedSourceCommittee}`,
-          onDelete: () => setSelectedSourceCommittee("all"),
-        }
-      : null,
-    selectedRecipientCommittee !== "all"
-      ? {
-          key: "recipientCommittee",
-          label: `${t("targetCommitteeFilter")}: ${selectedRecipientCommittee}`,
-          onDelete: () => setSelectedRecipientCommittee("all"),
-        }
-      : null,
-    selectedExpertCommittee !== "all"
-      ? {
-          key: "committee",
-          label: `${t("committeeFilter")}: ${selectedExpertCommittee}`,
-          onDelete: () => setSelectedExpertCommittee("all"),
-        }
-      : null,
-    selectedExpertDocType !== "all"
-      ? {
-          key: "docType",
-          label: `${t("documentSubtype")}: ${selectedExpertDocType}`,
-          onDelete: () => setSelectedExpertDocType("all"),
-        }
-      : null,
-  ].filter(Boolean) as Array<{
-    key: string;
-    label: string;
-    onDelete: () => void;
-  }>;
+  const activeFilters = useMemo(
+    () =>
+      [
+        searchQuery.trim()
+          ? {
+              key: "q",
+              label: `${t("searchLabel")}: ${searchQuery.trim()}`,
+              onDelete: () => {
+                startTransition(() => {
+                  setSearchQuery("");
+                  setDebouncedQuery("");
+                });
+              },
+            }
+          : null,
+        selectedYear !== "all"
+          ? {
+              key: "year",
+              label: `${t("year")}: ${selectedYear}`,
+              onDelete: () => setSelectedYear("all"),
+            }
+          : null,
+        selectedSubject
+          ? {
+              key: "subject",
+              label: `${t("subjectFilter")}: ${selectedSubject}`,
+              onDelete: () => setSelectedSubject(null),
+            }
+          : null,
+        selectedSourceCommittee !== "all"
+          ? {
+              key: "sourceCommittee",
+              label: `${t("sourceCommitteeFilter")}: ${selectedSourceCommittee}`,
+              onDelete: () => setSelectedSourceCommittee("all"),
+            }
+          : null,
+        selectedRecipientCommittee !== "all"
+          ? {
+              key: "recipientCommittee",
+              label: `${t("targetCommitteeFilter")}: ${selectedRecipientCommittee}`,
+              onDelete: () => setSelectedRecipientCommittee("all"),
+            }
+          : null,
+        selectedExpertCommittee !== "all"
+          ? {
+              key: "committee",
+              label: `${t("committeeFilter")}: ${selectedExpertCommittee}`,
+              onDelete: () => setSelectedExpertCommittee("all"),
+            }
+          : null,
+        selectedExpertDocType !== "all"
+          ? {
+              key: "docType",
+              label: `${t("documentSubtype")}: ${selectedExpertDocType}`,
+              onDelete: () => setSelectedExpertDocType("all"),
+            }
+          : null,
+      ].filter(Boolean) as Array<{
+        key: string;
+        label: string;
+        onDelete: () => void;
+      }>,
+    [
+      searchQuery,
+      selectedYear,
+      selectedSubject,
+      selectedSourceCommittee,
+      selectedRecipientCommittee,
+      selectedExpertCommittee,
+      selectedExpertDocType,
+      t,
+    ],
+  );
 
   return (
     <Box sx={{ p: { xs: 1.5, md: 2.5 } }}>

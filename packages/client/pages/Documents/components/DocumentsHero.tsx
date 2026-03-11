@@ -1,9 +1,9 @@
 import { AutoAwesome as AutoAwesomeIcon } from "@mui/icons-material";
 import { Box, Chip, Stack, Typography } from "@mui/material";
-import type React from "react";
+import React from "react";
 import { colors } from "#client/theme";
 
-export const DocumentsHero: React.FC<{
+const DocumentsHeroComponent: React.FC<{
   title: string;
   subtitle: string;
   resultsSummary?: string;
@@ -17,12 +17,9 @@ export const DocumentsHero: React.FC<{
       border: `1px solid ${colors.dataBorder}`,
       px: { xs: 2, md: 3.5 },
       py: { xs: 2.5, md: 3.5 },
-      background: `
-        radial-gradient(circle at top right, rgba(232,145,58,0.16), transparent 34%),
-        radial-gradient(circle at left center, rgba(74,111,165,0.16), transparent 42%),
-        linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(243,245,247,0.92) 100%)
-      `,
-      boxShadow: "0 18px 42px rgba(15, 27, 51, 0.06)",
+      background:
+        "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(244,246,248,0.95) 100%)",
+      boxShadow: "0 8px 20px rgba(15, 27, 51, 0.04)",
     }}
   >
     <Stack spacing={1.5}>
@@ -78,3 +75,5 @@ export const DocumentsHero: React.FC<{
     </Stack>
   </Box>
 );
+
+export const DocumentsHero = React.memo(DocumentsHeroComponent);

@@ -12,7 +12,7 @@ import {
   Collapse,
   Stack,
 } from "@mui/material";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
@@ -43,7 +43,7 @@ export interface LegislativeInitiativeListItem {
 type LegislativeInitiativeDetail =
   ApiRouteResponse<`/api/legislative-initiatives/:id`>;
 
-export function LegislativeInitiativeCard({
+function LegislativeInitiativeCardComponent({
   item,
   onSubjectClick,
 }: {
@@ -311,3 +311,7 @@ export function LegislativeInitiativeCard({
     </DocumentCardShell>
   );
 }
+
+export const LegislativeInitiativeCard = memo(
+  LegislativeInitiativeCardComponent,
+);

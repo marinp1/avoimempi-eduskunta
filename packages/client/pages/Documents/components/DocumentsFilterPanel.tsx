@@ -1,6 +1,6 @@
 import { Close as CloseIcon, Tune as TuneIcon } from "@mui/icons-material";
 import { Box, Button, Chip, Stack, Typography } from "@mui/material";
-import type React from "react";
+import React from "react";
 import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme";
 
@@ -10,7 +10,7 @@ type ActiveFilterChip = {
   onDelete: () => void;
 };
 
-export const DocumentsFilterPanel: React.FC<{
+const DocumentsFilterPanelComponent: React.FC<{
   title: string;
   helperText: string;
   activeFiltersTitle: string;
@@ -34,8 +34,8 @@ export const DocumentsFilterPanel: React.FC<{
   <DataCard
     sx={{
       p: { xs: 2, md: 2.5 },
-      background:
-        "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(250,251,252,0.98) 100%)",
+      background: "#fbfcfd",
+      boxShadow: "0 4px 12px rgba(15, 27, 51, 0.04)",
     }}
   >
     <Stack spacing={2}>
@@ -135,3 +135,5 @@ export const DocumentsFilterPanel: React.FC<{
     </Stack>
   </DataCard>
 );
+
+export const DocumentsFilterPanel = React.memo(DocumentsFilterPanelComponent);

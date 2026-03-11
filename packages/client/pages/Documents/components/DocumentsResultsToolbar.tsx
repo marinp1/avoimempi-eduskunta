@@ -1,8 +1,8 @@
 import { Box, Chip, Stack, Typography } from "@mui/material";
-import type React from "react";
+import React from "react";
 import { colors } from "#client/theme";
 
-export const DocumentsResultsToolbar: React.FC<{
+const DocumentsResultsToolbarComponent: React.FC<{
   resultsSummary: string;
   typeLabel: string;
 }> = ({ resultsSummary, typeLabel }) => (
@@ -41,4 +41,8 @@ export const DocumentsResultsToolbar: React.FC<{
       />
     </Stack>
   </Box>
+);
+
+export const DocumentsResultsToolbar = React.memo(
+  DocumentsResultsToolbarComponent,
 );

@@ -23,7 +23,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
@@ -55,7 +55,7 @@ export interface CommitteeReportListItem {
 
 type CommitteeReportDetail = ApiRouteResponse<`/api/committee-reports/:id`>;
 
-export function CommitteeReportCard({
+function CommitteeReportCardComponent({
   item,
 }: {
   item: CommitteeReportListItem;
@@ -101,7 +101,7 @@ export function CommitteeReportCard({
   };
 
   return (
-    <DataCard>
+    <DataCard sx={{ contentVisibility: "auto", containIntrinsicSize: "420px" }}>
       <Box
         sx={{
           cursor: "pointer",
@@ -590,3 +590,5 @@ export function CommitteeReportCard({
     </DataCard>
   );
 }
+
+export const CommitteeReportCard = memo(CommitteeReportCardComponent);
