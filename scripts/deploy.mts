@@ -32,6 +32,23 @@ function assertReleased() {
     return;
   }
 
+  // Alpha pre-releases are committed but not tagged — just verify the release commit exists.
+  if (pkg.version.includes("-")) {
+    const log = Bun.spawnSync(
+      ["git", "log", "-1", "--pretty=format:%s", "HEAD"],
+      { cwd: path.join(import.meta.dirname, "..") },
+    );
+    const subject = log.stdout.toString().trim();
+    if (subject !== `chore: release v${pkg.version}`) {
+      console.error(
+        `Error: HEAD is not a release commit for ${pkg.version}. Run \`bun run release alpha\` first.`,
+      );
+      process.exit(1);
+    }
+    console.log(`Deploying ${expectedTag} (pre-release, no tag)`);
+    return;
+  }
+
   if (!exactTag.success) {
     console.error(
       `Error: HEAD is not tagged. Run \`bun run release\` first to create tag ${expectedTag}.`,
