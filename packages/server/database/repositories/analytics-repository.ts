@@ -346,7 +346,11 @@ export class AnalyticsRepository {
     return data;
   }
 
-  public fetchRecentActivity(params: { limit?: number }) {
+  public fetchRecentActivity(params: {
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
+  }) {
     const stmt = this.db.query<
       {
         date: string;
@@ -358,9 +362,18 @@ export class AnalyticsRepository {
         total_votes_cast: number;
         close_vote_count: number;
       },
-      { $limit: number }
+      {
+        $limit: number;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
     >(recentActivity);
-    const data = stmt.all({ $limit: params.limit ?? 20 });
+    const endDateExclusiveValue = endDateExclusive(params.endDate);
+    const data = stmt.all({
+      $limit: params.limit ?? 20,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusiveValue,
+    });
     return data;
   }
 

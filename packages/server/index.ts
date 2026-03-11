@@ -1,12 +1,17 @@
 // modules/server/server.ts
 import packageJson from "../../package.json";
-import { getTraceDatabasePath } from "../shared/database";
+import {
+  getLastMigratorRunAtPath,
+  getLastScraperRunAtPath,
+  getTraceDatabasePath,
+} from "../shared/database";
 import { createResponseCache } from "./cache/response-cache";
 import { loadRuntimeConfig } from "./config/runtime-config";
 import { DatabaseConnection } from "./database/db";
 import { prepareDatabaseForServerStartup } from "./database/launch-db";
 import { AnalyticsRepository } from "./database/repositories/analytics-repository";
 import { DocumentRepository } from "./database/repositories/document-repository";
+import { HomeRepository } from "./database/repositories/home-repository";
 import { ImportSourceRepository } from "./database/repositories/import-source-repository";
 import { MetadataRepository } from "./database/repositories/metadata-repository";
 import { PersonRepository } from "./database/repositories/person-repository";
@@ -17,6 +22,7 @@ import homepage from "./public/index.html";
 import { createCoreRoutes } from "./routes/core-routes";
 import { createDocumentRoutes } from "./routes/document-routes";
 import { createGovernmentRoutes } from "./routes/government-routes";
+import { createHomeRoutes } from "./routes/home-routes";
 import { createInsightAnalyticsRoutes } from "./routes/insight-analytics-routes";
 import { createPartyRoutes } from "./routes/party-routes";
 import { createPersonRoutes } from "./routes/person-routes";
@@ -41,6 +47,31 @@ const metadataRepository = new MetadataRepository(db);
 const personRepository = new PersonRepository(db);
 const sessionRepository = new SessionRepository(db);
 const votingRepository = new VotingRepository(db);
+
+const readTimestamp = async (filePath: string): Promise<string | null> => {
+  const file = Bun.file(filePath);
+  if (!(await file.exists())) return null;
+  const text = (await file.text()).trim();
+  return text || null;
+};
+
+const homeRepository = new HomeRepository(sessionRepository, analyticsRepository, {
+  fetchLastMigrationTimestamp: () => {
+    try {
+      return (
+        db
+          .query<{ value: string }, []>(
+            `SELECT value FROM _migration_info WHERE key = 'last_migration'`,
+          )
+          .get()?.value ?? null
+      );
+    } catch {
+      return null;
+    }
+  },
+  fetchLastScraperRunAt: () => readTimestamp(getLastScraperRunAtPath()),
+  fetchLastMigratorRunAt: () => readTimestamp(getLastMigratorRunAtPath()),
+});
 
 const gitHash = (() => {
   try {
@@ -131,6 +162,7 @@ const baseApiRoutes = {
   ...cache.wrapRoutes(createPersonRoutes(personRepository)),
   ...cache.wrapRoutes(createVotingRoutes(votingRepository)),
   ...cache.wrapRoutes(createSessionRoutes(sessionRepository)),
+  ...cache.wrapRoutes(createHomeRoutes(homeRepository)),
   ...cache.wrapRoutes(createInsightAnalyticsRoutes(analyticsRepository)),
   ...cache.wrapRoutes(createPartyRoutes(analyticsRepository)),
   ...cache.wrapRoutes(createDocumentRoutes(documentRepository)),
