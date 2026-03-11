@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.1-alpha.8] — 2026-03-11
+
+### Features
+- add votings reference (70c5b64)
+- add attendance metrics (5b1e625)
+- improve mobile UI (5d79341)
+
+### Bug Fixes
+- improve minor ui issues (0db2afa)
+- address data correctness issues (9e6371d)
+- properly show votings ratio (2d77222)
+
+### Other
+- tests: fix and expand test coverage (86733aa)
+- security: reinforce potential security gaps (83a73c9)
+- performance(server): optimise db queries (07c9ee6)
+- docs: analyze project issues (454a7e3)
+
 ## [1.0.1-alpha.7] — 2026-03-10
 
 ### Features
