@@ -15,7 +15,8 @@
       "lastMigratorRunAt": "Tietojen tuonti suoritettu: {{timestamp}}"
     },
     "changesCount": "{{count}} muutosta viime päivityksessä",
-    "noChanges": "Ei muutoksia viime päivityksessä"
+    "noChanges": "Ei muutoksia viime päivityksessä",
+    "skipToContent": "Siirry sisältöön"
   },
   "navigation": {
     "openMenu": "Avaa valikko",
@@ -36,14 +37,25 @@
   "home": {
     "title": "Etusivu",
     "subtitle": "Reaaliaikainen katsaus Suomen eduskunnan toimintaan",
-    "eyebrow": "Yleiskatsaus",
-    "heroTitle": "Yhdellä silmäyksellä, mitä eduskunnassa tapahtuu juuri nyt.",
+    "eyebrow": "Etusivun näkymä",
+    "heroTitle": "Eduskunta juuri nyt",
     "heroDescription": "Etusivu nostaa esiin viimeisimmän istuntopäivän, voimasuhteet, aktiivisuuden ja tutkittavat signaalit ilman erillisten näkymien avaamista.",
     "heroAsOf": "Tilannepäivä",
     "heroLatestSession": "Viimeisin istunto",
     "heroGovernment": "Rajaus",
     "heroParties": "Puolueita",
     "allGovernments": "Kaikki hallituskaudet",
+    "heroSummaryTitle": "Eduskunnan kokoonpano",
+    "heroBalanceLabel": "Hallitus ja oppositio",
+    "heroSummaryDescription": "{{count}} puoluetta nykyisessä kokoonpanossa.",
+    "heroCloseVote": "Tiukin äänestys",
+    "heroVoteMarginUnit": "äänen ero",
+    "heroSpeechLeader": "Puheenvuoroissa aktiivisin",
+    "heroSpeechLeaderDetail_one": "{{party}} | {{count}} puheenvuoro",
+    "heroSpeechLeaderDetail_other": "{{party}} | {{count}} puheenvuoroa",
+    "heroFreshnessLabel": "Tietokanta päivitetty",
+    "heroNoSessionTitle": "Ei istuntoa tällä rajauksella",
+    "heroNoSessionDescription": "Nykyisellä rajauksella ei löytynyt viimeisintä istuntoa etusivulle.",
     "freshnessTitle": "Datan ajantasaisuus",
     "freshnessDb": "Tietokanta päivitetty",
     "freshnessScraper": "Rajapinnat tarkistettu",
@@ -109,6 +121,9 @@
   "parties": {
     "title": "Puolueet",
     "subtitle": "Eduskuntapuolueiden profiilit ja tilastot",
+    "eyebrow": "Puolueiden näkymä",
+    "summaryCurrent": "Puoluevertailu näyttää nykyisen aktiivisen eduskuntakokoonpanon.",
+    "summaryGovernment": "Puoluevertailu on rajattu hallituskauteen {{period}}.",
     "members": "Jäsentä",
     "government": "Hallitus",
     "opposition": "Oppositio",
@@ -191,6 +206,9 @@
   "documents": {
     "title": "Asiakirjat",
     "subtitle": "Selaa eduskunnan asiakirjoja",
+    "eyebrow": "Asiakirjojen näkymä",
+    "summaryType": "Selaat tyypin {{value}} asiakirjoja.",
+    "summaryTypePeriod": "Selaat tyypin {{value}} asiakirjoja hallituskaudelta {{period}}.",
     "heroSummary_one": "{{count}} asiakirja haussa",
     "heroSummary_other": "{{count}} asiakirjaa haussa",
     "filtersTitle": "Rajaa ja etsi",
@@ -375,6 +393,9 @@
   "hallitukset": {
     "title": "Hallitukset",
     "subtitle": "Nykyinen hallitus nopeasti nähtävissä, aiemmat hallitukset helposti selattavissa.",
+    "eyebrow": "Hallitusten näkymä",
+    "summaryCurrent": "Tarkastelet nykyistä hallitusta päivällä {{value}}.",
+    "summaryHistorical": "Tarkastelet ajankohdan {{value}} hallitusta.",
     "current": "Nykyinen hallitus",
     "selectedGovernment": "Valittu hallitus",
     "past": "Entinen hallitus",
@@ -425,6 +446,10 @@
   "composition": {
     "title": "Eduskunnan kokoonpano",
     "subtitle": "Nykyinen kokoonpano, historiallinen aikajana ja kaikki edustajat samassa työtilassa",
+    "eyebrow": "Kokoonpanon näkymä",
+    "summaryCurrent": "Tarkastelet nykyistä eduskuntakokoonpanoa päivällä {{value}}.",
+    "summaryHistorical": "Tarkastelet historiallista kokoonpanoa päivällä {{value}}.",
+    "summaryGovernment": "Tarkastelet hallituskauden {{period}} kokoonpanoa päivällä {{value}}.",
     "noResults": "Ei edustajia näillä suodattimilla.",
     "noResultsHint": "Kokeile laajentaa suodatusta nähdäksesi tuloksia.",
     "resetFilters": "Tyhjennä suodattimet",
@@ -673,7 +698,11 @@
   "votings": {
     "title": "Eduskunnan äänestykset",
     "subtitle": "Etsi ja selaa eduskunnan äänestystietoja",
-    "eyebrow": "Tiiviisti ryhmitelty selaus",
+    "eyebrow": "Äänestysten näkymä",
+    "summaryOverview": "Selaat äänestysten yleiskuvaa nykyisellä rajauksella.",
+    "summaryFiltered": "Tulokset on rajattu valitun vaiheen ja istunnon perusteella.",
+    "summarySearch_one": "Hakusi näyttää {{count}} äänestystuloksen.",
+    "summarySearch_other": "Hakusi näyttää {{count}} äänestystulosta.",
     "search": "Hae äänestyksiä otsikolla",
     "searchPlaceholder": "Kirjoita vähintään 3 merkkiä...",
     "searchHelp": "Haku kohdistuu otsikoihin ja tukee analyysiä suoraan tulosjoukosta.",
@@ -760,6 +789,8 @@
   "sessions": {
     "title": "Istunnot",
     "subtitle": "Selaa eduskunnan täysistuntoja",
+    "eyebrow": "Istuntojen näkymä",
+    "summary": "Näytät päivän {{date}} täysistunnot näkymässä {{view}}.",
     "session": "Istunto",
     "speeches": "Puheenvuorot",
     "noSpeeches": "Ei puheenvuoroja",
@@ -871,6 +902,8 @@
   "insights": {
     "title": "Eduskunnan analytiikka",
     "subtitle": "Syvällisiä näkemyksiä eduskunnan toiminnasta",
+    "eyebrow": "Analytiikan näkymä",
+    "summary": "Valitse analyysinäkymä puolueista, äänestyksistä, puheenvuoroista tai pitkän aikavälin kehityksestä.",
     "cards": {
       "timeSeriesStats": {
         "title": "Tilastot ajassa",

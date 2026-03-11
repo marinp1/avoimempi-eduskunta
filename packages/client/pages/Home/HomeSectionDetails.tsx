@@ -13,6 +13,10 @@ import {
 } from "@mui/material";
 import { DocumentCard, RelatedVotings } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
+import {
+  MinutesContentBlock,
+  type MinutesContentReferenceChip,
+} from "#client/components/MinutesContentBlock";
 import { SourceText } from "#client/components/SourceText";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { useScopedTranslation } from "#client/i18n/scoped";
@@ -821,78 +825,32 @@ const renderSectionMinutesContent = (
       .map((value) => normalize(value))
       .filter((value): value is string => value !== null),
   );
+  const minutesReferences: MinutesContentReferenceChip[] = references
+    .filter((reference): reference is MinutesContentReference & { code: string } =>
+      Boolean(reference.code),
+    )
+    .map((reference) => {
+      const migratedAsRollCall =
+        isRollCallSection(section) &&
+        knownRollCallIdentifiers.has(normalize(reference.code) || "");
+
+      return {
+        code: reference.code,
+        href: buildValtiopaivaAsiakirjaUrl(reference.code),
+        tooltipTitle: migratedAsRollCall
+          ? tSessions("minutesReferenceMigratedRollCall")
+          : tSessions("minutesReferenceNotMigrated"),
+        migratedAsRollCall,
+      };
+    });
 
   return (
-    <Box
-      sx={{ mt: 1.5, pl: 2, borderLeft: `3px solid ${colors.primaryLight}36` }}
-    >
-      <SectionInfoTitle>{tSessions("minutesContent")}</SectionInfoTitle>
-      {parsed.narrativeBlocks.map((block, index) => (
-        <Typography
-          key={`${section.key}-minutes-${index}`}
-          sx={{
-            fontSize: "0.8125rem",
-            color: colors.textPrimary,
-            whiteSpace: "pre-wrap",
-            lineHeight: 1.6,
-            mt: index === 0 ? 0.5 : 1,
-          }}
-        >
-          {block}
-        </Typography>
-      ))}
-      {references.length > 0 && (
-        <Box sx={{ mt: 1, display: "flex", gap: 0.75, flexWrap: "wrap" }}>
-          {references.map((reference, index) => {
-            if (!reference.code) return null;
-            const href = buildValtiopaivaAsiakirjaUrl(reference.code);
-            const migratedAsRollCall =
-              isRollCallSection(section) &&
-              knownRollCallIdentifiers.has(normalize(reference.code) || "");
-
-            return (
-              <Tooltip
-                key={`${reference.code}-${index}`}
-                title={
-                  migratedAsRollCall
-                    ? tSessions("minutesReferenceMigratedRollCall")
-                    : tSessions("minutesReferenceNotMigrated")
-                }
-              >
-                <span>
-                  {href ? (
-                    <EduskuntaSourceLink href={href} showExternalIcon={false}>
-                      <Chip
-                        label={reference.code}
-                        size="small"
-                        icon={
-                          <OpenInNewIcon sx={{ fontSize: "12px !important" }} />
-                        }
-                        sx={{
-                          ...commonStyles.compactChipSm,
-                          color: migratedAsRollCall
-                            ? successColor
-                            : colors.primaryLight,
-                          background: migratedAsRollCall
-                            ? `${successColor}12`
-                            : `${colors.primaryLight}12`,
-                        }}
-                      />
-                    </EduskuntaSourceLink>
-                  ) : (
-                    <Chip
-                      label={reference.code}
-                      size="small"
-                      sx={{ ...commonStyles.compactChipSm }}
-                    />
-                  )}
-                </span>
-              </Tooltip>
-            );
-          })}
-        </Box>
-      )}
-    </Box>
+    <MinutesContentBlock
+      title={tSessions("minutesContent")}
+      narrativeBlocks={parsed.narrativeBlocks}
+      references={minutesReferences}
+      successColor={successColor}
+    />
   );
 };
 

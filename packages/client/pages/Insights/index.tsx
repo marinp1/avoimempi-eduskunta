@@ -10,6 +10,7 @@ import {
   Box,
   CardActionArea,
   CardContent,
+  Chip,
   Drawer,
   Grid,
   Typography,
@@ -164,9 +165,21 @@ export default () => {
 
   return (
     <Box>
-      <PageHeader title={t("title")} subtitle={t("subtitle")} />
+      <PageHeader
+        title={t("title")}
+        summary={t("summary")}
+        mobileMode="compact"
+        mobileAnchorId="insights-content"
+        mobileSummary={
+          <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+            <Chip size="small" label="Äänestykset" sx={{ fontWeight: 700 }} />
+            <Chip size="small" label="Puolueet" sx={{ fontWeight: 700 }} />
+            <Chip size="small" label="Puheenvuorot" sx={{ fontWeight: 700 }} />
+          </Box>
+        }
+      />
 
-      <Grid container spacing={spacing.sm}>
+      <Grid container spacing={spacing.sm} id="insights-content">
         {cards.map((card) => (
           <Grid key={card.key} size={{ xs: 12, sm: 6, lg: 4 }}>
             <DataCard sx={{ height: "100%", p: 0 }}>

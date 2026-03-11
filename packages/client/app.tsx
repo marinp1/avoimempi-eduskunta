@@ -166,8 +166,8 @@ export const App: React.FC = () => {
         <Container
           maxWidth="xl"
           sx={{
-            mt: { xs: 2, sm: spacing.md },
-            px: { xs: 1.5, sm: 3 },
+            mt: { xs: 0, sm: spacing.md },
+            px: { xs: 0, sm: 3 },
             pb: { xs: 10, lg: spacing.xl },
           }}
         >

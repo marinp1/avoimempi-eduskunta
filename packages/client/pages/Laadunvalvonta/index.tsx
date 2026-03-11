@@ -24,6 +24,7 @@ import {
   MenuItem,
   Paper,
   Select,
+  Skeleton,
   Table,
   TableBody,
   TableCell,
@@ -35,7 +36,7 @@ import {
   Typography,
 } from "@mui/material";
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { sanityChecksEnabled } from "#client/dev-constraints";
 import { PageIntro } from "#client/theme/components";
 import { apiFetch } from "#client/utils/fetch";
@@ -79,6 +80,12 @@ interface Progress {
   current: number;
   total: number;
   checkName: string;
+}
+
+interface LastRunPayload {
+  checks: SanityCheckResult[];
+  ranAt: string;
+  orphanedResolutions: OrphanedResolution[];
 }
 
 // Server WebSocket message shapes
@@ -552,35 +559,104 @@ const OrphanedResolutions: React.FC<{
   );
 };
 
+const LoadingChecksPlaceholder: React.FC = () => (
+  <Box sx={{ display: "flex", flexDirection: "column", gap: spacing.lg }}>
+    {Array.from({ length: 3 }).map((_, categoryIndex) => (
+      <Box key={`placeholder-category-${categoryIndex}`}>
+        <Skeleton
+          variant="text"
+          width={180}
+          height={32}
+          sx={{ mb: 1.5, transform: "none" }}
+        />
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          {Array.from({ length: 4 }).map((__, rowIndex) => (
+            <Paper
+              key={`placeholder-row-${categoryIndex}-${rowIndex}`}
+              variant="outlined"
+              sx={{ p: 2, borderColor: colors.dataBorder }}
+            >
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1 }}
+              >
+                <Skeleton variant="circular" width={18} height={18} />
+                <Skeleton
+                  variant="text"
+                  width={`${48 + rowIndex * 9}%`}
+                  height={24}
+                  sx={{ transform: "none" }}
+                />
+              </Box>
+              <Skeleton
+                variant="text"
+                width={`${70 + rowIndex * 5}%`}
+                height={20}
+                sx={{ transform: "none" }}
+              />
+            </Paper>
+          ))}
+        </Box>
+      </Box>
+    ))}
+  </Box>
+);
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function Laadunvalvonta() {
   const [running, setRunning] = useState(false);
+  const [loadingLastRun, setLoadingLastRun] = useState(true);
+  const [lastRunLoadError, setLastRunLoadError] = useState<string | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [checks, setChecks] = useState<SanityCheckResult[]>([]);
   const [ranAt, setRanAt] = useState<string | null>(null);
   const [orphans, setOrphans] = useState<OrphanedResolution[]>([]);
   const [runError, setRunError] = useState<string | null>(null);
+  const lastRunRequestRef = useRef(0);
 
-  useEffect(() => {
-    apiFetch("/api/sanity/last-run")
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data) return;
-        const run = data as {
-          checks: SanityCheckResult[];
-          ranAt: string;
-          orphanedResolutions: OrphanedResolution[];
-        };
-        setChecks(run.checks);
-        setRanAt(run.ranAt);
-        setOrphans(run.orphanedResolutions);
-      })
-      .catch(() => {});
+  const loadLastRun = useCallback(async () => {
+    const requestId = ++lastRunRequestRef.current;
+    setLoadingLastRun(true);
+    setLastRunLoadError(null);
+
+    try {
+      const response = await apiFetch("/api/sanity/last-run");
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = (await response.json()) as LastRunPayload | null;
+      if (lastRunRequestRef.current !== requestId) return;
+
+      if (!data) {
+        setChecks([]);
+        setRanAt(null);
+        setOrphans([]);
+        return;
+      }
+
+      setChecks(data.checks);
+      setRanAt(data.ranAt);
+      setOrphans(data.orphanedResolutions);
+    } catch {
+      if (lastRunRequestRef.current !== requestId) return;
+      setLastRunLoadError("Viimeisimmän tarkistusajon lataaminen epäonnistui.");
+    } finally {
+      if (lastRunRequestRef.current === requestId) {
+        setLoadingLastRun(false);
+      }
+    }
   }, []);
 
+  useEffect(() => {
+    void loadLastRun();
+  }, [loadLastRun]);
+
   const runChecks = () => {
+    lastRunRequestRef.current += 1;
     setRunning(true);
+    setLoadingLastRun(false);
+    setLastRunLoadError(null);
     setProgress(null);
     setChecks([]);
     setRanAt(null);
@@ -679,9 +755,7 @@ export default function Laadunvalvonta() {
     <Box>
       <PageIntro
         title="Laadunvalvonta"
-        subtitle="Tietokannasta suoritettavat tarkistukset datan laadun varmistamiseksi. Hylätty tarkistus voi johtua koodivirheestä tai lähdedatan ongelmasta."
-        eyebrow="Tietolaatu"
-        icon={<BugReport sx={{ fontSize: 22 }} />}
+        summary="Tarkistukset näyttävät tietokannan laatuongelmat ja niiden käsittelytilan."
         actions={
           sanityChecksEnabled ? (
             <Button
@@ -700,6 +774,30 @@ export default function Laadunvalvonta() {
         <Alert severity="info" sx={{ mb: spacing.md }}>
           Tuotannossa tarkistusten tulokset ovat vain luku -tilassa.
         </Alert>
+      )}
+
+      {loadingLastRun && !running && (
+        <Paper
+          variant="outlined"
+          sx={{
+            mb: spacing.md,
+            p: 2,
+            borderColor: colors.dataBorder,
+            background: colors.backgroundPaper,
+          }}
+        >
+          <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.75 }}>
+            Ladataan viimeisintä tarkistusajoa...
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{ color: colors.textSecondary, mb: 1.5 }}
+          >
+            Haetaan aiemmin tallennetut tulokset ennen uusien tarkistusten
+            käynnistämistä.
+          </Typography>
+          <LinearProgress />
+        </Paper>
       )}
 
       {/* Progress bar */}
@@ -726,6 +824,20 @@ export default function Laadunvalvonta() {
             }
           />
         </Box>
+      )}
+
+      {lastRunLoadError && !running && (
+        <Alert
+          severity="error"
+          sx={{ mb: spacing.md }}
+          action={
+            <Button color="inherit" size="small" onClick={() => void loadLastRun()}>
+              Yritä uudelleen
+            </Button>
+          }
+        >
+          {lastRunLoadError}
+        </Alert>
       )}
 
       {runError && (
@@ -767,6 +879,10 @@ export default function Laadunvalvonta() {
         </Box>
       )}
 
+      {loadingLastRun && !running && checks.length === 0 && (
+        <LoadingChecksPlaceholder />
+      )}
+
       {/* Check results — rendered incrementally as they arrive */}
       {grouped.map(({ category, checks: catChecks }) => (
         <Box key={category} sx={{ mb: spacing.lg }}>
@@ -793,7 +909,12 @@ export default function Laadunvalvonta() {
         onDelete={deleteOrphan}
       />
 
-      {!hasResults && !running && !runError && (
+      {!hasResults &&
+        !running &&
+        !loadingLastRun &&
+        !runError &&
+        !lastRunLoadError &&
+        !ranAt && (
         <Box
           sx={{
             mt: spacing.xl,

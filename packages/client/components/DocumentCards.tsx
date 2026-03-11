@@ -167,7 +167,7 @@ const ExpandableSnippet: React.FC<{
   maxLength?: number;
 }> = ({ label, text, maxLength = 280 }) => {
   const { t } = useScopedTranslation("common");
-  const { replaceDrawer } = useOverlayDrawer();
+  const { openDrawer } = useOverlayDrawer();
   const normalized = normalizeSnippet(text);
 
   if (!normalized) return null;
@@ -187,7 +187,7 @@ const ExpandableSnippet: React.FC<{
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            replaceDrawer({
+            openDrawer({
               drawerKey: `snippet:${label}`,
               title: label,
               content: <DrawerTextContent label={label} text={normalized} />,
@@ -212,7 +212,7 @@ const ExpandableRichSnippet: React.FC<{
   maxLength?: number;
 }> = ({ label, text, richText, maxLength = 280 }) => {
   const { t } = useScopedTranslation("common");
-  const { replaceDrawer } = useOverlayDrawer();
+  const { openDrawer } = useOverlayDrawer();
   const normalized = normalizeSnippet(text);
 
   if (!normalized && !richText) return null;
@@ -235,7 +235,7 @@ const ExpandableRichSnippet: React.FC<{
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            replaceDrawer({
+            openDrawer({
               drawerKey: `snippet:${label}`,
               title: label,
               content: (
@@ -941,7 +941,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const { replaceDrawer } = useOverlayDrawer();
+  const { openDrawer } = useOverlayDrawer();
 
   type VotingSummary = {
     id: number;
@@ -1069,7 +1069,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
               <Button
                 size="small"
                 onClick={() => {
-                  replaceDrawer({
+                  openDrawer({
                     drawerKey: `related-voting:${v.id}`,
                     title: tDocuments("relatedVotings"),
                     subtitle:

@@ -305,8 +305,35 @@ const Parties = () => {
     <Box>
       <PageIntro
         title={tParties("title")}
-        subtitle={tParties("subtitle")}
-        icon={<GroupsIcon sx={{ fontSize: 22 }} />}
+        summary={
+          selectedHallituskausi
+            ? tParties("summaryGovernment", {
+                period: selectedHallituskausi.label,
+              })
+            : tParties("summaryCurrent")
+        }
+        mobileMode="compact"
+        mobileAnchorId="parties-content"
+        mobileStatsPlacement="hidden"
+        mobileSummary={
+          <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+              <Chip
+                size="small"
+                label={`${tParties("totalParties")}: ${parties.length}`}
+                sx={{ fontWeight: 700 }}
+              />
+              <Chip
+                size="small"
+                label={`${tParties("totalMembers")}: ${summary.totalMembers}`}
+                sx={{ fontWeight: 700 }}
+              />
+              <Chip
+                size="small"
+                label={`${summary.governmentParties} / ${summary.oppositionParties}`}
+                sx={{ fontWeight: 700 }}
+              />
+          </Box>
+        }
         chips={
           selectedHallituskausi ? (
             <Chip
@@ -367,7 +394,8 @@ const Parties = () => {
         }
       />
 
-      <Grid container spacing={spacing.md} sx={{ mb: spacing.md }}>
+      <Box id="parties-content">
+        <Grid container spacing={spacing.md} sx={{ mb: spacing.md }}>
         <Grid size={{ xs: 12, md: 4 }}>
           <HighlightCard
             title={tParties("highlights.largestParty")}
@@ -619,6 +647,7 @@ const Parties = () => {
             icon={<InsightsIcon fontSize="inherit" />}
           />
         )}
+        </Box>
       </Box>
     </Box>
   );
