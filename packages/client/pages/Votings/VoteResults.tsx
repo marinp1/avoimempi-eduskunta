@@ -1,144 +1,236 @@
+import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
+import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
+import FlashOnOutlinedIcon from "@mui/icons-material/FlashOnOutlined";
+import HowToVoteOutlinedIcon from "@mui/icons-material/HowToVoteOutlined";
 import {
   Alert,
   Box,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
+  Button,
+  Chip,
   Stack,
   Typography,
 } from "@mui/material";
 import React from "react";
-import { extractDocumentIdentifiers } from "#client/components/DocumentCards";
-import {
-  VotingCard,
-  type VotingCardData,
-  VotingGroupCard,
-} from "#client/components/VotingCard";
 import {
   isDateWithinHallituskausi,
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { commonStyles } from "#client/theme";
-import { DataCard, EmptyState, InlineSpinner } from "#client/theme/components";
+import { DataCard, EmptyState, InlineSpinner, MetricCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
+import {
+  groupVotingRows,
+  isCloseVote,
+  type VotingListRow,
+} from "./model";
+import { VotingsControlBar } from "./components/VotingsControlBar";
+import { VotingsResultsSummary } from "./components/VotingsResultsSummary";
+import type { VotingSortMode } from "./url-state";
+import { VotingCard, type VotingCardData, VotingGroupCard } from "#client/components/VotingCard";
 
-type SortMode = "newest" | "oldest" | "closest" | "largest";
-type VotingSearchRow = DatabaseQueries.VotingSearchResult;
-
-type SearchState = {
+type BrowseState = {
   loading: boolean;
   error: string | null;
-  rows: VotingSearchRow[];
+  rows: VotingListRow[];
 };
 
 type FocusVotingState = {
   loading: boolean;
   error: string | null;
-  row: VotingSearchRow | null;
+  row: VotingListRow | null;
 };
 
-type RecentState = {
+type VotingOverviewResponse = ApiRouteResponse<`/api/votings/overview`>;
+
+type OverviewState = {
   loading: boolean;
-  rows: VotingSearchRow[];
+  error: string | null;
+  data: VotingOverviewResponse | null;
 };
 
-const emptyState: SearchState = { loading: false, error: null, rows: [] };
+const emptyBrowseState: BrowseState = { loading: false, error: null, rows: [] };
 const emptyFocusState: FocusVotingState = {
   loading: false,
   error: null,
   row: null,
 };
-const emptyRecentState: RecentState = { loading: false, rows: [] };
-
-const voteMargin = (vote: VotingSearchRow) => Math.abs(vote.n_yes - vote.n_no);
-
-const sortRows = (rows: VotingSearchRow[], sortMode: SortMode) => {
-  const copy = [...rows];
-  switch (sortMode) {
-    case "oldest":
-      return copy.sort((a, b) =>
-        (a.start_time ?? "").localeCompare(b.start_time ?? ""),
-      );
-    case "closest":
-      return copy.sort((a, b) => voteMargin(a) - voteMargin(b));
-    case "largest":
-      return copy.sort((a, b) => b.n_total - a.n_total);
-    default:
-      return copy.sort((a, b) =>
-        (b.start_time ?? "").localeCompare(a.start_time ?? ""),
-      );
-  }
+const emptyOverviewState: OverviewState = {
+  loading: false,
+  error: null,
+  data: null,
 };
 
-/** Get the primary document identifier for grouping (e.g. "HE 45/2024 vp") */
-const getDocumentGroupKey = (vote: VotingSearchRow): string | null => {
-  const docRefs = extractDocumentIdentifiers([
-    vote.parliamentary_item,
-    vote.section_title,
-    vote.main_section_title,
-    vote.agenda_title,
-  ]);
-  return docRefs.length > 0 ? docRefs[0].identifier : null;
+const renderGroups = (groups: VotingListRow[][]) =>
+  groups.map((group) =>
+    group.length === 1 ? (
+      <VotingCard key={group[0].id} voting={group[0] as VotingCardData} />
+    ) : (
+      <VotingGroupCard
+        key={group.map((vote) => vote.id).join("-")}
+        votes={group as VotingCardData[]}
+      />
+    ),
+  );
+
+const OverviewSection: React.FC<{
+  title: string;
+  description: string;
+  rows: VotingListRow[];
+}> = ({ title, description, rows }) => {
+  const groupedRows = React.useMemo(() => groupVotingRows(rows), [rows]);
+
+  return (
+    <DataCard sx={{ p: { xs: 2, sm: 2.5 } }}>
+      <Stack spacing={1.5}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: { xs: "flex-start", sm: "center" },
+            flexDirection: { xs: "column", sm: "row" },
+            gap: 1,
+          }}
+        >
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              {title}
+            </Typography>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              {description}
+            </Typography>
+          </Box>
+          <Chip
+            size="small"
+            label={rows.length}
+            sx={{ fontWeight: 700, alignSelf: { xs: "flex-start", sm: "auto" } }}
+          />
+        </Box>
+        {groupedRows.length === 0 ? (
+          <EmptyState title={title} description={description} />
+        ) : (
+          <Stack spacing={1.25}>{renderGroups(groupedRows)}</Stack>
+        )}
+      </Stack>
+    </DataCard>
+  );
 };
 
 export const VoteResults: React.FC<{
   query: string;
+  searchValue: string;
   focusVotingId?: number | null;
-  initialSessionFilter?: string | null;
-}> = ({ query, focusVotingId, initialSessionFilter }) => {
+  sessionFilter: string;
+  phaseFilter: string;
+  sortMode: VotingSortMode;
+  onSearchChange: (value: string) => void;
+  onSessionFilterChange: (value: string) => void;
+  onPhaseFilterChange: (value: string) => void;
+  onSortModeChange: (value: VotingSortMode) => void;
+  onFocusVotingChange: (value: number | null) => void;
+  onClearFilters: () => void;
+}> = ({
+  query,
+  searchValue,
+  focusVotingId,
+  sessionFilter,
+  phaseFilter,
+  sortMode,
+  onSearchChange,
+  onSessionFilterChange,
+  onPhaseFilterChange,
+  onSortModeChange,
+  onFocusVotingChange,
+  onClearFilters,
+}) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tErrors } = useScopedTranslation("errors");
   const { t: tVotings } = useScopedTranslation("votings");
   const { selectedHallituskausi } = useHallituskausi();
   const themedColors = useThemedColors();
 
-  const [state, setState] = React.useState<SearchState>(emptyState);
+  const [browseState, setBrowseState] =
+    React.useState<BrowseState>(emptyBrowseState);
   const [focusVoting, setFocusVoting] =
     React.useState<FocusVotingState>(emptyFocusState);
-  const [recentState, setRecentState] =
-    React.useState<RecentState>(emptyRecentState);
-  const [phaseFilter, setPhaseFilter] = React.useState<string>("all");
-  const [sessionFilter, setSessionFilter] = React.useState<string>(
-    initialSessionFilter || "all",
-  );
-  const [sortMode, setSortMode] = React.useState<SortMode>("newest");
+  const [overviewState, setOverviewState] =
+    React.useState<OverviewState>(emptyOverviewState);
 
   const normalizedQuery = query.trim();
+  const hasEnoughQuery = normalizedQuery.length >= 3;
+  const filtersActive = phaseFilter !== "all" || sessionFilter !== "all";
+  const isOverviewMode = !hasEnoughQuery && !filtersActive && !focusVotingId;
 
   React.useEffect(() => {
-    setSessionFilter(initialSessionFilter || "all");
-  }, [initialSessionFilter]);
-
-  React.useEffect(() => {
-    if (!normalizedQuery || normalizedQuery.length < 3) {
-      setState(emptyState);
+    if (!isOverviewMode) {
+      setOverviewState(emptyOverviewState);
       return;
     }
 
     const ac = new AbortController();
 
     const run = async () => {
-      setState((prev) => ({ ...prev, loading: true, error: null }));
+      setOverviewState({ loading: true, error: null, data: null });
       try {
-        const params = new URLSearchParams({ q: normalizedQuery });
+        const params = new URLSearchParams();
         if (selectedHallituskausi) {
           params.set("startDate", selectedHallituskausi.startDate);
           if (selectedHallituskausi.endDate) {
             params.set("endDate", selectedHallituskausi.endDate);
           }
         }
-        const res = await apiFetch(`/api/votings/search?${params.toString()}`, {
+        const url =
+          `/api/votings/overview${params.toString() ? `?${params.toString()}` : ""}` as `/api/votings/overview?${string}` | "/api/votings/overview";
+        const res = await apiFetch(url, { signal: ac.signal });
+        if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+        const data = await res.json();
+        setOverviewState({ loading: false, error: null, data });
+      } catch (error) {
+        if (ac.signal.aborted) return;
+        setOverviewState({
+          loading: false,
+          error:
+            error instanceof Error ? error.message : tErrors("unknownError"),
+          data: null,
+        });
+      }
+    };
+
+    run();
+    return () => ac.abort();
+  }, [isOverviewMode, selectedHallituskausi, tErrors]);
+
+  React.useEffect(() => {
+    if (isOverviewMode) {
+      setBrowseState(emptyBrowseState);
+      return;
+    }
+
+    const ac = new AbortController();
+
+    const run = async () => {
+      setBrowseState((prev) => ({ ...prev, loading: true, error: null }));
+      try {
+        const params = new URLSearchParams();
+        if (hasEnoughQuery) params.set("q", normalizedQuery);
+        if (phaseFilter !== "all") params.set("phase", phaseFilter);
+        if (sessionFilter !== "all") params.set("session", sessionFilter);
+        params.set("sort", sortMode);
+        if (selectedHallituskausi) {
+          params.set("startDate", selectedHallituskausi.startDate);
+          if (selectedHallituskausi.endDate) {
+            params.set("endDate", selectedHallituskausi.endDate);
+          }
+        }
+        const res = await apiFetch(`/api/votings/browse?${params.toString()}`, {
           signal: ac.signal,
         });
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
         const rows = await res.json();
-        setState({ loading: false, error: null, rows });
+        setBrowseState({ loading: false, error: null, rows });
       } catch (error) {
         if (ac.signal.aborted) return;
-        setState({
+        setBrowseState({
           loading: false,
           error:
             error instanceof Error ? error.message : tErrors("unknownError"),
@@ -149,7 +241,16 @@ export const VoteResults: React.FC<{
 
     run();
     return () => ac.abort();
-  }, [normalizedQuery, selectedHallituskausi, tErrors]);
+  }, [
+    hasEnoughQuery,
+    isOverviewMode,
+    normalizedQuery,
+    phaseFilter,
+    selectedHallituskausi,
+    sessionFilter,
+    sortMode,
+    tErrors,
+  ]);
 
   React.useEffect(() => {
     if (!focusVotingId) {
@@ -194,271 +295,391 @@ export const VoteResults: React.FC<{
   }, [focusVotingId, tCommon, tErrors]);
 
   const combinedRows = React.useMemo(() => {
-    const rows = [...state.rows];
-    if (
-      focusVoting.row &&
-      !rows.some((row) => row.id === focusVoting.row?.id)
-    ) {
+    const rows = [...browseState.rows];
+    if (focusVoting.row && !rows.some((row) => row.id === focusVoting.row?.id)) {
       rows.unshift(focusVoting.row);
     }
-    return rows;
-  }, [state.rows, focusVoting.row]);
-
-  const phases = React.useMemo(
-    () =>
-      Array.from(
-        new Set(combinedRows.map((row) => row.section_processing_phase)),
-      ).sort(),
-    [combinedRows],
-  );
-
-  const sessions = React.useMemo(
-    () =>
-      Array.from(new Set(combinedRows.map((row) => row.session_key)))
-        .sort()
-        .reverse(),
-    [combinedRows],
-  );
-
-  const filtered = React.useMemo(() => {
-    const rows = combinedRows.filter((row) => {
-      if (
-        selectedHallituskausi &&
-        !isDateWithinHallituskausi(row.start_time ?? "", selectedHallituskausi)
-      )
-        return false;
-      if (phaseFilter !== "all" && row.section_processing_phase !== phaseFilter)
-        return false;
-      if (sessionFilter !== "all" && row.session_key !== sessionFilter)
-        return false;
-      return true;
+    return rows.filter((row) => {
+      if (!selectedHallituskausi) return true;
+      return isDateWithinHallituskausi(row.start_time ?? "", selectedHallituskausi);
     });
-    return sortRows(rows, sortMode);
+  }, [browseState.rows, focusVoting.row, selectedHallituskausi]);
+
+  const groupedResults = React.useMemo(
+    () => groupVotingRows(combinedRows),
+    [combinedRows],
+  );
+
+  const phaseOptions = React.useMemo(() => {
+    if (isOverviewMode) {
+      return overviewState.data?.facets.phases ?? [];
+    }
+
+    return Array.from(
+      new Set(combinedRows.map((row) => row.section_processing_phase).filter(Boolean)),
+    )
+      .sort((a, b) => a.localeCompare(b))
+      .map((value) => ({ value }));
+  }, [combinedRows, isOverviewMode, overviewState.data?.facets.phases]);
+
+  const sessionOptions = React.useMemo(() => {
+    if (isOverviewMode) {
+      return overviewState.data?.facets.sessions ?? [];
+    }
+
+    return Array.from(
+      new Set(combinedRows.map((row) => row.session_key).filter(Boolean)),
+    )
+      .sort()
+      .reverse()
+      .map((value) => ({ value }));
+  }, [combinedRows, isOverviewMode, overviewState.data?.facets.sessions]);
+
+  const activeFilters = React.useMemo(
+    () =>
+      [
+        phaseFilter !== "all"
+          ? {
+              key: "phase",
+              label: `${tVotings("filters.phase")}: ${phaseFilter}`,
+              onDelete: () => onPhaseFilterChange("all"),
+            }
+          : null,
+        sessionFilter !== "all"
+          ? {
+              key: "session",
+              label: `${tVotings("filters.session")}: ${sessionFilter}`,
+              onDelete: () => onSessionFilterChange("all"),
+            }
+          : null,
+        focusVotingId
+          ? {
+              key: "focus",
+              label: tVotings("focusedVoting", { id: focusVotingId }),
+              onDelete: () => onFocusVotingChange(null),
+            }
+          : null,
+      ].filter(Boolean) as Array<{
+        key: string;
+        label: string;
+        onDelete: () => void;
+      }>,
+    [
+      focusVotingId,
+      onFocusVotingChange,
+      onPhaseFilterChange,
+      onSessionFilterChange,
+      phaseFilter,
+      sessionFilter,
+      tVotings,
+    ],
+  );
+
+  const searchHint = React.useMemo(() => {
+    if (searchValue.trim().length > 0 && searchValue.trim().length < 3) {
+      return tVotings("searchNeedsMore");
+    }
+    if (isOverviewMode) return tVotings("controlHints.overview");
+    if (!hasEnoughQuery && filtersActive) return tVotings("controlHints.filtersOnly");
+    return tVotings("searchHelp");
   }, [
-    combinedRows,
-    phaseFilter,
-    selectedHallituskausi,
-    sessionFilter,
-    sortMode,
+    filtersActive,
+    hasEnoughQuery,
+    isOverviewMode,
+    searchValue,
+    tVotings,
   ]);
 
-  /** Group votings by referenced document (e.g. "HE 45/2024 vp") */
-  const grouped = React.useMemo(() => {
-    const groups: VotingSearchRow[][] = [];
-    const keyToIndex = new Map<string, number>();
-
-    for (const vote of filtered) {
-      const key = getDocumentGroupKey(vote);
-      if (key) {
-        const existingIdx = keyToIndex.get(key);
-        if (existingIdx !== undefined) {
-          groups[existingIdx].push(vote);
-        } else {
-          keyToIndex.set(key, groups.length);
-          groups.push([vote]);
-        }
-      } else {
-        groups.push([vote]);
-      }
-    }
-
-    for (const group of groups) {
-      if (group.length > 1) {
-        group.sort((a, b) =>
-          (a.start_time ?? "").localeCompare(b.start_time ?? ""),
-        );
-      }
-    }
-
-    return groups;
-  }, [filtered]);
-
-  const noSearch = normalizedQuery.length < 3 && !focusVotingId;
-
-  React.useEffect(() => {
-    if (!noSearch) return;
-    const ac = new AbortController();
-    const run = async () => {
-      setRecentState({ loading: true, rows: [] });
-      try {
-        const params = new URLSearchParams();
-        if (selectedHallituskausi) {
-          params.set("startDate", selectedHallituskausi.startDate);
-          if (selectedHallituskausi.endDate)
-            params.set("endDate", selectedHallituskausi.endDate);
-        }
-        const url =
-          `/api/votings/recent${params.toString() ? `?${params.toString()}` : ""}` as `/api/votings/recent?${string}`;
-        const res = await apiFetch(url, { signal: ac.signal });
-        if (!res.ok) throw new Error(`${res.status}`);
-        const rows = await res.json();
-        setRecentState({ loading: false, rows });
-      } catch {
-        if (!ac.signal.aborted) setRecentState({ loading: false, rows: [] });
-      }
-    };
-    run();
-    return () => ac.abort();
-  }, [noSearch, selectedHallituskausi]);
-
-  const recentGrouped = React.useMemo(() => {
-    if (!noSearch) return [];
-    const groups: VotingSearchRow[][] = [];
-    const keyToIndex = new Map<string, number>();
-    for (const vote of recentState.rows) {
-      const key = getDocumentGroupKey(vote);
-      if (key) {
-        const existingIdx = keyToIndex.get(key);
-        if (existingIdx !== undefined) {
-          groups[existingIdx].push(vote);
-        } else {
-          keyToIndex.set(key, groups.length);
-          groups.push([vote]);
-        }
-      } else {
-        groups.push([vote]);
-      }
-    }
-    return groups;
-  }, [noSearch, recentState.rows]);
-
-  const renderGroups = (groups: VotingSearchRow[][]) =>
-    groups.map((group) =>
-      group.length === 1 ? (
-        <VotingCard key={group[0].id} voting={group[0] as VotingCardData} />
-      ) : (
-        <VotingGroupCard
-          key={group.map((v) => v.id).join("-")}
-          votes={group as VotingCardData[]}
-        />
-      ),
-    );
+  const loading = overviewState.loading || browseState.loading || focusVoting.loading;
+  const error = overviewState.error || browseState.error || focusVoting.error;
 
   return (
     <Box>
-      {noSearch && recentState.loading && <InlineSpinner />}
+      <VotingsControlBar
+        search={searchValue}
+        onSearchChange={onSearchChange}
+        searchHint={searchHint}
+        sessionFilter={sessionFilter}
+        phaseFilter={phaseFilter}
+        sortMode={sortMode}
+        sessionOptions={sessionOptions}
+        phaseOptions={phaseOptions}
+        onSessionFilterChange={onSessionFilterChange}
+        onPhaseFilterChange={onPhaseFilterChange}
+        onSortModeChange={onSortModeChange}
+        onClearFilters={onClearFilters}
+        showSort={!isOverviewMode}
+        activeFilters={activeFilters}
+      />
 
-      {noSearch && !recentState.loading && recentGrouped.length > 0 && (
-        <Stack spacing={1.5}>{renderGroups(recentGrouped)}</Stack>
+      {selectedHallituskausi && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          {tCommon("filteredByGovernmentPeriodLine", {
+            value: selectedHallituskausi.label,
+          })}
+        </Alert>
       )}
 
-      {!noSearch && (state.loading || focusVoting.loading) && <InlineSpinner />}
+      {loading && <InlineSpinner />}
 
-      {!noSearch &&
-        !state.loading &&
-        !focusVoting.loading &&
-        (state.error || focusVoting.error) && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {tErrors("loadFailedWithReason", {
-              reason: state.error || focusVoting.error,
-            })}
-          </Alert>
+      {!loading && error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {tErrors("loadFailedWithReason", { reason: error })}
+        </Alert>
+      )}
+
+      {!loading && !error && isOverviewMode && overviewState.data && (
+        <Stack spacing={2.5}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, minmax(0, 1fr))",
+                xl: "repeat(4, minmax(0, 1fr))",
+              },
+              gap: 1.5,
+            }}
+          >
+            <MetricCard
+              label={tVotings("overview.metrics.total")}
+              value={overviewState.data.metrics.total_votings}
+              icon={<HowToVoteOutlinedIcon />}
+            />
+            <MetricCard
+              label={tVotings("overview.metrics.close")}
+              value={overviewState.data.metrics.close_votings}
+              icon={<FlashOnOutlinedIcon />}
+            />
+            <MetricCard
+              label={tVotings("overview.metrics.latestSession")}
+              value={
+                overviewState.data.metrics.latest_session_key ??
+                tCommon("none")
+              }
+              icon={<CalendarMonthOutlinedIcon />}
+            />
+            <MetricCard
+              label={tVotings("overview.metrics.phases")}
+              value={overviewState.data.metrics.phase_count}
+              icon={<CategoryOutlinedIcon />}
+            />
+          </Box>
+
+          <DataCard sx={{ p: { xs: 2, sm: 2.5 } }}>
+            <Stack spacing={1.75}>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                  {tVotings("overview.quickFiltersTitle")}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ color: themedColors.textSecondary }}
+                >
+                  {tVotings("overview.quickFiltersDescription")}
+                </Typography>
+              </Box>
+
+              <Stack spacing={1.25}>
+                <Box>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      display: "block",
+                      color: themedColors.textTertiary,
+                      mb: 0.75,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                    }}
+                  >
+                    {tVotings("overview.facets.phase")}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+                    {overviewState.data.facets.phases.map((phase) => (
+                      <Chip
+                        key={phase.value}
+                        label={`${phase.value} (${phase.count})`}
+                        clickable
+                        onClick={() => {
+                          onPhaseFilterChange(phase.value);
+                          onFocusVotingChange(null);
+                        }}
+                        sx={{
+                          backgroundColor: `${themedColors.primary}08`,
+                          color: themedColors.primary,
+                          fontWeight: 600,
+                        }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+
+                <Box>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      display: "block",
+                      color: themedColors.textTertiary,
+                      mb: 0.75,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                    }}
+                  >
+                    {tVotings("overview.facets.session")}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+                    {overviewState.data.facets.sessions.map((session) => (
+                      <Chip
+                        key={session.value}
+                        label={`${session.value} (${session.count})`}
+                        clickable
+                        onClick={() => {
+                          onSessionFilterChange(session.value);
+                          onFocusVotingChange(null);
+                        }}
+                        sx={{
+                          backgroundColor: "#fff",
+                          border: `1px solid ${themedColors.dataBorder}`,
+                          color: themedColors.textPrimary,
+                          fontWeight: 600,
+                        }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              </Stack>
+            </Stack>
+          </DataCard>
+
+          <OverviewSection
+            title={tVotings("overview.sections.recent.title")}
+            description={tVotings("overview.sections.recent.description")}
+            rows={overviewState.data.sections.recent}
+          />
+          <OverviewSection
+            title={tVotings("overview.sections.close.title")}
+            description={tVotings("overview.sections.close.description")}
+            rows={overviewState.data.sections.close}
+          />
+          <OverviewSection
+            title={tVotings("overview.sections.turnout.title")}
+            description={tVotings("overview.sections.turnout.description")}
+            rows={overviewState.data.sections.turnout}
+          />
+        </Stack>
+      )}
+
+      {!loading && !error && !isOverviewMode && (
+        <Box>
+          <VotingsResultsSummary
+            count={combinedRows.length}
+            groupingLabel={tVotings("groupedByDocument")}
+            contextLabel={
+              selectedHallituskausi
+                ? tCommon("filteredByGovernmentPeriodLine", {
+                    value: selectedHallituskausi.label,
+                  })
+                : null
+            }
+          />
+
+          {combinedRows.length === 0 ? (
+            <EmptyState
+              title={tVotings("noResults")}
+              description={
+                hasEnoughQuery || filtersActive || focusVotingId
+                  ? tVotings("noResultsHint")
+                  : tVotings("searchNeedsMore")
+              }
+              action={
+                activeFilters.length > 0 ? (
+                  <Button size="small" onClick={onClearFilters}>
+                    {tVotings("clearFilters")}
+                  </Button>
+                ) : undefined
+              }
+            />
+          ) : (
+            <Stack spacing={1.5}>{renderGroups(groupedResults)}</Stack>
+          )}
+
+          {combinedRows.length > 0 && searchValue.trim().length > 0 && searchValue.trim().length < 3 && (
+            <Typography
+              variant="caption"
+              sx={{
+                display: "block",
+                mt: 1.5,
+                color: themedColors.textTertiary,
+              }}
+            >
+              {tVotings("searchNeedsMore")}
+            </Typography>
+          )}
+        </Box>
+      )}
+
+      {!loading &&
+        !error &&
+        isOverviewMode &&
+        !overviewState.data &&
+        !overviewState.loading && (
+          <EmptyState
+            title={tVotings("overview.emptyTitle")}
+            description={tVotings("overview.emptyDescription")}
+          />
         )}
 
-      {!noSearch &&
-        !state.loading &&
-        !focusVoting.loading &&
-        !state.error &&
-        !focusVoting.error && (
-          <Stack spacing={3}>
-            <DataCard sx={{ p: 2.5 }}>
-              {selectedHallituskausi && (
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  {tCommon("filteredByGovernmentPeriodLine", {
-                    value: selectedHallituskausi.label,
-                  })}
-                </Alert>
-              )}
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: {
-                    xs: "1fr",
-                    sm: "repeat(3, minmax(0, 1fr))",
-                  },
-                  gap: 2,
-                }}
-              >
-                <FormControl size="small" fullWidth>
-                  <InputLabel id="phase-filter-label" sx={{ ...commonStyles.compactTextLg }}>
-                    {tVotings("filters.phase")}
-                  </InputLabel>
-                  <Select
-                    labelId="phase-filter-label"
-                    label={tVotings("filters.phase")}
-                    value={phaseFilter}
-                    onChange={(event) => setPhaseFilter(event.target.value)}
-                  >
-                    <MenuItem value="all">{tVotings("filters.all")}</MenuItem>
-                    {phases.map((phase) => (
-                      <MenuItem key={phase} value={phase}>
-                        {phase}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl size="small" fullWidth>
-                  <InputLabel id="session-filter-label" sx={{ ...commonStyles.compactTextLg }}>
-                    {tVotings("filters.session")}
-                  </InputLabel>
-                  <Select
-                    labelId="session-filter-label"
-                    label={tVotings("filters.session")}
-                    value={sessionFilter}
-                    onChange={(event) => setSessionFilter(event.target.value)}
-                  >
-                    <MenuItem value="all">{tVotings("filters.all")}</MenuItem>
-                    {sessions.map((session) => (
-                      <MenuItem key={session} value={session}>
-                        {session}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <FormControl size="small" fullWidth>
-                  <InputLabel id="sort-filter-label" sx={{ ...commonStyles.compactTextLg }}>
-                    {tVotings("filters.sort")}
-                  </InputLabel>
-                  <Select
-                    labelId="sort-filter-label"
-                    label={tVotings("filters.sort")}
-                    value={sortMode}
-                    onChange={(event) =>
-                      setSortMode(event.target.value as SortMode)
-                    }
-                  >
-                    <MenuItem value="newest">
-                      {tVotings("sort.newest")}
-                    </MenuItem>
-                    <MenuItem value="oldest">
-                      {tVotings("sort.oldest")}
-                    </MenuItem>
-                    <MenuItem value="closest">
-                      {tVotings("sort.closest")}
-                    </MenuItem>
-                    <MenuItem value="largest">
-                      {tVotings("sort.largest")}
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-            </DataCard>
+      {!loading &&
+        !error &&
+        isOverviewMode &&
+        searchValue.trim().length > 0 &&
+        searchValue.trim().length < 3 && (
+          <Typography
+            variant="caption"
+            sx={{
+              display: "block",
+              mt: 1.5,
+              color: themedColors.textTertiary,
+            }}
+          >
+            {tVotings("searchNeedsMore")}
+          </Typography>
+        )}
 
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <Typography variant="caption" sx={{ color: themedColors.textTertiary }}>
-                {tVotings("resultCount", { count: filtered.length })}
-              </Typography>
-            </Box>
+      {!loading &&
+        !error &&
+        !isOverviewMode &&
+        combinedRows.length > 0 &&
+        filtersActive &&
+        !hasEnoughQuery && (
+          <Typography
+            variant="caption"
+            sx={{
+              display: "block",
+              mt: 1.5,
+              color: themedColors.textTertiary,
+            }}
+          >
+            {tVotings("filterOnlyResultsHint")}
+          </Typography>
+        )}
 
-            {filtered.length === 0 ? (
-              <EmptyState
-                title={tVotings("noResults")}
-                description={tVotings("noResultsHint")}
-              />
-            ) : (
-              <Stack spacing={1.5}>{renderGroups(grouped)}</Stack>
-            )}
-          </Stack>
+      {!loading &&
+        !error &&
+        !isOverviewMode &&
+        combinedRows.length > 0 &&
+        combinedRows.some((row) => isCloseVote(row)) &&
+        sortMode !== "closest" && (
+          <Typography
+            variant="caption"
+            sx={{
+              display: "block",
+              mt: 0.75,
+              color: themedColors.textTertiary,
+            }}
+          >
+            {tVotings("closeVoteHint")}
+          </Typography>
         )}
     </Box>
   );

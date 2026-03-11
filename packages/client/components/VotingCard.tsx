@@ -300,12 +300,39 @@ export const VotingCard: React.FC<{
   return (
     <DataCard
       className="trace-hover-parent"
-      sx={{ p: 0, overflow: "hidden" }}
+      sx={{
+        p: 0,
+        overflow: "hidden",
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,252,0.98) 100%)",
+      }}
     >
       {/* Zone 1 + 2 + 3: header, title, bar */}
-      <Box sx={{ px: { xs: 1.5, sm: 2 }, pt: 1.5, pb: 1 }}>
+      <Box
+        sx={{
+          px: { xs: 1.5, sm: 2 },
+          pt: 1.5,
+          pb: 1,
+          background: `
+            radial-gradient(circle at top right, ${themedColors.primary}08, transparent 36%),
+            linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,0.94) 100%)
+          `,
+        }}
+      >
         {/* Header row: outcome pill + meta */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mb: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            flexWrap: "wrap",
+            mb: 1,
+            p: 0.75,
+            borderRadius: 2,
+            backgroundColor: "rgba(255,255,255,0.76)",
+            border: `1px solid ${themedColors.dataBorder}80`,
+          }}
+        >
           {/* Outcome pill — LEFT, prominent */}
           <Box
             sx={{
@@ -435,20 +462,30 @@ export const VotingCard: React.FC<{
         )}
 
         {/* Zone 3: vote bar + counts */}
-        <VoteMarginBar
-          yes={voting.n_yes}
-          no={voting.n_no}
-          empty={voting.n_abstain}
-          absent={voting.n_absent}
-          height={10}
-          sx={{ mb: 0.75 }}
-        />
-        <VoteCountsDisplay
-          n_yes={voting.n_yes}
-          n_no={voting.n_no}
-          n_abstain={voting.n_abstain}
-          n_absent={voting.n_absent}
-        />
+        <Box
+          sx={{
+            mt: 1.25,
+            p: 1.1,
+            borderRadius: 2,
+            backgroundColor: `${themedColors.primary}04`,
+            border: `1px solid ${themedColors.dataBorder}80`,
+          }}
+        >
+          <VoteMarginBar
+            yes={voting.n_yes}
+            no={voting.n_no}
+            empty={voting.n_abstain}
+            absent={voting.n_absent}
+            height={10}
+            sx={{ mb: 0.75 }}
+          />
+          <VoteCountsDisplay
+            n_yes={voting.n_yes}
+            n_no={voting.n_no}
+            n_abstain={voting.n_abstain}
+            n_absent={voting.n_absent}
+          />
+        </Box>
 
         {/* Document cards */}
         {docRefs.length > 0 && (
@@ -675,10 +712,39 @@ export const VotingGroupCard: React.FC<{
   );
 
   return (
-    <DataCard sx={{ p: 0, overflow: "hidden" }}>
-      <Box sx={{ px: { xs: 1.5, sm: 2 }, pt: 1.5, pb: 1.5 }}>
+    <DataCard
+      sx={{
+        p: 0,
+        overflow: "hidden",
+        background:
+          "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(247,249,252,0.98) 100%)",
+      }}
+    >
+      <Box
+        sx={{
+          px: { xs: 1.5, sm: 2 },
+          pt: 1.5,
+          pb: 1.5,
+          background: `
+            radial-gradient(circle at top left, ${themedColors.primary}07, transparent 32%),
+            linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,0.94) 100%)
+          `,
+        }}
+      >
         {/* Header row */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mb: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            flexWrap: "wrap",
+            mb: 1,
+            p: 0.75,
+            borderRadius: 2,
+            backgroundColor: "rgba(255,255,255,0.78)",
+            border: `1px solid ${themedColors.dataBorder}80`,
+          }}
+        >
           {/* Vote count chip — prominent, LEFT */}
           <Chip
             size="small"
@@ -748,6 +814,12 @@ export const VotingGroupCard: React.FC<{
         {/* Sub-voting rows — separated with dividers */}
         <Stack
           spacing={0}
+          sx={{
+            p: 0.5,
+            borderRadius: 2,
+            backgroundColor: "rgba(255,255,255,0.74)",
+            border: `1px solid ${themedColors.dataBorder}70`,
+          }}
           divider={<Box sx={{ height: "1px", bgcolor: themedColors.dataBorder, my: 0.5 }} />}
         >
           {votes.map((vote) => (

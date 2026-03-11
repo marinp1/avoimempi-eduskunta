@@ -14,6 +14,16 @@ export const createVotingRoutes = (db: VotingRepository) => ({
     },
   },
 
+  "/api/votings/overview": {
+    GET: async (req: BunRequest<"/api/votings/overview">) => {
+      const searchParams = getSearchParams(req);
+      const startDate = getOptionalQueryParam(searchParams, "startDate");
+      const endDate = getOptionalQueryParam(searchParams, "endDate");
+      const overview = await db.fetchVotingOverview({ startDate, endDate });
+      return json(overview);
+    },
+  },
+
   "/api/votings/search": {
     GET: async (req: BunRequest<"/api/votings/search">) => {
       const searchParams = getSearchParams(req);
@@ -25,6 +35,38 @@ export const createVotingRoutes = (db: VotingRepository) => ({
         return badRequest("Query parameter requires at least three characters");
       const titles = await db.queryVotings({ q, startDate, endDate });
       return json(titles);
+    },
+  },
+
+  "/api/votings/browse": {
+    GET: async (req: BunRequest<"/api/votings/browse">) => {
+      const searchParams = getSearchParams(req);
+      const q = searchParams.get("q")?.trim() || undefined;
+      const phase = getOptionalQueryParam(searchParams, "phase");
+      const session = getOptionalQueryParam(searchParams, "session");
+      const sort = searchParams.get("sort")?.trim() || undefined;
+      const startDate = getOptionalQueryParam(searchParams, "startDate");
+      const endDate = getOptionalQueryParam(searchParams, "endDate");
+
+      if (q && q.length < 3) {
+        return badRequest("Query parameter requires at least three characters");
+      }
+
+      const rows = await db.browseVotings({
+        q,
+        phase: phase && phase !== "all" ? phase : undefined,
+        session: session && session !== "all" ? session : undefined,
+        sort:
+          sort === "oldest" ||
+          sort === "closest" ||
+          sort === "largest" ||
+          sort === "newest"
+            ? sort
+            : undefined,
+        startDate,
+        endDate,
+      });
+      return json(rows);
     },
   },
 
