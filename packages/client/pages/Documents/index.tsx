@@ -39,6 +39,8 @@ import {
   type LegislativeInitiativeListItem,
   OralQuestionCard,
   type OralQuestionListItem,
+  ParliamentAnswerCard,
+  type ParliamentAnswerListItem,
   WrittenQuestionCard,
   type WrittenQuestionListItem,
   WrittenQuestionResponseCard,
@@ -78,7 +80,8 @@ type DocumentType =
   | "legislative-initiatives-action"
   | "legislative-initiatives-discussion"
   | "legislative-initiatives-citizens"
-  | "expert-statements";
+  | "expert-statements"
+  | "parliament-answers";
 
 const DEFAULT_DOCUMENT_TYPE: DocumentType = "interpellations";
 
@@ -96,6 +99,7 @@ const VALID_TYPES: DocumentType[] = [
   "legislative-initiatives-discussion",
   "legislative-initiatives-citizens",
   "expert-statements",
+  "parliament-answers",
 ];
 
 const LEGISLATIVE_INITIATIVE_TYPE_BY_DOCUMENT_TYPE: Partial<
@@ -152,6 +156,12 @@ const getDocumentApiConfig = (documentType: DocumentType) => {
       initiativeTypeCode: null,
     } as const;
   }
+  if (documentType === "parliament-answers") {
+    return {
+      apiBase: "/api/parliament-answers",
+      initiativeTypeCode: null,
+    } as const;
+  }
   return {
     apiBase: "/api/legislative-initiatives",
     initiativeTypeCode:
@@ -181,6 +191,7 @@ const DocumentsResultsList = memo(function DocumentsResultsList({
     | CommitteeReportListItem
     | LegislativeInitiativeListItem
     | ExpertStatementListItem
+    | ParliamentAnswerListItem
   )[];
   onSubjectClick: (subject: string) => void;
 }) {
@@ -274,6 +285,20 @@ const DocumentsResultsList = memo(function DocumentsResultsList({
     );
   }
 
+  if (documentType === "parliament-answers") {
+    return (
+      <>
+        {(items as ParliamentAnswerListItem[]).map((item) => (
+          <ParliamentAnswerCard
+            key={item.id}
+            item={item}
+            onSubjectClick={onSubjectClick}
+          />
+        ))}
+      </>
+    );
+  }
+
   return (
     <>
       {(items as WrittenQuestionListItem[]).map((item) => (
@@ -307,6 +332,7 @@ export default function Documents() {
       | CommitteeReportListItem
       | LegislativeInitiativeListItem
       | ExpertStatementListItem
+      | ParliamentAnswerListItem
     )[]
   >([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -359,6 +385,7 @@ export default function Documents() {
         ),
         "legislative-initiatives-citizens": t("legislativeInitiativesCitizens"),
         "expert-statements": t("expertStatements"),
+        "parliament-answers": t("parliamentAnswers"),
       };
       return labelByType[value];
     },

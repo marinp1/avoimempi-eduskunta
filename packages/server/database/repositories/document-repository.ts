@@ -69,6 +69,13 @@ import writtenQuestionYears from "../queries/WRITTEN_QUESTION_YEARS.sql";
 import writtenQuestionsCount from "../queries/WRITTEN_QUESTIONS_COUNT.sql";
 import writtenQuestionsList from "../queries/WRITTEN_QUESTIONS_LIST.sql";
 import writtenQuestionsSubjectsList from "../queries/WRITTEN_QUESTIONS_SUBJECTS_LIST.sql";
+import parliamentAnswerById from "../queries/PARLIAMENT_ANSWER_BY_ID.sql";
+import parliamentAnswerByIdentifier from "../queries/PARLIAMENT_ANSWER_BY_IDENTIFIER.sql";
+import parliamentAnswerBySourceReference from "../queries/PARLIAMENT_ANSWER_BY_SOURCE_REFERENCE.sql";
+import parliamentAnswerSubjects from "../queries/PARLIAMENT_ANSWER_SUBJECTS.sql";
+import parliamentAnswerYears from "../queries/PARLIAMENT_ANSWER_YEARS.sql";
+import parliamentAnswersCount from "../queries/PARLIAMENT_ANSWERS_COUNT.sql";
+import parliamentAnswersList from "../queries/PARLIAMENT_ANSWERS_LIST.sql";
 import {
   buildFtsSearchQuery,
   endDateExclusive,
@@ -1655,6 +1662,187 @@ export class DocumentRepository {
     const data = stmt.all();
     stmt.finalize();
     return data;
+  }
+
+  public fetchParliamentAnswers(params: {
+    query?: string;
+    year?: string;
+    subject?: string;
+    startDate?: string;
+    endDate?: string;
+    page: number;
+    limit: number;
+  }) {
+    const offset = (params.page - 1) * params.limit;
+    const endDateExclusiveValue = endDateExclusive(params.endDate);
+    const $query = params.query?.trim() || null;
+    const $year = params.year || null;
+    const $subject = params.subject?.trim() || null;
+
+    const countStmt = this.db.prepare<
+      { count: number },
+      {
+        $query: string | null;
+        $year: string | null;
+        $subject: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
+    >(parliamentAnswersCount);
+    const countResult = countStmt.get({
+      $query,
+      $year,
+      $subject,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusiveValue,
+    });
+    const totalCount = countResult?.count || 0;
+    countStmt.finalize();
+
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        source_reference: string | null;
+        committee_report_reference: string | null;
+        submission_date: string | null;
+        signature_date: string | null;
+        signatory_count: number;
+        subjects: string | null;
+      },
+      {
+        $query: string | null;
+        $year: string | null;
+        $subject: string | null;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+        $limit: number;
+        $offset: number;
+      }
+    >(parliamentAnswersList);
+    const rows = stmt.all({
+      $query,
+      $year,
+      $subject,
+      $startDate: params.startDate || null,
+      $endDateExclusive: endDateExclusiveValue,
+      $limit: params.limit,
+      $offset: offset,
+    });
+    stmt.finalize();
+
+    return paginatedResult(rows, totalCount, params.page, params.limit);
+  }
+
+  public fetchParliamentAnswerYears() {
+    const stmt = this.db.prepare<{ year: string }, []>(parliamentAnswerYears);
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
+
+  public fetchParliamentAnswerById(params: { id: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        source_reference: string | null;
+        committee_report_reference: string | null;
+        submission_date: string | null;
+        signature_date: string | null;
+        language: string;
+        edk_identifier: string | null;
+        decision_text: string | null;
+        decision_rich_text: string | null;
+        legislation_text: string | null;
+        legislation_rich_text: string | null;
+        signatory_count: number;
+      },
+      { $id: number }
+    >(parliamentAnswerById);
+    const detail = detailStmt.get({ $id: +params.id });
+    detailStmt.finalize();
+    if (!detail) return null;
+
+    const subjectsStmt = this.db.prepare<
+      { answer_id: number; subject_order: number; subject_text: string },
+      { $answerId: number }
+    >(parliamentAnswerSubjects);
+    const subjects = subjectsStmt.all({ $answerId: detail.id });
+    subjectsStmt.finalize();
+
+    return { ...detail, subjects };
+  }
+
+  public fetchParliamentAnswerByIdentifier(params: { identifier: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        source_reference: string | null;
+        committee_report_reference: string | null;
+        submission_date: string | null;
+        signature_date: string | null;
+        language: string;
+        edk_identifier: string | null;
+        decision_text: string | null;
+        decision_rich_text: string | null;
+        legislation_text: string | null;
+        legislation_rich_text: string | null;
+        signatory_count: number;
+      },
+      { $identifier: string }
+    >(parliamentAnswerByIdentifier);
+    const detail = detailStmt.get({ $identifier: params.identifier });
+    detailStmt.finalize();
+    if (!detail) return null;
+
+    const subjectsStmt = this.db.prepare<
+      { answer_id: number; subject_order: number; subject_text: string },
+      { $answerId: number }
+    >(parliamentAnswerSubjects);
+    const subjects = subjectsStmt.all({ $answerId: detail.id });
+    subjectsStmt.finalize();
+
+    return { ...detail, subjects };
+  }
+
+  public fetchParliamentAnswerBySourceReference(params: {
+    sourceReference: string;
+  }) {
+    const stmt = this.db.prepare<
+      {
+        id: number;
+        parliament_identifier: string;
+        document_number: number;
+        parliamentary_year: string;
+        title: string | null;
+        source_reference: string | null;
+        committee_report_reference: string | null;
+        submission_date: string | null;
+        signature_date: string | null;
+        language: string;
+        edk_identifier: string | null;
+        decision_text: string | null;
+        decision_rich_text: string | null;
+        legislation_text: string | null;
+        legislation_rich_text: string | null;
+        signatory_count: number;
+      },
+      { $sourceReference: string }
+    >(parliamentAnswerBySourceReference);
+    const row = stmt.get({ $sourceReference: params.sourceReference });
+    stmt.finalize();
+    return row ?? null;
   }
 
   public federatedSearch(params: { q: string; limit?: number }) {

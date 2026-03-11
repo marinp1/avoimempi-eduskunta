@@ -84,6 +84,13 @@ function GovernmentProposalCardComponent({
     meeting_date: string | null;
     title: string | null;
   }> | null>(null);
+  const [parliamentAnswer, setParliamentAnswer] = useState<{
+    id: number;
+    parliament_identifier: string;
+    title: string | null;
+    signature_date: string | null;
+    edk_identifier: string | null;
+  } | null | undefined>(undefined);
 
   const subjects = item.subjects
     ? item.subjects.split("||").filter(Boolean)
@@ -113,6 +120,13 @@ function GovernmentProposalCardComponent({
         .then((r) => (r.ok ? r.json() : []))
         .then((data) => setExpertStatements(data))
         .catch(() => setExpertStatements([]));
+
+      apiFetch(
+        `/api/parliament-answers/by-source-reference/${encodeURIComponent(item.parliament_identifier)}`,
+      )
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => setParliamentAnswer(data))
+        .catch(() => setParliamentAnswer(null));
     }
     setExpanded(!expanded);
   };
@@ -547,6 +561,75 @@ function GovernmentProposalCardComponent({
                   );
                 })}
               </Stack>
+            </Box>
+          )}
+
+          {parliamentAnswer && (
+            <Box>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ mb: 1 }}
+              >
+                <GavelIcon sx={{ color: colors.primary }} />
+                <Typography
+                  variant="subtitle1"
+                  sx={{ fontWeight: 600, color: colors.textPrimary }}
+                >
+                  Eduskunnan vastaus
+                </Typography>
+              </Stack>
+              <Box
+                sx={{
+                  pl: 1.5,
+                  py: 0.75,
+                  borderLeft: `3px solid ${colors.primaryLight}`,
+                  backgroundColor: colors.backgroundSubtle,
+                  borderRadius: "0 4px 4px 0",
+                }}
+              >
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="flex-start"
+                  gap={1}
+                >
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 500, color: colors.textPrimary }}
+                    >
+                      {parliamentAnswer.parliament_identifier}
+                    </Typography>
+                    {parliamentAnswer.title && (
+                      <Typography
+                        variant="caption"
+                        sx={{ color: colors.textSecondary, display: "block" }}
+                      >
+                        {parliamentAnswer.title}
+                      </Typography>
+                    )}
+                    {parliamentAnswer.signature_date && (
+                      <Typography
+                        variant="caption"
+                        sx={{ color: colors.textTertiary, display: "block" }}
+                      >
+                        {formatDate(parliamentAnswer.signature_date)}
+                      </Typography>
+                    )}
+                  </Box>
+                  {parliamentAnswer.edk_identifier && (
+                    <EduskuntaSourceLink
+                      href={`https://www.eduskunta.fi/FI/vaski/JulkaisuMetatieto/Documents/${parliamentAnswer.edk_identifier}.pdf`}
+                      stopPropagation
+                      sx={{ fontSize: "0.7rem", flexShrink: 0 }}
+                    >
+                      PDF
+                    </EduskuntaSourceLink>
+                  )}
+                </Stack>
+              </Box>
             </Box>
           )}
 
