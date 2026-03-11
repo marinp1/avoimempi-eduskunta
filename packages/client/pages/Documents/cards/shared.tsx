@@ -1,18 +1,17 @@
 import {
   Event as EventIcon,
-  ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
 import {
   Box,
   Button,
   Chip,
   CircularProgress,
-  Collapse,
   Stack,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
+import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors } from "#client/theme/index";
 import { formatDateFi } from "#client/utils/date-time";
@@ -120,47 +119,7 @@ export function InlineRelatedSessions({
 }) {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const [expandedSectionKey, setExpandedSectionKey] = useState<string | null>(
-    null,
-  );
-  const [loadingBySection, setLoadingBySection] = useState<
-    Record<string, boolean>
-  >({});
-  const [detailsBySection, setDetailsBySection] = useState<
-    Record<
-      string,
-      {
-        votings: DatabaseTables.Voting[];
-        links: DataLink[];
-        subsections: DataSubsection[];
-      }
-    >
-  >({});
-
-  const fetchSessionSectionDetails = (sectionKey: string) => {
-    if (loadingBySection[sectionKey] || detailsBySection[sectionKey]) return;
-    setLoadingBySection((prev) => ({ ...prev, [sectionKey]: true }));
-    Promise.all([
-      apiFetch(`/api/sections/${encodeURIComponent(sectionKey)}/votings`)
-        .then((res) => (res.ok ? res.json() : []))
-        .catch(() => []),
-      apiFetch(`/api/sections/${encodeURIComponent(sectionKey)}/links`)
-        .then((res) => (res.ok ? res.json() : []))
-        .catch(() => []),
-      apiFetch(`/api/sections/${encodeURIComponent(sectionKey)}/subsections`)
-        .then((res) => (res.ok ? res.json() : []))
-        .catch(() => []),
-    ])
-      .then(([votings, links, subsections]) => {
-        setDetailsBySection((prev) => ({
-          ...prev,
-          [sectionKey]: { votings, links, subsections },
-        }));
-      })
-      .finally(() => {
-        setLoadingBySection((prev) => ({ ...prev, [sectionKey]: false }));
-      });
-  };
+  const { replaceDrawer } = useOverlayDrawer();
 
   if (sessions.length === 0) return null;
 
@@ -177,9 +136,6 @@ export function InlineRelatedSessions({
       </Stack>
       <Stack spacing={1}>
         {sessions.map((session) => {
-          const isExpanded = expandedSectionKey === session.section_key;
-          const details = detailsBySection[session.section_key];
-          const loading = !!loadingBySection[session.section_key];
           return (
             <Box
               key={session.section_key}
@@ -213,26 +169,25 @@ export function InlineRelatedSessions({
                 <Button
                   size="small"
                   sx={{ textTransform: "none" }}
-                  endIcon={
-                    <ExpandMoreIcon
-                      sx={{
-                        fontSize: 14,
-                        transform: isExpanded
-                          ? "rotate(180deg)"
-                          : "rotate(0deg)",
-                        transition: "transform 0.2s",
-                      }}
-                    />
-                  }
                   onClick={() => {
-                    const next = isExpanded ? null : session.section_key;
-                    setExpandedSectionKey(next);
-                    if (next) fetchSessionSectionDetails(next);
+                    replaceDrawer({
+                      drawerKey: `related-session:${session.section_key}`,
+                      title: tDocuments("relatedSessions"),
+                      subtitle: `${session.session_type} ${session.session_number}/${session.session_year}`,
+                      meta: (
+                        <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                          {formatDate(session.session_date)}
+                        </Typography>
+                      ),
+                      content: (
+                        <RelatedSessionDrawerContent
+                          sectionKey={session.section_key}
+                        />
+                      ),
+                    });
                   }}
                 >
-                  {isExpanded
-                    ? tCommon("detailsToggle", { context: "hide" })
-                    : tCommon("detailsToggle", { context: "show" })}
+                  {tCommon("openDetails")}
                 </Button>
                 <Button
                   size="small"
@@ -254,146 +209,159 @@ export function InlineRelatedSessions({
                 <Typography
                   variant="caption"
                   sx={{ color: colors.textSecondary }}
-                >
-                  {session.section_title}
-                </Typography>
+              >
+                {session.section_title}
+              </Typography>
               )}
-              <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                <Box
-                  sx={{
-                    mt: 1,
-                    p: 1,
-                    border: `1px solid ${colors.dataBorder}`,
-                    borderRadius: 1,
-                  }}
-                >
-                  {loading && (
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <CircularProgress size={14} />
-                      <Typography
-                        variant="caption"
-                        sx={{ color: colors.textSecondary }}
-                      >
-                        {tDocuments("loadingSessionDetails")}
-                      </Typography>
-                    </Box>
-                  )}
-                  {!loading && details && (
-                    <Stack spacing={1}>
-                      <Typography
-                        variant="caption"
-                        sx={{ color: colors.textSecondary }}
-                      >
-                        {tDocuments("inlineCounts", {
-                          votings: details.votings.length,
-                          links: details.links.length,
-                          subsections: details.subsections.length,
-                        })}
-                      </Typography>
-                      {details.votings.length > 0 && (
-                        <Box
-                          sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}
-                        >
-                          {details.votings.slice(0, 6).map((voting) => (
-                            <Chip
-                              key={voting.id}
-                              size="small"
-                              variant="outlined"
-                              label={`${voting.id}: ${voting.n_yes}-${voting.n_no}`}
-                              sx={{ height: 20, fontSize: "0.65rem" }}
-                            />
-                          ))}
-                          {details.votings.length > 6 && (
-                            <Typography
-                              variant="caption"
-                              sx={{ color: colors.textSecondary }}
-                            >
-                              {tDocuments("moreVotings", {
-                                count: details.votings.length - 6,
-                              })}
-                            </Typography>
-                          )}
-                        </Box>
-                      )}
-                      {details.subsections.length > 0 && (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 0.25,
-                          }}
-                        >
-                          {details.subsections.slice(0, 2).map((subsection) => (
-                            <Typography
-                              key={subsection.id}
-                              variant="caption"
-                              sx={{ color: colors.textSecondary }}
-                            >
-                              {subsection.item_title ||
-                                subsection.related_document_identifier ||
-                                subsection.content_text ||
-                                tDocuments("subsectionFallback")}
-                            </Typography>
-                          ))}
-                        </Box>
-                      )}
-                      {details.links.length > 0 && (
-                        <Box
-                          sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}
-                        >
-                          {details.links.slice(0, 4).map((link) =>
-                            isEduskuntaOfficialUrl(link.url) ? (
-                              <EduskuntaSourceLink
-                                key={link.id}
-                                href={link.url as string}
-                                sx={{ fontSize: "0.65rem" }}
-                              >
-                                {link.document_tunnus ||
-                                  link.label ||
-                                  tDocuments("documentLink")}
-                              </EduskuntaSourceLink>
-                            ) : (
-                              <Chip
-                                key={link.id}
-                                size="small"
-                                component="a"
-                                clickable
-                                href={
-                                  isSafeExternalUrl(link.url)
-                                    ? (link.url ?? undefined)
-                                    : undefined
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                label={
-                                  link.document_tunnus ||
-                                  link.label ||
-                                  tDocuments("documentLink")
-                                }
-                                sx={{ height: 20, fontSize: "0.65rem" }}
-                              />
-                            ),
-                          )}
-                          {details.links.length > 4 && (
-                            <Typography
-                              variant="caption"
-                              sx={{ color: colors.textSecondary }}
-                            >
-                              {tDocuments("moreLinks", {
-                                count: details.links.length - 4,
-                              })}
-                            </Typography>
-                          )}
-                        </Box>
-                      )}
-                    </Stack>
-                  )}
-                </Box>
-              </Collapse>
             </Box>
           );
         })}
       </Stack>
     </Box>
+  );
+}
+
+function RelatedSessionDrawerContent({
+  sectionKey,
+}: {
+  sectionKey: string;
+}) {
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
+  const [loading, setLoading] = useState(true);
+  const [details, setDetails] = useState<{
+    votings: DatabaseTables.Voting[];
+    links: DataLink[];
+    subsections: DataSubsection[];
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    Promise.all([
+      apiFetch(`/api/sections/${encodeURIComponent(sectionKey)}/votings`)
+        .then((res) => (res.ok ? res.json() : []))
+        .catch(() => []),
+      apiFetch(`/api/sections/${encodeURIComponent(sectionKey)}/links`)
+        .then((res) => (res.ok ? res.json() : []))
+        .catch(() => []),
+      apiFetch(`/api/sections/${encodeURIComponent(sectionKey)}/subsections`)
+        .then((res) => (res.ok ? res.json() : []))
+        .catch(() => []),
+    ])
+      .then(([votings, links, subsections]) => {
+        if (!cancelled) {
+          setDetails({ votings, links, subsections });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [sectionKey]);
+
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <CircularProgress size={14} />
+        <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+          {tDocuments("loadingSessionDetails")}
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (!details) {
+    return (
+      <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+        {tCommon("noData")}
+      </Typography>
+    );
+  }
+
+  return (
+    <Stack spacing={1.25}>
+      <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+        {tDocuments("inlineCounts", {
+          votings: details.votings.length,
+          links: details.links.length,
+          subsections: details.subsections.length,
+        })}
+      </Typography>
+      {details.votings.length > 0 && (
+        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+          {details.votings.slice(0, 10).map((voting) => (
+            <Chip
+              key={voting.id}
+              size="small"
+              variant="outlined"
+              label={`${voting.id}: ${voting.n_yes}-${voting.n_no}`}
+              sx={{ height: 22, fontSize: "0.7rem" }}
+            />
+          ))}
+          {details.votings.length > 10 && (
+            <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+              {tDocuments("moreVotings", {
+                count: details.votings.length - 10,
+              })}
+            </Typography>
+          )}
+        </Box>
+      )}
+      {details.subsections.length > 0 && (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.35 }}>
+          {details.subsections.slice(0, 6).map((subsection) => (
+            <Typography
+              key={subsection.id}
+              variant="body2"
+              sx={{ color: colors.textSecondary }}
+            >
+              {subsection.item_title ||
+                subsection.related_document_identifier ||
+                subsection.content_text ||
+                tDocuments("subsectionFallback")}
+            </Typography>
+          ))}
+        </Box>
+      )}
+      {details.links.length > 0 && (
+        <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+          {details.links.slice(0, 8).map((link) =>
+            isEduskuntaOfficialUrl(link.url) ? (
+              <EduskuntaSourceLink
+                key={link.id}
+                href={link.url as string}
+                sx={{ fontSize: "0.75rem" }}
+              >
+                {link.document_tunnus || link.label || tDocuments("documentLink")}
+              </EduskuntaSourceLink>
+            ) : (
+              <Chip
+                key={link.id}
+                size="small"
+                component="a"
+                clickable
+                href={
+                  isSafeExternalUrl(link.url) ? (link.url ?? undefined) : undefined
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                label={link.document_tunnus || link.label || tDocuments("documentLink")}
+                sx={{ height: 22, fontSize: "0.7rem" }}
+              />
+            ),
+          )}
+          {details.links.length > 8 && (
+            <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+              {tDocuments("moreLinks", {
+                count: details.links.length - 8,
+              })}
+            </Typography>
+          )}
+        </Box>
+      )}
+    </Stack>
   );
 }

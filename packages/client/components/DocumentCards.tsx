@@ -1,4 +1,3 @@
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import {
@@ -6,13 +5,13 @@ import {
   Button,
   Chip,
   CircularProgress,
-  Collapse,
   Typography,
 } from "@mui/material";
 import type React from "react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState } from "react";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
+import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, commonStyles } from "#client/theme/index";
 import { apiFetch, type IdentifierRouteType } from "#client/utils/fetch";
@@ -142,6 +141,14 @@ const snippetTextSx = {
   lineHeight: 1.35,
 };
 
+const drawerSectionLabelSx = {
+  ...commonStyles.compactTextMd,
+  fontWeight: 700,
+  color: colors.textTertiary,
+  textTransform: "uppercase",
+  mb: 0.75,
+};
+
 const normalizeSnippet = (text: string | null | undefined) => {
   if (!text) return null;
   const cleaned = text.replace(/\s+/g, " ").trim();
@@ -166,40 +173,37 @@ const ExpandableSnippet: React.FC<{
   maxLength?: number;
 }> = ({ label, text, maxLength = 280 }) => {
   const { t } = useScopedTranslation("common");
+  const { replaceDrawer } = useOverlayDrawer();
   const normalized = normalizeSnippet(text);
-  const [expanded, setExpanded] = useState(false);
-  const snippetContentId = useId();
 
   if (!normalized) return null;
   const isLong = normalized.length > maxLength;
   const shownText =
-    isLong && !expanded
-      ? `${normalized.slice(0, maxLength).trimEnd()}...`
-      : normalized;
+    isLong ? `${normalized.slice(0, maxLength).trimEnd()}...` : normalized;
 
   return (
     <Box sx={{ mt: 0.5 }}>
-      <Box id={snippetContentId}>
-        <Typography sx={snippetTextSx}>
-          {label}: {shownText}
-        </Typography>
-      </Box>
+      <Typography sx={snippetTextSx}>
+        {label}: {shownText}
+      </Typography>
       {isLong && (
         <Button
           size="small"
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            setExpanded((prev) => !prev);
+            replaceDrawer({
+              drawerKey: `snippet:${label}`,
+              title: label,
+              content: <DrawerTextContent label={label} text={normalized} />,
+            });
           }}
-          aria-expanded={expanded}
-          aria-controls={snippetContentId}
           sx={{
             ...commonStyles.compactInlineTextButton,
             color: colors.primary,
           }}
         >
-          {expanded ? t("showLess") : t("showMore")}
+          {t("openDetails")}
         </Button>
       )}
     </Box>
@@ -213,62 +217,71 @@ const ExpandableRichSnippet: React.FC<{
   maxLength?: number;
 }> = ({ label, text, richText, maxLength = 280 }) => {
   const { t } = useScopedTranslation("common");
+  const { replaceDrawer } = useOverlayDrawer();
   const normalized = normalizeSnippet(text);
-  const [expanded, setExpanded] = useState(false);
-  const snippetContentId = useId();
 
   if (!normalized && !richText) return null;
 
   const isLong = normalized ? normalized.length > maxLength : false;
   const canExpand = isLong || !!richText;
   const shownText =
-    isLong && !expanded && normalized
+    isLong && normalized
       ? `${normalized.slice(0, maxLength).trimEnd()}...`
       : normalized;
 
   return (
     <Box sx={{ mt: 0.5 }}>
-      <Box id={snippetContentId}>
-        {!expanded && (
-          <Typography sx={snippetTextSx}>
-            {label}: {shownText}
-          </Typography>
-        )}
-        {expanded && (
-          <Box>
-            <Typography sx={{ ...snippetTextSx, mt: 0 }}>{label}:</Typography>
-            <Box sx={{ mt: 0.35 }}>
-              <RichTextRenderer
-                document={richText}
-                fallbackText={normalized}
-                paragraphVariant="body2"
-                compact
-              />
-            </Box>
-          </Box>
-        )}
-      </Box>
+      <Typography sx={snippetTextSx}>
+        {label}: {shownText || "—"}
+      </Typography>
       {canExpand && (
         <Button
           size="small"
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            setExpanded((prev) => !prev);
+            replaceDrawer({
+              drawerKey: `snippet:${label}`,
+              title: label,
+              content: (
+                <DrawerTextContent
+                  label={label}
+                  text={normalized}
+                  richText={richText}
+                />
+              ),
+            });
           }}
-          aria-expanded={expanded}
-          aria-controls={snippetContentId}
           sx={{
             ...commonStyles.compactInlineTextButton,
             color: colors.primary,
           }}
         >
-          {expanded ? t("showLess") : t("showMore")}
+          {t("openDetails")}
         </Button>
       )}
     </Box>
   );
 };
+
+const DrawerTextContent = ({
+  label,
+  text,
+  richText,
+}: {
+  label: string;
+  text?: string | null;
+  richText?: string | null;
+}) => (
+  <Box>
+    <Typography sx={drawerSectionLabelSx}>{label}</Typography>
+    <RichTextRenderer
+      document={richText}
+      fallbackText={text}
+      paragraphVariant="body2"
+    />
+  </Box>
+);
 
 function useFetchByIdentifier<
   I extends IdentifierRouteType,
@@ -933,6 +946,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
+  const { replaceDrawer } = useOverlayDrawer();
 
   type VotingSummary = {
     id: number;
@@ -949,30 +963,8 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
 
   const [votings, setVotings] = useState<VotingSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedVotingId, setExpandedVotingId] = useState<number | null>(null);
-  const [detailsById, setDetailsById] = useState<Record<number, VotingDetails>>(
-    {},
-  );
-  const [detailLoadingById, setDetailLoadingById] = useState<
-    Record<number, boolean>
-  >({});
 
   const refKey = identifiers.join(",");
-
-  const fetchVotingDetails = (id: number) => {
-    if (detailsById[id] || detailLoadingById[id]) return;
-    setDetailLoadingById((prev) => ({ ...prev, [id]: true }));
-    apiFetch(`/api/votings/${id}/details`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json) => {
-        if (!json) return;
-        setDetailsById((prev) => ({ ...prev, [id]: json }));
-      })
-      .catch(() => {})
-      .finally(() => {
-        setDetailLoadingById((prev) => ({ ...prev, [id]: false }));
-      });
-  };
 
   useEffect(() => {
     if (identifiers.length === 0) {
@@ -1002,9 +994,6 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
       }
       setVotings(merged);
       setLoading(false);
-      setExpandedVotingId(null);
-      setDetailsById({});
-      setDetailLoadingById({});
     });
 
     return () => {
@@ -1040,14 +1029,9 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
         </Typography>
       </Box>
       {votings.map((v) => {
-        const isExpanded = expandedVotingId === v.id;
-        const details = detailsById[v.id];
-        const isDetailLoading = !!detailLoadingById[v.id];
         const passed = v.n_yes > v.n_no;
         const yesRatio = v.n_total > 0 ? (v.n_yes / v.n_total) * 100 : 0;
         const noRatio = v.n_total > 0 ? (v.n_no / v.n_total) * 100 : 0;
-        const detailsCollapseId = `related-voting-details-${v.id}`;
-        const detailsToggleId = `related-voting-toggle-${v.id}`;
         return (
           <Box
             key={v.id}
@@ -1091,31 +1075,43 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
               />
               <Button
                 size="small"
-                id={detailsToggleId}
                 onClick={() => {
-                  const nextExpanded = isExpanded ? null : v.id;
-                  setExpandedVotingId(nextExpanded);
-                  if (nextExpanded === v.id) fetchVotingDetails(v.id);
+                  replaceDrawer({
+                    drawerKey: `related-voting:${v.id}`,
+                    title: tDocuments("relatedVotings"),
+                    subtitle: v.context_title || v.section_title || tDocuments("noTitle"),
+                    meta: (
+                      <>
+                        <Chip
+                          size="small"
+                          label={`${v.n_yes} - ${v.n_no}`}
+                          sx={{
+                            ...commonStyles.compactChipSm,
+                            fontWeight: 600,
+                            color: passed ? colors.success : colors.error,
+                            borderColor: passed ? colors.success : colors.error,
+                          }}
+                          variant="outlined"
+                        />
+                        <Typography sx={metaTextSx}>
+                          {v.start_time?.substring(0, 10)} — {v.session_key}
+                        </Typography>
+                      </>
+                    ),
+                    content: (
+                      <RelatedVotingDetailsContent
+                        votingId={v.id}
+                        summary={v}
+                      />
+                    ),
+                  });
                 }}
-                aria-expanded={isExpanded}
-                aria-controls={detailsCollapseId}
                 sx={{
                   ...commonStyles.compactActionButton,
                   ...commonStyles.compactTextXs,
                 }}
-                endIcon={
-                  <ExpandMoreIcon
-                    sx={{
-                      fontSize: 14,
-                      transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
-                      transition: "transform 0.2s",
-                    }}
-                  />
-                }
               >
-                {isExpanded
-                  ? tCommon("detailsToggle", { context: "hide" })
-                  : tCommon("detailsToggle", { context: "show" })}
+                {tCommon("openDetails")}
               </Button>
               <Button
                 size="small"
@@ -1174,170 +1170,207 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                 />
               </Box>
             </Box>
-            <Collapse
-              id={detailsCollapseId}
-              aria-labelledby={detailsToggleId}
-              in={isExpanded}
-              timeout="auto"
-              unmountOnExit
-            >
-              <Box
-                sx={{
-                  mt: 0.75,
-                  p: 1,
-                  borderRadius: 1,
-                  border: `1px solid ${colors.dataBorder}60`,
-                  backgroundColor: `${colors.primaryLight}04`,
-                }}
-              >
-                {isDetailLoading && (
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <CircularProgress size={12} />
-                    <Typography sx={metaTextSx}>
-                      {tCommon("loadingVotingDetails")}
-                    </Typography>
-                  </Box>
-                )}
-                {!isDetailLoading && details && (
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                  >
-                    <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                      <Chip
-                        size="small"
-                        label={tCommon("yesCount", {
-                          count: details.voting.n_yes,
-                        })}
-                        sx={{
-                          ...commonStyles.compactChipSm,
-                          color: colors.success,
-                          borderColor: colors.success,
-                        }}
-                        variant="outlined"
-                      />
-                      <Chip
-                        size="small"
-                        label={tCommon("noCount", {
-                          count: details.voting.n_no,
-                        })}
-                        sx={{
-                          ...commonStyles.compactChipSm,
-                          color: colors.error,
-                          borderColor: colors.error,
-                        }}
-                        variant="outlined"
-                      />
-                      <Chip
-                        size="small"
-                        label={tCommon("emptyCount", {
-                          count: details.voting.n_abstain,
-                        })}
-                        sx={{ ...commonStyles.compactChipSm }}
-                      />
-                      <Chip
-                        size="small"
-                        label={tCommon("absentCount", {
-                          count: details.voting.n_absent,
-                        })}
-                        sx={{ ...commonStyles.compactChipSm }}
-                      />
-                    </Box>
-                    <Typography
-                      sx={{ fontSize: "0.72rem", color: colors.textSecondary }}
-                    >
-                      {tCommon("votingTargetLine", {
-                        value:
-                          details.voting.context_title ||
-                          details.voting.section_title ||
-                          details.voting.title ||
-                          tDocuments("noTitle"),
-                      })}
-                    </Typography>
-                    {details.voting.parliamentary_item && (
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        label={details.voting.parliamentary_item}
-                        sx={{
-                          ...commonStyles.compactChipSm,
-                          width: "fit-content",
-                        }}
-                      />
-                    )}
-                    {details.governmentOpposition && (
-                      <Typography sx={metaTextSx}>
-                        Hallitus: {details.governmentOpposition.government_yes}{" "}
-                        jaa / {details.governmentOpposition.government_no} ei,
-                        Oppositio: {details.governmentOpposition.opposition_yes}{" "}
-                        jaa / {details.governmentOpposition.opposition_no} ei
-                      </Typography>
-                    )}
-                    <VotingResultsTable
-                      partyBreakdown={details.partyBreakdown}
-                      memberVotes={details.memberVotes}
-                    />
-                    <Box>
-                      {extractDocumentIdentifiers([
-                        details.voting.parliamentary_item,
-                        details.voting.context_title,
-                        details.voting.section_title,
-                        details.voting.title,
-                      ]).map((ref) => (
-                        <DocumentCard
-                          key={`${details.voting.id}-${ref.identifier}`}
-                          docRef={ref}
-                        />
-                      ))}
-                    </Box>
-                    {details.relatedVotings.length > 0 && (
-                      <Box>
-                        <Typography
-                          sx={{
-                            ...commonStyles.compactTextSm,
-                            color: colors.textSecondary,
-                          }}
-                        >
-                          {tDocuments("relatedVotingsSameSection")}
-                        </Typography>
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: 0.5,
-                            mt: 0.25,
-                          }}
-                        >
-                          {details.relatedVotings.slice(0, 6).map((related) => (
-                            <Chip
-                              key={related.id}
-                              size="small"
-                              label={`${related.id}: ${related.n_yes}-${related.n_no}`}
-                              variant="outlined"
-                              sx={{ ...commonStyles.compactChipSm }}
-                            />
-                          ))}
-                          {details.relatedVotings.length > 6 && (
-                            <Typography
-                              sx={{
-                                ...commonStyles.compactTextXs,
-                                color: colors.textSecondary,
-                              }}
-                            >
-                              {tDocuments("moreOther", {
-                                count: details.relatedVotings.length - 6,
-                              })}
-                            </Typography>
-                          )}
-                        </Box>
-                      </Box>
-                    )}
-                  </Box>
-                )}
-              </Box>
-            </Collapse>
           </Box>
         );
       })}
+    </Box>
+  );
+};
+
+const DrawerLoadingBlock = ({ text }: { text: string }) => (
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 1,
+      p: 1.25,
+      borderRadius: 1,
+      border: `1px solid ${colors.primaryLight}24`,
+      background: `${colors.primaryLight}08`,
+    }}
+  >
+    <CircularProgress size={16} />
+    <Typography sx={metaTextSx}>{text}</Typography>
+  </Box>
+);
+
+const RelatedVotingDetailsContent = ({
+  votingId,
+  summary,
+}: {
+  votingId: number;
+  summary: {
+    id: number;
+    section_title: string | null;
+    context_title: string | null;
+    start_time: string | null;
+    session_key: string | null;
+    n_yes: number;
+    n_no: number;
+    n_total: number;
+  };
+}) => {
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
+  const [details, setDetails] =
+    useState<ApiRouteResponse<`/api/votings/:id/details`> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    apiFetch(`/api/votings/${votingId}/details`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!cancelled) setDetails(json);
+      })
+      .catch(() => {
+        if (!cancelled) setDetails(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [votingId]);
+
+  if (loading) {
+    return <DrawerLoadingBlock text={tCommon("loadingVotingDetails")} />;
+  }
+
+  if (!details) {
+    return <Typography sx={secondaryTextSx}>{tCommon("noData")}</Typography>;
+  }
+
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
+      <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+        <Chip
+          size="small"
+          label={tCommon("yesCount", {
+            count: details.voting.n_yes,
+          })}
+          sx={{
+            ...commonStyles.compactChipSm,
+            color: colors.success,
+            borderColor: colors.success,
+          }}
+          variant="outlined"
+        />
+        <Chip
+          size="small"
+          label={tCommon("noCount", {
+            count: details.voting.n_no,
+          })}
+          sx={{
+            ...commonStyles.compactChipSm,
+            color: colors.error,
+            borderColor: colors.error,
+          }}
+          variant="outlined"
+        />
+        <Chip
+          size="small"
+          label={tCommon("emptyCount", {
+            count: details.voting.n_abstain,
+          })}
+          sx={{ ...commonStyles.compactChipSm }}
+        />
+        <Chip
+          size="small"
+          label={tCommon("absentCount", {
+            count: details.voting.n_absent,
+          })}
+          sx={{ ...commonStyles.compactChipSm }}
+        />
+      </Box>
+      <Typography sx={{ fontSize: "0.78rem", color: colors.textSecondary }}>
+        {tCommon("votingTargetLine", {
+          value:
+            details.voting.context_title ||
+            details.voting.section_title ||
+            details.voting.title ||
+            summary.context_title ||
+            summary.section_title ||
+            tDocuments("noTitle"),
+        })}
+      </Typography>
+      {details.voting.parliamentary_item && (
+        <Chip
+          size="small"
+          variant="outlined"
+          label={details.voting.parliamentary_item}
+          sx={{
+            ...commonStyles.compactChipSm,
+            width: "fit-content",
+          }}
+        />
+      )}
+      {details.governmentOpposition && (
+        <Typography sx={metaTextSx}>
+          Hallitus: {details.governmentOpposition.government_yes} jaa /{" "}
+          {details.governmentOpposition.government_no} ei, Oppositio:{" "}
+          {details.governmentOpposition.opposition_yes} jaa /{" "}
+          {details.governmentOpposition.opposition_no} ei
+        </Typography>
+      )}
+      <VotingResultsTable
+        partyBreakdown={details.partyBreakdown}
+        memberVotes={details.memberVotes}
+      />
+      <Box>
+        {extractDocumentIdentifiers([
+          details.voting.parliamentary_item,
+          details.voting.context_title,
+          details.voting.section_title,
+          details.voting.title,
+        ]).map((ref) => (
+          <DocumentCard key={`${details.voting.id}-${ref.identifier}`} docRef={ref} />
+        ))}
+      </Box>
+      {details.relatedVotings.length > 0 && (
+        <Box>
+          <Typography
+            sx={{
+              ...commonStyles.compactTextSm,
+              color: colors.textSecondary,
+            }}
+          >
+            {tDocuments("relatedVotingsSameSection")}
+          </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 0.5,
+              mt: 0.25,
+            }}
+          >
+            {details.relatedVotings.slice(0, 6).map((related) => (
+              <Chip
+                key={related.id}
+                size="small"
+                label={`${related.id}: ${related.n_yes}-${related.n_no}`}
+                variant="outlined"
+                sx={{ ...commonStyles.compactChipSm }}
+              />
+            ))}
+            {details.relatedVotings.length > 6 && (
+              <Typography
+                sx={{
+                  ...commonStyles.compactTextXs,
+                  color: colors.textSecondary,
+                }}
+              >
+                {tDocuments("moreOther", {
+                  count: details.relatedVotings.length - 6,
+                })}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 };
