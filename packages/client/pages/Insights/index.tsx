@@ -2,6 +2,7 @@ import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import BalanceIcon from "@mui/icons-material/Balance";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import EventBusyIcon from "@mui/icons-material/EventBusy";
 import GavelIcon from "@mui/icons-material/Gavel";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import MicIcon from "@mui/icons-material/Mic";
@@ -21,6 +22,7 @@ import { useScopedTranslation } from "#client/i18n/scoped";
 import { spacing } from "#client/theme";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import Attendance from "./Attendance";
 import CloseVotes from "./CloseVotes";
 import CoalitionOpposition from "./CoalitionOpposition";
 import PartyDiscipline from "./PartyDiscipline";
@@ -37,6 +39,7 @@ type DrawerType =
   | "closeVotes"
   | "coalitionOpposition"
   | "speechActivity"
+  | "attendance"
   | null;
 
 type DrawerKey = Exclude<DrawerType, null>;
@@ -153,6 +156,12 @@ export default () => {
       icon: <MicIcon sx={{ fontSize: 24 }} />,
       titleKey: "cards.speechActivity.title",
       descriptionKey: "cards.speechActivity.description",
+    },
+    {
+      key: "attendance",
+      icon: <EventBusyIcon sx={{ fontSize: 24 }} />,
+      titleKey: "cards.attendance.title",
+      descriptionKey: "cards.attendance.description",
     },
   ] as const satisfies readonly InsightCard[];
 
@@ -323,6 +332,15 @@ export default () => {
         PaperProps={drawerPaperProps}
       >
         <SpeechActivity onClose={closeDrawer} />
+      </Drawer>
+
+      <Drawer
+        anchor="right"
+        open={activeDrawer === "attendance"}
+        onClose={closeDrawer}
+        PaperProps={drawerPaperProps}
+      >
+        <Attendance onClose={closeDrawer} />
       </Drawer>
     </Box>
   );

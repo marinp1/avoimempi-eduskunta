@@ -1,5 +1,8 @@
 import type { Database } from "bun:sqlite";
 import ageDivisionOverTime from "../queries/AGE_DIVISION_OVER_TIME.sql";
+import attendanceByParty from "../queries/ATTENDANCE_BY_PARTY.sql";
+import attendancePerPerson from "../queries/ATTENDANCE_PER_PERSON.sql";
+import attendancePersonHistory from "../queries/ATTENDANCE_PERSON_HISTORY.sql";
 import closeVotes from "../queries/CLOSE_VOTES.sql";
 import coalitionVsOpposition from "../queries/COALITION_VS_OPPOSITION.sql";
 import committeeOverview from "../queries/COMMITTEE_OVERVIEW.sql";
@@ -420,6 +423,88 @@ export class AnalyticsRepository {
       $governmentStartDate: governmentStartDate,
     });
     return data;
+  }
+
+  public fetchAttendanceAnalytics(params?: {
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const endDateExclusiveValue = endDateExclusive(params?.endDate);
+    const stmt = this.db.query<
+      {
+        person_id: number;
+        first_name: string;
+        last_name: string;
+        sort_name: string;
+        party: string;
+        absent_count: number;
+        late_count: number;
+        total_roll_calls: number;
+        absence_rate: number;
+      },
+      {
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
+    >(attendancePerPerson);
+    return stmt.all({
+      $startDate: params?.startDate || null,
+      $endDateExclusive: endDateExclusiveValue,
+    });
+  }
+
+  public fetchAttendanceByParty(params?: {
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const endDateExclusiveValue = endDateExclusive(params?.endDate);
+    const stmt = this.db.query<
+      {
+        party: string;
+        absent_member_count: number;
+        total_absences: number;
+        total_late: number;
+        total_roll_calls: number;
+        avg_absence_rate: number;
+      },
+      {
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
+    >(attendanceByParty);
+    return stmt.all({
+      $startDate: params?.startDate || null,
+      $endDateExclusive: endDateExclusiveValue,
+    });
+  }
+
+  public fetchAttendancePersonHistory(params: {
+    personId: number;
+    startDate?: string;
+    endDate?: string;
+  }): {
+    session_date: string;
+    entry_type: string | null;
+    absence_reason: string | null;
+  }[] {
+    const endDateExclusiveValue = endDateExclusive(params.endDate);
+    const stmt = this.db.query<
+      {
+        session_date: string;
+        entry_type: string | null;
+        absence_reason: string | null;
+      },
+      {
+        $personId: number;
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+      }
+    >(attendancePersonHistory);
+    return stmt.all({
+      $personId: params.personId,
+      $startDate: params.startDate ?? null,
+      $endDateExclusive: endDateExclusiveValue,
+    });
   }
 
   public fetchPartyMembers(params: {
