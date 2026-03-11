@@ -467,12 +467,52 @@
         "government": "Hallitus",
         "opposition": "Oppositio"
       },
+      "headerSummary": {
+        "tenure": "Eduskuntavuodet",
+        "memberships": "Ryhmät",
+        "roles": "Tehtävät"
+      },
       "tabs": {
         "overview": "Yleistiedot",
         "votes": "Äänestykset",
         "speeches": "Puheenvuorot",
+        "initiatives": "Aloitteet",
         "questions": "Kysymykset",
         "positions": "Luottamustehtävät"
+      },
+      "analysis": {
+        "selectedDate": "Päivä: {{value}}",
+        "scopeSpecific": "Rajaus: {{value}}",
+        "scopeAll": "Kaikki kaudet",
+        "clearScope": "Tyhjennä rajaus",
+        "scopeHint": "Rajaus vaikuttaa äänestyksiin, puheenvuoroihin ja aloitteisiin aina kun päivämäärä on saatavilla.",
+        "governmentPeriodLabel": "Hallituskausi",
+        "selectGovernmentHint": "Näytä kaikki kaudet tai rajaa yhteen hallitukseen.",
+        "resultCount": "{{shown}} / {{total}} tulosta",
+        "searchVotes": "Hae äänestyksiä otsikolla tai asiakohdalla",
+        "searchSpeeches": "Hae puheenvuoroja sisällöstä tai asiakohdasta",
+        "searchInitiatives": "Hae aloitteita otsikolla tai tunnuksella",
+        "voteFilter": "Ääni",
+        "typeFilter": "Tyyppi",
+        "roleFilter": "Rooli",
+        "sort": "Järjestys",
+        "sortNewest": "Uusimmat ensin",
+        "sortOldest": "Vanhimmat ensin",
+        "sortLongest": "Pisimmät ensin",
+        "noFilteredResults": "Ei tuloksia nykyisillä rajauksilla.",
+        "availableTotal": "kaikkiaan",
+        "scope": "Aktiivinen rajaus",
+        "closeDialog": "Sulje edustajan tiedot",
+        "sectionsAria": "Edustajan analyysin osiot"
+      },
+      "overview": {
+        "currentAge": "Ikä valitulla päivällä",
+        "metrics": {
+          "tenure": "Eduskuntakausi",
+          "memberships": "Ryhmäjaksot",
+          "districts": "Vaalipiirit",
+          "governments": "Hallitukset"
+        }
       },
       "votes": {
         "participation": "Osallistuminen",
