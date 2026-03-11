@@ -4,6 +4,7 @@ set -euo pipefail
 APP_DIR="/opt/avoimempi-eduskunta"
 STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR:-/var/lib/avoimempi-eduskunta-pipeline/data}"
 DB_PATH="${DB_PATH:-/var/lib/avoimempi-eduskunta-pipeline/avoimempi-eduskunta.db}"
+TRACE_DB_PATH="${TRACE_DB_PATH:-/var/lib/avoimempi-eduskunta-pipeline/avoimempi-eduskunta-trace.db}"
 PIPELINE_BUILD_DIR="${APP_DIR}/dist/pipeline"
 LOG_FILE="/var/log/avoimempi-eduskunta/pipeline-jobs.log"
 LOCK_DIR="/var/lib/avoimempi-eduskunta-pipeline/locks"
@@ -127,7 +128,7 @@ migrate_and_sync() {
   require_bundle "${migrator_cli}"
   mkdir -p "$(dirname "${DB_PATH}")"
   log "Running migration"
-  (cd "${APP_DIR}" && env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" DB_PATH="${DB_PATH}" \
+  (cd "${APP_DIR}" && env STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR}" DB_PATH="${DB_PATH}" TRACE_DB_PATH="${TRACE_DB_PATH}" \
     bun "${migrator_cli}" >> "${LOG_FILE}" 2>&1)
   log "Activating new DB on app"
   activate_on_app "${DB_PATH}" >> "${LOG_FILE}" 2>&1
