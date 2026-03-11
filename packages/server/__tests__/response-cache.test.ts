@@ -236,6 +236,38 @@ describe("createResponseCache", () => {
       expect(calls).toBe(3);
     });
 
+    test("expired entries are evicted before enforcing maxEntries, allowing new insertions", async () => {
+      const cache = createResponseCache({
+        generationKey: "2024-01-01T00:00:00.000Z",
+        maxEntries: 1,
+        ttlMs: 20, // short TTL
+      });
+      let calls = 0;
+      const handler = async (req: Request) => {
+        calls++;
+        return Response.json({ path: new URL(req.url).pathname });
+      };
+      const wrapped = cache.wrapRoutes({
+        "/api/a": { GET: handler },
+        "/api/b": { GET: handler },
+      });
+
+      // Fill the one slot with /api/a
+      await (wrapped["/api/a"] as { GET: typeof handler }).GET(makeRequest("/api/a"));
+      expect(calls).toBe(1);
+
+      // Let the TTL expire
+      await Bun.sleep(30);
+
+      // /api/b should now be insertable because the expired /api/a entry was evicted
+      await (wrapped["/api/b"] as { GET: typeof handler }).GET(makeRequest("/api/b"));
+      const secondB = await (wrapped["/api/b"] as { GET: typeof handler }).GET(makeRequest("/api/b"));
+      expect(secondB.status).toBe(200);
+
+      // /api/b: 1 miss (inserted after eviction), 1 hit
+      expect(calls).toBe(2);
+    });
+
     test("size() counts live entries", async () => {
       const cache = createResponseCache({
         generationKey: "2024-01-01T00:00:00.000Z",

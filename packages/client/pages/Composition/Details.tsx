@@ -2233,7 +2233,7 @@ const SpeechesTab: React.FC<{
       .then((data) => {
         setSpeeches((prev) => [...(prev ?? []), ...data.speeches]);
       })
-      .catch(() => {})
+      .catch((err) => console.warn("Failed to load more speeches", err))
       .finally(() => setLoadingMore(false));
   };
 
@@ -3804,7 +3804,7 @@ export const RepresentativeDetails: React.FC<{
       )
         .then((res) => res.json())
         .then(setGovernmentPeriods)
-        .catch(() => {});
+        .catch((err) => console.warn("Failed to fetch government periods", err));
     } else {
       setDetails(undefined);
       setGovernmentPeriods([]);
