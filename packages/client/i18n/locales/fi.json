@@ -376,6 +376,7 @@
         "missingSectionKey": "Tältä puheenvuorolta puuttuu asiakohdan tunniste, joten kontekstia ei voi avata.",
         "noSectionTitle": "Asiakohta",
         "showConversation": "Näytä keskustelu",
+        "loadMore": "Näytä lisää ({{loaded}}/{{total}})",
         "drawer": {
           "title": "Keskustelun konteksti",
           "closeAria": "Sulje keskustelu",

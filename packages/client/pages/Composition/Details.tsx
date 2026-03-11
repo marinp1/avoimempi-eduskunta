@@ -38,7 +38,8 @@ import { useThemedColors } from "#client/theme/ThemeContext";
 import { isSafeExternalUrl } from "#client/utils/eduskunta-links";
 import { apiFetch } from "#client/utils/fetch";
 
-type SpeechType = ApiRouteItem<`/api/person/:id/speeches`>;
+type SpeechType =
+  ApiRouteResponse<`/api/person/:id/speeches`>["speeches"][number];
 
 type SectionSpeechType = Pick<
   DatabaseTables.Speech,
@@ -1225,6 +1226,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
   const { t: tComposition } = useScopedTranslation("composition");
   const themedColors = useThemedColors();
   const [speeches, setSpeeches] = React.useState<SpeechType[] | null>(null);
+  const [speechesTotal, setSpeechesTotal] = React.useState<number | null>(null);
   const [selectedSpeech, setSelectedSpeech] = React.useState<SpeechType | null>(
     null,
   );
@@ -1253,6 +1255,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
     null,
   );
   const [loading, setLoading] = React.useState(true);
+  const [loadingMore, setLoadingMore] = React.useState(false);
 
   React.useEffect(() => {
     let ignore = false;
@@ -1270,7 +1273,8 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
     fetchPersonSpeeches(personId, 50)
       .then((data) => {
         if (ignore) return;
-        setSpeeches(data);
+        setSpeeches(data.speeches);
+        setSpeechesTotal(data.total);
       })
       .catch(() => {
         if (ignore) return;
@@ -1284,6 +1288,17 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
       ignore = true;
     };
   }, [personId, tComposition]);
+
+  const loadMoreSpeeches = () => {
+    if (!speeches || loadingMore) return;
+    setLoadingMore(true);
+    fetchPersonSpeeches(personId, 50, speeches.length)
+      .then((data) => {
+        setSpeeches((prev) => [...(prev ?? []), ...data.speeches]);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingMore(false));
+  };
 
   const selectedSectionKey = selectedSpeech?.section_key || null;
   const selectedConversation = selectedSectionKey
@@ -1531,7 +1546,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
               color: themedColors.textPrimary,
             }}
           >
-            {speeches?.length || 0}
+            {speechesTotal ?? 0}
           </Typography>
           <Typography
             variant="caption"
@@ -1693,6 +1708,27 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
           {tComposition("details.speeches.noData")}
         </Typography>
       )}
+
+      {speeches &&
+        speechesTotal !== null &&
+        speeches.length < speechesTotal && (
+          <Box sx={{ textAlign: "center", mt: 1.5 }}>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={loadMoreSpeeches}
+              disabled={loadingMore}
+              startIcon={
+                loadingMore ? <CircularProgress size={14} /> : undefined
+              }
+            >
+              {tComposition("details.speeches.loadMore", {
+                loaded: speeches.length,
+                total: speechesTotal,
+              })}
+            </Button>
+          </Box>
+        )}
 
       <Drawer
         anchor="right"
