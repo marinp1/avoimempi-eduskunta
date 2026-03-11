@@ -5,6 +5,8 @@ import { getChangesArchiveDir, getChangesReportPath } from "#database";
 import { getSearchParams } from "./http";
 import { badRequest, json } from "./route-responses";
 
+const RUN_ID_RE = /^\d+$/;
+
 export const createCoreRoutes = (
   db: typeof import("../index").coreRoutesDataAccess,
 ) => ({
@@ -101,6 +103,9 @@ export const createCoreRoutes = (
     GET: async (req: Request) => {
       try {
         const runId = getSearchParams(req).get("run");
+        if (runId && !RUN_ID_RE.test(runId)) {
+          return badRequest("Invalid run id");
+        }
         const filePath = runId
           ? path.join(getChangesArchiveDir(), `${runId}.json`)
           : getChangesReportPath();
