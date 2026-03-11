@@ -169,7 +169,12 @@ declare global {
     };
 
     export type VotesByPerson = DatabaseTables.Voting &
-      Pick<DatabaseTables.Vote, "vote" | "group_abbreviation">;
+      Pick<DatabaseTables.Vote, "vote" | "group_abbreviation"> & {
+        government_name: string | null;
+        government_start_date: string | null;
+        government_end_date: string | null;
+        is_coalition: 0 | 1;
+      };
   }
 }
 
