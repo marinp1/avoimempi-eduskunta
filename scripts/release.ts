@@ -1,14 +1,12 @@
 #!/usr/bin/env bun
-// Usage: bun run release [major|minor|patch]
+// Usage: bun run release [major|minor|patch|alpha]
 // Auto-detects bump type from conventional commits if not specified.
+// Use "alpha" to increment the prerelease counter on the current base version.
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const ROOT = resolve(import.meta.dir, "..");
-
-// Set to a string like "alpha" or "beta" for pre-release builds; remove when releasing to production.
-const PRERELEASE = "alpha";
 
 function git(...args: string[]): string {
   const result = Bun.spawnSync(["git", ...args], { cwd: ROOT });
@@ -35,12 +33,17 @@ if (commits.length === 0 && !process.argv[2]) {
 }
 
 // 3. Determine bump type
-type BumpType = "major" | "minor" | "patch";
+type BumpType = "major" | "minor" | "patch" | "alpha";
 const cliArg = process.argv[2] as BumpType | undefined;
-const validBumps = new Set(["major", "minor", "patch"]);
+const validBumps = new Set<string>(["major", "minor", "patch", "alpha"]);
+
+if (cliArg && !validBumps.has(cliArg)) {
+  console.error(`Unknown bump type: ${cliArg}. Use: major | minor | patch | alpha`);
+  process.exit(1);
+}
 
 let bump: BumpType;
-if (cliArg && validBumps.has(cliArg)) {
+if (cliArg) {
   bump = cliArg;
 } else {
   const hasBreaking = commits.some(
@@ -52,18 +55,28 @@ if (cliArg && validBumps.has(cliArg)) {
   bump = hasBreaking ? "major" : hasFeat ? "minor" : "patch";
 }
 
-// 4. Bump version in package.json
+// 4. Compute next version
 const pkgPath = resolve(ROOT, "package.json");
 const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
-const baseVersion = pkg.version.replace(/-.*$/, "");
+const currentVersion: string = pkg.version;
+const baseVersion = currentVersion.replace(/-.*$/, "");
 const [maj, min, pat] = baseVersion.split(".").map(Number);
-const semver =
-  bump === "major"
-    ? `${maj + 1}.0.0`
-    : bump === "minor"
-      ? `${maj}.${min + 1}.0`
-      : `${maj}.${min}.${pat + 1}`;
-const next = PRERELEASE ? `${semver}-${PRERELEASE}` : semver;
+
+let next: string;
+if (bump === "alpha") {
+  const alphaMatch = currentVersion.match(/-alpha(?:\.(\d+))?$/);
+  const currentAlphaNum = alphaMatch ? Number(alphaMatch[1] ?? 0) : 0;
+  next = `${baseVersion}-alpha.${currentAlphaNum + 1}`;
+} else {
+  const semver =
+    bump === "major"
+      ? `${maj + 1}.0.0`
+      : bump === "minor"
+        ? `${maj}.${min + 1}.0`
+        : `${maj}.${min}.${pat + 1}`;
+  next = semver;
+}
+
 pkg.version = next;
 writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
 
