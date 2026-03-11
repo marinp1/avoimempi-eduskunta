@@ -1,4 +1,7 @@
-import { collectServerQueryAudit, summarizeQueryAudit } from "../database/query-audit";
+import {
+  collectServerQueryAudit,
+  summarizeQueryAudit,
+} from "../database/query-audit";
 
 const records = collectServerQueryAudit();
 const summary = summarizeQueryAudit(records);

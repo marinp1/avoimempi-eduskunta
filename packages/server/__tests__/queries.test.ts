@@ -1449,7 +1449,16 @@ describe("Party queries", () => {
     db.run(
       `INSERT INTO Representative (person_id, last_name, first_name, sort_name, party, gender, birth_date, minister)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [1999, "Vornanen", "Timo", "Vornanen Timo", "tv", "Mies", "1980-01-01", 0],
+      [
+        1999,
+        "Vornanen",
+        "Timo",
+        "Vornanen Timo",
+        "tv",
+        "Mies",
+        "1980-01-01",
+        0,
+      ],
     );
     db.run(
       `INSERT INTO Term (id, person_id, start_date, end_date, start_year, end_year)
@@ -1462,10 +1471,10 @@ describe("Party queries", () => {
        VALUES (?, ?, ?, ?, ?, ?)`,
       [99, 1999, "pg61", "Eduskuntaryhmä Timo Vornanen", "2024-05-23", null],
     );
-    db.run(
-      `INSERT INTO Voting (id, start_time) VALUES (?, ?)`,
-      [99, "2024-05-24T12:00:00"],
-    );
+    db.run(`INSERT INTO Voting (id, start_time) VALUES (?, ?)`, [
+      99,
+      "2024-05-24T12:00:00",
+    ]);
     db.run(
       `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbreviation)
        VALUES (?, ?, ?, ?, ?)`,
@@ -1482,9 +1491,7 @@ describe("Party queries", () => {
     }) as any[];
     stmt.finalize();
 
-    const vornanenGroup = rows.find(
-      (row: any) => row.party_code === "pg61",
-    );
+    const vornanenGroup = rows.find((row: any) => row.party_code === "pg61");
     expect(vornanenGroup).toBeDefined();
     expect(vornanenGroup.party_display_code).toBe("tv");
     expect(vornanenGroup.votes_cast).toBe(1);

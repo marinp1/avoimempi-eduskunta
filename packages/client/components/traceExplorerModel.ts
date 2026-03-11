@@ -19,7 +19,9 @@ export const resolveTraceSelection = <T extends TraceItemLike>(
   if (!preferredItem) return items[0] ?? null;
 
   const preferredKey = getTraceItemKey(preferredItem);
-  return items.find((item) => getTraceItemKey(item) === preferredKey) ?? items[0];
+  return (
+    items.find((item) => getTraceItemKey(item) === preferredKey) ?? items[0]
+  );
 };
 
 export const groupTraceItemsByTable = <T extends TraceItemLike>(items: T[]) => {

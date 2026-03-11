@@ -38,9 +38,9 @@ describe("LocalStorageProvider path traversal protection", () => {
     await withTempDir(async (dir) => {
       const storage = new LocalStorageProvider(dir);
 
-      await expect(storage.put("subdir/../../etc/shadow", "evil")).rejects.toThrow(
-        /escapes the storage base directory/,
-      );
+      await expect(
+        storage.put("subdir/../../etc/shadow", "evil"),
+      ).rejects.toThrow(/escapes the storage base directory/);
     });
   });
 
@@ -48,7 +48,9 @@ describe("LocalStorageProvider path traversal protection", () => {
     await withTempDir(async (dir) => {
       const storage = new LocalStorageProvider(dir);
 
-      await expect(storage.put("subdir/file.json", "data")).resolves.toBeUndefined();
+      await expect(
+        storage.put("subdir/file.json", "data"),
+      ).resolves.toBeUndefined();
       const result = await storage.get("subdir/file.json");
       expect(result).toBe("data");
     });

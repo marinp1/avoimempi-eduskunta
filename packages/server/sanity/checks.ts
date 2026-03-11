@@ -170,6 +170,303 @@ export const sanityChecks: SanityCheckDefinition[] = [
         .all(),
   },
 
+  {
+    id: "vote-group-abbreviation-trimmed",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Äänien ryhmätunnukset ilman reunavälilyöntejä",
+    description:
+      "Vote.group_abbreviation-arvon tulee olla valmiiksi trimmattu ilman alku- tai loppuvälilyöntejä.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT id, voting_id, person_id, group_abbreviation
+           FROM Vote
+           WHERE group_abbreviation IS NOT NULL
+             AND group_abbreviation != TRIM(group_abbreviation)`,
+        )
+        .all(),
+  },
+
+  {
+    id: "speech-party-abbreviation-null-not-empty",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Puoluekoodi puuttuu NULL-arvona",
+    description:
+      "Speech.party_abbreviation-kentässä puuttuva arvo pitää tallentaa NULL-arvona, ei tyhjänä merkkijonona.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT id, key, party_abbreviation
+           FROM Speech
+           WHERE party_abbreviation = ''`,
+        )
+        .all(),
+  },
+
+  {
+    id: "speech-ministry-null-not-empty",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Ministeriö puuttuu NULL-arvona",
+    description:
+      "Speech.ministry-kentässä puuttuva arvo pitää tallentaa NULL-arvona, ei tyhjänä merkkijonona.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT id, key, ministry
+           FROM Speech
+           WHERE ministry = ''`,
+        )
+        .all(),
+  },
+
+  {
+    id: "section-note-null-not-empty",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Kohtahuomautus puuttuu NULL-arvona",
+    description:
+      "Section.note-kentässä puuttuva arvo pitää tallentaa NULL-arvona, ei tyhjänä merkkijonona.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT key, note
+           FROM Section
+           WHERE note = ''`,
+        )
+        .all(),
+  },
+
+  {
+    id: "section-processing-title-null-not-empty",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Käsittelyotsikko puuttuu NULL-arvona",
+    description:
+      "Section.processing_title-kentässä puuttuva arvo pitää tallentaa NULL-arvona, ei tyhjänä merkkijonona.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT key, processing_title
+           FROM Section
+           WHERE processing_title = ''`,
+        )
+        .all(),
+  },
+
+  {
+    id: "section-resolution-null-not-empty",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Päätöslauselma puuttuu NULL-arvona",
+    description:
+      "Section.resolution-kentässä puuttuva arvo pitää tallentaa NULL-arvona, ei tyhjänä merkkijonona.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT key, resolution
+           FROM Section
+           WHERE resolution = ''`,
+        )
+        .all(),
+  },
+
+  {
+    id: "voting-title-null-not-empty",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Äänestyksen otsikko puuttuu NULL-arvona",
+    description:
+      "Voting.title-kentässä puuttuva arvo pitää tallentaa NULL-arvona, ei tyhjänä merkkijonona.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT id, session_key, number, title
+           FROM Voting
+           WHERE title = ''`,
+        )
+        .all(),
+  },
+
+  {
+    id: "vote-group-abbreviation-lowercase",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Äänien ryhmätunnukset pienaakkosin",
+    description:
+      "Vote.group_abbreviation-arvojen tulee olla normalisoitu pienaakkosiin.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT id, voting_id, person_id, group_abbreviation
+           FROM Vote
+           WHERE group_abbreviation IS NOT NULL
+             AND group_abbreviation != LOWER(group_abbreviation)`,
+        )
+        .all(),
+  },
+
+  {
+    id: "speech-party-abbreviation-lowercase",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Puheenvuorojen puoluekoodit pienaakkosin",
+    description:
+      "Speech.party_abbreviation-arvojen tulee olla normalisoitu pienaakkosiin.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT id, key, party_abbreviation
+           FROM Speech
+           WHERE party_abbreviation IS NOT NULL
+             AND party_abbreviation != ''
+             AND party_abbreviation != LOWER(party_abbreviation)`,
+        )
+        .all(),
+  },
+
+  {
+    id: "roll-call-entry-party-lowercase",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Nimenhuutopuolueet pienaakkosin",
+    description:
+      "RollCallEntry.party-arvojen tulee olla normalisoitu pienaakkosiin.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT roll_call_id, entry_order, person_id, party
+           FROM RollCallEntry
+           WHERE party IS NOT NULL
+             AND party != LOWER(party)`,
+        )
+        .all(),
+  },
+
+  {
+    id: "vaski-document-type-normalized",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Vaski-asiakirjatyypit normalisoitu",
+    description:
+      "VaskiDocument.document_type-arvon tulee olla normalisoitu tunnettuihin pienaakkosisiin arvoihin.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT id, document_type, edk_identifier, source_path
+           FROM VaskiDocument
+           WHERE document_type NOT IN ('pöytäkirja', 'nimenhuutoraportti')`,
+        )
+        .all(),
+  },
+
+  {
+    id: "roll-call-entry-names-present",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Nimenhuutoriveillä on nimet",
+    description:
+      "RollCallEntry.first_name- ja last_name-kenttien tulee sisältää arvo, ei NULL- tai tyhjää merkkijonoa.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT roll_call_id, entry_order, person_id, first_name, last_name
+           FROM RollCallEntry
+           WHERE first_name IS NULL OR TRIM(first_name) = ''
+              OR last_name IS NULL OR TRIM(last_name) = ''`,
+        )
+        .all(),
+  },
+
+  {
+    id: "roll-call-entry-names-trimmed",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Nimenhuutorivien nimet trimmattuja",
+    description:
+      "RollCallEntry.first_name- ja last_name-arvoissa ei saa olla alku- tai loppuvälilyöntejä.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT roll_call_id, entry_order, person_id, first_name, last_name
+           FROM RollCallEntry
+           WHERE first_name != TRIM(first_name)
+              OR last_name != TRIM(last_name)`,
+        )
+        .all(),
+  },
+
+  {
+    id: "vote-values-normalized",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Ääniarvot normalisoitu",
+    description:
+      "Vote.vote-kentän arvon tulee olla Jaa, Ei, Tyhjää tai Poissa; lähdekielen arvoja ei saa jäädä tietokantaan.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT id, voting_id, person_id, vote
+           FROM Vote
+           WHERE vote NOT IN ('Jaa', 'Ei', ('Tyhj' || char(228, 228)), 'Poissa')`,
+        )
+        .all(),
+  },
+
+  {
+    id: "roll-call-report-status-known-values",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Nimenhuutoraportin tila tunnetuissa arvoissa",
+    description:
+      "RollCallReport.status-kentässä saa olla vain tunnettuja lähdearvoja silloin kun arvo on asetettu.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT id, edk_identifier, status
+           FROM RollCallReport
+           WHERE status IS NOT NULL
+             AND status NOT IN ('5', '8')`,
+        )
+        .all(),
+  },
+
+  {
+    id: "vaski-document-source-path-present",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Vaski-asiakirjoilla on lähdepolku",
+    description:
+      "VaskiDocument.source_path-kentän tulee sisältää ei-tyhjä lähdepolku.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT id, document_type, edk_identifier, source_path
+           FROM VaskiDocument
+           WHERE source_path IS NULL OR TRIM(source_path) = ''`,
+        )
+        .all(),
+  },
+
+  {
+    id: "speech-content-source-path-present",
+    category: "Data Quality",
+    severity: "warning",
+    name: "Puhesisällöillä on lähdepolku",
+    description:
+      "SpeechContent.source_path-kentän tulee sisältää ei-tyhjä lähdepolku.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT speech_id, session_key, section_key, source_path
+           FROM SpeechContent
+           WHERE source_path IS NULL OR TRIM(source_path) = ''`,
+        )
+        .all(),
+  },
+
   // ── Data Integrity ───────────────────────────────────────────────────────────
 
   {
@@ -365,6 +662,58 @@ export const sanityChecks: SanityCheckDefinition[] = [
            WHERE NOT EXISTS (
              SELECT 1 FROM Term t WHERE t.person_id = r.person_id
            )`,
+        )
+        .all(),
+  },
+
+  // ── Schema Integrity ─────────────────────────────────────────────────────────
+
+  {
+    id: "vote-group-abbreviation-column-name-correct",
+    category: "Schema Integrity",
+    severity: "error",
+    name: "Vote-taulun ryhmätunnussarake nimetty oikein",
+    description:
+      "Vote-taulussa tulee olla sarake group_abbreviation eikä virheellisesti nimettyä group_abbrviation-saraketta.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT 'missing_group_abbreviation' AS issue
+           WHERE NOT EXISTS (
+             SELECT 1 FROM pragma_table_info('Vote')
+             WHERE name = 'group_abbreviation'
+           )
+           UNION ALL
+           SELECT 'unexpected_group_abbrviation' AS issue
+           WHERE EXISTS (
+             SELECT 1 FROM pragma_table_info('Vote')
+             WHERE name = 'group_abbrviation'
+           )`,
+        )
+        .all(),
+  },
+
+  {
+    id: "legacy-document-tables-absent",
+    category: "Schema Integrity",
+    severity: "error",
+    name: "Legacy-asiakirjataulut poistettu",
+    description:
+      "Poistettujen legacy-asiakirjataulujen ei tule enää olla mukana lopullisessa skeemassa.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT name
+           FROM sqlite_master
+           WHERE type = 'table'
+             AND name IN (
+               'SessionSectionSpeech',
+               'Document',
+               'DocumentActor',
+               'DocumentSubject',
+               'DocumentRelation',
+               'SessionMinutesItem'
+             )`,
         )
         .all(),
   },

@@ -168,9 +168,9 @@ export const PageDataSourcesDrawer = ({
 }) => {
   const { t: tPageSources } = useScopedTranslation("pageSources");
   const { t: tNavigation } = useScopedTranslation("navigation");
-  const themedColors = useThemedColors();
   const { pageItems, registerOpenDrawer } = useTrace();
-  const { currentDrawerKey, openRootDrawer, replaceDrawer } = useOverlayDrawer();
+  const { currentDrawerKey, openRootDrawer, replaceDrawer } =
+    useOverlayDrawer();
 
   const sourceDefinitions = PAGE_SOURCES[activeRoute] ?? [];
 
@@ -304,7 +304,10 @@ const TraceOverlayContent = ({
     }
 
     if (!selectedItem) return;
-    if (!traceItem || getTraceItemKey(traceItem) !== getTraceItemKey(selectedItem)) {
+    if (
+      !traceItem ||
+      getTraceItemKey(traceItem) !== getTraceItemKey(selectedItem)
+    ) {
       setTraceItem(selectedItem);
     }
   }, [
@@ -541,7 +544,10 @@ const TraceItemBrowser = ({
           borderBottom: `1px solid ${themedColors.dataBorder}`,
         }}
       >
-        <Typography variant="overline" sx={{ color: themedColors.textTertiary }}>
+        <Typography
+          variant="overline"
+          sx={{ color: themedColors.textTertiary }}
+        >
           {t("itemBrowserEyebrow")}
         </Typography>
         <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
@@ -695,7 +701,10 @@ const TraceFlowCanvas = ({
     >
       <Stack spacing={1.5}>
         <Box>
-          <Typography variant="overline" sx={{ color: themedColors.textTertiary }}>
+          <Typography
+            variant="overline"
+            sx={{ color: themedColors.textTertiary }}
+          >
             {t("itemTraceTitle")}
           </Typography>
           <Typography
@@ -743,7 +752,11 @@ const TraceFlowCanvas = ({
             </Typography>
             <Typography
               variant="caption"
-              sx={{ display: "block", color: themedColors.textSecondary, mt: 0.75 }}
+              sx={{
+                display: "block",
+                color: themedColors.textSecondary,
+                mt: 0.75,
+              }}
             >
               {t("flowStepVisibleCopy")}
             </Typography>
@@ -763,12 +776,18 @@ const TraceFlowCanvas = ({
               </Box>
             ) : (
               <>
-                <Typography variant="caption" sx={{ display: "block", mb: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{ display: "block", mb: 0.5 }}
+                >
                   {t("lastScrapeLine", {
                     value: formatDateTime(rowTrace?.scrapedAt ?? null),
                   })}
                 </Typography>
-                <Typography variant="caption" sx={{ display: "block", mb: 0.75 }}>
+                <Typography
+                  variant="caption"
+                  sx={{ display: "block", mb: 0.75 }}
+                >
                   {t("lastMigrationLine", {
                     value: formatDateTime(rowTrace?.migratedAt ?? null),
                   })}
@@ -796,7 +815,11 @@ const TraceFlowCanvas = ({
             </Typography>
             <Typography
               variant="caption"
-              sx={{ display: "block", color: themedColors.textSecondary, mb: 1.25 }}
+              sx={{
+                display: "block",
+                color: themedColors.textSecondary,
+                mb: 1.25,
+              }}
             >
               {t("flowStepApiCopy")}
             </Typography>
@@ -816,7 +839,10 @@ const TraceFlowCanvas = ({
                 {t("openApiSource")}
               </Button>
             ) : (
-              <Typography variant="caption" sx={{ color: themedColors.textTertiary }}>
+              <Typography
+                variant="caption"
+                sx={{ color: themedColors.textTertiary }}
+              >
                 {t("openApiUnavailable")}
               </Typography>
             )}
@@ -868,7 +894,10 @@ const TraceFlowStep = ({
         {icon}
       </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Typography variant="overline" sx={{ color: themedColors.textTertiary }}>
+        <Typography
+          variant="overline"
+          sx={{ color: themedColors.textTertiary }}
+        >
           {eyebrow}
         </Typography>
         <Typography variant="body2" sx={{ fontWeight: 700, mb: 1 }}>
@@ -938,7 +967,10 @@ const TracePageSourcesTab = ({
   return (
     <Box sx={{ display: "grid", gap: 2 }}>
       <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-        <Chip size="small" label={t("tablesCountMeta", { count: totalTables })} />
+        <Chip
+          size="small"
+          label={t("tablesCountMeta", { count: totalTables })}
+        />
         <Chip
           size="small"
           label={t("summaryRowsMeta", { count: totalImportedRows })}
@@ -992,12 +1024,18 @@ const TracePageSourcesTab = ({
                   <Chip size="small" label={sourceDefinition.tableName} />
                 </Stack>
                 <Divider sx={{ mb: 1.25 }} />
-                <Typography variant="caption" sx={{ display: "block", mb: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{ display: "block", mb: 0.5 }}
+                >
                   {t("lastScrapeLine", {
                     value: formatDateTime(summary?.lastScrapedAt ?? null),
                   })}
                 </Typography>
-                <Typography variant="caption" sx={{ display: "block", mb: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{ display: "block", mb: 0.5 }}
+                >
                   {t("lastMigrationLine", {
                     value: formatDateTime(summary?.lastMigratedAt ?? null),
                   })}

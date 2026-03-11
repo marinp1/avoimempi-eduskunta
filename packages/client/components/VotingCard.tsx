@@ -17,8 +17,8 @@ import {
   extractDocumentIdentifiers,
 } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
-import { TraceRegistration } from "#client/context/TraceContext";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
+import { TraceRegistration } from "#client/context/TraceContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
 import { colors, commonStyles } from "#client/theme";

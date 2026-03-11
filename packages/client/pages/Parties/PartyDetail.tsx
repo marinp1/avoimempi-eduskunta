@@ -4,6 +4,7 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import {
+  Alert,
   Box,
   Button,
   Chip,
@@ -39,6 +40,7 @@ import { colors, commonStyles, spacing } from "#client/theme";
 import { DataCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
+import { warnInDevelopment } from "#client/utils/request-errors";
 
 type PartySummary = ApiRouteItem<`/api/parties/summary`>;
 type PartyMember = ApiRouteItem<`/api/parties/:code/members`>;
@@ -68,9 +70,12 @@ const MembersTab: React.FC<{
   const { t: tParties } = useScopedTranslation("parties");
   const [members, setMembers] = useState<PartyMember[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams({ asOfDate });
     if (startDate) params.set("startDate", startDate);
     if (endDate) params.set("endDate", endDate);
@@ -78,16 +83,28 @@ const MembersTab: React.FC<{
       params.set("governmentName", governmentName);
       params.set("governmentStartDate", governmentStartDate);
     }
-    apiFetch(`/api/parties/${partyCode}/members?${params.toString()}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setMembers(data);
-        setLoading(false);
+    apiFetch(`/api/parties/${partyCode}/members?${params.toString()}`, {
+      signal: controller.signal,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
       })
-      .catch(() => {
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        setMembers(data);
+        setError(null);
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        warnInDevelopment("Failed to fetch party members", err);
         setMembers([]);
-        setLoading(false);
+        setError(tParties("detail.membersLoadError"));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
       });
+    return () => controller.abort();
   }, [
     asOfDate,
     endDate,
@@ -103,6 +120,8 @@ const MembersTab: React.FC<{
         <CircularProgress size={28} />
       </Box>
     );
+
+  if (error) return <Alert severity="error">{error}</Alert>;
 
   if (!members || members.length === 0)
     return (
@@ -188,6 +207,7 @@ const VotingTab: React.FC = () => {
   const { selectedHallituskausi } = useHallituskausi();
   const [data, setData] = useState<CoalitionOppositionRow[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expandedVotingIds, setExpandedVotingIds] = useState<Set<number>>(
     new Set(),
   );
@@ -197,9 +217,14 @@ const VotingTab: React.FC = () => {
   const [votingDetailsById, setVotingDetailsById] = useState<
     Record<number, VotingInlineDetails>
   >({});
+  const [failedVotingDetailIds, setFailedVotingDetailIds] = useState<
+    Set<number>
+  >(new Set());
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams({ limit: "30" });
     if (selectedHallituskausi) {
       params.set("startDate", selectedHallituskausi.startDate);
@@ -207,19 +232,35 @@ const VotingTab: React.FC = () => {
         params.set("endDate", selectedHallituskausi.endDate);
       }
     }
-    apiFetch(`/api/analytics/coalition-opposition?${params.toString()}`)
-      .then((res) => res.json())
+    apiFetch(`/api/analytics/coalition-opposition?${params.toString()}`, {
+      signal: controller.signal,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then((result) => {
+        if (controller.signal.aborted) return;
         setData(result);
+        setError(null);
         setExpandedVotingIds(new Set());
         setLoadingVotingDetails(new Set());
         setVotingDetailsById({});
-        setLoading(false);
+        setFailedVotingDetailIds(new Set());
       })
-      .catch(() => {
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        warnInDevelopment(
+          "Failed to fetch coalition-opposition analytics",
+          err,
+        );
         setData([]);
-        setLoading(false);
+        setError(tParties("detail.votingLoadError"));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
       });
+    return () => controller.abort();
   }, [selectedHallituskausi]);
 
   const fetchVotingDetails = async (votingId: number) => {
@@ -228,9 +269,17 @@ const VotingTab: React.FC = () => {
     setLoadingVotingDetails((prev) => new Set(prev).add(votingId));
     try {
       const res = await apiFetch(`/api/votings/${votingId}/details`);
-      if (!res.ok) return;
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
+      setFailedVotingDetailIds((prev) => {
+        const next = new Set(prev);
+        next.delete(votingId);
+        return next;
+      });
       setVotingDetailsById((prev) => ({ ...prev, [votingId]: data }));
+    } catch (err) {
+      warnInDevelopment(`Failed to fetch voting details for ${votingId}`, err);
+      setFailedVotingDetailIds((prev) => new Set(prev).add(votingId));
     } finally {
       setLoadingVotingDetails((prev) => {
         const next = new Set(prev);
@@ -257,6 +306,8 @@ const VotingTab: React.FC = () => {
         <CircularProgress size={28} />
       </Box>
     );
+
+  if (error) return <Alert severity="error">{error}</Alert>;
 
   if (!data || data.length === 0)
     return (
@@ -446,6 +497,16 @@ const VotingTab: React.FC = () => {
                       />
                     </Box>
                   )}
+                  {!detailsLoading &&
+                  !details &&
+                  failedVotingDetailIds.has(vote.voting_id) ? (
+                    <Typography
+                      variant="caption"
+                      sx={{ color: themedColors.textSecondary }}
+                    >
+                      {tParties("detail.votingDetailsLoadError")}
+                    </Typography>
+                  ) : null}
                 </Box>
               </Collapse>
             </Box>
@@ -467,9 +528,12 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
     useState<PartyDisciplineRow | null>(null);
   const [dissents, setDissents] = useState<DissentRow[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams();
     if (selectedHallituskausi) {
       params.set("startDate", selectedHallituskausi.startDate);
@@ -481,14 +545,22 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
       ? (`?${params.toString()}` as `?${string}`)
       : "";
     Promise.all([
-      apiFetch(`/api/analytics/party-discipline${query}`).then((res) =>
-        res.json(),
-      ),
+      apiFetch(`/api/analytics/party-discipline${query}`, {
+        signal: controller.signal,
+      }).then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      }),
       apiFetch(
         `/api/analytics/dissent?limit=200${params.toString() ? `&${params.toString()}` : ""}`,
-      ).then((res) => res.json()),
+        { signal: controller.signal },
+      ).then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      }),
     ])
       .then(([allDiscipline, allDissents]) => {
+        if (controller.signal.aborted) return;
         const partyDiscipline = (allDiscipline as PartyDisciplineRow[]).find(
           (row) => row.party_code === partyCode,
         );
@@ -498,13 +570,19 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
           (row) => row.party_code === partyCode,
         );
         setDissents(partyDissents);
-        setLoading(false);
+        setError(null);
       })
-      .catch(() => {
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        warnInDevelopment("Failed to fetch party discipline data", err);
         setDisciplineData(null);
         setDissents([]);
-        setLoading(false);
+        setError(t("detail.disciplineLoadError"));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
       });
+    return () => controller.abort();
   }, [partyCode, selectedHallituskausi]);
 
   if (loading)
@@ -513,6 +591,8 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
         <CircularProgress size={28} />
       </Box>
     );
+
+  if (error) return <Alert severity="error">{error}</Alert>;
 
   if (!disciplineData)
     return (

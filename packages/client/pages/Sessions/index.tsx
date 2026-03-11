@@ -2,7 +2,6 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import EventIcon from "@mui/icons-material/Event";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import {
   Alert,
@@ -16,7 +15,6 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
-  Tooltip,
   Typography,
 } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
@@ -59,11 +57,7 @@ import {
 } from "#client/pages/Sessions/shared/utils";
 import { refs } from "#client/references";
 import { commonStyles } from "#client/theme";
-import {
-  DataCard,
-  PageIntro,
-  ToolbarCard,
-} from "#client/theme/components";
+import { DataCard, PageIntro, ToolbarCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import {
@@ -306,8 +300,7 @@ export default () => {
     }),
     [sessions],
   );
-  const viewModeLabel =
-    viewMode === "list" ? "Lista" : "Kalenteri";
+  const viewModeLabel = viewMode === "list" ? "Lista" : "Kalenteri";
 
   const formatSpeechTimeRange = (speech: Speech) => {
     const start = formatTime(speech.start_time);
@@ -615,8 +608,9 @@ export default () => {
       return knownRollCallIdentifiers.has(normalizedCode);
     };
     const minutesReferences: MinutesContentReferenceChip[] = references
-      .filter((reference): reference is MinutesContentReference & { code: string } =>
-        Boolean(reference.code),
+      .filter(
+        (reference): reference is MinutesContentReference & { code: string } =>
+          Boolean(reference.code),
       )
       .map((reference) => {
         const migratedAsRollCall = isReferenceMigratedAsRollCall(reference);
@@ -2360,21 +2354,21 @@ export default () => {
         mobileSummary={
           !loading && !error ? (
             <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
-                <Chip
-                  size="small"
-                  label={`Istuntoja: ${sessionSummary.totalSessions}`}
-                  sx={{ fontWeight: 700 }}
-                />
-                <Chip
-                  size="small"
-                  label={`Asiakohtia: ${sessionSummary.totalSections}`}
-                  sx={{ fontWeight: 700 }}
-                />
-                <Chip
-                  size="small"
-                  label={`Näkymä: ${viewModeLabel}`}
-                  sx={{ fontWeight: 700 }}
-                />
+              <Chip
+                size="small"
+                label={`Istuntoja: ${sessionSummary.totalSessions}`}
+                sx={{ fontWeight: 700 }}
+              />
+              <Chip
+                size="small"
+                label={`Asiakohtia: ${sessionSummary.totalSections}`}
+                sx={{ fontWeight: 700 }}
+              />
+              <Chip
+                size="small"
+                label={`Näkymä: ${viewModeLabel}`}
+                sx={{ fontWeight: 700 }}
+              />
             </Box>
           ) : undefined
         }
@@ -2818,9 +2812,7 @@ export default () => {
                               label={getSectionOrderLabel(section)}
                               size="small"
                               sx={{
-                                background: isActive
-                                  ? colors.primary
-                                  : "#fff",
+                                background: isActive ? colors.primary : "#fff",
                                 color: isActive ? "#fff" : colors.textSecondary,
                                 fontWeight: 700,
                                 ...commonStyles.compactTextMd,

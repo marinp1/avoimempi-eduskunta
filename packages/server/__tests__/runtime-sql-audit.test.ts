@@ -41,7 +41,9 @@ const DEFAULT_BINDINGS: Record<string, number | string | null> = {
   $year: "2024",
 };
 
-function getBindingsForSql(sql: string): Record<string, number | string | null> {
+function getBindingsForSql(
+  sql: string,
+): Record<string, number | string | null> {
   const bindings: Record<string, number | string | null> = {};
   const parameterNames = new Set<string>();
 
@@ -77,7 +79,9 @@ describe("runtime SQL audit", () => {
   });
 
   test("every runtime SQL file executes against the seeded test database", () => {
-    const records = collectServerQueryAudit().filter((record) => record.isRuntimeUsed);
+    const records = collectServerQueryAudit().filter(
+      (record) => record.isRuntimeUsed,
+    );
 
     expect(records.length).toBeGreaterThan(0);
 

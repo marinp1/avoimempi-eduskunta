@@ -294,7 +294,8 @@ const Parties = () => {
       })
     : tParties("scope.current");
   const participationWindow = useMemo(() => {
-    const start = selectedHallituskausi?.startDate ?? shiftIsoDateByMonths(asOfDate, -6);
+    const start =
+      selectedHallituskausi?.startDate ?? shiftIsoDateByMonths(asOfDate, -6);
     const end = asOfDate;
     return tParties("participationWindow", {
       start: formatDateFi(start, start),
@@ -333,21 +334,21 @@ const Parties = () => {
         mobileStatsPlacement="hidden"
         mobileSummary={
           <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
-              <Chip
-                size="small"
-                label={`${tParties("totalParties")}: ${parties.length}`}
-                sx={{ fontWeight: 700 }}
-              />
-              <Chip
-                size="small"
-                label={`${tParties("totalMembers")}: ${summary.totalMembers}`}
-                sx={{ fontWeight: 700 }}
-              />
-              <Chip
-                size="small"
-                label={`${summary.governmentParties} / ${summary.oppositionParties}`}
-                sx={{ fontWeight: 700 }}
-              />
+            <Chip
+              size="small"
+              label={`${tParties("totalParties")}: ${parties.length}`}
+              sx={{ fontWeight: 700 }}
+            />
+            <Chip
+              size="small"
+              label={`${tParties("totalMembers")}: ${summary.totalMembers}`}
+              sx={{ fontWeight: 700 }}
+            />
+            <Chip
+              size="small"
+              label={`${summary.governmentParties} / ${summary.oppositionParties}`}
+              sx={{ fontWeight: 700 }}
+            />
           </Box>
         }
         chips={
@@ -408,7 +409,11 @@ const Parties = () => {
             </Typography>
             <Typography
               variant="caption"
-              sx={{ color: themedColors.textTertiary, display: "block", mt: 0.5 }}
+              sx={{
+                color: themedColors.textTertiary,
+                display: "block",
+                mt: 0.5,
+              }}
             >
               {participationWindow}
             </Typography>
@@ -418,265 +423,270 @@ const Parties = () => {
 
       <Box id="parties-content">
         <Grid container spacing={spacing.md} sx={{ mb: spacing.md }}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <HighlightCard
-            title={tParties("highlights.largestParty")}
-            party={highlights.largestParty}
-            value={
-              highlights.largestParty
-                ? tParties("highlights.membersValue", {
-                    count: highlights.largestParty.member_count,
-                  })
-                : null
-            }
-          />
+          <Grid size={{ xs: 12, md: 4 }}>
+            <HighlightCard
+              title={tParties("highlights.largestParty")}
+              party={highlights.largestParty}
+              value={
+                highlights.largestParty
+                  ? tParties("highlights.membersValue", {
+                      count: highlights.largestParty.member_count,
+                    })
+                  : null
+              }
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <HighlightCard
+              title={tParties("highlights.highestParticipation")}
+              party={highlights.highestParticipation}
+              value={
+                highlights.highestParticipation
+                  ? `${(highlights.highestParticipation.participation_rate ?? 0).toFixed(1)}%`
+                  : null
+              }
+              caption={
+                highlights.highestParticipation
+                  ? tCommon("voteRatio", {
+                      cast: highlights.highestParticipation.votes_cast ?? 0,
+                      total: highlights.highestParticipation.total_votings ?? 0,
+                    })
+                  : null
+              }
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <HighlightCard
+              title={tParties("highlights.youngestAverageAge")}
+              party={highlights.youngestParty}
+              value={
+                highlights.youngestParty
+                  ? tParties("highlights.averageAgeValue", {
+                      age: (highlights.youngestParty.average_age ?? 0).toFixed(
+                        1,
+                      ),
+                    })
+                  : null
+              }
+            />
+          </Grid>
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <HighlightCard
-            title={tParties("highlights.highestParticipation")}
-            party={highlights.highestParticipation}
-            value={
-              highlights.highestParticipation
-                ? `${(highlights.highestParticipation.participation_rate ?? 0).toFixed(1)}%`
-                : null
-            }
-            caption={
-              highlights.highestParticipation
-                ? tCommon("voteRatio", {
-                    cast: highlights.highestParticipation.votes_cast ?? 0,
-                    total: highlights.highestParticipation.total_votings ?? 0,
-                  })
-                : null
-            }
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <HighlightCard
-            title={tParties("highlights.youngestAverageAge")}
-            party={highlights.youngestParty}
-            value={
-              highlights.youngestParty
-                ? tParties("highlights.averageAgeValue", {
-                    age: (highlights.youngestParty.average_age ?? 0).toFixed(1),
-                  })
-                : null
-            }
-          />
-        </Grid>
-      </Grid>
 
-      <DataCard sx={{ p: { xs: 2, md: 2.5 }, mb: spacing.md }}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 2,
-            flexDirection: { xs: "column", md: "row" },
-            mb: 2,
-          }}
-        >
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
-              {tParties("comparisonTitle")}
-            </Typography>
+        <DataCard sx={{ p: { xs: 2, md: 2.5 }, mb: spacing.md }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 2,
+              flexDirection: { xs: "column", md: "row" },
+              mb: 2,
+            }}
+          >
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                {tParties("comparisonTitle")}
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ color: themedColors.textSecondary }}
+              >
+                {tParties("comparisonSubtitle")}
+              </Typography>
+            </Box>
+            {selectedParty && (
+              <Button
+                variant="outlined"
+                onClick={() => clearSelection()}
+                sx={commonStyles.compactOutlinedPrimaryButton}
+              >
+                {tParties("clearSelection")}
+              </Button>
+            )}
+          </Box>
+
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1,
+              flexWrap: "wrap",
+              alignItems: "center",
+              mb: 2,
+            }}
+          >
+            <TextField
+              size="small"
+              value={searchValue}
+              onChange={(event) => setSearchValue(event.target.value)}
+              label={tCommon("search")}
+              placeholder={tParties("searchPlaceholder")}
+              sx={{
+                minWidth: { xs: "100%", md: 280 },
+                "& .MuiInputBase-input": { fontSize: "0.9rem" },
+              }}
+            />
+
+            {(["all", "government", "opposition"] as const).map((role) => {
+              const selected = roleFilter === role;
+              const label =
+                role === "all"
+                  ? tParties("filters.all")
+                  : role === "government"
+                    ? tParties("government")
+                    : tParties("opposition");
+              return (
+                <Chip
+                  key={role}
+                  clickable
+                  label={label}
+                  onClick={() => setRoleFilter(role)}
+                  sx={{
+                    fontWeight: 600,
+                    bgcolor: selected
+                      ? colors.primary
+                      : themedColors.backgroundPaper,
+                    color: selected ? "white" : themedColors.textSecondary,
+                    border: `1px solid ${selected ? colors.primary : themedColors.dataBorder}`,
+                  }}
+                />
+              );
+            })}
+
             <Typography
               variant="body2"
-              sx={{ color: themedColors.textSecondary }}
+              sx={{ color: themedColors.textSecondary, ml: { md: "auto" } }}
             >
-              {tParties("comparisonSubtitle")}
+              {tParties("sortBy")}
             </Typography>
+            {SORT_FIELDS.map((option) => {
+              const selected = sortField === option.field;
+              return (
+                <Chip
+                  key={option.field}
+                  clickable
+                  label={tParties(option.labelKey)}
+                  onClick={() => setSortField(option.field)}
+                  sx={{
+                    fontWeight: 600,
+                    bgcolor: selected
+                      ? `${colors.primary}12`
+                      : themedColors.backgroundPaper,
+                    color: selected
+                      ? colors.primary
+                      : themedColors.textSecondary,
+                    border: `1px solid ${selected ? colors.primaryLight : themedColors.dataBorder}`,
+                  }}
+                />
+              );
+            })}
           </Box>
-          {selectedParty && (
-            <Button
-              variant="outlined"
-              onClick={() => clearSelection()}
-              sx={commonStyles.compactOutlinedPrimaryButton}
-            >
-              {tParties("clearSelection")}
-            </Button>
-          )}
-        </Box>
-
-        <Box
-          sx={{
-            display: "flex",
-            gap: 1,
-            flexWrap: "wrap",
-            alignItems: "center",
-            mb: 2,
-          }}
-        >
-          <TextField
-            size="small"
-            value={searchValue}
-            onChange={(event) => setSearchValue(event.target.value)}
-            label={tCommon("search")}
-            placeholder={tParties("searchPlaceholder")}
-            sx={{
-              minWidth: { xs: "100%", md: 280 },
-              "& .MuiInputBase-input": { fontSize: "0.9rem" },
-            }}
-          />
-
-          {(["all", "government", "opposition"] as const).map((role) => {
-            const selected = roleFilter === role;
-            const label =
-              role === "all"
-                ? tParties("filters.all")
-                : role === "government"
-                  ? tParties("government")
-                  : tParties("opposition");
-            return (
-              <Chip
-                key={role}
-                clickable
-                label={label}
-                onClick={() => setRoleFilter(role)}
-                sx={{
-                  fontWeight: 600,
-                  bgcolor: selected
-                    ? colors.primary
-                    : themedColors.backgroundPaper,
-                  color: selected ? "white" : themedColors.textSecondary,
-                  border: `1px solid ${selected ? colors.primary : themedColors.dataBorder}`,
-                }}
-              />
-            );
-          })}
 
           <Typography
             variant="body2"
-            sx={{ color: themedColors.textSecondary, ml: { md: "auto" } }}
+            sx={{ color: themedColors.textSecondary, mb: 2 }}
           >
-            {tParties("sortBy")}
-          </Typography>
-          {SORT_FIELDS.map((option) => {
-            const selected = sortField === option.field;
-            return (
-              <Chip
-                key={option.field}
-                clickable
-                label={tParties(option.labelKey)}
-                onClick={() => setSortField(option.field)}
-                sx={{
-                  fontWeight: 600,
-                  bgcolor: selected
-                    ? `${colors.primary}12`
-                    : themedColors.backgroundPaper,
-                  color: selected ? colors.primary : themedColors.textSecondary,
-                  border: `1px solid ${selected ? colors.primaryLight : themedColors.dataBorder}`,
-                }}
-              />
-            );
-          })}
-        </Box>
-
-        <Typography
-          variant="body2"
-          sx={{ color: themedColors.textSecondary, mb: 2 }}
-        >
-          {tParties("showingResults", {
-            shown: visibleParties.length,
-            total: parties.length,
-          })}
-        </Typography>
-
-        {!selectedPartyVisible && selectedParty && (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            {tParties("selectedHiddenByFilters", {
-              party: selectedParty.party_name,
+            {tParties("showingResults", {
+              shown: visibleParties.length,
+              total: parties.length,
             })}
-          </Alert>
-        )}
+          </Typography>
 
-        {visibleParties.length === 0 ? (
-          <EmptyState
-            title={tCommon("noData")}
-            description={tParties("noResultsDescription")}
-            icon={<GroupsIcon fontSize="inherit" />}
-          />
-        ) : (
-          <>
-            <TableContainer
-              sx={{
-                display: { xs: "none", md: "block" },
-                borderRadius: 2,
-                border: `1px solid ${themedColors.dataBorder}`,
-                overflow: "hidden",
-              }}
-            >
-              <Table>
-                <TableHead>
-                  <TableRow sx={commonStyles.tableHeaderRow}>
-                    <TableCell>{tParties("table.party")}</TableCell>
-                    <TableCell>{tParties("table.status")}</TableCell>
-                    <TableCell align="right">
-                      {tParties("table.members")}
-                    </TableCell>
-                    <TableCell align="right">
-                      {tParties("table.participation")}
-                    </TableCell>
-                    <TableCell>{tParties("table.genderSplit")}</TableCell>
-                    <TableCell align="right">
-                      {tParties("table.averageAge")}
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {visibleParties.map((party) => (
-                    <DesktopPartyRow
+          {!selectedPartyVisible && selectedParty && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              {tParties("selectedHiddenByFilters", {
+                party: selectedParty.party_name,
+              })}
+            </Alert>
+          )}
+
+          {visibleParties.length === 0 ? (
+            <EmptyState
+              title={tCommon("noData")}
+              description={tParties("noResultsDescription")}
+              icon={<GroupsIcon fontSize="inherit" />}
+            />
+          ) : (
+            <>
+              <TableContainer
+                sx={{
+                  display: { xs: "none", md: "block" },
+                  borderRadius: 2,
+                  border: `1px solid ${themedColors.dataBorder}`,
+                  overflow: "hidden",
+                }}
+              >
+                <Table>
+                  <TableHead>
+                    <TableRow sx={commonStyles.tableHeaderRow}>
+                      <TableCell>{tParties("table.party")}</TableCell>
+                      <TableCell>{tParties("table.status")}</TableCell>
+                      <TableCell align="right">
+                        {tParties("table.members")}
+                      </TableCell>
+                      <TableCell align="right">
+                        {tParties("table.participation")}
+                      </TableCell>
+                      <TableCell>{tParties("table.genderSplit")}</TableCell>
+                      <TableCell align="right">
+                        {tParties("table.averageAge")}
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {visibleParties.map((party) => (
+                      <DesktopPartyRow
+                        key={party.party_code}
+                        party={party}
+                        selected={
+                          selectedPartyCode ===
+                          normalizePartyCode(party.party_code)
+                        }
+                        onSelect={handlePartySelect}
+                        getParticipationColor={getParticipationColor}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              <Box sx={{ display: { xs: "block", md: "none" } }}>
+                <DataCard sx={{ p: 0 }}>
+                  {visibleParties.map((party, index) => (
+                    <MobilePartyCard
                       key={party.party_code}
                       party={party}
                       selected={
                         selectedPartyCode ===
                         normalizePartyCode(party.party_code)
                       }
+                      isLast={index === visibleParties.length - 1}
                       onSelect={handlePartySelect}
-                      getParticipationColor={getParticipationColor}
                     />
                   ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                </DataCard>
+              </Box>
+            </>
+          )}
+        </DataCard>
 
-            <Box sx={{ display: { xs: "block", md: "none" } }}>
-              <DataCard sx={{ p: 0 }}>
-                {visibleParties.map((party, index) => (
-                  <MobilePartyCard
-                    key={party.party_code}
-                    party={party}
-                    selected={
-                      selectedPartyCode === normalizePartyCode(party.party_code)
-                    }
-                    isLast={index === visibleParties.length - 1}
-                    onSelect={handlePartySelect}
-                  />
-                ))}
-              </DataCard>
-            </Box>
-          </>
-        )}
-      </DataCard>
-
-      <Box ref={profileRef}>
-        {selectedParty ? (
-          <PartyDetail
-            party={selectedParty}
-            partyColor={getPartyColor(selectedParty.party_code)}
-            asOfDate={asOfDate}
-            startDate={selectedHallituskausi?.startDate}
-            endDate={selectedHallituskausi?.endDate || undefined}
-            governmentName={selectedHallituskausi?.name}
-            governmentStartDate={selectedHallituskausi?.startDate}
-            onClearSelection={() => clearSelection()}
-          />
-        ) : (
-          <EmptyState
-            title={tParties("profilePlaceholderTitle")}
-            description={tParties("profilePlaceholderDescription")}
-            icon={<InsightsIcon fontSize="inherit" />}
-          />
-        )}
+        <Box ref={profileRef}>
+          {selectedParty ? (
+            <PartyDetail
+              party={selectedParty}
+              partyColor={getPartyColor(selectedParty.party_code)}
+              asOfDate={asOfDate}
+              startDate={selectedHallituskausi?.startDate}
+              endDate={selectedHallituskausi?.endDate || undefined}
+              governmentName={selectedHallituskausi?.name}
+              governmentStartDate={selectedHallituskausi?.startDate}
+              onClearSelection={() => clearSelection()}
+            />
+          ) : (
+            <EmptyState
+              title={tParties("profilePlaceholderTitle")}
+              description={tParties("profilePlaceholderDescription")}
+              icon={<InsightsIcon fontSize="inherit" />}
+            />
+          )}
         </Box>
       </Box>
     </Box>
@@ -740,7 +750,11 @@ const HighlightCard: React.FC<{
           {caption ? (
             <Typography
               variant="caption"
-              sx={{ display: "block", mt: 0.35, color: themedColors.textSecondary }}
+              sx={{
+                display: "block",
+                mt: 0.35,
+                color: themedColors.textSecondary,
+              }}
             >
               {caption}
             </Typography>
@@ -958,11 +972,7 @@ const MobilePartyCard: React.FC<{
               />
               <Typography fontWeight={700}>{party.party_name}</Typography>
             </Box>
-            <Chip
-              size="small"
-              label={visibleCode}
-              sx={{ fontWeight: 700 }}
-            />
+            <Chip size="small" label={visibleCode} sx={{ fontWeight: 700 }} />
           </Box>
 
           <Box
@@ -1039,11 +1049,11 @@ const MobilePartyCard: React.FC<{
   );
 };
 
-const MetricBlock: React.FC<{ label: string; value: string; caption?: string }> = ({
-  label,
-  value,
-  caption,
-}) => {
+const MetricBlock: React.FC<{
+  label: string;
+  value: string;
+  caption?: string;
+}> = ({ label, value, caption }) => {
   const themedColors = useThemedColors();
 
   return (

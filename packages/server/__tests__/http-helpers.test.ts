@@ -104,7 +104,9 @@ describe("validateDateRange", () => {
   });
 
   test("returns null for valid YYYY-MM-DD dates", () => {
-    const params = new URLSearchParams("startDate=2024-01-01&endDate=2024-12-31");
+    const params = new URLSearchParams(
+      "startDate=2024-01-01&endDate=2024-12-31",
+    );
     expect(validateDateRange(params)).toBeNull();
   });
 

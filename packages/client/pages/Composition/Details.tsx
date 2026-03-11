@@ -11,6 +11,7 @@ import QuizIcon from "@mui/icons-material/Quiz";
 import SearchIcon from "@mui/icons-material/Search";
 import WorkIcon from "@mui/icons-material/Work";
 import {
+  Alert,
   Avatar,
   Box,
   Button,
@@ -46,6 +47,7 @@ import { MetricCard, VoteMarginBar } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { isSafeExternalUrl } from "#client/utils/eduskunta-links";
 import { apiFetch } from "#client/utils/fetch";
+import { warnInDevelopment } from "#client/utils/request-errors";
 
 type SpeechType =
   ApiRouteResponse<`/api/person/:id/speeches`>["speeches"][number];
@@ -130,7 +132,21 @@ const visuallyHiddenSx = {
   border: 0,
 } as const;
 
-const fetchPersonDetails = async (personId: number) => {
+const fetchPersonDetails = async (personId: number, signal?: AbortSignal) => {
+  const jsonOrThrow = async <T,>(
+    responsePromise: Promise<{
+      ok: boolean;
+      status: number;
+      json: () => Promise<T>;
+    }>,
+  ): Promise<T> => {
+    const response = await responsePromise;
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return response.json();
+  };
+
   const [
     groupMemberships,
     terms,
@@ -140,20 +156,20 @@ const fetchPersonDetails = async (personId: number) => {
     trustPositions,
     governmentMemberships,
   ] = await Promise.all([
-    apiFetch(`/api/person/${personId}/group-memberships`).then((res) =>
-      res.json(),
+    jsonOrThrow(
+      apiFetch(`/api/person/${personId}/group-memberships`, { signal }),
     ),
-    apiFetch(`/api/person/${personId}/terms`).then((res) => res.json()),
-    apiFetch(`/api/person/${personId}/details`).then((res) => res.json()),
-    apiFetch(`/api/person/${personId}/districts`).then((res) => res.json()),
-    apiFetch(`/api/person/${personId}/leaving-records`).then((res) =>
-      res.json(),
+    jsonOrThrow(apiFetch(`/api/person/${personId}/terms`, { signal })),
+    jsonOrThrow(apiFetch(`/api/person/${personId}/details`, { signal })),
+    jsonOrThrow(apiFetch(`/api/person/${personId}/districts`, { signal })),
+    jsonOrThrow(
+      apiFetch(`/api/person/${personId}/leaving-records`, { signal }),
     ),
-    apiFetch(`/api/person/${personId}/trust-positions`).then((res) =>
-      res.json(),
+    jsonOrThrow(
+      apiFetch(`/api/person/${personId}/trust-positions`, { signal }),
     ),
-    apiFetch(`/api/person/${personId}/government-memberships`).then((res) =>
-      res.json(),
+    jsonOrThrow(
+      apiFetch(`/api/person/${personId}/government-memberships`, { signal }),
     ),
   ]);
   return {
@@ -186,10 +202,15 @@ const fetchPersonSpeeches = async (
   personId: number,
   limit = 50,
   offset = 0,
+  signal?: AbortSignal,
 ) => {
   const res = await apiFetch(
     `/api/person/${personId}/speeches?limit=${limit}&offset=${offset}`,
+    { signal },
   );
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}`);
+  }
   return res.json();
 };
 
@@ -203,8 +224,11 @@ const fetchSectionSpeechesPage = async (
   sectionKey: string,
   limit = SECTION_SPEECH_PAGE_SIZE,
   offset = 0,
+  signal?: AbortSignal,
 ) => {
   const controller = new AbortController();
+  const abortRequest = () => controller.abort();
+  signal?.addEventListener("abort", abortRequest, { once: true });
   const timeoutId = window.setTimeout(
     () => controller.abort(),
     SECTION_SPEECH_REQUEST_TIMEOUT_MS,
@@ -214,6 +238,7 @@ const fetchSectionSpeechesPage = async (
     { signal: controller.signal },
   ).finally(() => {
     window.clearTimeout(timeoutId);
+    signal?.removeEventListener("abort", abortRequest);
   });
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
@@ -221,8 +246,16 @@ const fetchSectionSpeechesPage = async (
   return res.json();
 };
 
-const fetchSectionDetails = async (sectionKey: string) => {
-  const res = await apiFetch(`/api/sections/${encodeURIComponent(sectionKey)}`);
+const fetchSectionDetails = async (
+  sectionKey: string,
+  signal?: AbortSignal,
+) => {
+  const res = await apiFetch(
+    `/api/sections/${encodeURIComponent(sectionKey)}`,
+    {
+      signal,
+    },
+  );
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
   }
@@ -232,6 +265,7 @@ const fetchSectionDetails = async (sectionKey: string) => {
 const fetchSectionConversation = async (
   sectionKey: string,
   targetSpeechId?: number,
+  signal?: AbortSignal,
 ): Promise<SectionConversationType> => {
   const startedAt = Date.now();
   let page = 1;
@@ -242,6 +276,7 @@ const fetchSectionConversation = async (
   let targetSpeechIncluded = targetSpeechId === undefined;
 
   while (
+    !signal?.aborted &&
     page <= totalPages &&
     page <= SECTION_SPEECH_TARGET_SEEK_MAX_PAGES &&
     Date.now() - startedAt < SECTION_SPEECH_TOTAL_FETCH_TIMEOUT_MS
@@ -250,6 +285,7 @@ const fetchSectionConversation = async (
       sectionKey,
       SECTION_SPEECH_PAGE_SIZE,
       offset,
+      signal,
     );
     speeches.push(...data.speeches);
     if (targetSpeechId !== undefined) {
@@ -2179,7 +2215,11 @@ const SpeechesTab: React.FC<{
     Record<string, true>
   >({});
   const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [loadMoreError, setLoadMoreError] = React.useState<string | null>(null);
   const [contextError, setContextError] = React.useState<string | null>(null);
+  const [sectionDetailsError, setSectionDetailsError] = React.useState<
+    string | null
+  >(null);
   const [loadingContextSection, setLoadingContextSection] = React.useState<
     string | null
   >(null);
@@ -2195,9 +2235,10 @@ const SpeechesTab: React.FC<{
   const [loadingMore, setLoadingMore] = React.useState(false);
 
   React.useEffect(() => {
-    let ignore = false;
+    const controller = new AbortController();
     setLoading(true);
     setLoadError(null);
+    setLoadMoreError(null);
     setSelectedSpeech(null);
     setActiveSpeechId(null);
     setSectionConversations({});
@@ -2205,35 +2246,38 @@ const SpeechesTab: React.FC<{
     setFailedSectionDetailsKeys({});
     setFailedContextSections({});
     setContextError(null);
+    setSectionDetailsError(null);
     setLoadingContextSection(null);
     setLoadingSectionDetailsKey(null);
-    fetchPersonSpeeches(personId, 50)
+    fetchPersonSpeeches(personId, 50, 0, controller.signal)
       .then((data) => {
-        if (ignore) return;
+        if (controller.signal.aborted) return;
         setSpeeches(data.speeches);
         setSpeechesTotal(data.total);
       })
-      .catch(() => {
-        if (ignore) return;
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        warnInDevelopment(`Failed to fetch speeches for ${personId}`, err);
         setLoadError(tComposition("details.speeches.loadError"));
       })
       .finally(() => {
-        if (ignore) return;
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       });
-    return () => {
-      ignore = true;
-    };
+    return () => controller.abort();
   }, [personId, tComposition]);
 
   const loadMoreSpeeches = () => {
     if (!speeches || loadingMore) return;
     setLoadingMore(true);
+    setLoadMoreError(null);
     fetchPersonSpeeches(personId, 50, speeches.length)
       .then((data) => {
         setSpeeches((prev) => [...(prev ?? []), ...data.speeches]);
       })
-      .catch((err) => console.warn("Failed to load more speeches", err))
+      .catch((err) => {
+        warnInDevelopment(`Failed to load more speeches for ${personId}`, err);
+        setLoadMoreError(tComposition("details.speeches.loadMoreError"));
+      })
       .finally(() => setLoadingMore(false));
   };
 
@@ -2297,12 +2341,21 @@ const SpeechesTab: React.FC<{
     if (loadingContextSection === selectedSectionKey) return;
 
     const requestId = contextLoadRequestRef.current + 1;
+    const controller = new AbortController();
     contextLoadRequestRef.current = requestId;
     setContextError(null);
     setLoadingContextSection(selectedSectionKey);
-    fetchSectionConversation(selectedSectionKey, selectedSpeechId)
+    fetchSectionConversation(
+      selectedSectionKey,
+      selectedSpeechId,
+      controller.signal,
+    )
       .then((data) => {
-        if (contextLoadRequestRef.current !== requestId) return;
+        if (
+          controller.signal.aborted ||
+          contextLoadRequestRef.current !== requestId
+        )
+          return;
         setSectionConversations((prev) => ({
           ...prev,
           [selectedSectionKey]: data,
@@ -2320,7 +2373,12 @@ const SpeechesTab: React.FC<{
           );
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        warnInDevelopment(
+          `Failed to fetch section conversation for ${selectedSectionKey}`,
+          err,
+        );
         if (contextLoadRequestRef.current !== requestId) return;
         setFailedContextSections((prev) => ({
           ...prev,
@@ -2334,6 +2392,7 @@ const SpeechesTab: React.FC<{
           current === selectedSectionKey ? null : current,
         );
       });
+    return () => controller.abort();
   }, [
     selectedSectionKey,
     selectedSpeech?.id,
@@ -2350,22 +2409,36 @@ const SpeechesTab: React.FC<{
     if (loadingSectionDetailsKey === selectedSectionKey) return;
 
     const requestId = sectionDetailsRequestRef.current + 1;
+    const controller = new AbortController();
     sectionDetailsRequestRef.current = requestId;
+    setSectionDetailsError(null);
     setLoadingSectionDetailsKey(selectedSectionKey);
-    fetchSectionDetails(selectedSectionKey)
+    fetchSectionDetails(selectedSectionKey, controller.signal)
       .then((data) => {
-        if (sectionDetailsRequestRef.current !== requestId) return;
+        if (
+          controller.signal.aborted ||
+          sectionDetailsRequestRef.current !== requestId
+        )
+          return;
         setSectionDetailsByKey((prev) => ({
           ...prev,
           [selectedSectionKey]: data,
         }));
       })
-      .catch(() => {
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        warnInDevelopment(
+          `Failed to fetch section details for ${selectedSectionKey}`,
+          err,
+        );
         if (sectionDetailsRequestRef.current !== requestId) return;
         setFailedSectionDetailsKeys((prev) => ({
           ...prev,
           [selectedSectionKey]: true,
         }));
+        setSectionDetailsError(
+          tComposition("details.speeches.sectionDetailsLoadError"),
+        );
       })
       .finally(() => {
         if (sectionDetailsRequestRef.current !== requestId) return;
@@ -2373,11 +2446,13 @@ const SpeechesTab: React.FC<{
           current === selectedSectionKey ? null : current,
         );
       });
+    return () => controller.abort();
   }, [
     selectedSectionKey,
     selectedSectionDetails,
     failedSectionDetailsKeys,
     loadingSectionDetailsKey,
+    tComposition,
   ]);
 
   React.useEffect(() => {
@@ -2401,6 +2476,7 @@ const SpeechesTab: React.FC<{
   const openSpeechConversation = (speech: SpeechType) => {
     setSelectedSpeech(speech);
     setActiveSpeechId(speech.id);
+    setSectionDetailsError(null);
     if (!speech.section_key) {
       setContextError(tComposition("details.speeches.missingSectionKey"));
       return;
@@ -2414,6 +2490,8 @@ const SpeechesTab: React.FC<{
     setContextError(null);
     setLoadingContextSection(null);
     setLoadingSectionDetailsKey(null);
+    setSectionDetailsError(null);
+    setLoadMoreError(null);
   };
 
   const selectSpeechInConversation = (speechId: number) => {
@@ -2626,6 +2704,18 @@ const SpeechesTab: React.FC<{
               }}
             >
               {tComposition("details.speeches.drawer.loadingSectionContent")}
+            </Typography>
+          ) : null}
+          {sectionDetailsError ? (
+            <Typography
+              variant="caption"
+              sx={{
+                color: themedColors.textTertiary,
+                mt: 1,
+                display: "block",
+              }}
+            >
+              {sectionDetailsError}
             </Typography>
           ) : null}
           {sectionContextContent ? (
@@ -3167,6 +3257,18 @@ const SpeechesTab: React.FC<{
                 total: speechesTotal,
               })}
             </Button>
+            {loadMoreError ? (
+              <Typography
+                variant="caption"
+                sx={{
+                  color: themedColors.textTertiary,
+                  mt: 0.75,
+                  display: "block",
+                }}
+              >
+                {loadMoreError}
+              </Typography>
+            ) : null}
           </Box>
         )}
 
@@ -3788,28 +3890,64 @@ export const RepresentativeDetails: React.FC<{
   const [governmentPeriods, setGovernmentPeriods] = React.useState<
     GovernmentPeriod[]
   >([]);
+  const [detailsLoadError, setDetailsLoadError] = React.useState<string | null>(
+    null,
+  );
+  const [governmentPeriodsError, setGovernmentPeriodsError] = React.useState<
+    string | null
+  >(null);
 
   const [details, setDetails] =
     React.useState<Awaited<ReturnType<typeof fetchPersonDetails>>>();
 
   React.useEffect(() => {
     if (selectedRepresentative) {
+      const controller = new AbortController();
       setDetails(undefined);
+      setDetailsLoadError(null);
       setTabIndex(0);
       setSelectedGovName(null);
       setGovernmentPeriods([]);
-      fetchPersonDetails(selectedRepresentative.personId).then(setDetails);
+      setGovernmentPeriodsError(null);
+      fetchPersonDetails(selectedRepresentative.personId, controller.signal)
+        .then((data) => {
+          if (!controller.signal.aborted) setDetails(data);
+        })
+        .catch((err) => {
+          if (controller.signal.aborted) return;
+          warnInDevelopment(
+            `Failed to fetch representative details for ${selectedRepresentative.personId}`,
+            err,
+          );
+          setDetailsLoadError(t("details.profileLoadError"));
+        });
       apiFetch(
         `/api/person/${selectedRepresentative.personId}/government-periods`,
+        { signal: controller.signal },
       )
-        .then((res) => res.json())
-        .then(setGovernmentPeriods)
-        .catch((err) => console.warn("Failed to fetch government periods", err));
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          if (!controller.signal.aborted) setGovernmentPeriods(data);
+        })
+        .catch((err) => {
+          if (controller.signal.aborted) return;
+          warnInDevelopment(
+            `Failed to fetch government periods for ${selectedRepresentative.personId}`,
+            err,
+          );
+          setGovernmentPeriodsError(t("details.governmentPeriodsLoadError"));
+        });
+      return () => controller.abort();
     } else {
       setDetails(undefined);
+      setDetailsLoadError(null);
       setGovernmentPeriods([]);
+      setGovernmentPeriodsError(null);
     }
-  }, [selectedRepresentative]);
+  }, [selectedRepresentative, t]);
 
   if (!selectedRepresentative) return null;
 
@@ -3903,9 +4041,16 @@ export const RepresentativeDetails: React.FC<{
             justifyContent: "center",
             alignItems: "center",
             minHeight: 400,
+            px: 3,
           }}
         >
-          <CircularProgress />
+          {detailsLoadError ? (
+            <Alert severity="error" sx={{ maxWidth: 420 }}>
+              {detailsLoadError}
+            </Alert>
+          ) : (
+            <CircularProgress />
+          )}
         </Box>
       ) : (
         <>
@@ -4162,6 +4307,11 @@ export const RepresentativeDetails: React.FC<{
               overflowY: "auto",
             }}
           >
+            {governmentPeriodsError ? (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {governmentPeriodsError}
+              </Alert>
+            ) : null}
             <AnalysisScopeToolbar
               selectedDate={selectedDate}
               scope={analysisScope}

@@ -5,39 +5,87 @@ import { createQuestionFamilyRoutes } from "../routes/documents/question-family-
 
 // Minimal stub covering all methods used across the document route families
 const mockDb: any = {
-  fetchInterpellations: async () => ({ items: [], totalCount: 0, page: 1, limit: 20, totalPages: 0 }),
+  fetchInterpellations: async () => ({
+    items: [],
+    totalCount: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 0,
+  }),
   fetchInterpellationsSubjects: async () => [],
   fetchInterpellationYears: async () => [],
   fetchInterpellationByIdentifier: async () => null,
   fetchInterpellationById: async () => null,
-  fetchGovernmentProposals: async () => ({ items: [], totalCount: 0, page: 1, limit: 20, totalPages: 0 }),
+  fetchGovernmentProposals: async () => ({
+    items: [],
+    totalCount: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 0,
+  }),
   fetchGovernmentProposalsSubjects: async () => [],
   fetchGovernmentProposalYears: async () => [],
   fetchGovernmentProposalByIdentifier: async () => null,
   fetchGovernmentProposalById: async () => null,
-  fetchCommitteeReports: async () => ({ items: [], totalCount: 0, page: 1, limit: 20, totalPages: 0 }),
+  fetchCommitteeReports: async () => ({
+    items: [],
+    totalCount: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 0,
+  }),
   fetchCommitteeReportYears: async () => [],
   fetchCommitteeReportSourceCommittees: async () => [],
   fetchCommitteeReportRecipientCommittees: async () => [],
   fetchCommitteeReportByIdentifier: async () => null,
   fetchCommitteeReportById: async () => null,
-  fetchLegislativeInitiatives: async () => ({ items: [], totalCount: 0, page: 1, limit: 20, totalPages: 0 }),
+  fetchLegislativeInitiatives: async () => ({
+    items: [],
+    totalCount: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 0,
+  }),
   fetchLegislativeInitiativesSubjects: async () => [],
   fetchLegislativeInitiativeYears: async () => [],
   fetchLegislativeInitiativeByIdentifier: async () => null,
   fetchLegislativeInitiativeById: async () => null,
-  fetchWrittenQuestions: async () => ({ items: [], totalCount: 0, page: 1, limit: 20, totalPages: 0 }),
+  fetchWrittenQuestions: async () => ({
+    items: [],
+    totalCount: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 0,
+  }),
   fetchWrittenQuestionsSubjects: async () => [],
   fetchWrittenQuestionYears: async () => [],
   fetchWrittenQuestionByIdentifier: async () => null,
   fetchWrittenQuestionById: async () => null,
-  fetchExpertStatements: async () => ({ items: [], totalCount: 0, page: 1, limit: 20, totalPages: 0 }),
+  fetchExpertStatements: async () => ({
+    items: [],
+    totalCount: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 0,
+  }),
   fetchExpertStatementYears: async () => [],
   fetchExpertStatementCommittees: async () => [],
   fetchExpertStatementsByBill: async () => [],
-  fetchWrittenQuestionResponses: async () => ({ items: [], totalCount: 0, page: 1, limit: 20, totalPages: 0 }),
+  fetchWrittenQuestionResponses: async () => ({
+    items: [],
+    totalCount: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 0,
+  }),
   fetchWrittenQuestionResponseYears: async () => [],
-  fetchOralQuestions: async () => ({ items: [], totalCount: 0, page: 1, limit: 20, totalPages: 0 }),
+  fetchOralQuestions: async () => ({
+    items: [],
+    totalCount: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 0,
+  }),
   fetchOralQuestionsSubjects: async () => [],
   fetchOralQuestionYears: async () => [],
   fetchOralQuestionByIdentifier: async () => null,
@@ -57,7 +105,9 @@ describe("interpellation and government proposal routes", () => {
   });
 
   test("GET /api/interpellations/by-identifier/:identifier returns 404 for unknown", async () => {
-    const res = await interpellationRoutes["/api/interpellations/by-identifier/:identifier"].GET({
+    const res = await interpellationRoutes[
+      "/api/interpellations/by-identifier/:identifier"
+    ].GET({
       url: "https://example.test/api/interpellations/by-identifier/VK+1%2F2024+vp",
       params: { identifier: "VK+1%2F2024+vp" },
     } as any);
@@ -65,7 +115,9 @@ describe("interpellation and government proposal routes", () => {
   });
 
   test("GET /api/interpellations/by-identifier/:identifier returns 400 for empty identifier", async () => {
-    const res = await interpellationRoutes["/api/interpellations/by-identifier/:identifier"].GET({
+    const res = await interpellationRoutes[
+      "/api/interpellations/by-identifier/:identifier"
+    ].GET({
       url: "https://example.test/api/interpellations/by-identifier/%20",
       params: { identifier: "%20" },
     } as any);
@@ -74,7 +126,9 @@ describe("interpellation and government proposal routes", () => {
 
   test("GET /api/interpellations rejects invalid date format", async () => {
     const res = await interpellationRoutes["/api/interpellations"].GET(
-      new Request("https://example.test/api/interpellations?startDate=01-01-2024"),
+      new Request(
+        "https://example.test/api/interpellations?startDate=01-01-2024",
+      ),
     );
     expect(res.status).toBe(400);
   });
@@ -87,7 +141,9 @@ describe("interpellation and government proposal routes", () => {
   });
 
   test("GET /api/government-proposals/by-identifier/:identifier returns 400 for empty identifier", async () => {
-    const res = await interpellationRoutes["/api/government-proposals/by-identifier/:identifier"].GET({
+    const res = await interpellationRoutes[
+      "/api/government-proposals/by-identifier/:identifier"
+    ].GET({
       url: "https://example.test/api/government-proposals/by-identifier/%20",
       params: { identifier: "%20" },
     } as any);
@@ -105,13 +161,17 @@ describe("committee and legislative initiative routes", () => {
 
   test("GET /api/committee-reports rejects invalid date format", async () => {
     const res = await committeeRoutes["/api/committee-reports"].GET(
-      new Request("https://example.test/api/committee-reports?endDate=2024/12/31"),
+      new Request(
+        "https://example.test/api/committee-reports?endDate=2024/12/31",
+      ),
     );
     expect(res.status).toBe(400);
   });
 
   test("GET /api/committee-reports/by-identifier/:identifier returns 400 for empty identifier", async () => {
-    const res = await committeeRoutes["/api/committee-reports/by-identifier/:identifier"].GET({
+    const res = await committeeRoutes[
+      "/api/committee-reports/by-identifier/:identifier"
+    ].GET({
       url: "https://example.test/api/committee-reports/by-identifier/%20",
       params: { identifier: "%20" },
     } as any);
@@ -136,13 +196,17 @@ describe("question family routes", () => {
 
   test("GET /api/written-questions rejects invalid date format", async () => {
     const res = await questionRoutes["/api/written-questions"].GET(
-      new Request("https://example.test/api/written-questions?startDate=not-a-date"),
+      new Request(
+        "https://example.test/api/written-questions?startDate=not-a-date",
+      ),
     );
     expect(res.status).toBe(400);
   });
 
   test("GET /api/written-questions/by-identifier/:identifier returns 400 for empty identifier", async () => {
-    const res = await questionRoutes["/api/written-questions/by-identifier/:identifier"].GET({
+    const res = await questionRoutes[
+      "/api/written-questions/by-identifier/:identifier"
+    ].GET({
       url: "https://example.test/api/written-questions/by-identifier/%20",
       params: { identifier: "%20" },
     } as any);

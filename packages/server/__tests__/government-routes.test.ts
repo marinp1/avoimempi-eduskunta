@@ -11,9 +11,7 @@ const routes = createGovernmentRoutes(mockDb);
 
 describe("government routes", () => {
   test("GET /api/hallitukset returns 200 with array", async () => {
-    const response = await routes["/api/hallitukset"].GET(
-      new Request("https://example.test/api/hallitukset"),
-    );
+    const response = await routes["/api/hallitukset"].GET();
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual([]);
   });
@@ -45,7 +43,9 @@ describe("government routes", () => {
         start_date: "2023-06-20",
         end_date: null,
       }),
-      fetchGovernmentMembers: () => [{ person_id: 1000, name: "Valtiovarainministeri" }],
+      fetchGovernmentMembers: () => [
+        { person_id: 1000, name: "Valtiovarainministeri" },
+      ],
     };
     const localRoutes = createGovernmentRoutes(db);
     const response = await localRoutes["/api/hallitukset/active"].GET({
@@ -53,7 +53,10 @@ describe("government routes", () => {
       params: {},
     } as any);
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body = (await response.json()) as {
+      government: Record<string, unknown> | null;
+      members: unknown[];
+    };
     expect(body.government).not.toBeNull();
     expect(body.members).toHaveLength(1);
   });

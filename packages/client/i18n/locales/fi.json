@@ -202,7 +202,11 @@
       "dissentCount_other": "{{count}} poikkeamaa",
       "noMembers": "Ei jäsentietoja.",
       "noVotingData": "Ei äänestystietoja.",
-      "noDisciplineData": "Ei puoluekuritietoja."
+      "noDisciplineData": "Ei puoluekuritietoja.",
+      "membersLoadError": "Puolueen jäsentietojen lataus epäonnistui.",
+      "votingLoadError": "Puolueen äänestystietojen lataus epäonnistui.",
+      "votingDetailsLoadError": "Äänestyksen lisätietojen lataus epäonnistui.",
+      "disciplineLoadError": "Puoluekuritietojen lataus epäonnistui."
     },
     "genderSplitLine": "{{womenLabel}}: {{female}} | {{menLabel}}: {{male}}"
   },
@@ -349,7 +353,9 @@
     "parliamentAnswers": "Eduskunnan vastaukset",
     "parliamentAnswerTypeLabel": "Eduskunnan vastaus",
     "parliamentAnswerSourceRef": "Perustuu esitykseen",
-    "parliamentAnswerCommitteeRef": "Valiokunta käsitteli"
+    "parliamentAnswerCommitteeRef": "Valiokunta käsitteli",
+    "relatedVotingsLoadError": "Liittyvien äänestysten lataus epäonnistui.",
+    "relatedVotingDetailsLoadError": "Äänestyksen yksityiskohtien lataus epäonnistui."
   },
   "common": {
     "selectDate": "Valitse päivämäärä",
@@ -516,6 +522,7 @@
       "noResults": "Hakutuloksia ei löytynyt.",
       "noResultsHint": "Kokeile toista nimimuotoa tai lyhyempää hakua.",
       "loadError": "Edustajahaun lataus epäonnistui.",
+      "selectionFallback": "Edustajan yhteenvedon lataus epäonnistui. Näytetään rajatut tiedot.",
       "adjustedDateHint": "Näkymä siirrettiin viimeiseen aktiiviseen päivään: {{value}}.",
       "termRange": "{{start}} - {{end}}",
       "badges": {
@@ -554,6 +561,8 @@
       "electoralDistricts": "Vaalipiirit",
       "membership": "Eduskuntajäsenyys",
       "governmentCoalitionParticipation": "Hallituskoalitioon osallistuminen",
+      "profileLoadError": "Edustajan tietojen lataus epäonnistui.",
+      "governmentPeriodsLoadError": "Hallituskausien lataus epäonnistui.",
       "successorLine": "Seuraaja: {{value}}",
       "ongoing": "edelleen",
       "unknownParty": "Ei tiedossa",
@@ -640,8 +649,10 @@
         "noData": "Ei puheenvuoroja.",
         "words": "sanaa",
         "loadError": "Puheenvuorojen lataus epäonnistui.",
+        "loadMoreError": "Lisää puheenvuoroja ei voitu ladata.",
         "missingSpeechInThread": "Valittua puheenvuoroa ei löytynyt keskusteluketjusta. Avaa koko asiakohta jatkaaksesi.",
         "contextLoadError": "Keskustelukontekstin lataus epäonnistui.",
+        "sectionDetailsLoadError": "Asiakohdan lisätietojen lataus epäonnistui.",
         "missingSectionKey": "Tältä puheenvuorolta puuttuu asiakohdan tunniste, joten kontekstia ei voi avata.",
         "noSectionTitle": "Asiakohta",
         "showConversation": "Näytä keskustelu",

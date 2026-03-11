@@ -536,238 +536,244 @@ const Home = () => {
                             </Box>
                           )}
 
-                        {session.sections
-                          .slice(0, previewCount)
-                          .map((section) => {
-                            const isExpanded = expandedSections.has(section.id);
-                            const sectionNotices = (
-                              session.notices || []
-                            ).filter(
-                              (notice) => notice.section_key === section.key,
-                            );
+                          {session.sections
+                            .slice(0, previewCount)
+                            .map((section) => {
+                              const isExpanded = expandedSections.has(
+                                section.id,
+                              );
+                              const sectionNotices = (
+                                session.notices || []
+                              ).filter(
+                                (notice) => notice.section_key === section.key,
+                              );
 
-                            return (
-                              <SessionSectionPanel
-                                key={section.id}
-                                sectionId={section.id}
-                                sectionKey={section.key}
-                                isExpanded={isExpanded}
-                                onToggle={() =>
-                                  toggleSection(section.id, section.key)
-                                }
-                                headerContent={
-                                  <>
-                                    <Chip
-                                      label={getSectionOrderLabel(section)}
-                                      size="small"
-                                      sx={{
-                                        background: colors.primary,
-                                        color: "#fff",
-                                        fontWeight: 700,
-                                        ...commonStyles.compactChipMd,
-                                      }}
-                                    />
-                                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                                      <Typography
+                              return (
+                                <SessionSectionPanel
+                                  key={section.id}
+                                  sectionId={section.id}
+                                  sectionKey={section.key}
+                                  isExpanded={isExpanded}
+                                  onToggle={() =>
+                                    toggleSection(section.id, section.key)
+                                  }
+                                  headerContent={
+                                    <>
+                                      <Chip
+                                        label={getSectionOrderLabel(section)}
+                                        size="small"
                                         sx={{
+                                          background: colors.primary,
+                                          color: "#fff",
                                           fontWeight: 700,
-                                          fontSize: "0.9rem",
-                                          color: colors.textPrimary,
-                                          wordBreak: "break-word",
+                                          ...commonStyles.compactChipMd,
                                         }}
-                                      >
-                                        {section.title ||
-                                          section.processing_title ||
-                                          tSessions("noTitle")}
-                                      </Typography>
-                                      {section.processing_title &&
-                                        section.processing_title !==
-                                          section.title && (
-                                          <Typography
-                                            sx={{
-                                              ...commonStyles.compactTextLg,
-                                              color: colors.textSecondary,
-                                              mt: 0.25,
-                                            }}
-                                          >
-                                            {section.processing_title}
-                                          </Typography>
-                                        )}
-                                      <Box
-                                        sx={{
-                                          display: "flex",
-                                          gap: 0.75,
-                                          flexWrap: "wrap",
-                                          mt: 0.85,
-                                        }}
-                                      >
-                                        <Chip
-                                          size="small"
-                                          icon={
-                                            <EventIcon
-                                              sx={{
-                                                fontSize: "14px !important",
-                                              }}
-                                            />
-                                          }
-                                          label={tSessions("speakersCount", {
-                                            count: section.speaker_count ?? 0,
-                                          })}
-                                          sx={{ ...commonStyles.compactChipXs }}
-                                        />
-                                        <Chip
-                                          size="small"
-                                          icon={
-                                            <MicIcon
-                                              sx={{
-                                                fontSize: "14px !important",
-                                              }}
-                                            />
-                                          }
-                                          label={tSessions("speechesCount", {
-                                            count: section.speech_count ?? 0,
-                                          })}
+                                      />
+                                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Typography
                                           sx={{
-                                            ...commonStyles.compactChipXs,
-                                            color: colors.primaryLight,
-                                            background: `${colors.primaryLight}12`,
+                                            fontWeight: 700,
+                                            fontSize: "0.9rem",
+                                            color: colors.textPrimary,
+                                            wordBreak: "break-word",
                                           }}
-                                        />
-                                        <Chip
-                                          size="small"
-                                          icon={
-                                            <HowToVoteIcon
+                                        >
+                                          {section.title ||
+                                            section.processing_title ||
+                                            tSessions("noTitle")}
+                                        </Typography>
+                                        {section.processing_title &&
+                                          section.processing_title !==
+                                            section.title && (
+                                            <Typography
                                               sx={{
-                                                fontSize: "14px !important",
+                                                ...commonStyles.compactTextLg,
+                                                color: colors.textSecondary,
+                                                mt: 0.25,
                                               }}
-                                            />
-                                          }
-                                          label={tSessions("votingsCount", {
-                                            count: section.voting_count ?? 0,
-                                          })}
+                                            >
+                                              {section.processing_title}
+                                            </Typography>
+                                          )}
+                                        <Box
                                           sx={{
-                                            ...commonStyles.compactChipXs,
-                                            color: colors.success,
-                                            background: `${colors.success}12`,
+                                            display: "flex",
+                                            gap: 0.75,
+                                            flexWrap: "wrap",
+                                            mt: 0.85,
                                           }}
-                                        />
-                                        {section.minutes_related_document_identifier && (
+                                        >
                                           <Chip
                                             size="small"
                                             icon={
-                                              <InsertDriveFileOutlinedIcon
+                                              <EventIcon
                                                 sx={{
                                                   fontSize: "14px !important",
                                                 }}
                                               />
                                             }
-                                            label={
-                                              section.minutes_related_document_identifier
-                                            }
-                                            sx={{
-                                              ...commonStyles.compactChipXs,
-                                              color: colors.warning,
-                                              background: `${colors.warning}12`,
-                                            }}
-                                          />
-                                        )}
-                                        {sectionNotices.length > 0 && (
-                                          <Chip
-                                            size="small"
-                                            label={tHome("noticeCount", {
-                                              count: sectionNotices.length,
+                                            label={tSessions("speakersCount", {
+                                              count: section.speaker_count ?? 0,
                                             })}
                                             sx={{
                                               ...commonStyles.compactChipXs,
-                                              color: colors.warning,
-                                              background: `${colors.warning}12`,
                                             }}
                                           />
-                                        )}
+                                          <Chip
+                                            size="small"
+                                            icon={
+                                              <MicIcon
+                                                sx={{
+                                                  fontSize: "14px !important",
+                                                }}
+                                              />
+                                            }
+                                            label={tSessions("speechesCount", {
+                                              count: section.speech_count ?? 0,
+                                            })}
+                                            sx={{
+                                              ...commonStyles.compactChipXs,
+                                              color: colors.primaryLight,
+                                              background: `${colors.primaryLight}12`,
+                                            }}
+                                          />
+                                          <Chip
+                                            size="small"
+                                            icon={
+                                              <HowToVoteIcon
+                                                sx={{
+                                                  fontSize: "14px !important",
+                                                }}
+                                              />
+                                            }
+                                            label={tSessions("votingsCount", {
+                                              count: section.voting_count ?? 0,
+                                            })}
+                                            sx={{
+                                              ...commonStyles.compactChipXs,
+                                              color: colors.success,
+                                              background: `${colors.success}12`,
+                                            }}
+                                          />
+                                          {section.minutes_related_document_identifier && (
+                                            <Chip
+                                              size="small"
+                                              icon={
+                                                <InsertDriveFileOutlinedIcon
+                                                  sx={{
+                                                    fontSize: "14px !important",
+                                                  }}
+                                                />
+                                              }
+                                              label={
+                                                section.minutes_related_document_identifier
+                                              }
+                                              sx={{
+                                                ...commonStyles.compactChipXs,
+                                                color: colors.warning,
+                                                background: `${colors.warning}12`,
+                                              }}
+                                            />
+                                          )}
+                                          {sectionNotices.length > 0 && (
+                                            <Chip
+                                              size="small"
+                                              label={tHome("noticeCount", {
+                                                count: sectionNotices.length,
+                                              })}
+                                              sx={{
+                                                ...commonStyles.compactChipXs,
+                                                color: colors.warning,
+                                                background: `${colors.warning}12`,
+                                              }}
+                                            />
+                                          )}
+                                        </Box>
                                       </Box>
-                                    </Box>
-                                  </>
-                                }
-                              >
-                                <HomeSectionDetails
-                                  session={session}
-                                  section={section}
-                                  speechData={sectionSpeechData[section.id]}
-                                  votings={sectionVotings[section.id] || []}
-                                  links={sectionLinks[section.key] || []}
-                                  rollCallData={sectionRollCalls[section.id]}
-                                  subSections={sectionSubSections[section.id]}
-                                  notices={session.notices || []}
-                                  loadingSpeeches={loadingSpeeches.has(
-                                    section.id,
-                                  )}
-                                  loadingMoreSpeeches={loadingMoreSpeeches.has(
-                                    section.id,
-                                  )}
-                                  loadingVotings={loadingVotings.has(
-                                    section.id,
-                                  )}
-                                  loadingLinks={loadingLinks.has(section.key)}
-                                  loadingRollCalls={loadingRollCalls.has(
-                                    section.id,
-                                  )}
-                                  loadingSubSections={loadingSubSections.has(
-                                    section.id,
-                                  )}
-                                  sectionErrors={sectionLoadErrors[section.id]}
-                                  expandedVotingIds={expandedVotingIds}
-                                  votingDetailsById={votingDetailsById}
-                                  loadingVotingDetails={loadingVotingDetails}
-                                  vaskiLatestSpeechDate={
-                                    overview.latestDay.vaskiLatestSpeechDate
+                                    </>
                                   }
-                                  onRetry={() =>
-                                    void loadSectionData(
+                                >
+                                  <HomeSectionDetails
+                                    session={session}
+                                    section={section}
+                                    speechData={sectionSpeechData[section.id]}
+                                    votings={sectionVotings[section.id] || []}
+                                    links={sectionLinks[section.key] || []}
+                                    rollCallData={sectionRollCalls[section.id]}
+                                    subSections={sectionSubSections[section.id]}
+                                    notices={session.notices || []}
+                                    loadingSpeeches={loadingSpeeches.has(
                                       section.id,
-                                      section.key,
-                                    )
-                                  }
-                                  onLoadMoreSpeeches={() =>
-                                    void loadMoreSpeeches(
+                                    )}
+                                    loadingMoreSpeeches={loadingMoreSpeeches.has(
                                       section.id,
-                                      section.key,
-                                    )
-                                  }
-                                  onToggleVotingDetails={toggleVotingDetails}
-                                />
-                              </SessionSectionPanel>
-                            );
-                          })}
+                                    )}
+                                    loadingVotings={loadingVotings.has(
+                                      section.id,
+                                    )}
+                                    loadingLinks={loadingLinks.has(section.key)}
+                                    loadingRollCalls={loadingRollCalls.has(
+                                      section.id,
+                                    )}
+                                    loadingSubSections={loadingSubSections.has(
+                                      section.id,
+                                    )}
+                                    sectionErrors={
+                                      sectionLoadErrors[section.id]
+                                    }
+                                    expandedVotingIds={expandedVotingIds}
+                                    votingDetailsById={votingDetailsById}
+                                    loadingVotingDetails={loadingVotingDetails}
+                                    vaskiLatestSpeechDate={
+                                      overview.latestDay.vaskiLatestSpeechDate
+                                    }
+                                    onRetry={() =>
+                                      void loadSectionData(
+                                        section.id,
+                                        section.key,
+                                      )
+                                    }
+                                    onLoadMoreSpeeches={() =>
+                                      void loadMoreSpeeches(
+                                        section.id,
+                                        section.key,
+                                      )
+                                    }
+                                    onToggleVotingDetails={toggleVotingDetails}
+                                  />
+                                </SessionSectionPanel>
+                              );
+                            })}
 
-                        {session.sections.length >
-                          INITIAL_SECTION_PREVIEW_COUNT && (
-                          <Box
-                            sx={{
-                              p: 2,
-                              borderBottom: `1px solid ${colors.dataBorder}`,
-                            }}
-                          >
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              onClick={() =>
-                                toggleSessionExpansion(session.key)
-                              }
+                          {session.sections.length >
+                            INITIAL_SECTION_PREVIEW_COUNT && (
+                            <Box
                               sx={{
-                                ...commonStyles.compactOutlinedPrimaryButton,
+                                p: 2,
+                                borderBottom: `1px solid ${colors.dataBorder}`,
                               }}
                             >
-                              {expandedSessions.has(session.key)
-                                ? tHome("showLessSections")
-                                : tHome("showMoreSections", {
-                                    count:
-                                      session.sections.length -
-                                      INITIAL_SECTION_PREVIEW_COUNT,
-                                  })}
-                            </Button>
-                          </Box>
-                        )}
-                      </Box>
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={() =>
+                                  toggleSessionExpansion(session.key)
+                                }
+                                sx={{
+                                  ...commonStyles.compactOutlinedPrimaryButton,
+                                }}
+                              >
+                                {expandedSessions.has(session.key)
+                                  ? tHome("showLessSections")
+                                  : tHome("showMoreSections", {
+                                      count:
+                                        session.sections.length -
+                                        INITIAL_SECTION_PREVIEW_COUNT,
+                                    })}
+                              </Button>
+                            </Box>
+                          )}
+                        </Box>
                       );
                     })
                   )}

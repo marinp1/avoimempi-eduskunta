@@ -542,7 +542,8 @@ export default function Documents() {
       .then((r) => r.json())
       .then((data) => setExpertCommittees(data))
       .catch((err) => {
-        if (err?.name !== "AbortError") console.warn("Failed to fetch expert committees", err);
+        if (err?.name !== "AbortError")
+          console.warn("Failed to fetch expert committees", err);
       })
       .finally(() => setExpertFiltersLoading(false));
     return () => controller.abort();
@@ -558,7 +559,9 @@ export default function Documents() {
     const fetchSubjects = async () => {
       setSubjectsLoading(true);
       try {
-        const response = await apiFetch(subjectsPath, { signal: controller.signal });
+        const response = await apiFetch(subjectsPath, {
+          signal: controller.signal,
+        });
         if (!response.ok) throw new Error("Failed to fetch subjects");
         const data: { subject_text: string; count: number }[] =
           await response.json();
@@ -975,229 +978,231 @@ export default function Documents() {
 
         <Box id="documents-content">
           <DocumentsFilterPanel
-          secondaryFilters={
-            <>
-              {documentType === "committee-reports" && (
-                <>
-                  <FormControl fullWidth>
-                    <InputLabel>{t("sourceCommitteeFilter")}</InputLabel>
-                    <Select
-                      value={selectedSourceCommittee}
-                      label={t("sourceCommitteeFilter")}
-                      onChange={(e) =>
-                        setSelectedSourceCommittee(e.target.value)
-                      }
-                      disabled={committeeFiltersLoading}
-                      sx={{ backgroundColor: colors.backgroundDefault }}
-                    >
-                      <MenuItem value="all">
-                        {t("allSourceCommittees")}
-                      </MenuItem>
-                      {sourceCommittees.map((item) => (
-                        <MenuItem
-                          key={item.committee_name}
-                          value={item.committee_name}
-                        >
-                          {item.committee_name} ({item.count})
+            secondaryFilters={
+              <>
+                {documentType === "committee-reports" && (
+                  <>
+                    <FormControl fullWidth>
+                      <InputLabel>{t("sourceCommitteeFilter")}</InputLabel>
+                      <Select
+                        value={selectedSourceCommittee}
+                        label={t("sourceCommitteeFilter")}
+                        onChange={(e) =>
+                          setSelectedSourceCommittee(e.target.value)
+                        }
+                        disabled={committeeFiltersLoading}
+                        sx={{ backgroundColor: colors.backgroundDefault }}
+                      >
+                        <MenuItem value="all">
+                          {t("allSourceCommittees")}
                         </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                        {sourceCommittees.map((item) => (
+                          <MenuItem
+                            key={item.committee_name}
+                            value={item.committee_name}
+                          >
+                            {item.committee_name} ({item.count})
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
 
-                  <FormControl fullWidth>
-                    <InputLabel>{t("targetCommitteeFilter")}</InputLabel>
-                    <Select
-                      value={selectedRecipientCommittee}
-                      label={t("targetCommitteeFilter")}
-                      onChange={(e) =>
-                        setSelectedRecipientCommittee(e.target.value)
-                      }
-                      disabled={committeeFiltersLoading}
-                      sx={{ backgroundColor: colors.backgroundDefault }}
-                    >
-                      <MenuItem value="all">
-                        {t("allTargetCommittees")}
-                      </MenuItem>
-                      {recipientCommittees.map((item) => (
-                        <MenuItem
-                          key={item.committee_name}
-                          value={item.committee_name}
-                        >
-                          {item.committee_name} ({item.count})
+                    <FormControl fullWidth>
+                      <InputLabel>{t("targetCommitteeFilter")}</InputLabel>
+                      <Select
+                        value={selectedRecipientCommittee}
+                        label={t("targetCommitteeFilter")}
+                        onChange={(e) =>
+                          setSelectedRecipientCommittee(e.target.value)
+                        }
+                        disabled={committeeFiltersLoading}
+                        sx={{ backgroundColor: colors.backgroundDefault }}
+                      >
+                        <MenuItem value="all">
+                          {t("allTargetCommittees")}
                         </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </>
-              )}
-
-              {documentType === "expert-statements" && (
-                <>
-                  <FormControl fullWidth>
-                    <InputLabel>{t("committeeFilter")}</InputLabel>
-                    <Select
-                      value={selectedExpertCommittee}
-                      label={t("committeeFilter")}
-                      onChange={(e) =>
-                        setSelectedExpertCommittee(e.target.value)
-                      }
-                      disabled={expertFiltersLoading}
-                      sx={{ backgroundColor: colors.backgroundDefault }}
-                    >
-                      <MenuItem value="all">{t("allCommittees")}</MenuItem>
-                      {expertCommittees.map((item) => (
-                        <MenuItem
-                          key={item.committee_name}
-                          value={item.committee_name}
-                        >
-                          {item.committee_name} ({item.count})
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  <FormControl fullWidth>
-                    <InputLabel>{t("documentSubtype")}</InputLabel>
-                    <Select
-                      value={selectedExpertDocType}
-                      label={t("documentSubtype")}
-                      onChange={(e) => setSelectedExpertDocType(e.target.value)}
-                      sx={{ backgroundColor: colors.backgroundDefault }}
-                    >
-                      <MenuItem value="all">{t("allTypes")}</MenuItem>
-                      <MenuItem value="asiantuntijalausunto">
-                        {t("expertStatement")}
-                      </MenuItem>
-                      <MenuItem value="asiantuntijalausunnon_liite">
-                        {t("expertStatementAttachment")}
-                      </MenuItem>
-                      <MenuItem value="asiantuntijasuunnitelma">
-                        {t("expertHearingPlan")}
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
-                </>
-              )}
-
-              {documentType !== "committee-reports" &&
-                documentType !== "expert-statements" && (
-                  <Autocomplete
-                    options={subjectOptions}
-                    value={selectedSubject}
-                    onChange={(_event, newValue) =>
-                      setSelectedSubject(newValue)
-                    }
-                    loading={subjectsLoading}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label={t("subjectFilter")}
-                        sx={{
-                          backgroundColor: colors.backgroundDefault,
-                          "& .MuiOutlinedInput-root": {
-                            "& fieldset": {
-                              borderColor: colors.dataBorder,
-                            },
-                          },
-                        }}
-                      />
-                    )}
-                  />
+                        {recipientCommittees.map((item) => (
+                          <MenuItem
+                            key={item.committee_name}
+                            value={item.committee_name}
+                          >
+                            {item.committee_name} ({item.count})
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </>
                 )}
-            </>
-          }
-        >
-          <TextField
-            fullWidth
-            label={t("searchLabel")}
-            placeholder={t("searchPlaceholder")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: colors.textSecondary }} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              gridColumn: { md: "span 1" },
-              backgroundColor: colors.backgroundDefault,
-              "& .MuiOutlinedInput-root": {
-                "& fieldset": {
-                  borderColor: colors.dataBorder,
+
+                {documentType === "expert-statements" && (
+                  <>
+                    <FormControl fullWidth>
+                      <InputLabel>{t("committeeFilter")}</InputLabel>
+                      <Select
+                        value={selectedExpertCommittee}
+                        label={t("committeeFilter")}
+                        onChange={(e) =>
+                          setSelectedExpertCommittee(e.target.value)
+                        }
+                        disabled={expertFiltersLoading}
+                        sx={{ backgroundColor: colors.backgroundDefault }}
+                      >
+                        <MenuItem value="all">{t("allCommittees")}</MenuItem>
+                        {expertCommittees.map((item) => (
+                          <MenuItem
+                            key={item.committee_name}
+                            value={item.committee_name}
+                          >
+                            {item.committee_name} ({item.count})
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
+                    <FormControl fullWidth>
+                      <InputLabel>{t("documentSubtype")}</InputLabel>
+                      <Select
+                        value={selectedExpertDocType}
+                        label={t("documentSubtype")}
+                        onChange={(e) =>
+                          setSelectedExpertDocType(e.target.value)
+                        }
+                        sx={{ backgroundColor: colors.backgroundDefault }}
+                      >
+                        <MenuItem value="all">{t("allTypes")}</MenuItem>
+                        <MenuItem value="asiantuntijalausunto">
+                          {t("expertStatement")}
+                        </MenuItem>
+                        <MenuItem value="asiantuntijalausunnon_liite">
+                          {t("expertStatementAttachment")}
+                        </MenuItem>
+                        <MenuItem value="asiantuntijasuunnitelma">
+                          {t("expertHearingPlan")}
+                        </MenuItem>
+                      </Select>
+                    </FormControl>
+                  </>
+                )}
+
+                {documentType !== "committee-reports" &&
+                  documentType !== "expert-statements" && (
+                    <Autocomplete
+                      options={subjectOptions}
+                      value={selectedSubject}
+                      onChange={(_event, newValue) =>
+                        setSelectedSubject(newValue)
+                      }
+                      loading={subjectsLoading}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label={t("subjectFilter")}
+                          sx={{
+                            backgroundColor: colors.backgroundDefault,
+                            "& .MuiOutlinedInput-root": {
+                              "& fieldset": {
+                                borderColor: colors.dataBorder,
+                              },
+                            },
+                          }}
+                        />
+                      )}
+                    />
+                  )}
+              </>
+            }
+          >
+            <TextField
+              fullWidth
+              label={t("searchLabel")}
+              placeholder={t("searchPlaceholder")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: colors.textSecondary }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                gridColumn: { md: "span 1" },
+                backgroundColor: colors.backgroundDefault,
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: colors.dataBorder,
+                  },
                 },
-              },
-            }}
-          />
+              }}
+            />
 
-          <FormControl fullWidth>
-            <InputLabel>{t("type")}</InputLabel>
-            <Select
-              value={documentType}
-              label={t("type")}
-              onChange={(e) =>
-                handleDocumentTypeChange(e.target.value as DocumentType)
-              }
-              sx={{ backgroundColor: colors.backgroundDefault }}
-            >
-              <MenuItem value="interpellations">
-                {t("interpellations")}
-              </MenuItem>
-              <MenuItem value="government-proposals">
-                {t("governmentProposals")}
-              </MenuItem>
-              <MenuItem value="written-questions">
-                {t("writtenQuestions")}
-              </MenuItem>
-              <MenuItem value="written-question-responses">
-                {t("writtenQuestionResponses")}
-              </MenuItem>
-              <MenuItem value="expert-statements">
-                {t("expertStatements")}
-              </MenuItem>
-              <MenuItem value="oral-questions">{t("oralQuestions")}</MenuItem>
-              <MenuItem value="committee-reports">
-                {t("committeeReports")}
-              </MenuItem>
-              <MenuItem value="legislative-initiatives-law">
-                {t("legislativeInitiativesLaw")}
-              </MenuItem>
-              <MenuItem value="legislative-initiatives-budget">
-                {t("legislativeInitiativesBudget")}
-              </MenuItem>
-              <MenuItem value="legislative-initiatives-supplementary-budget">
-                {t("legislativeInitiativesSupplementaryBudget")}
-              </MenuItem>
-              <MenuItem value="legislative-initiatives-action">
-                {t("legislativeInitiativesAction")}
-              </MenuItem>
-              <MenuItem value="legislative-initiatives-discussion">
-                {t("legislativeInitiativesDiscussion")}
-              </MenuItem>
-              <MenuItem value="legislative-initiatives-citizens">
-                {t("legislativeInitiativesCitizens")}
-              </MenuItem>
-            </Select>
-          </FormControl>
-
-          <FormControl fullWidth>
-            <InputLabel>{t("year")}</InputLabel>
-            <Select
-              value={selectedYear}
-              label={t("year")}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              disabled={yearsLoading}
-              sx={{ backgroundColor: colors.backgroundDefault }}
-            >
-              <MenuItem value="all">{t("allYears")}</MenuItem>
-              {years.map((year) => (
-                <MenuItem key={year} value={year.toString()}>
-                  {year}
+            <FormControl fullWidth>
+              <InputLabel>{t("type")}</InputLabel>
+              <Select
+                value={documentType}
+                label={t("type")}
+                onChange={(e) =>
+                  handleDocumentTypeChange(e.target.value as DocumentType)
+                }
+                sx={{ backgroundColor: colors.backgroundDefault }}
+              >
+                <MenuItem value="interpellations">
+                  {t("interpellations")}
                 </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+                <MenuItem value="government-proposals">
+                  {t("governmentProposals")}
+                </MenuItem>
+                <MenuItem value="written-questions">
+                  {t("writtenQuestions")}
+                </MenuItem>
+                <MenuItem value="written-question-responses">
+                  {t("writtenQuestionResponses")}
+                </MenuItem>
+                <MenuItem value="expert-statements">
+                  {t("expertStatements")}
+                </MenuItem>
+                <MenuItem value="oral-questions">{t("oralQuestions")}</MenuItem>
+                <MenuItem value="committee-reports">
+                  {t("committeeReports")}
+                </MenuItem>
+                <MenuItem value="legislative-initiatives-law">
+                  {t("legislativeInitiativesLaw")}
+                </MenuItem>
+                <MenuItem value="legislative-initiatives-budget">
+                  {t("legislativeInitiativesBudget")}
+                </MenuItem>
+                <MenuItem value="legislative-initiatives-supplementary-budget">
+                  {t("legislativeInitiativesSupplementaryBudget")}
+                </MenuItem>
+                <MenuItem value="legislative-initiatives-action">
+                  {t("legislativeInitiativesAction")}
+                </MenuItem>
+                <MenuItem value="legislative-initiatives-discussion">
+                  {t("legislativeInitiativesDiscussion")}
+                </MenuItem>
+                <MenuItem value="legislative-initiatives-citizens">
+                  {t("legislativeInitiativesCitizens")}
+                </MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>{t("year")}</InputLabel>
+              <Select
+                value={selectedYear}
+                label={t("year")}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                disabled={yearsLoading}
+                sx={{ backgroundColor: colors.backgroundDefault }}
+              >
+                <MenuItem value="all">{t("allYears")}</MenuItem>
+                {years.map((year) => (
+                  <MenuItem key={year} value={year.toString()}>
+                    {year}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </DocumentsFilterPanel>
         </Box>
 

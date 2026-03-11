@@ -49,7 +49,9 @@ describe("security headers", () => {
         },
       });
 
-      const handler = (routes["/api/test"] as { GET: (r: Request) => Promise<Response> }).GET;
+      const handler = (
+        routes["/api/test"] as { GET: (r: Request) => Promise<Response> }
+      ).GET;
       const response = await handler(new Request("http://localhost/api/test"));
 
       for (const header of REQUIRED_HEADERS) {
