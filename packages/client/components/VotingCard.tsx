@@ -6,7 +6,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Collapse,
   Link,
   Stack,
@@ -23,7 +22,7 @@ import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
 import { colors, commonStyles } from "#client/theme";
-import { DataCard, VoteMarginBar } from "#client/theme/components";
+import { DataCard, InlineSpinner, VoteMarginBar } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { formatDateFi, formatTimeFi } from "#client/utils/date-time";
 import { apiFetch } from "#client/utils/fetch";
@@ -157,51 +156,12 @@ const VoteCountsDisplay: React.FC<{
   }
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        gap: { xs: 1.5, sm: 2 },
-        flexWrap: "wrap",
-        alignItems: "center",
-      }}
-    >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-        <Box
-          sx={{
-            width: 8,
-            height: 8,
-            borderRadius: "50%",
-            bgcolor: "#22C55E",
-            flexShrink: 0,
-          }}
-        />
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 700, color: themedColors.success }}
-        >
-          {n_yes} {yesLabel}
-        </Typography>
-      </Box>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-        <Box
-          sx={{
-            width: 8,
-            height: 8,
-            borderRadius: "50%",
-            bgcolor: "#EF4444",
-            flexShrink: 0,
-          }}
-        />
-        <Typography
-          variant="caption"
-          sx={{ fontWeight: 700, color: themedColors.error }}
-        >
-          {n_no} {noLabel}
-        </Typography>
-      </Box>
-      <Typography variant="caption" sx={{ color: themedColors.textTertiary }}>
-        {n_abstain} {emptyLabel} · {n_absent} {absentLabel}
-      </Typography>
+    <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", alignItems: "center" }}>
+      <Typography variant="caption" sx={{ fontWeight: 700, color: themedColors.success }}>{n_yes} {yesLabel}</Typography>
+      <Typography variant="caption" sx={{ color: themedColors.textTertiary }}>·</Typography>
+      <Typography variant="caption" sx={{ fontWeight: 700, color: themedColors.error }}>{n_no} {noLabel}</Typography>
+      <Typography variant="caption" sx={{ color: themedColors.textTertiary }}>·</Typography>
+      <Typography variant="caption" sx={{ color: themedColors.textTertiary }}>{n_abstain} {emptyLabel} · {n_absent} {absentLabel}</Typography>
     </Box>
   );
 };
@@ -216,17 +176,7 @@ const VotingDetailsPanel: React.FC<{
   const themedColors = useThemedColors();
 
   if (loading) {
-    return (
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, py: 0.5 }}>
-        <CircularProgress size={14} />
-        <Typography
-          variant="caption"
-          sx={{ color: themedColors.textSecondary }}
-        >
-          {tCommon("loadingVotingDetails")}
-        </Typography>
-      </Box>
-    );
+    return <InlineSpinner size={20} py={1} />;
   }
 
   if (!details) return null;
@@ -347,80 +297,67 @@ export const VotingCard: React.FC<{
     voting.agenda_title,
   ]);
 
-  const borderColor = passed ? themedColors.success : themedColors.error;
-
   return (
     <DataCard
       className="trace-hover-parent"
-      sx={{
-        p: 0,
-        borderLeft: `3px solid ${borderColor}`,
-        overflow: "hidden",
-        "&:hover": { borderColor },
-      }}
+      sx={{ p: 0, overflow: "hidden" }}
     >
-      <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
-        {/* Header row */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0.75,
-            mb: 1.25,
-            flexWrap: "wrap",
-          }}
-        >
-          {voting.start_time && (
+      {/* Zone 1 + 2 + 3: header, title, bar */}
+      <Box sx={{ px: { xs: 1.5, sm: 2 }, pt: 1.5, pb: 1 }}>
+        {/* Header row: outcome pill + meta */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mb: 1 }}>
+          {/* Outcome pill — LEFT, prominent */}
+          <Box
+            sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 0.5,
+              px: 1.25,
+              py: 0.4,
+              borderRadius: 1.5,
+              bgcolor: passed ? `${themedColors.success}15` : `${themedColors.error}15`,
+              border: `1px solid ${passed ? `${themedColors.success}40` : `${themedColors.error}40`}`,
+            }}
+          >
+            {passed ? (
+              <CheckCircleOutlineIcon sx={{ fontSize: 13, color: themedColors.success }} />
+            ) : (
+              <CancelOutlinedIcon sx={{ fontSize: 13, color: themedColors.error }} />
+            )}
             <Typography
-              variant="caption"
-              sx={{ color: themedColors.textSecondary, fontWeight: 500 }}
+              sx={{
+                fontSize: "0.7rem",
+                fontWeight: 700,
+                color: passed ? themedColors.success : themedColors.error,
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+              }}
             >
+              {passed ? tVotings("passed") : tVotings("failed")}
+            </Typography>
+          </Box>
+
+          {/* Date + session — right of outcome */}
+          {voting.start_time && (
+            <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontWeight: 500 }}>
               {formatDate(voting.start_time)}
-              {formatTime(voting.start_time)
-                ? ` · ${formatTime(voting.start_time)}`
-                : ""}
+              {formatTime(voting.start_time) ? ` · ${formatTime(voting.start_time)}` : ""}
             </Typography>
           )}
           {voting.session_key && (
             <Link
               href={refs.session(voting.session_key, voting.start_time)}
               underline="hover"
-              sx={{ fontWeight: 600, fontSize: "0.8rem" }}
+              sx={{ fontWeight: 600, fontSize: "0.78rem", color: themedColors.primary }}
             >
               {voting.session_key}
             </Link>
           )}
-          {voting.section_key && (
-            <Link
-              href={refs.section(
-                voting.section_key,
-                voting.start_time,
-                voting.session_key,
-              )}
-              underline="none"
-            >
-              <Chip
-                size="small"
-                label={voting.section_key}
-                variant="outlined"
-                clickable
-                sx={{
-                  ...commonStyles.compactChipSm,
-                  ...commonStyles.compactTextMd,
-                }}
-              />
-            </Link>
-          )}
-          {voting.section_processing_phase && (
-            <Chip
-              size="small"
-              label={voting.section_processing_phase}
-              sx={{
-                ...commonStyles.compactChipSm,
-                ...commonStyles.compactTextMd,
-              }}
-            />
-          )}
+
+          {/* Spacer */}
+          <Box sx={{ flex: 1 }} />
+
+          {/* Close-vote chip + trace icon — far right */}
           {close && (
             <Chip
               size="small"
@@ -436,184 +373,141 @@ export const VotingCard: React.FC<{
               }}
             />
           )}
-          {Number.isFinite(voting.number) && voting.number != null && (
-            <Chip
-              size="small"
-              label={`#${voting.number}`}
-              variant="outlined"
-              sx={{
-                ...commonStyles.compactChipSm,
-                ...commonStyles.compactTextMd,
-              }}
-            />
-          )}
-          <Box sx={{ ml: "auto" }}>
-            <ItemTraceIcon
-              table="SaliDBAanestys"
-              pkName="AanestysId"
-              pkValue={String(voting.id)}
-              label={`Äänestys #${voting.number ?? voting.id}${voting.start_time ? ` – ${formatDate(voting.start_time)}` : ""}`}
-            />
-          </Box>
+          <ItemTraceIcon
+            table="SaliDBAanestys"
+            pkName="AanestysId"
+            pkValue={String(voting.id)}
+            label={`Äänestys #${voting.number ?? voting.id}${voting.start_time ? ` – ${formatDate(voting.start_time)}` : ""}`}
+          />
         </Box>
 
-        {/* Title + status badge */}
-        <Box
+        {/* Zone 2: title */}
+        <Typography
           sx={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 1.5,
-            mb: 1.25,
+            fontWeight: 600,
+            fontSize: "0.9375rem",
+            color: themedColors.textPrimary,
+            lineHeight: 1.45,
+            mb: secondaryTitle ? 0.25 : 1,
           }}
         >
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography
-              sx={{
-                fontWeight: 600,
-                fontSize: "0.9375rem",
-                color: themedColors.textPrimary,
-                lineHeight: 1.4,
-              }}
-            >
-              {primaryTitle || tCommon("none")}
-            </Typography>
-            {secondaryTitle && (
-              <Typography
-                variant="body2"
-                sx={{
-                  color: themedColors.textSecondary,
-                  mt: 0.25,
-                  lineHeight: 1.4,
-                }}
-              >
-                {secondaryTitle}
-              </Typography>
-            )}
-          </Box>
-          {/* Status badge */}
-          <Box
-            sx={{
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              gap: 0.5,
-              px: 1.25,
-              py: 0.4,
-              borderRadius: 2,
-              bgcolor: passed
-                ? `${themedColors.success}12`
-                : `${themedColors.error}12`,
-              border: `1px solid ${
-                passed ? `${themedColors.success}35` : `${themedColors.error}35`
-              }`,
-            }}
-          >
-            {passed ? (
-              <CheckCircleOutlineIcon
-                sx={{ fontSize: 13, color: themedColors.success }}
-              />
-            ) : (
-              <CancelOutlinedIcon
-                sx={{ fontSize: 13, color: themedColors.error }}
-              />
-            )}
-            <Typography
-              sx={{
-                fontSize: "0.7rem",
-                fontWeight: 700,
-                color: passed ? themedColors.success : themedColors.error,
-                letterSpacing: "0.03em",
-                textTransform: "uppercase",
-              }}
-            >
-              {passed ? tVotings("passed") : tVotings("failed")}
-            </Typography>
-          </Box>
-        </Box>
+          {primaryTitle || tCommon("none")}
+        </Typography>
+        {secondaryTitle && (
+          <Typography variant="body2" sx={{ color: themedColors.textSecondary, lineHeight: 1.4, mb: 1 }}>
+            {secondaryTitle}
+          </Typography>
+        )}
 
-        {/* Vote bar */}
+        {/* Section + phase chips row */}
+        {(voting.section_key || voting.section_processing_phase || (Number.isFinite(voting.number) && voting.number != null)) && (
+          <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", mb: 1 }}>
+            {voting.section_key && (
+              <Link
+                href={refs.section(voting.section_key, voting.start_time, voting.session_key)}
+                underline="none"
+              >
+                <Chip
+                  size="small"
+                  label={voting.section_key}
+                  variant="outlined"
+                  clickable
+                  sx={{ ...commonStyles.compactChipSm, ...commonStyles.compactTextMd }}
+                />
+              </Link>
+            )}
+            {voting.section_processing_phase && (
+              <Chip
+                size="small"
+                label={voting.section_processing_phase}
+                sx={{ ...commonStyles.compactChipSm, ...commonStyles.compactTextMd }}
+              />
+            )}
+            {Number.isFinite(voting.number) && voting.number != null && (
+              <Chip
+                size="small"
+                label={`#${voting.number}`}
+                variant="outlined"
+                sx={{ ...commonStyles.compactChipSm, ...commonStyles.compactTextMd }}
+              />
+            )}
+          </Box>
+        )}
+
+        {/* Zone 3: vote bar + counts */}
         <VoteMarginBar
           yes={voting.n_yes}
           no={voting.n_no}
           empty={voting.n_abstain}
           absent={voting.n_absent}
-          height={8}
+          height={10}
           sx={{ mb: 0.75 }}
         />
-
-        {/* Vote counts */}
-        <Box sx={{ mb: 1.25 }}>
-          <VoteCountsDisplay
-            n_yes={voting.n_yes}
-            n_no={voting.n_no}
-            n_abstain={voting.n_abstain}
-            n_absent={voting.n_absent}
-          />
-        </Box>
-
-        {/* Actions */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            flexWrap: "wrap",
-          }}
-        >
-          <Button
-            size="small"
-            onClick={() => void toggle()}
-            sx={{ ...commonStyles.compactActionButton }}
-            endIcon={
-              <ExpandMoreIcon
-                sx={{
-                  fontSize: "14px !important",
-                  transform: expanded ? "rotate(180deg)" : "none",
-                  transition: "transform 0.2s",
-                }}
-              />
-            }
-          >
-            {expanded
-              ? tCommon("detailsToggle", { context: "hide" })
-              : tCommon("detailsToggle", { context: "show" })}
-          </Button>
-          <Link
-            href={refs.voting(voting.id, voting.session_key, voting.start_time)}
-            sx={{
-              color: themedColors.primary,
-              fontWeight: 600,
-              fontSize: "0.8rem",
-            }}
-          >
-            #{voting.id}
-          </Link>
-          {voting.result_url && (
-            <EduskuntaSourceLink
-              href={voting.result_url}
-              sx={{ fontSize: "0.8rem" }}
-            >
-              {tVotings("results.results")}
-            </EduskuntaSourceLink>
-          )}
-          {voting.proceedings_url && (
-            <EduskuntaSourceLink
-              href={voting.proceedings_url}
-              sx={{ fontSize: "0.8rem" }}
-            >
-              {tVotings("results.minutes")}
-            </EduskuntaSourceLink>
-          )}
-        </Box>
+        <VoteCountsDisplay
+          n_yes={voting.n_yes}
+          n_no={voting.n_no}
+          n_abstain={voting.n_abstain}
+          n_absent={voting.n_absent}
+        />
 
         {/* Document cards */}
         {docRefs.length > 0 && (
-          <Box sx={{ mt: 1 }}>
+          <Box sx={{ mt: 1.25 }}>
             {docRefs.map((ref) => (
               <DocumentCard key={ref.identifier} docRef={ref} />
             ))}
           </Box>
         )}
+      </Box>
+
+      {/* Zone 4: actions footer */}
+      <Box
+        sx={{
+          borderTop: `1px solid ${themedColors.dataBorder}`,
+          px: { xs: 1.5, sm: 2 },
+          py: 0.75,
+          bgcolor: `${themedColors.primary}02`,
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          flexWrap: "wrap",
+        }}
+      >
+        <Button
+          size="small"
+          onClick={() => void toggle()}
+          sx={{ ...commonStyles.compactActionButton }}
+          endIcon={
+            <ExpandMoreIcon
+              sx={{
+                fontSize: "14px !important",
+                transform: expanded ? "rotate(180deg)" : "none",
+                transition: "transform 0.2s",
+              }}
+            />
+          }
+        >
+          {expanded
+            ? tCommon("detailsToggle", { context: "hide" })
+            : tCommon("detailsToggle", { context: "show" })}
+        </Button>
+        {voting.result_url && (
+          <EduskuntaSourceLink href={voting.result_url} sx={{ fontSize: "0.78rem" }}>
+            {tVotings("results.results")}
+          </EduskuntaSourceLink>
+        )}
+        {voting.proceedings_url && (
+          <EduskuntaSourceLink href={voting.proceedings_url} sx={{ fontSize: "0.78rem" }}>
+            {tVotings("results.minutes")}
+          </EduskuntaSourceLink>
+        )}
+        {/* Deemphasized ID link — far right */}
+        <Link
+          href={refs.voting(voting.id, voting.session_key, voting.start_time)}
+          sx={{ ml: "auto", color: themedColors.textTertiary, fontSize: "0.72rem" }}
+        >
+          #{voting.id}
+        </Link>
       </Box>
 
       {/* Details panel */}
@@ -651,56 +545,38 @@ export const VotingSubRow: React.FC<{
   const detailsPanelId = `voting-sub-details-${voting.id}`;
 
   return (
-    <Box
-      sx={{
-        borderLeft: `3px solid ${passed ? themedColors.success : themedColors.error}`,
-        pl: 1.25,
-        py: 0.75,
-        borderRadius: "0 4px 4px 0",
-      }}
-    >
-      {/* Optional title */}
-      {showTitle && voting.title && (
-        <Typography
-          variant="caption"
+    <Box sx={{ py: 0.75 }}>
+      {/* Line 1: outcome dot + phase chip + title */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.5, flexWrap: "wrap" }}>
+        {/* Small outcome dot */}
+        <Box
           sx={{
-            display: "block",
-            color: themedColors.textSecondary,
-            mb: 0.5,
-            lineHeight: 1.3,
+            width: 8,
+            height: 8,
+            borderRadius: "50%",
+            bgcolor: passed ? themedColors.success : themedColors.error,
+            flexShrink: 0,
           }}
-        >
-          {voting.title}
-        </Typography>
-      )}
+        />
 
-      {/* Main row */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          flexWrap: "wrap",
-        }}
-      >
-        {/* Phase chip */}
-        {(voting.section_processing_phase ||
-          voting.section_processing_title) && (
+        {(voting.section_processing_phase || voting.section_processing_title) && (
           <Chip
             size="small"
-            label={
-              voting.section_processing_phase || voting.section_processing_title
-            }
-            sx={{
-              ...commonStyles.compactChipSm,
-              ...commonStyles.compactTextMd,
-              minWidth: 72,
-            }}
+            label={voting.section_processing_phase || voting.section_processing_title}
+            sx={{ ...commonStyles.compactChipSm, ...commonStyles.compactTextMd, minWidth: 60 }}
           />
         )}
 
-        {/* Mini vote bar */}
-        <Box sx={{ flex: 1, minWidth: 80, maxWidth: 180 }}>
+        {showTitle && voting.title && (
+          <Typography variant="caption" sx={{ color: themedColors.textSecondary, lineHeight: 1.3, flex: 1 }}>
+            {voting.title}
+          </Typography>
+        )}
+      </Box>
+
+      {/* Line 2: vote bar + counts + actions */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap", pl: 2 }}>
+        <Box sx={{ flex: 1, minWidth: 100, maxWidth: 200 }}>
           <VoteMarginBar
             yes={voting.n_yes}
             no={voting.n_no}
@@ -710,7 +586,6 @@ export const VotingSubRow: React.FC<{
           />
         </Box>
 
-        {/* Compact counts */}
         <VoteCountsDisplay
           n_yes={voting.n_yes}
           n_no={voting.n_no}
@@ -719,8 +594,7 @@ export const VotingSubRow: React.FC<{
           compact
         />
 
-        {/* Actions */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ml: "auto" }}>
           <Button
             size="small"
             onClick={() => void toggle()}
@@ -742,34 +616,19 @@ export const VotingSubRow: React.FC<{
               : tCommon("detailsToggle", { context: "show" })}
           </Button>
           {onOpenInView ? (
-            <Button
-              size="small"
-              onClick={onOpenInView}
-              sx={{ ...commonStyles.compactActionButton }}
-            >
+            <Button size="small" onClick={onOpenInView} sx={{ ...commonStyles.compactActionButton }}>
               {tCommon("openView")}
             </Button>
           ) : (
             <Link
-              href={refs.voting(
-                voting.id,
-                voting.session_key,
-                voting.start_time,
-              )}
-              sx={{
-                color: themedColors.primary,
-                fontWeight: 600,
-                ...commonStyles.compactTextLg,
-              }}
+              href={refs.voting(voting.id, voting.session_key, voting.start_time)}
+              sx={{ color: themedColors.textTertiary, ...commonStyles.compactTextLg }}
             >
               #{voting.id}
             </Link>
           )}
           {voting.result_url && (
-            <EduskuntaSourceLink
-              href={voting.result_url}
-              sx={{ ...commonStyles.compactTextLg }}
-            >
+            <EduskuntaSourceLink href={voting.result_url} sx={{ ...commonStyles.compactTextLg }}>
               {tVotings("results.results")}
             </EduskuntaSourceLink>
           )}
@@ -804,14 +663,6 @@ export const VotingGroupCard: React.FC<{
   const themedColors = useThemedColors();
 
   const first = votes[0];
-  const allPassed = votes.every(isVotePassed);
-  const anyPassed = votes.some(isVotePassed);
-  const borderColor = allPassed
-    ? themedColors.success
-    : anyPassed
-      ? themedColors.warning
-      : themedColors.error;
-
   const groupTitle = getPrimaryVotingTitle(first);
   const docRefs = extractDocumentIdentifiers(
     votes.flatMap((v) => [
@@ -824,30 +675,26 @@ export const VotingGroupCard: React.FC<{
   );
 
   return (
-    <DataCard
-      sx={{
-        p: 0,
-        borderLeft: `3px solid ${borderColor}`,
-        overflow: "hidden",
-        "&:hover": { borderColor },
-      }}
-    >
-      <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
-        {/* Header */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 0.75,
-            mb: 1.25,
-            flexWrap: "wrap",
-          }}
-        >
+    <DataCard sx={{ p: 0, overflow: "hidden" }}>
+      <Box sx={{ px: { xs: 1.5, sm: 2 }, pt: 1.5, pb: 1.5 }}>
+        {/* Header row */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mb: 1 }}>
+          {/* Vote count chip — prominent, LEFT */}
+          <Chip
+            size="small"
+            label={tVotings("votingCount", { count: votes.length })}
+            sx={{
+              ...commonStyles.compactChipSm,
+              ...commonStyles.compactTextMd,
+              fontWeight: 700,
+              bgcolor: `${themedColors.primary}12`,
+              color: themedColors.primary,
+            }}
+          />
+
+          {/* Date + session */}
           {first.start_time && (
-            <Typography
-              variant="caption"
-              sx={{ color: themedColors.textSecondary, fontWeight: 500 }}
-            >
+            <Typography variant="caption" sx={{ color: themedColors.textTertiary, fontWeight: 500 }}>
               {formatDate(first.start_time)}
             </Typography>
           )}
@@ -855,18 +702,14 @@ export const VotingGroupCard: React.FC<{
             <Link
               href={refs.session(first.session_key, first.start_time)}
               underline="hover"
-              sx={{ fontWeight: 600, fontSize: "0.8rem" }}
+              sx={{ fontWeight: 600, fontSize: "0.78rem", color: themedColors.primary }}
             >
               {first.session_key}
             </Link>
           )}
           {first.section_key && (
             <Link
-              href={refs.section(
-                first.section_key,
-                first.start_time,
-                first.session_key,
-              )}
+              href={refs.section(first.section_key, first.start_time, first.session_key)}
               underline="none"
             >
               <Chip
@@ -874,24 +717,10 @@ export const VotingGroupCard: React.FC<{
                 label={first.section_key}
                 variant="outlined"
                 clickable
-                sx={{
-                  ...commonStyles.compactChipSm,
-                  ...commonStyles.compactTextMd,
-                }}
+                sx={{ ...commonStyles.compactChipSm, ...commonStyles.compactTextMd }}
               />
             </Link>
           )}
-          <Chip
-            size="small"
-            label={tVotings("votingCount", { count: votes.length })}
-            sx={{
-              ...commonStyles.compactChipSm,
-              ...commonStyles.compactTextMd,
-              fontWeight: 600,
-              bgcolor: `${themedColors.primary}15`,
-              color: themedColors.primary,
-            }}
-          />
         </Box>
 
         {/* Group title */}
@@ -900,8 +729,8 @@ export const VotingGroupCard: React.FC<{
             fontWeight: 600,
             fontSize: "0.9375rem",
             color: themedColors.textPrimary,
-            mb: docRefs.length > 0 ? 0.75 : 1.25,
-            lineHeight: 1.4,
+            lineHeight: 1.45,
+            mb: 1,
           }}
         >
           {groupTitle || tCommon("none")}
@@ -916,8 +745,11 @@ export const VotingGroupCard: React.FC<{
           </Box>
         )}
 
-        {/* Sub-voting rows */}
-        <Stack spacing={0.5}>
+        {/* Sub-voting rows — separated with dividers */}
+        <Stack
+          spacing={0}
+          divider={<Box sx={{ height: "1px", bgcolor: themedColors.dataBorder, my: 0.5 }} />}
+        >
           {votes.map((vote) => (
             <VotingSubRow
               key={vote.id}

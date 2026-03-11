@@ -19,7 +19,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { colors, spacing } from "#client/theme";
+import { colors, commonStyles, spacing } from "#client/theme";
 import { DataCard, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
@@ -344,8 +344,8 @@ const Parties = () => {
         >
           <Table>
             <TableHead>
-              <TableRow sx={{ bgcolor: colors.primary }}>
-                <TableCell sx={{ color: "white", fontWeight: 700 }}>
+              <TableRow sx={commonStyles.tableHeaderRow}>
+                <TableCell>
                   <TableSortLabel
                     active={sortField === "party_name"}
                     direction={
@@ -362,13 +362,8 @@ const Parties = () => {
                     {tParties("table.party")}
                   </TableSortLabel>
                 </TableCell>
-                <TableCell sx={{ color: "white", fontWeight: 700 }}>
-                  {tParties("table.status")}
-                </TableCell>
-                <TableCell
-                  align="right"
-                  sx={{ color: "white", fontWeight: 700 }}
-                >
+                <TableCell>{tParties("table.status")}</TableCell>
+                <TableCell align="right">
                   <TableSortLabel
                     active={sortField === "member_count"}
                     direction={
@@ -385,10 +380,7 @@ const Parties = () => {
                     {tParties("table.members")}
                   </TableSortLabel>
                 </TableCell>
-                <TableCell
-                  align="right"
-                  sx={{ color: "white", fontWeight: 700 }}
-                >
+                <TableCell align="right">
                   <TableSortLabel
                     active={sortField === "participation_rate"}
                     direction={
@@ -407,13 +399,8 @@ const Parties = () => {
                     {tParties("table.participation")}
                   </TableSortLabel>
                 </TableCell>
-                <TableCell sx={{ color: "white", fontWeight: 700 }}>
-                  {tParties("table.genderSplit")}
-                </TableCell>
-                <TableCell
-                  align="right"
-                  sx={{ color: "white", fontWeight: 700 }}
-                >
+                <TableCell>{tParties("table.genderSplit")}</TableCell>
+                <TableCell align="right">
                   <TableSortLabel
                     active={sortField === "average_age"}
                     direction={

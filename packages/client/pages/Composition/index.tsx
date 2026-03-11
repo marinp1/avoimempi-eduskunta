@@ -8,11 +8,11 @@ import {
   Card,
   CardContent,
   Chip,
-  CircularProgress,
   Fade,
   IconButton,
   InputAdornment,
   Paper,
+  Skeleton,
   Slider,
   Stack,
   Table,
@@ -34,6 +34,7 @@ import {
 } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { commonStyles, spacing } from "#client/theme";
+import { EmptyState } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 import { RepresentativeDetails } from "./Details";
@@ -865,8 +866,34 @@ export default () => {
 
       {/* Loading / Error states */}
       {loading && (
-        <Box sx={{ ...commonStyles.centeredFlex, py: spacing.xl }}>
-          <CircularProgress sx={{ color: themedColors.primary }} />
+        <Box>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 2,
+              mb: 3,
+            }}
+          >
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} variant="rounded" height={72} animation="wave" />
+            ))}
+          </Box>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                lg: "repeat(3, 1fr)",
+              },
+              gap: 2,
+            }}
+          >
+            {Array.from({ length: 9 }).map((_, i) => (
+              <Skeleton key={i} variant="rounded" height={80} animation="wave" />
+            ))}
+          </Box>
         </Box>
       )}
       {!loading && error && (
@@ -885,44 +912,25 @@ export default () => {
         <Fade in timeout={700}>
           <Box>
             {filteredMembers.length === 0 ? (
-              <Paper
-                elevation={0}
-                sx={{
-                  mb: spacing.lg,
-                  px: 3,
-                  py: 4,
-                  borderRadius: 1,
-                  border: `1px solid ${themedColors.dataBorder}`,
-                  background: themedColors.backgroundPaper,
-                  textAlign: "center",
-                }}
-              >
-                <Typography
-                  variant="body1"
-                  sx={{ color: themedColors.textPrimary, fontWeight: 600 }}
-                >
-                  {t("noResults")}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ color: themedColors.textSecondary, mt: 0.5 }}
-                >
-                  {t("noResultsHint")}
-                </Typography>
-                {(partyFilter || govFilter !== "all") && (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    sx={{ mt: 2, textTransform: "none" }}
-                    onClick={() => {
-                      setPartyFilter(null);
-                      setGovFilter("all");
-                    }}
-                  >
-                    {t("resetFilters")}
-                  </Button>
-                )}
-              </Paper>
+              <EmptyState
+                title={t("noResults")}
+                description={t("noResultsHint")}
+                sx={{ mb: spacing.lg }}
+                action={
+                  (partyFilter || govFilter !== "all") ? (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => {
+                        setPartyFilter(null);
+                        setGovFilter("all");
+                      }}
+                    >
+                      {t("resetFilters")}
+                    </Button>
+                  ) : undefined
+                }
+              />
             ) : (
               <>
                 <Box sx={{ display: { xs: "block", lg: "none" } }}>
@@ -1047,35 +1055,16 @@ export default () => {
                 >
                   <Table>
                     <TableHead>
-                      <TableRow
-                        sx={{
-                          background: themedColors.primaryGradient,
-                        }}
-                      >
-                        <TableCell sx={{ ...commonStyles.tableHeader }}>
-                          {t("table.name")}
-                        </TableCell>
-                        <TableCell sx={{ ...commonStyles.tableHeader }}>
-                          {t("table.party")}
-                        </TableCell>
-                        <TableCell
-                          sx={{ ...commonStyles.tableHeader }}
-                          align="center"
-                        >
+                      <TableRow sx={commonStyles.tableHeaderRow}>
+                        <TableCell>{t("table.name")}</TableCell>
+                        <TableCell>{t("table.party")}</TableCell>
+                        <TableCell align="center">
                           {t("table.government")}
                         </TableCell>
-                        <TableCell sx={{ ...commonStyles.tableHeader }}>
-                          {t("table.gender")}
-                        </TableCell>
-                        <TableCell sx={{ ...commonStyles.tableHeader }}>
-                          {t("table.birthDate")}
-                        </TableCell>
-                        <TableCell sx={{ ...commonStyles.tableHeader }}>
-                          {t("table.birthPlace")}
-                        </TableCell>
-                        <TableCell sx={{ ...commonStyles.tableHeader }}>
-                          {t("table.occupation")}
-                        </TableCell>
+                        <TableCell>{t("table.gender")}</TableCell>
+                        <TableCell>{t("table.birthDate")}</TableCell>
+                        <TableCell>{t("table.birthPlace")}</TableCell>
+                        <TableCell>{t("table.occupation")}</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>

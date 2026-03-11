@@ -19,6 +19,7 @@ import {
   ListItemIcon,
   ListItemText,
   MenuItem,
+  Popover,
   Select,
   Tab,
   Tabs,
@@ -32,17 +33,22 @@ import { useHallituskausi } from "./filters/HallituskausiContext";
 import { type RouteName, routes } from "./pages";
 import { colors, transitions as motion, spacing } from "./theme";
 
-/** Routes to show in the main desktop navigation */
-const mainNavRoutes: RouteName[] = [
+/** Primary routes shown as tabs in the desktop navigation */
+const desktopPrimaryRoutes: RouteName[] = [
   "",
   "edustajat",
-  "hallitukset",
   "puolueet",
   "istunnot",
   "aanestykset",
   "asiakirjat",
   "analytiikka",
+];
+
+/** Secondary routes shown in the "More" popover on desktop */
+const desktopSecondaryRoutes: RouteName[] = [
+  "hallitukset",
   "laadunvalvonta",
+  "muutokset",
 ];
 
 /** Routes for mobile bottom tabs */
@@ -74,6 +80,10 @@ export const Navigation: React.FC<{
   const titleBase = titleDotFi ? appTitle.slice(0, -3) : appTitle;
   const titleSuffix = titleDotFi ? ".fi" : null;
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [moreAnchorEl, setMoreAnchorEl] = useState<null | HTMLElement>(null);
+  const moreOpen = Boolean(moreAnchorEl);
+
+  const isSecondaryActive = desktopSecondaryRoutes.includes(activeTab as RouteName);
 
   const navigate = (path: RouteName) => {
     setActiveTab(path);
@@ -104,8 +114,6 @@ export const Navigation: React.FC<{
     navigate(path);
     setDrawerOpen(false);
   };
-
-  const visibleRoutes = mainNavRoutes;
 
   const allDrawerRoutes = Object.keys(routes) as RouteName[];
 
@@ -299,11 +307,13 @@ export const Navigation: React.FC<{
               flexGrow: 1,
               minWidth: 0,
               display: "flex",
+              alignItems: "center",
               justifyContent: "center",
+              gap: 0.5,
             }}
           >
             <Tabs
-              value={activeTab}
+              value={isSecondaryActive ? false : activeTab}
               onChange={handleDesktopTabChange}
               sx={{
                 maxWidth: "100%",
@@ -337,7 +347,7 @@ export const Navigation: React.FC<{
                 },
               }}
             >
-              {visibleRoutes.map((key) => (
+              {desktopPrimaryRoutes.map((key) => (
                 <Tab
                   key={key}
                   label={tNavigation(`routes.${key}`)}
@@ -345,6 +355,86 @@ export const Navigation: React.FC<{
                 />
               ))}
             </Tabs>
+
+            {/* "More" button for secondary desktop routes */}
+            <IconButton
+              onClick={(e) => setMoreAnchorEl(e.currentTarget)}
+              aria-label={tNavigation("more")}
+              aria-haspopup="true"
+              aria-expanded={moreOpen}
+              size="small"
+              sx={{
+                color: isSecondaryActive ? "white" : "rgba(255,255,255,0.7)",
+                bgcolor: isSecondaryActive
+                  ? "rgba(255,255,255,0.14)"
+                  : "transparent",
+                borderRadius: 1,
+                transition: `background-color ${motion.fast}ms ${motion.easing.standard}, color ${motion.fast}ms ${motion.easing.standard}`,
+                "&:hover": {
+                  color: "white",
+                  bgcolor: "rgba(255,255,255,0.12)",
+                },
+              }}
+            >
+              <MoreHoriz fontSize="small" />
+            </IconButton>
+
+            <Popover
+              open={moreOpen}
+              anchorEl={moreAnchorEl}
+              onClose={() => setMoreAnchorEl(null)}
+              anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+              transformOrigin={{ vertical: "top", horizontal: "center" }}
+              PaperProps={{
+                sx: {
+                  mt: 0.5,
+                  minWidth: 180,
+                  border: `1px solid ${colors.dataBorder}`,
+                  boxShadow: "0 8px 24px rgba(15,27,51,0.16)",
+                },
+              }}
+            >
+              <List dense disablePadding sx={{ py: 0.5 }}>
+                {desktopSecondaryRoutes.map((key) => {
+                  const route = routes[key];
+                  const Icon = route.icon;
+                  const isActive = activeTab === key;
+                  return (
+                    <ListItem key={key} disablePadding>
+                      <ListItemButton
+                        onClick={() => {
+                          navigate(key);
+                          setMoreAnchorEl(null);
+                        }}
+                        sx={{
+                          py: 1,
+                          px: 2,
+                          color: isActive ? colors.primary : colors.textPrimary,
+                          bgcolor: isActive ? `${colors.primary}08` : "transparent",
+                          "&:hover": { bgcolor: `${colors.primary}08` },
+                        }}
+                      >
+                        <ListItemIcon
+                          sx={{
+                            color: isActive ? colors.primary : colors.textSecondary,
+                            minWidth: 32,
+                          }}
+                        >
+                          <Icon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={tNavigation(`routes.${key}`)}
+                          primaryTypographyProps={{
+                            fontWeight: isActive ? 600 : 400,
+                            fontSize: "0.875rem",
+                          }}
+                        />
+                      </ListItemButton>
+                    </ListItem>
+                  );
+                })}
+              </List>
+            </Popover>
           </Box>
 
           <Box sx={{ flexShrink: 0 }}>
@@ -412,9 +502,12 @@ export const Navigation: React.FC<{
       >
         <Toolbar
           sx={{
-            py: 0,
+            py: 0.75,
             px: 2,
             minHeight: 48,
+            flexDirection: "column",
+            alignItems: "flex-start",
+            justifyContent: "center",
           }}
         >
           <Typography
@@ -425,6 +518,7 @@ export const Navigation: React.FC<{
               fontWeight: 600,
               fontSize: "0.9375rem",
               letterSpacing: "-0.01em",
+              lineHeight: 1.3,
             }}
           >
             {titleBase}
@@ -437,18 +531,26 @@ export const Navigation: React.FC<{
               </Box>
             )}
           </Typography>
+          {activeTab !== "" && (
+            <Typography
+              variant="caption"
+              sx={{ color: "rgba(255,255,255,0.65)", lineHeight: 1, mt: 0.2 }}
+            >
+              {tNavigation(`routes.${activeTab as RouteName}`)}
+            </Typography>
+          )}
         </Toolbar>
       </AppBar>
 
       {/* Mobile Drawer */}
       <Drawer
-        anchor="right"
+        anchor="left"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         ModalProps={{ keepMounted: true }}
         PaperProps={{
           sx: {
-            borderLeft: `1px solid ${colors.dataBorder}`,
+            borderRight: `1px solid ${colors.dataBorder}`,
             boxShadow: "0 12px 30px rgba(15, 27, 51, 0.2)",
           },
         }}

@@ -362,7 +362,7 @@ export function CommitteeReportCard({
                         p: 2,
                         backgroundColor: colors.backgroundSubtle,
                         borderRadius: 1,
-                        borderLeft: `4px solid ${colors.primary}`,
+                        borderLeft: `3px solid ${colors.primaryLight}`,
                       }}
                     >
                       <RichTextRenderer
@@ -400,7 +400,7 @@ export function CommitteeReportCard({
                         p: 2,
                         backgroundColor: colors.backgroundSubtle,
                         borderRadius: 1,
-                        borderLeft: `4px solid ${colors.primary}`,
+                        borderLeft: `3px solid ${colors.primaryLight}`,
                       }}
                     >
                       <Stack spacing={1.5}>
@@ -448,7 +448,7 @@ export function CommitteeReportCard({
                         p: 2,
                         backgroundColor: colors.backgroundSubtle,
                         borderRadius: 1,
-                        borderLeft: `4px solid ${colors.primary}`,
+                        borderLeft: `3px solid ${colors.primaryLight}`,
                       }}
                     >
                       <RichTextRenderer
@@ -484,7 +484,7 @@ export function CommitteeReportCard({
                         p: 2,
                         backgroundColor: colors.backgroundSubtle,
                         borderRadius: 1,
-                        borderLeft: `4px solid ${colors.primary}`,
+                        borderLeft: `3px solid ${colors.primaryLight}`,
                       }}
                     >
                       <RichTextRenderer
@@ -520,7 +520,7 @@ export function CommitteeReportCard({
                         p: 2,
                         backgroundColor: colors.backgroundSubtle,
                         borderRadius: 1,
-                        borderLeft: `4px solid ${colors.error}`,
+                        borderLeft: `3px solid ${colors.error}`,
                       }}
                     >
                       <RichTextRenderer
@@ -540,7 +540,7 @@ export function CommitteeReportCard({
                     p: 2,
                     backgroundColor: colors.backgroundSubtle,
                     borderRadius: 1,
-                    borderLeft: `4px solid ${colors.primary}`,
+                    borderLeft: `3px solid ${colors.primaryLight}`,
                   }}
                 >
                   <Typography
