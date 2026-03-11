@@ -9,24 +9,15 @@ import MicIcon from "@mui/icons-material/Mic";
 import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import TimelineIcon from "@mui/icons-material/Timeline";
-import {
-  Box,
-  Button,
-  Chip,
-  Grid,
-  Link,
-  Typography,
-} from "@mui/material";
-import { useScopedTranslation } from "#client/i18n/scoped";
+import { Box, Button, Chip, Grid, Link, Typography } from "@mui/material";
+import type { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
-import {
-  borderRadius,
-  colors,
-  commonStyles,
-  spacing,
-} from "#client/theme";
+import { borderRadius, colors, commonStyles, spacing } from "#client/theme";
 import { DataCard, PanelHeader, VoteMarginBar } from "#client/theme/components";
-import { formatDateLongFi, formatDateTimeCompactFi } from "#client/utils/date-time";
+import {
+  formatDateLongFi,
+  formatDateTimeCompactFi,
+} from "#client/utils/date-time";
 import type {
   HomeCloseVote,
   HomeCoalitionVote,
@@ -56,7 +47,12 @@ export const HomeHero = ({
   const latestSession = overview.latestDay.sessions[0] ?? null;
 
   const quickLinks = [
-    { href: latestSession ? refs.session(latestSession.key, latestSession.date) : "/istunnot", label: tHome("jumpLatestSession") },
+    {
+      href: latestSession
+        ? refs.session(latestSession.key, latestSession.date)
+        : "/istunnot",
+      label: tHome("jumpLatestSession"),
+    },
     { href: "/aanestykset", label: tHome("jumpVotes") },
     { href: "/puolueet", label: tHome("jumpParties") },
     { href: "/analytiikka", label: tHome("jumpAnalytics") },
@@ -191,7 +187,9 @@ export const HomeHero = ({
                 label={tHome("heroLatestSession")}
                 value={
                   overview.scope.latestCompletedSessionDate
-                    ? formatDateLongFi(overview.scope.latestCompletedSessionDate)
+                    ? formatDateLongFi(
+                        overview.scope.latestCompletedSessionDate,
+                      )
                     : tHome("noData")
                 }
               />
@@ -249,9 +247,13 @@ export const HomeHero = ({
             sx={{
               height: "100%",
               p: { xs: 2.25, md: 3 },
-              borderLeft: { xs: "none", lg: "1px solid rgba(255,255,255,0.12)" },
+              borderLeft: {
+                xs: "none",
+                lg: "1px solid rgba(255,255,255,0.12)",
+              },
               borderTop: { xs: "1px solid rgba(255,255,255,0.12)", lg: "none" },
-              background: "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))",
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))",
             }}
           >
             <Box
@@ -297,7 +299,8 @@ export const HomeHero = ({
                   p: 1.5,
                   borderRadius: heroInnerRadius,
                   border: "1px solid rgba(255,255,255,0.14)",
-                  background: "linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.04))",
+                  background:
+                    "linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.04))",
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
                 }}
               >
@@ -329,9 +332,18 @@ export const HomeHero = ({
                     fontSize: "0.82rem",
                   }}
                 >
-                  {latestSession.agenda_title || latestSession.description || tHome("spotlightFallback")}
+                  {latestSession.agenda_title ||
+                    latestSession.description ||
+                    tHome("spotlightFallback")}
                 </Typography>
-                <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", mt: 1.25 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 0.75,
+                    flexWrap: "wrap",
+                    mt: 1.25,
+                  }}
+                >
                   <Chip
                     icon={<EventIcon sx={{ fontSize: "14px !important" }} />}
                     label={tHome("sectionCount", {
@@ -348,7 +360,9 @@ export const HomeHero = ({
                     }}
                   />
                   <Chip
-                    icon={<HowToVoteIcon sx={{ fontSize: "14px !important" }} />}
+                    icon={
+                      <HowToVoteIcon sx={{ fontSize: "14px !important" }} />
+                    }
                     label={tHome("votingCount", {
                       count: latestSession.voting_count,
                     })}
@@ -544,10 +558,17 @@ export const HomeMetricStrip = ({
               {metric.icon}
             </Box>
             <Box sx={{ minWidth: 0 }}>
-              <Typography sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}>
+              <Typography
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textSecondary,
+                }}
+              >
                 {metric.label}
               </Typography>
-              <Typography sx={{ fontSize: "1.35rem", fontWeight: 700, lineHeight: 1.2 }}>
+              <Typography
+                sx={{ fontSize: "1.35rem", fontWeight: 700, lineHeight: 1.2 }}
+              >
                 {metric.value}
               </Typography>
             </Box>
@@ -567,7 +588,8 @@ export const CompositionPanel = ({
 }) => {
   const governmentWidth =
     overview.composition.totalMembers > 0
-      ? (overview.composition.governmentMembers / overview.composition.totalMembers) *
+      ? (overview.composition.governmentMembers /
+          overview.composition.totalMembers) *
         100
       : 0;
 
@@ -602,20 +624,49 @@ export const CompositionPanel = ({
             border: `1px solid ${colors.dataBorder}`,
           }}
         >
-          <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 2,
+              flexWrap: "wrap",
+            }}
+          >
             <Box>
-              <Typography sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}>
+              <Typography
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textSecondary,
+                }}
+              >
                 {tHome("government")}
               </Typography>
-              <Typography sx={{ fontSize: "1.4rem", fontWeight: 700, color: colors.success }}>
+              <Typography
+                sx={{
+                  fontSize: "1.4rem",
+                  fontWeight: 700,
+                  color: colors.success,
+                }}
+              >
                 {overview.composition.governmentMembers}
               </Typography>
             </Box>
             <Box sx={{ textAlign: { xs: "left", sm: "right" } }}>
-              <Typography sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}>
+              <Typography
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textSecondary,
+                }}
+              >
                 {tHome("opposition")}
               </Typography>
-              <Typography sx={{ fontSize: "1.4rem", fontWeight: 700, color: colors.warning }}>
+              <Typography
+                sx={{
+                  fontSize: "1.4rem",
+                  fontWeight: 700,
+                  color: colors.warning,
+                }}
+              >
                 {overview.composition.oppositionMembers}
               </Typography>
             </Box>
@@ -636,7 +687,12 @@ export const CompositionPanel = ({
                 background: `linear-gradient(90deg, ${colors.success} 0%, ${colors.successLight} 100%)`,
               }}
             />
-            <Box sx={{ flex: 1, background: `linear-gradient(90deg, ${colors.warningLight} 0%, ${colors.warning} 100%)` }} />
+            <Box
+              sx={{
+                flex: 1,
+                background: `linear-gradient(90deg, ${colors.warningLight} 0%, ${colors.warning} 100%)`,
+              }}
+            />
           </Box>
         </Box>
 
@@ -656,7 +712,14 @@ export const CompositionPanel = ({
               }}
             >
               <Box sx={{ minWidth: 0 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexWrap: "wrap" }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.75,
+                    flexWrap: "wrap",
+                  }}
+                >
                   <Link
                     href={`/puolueet?party=${encodeURIComponent(party.party_code)}`}
                     underline="hover"
@@ -688,7 +751,13 @@ export const CompositionPanel = ({
                     }}
                   />
                 </Box>
-                <Typography sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary, mt: 0.3 }}>
+                <Typography
+                  sx={{
+                    ...commonStyles.compactTextLg,
+                    color: colors.textSecondary,
+                    mt: 0.3,
+                  }}
+                >
                   {tHome("participationRate", {
                     value: Math.round(party.participation_rate ?? 0),
                   })}
@@ -767,10 +836,30 @@ export const SessionSummaryCard = ({
         "linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(243,245,247,0.85) 100%)",
     }}
   >
-    <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2, flexWrap: "wrap" }}>
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        gap: 2,
+        flexWrap: "wrap",
+      }}
+    >
       <Box sx={{ minWidth: 0 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-          <Typography sx={{ fontWeight: 800, fontSize: "1rem", color: colors.textPrimary }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            flexWrap: "wrap",
+          }}
+        >
+          <Typography
+            sx={{
+              fontWeight: 800,
+              fontSize: "1rem",
+              color: colors.textPrimary,
+            }}
+          >
             {session.key}
           </Typography>
           <Chip
@@ -797,7 +886,9 @@ export const SessionSummaryCard = ({
           {(session.notices?.length || 0) > 0 && (
             <Chip
               size="small"
-              icon={<NotificationsActiveIcon sx={{ fontSize: "14px !important" }} />}
+              icon={
+                <NotificationsActiveIcon sx={{ fontSize: "14px !important" }} />
+              }
               label={tHome("noticeCount", {
                 count: session.notices?.length ?? 0,
               })}
@@ -810,7 +901,9 @@ export const SessionSummaryCard = ({
           )}
         </Box>
         {(session.agenda_title || session.description) && (
-          <Typography sx={{ mt: 0.75, color: colors.textSecondary, fontSize: "0.85rem" }}>
+          <Typography
+            sx={{ mt: 0.75, color: colors.textSecondary, fontSize: "0.85rem" }}
+          >
             {session.agenda_title || session.description}
           </Typography>
         )}
@@ -827,7 +920,13 @@ export const SessionSummaryCard = ({
       </Box>
     </Box>
     {session.agenda_state && (
-      <Typography sx={{ mt: 1, ...commonStyles.compactTextLg, color: colors.textTertiary }}>
+      <Typography
+        sx={{
+          mt: 1,
+          ...commonStyles.compactTextLg,
+          color: colors.textTertiary,
+        }}
+      >
         {tSessions("agendaStateLine", { value: session.agenda_state })}
       </Typography>
     )}
@@ -845,58 +944,77 @@ export const SignalsPanel = ({
 
   return (
     <Grid container spacing={2}>
-    <Grid size={{ xs: 12, md: 6 }}>
-      <SignalCard
-        eyebrow={tHome("signalsRecentEyebrow")}
-        title={tHome("signalsRecentTitle")}
-        description={tHome("signalsRecentDescription")}
-        actionHref="/istunnot"
-        actionLabel={tHome("openSessions")}
-      >
-        {overview.signals.recentActivity.length > 0 ? overview.signals.recentActivity.map((item) => (
-          <RecentActivityRow key={`${item.session_key}-${item.date}`} item={item} />
-        )) : <EmptySignalState label={emptyLabel} />}
-      </SignalCard>
-    </Grid>
-    <Grid size={{ xs: 12, md: 6 }}>
-      <SignalCard
-        eyebrow={tHome("signalsCloseVoteEyebrow")}
-        title={tHome("signalsCloseVoteTitle")}
-        description={tHome("signalsCloseVoteDescription")}
-        actionHref="/analytiikka?insight=closeVotes"
-        actionLabel={tHome("openAnalytics")}
-      >
-        {overview.signals.closeVotes.length > 0 ? overview.signals.closeVotes.map((vote) => (
-          <CloseVoteRow key={vote.id} vote={vote} />
-        )) : <EmptySignalState label={emptyLabel} />}
-      </SignalCard>
-    </Grid>
-    <Grid size={{ xs: 12, md: 6 }}>
-      <SignalCard
-        eyebrow={tHome("signalsSpeechEyebrow")}
-        title={tHome("signalsSpeechTitle")}
-        description={tHome("signalsSpeechDescription")}
-        actionHref="/analytiikka?insight=speechActivity"
-        actionLabel={tHome("openAnalytics")}
-      >
-        {overview.signals.speechActivity.length > 0 ? overview.signals.speechActivity.map((item) => (
-          <SpeechActivityRow key={item.person_id} item={item} />
-        )) : <EmptySignalState label={emptyLabel} />}
-      </SignalCard>
-    </Grid>
-    <Grid size={{ xs: 12, md: 6 }}>
-      <SignalCard
-        eyebrow={tHome("signalsCoalitionEyebrow")}
-        title={tHome("signalsCoalitionTitle")}
-        description={tHome("signalsCoalitionDescription")}
-        actionHref="/analytiikka?insight=coalitionOpposition"
-        actionLabel={tHome("openAnalytics")}
-      >
-        {overview.signals.coalitionOpposition.length > 0 ? overview.signals.coalitionOpposition.map((item) => (
-          <CoalitionRow key={item.voting_id} item={item} />
-        )) : <EmptySignalState label={emptyLabel} />}
-      </SignalCard>
-    </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <SignalCard
+          eyebrow={tHome("signalsRecentEyebrow")}
+          title={tHome("signalsRecentTitle")}
+          description={tHome("signalsRecentDescription")}
+          actionHref="/istunnot"
+          actionLabel={tHome("openSessions")}
+        >
+          {overview.signals.recentActivity.length > 0 ? (
+            overview.signals.recentActivity.map((item) => (
+              <RecentActivityRow
+                key={`${item.session_key}-${item.date}`}
+                item={item}
+              />
+            ))
+          ) : (
+            <EmptySignalState label={emptyLabel} />
+          )}
+        </SignalCard>
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <SignalCard
+          eyebrow={tHome("signalsCloseVoteEyebrow")}
+          title={tHome("signalsCloseVoteTitle")}
+          description={tHome("signalsCloseVoteDescription")}
+          actionHref="/analytiikka?insight=closeVotes"
+          actionLabel={tHome("openAnalytics")}
+        >
+          {overview.signals.closeVotes.length > 0 ? (
+            overview.signals.closeVotes.map((vote) => (
+              <CloseVoteRow key={vote.id} vote={vote} />
+            ))
+          ) : (
+            <EmptySignalState label={emptyLabel} />
+          )}
+        </SignalCard>
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <SignalCard
+          eyebrow={tHome("signalsSpeechEyebrow")}
+          title={tHome("signalsSpeechTitle")}
+          description={tHome("signalsSpeechDescription")}
+          actionHref="/analytiikka?insight=speechActivity"
+          actionLabel={tHome("openAnalytics")}
+        >
+          {overview.signals.speechActivity.length > 0 ? (
+            overview.signals.speechActivity.map((item) => (
+              <SpeechActivityRow key={item.person_id} item={item} />
+            ))
+          ) : (
+            <EmptySignalState label={emptyLabel} />
+          )}
+        </SignalCard>
+      </Grid>
+      <Grid size={{ xs: 12, md: 6 }}>
+        <SignalCard
+          eyebrow={tHome("signalsCoalitionEyebrow")}
+          title={tHome("signalsCoalitionTitle")}
+          description={tHome("signalsCoalitionDescription")}
+          actionHref="/analytiikka?insight=coalitionOpposition"
+          actionLabel={tHome("openAnalytics")}
+        >
+          {overview.signals.coalitionOpposition.length > 0 ? (
+            overview.signals.coalitionOpposition.map((item) => (
+              <CoalitionRow key={item.voting_id} item={item} />
+            ))
+          ) : (
+            <EmptySignalState label={emptyLabel} />
+          )}
+        </SignalCard>
+      </Grid>
     </Grid>
   );
 };
@@ -994,8 +1112,21 @@ const RowShell = ({
         {icon}
       </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
-        <Box sx={{ display: "flex", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }}>
-          <Typography sx={{ fontWeight: 700, color: colors.textPrimary, fontSize: "0.84rem" }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 1,
+            flexWrap: "wrap",
+          }}
+        >
+          <Typography
+            sx={{
+              fontWeight: 700,
+              color: colors.textPrimary,
+              fontSize: "0.84rem",
+            }}
+          >
             {title}
           </Typography>
           <Button
@@ -1006,7 +1137,13 @@ const RowShell = ({
             Avaa
           </Button>
         </Box>
-        <Typography sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary, mt: 0.3 }}>
+        <Typography
+          sx={{
+            ...commonStyles.compactTextLg,
+            color: colors.textSecondary,
+            mt: 0.3,
+          }}
+        >
           {subtitle}
         </Typography>
         {footer && <Box sx={{ mt: 0.85 }}>{footer}</Box>}
@@ -1068,7 +1205,9 @@ const SpeechActivityRow = ({ item }: { item: HomeSpeechActivityItem }) => (
     subtitle={`${item.party || "-"} · ${item.speech_count} puheenvuoroa`}
     href={refs.member(item.person_id, item.last_speech)}
     footer={
-      <Typography sx={{ ...commonStyles.compactTextLg, color: colors.textTertiary }}>
+      <Typography
+        sx={{ ...commonStyles.compactTextLg, color: colors.textTertiary }}
+      >
         {item.total_words.toLocaleString("fi-FI")} sanaa yhteensä
       </Typography>
     }
@@ -1082,7 +1221,13 @@ const CoalitionRow = ({ item }: { item: HomeCoalitionVote }) => (
     subtitle={item.section_title}
     href={refs.voting(item.voting_id, undefined, item.start_time)}
     footer={
-      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 0.5 }}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+          gap: 0.5,
+        }}
+      >
         <Chip
           size="small"
           label={`Hallitus ${item.coalition_yes}-${item.coalition_no}`}

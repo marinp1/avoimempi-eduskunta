@@ -29,7 +29,9 @@ export const App: React.FC = () => {
   const { t } = useScopedTranslation("app");
 
   const [activeTab, setActiveTab] = useState<RouteName>(getInitialTab());
-  const [dbInfo, setDbInfo] = useState<ApiRouteResponse<"/api/db-info"> | null>(null);
+  const [dbInfo, setDbInfo] = useState<ApiRouteResponse<"/api/db-info"> | null>(
+    null,
+  );
   const [versionInfo, setVersionInfo] =
     useState<ApiRouteResponse<"/api/version"> | null>(null);
   const [changeSummary, setChangeSummary] = useState<Pick<
@@ -85,79 +87,79 @@ export const App: React.FC = () => {
         <CssBaseline />
         <GlobalStyles
           styles={{
-          "@font-face": [
-            {
-              fontFamily: "Zilla Slab",
-              src: "url('/fonts/Zilla_Slab/ZillaSlab-Regular.ttf') format('truetype')",
-              fontWeight: 400,
-              fontStyle: "normal",
-              fontDisplay: "swap",
+            "@font-face": [
+              {
+                fontFamily: "Zilla Slab",
+                src: "url('/fonts/Zilla_Slab/ZillaSlab-Regular.ttf') format('truetype')",
+                fontWeight: 400,
+                fontStyle: "normal",
+                fontDisplay: "swap",
+              },
+              {
+                fontFamily: "Zilla Slab",
+                src: "url('/fonts/Zilla_Slab/ZillaSlab-Italic.ttf') format('truetype')",
+                fontWeight: 400,
+                fontStyle: "italic",
+                fontDisplay: "swap",
+              },
+              {
+                fontFamily: "Zilla Slab",
+                src: "url('/fonts/Zilla_Slab/ZillaSlab-Medium.ttf') format('truetype')",
+                fontWeight: 500,
+                fontStyle: "normal",
+                fontDisplay: "swap",
+              },
+              {
+                fontFamily: "Zilla Slab",
+                src: "url('/fonts/Zilla_Slab/ZillaSlab-SemiBold.ttf') format('truetype')",
+                fontWeight: 600,
+                fontStyle: "normal",
+                fontDisplay: "swap",
+              },
+              {
+                fontFamily: "Zilla Slab",
+                src: "url('/fonts/Zilla_Slab/ZillaSlab-Bold.ttf') format('truetype')",
+                fontWeight: 700,
+                fontStyle: "normal",
+                fontDisplay: "swap",
+              },
+            ] as unknown as Record<string, unknown>,
+            "html, body, #root": {
+              minHeight: "100%",
             },
-            {
-              fontFamily: "Zilla Slab",
-              src: "url('/fonts/Zilla_Slab/ZillaSlab-Italic.ttf') format('truetype')",
-              fontWeight: 400,
-              fontStyle: "italic",
-              fontDisplay: "swap",
-            },
-            {
-              fontFamily: "Zilla Slab",
-              src: "url('/fonts/Zilla_Slab/ZillaSlab-Medium.ttf') format('truetype')",
-              fontWeight: 500,
-              fontStyle: "normal",
-              fontDisplay: "swap",
-            },
-            {
-              fontFamily: "Zilla Slab",
-              src: "url('/fonts/Zilla_Slab/ZillaSlab-SemiBold.ttf') format('truetype')",
-              fontWeight: 600,
-              fontStyle: "normal",
-              fontDisplay: "swap",
-            },
-            {
-              fontFamily: "Zilla Slab",
-              src: "url('/fonts/Zilla_Slab/ZillaSlab-Bold.ttf') format('truetype')",
-              fontWeight: 700,
-              fontStyle: "normal",
-              fontDisplay: "swap",
-            },
-          ] as unknown as Record<string, unknown>,
-          "html, body, #root": {
-            minHeight: "100%",
-          },
-          body: {
-            position: "relative",
-            background: `
+            body: {
+              position: "relative",
+              background: `
               radial-gradient(1100px 620px at 8% -10%, var(--ae-ambient-primary), transparent 70%),
               radial-gradient(900px 540px at 98% 0%, var(--ae-ambient-accent), transparent 72%),
               linear-gradient(180deg, ${colors.backgroundDefault} 0%, ${colors.backgroundSubtle} 100%)
           `,
-            backgroundAttachment: "fixed",
-            minHeight: "100vh",
-            overflowX: "hidden",
-          },
-          "#root": {
-            position: "relative",
-            zIndex: 1,
-          },
-          "@keyframes pageEnter": {
-            from: {
-              opacity: 0,
-              transform: "translateY(10px)",
+              backgroundAttachment: "fixed",
+              minHeight: "100vh",
+              overflowX: "hidden",
             },
-            to: {
-              opacity: 1,
-              transform: "translateY(0)",
+            "#root": {
+              position: "relative",
+              zIndex: 1,
             },
-          },
-          "@media (prefers-reduced-motion: reduce)": {
-            "*, *::before, *::after": {
-              animationDuration: "0.01ms !important",
-              animationIterationCount: "1 !important",
-              transitionDuration: "0.01ms !important",
-              scrollBehavior: "auto !important",
+            "@keyframes pageEnter": {
+              from: {
+                opacity: 0,
+                transform: "translateY(10px)",
+              },
+              to: {
+                opacity: 1,
+                transform: "translateY(0)",
+              },
             },
-          },
+            "@media (prefers-reduced-motion: reduce)": {
+              "*, *::before, *::after": {
+                animationDuration: "0.01ms !important",
+                animationIterationCount: "1 !important",
+                transitionDuration: "0.01ms !important",
+                scrollBehavior: "auto !important",
+              },
+            },
           }}
         />
         <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
@@ -196,7 +198,12 @@ export const App: React.FC = () => {
             }}
           >
             {(() => {
-              const footerLineSx = { color: themedColors.textTertiary, display: "block", mt: 0.5, lineHeight: 1.6 };
+              const footerLineSx = {
+                color: themedColors.textTertiary,
+                display: "block",
+                mt: 0.5,
+                lineHeight: 1.6,
+              };
               return (
                 <>
                   <Typography variant="caption" sx={{ ...footerLineSx, mt: 0 }}>
@@ -208,21 +215,27 @@ export const App: React.FC = () => {
                   {dbInfo?.lastScraperRunAt && (
                     <Typography variant="caption" sx={footerLineSx}>
                       {t("disclaimer.lastScraperRunAt", {
-                        timestamp: new Date(dbInfo.lastScraperRunAt).toLocaleString("fi-FI"),
+                        timestamp: new Date(
+                          dbInfo.lastScraperRunAt,
+                        ).toLocaleString("fi-FI"),
                       })}
                     </Typography>
                   )}
                   {dbInfo?.lastMigratorRunAt && (
                     <Typography variant="caption" sx={footerLineSx}>
                       {t("disclaimer.lastMigratorRunAt", {
-                        timestamp: new Date(dbInfo.lastMigratorRunAt).toLocaleString("fi-FI"),
+                        timestamp: new Date(
+                          dbInfo.lastMigratorRunAt,
+                        ).toLocaleString("fi-FI"),
                       })}
                     </Typography>
                   )}
                   {dbInfo?.lastMigrationTimestamp && (
                     <Typography variant="caption" sx={footerLineSx}>
                       {t("disclaimer.dbBuildTimestamp", {
-                        timestamp: new Date(dbInfo.lastMigrationTimestamp).toLocaleString("fi-FI"),
+                        timestamp: new Date(
+                          dbInfo.lastMigrationTimestamp,
+                        ).toLocaleString("fi-FI"),
                       })}
                     </Typography>
                   )}
@@ -240,10 +253,19 @@ export const App: React.FC = () => {
                           window.history.pushState({}, "", "/muutokset");
                           window.dispatchEvent(new PopStateEvent("popstate"));
                         }}
-                        sx={{ color: "inherit", textDecorationColor: "inherit" }}
+                        sx={{
+                          color: "inherit",
+                          textDecorationColor: "inherit",
+                        }}
                       >
-                        {changeSummary.totalNewRows + changeSummary.totalChangedRows > 0
-                          ? t("changesCount", { count: changeSummary.totalNewRows + changeSummary.totalChangedRows })
+                        {changeSummary.totalNewRows +
+                          changeSummary.totalChangedRows >
+                        0
+                          ? t("changesCount", {
+                              count:
+                                changeSummary.totalNewRows +
+                                changeSummary.totalChangedRows,
+                            })
                           : t("noChanges")}
                       </Link>
                     </Typography>

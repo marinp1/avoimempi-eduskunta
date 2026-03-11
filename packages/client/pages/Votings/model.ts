@@ -77,7 +77,9 @@ export const getDocumentGroupKey = (vote: {
   return docRefs.length > 0 ? docRefs[0].identifier : null;
 };
 
-export const buildVotingViewModels = (rows: VotingListRow[]): VotingViewModel[] =>
+export const buildVotingViewModels = (
+  rows: VotingListRow[],
+): VotingViewModel[] =>
   rows.map((row) => {
     const documentRefs = getVotingDocumentRefs(row);
     const groupKey = documentRefs[0]?.identifier ?? null;
@@ -95,7 +97,9 @@ export const buildVotingViewModels = (rows: VotingListRow[]): VotingViewModel[] 
     };
   });
 
-export const sortRows = <T extends Pick<VotingListRow, "n_yes" | "n_no" | "n_total" | "start_time">>(
+export const sortRows = <
+  T extends Pick<VotingListRow, "n_yes" | "n_no" | "n_total" | "start_time">,
+>(
   rows: T[],
   sortMode: VotingSortMode,
 ) => {

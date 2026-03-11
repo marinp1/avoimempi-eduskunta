@@ -3,10 +3,6 @@ export {
   type CommitteeReportListItem,
 } from "./cards/committee";
 export {
-  ParliamentAnswerCard,
-  type ParliamentAnswerListItem,
-} from "./cards/parliament-answer";
-export {
   GovernmentProposalCard,
   type GovernmentProposalListItem,
 } from "./cards/government";
@@ -18,6 +14,10 @@ export {
   LegislativeInitiativeCard,
   type LegislativeInitiativeListItem,
 } from "./cards/legislative";
+export {
+  ParliamentAnswerCard,
+  type ParliamentAnswerListItem,
+} from "./cards/parliament-answer";
 export {
   ExpertStatementCard,
   type ExpertStatementListItem,

@@ -755,7 +755,10 @@ export const PartyDetail: React.FC<{
                       : colors.oppositionColor,
                 }}
               />
-              <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+              <Typography
+                variant="body2"
+                sx={{ color: themedColors.textSecondary }}
+              >
                 {t("detail.profileSummary", {
                   members: party.member_count,
                   participation: participationRate,

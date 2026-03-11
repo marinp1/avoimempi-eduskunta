@@ -78,9 +78,9 @@ export const toRepresentativeSelectionFromSearchResult = (
 });
 
 export const getMemberStartDate = (member: MemberWithExtras) =>
-  ((member as MemberWithExtras & { t_start_date?: string }).start_date ||
-    (member as MemberWithExtras & { t_start_date?: string }).t_start_date ||
-    "");
+  (member as MemberWithExtras & { t_start_date?: string }).start_date ||
+  (member as MemberWithExtras & { t_start_date?: string }).t_start_date ||
+  "";
 
 export type PartySummary = {
   partyName: string;
@@ -90,25 +90,30 @@ export type PartySummary = {
   share: number;
 };
 
-export const buildPartySummaries = (members: MemberWithExtras[]): PartySummary[] => {
-  const grouped = members.reduce<Record<string, PartySummary>>((acc, member) => {
-    const partyName = member.party_name || "Ei tiedossa";
-    const existing = acc[partyName] ?? {
-      partyName,
-      total: 0,
-      government: 0,
-      opposition: 0,
-      share: 0,
-    };
-    existing.total += 1;
-    if (member.is_in_government === 1) {
-      existing.government += 1;
-    } else {
-      existing.opposition += 1;
-    }
-    acc[partyName] = existing;
-    return acc;
-  }, {});
+export const buildPartySummaries = (
+  members: MemberWithExtras[],
+): PartySummary[] => {
+  const grouped = members.reduce<Record<string, PartySummary>>(
+    (acc, member) => {
+      const partyName = member.party_name || "Ei tiedossa";
+      const existing = acc[partyName] ?? {
+        partyName,
+        total: 0,
+        government: 0,
+        opposition: 0,
+        share: 0,
+      };
+      existing.total += 1;
+      if (member.is_in_government === 1) {
+        existing.government += 1;
+      } else {
+        existing.opposition += 1;
+      }
+      acc[partyName] = existing;
+      return acc;
+    },
+    {},
+  );
 
   const totalMembers = members.length || 1;
   return Object.values(grouped)
@@ -116,5 +121,7 @@ export const buildPartySummaries = (members: MemberWithExtras[]): PartySummary[]
       ...party,
       share: party.total / totalMembers,
     }))
-    .sort((a, b) => b.total - a.total || a.partyName.localeCompare(b.partyName));
+    .sort(
+      (a, b) => b.total - a.total || a.partyName.localeCompare(b.partyName),
+    );
 };

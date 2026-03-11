@@ -1,10 +1,5 @@
 import BalanceIcon from "@mui/icons-material/Balance";
-import {
-  Alert,
-  Box,
-  CircularProgress,
-  Stack,
-} from "@mui/material";
+import { Alert, Box, CircularProgress, Stack } from "@mui/material";
 import { useEffect, useState } from "react";
 import { VotingCard, type VotingCardData } from "#client/components/VotingCard";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";

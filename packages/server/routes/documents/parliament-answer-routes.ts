@@ -1,9 +1,6 @@
 import type { BunRequest } from "bun";
 import type { DocumentRepository } from "../../database/repositories/document-repository";
-import {
-  getMappedPaginatedQueryParams,
-  getSearchParams,
-} from "../http";
+import { getMappedPaginatedQueryParams, getSearchParams } from "../http";
 import { json, jsonOrNotFound } from "../route-responses";
 
 export const createParliamentAnswerRoutes = (db: DocumentRepository) => ({

@@ -40,10 +40,7 @@ import { refs } from "#client/references";
 import { colors, commonStyles } from "#client/theme";
 import { VoteMarginBar } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
-import {
-  formatDateLongFi,
-  formatTimeFi,
-} from "#client/utils/date-time";
+import { formatDateLongFi, formatTimeFi } from "#client/utils/date-time";
 import {
   isEduskuntaOfficialUrl,
   toEduskuntaUrl,
@@ -126,10 +123,14 @@ export const HomeSectionDetails = ({
     rollCall: tSessions("loadErrorRollCall"),
   };
   const errorReasons = (sectionErrors ? Object.entries(sectionErrors) : [])
-    .filter((entry): entry is [SectionLoadErrorKey, string] => Boolean(entry[1]))
+    .filter((entry): entry is [SectionLoadErrorKey, string] =>
+      Boolean(entry[1]),
+    )
     .map(([key, reason]) => `${sectionLoadErrorLabels[key]} (${reason})`);
   const docRefs = extractSectionDocRefs(section);
-  const allNotices = (notices || []).filter((notice) => notice.section_key === section.key);
+  const allNotices = (notices || []).filter(
+    (notice) => notice.section_key === section.key,
+  );
   const sectionSubSections = getSectionSubSectionRows(section, subSections);
 
   return (
@@ -158,8 +159,18 @@ export const HomeSectionDetails = ({
       {renderVaskiInfo(section, tSessions)}
       {renderMinutesInfo(section, tSessions)}
       {renderSectionNotices(allNotices, tSessions)}
-      {renderSectionMinutesContent(section, sectionSubSections, rollCallData ?? null, tSessions, themedColors.success)}
-      {renderSectionSubSections(sectionSubSections, loadingSubSections, tSessions)}
+      {renderSectionMinutesContent(
+        section,
+        sectionSubSections,
+        rollCallData ?? null,
+        tSessions,
+        themedColors.success,
+      )}
+      {renderSectionSubSections(
+        sectionSubSections,
+        loadingSubSections,
+        tSessions,
+      )}
       {docRefs.map((ref) => (
         <DocumentCard key={ref.identifier} docRef={ref} />
       ))}
@@ -214,12 +225,16 @@ export const HomeSectionDetails = ({
             {tSessions("speeches")} ({speechData?.total ?? speeches.length})
           </Typography>
           {!hasSpeechContent && (
-            <Typography sx={{ ...commonStyles.compactTextLg, color: colors.textTertiary }}>
+            <Typography
+              sx={{ ...commonStyles.compactTextLg, color: colors.textTertiary }}
+            >
               {tSessions("speechContentPending")}
             </Typography>
           )}
           {!hasSpeechContent && vaskiLatestSpeechDate && (
-            <Typography sx={{ ...commonStyles.compactTextLg, color: colors.textTertiary }}>
+            <Typography
+              sx={{ ...commonStyles.compactTextLg, color: colors.textTertiary }}
+            >
               {tSessions("speechContentLatest", {
                 date: formatDateLongFi(vaskiLatestSpeechDate),
               })}
@@ -237,7 +252,9 @@ export const HomeSectionDetails = ({
                 disabled={loadingMoreSpeeches}
                 sx={{ ...commonStyles.compactOutlinedPrimaryButton }}
               >
-                {loadingMoreSpeeches ? <CircularProgress size={16} sx={{ mr: 1 }} /> : null}
+                {loadingMoreSpeeches ? (
+                  <CircularProgress size={16} sx={{ mr: 1 }} />
+                ) : null}
                 {tSessions("loadMoreProgress", {
                   loaded: speeches.length,
                   total: speechData.total,
@@ -254,7 +271,9 @@ export const HomeSectionDetails = ({
 const LoadingBlock = ({ label }: { label: string }) => (
   <Box sx={{ py: 2, textAlign: "center" }} role="status" aria-live="polite">
     <CircularProgress size={20} />
-    <Typography sx={{ ...commonStyles.compactTextXs, color: colors.textTertiary }}>
+    <Typography
+      sx={{ ...commonStyles.compactTextXs, color: colors.textTertiary }}
+    >
       {label}
     </Typography>
   </Box>
@@ -264,8 +283,18 @@ const SpeechCard = ({ speech }: { speech: Speech }) => {
   const timeRange = formatSpeechTimeRange(speech);
 
   return (
-    <Box sx={{ p: 1.5, borderRadius: 1.5, background: colors.backgroundSubtle }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mb: speech.content ? 1 : 0 }}>
+    <Box
+      sx={{ p: 1.5, borderRadius: 1.5, background: colors.backgroundSubtle }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          flexWrap: "wrap",
+          mb: speech.content ? 1 : 0,
+        }}
+      >
         <Chip
           label={speech.ordinal_number ?? speech.ordinal}
           size="small"
@@ -279,14 +308,24 @@ const SpeechCard = ({ speech }: { speech: Speech }) => {
         <Typography sx={{ fontWeight: 700, fontSize: "0.82rem", flex: 1 }}>
           {speech.first_name} {speech.last_name}
         </Typography>
-        {speech.party_abbreviation && <Chip label={speech.party_abbreviation} size="small" sx={{ ...commonStyles.compactChipXs }} />}
+        {speech.party_abbreviation && (
+          <Chip
+            label={speech.party_abbreviation}
+            size="small"
+            sx={{ ...commonStyles.compactChipXs }}
+          />
+        )}
         {speech.speech_type && (
-          <Typography sx={{ ...commonStyles.compactTextXs, color: colors.textTertiary }}>
+          <Typography
+            sx={{ ...commonStyles.compactTextXs, color: colors.textTertiary }}
+          >
             {speech.speech_type}
           </Typography>
         )}
         {timeRange && (
-          <Typography sx={{ ...commonStyles.compactTextXs, color: colors.textTertiary }}>
+          <Typography
+            sx={{ ...commonStyles.compactTextXs, color: colors.textTertiary }}
+          >
             {timeRange}
           </Typography>
         )}
@@ -360,8 +399,18 @@ const renderSectionVotings = (
                 : `${themedColors.error}08`,
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", mb: 0.75 }}>
-              <Typography sx={{ fontWeight: 700, fontSize: "0.82rem", flex: 1 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                flexWrap: "wrap",
+                mb: 0.75,
+              }}
+            >
+              <Typography
+                sx={{ fontWeight: 700, fontSize: "0.82rem", flex: 1 }}
+              >
                 {voting.title}
               </Typography>
               <Button
@@ -376,7 +425,10 @@ const renderSectionVotings = (
                     }}
                   />
                 }
-                sx={{ ...commonStyles.compactActionButton, textTransform: "none" }}
+                sx={{
+                  ...commonStyles.compactActionButton,
+                  textTransform: "none",
+                }}
               >
                 {isExpanded
                   ? tCommon("detailsToggle", { context: "hide" })
@@ -386,7 +438,10 @@ const renderSectionVotings = (
                 size="small"
                 href={refs.voting(voting.id, session.key, session.date)}
                 endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
-                sx={{ ...commonStyles.compactActionButton, textTransform: "none" }}
+                sx={{
+                  ...commonStyles.compactActionButton,
+                  textTransform: "none",
+                }}
               >
                 {tCommon("openView")}
               </Button>
@@ -398,7 +453,12 @@ const renderSectionVotings = (
               absent={voting.n_absent}
               height={9}
             />
-            <Collapse id={collapseId} in={isExpanded} timeout="auto" unmountOnExit>
+            <Collapse
+              id={collapseId}
+              in={isExpanded}
+              timeout="auto"
+              unmountOnExit
+            >
               <Box
                 sx={{
                   mt: 0.75,
@@ -408,14 +468,46 @@ const renderSectionVotings = (
                   background: `${colors.primaryLight}04`,
                 }}
               >
-                {detailsLoading && <LoadingBlock label={tCommon("loadingVotingDetails")} />}
+                {detailsLoading && (
+                  <LoadingBlock label={tCommon("loadingVotingDetails")} />
+                )}
                 {!detailsLoading && details && (
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                  >
                     <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                      <Chip label={`Jaa ${details.voting.n_yes}`} size="small" variant="outlined" sx={{ ...commonStyles.compactChipSm, color: colors.success, borderColor: colors.success }} />
-                      <Chip label={`Ei ${details.voting.n_no}`} size="small" variant="outlined" sx={{ ...commonStyles.compactChipSm, color: colors.error, borderColor: colors.error }} />
-                      <Chip label={tCommon("emptyCount", { count: details.voting.n_abstain })} size="small" sx={{ ...commonStyles.compactChipSm }} />
-                      <Chip label={`Poissa ${details.voting.n_absent}`} size="small" sx={{ ...commonStyles.compactChipSm }} />
+                      <Chip
+                        label={`Jaa ${details.voting.n_yes}`}
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          ...commonStyles.compactChipSm,
+                          color: colors.success,
+                          borderColor: colors.success,
+                        }}
+                      />
+                      <Chip
+                        label={`Ei ${details.voting.n_no}`}
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          ...commonStyles.compactChipSm,
+                          color: colors.error,
+                          borderColor: colors.error,
+                        }}
+                      />
+                      <Chip
+                        label={tCommon("emptyCount", {
+                          count: details.voting.n_abstain,
+                        })}
+                        size="small"
+                        sx={{ ...commonStyles.compactChipSm }}
+                      />
+                      <Chip
+                        label={`Poissa ${details.voting.n_absent}`}
+                        size="small"
+                        sx={{ ...commonStyles.compactChipSm }}
+                      />
                     </Box>
                     <VotingResultsTable
                       partyBreakdown={details.partyBreakdown}
@@ -456,7 +548,10 @@ const renderSectionLinks = (
       </Typography>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
         {links.map((link) => (
-          <Box key={link.id} sx={{ display: "flex", flexDirection: "column", gap: 0.2 }}>
+          <Box
+            key={link.id}
+            sx={{ display: "flex", flexDirection: "column", gap: 0.2 }}
+          >
             {isEduskuntaOfficialUrl(link.url) ? (
               <EduskuntaSourceLink
                 href={link.url as string}
@@ -470,14 +565,29 @@ const renderSectionLinks = (
                 underline="hover"
                 target="_blank"
                 rel="noreferrer"
-                sx={{ fontSize: "0.8125rem", fontWeight: 600, color: colors.textPrimary }}
+                sx={{
+                  fontSize: "0.8125rem",
+                  fontWeight: 600,
+                  color: colors.textPrimary,
+                }}
               >
                 {link.label || link.document_title || link.url}
               </Link>
             )}
-            {(link.document_type_name || link.document_created_at || link.document_tunnus) && (
-              <Typography sx={{ ...commonStyles.compactTextLg, color: colors.textTertiary }}>
-                {[link.document_tunnus, link.document_type_name, link.document_created_at]
+            {(link.document_type_name ||
+              link.document_created_at ||
+              link.document_tunnus) && (
+              <Typography
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textTertiary,
+                }}
+              >
+                {[
+                  link.document_tunnus,
+                  link.document_type_name,
+                  link.document_created_at,
+                ]
                   .filter(Boolean)
                   .join(" · ")}
               </Typography>
@@ -520,7 +630,9 @@ const renderVaskiInfo = (
         section.vaski_eduskunta_tunnus ||
         docNumber ||
         section.vaski_status) && (
-        <Typography sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}>
+        <Typography
+          sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
+        >
           {[
             section.vaski_document_type_name,
             section.vaski_eduskunta_tunnus,
@@ -537,19 +649,36 @@ const renderVaskiInfo = (
         </Typography>
       )}
       {authorLine && (
-        <Typography sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary, mt: 0.35 }}>
+        <Typography
+          sx={{
+            ...commonStyles.compactTextLg,
+            color: colors.textSecondary,
+            mt: 0.35,
+          }}
+        >
           {tSessions("vaskiAuthorLine", { value: authorLine })}
         </Typography>
       )}
       {section.vaski_summary && (
-        <Typography sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary, mt: 0.5 }}>
+        <Typography
+          sx={{
+            ...commonStyles.compactTextLg,
+            color: colors.textSecondary,
+            mt: 0.5,
+          }}
+        >
           {tSessions("vaskiSummaryLine", { value: section.vaski_summary })}
         </Typography>
       )}
       {subjects.length > 0 && (
         <Box sx={{ mt: 0.75, display: "flex", gap: 0.5, flexWrap: "wrap" }}>
           {subjects.map((subject) => (
-            <Chip key={subject} label={subject} size="small" sx={{ ...commonStyles.compactChipXs }} />
+            <Chip
+              key={subject}
+              label={subject}
+              size="small"
+              sx={{ ...commonStyles.compactChipXs }}
+            />
           ))}
         </Box>
       )}
@@ -571,13 +700,23 @@ const renderMinutesInfo = (
     <Box sx={infoBoxSx}>
       <SectionInfoTitle>{tSessions("minutesMetadata")}</SectionInfoTitle>
       {section.minutes_item_title && (
-        <Typography sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}>
-          {tSessions("minutesItemTitleLine", { value: section.minutes_item_title })}
+        <Typography
+          sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary }}
+        >
+          {tSessions("minutesItemTitleLine", {
+            value: section.minutes_item_title,
+          })}
         </Typography>
       )}
       {(section.minutes_processing_phase_code ||
         section.minutes_general_processing_phase_code) && (
-        <Typography sx={{ ...commonStyles.compactTextLg, color: colors.textSecondary, mt: 0.35 }}>
+        <Typography
+          sx={{
+            ...commonStyles.compactTextLg,
+            color: colors.textSecondary,
+            mt: 0.35,
+          }}
+        >
           {tSessions("minutesProcessingCodesLine", {
             value: [
               section.minutes_processing_phase_code,
@@ -668,9 +807,11 @@ const renderSectionMinutesContent = (
   ) {
     references.unshift({ vaskiId: null, code: relatedDocument });
   }
-  if (parsed.narrativeBlocks.length === 0 && references.length === 0) return null;
+  if (parsed.narrativeBlocks.length === 0 && references.length === 0)
+    return null;
 
-  const normalize = (value?: string | null) => value?.trim().toLowerCase() || null;
+  const normalize = (value?: string | null) =>
+    value?.trim().toLowerCase() || null;
   const knownRollCallIdentifiers = new Set<string>(
     [
       section.minutes_related_document_identifier,
@@ -682,12 +823,20 @@ const renderSectionMinutesContent = (
   );
 
   return (
-    <Box sx={{ mt: 1.5, pl: 2, borderLeft: `3px solid ${colors.primaryLight}36` }}>
+    <Box
+      sx={{ mt: 1.5, pl: 2, borderLeft: `3px solid ${colors.primaryLight}36` }}
+    >
       <SectionInfoTitle>{tSessions("minutesContent")}</SectionInfoTitle>
       {parsed.narrativeBlocks.map((block, index) => (
         <Typography
           key={`${section.key}-minutes-${index}`}
-          sx={{ fontSize: "0.8125rem", color: colors.textPrimary, whiteSpace: "pre-wrap", lineHeight: 1.6, mt: index === 0 ? 0.5 : 1 }}
+          sx={{
+            fontSize: "0.8125rem",
+            color: colors.textPrimary,
+            whiteSpace: "pre-wrap",
+            lineHeight: 1.6,
+            mt: index === 0 ? 0.5 : 1,
+          }}
         >
           {block}
         </Typography>
@@ -716,10 +865,14 @@ const renderSectionMinutesContent = (
                       <Chip
                         label={reference.code}
                         size="small"
-                        icon={<OpenInNewIcon sx={{ fontSize: "12px !important" }} />}
+                        icon={
+                          <OpenInNewIcon sx={{ fontSize: "12px !important" }} />
+                        }
                         sx={{
                           ...commonStyles.compactChipSm,
-                          color: migratedAsRollCall ? successColor : colors.primaryLight,
+                          color: migratedAsRollCall
+                            ? successColor
+                            : colors.primaryLight,
                           background: migratedAsRollCall
                             ? `${successColor}12`
                             : `${colors.primaryLight}12`,
@@ -727,7 +880,11 @@ const renderSectionMinutesContent = (
                       />
                     </EduskuntaSourceLink>
                   ) : (
-                    <Chip label={reference.code} size="small" sx={{ ...commonStyles.compactChipSm }} />
+                    <Chip
+                      label={reference.code}
+                      size="small"
+                      sx={{ ...commonStyles.compactChipSm }}
+                    />
                   )}
                 </span>
               </Tooltip>
@@ -748,7 +905,9 @@ const renderSectionNotices = (
   return (
     <Box sx={{ mt: 1.5 }}>
       <SectionInfoTitle>{tSessions("sectionNotices")}</SectionInfoTitle>
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75, mt: 0.75 }}>
+      <Box
+        sx={{ display: "flex", flexDirection: "column", gap: 0.75, mt: 0.75 }}
+      >
         {notices.map((notice) => (
           <Box
             key={notice.id}
@@ -771,7 +930,9 @@ const renderSectionNotices = (
               />
             )}
             {notice.text_fi && (
-              <Typography sx={{ fontSize: "0.8125rem", color: colors.textPrimary }}>
+              <Typography
+                sx={{ fontSize: "0.8125rem", color: colors.textPrimary }}
+              >
                 {notice.text_fi}
               </Typography>
             )}
@@ -794,13 +955,16 @@ const renderSectionRollCall = (
   if (!rollCallData || !isRollCallSection(section)) return null;
 
   const { report, entries } = rollCallData;
-  const documentIdentifier = report.edk_identifier || report.parliament_identifier;
+  const documentIdentifier =
+    report.edk_identifier || report.parliament_identifier;
   const documentUrl = toEduskuntaUrl(
     `/valtiopaivaasiakirjat/${encodeURIComponent(documentIdentifier)}`,
   );
 
   const formatEntryType = (entryType: RollCallEntry["entry_type"]) =>
-    entryType === "late" ? tSessions("rollCallLate") : tSessions("rollCallAbsent");
+    entryType === "late"
+      ? tSessions("rollCallLate")
+      : tSessions("rollCallAbsent");
 
   const formatAbsenceReason = (reasonCode?: string | null) => {
     if (!reasonCode) return "-";
@@ -814,22 +978,41 @@ const renderSectionRollCall = (
     <Box sx={infoBoxSx}>
       <SectionInfoTitle>{tSessions("rollCallReport")}</SectionInfoTitle>
       {report.title && (
-        <Typography sx={{ fontSize: "0.8125rem", fontWeight: 700, color: colors.textPrimary }}>
+        <Typography
+          sx={{
+            fontSize: "0.8125rem",
+            fontWeight: 700,
+            color: colors.textPrimary,
+          }}
+        >
           {report.title}
         </Typography>
       )}
       <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", mt: 0.75 }}>
         <Chip
-          label={tSessions("rollCallAbsentLine", { count: report.absent_count })}
+          label={tSessions("rollCallAbsentLine", {
+            count: report.absent_count,
+          })}
           size="small"
-          sx={{ ...commonStyles.compactChipSm, color: themedColors.error, background: `${themedColors.error}12` }}
+          sx={{
+            ...commonStyles.compactChipSm,
+            color: themedColors.error,
+            background: `${themedColors.error}12`,
+          }}
         />
         <Chip
           label={tSessions("rollCallLateLine", { count: report.late_count })}
           size="small"
-          sx={{ ...commonStyles.compactChipSm, color: themedColors.warning, background: `${themedColors.warning}12` }}
+          sx={{
+            ...commonStyles.compactChipSm,
+            color: themedColors.warning,
+            background: `${themedColors.warning}12`,
+          }}
         />
-        <EduskuntaSourceLink href={documentUrl} sx={{ ...commonStyles.compactTextLg, fontWeight: 700 }}>
+        <EduskuntaSourceLink
+          href={documentUrl}
+          sx={{ ...commonStyles.compactTextLg, fontWeight: 700 }}
+        >
           {tSessions("rollCallOpenDocument")}
         </EduskuntaSourceLink>
       </Box>
@@ -866,7 +1049,9 @@ const renderSectionRollCall = (
               {entries.map((entry) => (
                 <tr key={`${entry.roll_call_id}-${entry.entry_order}`}>
                   <td>{entry.entry_order}</td>
-                  <td>{entry.first_name} {entry.last_name}</td>
+                  <td>
+                    {entry.first_name} {entry.last_name}
+                  </td>
                   <td>{entry.party ? entry.party.toUpperCase() : "-"}</td>
                   <td>{formatEntryType(entry.entry_type)}</td>
                   <td>{formatAbsenceReason(entry.absence_reason)}</td>

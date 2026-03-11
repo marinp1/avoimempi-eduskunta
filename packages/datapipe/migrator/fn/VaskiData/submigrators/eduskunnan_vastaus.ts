@@ -356,7 +356,11 @@ export default function createEduskunnanVastausSubMigrator(db: Database) {
         if (data.subjects.length > 0) {
           deleteSubjects.run(answerId);
           for (const subject of data.subjects) {
-            insertSubject.run(answerId, subject.subject_order, subject.subject_text);
+            insertSubject.run(
+              answerId,
+              subject.subject_order,
+              subject.subject_text,
+            );
           }
         }
       } catch (error) {

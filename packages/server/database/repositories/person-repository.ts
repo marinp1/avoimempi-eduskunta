@@ -1,9 +1,9 @@
 import type { Database } from "bun:sqlite";
 import governmentMemberships from "../queries/GOVERNMENT_MEMBERSHIPS.sql";
-import personGovernmentPeriods from "../queries/PERSON_GOVERNMENT_PERIODS.sql";
 import leavingParliamentRecords from "../queries/LEAVING_PARLIAMENT.sql";
 import personCommittees from "../queries/PERSON_COMMITTEES.sql";
 import personDissents from "../queries/PERSON_DISSENTS.sql";
+import personGovernmentPeriods from "../queries/PERSON_GOVERNMENT_PERIODS.sql";
 import personGroupMemberships from "../queries/PERSON_GROUP_MEMBERSHIPS.sql";
 import personQuestions from "../queries/PERSON_QUESTIONS.sql";
 import personSearch from "../queries/PERSON_SEARCH.sql";

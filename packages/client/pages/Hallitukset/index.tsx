@@ -437,7 +437,9 @@ const GovernmentPageHero: React.FC<{
       chips={
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           <Chip
-            label={government.is_current ? t("current") : t("selectedGovernment")}
+            label={
+              government.is_current ? t("current") : t("selectedGovernment")
+            }
             size="small"
             sx={{ fontWeight: 700 }}
           />
@@ -493,7 +495,9 @@ const GovernmentPageHero: React.FC<{
                 bgcolor: `${tc.info}08`,
               }}
             >
-              {t("viewingHistoricalDate", { value: formatDateFi(selectedDate) })}
+              {t("viewingHistoricalDate", {
+                value: formatDateFi(selectedDate),
+              })}
             </Alert>
           )}
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -1169,14 +1173,12 @@ export default () => {
         ) : activeGovernmentError ? (
           <Alert severity="error">{activeGovernmentError}</Alert>
         ) : activeGovernment ? (
-          <>
-            <Box ref={ministersRef}>
-              <GovernmentMinistersSection
-                members={activeMembers}
-                selectedDate={selectedDate}
-              />
-            </Box>
-          </>
+          <Box ref={ministersRef}>
+            <GovernmentMinistersSection
+              members={activeMembers}
+              selectedDate={selectedDate}
+            />
+          </Box>
         ) : (
           <EmptyState
             title={t("noGovernmentForDate")}

@@ -27,7 +27,9 @@ const cliArg = process.argv[2] as BumpType | undefined;
 const validBumps = new Set<string>(["major", "minor", "patch", "alpha"]);
 
 if (cliArg && !validBumps.has(cliArg)) {
-  console.error(`Unknown bump type: ${cliArg}. Use: major | minor | patch | alpha`);
+  console.error(
+    `Unknown bump type: ${cliArg}. Use: major | minor | patch | alpha`,
+  );
   process.exit(1);
 }
 

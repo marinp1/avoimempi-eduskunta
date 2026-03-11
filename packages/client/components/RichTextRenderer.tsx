@@ -116,7 +116,11 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
     return (
       <Typography
         variant={paragraphVariant}
-        sx={{ color: colors.textPrimary, whiteSpace: "pre-wrap", fontFamily: serifFontFamily }}
+        sx={{
+          color: colors.textPrimary,
+          whiteSpace: "pre-wrap",
+          fontFamily: serifFontFamily,
+        }}
       >
         {fallbackText}
       </Typography>
@@ -136,7 +140,11 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
             <Typography
               key={keyPrefix}
               variant={paragraphVariant}
-              sx={{ mt: marginTop, color: colors.textPrimary, fontFamily: serifFontFamily }}
+              sx={{
+                mt: marginTop,
+                color: colors.textPrimary,
+                fontFamily: serifFontFamily,
+              }}
             >
               {renderInlines(block.inlines, keyPrefix)}
             </Typography>

@@ -12,8 +12,8 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme";
+import { DataCard } from "#client/theme/components";
 
 const DocumentCardShellComponent: React.FC<{
   title: React.ReactNode;

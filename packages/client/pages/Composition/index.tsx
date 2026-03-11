@@ -38,35 +38,32 @@ import {
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
+import { colors, commonStyles, spacing } from "#client/theme";
 import {
-  PageIntro,
   DataCard,
   EmptyState,
   MetricCard,
+  PageIntro,
   ToolbarCard,
 } from "#client/theme/components";
-import { colors, commonStyles, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
+import { RepresentativeDetails, type RepresentativeSelection } from "./Details";
 import {
   buildCompositionUrl,
   buildPartySummaries,
-  calculateAgeAtDate,
   type CompositionBrowserView,
   type CompositionSortValue,
+  calculateAgeAtDate,
   formatFinnishDate,
-  getMemberStartDate,
-  getActivationDateForSearchResult,
   type GovernmentFilterValue,
+  getActivationDateForSearchResult,
+  getMemberStartDate,
   type MemberWithExtras,
   type PersonLookupResult,
   toRepresentativeSelectionFromMember,
   toRepresentativeSelectionFromSearchResult,
 } from "./helpers";
-import {
-  RepresentativeDetails,
-  type RepresentativeSelection,
-} from "./Details";
 
 const LOOKUP_DEBOUNCE_MS = 250;
 
@@ -114,7 +111,12 @@ const TimelineSelector: React.FC<{
   const minTimelineWidth = Math.max(visible.length * 88, 720);
 
   type Segment =
-    | { kind: "period"; period: HallituskausiPeriod; duration: number; idx: number }
+    | {
+        kind: "period";
+        period: HallituskausiPeriod;
+        duration: number;
+        idx: number;
+      }
     | { kind: "gap"; duration: number }
     | {
         kind: "overlap";
@@ -202,7 +204,11 @@ const TimelineSelector: React.FC<{
               return (
                 <Box
                   key={`gap-${index}`}
-                  sx={{ flexGrow: segment.duration, flexBasis: 0, flexShrink: 1 }}
+                  sx={{
+                    flexGrow: segment.duration,
+                    flexBasis: 0,
+                    flexShrink: 1,
+                  }}
                 />
               );
             }
@@ -443,13 +449,14 @@ export default () => {
   const [committedLookupQuery, setCommittedLookupQuery] = React.useState(
     initialUrlState.query.trim(),
   );
-  const [lookupResults, setLookupResults] = React.useState<PersonLookupResult[]>(
-    [],
-  );
+  const [lookupResults, setLookupResults] = React.useState<
+    PersonLookupResult[]
+  >([]);
   const [lookupLoading, setLookupLoading] = React.useState(false);
   const [lookupError, setLookupError] = React.useState<string | null>(null);
-  const [lookupSelectionMessage, setLookupSelectionMessage] =
-    React.useState<string | null>(null);
+  const [lookupSelectionMessage, setLookupSelectionMessage] = React.useState<
+    string | null
+  >(null);
 
   const todayIso = new Date().toISOString().split("T")[0];
   const isToday = date === todayIso;
@@ -603,9 +610,13 @@ export default () => {
     if (!selectedPersonId) return;
 
     let cancelled = false;
-    const currentMember = members.find((member) => member.person_id === selectedPersonId);
+    const currentMember = members.find(
+      (member) => member.person_id === selectedPersonId,
+    );
     if (currentMember) {
-      setSelectedRepresentative(toRepresentativeSelectionFromMember(currentMember));
+      setSelectedRepresentative(
+        toRepresentativeSelectionFromMember(currentMember),
+      );
       return;
     }
 
@@ -1009,7 +1020,12 @@ export default () => {
                 }}
               >
                 <Stack spacing={0.75}>
-                  <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+                  <Stack
+                    direction="row"
+                    spacing={0.75}
+                    flexWrap="wrap"
+                    useFlexGap
+                  >
                     <Typography
                       variant="body2"
                       sx={{ fontWeight: 700, color: themedColors.textPrimary }}
@@ -1062,12 +1078,21 @@ export default () => {
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", xl: "repeat(5, 1fr)" },
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, 1fr)",
+                xl: "repeat(5, 1fr)",
+              },
               gap: 2,
             }}
           >
             {Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton key={index} variant="rounded" height={112} animation="wave" />
+              <Skeleton
+                key={index}
+                variant="rounded"
+                height={112}
+                animation="wave"
+              />
             ))}
           </Box>
         </Box>
@@ -1095,7 +1120,11 @@ export default () => {
                 <Box>
                   <Typography
                     variant="h6"
-                    sx={{ color: themedColors.textPrimary, fontWeight: 700, mb: 0.5 }}
+                    sx={{
+                      color: themedColors.textPrimary,
+                      fontWeight: 700,
+                      mb: 0.5,
+                    }}
                   >
                     {t("distribution.title")}
                   </Typography>
@@ -1151,8 +1180,14 @@ export default () => {
                         flex: party.total,
                         minWidth: party.total <= 2 ? 8 : 0,
                         cursor: "pointer",
-                        bgcolor: getStatusColor(party.government, party.opposition),
-                        opacity: partyFilter && partyFilter !== party.partyName ? 0.45 : 1,
+                        bgcolor: getStatusColor(
+                          party.government,
+                          party.opposition,
+                        ),
+                        opacity:
+                          partyFilter && partyFilter !== party.partyName
+                            ? 0.45
+                            : 1,
                         transition: "opacity 150ms ease",
                       }}
                     />
@@ -1163,7 +1198,10 @@ export default () => {
                 sx={{
                   mt: 1.5,
                   display: "grid",
-                  gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" },
+                  gridTemplateColumns: {
+                    xs: "repeat(2, minmax(0, 1fr))",
+                    md: "repeat(4, minmax(0, 1fr))",
+                  },
                   gap: 1,
                 }}
               >
@@ -1287,7 +1325,10 @@ export default () => {
                       <Box sx={{ minWidth: 0, flex: 1 }}>
                         <Typography
                           variant="body2"
-                          sx={{ color: themedColors.textPrimary, fontWeight: 700 }}
+                          sx={{
+                            color: themedColors.textPrimary,
+                            fontWeight: 700,
+                          }}
                         >
                           {party.partyName}
                         </Typography>
@@ -1304,7 +1345,10 @@ export default () => {
                       </Box>
                       <Typography
                         variant="body2"
-                        sx={{ fontWeight: 700, color: themedColors.textPrimary }}
+                        sx={{
+                          fontWeight: 700,
+                          color: themedColors.textPrimary,
+                        }}
                       >
                         {party.total}
                       </Typography>
@@ -1319,7 +1363,10 @@ export default () => {
                         bgcolor: themedColors.backgroundSubtle,
                         "& .MuiLinearProgress-bar": {
                           borderRadius: 999,
-                          bgcolor: getStatusColor(party.government, party.opposition),
+                          bgcolor: getStatusColor(
+                            party.government,
+                            party.opposition,
+                          ),
                         },
                       }}
                     />
@@ -1376,7 +1423,9 @@ export default () => {
                     fullWidth
                     placeholder={t("browser.searchPlaceholder")}
                     value={compositionSearch}
-                    onChange={(event) => setCompositionSearch(event.target.value)}
+                    onChange={(event) =>
+                      setCompositionSearch(event.target.value)
+                    }
                     slotProps={{
                       input: {
                         startAdornment: (
@@ -1409,38 +1458,45 @@ export default () => {
                     <MenuItem value="party">{t("browser.sort.party")}</MenuItem>
                     <MenuItem value="name">{t("browser.sort.name")}</MenuItem>
                     <MenuItem value="age">{t("browser.sort.age")}</MenuItem>
-                    <MenuItem value="tenure">{t("browser.sort.tenure")}</MenuItem>
+                    <MenuItem value="tenure">
+                      {t("browser.sort.tenure")}
+                    </MenuItem>
                   </Select>
                 </Stack>
 
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {(["all", "government", "opposition"] as const).map((value) => (
-                    <Chip
-                      key={value}
-                      size="small"
-                      label={
-                        value === "all"
-                          ? t("details.filters.all")
-                          : value === "government"
-                            ? t("details.filters.government")
-                            : t("details.filters.opposition")
-                      }
-                      onClick={() => setGovFilter(value)}
-                      sx={{
-                        fontWeight: 700,
-                        bgcolor:
-                          govFilter === value
-                            ? themedColors.primary
-                            : themedColors.backgroundPaper,
-                        color: govFilter === value ? "white" : themedColors.textSecondary,
-                        border: `1px solid ${
-                          govFilter === value
-                            ? themedColors.primary
-                            : themedColors.dataBorder
-                        }`,
-                      }}
-                    />
-                  ))}
+                  {(["all", "government", "opposition"] as const).map(
+                    (value) => (
+                      <Chip
+                        key={value}
+                        size="small"
+                        label={
+                          value === "all"
+                            ? t("details.filters.all")
+                            : value === "government"
+                              ? t("details.filters.government")
+                              : t("details.filters.opposition")
+                        }
+                        onClick={() => setGovFilter(value)}
+                        sx={{
+                          fontWeight: 700,
+                          bgcolor:
+                            govFilter === value
+                              ? themedColors.primary
+                              : themedColors.backgroundPaper,
+                          color:
+                            govFilter === value
+                              ? "white"
+                              : themedColors.textSecondary,
+                          border: `1px solid ${
+                            govFilter === value
+                              ? themedColors.primary
+                              : themedColors.dataBorder
+                          }`,
+                        }}
+                      />
+                    ),
+                  )}
                   {partyFilter && (
                     <Chip
                       size="small"
@@ -1451,7 +1507,11 @@ export default () => {
                   )}
                   <Typography
                     variant="caption"
-                    sx={{ color: themedColors.textTertiary, ml: "auto", alignSelf: "center" }}
+                    sx={{
+                      color: themedColors.textTertiary,
+                      ml: "auto",
+                      alignSelf: "center",
+                    }}
                   >
                     {t("browser.resultCount", {
                       shown: filteredMembers.length,
@@ -1510,7 +1570,11 @@ export default () => {
                           alignItems={{ xs: "flex-start", md: "center" }}
                         >
                           <Box sx={{ minWidth: 0 }}>
-                            <Stack direction="row" spacing={0.75} alignItems="center">
+                            <Stack
+                              direction="row"
+                              spacing={0.75}
+                              alignItems="center"
+                            >
                               <Typography
                                 variant="body1"
                                 sx={{
@@ -1532,11 +1596,17 @@ export default () => {
                               sx={{ color: themedColors.textSecondary }}
                             >
                               {member.party_name || t("details.unknownParty")} ·{" "}
-                              {member.profession || t("browser.unknownProfession")}
+                              {member.profession ||
+                                t("browser.unknownProfession")}
                             </Typography>
                           </Box>
 
-                          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            flexWrap="wrap"
+                            useFlexGap
+                          >
                             <Chip
                               size="small"
                               label={t("browser.age", { value: age })}
@@ -1605,13 +1675,18 @@ export default () => {
                           sx={{
                             cursor: "pointer",
                             "&:last-child td": { borderBottom: 0 },
-                            ...(selectedRepresentative?.personId === member.person_id
+                            ...(selectedRepresentative?.personId ===
+                            member.person_id
                               ? { bgcolor: `${themedColors.primary}08` }
                               : null),
                           }}
                         >
                           <TableCell>
-                            <Stack direction="row" spacing={0.75} alignItems="center">
+                            <Stack
+                              direction="row"
+                              spacing={0.75}
+                              alignItems="center"
+                            >
                               <Typography sx={{ fontWeight: 700 }}>
                                 {member.first_name} {member.last_name}
                               </Typography>

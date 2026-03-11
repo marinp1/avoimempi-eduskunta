@@ -55,6 +55,13 @@ import oralQuestionYears from "../queries/ORAL_QUESTION_YEARS.sql";
 import oralQuestionsCount from "../queries/ORAL_QUESTIONS_COUNT.sql";
 import oralQuestionsList from "../queries/ORAL_QUESTIONS_LIST.sql";
 import oralQuestionsSubjectsList from "../queries/ORAL_QUESTIONS_SUBJECTS_LIST.sql";
+import parliamentAnswerById from "../queries/PARLIAMENT_ANSWER_BY_ID.sql";
+import parliamentAnswerByIdentifier from "../queries/PARLIAMENT_ANSWER_BY_IDENTIFIER.sql";
+import parliamentAnswerBySourceReference from "../queries/PARLIAMENT_ANSWER_BY_SOURCE_REFERENCE.sql";
+import parliamentAnswerSubjects from "../queries/PARLIAMENT_ANSWER_SUBJECTS.sql";
+import parliamentAnswerYears from "../queries/PARLIAMENT_ANSWER_YEARS.sql";
+import parliamentAnswersCount from "../queries/PARLIAMENT_ANSWERS_COUNT.sql";
+import parliamentAnswersList from "../queries/PARLIAMENT_ANSWERS_LIST.sql";
 import writtenQuestionById from "../queries/WRITTEN_QUESTION_BY_ID.sql";
 import writtenQuestionByIdentifier from "../queries/WRITTEN_QUESTION_BY_IDENTIFIER.sql";
 import writtenQuestionResponseSubjects from "../queries/WRITTEN_QUESTION_RESPONSE_SUBJECTS.sql";
@@ -69,13 +76,6 @@ import writtenQuestionYears from "../queries/WRITTEN_QUESTION_YEARS.sql";
 import writtenQuestionsCount from "../queries/WRITTEN_QUESTIONS_COUNT.sql";
 import writtenQuestionsList from "../queries/WRITTEN_QUESTIONS_LIST.sql";
 import writtenQuestionsSubjectsList from "../queries/WRITTEN_QUESTIONS_SUBJECTS_LIST.sql";
-import parliamentAnswerById from "../queries/PARLIAMENT_ANSWER_BY_ID.sql";
-import parliamentAnswerByIdentifier from "../queries/PARLIAMENT_ANSWER_BY_IDENTIFIER.sql";
-import parliamentAnswerBySourceReference from "../queries/PARLIAMENT_ANSWER_BY_SOURCE_REFERENCE.sql";
-import parliamentAnswerSubjects from "../queries/PARLIAMENT_ANSWER_SUBJECTS.sql";
-import parliamentAnswerYears from "../queries/PARLIAMENT_ANSWER_YEARS.sql";
-import parliamentAnswersCount from "../queries/PARLIAMENT_ANSWERS_COUNT.sql";
-import parliamentAnswersList from "../queries/PARLIAMENT_ANSWERS_LIST.sql";
 import {
   buildFtsSearchQuery,
   endDateExclusive,

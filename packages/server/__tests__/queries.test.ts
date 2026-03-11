@@ -43,16 +43,16 @@ import speechActivity from "../database/queries/SPEECH_ACTIVITY.sql";
 import speechesByDate from "../database/queries/SPEECHES_BY_DATE.sql";
 import trustPositions from "../database/queries/TRUST_POSITIONS.sql";
 import votesByPerson from "../database/queries/VOTES_BY_PERSON.sql";
+import votingParticipation from "../database/queries/VOTING_PARTICIPATION.sql";
+import votingParticipationByGovernment from "../database/queries/VOTING_PARTICIPATION_BY_GOVERNMENT.sql";
+import votingRelatedById from "../database/queries/VOTING_RELATED_BY_ID.sql";
 import votingsBrowse from "../database/queries/VOTINGS_BROWSE.sql";
+import votingsByDocument from "../database/queries/VOTINGS_BY_DOCUMENT.sql";
 import votingsOverviewClose from "../database/queries/VOTINGS_OVERVIEW_CLOSE.sql";
 import votingsOverviewMetrics from "../database/queries/VOTINGS_OVERVIEW_METRICS.sql";
 import votingsOverviewPhases from "../database/queries/VOTINGS_OVERVIEW_PHASES.sql";
 import votingsOverviewSessions from "../database/queries/VOTINGS_OVERVIEW_SESSIONS.sql";
 import votingsOverviewTurnout from "../database/queries/VOTINGS_OVERVIEW_TURNOUT.sql";
-import votingParticipation from "../database/queries/VOTING_PARTICIPATION.sql";
-import votingParticipationByGovernment from "../database/queries/VOTING_PARTICIPATION_BY_GOVERNMENT.sql";
-import votingRelatedById from "../database/queries/VOTING_RELATED_BY_ID.sql";
-import votingsByDocument from "../database/queries/VOTINGS_BY_DOCUMENT.sql";
 import votingsSearch from "../database/queries/VOTINGS_SEARCH.sql";
 import { createTestDb, seedFullDataset } from "./helpers/setup-db";
 
@@ -1050,7 +1050,9 @@ describe("Voting queries", () => {
 
     expect(rows.length).toBeGreaterThan(0);
     expect(rows[0]).toHaveProperty("context_title");
-    expect(rows[0].n_total).toBeGreaterThanOrEqual(rows[rows.length - 1].n_total);
+    expect(rows[0].n_total).toBeGreaterThanOrEqual(
+      rows[rows.length - 1].n_total,
+    );
   });
 
   test("voting overview queries expose summary metrics and curated lists", () => {
@@ -1464,7 +1466,16 @@ describe("Person search query", () => {
     tempDb.run(
       `INSERT INTO Representative (person_id, last_name, first_name, sort_name, party, gender, birth_date, minister)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [1100, "Meikäläinen", "Mikko", "Meikäläinen Mikko", "vihr", "Mies", "1965-02-01", 0],
+      [
+        1100,
+        "Meikäläinen",
+        "Mikko",
+        "Meikäläinen Mikko",
+        "vihr",
+        "Mies",
+        "1965-02-01",
+        0,
+      ],
     );
     tempDb.run(`INSERT INTO ParliamentaryGroup (code) VALUES (?)`, ["vihr"]);
     tempDb.run(

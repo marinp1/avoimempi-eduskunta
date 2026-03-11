@@ -23,8 +23,8 @@ import {
 } from "react";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { colors } from "#client/theme/index";
 import { PageIntro } from "#client/theme/components";
+import { colors } from "#client/theme/index";
 import { apiFetch } from "#client/utils/fetch";
 import {
   CommitteeReportCard,
@@ -316,8 +316,9 @@ export default function Documents() {
   const { t } = useScopedTranslation("documents");
   const { selectedHallituskausi } = useHallituskausi();
 
-  const [documentType, setDocumentType] =
-    useState<DocumentType>(DEFAULT_DOCUMENT_TYPE);
+  const [documentType, setDocumentType] = useState<DocumentType>(
+    DEFAULT_DOCUMENT_TYPE,
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedYear, setSelectedYear] = useState<string>("all");
@@ -945,11 +946,15 @@ export default function Documents() {
                     <Select
                       value={selectedSourceCommittee}
                       label={t("sourceCommitteeFilter")}
-                      onChange={(e) => setSelectedSourceCommittee(e.target.value)}
+                      onChange={(e) =>
+                        setSelectedSourceCommittee(e.target.value)
+                      }
                       disabled={committeeFiltersLoading}
                       sx={{ backgroundColor: colors.backgroundDefault }}
                     >
-                      <MenuItem value="all">{t("allSourceCommittees")}</MenuItem>
+                      <MenuItem value="all">
+                        {t("allSourceCommittees")}
+                      </MenuItem>
                       {sourceCommittees.map((item) => (
                         <MenuItem
                           key={item.committee_name}
@@ -972,7 +977,9 @@ export default function Documents() {
                       disabled={committeeFiltersLoading}
                       sx={{ backgroundColor: colors.backgroundDefault }}
                     >
-                      <MenuItem value="all">{t("allTargetCommittees")}</MenuItem>
+                      <MenuItem value="all">
+                        {t("allTargetCommittees")}
+                      </MenuItem>
                       {recipientCommittees.map((item) => (
                         <MenuItem
                           key={item.committee_name}
@@ -993,7 +1000,9 @@ export default function Documents() {
                     <Select
                       value={selectedExpertCommittee}
                       label={t("committeeFilter")}
-                      onChange={(e) => setSelectedExpertCommittee(e.target.value)}
+                      onChange={(e) =>
+                        setSelectedExpertCommittee(e.target.value)
+                      }
                       disabled={expertFiltersLoading}
                       sx={{ backgroundColor: colors.backgroundDefault }}
                     >
@@ -1037,7 +1046,9 @@ export default function Documents() {
                   <Autocomplete
                     options={subjectOptions}
                     value={selectedSubject}
-                    onChange={(_event, newValue) => setSelectedSubject(newValue)}
+                    onChange={(_event, newValue) =>
+                      setSelectedSubject(newValue)
+                    }
                     loading={subjectsLoading}
                     renderInput={(params) => (
                       <TextField
@@ -1092,17 +1103,25 @@ export default function Documents() {
               }
               sx={{ backgroundColor: colors.backgroundDefault }}
             >
-              <MenuItem value="interpellations">{t("interpellations")}</MenuItem>
+              <MenuItem value="interpellations">
+                {t("interpellations")}
+              </MenuItem>
               <MenuItem value="government-proposals">
                 {t("governmentProposals")}
               </MenuItem>
-              <MenuItem value="written-questions">{t("writtenQuestions")}</MenuItem>
+              <MenuItem value="written-questions">
+                {t("writtenQuestions")}
+              </MenuItem>
               <MenuItem value="written-question-responses">
                 {t("writtenQuestionResponses")}
               </MenuItem>
-              <MenuItem value="expert-statements">{t("expertStatements")}</MenuItem>
+              <MenuItem value="expert-statements">
+                {t("expertStatements")}
+              </MenuItem>
               <MenuItem value="oral-questions">{t("oralQuestions")}</MenuItem>
-              <MenuItem value="committee-reports">{t("committeeReports")}</MenuItem>
+              <MenuItem value="committee-reports">
+                {t("committeeReports")}
+              </MenuItem>
               <MenuItem value="legislative-initiatives-law">
                 {t("legislativeInitiativesLaw")}
               </MenuItem>
