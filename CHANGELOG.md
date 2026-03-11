@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.0.1-alpha.7] — 2026-03-10
+
+### Features
+- improve trace (4a3154b)
+- migrate vaskidata/eduskunnan_vastaus (1c0b1f3)
+- harmonize ui (05d49c7)
+- improve sessions view (634c8bd)
+- improve documents performance (caed6a9)
+- improve votings (9304aa0)
+- improve composition view (e8a1fb8)
+- improve homepage (fdea467)
+- improve government panel (826b379)
+- improve parties panel (3b9a146)
+- improve documents view (8b0584e)
+- start implementing better goverment details in representatives (cd53bac)
+
+### Bug Fixes
+- fix post import step (dbe95e6)
+- revise translations (eb89621)
+- improve votings performance (95a829d)
+- improve details (dd87dca)
+- government (83ac639)
+
+### Other
+- housekeeping: fix lint errors (1c8a90c)
+
 ## [1.0.1-alpha.6] — 2026-03-09
 
 ### Features
