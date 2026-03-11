@@ -1,6 +1,3 @@
-import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
-import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
-import FlashOnOutlinedIcon from "@mui/icons-material/FlashOnOutlined";
 import {
   Alert,
   Box,
@@ -583,10 +580,15 @@ export const VoteResults: React.FC<{
       </Stack>
     ) : undefined;
   const headerMeta =
-    !loading && !error && (!isOverviewMode || (!isMobile && activeFilters.length > 0)) ? (
+    !loading &&
+    !error &&
+    (!isOverviewMode || (!isMobile && activeFilters.length > 0)) ? (
       <Stack spacing={0.75}>
         {!isOverviewMode ? (
-          <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+          <Typography
+            variant="body2"
+            sx={{ color: themedColors.textSecondary }}
+          >
             {tVotings("resultCount", { count: combinedRows.length })}
           </Typography>
         ) : null}
@@ -621,33 +623,35 @@ export const VoteResults: React.FC<{
         mobileSummary={
           !loading && !error ? (
             <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
-                {isOverviewMode && overviewState.data ? (
-                  <>
-                    <Chip
-                      size="small"
-                      label={`${tVotings("overview.metrics.total")}: ${overviewState.data.metrics.total_votings}`}
-                      sx={{ fontWeight: 700 }}
-                    />
-                    <Chip
-                      size="small"
-                      label={`${tVotings("overview.metrics.close")}: ${overviewState.data.metrics.close_votings}`}
-                      sx={{ fontWeight: 700 }}
-                    />
-                  </>
-                ) : (
+              {isOverviewMode && overviewState.data ? (
+                <>
                   <Chip
                     size="small"
-                    label={tVotings("resultCount", { count: combinedRows.length })}
+                    label={`${tVotings("overview.metrics.total")}: ${overviewState.data.metrics.total_votings}`}
                     sx={{ fontWeight: 700 }}
                   />
-                )}
-                {!isOverviewMode ? (
                   <Chip
                     size="small"
-                    label={tVotings("groupedByDocument")}
+                    label={`${tVotings("overview.metrics.close")}: ${overviewState.data.metrics.close_votings}`}
                     sx={{ fontWeight: 700 }}
                   />
-                ) : null}
+                </>
+              ) : (
+                <Chip
+                  size="small"
+                  label={tVotings("resultCount", {
+                    count: combinedRows.length,
+                  })}
+                  sx={{ fontWeight: 700 }}
+                />
+              )}
+              {!isOverviewMode ? (
+                <Chip
+                  size="small"
+                  label={tVotings("groupedByDocument")}
+                  sx={{ fontWeight: 700 }}
+                />
+              ) : null}
             </Box>
           ) : undefined
         }
@@ -658,20 +662,20 @@ export const VoteResults: React.FC<{
 
       <Box id="votings-content">
         <VotingsControlBar
-        search={searchValue}
-        onSearchChange={onSearchChange}
-        searchHint={searchHint}
-        sessionFilter={sessionFilter}
-        phaseFilter={phaseFilter}
-        sortMode={sortMode}
-        sessionOptions={sessionOptions}
-        phaseOptions={phaseOptions}
-        onSessionFilterChange={onSessionFilterChange}
-        onPhaseFilterChange={onPhaseFilterChange}
-        onSortModeChange={onSortModeChange}
-        onClearFilters={onClearFilters}
-        showSort={!isOverviewMode}
-        activeFilters={activeFilters}
+          search={searchValue}
+          onSearchChange={onSearchChange}
+          searchHint={searchHint}
+          sessionFilter={sessionFilter}
+          phaseFilter={phaseFilter}
+          sortMode={sortMode}
+          sessionOptions={sessionOptions}
+          phaseOptions={phaseOptions}
+          onSessionFilterChange={onSessionFilterChange}
+          onPhaseFilterChange={onPhaseFilterChange}
+          onSortModeChange={onSortModeChange}
+          onClearFilters={onClearFilters}
+          showSort={!isOverviewMode}
+          activeFilters={activeFilters}
         />
       </Box>
 

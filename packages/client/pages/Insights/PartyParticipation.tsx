@@ -227,7 +227,13 @@ export default function PartyParticipation({
                     mb: 0.75,
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: spacing.xs }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: spacing.xs,
+                    }}
+                  >
                     <Box
                       sx={{
                         width: 12,
@@ -248,10 +254,14 @@ export default function PartyParticipation({
                       {entry.dataKey}: {entry.value}%{isInCoalition && " ★"}
                     </Typography>
                   </Box>
-                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "text.secondary" }}
+                  >
                     {tCommon("voteRatio", {
                       cast: entry.payload[`${entry.dataKey}_votes_cast`] ?? 0,
-                      total: entry.payload[`${entry.dataKey}_total_votings`] ?? 0,
+                      total:
+                        entry.payload[`${entry.dataKey}_total_votings`] ?? 0,
                     })}
                   </Typography>
                 </Box>

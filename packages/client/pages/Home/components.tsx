@@ -198,7 +198,12 @@ const HomeHeroComponent = ({
               </Typography>
               <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
                 {scopeItems.map((item) => (
-                  <Chip key={item} size="small" label={item} sx={heroScopeChipSx} />
+                  <Chip
+                    key={item}
+                    size="small"
+                    label={item}
+                    sx={heroScopeChipSx}
+                  />
                 ))}
               </Box>
             </Box>
@@ -535,7 +540,9 @@ const HomeHeroComponent = ({
             }}
           >
             {overview.freshness.lastMigrationTimestamp
-              ? formatDateTimeCompactFi(overview.freshness.lastMigrationTimestamp)
+              ? formatDateTimeCompactFi(
+                  overview.freshness.lastMigrationTimestamp,
+                )
               : "-"}
           </Typography>
         </Box>
@@ -741,7 +748,8 @@ export const CompositionPanel = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const participationWindowStart =
-    overview.scope.startDate ?? shiftIsoDateByMonths(overview.scope.asOfDate, -6);
+    overview.scope.startDate ??
+    shiftIsoDateByMonths(overview.scope.asOfDate, -6);
   const participationWindowText = tHome("compositionParticipationWindow", {
     start: formatDateFi(participationWindowStart, participationWindowStart),
     end: formatDateFi(overview.scope.asOfDate, overview.scope.asOfDate),

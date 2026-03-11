@@ -253,15 +253,21 @@ describe("createResponseCache", () => {
       });
 
       // Fill the one slot with /api/a
-      await (wrapped["/api/a"] as { GET: typeof handler }).GET(makeRequest("/api/a"));
+      await (wrapped["/api/a"] as { GET: typeof handler }).GET(
+        makeRequest("/api/a"),
+      );
       expect(calls).toBe(1);
 
       // Let the TTL expire
       await Bun.sleep(30);
 
       // /api/b should now be insertable because the expired /api/a entry was evicted
-      await (wrapped["/api/b"] as { GET: typeof handler }).GET(makeRequest("/api/b"));
-      const secondB = await (wrapped["/api/b"] as { GET: typeof handler }).GET(makeRequest("/api/b"));
+      await (wrapped["/api/b"] as { GET: typeof handler }).GET(
+        makeRequest("/api/b"),
+      );
+      const secondB = await (wrapped["/api/b"] as { GET: typeof handler }).GET(
+        makeRequest("/api/b"),
+      );
       expect(secondB.status).toBe(200);
 
       // /api/b: 1 miss (inserted after eviction), 1 hit

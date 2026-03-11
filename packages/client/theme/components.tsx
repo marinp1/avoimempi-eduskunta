@@ -6,11 +6,11 @@ import {
   IconButton,
   Skeleton,
   Stack,
-  useMediaQuery,
-  useTheme,
   type SxProps,
   type Theme,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import type React from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
@@ -68,7 +68,7 @@ export const PageIntro: React.FC<{
   variant = "default",
   mobileMode = "compact",
   mobileSummary,
-  mobileAnchorId,
+  mobileAnchorId: _mobileAnchorId,
   mobileStatsPlacement = "inline",
   sx,
 }) => {
@@ -80,9 +80,7 @@ export const PageIntro: React.FC<{
   const heroOuterRadius = `${borderRadius.heroOuter * 8}px`;
   const heroInnerRadius = `${borderRadius.heroInner * 8}px`;
   const showInlineStats = Boolean(
-    stats &&
-      (!isImmersiveMobile ||
-        mobileStatsPlacement === "inline"),
+    stats && (!isImmersiveMobile || mobileStatsPlacement === "inline"),
   );
   const showFooterStats = Boolean(
     stats && isImmersiveMobile && mobileStatsPlacement === "footer",

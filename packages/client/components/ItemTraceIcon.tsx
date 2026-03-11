@@ -1,8 +1,8 @@
 import TravelExploreIcon from "@mui/icons-material/TravelExplore";
 import { IconButton, Tooltip } from "@mui/material";
 import {
-  TraceRegistration,
   type TraceItem,
+  TraceRegistration,
   useTrace,
 } from "#client/context/TraceContext";
 

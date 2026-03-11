@@ -47,6 +47,7 @@ import {
 } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
+import { warnInDevelopment } from "#client/utils/request-errors";
 import { RepresentativeDetails, type RepresentativeSelection } from "./Details";
 import {
   buildCompositionUrl,
@@ -396,11 +397,17 @@ const getPartyBlocLabel = (
 
 const fetchRepresentativeSelection = async (
   personId: number,
+  signal?: AbortSignal,
 ): Promise<RepresentativeSelection> => {
   const [detailsResponse, membershipsResponse] = await Promise.all([
-    apiFetch(`/api/person/${personId}/details`),
-    apiFetch(`/api/person/${personId}/group-memberships`),
+    apiFetch(`/api/person/${personId}/details`, { signal }),
+    apiFetch(`/api/person/${personId}/group-memberships`, { signal }),
   ]);
+  if (!detailsResponse.ok || !membershipsResponse.ok) {
+    throw new Error(
+      `HTTP ${detailsResponse.ok ? membershipsResponse.status : detailsResponse.status}`,
+    );
+  }
 
   const details = await detailsResponse.json();
   const memberships = await membershipsResponse.json();
@@ -511,25 +518,32 @@ export default () => {
   }, [viewMode, syncUrl]);
 
   React.useEffect(() => {
+    const controller = new AbortController();
     const loadMembers = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await apiFetch(`/api/composition/${date}`);
+        const response = await apiFetch(`/api/composition/${date}`, {
+          signal: controller.signal,
+        });
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
         const data = await response.json();
+        if (controller.signal.aborted) return;
         setMembers(data);
       } catch (loadError) {
+        if (controller.signal.aborted) return;
+        warnInDevelopment("Failed to fetch composition members", loadError);
         console.error(loadError);
         setError(t("loadError"));
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
 
     loadMembers();
+    return () => controller.abort();
   }, [date, t]);
 
   React.useEffect(() => {
@@ -540,7 +554,7 @@ export default () => {
       return;
     }
 
-    let cancelled = false;
+    const controller = new AbortController();
     const loadResults = async () => {
       try {
         setLookupLoading(true);
@@ -549,31 +563,31 @@ export default () => {
           `/api/person/search?q=${encodeURIComponent(
             committedLookupQuery,
           )}&date=${date}&limit=18`,
+          { signal: controller.signal },
         );
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
         const data = await response.json();
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setLookupResults(data);
         }
       } catch (loadError) {
+        if (controller.signal.aborted) return;
+        warnInDevelopment(
+          "Failed to fetch composition lookup results",
+          loadError,
+        );
         console.error(loadError);
-        if (!cancelled) {
-          setLookupResults([]);
-          setLookupError(t("globalSearch.loadError"));
-        }
+        setLookupResults([]);
+        setLookupError(t("globalSearch.loadError"));
       } finally {
-        if (!cancelled) {
-          setLookupLoading(false);
-        }
+        if (!controller.signal.aborted) setLookupLoading(false);
       }
     };
 
     loadResults();
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [committedLookupQuery, date, t]);
 
   React.useEffect(() => {
@@ -606,13 +620,17 @@ export default () => {
   }, [date, selectedHallituskausi, syncUrl]);
 
   React.useEffect(() => {
-    if (!selectedPersonId) return;
+    if (!selectedPersonId) {
+      setLookupSelectionMessage(null);
+      return;
+    }
 
-    let cancelled = false;
+    const controller = new AbortController();
     const currentMember = members.find(
       (member) => member.person_id === selectedPersonId,
     );
     if (currentMember) {
+      setLookupSelectionMessage(null);
       setSelectedRepresentative(
         toRepresentativeSelectionFromMember(currentMember),
       );
@@ -623,28 +641,32 @@ export default () => {
       (result) => result.person_id === selectedPersonId,
     );
     if (currentLookupMatch) {
+      setLookupSelectionMessage(null);
       setSelectedRepresentative(
         toRepresentativeSelectionFromSearchResult(currentLookupMatch),
       );
       return;
     }
 
-    fetchRepresentativeSelection(selectedPersonId)
+    fetchRepresentativeSelection(selectedPersonId, controller.signal)
       .then((selection) => {
-        if (!cancelled) {
+        if (!controller.signal.aborted) {
           setSelectedRepresentative(selection);
+          setLookupSelectionMessage(null);
         }
       })
-      .catch(() => {
-        if (!cancelled) {
-          setSelectedRepresentative({ personId: selectedPersonId });
-        }
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        warnInDevelopment(
+          `Failed to fetch representative selection for ${selectedPersonId}`,
+          err,
+        );
+        setSelectedRepresentative({ personId: selectedPersonId });
+        setLookupSelectionMessage(t("globalSearch.selectionFallback"));
       });
 
-    return () => {
-      cancelled = true;
-    };
-  }, [lookupResults, members, selectedPersonId]);
+    return () => controller.abort();
+  }, [lookupResults, members, selectedPersonId, t]);
 
   const stats = React.useMemo(() => {
     const totalMembers = members.length;
@@ -833,16 +855,16 @@ export default () => {
         mobileSummary={
           !loading && !error ? (
             <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
-                <Chip
-                  size="small"
-                  label={`${t("snapshot.totalMembers")}: ${stats.totalMembers}`}
-                  sx={{ fontWeight: 700 }}
-                />
-                <Chip
-                  size="small"
-                  label={`${t("snapshot.partyCount")}: ${stats.partyCount}`}
-                  sx={{ fontWeight: 700 }}
-                />
+              <Chip
+                size="small"
+                label={`${t("snapshot.totalMembers")}: ${stats.totalMembers}`}
+                sx={{ fontWeight: 700 }}
+              />
+              <Chip
+                size="small"
+                label={`${t("snapshot.partyCount")}: ${stats.partyCount}`}
+                sx={{ fontWeight: 700 }}
+              />
             </Box>
           ) : undefined
         }
@@ -896,13 +918,13 @@ export default () => {
 
       <Box id="composition-content">
         <ToolbarCard sx={{ mb: spacing.md }}>
-        <TimelineSelector
-          hallituskaudet={hallituskaudet}
-          selectedHallituskausi={selectedHallituskausi}
-          date={date}
-          todayIso={todayIso}
-          onDateChange={handleDateChange}
-        />
+          <TimelineSelector
+            hallituskaudet={hallituskaudet}
+            selectedHallituskausi={selectedHallituskausi}
+            date={date}
+            todayIso={todayIso}
+            onDateChange={handleDateChange}
+          />
         </ToolbarCard>
       </Box>
 

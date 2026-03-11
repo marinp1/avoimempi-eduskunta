@@ -49,14 +49,16 @@ export const App: React.FC = () => {
         setDbInfo(data);
       })
       .catch((err) => {
-        if (err?.name !== "AbortError") console.warn("Failed to fetch db-info", err);
+        if (err?.name !== "AbortError")
+          console.warn("Failed to fetch db-info", err);
       });
 
     apiFetch("/api/version", { signal })
       .then((res) => res.json())
       .then(setVersionInfo)
       .catch((err) => {
-        if (err?.name !== "AbortError") console.warn("Failed to fetch version", err);
+        if (err?.name !== "AbortError")
+          console.warn("Failed to fetch version", err);
       });
 
     apiFetch("/api/changes-report", { signal })
@@ -70,7 +72,8 @@ export const App: React.FC = () => {
         }
       })
       .catch((err) => {
-        if (err?.name !== "AbortError") console.warn("Failed to fetch changes-report", err);
+        if (err?.name !== "AbortError")
+          console.warn("Failed to fetch changes-report", err);
       });
 
     return () => controller.abort();

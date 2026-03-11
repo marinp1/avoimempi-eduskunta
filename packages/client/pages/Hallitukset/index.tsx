@@ -452,24 +452,21 @@ const GovernmentPageHero: React.FC<{
       mobileStatsPlacement="hidden"
       mobileSummary={
         <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
-            <Chip
-              size="small"
-              label={`${government.parties.length} puoluetta`}
-              sx={{ fontWeight: 700 }}
-            />
-            <Chip
-              size="small"
-              label={formatDurationFi(
-                government.start_date,
-                government.end_date,
-              )}
-              sx={{ fontWeight: 700 }}
-            />
-            <Chip
-              size="small"
-              label={`${totalGovernments} hallitusta`}
-              sx={{ fontWeight: 700 }}
-            />
+          <Chip
+            size="small"
+            label={`${government.parties.length} puoluetta`}
+            sx={{ fontWeight: 700 }}
+          />
+          <Chip
+            size="small"
+            label={formatDurationFi(government.start_date, government.end_date)}
+            sx={{ fontWeight: 700 }}
+          />
+          <Chip
+            size="small"
+            label={`${totalGovernments} hallitusta`}
+            sx={{ fontWeight: 700 }}
+          />
         </Box>
       }
       chips={

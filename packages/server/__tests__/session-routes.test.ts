@@ -6,7 +6,13 @@ function makeRequest(url: string): Request {
 }
 
 const mockDb: any = {
-  fetchSessions: () => ({ sessions: [], totalCount: 0, page: 1, limit: 20, totalPages: 0 }),
+  fetchSessions: () => ({
+    sessions: [],
+    totalCount: 0,
+    page: 1,
+    limit: 20,
+    totalPages: 0,
+  }),
   fetchSessionByDate: () => [],
   fetchSessionWithSectionsByDate: () => [],
   fetchDocumentsBySessionKeys: () => new Map(),
@@ -27,22 +33,22 @@ const routes = createSessionRoutes(mockDb);
 
 describe("session routes", () => {
   test("GET /api/sessions returns 200 with sessions object", async () => {
-    const response = await routes["/api/sessions"].GET(makeRequest("/api/sessions"));
+    const response = await routes["/api/sessions"].GET(
+      makeRequest("/api/sessions"),
+    );
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body).toMatchObject({ sessions: [], totalCount: 0 });
   });
 
   test("GET /api/session-dates returns 200", async () => {
-    const response = await routes["/api/session-dates"].GET(makeRequest("/api/session-dates"));
+    const response = await routes["/api/session-dates"].GET();
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual([]);
   });
 
   test("GET /api/session-dates/completed returns 200", async () => {
-    const response = await routes["/api/session-dates/completed"].GET(
-      makeRequest("/api/session-dates/completed"),
-    );
+    const response = await routes["/api/session-dates/completed"].GET();
     expect(response.status).toBe(200);
   });
 
@@ -50,8 +56,20 @@ describe("session routes", () => {
     const db = {
       ...mockDb,
       fetchSessionWithSectionsByDate: () => [
-        { key: "2024/1", date: "2024-01-15", sections: [], section_count: 0, voting_count: 0 },
-        { key: "2024/2", date: "2024-01-15", sections: [], section_count: 0, voting_count: 0 },
+        {
+          key: "2024/1",
+          date: "2024-01-15",
+          sections: [],
+          section_count: 0,
+          voting_count: 0,
+        },
+        {
+          key: "2024/2",
+          date: "2024-01-15",
+          sections: [],
+          section_count: 0,
+          voting_count: 0,
+        },
       ],
       fetchDocumentsBySessionKeys: (keys: string[]) => {
         expect(keys).toHaveLength(2); // batch: both sessions at once

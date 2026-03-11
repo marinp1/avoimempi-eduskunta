@@ -831,7 +831,11 @@ export default function Laadunvalvonta() {
           severity="error"
           sx={{ mb: spacing.md }}
           action={
-            <Button color="inherit" size="small" onClick={() => void loadLastRun()}>
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => void loadLastRun()}
+            >
               Yritä uudelleen
             </Button>
           }
@@ -915,18 +919,18 @@ export default function Laadunvalvonta() {
         !runError &&
         !lastRunLoadError &&
         !ranAt && (
-        <Box
-          sx={{
-            mt: spacing.xl,
-            textAlign: "center",
-            color: colors.textTertiary,
-          }}
-        >
-          <Typography variant="body2">
-            Paina "Suorita tarkistukset" aloittaaksesi.
-          </Typography>
-        </Box>
-      )}
+          <Box
+            sx={{
+              mt: spacing.xl,
+              textAlign: "center",
+              color: colors.textTertiary,
+            }}
+          >
+            <Typography variant="body2">
+              Paina "Suorita tarkistukset" aloittaaksesi.
+            </Typography>
+          </Box>
+        )}
     </Box>
   );
 }

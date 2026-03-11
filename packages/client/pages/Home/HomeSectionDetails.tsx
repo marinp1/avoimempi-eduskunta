@@ -8,7 +8,6 @@ import {
   CircularProgress,
   Collapse,
   Link,
-  Tooltip,
   Typography,
 } from "@mui/material";
 import { DocumentCard, RelatedVotings } from "#client/components/DocumentCards";
@@ -826,8 +825,9 @@ const renderSectionMinutesContent = (
       .filter((value): value is string => value !== null),
   );
   const minutesReferences: MinutesContentReferenceChip[] = references
-    .filter((reference): reference is MinutesContentReference & { code: string } =>
-      Boolean(reference.code),
+    .filter(
+      (reference): reference is MinutesContentReference & { code: string } =>
+        Boolean(reference.code),
     )
     .map((reference) => {
       const migratedAsRollCall =

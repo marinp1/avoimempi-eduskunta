@@ -1,5 +1,12 @@
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { Box, Chip, Tooltip, Typography, type SxProps, type Theme } from "@mui/material";
+import {
+  Box,
+  Chip,
+  type SxProps,
+  type Theme,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { SourceText } from "#client/components/SourceText";
 import { colors, commonStyles } from "#client/theme";

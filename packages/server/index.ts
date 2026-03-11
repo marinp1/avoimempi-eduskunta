@@ -18,6 +18,10 @@ import { PersonRepository } from "./database/repositories/person-repository";
 import { SessionRepository } from "./database/repositories/session-repository";
 import { VotingRepository } from "./database/repositories/voting-repository";
 import { devFeaturesEnabled } from "./dev-constraints";
+import {
+  addSecurityHeaders,
+  withSecurityHeaders,
+} from "./middleware/security-headers";
 import homepage from "./public/index.html";
 import { createCoreRoutes } from "./routes/core-routes";
 import { createDocumentRoutes } from "./routes/document-routes";
@@ -30,7 +34,6 @@ import { createSanityRoutes } from "./routes/sanity-routes";
 import { createSessionRoutes } from "./routes/session-routes";
 import { createStaticPageRoutes } from "./routes/static-page-routes";
 import { createVotingRoutes } from "./routes/voting-routes";
-import { addSecurityHeaders, withSecurityHeaders } from "./middleware/security-headers";
 import { getQualityDb } from "./sanity/quality-db";
 import { ResolutionStore } from "./sanity/resolution-store";
 

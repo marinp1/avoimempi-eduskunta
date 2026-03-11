@@ -34,8 +34,8 @@ function walkFiles(dir: string): string[] {
 
 function extractSqlImports(filePath: string): string[] {
   const source = readFileSync(filePath, "utf8");
-  return [...source.matchAll(/from\s+["']([^"']+\.sql)["']/g)].map((match) =>
-    match[1]!.split("/").at(-1)!,
+  return [...source.matchAll(/from\s+["']([^"']+\.sql)["']/g)].map(
+    (match) => match[1]!.split("/").at(-1)!,
   );
 }
 
@@ -73,7 +73,8 @@ export function collectServerQueryAudit(): QueryAuditRecord[] {
       if (isTestFile) {
         const coverageKind = TEST_COVERAGE_BY_FILE[relPath.split("/").at(-1)!];
         if (coverageKind) {
-          const kinds = coverageKinds.get(queryFile) ?? new Set<QueryCoverageKind>();
+          const kinds =
+            coverageKinds.get(queryFile) ?? new Set<QueryCoverageKind>();
           kinds.add(coverageKind);
           coverageKinds.set(queryFile, kinds);
         }

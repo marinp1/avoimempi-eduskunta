@@ -1,6 +1,13 @@
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { Box, Button, Chip, CircularProgress, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Typography,
+} from "@mui/material";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
@@ -9,6 +16,7 @@ import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, commonStyles } from "#client/theme/index";
 import { apiFetch, type IdentifierRouteType } from "#client/utils/fetch";
+import { warnInDevelopment } from "#client/utils/request-errors";
 
 export type DocRef = {
   type:
@@ -284,27 +292,32 @@ function useFetchByIdentifier<
 >(apiPath: `/api/${I}/by-identifier`, identifier: string) {
   const [data, setData] = useState<D | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
     setLoading(true);
-    apiFetch(`${apiPath}/${encodeURIComponent(identifier)}` as const)
+    setError(false);
+    apiFetch(`${apiPath}/${encodeURIComponent(identifier)}` as const, {
+      signal: controller.signal,
+    })
       .then((res) => (res.ok ? (res.json() as D) : null))
       .then((json) => {
-        if (!cancelled) setData(json as D);
+        if (controller.signal.aborted) return;
+        setData(json as D);
       })
       .catch((err) => {
-        if (!cancelled) console.warn("Failed to fetch document card data", err);
+        if (controller.signal.aborted) return;
+        warnInDevelopment("Failed to fetch document card data", err);
+        setError(true);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [identifier, apiPath]);
 
-  return { data, loading };
+  return { data, loading, error };
 }
 
 const renderSubjectChips = (
@@ -348,12 +361,18 @@ const LoadingPlaceholder: React.FC<{ text: string }> = ({ text }) => (
   </Box>
 );
 
+const LoadErrorNotice: React.FC<{ message: string }> = ({ message }) => (
+  <Alert severity="error" sx={{ mt: 1 }}>
+    {message}
+  </Alert>
+);
+
 export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
   identifier,
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const { data, loading } = useFetchByIdentifier(
+  const { data, loading, error } = useFetchByIdentifier(
     "/api/government-proposals/by-identifier",
     identifier,
   );
@@ -361,6 +380,14 @@ export const GovernmentProposalCard: React.FC<{ identifier: string }> = ({
   if (loading)
     return (
       <LoadingPlaceholder text={tDocuments("loadingGovernmentProposal")} />
+    );
+  if (error)
+    return (
+      <LoadErrorNotice
+        message={tDocuments("loadErrorLine", {
+          value: tDocuments("governmentProposals"),
+        })}
+      />
     );
   if (!data) return null;
 
@@ -440,13 +467,21 @@ export const InterpellationCard: React.FC<{ identifier: string }> = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const { data, loading } = useFetchByIdentifier(
+  const { data, loading, error } = useFetchByIdentifier(
     "/api/interpellations/by-identifier",
     identifier,
   );
 
   if (loading)
     return <LoadingPlaceholder text={tDocuments("loadingInterpellation")} />;
+  if (error)
+    return (
+      <LoadErrorNotice
+        message={tDocuments("loadErrorLine", {
+          value: tDocuments("interpellations"),
+        })}
+      />
+    );
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -560,7 +595,7 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const { data, loading } = useFetchByIdentifier(
+  const { data, loading, error } = useFetchByIdentifier(
     "/api/legislative-initiatives/by-identifier",
     identifier,
   );
@@ -568,6 +603,14 @@ export const LegislativeInitiativeCard: React.FC<{ identifier: string }> = ({
   if (loading)
     return (
       <LoadingPlaceholder text={tDocuments("loadingLegislativeInitiative")} />
+    );
+  if (error)
+    return (
+      <LoadErrorNotice
+        message={tDocuments("loadErrorLine", {
+          value: tDocuments("legislativeInitiativesLaw"),
+        })}
+      />
     );
   if (!data) return null;
 
@@ -659,13 +702,21 @@ export const OralQuestionCard: React.FC<{ identifier: string }> = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const { data, loading } = useFetchByIdentifier(
+  const { data, loading, error } = useFetchByIdentifier(
     "/api/oral-questions/by-identifier",
     identifier,
   );
 
   if (loading)
     return <LoadingPlaceholder text={tDocuments("loadingOralQuestion")} />;
+  if (error)
+    return (
+      <LoadErrorNotice
+        message={tDocuments("loadErrorLine", {
+          value: tDocuments("oralQuestions"),
+        })}
+      />
+    );
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -741,13 +792,21 @@ export const WrittenQuestionCard: React.FC<{ identifier: string }> = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const { data, loading } = useFetchByIdentifier(
+  const { data, loading, error } = useFetchByIdentifier(
     "/api/written-questions/by-identifier",
     identifier,
   );
 
   if (loading)
     return <LoadingPlaceholder text={tDocuments("loadingWrittenQuestion")} />;
+  if (error)
+    return (
+      <LoadErrorNotice
+        message={tDocuments("loadErrorLine", {
+          value: tDocuments("writtenQuestions"),
+        })}
+      />
+    );
   if (!data) return null;
 
   const decisionColor = getDecisionColor(data.decision_outcome_code);
@@ -820,13 +879,21 @@ export const CommitteeReportCard: React.FC<{ identifier: string }> = ({
 }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const { data, loading } = useFetchByIdentifier(
+  const { data, loading, error } = useFetchByIdentifier(
     "/api/committee-reports/by-identifier",
     identifier,
   );
 
   if (loading)
     return <LoadingPlaceholder text={tDocuments("loadingCommitteeReport")} />;
+  if (error)
+    return (
+      <LoadErrorNotice
+        message={tDocuments("loadErrorLine", {
+          value: tDocuments("committeeReports"),
+        })}
+      />
+    );
   if (!data) return null;
   const openDocument = () => {
     window.location.href = `/asiakirjat?id=${data.id}&type=committee-reports`;
@@ -958,42 +1025,55 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
 
   const [votings, setVotings] = useState<VotingSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const refKey = identifiers.join(",");
 
   useEffect(() => {
     if (identifiers.length === 0) {
       setLoading(false);
+      setError(null);
       return;
     }
-    let cancelled = false;
+    const controller = new AbortController();
     setLoading(true);
+    setError(null);
 
     Promise.all(
       identifiers.map((id) =>
-        apiFetch(`/api/votings/by-document/${encodeURIComponent(id)}`)
-          .then((res) => (res.ok ? res.json() : []))
-          .catch(() => []),
+        apiFetch(`/api/votings/by-document/${encodeURIComponent(id)}`, {
+          signal: controller.signal,
+        }).then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        }),
       ),
-    ).then((results) => {
-      if (cancelled) return;
-      const seen = new Set<number>();
-      const merged: typeof votings = [];
-      for (const list of results) {
-        for (const v of list) {
-          if (!seen.has(v.id)) {
-            seen.add(v.id);
-            merged.push(v);
+    )
+      .then((results) => {
+        if (controller.signal.aborted) return;
+        const seen = new Set<number>();
+        const merged: typeof votings = [];
+        for (const list of results) {
+          for (const v of list) {
+            if (!seen.has(v.id)) {
+              seen.add(v.id);
+              merged.push(v);
+            }
           }
         }
-      }
-      setVotings(merged);
-      setLoading(false);
-    });
+        setVotings(merged);
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        warnInDevelopment("Failed to fetch related votings", err);
+        setVotings([]);
+        setError(tDocuments("relatedVotingsLoadError"));
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
+      });
 
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [refKey]);
 
   if (loading) {
@@ -1004,6 +1084,14 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
         <CircularProgress size={14} />
         <Typography sx={metaTextSx}>{tDocuments("loadingVotings")}</Typography>
       </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert severity="error" sx={{ mt: 1 }}>
+        {error}
+      </Alert>
     );
   }
 
@@ -1213,24 +1301,30 @@ const RelatedVotingDetailsContent = ({
   const [details, setDetails] =
     useState<ApiRouteResponse<`/api/votings/:id/details`> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
     setLoading(true);
-    apiFetch(`/api/votings/${votingId}/details`)
+    setError(null);
+    apiFetch(`/api/votings/${votingId}/details`, { signal: controller.signal })
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
-        if (!cancelled) setDetails(json);
+        if (!controller.signal.aborted) setDetails(json);
       })
-      .catch(() => {
-        if (!cancelled) setDetails(null);
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        warnInDevelopment(
+          `Failed to fetch related voting details for ${votingId}`,
+          err,
+        );
+        setDetails(null);
+        setError(tDocuments("relatedVotingDetailsLoadError"));
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [votingId]);
 
   if (loading) {
@@ -1238,6 +1332,9 @@ const RelatedVotingDetailsContent = ({
   }
 
   if (!details) {
+    if (error) {
+      return <Alert severity="error">{error}</Alert>;
+    }
     return <Typography sx={secondaryTextSx}>{tCommon("noData")}</Typography>;
   }
 
