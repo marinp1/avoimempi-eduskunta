@@ -325,6 +325,8 @@ export const commonStyles = {
     }) satisfies SxProps<Theme>,
 } as const;
 
+export const serifFontFamily = '"Zilla Slab", Georgia, "Times New Roman", serif';
+
 /**
  * MUI theme - Nordic minimal design system
  */
@@ -372,28 +374,28 @@ export const createLightTheme = () => {
       h1: {
         fontWeight: 700,
         fontSize: "2.25rem",
-        letterSpacing: "-0.02em",
+        letterSpacing: "-0.01em",
         lineHeight: 1.2,
         color: colors.textPrimary,
       },
       h2: {
         fontWeight: 700,
         fontSize: "1.875rem",
-        letterSpacing: "-0.02em",
+        letterSpacing: "-0.01em",
         lineHeight: 1.25,
         color: colors.textPrimary,
       },
       h3: {
         fontWeight: 600,
         fontSize: "1.5rem",
-        letterSpacing: "-0.01em",
+        letterSpacing: "-0.005em",
         lineHeight: 1.3,
         color: colors.textPrimary,
       },
       h4: {
         fontWeight: 600,
         fontSize: "1.25rem",
-        letterSpacing: "-0.01em",
+        letterSpacing: "0",
         lineHeight: 1.35,
         color: colors.textPrimary,
       },

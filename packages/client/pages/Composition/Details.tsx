@@ -29,6 +29,7 @@ import {
 } from "@mui/material";
 import React from "react";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
+import { SourceText } from "#client/components/SourceText";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
@@ -2220,7 +2221,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                             />
                           )}
                         </Box>
-                        <Typography
+                        <SourceText
                           variant="body2"
                           sx={{
                             color: themedColors.textPrimary,
@@ -2230,7 +2231,7 @@ const SpeechesTab: React.FC<{ personId: number }> = ({ personId }) => {
                         >
                           {speech.content ||
                             tComposition("details.speeches.drawer.noContent")}
-                        </Typography>
+                        </SourceText>
                       </Box>
                     );
                   })}
