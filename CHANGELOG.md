@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1-alpha.4] — 2026-03-09
+
+### Features
+- show additional timestamps in client (88c86d6)
+
+### Bug Fixes
+- collapse alpha releases (89e5edf)
+
 ## [1.0.1-alpha.3] — 2026-03-09
 
 ### Bug Fixes
