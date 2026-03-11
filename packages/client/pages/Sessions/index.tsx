@@ -56,7 +56,12 @@ import {
 } from "#client/pages/Sessions/shared/utils";
 import { refs } from "#client/references";
 import { commonStyles } from "#client/theme";
-import { DataCard, PageHeader } from "#client/theme/components";
+import {
+  DataCard,
+  MetricCard,
+  PageIntro,
+  ToolbarCard,
+} from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import {
@@ -297,6 +302,26 @@ export default () => {
 
   const formatDate = formatDateLongFi;
   const formatTime = formatTimeFi;
+  const latestAvailableDate = useMemo(
+    () => Array.from(validDates).sort().at(-1) ?? null,
+    [validDates],
+  );
+  const sessionSummary = useMemo(
+    () => ({
+      totalSessions: sessions.length,
+      totalSections: sessions.reduce(
+        (sum, session) => sum + session.sections.length,
+        0,
+      ),
+    }),
+    [sessions],
+  );
+  const viewModeLabel =
+    viewMode === "list"
+      ? "Lista"
+      : viewMode === "timeline"
+        ? "Aikajana"
+        : "Kalenteri";
 
   const formatSpeechTimeRange = (speech: Speech) => {
     const start = formatTime(speech.start_time);
@@ -2471,12 +2496,23 @@ export default () => {
 
   return (
     <Box>
-      <PageHeader
+      <PageIntro
+        eyebrow={tSessions("title")}
         title={tSessions("title")}
         subtitle={tSessions("subtitle")}
-        actions={
-          <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
-            {selectedHallituskausi && (
+        chips={
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+            <Chip
+              size="small"
+              label={formatDate(date)}
+              sx={{
+                background: `${colors.primary}14`,
+                color: colors.textPrimary,
+                border: `1px solid ${colors.primary}2e`,
+                fontWeight: 600,
+              }}
+            />
+            {selectedHallituskausi ? (
               <Chip
                 size="small"
                 label={`Hallituskausi: ${selectedHallituskausi.label}`}
@@ -2484,9 +2520,71 @@ export default () => {
                   background: `${colors.primary}20`,
                   color: colors.textPrimary,
                   border: `1px solid ${colors.primary}40`,
+                  fontWeight: 600,
                 }}
               />
-            )}
+            ) : null}
+            {latestAvailableDate ? (
+              <Chip
+                size="small"
+                label={`Viimeisin istuntopäivä ${formatDate(latestAvailableDate)}`}
+                variant="outlined"
+                sx={{ fontWeight: 500 }}
+              />
+            ) : null}
+          </Box>
+        }
+        stats={
+          !loading && !error ? (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "repeat(2, minmax(0, 1fr))",
+                  lg: "repeat(3, minmax(0, 1fr))",
+                },
+                gap: 1.5,
+              }}
+            >
+              <MetricCard
+                label="Istuntoja"
+                value={sessionSummary.totalSessions}
+                icon={<EventIcon fontSize="small" />}
+              />
+              <MetricCard
+                label="Asiakohtia"
+                value={sessionSummary.totalSections}
+                icon={<TimelineIcon fontSize="small" />}
+              />
+              <MetricCard
+                label="Näkymä"
+                value={viewModeLabel}
+                icon={<CalendarMonthIcon fontSize="small" />}
+                caption={
+                  vaskiLatestSpeechDate
+                    ? speechContentLatestLabel(formatDate(vaskiLatestSpeechDate))
+                    : undefined
+                }
+              />
+            </Box>
+          ) : null
+        }
+      />
+
+      <ToolbarCard sx={{ mb: 3 }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              md: viewMode === "calendar" ? "auto" : "auto minmax(220px, 240px)",
+            },
+            gap: 1.25,
+            alignItems: "start",
+          }}
+        >
+          <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
             <ToggleButtonGroup
               value={viewMode}
               exclusive
@@ -2544,8 +2642,8 @@ export default () => {
               />
             )}
           </Box>
-        }
-      />
+        </Box>
+      </ToolbarCard>
 
       {/* Calendar view */}
       {viewMode === "calendar" && !datesLoading && (

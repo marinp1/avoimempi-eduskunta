@@ -42,7 +42,7 @@ import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
 import theme, { colors } from "#client/theme";
-import { VoteMarginBar } from "#client/theme/components";
+import { MetricCard, VoteMarginBar } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { isSafeExternalUrl } from "#client/utils/eduskunta-links";
 import { apiFetch } from "#client/utils/fetch";
@@ -774,50 +774,6 @@ const tabA11yProps = (index: number) => ({
   id: `representative-tab-${index}`,
   "aria-controls": `representative-tabpanel-${index}`,
 });
-
-const MetricCard: React.FC<{
-  label: string;
-  value: React.ReactNode;
-  caption?: React.ReactNode;
-}> = ({ label, value, caption }) => {
-  const themedColors = useThemedColors();
-
-  return (
-    <Box
-      sx={{
-        p: 1.5,
-        borderRadius: 2,
-        border: `1px solid ${themedColors.dataBorder}`,
-        bgcolor: themedColors.backgroundPaper,
-      }}
-    >
-      <Typography
-        variant="caption"
-        sx={{ color: themedColors.textSecondary, display: "block", mb: 0.5 }}
-      >
-        {label}
-      </Typography>
-      <Typography
-        sx={{
-          fontSize: "1.25rem",
-          fontWeight: 700,
-          color: themedColors.textPrimary,
-          lineHeight: 1.2,
-        }}
-      >
-        {value}
-      </Typography>
-      {caption ? (
-        <Typography
-          variant="caption"
-          sx={{ color: themedColors.textTertiary, display: "block", mt: 0.5 }}
-        >
-          {caption}
-        </Typography>
-      ) : null}
-    </Box>
-  );
-};
 
 const ResultCountAnnouncer: React.FC<{ message: string }> = ({ message }) => (
   <Box aria-live="polite" role="status" sx={visuallyHiddenSx}>

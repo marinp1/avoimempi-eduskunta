@@ -31,7 +31,7 @@ import {
   DataCard,
   EmptyState,
   MetricCard,
-  PageHeader,
+  PageIntro,
 } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { formatDateFi } from "#client/utils/date-time";
@@ -403,130 +403,116 @@ const TimelineSelector: React.FC<{
   );
 };
 
-const GovernmentHero: React.FC<{
+const GovernmentPageHero: React.FC<{
   government: ActiveGovernmentResponse["government"];
+  selectedDate: string;
+  isToday: boolean;
+  totalGovernments: number;
   onShowMinisters: () => void;
   onBrowseArchive: () => void;
-}> = ({ government, onShowMinisters, onBrowseArchive }) => {
+  onReturnToCurrent: () => void;
+}> = ({
+  government,
+  selectedDate,
+  isToday,
+  totalGovernments,
+  onShowMinisters,
+  onBrowseArchive,
+  onReturnToCurrent,
+}) => {
   const { t } = useScopedTranslation("hallitukset");
   const tc = useThemedColors();
 
   if (!government) return null;
 
   return (
-    <Box
-      sx={{
-        position: "relative",
-        overflow: "hidden",
-        borderRadius: 3,
-        p: { xs: 2.25, md: 3.5 },
-        color: "white",
-        background: `
-          radial-gradient(1200px 340px at -10% -20%, rgba(255,255,255,0.16), transparent 55%),
-          radial-gradient(520px 260px at 100% 0%, rgba(232,145,58,0.26), transparent 60%),
-          linear-gradient(125deg, ${tc.primary} 0%, #223965 58%, #34558A 100%)
-        `,
-        boxShadow: "0 14px 36px rgba(15, 27, 51, 0.22)",
-      }}
-    >
-      <Stack spacing={2}>
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={1}
-          sx={{ alignItems: { xs: "flex-start", sm: "center" } }}
-        >
+    <PageIntro
+      title={government.name}
+      subtitle={`${t("startedOn", {
+        value: formatDateFi(government.start_date),
+      })} • ${formatDateRange(government.start_date, government.end_date)}`}
+      eyebrow={t("title")}
+      icon={<AccountBalanceIcon sx={{ fontSize: 22 }} />}
+      variant="feature"
+      chips={
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           <Chip
-            label={
-              government.is_current ? t("current") : t("selectedGovernment")
-            }
+            label={government.is_current ? t("current") : t("selectedGovernment")}
             size="small"
-            sx={{
-              bgcolor: "rgba(255,255,255,0.2)",
-              color: "white",
-              fontWeight: 700,
-              border: "1px solid rgba(255,255,255,0.28)",
-              "& .MuiChip-label": {
-                color: "inherit",
-              },
-            }}
+            sx={{ fontWeight: 700 }}
+          />
+          <Chip
+            label={formatDateFi(selectedDate)}
+            size="small"
+            icon={<TodayIcon sx={{ fontSize: 14 }} />}
+            sx={{ fontWeight: 700 }}
           />
         </Stack>
-
-        <Box>
-          <Typography
-            variant="h3"
-            sx={{
-              fontSize: { xs: "1.75rem", md: "2.5rem" },
-              fontWeight: 700,
-              lineHeight: 1.1,
-              letterSpacing: "-0.02em",
-              color: "#fff",
-            }}
-          >
-            {government.name}
-          </Typography>
-          <Typography
-            variant="body1"
-            sx={{ color: "rgba(255,255,255,0.94)", mt: 1.25, maxWidth: 760 }}
-          >
-            {t("startedOn", { value: formatDateFi(government.start_date) })}
-            {" • "}
-            {formatDateRange(government.start_date, government.end_date)}
-          </Typography>
-        </Box>
-
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          {government.parties.map((party) => (
-            <Chip
-              key={party}
-              label={party}
-              sx={{
-                bgcolor: "rgba(255,255,255,0.18)",
-                color: "white",
-                border: "1px solid rgba(255,255,255,0.22)",
-                fontWeight: 600,
-                "& .MuiChip-label": {
-                  color: "inherit",
-                },
-              }}
-            />
-          ))}
-        </Stack>
-
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.25}>
+      }
+      actions={
+        <>
+          {!isToday && (
+            <Button
+              variant="outlined"
+              onClick={onReturnToCurrent}
+              sx={{ textTransform: "none", fontWeight: 700 }}
+            >
+              {t("returnToCurrentGovernment")}
+            </Button>
+          )}
           <Button
             variant="contained"
             onClick={onShowMinisters}
-            sx={{
-              alignSelf: "flex-start",
-              textTransform: "none",
-              bgcolor: "white",
-              color: tc.primary,
-              fontWeight: 700,
-              "&:hover": { bgcolor: "rgba(255,255,255,0.92)" },
-            }}
+            sx={{ textTransform: "none", fontWeight: 700 }}
           >
             {t("showMinisters")}
           </Button>
           <Button
             variant="outlined"
             onClick={onBrowseArchive}
-            sx={{
-              alignSelf: "flex-start",
-              textTransform: "none",
-              color: "white",
-              borderColor: "rgba(255,255,255,0.32)",
-              "&:hover": {
-                borderColor: "rgba(255,255,255,0.46)",
-                bgcolor: "rgba(255,255,255,0.08)",
-              },
-            }}
+            sx={{ textTransform: "none", fontWeight: 700 }}
           >
             {t("browseHistory")}
           </Button>
+        </>
+      }
+      stats={
+        <GovernmentSummaryCards
+          government={government}
+          totalGovernments={totalGovernments}
+        />
+      }
+      footer={
+        <Stack spacing={1.25}>
+          {!isToday && (
+            <Alert
+              severity="info"
+              icon={<HistoryIcon />}
+              sx={{
+                border: `1px solid ${tc.dataBorder}`,
+                bgcolor: `${tc.info}08`,
+              }}
+            >
+              {t("viewingHistoricalDate", { value: formatDateFi(selectedDate) })}
+            </Alert>
+          )}
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {government.parties.map((party) => (
+              <Chip
+                key={party}
+                label={party}
+                size="small"
+                sx={{
+                  fontWeight: 600,
+                  bgcolor: `${tc.primary}10`,
+                  color: tc.primary,
+                }}
+              />
+            ))}
+          </Stack>
         </Stack>
-      </Stack>
-    </Box>
+      }
+    />
   );
 };
 
@@ -1126,30 +1112,52 @@ export default () => {
 
   return (
     <Box>
-      <PageHeader title={t("title")} subtitle={t("subtitle")} />
-
       <Stack spacing={spacing.md}>
-        {!isToday && (
-          <Alert
-            severity="info"
-            icon={<HistoryIcon />}
-            action={
-              <Button
-                color="inherit"
-                size="small"
-                onClick={() => setSelectedDate(currentDate)}
-                sx={{ textTransform: "none", fontWeight: 700 }}
-              >
-                {t("returnToCurrentGovernment")}
-              </Button>
+        {activeGovernment ? (
+          <GovernmentPageHero
+            government={activeGovernment}
+            selectedDate={selectedDate}
+            isToday={isToday}
+            totalGovernments={governments.length}
+            onShowMinisters={() =>
+              ministersRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              })
             }
-            sx={{
-              border: `1px solid ${tc.dataBorder}`,
-              bgcolor: `${tc.info}08`,
-            }}
-          >
-            {t("viewingHistoricalDate", { value: formatDateFi(selectedDate) })}
-          </Alert>
+            onBrowseArchive={() =>
+              archiveRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              })
+            }
+            onReturnToCurrent={() => setSelectedDate(currentDate)}
+          />
+        ) : (
+          <PageIntro
+            title={t("title")}
+            subtitle={t("subtitle")}
+            icon={<AccountBalanceIcon sx={{ fontSize: 22 }} />}
+            chips={
+              <Chip
+                label={formatDateFi(selectedDate)}
+                size="small"
+                icon={<TodayIcon sx={{ fontSize: 14 }} />}
+                sx={{ fontWeight: 700 }}
+              />
+            }
+            actions={
+              !isToday ? (
+                <Button
+                  variant="outlined"
+                  onClick={() => setSelectedDate(currentDate)}
+                  sx={{ textTransform: "none", fontWeight: 700 }}
+                >
+                  {t("returnToCurrentGovernment")}
+                </Button>
+              ) : undefined
+            }
+          />
         )}
 
         {loadingActiveGovernment ? (
@@ -1162,27 +1170,6 @@ export default () => {
           <Alert severity="error">{activeGovernmentError}</Alert>
         ) : activeGovernment ? (
           <>
-            <GovernmentHero
-              government={activeGovernment}
-              onShowMinisters={() =>
-                ministersRef.current?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                })
-              }
-              onBrowseArchive={() =>
-                archiveRef.current?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                })
-              }
-            />
-
-            <GovernmentSummaryCards
-              government={activeGovernment}
-              totalGovernments={governments.length}
-            />
-
             <Box ref={ministersRef}>
               <GovernmentMinistersSection
                 members={activeMembers}

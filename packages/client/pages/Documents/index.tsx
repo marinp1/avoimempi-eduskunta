@@ -1,8 +1,9 @@
-import { Search as SearchIcon } from "@mui/icons-material";
+import { DescriptionOutlined, Search as SearchIcon } from "@mui/icons-material";
 import {
   Alert,
   Autocomplete,
   Box,
+  Chip,
   CircularProgress,
   FormControl,
   InputAdornment,
@@ -23,6 +24,7 @@ import {
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors } from "#client/theme/index";
+import { PageIntro } from "#client/theme/components";
 import { apiFetch } from "#client/utils/fetch";
 import {
   CommitteeReportCard,
@@ -45,9 +47,7 @@ import {
 import {
   DocumentsEmptyState,
   DocumentsFilterPanel,
-  DocumentsHero,
   DocumentsLoadingState,
-  DocumentsResultsToolbar,
 } from "./components";
 
 type SubjectsRoute =
@@ -806,29 +806,109 @@ export default function Documents() {
   return (
     <Box sx={{ p: { xs: 1.5, md: 2.5 } }}>
       <Stack spacing={3}>
-        <DocumentsHero
+        <PageIntro
           title={t("title")}
           subtitle={t("subtitle")}
-          resultsSummary={t("heroSummary", { count: totalCount })}
-          contextLabel={
-            selectedHallituskausi
-              ? t("hallituskausiLabel", {
-                  value: selectedHallituskausi.label,
-                })
-              : t("browseTypeLabel", {
-                  value: getDocumentTypeLabel(documentType),
-                })
+          eyebrow={t("browseTypeLabel", {
+            value: getDocumentTypeLabel(documentType),
+          })}
+          icon={<DescriptionOutlined sx={{ fontSize: 22 }} />}
+          chips={
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Chip
+                label={t("resultsSummary", {
+                  shown: items.length,
+                  total: totalCount,
+                  count: totalCount,
+                })}
+                sx={{
+                  backgroundColor: `${colors.primary}10`,
+                  color: colors.primary,
+                  fontWeight: 700,
+                }}
+              />
+              <Chip
+                label={
+                  selectedHallituskausi
+                    ? t("hallituskausiLabel", {
+                        value: selectedHallituskausi.label,
+                      })
+                    : t("browseTypeLabel", {
+                        value: getDocumentTypeLabel(documentType),
+                      })
+                }
+                variant="outlined"
+                sx={{
+                  borderColor: `${colors.primary}30`,
+                  backgroundColor: "rgba(255,255,255,0.72)",
+                  color: colors.textSecondary,
+                }}
+              />
+            </Stack>
           }
+          actions={
+            canClearFilters ? (
+              <Chip
+                label={t("clearFilters")}
+                onClick={clearFilters}
+                onDelete={clearFilters}
+                sx={{
+                  backgroundColor: "rgba(255,255,255,0.8)",
+                  color: colors.primary,
+                  fontWeight: 700,
+                }}
+              />
+            ) : undefined
+          }
+          meta={
+            <Stack spacing={1}>
+              {selectedHallituskausi ? (
+                <Alert
+                  severity="info"
+                  sx={{
+                    py: 0,
+                    borderRadius: 1.5,
+                    backgroundColor: "rgba(37, 99, 235, 0.08)",
+                  }}
+                >
+                  {t("hallituskausiNotice", {
+                    value: selectedHallituskausi.label,
+                  })}
+                </Alert>
+              ) : null}
+              {activeFilters.length > 0 ? (
+                <Box>
+                  <Chip
+                    label={t("activeFilters")}
+                    size="small"
+                    sx={{
+                      mb: 1,
+                      backgroundColor: `${colors.primary}08`,
+                      color: colors.primary,
+                      fontWeight: 700,
+                    }}
+                  />
+                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                    {activeFilters.map((filter) => (
+                      <Chip
+                        key={filter.key}
+                        label={filter.label}
+                        onDelete={filter.onDelete}
+                        sx={{
+                          backgroundColor: "rgba(255,255,255,0.84)",
+                          color: colors.primary,
+                        }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              ) : null}
+            </Stack>
+          }
+          variant="feature"
         />
 
         <DocumentsFilterPanel
-          title={t("filtersTitle")}
-          helperText={t("filtersHelper")}
-          activeFiltersTitle={t("activeFilters")}
-          clearLabel={t("clearFilters")}
-          canClear={canClearFilters}
-          onClear={clearFilters}
-          activeFilters={activeFilters}
           secondaryFilters={
             <>
               {documentType === "committee-reports" && (
@@ -1035,29 +1115,6 @@ export default function Documents() {
             </Select>
           </FormControl>
         </DocumentsFilterPanel>
-
-        <DocumentsResultsToolbar
-          resultsSummary={t("resultsSummary", {
-            shown: items.length,
-            total: totalCount,
-            count: totalCount,
-          })}
-          typeLabel={getDocumentTypeLabel(documentType)}
-        />
-
-        {selectedHallituskausi && (
-          <Alert
-            severity="info"
-            sx={{
-              borderRadius: 2,
-              backgroundColor: "rgba(37, 99, 235, 0.08)",
-            }}
-          >
-            {t("hallituskausiNotice", {
-              value: selectedHallituskausi.label,
-            })}
-          </Alert>
-        )}
 
         {loading && page === 1 ? (
           <DocumentsLoadingState />

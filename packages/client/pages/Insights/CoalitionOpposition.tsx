@@ -1,5 +1,4 @@
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
   Alert,
@@ -8,7 +7,6 @@ import {
   Chip,
   CircularProgress,
   Collapse,
-  IconButton,
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
@@ -26,6 +24,7 @@ import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
+import { PanelHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 
@@ -169,32 +168,13 @@ export default function CoalitionOpposition({
 
   return (
     <Box sx={{ p: spacing.lg, minHeight: "100vh" }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: spacing.lg,
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
-          <AccountBalanceIcon sx={{ fontSize: 36, color: colors.primary }} />
-          <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            {tInsights("coalitionOpposition.title")}
-          </Typography>
-        </Box>
-        <IconButton onClick={onClose} size="large">
-          <CloseIcon />
-        </IconButton>
-      </Box>
-
-      <Typography
-        variant="body1"
-        color="text.secondary"
+      <PanelHeader
+        title={tInsights("coalitionOpposition.title")}
+        subtitle={tInsights("coalitionOpposition.description")}
+        icon={<AccountBalanceIcon sx={{ fontSize: 28, color: colors.primary }} />}
+        onClose={onClose}
         sx={{ mb: spacing.lg }}
-      >
-        {tInsights("coalitionOpposition.description")}
-      </Typography>
+      />
       {selectedHallituskausi && (
         <Alert severity="info" sx={{ mb: spacing.md }}>
           Rajattu hallituskauteen: {selectedHallituskausi.label}

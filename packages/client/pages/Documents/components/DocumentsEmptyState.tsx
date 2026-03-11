@@ -28,7 +28,6 @@ export const DocumentsEmptyState: React.FC<{
       <Typography
         variant="h5"
         sx={{
-          fontFamily: '"Zilla Slab", Georgia, serif',
           fontWeight: 700,
           color: colors.textPrimary,
         }}

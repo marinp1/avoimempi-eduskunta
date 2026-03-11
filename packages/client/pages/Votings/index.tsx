@@ -1,9 +1,7 @@
 import { Box, LinearProgress } from "@mui/material";
 import React from "react";
-import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors } from "#client/theme";
 import { InlineSpinner } from "#client/theme/components";
-import { VotingsHero } from "./components/VotingsHero";
 import { VoteResults } from "./VoteResults";
 import {
   buildVotingsUrl,
@@ -15,7 +13,6 @@ import {
 } from "./url-state";
 
 export default () => {
-  const { t } = useScopedTranslation("votings");
   const getUrlState = React.useCallback(
     () => parseVotingsUrlState(window.location.search),
     [],
@@ -77,8 +74,6 @@ export default () => {
 
   return (
     <Box>
-      <VotingsHero title={t("title")} subtitle={t("subtitle")} />
-
       {isStale && (
         <LinearProgress
           sx={{

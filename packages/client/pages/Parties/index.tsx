@@ -27,7 +27,7 @@ import {
   DataCard,
   EmptyState,
   MetricCard,
-  PageHeader,
+  PageIntro,
 } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
@@ -290,60 +290,76 @@ const Parties = () => {
   if (error)
     return (
       <Box>
-        <PageHeader title={tParties("title")} subtitle={tParties("subtitle")} />
+        <PageIntro title={tParties("title")} subtitle={tParties("subtitle")} />
         <Alert severity="error">{error}</Alert>
       </Box>
     );
 
   return (
     <Box>
-      <PageHeader title={tParties("title")} subtitle={tParties("subtitle")} />
-
-      {selectedHallituskausi && (
-        <Alert severity="info" sx={{ mb: spacing.md }}>
-          {tParties("hallituskausiNotice", {
-            period: selectedHallituskausi.label,
-          })}
-        </Alert>
-      )}
-
-      <Grid container spacing={spacing.md} sx={{ mb: spacing.md }}>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <MetricCard
-            label={tParties("totalParties")}
-            value={parties.length}
-            icon={<GroupsIcon fontSize="small" />}
-          />
-        </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <MetricCard
-            label={tParties("totalMembers")}
-            value={summary.totalMembers}
-            icon={<AccountBalanceIcon fontSize="small" />}
-          />
-        </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <MetricCard
-            label={tParties("governmentBreakdown")}
-            value={`${summary.governmentParties} / ${summary.oppositionParties}`}
-            icon={<PieChartOutlineIcon fontSize="small" />}
-          />
-        </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <MetricCard
-            label={tParties("weightedParticipation")}
-            value={`${summary.weightedParticipation.toFixed(1)}%`}
-            icon={<InsightsIcon fontSize="small" />}
-          />
-        </Grid>
-      </Grid>
-
-      <Typography
-        variant="body2"
-        sx={{ color: themedColors.textSecondary, mb: spacing.md }}
-      >
-        {scopeText}
-      </Typography>
+      <PageIntro
+        title={tParties("title")}
+        subtitle={tParties("subtitle")}
+        icon={<GroupsIcon sx={{ fontSize: 22 }} />}
+        chips={
+          selectedHallituskausi ? (
+            <Chip
+              size="small"
+              label={selectedHallituskausi.label}
+              sx={{ fontWeight: 700 }}
+            />
+          ) : undefined
+        }
+        stats={
+          <Grid container spacing={spacing.md}>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <MetricCard
+                label={tParties("totalParties")}
+                value={parties.length}
+                icon={<GroupsIcon fontSize="small" />}
+              />
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <MetricCard
+                label={tParties("totalMembers")}
+                value={summary.totalMembers}
+                icon={<AccountBalanceIcon fontSize="small" />}
+              />
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <MetricCard
+                label={tParties("governmentBreakdown")}
+                value={`${summary.governmentParties} / ${summary.oppositionParties}`}
+                icon={<PieChartOutlineIcon fontSize="small" />}
+              />
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <MetricCard
+                label={tParties("weightedParticipation")}
+                value={`${summary.weightedParticipation.toFixed(1)}%`}
+                icon={<InsightsIcon fontSize="small" />}
+              />
+            </Grid>
+          </Grid>
+        }
+        footer={
+          <Box>
+            {selectedHallituskausi && (
+              <Alert severity="info" sx={{ mb: 1.5 }}>
+                {tParties("hallituskausiNotice", {
+                  period: selectedHallituskausi.label,
+                })}
+              </Alert>
+            )}
+            <Typography
+              variant="body2"
+              sx={{ color: themedColors.textSecondary }}
+            >
+              {scopeText}
+            </Typography>
+          </Box>
+        }
+      />
 
       <Grid container spacing={spacing.md} sx={{ mb: spacing.md }}>
         <Grid size={{ xs: 12, md: 4 }}>

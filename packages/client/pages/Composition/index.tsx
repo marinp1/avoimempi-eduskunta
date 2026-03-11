@@ -38,7 +38,13 @@ import {
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { PageHeader, DataCard, EmptyState, MetricCard } from "#client/theme/components";
+import {
+  PageIntro,
+  DataCard,
+  EmptyState,
+  MetricCard,
+  ToolbarCard,
+} from "#client/theme/components";
 import { colors, commonStyles, spacing } from "#client/theme";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
@@ -799,63 +805,12 @@ export default () => {
 
   return (
     <Box>
-      <PageHeader title={t("title")} subtitle={t("subtitle")} />
-
-      <DataCard sx={{ p: { xs: 2, md: 2.5 }, mb: spacing.md }}>
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={2}
-          justifyContent="space-between"
-          alignItems={{ xs: "flex-start", md: "flex-start" }}
-        >
-          <Box sx={{ minWidth: 0 }}>
-            <Typography
-              variant="overline"
-              sx={{
-                color: themedColors.primary,
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-              }}
-            >
-              {t("context.eyebrow")}
-            </Typography>
-            <Typography
-              variant="h6"
-              sx={{ color: themedColors.textPrimary, fontWeight: 700, mb: 0.75 }}
-            >
-              {selectedHallituskausi
-                ? selectedHallituskausi.label
-                : isToday
-                  ? t("context.current")
-                  : t("context.historical")}
-            </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <Chip
-                size="small"
-                label={t("details.analysis.selectedDate", {
-                  value: formatFinnishDate(date),
-                })}
-                sx={{ fontWeight: 600 }}
-              />
-              {selectedHallituskausi && (
-                <Chip
-                  size="small"
-                  icon={<AccountBalanceIcon sx={{ fontSize: 14 }} />}
-                  label={selectedHallituskausi.name}
-                  sx={{ fontWeight: 600 }}
-                />
-              )}
-              {!isToday && !selectedHallituskausi && (
-                <Chip
-                  size="small"
-                  icon={<HistoryEduIcon sx={{ fontSize: 14 }} />}
-                  label={t("historicalView")}
-                  sx={{ fontWeight: 600 }}
-                />
-              )}
-            </Stack>
-          </Box>
-
+      <PageIntro
+        eyebrow={t("context.eyebrow")}
+        title={t("title")}
+        subtitle={t("subtitle")}
+        icon={<AccountBalanceIcon fontSize="small" />}
+        utility={
           <Button
             variant="outlined"
             size="small"
@@ -867,18 +822,97 @@ export default () => {
           >
             {t("returnToPresent")}
           </Button>
-        </Stack>
+        }
+        chips={
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Chip
+              size="small"
+              label={t("details.analysis.selectedDate", {
+                value: formatFinnishDate(date),
+              })}
+              sx={{ fontWeight: 600 }}
+            />
+            {selectedHallituskausi ? (
+              <Chip
+                size="small"
+                icon={<AccountBalanceIcon sx={{ fontSize: 14 }} />}
+                label={selectedHallituskausi.name}
+                sx={{ fontWeight: 600 }}
+              />
+            ) : null}
+            {!selectedHallituskausi ? (
+              <Chip
+                size="small"
+                icon={
+                  isToday ? (
+                    <CheckCircleIcon sx={{ fontSize: 14 }} />
+                  ) : (
+                    <HistoryEduIcon sx={{ fontSize: 14 }} />
+                  )
+                }
+                label={isToday ? t("context.current") : t("historicalView")}
+                sx={{ fontWeight: 600 }}
+              />
+            ) : null}
+            {stats.largestParty ? (
+              <Chip
+                size="small"
+                label={t("snapshot.leadingPartySeats", {
+                  party: stats.largestParty.partyName,
+                  count: stats.largestParty.total,
+                })}
+                sx={{ fontWeight: 600 }}
+              />
+            ) : null}
+          </Stack>
+        }
+        stats={
+          !loading && !error ? (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "repeat(2, minmax(0, 1fr))",
+                  xl: "repeat(4, minmax(0, 1fr))",
+                },
+                gap: 1.5,
+              }}
+            >
+              <MetricCard
+                label={t("snapshot.totalMembers")}
+                value={stats.totalMembers}
+                icon={<TableRowsIcon fontSize="small" />}
+              />
+              <MetricCard
+                label={t("snapshot.governmentMembers")}
+                value={stats.governmentMembers}
+                icon={<CheckCircleIcon fontSize="small" />}
+              />
+              <MetricCard
+                label={t("snapshot.oppositionMembers")}
+                value={stats.oppositionMembers}
+                icon={<HistoryEduIcon fontSize="small" />}
+              />
+              <MetricCard
+                label={t("snapshot.partyCount")}
+                value={stats.partyCount}
+                icon={<AccountBalanceIcon fontSize="small" />}
+              />
+            </Box>
+          ) : null
+        }
+      />
 
-        <Box sx={{ mt: 2 }}>
-          <TimelineSelector
-            hallituskaudet={hallituskaudet}
-            selectedHallituskausi={selectedHallituskausi}
-            date={date}
-            todayIso={todayIso}
-            onDateChange={handleDateChange}
-          />
-        </Box>
-      </DataCard>
+      <ToolbarCard sx={{ mb: spacing.md }}>
+        <TimelineSelector
+          hallituskaudet={hallituskaudet}
+          selectedHallituskausi={selectedHallituskausi}
+          date={date}
+          todayIso={todayIso}
+          onDateChange={handleDateChange}
+        />
+      </ToolbarCard>
 
       <DataCard sx={{ p: 2.5, mb: spacing.md }}>
         <Typography
@@ -1043,45 +1077,6 @@ export default () => {
         </Alert>
       ) : (
         <>
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, 1fr)",
-                xl: "repeat(5, 1fr)",
-              },
-              gap: 2,
-              mb: spacing.md,
-            }}
-          >
-            <MetricCard
-              label={t("snapshot.totalMembers")}
-              value={stats.totalMembers}
-              icon={<TableRowsIcon fontSize="small" />}
-            />
-            <MetricCard
-              label={t("snapshot.governmentMembers")}
-              value={stats.governmentMembers}
-              icon={<CheckCircleIcon fontSize="small" />}
-            />
-            <MetricCard
-              label={t("snapshot.oppositionMembers")}
-              value={stats.oppositionMembers}
-              icon={<HistoryEduIcon fontSize="small" />}
-            />
-            <MetricCard
-              label={t("snapshot.partyCount")}
-              value={stats.partyCount}
-              icon={<AccountBalanceIcon fontSize="small" />}
-            />
-            <MetricCard
-              label={t("snapshot.largestParty")}
-              value={stats.largestParty?.partyName ?? "-"}
-              icon={<AccountBalanceIcon fontSize="small" />}
-            />
-          </Box>
-
           <Box
             sx={{
               display: "grid",
