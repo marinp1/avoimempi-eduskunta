@@ -21,6 +21,7 @@ import {
 import React, { useCallback, useEffect, useState } from "react";
 import { DocumentCard, RelatedVotings } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
+import { SourceText } from "#client/components/SourceText";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import {
   isDateWithinHallituskausi,
@@ -2932,7 +2933,7 @@ const Home = () => {
                                     background: colors.backgroundDefault,
                                   }}
                                 >
-                                  <Typography
+                                  <SourceText
                                     sx={{
                                       fontSize: "0.8125rem",
                                       color: colors.textPrimary,
@@ -2941,7 +2942,7 @@ const Home = () => {
                                     }}
                                   >
                                     {speech.content}
-                                  </Typography>
+                                  </SourceText>
                                 </Box>
                               )}
                             </Box>

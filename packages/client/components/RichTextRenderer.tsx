@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
-import { colors } from "#client/theme";
+import { colors, serifFontFamily } from "#client/theme";
 import {
   parseRichTextDocument,
   type RichTextDocument,
@@ -116,7 +116,7 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
     return (
       <Typography
         variant={paragraphVariant}
-        sx={{ color: colors.textPrimary, whiteSpace: "pre-wrap" }}
+        sx={{ color: colors.textPrimary, whiteSpace: "pre-wrap", fontFamily: serifFontFamily }}
       >
         {fallbackText}
       </Typography>
@@ -136,7 +136,7 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
             <Typography
               key={keyPrefix}
               variant={paragraphVariant}
-              sx={{ mt: marginTop, color: colors.textPrimary }}
+              sx={{ mt: marginTop, color: colors.textPrimary, fontFamily: serifFontFamily }}
             >
               {renderInlines(block.inlines, keyPrefix)}
             </Typography>

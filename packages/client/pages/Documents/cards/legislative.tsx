@@ -18,6 +18,7 @@ import { useState } from "react";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
+import { SourceText } from "#client/components/SourceText";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
@@ -120,7 +121,7 @@ export function LegislativeInitiativeCard({
             alignItems="flex-start"
             flexWrap="wrap"
           >
-            <Typography
+            <SourceText
               variant="h6"
               sx={{
                 flex: 1,
@@ -130,7 +131,7 @@ export function LegislativeInitiativeCard({
               }}
             >
               {item.title || t("noTitle")}
-            </Typography>
+            </SourceText>
             <Chip
               label={item.parliament_identifier}
               size="small"

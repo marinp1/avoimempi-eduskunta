@@ -23,6 +23,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { DocumentCard, RelatedVotings } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
+import { SourceText } from "#client/components/SourceText";
 import { VotingSubRow } from "#client/components/VotingCard";
 import {
   isDateWithinHallituskausi,
@@ -2797,7 +2798,7 @@ export default () => {
                                         background: colors.backgroundDefault,
                                       }}
                                     >
-                                      <Typography
+                                      <SourceText
                                         sx={{
                                           fontSize: "0.8125rem",
                                           color: colors.textPrimary,
@@ -2806,7 +2807,7 @@ export default () => {
                                         }}
                                       >
                                         {speech.content}
-                                      </Typography>
+                                      </SourceText>
                                     </Box>
                                   )}
                                 </Box>
@@ -3372,7 +3373,7 @@ export default () => {
                                               )}
                                             </Box>
                                             {speech.content && (
-                                              <Typography
+                                              <SourceText
                                                 sx={{
                                                   fontSize: "0.8125rem",
                                                   color: colors.textPrimary,
@@ -3381,7 +3382,7 @@ export default () => {
                                                 }}
                                               >
                                                 {speech.content}
-                                              </Typography>
+                                              </SourceText>
                                             )}
                                           </Box>
                                         );

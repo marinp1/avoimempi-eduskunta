@@ -83,6 +83,43 @@ export const App: React.FC = () => {
       <CssBaseline />
       <GlobalStyles
         styles={{
+          "@font-face": [
+            {
+              fontFamily: "Zilla Slab",
+              src: "url('/fonts/Zilla_Slab/ZillaSlab-Regular.ttf') format('truetype')",
+              fontWeight: 400,
+              fontStyle: "normal",
+              fontDisplay: "swap",
+            },
+            {
+              fontFamily: "Zilla Slab",
+              src: "url('/fonts/Zilla_Slab/ZillaSlab-Italic.ttf') format('truetype')",
+              fontWeight: 400,
+              fontStyle: "italic",
+              fontDisplay: "swap",
+            },
+            {
+              fontFamily: "Zilla Slab",
+              src: "url('/fonts/Zilla_Slab/ZillaSlab-Medium.ttf') format('truetype')",
+              fontWeight: 500,
+              fontStyle: "normal",
+              fontDisplay: "swap",
+            },
+            {
+              fontFamily: "Zilla Slab",
+              src: "url('/fonts/Zilla_Slab/ZillaSlab-SemiBold.ttf') format('truetype')",
+              fontWeight: 600,
+              fontStyle: "normal",
+              fontDisplay: "swap",
+            },
+            {
+              fontFamily: "Zilla Slab",
+              src: "url('/fonts/Zilla_Slab/ZillaSlab-Bold.ttf') format('truetype')",
+              fontWeight: 700,
+              fontStyle: "normal",
+              fontDisplay: "swap",
+            },
+          ] as unknown as Record<string, unknown>,
           "html, body, #root": {
             minHeight: "100%",
           },
