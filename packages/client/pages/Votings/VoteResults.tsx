@@ -19,15 +19,20 @@ import { useScopedTranslation } from "#client/i18n/scoped";
 import { DataCard, EmptyState, InlineSpinner, MetricCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
-import {
-  groupVotingRows,
-  isCloseVote,
-  type VotingListRow,
-} from "./model";
+import { VotingCard, type VotingCardData, VotingGroupCard } from "#client/components/VotingCard";
 import { VotingsControlBar } from "./components/VotingsControlBar";
 import { VotingsResultsSummary } from "./components/VotingsResultsSummary";
+import {
+  buildVotingViewModels,
+  getNextVisibleGroupCount,
+  getVisibleGroups,
+  groupVotingViewModels,
+  hasMoreGroups,
+  isCloseVote,
+  type VotingGroupViewModel,
+  type VotingListRow,
+} from "./model";
 import type { VotingSortMode } from "./url-state";
-import { VotingCard, type VotingCardData, VotingGroupCard } from "#client/components/VotingCard";
 
 type BrowseState = {
   loading: boolean;
@@ -49,6 +54,9 @@ type OverviewState = {
   data: VotingOverviewResponse | null;
 };
 
+const RESULT_GROUP_BATCH = 24;
+const OVERVIEW_GROUP_LIMIT = 4;
+
 const emptyBrowseState: BrowseState = { loading: false, error: null, rows: [] };
 const emptyFocusState: FocusVotingState = {
   loading: false,
@@ -61,24 +69,31 @@ const emptyOverviewState: OverviewState = {
   data: null,
 };
 
-const renderGroups = (groups: VotingListRow[][]) =>
+const renderGroups = (groups: VotingGroupViewModel[]) =>
   groups.map((group) =>
-    group.length === 1 ? (
-      <VotingCard key={group[0].id} voting={group[0] as VotingCardData} />
+    group.votes.length === 1 ? (
+      <VotingCard key={group.id} voting={group.votes[0] as VotingCardData} />
     ) : (
-      <VotingGroupCard
-        key={group.map((vote) => vote.id).join("-")}
-        votes={group as VotingCardData[]}
-      />
+      <VotingGroupCard key={group.id} votes={group.votes as VotingCardData[]} />
     ),
   );
 
 const OverviewSection: React.FC<{
   title: string;
   description: string;
-  rows: VotingListRow[];
-}> = ({ title, description, rows }) => {
-  const groupedRows = React.useMemo(() => groupVotingRows(rows), [rows]);
+  groups: VotingGroupViewModel[];
+}> = ({ title, description, groups }) => {
+  const { t: tCommon } = useScopedTranslation("common");
+  const [expanded, setExpanded] = React.useState(false);
+
+  React.useEffect(() => {
+    setExpanded(false);
+  }, [groups]);
+
+  const visibleGroups = React.useMemo(
+    () => (expanded ? groups : getVisibleGroups(groups, OVERVIEW_GROUP_LIMIT)),
+    [expanded, groups],
+  );
 
   return (
     <DataCard sx={{ p: { xs: 2, sm: 2.5 } }}>
@@ -102,14 +117,23 @@ const OverviewSection: React.FC<{
           </Box>
           <Chip
             size="small"
-            label={rows.length}
+            label={groups.length}
             sx={{ fontWeight: 700, alignSelf: { xs: "flex-start", sm: "auto" } }}
           />
         </Box>
-        {groupedRows.length === 0 ? (
+
+        {visibleGroups.length === 0 ? (
           <EmptyState title={title} description={description} />
         ) : (
-          <Stack spacing={1.25}>{renderGroups(groupedRows)}</Stack>
+          <Stack spacing={1.25}>{renderGroups(visibleGroups)}</Stack>
+        )}
+
+        {!expanded && hasMoreGroups(groups, OVERVIEW_GROUP_LIMIT) && (
+          <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
+            <Button size="small" onClick={() => setExpanded(true)}>
+              {tCommon("showMore")}
+            </Button>
+          </Box>
         )}
       </Stack>
     </DataCard>
@@ -155,6 +179,10 @@ export const VoteResults: React.FC<{
     React.useState<FocusVotingState>(emptyFocusState);
   const [overviewState, setOverviewState] =
     React.useState<OverviewState>(emptyOverviewState);
+  const [visibleResultGroupCount, setVisibleResultGroupCount] =
+    React.useState(RESULT_GROUP_BATCH);
+
+  const resultsSentinelRef = React.useRef<HTMLDivElement | null>(null);
 
   const normalizedQuery = query.trim();
   const hasEnoughQuery = normalizedQuery.length >= 3;
@@ -301,14 +329,44 @@ export const VoteResults: React.FC<{
     }
     return rows.filter((row) => {
       if (!selectedHallituskausi) return true;
-      return isDateWithinHallituskausi(row.start_time ?? "", selectedHallituskausi);
+      return isDateWithinHallituskausi(
+        row.start_time ?? "",
+        selectedHallituskausi,
+      );
     });
   }, [browseState.rows, focusVoting.row, selectedHallituskausi]);
 
-  const groupedResults = React.useMemo(
-    () => groupVotingRows(combinedRows),
+  const combinedViewModels = React.useMemo(
+    () => buildVotingViewModels(combinedRows),
     [combinedRows],
   );
+
+  const groupedResults = React.useMemo(
+    () => groupVotingViewModels(combinedViewModels),
+    [combinedViewModels],
+  );
+
+  const overviewGroups = React.useMemo(() => {
+    if (!overviewState.data) {
+      return {
+        recent: [] as VotingGroupViewModel[],
+        close: [] as VotingGroupViewModel[],
+        turnout: [] as VotingGroupViewModel[],
+      };
+    }
+
+    return {
+      recent: groupVotingViewModels(
+        buildVotingViewModels(overviewState.data.sections.recent),
+      ),
+      close: groupVotingViewModels(
+        buildVotingViewModels(overviewState.data.sections.close),
+      ),
+      turnout: groupVotingViewModels(
+        buildVotingViewModels(overviewState.data.sections.turnout),
+      ),
+    };
+  }, [overviewState.data]);
 
   const phaseOptions = React.useMemo(() => {
     if (isOverviewMode) {
@@ -316,7 +374,9 @@ export const VoteResults: React.FC<{
     }
 
     return Array.from(
-      new Set(combinedRows.map((row) => row.section_processing_phase).filter(Boolean)),
+      new Set(
+        combinedRows.map((row) => row.section_processing_phase).filter(Boolean),
+      ),
     )
       .sort((a, b) => a.localeCompare(b))
       .map((value) => ({ value }));
@@ -380,7 +440,8 @@ export const VoteResults: React.FC<{
       return tVotings("searchNeedsMore");
     }
     if (isOverviewMode) return tVotings("controlHints.overview");
-    if (!hasEnoughQuery && filtersActive) return tVotings("controlHints.filtersOnly");
+    if (!hasEnoughQuery && filtersActive)
+      return tVotings("controlHints.filtersOnly");
     return tVotings("searchHelp");
   }, [
     filtersActive,
@@ -390,8 +451,85 @@ export const VoteResults: React.FC<{
     tVotings,
   ]);
 
-  const loading = overviewState.loading || browseState.loading || focusVoting.loading;
+  const loading =
+    overviewState.loading || browseState.loading || focusVoting.loading;
   const error = overviewState.error || browseState.error || focusVoting.error;
+
+  const loadMoreResultGroups = React.useCallback(() => {
+    setVisibleResultGroupCount((currentCount) =>
+      getNextVisibleGroupCount(
+        currentCount,
+        groupedResults.length,
+        RESULT_GROUP_BATCH,
+      ),
+    );
+  }, [groupedResults.length]);
+
+  React.useEffect(() => {
+    setVisibleResultGroupCount(RESULT_GROUP_BATCH);
+  }, [
+    focusVotingId,
+    groupedResults.length,
+    hasEnoughQuery,
+    isOverviewMode,
+    normalizedQuery,
+    phaseFilter,
+    sessionFilter,
+    sortMode,
+  ]);
+
+  React.useEffect(() => {
+    if (isOverviewMode || !hasMoreGroups(groupedResults, visibleResultGroupCount)) {
+      return;
+    }
+
+    const sentinel = resultsSentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          loadMoreResultGroups();
+        }
+      },
+      {
+        rootMargin: "400px 0px",
+      },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [
+    groupedResults,
+    isOverviewMode,
+    loadMoreResultGroups,
+    visibleResultGroupCount,
+  ]);
+
+  const visibleResultGroups = React.useMemo(
+    () => getVisibleGroups(groupedResults, visibleResultGroupCount),
+    [groupedResults, visibleResultGroupCount],
+  );
+
+  const applyPhaseQuickFilter = React.useCallback(
+    (value: string) => {
+      React.startTransition(() => {
+        onPhaseFilterChange(value);
+        onFocusVotingChange(null);
+      });
+    },
+    [onFocusVotingChange, onPhaseFilterChange],
+  );
+
+  const applySessionQuickFilter = React.useCallback(
+    (value: string) => {
+      React.startTransition(() => {
+        onSessionFilterChange(value);
+        onFocusVotingChange(null);
+      });
+    },
+    [onFocusVotingChange, onSessionFilterChange],
+  );
 
   return (
     <Box>
@@ -454,8 +592,7 @@ export const VoteResults: React.FC<{
             <MetricCard
               label={tVotings("overview.metrics.latestSession")}
               value={
-                overviewState.data.metrics.latest_session_key ??
-                tCommon("none")
+                overviewState.data.metrics.latest_session_key ?? tCommon("none")
               }
               icon={<CalendarMonthOutlinedIcon />}
             />
@@ -500,10 +637,7 @@ export const VoteResults: React.FC<{
                         key={phase.value}
                         label={`${phase.value} (${phase.count})`}
                         clickable
-                        onClick={() => {
-                          onPhaseFilterChange(phase.value);
-                          onFocusVotingChange(null);
-                        }}
+                        onClick={() => applyPhaseQuickFilter(phase.value)}
                         sx={{
                           backgroundColor: `${themedColors.primary}08`,
                           color: themedColors.primary,
@@ -533,10 +667,7 @@ export const VoteResults: React.FC<{
                         key={session.value}
                         label={`${session.value} (${session.count})`}
                         clickable
-                        onClick={() => {
-                          onSessionFilterChange(session.value);
-                          onFocusVotingChange(null);
-                        }}
+                        onClick={() => applySessionQuickFilter(session.value)}
                         sx={{
                           backgroundColor: "#fff",
                           border: `1px solid ${themedColors.dataBorder}`,
@@ -554,17 +685,17 @@ export const VoteResults: React.FC<{
           <OverviewSection
             title={tVotings("overview.sections.recent.title")}
             description={tVotings("overview.sections.recent.description")}
-            rows={overviewState.data.sections.recent}
+            groups={overviewGroups.recent}
           />
           <OverviewSection
             title={tVotings("overview.sections.close.title")}
             description={tVotings("overview.sections.close.description")}
-            rows={overviewState.data.sections.close}
+            groups={overviewGroups.close}
           />
           <OverviewSection
             title={tVotings("overview.sections.turnout.title")}
             description={tVotings("overview.sections.turnout.description")}
-            rows={overviewState.data.sections.turnout}
+            groups={overviewGroups.turnout}
           />
         </Stack>
       )}
@@ -600,21 +731,35 @@ export const VoteResults: React.FC<{
               }
             />
           ) : (
-            <Stack spacing={1.5}>{renderGroups(groupedResults)}</Stack>
+            <Stack spacing={1.5}>
+              {renderGroups(visibleResultGroups)}
+              {hasMoreGroups(groupedResults, visibleResultGroupCount) && (
+                <>
+                  <Box ref={resultsSentinelRef} sx={{ height: 1 }} />
+                  <Box sx={{ display: "flex", justifyContent: "center", pt: 0.5 }}>
+                    <Button size="small" onClick={loadMoreResultGroups}>
+                      {tCommon("showMore")}
+                    </Button>
+                  </Box>
+                </>
+              )}
+            </Stack>
           )}
 
-          {combinedRows.length > 0 && searchValue.trim().length > 0 && searchValue.trim().length < 3 && (
-            <Typography
-              variant="caption"
-              sx={{
-                display: "block",
-                mt: 1.5,
-                color: themedColors.textTertiary,
-              }}
-            >
-              {tVotings("searchNeedsMore")}
-            </Typography>
-          )}
+          {combinedRows.length > 0 &&
+            searchValue.trim().length > 0 &&
+            searchValue.trim().length < 3 && (
+              <Typography
+                variant="caption"
+                sx={{
+                  display: "block",
+                  mt: 1.5,
+                  color: themedColors.textTertiary,
+                }}
+              >
+                {tVotings("searchNeedsMore")}
+              </Typography>
+            )}
         </Box>
       )}
 

@@ -50,6 +50,13 @@ export type VotingCardData = {
   parliamentary_item?: string | null;
   result_url?: string | null;
   proceedings_url?: string | null;
+  primary_title?: string | null;
+  secondary_title?: string | null;
+  document_refs?: ReturnType<typeof extractDocumentIdentifiers>;
+  passed?: boolean;
+  close?: boolean;
+  margin?: number;
+  group_key?: string | null;
 };
 
 type VotingFetchedDetails = ApiRouteResponse<`/api/votings/:id/details`>;
@@ -64,6 +71,7 @@ const isCloseVote = (v: VotingCardData) =>
   voteMargin(v) <= CLOSE_VOTE_THRESHOLD;
 
 export const getPrimaryVotingTitle = (v: VotingCardData) =>
+  v.primary_title ||
   v.context_title ||
   v.section_title ||
   v.main_section_title ||
@@ -71,6 +79,7 @@ export const getPrimaryVotingTitle = (v: VotingCardData) =>
   v.title;
 
 const getSecondaryTitle = (v: VotingCardData) => {
+  if (typeof v.secondary_title !== "undefined") return v.secondary_title;
   const primary = getPrimaryVotingTitle(v);
   if (!v.title || v.title === primary) return null;
   return v.title;
@@ -174,6 +183,20 @@ const VotingDetailsPanel: React.FC<{
 }> = ({ details, loading }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const themedColors = useThemedColors();
+  const docRefs = React.useMemo(
+    () =>
+      details
+        ? extractDocumentIdentifiers([
+            details.voting.parliamentary_item,
+            details.voting.context_title,
+            details.voting.title,
+            details.voting.section_title,
+            details.voting.main_section_title,
+            details.voting.agenda_title,
+          ])
+        : [],
+    [details],
+  );
 
   if (loading) {
     return <InlineSpinner size={20} py={1} />;
@@ -183,15 +206,6 @@ const VotingDetailsPanel: React.FC<{
 
   const yesLabel = String(tCommon("yes")).toLowerCase();
   const noLabel = String(tCommon("no")).toLowerCase();
-
-  const docRefs = extractDocumentIdentifiers([
-    details.voting.parliamentary_item,
-    details.voting.context_title,
-    details.voting.title,
-    details.voting.section_title,
-    details.voting.main_section_title,
-    details.voting.agenda_title,
-  ]);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -276,7 +290,7 @@ const VotingDetailsPanel: React.FC<{
 
 // ─── VotingCard (full standalone) ─────────────────────────────────────────────
 
-export const VotingCard: React.FC<{
+const VotingCardComponent: React.FC<{
   voting: VotingCardData;
 }> = ({ voting }) => {
   const { t: tCommon } = useScopedTranslation("common");
@@ -284,18 +298,30 @@ export const VotingCard: React.FC<{
   const themedColors = useThemedColors();
   const { expanded, details, loading, toggle } = useVotingDetails(voting.id);
 
-  const passed = isVotePassed(voting);
-  const close = isCloseVote(voting);
-  const margin = voteMargin(voting);
+  const passed = voting.passed ?? isVotePassed(voting);
+  const close = voting.close ?? isCloseVote(voting);
+  const margin = voting.margin ?? voteMargin(voting);
   const primaryTitle = getPrimaryVotingTitle(voting);
   const secondaryTitle = getSecondaryTitle(voting);
-  const docRefs = extractDocumentIdentifiers([
-    voting.parliamentary_item,
-    voting.context_title,
-    voting.section_title,
-    voting.main_section_title,
-    voting.agenda_title,
-  ]);
+  const docRefs = React.useMemo(
+    () =>
+      voting.document_refs ??
+      extractDocumentIdentifiers([
+        voting.parliamentary_item,
+        voting.context_title,
+        voting.section_title,
+        voting.main_section_title,
+        voting.agenda_title,
+      ]),
+    [
+      voting.agenda_title,
+      voting.context_title,
+      voting.document_refs,
+      voting.main_section_title,
+      voting.parliamentary_item,
+      voting.section_title,
+    ],
+  );
 
   return (
     <DataCard
@@ -303,8 +329,7 @@ export const VotingCard: React.FC<{
       sx={{
         p: 0,
         overflow: "hidden",
-        background:
-          "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(249,250,252,0.98) 100%)",
+        background: "#fff",
       }}
     >
       {/* Zone 1 + 2 + 3: header, title, bar */}
@@ -313,10 +338,6 @@ export const VotingCard: React.FC<{
           px: { xs: 1.5, sm: 2 },
           pt: 1.5,
           pb: 1,
-          background: `
-            radial-gradient(circle at top right, ${themedColors.primary}08, transparent 36%),
-            linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,0.94) 100%)
-          `,
         }}
       >
         {/* Header row: outcome pill + meta */}
@@ -329,7 +350,7 @@ export const VotingCard: React.FC<{
             mb: 1,
             p: 0.75,
             borderRadius: 2,
-            backgroundColor: "rgba(255,255,255,0.76)",
+            backgroundColor: `${themedColors.primary}03`,
             border: `1px solid ${themedColors.dataBorder}80`,
           }}
         >
@@ -467,7 +488,7 @@ export const VotingCard: React.FC<{
             mt: 1.25,
             p: 1.1,
             borderRadius: 2,
-            backgroundColor: `${themedColors.primary}04`,
+            backgroundColor: `${themedColors.primary}03`,
             border: `1px solid ${themedColors.dataBorder}80`,
           }}
         >
@@ -564,9 +585,11 @@ export const VotingCard: React.FC<{
   );
 };
 
+export const VotingCard = React.memo(VotingCardComponent);
+
 // ─── VotingSubRow (compact, for groups + Sessions inline) ────────────────────
 
-export const VotingSubRow: React.FC<{
+const VotingSubRowComponent: React.FC<{
   voting: VotingCardData;
   /** Show voting.title if it differs from the group/section title */
   showTitle?: boolean;
@@ -690,9 +713,11 @@ export const VotingSubRow: React.FC<{
   );
 };
 
+export const VotingSubRow = React.memo(VotingSubRowComponent);
+
 // ─── VotingGroupCard ──────────────────────────────────────────────────────────
 
-export const VotingGroupCard: React.FC<{
+const VotingGroupCardComponent: React.FC<{
   votes: VotingCardData[];
 }> = ({ votes }) => {
   const { t: tCommon } = useScopedTranslation("common");
@@ -701,14 +726,19 @@ export const VotingGroupCard: React.FC<{
 
   const first = votes[0];
   const groupTitle = getPrimaryVotingTitle(first);
-  const docRefs = extractDocumentIdentifiers(
-    votes.flatMap((v) => [
-      v.parliamentary_item,
-      v.context_title,
-      v.section_title,
-      v.main_section_title,
-      v.agenda_title,
-    ]),
+  const docRefs = React.useMemo(
+    () =>
+      votes[0]?.document_refs ??
+      extractDocumentIdentifiers(
+        votes.flatMap((v) => [
+          v.parliamentary_item,
+          v.context_title,
+          v.section_title,
+          v.main_section_title,
+          v.agenda_title,
+        ]),
+      ),
+    [votes],
   );
 
   return (
@@ -716,8 +746,7 @@ export const VotingGroupCard: React.FC<{
       sx={{
         p: 0,
         overflow: "hidden",
-        background:
-          "linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(247,249,252,0.98) 100%)",
+        background: "#fff",
       }}
     >
       <Box
@@ -725,10 +754,6 @@ export const VotingGroupCard: React.FC<{
           px: { xs: 1.5, sm: 2 },
           pt: 1.5,
           pb: 1.5,
-          background: `
-            radial-gradient(circle at top left, ${themedColors.primary}07, transparent 32%),
-            linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(248,250,252,0.94) 100%)
-          `,
         }}
       >
         {/* Header row */}
@@ -741,7 +766,7 @@ export const VotingGroupCard: React.FC<{
             mb: 1,
             p: 0.75,
             borderRadius: 2,
-            backgroundColor: "rgba(255,255,255,0.78)",
+            backgroundColor: `${themedColors.primary}03`,
             border: `1px solid ${themedColors.dataBorder}80`,
           }}
         >
@@ -817,7 +842,7 @@ export const VotingGroupCard: React.FC<{
           sx={{
             p: 0.5,
             borderRadius: 2,
-            backgroundColor: "rgba(255,255,255,0.74)",
+            backgroundColor: `${themedColors.primary}02`,
             border: `1px solid ${themedColors.dataBorder}70`,
           }}
           divider={<Box sx={{ height: "1px", bgcolor: themedColors.dataBorder, my: 0.5 }} />}
@@ -837,3 +862,5 @@ export const VotingGroupCard: React.FC<{
     </DataCard>
   );
 };
+
+export const VotingGroupCard = React.memo(VotingGroupCardComponent);

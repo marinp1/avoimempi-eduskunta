@@ -1,9 +1,9 @@
 import { Box, Chip, Stack, Typography } from "@mui/material";
-import type React from "react";
+import React from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors } from "#client/theme";
 
-export const VotingsResultsSummary: React.FC<{
+const VotingsResultsSummaryComponent: React.FC<{
   count: number;
   groupingLabel: string;
   contextLabel?: string | null;
@@ -48,3 +48,7 @@ export const VotingsResultsSummary: React.FC<{
     </Box>
   );
 };
+
+export const VotingsResultsSummary = React.memo(
+  VotingsResultsSummaryComponent,
+);

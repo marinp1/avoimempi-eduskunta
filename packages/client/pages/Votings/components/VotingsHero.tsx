@@ -12,21 +12,18 @@ export const VotingsHero: React.FC<{
 
   return (
     <Box
-    sx={{
-      position: "relative",
-      overflow: "hidden",
-      borderRadius: 4,
-      border: `1px solid ${colors.dataBorder}`,
-      px: { xs: 2, md: 3.5 },
-      py: { xs: 2.5, md: 3.5 },
-      mb: 3,
-      background: `
-        radial-gradient(circle at top left, rgba(27,42,74,0.18), transparent 34%),
-        radial-gradient(circle at bottom right, rgba(232,145,58,0.18), transparent 30%),
-        linear-gradient(140deg, rgba(255,255,255,0.98) 0%, rgba(243,245,247,0.96) 55%, rgba(232,238,246,0.92) 100%)
-      `,
-      boxShadow: "0 20px 48px rgba(15, 27, 51, 0.08)",
-    }}
+      sx={{
+        position: "relative",
+        overflow: "hidden",
+        borderRadius: 4,
+        border: `1px solid ${colors.dataBorder}`,
+        px: { xs: 2, md: 3.5 },
+        py: { xs: 2.5, md: 3.5 },
+        mb: 3,
+        background:
+          "linear-gradient(140deg, rgba(255,255,255,0.98) 0%, rgba(243,245,247,0.97) 62%, rgba(236,241,247,0.95) 100%)",
+        boxShadow: "0 10px 24px rgba(15, 27, 51, 0.05)",
+      }}
     >
       <Stack spacing={1.5}>
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
