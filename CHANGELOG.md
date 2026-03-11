@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.1-alpha.6] — 2026-03-09
+
+### Features
+- better fonts (c008ffa)
+- improve ui (2c58cde)
+- improve votings panel in representatives (68e93ca)
+
+### Bug Fixes
+- always show latest migration report (728cb31)
+- correctly lookup all speeches (2af7fa0)
+
 ## [1.0.1-alpha.5] — 2026-03-09
 
 ### Bug Fixes
