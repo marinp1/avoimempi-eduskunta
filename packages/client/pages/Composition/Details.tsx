@@ -160,6 +160,16 @@ const fetchPersonDetails = async (personId: number) => {
   };
 };
 
+export type RepresentativeSelection = {
+  personId: number;
+  summary?: {
+    firstName?: string;
+    lastName?: string;
+    partyName?: string | null;
+    isInGovernment?: 0 | 1 | null;
+  };
+};
+
 const fetchPersonVotes = async (personId: number) => {
   const res = await apiFetch(`/api/person/${personId}/votes`);
   return res.json();
@@ -3669,7 +3679,7 @@ const PositionsTab: React.FC<{
 export const RepresentativeDetails: React.FC<{
   open: boolean;
   onClose: () => void;
-  selectedRepresentative: DatabaseQueries.GetParliamentComposition | null;
+  selectedRepresentative: RepresentativeSelection | null;
   selectedDate: string;
 }> = ({ open, onClose, selectedRepresentative, selectedDate }) => {
   const { t } = useScopedTranslation("composition");
@@ -3689,8 +3699,8 @@ export const RepresentativeDetails: React.FC<{
       setTabIndex(0);
       setSelectedGovName(null);
       setGovernmentPeriods([]);
-      fetchPersonDetails(selectedRepresentative.person_id).then(setDetails);
-      apiFetch(`/api/person/${selectedRepresentative.person_id}/government-periods`)
+      fetchPersonDetails(selectedRepresentative.personId).then(setDetails);
+      apiFetch(`/api/person/${selectedRepresentative.personId}/government-periods`)
         .then((res) => res.json())
         .then(setGovernmentPeriods)
         .catch(() => {});
@@ -3702,22 +3712,43 @@ export const RepresentativeDetails: React.FC<{
 
   if (!selectedRepresentative) return null;
 
+  const membershipForDate = [...(details?.groupMemberships ?? [])]
+    .reverse()
+    .find(
+      (membership) =>
+        membership.start_date <= selectedDate &&
+        (!membership.end_date || membership.end_date >= selectedDate),
+    );
+  const latestMembership = details?.groupMemberships?.at(-1);
   const currentParty =
-    details?.groupMemberships?.[0]?.group_name || t("details.unknownParty");
+    membershipForDate?.group_name ??
+    latestMembership?.group_name ??
+    selectedRepresentative.summary?.partyName ??
+    t("details.unknownParty");
   const currentDistrict =
     details?.districts?.[0]?.district_name || t("details.unknownDistrict");
+  const representativeDetails = details?.representativeDetails;
+  const representativeFirstName =
+    representativeDetails?.first_name ??
+    selectedRepresentative.summary?.firstName ??
+    "";
+  const representativeLastName =
+    representativeDetails?.last_name ??
+    selectedRepresentative.summary?.lastName ??
+    "";
+  const governmentStatus = selectedRepresentative.summary?.isInGovernment ?? null;
 
   const selectedDateObj = new Date(selectedDate);
-  const deathDateObj = selectedRepresentative.death_date
-    ? new Date(selectedRepresentative.death_date)
+  const deathDateObj = representativeDetails?.death_date
+    ? new Date(representativeDetails.death_date)
     : null;
   const wasAliveOnSelectedDate =
     !deathDateObj || selectedDateObj <= deathDateObj;
   const effectiveDate = wasAliveOnSelectedDate
     ? selectedDate
-    : selectedRepresentative.death_date!;
-  const age = selectedRepresentative.birth_date
-    ? calculateAge(selectedRepresentative.birth_date, effectiveDate)
+    : representativeDetails?.death_date ?? selectedDate;
+  const age = representativeDetails?.birth_date
+    ? calculateAge(representativeDetails.birth_date, effectiveDate)
     : null;
   const selectedGovernmentPeriod =
     governmentPeriods.find((period) => period.government_name === selectedGovName) ??
@@ -3821,8 +3852,8 @@ export const RepresentativeDetails: React.FC<{
                     flexShrink: 0,
                   }}
                 >
-                  {selectedRepresentative.first_name[0]}
-                  {selectedRepresentative.last_name[0]}
+                  {representativeFirstName[0] ?? "?"}
+                  {representativeLastName[0] ?? ""}
                 </Avatar>
 
                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -3832,8 +3863,7 @@ export const RepresentativeDetails: React.FC<{
                     id={dialogTitleId}
                     sx={{ color: "white", lineHeight: 1.3 }}
                   >
-                    {selectedRepresentative.first_name}{" "}
-                    {selectedRepresentative.last_name}
+                    {representativeFirstName} {representativeLastName}
                   </Typography>
 
                   <Box
@@ -3879,29 +3909,31 @@ export const RepresentativeDetails: React.FC<{
                         </Typography>
                       </>
                     )}
-                    <Chip
-                      icon={<AccountBalanceIcon sx={{ fontSize: 14 }} />}
-                      label={
-                        selectedRepresentative.is_in_government === 1
-                          ? t("details.header.government")
-                          : t("details.header.opposition")
-                      }
-                      size="small"
-                      sx={{
-                        height: 20,
-                        fontSize: "0.65rem",
-                        fontWeight: 700,
-                        bgcolor:
-                          selectedRepresentative.is_in_government === 1
-                            ? "rgba(76, 175, 80, 0.25)"
-                            : "rgba(255, 152, 0, 0.25)",
-                        color: "white",
-                        border:
-                          selectedRepresentative.is_in_government === 1
-                            ? "1px solid rgba(76, 175, 80, 0.5)"
-                            : "1px solid rgba(255, 152, 0, 0.5)",
-                      }}
-                    />
+                    {governmentStatus !== null && (
+                      <Chip
+                        icon={<AccountBalanceIcon sx={{ fontSize: 14 }} />}
+                        label={
+                          governmentStatus === 1
+                            ? t("details.header.government")
+                            : t("details.header.opposition")
+                        }
+                        size="small"
+                        sx={{
+                          height: 20,
+                          fontSize: "0.65rem",
+                          fontWeight: 700,
+                          bgcolor:
+                            governmentStatus === 1
+                              ? "rgba(76, 175, 80, 0.25)"
+                              : "rgba(255, 152, 0, 0.25)",
+                          color: "white",
+                          border:
+                            governmentStatus === 1
+                              ? "1px solid rgba(76, 175, 80, 0.5)"
+                              : "1px solid rgba(255, 152, 0, 0.5)",
+                        }}
+                      />
+                    )}
                     <Chip
                       label={t("details.analysis.selectedDate", {
                         value: displayDate(selectedDate),
@@ -4039,26 +4071,26 @@ export const RepresentativeDetails: React.FC<{
             </AnalysisTabPanel>
             <AnalysisTabPanel value={tabIndex} index={1}>
               <VotesTab
-                personId={selectedRepresentative.person_id}
+                personId={selectedRepresentative.personId}
                 scope={analysisScope}
               />
             </AnalysisTabPanel>
             <AnalysisTabPanel value={tabIndex} index={2}>
               <SpeechesTab
-                personId={selectedRepresentative.person_id}
+                personId={selectedRepresentative.personId}
                 scope={analysisScope}
               />
             </AnalysisTabPanel>
             <AnalysisTabPanel value={tabIndex} index={3}>
               <QuestionsTab
-                personId={selectedRepresentative.person_id}
+                personId={selectedRepresentative.personId}
                 scope={analysisScope}
               />
             </AnalysisTabPanel>
             <AnalysisTabPanel value={tabIndex} index={4}>
               {details ? (
                 <PositionsTab
-                  personId={selectedRepresentative.person_id}
+                  personId={selectedRepresentative.personId}
                   trustPositions={details.trustPositions || []}
                   governmentMemberships={details.governmentMemberships || []}
                 />

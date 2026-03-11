@@ -19,6 +19,7 @@ import personCommittees from "../database/queries/PERSON_COMMITTEES.sql";
 import personDissents from "../database/queries/PERSON_DISSENTS.sql";
 import personGroupMemberships from "../database/queries/PERSON_GROUP_MEMBERSHIPS.sql";
 import personQuestions from "../database/queries/PERSON_QUESTIONS.sql";
+import personSearch from "../database/queries/PERSON_SEARCH.sql";
 import personSpeeches from "../database/queries/PERSON_SPEECHES.sql";
 import personTerms from "../database/queries/PERSON_TERMS.sql";
 import recentActivity from "../database/queries/RECENT_ACTIVITY.sql";
@@ -69,6 +70,7 @@ const queries = {
   personDissents,
   personGroupMemberships,
   personQuestions,
+  personSearch,
   personSpeeches,
   personTerms,
   recentActivity,
@@ -1372,6 +1374,65 @@ describe("Federated search query", () => {
     stmt.finalize();
 
     expect(rows).toHaveLength(0);
+  });
+});
+
+describe("Person search query", () => {
+  test("PERSON_SEARCH finds both current and former MPs", () => {
+    const tempDb = createTestDb();
+    seedFullDataset(tempDb);
+
+    tempDb.run(
+      `INSERT INTO Representative (person_id, last_name, first_name, sort_name, party, gender, birth_date, minister)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [1100, "Meikäläinen", "Mikko", "Meikäläinen Mikko", "vihr", "Mies", "1965-02-01", 0],
+    );
+    tempDb.run(`INSERT INTO ParliamentaryGroup (code) VALUES (?)`, ["vihr"]);
+    tempDb.run(
+      `INSERT INTO ParliamentaryGroupMembership (id, person_id, group_code, group_name, start_date, end_date)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [1100, 1100, "vihr", "Vihreä eduskuntaryhmä", "2011-04-01", "2015-04-21"],
+    );
+    tempDb.run(
+      `INSERT INTO Term (id, person_id, start_date, end_date, start_year, end_year)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [1100, 1100, "2011-04-01", "2015-04-21", 2011, 2015],
+    );
+
+    const stmt = tempDb.prepare(personSearch);
+    const rows = stmt.all({
+      $query: "Meikäläinen",
+      $exactQuery: "Meikäläinen",
+      $prefixQuery: "Meikäläinen%",
+      $limit: 20,
+      $date: "2024-01-15",
+    }) as DatabaseQueries.PersonSearchResult[];
+    stmt.finalize();
+    tempDb.close();
+
+    expect(rows.map((row) => row.person_id)).toEqual([1000, 1100]);
+    expect(rows[0]?.is_current_mp).toBe(1);
+    expect(rows[1]?.is_current_mp).toBe(0);
+    expect(rows[0]?.is_active_on_selected_date).toBe(1);
+    expect(rows[1]?.is_active_on_selected_date).toBe(0);
+  });
+
+  test("PERSON_SEARCH returns latest party and term summary", () => {
+    const stmt = db.prepare(personSearch);
+    const row = stmt.get({
+      $query: "Virtanen",
+      $exactQuery: "Virtanen",
+      $prefixQuery: "Virtanen%",
+      $limit: 20,
+      $date: null,
+    }) as DatabaseQueries.PersonSearchResult | null;
+    stmt.finalize();
+
+    expect(row).not.toBeNull();
+    expect(row?.latest_party_name).toBe("Sosialidemokraattinen eduskuntaryhmä");
+    expect(row?.first_term_start).toBe("2023-04-01");
+    expect(row?.last_term_end).toBeNull();
+    expect(row?.latest_active_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });
 

@@ -6,6 +6,7 @@ import personCommittees from "../queries/PERSON_COMMITTEES.sql";
 import personDissents from "../queries/PERSON_DISSENTS.sql";
 import personGroupMemberships from "../queries/PERSON_GROUP_MEMBERSHIPS.sql";
 import personQuestions from "../queries/PERSON_QUESTIONS.sql";
+import personSearch from "../queries/PERSON_SEARCH.sql";
 import personSpeeches from "../queries/PERSON_SPEECHES.sql";
 import personSpeechesCount from "../queries/PERSON_SPEECHES_COUNT.sql";
 import personTerms from "../queries/PERSON_TERMS.sql";
@@ -14,6 +15,7 @@ import representativeDistricts from "../queries/REPRESENTATIVE_DISTRICTS.sql";
 import representativesPaginated from "../queries/REPRESENTATIVES_PAGINATED.sql";
 import trustPositions from "../queries/TRUST_POSITIONS.sql";
 import votesByPerson from "../queries/VOTES_BY_PERSON.sql";
+import { buildSearchQuery } from "../query-helpers";
 
 export class PersonRepository {
   constructor(private readonly db: Database) {}
@@ -28,6 +30,35 @@ export class PersonRepository {
       }
     >(representativesPaginated);
     const data = stmt.all({ $limit: params.limit, $offset: offset });
+    stmt.finalize();
+    return data;
+  }
+
+  public fetchPersonSearch(params: {
+    q: string;
+    limit?: number;
+    date?: string | null;
+  }) {
+    const searchQuery = buildSearchQuery(params.q);
+    if (!searchQuery) return [];
+    const exactQuery = params.q.trim().replace(/\s+/g, " ");
+    const stmt = this.db.prepare<
+      DatabaseQueries.PersonSearchResult,
+      {
+        $query: string;
+        $exactQuery: string;
+        $prefixQuery: string;
+        $limit: number;
+        $date: string | null;
+      }
+    >(personSearch);
+    const data = stmt.all({
+      $query: searchQuery,
+      $exactQuery: exactQuery,
+      $prefixQuery: `${exactQuery}%`,
+      $limit: params.limit ?? 20,
+      $date: params.date ?? null,
+    });
     stmt.finalize();
     return data;
   }
