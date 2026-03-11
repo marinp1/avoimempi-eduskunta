@@ -175,6 +175,22 @@ declare global {
         government_end_date: string | null;
         is_coalition: 0 | 1;
       };
+
+    export type PersonSearchResult = {
+      person_id: number;
+      first_name: string;
+      last_name: string;
+      sort_name: string;
+      birth_date: DateString | null;
+      death_date: DateString | null;
+      profession: string | null;
+      latest_party_name: string | null;
+      first_term_start: DateString | null;
+      last_term_end: DateString | null;
+      latest_active_date: DateString | null;
+      is_current_mp: 0 | 1;
+      is_active_on_selected_date: 0 | 1;
+    };
   }
 }
 

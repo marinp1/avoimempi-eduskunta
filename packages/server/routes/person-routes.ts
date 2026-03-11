@@ -5,9 +5,29 @@ import {
   getLimitOffsetQueryParams,
   getSearchParams,
 } from "./http";
-import { json } from "./route-responses";
+import { badRequest, json } from "./route-responses";
 
 export const createPersonRoutes = (db: PersonRepository) => ({
+  "/api/person/search": {
+    GET: async (req: Request) => {
+      const searchParams = getSearchParams(req);
+      const q = searchParams.get("q")?.trim() || "";
+      if (q.length < 2) {
+        return badRequest("Query must be at least 2 characters");
+      }
+      const data = await db.fetchPersonSearch({
+        q,
+        date: searchParams.get("date"),
+        limit: getBoundedIntegerQueryParam(searchParams, "limit", {
+          fallback: 20,
+          min: 1,
+          max: 50,
+        }),
+      });
+      return json(data);
+    },
+  },
+
   "/api/person/:id/group-memberships": {
     GET: async (req: BunRequest<"/api/person/:id/group-memberships">) => {
       const memberships = await db.fetchPersonGroupMemberships(req.params);

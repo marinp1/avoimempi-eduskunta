@@ -417,16 +417,75 @@
   },
   "composition": {
     "title": "Eduskunnan kokoonpano",
-    "subtitle": "Selaa kansanedustajia ja heidän tietojaan",
+    "subtitle": "Nykyinen kokoonpano, historiallinen aikajana ja kaikki edustajat samassa työtilassa",
     "noResults": "Ei edustajia näillä suodattimilla.",
     "noResultsHint": "Kokeile laajentaa suodatusta nähdäksesi tuloksia.",
     "resetFilters": "Tyhjennä suodattimet",
     "searchPlaceholder": "Hae nimellä...",
+    "loadError": "Kokoonpanon lataus epäonnistui.",
     "dateWithinPeriod": "Päivä kaudella",
     "historicalView": "Historiallinen näkymä",
     "returnToPresent": "Palaa nykyhetkeen",
+    "context": {
+      "eyebrow": "Kokoonpanon näkymä",
+      "current": "Nykyinen eduskuntakokoonpano",
+      "historical": "Historiallinen kokoonpano"
+    },
+    "snapshot": {
+      "totalMembers": "Edustajia",
+      "governmentMembers": "Hallitus",
+      "oppositionMembers": "Oppositio",
+      "partyCount": "Puolueita",
+      "largestParty": "Suurin ryhmä",
+      "genderSplit": "{{women}} naista · {{men}} miestä",
+      "leadingPartySeats": "{{party}}: {{count}} paikkaa"
+    },
     "distribution": {
-      "totalMembers": "Jäsentä yhteensä"
+      "title": "Paikkajakauma",
+      "description": "Klikkaa puoluetta rajataksesi listan samaan ryhmään.",
+      "totalMembers": "Jäsentä yhteensä",
+      "seats": "paikkaa",
+      "majorityLine": "Puuttuu enemmistöstä",
+      "topThreeLine": "Kolme suurinta"
+    },
+    "partyMatrix": {
+      "title": "Puolueblokit",
+      "government": "Hallituspuolue",
+      "opposition": "Oppositiopuolue",
+      "mixed": "Sekä hallituksessa että oppositiossa"
+    },
+    "browser": {
+      "title": "Valitun päivän edustajat",
+      "description": "Selaa kokoonpanoa kompaktina listana tai taulukkona.",
+      "searchPlaceholder": "Rajaa kokoonpanoa nimellä...",
+      "resultCount": "{{shown}} / {{total}} edustajaa",
+      "partyFilter": "Puolue: {{value}}",
+      "unknownProfession": "Ammatti puuttuu",
+      "age": "{{value}} v",
+      "tenure": "Aloittanut {{value}}",
+      "ageColumn": "Ikä",
+      "sort": {
+        "party": "Järjestä puolueen mukaan",
+        "name": "Järjestä nimen mukaan",
+        "age": "Järjestä iän mukaan",
+        "tenure": "Järjestä aloituspäivän mukaan"
+      }
+    },
+    "globalSearch": {
+      "title": "Hae kaikkia edustajia",
+      "description": "Haku kattaa myös entiset kansanedustajat. Profiili avautuu tähän näkymään.",
+      "placeholder": "Kirjoita nimi tai osa nimestä...",
+      "startTitle": "Aloita globaali henkilöhaku",
+      "startHint": "Kirjoita vähintään kaksi merkkiä hakeaksesi nykyisiä ja entisiä edustajia.",
+      "noResults": "Hakutuloksia ei löytynyt.",
+      "noResultsHint": "Kokeile toista nimimuotoa tai lyhyempää hakua.",
+      "loadError": "Edustajahaun lataus epäonnistui.",
+      "adjustedDateHint": "Näkymä siirrettiin viimeiseen aktiiviseen päivään: {{value}}.",
+      "termRange": "{{start}} - {{end}}",
+      "badges": {
+        "current": "Nykyinen",
+        "activeOnDate": "Aktiivinen valitulla päivällä"
+      }
     },
     "partyBreakdown": {
       "title": "Puolueiden jako",
