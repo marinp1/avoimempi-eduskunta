@@ -324,7 +324,11 @@
     "viewQuestionPdf": "Kysymys (PDF)",
     "viewResponseOnEduskunta": "Vastaus (PDF)",
     "viewResponsePdf": "Vastaus (PDF)",
-    "writtenQuestionResponses": "Kirjalliset vastaukset"
+    "writtenQuestionResponses": "Kirjalliset vastaukset",
+    "parliamentAnswers": "Eduskunnan vastaukset",
+    "parliamentAnswerTypeLabel": "Eduskunnan vastaus",
+    "parliamentAnswerSourceRef": "Perustuu esitykseen",
+    "parliamentAnswerCommitteeRef": "Valiokunta käsitteli"
   },
   "common": {
     "selectDate": "Valitse päivämäärä",

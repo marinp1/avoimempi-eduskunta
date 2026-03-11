@@ -389,6 +389,7 @@ const DocumentPrefixMap = Object.freeze({
   KAA: "legislative-initiatives-citizens",
   MIE: "committee-reports",
   MIL: "committee-reports",
+  EV: "parliament-answers",
 });
 
 const inferDocumentType = (
@@ -406,6 +407,7 @@ const BillTypeToApiPath = Object.freeze({
   interpellations: "/api/interpellations/by-identifier",
   "written-questions": "/api/written-questions/by-identifier",
   "committee-reports": "/api/committee-reports/by-identifier",
+  "parliament-answers": "/api/parliament-answers/by-identifier",
   "legislative-initiatives-law": "/api/legislative-initiatives/by-identifier",
   "legislative-initiatives-budget":
     "/api/legislative-initiatives/by-identifier",

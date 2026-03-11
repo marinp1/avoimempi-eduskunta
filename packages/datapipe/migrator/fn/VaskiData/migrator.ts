@@ -1,5 +1,6 @@
 import type { Database } from "bun:sqlite";
 import { readAllVaskiRows, readVaskiIndex, type VaskiEntry } from "./reader";
+import createEduskunnanVastaus from "./submigrators/eduskunnan_vastaus.ts";
 import createAsiantuntijalausunnonLiite from "./submigrators/asiantuntijalausunnon_liite.ts";
 import createAsiantuntijalausunto from "./submigrators/asiantuntijalausunto.ts";
 import createAsiantuntijasuunnitelma from "./submigrators/asiantuntijasuunnitelma.ts";
@@ -20,6 +21,7 @@ import createVastausKirjalliseenKysymykseen from "./submigrators/vastaus_kirjall
 import createValikysymys from "./submigrators/välikysymys.ts";
 
 const SUBMIGRATOR_FACTORIES: Record<string, VaskiSubMigratorFactory> = {
+  eduskunnan_vastaus: createEduskunnanVastaus,
   asiantuntijalausunnon_liite: createAsiantuntijalausunnonLiite,
   asiantuntijalausunto: createAsiantuntijalausunto,
   asiantuntijasuunnitelma: createAsiantuntijasuunnitelma,
