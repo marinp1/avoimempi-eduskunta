@@ -1388,10 +1388,61 @@ describe("Party queries", () => {
     expect(rows.length).toBeGreaterThan(0);
     for (const row of rows) {
       expect(row).toHaveProperty("party_code");
+      expect(row).toHaveProperty("party_display_code");
       expect(row).toHaveProperty("party_name");
       expect(row).toHaveProperty("member_count");
+      expect(row).toHaveProperty("votes_cast");
+      expect(row).toHaveProperty("total_votings");
+      expect(row.total_votings).toBeGreaterThan(0);
       expect(row.member_count).toBeGreaterThan(0);
     }
+  });
+
+  test("PARTY_SUMMARY maps votes by membership active on the voting date", () => {
+    db.run(
+      `INSERT INTO Representative (person_id, last_name, first_name, sort_name, party, gender, birth_date, minister)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [1999, "Vornanen", "Timo", "Vornanen Timo", "tv", "Mies", "1980-01-01", 0],
+    );
+    db.run(
+      `INSERT INTO Term (id, person_id, start_date, end_date, start_year, end_year)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [99, 1999, "2024-01-01", null, 2024, null],
+    );
+    db.run(`INSERT INTO ParliamentaryGroup (code) VALUES (?)`, ["pg61"]);
+    db.run(
+      `INSERT INTO ParliamentaryGroupMembership (id, person_id, group_code, group_name, start_date, end_date)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [99, 1999, "pg61", "Eduskuntaryhmä Timo Vornanen", "2024-05-23", null],
+    );
+    db.run(
+      `INSERT INTO Voting (id, start_time) VALUES (?, ?)`,
+      [99, "2024-05-24T12:00:00"],
+    );
+    db.run(
+      `INSERT INTO Vote (id, voting_id, person_id, vote, group_abbreviation)
+       VALUES (?, ?, ?, ?, ?)`,
+      [99, 99, 1999, "Jaa", "tv"],
+    );
+
+    const stmt = db.prepare(partySummary);
+    const rows = stmt.all({
+      $asOfDate: "2024-05-24",
+      $startDate: "2024-05-23",
+      $endDateExclusive: null,
+      $governmentName: null,
+      $governmentStartDate: null,
+    }) as any[];
+    stmt.finalize();
+
+    const vornanenGroup = rows.find(
+      (row: any) => row.party_code === "pg61",
+    );
+    expect(vornanenGroup).toBeDefined();
+    expect(vornanenGroup.party_display_code).toBe("tv");
+    expect(vornanenGroup.votes_cast).toBe(1);
+    expect(vornanenGroup.total_votings).toBe(1);
+    expect(vornanenGroup.participation_rate).toBe(100);
   });
 
   test("PARTY_MEMBERS returns members of a specific party", () => {

@@ -621,7 +621,8 @@ const ProfileMetric: React.FC<{
   label: string;
   value: string;
   accentColor: string;
-}> = ({ label, value, accentColor }) => {
+  caption?: string;
+}> = ({ label, value, accentColor, caption }) => {
   const themedColors = useThemedColors();
 
   return (
@@ -642,6 +643,14 @@ const ProfileMetric: React.FC<{
       <Typography sx={{ fontWeight: 700, color: accentColor }}>
         {value}
       </Typography>
+      {caption ? (
+        <Typography
+          variant="caption"
+          sx={{ color: themedColors.textTertiary, display: "block", mt: 0.35 }}
+        >
+          {caption}
+        </Typography>
+      ) : null}
     </Box>
   );
 };
@@ -666,6 +675,7 @@ export const PartyDetail: React.FC<{
   onClearSelection,
 }) => {
   const themedColors = useThemedColors();
+  const { t: tCommon } = useScopedTranslation("common");
   const { t } = useScopedTranslation("parties");
   const [tabIndex, setTabIndex] = useState(0);
 
@@ -676,7 +686,12 @@ export const PartyDetail: React.FC<{
   if (!party) return null;
 
   const participationRate = `${(party.participation_rate ?? 0).toFixed(1)}%`;
+  const participationRatio = tCommon("voteRatio", {
+    cast: party.votes_cast ?? 0,
+    total: party.total_votings ?? 0,
+  });
   const averageAge = `${(party.average_age ?? 0).toFixed(1)}`;
+  const visibleCode = party.party_display_code ?? party.party_code;
   const roleLabel =
     party.is_in_government === 1 ? t("government") : t("opposition");
 
@@ -731,7 +746,7 @@ export const PartyDetail: React.FC<{
               }}
             >
               <Chip
-                label={party.party_code}
+                label={visibleCode}
                 size="small"
                 sx={{
                   fontWeight: 700,
@@ -761,7 +776,7 @@ export const PartyDetail: React.FC<{
               >
                 {t("detail.profileSummary", {
                   members: party.member_count,
-                  participation: participationRate,
+                  participation: `${participationRate} (${participationRatio})`,
                 })}
               </Typography>
             </Box>
@@ -798,6 +813,7 @@ export const PartyDetail: React.FC<{
             label={t("participation")}
             value={participationRate}
             accentColor={partyColor}
+            caption={participationRatio}
           />
           <ProfileMetric
             label={t("table.averageAge")}

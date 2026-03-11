@@ -194,7 +194,11 @@ export function ParticipationTable({
                       })}
                     >
                       <Box
-                        sx={{ display: "inline-flex", alignItems: "center" }}
+                        sx={{
+                          display: "inline-flex",
+                          flexDirection: "column",
+                          alignItems: "flex-end",
+                        }}
                       >
                         <Chip
                           label={`${row.participation_rate}%`}
@@ -208,6 +212,15 @@ export function ParticipationTable({
                             minWidth: 70,
                           }}
                         />
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "text.secondary", mt: 0.35 }}
+                        >
+                          {tCommon("voteRatio", {
+                            cast: row.votes_cast,
+                            total: row.total_votings,
+                          })}
+                        </Typography>
                       </Box>
                     </Tooltip>
                   </TableCell>

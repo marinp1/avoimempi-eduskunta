@@ -393,9 +393,12 @@ export class AnalyticsRepository {
     const stmt = this.db.query<
       {
         party_code: string;
+        party_display_code: string;
         party_name: string;
         member_count: number;
         is_in_government: number;
+        votes_cast: number;
+        total_votings: number;
         participation_rate: number;
         female_count: number;
         male_count: number;

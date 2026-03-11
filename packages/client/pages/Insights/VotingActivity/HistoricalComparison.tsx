@@ -270,18 +270,35 @@ export function HistoricalComparison({
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
-                        <Chip
-                          label={`${row.participation_rate}%`}
-                          size="small"
+                        <Box
                           sx={{
-                            backgroundColor: `${getParticipationColor(row.participation_rate)}20`,
-                            color: getParticipationColor(
-                              row.participation_rate,
-                            ),
-                            fontWeight: 700,
-                            minWidth: 70,
+                            display: "inline-flex",
+                            flexDirection: "column",
+                            alignItems: "flex-end",
                           }}
-                        />
+                        >
+                          <Chip
+                            label={`${row.participation_rate}%`}
+                            size="small"
+                            sx={{
+                              backgroundColor: `${getParticipationColor(row.participation_rate)}20`,
+                              color: getParticipationColor(
+                                row.participation_rate,
+                              ),
+                              fontWeight: 700,
+                              minWidth: 70,
+                            }}
+                          />
+                          <Typography
+                            variant="caption"
+                            sx={{ color: "text.secondary", mt: 0.35 }}
+                          >
+                            {tCommon("voteRatio", {
+                              cast: row.votes_cast,
+                              total: row.total_votings,
+                            })}
+                          </Typography>
+                        </Box>
                       </TableCell>
                       <TableCell align="center">
                         {getTrendIcon(row.participation_rate, previousRate)}
