@@ -1,5 +1,6 @@
 import type { Database } from "bun:sqlite";
 import governmentMemberships from "../queries/GOVERNMENT_MEMBERSHIPS.sql";
+import personGovernmentPeriods from "../queries/PERSON_GOVERNMENT_PERIODS.sql";
 import leavingParliamentRecords from "../queries/LEAVING_PARLIAMENT.sql";
 import personCommittees from "../queries/PERSON_COMMITTEES.sql";
 import personDissents from "../queries/PERSON_DISSENTS.sql";
@@ -111,6 +112,21 @@ export class PersonRepository {
       DatabaseTables.GovernmentMembership,
       { $personId: number }
     >(governmentMemberships);
+    const data = stmt.all({ $personId: +params.id });
+    stmt.finalize();
+    return data;
+  }
+
+  public fetchGovernmentPeriods(params: { id: string }) {
+    const stmt = this.db.prepare<
+      {
+        government_name: string;
+        government_start_date: string;
+        government_end_date: string | null;
+        is_coalition: 0 | 1;
+      },
+      { $personId: number }
+    >(personGovernmentPeriods);
     const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
     return data;
