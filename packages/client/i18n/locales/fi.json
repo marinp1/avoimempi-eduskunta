@@ -9,10 +9,10 @@
     },
     "disclaimer": {
       "source": "Tietolähde: Eduskunnan avoin data (avoindata.eduskunta.fi)",
-      "unofficial": "Tiedot haetaan ja jäsennetään päivittäin Eduskunnan avoiden datan rajapinnoista ja voivat olla puutteellisia tai virheellisiä. Varmista informaation todenmukaisuus aina virallisista lähteistä, äläkä luota satunnaisiin verkkosivustoihin. Tällä sivulla on mahdollisuuksien mukaan aina myös suora linkki eduskunnan omiin palveluihin.",
+      "unofficial": "Tiedot haetaan ja jäsennetään päivittäin Eduskunnan avoimen datan rajapinnoista ja voivat olla puutteellisia tai virheellisiä. Varmista tietojen paikkansapitävyys aina virallisista lähteistä. Suosittelemme tarkistamaan tiedot aina myös eduskunnan virallisilta sivuilta. Tällä sivulla on mahdollisuuksien mukaan aina myös suora linkki eduskunnan omiin palveluihin.",
       "dbBuildTimestamp": "Tietokanta päivitetty: {{timestamp}}",
       "lastScraperRunAt": "Viimeksi tarkistettu: {{timestamp}}",
-      "lastMigratorRunAt": "Migraattori ajettu: {{timestamp}}"
+      "lastMigratorRunAt": "Tietojen tuonti suoritettu: {{timestamp}}"
     },
     "changesCount": "{{count}} muutosta viime päivityksessä",
     "noChanges": "Ei muutoksia viime päivityksessä"
@@ -36,9 +36,9 @@
   "home": {
     "title": "Etusivu",
     "subtitle": "Reaaliaikainen katsaus Suomen eduskunnan toimintaan",
-    "eyebrow": "Tilannehuone",
-    "heroTitle": "Yhdellä silmäyksellä, missä eduskunta menee juuri nyt.",
-    "heroDescription": "Etusivu nostaa esiin viimeisimmän istuntopäivän, voimasuhteet, aktiivisuuden ja tutkittavat signaalit ilman että sinun täytyy avata erillisiä näkymiä.",
+    "eyebrow": "Yleiskatsaus",
+    "heroTitle": "Yhdellä silmäyksellä, mitä eduskunnassa tapahtuu juuri nyt.",
+    "heroDescription": "Etusivu nostaa esiin viimeisimmän istuntopäivän, voimasuhteet, aktiivisuuden ja tutkittavat signaalit ilman erillisten näkymien avaamista.",
     "heroAsOf": "Tilannepäivä",
     "heroLatestSession": "Viimeisin istunto",
     "heroGovernment": "Rajaus",
@@ -47,7 +47,7 @@
     "freshnessTitle": "Datan ajantasaisuus",
     "freshnessDb": "Tietokanta päivitetty",
     "freshnessScraper": "Rajapinnat tarkistettu",
-    "freshnessMigrator": "Migraatio ajettu",
+    "freshnessMigrator": "Tietojen tuonti suoritettu",
     "spotlightTitle": "Päivän painopiste",
     "spotlightFallback": "Avaa viimeisin istunto tarkempaan tarkasteluun.",
     "jumpLatestSession": "Viimeisin istunto",
@@ -91,13 +91,13 @@
     "noProceedings": "Valitulla rajauksella ei ole istuntoja etusivulle.",
     "signalsRecentEyebrow": "Seurantaan",
     "signalsRecentTitle": "Tuore istuntoaktiivisuus",
-    "signalsRecentDescription": "Nopea leikkaus viimeisimmistä istunnoista ja niiden äänestysaktiivisuudesta.",
+    "signalsRecentDescription": "Pikasilmäys viimeisimpien istuntojen äänestysaktiivisuuteen.",
     "signalsCloseVoteEyebrow": "Jännite",
     "signalsCloseVoteTitle": "Tiukimmat äänestykset",
-    "signalsCloseVoteDescription": "Pienellä marginaalilla ratkenneet äänestykset kannattaa tarkistaa ensin.",
+    "signalsCloseVoteDescription": "Pienellä ääntenerolla ratkenneet äänestykset.",
     "signalsSpeechEyebrow": "Puheaktiivisuus",
     "signalsSpeechTitle": "Kuka hallitsee puheenvuoroja",
-    "signalsSpeechDescription": "Puhujalistauksen kärki kertoo, ketkä näkyvät juuri nyt eniten salikeskustelussa.",
+    "signalsSpeechDescription": "Eniten puheenvuoroja käyttäneet edustajat viimeisimmissä täysistunnoissa.",
     "signalsCoalitionEyebrow": "Asetelma",
     "signalsCoalitionTitle": "Hallitus vastaan oppositio",
     "signalsCoalitionDescription": "Poimi nopeasti äänestykset, joissa blokkien asetelma on selkeästi nähtävissä.",
@@ -335,7 +335,7 @@
     "close": "Sulje",
     "configure": "Määritä",
     "selectAll": "Valitse kaikki",
-    "deselectAll": "Poista valinnat",
+    "deselectAll": "Tyhjennä valinnat",
     "name": "Nimi",
     "party": "Puolue",
     "status": "Tila",
@@ -357,7 +357,7 @@
     "noData": "Ei tietoja",
     "openView": "Avaa näkymä",
     "openDetails": "Avaa tiedot",
-    "rowsPerPage": "Rivejä per sivu:",
+    "rowsPerPage": "Rivejä sivulla:",
     "search": "Haku",
     "detailsToggle_show": "Näytä tiedot",
     "showLess": "Näytä vähemmän",
@@ -375,7 +375,7 @@
     "selectedGovernment": "Valittu hallitus",
     "past": "Entinen hallitus",
     "ministers": "ministeriä",
-    "coalition": "Koalitio",
+    "coalition": "Hallituspuolueet",
     "period": "Kausi",
     "members": "Ministerit",
     "ministry": "Ministeriö",
@@ -445,7 +445,7 @@
     },
     "distribution": {
       "title": "Paikkajakauma",
-      "description": "Klikkaa puoluetta rajataksesi listan samaan ryhmään.",
+      "description": "Valitse puolue rajataksesi lista saman ryhmän edustajiin.",
       "totalMembers": "Jäsentä yhteensä",
       "seats": "paikkaa",
       "majorityLine": "Puuttuu enemmistöstä",
@@ -478,7 +478,7 @@
       "title": "Hae kaikkia edustajia",
       "description": "Haku kattaa myös entiset kansanedustajat. Profiili avautuu tähän näkymään.",
       "placeholder": "Kirjoita nimi tai osa nimestä...",
-      "startTitle": "Aloita globaali henkilöhaku",
+      "startTitle": "Hae kaikkien kausien edustajia",
       "startHint": "Kirjoita vähintään kaksi merkkiä hakeaksesi nykyisiä ja entisiä edustajia.",
       "noResults": "Hakutuloksia ei löytynyt.",
       "noResultsHint": "Kokeile toista nimimuotoa tai lyhyempää hakua.",
@@ -673,11 +673,11 @@
     "search": "Hae äänestyksiä otsikolla",
     "searchPlaceholder": "Kirjoita vähintään 3 merkkiä...",
     "searchHelp": "Haku kohdistuu otsikoihin ja tukee analyysiä suoraan tulosjoukosta.",
-    "searchNeedsMore": "Kirjoita vähintään 3 merkkiä, niin otamme haun mukaan tuloksiin.",
+    "searchNeedsMore": "Kirjoita vähintään 3 merkkiä hakutulosten näyttämiseksi.",
     "clearFilters": "Tyhjennä rajaukset",
     "recentVotes": "Viimeisimmät äänestykset",
     "startSearch": "Aloita kirjoittamalla hakusana",
-    "startSearchHint": "Näytämme analyysin, kun hakuehto on vähintään 3 merkkiä.",
+    "startSearchHint": "Analyysi näytetään, kun hakuehto on vähintään 3 merkkiä.",
     "noResults": "Ei äänestyksiä tällä haulla.",
     "noResultsHint": "Kokeile toista hakusanaa tai poista suodattimia.",
     "focusedVoting": "Äänestys #{{id}}",
@@ -735,7 +735,7 @@
     "results": {
       "empty": "Tyhjää",
       "absent": "Poissa",
-      "total": "Yht",
+      "total": "Yht.",
       "results": "Tulokset",
       "minutes": "Pöytäkirja"
     },
@@ -783,8 +783,8 @@
     "speakersCount_other": "Puhujat: {{count}}",
     "partiesCount_one": "Puolue: {{count}}",
     "partiesCount_other": "Puolueet: {{count}}",
-    "agendaKeyLine": "Päiväjärjestysavain: {{value}}",
-    "vaskiIdLine": "Vaski ID: {{value}}",
+    "agendaKeyLine": "Päiväjärjestyksen tunniste: {{value}}",
+    "vaskiIdLine": "Vaski-tunniste: {{value}}",
     "vaskiDocument": "Asiakirja",
     "vaskiTypeLine": "Tyyppi: {{value}}",
     "vaskiTunnusLine": "Eduskuntatunnus: {{value}}",
@@ -885,7 +885,7 @@
       },
       "closeVotes": {
         "title": "Tiukat äänestykset",
-        "description": "Äänestykset joissa tulos ratkaistiin pienellä marginaalilla",
+        "description": "Äänestykset, joissa tulos ratkaistiin pienellä äänierolla",
         "action": "Katso tiukat äänestykset \u2192"
       },
       "coalitionOpposition": {
@@ -951,7 +951,7 @@
     },
     "closeVotes": {
       "title": "Tiukat äänestykset",
-      "description": "Äänestykset joissa jaa- ja ei-äänten ero oli pieni.",
+      "description": "Äänestykset, joissa jaa- ja ei-äänten ero oli pieni.",
       "marginLabel": "Marginaali: {{value}}",
       "noData": "Ei tiukkoja äänestyksiä."
     },
@@ -965,7 +965,7 @@
       "noData": "Ei hallitus-oppositio-tietoja.",
       "agreementRate": "Yksimielisyysaste",
       "agreements": "Yksimielisiä",
-      "inlineVotings": "Äänestykset (inline)",
+      "inlineVotings": "Äänestykset (listanäkymä)",
       "votings": "Äänestyksiä"
     },
     "speechActivity": {
@@ -973,13 +973,13 @@
       "description": "Aktiivisimmat puhujat eduskunnassa puheenvuorojen ja sanamäärän perusteella.",
       "speechCount": "Puheenvuoroja",
       "totalWords": "Sanoja yhteensä",
-      "avgWords": "Keskim. sanat/puhe",
+      "avgWords": "Sanoja / puheenvuoro",
       "noData": "Ei puheenvuorotietoja."
     },
     "timeSeries": {
       "title": "Eduskunnan tilastot ajassa",
       "count": "Lukumäärä",
-      "totalLatest": "Yhteensä viimeisimpänä",
+      "totalLatest": "Yhteensä (uusin tieto)",
       "gender": {
         "title": "Sukupuolijakauma",
         "description": "Naisten ja miesten määrä eduskunnassa vuosittain",
@@ -990,8 +990,8 @@
         "countDistribution": "Lukumääräinen jakauma",
         "women": "Naiset",
         "men": "Miehet",
-        "womenLatest": "Naiset viimeisimpänä",
-        "menLatest": "Miehet viimeisimpänä"
+        "womenLatest": "Naiset (uusin tieto)",
+        "menLatest": "Miehet (uusin tieto)"
       },
       "age": {
         "title": "Ikäjakauma",
@@ -999,9 +999,9 @@
         "groups": "Ikäryhmät",
         "averageAge": "Keski-ikä",
         "years": "Ikä (vuotta)",
-        "averageLatest": "Keski-ikä viimeisimpänä",
-        "youngestLatest": "Nuorin viimeisimpänä",
-        "oldestLatest": "Vanhin viimeisimpänä"
+        "averageLatest": "Keski-ikä (uusin tieto)",
+        "youngestLatest": "Nuorin (uusin tieto)",
+        "oldestLatest": "Vanhin (uusin tieto)"
       }
     }
   },
@@ -1009,7 +1009,7 @@
     "buttonLabel": "Tietolähteet",
     "drawerTitle": "Tietolähteet",
     "fetchFailed": "Tietolähteiden haku epäonnistui",
-    "lastMigrationLine": "Viimeisin migraatio: {{value}}",
+    "lastMigrationLine": "Viimeisin tietojen tuonti: {{value}}",
     "lastScrapeLine": "Viimeisin haku: {{value}}",
     "noMapping": "Tälle sivulle ei ole vielä määritetty tietolähdekartoitusta.",
     "openTooltip": "Näytä tietolähteet ja alkuperä",
