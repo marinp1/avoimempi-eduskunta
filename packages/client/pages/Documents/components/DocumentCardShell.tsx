@@ -11,11 +11,11 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import type React from "react";
+import React from "react";
 import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme";
 
-export const DocumentCardShell: React.FC<{
+const DocumentCardShellComponent: React.FC<{
   title: React.ReactNode;
   identifier?: string | null;
   eyebrow?: React.ReactNode;
@@ -49,15 +49,15 @@ export const DocumentCardShell: React.FC<{
   <DataCard
     sx={{
       overflow: "hidden",
-      background:
-        "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.96) 100%)",
+      background: "#fff",
+      contentVisibility: "auto",
+      containIntrinsicSize: "420px",
     }}
   >
     <Box
       sx={{
         p: { xs: 2, md: 2.5 },
-        background:
-          "linear-gradient(180deg, rgba(27,42,74,0.025) 0%, rgba(27,42,74,0) 100%)",
+        background: `${colors.primary}03`,
       }}
     >
       <Stack spacing={1.5}>
@@ -167,3 +167,5 @@ export const DocumentCardShell: React.FC<{
     </Collapse>
   </DataCard>
 );
+
+export const DocumentCardShell = React.memo(DocumentCardShellComponent);

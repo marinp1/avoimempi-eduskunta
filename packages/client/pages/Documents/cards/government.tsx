@@ -20,7 +20,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
@@ -60,7 +60,7 @@ export interface GovernmentProposalListItem {
 type GovernmentProposalDetail =
   ApiRouteResponse<`/api/government-proposals/:id`>;
 
-export function GovernmentProposalCard({
+function GovernmentProposalCardComponent({
   item,
   onSubjectClick,
 }: {
@@ -556,3 +556,5 @@ export function GovernmentProposalCard({
     </DocumentCardShell>
   );
 }
+
+export const GovernmentProposalCard = memo(GovernmentProposalCardComponent);

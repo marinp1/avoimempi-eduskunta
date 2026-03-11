@@ -19,7 +19,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
@@ -53,7 +53,7 @@ export interface InterpellationListItem {
 
 type InterpellationDetail = ApiRouteResponse<`/api/interpellations/:id`>;
 
-export function InterpellationCard({
+function InterpellationCardComponent({
   item,
   onSubjectClick,
 }: {
@@ -373,3 +373,5 @@ export function InterpellationCard({
     </DocumentCardShell>
   );
 }
+
+export const InterpellationCard = memo(InterpellationCardComponent);
