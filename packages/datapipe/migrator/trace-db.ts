@@ -1,4 +1,6 @@
 import sqlite from "bun:sqlite";
+import { mkdirSync } from "node:fs";
+import path from "node:path";
 import { getTraceDatabasePath } from "#database";
 import { getRawRowStore } from "#storage/row-store/factory";
 
@@ -35,6 +37,7 @@ export async function rebuildTraceDatabase(): Promise<void> {
 
   console.log(`\n🔍 Rebuilding trace database at ${tracePath}...`);
 
+  mkdirSync(path.dirname(tracePath), { recursive: true });
   const traceDb = sqlite.open(tracePath, { create: true, readwrite: true });
 
   try {
