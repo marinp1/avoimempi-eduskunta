@@ -1,31 +1,26 @@
 import {
   Article as ArticleIcon,
   Balance as BalanceIcon,
-  ExpandMore as ExpandMoreIcon,
   Gavel as GavelIcon,
+  Person as PersonIcon,
 } from "@mui/icons-material";
 import {
-  Alert,
   Box,
   Button,
   Chip,
   CircularProgress,
   Collapse,
   Stack,
-  Typography,
 } from "@mui/material";
 import { useState } from "react";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
-import { SourceText } from "#client/components/SourceText";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { apiFetch } from "#client/utils/fetch";
+import { DocumentCardShell, DocumentMetaItem } from "../components";
 import { formatDate, getOutcomeColor, InlineRelatedSessions } from "./shared";
-
-// ─── Legislative initiative types and card ───
 
 export interface LegislativeInitiativeListItem {
   id: number;
@@ -102,272 +97,217 @@ export function LegislativeInitiativeCard({
     : signer;
 
   return (
-    <DataCard>
-      <Box
-        sx={{
-          cursor: "pointer",
-          "&:hover": {
-            backgroundColor: colors.backgroundSubtle,
-          },
-          transition: "background-color 0.2s",
-          p: 2,
-        }}
-        onClick={handleExpand}
-      >
-        <Stack spacing={1.5}>
-          <Stack
-            direction="row"
-            spacing={1}
-            alignItems="flex-start"
-            flexWrap="wrap"
-          >
-            <SourceText
-              variant="h6"
-              sx={{
-                flex: 1,
-                minWidth: "200px",
-                color: colors.textPrimary,
-                fontWeight: 500,
-              }}
-            >
-              {item.title || t("noTitle")}
-            </SourceText>
-            <Chip
-              label={item.parliament_identifier}
-              size="small"
-              sx={{
-                backgroundColor: colors.primaryLight,
-                color: colors.primary,
-                fontWeight: 500,
-              }}
-            />
-            <Chip
-              label={item.initiative_type_code}
-              size="small"
-              variant="outlined"
-            />
-          </Stack>
-
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            flexWrap="wrap"
-            alignItems={{ xs: "flex-start", sm: "center" }}
-          >
-            {item.submission_date && (
-              <Typography variant="body2" color={colors.textSecondary}>
-                {t("submissionDateLine", {
-                  value: formatDate(item.submission_date),
-                })}
-              </Typography>
-            )}
-
-            {signerWithParty && (
-              <Typography variant="body2" color={colors.textSecondary}>
-                {signerWithParty}
-              </Typography>
-            )}
-
-            {item.decision_outcome && (
+    <DocumentCardShell
+      title={item.title || t("noTitle")}
+      identifier={item.parliament_identifier}
+      eyebrow={
+        <Chip
+          label={item.initiative_type_code}
+          size="small"
+          variant="outlined"
+          sx={{ borderColor: colors.dataBorder }}
+        />
+      }
+      status={
+        item.decision_outcome ? (
+          <Chip
+            label={item.decision_outcome}
+            size="small"
+            sx={{
+              backgroundColor: getOutcomeColor(item.decision_outcome_code),
+              color: "#fff",
+              fontWeight: 700,
+            }}
+          />
+        ) : item.latest_stage_code ? (
+          <Chip
+            label={item.latest_stage_code}
+            size="small"
+            variant="outlined"
+            sx={{
+              borderColor: colors.dataBorder,
+              color: colors.textSecondary,
+            }}
+          />
+        ) : null
+      }
+      meta={
+        <>
+          {item.submission_date && (
+            <DocumentMetaItem icon={<ArticleIcon />}>
+              {t("submissionDateLine", {
+                value: formatDate(item.submission_date),
+              })}
+            </DocumentMetaItem>
+          )}
+          {signerWithParty && (
+            <DocumentMetaItem icon={<PersonIcon />}>
+              {signerWithParty}
+            </DocumentMetaItem>
+          )}
+        </>
+      }
+      topics={
+        subjects.length > 0 ? (
+          <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+            {displaySubjects.map((subject, idx) => (
               <Chip
-                label={item.decision_outcome}
+                key={idx}
+                label={subject}
                 size="small"
+                variant="outlined"
+                onClick={
+                  onSubjectClick
+                    ? () => {
+                        onSubjectClick(subject);
+                      }
+                    : undefined
+                }
                 sx={{
-                  backgroundColor: getOutcomeColor(item.decision_outcome_code),
-                  color: "#fff",
-                  fontWeight: 500,
+                  borderColor: colors.dataBorder,
+                  color: colors.textSecondary,
+                  cursor: onSubjectClick ? "pointer" : "default",
+                }}
+              />
+            ))}
+            {remainingSubjects > 0 && (
+              <Chip
+                label={`+${remainingSubjects}`}
+                size="small"
+                variant="outlined"
+                sx={{
+                  borderColor: colors.dataBorder,
+                  color: colors.textSecondary,
                 }}
               />
             )}
-
-            {item.latest_stage_code && !item.decision_outcome && (
-              <Typography variant="body2" color={colors.textSecondary}>
-                {t("latestStageLine", {
-                  value: item.latest_stage_code,
-                })}
-              </Typography>
-            )}
           </Stack>
-
-          {subjects.length > 0 && (
-            <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
-              {displaySubjects.map((subject, idx) => (
-                <Chip
-                  key={idx}
-                  label={subject}
-                  size="small"
-                  variant="outlined"
-                  onClick={
-                    onSubjectClick
-                      ? (e) => {
-                          e.stopPropagation();
-                          onSubjectClick(subject);
-                        }
-                      : undefined
-                  }
+        ) : null
+      }
+      expanded={expanded}
+      onToggle={handleExpand}
+      toggleLabel={t("showDetails")}
+      collapseLabel={t("hideDetails")}
+      loadingState={
+        loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
+            <CircularProgress size={24} />
+          </Box>
+        ) : undefined
+      }
+      error={error ? t("loadErrorLine", { value: error }) : null}
+    >
+      {detail && (
+        <Stack spacing={2}>
+          {(detail.justification_text || detail.justification_rich_text) && (
+            <Box>
+              <Button
+                startIcon={<ArticleIcon />}
+                onClick={() => setShowJustification(!showJustification)}
+                sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
+              >
+                {showJustification
+                  ? t("justificationToggle", { context: "hide" })
+                  : t("justificationToggle", { context: "show" })}
+              </Button>
+              <Collapse in={showJustification}>
+                <Box
                   sx={{
-                    borderColor: colors.dataBorder,
-                    color: colors.textSecondary,
-                    cursor: onSubjectClick ? "pointer" : "default",
+                    p: 2,
+                    backgroundColor: colors.backgroundSubtle,
+                    borderRadius: 1,
+                    borderLeft: `3px solid ${colors.primaryLight}`,
                   }}
-                />
-              ))}
-              {remainingSubjects > 0 && (
-                <Chip
-                  label={`+${remainingSubjects}`}
-                  size="small"
-                  variant="outlined"
-                  sx={{
-                    borderColor: colors.dataBorder,
-                    color: colors.textSecondary,
-                  }}
-                />
-              )}
-            </Stack>
-          )}
-        </Stack>
-
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            mt: 1,
-            transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-            transition: "transform 0.2s",
-          }}
-        >
-          <ExpandMoreIcon sx={{ color: colors.textSecondary }} />
-        </Box>
-      </Box>
-
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <Box sx={{ px: 2, pb: 2 }}>
-          {loading && (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-              <CircularProgress size={24} />
+                >
+                  <RichTextRenderer
+                    document={detail.justification_rich_text}
+                    fallbackText={detail.justification_text}
+                    paragraphVariant="body2"
+                  />
+                </Box>
+              </Collapse>
             </Box>
           )}
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {t("loadErrorLine", { value: error })}
-            </Alert>
+          {(detail.proposal_text || detail.proposal_rich_text) && (
+            <Box>
+              <Button
+                startIcon={<GavelIcon />}
+                onClick={() => setShowProposalText(!showProposalText)}
+                sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
+              >
+                {showProposalText
+                  ? t("clausesToggle", { context: "hide" })
+                  : t("clausesToggle", { context: "show" })}
+              </Button>
+              <Collapse in={showProposalText}>
+                <Box
+                  sx={{
+                    p: 2,
+                    backgroundColor: colors.backgroundSubtle,
+                    borderRadius: 1,
+                    borderLeft: `3px solid ${colors.primaryLight}`,
+                  }}
+                >
+                  <RichTextRenderer
+                    document={detail.proposal_rich_text}
+                    fallbackText={detail.proposal_text}
+                    paragraphVariant="body2"
+                  />
+                </Box>
+              </Collapse>
+            </Box>
           )}
 
-          {detail && (
-            <Stack spacing={2}>
-              {(detail.justification_text ||
-                detail.justification_rich_text) && (
-                <Box>
-                  <Button
-                    startIcon={<ArticleIcon />}
-                    onClick={() => setShowJustification(!showJustification)}
-                    sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
-                  >
-                    {showJustification
-                      ? t("justificationToggle", { context: "hide" })
-                      : t("justificationToggle", { context: "show" })}
-                  </Button>
-                  <Collapse in={showJustification}>
-                    <Box
-                      sx={{
-                        p: 2,
-                        backgroundColor: colors.backgroundSubtle,
-                        borderRadius: 1,
-                        borderLeft: `3px solid ${colors.primaryLight}`,
-                      }}
-                    >
-                      <RichTextRenderer
-                        document={detail.justification_rich_text}
-                        fallbackText={detail.justification_text}
-                        paragraphVariant="body2"
-                      />
-                    </Box>
-                  </Collapse>
+          {(detail.law_text || detail.law_rich_text) && (
+            <Box>
+              <Button
+                startIcon={<BalanceIcon />}
+                onClick={() => setShowLawText(!showLawText)}
+                sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
+              >
+                {showLawText
+                  ? t("lawTextToggle", { context: "hide" })
+                  : t("lawTextToggle", { context: "show" })}
+              </Button>
+              <Collapse in={showLawText}>
+                <Box
+                  sx={{
+                    p: 2,
+                    backgroundColor: colors.backgroundSubtle,
+                    borderRadius: 1,
+                    borderLeft: `3px solid ${colors.success}`,
+                  }}
+                >
+                  <RichTextRenderer
+                    document={detail.law_rich_text}
+                    fallbackText={detail.law_text}
+                    paragraphVariant="body2"
+                  />
                 </Box>
-              )}
-
-              {(detail.proposal_text || detail.proposal_rich_text) && (
-                <Box>
-                  <Button
-                    startIcon={<GavelIcon />}
-                    onClick={() => setShowProposalText(!showProposalText)}
-                    sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
-                  >
-                    {showProposalText
-                      ? t("clausesToggle", { context: "hide" })
-                      : t("clausesToggle", { context: "show" })}
-                  </Button>
-                  <Collapse in={showProposalText}>
-                    <Box
-                      sx={{
-                        p: 2,
-                        backgroundColor: colors.backgroundSubtle,
-                        borderRadius: 1,
-                        borderLeft: `3px solid ${colors.primaryLight}`,
-                      }}
-                    >
-                      <RichTextRenderer
-                        document={detail.proposal_rich_text}
-                        fallbackText={detail.proposal_text}
-                        paragraphVariant="body2"
-                      />
-                    </Box>
-                  </Collapse>
-                </Box>
-              )}
-
-              {(detail.law_text || detail.law_rich_text) && (
-                <Box>
-                  <Button
-                    startIcon={<BalanceIcon />}
-                    onClick={() => setShowLawText(!showLawText)}
-                    sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
-                  >
-                    {showLawText
-                      ? t("lawTextToggle", { context: "hide" })
-                      : t("lawTextToggle", { context: "show" })}
-                  </Button>
-                  <Collapse in={showLawText}>
-                    <Box
-                      sx={{
-                        p: 2,
-                        backgroundColor: colors.backgroundSubtle,
-                        borderRadius: 1,
-                        borderLeft: `3px solid ${colors.success}`,
-                      }}
-                    >
-                      <RichTextRenderer
-                        document={detail.law_rich_text}
-                        fallbackText={detail.law_text}
-                        paragraphVariant="body2"
-                      />
-                    </Box>
-                  </Collapse>
-                </Box>
-              )}
-
-              <DocumentLifecycle
-                currentIdentifier={item.parliament_identifier}
-                directReferenceValues={[
-                  ...detail.stages.map((stage) => stage.stage_title),
-                  ...detail.stages.map((stage) => stage.event_title),
-                  ...detail.stages.map((stage) => stage.event_description),
-                ]}
-                richTextValues={[
-                  detail.justification_rich_text,
-                  detail.proposal_rich_text,
-                  detail.law_rich_text,
-                ]}
-              />
-
-              <InlineRelatedSessions sessions={detail.sessions} />
-
-              <RelatedVotings identifiers={[item.parliament_identifier]} />
-            </Stack>
+              </Collapse>
+            </Box>
           )}
-        </Box>
-      </Collapse>
-    </DataCard>
+
+          <DocumentLifecycle
+            currentIdentifier={item.parliament_identifier}
+            directReferenceValues={[
+              ...detail.stages.map((stage) => stage.stage_title),
+              ...detail.stages.map((stage) => stage.event_title),
+              ...detail.stages.map((stage) => stage.event_description),
+            ]}
+            richTextValues={[
+              detail.justification_rich_text,
+              detail.proposal_rich_text,
+              detail.law_rich_text,
+            ]}
+          />
+
+          <InlineRelatedSessions sessions={detail.sessions} />
+
+          <RelatedVotings identifiers={[item.parliament_identifier]} />
+        </Stack>
+      )}
+    </DocumentCardShell>
   );
 }

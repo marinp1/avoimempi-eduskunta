@@ -1,12 +1,10 @@
 import {
   Article as ArticleIcon,
-  ExpandMore as ExpandMoreIcon,
   Gavel as GavelIcon,
   Person as PersonIcon,
   Timeline as TimelineIcon,
 } from "@mui/icons-material";
 import {
-  Alert,
   Box,
   Button,
   Chip,
@@ -26,9 +24,13 @@ import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { apiFetch } from "#client/utils/fetch";
+import {
+  DocumentCardShell,
+  DocumentDetailSection,
+  DocumentMetaItem,
+} from "../components";
 import { formatDate, getOutcomeColor, InlineRelatedSessions } from "./shared";
 
 // ─── Interpellation types and card ───
@@ -95,373 +97,279 @@ export function InterpellationCard({
   };
 
   return (
-    <DataCard>
-      <Box
-        sx={{
-          cursor: "pointer",
-          "&:hover": {
-            backgroundColor: colors.backgroundSubtle,
-          },
-          transition: "background-color 0.2s",
-          p: 2,
-        }}
-        onClick={handleExpand}
-      >
-        <Stack spacing={1.5}>
-          {/* Title row */}
-          <Stack
-            direction="row"
-            spacing={1}
-            alignItems="flex-start"
-            flexWrap="wrap"
-          >
-            <Typography
-              variant="h6"
-              sx={{
-                flex: 1,
-                minWidth: "200px",
-                color: colors.textPrimary,
-                fontWeight: 500,
-              }}
-            >
-              {item.title || tDocuments("noTitle")}
-            </Typography>
-            <Chip
-              label={item.parliament_identifier}
-              size="small"
-              sx={{
-                backgroundColor: colors.primaryLight,
-                color: colors.primary,
-                fontWeight: 500,
-              }}
-            />
-          </Stack>
-
-          {/* Metadata row */}
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            flexWrap="wrap"
-            alignItems={{ xs: "flex-start", sm: "center" }}
-          >
-            {item.submission_date && (
-              <Typography variant="body2" color={colors.textSecondary}>
-                {tDocuments("submissionDateLine", {
-                  value: formatDate(item.submission_date),
-                })}
-              </Typography>
-            )}
-
-            {(item.first_signer_first_name || item.first_signer_last_name) && (
-              <Stack direction="row" spacing={0.5} alignItems="center">
-                <PersonIcon
-                  fontSize="small"
-                  sx={{ color: colors.textSecondary }}
-                />
-                <Typography variant="body2" color={colors.textSecondary}>
-                  {[item.first_signer_first_name, item.first_signer_last_name]
-                    .filter(Boolean)
-                    .join(" ")}
-                  {item.first_signer_party && ` (${item.first_signer_party})`}
-                  {!!item.co_signer_count &&
-                    item.co_signer_count > 0 &&
-                    ` +${item.co_signer_count}`}
-                </Typography>
-              </Stack>
-            )}
-
-            {item.decision_outcome && (
+    <DocumentCardShell
+      title={item.title || tDocuments("noTitle")}
+      identifier={item.parliament_identifier}
+      status={
+        item.decision_outcome ? (
+          <Chip
+            label={item.decision_outcome}
+            size="small"
+            sx={{
+              backgroundColor: getOutcomeColor(item.decision_outcome_code),
+              color: "#fff",
+              fontWeight: 700,
+            }}
+          />
+        ) : null
+      }
+      meta={
+        <>
+          {item.submission_date && (
+            <DocumentMetaItem icon={<ArticleIcon />}>
+              {tDocuments("submissionDateLine", {
+                value: formatDate(item.submission_date),
+              })}
+            </DocumentMetaItem>
+          )}
+          {(item.first_signer_first_name || item.first_signer_last_name) && (
+            <DocumentMetaItem icon={<PersonIcon />}>
+              {[item.first_signer_first_name, item.first_signer_last_name]
+                .filter(Boolean)
+                .join(" ")}
+              {item.first_signer_party && ` (${item.first_signer_party})`}
+              {!!item.co_signer_count &&
+                item.co_signer_count > 0 &&
+                ` +${item.co_signer_count}`}
+            </DocumentMetaItem>
+          )}
+        </>
+      }
+      topics={
+        subjects.length > 0 ? (
+          <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+            {displaySubjects.map((subject, idx) => (
               <Chip
-                label={item.decision_outcome}
+                key={idx}
+                label={subject}
                 size="small"
+                variant="outlined"
+                onClick={
+                  onSubjectClick
+                    ? () => {
+                        onSubjectClick(subject);
+                      }
+                    : undefined
+                }
                 sx={{
-                  backgroundColor: getOutcomeColor(item.decision_outcome_code),
-                  color: "#fff",
-                  fontWeight: 500,
+                  borderColor: colors.dataBorder,
+                  color: colors.textSecondary,
+                  cursor: onSubjectClick ? "pointer" : "default",
+                }}
+              />
+            ))}
+            {remainingSubjects > 0 && (
+              <Chip
+                label={`+${remainingSubjects}`}
+                size="small"
+                variant="outlined"
+                sx={{
+                  borderColor: colors.dataBorder,
+                  color: colors.textSecondary,
                 }}
               />
             )}
           </Stack>
-
-          {/* Subjects */}
-          {subjects.length > 0 && (
-            <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
-              {displaySubjects.map((subject, idx) => (
-                <Chip
-                  key={idx}
-                  label={subject}
-                  size="small"
-                  variant="outlined"
-                  onClick={
-                    onSubjectClick
-                      ? (e) => {
-                          e.stopPropagation();
-                          onSubjectClick(subject);
-                        }
-                      : undefined
-                  }
-                  sx={{
-                    borderColor: colors.dataBorder,
-                    color: colors.textSecondary,
-                    cursor: onSubjectClick ? "pointer" : "default",
-                  }}
-                />
-              ))}
-              {remainingSubjects > 0 && (
-                <Chip
-                  label={`+${remainingSubjects}`}
-                  size="small"
-                  variant="outlined"
-                  sx={{
-                    borderColor: colors.dataBorder,
-                    color: colors.textSecondary,
-                  }}
-                />
-              )}
-            </Stack>
+        ) : null
+      }
+      expanded={expanded}
+      onToggle={handleExpand}
+      toggleLabel={tDocuments("showDetails")}
+      collapseLabel={tDocuments("hideDetails")}
+      loadingState={
+        loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+            <CircularProgress size={32} />
+          </Box>
+        ) : undefined
+      }
+      error={error}
+    >
+      {detail && (
+        <Stack spacing={3}>
+          {detail.signers.length > 0 && (
+            <DocumentDetailSection
+              title={tDocuments("signers")}
+              icon={<PersonIcon />}
+            >
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>#</TableCell>
+                      <TableCell>{tDocuments("author")}</TableCell>
+                      <TableCell>{tCommon("party")}</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {detail.signers.map((signer, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            alignItems="center"
+                          >
+                            {idx + 1}
+                          </Stack>
+                        </TableCell>
+                        <TableCell>
+                          {[signer.first_name, signer.last_name]
+                            .filter(Boolean)
+                            .join(" ") || "—"}
+                        </TableCell>
+                        <TableCell>{signer.party || "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </DocumentDetailSection>
           )}
-        </Stack>
 
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            mt: 1,
-          }}
-        >
-          <ExpandMoreIcon
-            sx={{
-              transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.3s",
-              color: colors.textSecondary,
-            }}
-          />
-        </Box>
-      </Box>
+          {detail.stages.length > 0 && (
+            <DocumentDetailSection
+              title={tDocuments("stages")}
+              icon={<TimelineIcon />}
+            >
+              <Stack spacing={1.5}>
+                {detail.stages.map((stage, idx) => (
+                  <Box
+                    key={idx}
+                    sx={{
+                      pl: 2,
+                      borderLeft: `3px solid ${colors.primary}`,
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: 500, color: colors.textPrimary }}
+                    >
+                      {stage.stage_title || "—"}
+                    </Typography>
+                    {stage.event_date && (
+                      <Typography
+                        variant="caption"
+                        sx={{ color: colors.textSecondary }}
+                      >
+                        {formatDate(stage.event_date)}
+                      </Typography>
+                    )}
+                    {stage.event_title &&
+                      stage.event_title !== stage.stage_title && (
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            mt: 0.25,
+                            color: colors.textPrimary,
+                            fontWeight: 400,
+                          }}
+                        >
+                          {stage.event_title}
+                        </Typography>
+                      )}
+                    {stage.event_description && (
+                      <Typography
+                        variant="body2"
+                        sx={{ mt: 0.5, color: colors.textSecondary }}
+                      >
+                        {stage.event_description}
+                      </Typography>
+                    )}
+                  </Box>
+                ))}
+              </Stack>
+            </DocumentDetailSection>
+          )}
 
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <Box sx={{ p: 2, pt: 0, borderTop: `1px solid ${colors.dataBorder}` }}>
-          {loading && (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
-              <CircularProgress size={32} />
+          {(detail.question_text || detail.question_rich_text) && (
+            <Box>
+              <Button
+                startIcon={<ArticleIcon />}
+                onClick={() => setShowJustification(!showJustification)}
+                sx={{
+                  textTransform: "none",
+                  color: colors.primary,
+                  mb: 1,
+                }}
+              >
+                {showJustification
+                  ? tDocuments("justificationToggle", { context: "hide" })
+                  : tDocuments("justificationToggle", { context: "show" })}
+              </Button>
+              <Collapse in={showJustification}>
+                <Box
+                  sx={{
+                    p: 2,
+                    backgroundColor: colors.backgroundSubtle,
+                    borderRadius: 1,
+                    borderLeft: `4px solid ${colors.primary}`,
+                  }}
+                >
+                  <RichTextRenderer
+                    document={detail.question_rich_text}
+                    fallbackText={detail.question_text}
+                    paragraphVariant="body2"
+                  />
+                </Box>
+              </Collapse>
             </Box>
           )}
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
+          {(detail.resolution_text || detail.resolution_rich_text) && (
+            <Box>
+              <Button
+                startIcon={<GavelIcon />}
+                onClick={() => setShowClauses(!showClauses)}
+                sx={{
+                  textTransform: "none",
+                  color: colors.primary,
+                  mb: 1,
+                }}
+              >
+                {showClauses
+                  ? tDocuments("clausesToggle", { context: "hide" })
+                  : tDocuments("clausesToggle", { context: "show" })}
+              </Button>
+              <Collapse in={showClauses}>
+                <Box
+                  sx={{
+                    p: 2,
+                    backgroundColor: colors.backgroundSubtle,
+                    borderRadius: 1,
+                    borderLeft: `4px solid ${getOutcomeColor(
+                      detail.decision_outcome_code,
+                    )}`,
+                  }}
+                >
+                  <RichTextRenderer
+                    document={detail.resolution_rich_text}
+                    fallbackText={detail.resolution_text}
+                    paragraphVariant="body2"
+                  />
+                </Box>
+              </Collapse>
+            </Box>
           )}
 
-          {detail && (
-            <Stack spacing={3}>
-              {detail.signers.length > 0 && (
-                <Box>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    sx={{ mb: 1.5 }}
-                  >
-                    <PersonIcon sx={{ color: colors.primary }} />
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 600, color: colors.textPrimary }}
-                    >
-                      {tDocuments("signers")}
-                    </Typography>
-                  </Stack>
-                  <TableContainer>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>#</TableCell>
-                          <TableCell>{tDocuments("author")}</TableCell>
-                          <TableCell>{tCommon("party")}</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {detail.signers.map((signer, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell>
-                              <Stack
-                                direction="row"
-                                spacing={0.5}
-                                alignItems="center"
-                              >
-                                {idx + 1}
-                              </Stack>
-                            </TableCell>
-                            <TableCell>
-                              {[signer.first_name, signer.last_name]
-                                .filter(Boolean)
-                                .join(" ") || "—"}
-                            </TableCell>
-                            <TableCell>{signer.party || "—"}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Box>
-              )}
+          <DocumentLifecycle
+            currentIdentifier={item.parliament_identifier}
+            directReferenceValues={[
+              ...detail.stages.map((stage) => stage.stage_title),
+              ...detail.stages.map((stage) => stage.event_title),
+              ...detail.stages.map((stage) => stage.event_description),
+            ]}
+            richTextValues={[
+              detail.question_rich_text,
+              detail.resolution_rich_text,
+            ]}
+          />
 
-              {detail.stages.length > 0 && (
-                <Box>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    sx={{ mb: 1.5 }}
-                  >
-                    <TimelineIcon sx={{ color: colors.primary }} />
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 600, color: colors.textPrimary }}
-                    >
-                      {tDocuments("stages")}
-                    </Typography>
-                  </Stack>
-                  <Stack spacing={1.5}>
-                    {detail.stages.map((stage, idx) => (
-                      <Box
-                        key={idx}
-                        sx={{
-                          pl: 2,
-                          borderLeft: `3px solid ${colors.primary}`,
-                        }}
-                      >
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: 500, color: colors.textPrimary }}
-                        >
-                          {stage.stage_title || "—"}
-                        </Typography>
-                        {stage.event_date && (
-                          <Typography
-                            variant="caption"
-                            sx={{ color: colors.textSecondary }}
-                          >
-                            {formatDate(stage.event_date)}
-                          </Typography>
-                        )}
-                        {stage.event_title &&
-                          stage.event_title !== stage.stage_title && (
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                mt: 0.25,
-                                color: colors.textPrimary,
-                                fontWeight: 400,
-                              }}
-                            >
-                              {stage.event_title}
-                            </Typography>
-                          )}
-                        {stage.event_description && (
-                          <Typography
-                            variant="body2"
-                            sx={{ mt: 0.5, color: colors.textSecondary }}
-                          >
-                            {stage.event_description}
-                          </Typography>
-                        )}
-                      </Box>
-                    ))}
-                  </Stack>
-                </Box>
-              )}
+          <InlineRelatedSessions sessions={detail.sessions} />
 
-              {(detail.question_text || detail.question_rich_text) && (
-                <Box>
-                  <Button
-                    startIcon={<ArticleIcon />}
-                    onClick={() => setShowJustification(!showJustification)}
-                    sx={{
-                      textTransform: "none",
-                      color: colors.primary,
-                      mb: 1,
-                    }}
-                  >
-                    {showJustification
-                      ? tDocuments("justificationToggle", { context: "hide" })
-                      : tDocuments("justificationToggle", { context: "show" })}
-                  </Button>
-                  <Collapse in={showJustification}>
-                    <Box
-                      sx={{
-                        p: 2,
-                        backgroundColor: colors.backgroundSubtle,
-                        borderRadius: 1,
-                        borderLeft: `4px solid ${colors.primary}`,
-                      }}
-                    >
-                      <RichTextRenderer
-                        document={detail.question_rich_text}
-                        fallbackText={detail.question_text}
-                        paragraphVariant="body2"
-                      />
-                    </Box>
-                  </Collapse>
-                </Box>
-              )}
-
-              {(detail.resolution_text || detail.resolution_rich_text) && (
-                <Box>
-                  <Button
-                    startIcon={<GavelIcon />}
-                    onClick={() => setShowClauses(!showClauses)}
-                    sx={{
-                      textTransform: "none",
-                      color: colors.primary,
-                      mb: 1,
-                    }}
-                  >
-                    {showClauses
-                      ? tDocuments("clausesToggle", { context: "hide" })
-                      : tDocuments("clausesToggle", { context: "show" })}
-                  </Button>
-                  <Collapse in={showClauses}>
-                    <Box
-                      sx={{
-                        p: 2,
-                        backgroundColor: colors.backgroundSubtle,
-                        borderRadius: 1,
-                        borderLeft: `4px solid ${getOutcomeColor(
-                          detail.decision_outcome_code,
-                        )}`,
-                      }}
-                    >
-                      <RichTextRenderer
-                        document={detail.resolution_rich_text}
-                        fallbackText={detail.resolution_text}
-                        paragraphVariant="body2"
-                      />
-                    </Box>
-                  </Collapse>
-                </Box>
-              )}
-
-              <DocumentLifecycle
-                currentIdentifier={item.parliament_identifier}
-                directReferenceValues={[
-                  ...detail.stages.map((stage) => stage.stage_title),
-                  ...detail.stages.map((stage) => stage.event_title),
-                  ...detail.stages.map((stage) => stage.event_description),
-                ]}
-                richTextValues={[
-                  detail.question_rich_text,
-                  detail.resolution_rich_text,
-                ]}
-              />
-
-              <InlineRelatedSessions sessions={detail.sessions} />
-
-              <RelatedVotings identifiers={[item.parliament_identifier]} />
-            </Stack>
-          )}
-        </Box>
-      </Collapse>
-    </DataCard>
+          <RelatedVotings identifiers={[item.parliament_identifier]} />
+        </Stack>
+      )}
+    </DocumentCardShell>
   );
 }
