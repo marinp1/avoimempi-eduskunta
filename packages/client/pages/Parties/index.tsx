@@ -199,7 +199,8 @@ const Parties = () => {
     () =>
       selectedPartyCode
         ? parties.find(
-            (party) => normalizePartyCode(party.party_code) === selectedPartyCode,
+            (party) =>
+              normalizePartyCode(party.party_code) === selectedPartyCode,
           ) || null
         : null,
     [parties, selectedPartyCode],
@@ -229,7 +230,10 @@ const Parties = () => {
     : true;
 
   const summary = useMemo(() => {
-    const totalMembers = parties.reduce((sum, party) => sum + party.member_count, 0);
+    const totalMembers = parties.reduce(
+      (sum, party) => sum + party.member_count,
+      0,
+    );
     const governmentParties = parties.filter(
       (party) => party.is_in_government === 1,
     ).length;
@@ -260,7 +264,9 @@ const Parties = () => {
     )[0];
     const youngestParty = [...parties]
       .filter((party) => (party.average_age ?? 0) > 0)
-      .sort((left, right) => (left.average_age ?? 0) - (right.average_age ?? 0))[0];
+      .sort(
+        (left, right) => (left.average_age ?? 0) - (right.average_age ?? 0),
+      )[0];
     return {
       largestParty,
       highestParticipation,
@@ -546,7 +552,9 @@ const Parties = () => {
                   <TableRow sx={commonStyles.tableHeaderRow}>
                     <TableCell>{tParties("table.party")}</TableCell>
                     <TableCell>{tParties("table.status")}</TableCell>
-                    <TableCell align="right">{tParties("table.members")}</TableCell>
+                    <TableCell align="right">
+                      {tParties("table.members")}
+                    </TableCell>
                     <TableCell align="right">
                       {tParties("table.participation")}
                     </TableCell>
@@ -562,7 +570,8 @@ const Parties = () => {
                       key={party.party_code}
                       party={party}
                       selected={
-                        selectedPartyCode === normalizePartyCode(party.party_code)
+                        selectedPartyCode ===
+                        normalizePartyCode(party.party_code)
                       }
                       onSelect={handlePartySelect}
                       getParticipationColor={getParticipationColor}
@@ -675,7 +684,10 @@ const HighlightCard: React.FC<{
           </Typography>
         </>
       ) : (
-        <Typography variant="body2" sx={{ mt: 1.5, color: themedColors.textSecondary }}>
+        <Typography
+          variant="body2"
+          sx={{ mt: 1.5, color: themedColors.textSecondary }}
+        >
           {tParties("noResultsDescription")}
         </Typography>
       )}
@@ -710,7 +722,9 @@ const DesktopPartyRow: React.FC<{
     >
       <TableCell
         sx={{
-          borderLeft: selected ? `4px solid ${partyColor}` : "4px solid transparent",
+          borderLeft: selected
+            ? `4px solid ${partyColor}`
+            : "4px solid transparent",
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -854,7 +868,11 @@ const MobilePartyCard: React.FC<{
               />
               <Typography fontWeight={700}>{party.party_name}</Typography>
             </Box>
-            <Chip size="small" label={party.party_code} sx={{ fontWeight: 700 }} />
+            <Chip
+              size="small"
+              label={party.party_code}
+              sx={{ fontWeight: 700 }}
+            />
           </Box>
 
           <Box
@@ -908,7 +926,9 @@ const MobilePartyCard: React.FC<{
               bgcolor: themedColors.backgroundSubtle,
             }}
           >
-            <Box sx={{ width: `${femaleShare}%`, bgcolor: colors.errorLight }} />
+            <Box
+              sx={{ width: `${femaleShare}%`, bgcolor: colors.errorLight }}
+            />
             <Box sx={{ width: `${maleShare}%`, bgcolor: colors.info }} />
           </Box>
         </Box>

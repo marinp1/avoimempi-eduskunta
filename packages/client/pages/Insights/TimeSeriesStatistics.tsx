@@ -171,7 +171,11 @@ export default function TimeSeriesStatistics({
       <PanelHeader
         title={tInsights("timeSeries.title")}
         subtitle="Sukupuoli- ja ikäjakauman pitkän aikavälin kehitys eduskunnassa."
-        icon={<Typography sx={{ color: colors.primary, fontWeight: 700 }}>TS</Typography>}
+        icon={
+          <Typography sx={{ color: colors.primary, fontWeight: 700 }}>
+            TS
+          </Typography>
+        }
         onClose={onClose}
         sx={{
           mb: spacing.lg,

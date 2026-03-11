@@ -1,12 +1,6 @@
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import {
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Chip, CircularProgress, Typography } from "@mui/material";
 import type React from "react";
 import { useEffect, useState } from "react";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
@@ -178,8 +172,9 @@ const ExpandableSnippet: React.FC<{
 
   if (!normalized) return null;
   const isLong = normalized.length > maxLength;
-  const shownText =
-    isLong ? `${normalized.slice(0, maxLength).trimEnd()}...` : normalized;
+  const shownText = isLong
+    ? `${normalized.slice(0, maxLength).trimEnd()}...`
+    : normalized;
 
   return (
     <Box sx={{ mt: 0.5 }}>
@@ -959,8 +954,6 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
     n_total: number;
   };
 
-  type VotingDetails = ApiRouteResponse<`/api/votings/:id/details`>;
-
   const [votings, setVotings] = useState<VotingSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -1079,7 +1072,10 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                   replaceDrawer({
                     drawerKey: `related-voting:${v.id}`,
                     title: tDocuments("relatedVotings"),
-                    subtitle: v.context_title || v.section_title || tDocuments("noTitle"),
+                    subtitle:
+                      v.context_title ||
+                      v.section_title ||
+                      tDocuments("noTitle"),
                     meta: (
                       <>
                         <Chip
@@ -1326,7 +1322,10 @@ const RelatedVotingDetailsContent = ({
           details.voting.section_title,
           details.voting.title,
         ]).map((ref) => (
-          <DocumentCard key={`${details.voting.id}-${ref.identifier}`} docRef={ref} />
+          <DocumentCard
+            key={`${details.voting.id}-${ref.identifier}`}
+            docRef={ref}
+          />
         ))}
       </Box>
       {details.relatedVotings.length > 0 && (

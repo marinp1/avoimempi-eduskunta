@@ -83,7 +83,9 @@ export const Navigation: React.FC<{
   const [moreAnchorEl, setMoreAnchorEl] = useState<null | HTMLElement>(null);
   const moreOpen = Boolean(moreAnchorEl);
 
-  const isSecondaryActive = desktopSecondaryRoutes.includes(activeTab as RouteName);
+  const isSecondaryActive = desktopSecondaryRoutes.includes(
+    activeTab as RouteName,
+  );
 
   const navigate = (path: RouteName) => {
     setActiveTab(path);
@@ -410,13 +412,17 @@ export const Navigation: React.FC<{
                           py: 1,
                           px: 2,
                           color: isActive ? colors.primary : colors.textPrimary,
-                          bgcolor: isActive ? `${colors.primary}08` : "transparent",
+                          bgcolor: isActive
+                            ? `${colors.primary}08`
+                            : "transparent",
                           "&:hover": { bgcolor: `${colors.primary}08` },
                         }}
                       >
                         <ListItemIcon
                           sx={{
-                            color: isActive ? colors.primary : colors.textSecondary,
+                            color: isActive
+                              ? colors.primary
+                              : colors.textSecondary,
                             minWidth: 32,
                           }}
                         >

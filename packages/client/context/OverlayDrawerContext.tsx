@@ -4,9 +4,9 @@ import {
   Box,
   Drawer,
   IconButton,
-  Typography,
   type SxProps,
   type Theme,
+  Typography,
 } from "@mui/material";
 import type { ReactNode } from "react";
 import {
@@ -17,7 +17,7 @@ import {
   useState,
 } from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { commonStyles, colors } from "#client/theme";
+import { colors, commonStyles } from "#client/theme";
 
 type OverlayDrawerConfig = {
   drawerKey?: string;
@@ -54,7 +54,8 @@ export const OverlayDrawerProvider = ({
   const [stack, setStack] = useState<OverlayDrawerConfig[]>([]);
   const config = stack.at(-1) ?? null;
   const openDrawer = useCallback(
-    (nextConfig: OverlayDrawerConfig) => setStack((prev) => [...prev, nextConfig]),
+    (nextConfig: OverlayDrawerConfig) =>
+      setStack((prev) => [...prev, nextConfig]),
     [],
   );
   const openRootDrawer = useCallback(

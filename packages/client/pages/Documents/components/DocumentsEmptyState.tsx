@@ -1,8 +1,8 @@
 import { SearchOff as SearchOffIcon } from "@mui/icons-material";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import type React from "react";
-import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme";
+import { DataCard } from "#client/theme/components";
 
 export const DocumentsEmptyState: React.FC<{
   title: string;
@@ -34,7 +34,10 @@ export const DocumentsEmptyState: React.FC<{
       >
         {title}
       </Typography>
-      <Typography variant="body2" sx={{ color: colors.textSecondary, maxWidth: 520 }}>
+      <Typography
+        variant="body2"
+        sx={{ color: colors.textSecondary, maxWidth: 520 }}
+      >
         {description}
       </Typography>
       {onClear && (

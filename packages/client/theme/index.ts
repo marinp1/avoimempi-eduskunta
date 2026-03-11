@@ -327,7 +327,8 @@ export const commonStyles = {
 } as const;
 
 // Reserved for official source-content rendering only.
-export const serifFontFamily = '"Zilla Slab", Georgia, "Times New Roman", serif';
+export const serifFontFamily =
+  '"Zilla Slab", Georgia, "Times New Roman", serif';
 
 /**
  * MUI theme - Nordic minimal design system

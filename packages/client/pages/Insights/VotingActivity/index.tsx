@@ -185,7 +185,10 @@ export default function Osallistumisaktiivisuus({
 
           {/* Filters */}
           <Box>
-            <ToolbarCard title={tInsights("votingActivity.filters")} sx={{ mb: spacing.md }}>
+            <ToolbarCard
+              title={tInsights("votingActivity.filters")}
+              sx={{ mb: spacing.md }}
+            >
               <Box>
                 <Grid container spacing={spacing.sm}>
                   <Grid size={{ xs: 12, md: 6 }}>

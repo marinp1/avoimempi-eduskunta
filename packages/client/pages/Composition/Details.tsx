@@ -400,7 +400,9 @@ const GovernmentTimelineFilter: React.FC<{
             height: 24,
             fontWeight: 700,
             bgcolor: themedColors.backgroundPaper,
-            color: selectedGovernment ? colors.primaryLight : themedColors.textSecondary,
+            color: selectedGovernment
+              ? colors.primaryLight
+              : themedColors.textSecondary,
             border: `1px solid ${
               selectedGovernment
                 ? `${colors.primaryLight}30`
@@ -847,7 +849,9 @@ const AnalysisScopeToolbar: React.FC<{
             bgcolor: scope.selectedGovernmentPeriod
               ? `${colors.primaryLight}16`
               : undefined,
-            color: scope.selectedGovernmentPeriod ? colors.primaryLight : undefined,
+            color: scope.selectedGovernmentPeriod
+              ? colors.primaryLight
+              : undefined,
           }}
         />
         {scope.selectedGovernmentPeriod ? (
@@ -903,7 +907,8 @@ const OverviewTab: React.FC<{
           ? `${getYearsBetween(tenureRange.start, activeDate)} ${t("details.years")}`
           : "-",
       caption:
-        tenureRange?.start && displayDate(tenureRange.start, t("details.ongoing")),
+        tenureRange?.start &&
+        displayDate(tenureRange.start, t("details.ongoing")),
     },
     {
       label: t("details.overview.metrics.memberships"),
@@ -921,8 +926,8 @@ const OverviewTab: React.FC<{
   const orderedDistricts = [...(details.districts ?? [])].sort((a, b) =>
     (b.start_date ?? "").localeCompare(a.start_date ?? ""),
   );
-  const orderedMemberships = [...(details.groupMemberships ?? [])].sort((a, b) =>
-    (b.start_date ?? "").localeCompare(a.start_date ?? ""),
+  const orderedMemberships = [...(details.groupMemberships ?? [])].sort(
+    (a, b) => (b.start_date ?? "").localeCompare(a.start_date ?? ""),
   );
   const orderedGovernments = [...(details.governmentMemberships ?? [])].sort(
     (a, b) => (b.start_date ?? "").localeCompare(a.start_date ?? ""),
@@ -991,7 +996,12 @@ const OverviewTab: React.FC<{
             value={details.representativeDetails.profession}
           />
         )}
-        {age !== null && <InfoRow label={t("details.overview.currentAge")} value={`${age} ${t("details.years")}`} />}
+        {age !== null && (
+          <InfoRow
+            label={t("details.overview.currentAge")}
+            value={`${age} ${t("details.years")}`}
+          />
+        )}
       </Box>
 
       {/* Contact Info */}
@@ -1167,71 +1177,68 @@ const OverviewTab: React.FC<{
 
       {/* Government Memberships */}
       {orderedGovernments.length > 0 && (
-          <>
-            <SectionLabel
-              icon={
-                <AccountBalanceIcon
-                  sx={{ color: colors.primaryLight, fontSize: 20 }}
-                />
-              }
-              label={t("details.governmentCoalitionParticipation")}
-            />
-            <List dense sx={{ p: 0 }}>
-              {orderedGovernments.map((membership, i) => (
-                <ListItem key={i} sx={{ px: 0, py: 0.5 }}>
-                  <ListItemText
-                    disableTypography
-                    primary={
-                      <Box>
+        <>
+          <SectionLabel
+            icon={
+              <AccountBalanceIcon
+                sx={{ color: colors.primaryLight, fontSize: 20 }}
+              />
+            }
+            label={t("details.governmentCoalitionParticipation")}
+          />
+          <List dense sx={{ p: 0 }}>
+            {orderedGovernments.map((membership, i) => (
+              <ListItem key={i} sx={{ px: 0, py: 0.5 }}>
+                <ListItemText
+                  disableTypography
+                  primary={
+                    <Box>
+                      <Typography
+                        variant="body2"
+                        fontWeight="600"
+                        sx={{ color: themedColors.textPrimary }}
+                      >
+                        {membership.government}
+                      </Typography>
+                      {membership.ministry && (
                         <Typography
                           variant="body2"
-                          fontWeight="600"
-                          sx={{ color: themedColors.textPrimary }}
-                        >
-                          {membership.government}
-                        </Typography>
-                        {membership.ministry && (
-                          <Typography
-                            variant="body2"
-                            sx={{ color: themedColors.textSecondary }}
-                          >
-                            {membership.ministry}
-                          </Typography>
-                        )}
-                      </Box>
-                    }
-                    secondary={
-                      <Box sx={{ mt: 0.25 }}>
-                        <Typography
-                          variant="caption"
-                          fontWeight="600"
-                          sx={{ color: colors.primaryLight }}
-                        >
-                          {membership.name}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          display="block"
                           sx={{ color: themedColors.textSecondary }}
                         >
-                          {displayDate(
-                            membership.start_date,
-                            t("details.ongoing"),
-                          )}{" "}
-                          -{" "}
-                          {displayDate(
-                            membership.end_date,
-                            t("details.ongoing"),
-                          )}
+                          {membership.ministry}
                         </Typography>
-                      </Box>
-                    }
-                  />
-                </ListItem>
-              ))}
-            </List>
-          </>
-        )}
+                      )}
+                    </Box>
+                  }
+                  secondary={
+                    <Box sx={{ mt: 0.25 }}>
+                      <Typography
+                        variant="caption"
+                        fontWeight="600"
+                        sx={{ color: colors.primaryLight }}
+                      >
+                        {membership.name}
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        display="block"
+                        sx={{ color: themedColors.textSecondary }}
+                      >
+                        {displayDate(
+                          membership.start_date,
+                          t("details.ongoing"),
+                        )}{" "}
+                        -{" "}
+                        {displayDate(membership.end_date, t("details.ongoing"))}
+                      </Typography>
+                    </Box>
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+        </>
+      )}
     </Box>
   );
 };
@@ -1380,37 +1387,36 @@ const VotesTab: React.FC<{
       else if (v.vote === "Poissa") s.absent++;
     }
     return [...map.values()].sort(
-      (a, b) => new Date(b.governmentStartDate).getTime() - new Date(a.governmentStartDate).getTime(),
+      (a, b) =>
+        new Date(b.governmentStartDate).getTime() -
+        new Date(a.governmentStartDate).getTime(),
     );
   }, [votes]);
 
-  const filteredVotes = React.useMemo(
-    () => {
-      let result = votes ?? [];
-      if (scope.selectedGovernmentName) {
-        result = result.filter(
-          (v) => v.government_name === scope.selectedGovernmentName,
-        );
-      }
-      if (query.trim()) {
-        const normalized = query.trim().toLowerCase();
-        result = result.filter((v) =>
-          `${v.title ?? ""} ${v.section_title ?? ""}`
-            .toLowerCase()
-            .includes(normalized),
-        );
-      }
-      if (voteFilter !== "all") {
-        result = result.filter((v) => v.vote === voteFilter);
-      }
-      return [...result].sort((a, b) => {
-        const aTime = new Date(a.start_time ?? 0).getTime();
-        const bTime = new Date(b.start_time ?? 0).getTime();
-        return sort === "newest" ? bTime - aTime : aTime - bTime;
-      });
-    },
-    [votes, scope.selectedGovernmentName, query, voteFilter, sort],
-  );
+  const filteredVotes = React.useMemo(() => {
+    let result = votes ?? [];
+    if (scope.selectedGovernmentName) {
+      result = result.filter(
+        (v) => v.government_name === scope.selectedGovernmentName,
+      );
+    }
+    if (query.trim()) {
+      const normalized = query.trim().toLowerCase();
+      result = result.filter((v) =>
+        `${v.title ?? ""} ${v.section_title ?? ""}`
+          .toLowerCase()
+          .includes(normalized),
+      );
+    }
+    if (voteFilter !== "all") {
+      result = result.filter((v) => v.vote === voteFilter);
+    }
+    return [...result].sort((a, b) => {
+      const aTime = new Date(a.start_time ?? 0).getTime();
+      const bTime = new Date(b.start_time ?? 0).getTime();
+      return sort === "newest" ? bTime - aTime : aTime - bTime;
+    });
+  }, [votes, scope.selectedGovernmentName, query, voteFilter, sort]);
 
   if (loading)
     return (
@@ -1426,9 +1432,9 @@ const VotesTab: React.FC<{
   const absentVotes = votes?.filter((v) => v.vote === "Poissa").length || 0;
 
   const selectedGovStats = scope.selectedGovernmentName
-    ? governmentStats.find(
+    ? (governmentStats.find(
         (s) => s.governmentName === scope.selectedGovernmentName,
-      ) ?? null
+      ) ?? null)
     : null;
 
   const displayStats = selectedGovStats
@@ -1448,7 +1454,10 @@ const VotesTab: React.FC<{
       };
   const displayParticipationRate =
     displayStats.total > 0
-      ? (((displayStats.total - displayStats.absent) / displayStats.total) * 100).toFixed(1)
+      ? (
+          ((displayStats.total - displayStats.absent) / displayStats.total) *
+          100
+        ).toFixed(1)
       : "0";
   const activeVotingDetails = selectedVoting
     ? votingDetailsById[selectedVoting.id]
@@ -1697,11 +1706,14 @@ const VotesTab: React.FC<{
                           activeVotingDetails.governmentOpposition
                             .government_yes,
                         governmentNo:
-                          activeVotingDetails.governmentOpposition.government_no,
+                          activeVotingDetails.governmentOpposition
+                            .government_no,
                         oppositionYes:
-                          activeVotingDetails.governmentOpposition.opposition_yes,
+                          activeVotingDetails.governmentOpposition
+                            .opposition_yes,
                         oppositionNo:
-                          activeVotingDetails.governmentOpposition.opposition_no,
+                          activeVotingDetails.governmentOpposition
+                            .opposition_no,
                       },
                     )}
                   </Typography>
@@ -1715,7 +1727,12 @@ const VotesTab: React.FC<{
                       {tComposition("details.votes.drawer.relatedVotingsTitle")}
                     </Typography>
                     <Box
-                      sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.5 }}
+                      sx={{
+                        display: "flex",
+                        gap: 0.5,
+                        flexWrap: "wrap",
+                        mt: 0.5,
+                      }}
                     >
                       {activeVotingDetails.relatedVotings
                         .slice(0, 6)
@@ -1760,7 +1777,9 @@ const VotesTab: React.FC<{
     <Box>
       <ResultCountAnnouncer message={voteResultMessage} />
       <SectionLabel
-        icon={<HowToVoteIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />}
+        icon={
+          <HowToVoteIcon sx={{ color: colors.primaryLight, fontSize: 20 }} />
+        }
         label={tComposition("details.votes.recentVotes")}
       />
       <Box
@@ -1800,7 +1819,10 @@ const VotesTab: React.FC<{
             height={6}
             sx={{ mb: 0.75, mt: 0.5 }}
           />
-          <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary }}
+          >
             {tComposition("details.votes.voteBreakdown", {
               yes: displayStats.yes,
               no: displayStats.no,
@@ -1843,11 +1865,18 @@ const VotesTab: React.FC<{
             label={tComposition("details.analysis.voteFilter")}
             onChange={(event) =>
               setVoteFilter(
-                event.target.value as "all" | "Jaa" | "Ei" | "Tyhjää" | "Poissa",
+                event.target.value as
+                  | "all"
+                  | "Jaa"
+                  | "Ei"
+                  | "Tyhjää"
+                  | "Poissa",
               )
             }
           >
-            <MenuItem value="all">{tComposition("details.filters.all")}</MenuItem>
+            <MenuItem value="all">
+              {tComposition("details.filters.all")}
+            </MenuItem>
             <MenuItem value="Jaa">Jaa</MenuItem>
             <MenuItem value="Ei">Ei</MenuItem>
             <MenuItem value="Tyhjää">Tyhjää</MenuItem>
@@ -1886,7 +1915,9 @@ const VotesTab: React.FC<{
           sx={{
             display: "grid",
             gridTemplateColumns:
-              !isMobile && selectedVoting ? "minmax(0, 1.2fr) minmax(320px, 0.8fr)" : "1fr",
+              !isMobile && selectedVoting
+                ? "minmax(0, 1.2fr) minmax(320px, 0.8fr)"
+                : "1fr",
             gap: 1.5,
             alignItems: "start",
           }}
@@ -1903,7 +1934,12 @@ const VotesTab: React.FC<{
             {filteredVotes.length === 0 ? (
               <Typography
                 variant="body2"
-                sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4, px: 2 }}
+                sx={{
+                  color: themedColors.textTertiary,
+                  textAlign: "center",
+                  py: 4,
+                  px: 2,
+                }}
               >
                 {tComposition("details.analysis.noFilteredResults")}
               </Typography>
@@ -1940,18 +1976,32 @@ const VotesTab: React.FC<{
                   }}
                 >
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2" sx={{ color: themedColors.textPrimary }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: themedColors.textPrimary }}
+                    >
                       {v.title || v.section_title}
                     </Typography>
                     <Typography
                       variant="caption"
-                      sx={{ color: themedColors.textSecondary, display: "block", mt: 0.25 }}
+                      sx={{
+                        color: themedColors.textSecondary,
+                        display: "block",
+                        mt: 0.25,
+                      }}
                     >
                       {v.start_time
                         ? new Date(v.start_time).toLocaleDateString("fi-FI")
                         : "-"}
                     </Typography>
-                    <Box sx={{ display: "flex", gap: 0.5, mt: 0.75, flexWrap: "wrap" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 0.5,
+                        mt: 0.75,
+                        flexWrap: "wrap",
+                      }}
+                    >
                       <Chip
                         label={v.vote}
                         size="small"
@@ -1995,7 +2045,14 @@ const VotesTab: React.FC<{
                         />
                       ) : null}
                     </Box>
-                    <Box sx={{ display: "flex", gap: 0.5, mt: 0.75, flexWrap: "wrap" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 0.5,
+                        mt: 0.75,
+                        flexWrap: "wrap",
+                      }}
+                    >
                       <Button
                         size="small"
                         onClick={(event) => {
@@ -2409,7 +2466,9 @@ const SpeechesTab: React.FC<{
       );
     }
     if (speechTypeFilter !== "all") {
-      result = result.filter((speech) => speech.speech_type === speechTypeFilter);
+      result = result.filter(
+        (speech) => speech.speech_type === speechTypeFilter,
+      );
     }
     return [...result].sort((a, b) => {
       if (sort === "longest") {
@@ -2421,7 +2480,10 @@ const SpeechesTab: React.FC<{
     });
   }, [speeches, scope.selectedGovernmentPeriod, query, speechTypeFilter, sort]);
   const filteredWords =
-    filteredSpeeches.reduce((sum, speech) => sum + (speech.word_count ?? 0), 0) || 0;
+    filteredSpeeches.reduce(
+      (sum, speech) => sum + (speech.word_count ?? 0),
+      0,
+    ) || 0;
   const speechResultMessage = tComposition("details.analysis.resultCount", {
     shown: filteredSpeeches.length,
     total: speechesTotal ?? speeches?.length ?? 0,
@@ -2523,7 +2585,10 @@ const SpeechesTab: React.FC<{
             ) : null}
             <Chip
               size="small"
-              label={formatSpeechTime(activeSpeechStartTime, activeSpeechEndTime)}
+              label={formatSpeechTime(
+                activeSpeechStartTime,
+                activeSpeechEndTime,
+              )}
               sx={{ height: 20, fontSize: "0.65rem" }}
             />
             {activeSpeechType ? (
@@ -2625,7 +2690,8 @@ const SpeechesTab: React.FC<{
           >
             {tComposition("details.speeches.drawer.conversationHeading")}
           </Typography>
-          {selectedSectionKey && loadingContextSection === selectedSectionKey ? (
+          {selectedSectionKey &&
+          loadingContextSection === selectedSectionKey ? (
             <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
               <CircularProgress size={26} />
             </Box>
@@ -2639,7 +2705,8 @@ const SpeechesTab: React.FC<{
               >
                 {contextError}
               </Typography>
-              {selectedSectionKey && failedContextSections[selectedSectionKey] ? (
+              {selectedSectionKey &&
+              failedContextSections[selectedSectionKey] ? (
                 <Button
                   size="small"
                   onClick={retryContextLoad}
@@ -2801,7 +2868,11 @@ const SpeechesTab: React.FC<{
         />
         <MetricCard
           label={tComposition("details.speeches.totalWords")}
-          value={filteredWords > 1000 ? `${(filteredWords / 1000).toFixed(1)}k` : filteredWords}
+          value={
+            filteredWords > 1000
+              ? `${(filteredWords / 1000).toFixed(1)}k`
+              : filteredWords
+          }
           caption={
             totalWords !== filteredWords
               ? `${totalWords} ${tComposition("details.analysis.scopeAll")}`
@@ -2851,7 +2922,9 @@ const SpeechesTab: React.FC<{
             label={tComposition("details.analysis.typeFilter")}
             onChange={(event) => setSpeechTypeFilter(event.target.value)}
           >
-            <MenuItem value="all">{tComposition("details.filters.all")}</MenuItem>
+            <MenuItem value="all">
+              {tComposition("details.filters.all")}
+            </MenuItem>
             {availableSpeechTypes.map((speechType) => (
               <MenuItem key={speechType} value={speechType}>
                 {speechType}
@@ -2894,7 +2967,9 @@ const SpeechesTab: React.FC<{
           sx={{
             display: "grid",
             gridTemplateColumns:
-              !isMobile && selectedSpeech ? "minmax(0, 1.2fr) minmax(320px, 0.8fr)" : "1fr",
+              !isMobile && selectedSpeech
+                ? "minmax(0, 1.2fr) minmax(320px, 0.8fr)"
+                : "1fr",
             gap: 1.5,
             alignItems: "start",
           }}
@@ -2911,7 +2986,12 @@ const SpeechesTab: React.FC<{
             {filteredSpeeches.length === 0 ? (
               <Typography
                 variant="body2"
-                sx={{ color: themedColors.textTertiary, textAlign: "center", py: 4, px: 2 }}
+                sx={{
+                  color: themedColors.textTertiary,
+                  textAlign: "center",
+                  py: 4,
+                  px: 2,
+                }}
               >
                 {tComposition("details.analysis.noFilteredResults")}
               </Typography>
@@ -2947,7 +3027,14 @@ const SpeechesTab: React.FC<{
                         mb: 0.5,
                       }}
                     >
-                      <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 1,
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                        }}
+                      >
                         <Typography
                           variant="caption"
                           fontWeight="600"
@@ -3004,7 +3091,11 @@ const SpeechesTab: React.FC<{
                     ) : null}
                     <Typography
                       variant="caption"
-                      sx={{ color: themedColors.textTertiary, display: "block", mt: 0.75 }}
+                      sx={{
+                        color: themedColors.textTertiary,
+                        display: "block",
+                        mt: 0.75,
+                      }}
                     >
                       {s.section_identifier ||
                         s.section_title ||
@@ -3168,7 +3259,14 @@ const QuestionsTab: React.FC<{
       const bTime = new Date(b.submission_date ?? 0).getTime();
       return sort === "newest" ? bTime - aTime : aTime - bTime;
     });
-  }, [questions, scope.selectedGovernmentPeriod, query, typeFilter, roleFilter, sort]);
+  }, [
+    questions,
+    scope.selectedGovernmentPeriod,
+    query,
+    typeFilter,
+    roleFilter,
+    sort,
+  ]);
   const resultMessage = t("details.analysis.resultCount", {
     shown: filteredQuestions.length,
     total: totalQuestions,
@@ -3279,7 +3377,9 @@ const QuestionsTab: React.FC<{
             label={t("details.analysis.roleFilter")}
             onChange={(event) =>
               setRoleFilter(
-                event.target.value as "all" | PersonQuestionType["relation_role"],
+                event.target.value as
+                  | "all"
+                  | PersonQuestionType["relation_role"],
               )
             }
           >
@@ -3303,8 +3403,12 @@ const QuestionsTab: React.FC<{
               setSort(event.target.value as InitiativeSortValue)
             }
           >
-            <MenuItem value="newest">{t("details.analysis.sortNewest")}</MenuItem>
-            <MenuItem value="oldest">{t("details.analysis.sortOldest")}</MenuItem>
+            <MenuItem value="newest">
+              {t("details.analysis.sortNewest")}
+            </MenuItem>
+            <MenuItem value="oldest">
+              {t("details.analysis.sortOldest")}
+            </MenuItem>
           </Select>
         </FormControl>
       </Box>
@@ -3348,7 +3452,12 @@ const QuestionsTab: React.FC<{
         {filteredQuestions.length === 0 ? (
           <Typography
             variant="body2"
-            sx={{ color: themedColors.textTertiary, py: 4, px: 2, textAlign: "center" }}
+            sx={{
+              color: themedColors.textTertiary,
+              py: 4,
+              px: 2,
+              textAlign: "center",
+            }}
           >
             {t("details.analysis.noFilteredResults")}
           </Typography>
@@ -3376,14 +3485,20 @@ const QuestionsTab: React.FC<{
                 </Typography>
                 <Typography
                   variant="caption"
-                  sx={{ color: themedColors.textSecondary, display: "block", mt: 0.25 }}
+                  sx={{
+                    color: themedColors.textSecondary,
+                    display: "block",
+                    mt: 0.25,
+                  }}
                 >
                   {item.parliament_identifier}
                   {item.submission_date
                     ? ` - ${displayDate(item.submission_date)}`
                     : ""}
                 </Typography>
-                <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.75 }}>
+                <Box
+                  sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.75 }}
+                >
                   <Chip
                     size="small"
                     label={
@@ -3391,7 +3506,9 @@ const QuestionsTab: React.FC<{
                         ? t("details.questions.interpellations", { count: 1 })
                         : item.question_kind === "oral_question"
                           ? t("details.questions.oralQuestions", { count: 1 })
-                          : t("details.questions.writtenQuestions", { count: 1 })
+                          : t("details.questions.writtenQuestions", {
+                              count: 1,
+                            })
                     }
                     sx={{ height: 20, fontSize: "0.65rem" }}
                   />
@@ -3643,8 +3760,12 @@ export const RepresentativeDetails: React.FC<{
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const dialogTitleId = React.useId();
   const [tabIndex, setTabIndex] = React.useState(0);
-  const [selectedGovName, setSelectedGovName] = React.useState<string | null>(null);
-  const [governmentPeriods, setGovernmentPeriods] = React.useState<GovernmentPeriod[]>([]);
+  const [selectedGovName, setSelectedGovName] = React.useState<string | null>(
+    null,
+  );
+  const [governmentPeriods, setGovernmentPeriods] = React.useState<
+    GovernmentPeriod[]
+  >([]);
 
   const [details, setDetails] =
     React.useState<Awaited<ReturnType<typeof fetchPersonDetails>>>();
@@ -3656,7 +3777,9 @@ export const RepresentativeDetails: React.FC<{
       setSelectedGovName(null);
       setGovernmentPeriods([]);
       fetchPersonDetails(selectedRepresentative.personId).then(setDetails);
-      apiFetch(`/api/person/${selectedRepresentative.personId}/government-periods`)
+      apiFetch(
+        `/api/person/${selectedRepresentative.personId}/government-periods`,
+      )
         .then((res) => res.json())
         .then(setGovernmentPeriods)
         .catch(() => {});
@@ -3692,7 +3815,8 @@ export const RepresentativeDetails: React.FC<{
     representativeDetails?.last_name ??
     selectedRepresentative.summary?.lastName ??
     "";
-  const governmentStatus = selectedRepresentative.summary?.isInGovernment ?? null;
+  const governmentStatus =
+    selectedRepresentative.summary?.isInGovernment ?? null;
 
   const selectedDateObj = new Date(selectedDate);
   const deathDateObj = representativeDetails?.death_date
@@ -3702,13 +3826,14 @@ export const RepresentativeDetails: React.FC<{
     !deathDateObj || selectedDateObj <= deathDateObj;
   const effectiveDate = wasAliveOnSelectedDate
     ? selectedDate
-    : representativeDetails?.death_date ?? selectedDate;
+    : (representativeDetails?.death_date ?? selectedDate);
   const age = representativeDetails?.birth_date
     ? calculateAge(representativeDetails.birth_date, effectiveDate)
     : null;
   const selectedGovernmentPeriod =
-    governmentPeriods.find((period) => period.government_name === selectedGovName) ??
-    null;
+    governmentPeriods.find(
+      (period) => period.government_name === selectedGovName,
+    ) ?? null;
   const analysisScope: RepresentativeAnalysisScope = {
     selectedGovernmentName: selectedGovName,
     selectedGovernmentPeriod,

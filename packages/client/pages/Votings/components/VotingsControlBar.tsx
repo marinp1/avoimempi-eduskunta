@@ -74,7 +74,9 @@ const VotingsControlBarComponent: React.FC<{
             display: "grid",
             gridTemplateColumns: {
               xs: "1fr",
-              lg: showSort ? "minmax(0, 2fr) repeat(3, minmax(0, 1fr))" : "minmax(0, 2fr) repeat(2, minmax(0, 1fr))",
+              lg: showSort
+                ? "minmax(0, 2fr) repeat(3, minmax(0, 1fr))"
+                : "minmax(0, 2fr) repeat(2, minmax(0, 1fr))",
             },
             gap: 1.25,
             alignItems: "start",
@@ -172,11 +174,18 @@ const VotingsControlBarComponent: React.FC<{
             display: "flex",
             alignItems: { xs: "flex-start", sm: "center" },
             justifyContent: "space-between",
-          flexDirection: { xs: "column", sm: "row" },
-          gap: 1.25,
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+            flexDirection: { xs: "column", sm: "row" },
+            gap: 1.25,
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              flexWrap: "wrap",
+            }}
+          >
             <Typography
               variant="caption"
               sx={{ color: themedColors.textSecondary, fontWeight: 600 }}

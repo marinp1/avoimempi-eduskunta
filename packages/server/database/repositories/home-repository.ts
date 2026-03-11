@@ -37,51 +37,60 @@ export class HomeRepository {
       latestCompletedSessionDate ||
       new Date().toISOString().slice(0, 10);
 
-    const [parties, vaskiLatestSpeechDate, recentActivity, closeVotes, speechActivity, coalitionOpposition, lastMigrationTimestamp, lastScraperRunAt, lastMigratorRunAt] =
-      await Promise.all([
-        Promise.resolve(
-          this.analytics.fetchPartySummary({
-            asOfDate,
-            startDate: params.startDate,
-            endDate: params.endDate,
-            governmentName: params.governmentName,
-            governmentStartDate: params.governmentStartDate,
-          }),
-        ),
-        Promise.resolve(this.sessions.fetchLatestSpeechDate()),
-        Promise.resolve(
-          this.analytics.fetchRecentActivity({
-            limit: 6,
-            startDate: params.startDate,
-            endDate: params.endDate,
-          }),
-        ),
-        Promise.resolve(
-          this.analytics.fetchCloseVotes({
-            threshold: 10,
-            limit: 5,
-            startDate: params.startDate,
-            endDate: params.endDate,
-          }),
-        ),
-        Promise.resolve(
-          this.analytics.fetchSpeechActivity({
-            limit: 5,
-            startDate: params.startDate,
-            endDate: params.endDate,
-          }),
-        ),
-        Promise.resolve(
-          this.analytics.fetchCoalitionVsOpposition({
-            limit: 5,
-            startDate: params.startDate,
-            endDate: params.endDate,
-          }),
-        ),
-        Promise.resolve(this.freshness.fetchLastMigrationTimestamp()),
-        Promise.resolve(this.freshness.fetchLastScraperRunAt()),
-        Promise.resolve(this.freshness.fetchLastMigratorRunAt()),
-      ]);
+    const [
+      parties,
+      vaskiLatestSpeechDate,
+      recentActivity,
+      closeVotes,
+      speechActivity,
+      coalitionOpposition,
+      lastMigrationTimestamp,
+      lastScraperRunAt,
+      lastMigratorRunAt,
+    ] = await Promise.all([
+      Promise.resolve(
+        this.analytics.fetchPartySummary({
+          asOfDate,
+          startDate: params.startDate,
+          endDate: params.endDate,
+          governmentName: params.governmentName,
+          governmentStartDate: params.governmentStartDate,
+        }),
+      ),
+      Promise.resolve(this.sessions.fetchLatestSpeechDate()),
+      Promise.resolve(
+        this.analytics.fetchRecentActivity({
+          limit: 6,
+          startDate: params.startDate,
+          endDate: params.endDate,
+        }),
+      ),
+      Promise.resolve(
+        this.analytics.fetchCloseVotes({
+          threshold: 10,
+          limit: 5,
+          startDate: params.startDate,
+          endDate: params.endDate,
+        }),
+      ),
+      Promise.resolve(
+        this.analytics.fetchSpeechActivity({
+          limit: 5,
+          startDate: params.startDate,
+          endDate: params.endDate,
+        }),
+      ),
+      Promise.resolve(
+        this.analytics.fetchCoalitionVsOpposition({
+          limit: 5,
+          startDate: params.startDate,
+          endDate: params.endDate,
+        }),
+      ),
+      Promise.resolve(this.freshness.fetchLastMigrationTimestamp()),
+      Promise.resolve(this.freshness.fetchLastScraperRunAt()),
+      Promise.resolve(this.freshness.fetchLastMigratorRunAt()),
+    ]);
 
     const latestDaySessions = latestCompletedSessionDate
       ? this.sessions.fetchSessionWithSectionsByDate({
@@ -147,8 +156,9 @@ export class HomeRepository {
     });
 
     if (filtered.length === 0) return null;
-    return filtered.sort((left, right) => right.date.localeCompare(left.date))[0]
-      ?.date;
+    return filtered.sort((left, right) =>
+      right.date.localeCompare(left.date),
+    )[0]?.date;
   }
 
   private enrichLatestDaySessions(

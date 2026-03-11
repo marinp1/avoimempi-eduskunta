@@ -1,6 +1,4 @@
-import {
-  Event as EventIcon,
-} from "@mui/icons-material";
+import { Event as EventIcon } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -175,7 +173,10 @@ export function InlineRelatedSessions({
                       title: tDocuments("relatedSessions"),
                       subtitle: `${session.session_type} ${session.session_number}/${session.session_year}`,
                       meta: (
-                        <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: colors.textSecondary }}
+                        >
                           {formatDate(session.session_date)}
                         </Typography>
                       ),
@@ -209,9 +210,9 @@ export function InlineRelatedSessions({
                 <Typography
                   variant="caption"
                   sx={{ color: colors.textSecondary }}
-              >
-                {session.section_title}
-              </Typography>
+                >
+                  {session.section_title}
+                </Typography>
               )}
             </Box>
           );
@@ -221,11 +222,7 @@ export function InlineRelatedSessions({
   );
 }
 
-function RelatedSessionDrawerContent({
-  sectionKey,
-}: {
-  sectionKey: string;
-}) {
+function RelatedSessionDrawerContent({ sectionKey }: { sectionKey: string }) {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
   const [loading, setLoading] = useState(true);
@@ -335,7 +332,9 @@ function RelatedSessionDrawerContent({
                 href={link.url as string}
                 sx={{ fontSize: "0.75rem" }}
               >
-                {link.document_tunnus || link.label || tDocuments("documentLink")}
+                {link.document_tunnus ||
+                  link.label ||
+                  tDocuments("documentLink")}
               </EduskuntaSourceLink>
             ) : (
               <Chip
@@ -344,11 +343,17 @@ function RelatedSessionDrawerContent({
                 component="a"
                 clickable
                 href={
-                  isSafeExternalUrl(link.url) ? (link.url ?? undefined) : undefined
+                  isSafeExternalUrl(link.url)
+                    ? (link.url ?? undefined)
+                    : undefined
                 }
                 target="_blank"
                 rel="noopener noreferrer"
-                label={link.document_tunnus || link.label || tDocuments("documentLink")}
+                label={
+                  link.document_tunnus ||
+                  link.label ||
+                  tDocuments("documentLink")
+                }
                 sx={{ height: 22, fontSize: "0.7rem" }}
               />
             ),

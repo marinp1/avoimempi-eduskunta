@@ -2,7 +2,6 @@ import { Box, LinearProgress } from "@mui/material";
 import React from "react";
 import { colors } from "#client/theme";
 import { InlineSpinner } from "#client/theme/components";
-import { VoteResults } from "./VoteResults";
 import {
   buildVotingsUrl,
   DEFAULT_VOTINGS_PHASE,
@@ -11,6 +10,7 @@ import {
   parseVotingsUrlState,
   type VotingSortMode,
 } from "./url-state";
+import { VoteResults } from "./VoteResults";
 
 export default () => {
   const getUrlState = React.useCallback(
@@ -23,7 +23,9 @@ export default () => {
   const [focusVotingId, setFocusVotingId] = React.useState<number | null>(
     initialState.voting,
   );
-  const [sessionFilter, setSessionFilter] = React.useState(initialState.session);
+  const [sessionFilter, setSessionFilter] = React.useState(
+    initialState.session,
+  );
   const [phaseFilter, setPhaseFilter] = React.useState(initialState.phase);
   const [sortMode, setSortMode] = React.useState<VotingSortMode>(
     initialState.sort,

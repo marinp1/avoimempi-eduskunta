@@ -84,13 +84,17 @@ function GovernmentProposalCardComponent({
     meeting_date: string | null;
     title: string | null;
   }> | null>(null);
-  const [parliamentAnswer, setParliamentAnswer] = useState<{
-    id: number;
-    parliament_identifier: string;
-    title: string | null;
-    signature_date: string | null;
-    edk_identifier: string | null;
-  } | null | undefined>(undefined);
+  const [parliamentAnswer, setParliamentAnswer] = useState<
+    | {
+        id: number;
+        parliament_identifier: string;
+        title: string | null;
+        signature_date: string | null;
+        edk_identifier: string | null;
+      }
+    | null
+    | undefined
+  >(undefined);
 
   const subjects = item.subjects
     ? item.subjects.split("||").filter(Boolean)

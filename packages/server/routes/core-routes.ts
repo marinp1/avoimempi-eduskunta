@@ -1,7 +1,12 @@
 import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import type { BunRequest } from "bun";
-import { getChangesArchiveDir, getChangesReportPath, getLastMigratorRunAtPath, getLastScraperRunAtPath } from "#database";
+import {
+  getChangesArchiveDir,
+  getChangesReportPath,
+  getLastMigratorRunAtPath,
+  getLastScraperRunAtPath,
+} from "#database";
 import { getSearchParams } from "./http";
 import { badRequest, json } from "./route-responses";
 
@@ -89,7 +94,9 @@ export const createCoreRoutes = (
   "/api/db-info": {
     GET: async () => {
       const lastMigrationTimestamp = db.fetchLastMigrationTimestamp();
-      const readTimestamp = async (filePath: string): Promise<string | null> => {
+      const readTimestamp = async (
+        filePath: string,
+      ): Promise<string | null> => {
         const f = Bun.file(filePath);
         if (!(await f.exists())) return null;
         const text = (await f.text()).trim();
@@ -99,7 +106,11 @@ export const createCoreRoutes = (
         readTimestamp(getLastScraperRunAtPath()),
         readTimestamp(getLastMigratorRunAtPath()),
       ]);
-      return json({ lastMigrationTimestamp, lastScraperRunAt, lastMigratorRunAt });
+      return json({
+        lastMigrationTimestamp,
+        lastScraperRunAt,
+        lastMigratorRunAt,
+      });
     },
   },
 

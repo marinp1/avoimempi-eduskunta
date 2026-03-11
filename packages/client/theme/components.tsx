@@ -1,3 +1,4 @@
+import CloseIcon from "@mui/icons-material/Close";
 import {
   Box,
   Card,
@@ -9,7 +10,6 @@ import {
   type Theme,
   Typography,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
 import type React from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { borderRadius, colors, commonStyles } from "./index";
@@ -62,12 +62,13 @@ export const PageIntro: React.FC<{
   const isFeature = variant === "feature";
   const heroOuterRadius = `${borderRadius.heroOuter * 8}px`;
   const heroInnerRadius = `${borderRadius.heroInner * 8}px`;
-  const supportContent = chips || meta ? (
-    <Stack spacing={1}>
-      {chips ? <Box>{chips}</Box> : null}
-      {meta ? <Box>{meta}</Box> : null}
-    </Stack>
-  ) : null;
+  const supportContent =
+    chips || meta ? (
+      <Stack spacing={1}>
+        {chips ? <Box>{chips}</Box> : null}
+        {meta ? <Box>{meta}</Box> : null}
+      </Stack>
+    ) : null;
   const hasSupportRail = Boolean(supportContent || stats);
 
   return (
@@ -107,10 +108,9 @@ export const PageIntro: React.FC<{
         sx={{
           position: "absolute",
           inset: 0,
-          background:
-            isFeature
-              ? "radial-gradient(620px 240px at 0% 0%, rgba(74,111,165,0.12), transparent 66%), radial-gradient(540px 260px at 100% 0%, rgba(232,145,58,0.10), transparent 72%), linear-gradient(135deg, rgba(255,255,255,0.20), transparent 46%)"
-              : "radial-gradient(540px 210px at 0% 0%, rgba(74,111,165,0.08), transparent 68%), radial-gradient(420px 220px at 100% 0%, rgba(232,145,58,0.06), transparent 74%)",
+          background: isFeature
+            ? "radial-gradient(620px 240px at 0% 0%, rgba(74,111,165,0.12), transparent 66%), radial-gradient(540px 260px at 100% 0%, rgba(232,145,58,0.10), transparent 72%), linear-gradient(135deg, rgba(255,255,255,0.20), transparent 46%)"
+            : "radial-gradient(540px 210px at 0% 0%, rgba(74,111,165,0.08), transparent 68%), radial-gradient(420px 220px at 100% 0%, rgba(232,145,58,0.06), transparent 74%)",
           pointerEvents: "none",
         }}
       />
@@ -146,8 +146,12 @@ export const PageIntro: React.FC<{
                     px: isFeature ? 1 : 0,
                     py: isFeature ? 0.55 : 0,
                     borderRadius: 999,
-                    background: isFeature ? "rgba(255,255,255,0.78)" : "transparent",
-                    border: isFeature ? "1px solid rgba(255,255,255,0.7)" : "none",
+                    background: isFeature
+                      ? "rgba(255,255,255,0.78)"
+                      : "transparent",
+                    border: isFeature
+                      ? "1px solid rgba(255,255,255,0.7)"
+                      : "none",
                   }}
                 >
                   {icon ? (
@@ -160,7 +164,9 @@ export const PageIntro: React.FC<{
                         justifyContent: "center",
                         color: tc.primary,
                         borderRadius: "50%",
-                        background: isFeature ? `${tc.primary}10` : "transparent",
+                        background: isFeature
+                          ? `${tc.primary}10`
+                          : "transparent",
                       }}
                     >
                       {icon}
@@ -224,11 +230,7 @@ export const PageIntro: React.FC<{
                   pt: { xs: 0, md: 0.25 },
                 }}
               >
-                {utility ? (
-                  <Box sx={{ width: "100%" }}>
-                    {utility}
-                  </Box>
-                ) : null}
+                {utility ? <Box sx={{ width: "100%" }}>{utility}</Box> : null}
                 {actions ? (
                   <Box
                     sx={{
@@ -279,11 +281,7 @@ export const PageIntro: React.FC<{
             </Box>
           </Box>
         ) : null}
-        {footer ? (
-          <Box sx={{ mt: 1.5 }}>
-            {footer}
-          </Box>
-        ) : null}
+        {footer ? <Box sx={{ mt: 1.5 }}>{footer}</Box> : null}
       </Box>
     </Box>
   );
@@ -448,7 +446,9 @@ export const ToolbarCard: React.FC<{
                   }}
                 >
                   {icon ? (
-                    <Box sx={{ display: "flex", color: tc.primary }}>{icon}</Box>
+                    <Box sx={{ display: "flex", color: tc.primary }}>
+                      {icon}
+                    </Box>
                   ) : null}
                   <Typography
                     variant="subtitle1"
@@ -467,7 +467,9 @@ export const ToolbarCard: React.FC<{
                 </Typography>
               ) : null}
             </Box>
-            {actions ? <Box sx={{ display: "flex", gap: 1 }}>{actions}</Box> : null}
+            {actions ? (
+              <Box sx={{ display: "flex", gap: 1 }}>{actions}</Box>
+            ) : null}
           </Box>
         ) : null}
         {children}
@@ -532,7 +534,9 @@ export const PanelHeader: React.FC<{
                 flexWrap: "wrap",
               }}
             >
-              {icon ? <Box sx={{ display: "flex", color: tc.primary }}>{icon}</Box> : null}
+              {icon ? (
+                <Box sx={{ display: "flex", color: tc.primary }}>{icon}</Box>
+              ) : null}
               {eyebrow ? (
                 <Typography
                   sx={{
@@ -558,7 +562,10 @@ export const PanelHeader: React.FC<{
             {title}
           </Typography>
           {subtitle ? (
-            <Typography variant="body1" sx={{ color: tc.textSecondary, mt: 0.75 }}>
+            <Typography
+              variant="body1"
+              sx={{ color: tc.textSecondary, mt: 0.75 }}
+            >
               {subtitle}
             </Typography>
           ) : null}
@@ -670,11 +677,11 @@ export const MetricCard: React.FC<{
                     fontSize: "0.75rem",
                     color: themedColors.textTertiary,
                   }}
-              >
-                {trend.label}
-              </Typography>
-            )}
-          </Box>
+                >
+                  {trend.label}
+                </Typography>
+              )}
+            </Box>
           )}
           {caption ? (
             <Typography
@@ -776,7 +783,13 @@ export const PageSkeleton: React.FC = () => (
   <Box sx={{ pt: 1 }}>
     <Box sx={{ mb: 3 }}>
       <Skeleton variant="text" width={220} height={36} animation="wave" />
-      <Skeleton variant="text" width={340} height={20} animation="wave" sx={{ mt: 0.5 }} />
+      <Skeleton
+        variant="text"
+        width={340}
+        height={20}
+        animation="wave"
+        sx={{ mt: 0.5 }}
+      />
     </Box>
     {[90, 160, 120].map((h, i) => (
       <Skeleton
@@ -814,11 +827,16 @@ export const EmptyState: React.FC<{
       }}
     >
       {icon && (
-        <Box sx={{ mb: 2, color: tc.textTertiary, fontSize: 40, lineHeight: 1 }}>
+        <Box
+          sx={{ mb: 2, color: tc.textTertiary, fontSize: 40, lineHeight: 1 }}
+        >
           {icon}
         </Box>
       )}
-      <Typography variant="h6" sx={{ color: tc.textSecondary, fontWeight: 600, mb: 0.5 }}>
+      <Typography
+        variant="h6"
+        sx={{ color: tc.textSecondary, fontWeight: 600, mb: 0.5 }}
+      >
         {title}
       </Typography>
       {description && (

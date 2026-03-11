@@ -19,13 +19,13 @@ describe("sessions url state", () => {
   });
 
   test("falls back when date is missing or invalid", () => {
-    expect(parseSessionsUrlState("?date=foo&section=1.2", "2025-01-01")).toEqual(
-      {
-        date: "2025-01-01",
-        sessionKey: null,
-        sectionKey: "1.2",
-      },
-    );
+    expect(
+      parseSessionsUrlState("?date=foo&section=1.2", "2025-01-01"),
+    ).toEqual({
+      date: "2025-01-01",
+      sessionKey: null,
+      sectionKey: "1.2",
+    });
   });
 
   test("builds a shareable sessions url", () => {

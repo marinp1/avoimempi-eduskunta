@@ -53,6 +53,8 @@ describe("votings url state", () => {
         sort: "largest",
         voting: null,
       }),
-    ).toBe("/aanestykset?foo=1&sort=largest&phase=Ensimm%C3%A4inen+k%C3%A4sittely");
+    ).toBe(
+      "/aanestykset?foo=1&sort=largest&phase=Ensimm%C3%A4inen+k%C3%A4sittely",
+    );
   });
 });

@@ -1,8 +1,8 @@
 import { Close as CloseIcon, Tune as TuneIcon } from "@mui/icons-material";
 import { Box, Button, Chip, Stack, Typography } from "@mui/material";
 import React from "react";
-import { ToolbarCard } from "#client/theme/components";
 import { colors } from "#client/theme";
+import { ToolbarCard } from "#client/theme/components";
 
 type ActiveFilterChip = {
   key: string;
@@ -37,19 +37,19 @@ const DocumentsFilterPanelComponent: React.FC<{
     icon={<TuneIcon sx={{ fontSize: 18 }} />}
     actions={
       clearLabel && onClear ? (
-      <Button
-        variant="text"
-        color="inherit"
-        onClick={canClear ? onClear : undefined}
-        disabled={!canClear}
-        startIcon={<CloseIcon />}
-        sx={{
-          color: canClear ? colors.primary : colors.textTertiary,
-          px: 0,
-        }}
-      >
-        {clearLabel}
-      </Button>
+        <Button
+          variant="text"
+          color="inherit"
+          onClick={canClear ? onClear : undefined}
+          disabled={!canClear}
+          startIcon={<CloseIcon />}
+          sx={{
+            color: canClear ? colors.primary : colors.textTertiary,
+            px: 0,
+          }}
+        >
+          {clearLabel}
+        </Button>
       ) : undefined
     }
     sx={{
@@ -60,7 +60,10 @@ const DocumentsFilterPanelComponent: React.FC<{
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", md: "minmax(0, 2fr) repeat(2, minmax(180px, 1fr))" },
+          gridTemplateColumns: {
+            xs: "1fr",
+            md: "minmax(0, 2fr) repeat(2, minmax(180px, 1fr))",
+          },
           gap: 2,
         }}
       >
@@ -71,7 +74,10 @@ const DocumentsFilterPanelComponent: React.FC<{
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(220px, 1fr))" },
+            gridTemplateColumns: {
+              xs: "1fr",
+              md: "repeat(2, minmax(220px, 1fr))",
+            },
             gap: 2,
           }}
         >

@@ -55,23 +55,27 @@ const readTimestamp = async (filePath: string): Promise<string | null> => {
   return text || null;
 };
 
-const homeRepository = new HomeRepository(sessionRepository, analyticsRepository, {
-  fetchLastMigrationTimestamp: () => {
-    try {
-      return (
-        db
-          .query<{ value: string }, []>(
-            `SELECT value FROM _migration_info WHERE key = 'last_migration'`,
-          )
-          .get()?.value ?? null
-      );
-    } catch {
-      return null;
-    }
+const homeRepository = new HomeRepository(
+  sessionRepository,
+  analyticsRepository,
+  {
+    fetchLastMigrationTimestamp: () => {
+      try {
+        return (
+          db
+            .query<{ value: string }, []>(
+              `SELECT value FROM _migration_info WHERE key = 'last_migration'`,
+            )
+            .get()?.value ?? null
+        );
+      } catch {
+        return null;
+      }
+    },
+    fetchLastScraperRunAt: () => readTimestamp(getLastScraperRunAtPath()),
+    fetchLastMigratorRunAt: () => readTimestamp(getLastMigratorRunAtPath()),
   },
-  fetchLastScraperRunAt: () => readTimestamp(getLastScraperRunAtPath()),
-  fetchLastMigratorRunAt: () => readTimestamp(getLastMigratorRunAtPath()),
-});
+);
 
 const gitHash = (() => {
   try {

@@ -2,15 +2,13 @@ import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 import FlashOnOutlinedIcon from "@mui/icons-material/FlashOnOutlined";
 import HowToVoteOutlinedIcon from "@mui/icons-material/HowToVoteOutlined";
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, Button, Chip, Stack, Typography } from "@mui/material";
 import React from "react";
+import {
+  VotingCard,
+  type VotingCardData,
+  VotingGroupCard,
+} from "#client/components/VotingCard";
 import {
   isDateWithinHallituskausi,
   useHallituskausi,
@@ -25,7 +23,6 @@ import {
 } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
-import { VotingCard, type VotingCardData, VotingGroupCard } from "#client/components/VotingCard";
 import { VotingsControlBar } from "./components/VotingsControlBar";
 import {
   buildVotingViewModels,
@@ -123,7 +120,10 @@ const OverviewSection: React.FC<{
           <Chip
             size="small"
             label={groups.length}
-            sx={{ fontWeight: 700, alignSelf: { xs: "flex-start", sm: "auto" } }}
+            sx={{
+              fontWeight: 700,
+              alignSelf: { xs: "flex-start", sm: "auto" },
+            }}
           />
         </Box>
 
@@ -213,7 +213,9 @@ export const VoteResults: React.FC<{
           }
         }
         const url =
-          `/api/votings/overview${params.toString() ? `?${params.toString()}` : ""}` as `/api/votings/overview?${string}` | "/api/votings/overview";
+          `/api/votings/overview${params.toString() ? `?${params.toString()}` : ""}` as
+            | `/api/votings/overview?${string}`
+            | "/api/votings/overview";
         const res = await apiFetch(url, { signal: ac.signal });
         if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
         const data = await res.json();
@@ -329,7 +331,10 @@ export const VoteResults: React.FC<{
 
   const combinedRows = React.useMemo(() => {
     const rows = [...browseState.rows];
-    if (focusVoting.row && !rows.some((row) => row.id === focusVoting.row?.id)) {
+    if (
+      focusVoting.row &&
+      !rows.some((row) => row.id === focusVoting.row?.id)
+    ) {
       rows.unshift(focusVoting.row);
     }
     return rows.filter((row) => {
@@ -448,13 +453,7 @@ export const VoteResults: React.FC<{
     if (!hasEnoughQuery && filtersActive)
       return tVotings("controlHints.filtersOnly");
     return tVotings("searchHelp");
-  }, [
-    filtersActive,
-    hasEnoughQuery,
-    isOverviewMode,
-    searchValue,
-    tVotings,
-  ]);
+  }, [filtersActive, hasEnoughQuery, isOverviewMode, searchValue, tVotings]);
 
   const loading =
     overviewState.loading || browseState.loading || focusVoting.loading;
@@ -484,7 +483,10 @@ export const VoteResults: React.FC<{
   ]);
 
   React.useEffect(() => {
-    if (isOverviewMode || !hasMoreGroups(groupedResults, visibleResultGroupCount)) {
+    if (
+      isOverviewMode ||
+      !hasMoreGroups(groupedResults, visibleResultGroupCount)
+    ) {
       return;
     }
 
@@ -576,7 +578,10 @@ export const VoteResults: React.FC<{
           !loading && !error ? (
             <Stack spacing={0.75}>
               {!isOverviewMode ? (
-                <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: themedColors.textSecondary }}
+                >
                   {tVotings("resultCount", { count: combinedRows.length })}
                 </Typography>
               ) : null}
@@ -626,7 +631,8 @@ export const VoteResults: React.FC<{
               <MetricCard
                 label={tVotings("overview.metrics.latestSession")}
                 value={
-                  overviewState.data.metrics.latest_session_key ?? tCommon("none")
+                  overviewState.data.metrics.latest_session_key ??
+                  tCommon("none")
                 }
                 icon={<CalendarMonthOutlinedIcon />}
               />
@@ -789,7 +795,9 @@ export const VoteResults: React.FC<{
               {hasMoreGroups(groupedResults, visibleResultGroupCount) && (
                 <>
                   <Box ref={resultsSentinelRef} sx={{ height: 1 }} />
-                  <Box sx={{ display: "flex", justifyContent: "center", pt: 0.5 }}>
+                  <Box
+                    sx={{ display: "flex", justifyContent: "center", pt: 0.5 }}
+                  >
                     <Button size="small" onClick={loadMoreResultGroups}>
                       {tCommon("showMore")}
                     </Button>

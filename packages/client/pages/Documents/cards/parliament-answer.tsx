@@ -39,8 +39,7 @@ export interface ParliamentAnswerListItem {
   subjects: string | null;
 }
 
-type ParliamentAnswerDetail =
-  ApiRouteResponse<`/api/parliament-answers/:id`>;
+type ParliamentAnswerDetail = ApiRouteResponse<`/api/parliament-answers/:id`>;
 
 function ParliamentAnswerCardComponent({
   item,
@@ -177,7 +176,10 @@ function ParliamentAnswerCardComponent({
                 onClick={(e) => {
                   e.stopPropagation();
                   navigateTo(
-                    refs.documents("government-proposals", item.source_reference!),
+                    refs.documents(
+                      "government-proposals",
+                      item.source_reference!,
+                    ),
                   );
                 }}
                 sx={{

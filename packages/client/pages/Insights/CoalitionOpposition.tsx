@@ -171,7 +171,9 @@ export default function CoalitionOpposition({
       <PanelHeader
         title={tInsights("coalitionOpposition.title")}
         subtitle={tInsights("coalitionOpposition.description")}
-        icon={<AccountBalanceIcon sx={{ fontSize: 28, color: colors.primary }} />}
+        icon={
+          <AccountBalanceIcon sx={{ fontSize: 28, color: colors.primary }} />
+        }
         onClose={onClose}
         sx={{ mb: spacing.lg }}
       />

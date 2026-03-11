@@ -1,9 +1,9 @@
 import type { Database } from "bun:sqlite";
 import { readAllVaskiRows, readVaskiIndex, type VaskiEntry } from "./reader";
-import createEduskunnanVastaus from "./submigrators/eduskunnan_vastaus.ts";
 import createAsiantuntijalausunnonLiite from "./submigrators/asiantuntijalausunnon_liite.ts";
 import createAsiantuntijalausunto from "./submigrators/asiantuntijalausunto.ts";
 import createAsiantuntijasuunnitelma from "./submigrators/asiantuntijasuunnitelma.ts";
+import createEduskunnanVastaus from "./submigrators/eduskunnan_vastaus.ts";
 import createHallituksenEsitys from "./submigrators/hallituksen_esitys.ts";
 import createKansalaisaloite from "./submigrators/kansalaisaloite.ts";
 import createKeskustelualoite from "./submigrators/keskustelualoite.ts";

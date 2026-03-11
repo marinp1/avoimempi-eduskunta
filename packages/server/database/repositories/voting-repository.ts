@@ -1,17 +1,17 @@
 import type { Database } from "bun:sqlite";
 import documentRelationsByIdentifier from "../queries/DOCUMENT_RELATIONS_BY_IDENTIFIER.sql";
-import votingsBrowse from "../queries/VOTINGS_BROWSE.sql";
 import votingById from "../queries/VOTING_BY_ID.sql";
 import votingGovernmentOppositionById from "../queries/VOTING_GOVERNMENT_OPPOSITION_BY_ID.sql";
 import votingMemberVotesById from "../queries/VOTING_MEMBER_VOTES_BY_ID.sql";
+import votingPartyBreakdownById from "../queries/VOTING_PARTY_BREAKDOWN_BY_ID.sql";
+import votingRelatedById from "../queries/VOTING_RELATED_BY_ID.sql";
+import votingsBrowse from "../queries/VOTINGS_BROWSE.sql";
+import votingsByDocument from "../queries/VOTINGS_BY_DOCUMENT.sql";
 import votingsOverviewClose from "../queries/VOTINGS_OVERVIEW_CLOSE.sql";
 import votingsOverviewMetrics from "../queries/VOTINGS_OVERVIEW_METRICS.sql";
 import votingsOverviewPhases from "../queries/VOTINGS_OVERVIEW_PHASES.sql";
 import votingsOverviewSessions from "../queries/VOTINGS_OVERVIEW_SESSIONS.sql";
 import votingsOverviewTurnout from "../queries/VOTINGS_OVERVIEW_TURNOUT.sql";
-import votingPartyBreakdownById from "../queries/VOTING_PARTY_BREAKDOWN_BY_ID.sql";
-import votingRelatedById from "../queries/VOTING_RELATED_BY_ID.sql";
-import votingsByDocument from "../queries/VOTINGS_BY_DOCUMENT.sql";
 import votingsRecent from "../queries/VOTINGS_RECENT.sql";
 import votingsSearch from "../queries/VOTINGS_SEARCH.sql";
 import {
@@ -42,22 +42,25 @@ export class VotingRepository {
         $closeThreshold: number;
       }
     >(votingsOverviewMetrics);
-    const metrics =
-      metricsStmt.get({
-        $startDate: params.startDate ?? null,
-        $endDateExclusive: endDateExclusiveValue,
-        $closeThreshold: closeThreshold,
-      }) ?? {
-        total_votings: 0,
-        close_votings: 0,
-        latest_session_key: null,
-        phase_count: 0,
-      };
+    const metrics = metricsStmt.get({
+      $startDate: params.startDate ?? null,
+      $endDateExclusive: endDateExclusiveValue,
+      $closeThreshold: closeThreshold,
+    }) ?? {
+      total_votings: 0,
+      close_votings: 0,
+      latest_session_key: null,
+      phase_count: 0,
+    };
     metricsStmt.finalize();
 
     const phasesStmt = this.db.prepare<
       { value: string; count: number },
-      { $startDate: string | null; $endDateExclusive: string | null; $limit: number }
+      {
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+        $limit: number;
+      }
     >(votingsOverviewPhases);
     const phases = phasesStmt.all({
       $startDate: params.startDate ?? null,
@@ -68,7 +71,11 @@ export class VotingRepository {
 
     const sessionsStmt = this.db.prepare<
       { value: string; count: number },
-      { $startDate: string | null; $endDateExclusive: string | null; $limit: number }
+      {
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+        $limit: number;
+      }
     >(votingsOverviewSessions);
     const sessions = sessionsStmt.all({
       $startDate: params.startDate ?? null,
@@ -79,7 +86,11 @@ export class VotingRepository {
 
     const closeStmt = this.db.prepare<
       DatabaseQueries.VotingSearchResult,
-      { $startDate: string | null; $endDateExclusive: string | null; $limit: number }
+      {
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+        $limit: number;
+      }
     >(votingsOverviewClose);
     const close = closeStmt.all({
       $startDate: params.startDate ?? null,
@@ -90,7 +101,11 @@ export class VotingRepository {
 
     const turnoutStmt = this.db.prepare<
       DatabaseQueries.VotingSearchResult,
-      { $startDate: string | null; $endDateExclusive: string | null; $limit: number }
+      {
+        $startDate: string | null;
+        $endDateExclusive: string | null;
+        $limit: number;
+      }
     >(votingsOverviewTurnout);
     const turnout = turnoutStmt.all({
       $startDate: params.startDate ?? null,
