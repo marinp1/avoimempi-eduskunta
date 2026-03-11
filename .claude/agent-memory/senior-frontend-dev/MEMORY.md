@@ -8,16 +8,29 @@
 - **Shared Types**: `packages/shared/typings/SQLModel/` - Database table TypeScript types
 - **SQL Queries**: `packages/server/database/queries/*.sql` - Named SQL query files
 
-### Database Query Pattern
+### Database Query Pattern — Analytics Repository
 1. Create SQL file in `packages/server/database/queries/QUERY_NAME.sql`
-2. Export in `packages/server/database/queries.ts`
-3. Add method to `DatabaseConnection` class in `packages/server/database/db.ts`
-4. Add API route in `packages/server/index.ts` using Bun's type-safe routing
+2. Import the SQL file directly at the top of `analytics-repository.ts` (e.g., `import attendancePersonHistory from "../queries/ATTENDANCE_PERSON_HISTORY.sql"`)
+3. Add method to `AnalyticsRepository` class in `packages/server/database/repositories/analytics-repository.ts`
+4. Add route to `packages/server/routes/insight-analytics-routes.ts` (auto-registered via spread in `index.ts`)
+
+Note: The `analytics-repository.ts` uses direct SQL file imports (not `readFileSync`). The routes file auto-registers — no need to update `index.ts`.
+
+### RollCall Tables
+- `RollCallReport`: `id`, `session_date` — one row per nimenhuuto session
+- `RollCallEntry`: `roll_call_id`, `person_id`, `entry_type` (`'absent'` or `'late'`), `absence_reason`, `party`
+- LEFT JOIN `RollCallReport` → `RollCallEntry`: NULL `entry_type` means the person was present (no entry recorded)
 
 ### API Patterns
 - Use `BunRequest<"/path/:param">` for typed route parameters
 - Fetch methods return data directly, API routes wrap in Response with JSON
-- Client-side fetches use standard `fetch()` API
+- Client-side fetches use `apiFetch` from `#client/utils/fetch` — fully typed against server routes
+- Parameterized fetch: `apiFetch(\`/api/path/${id}\`)` — template literals work fine, type inferred
+- `ApiRouteItem<"/api/path/:param">` extracts the array item type for parameterized routes
+
+### i18n Translation Pattern
+- `useScopedTranslation("insights")` then call `t("attendance.xxx")` — never use nested prefix like `"insights.attendance"` (not a valid `TranslationNamespace`)
+- Valid namespaces: `"navigation" | "app" | "home" | "parties" | "documents" | "common" | "hallitukset" | "errors" | "composition" | "votings" | "sessions" | "insights" | "pageSources"`
 
 ## Security Middleware (packages/server/middleware/)
 

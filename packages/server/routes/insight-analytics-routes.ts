@@ -6,7 +6,7 @@ import {
   getOptionalIntegerQueryParam,
   getSearchParams,
 } from "./http";
-import { json } from "./route-responses";
+import { badRequest, json } from "./route-responses";
 
 const dateRangeQueryParamMap = {
   startDate: "startDate",
@@ -179,6 +179,46 @@ export const createInsightAnalyticsRoutes = (db: AnalyticsRepository) => ({
         limit,
         ...params,
       });
+      return json(data);
+    },
+  },
+
+  "/api/analytics/attendance": {
+    GET: async (req: Request) => {
+      const searchParams = getSearchParams(req);
+      const params = getMappedOptionalQueryParams(
+        searchParams,
+        dateRangeQueryParamMap,
+      );
+      const data = await db.fetchAttendanceAnalytics(params);
+      return json(data);
+    },
+  },
+
+  "/api/analytics/attendance-by-party": {
+    GET: async (req: Request) => {
+      const searchParams = getSearchParams(req);
+      const params = getMappedOptionalQueryParams(
+        searchParams,
+        dateRangeQueryParamMap,
+      );
+      const data = await db.fetchAttendanceByParty(params);
+      return json(data);
+    },
+  },
+
+  "/api/analytics/attendance/:personId": {
+    GET: async (req: BunRequest<"/api/analytics/attendance/:personId">) => {
+      const personId = parseInt(req.params.personId, 10);
+      if (!Number.isFinite(personId) || personId <= 0) {
+        return badRequest("Invalid personId");
+      }
+      const searchParams = getSearchParams(req);
+      const params = getMappedOptionalQueryParams(
+        searchParams,
+        dateRangeQueryParamMap,
+      );
+      const data = db.fetchAttendancePersonHistory({ personId, ...params });
       return json(data);
     },
   },
