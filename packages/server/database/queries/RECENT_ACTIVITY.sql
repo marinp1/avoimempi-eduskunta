@@ -10,6 +10,8 @@ SELECT
 FROM Session s
 LEFT JOIN Section sec ON s.key = sec.session_key
 LEFT JOIN Voting vt ON sec.key = vt.section_key AND vt.annulled = 0
+WHERE ($startDate IS NULL OR s.date >= $startDate)
+  AND ($endDateExclusive IS NULL OR s.date < $endDateExclusive)
 GROUP BY s.date, s.key, s.description, s.type
 ORDER BY s.date DESC
 LIMIT $limit;
