@@ -1,4 +1,4 @@
-import { DescriptionOutlined, Search as SearchIcon } from "@mui/icons-material";
+import { Search as SearchIcon } from "@mui/icons-material";
 import {
   Alert,
   Autocomplete,
@@ -12,6 +12,8 @@ import {
   Select,
   Stack,
   TextField,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   memo,
@@ -315,6 +317,8 @@ const DocumentsResultsList = memo(function DocumentsResultsList({
 export default function Documents() {
   const { t } = useScopedTranslation("documents");
   const { selectedHallituskausi } = useHallituskausi();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const [documentType, setDocumentType] = useState<DocumentType>(
     DEFAULT_DOCUMENT_TYPE,
@@ -832,15 +836,40 @@ export default function Documents() {
   );
 
   return (
-    <Box sx={{ p: { xs: 1.5, md: 2.5 } }}>
+    <Box sx={{ p: { xs: 0, md: 2.5 } }}>
       <Stack spacing={3}>
         <PageIntro
           title={t("title")}
-          subtitle={t("subtitle")}
-          eyebrow={t("browseTypeLabel", {
-            value: getDocumentTypeLabel(documentType),
-          })}
-          icon={<DescriptionOutlined sx={{ fontSize: 22 }} />}
+          summary={
+            selectedHallituskausi
+              ? t("summaryTypePeriod", {
+                  value: getDocumentTypeLabel(documentType),
+                  period: selectedHallituskausi.label,
+                })
+              : t("summaryType", {
+                  value: getDocumentTypeLabel(documentType),
+                })
+          }
+          mobileMode="compact"
+          mobileAnchorId="documents-content"
+          mobileSummary={
+            <Box>
+              <Alert
+                severity="info"
+                sx={{
+                  py: 0,
+                  borderRadius: 1.5,
+                  backgroundColor: "rgba(37, 99, 235, 0.08)",
+                }}
+              >
+                {t("resultsSummary", {
+                  shown: items.length,
+                  total: totalCount,
+                  count: totalCount,
+                })}
+              </Alert>
+            </Box>
+          }
           chips={
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
               <Chip
@@ -904,7 +933,7 @@ export default function Documents() {
                   })}
                 </Alert>
               ) : null}
-              {activeFilters.length > 0 ? (
+              {!isMobile && activeFilters.length > 0 ? (
                 <Box>
                   <Chip
                     label={t("activeFilters")}
@@ -936,7 +965,8 @@ export default function Documents() {
           variant="feature"
         />
 
-        <DocumentsFilterPanel
+        <Box id="documents-content">
+          <DocumentsFilterPanel
           secondaryFilters={
             <>
               {documentType === "committee-reports" && (
@@ -1160,7 +1190,8 @@ export default function Documents() {
               ))}
             </Select>
           </FormControl>
-        </DocumentsFilterPanel>
+          </DocumentsFilterPanel>
+        </Box>
 
         {loading && page === 1 ? (
           <DocumentsLoadingState />

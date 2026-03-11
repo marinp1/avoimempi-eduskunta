@@ -125,7 +125,7 @@ export const commonStyles = {
    * Data card - clean, flat styling with 1px border
    */
   dataCard: {
-    borderRadius: borderRadius.md,
+    borderRadius: { xs: 0, sm: borderRadius.md },
     background: colors.backgroundPaper,
     border: `1px solid ${colors.dataBorder}`,
     boxShadow: shadows.card,

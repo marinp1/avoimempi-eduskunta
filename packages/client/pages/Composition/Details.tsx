@@ -41,7 +41,7 @@ import { SourceText } from "#client/components/SourceText";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
-import theme, { colors } from "#client/theme";
+import theme, { borderRadius, colors } from "#client/theme";
 import { MetricCard, VoteMarginBar } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { isSafeExternalUrl } from "#client/utils/eduskunta-links";
@@ -82,6 +82,13 @@ type VotesByPersonType = ApiRouteItem<`/api/person/:id/votes`>;
 type PersonQuestionType = ApiRouteItem<`/api/person/:id/questions`>;
 
 type VotingInlineDetails = ApiRouteResponse<`/api/votings/:id/details`>;
+
+const detailMetricCardSx = {
+  borderRadius: {
+    xs: `${borderRadius.md * 8}px`,
+    sm: `${borderRadius.md * 8}px`,
+  },
+} as const;
 
 type GovernmentPeriod = {
   government_name: string;
@@ -949,6 +956,7 @@ const OverviewTab: React.FC<{
             label={metric.label}
             value={metric.value}
             caption={metric.caption}
+            sx={detailMetricCardSx}
           />
         ))}
       </Box>
@@ -1793,6 +1801,7 @@ const VotesTab: React.FC<{
         <MetricCard
           label={tComposition("details.votes.participation")}
           value={`${displayParticipationRate}%`}
+          sx={detailMetricCardSx}
         />
         <MetricCard
           label={tComposition("details.votes.totalVotes")}
@@ -1802,10 +1811,12 @@ const VotesTab: React.FC<{
               ? scope.selectedGovernmentName
               : tComposition("details.analysis.scopeAll")
           }
+          sx={detailMetricCardSx}
         />
         <Box
           sx={{
             p: 1.5,
+            gridColumn: { xs: "1 / -1", sm: "auto" },
             borderRadius: 2,
             border: `1px solid ${themedColors.dataBorder}`,
             bgcolor: themedColors.backgroundPaper,
@@ -2865,6 +2876,7 @@ const SpeechesTab: React.FC<{
           label={tComposition("details.speeches.count")}
           value={filteredSpeeches.length}
           caption={`${speechesTotal ?? 0} ${tComposition("details.analysis.availableTotal")}`}
+          sx={detailMetricCardSx}
         />
         <MetricCard
           label={tComposition("details.speeches.totalWords")}
@@ -2878,6 +2890,7 @@ const SpeechesTab: React.FC<{
               ? `${totalWords} ${tComposition("details.analysis.scopeAll")}`
               : undefined
           }
+          sx={detailMetricCardSx}
         />
         <MetricCard
           label={tComposition("details.analysis.scope")}
@@ -2886,6 +2899,7 @@ const SpeechesTab: React.FC<{
               ? scope.selectedGovernmentPeriod.government_name
               : tComposition("details.analysis.scopeAll")
           }
+          sx={detailMetricCardSx}
         />
       </Box>
 
@@ -3293,24 +3307,28 @@ const QuestionsTab: React.FC<{
         <MetricCard
           label={t("details.questions.total", { count: totalQuestions })}
           value={filteredQuestions.length}
+          sx={detailMetricCardSx}
         />
         <MetricCard
           label={t("details.questions.interpellations", {
             count: interpellationsCount,
           })}
           value={interpellationsCount}
+          sx={detailMetricCardSx}
         />
         <MetricCard
           label={t("details.questions.oralQuestions", {
             count: oralQuestionsCount,
           })}
           value={oralQuestionsCount}
+          sx={detailMetricCardSx}
         />
         <MetricCard
           label={t("details.questions.writtenQuestions", {
             count: writtenQuestionsCount,
           })}
           value={writtenQuestionsCount}
+          sx={detailMetricCardSx}
         />
       </Box>
 
@@ -4034,44 +4052,46 @@ export const RepresentativeDetails: React.FC<{
               </Box>
             </Box>
 
-            <Box
-              sx={{
-                px: { xs: 2, sm: 2.5 },
-                pb: 1.5,
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
-                gap: 1,
-              }}
-            >
-              {quickSummary.map((item) => (
-                <Box
-                  key={item.label}
-                  sx={{
-                    p: 1.1,
-                    borderRadius: 1.5,
-                    bgcolor: "rgba(255,255,255,0.08)",
-                    border: "1px solid rgba(255,255,255,0.12)",
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{ color: "rgba(255,255,255,0.75)" }}
-                  >
-                    {item.label}
-                  </Typography>
-                  <Typography
+            {!isMobile ? (
+              <Box
+                sx={{
+                  px: { xs: 2, sm: 2.5 },
+                  pb: 1.5,
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
+                  gap: 1,
+                }}
+              >
+                {quickSummary.map((item) => (
+                  <Box
+                    key={item.label}
                     sx={{
-                      color: "white",
-                      fontWeight: 700,
-                      lineHeight: 1.2,
-                      mt: 0.25,
+                      p: 1.1,
+                      borderRadius: 1.5,
+                      bgcolor: "rgba(255,255,255,0.08)",
+                      border: "1px solid rgba(255,255,255,0.12)",
                     }}
                   >
-                    {item.value}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "rgba(255,255,255,0.75)" }}
+                    >
+                      {item.label}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: "white",
+                        fontWeight: 700,
+                        lineHeight: 1.2,
+                        mt: 0.25,
+                      }}
+                    >
+                      {item.value}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            ) : null}
 
             <Tabs
               value={tabIndex}

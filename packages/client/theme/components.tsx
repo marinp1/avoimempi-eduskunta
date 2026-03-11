@@ -6,6 +6,8 @@ import {
   IconButton,
   Skeleton,
   Stack,
+  useMediaQuery,
+  useTheme,
   type SxProps,
   type Theme,
   Typography,
@@ -34,6 +36,7 @@ export const DataCard: React.FC<{
 export const PageIntro: React.FC<{
   title: string;
   subtitle?: string;
+  summary?: React.ReactNode;
   eyebrow?: string;
   icon?: React.ReactNode;
   actions?: React.ReactNode;
@@ -43,10 +46,17 @@ export const PageIntro: React.FC<{
   stats?: React.ReactNode;
   footer?: React.ReactNode;
   variant?: "default" | "feature";
+  mobileMode?: "compact" | "immersive";
+  mobileSummary?: React.ReactNode;
+  mobileAnchorId?: string;
+  mobileCtaLabel?: string;
+  mobileCtaHref?: string;
+  mobileStatsPlacement?: "inline" | "footer" | "hidden";
   sx?: SxProps<Theme>;
 }> = ({
   title,
   subtitle,
+  summary,
   eyebrow,
   icon,
   actions,
@@ -56,12 +66,27 @@ export const PageIntro: React.FC<{
   stats,
   footer,
   variant = "default",
+  mobileMode = "compact",
+  mobileSummary,
+  mobileAnchorId,
+  mobileStatsPlacement = "inline",
   sx,
 }) => {
   const tc = useThemedColors();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isFeature = variant === "feature";
+  const isImmersiveMobile = isMobile && mobileMode === "immersive";
   const heroOuterRadius = `${borderRadius.heroOuter * 8}px`;
   const heroInnerRadius = `${borderRadius.heroInner * 8}px`;
+  const showInlineStats = Boolean(
+    stats &&
+      (!isImmersiveMobile ||
+        mobileStatsPlacement === "inline"),
+  );
+  const showFooterStats = Boolean(
+    stats && isImmersiveMobile && mobileStatsPlacement === "footer",
+  );
   const supportContent =
     chips || meta ? (
       <Stack spacing={1}>
@@ -69,221 +94,271 @@ export const PageIntro: React.FC<{
         {meta ? <Box>{meta}</Box> : null}
       </Stack>
     ) : null;
-  const hasSupportRail = Boolean(supportContent || stats);
+  const hasSupportRail = Boolean(supportContent || showInlineStats);
 
   return (
-    <Box
-      sx={{
-        position: "relative",
-        overflow: "hidden",
-        borderRadius: heroOuterRadius,
-        border: `1px solid ${tc.dataBorder}`,
-        background: isFeature
-          ? "linear-gradient(180deg, rgba(255,255,255,0.99) 0%, rgba(244,247,250,0.98) 52%, rgba(239,243,248,0.97) 100%)"
-          : "linear-gradient(180deg, rgba(255,255,255,0.99) 0%, rgba(247,249,251,0.98) 100%)",
-        boxShadow: isFeature
-          ? "0 16px 32px rgba(15, 27, 51, 0.07)"
-          : "0 10px 22px rgba(15, 27, 51, 0.05)",
-        px: { xs: 2, md: 3.25 },
-        py: { xs: 2, md: 2.75 },
-        mb: 3,
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: isFeature ? { xs: 132, md: 188 } : { xs: 104, md: 136 },
-          height: 4,
-          borderBottomRightRadius: 999,
-          background: isFeature
-            ? `linear-gradient(90deg, ${colors.primary} 0%, ${colors.primaryLight} 68%, ${colors.accent} 100%)`
-            : `linear-gradient(90deg, ${colors.primary} 0%, ${colors.primaryLight} 100%)`,
-          opacity: isFeature ? 0.95 : 0.82,
-          zIndex: 1,
-        },
-        ...sx,
-      }}
-    >
+    <>
       <Box
         sx={{
-          position: "absolute",
-          inset: 0,
+          position: "relative",
+          overflow: "hidden",
+          borderRadius: { xs: 0, sm: heroOuterRadius },
+          border: `1px solid ${tc.dataBorder}`,
           background: isFeature
-            ? "radial-gradient(620px 240px at 0% 0%, rgba(74,111,165,0.12), transparent 66%), radial-gradient(540px 260px at 100% 0%, rgba(232,145,58,0.10), transparent 72%), linear-gradient(135deg, rgba(255,255,255,0.20), transparent 46%)"
-            : "radial-gradient(540px 210px at 0% 0%, rgba(74,111,165,0.08), transparent 68%), radial-gradient(420px 220px at 100% 0%, rgba(232,145,58,0.06), transparent 74%)",
-          pointerEvents: "none",
+            ? "linear-gradient(180deg, rgba(255,255,255,0.99) 0%, rgba(244,247,250,0.98) 52%, rgba(239,243,248,0.97) 100%)"
+            : "linear-gradient(180deg, rgba(255,255,255,0.99) 0%, rgba(247,249,251,0.98) 100%)",
+          boxShadow: isFeature
+            ? "0 16px 32px rgba(15, 27, 51, 0.07)"
+            : "0 10px 22px rgba(15, 27, 51, 0.05)",
+          px: { xs: 2, md: 3.25 },
+          py: { xs: isImmersiveMobile ? 2 : 1.5, md: 2.75 },
+          mb: showFooterStats ? 1.5 : 3,
+          minHeight: isImmersiveMobile
+            ? "calc(100dvh - 48px - 56px - 32px - env(safe-area-inset-bottom, 0px))"
+            : "auto",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: isImmersiveMobile ? "space-between" : "flex-start",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: isFeature ? { xs: 132, md: 188 } : { xs: 104, md: 136 },
+            height: 4,
+            borderBottomRightRadius: 999,
+            background: isFeature
+              ? `linear-gradient(90deg, ${colors.primary} 0%, ${colors.primaryLight} 68%, ${colors.accent} 100%)`
+              : `linear-gradient(90deg, ${colors.primary} 0%, ${colors.primaryLight} 100%)`,
+            opacity: isFeature ? 0.95 : 0.82,
+            zIndex: 1,
+          },
+          ...sx,
         }}
-      />
-      <Box sx={{ position: "relative" }}>
-        <Stack
+      >
+        <Box
           sx={{
-            gap: { xs: 1.5, md: isFeature ? 2 : 1.5 },
+            position: "absolute",
+            inset: 0,
+            background: isFeature
+              ? "radial-gradient(620px 240px at 0% 0%, rgba(74,111,165,0.12), transparent 66%), radial-gradient(540px 260px at 100% 0%, rgba(232,145,58,0.10), transparent 72%), linear-gradient(135deg, rgba(255,255,255,0.20), transparent 46%)"
+              : "radial-gradient(540px 210px at 0% 0%, rgba(74,111,165,0.08), transparent 68%), radial-gradient(420px 220px at 100% 0%, rgba(232,145,58,0.06), transparent 74%)",
+            pointerEvents: "none",
           }}
-        >
-          <Box
+        />
+        <Box sx={{ position: "relative" }}>
+          <Stack
             sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                md:
-                  actions || utility
-                    ? "minmax(0, 1fr) minmax(220px, auto)"
-                    : "1fr",
-              },
-              gap: { xs: 1.5, md: 2 },
-              alignItems: { xs: "flex-start", md: "end" },
-            }}
-          >
-            <Box sx={{ minWidth: 0 }}>
-              {(eyebrow || icon) && (
-                <Box
-                  sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 0.75,
-                    mb: 1,
-                    flexWrap: "wrap",
-                    px: isFeature ? 1 : 0,
-                    py: isFeature ? 0.55 : 0,
-                    borderRadius: 999,
-                    background: isFeature
-                      ? "rgba(255,255,255,0.78)"
-                      : "transparent",
-                    border: isFeature
-                      ? "1px solid rgba(255,255,255,0.7)"
-                      : "none",
-                  }}
-                >
-                  {icon ? (
-                    <Box
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: tc.primary,
-                        borderRadius: "50%",
-                        background: isFeature
-                          ? `${tc.primary}10`
-                          : "transparent",
-                      }}
-                    >
-                      {icon}
-                    </Box>
-                  ) : null}
-                  {eyebrow ? (
-                    <Typography
-                      sx={{
-                        fontSize: "0.75rem",
-                        letterSpacing: "0.12em",
-                        textTransform: "uppercase",
-                        color: tc.primary,
-                        fontWeight: 700,
-                      }}
-                    >
-                      {eyebrow}
-                    </Typography>
-                  ) : null}
-                </Box>
-              )}
-              <Typography
-                variant="h2"
-                sx={{
-                  fontWeight: 700,
-                  letterSpacing: isFeature ? "-0.04em" : "-0.03em",
-                  lineHeight: 1.03,
-                  fontSize: {
-                    xs: isFeature ? "2rem" : "1.8rem",
-                    md: isFeature ? "2.45rem" : "2.1rem",
-                  },
-                  maxWidth: isFeature ? "15ch" : "22ch",
-                }}
-              >
-                {title}
-              </Typography>
-              {subtitle ? (
-                <Typography
-                  variant="body1"
-                  sx={{
-                    color: tc.textSecondary,
-                    maxWidth: 760,
-                    mt: 0.9,
-                    fontSize: isFeature ? "1rem" : "0.95rem",
-                    lineHeight: 1.65,
-                  }}
-                >
-                  {subtitle}
-                </Typography>
-              ) : null}
-            </Box>
-            {actions || utility ? (
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 1,
-                  alignItems: { xs: "stretch", md: "flex-end" },
-                  justifyContent: "flex-start",
-                  maxWidth: { md: 360 },
-                  minWidth: 0,
-                  pt: { xs: 0, md: 0.25 },
-                }}
-              >
-                {utility ? <Box sx={{ width: "100%" }}>{utility}</Box> : null}
-                {actions ? (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      gap: 1,
-                      alignItems: { xs: "flex-start", md: "center" },
-                      flexWrap: "wrap",
-                      justifyContent: { xs: "flex-start", md: "flex-end" },
-                    }}
-                  >
-                    {actions}
-                  </Box>
-                ) : null}
-              </Box>
-            ) : null}
-          </Box>
-        </Stack>
-        {hasSupportRail ? (
-          <Box
-            sx={{
-              mt: 0.5,
+              gap: { xs: 1.5, md: isFeature ? 2 : 1.5 },
             }}
           >
             <Box
               sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 1.25,
-                p: { xs: 1, md: isFeature ? 1.25 : 1 },
-                borderRadius: heroInnerRadius,
-                border: `1px solid ${isFeature ? "rgba(255,255,255,0.76)" : tc.dataBorder}`,
-                background: isFeature
-                  ? "linear-gradient(180deg, rgba(255,255,255,0.74) 0%, rgba(246,248,251,0.9) 100%)"
-                  : "rgba(255,255,255,0.58)",
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  md:
+                    actions || utility
+                      ? "minmax(0, 1fr) minmax(220px, auto)"
+                      : "1fr",
+                },
+                gap: { xs: 1.5, md: 2 },
+                alignItems: { xs: "flex-start", md: "end" },
               }}
             >
-              {supportContent ? <Box>{supportContent}</Box> : null}
-              {stats ? (
-                <Box
+              <Box sx={{ minWidth: 0 }}>
+                {(eyebrow || icon) && (
+                  <Box
+                    sx={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 0.75,
+                      mb: 1,
+                      flexWrap: "wrap",
+                      px: isFeature ? 1 : 0,
+                      py: isFeature ? 0.55 : 0,
+                      borderRadius: 999,
+                      background: isFeature
+                        ? "rgba(255,255,255,0.78)"
+                        : "transparent",
+                      border: isFeature
+                        ? "1px solid rgba(255,255,255,0.7)"
+                        : "none",
+                    }}
+                  >
+                    {icon ? (
+                      <Box
+                        sx={{
+                          width: 24,
+                          height: 24,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: tc.primary,
+                          borderRadius: "50%",
+                          background: isFeature
+                            ? `${tc.primary}10`
+                            : "transparent",
+                        }}
+                      >
+                        {icon}
+                      </Box>
+                    ) : null}
+                    {eyebrow ? (
+                      <Typography
+                        sx={{
+                          fontSize: "0.75rem",
+                          letterSpacing: "0.12em",
+                          textTransform: "uppercase",
+                          color: tc.primary,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {eyebrow}
+                      </Typography>
+                    ) : null}
+                  </Box>
+                )}
+                <Typography
+                  variant="h2"
                   sx={{
-                    minWidth: 0,
-                    width: "100%",
+                    fontWeight: 700,
+                    letterSpacing: isFeature ? "-0.04em" : "-0.03em",
+                    lineHeight: 1.03,
+                    fontSize: {
+                      xs: isFeature ? "2rem" : "1.8rem",
+                      md: isFeature ? "2.45rem" : "2.1rem",
+                    },
+                    maxWidth: isFeature ? "15ch" : "22ch",
+                    textWrap: "balance",
                   }}
                 >
-                  {stats}
+                  {title}
+                </Typography>
+                {subtitle ? (
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: tc.textSecondary,
+                      maxWidth: 760,
+                      mt: 0.9,
+                      fontSize: isFeature ? "1rem" : "0.95rem",
+                      lineHeight: 1.65,
+                    }}
+                  >
+                    {subtitle}
+                  </Typography>
+                ) : null}
+                {summary ? (
+                  <Box
+                    sx={{
+                      mt: subtitle ? 1 : 0.9,
+                      color: tc.textSecondary,
+                      maxWidth: 760,
+                    }}
+                  >
+                    {typeof summary === "string" ? (
+                      <Typography
+                        variant="body1"
+                        sx={{
+                          color: "inherit",
+                          fontSize: isFeature ? "1rem" : "0.95rem",
+                          lineHeight: 1.65,
+                        }}
+                      >
+                        {summary}
+                      </Typography>
+                    ) : (
+                      summary
+                    )}
+                  </Box>
+                ) : null}
+                {isMobile && mobileSummary ? (
+                  <Box sx={{ mt: 1.5 }}>{mobileSummary}</Box>
+                ) : null}
+              </Box>
+              {actions || utility ? (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                    alignItems: { xs: "stretch", md: "flex-end" },
+                    justifyContent: "flex-start",
+                    maxWidth: { md: 360 },
+                    minWidth: 0,
+                    pt: { xs: 0, md: 0.25 },
+                  }}
+                >
+                  {utility ? <Box sx={{ width: "100%" }}>{utility}</Box> : null}
+                  {actions ? (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1,
+                        alignItems: { xs: "flex-start", md: "center" },
+                        flexWrap: "wrap",
+                        justifyContent: { xs: "flex-start", md: "flex-end" },
+                      }}
+                    >
+                      {actions}
+                    </Box>
+                  ) : null}
                 </Box>
               ) : null}
             </Box>
-          </Box>
-        ) : null}
-        {footer ? <Box sx={{ mt: 1.5 }}>{footer}</Box> : null}
+          </Stack>
+          {hasSupportRail ? (
+            <Box
+              sx={{
+                mt: isImmersiveMobile ? 1.25 : 0.5,
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1.25,
+                  p: { xs: 1, md: isFeature ? 1.25 : 1 },
+                  borderRadius: heroInnerRadius,
+                  border: `1px solid ${isFeature ? "rgba(255,255,255,0.76)" : tc.dataBorder}`,
+                  background: isFeature
+                    ? "linear-gradient(180deg, rgba(255,255,255,0.74) 0%, rgba(246,248,251,0.9) 100%)"
+                    : "rgba(255,255,255,0.58)",
+                }}
+              >
+                {supportContent ? <Box>{supportContent}</Box> : null}
+                {showInlineStats ? (
+                  <Box
+                    sx={{
+                      minWidth: 0,
+                      width: "100%",
+                    }}
+                  >
+                    {stats}
+                  </Box>
+                ) : null}
+              </Box>
+            </Box>
+          ) : null}
+          {footer ? <Box sx={{ mt: 1.5 }}>{footer}</Box> : null}
+        </Box>
       </Box>
-    </Box>
+      {showFooterStats ? (
+        <Box
+          sx={{
+            p: { xs: 1.25, md: 1.5 },
+            mb: 3,
+            borderRadius: heroInnerRadius,
+            border: `1px solid ${tc.dataBorder}`,
+            background: "rgba(255,255,255,0.78)",
+            boxShadow: "0 8px 18px rgba(15, 27, 51, 0.05)",
+          }}
+        >
+          {stats}
+        </Box>
+      ) : null}
+    </>
   );
 };
 
@@ -291,12 +366,39 @@ export const PageIntro: React.FC<{
  * PageHeader - compatibility wrapper over PageIntro
  */
 export const PageHeader: React.FC<{
+  eyebrow?: string;
   title: string;
   subtitle?: string;
+  summary?: React.ReactNode;
   actions?: React.ReactNode;
+  mobileMode?: "compact" | "immersive";
+  mobileSummary?: React.ReactNode;
+  mobileAnchorId?: string;
+  mobileCtaLabel?: string;
+  mobileCtaHref?: string;
   sx?: SxProps<Theme>;
-}> = ({ title, subtitle, actions, sx }) => (
-  <PageIntro title={title} subtitle={subtitle} actions={actions} sx={sx} />
+}> = ({
+  eyebrow,
+  title,
+  subtitle,
+  summary,
+  actions,
+  mobileMode,
+  mobileSummary,
+  mobileAnchorId,
+  sx,
+}) => (
+  <PageIntro
+    eyebrow={eyebrow}
+    title={title}
+    subtitle={subtitle}
+    summary={summary}
+    actions={actions}
+    mobileMode={mobileMode}
+    mobileSummary={mobileSummary}
+    mobileAnchorId={mobileAnchorId}
+    sx={sx}
+  />
 );
 
 /**

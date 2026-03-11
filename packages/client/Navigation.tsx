@@ -589,7 +589,12 @@ export const Navigation: React.FC<{
           variant="fullWidth"
           sx={{
             minHeight: 56,
+            width: "100%",
+            overflow: "hidden",
             "& .MuiTab-root": {
+              minWidth: 0,
+              maxWidth: "none",
+              flex: "1 1 0",
               minHeight: 56,
               py: 1,
               px: 0,
@@ -633,6 +638,7 @@ export const Navigation: React.FC<{
             icon={<MoreHoriz sx={{ fontSize: 22 }} />}
             label={tNavigation("more")}
             value={MOBILE_MORE_TAB_VALUE}
+            onClick={() => setDrawerOpen(true)}
           />
         </Tabs>
       </AppBar>

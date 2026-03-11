@@ -35,7 +35,6 @@ import { apiFetch } from "#client/utils/fetch";
 import {
   CompositionPanel,
   HomeHero,
-  HomeMetricStrip,
   ProceedingsShell,
   SessionSummaryCard,
   SignalsPanel,
@@ -480,63 +479,62 @@ const Home = () => {
       {overview && (
         <>
           <HomeHero overview={overview} tHome={tHome} />
-          <HomeMetricStrip overview={overview} tHome={tHome} />
+          <Box id="home-content">
+            <Grid container spacing={2} sx={{ mb: spacing.md }}>
+              <Grid size={{ xs: 12, lg: 5 }}>
+                <CompositionPanel overview={overview} tHome={tHome} />
+              </Grid>
+              <Grid size={{ xs: 12, lg: 7 }}>
+                <ProceedingsShell
+                  tHome={tHome}
+                  latestDate={overview.latestDay.date}
+                >
+                  {overview.latestDay.sessions.length === 0 ? (
+                    <Box sx={{ p: 3 }}>
+                      <Alert severity="info">{tHome("noProceedings")}</Alert>
+                    </Box>
+                  ) : (
+                    overview.latestDay.sessions.map((session) => {
+                      const previewCount = expandedSessions.has(session.key)
+                        ? session.sections.length
+                        : Math.min(
+                            session.sections.length,
+                            INITIAL_SECTION_PREVIEW_COUNT,
+                          );
+                      const speechLag =
+                        overview.latestDay.vaskiLatestSpeechDate &&
+                        session.date &&
+                        new Date(session.date).getTime() >
+                          new Date(
+                            overview.latestDay.vaskiLatestSpeechDate,
+                          ).getTime();
 
-          <Grid container spacing={2} sx={{ mb: spacing.md }}>
-            <Grid size={{ xs: 12, lg: 5 }}>
-              <CompositionPanel overview={overview} tHome={tHome} />
-            </Grid>
-            <Grid size={{ xs: 12, lg: 7 }}>
-              <ProceedingsShell
-                tHome={tHome}
-                latestDate={overview.latestDay.date}
-              >
-                {overview.latestDay.sessions.length === 0 ? (
-                  <Box sx={{ p: 3 }}>
-                    <Alert severity="info">{tHome("noProceedings")}</Alert>
-                  </Box>
-                ) : (
-                  overview.latestDay.sessions.map((session) => {
-                    const previewCount = expandedSessions.has(session.key)
-                      ? session.sections.length
-                      : Math.min(
-                          session.sections.length,
-                          INITIAL_SECTION_PREVIEW_COUNT,
-                        );
-                    const speechLag =
-                      overview.latestDay.vaskiLatestSpeechDate &&
-                      session.date &&
-                      new Date(session.date).getTime() >
-                        new Date(
-                          overview.latestDay.vaskiLatestSpeechDate,
-                        ).getTime();
+                      return (
+                        <Box key={session.id}>
+                          <SessionSummaryCard
+                            session={session}
+                            tHome={tHome}
+                            tSessions={tSessions}
+                          />
 
-                    return (
-                      <Box key={session.id}>
-                        <SessionSummaryCard
-                          session={session}
-                          tHome={tHome}
-                          tSessions={tSessions}
-                        />
-
-                        {speechLag && (
-                          <Box sx={{ px: 2, pt: 2 }}>
-                            <Alert
-                              severity="info"
-                              icon={<WarningAmberIcon fontSize="inherit" />}
-                            >
-                              <Typography sx={{ fontSize: "0.8125rem" }}>
-                                {tSessions("speechContentPending")}{" "}
-                                {tSessions("speechContentLatest", {
-                                  date: formatDateLongFi(
-                                    overview.latestDay
-                                      .vaskiLatestSpeechDate as string,
-                                  ),
-                                })}
-                              </Typography>
-                            </Alert>
-                          </Box>
-                        )}
+                          {speechLag && (
+                            <Box sx={{ px: 2, pt: 2 }}>
+                              <Alert
+                                severity="info"
+                                icon={<WarningAmberIcon fontSize="inherit" />}
+                              >
+                                <Typography sx={{ fontSize: "0.8125rem" }}>
+                                  {tSessions("speechContentPending")}{" "}
+                                  {tSessions("speechContentLatest", {
+                                    date: formatDateLongFi(
+                                      overview.latestDay
+                                        .vaskiLatestSpeechDate as string,
+                                    ),
+                                  })}
+                                </Typography>
+                              </Alert>
+                            </Box>
+                          )}
 
                         {session.sections
                           .slice(0, previewCount)
@@ -770,12 +768,13 @@ const Home = () => {
                           </Box>
                         )}
                       </Box>
-                    );
-                  })
-                )}
-              </ProceedingsShell>
+                      );
+                    })
+                  )}
+                </ProceedingsShell>
+              </Grid>
             </Grid>
-          </Grid>
+          </Box>
 
           <SignalsPanel overview={overview} tHome={tHome} />
         </>

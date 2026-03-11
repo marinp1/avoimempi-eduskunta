@@ -42,7 +42,6 @@ import { colors, commonStyles, spacing } from "#client/theme";
 import {
   DataCard,
   EmptyState,
-  MetricCard,
   PageIntro,
   ToolbarCard,
 } from "#client/theme/components";
@@ -817,10 +816,36 @@ export default () => {
   return (
     <Box>
       <PageIntro
-        eyebrow={t("context.eyebrow")}
         title={t("title")}
-        subtitle={t("subtitle")}
-        icon={<AccountBalanceIcon fontSize="small" />}
+        summary={
+          selectedHallituskausi
+            ? t("summaryGovernment", {
+                period: selectedHallituskausi.name,
+                value: formatFinnishDate(date),
+              })
+            : isToday
+              ? t("summaryCurrent", { value: formatFinnishDate(date) })
+              : t("summaryHistorical", { value: formatFinnishDate(date) })
+        }
+        mobileMode="compact"
+        mobileAnchorId="composition-content"
+        mobileStatsPlacement="hidden"
+        mobileSummary={
+          !loading && !error ? (
+            <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+                <Chip
+                  size="small"
+                  label={`${t("snapshot.totalMembers")}: ${stats.totalMembers}`}
+                  sx={{ fontWeight: 700 }}
+                />
+                <Chip
+                  size="small"
+                  label={`${t("snapshot.partyCount")}: ${stats.partyCount}`}
+                  sx={{ fontWeight: 700 }}
+                />
+            </Box>
+          ) : undefined
+        }
         utility={
           <Button
             variant="outlined"
@@ -865,57 +890,12 @@ export default () => {
                 sx={{ fontWeight: 600 }}
               />
             ) : null}
-            {stats.largestParty ? (
-              <Chip
-                size="small"
-                label={t("snapshot.leadingPartySeats", {
-                  party: stats.largestParty.partyName,
-                  count: stats.largestParty.total,
-                })}
-                sx={{ fontWeight: 600 }}
-              />
-            ) : null}
           </Stack>
-        }
-        stats={
-          !loading && !error ? (
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: {
-                  xs: "1fr",
-                  sm: "repeat(2, minmax(0, 1fr))",
-                  xl: "repeat(4, minmax(0, 1fr))",
-                },
-                gap: 1.5,
-              }}
-            >
-              <MetricCard
-                label={t("snapshot.totalMembers")}
-                value={stats.totalMembers}
-                icon={<TableRowsIcon fontSize="small" />}
-              />
-              <MetricCard
-                label={t("snapshot.governmentMembers")}
-                value={stats.governmentMembers}
-                icon={<CheckCircleIcon fontSize="small" />}
-              />
-              <MetricCard
-                label={t("snapshot.oppositionMembers")}
-                value={stats.oppositionMembers}
-                icon={<HistoryEduIcon fontSize="small" />}
-              />
-              <MetricCard
-                label={t("snapshot.partyCount")}
-                value={stats.partyCount}
-                icon={<AccountBalanceIcon fontSize="small" />}
-              />
-            </Box>
-          ) : null
         }
       />
 
-      <ToolbarCard sx={{ mb: spacing.md }}>
+      <Box id="composition-content">
+        <ToolbarCard sx={{ mb: spacing.md }}>
         <TimelineSelector
           hallituskaudet={hallituskaudet}
           selectedHallituskausi={selectedHallituskausi}
@@ -923,7 +903,8 @@ export default () => {
           todayIso={todayIso}
           onDateChange={handleDateChange}
         />
-      </ToolbarCard>
+        </ToolbarCard>
+      </Box>
 
       <DataCard sx={{ p: 2.5, mb: spacing.md }}>
         <Typography

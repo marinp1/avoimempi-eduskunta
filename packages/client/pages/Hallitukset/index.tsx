@@ -18,6 +18,8 @@ import {
   Slider,
   Stack,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -190,6 +192,15 @@ const featuredRoleColors: Record<FeaturedMinisterKey, string> = {
   financeMinister: "#0F766E",
   interiorMinister: "#C2410C",
 };
+
+const wrapChipSx = {
+  maxWidth: "100%",
+  height: "auto",
+  "& .MuiChip-label": {
+    display: "block",
+    whiteSpace: "normal",
+  },
+} as const;
 
 const TimelineSelector: React.FC<{
   hallituskaudet: HallituskausiPeriod[];
@@ -422,18 +433,45 @@ const GovernmentPageHero: React.FC<{
 }) => {
   const { t } = useScopedTranslation("hallitukset");
   const tc = useThemedColors();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   if (!government) return null;
 
   return (
     <PageIntro
       title={government.name}
-      subtitle={`${t("startedOn", {
-        value: formatDateFi(government.start_date),
-      })} • ${formatDateRange(government.start_date, government.end_date)}`}
-      eyebrow={t("title")}
-      icon={<AccountBalanceIcon sx={{ fontSize: 22 }} />}
+      summary={
+        government.is_current
+          ? t("summaryCurrent", { value: formatDateFi(selectedDate) })
+          : t("summaryHistorical", { value: formatDateFi(selectedDate) })
+      }
       variant="feature"
+      mobileMode="compact"
+      mobileAnchorId="governments-content"
+      mobileStatsPlacement="hidden"
+      mobileSummary={
+        <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+            <Chip
+              size="small"
+              label={`${government.parties.length} puoluetta`}
+              sx={{ fontWeight: 700 }}
+            />
+            <Chip
+              size="small"
+              label={formatDurationFi(
+                government.start_date,
+                government.end_date,
+              )}
+              sx={{ fontWeight: 700 }}
+            />
+            <Chip
+              size="small"
+              label={`${totalGovernments} hallitusta`}
+              sx={{ fontWeight: 700 }}
+            />
+        </Box>
+      }
       chips={
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           <Chip
@@ -451,9 +489,16 @@ const GovernmentPageHero: React.FC<{
           />
         </Stack>
       }
+      meta={
+        <Typography variant="body2" sx={{ color: tc.textSecondary }}>
+          {`${t("startedOn", {
+            value: formatDateFi(government.start_date),
+          })} • ${formatDateRange(government.start_date, government.end_date)}`}
+        </Typography>
+      }
       actions={
         <>
-          {!isToday && (
+          {!isToday && !isMobile && (
             <Button
               variant="outlined"
               onClick={onReturnToCurrent}
@@ -469,14 +514,38 @@ const GovernmentPageHero: React.FC<{
           >
             {t("showMinisters")}
           </Button>
-          <Button
-            variant="outlined"
-            onClick={onBrowseArchive}
-            sx={{ textTransform: "none", fontWeight: 700 }}
-          >
-            {t("browseHistory")}
-          </Button>
+          {!isMobile && (
+            <Button
+              variant="outlined"
+              onClick={onBrowseArchive}
+              sx={{ textTransform: "none", fontWeight: 700 }}
+            >
+              {t("browseHistory")}
+            </Button>
+          )}
         </>
+      }
+      utility={
+        isMobile ? (
+          <Stack spacing={1}>
+            {!isToday ? (
+              <Button
+                variant="outlined"
+                onClick={onReturnToCurrent}
+                sx={{ textTransform: "none", fontWeight: 700 }}
+              >
+                {t("returnToCurrentGovernment")}
+              </Button>
+            ) : null}
+            <Button
+              variant="text"
+              onClick={onBrowseArchive}
+              sx={{ textTransform: "none", fontWeight: 700 }}
+            >
+              {t("browseHistory")}
+            </Button>
+          </Stack>
+        ) : undefined
       }
       stats={
         <GovernmentSummaryCards
@@ -507,6 +576,7 @@ const GovernmentPageHero: React.FC<{
                 label={party}
                 size="small"
                 sx={{
+                  ...wrapChipSx,
                   fontWeight: 600,
                   bgcolor: `${tc.primary}10`,
                   color: tc.primary,
@@ -580,7 +650,7 @@ const GovernmentMinistersSection: React.FC<{
     segmented.previous.length === 0
   ) {
     return (
-      <Box>
+      <DataCard sx={{ p: { xs: 2, md: 2.5 } }}>
         <Stack spacing={0.5} sx={{ mb: 2 }}>
           <Typography
             variant="h5"
@@ -595,12 +665,12 @@ const GovernmentMinistersSection: React.FC<{
           description={t("ministersUnavailableDescription")}
           icon={<PersonIcon fontSize="inherit" />}
         />
-      </Box>
+      </DataCard>
     );
   }
 
   return (
-    <Box>
+    <DataCard sx={{ p: { xs: 2, md: 2.5 } }}>
       <Stack spacing={0.5} sx={{ mb: 2 }}>
         <Typography
           variant="h5"
@@ -654,6 +724,7 @@ const GovernmentMinistersSection: React.FC<{
                         label={t(key)}
                         size="small"
                         sx={{
+                          ...wrapChipSx,
                           height: 24,
                           fontSize: "0.72rem",
                           fontWeight: 800,
@@ -666,6 +737,7 @@ const GovernmentMinistersSection: React.FC<{
                           label={member.party}
                           size="small"
                           sx={{
+                            ...wrapChipSx,
                             height: 22,
                             fontSize: "0.7rem",
                             fontWeight: 700,
@@ -763,6 +835,7 @@ const GovernmentMinistersSection: React.FC<{
                           label={member.party}
                           size="small"
                           sx={{
+                            ...wrapChipSx,
                             height: 22,
                             fontSize: "0.7rem",
                             fontWeight: 700,
@@ -776,6 +849,7 @@ const GovernmentMinistersSection: React.FC<{
                           label={member.ministry}
                           size="small"
                           sx={{
+                            ...wrapChipSx,
                             height: 22,
                             fontSize: "0.7rem",
                             bgcolor: tc.backgroundSubtle,
@@ -841,6 +915,7 @@ const GovernmentMinistersSection: React.FC<{
                           label={member.party}
                           size="small"
                           sx={{
+                            ...wrapChipSx,
                             height: 22,
                             fontSize: "0.7rem",
                             fontWeight: 700,
@@ -872,7 +947,7 @@ const GovernmentMinistersSection: React.FC<{
           </Box>
         )}
       </Stack>
-    </Box>
+    </DataCard>
   );
 };
 
@@ -983,6 +1058,7 @@ const GovernmentArchiveItem: React.FC<{
                   label={party}
                   size="small"
                   sx={{
+                    ...wrapChipSx,
                     height: 22,
                     fontSize: "0.72rem",
                     bgcolor: `${tc.primary}10`,
@@ -994,6 +1070,7 @@ const GovernmentArchiveItem: React.FC<{
                 label={t("ministerCount", { count: government.member_count })}
                 size="small"
                 sx={{
+                  ...wrapChipSx,
                   height: 22,
                   fontSize: "0.72rem",
                   bgcolor: tc.backgroundSubtle,
@@ -1041,6 +1118,7 @@ const GovernmentArchiveItem: React.FC<{
                               : getMemberDisplayName(member)
                           }
                           sx={{
+                            ...wrapChipSx,
                             justifyContent: "flex-start",
                             bgcolor: tc.backgroundSubtle,
                             color: tc.textPrimary,
@@ -1115,7 +1193,7 @@ export default () => {
   const activeMembers = activePayload?.members ?? [];
 
   return (
-    <Box>
+    <Box sx={{ overflowX: "clip" }}>
       <Stack spacing={spacing.md}>
         {activeGovernment ? (
           <GovernmentPageHero
@@ -1140,8 +1218,13 @@ export default () => {
         ) : (
           <PageIntro
             title={t("title")}
-            subtitle={t("subtitle")}
-            icon={<AccountBalanceIcon sx={{ fontSize: 22 }} />}
+            summary={
+              isToday
+                ? t("summaryCurrent", { value: formatDateFi(selectedDate) })
+                : t("summaryHistorical", { value: formatDateFi(selectedDate) })
+            }
+            mobileMode="compact"
+            mobileAnchorId="governments-content"
             chips={
               <Chip
                 label={formatDateFi(selectedDate)}
@@ -1164,28 +1247,30 @@ export default () => {
           />
         )}
 
-        {loadingActiveGovernment ? (
-          <DataCard sx={{ p: { xs: 3, md: 4 } }}>
-            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-              <CircularProgress sx={{ color: tc.primary }} />
+        <Box id="governments-content">
+          {loadingActiveGovernment ? (
+            <DataCard sx={{ p: { xs: 3, md: 4 } }}>
+              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                <CircularProgress sx={{ color: tc.primary }} />
+              </Box>
+            </DataCard>
+          ) : activeGovernmentError ? (
+            <Alert severity="error">{activeGovernmentError}</Alert>
+          ) : activeGovernment ? (
+            <Box ref={ministersRef}>
+              <GovernmentMinistersSection
+                members={activeMembers}
+                selectedDate={selectedDate}
+              />
             </Box>
-          </DataCard>
-        ) : activeGovernmentError ? (
-          <Alert severity="error">{activeGovernmentError}</Alert>
-        ) : activeGovernment ? (
-          <Box ref={ministersRef}>
-            <GovernmentMinistersSection
-              members={activeMembers}
-              selectedDate={selectedDate}
+          ) : (
+            <EmptyState
+              title={t("noGovernmentForDate")}
+              description={t("noGovernmentForDateDescription")}
+              icon={<TodayIcon fontSize="inherit" />}
             />
-          </Box>
-        ) : (
-          <EmptyState
-            title={t("noGovernmentForDate")}
-            description={t("noGovernmentForDateDescription")}
-            icon={<TodayIcon fontSize="inherit" />}
-          />
-        )}
+          )}
+        </Box>
 
         <Box ref={archiveRef}>
           <Stack spacing={2}>

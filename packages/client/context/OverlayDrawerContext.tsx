@@ -72,6 +72,10 @@ export const OverlayDrawerProvider = ({
   const goBack = useCallback(() => setStack((prev) => prev.slice(0, -1)), []);
   const resetDrawer = useCallback(() => setStack([]), []);
   const closeDrawer = useCallback(() => {
+    if (stack.length > 1) {
+      setStack((prev) => prev.slice(0, -1));
+      return;
+    }
     stack[0]?.onClose?.();
     setStack([]);
   }, [stack]);

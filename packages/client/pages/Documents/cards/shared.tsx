@@ -117,7 +117,7 @@ export function InlineRelatedSessions({
 }) {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-  const { replaceDrawer } = useOverlayDrawer();
+  const { openDrawer } = useOverlayDrawer();
 
   if (sessions.length === 0) return null;
 
@@ -168,7 +168,7 @@ export function InlineRelatedSessions({
                   size="small"
                   sx={{ textTransform: "none" }}
                   onClick={() => {
-                    replaceDrawer({
+                    openDrawer({
                       drawerKey: `related-session:${session.section_key}`,
                       title: tDocuments("relatedSessions"),
                       subtitle: `${session.session_type} ${session.session_number}/${session.session_year}`,

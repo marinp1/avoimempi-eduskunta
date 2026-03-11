@@ -1,8 +1,16 @@
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 import FlashOnOutlinedIcon from "@mui/icons-material/FlashOnOutlined";
-import HowToVoteOutlinedIcon from "@mui/icons-material/HowToVoteOutlined";
-import { Alert, Box, Button, Chip, Stack, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Button,
+  Chip,
+  Stack,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import React from "react";
 import {
   VotingCard,
@@ -18,7 +26,6 @@ import {
   DataCard,
   EmptyState,
   InlineSpinner,
-  MetricCard,
   PageIntro,
 } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -172,6 +179,8 @@ export const VoteResults: React.FC<{
   onFocusVotingChange,
   onClearFilters,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tErrors } = useScopedTranslation("errors");
   const { t: tVotings } = useScopedTranslation("votings");
@@ -538,116 +547,117 @@ export const VoteResults: React.FC<{
     [onFocusVotingChange, onSessionFilterChange],
   );
 
-  return (
-    <Box>
-      <PageIntro
-        title={tVotings("title")}
-        subtitle={tVotings("subtitle")}
-        eyebrow={tVotings("eyebrow")}
-        icon={<HowToVoteOutlinedIcon sx={{ fontSize: 22 }} />}
-        chips={
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {selectedHallituskausi ? (
+  const headerSummary = isOverviewMode
+    ? tVotings("summaryOverview")
+    : !hasEnoughQuery
+      ? tVotings("summaryFiltered")
+      : tVotings("summarySearch", { count: combinedRows.length });
+  const headerChips =
+    selectedHallituskausi || !isOverviewMode ? (
+      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        {selectedHallituskausi ? (
+          <Chip
+            size="small"
+            label={tCommon("filteredByGovernmentPeriodLine", {
+              value: selectedHallituskausi.label,
+            })}
+            sx={{
+              backgroundColor: `${themedColors.primary}10`,
+              color: themedColors.primary,
+              fontWeight: 700,
+            }}
+          />
+        ) : null}
+        {!isOverviewMode ? (
+          <Chip
+            size="small"
+            label={tVotings("groupedByDocument")}
+            variant="outlined"
+            sx={{
+              borderColor: `${themedColors.primary}30`,
+              color: themedColors.primary,
+              fontWeight: 600,
+            }}
+          />
+        ) : null}
+      </Stack>
+    ) : undefined;
+  const headerMeta =
+    !loading && !error && (!isOverviewMode || (!isMobile && activeFilters.length > 0)) ? (
+      <Stack spacing={0.75}>
+        {!isOverviewMode ? (
+          <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+            {tVotings("resultCount", { count: combinedRows.length })}
+          </Typography>
+        ) : null}
+        {!isMobile && activeFilters.length > 0 ? (
+          <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+            {activeFilters.map((filter) => (
               <Chip
+                key={filter.key}
+                label={filter.label}
+                onDelete={filter.onDelete}
                 size="small"
-                label={tCommon("filteredByGovernmentPeriodLine", {
-                  value: selectedHallituskausi.label,
-                })}
                 sx={{
-                  backgroundColor: `${themedColors.primary}10`,
-                  color: themedColors.primary,
-                  fontWeight: 700,
-                }}
-              />
-            ) : null}
-            {!isOverviewMode ? (
-              <Chip
-                size="small"
-                label={tVotings("groupedByDocument")}
-                variant="outlined"
-                sx={{
-                  borderColor: `${themedColors.primary}30`,
+                  backgroundColor: "rgba(255,255,255,0.82)",
                   color: themedColors.primary,
                   fontWeight: 600,
                 }}
               />
-            ) : null}
-          </Stack>
-        }
-        meta={
+            ))}
+          </Box>
+        ) : null}
+      </Stack>
+    ) : undefined;
+
+  return (
+    <Box>
+      <PageIntro
+        title={tVotings("title")}
+        summary={headerSummary}
+        mobileMode="compact"
+        mobileAnchorId="votings-content"
+        mobileStatsPlacement="hidden"
+        mobileSummary={
           !loading && !error ? (
-            <Stack spacing={0.75}>
-              {!isOverviewMode ? (
-                <Typography
-                  variant="body2"
-                  sx={{ color: themedColors.textSecondary }}
-                >
-                  {tVotings("resultCount", { count: combinedRows.length })}
-                </Typography>
-              ) : null}
-              {activeFilters.length > 0 ? (
-                <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
-                  {activeFilters.map((filter) => (
+            <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+                {isOverviewMode && overviewState.data ? (
+                  <>
                     <Chip
-                      key={filter.key}
-                      label={filter.label}
-                      onDelete={filter.onDelete}
                       size="small"
-                      sx={{
-                        backgroundColor: "rgba(255,255,255,0.82)",
-                        color: themedColors.primary,
-                        fontWeight: 600,
-                      }}
+                      label={`${tVotings("overview.metrics.total")}: ${overviewState.data.metrics.total_votings}`}
+                      sx={{ fontWeight: 700 }}
                     />
-                  ))}
-                </Box>
-              ) : null}
-            </Stack>
-          ) : null
-        }
-        stats={
-          !loading && !error && isOverviewMode && overviewState.data ? (
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: {
-                  xs: "1fr",
-                  sm: "repeat(2, minmax(0, 1fr))",
-                  xl: "repeat(4, minmax(0, 1fr))",
-                },
-                gap: 1.5,
-              }}
-            >
-              <MetricCard
-                label={tVotings("overview.metrics.total")}
-                value={overviewState.data.metrics.total_votings}
-                icon={<HowToVoteOutlinedIcon />}
-              />
-              <MetricCard
-                label={tVotings("overview.metrics.close")}
-                value={overviewState.data.metrics.close_votings}
-                icon={<FlashOnOutlinedIcon />}
-              />
-              <MetricCard
-                label={tVotings("overview.metrics.latestSession")}
-                value={
-                  overviewState.data.metrics.latest_session_key ??
-                  tCommon("none")
-                }
-                icon={<CalendarMonthOutlinedIcon />}
-              />
-              <MetricCard
-                label={tVotings("overview.metrics.phases")}
-                value={overviewState.data.metrics.phase_count}
-                icon={<CategoryOutlinedIcon />}
-              />
+                    <Chip
+                      size="small"
+                      label={`${tVotings("overview.metrics.close")}: ${overviewState.data.metrics.close_votings}`}
+                      sx={{ fontWeight: 700 }}
+                    />
+                  </>
+                ) : (
+                  <Chip
+                    size="small"
+                    label={tVotings("resultCount", { count: combinedRows.length })}
+                    sx={{ fontWeight: 700 }}
+                  />
+                )}
+                {!isOverviewMode ? (
+                  <Chip
+                    size="small"
+                    label={tVotings("groupedByDocument")}
+                    sx={{ fontWeight: 700 }}
+                  />
+                ) : null}
             </Box>
-          ) : null
+          ) : undefined
         }
+        chips={headerChips}
+        meta={headerMeta}
         variant="feature"
       />
 
-      <VotingsControlBar
+      <Box id="votings-content">
+        <VotingsControlBar
         search={searchValue}
         onSearchChange={onSearchChange}
         searchHint={searchHint}
@@ -662,7 +672,8 @@ export const VoteResults: React.FC<{
         onClearFilters={onClearFilters}
         showSort={!isOverviewMode}
         activeFilters={activeFilters}
-      />
+        />
+      </Box>
 
       {loading && <InlineSpinner />}
 

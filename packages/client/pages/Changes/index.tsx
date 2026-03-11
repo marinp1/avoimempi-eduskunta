@@ -1,5 +1,4 @@
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import HistoryIcon from "@mui/icons-material/History";
 import NewReleasesIcon from "@mui/icons-material/NewReleases";
 import UpdateIcon from "@mui/icons-material/Update";
 import {
@@ -11,13 +10,11 @@ import {
   Chip,
   CircularProgress,
   Divider,
-  MenuItem,
-  Select,
   Stack,
   Typography,
 } from "@mui/material";
 import { type ReactNode, useEffect, useState } from "react";
-import { DataCard, MetricCard, PageIntro } from "#client/theme/components";
+import { DataCard, PageIntro } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 
@@ -54,6 +51,7 @@ interface ChangesReport {
 interface RunEntry {
   id: string;
   generatedAt: string;
+  isLatest?: boolean;
 }
 
 function fmtDate(iso: string): string {
@@ -100,7 +98,12 @@ function Changes(): ReactNode {
       .finally(() => setLoading(false));
   }, [selectedRun]);
 
-  const showRunSelector = runs.length > 1;
+  const historyEntries =
+    runs.length > 0
+      ? runs
+      : report
+        ? [{ id: "latest", generatedAt: report.generatedAt, isLatest: true }]
+        : [];
   const changedTables = report
     ? Object.entries(report.tables).filter(
         ([, table]) => table.newRows > 0 || table.changedRows.length > 0,
@@ -110,44 +113,37 @@ function Changes(): ReactNode {
   return (
     <Box>
       <PageIntro
-        eyebrow="Tietokannan päivitykset"
         title="Muutokset"
-        icon={<HistoryIcon fontSize="small" />}
-        subtitle={
+        mobileMode="compact"
+        mobileAnchorId="changes-content"
+        mobileStatsPlacement="hidden"
+        summary={
           report
             ? report.previousRebuildAt
               ? `Muutokset edellisestä päivityksestä (${fmtDate(report.previousRebuildAt)})`
               : "Ensimmäinen tietokantapäivitys"
             : "Tietokannan päivityshistoria"
         }
-        utility={
-          showRunSelector ? (
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              alignItems={{ xs: "stretch", sm: "center" }}
-              spacing={1}
-            >
-              <Typography
-                variant="body2"
-                sx={{ color: themedColors.textSecondary, fontWeight: 600 }}
-              >
-                Päivitysajo
-              </Typography>
-              <Select
-                size="small"
-                value={selectedRun ?? ""}
-                onChange={(e) => setSelectedRun(e.target.value)}
-                sx={{ minWidth: { xs: "100%", sm: 240 } }}
-              >
-                {runs.map((run, i) => (
-                  <MenuItem key={run.id} value={run.id}>
-                    {fmtDate(run.generatedAt)}
-                    {i === 0 ? " (uusin)" : ""}
-                  </MenuItem>
-                ))}
-              </Select>
-            </Stack>
-          ) : null
+        mobileSummary={
+          report ? (
+            <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+                <Chip
+                  size="small"
+                  label={`${report.totalNewRows} uutta riviä`}
+                  sx={{ fontWeight: 700 }}
+                />
+                <Chip
+                  size="small"
+                  label={`${report.totalChangedRows} muuttunutta riviä`}
+                  sx={{ fontWeight: 700 }}
+                />
+                <Chip
+                  size="small"
+                  label={`${changedTables.length} muuttunutta taulua`}
+                  sx={{ fontWeight: 700 }}
+                />
+            </Box>
+          ) : undefined
         }
         chips={
           report ? (
@@ -175,54 +171,63 @@ function Changes(): ReactNode {
             </Stack>
           ) : null
         }
-        stats={
-          report ? (
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: {
-                  xs: "1fr",
-                  sm: "repeat(2, minmax(0, 1fr))",
-                  lg: "repeat(3, minmax(0, 1fr))",
-                },
-                gap: 1.5,
-              }}
-            >
-              <MetricCard
-                label="Uudet rivit"
-                value={report.totalNewRows}
-                icon={<NewReleasesIcon fontSize="small" />}
-              />
-              <MetricCard
-                label="Muuttuneet rivit"
-                value={report.totalChangedRows}
-                icon={<UpdateIcon fontSize="small" />}
-              />
-              <MetricCard
-                label="Muuttuneet taulut"
-                value={changedTables.length}
-                icon={<HistoryIcon fontSize="small" />}
-              />
-            </Box>
-          ) : null
-        }
       />
 
-      {loading && (
+      <Box id="changes-content">
+        {historyEntries.length > 0 && (
+          <DataCard sx={{ mb: 2 }}>
+            <Box sx={{ p: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                Päivityshistoria
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ mt: 0.5, mb: 1.5, color: themedColors.textSecondary }}
+              >
+                Valitse päivämäärä nähdäksesi kyseisen muutosraportin.
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {historyEntries.map((run, index) => {
+                  const isSelected = selectedRun === run.id;
+                  const isLatest = run.isLatest || index === 0;
+
+                  return (
+                    <Chip
+                      key={run.id}
+                      label={`${fmtDate(run.generatedAt)}${isLatest ? " (uusin)" : ""}`}
+                      clickable
+                      onClick={() => setSelectedRun(run.id)}
+                      color={isSelected ? "primary" : "default"}
+                      variant={isSelected ? "filled" : "outlined"}
+                      sx={{
+                        fontWeight: isSelected ? 700 : 500,
+                        bgcolor: isSelected
+                          ? undefined
+                          : themedColors.backgroundSubtle,
+                      }}
+                    />
+                  );
+                })}
+              </Stack>
+            </Box>
+          </DataCard>
+        )}
+
+        {loading && (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
           <CircularProgress />
         </Box>
-      )}
+        )}
 
-      {!loading && (error || !report) && (
+        {!loading && (error || !report) && (
         <Alert severity="info" sx={{ mt: 2 }}>
           Muutosraportti ei ole vielä saatavilla. Aja tietokantapäivitys ensin.
         </Alert>
-      )}
+        )}
 
-      {!loading &&
-        report &&
-        (changedTables.length === 0 ? (
+        {!loading &&
+          report &&
+          (changedTables.length === 0 ? (
           <DataCard>
             <Box sx={{ p: 3 }}>
               <Typography color="text.secondary">
@@ -373,6 +378,7 @@ function Changes(): ReactNode {
             ))}
           </Stack>
         ))}
+      </Box>
     </Box>
   );
 }
