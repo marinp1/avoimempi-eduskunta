@@ -57,7 +57,7 @@ vote_stats AS (
     ) AS participation_rate
   FROM recent_votings rv
   JOIN Vote v INDEXED BY idx_vote_voting_group_vote ON v.voting_id = rv.id
-  JOIN ParliamentaryGroupMembership pgm
+  JOIN ParliamentaryGroupMembership pgm INDEXED BY idx_pgm_person_dates
     ON pgm.person_id = v.person_id
     AND pgm.start_date <= rv.start_date
     AND (pgm.end_date IS NULL OR pgm.end_date >= rv.start_date)
@@ -65,23 +65,34 @@ vote_stats AS (
 ),
 display_code_candidates AS (
   SELECT
-    am.group_code,
-    v.group_abbreviation AS party_display_code,
-    ROW_NUMBER() OVER (
-      PARTITION BY am.group_code
-      ORDER BY v.voting_id DESC
-    ) AS row_num
-  FROM active_members am
-  JOIN Vote v ON v.person_id = am.person_id
+    pgm.group_code,
+    v.group_abbreviation,
+    MAX(v.voting_id) AS latest_voting_id
+  FROM recent_votings rv
+  JOIN Vote v INDEXED BY idx_vote_voting_group_vote ON v.voting_id = rv.id
+  JOIN ParliamentaryGroupMembership pgm INDEXED BY idx_pgm_person_dates
+    ON pgm.person_id = v.person_id
+    AND pgm.start_date <= rv.start_date
+    AND (pgm.end_date IS NULL OR pgm.end_date >= rv.start_date)
   WHERE v.group_abbreviation IS NOT NULL
     AND TRIM(v.group_abbreviation) != ''
+  GROUP BY pgm.group_code, v.group_abbreviation
 ),
 display_codes AS (
   SELECT
-    group_code,
-    party_display_code
-  FROM display_code_candidates
-  WHERE row_num = 1
+    dcc.group_code,
+    MIN(dcc.group_abbreviation) AS party_display_code
+  FROM display_code_candidates dcc
+  JOIN (
+    SELECT
+      group_code,
+      MAX(latest_voting_id) AS latest_voting_id
+    FROM display_code_candidates
+    GROUP BY group_code
+  ) latest
+    ON latest.group_code = dcc.group_code
+    AND latest.latest_voting_id = dcc.latest_voting_id
+  GROUP BY dcc.group_code
 ),
 gov_groups AS (
   SELECT
@@ -121,7 +132,7 @@ demo_stats AS (
 )
 SELECT
   ms.group_code AS party_code,
-  COALESCE(dc.party_display_code, ms.group_code) AS party_display_code,
+  COALESCE(dc.party_display_code, ms.group_abbreviation, ms.group_code) AS party_display_code,
   ms.group_name AS party_name,
   ms.member_count,
   COALESCE(gg.is_in_government, 0) AS is_in_government,

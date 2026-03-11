@@ -17,70 +17,44 @@ CoalitionParties AS (
         AND (pgm.end_date IS NULL OR pgm.end_date >= g.start_date)
     GROUP BY gm.government_id, pgm.group_abbreviation
 ),
-GroupMap AS (
+RankedGroupMap AS (
     SELECT
         pgm.group_abbreviation AS party,
-        pgm.group_name
+        pgm.group_name,
+        ROW_NUMBER() OVER (
+            PARTITION BY pgm.group_abbreviation
+            ORDER BY
+                CASE WHEN pgm.end_date IS NULL THEN 0 ELSE 1 END,
+                pgm.end_date DESC,
+                pgm.start_date DESC,
+                pgm.id DESC
+        ) AS row_num
     FROM ParliamentaryGroupMembership pgm
     WHERE pgm.group_abbreviation IS NOT NULL
-        AND pgm.id = (
-            SELECT pgm2.id
-            FROM ParliamentaryGroupMembership pgm2
-            WHERE pgm2.group_abbreviation = pgm.group_abbreviation
-            ORDER BY
-                CASE WHEN pgm2.end_date IS NULL THEN 0 ELSE 1 END,
-                pgm2.end_date DESC,
-                pgm2.start_date DESC,
-                pgm2.id DESC
-            LIMIT 1
-        )
 ),
-VotingBase AS (
+GroupMap AS (
     SELECT
-        vt.id AS voting_id,
-        vt.start_date AS voting_date
-    FROM Voting vt
-    WHERE
-        ($startDate IS NULL OR vt.start_date >= $startDate)
-        AND ($endDateExclusive IS NULL OR vt.start_date < $endDateExclusive)
-),
-VotingDates AS (
-    SELECT DISTINCT voting_date
-    FROM VotingBase
-),
-DateGovernment AS (
-    SELECT
-        vd.voting_date,
-        (
-            SELECT g.id
-            FROM Government g
-            WHERE g.start_date <= vd.voting_date
-                AND (g.end_date IS NULL OR g.end_date >= vd.voting_date)
-            ORDER BY g.start_date DESC
-            LIMIT 1
-        ) AS government_id
-    FROM VotingDates vd
-),
-VotingGovernment AS (
-    SELECT
-        vb.voting_id,
-        vb.voting_date,
-        dg.government_id
-    FROM VotingBase vb
-    JOIN DateGovernment dg ON dg.voting_date = vb.voting_date
+        party,
+        group_name
+    FROM RankedGroupMap
+    WHERE row_num = 1
 ),
 VotePerVotingParty AS (
     SELECT
-        vg.government_id,
+        g.id AS government_id,
         vps.voting_id,
         vps.party,
         vps.votes_cast,
         vps.total_votings,
         vps.party_member_count
-    FROM VotingGovernment vg
-    JOIN VotingPartyStats vps ON vps.voting_id = vg.voting_id
+    FROM Voting vt
+    JOIN Government g
+        ON g.start_date <= vt.start_date
+        AND (g.end_date IS NULL OR g.end_date >= vt.start_date)
+    JOIN VotingPartyStats vps ON vps.voting_id = vt.id
     WHERE
-        vg.government_id IS NOT NULL
+        ($startDate IS NULL OR vt.start_date >= $startDate)
+        AND ($endDateExclusive IS NULL OR vt.start_date < $endDateExclusive)
 ),
 PartyVotingStats AS (
     SELECT

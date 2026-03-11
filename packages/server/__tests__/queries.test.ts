@@ -35,9 +35,7 @@ import sessionCount from "../database/queries/SESSION_COUNT.sql";
 import sessionDates from "../database/queries/SESSION_DATES.sql";
 import sessionDocuments from "../database/queries/SESSION_DOCUMENTS.sql";
 import sessionNotices from "../database/queries/SESSION_NOTICES.sql";
-import sessionSections from "../database/queries/SESSION_SECTIONS.sql";
-import sessionVotingCount from "../database/queries/SESSION_VOTING_COUNT.sql";
-import sessions from "../database/queries/SESSIONS.sql";
+import sessionSectionsBySessionKeys from "../database/queries/SESSION_SECTIONS_BY_SESSION_KEYS.sql";
 import sessionsPaginated from "../database/queries/SESSIONS_PAGINATED.sql";
 import speechActivity from "../database/queries/SPEECH_ACTIVITY.sql";
 import speechesByDate from "../database/queries/SPEECHES_BY_DATE.sql";
@@ -92,10 +90,8 @@ const queries = {
   sessionDates,
   sessionDocuments,
   sessionNotices,
-  sessions,
-  sessionSections,
+  sessionSectionsBySessionKeys,
   sessionsPaginated,
-  sessionVotingCount,
   speechActivity,
   speechesByDate,
   trustPositions,
@@ -365,21 +361,74 @@ describe("Person question queries", () => {
 
     expect(rows).toHaveLength(0);
   });
+
+  test("PERSON_QUESTIONS does not duplicate first signers present in signer rows", () => {
+    try {
+      db.run(
+        `INSERT INTO Interpellation (
+           id,
+           parliament_identifier,
+           document_number,
+           parliamentary_year,
+           title,
+           submission_date,
+           first_signer_person_id,
+           first_signer_first_name,
+           first_signer_last_name,
+           first_signer_party,
+           co_signer_count,
+           source_path
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          81011,
+          "VK 11/2024 vp",
+          11,
+          "2024",
+          "Ensisijainen allekirjoittaja",
+          "2024-03-01",
+          1000,
+          "Matti",
+          "Meikäläinen",
+          "kesk",
+          0,
+          "test",
+        ],
+      );
+      db.run(
+        `INSERT INTO InterpellationSigner (
+           interpellation_id,
+           signer_order,
+           person_id,
+           first_name,
+           last_name,
+           party,
+           is_first_signer
+         ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [81011, 1, 1000, "Matti", "Meikäläinen", "kesk", 1],
+      );
+
+      const stmt = db.prepare(personQuestions);
+      const rows = stmt.all({ $personId: 1000, $limit: 100 }) as any[];
+      stmt.finalize();
+
+      const matches = rows.filter(
+        (row: any) => row.parliament_identifier === "VK 11/2024 vp",
+      );
+      expect(matches).toHaveLength(1);
+      expect(matches[0].relation_role).toBe("first_signer");
+    } finally {
+      db.run(
+        `DELETE FROM InterpellationSigner WHERE interpellation_id = ?`,
+        [81011],
+      );
+      db.run(`DELETE FROM Interpellation WHERE id = ?`, [81011]);
+    }
+  });
 });
 
 // ─── SESSION QUERIES ────────────────────────────────────────
 
 describe("Session queries", () => {
-  test("SESSIONS returns all sessions with agenda info", () => {
-    const stmt = db.prepare(sessions);
-    const rows = stmt.all() as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(2);
-    expect(rows[0]).toHaveProperty("agenda_title");
-    expect(rows[0]).toHaveProperty("agenda_state");
-  });
-
   test("SESSION_COUNT returns total session count", () => {
     const stmt = db.prepare(sessionCount);
     const row = stmt.get() as any;
@@ -397,9 +446,11 @@ describe("Session queries", () => {
     expect(rows[0].key).toBe("2024/2");
   });
 
-  test("SESSION_SECTIONS returns sections for a session", () => {
-    const stmt = db.prepare(sessionSections);
-    const rows = stmt.all({ $sessionKey: "2024/1" }) as any[];
+  test("SESSION_SECTIONS_BY_SESSION_KEYS returns sections for a session", () => {
+    const stmt = db.prepare(sessionSectionsBySessionKeys);
+    const rows = stmt.all({
+      $sessionKeysJson: JSON.stringify(["2024/1"]),
+    }) as any[];
     stmt.finalize();
 
     expect(rows).toHaveLength(2);
@@ -407,15 +458,17 @@ describe("Session queries", () => {
     expect(rows[1].ordinal).toBe(4);
   });
 
-  test("SESSION_SECTIONS returns empty for non-existent session", () => {
-    const stmt = db.prepare(sessionSections);
-    const rows = stmt.all({ $sessionKey: "nonexistent" }) as any[];
+  test("SESSION_SECTIONS_BY_SESSION_KEYS returns empty for non-existent session", () => {
+    const stmt = db.prepare(sessionSectionsBySessionKeys);
+    const rows = stmt.all({
+      $sessionKeysJson: JSON.stringify(["nonexistent"]),
+    }) as any[];
     stmt.finalize();
 
     expect(rows).toHaveLength(0);
   });
 
-  test("SESSION_SECTIONS keeps legacy document fields null", () => {
+  test("SESSION_SECTIONS_BY_SESSION_KEYS keeps legacy document fields null", () => {
     try {
       db.run(`INSERT INTO Agenda (key, title, state) VALUES (?, ?, ?)`, [
         "PJ_2025_136",
@@ -456,8 +509,10 @@ describe("Session queries", () => {
         "2025/136",
       ]);
 
-      const stmt = db.prepare(sessionSections);
-      const rows = stmt.all({ $sessionKey: "2025/136" }) as any[];
+      const stmt = db.prepare(sessionSectionsBySessionKeys);
+      const rows = stmt.all({
+        $sessionKeysJson: JSON.stringify(["2025/136"]),
+      }) as any[];
       stmt.finalize();
 
       expect(rows).toHaveLength(1);
@@ -813,14 +868,6 @@ describe("Speech queries", () => {
 // ─── VOTING QUERIES ─────────────────────────────────────────
 
 describe("Voting queries", () => {
-  test("SESSION_VOTING_COUNT returns votings in one session", () => {
-    const stmt = db.prepare(sessionVotingCount);
-    const row = stmt.get({ $sessionKey: "2024/1" }) as any;
-    stmt.finalize();
-
-    expect(row.voting_count).toBe(2);
-  });
-
   test("VOTINGS_SEARCH returns computed context_title", () => {
     const stmt = db.prepare(votingsSearch);
     const rows = stmt.all({

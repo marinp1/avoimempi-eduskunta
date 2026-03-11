@@ -1,15 +1,20 @@
-WITH party_vote_counts AS (
+WITH filtered_votings AS (
+  SELECT id
+  FROM Voting INDEXED BY idx_voting_start_date
+  WHERE ($startDate IS NULL OR start_date >= $startDate)
+    AND ($endDateExclusive IS NULL OR start_date < $endDateExclusive)
+),
+party_vote_counts AS (
   SELECT
     vps.voting_id,
     vps.party,
     vps.n_jaa,
     vps.n_ei,
     vps.n_tyhjaa
-  FROM VotingPartyStats vps
-  JOIN Voting vt ON vt.id = vps.voting_id
-  WHERE vps.party IS NOT NULL
-    AND ($startDate IS NULL OR vt.start_date >= $startDate)
-    AND ($endDateExclusive IS NULL OR vt.start_date < $endDateExclusive)
+  FROM filtered_votings fv
+  CROSS JOIN VotingPartyStats vps
+  WHERE vps.voting_id = fv.id
+    AND vps.party IS NOT NULL
 ),
 discipline_stats AS (
   SELECT
