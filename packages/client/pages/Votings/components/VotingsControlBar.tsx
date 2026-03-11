@@ -13,7 +13,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import type React from "react";
+import React from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { commonStyles } from "#client/theme";
 import { DataCard } from "#client/theme/components";
@@ -25,7 +25,7 @@ type Option = {
   count?: number;
 };
 
-export const VotingsControlBar: React.FC<{
+const VotingsControlBarComponent: React.FC<{
   search: string;
   onSearchChange: (value: string) => void;
   searchHint: string;
@@ -67,9 +67,8 @@ export const VotingsControlBar: React.FC<{
         position: "sticky",
         top: 12,
         zIndex: 4,
-        background:
-          "linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(249,250,252,0.98) 100%)",
-        backdropFilter: "blur(16px)",
+        background: "#fbfcfd",
+        boxShadow: "0 4px 12px rgba(15, 27, 51, 0.04)",
       }}
     >
       <Stack spacing={1.5}>
@@ -214,3 +213,5 @@ export const VotingsControlBar: React.FC<{
     </DataCard>
   );
 };
+
+export const VotingsControlBar = React.memo(VotingsControlBarComponent);

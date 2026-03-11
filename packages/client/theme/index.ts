@@ -128,7 +128,6 @@ export const commonStyles = {
     border: `1px solid ${colors.dataBorder}`,
     boxShadow: shadows.card,
     transition: `transform ${transitions.normal}ms ${transitions.easing.smooth}, box-shadow ${transitions.normal}ms ${transitions.easing.standard}, border-color ${transitions.normal}ms ${transitions.easing.standard}`,
-    willChange: "transform, box-shadow",
     "@media (hover: hover) and (pointer: fine)": {
       "&:hover": {
         transform: "translateY(-2px)",

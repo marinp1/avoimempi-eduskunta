@@ -48,13 +48,17 @@ export default () => {
   }, [getUrlState]);
 
   React.useEffect(() => {
-    const nextUrl = buildVotingsUrl(window.location.pathname, window.location.search, {
-      query: search,
-      session: sessionFilter,
-      phase: phaseFilter,
-      sort: sortMode,
-      voting: focusVotingId,
-    });
+    const nextUrl = buildVotingsUrl(
+      window.location.pathname,
+      window.location.search,
+      {
+        query: search,
+        session: sessionFilter,
+        phase: phaseFilter,
+        sort: sortMode,
+        voting: focusVotingId,
+      },
+    );
     const currentUrl = `${window.location.pathname}${window.location.search}`;
     if (nextUrl !== currentUrl) {
       window.history.replaceState(null, "", nextUrl);
@@ -62,11 +66,13 @@ export default () => {
   }, [focusVotingId, phaseFilter, search, sessionFilter, sortMode]);
 
   const clearFilters = React.useCallback(() => {
-    setSearch("");
-    setFocusVotingId(null);
-    setSessionFilter(DEFAULT_VOTINGS_SESSION);
-    setPhaseFilter(DEFAULT_VOTINGS_PHASE);
-    setSortMode(DEFAULT_VOTINGS_SORT);
+    React.startTransition(() => {
+      setSearch("");
+      setFocusVotingId(null);
+      setSessionFilter(DEFAULT_VOTINGS_SESSION);
+      setPhaseFilter(DEFAULT_VOTINGS_PHASE);
+      setSortMode(DEFAULT_VOTINGS_SORT);
+    });
   }, []);
 
   return (
@@ -79,10 +85,12 @@ export default () => {
             mb: 1.5,
             height: 2,
             borderRadius: 1,
-          backgroundColor: `${colors.primaryLight}20`,
-          "& .MuiLinearProgress-bar": { backgroundColor: colors.primaryLight },
-        }}
-      />
+            backgroundColor: `${colors.primaryLight}20`,
+            "& .MuiLinearProgress-bar": {
+              backgroundColor: colors.primaryLight,
+            },
+          }}
+        />
       )}
 
       <React.Suspense fallback={<InlineSpinner />}>
