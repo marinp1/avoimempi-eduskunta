@@ -17,7 +17,7 @@ import {
   extractDocumentIdentifiers,
 } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
-import { ItemTraceIcon } from "#client/components/ItemTraceIcon";
+import { TraceRegistration } from "#client/context/TraceContext";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
@@ -458,13 +458,13 @@ const VotingCardComponent: React.FC<{
               }}
             />
           )}
-          <ItemTraceIcon
-            table="SaliDBAanestys"
-            pkName="AanestysId"
-            pkValue={String(voting.id)}
-            label={`Äänestys #${voting.number ?? voting.id}${voting.start_time ? ` – ${formatDate(voting.start_time)}` : ""}`}
-          />
         </Box>
+        <TraceRegistration
+          table="SaliDBAanestys"
+          pkName="AanestysId"
+          pkValue={String(voting.id)}
+          label={`Äänestys #${voting.number ?? voting.id}${voting.start_time ? ` – ${formatDate(voting.start_time)}` : ""}`}
+        />
 
         {/* Zone 2: title */}
         <Typography
