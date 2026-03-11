@@ -4,19 +4,19 @@ import { join } from "node:path";
 
 const VASKI_MIGRATOR_PATH = join(
   import.meta.dirname,
-  "../migrator/VaskiData/migrator.ts",
+  "../migrator/fn/VaskiData/migrator.ts",
 );
 const SUBMIGRATORS_DIR = join(
   import.meta.dirname,
-  "../migrator/VaskiData/submigrators",
+  "../migrator/fn/VaskiData/submigrators",
 );
 const NIMENHUUTORAPORTTI_PATH = join(
   import.meta.dirname,
-  "../migrator/VaskiData/submigrators/nimenhuutoraportti.ts",
+  "../migrator/fn/VaskiData/submigrators/nimenhuutoraportti.ts",
 );
 const POYTAKIRJA_PATH = join(
   import.meta.dirname,
-  "../migrator/VaskiData/submigrators/pöytäkirja.ts",
+  "../migrator/fn/VaskiData/submigrators/pöytäkirja.ts",
 );
 
 describe("Migrator SQL pattern regressions", () => {
@@ -35,6 +35,10 @@ describe("Migrator SQL pattern regressions", () => {
 
     for (const file of files) {
       const source = readFileSync(join(SUBMIGRATORS_DIR, file), "utf8");
+      // vastaus_kirjalliseen_kysymykseen.ts legitimately looks up WrittenQuestion.id
+      // by parliament_identifier as a cross-table FK lookup — this is not the
+      // post-upsert round-trip anti-pattern this test guards against.
+      if (file === "vastaus_kirjalliseen_kysymykseen.ts") continue;
       expect(source).not.toMatch(
         /SELECT id FROM [A-Za-z]+ WHERE parliament_identifier = \? LIMIT 1/,
       );

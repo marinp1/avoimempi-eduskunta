@@ -75,6 +75,10 @@ describe("Migration schema", () => {
       "V001.029__analytics_aggregate_tables.sql",
       "V001.030__import_source_reference_summary.sql",
       "V001.031__database_size_reduction_indexes.sql",
+      "V001.032__drop_import_source_tables.sql",
+      "V001.033__votes_by_person_query_indexes.sql",
+      "V001.034__parliament_answer_schema.sql",
+      "V001.035__person_question_indexes.sql",
     ]);
   });
 
