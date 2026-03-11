@@ -293,7 +293,9 @@ function useFetchByIdentifier<
       .then((json) => {
         if (!cancelled) setData(json as D);
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (!cancelled) console.warn("Failed to fetch document card data", err);
+      })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });

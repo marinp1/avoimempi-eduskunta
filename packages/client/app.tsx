@@ -40,19 +40,26 @@ export const App: React.FC = () => {
   > | null>(null);
 
   useEffect(() => {
-    apiFetch("/api/db-info")
+    const controller = new AbortController();
+    const { signal } = controller;
+
+    apiFetch("/api/db-info", { signal })
       .then((res) => res.json())
       .then((data: ApiRouteResponse<"/api/db-info">) => {
         setDbInfo(data);
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (err?.name !== "AbortError") console.warn("Failed to fetch db-info", err);
+      });
 
-    apiFetch("/api/version")
+    apiFetch("/api/version", { signal })
       .then((res) => res.json())
       .then(setVersionInfo)
-      .catch(() => {});
+      .catch((err) => {
+        if (err?.name !== "AbortError") console.warn("Failed to fetch version", err);
+      });
 
-    apiFetch("/api/changes-report")
+    apiFetch("/api/changes-report", { signal })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data && typeof data.totalNewRows === "number") {
@@ -62,7 +69,11 @@ export const App: React.FC = () => {
           });
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (err?.name !== "AbortError") console.warn("Failed to fetch changes-report", err);
+      });
+
+    return () => controller.abort();
   }, []);
 
   // Handle browser back/forward

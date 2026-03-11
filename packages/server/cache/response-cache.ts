@@ -55,7 +55,13 @@ export function createResponseCache(
   }
 
   function set(key: string, entry: CacheEntry): void {
-    if (store.size >= maxEntries) return;
+    if (store.size >= maxEntries) {
+      const now = Date.now();
+      for (const [k, v] of store) {
+        if (v.expiresAt <= now) store.delete(k);
+      }
+      if (store.size >= maxEntries) return;
+    }
     store.set(key, entry);
   }
 

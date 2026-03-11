@@ -13,7 +13,9 @@ import sessionCount from "../queries/SESSION_COUNT.sql";
 import sessionDates from "../queries/SESSION_DATES.sql";
 import sessionDatesCompleted from "../queries/SESSION_DATES_COMPLETED.sql";
 import sessionDocuments from "../queries/SESSION_DOCUMENTS.sql";
+import sessionDocumentsBySessionKeys from "../queries/SESSION_DOCUMENTS_BY_SESSION_KEYS.sql";
 import sessionNotices from "../queries/SESSION_NOTICES.sql";
+import sessionNoticesBySessionKeys from "../queries/SESSION_NOTICES_BY_SESSION_KEYS.sql";
 import sessionSectionsBySessionKeys from "../queries/SESSION_SECTIONS_BY_SESSION_KEYS.sql";
 import sessionVotingCountsBySessionKeys from "../queries/SESSION_VOTING_COUNTS_BY_SESSION_KEYS.sql";
 import sessionsPaginated from "../queries/SESSIONS_PAGINATED.sql";
@@ -120,6 +122,53 @@ export class SessionRepository {
     }
 
     return votingCountBySessionKey;
+  }
+
+  public fetchDocumentsBySessionKeys(
+    sessionKeys: string[],
+  ): Map<string, ReturnType<SessionRepository["fetchSessionDocuments"]>> {
+    if (sessionKeys.length === 0) return new Map();
+
+    const stmt = this.db.prepare<
+      { session_key: string } & ReturnType<
+        SessionRepository["fetchSessionDocuments"]
+      >[number],
+      { $sessionKeysJson: string }
+    >(sessionDocumentsBySessionKeys);
+    const rows = stmt.all({ $sessionKeysJson: JSON.stringify(sessionKeys) });
+    stmt.finalize();
+
+    const byKey = new Map<
+      string,
+      ReturnType<SessionRepository["fetchSessionDocuments"]>
+    >();
+    for (const { session_key, ...doc } of rows) {
+      const list = byKey.get(session_key);
+      if (list) list.push(doc as any);
+      else byKey.set(session_key, [doc as any]);
+    }
+    return byKey;
+  }
+
+  public fetchNoticesBySessionKeys(
+    sessionKeys: string[],
+  ): Map<string, DatabaseTables.SessionNotice[]> {
+    if (sessionKeys.length === 0) return new Map();
+
+    const stmt = this.db.prepare<
+      DatabaseTables.SessionNotice,
+      { $sessionKeysJson: string }
+    >(sessionNoticesBySessionKeys);
+    const rows = stmt.all({ $sessionKeysJson: JSON.stringify(sessionKeys) });
+    stmt.finalize();
+
+    const byKey = new Map<string, DatabaseTables.SessionNotice[]>();
+    for (const row of rows) {
+      const list = byKey.get(row.session_key);
+      if (list) list.push(row);
+      else byKey.set(row.session_key, [row]);
+    }
+    return byKey;
   }
 
   private attachSectionsAndVotingCounts(

@@ -89,8 +89,7 @@ export const Navigation: React.FC<{
 
   const navigate = (path: RouteName) => {
     setActiveTab(path);
-    const search = window.location.search;
-    const newPath = path === "" ? `/${search}` : `/${path}${search}`;
+    const newPath = path === "" ? "/" : `/${path}`;
     window.history.pushState({}, "", newPath);
   };
 

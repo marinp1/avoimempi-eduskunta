@@ -93,19 +93,16 @@ export const createSessionRoutes = (db: SessionRepository) => ({
       const sessions = await db.fetchSessionWithSectionsByDate({
         date: req.params.date,
       });
-      const sessionsWithDocs = await Promise.all(
-        sessions.map(async (session) => {
-          const [documents, notices] = await Promise.all([
-            db.fetchSessionDocuments({ sessionKey: session.key }),
-            db.fetchSessionNotices({ sessionKey: session.key }),
-          ]);
-          return {
-            ...session,
-            documents,
-            notices,
-          };
-        }),
-      );
+      const sessionKeys = sessions.map((s) => s.key);
+      const [documentsByKey, noticesByKey] = await Promise.all([
+        db.fetchDocumentsBySessionKeys(sessionKeys),
+        db.fetchNoticesBySessionKeys(sessionKeys),
+      ]);
+      const sessionsWithDocs = sessions.map((session) => ({
+        ...session,
+        documents: documentsByKey.get(session.key) ?? [],
+        notices: noticesByKey.get(session.key) ?? [],
+      }));
       const vaskiLatestSpeechDate = db.fetchLatestSpeechDate();
       return json({ sessions: sessionsWithDocs, vaskiLatestSpeechDate });
     },

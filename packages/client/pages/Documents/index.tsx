@@ -536,12 +536,16 @@ export default function Documents() {
 
   useEffect(() => {
     if (documentType !== "expert-statements") return;
+    const controller = new AbortController();
     setExpertFiltersLoading(true);
-    apiFetch("/api/expert-statements/committees")
+    apiFetch("/api/expert-statements/committees", { signal: controller.signal })
       .then((r) => r.json())
       .then((data) => setExpertCommittees(data))
-      .catch(() => {})
+      .catch((err) => {
+        if (err?.name !== "AbortError") console.warn("Failed to fetch expert committees", err);
+      })
       .finally(() => setExpertFiltersLoading(false));
+    return () => controller.abort();
   }, [documentType]);
 
   useEffect(() => {
@@ -550,22 +554,26 @@ export default function Documents() {
       setSubjectOptions([]);
       return;
     }
+    const controller = new AbortController();
     const fetchSubjects = async () => {
       setSubjectsLoading(true);
       try {
-        const response = await apiFetch(subjectsPath);
+        const response = await apiFetch(subjectsPath, { signal: controller.signal });
         if (!response.ok) throw new Error("Failed to fetch subjects");
         const data: { subject_text: string; count: number }[] =
           await response.json();
         setSubjectOptions(data.map((item) => item.subject_text));
-      } catch (err) {
-        console.error("Error fetching subjects:", err);
-        setSubjectOptions([]);
+      } catch (err: any) {
+        if (err?.name !== "AbortError") {
+          console.warn("Error fetching subjects:", err);
+          setSubjectOptions([]);
+        }
       } finally {
         setSubjectsLoading(false);
       }
     };
     fetchSubjects();
+    return () => controller.abort();
   }, [apiBase]);
 
   const fetchDocuments = useCallback(
