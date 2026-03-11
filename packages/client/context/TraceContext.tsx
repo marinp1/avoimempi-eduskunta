@@ -3,9 +3,11 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
 } from "react";
+import { getTraceItemKey } from "#client/components/traceExplorerModel";
 
 export type TraceItem = {
   table: string;
@@ -34,15 +36,13 @@ export const TraceProvider = ({ children }: { children: ReactNode }) => {
   const openDrawerRef = useRef<(() => void) | null>(null);
 
   const registerPageItem = useCallback((item: TraceItem) => {
-    const key = `${item.table}:${item.pkValue}`;
+    const key = getTraceItemKey(item);
     setPageItems((prev) => {
-      if (prev.some((i) => `${i.table}:${i.pkValue}` === key)) return prev;
+      if (prev.some((i) => getTraceItemKey(i) === key)) return prev;
       return [...prev, item];
     });
     return () => {
-      setPageItems((prev) =>
-        prev.filter((i) => `${i.table}:${i.pkValue}` !== key),
-      );
+      setPageItems((prev) => prev.filter((i) => getTraceItemKey(i) !== key));
     };
   }, []);
 
@@ -74,4 +74,19 @@ export const useTrace = (): TraceContextValue => {
   const ctx = useContext(TraceContext);
   if (!ctx) throw new Error("useTrace must be used within TraceProvider");
   return ctx;
+};
+
+export const TraceRegistration = ({
+  table,
+  pkName,
+  pkValue,
+  label,
+}: TraceItem) => {
+  const { registerPageItem } = useTrace();
+
+  useEffect(() => {
+    return registerPageItem({ table, pkName, pkValue, label });
+  }, [label, pkName, pkValue, registerPageItem, table]);
+
+  return null;
 };

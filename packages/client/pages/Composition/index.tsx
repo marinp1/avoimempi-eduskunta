@@ -31,7 +31,7 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { ItemTraceIcon } from "#client/components/ItemTraceIcon";
+import { TraceRegistration } from "#client/context/TraceContext";
 import {
   type HallituskausiPeriod,
   isDateWithinHallituskausi,
@@ -1584,13 +1584,13 @@ export default () => {
                               >
                                 {member.first_name} {member.last_name}
                               </Typography>
-                              <ItemTraceIcon
-                                table="MemberOfParliament"
-                                pkName="personId"
-                                pkValue={String(member.person_id)}
-                                label={`${member.first_name} ${member.last_name}`}
-                              />
                             </Stack>
+                            <TraceRegistration
+                              table="MemberOfParliament"
+                              pkName="personId"
+                              pkValue={String(member.person_id)}
+                              label={`${member.first_name} ${member.last_name}`}
+                            />
                             <Typography
                               variant="body2"
                               sx={{ color: themedColors.textSecondary }}
@@ -1690,13 +1690,13 @@ export default () => {
                               <Typography sx={{ fontWeight: 700 }}>
                                 {member.first_name} {member.last_name}
                               </Typography>
-                              <ItemTraceIcon
-                                table="MemberOfParliament"
-                                pkName="personId"
-                                pkValue={String(member.person_id)}
-                                label={`${member.first_name} ${member.last_name}`}
-                              />
                             </Stack>
+                            <TraceRegistration
+                              table="MemberOfParliament"
+                              pkName="personId"
+                              pkValue={String(member.person_id)}
+                              label={`${member.first_name} ${member.last_name}`}
+                            />
                           </TableCell>
                           <TableCell>{member.party_name || "-"}</TableCell>
                           <TableCell>
