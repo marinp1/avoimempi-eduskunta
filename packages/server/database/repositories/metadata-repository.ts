@@ -40,6 +40,18 @@ export class MetadataRepository {
     }));
   }
 
+  public fetchGovernmentByDate(params: { date: string }) {
+    const dateObj = new Date(params.date);
+    if (Number.isNaN(dateObj.getTime())) throw new Error("Invalid date");
+
+    const isoDate = dateObj.toISOString().split("T")[0];
+    return this.fetchGovernments().find(
+      (row) =>
+        row.start_date <= isoDate &&
+        (row.end_date === null || row.end_date >= isoDate),
+    );
+  }
+
   public fetchGovernmentMembers(params: { id: number }) {
     const stmt = this.db.prepare<
       {
