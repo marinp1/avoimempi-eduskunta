@@ -30,6 +30,7 @@ import {
   PageIntro,
 } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { formatDateFi } from "#client/utils/date-time";
 import { apiFetch } from "#client/utils/fetch";
 import { PartyDetail } from "./PartyDetail";
 import { getPartyColor } from "./partyColors";
@@ -61,6 +62,12 @@ const SORT_FIELDS: ReadonlyArray<{
   { field: "average_age", labelKey: "sort.averageAge" },
   { field: "party_name", labelKey: "sort.alphabetical" },
 ];
+
+const shiftIsoDateByMonths = (value: string, months: number) => {
+  const date = new Date(`${value}T00:00:00Z`);
+  date.setUTCMonth(date.getUTCMonth() + months);
+  return date.toISOString().slice(0, 10);
+};
 
 const Parties = () => {
   const { t: tCommon } = useScopedTranslation("common");
@@ -180,7 +187,8 @@ const Parties = () => {
       const matchesSearch =
         needle.length === 0 ||
         party.party_name.toLowerCase().includes(needle) ||
-        party.party_code.toLowerCase().includes(needle);
+        party.party_code.toLowerCase().includes(needle) ||
+        (party.party_display_code ?? "").toLowerCase().includes(needle);
       return matchesRole && matchesSearch;
     });
   }, [parties, roleFilter, searchValue]);
@@ -285,6 +293,14 @@ const Parties = () => {
         period: selectedHallituskausi.label,
       })
     : tParties("scope.current");
+  const participationWindow = useMemo(() => {
+    const start = selectedHallituskausi?.startDate ?? shiftIsoDateByMonths(asOfDate, -6);
+    const end = asOfDate;
+    return tParties("participationWindow", {
+      start: formatDateFi(start, start),
+      end: formatDateFi(end, end),
+    });
+  }, [asOfDate, selectedHallituskausi]);
 
   if (loading)
     return (
@@ -390,6 +406,12 @@ const Parties = () => {
             >
               {scopeText}
             </Typography>
+            <Typography
+              variant="caption"
+              sx={{ color: themedColors.textTertiary, display: "block", mt: 0.5 }}
+            >
+              {participationWindow}
+            </Typography>
           </Box>
         }
       />
@@ -416,6 +438,14 @@ const Parties = () => {
             value={
               highlights.highestParticipation
                 ? `${(highlights.highestParticipation.participation_rate ?? 0).toFixed(1)}%`
+                : null
+            }
+            caption={
+              highlights.highestParticipation
+                ? tCommon("voteRatio", {
+                    cast: highlights.highestParticipation.votes_cast ?? 0,
+                    total: highlights.highestParticipation.total_votings ?? 0,
+                  })
                 : null
             }
           />
@@ -657,10 +687,12 @@ const HighlightCard: React.FC<{
   title: string;
   party?: PartySummary;
   value: string | null;
-}> = ({ title, party, value }) => {
+  caption?: string | null;
+}> = ({ title, party, value, caption }) => {
   const themedColors = useThemedColors();
   const { t: tParties } = useScopedTranslation("parties");
   const partyColor = party ? getPartyColor(party.party_code) : colors.neutral;
+  const visibleCode = party?.party_display_code ?? party?.party_code ?? "";
 
   return (
     <DataCard sx={{ p: 2.25, height: "100%" }}>
@@ -705,11 +737,19 @@ const HighlightCard: React.FC<{
           >
             {value}
           </Typography>
+          {caption ? (
+            <Typography
+              variant="caption"
+              sx={{ display: "block", mt: 0.35, color: themedColors.textSecondary }}
+            >
+              {caption}
+            </Typography>
+          ) : null}
           <Typography
             variant="body2"
             sx={{ mt: 0.5, color: themedColors.textSecondary }}
           >
-            {tParties("highlights.partyCode", { code: party.party_code })}
+            {tParties("highlights.partyCode", { code: visibleCode })}
           </Typography>
         </>
       ) : (
@@ -731,8 +771,10 @@ const DesktopPartyRow: React.FC<{
   getParticipationColor: (rate: number) => string;
 }> = ({ party, selected, onSelect, getParticipationColor }) => {
   const themedColors = useThemedColors();
+  const { t: tCommon } = useScopedTranslation("common");
   const { t: tParties } = useScopedTranslation("parties");
   const partyColor = getPartyColor(party.party_code);
+  const visibleCode = party.party_display_code ?? party.party_code;
   const female = party.female_count ?? 0;
   const male = party.male_count ?? 0;
   const totalKnownGender = female + male;
@@ -772,7 +814,7 @@ const DesktopPartyRow: React.FC<{
               variant="caption"
               sx={{ color: themedColors.textSecondary }}
             >
-              {party.party_code}
+              {visibleCode}
             </Typography>
           </Box>
         </Box>
@@ -802,16 +844,33 @@ const DesktopPartyRow: React.FC<{
         <Typography fontWeight={700}>{party.member_count}</Typography>
       </TableCell>
       <TableCell align="right">
-        <Chip
-          label={`${(party.participation_rate ?? 0).toFixed(1)}%`}
-          size="small"
+        <Box
           sx={{
-            minWidth: 72,
-            fontWeight: 700,
-            bgcolor: `${getParticipationColor(party.participation_rate ?? 0)}20`,
-            color: getParticipationColor(party.participation_rate ?? 0),
+            display: "inline-flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
           }}
-        />
+        >
+          <Chip
+            label={`${(party.participation_rate ?? 0).toFixed(1)}%`}
+            size="small"
+            sx={{
+              minWidth: 72,
+              fontWeight: 700,
+              bgcolor: `${getParticipationColor(party.participation_rate ?? 0)}20`,
+              color: getParticipationColor(party.participation_rate ?? 0),
+            }}
+          />
+          <Typography
+            variant="caption"
+            sx={{ color: themedColors.textSecondary, mt: 0.35 }}
+          >
+            {tCommon("voteRatio", {
+              cast: party.votes_cast ?? 0,
+              total: party.total_votings ?? 0,
+            })}
+          </Typography>
+        </Box>
       </TableCell>
       <TableCell>
         <Typography
@@ -855,8 +914,10 @@ const MobilePartyCard: React.FC<{
   onSelect: (partyCode: string) => void;
 }> = ({ party, selected, isLast, onSelect }) => {
   const themedColors = useThemedColors();
+  const { t: tCommon } = useScopedTranslation("common");
   const { t: tParties } = useScopedTranslation("parties");
   const partyColor = getPartyColor(party.party_code);
+  const visibleCode = party.party_display_code ?? party.party_code;
   const female = party.female_count ?? 0;
   const male = party.male_count ?? 0;
   const totalKnownGender = female + male;
@@ -899,7 +960,7 @@ const MobilePartyCard: React.FC<{
             </Box>
             <Chip
               size="small"
-              label={party.party_code}
+              label={visibleCode}
               sx={{ fontWeight: 700 }}
             />
           </Box>
@@ -919,6 +980,10 @@ const MobilePartyCard: React.FC<{
             <MetricBlock
               label={tParties("participation")}
               value={`${(party.participation_rate ?? 0).toFixed(1)}%`}
+              caption={tCommon("voteRatio", {
+                cast: party.votes_cast ?? 0,
+                total: party.total_votings ?? 0,
+              })}
             />
             <MetricBlock
               label={tParties("table.averageAge")}
@@ -974,9 +1039,10 @@ const MobilePartyCard: React.FC<{
   );
 };
 
-const MetricBlock: React.FC<{ label: string; value: string }> = ({
+const MetricBlock: React.FC<{ label: string; value: string; caption?: string }> = ({
   label,
   value,
+  caption,
 }) => {
   const themedColors = useThemedColors();
 
@@ -986,6 +1052,14 @@ const MetricBlock: React.FC<{ label: string; value: string }> = ({
         {label}
       </Typography>
       <Typography fontWeight={700}>{value}</Typography>
+      {caption ? (
+        <Typography
+          variant="caption"
+          sx={{ color: themedColors.textTertiary, display: "block", mt: 0.25 }}
+        >
+          {caption}
+        </Typography>
+      ) : null}
     </Box>
   );
 };

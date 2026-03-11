@@ -19,11 +19,12 @@ import {
   useTheme,
 } from "@mui/material";
 import { memo } from "react";
-import type { useScopedTranslation } from "#client/i18n/scoped";
+import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
 import { borderRadius, colors, commonStyles, spacing } from "#client/theme";
 import { DataCard, PanelHeader, VoteMarginBar } from "#client/theme/components";
 import {
+  formatDateFi,
   formatDateLongFi,
   formatDateTimeCompactFi,
 } from "#client/utils/date-time";
@@ -45,6 +46,12 @@ const heroGradient =
   "linear-gradient(135deg, rgba(19,33,62,0.97) 0%, rgba(27,42,74,0.96) 56%, rgba(74,111,165,0.94) 100%)";
 const heroOuterRadius = `${borderRadius.heroOuter * 8}px`;
 const heroInnerRadius = `${borderRadius.heroInner * 8}px`;
+
+const shiftIsoDateByMonths = (value: string, months: number) => {
+  const date = new Date(`${value}T00:00:00Z`);
+  date.setUTCMonth(date.getUTCMonth() + months);
+  return date.toISOString().slice(0, 10);
+};
 
 const HomeHeroComponent = ({
   overview,
@@ -732,6 +739,13 @@ export const CompositionPanel = ({
   overview: HomeOverview;
   tHome: HomeTranslation;
 }) => {
+  const { t: tCommon } = useScopedTranslation("common");
+  const participationWindowStart =
+    overview.scope.startDate ?? shiftIsoDateByMonths(overview.scope.asOfDate, -6);
+  const participationWindowText = tHome("compositionParticipationWindow", {
+    start: formatDateFi(participationWindowStart, participationWindowStart),
+    end: formatDateFi(overview.scope.asOfDate, overview.scope.asOfDate),
+  });
   const governmentWidth =
     overview.composition.totalMembers > 0
       ? (overview.composition.governmentMembers /
@@ -843,6 +857,12 @@ export const CompositionPanel = ({
         </Box>
 
         <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 1 }}>
+          <Typography
+            variant="caption"
+            sx={{ color: colors.textTertiary, display: "block" }}
+          >
+            {participationWindowText}
+          </Typography>
           {overview.composition.parties.map((party) => (
             <Box
               key={party.party_code}
@@ -904,8 +924,20 @@ export const CompositionPanel = ({
                     mt: 0.3,
                   }}
                 >
-                  {tHome("participationRate", {
-                    value: Math.round(party.participation_rate ?? 0),
+                  {tHome("votingParticipation")}{" "}
+                  {Math.round(party.participation_rate ?? 0)}%
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: colors.textTertiary,
+                    display: "block",
+                    mt: 0.25,
+                  }}
+                >
+                  {tCommon("voteRatio", {
+                    cast: party.votes_cast ?? 0,
+                    total: party.total_votings ?? 0,
                   })}
                 </Typography>
               </Box>

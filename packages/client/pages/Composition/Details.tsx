@@ -1801,6 +1801,10 @@ const VotesTab: React.FC<{
         <MetricCard
           label={tComposition("details.votes.participation")}
           value={`${displayParticipationRate}%`}
+          caption={tCommon("voteRatio", {
+            cast: displayStats.total - displayStats.absent,
+            total: displayStats.total,
+          })}
           sx={detailMetricCardSx}
         />
         <MetricCard

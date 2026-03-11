@@ -127,7 +127,15 @@ export default function PartyParticipation({
     // Group by government
     const byGovernment: Record<
       string,
-      Record<string, { participation_rate: number; was_in_coalition: number }>
+      Record<
+        string,
+        {
+          participation_rate: number;
+          votes_cast: number;
+          total_votings: number;
+          was_in_coalition: number;
+        }
+      >
     > = {};
 
     data.forEach((item) => {
@@ -136,6 +144,8 @@ export default function PartyParticipation({
       }
       byGovernment[item.government][item.party_name] = {
         participation_rate: item.participation_rate,
+        votes_cast: item.votes_cast,
+        total_votings: item.total_votings,
         was_in_coalition: item.was_in_coalition,
       };
     });
@@ -145,6 +155,8 @@ export default function PartyParticipation({
       const point: any = { government };
       Object.entries(parties).forEach(([partyName, partyData]) => {
         point[partyName] = partyData.participation_rate;
+        point[`${partyName}_votes_cast`] = partyData.votes_cast;
+        point[`${partyName}_total_votings`] = partyData.total_votings;
         point[`${partyName}_coalition`] = partyData.was_in_coalition;
       });
       return point;
@@ -209,29 +221,38 @@ export default function PartyParticipation({
                   key={entry.dataKey}
                   sx={{
                     display: "flex",
-                    alignItems: "center",
-                    gap: spacing.xs,
-                    mb: 0.5,
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                    gap: 0.15,
+                    mb: 0.75,
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: 12,
-                      height: 12,
-                      backgroundColor: entry.color,
-                      borderRadius: "50%",
-                      flexShrink: 0,
-                    }}
-                  />
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "text.primary",
-                      fontWeight: isInCoalition ? 700 : 400,
-                      fontSize: "0.85rem",
-                    }}
-                  >
-                    {entry.dataKey}: {entry.value}%{isInCoalition && " ★"}
+                  <Box sx={{ display: "flex", alignItems: "center", gap: spacing.xs }}>
+                    <Box
+                      sx={{
+                        width: 12,
+                        height: 12,
+                        backgroundColor: entry.color,
+                        borderRadius: "50%",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "text.primary",
+                        fontWeight: isInCoalition ? 700 : 400,
+                        fontSize: "0.85rem",
+                      }}
+                    >
+                      {entry.dataKey}: {entry.value}%{isInCoalition && " ★"}
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                    {tCommon("voteRatio", {
+                      cast: entry.payload[`${entry.dataKey}_votes_cast`] ?? 0,
+                      total: entry.payload[`${entry.dataKey}_total_votings`] ?? 0,
+                    })}
                   </Typography>
                 </Box>
               );

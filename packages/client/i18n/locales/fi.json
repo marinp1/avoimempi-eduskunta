@@ -76,10 +76,12 @@
     "compositionEyebrow": "Voimasuhteet",
     "compositionTitle": "Kokoonpano ja blokit",
     "compositionDescription": "Nykyinen paikkajakauma ja puoluekenttä samassa näkymässä. Hallitus- ja oppositioasema näkyy heti listassa.",
+    "compositionParticipationWindow": "Äänestysosallistuminen aikavälillä {{start}} - {{end}}.",
     "partyBreakdown": "Puoluejakauma",
     "governmentChip": "Hallitus",
     "oppositionChip": "Oppositio",
-    "participationRate": "Osallistuminen {{value}} %",
+    "participationRate": "Äänestysosallistuminen {{value}} %",
+    "votingParticipation": "Äänestysosallistuminen",
     "openParties": "Avaa puolueet",
     "seatCount_one": "{{count}} paikka",
     "seatCount_other": "{{count}} paikkaa",
@@ -127,11 +129,12 @@
     "members": "Jäsentä",
     "government": "Hallitus",
     "opposition": "Oppositio",
-    "participation": "Osallistuminen",
+    "participation": "Äänestysosallistuminen",
     "totalParties": "Puolueita",
     "totalMembers": "Kansanedustajia",
     "governmentBreakdown": "Hallitus / oppositio",
-    "weightedParticipation": "Painotettu osallistuminen",
+    "weightedParticipation": "Painotettu äänestysosallistuminen",
+    "participationWindow": "Äänestysosallistuminen aikavälillä {{start}} - {{end}}.",
     "searchPlaceholder": "Hae puolueen nimellä tai tunnuksella",
     "showingResults": "Näytetään {{shown}} / {{total}} puolueesta",
     "hallituskausiNotice": "Rajattu hallituskauteen: {{period}}",
@@ -151,7 +154,7 @@
     },
     "sort": {
       "members": "Koko",
-      "participation": "Osallistuminen",
+      "participation": "Äänestysosallistuminen",
       "averageAge": "Keski-ikä",
       "alphabetical": "A-Ö"
     },
@@ -170,13 +173,13 @@
       "party": "Puolue",
       "status": "Asema",
       "members": "Jäseniä",
-      "participation": "Osallistuminen",
+      "participation": "Äänestysosallistuminen",
       "genderSplit": "Sukupuolijakauma",
       "averageAge": "Keski-ikä"
     },
     "detail": {
       "profileEyebrow": "Puolueprofiili",
-      "profileSummary": "{{members}} jäsentä, osallistuminen {{participation}}",
+      "profileSummary": "{{members}} jäsentä, äänestysosallistuminen {{participation}}",
       "clearSelection": "Sulje profiili",
       "genderSplit": "Sukupuolijakauma",
       "tabs": {
@@ -362,6 +365,7 @@
     "party": "Puolue",
     "status": "Tila",
     "total": "Yhteensä",
+    "voteRatio": "{{cast}} / {{total}} äänestystä",
     "none": "-",
     "yes": "Jaa",
     "yesCount": "Jaa {{count}}",
@@ -606,7 +610,7 @@
         }
       },
       "votes": {
-        "participation": "Osallistuminen",
+        "participation": "Äänestysosallistuminen",
         "totalVotes": "Äänestyksiä",
         "voteBreakdown": "{{yes}} jaa / {{no}} ei / {{empty}} tyhj.",
         "recentVotes": "Viimeisimmät äänestykset",
@@ -969,14 +973,14 @@
       "startDate": "Aloituspäivä",
       "endDate": "Lopetuspäivä",
       "selectParties": "Valitse puolueet",
-      "chartTitle": "Osallistumisprosentti hallituksittain",
+      "chartTitle": "Äänestysosallistuminen hallituksittain",
       "chartSubtitle": "Puolueiden äänestysosallistuminen eri hallitusten aikana",
       "governmentPartyIndicator": "★ = Hallituspuolue",
       "noData": "Ei dataa valitulle aikavälille tai puolueille.",
       "summary": "Yhteenveto",
       "totalGovernments": "Hallituksia yhteensä",
       "totalParties": "Puolueita yhteensä",
-      "averageParticipation": "Keskimääräinen osallistuminen"
+      "averageParticipation": "Keskimääräinen äänestysosallistuminen"
     },
     "partyDiscipline": {
       "title": "Puoluekuri",

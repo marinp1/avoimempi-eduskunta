@@ -8,7 +8,9 @@ active_members AS (
     pgm.group_code,
     pgm.group_name,
     pgm.group_abbreviation,
-    pgm.person_id
+    pgm.person_id,
+    pgm.start_date,
+    pgm.end_date
   FROM ParliamentaryGroupMembership pgm
   WHERE pgm.start_date <= $asOfDate
     AND (pgm.end_date IS NULL OR pgm.end_date >= $asOfDate)
@@ -19,7 +21,13 @@ active_members AS (
         AND t.start_date <= $asOfDate
         AND (t.end_date IS NULL OR t.end_date >= $asOfDate)
     )
-  GROUP BY pgm.group_code, pgm.group_name, pgm.group_abbreviation, pgm.person_id
+  GROUP BY
+    pgm.group_code,
+    pgm.group_name,
+    pgm.group_abbreviation,
+    pgm.person_id,
+    pgm.start_date,
+    pgm.end_date
 ),
 member_stats AS (
   SELECT
@@ -31,7 +39,7 @@ member_stats AS (
   GROUP BY am.group_code, am.group_name
 ),
 recent_votings AS (
-  SELECT id
+  SELECT id, start_date
   FROM Voting
   WHERE start_date <= $asOfDate
     AND start_date >= COALESCE($startDate, DATE($asOfDate, '-6 months'))
@@ -39,7 +47,9 @@ recent_votings AS (
 ),
 vote_stats AS (
   SELECT
-    v.group_abbreviation AS party,
+    pgm.group_code,
+    SUM(CASE WHEN v.vote IN ('Jaa', 'Ei', 'Tyhjää') THEN 1 ELSE 0 END) AS votes_cast,
+    COUNT(*) AS total_votings,
     ROUND(
       100.0 * SUM(CASE WHEN v.vote IN ('Jaa', 'Ei', 'Tyhjää') THEN 1 ELSE 0 END) /
       NULLIF(COUNT(*), 0),
@@ -47,7 +57,31 @@ vote_stats AS (
     ) AS participation_rate
   FROM recent_votings rv
   JOIN Vote v INDEXED BY idx_vote_voting_group_vote ON v.voting_id = rv.id
-  GROUP BY v.group_abbreviation
+  JOIN ParliamentaryGroupMembership pgm
+    ON pgm.person_id = v.person_id
+    AND pgm.start_date <= rv.start_date
+    AND (pgm.end_date IS NULL OR pgm.end_date >= rv.start_date)
+  GROUP BY pgm.group_code
+),
+display_code_candidates AS (
+  SELECT
+    am.group_code,
+    v.group_abbreviation AS party_display_code,
+    ROW_NUMBER() OVER (
+      PARTITION BY am.group_code
+      ORDER BY v.voting_id DESC
+    ) AS row_num
+  FROM active_members am
+  JOIN Vote v ON v.person_id = am.person_id
+  WHERE v.group_abbreviation IS NOT NULL
+    AND TRIM(v.group_abbreviation) != ''
+),
+display_codes AS (
+  SELECT
+    group_code,
+    party_display_code
+  FROM display_code_candidates
+  WHERE row_num = 1
 ),
 gov_groups AS (
   SELECT
@@ -87,15 +121,19 @@ demo_stats AS (
 )
 SELECT
   ms.group_code AS party_code,
+  COALESCE(dc.party_display_code, ms.group_code) AS party_display_code,
   ms.group_name AS party_name,
   ms.member_count,
   COALESCE(gg.is_in_government, 0) AS is_in_government,
+  COALESCE(vs.votes_cast, 0) AS votes_cast,
+  COALESCE(vs.total_votings, 0) AS total_votings,
   COALESCE(vs.participation_rate, 0) AS participation_rate,
   COALESCE(ds.female_count, 0) AS female_count,
   COALESCE(ds.male_count, 0) AS male_count,
   ROUND(COALESCE(ds.avg_age, 0), 1) AS average_age
 FROM member_stats ms
+LEFT JOIN display_codes dc ON dc.group_code = ms.group_code
 LEFT JOIN gov_groups gg ON gg.group_code = ms.group_code
 LEFT JOIN demo_stats ds ON ds.group_code = ms.group_code
-LEFT JOIN vote_stats vs ON vs.party = ms.group_abbreviation
+LEFT JOIN vote_stats vs ON vs.group_code = ms.group_code
 ORDER BY ms.member_count DESC;
