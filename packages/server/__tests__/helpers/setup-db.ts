@@ -21,6 +21,26 @@ export function createTestDb(): Database {
   db.exec("PRAGMA journal_mode = WAL;");
   db.exec("PRAGMA foreign_keys = ON;");
   migrate(db, getMigrations(MIGRATIONS_DIR));
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS ImportSourceReference (
+      source_table TEXT NOT NULL,
+      source_page INTEGER NOT NULL,
+      source_pk_name TEXT NOT NULL,
+      source_pk_value TEXT NOT NULL,
+      scraped_at TEXT,
+      migrated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS ImportSourceReferenceSummary (
+      source_table TEXT PRIMARY KEY,
+      imported_rows INTEGER NOT NULL,
+      distinct_pages INTEGER NOT NULL,
+      first_scraped_at TEXT,
+      last_scraped_at TEXT,
+      first_migrated_at TEXT,
+      last_migrated_at TEXT
+    );
+  `);
   return db;
 }
 
@@ -28,6 +48,86 @@ export function createTestDb(): Database {
  * Seed a fully-connected test dataset for query testing.
  */
 export function seedFullDataset(db: Database) {
+  db.run(`DELETE FROM ImportSourceReferenceSummary`);
+  db.run(`DELETE FROM ImportSourceReference`);
+
+  db.run(
+    `INSERT INTO ImportSourceReference (
+       source_table,
+       source_page,
+       source_pk_name,
+       source_pk_value,
+       scraped_at,
+       migrated_at
+     ) VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      "MemberOfParliament",
+      1,
+      "person_id",
+      "1000",
+      "2024-01-14T08:00:00Z",
+      "2024-01-14T09:00:00Z",
+    ],
+  );
+  db.run(
+    `INSERT INTO ImportSourceReference (
+       source_table,
+       source_page,
+       source_pk_name,
+       source_pk_value,
+       scraped_at,
+       migrated_at
+     ) VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      "SaliDBIstunto",
+      1,
+      "Id",
+      "1",
+      "2024-01-15T08:00:00Z",
+      "2024-01-15T09:00:00Z",
+    ],
+  );
+  db.run(
+    `INSERT INTO ImportSourceReferenceSummary (
+       source_table,
+       imported_rows,
+       distinct_pages,
+       first_scraped_at,
+       last_scraped_at,
+       first_migrated_at,
+       last_migrated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      "MemberOfParliament",
+      1,
+      1,
+      "2024-01-14T08:00:00Z",
+      "2024-01-14T08:00:00Z",
+      "2024-01-14T09:00:00Z",
+      "2024-01-14T09:00:00Z",
+    ],
+  );
+  db.run(
+    `INSERT INTO ImportSourceReferenceSummary (
+       source_table,
+       imported_rows,
+       distinct_pages,
+       first_scraped_at,
+       last_scraped_at,
+       first_migrated_at,
+       last_migrated_at
+     ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      "SaliDBIstunto",
+      1,
+      1,
+      "2024-01-15T08:00:00Z",
+      "2024-01-15T08:00:00Z",
+      "2024-01-15T09:00:00Z",
+      "2024-01-15T09:00:00Z",
+    ],
+  );
+
   // Representatives
   db.run(
     `INSERT INTO Representative (person_id, last_name, first_name, sort_name, party, gender, birth_date, minister)

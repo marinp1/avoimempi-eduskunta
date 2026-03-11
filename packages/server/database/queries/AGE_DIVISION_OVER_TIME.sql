@@ -5,12 +5,12 @@ WITH RECURSIVE bounds AS (
     FROM Term
 ),
 YearSeries AS (
-    SELECT min_year AS year
+    SELECT min_year AS year, max_year
     FROM bounds
     UNION ALL
-    SELECT year + 1
+    SELECT year + 1, max_year
     FROM YearSeries
-    WHERE year < (SELECT max_year FROM bounds)
+    WHERE year < max_year
 ),
 ActiveTermsByYear AS (
     SELECT

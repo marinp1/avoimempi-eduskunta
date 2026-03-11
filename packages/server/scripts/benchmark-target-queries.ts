@@ -3,7 +3,7 @@ import ageDivisionOverTime from "../database/queries/AGE_DIVISION_OVER_TIME.sql"
 import partyDiscipline from "../database/queries/PARTY_DISCIPLINE.sql";
 import partyParticipationByGovernment from "../database/queries/PARTY_PARTICIPATION_BY_GOVERNMENT.sql";
 import partySummary from "../database/queries/PARTY_SUMMARY.sql";
-import sessionSections from "../database/queries/SESSION_SECTIONS.sql";
+import sessionSectionsBySessionKeys from "../database/queries/SESSION_SECTIONS_BY_SESSION_KEYS.sql";
 
 type Target = {
   name: string;
@@ -13,9 +13,9 @@ type Target = {
 
 const targets: Target[] = [
   {
-    name: "sessionSections",
-    sql: sessionSections,
-    params: { $sessionKey: "2021/129" },
+    name: "sessionSectionsBySessionKeys",
+    sql: sessionSectionsBySessionKeys,
+    params: { $sessionKeysJson: '["2021/129"]' },
   },
   {
     name: "partySummary",
