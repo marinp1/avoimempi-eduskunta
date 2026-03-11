@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.1-alpha.5] — 2026-03-09
+
+### Bug Fixes
+- validate prerelease during deploy (2508d38)
+
 ## [1.0.1-alpha.4] — 2026-03-09
 
 ### Features
