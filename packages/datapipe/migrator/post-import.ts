@@ -198,7 +198,7 @@ export function rebuildPersonVotingDailyStats(db: Database): number {
          vt.start_date AS voting_date,
          SUM(CASE WHEN v.vote != 'Poissa' THEN 1 ELSE 0 END) AS votes_cast,
          COUNT(*) AS total_votings
-       FROM Vote v INDEXED BY idx_vote_person_voting
+       FROM Vote v INDEXED BY idx_vote_person_covering
        JOIN Voting vt ON vt.id = v.voting_id
        WHERE v.person_id IS NOT NULL
          AND vt.start_date IS NOT NULL
