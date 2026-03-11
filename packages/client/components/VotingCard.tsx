@@ -204,6 +204,7 @@ const VotingDetailsPanel: React.FC<{
   loading: boolean;
 }> = ({ details, loading }) => {
   const { t: tCommon } = useScopedTranslation("common");
+  const { t: tVotings } = useScopedTranslation("votings");
   const themedColors = useThemedColors();
   const docRefs = React.useMemo(
     () =>
@@ -299,6 +300,90 @@ const VotingDetailsPanel: React.FC<{
         partyBreakdown={details.partyBreakdown}
         memberVotes={details.memberVotes}
       />
+      {details.relatedVotings.length > 0 && (
+        <Box
+          sx={{
+            p: 1,
+            borderRadius: 1,
+            border: `1px solid ${themedColors.dataBorder}60`,
+            bgcolor: `${themedColors.primary}03`,
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              fontWeight: 600,
+              color: themedColors.textSecondary,
+              display: "block",
+              mb: 0.75,
+            }}
+          >
+            {tVotings("relatedVotings")}
+          </Typography>
+          <Stack
+            spacing={0}
+            divider={
+              <Box
+                sx={{
+                  height: "1px",
+                  bgcolor: `${themedColors.dataBorder}60`,
+                  my: 0.5,
+                }}
+              />
+            }
+          >
+            {details.relatedVotings.map((rv) => {
+              const rvPassed = rv.n_yes > rv.n_no;
+              return (
+                <Box
+                  key={rv.id}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.75,
+                    flexWrap: "wrap",
+                    py: 0.25,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: "50%",
+                      flexShrink: 0,
+                      bgcolor: rvPassed
+                        ? themedColors.success
+                        : themedColors.error,
+                    }}
+                  />
+                  <Typography
+                    variant="caption"
+                    sx={{ flex: 1, color: themedColors.textSecondary }}
+                  >
+                    {rv.context_title}
+                  </Typography>
+                  <VoteCountsDisplay
+                    n_yes={rv.n_yes}
+                    n_no={rv.n_no}
+                    n_abstain={rv.n_abstain}
+                    n_absent={rv.n_absent}
+                    compact
+                  />
+                  <Link
+                    href={refs.voting(rv.id, rv.session_key, rv.start_time)}
+                    sx={{
+                      color: themedColors.textTertiary,
+                      fontSize: "0.72rem",
+                    }}
+                  >
+                    #{rv.id}
+                  </Link>
+                </Box>
+              );
+            })}
+          </Stack>
+        </Box>
+      )}
       {docRefs.length > 0 && (
         <Box>
           {docRefs.map((ref) => (

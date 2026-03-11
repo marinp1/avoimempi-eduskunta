@@ -5,12 +5,25 @@ WITH target_documents AS (
     AND dr.document_tunnus IS NOT NULL
     AND dr.document_tunnus != ''
 ),
-related_votings AS (
+related_by_document AS (
   SELECT DISTINCT dr.voting_id
   FROM SaliDBDocumentReference dr
   JOIN target_documents td ON td.document_tunnus = dr.document_tunnus
   WHERE dr.voting_id IS NOT NULL
     AND dr.voting_id != $id
+),
+related_by_section AS (
+  SELECT v2.id AS voting_id
+  FROM Voting v2
+  JOIN Voting v1 ON v1.id = $id
+  WHERE v2.section_key IS NOT NULL
+    AND v2.section_key = v1.section_key
+    AND v2.id != $id
+),
+all_related AS (
+  SELECT voting_id FROM related_by_document
+  UNION
+  SELECT voting_id FROM related_by_section
 )
 SELECT
   v.id,
@@ -29,7 +42,7 @@ SELECT
   v.n_absent,
   v.n_total,
   v.session_key
-FROM related_votings rv
-JOIN Voting v ON v.id = rv.voting_id
+FROM all_related ar
+JOIN Voting v ON v.id = ar.voting_id
 ORDER BY v.start_time ASC, v.id ASC
 LIMIT 25

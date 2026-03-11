@@ -799,7 +799,8 @@
       "groupByRepresentative": "Ryhmitä edustajittain",
       "representative": "Edustaja",
       "vote": "Ääni"
-    }
+    },
+    "relatedVotings": "Liittyvät äänestykset"
   },
   "sessions": {
     "title": "Istunnot",
