@@ -2,7 +2,6 @@
 import packageJson from "../../package.json";
 import { getTraceDatabasePath } from "../shared/database";
 import { createResponseCache } from "./cache/response-cache";
-import { devFeaturesEnabled } from "./dev-constraints";
 import { loadRuntimeConfig } from "./config/runtime-config";
 import { DatabaseConnection } from "./database/db";
 import { prepareDatabaseForServerStartup } from "./database/launch-db";
@@ -13,6 +12,7 @@ import { MetadataRepository } from "./database/repositories/metadata-repository"
 import { PersonRepository } from "./database/repositories/person-repository";
 import { SessionRepository } from "./database/repositories/session-repository";
 import { VotingRepository } from "./database/repositories/voting-repository";
+import { devFeaturesEnabled } from "./dev-constraints";
 import homepage from "./public/index.html";
 import { createCoreRoutes } from "./routes/core-routes";
 import { createDocumentRoutes } from "./routes/document-routes";

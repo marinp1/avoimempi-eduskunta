@@ -1,6 +1,4 @@
-export const createStaticPageRoutes = (
-  homepage: Bun.HTMLBundle,
-) => {
+export const createStaticPageRoutes = (homepage: Bun.HTMLBundle) => {
   return {
     "/": homepage,
     "/edustajat": homepage,

@@ -36,8 +36,8 @@ import {
 } from "@mui/material";
 import type React from "react";
 import { useEffect, useState } from "react";
-import { apiFetch } from "#client/utils/fetch";
 import { sanityChecksEnabled } from "#client/dev-constraints";
+import { apiFetch } from "#client/utils/fetch";
 import { colors, spacing } from "../../theme";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -176,52 +176,54 @@ const ResolutionPanel: React.FC<{
           )}
         </>
       ) : (
-      <Box
-        sx={{
-          display: "flex",
-          gap: 1.5,
-          alignItems: "flex-start",
-          flexWrap: "wrap",
-        }}
-      >
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel>Tila</InputLabel>
-          <Select
-            label="Tila"
-            value={currentStatus}
-            onChange={(e) =>
-              save(e.target.value as ResolutionStatus, summaryDraft)
-            }
-          >
-            {(Object.keys(RESOLUTION_LABELS) as ResolutionStatus[]).map((s) => (
-              <MenuItem key={s} value={s}>
-                {RESOLUTION_LABELS[s]}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 1.5,
+            alignItems: "flex-start",
+            flexWrap: "wrap",
+          }}
+        >
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <InputLabel>Tila</InputLabel>
+            <Select
+              label="Tila"
+              value={currentStatus}
+              onChange={(e) =>
+                save(e.target.value as ResolutionStatus, summaryDraft)
+              }
+            >
+              {(Object.keys(RESOLUTION_LABELS) as ResolutionStatus[]).map(
+                (s) => (
+                  <MenuItem key={s} value={s}>
+                    {RESOLUTION_LABELS[s]}
+                  </MenuItem>
+                ),
+              )}
+            </Select>
+          </FormControl>
 
-        <TextField
-          size="small"
-          label="Selitys"
-          placeholder="Miksi tarkistus ei läpäise…"
-          multiline
-          minRows={1}
-          maxRows={4}
-          value={summaryDraft}
-          onChange={(e) => setSummaryDraft(e.target.value)}
-          onBlur={() => save(currentStatus, summaryDraft)}
-          sx={{ flex: 1, minWidth: 200 }}
-        />
+          <TextField
+            size="small"
+            label="Selitys"
+            placeholder="Miksi tarkistus ei läpäise…"
+            multiline
+            minRows={1}
+            maxRows={4}
+            value={summaryDraft}
+            onChange={(e) => setSummaryDraft(e.target.value)}
+            onBlur={() => save(currentStatus, summaryDraft)}
+            sx={{ flex: 1, minWidth: 200 }}
+          />
 
-        {resolution && (
-          <Tooltip title="Poista ratkaisu">
-            <IconButton size="small" onClick={remove}>
-              <DeleteOutline fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )}
-      </Box>
+          {resolution && (
+            <Tooltip title="Poista ratkaisu">
+              <IconButton size="small" onClick={remove}>
+                <DeleteOutline fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
       )}
       {resolution?.updatedAt && (
         <Typography
