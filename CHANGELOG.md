@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.1-alpha.2] — 2026-03-08
+
+### Bug Fixes
+- fix pipeline scripts (cae89f5)
+
 ## [1.0.1-alpha.1] — 2026-03-08
 
 ### Bug Fixes
