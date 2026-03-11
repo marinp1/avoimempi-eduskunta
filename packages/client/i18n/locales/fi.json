@@ -666,14 +666,21 @@
   "votings": {
     "title": "Eduskunnan äänestykset",
     "subtitle": "Etsi ja selaa eduskunnan äänestystietoja",
+    "eyebrow": "Tiiviisti ryhmitelty selaus",
     "search": "Hae äänestyksiä otsikolla",
     "searchPlaceholder": "Kirjoita vähintään 3 merkkiä...",
     "searchHelp": "Haku kohdistuu otsikoihin ja tukee analyysiä suoraan tulosjoukosta.",
+    "searchNeedsMore": "Kirjoita vähintään 3 merkkiä, niin otamme haun mukaan tuloksiin.",
+    "clearFilters": "Tyhjennä rajaukset",
     "recentVotes": "Viimeisimmät äänestykset",
     "startSearch": "Aloita kirjoittamalla hakusana",
     "startSearchHint": "Näytämme analyysin, kun hakuehto on vähintään 3 merkkiä.",
     "noResults": "Ei äänestyksiä tällä haulla.",
     "noResultsHint": "Kokeile toista hakusanaa tai poista suodattimia.",
+    "focusedVoting": "Äänestys #{{id}}",
+    "groupedByDocument": "Ryhmitelty asiakirja- ja asiayhteyden mukaan",
+    "filterOnlyResultsHint": "Tulokset on rajattu ilman hakusanaa valituilla suodattimilla.",
+    "closeVoteHint": "Useissa tuloksissa on tiukkoja äänestyksiä. Järjestä tiukimmat ensin, jos haluat nähdä ne kärjessä.",
     "closeVote": "Tiukka äänestys",
     "filters": {
       "all": "Kaikki",
@@ -681,11 +688,45 @@
       "session": "Istunto",
       "sort": "Järjestys"
     },
+    "controlHints": {
+      "overview": "Selaa viimeisimpiä, tiukimpia ja osallistujamäärältään suurimpia äänestyksiä tai rajaa näkymää suoraan suodattimilla.",
+      "filtersOnly": "Rajaus näyttää äänestykset ilman hakusanaa valitun vaiheen ja istunnon perusteella."
+    },
     "sort": {
       "newest": "Uusimmat ensin",
       "oldest": "Vanhimmat ensin",
       "closest": "Tiukimmat ensin",
       "largest": "Suurin osallistujamäärä ensin"
+    },
+    "overview": {
+      "emptyTitle": "Yleiskuvaa ei voitu muodostaa",
+      "emptyDescription": "Kokeile vaihtaa rajauksia tai ladata näkymä uudelleen.",
+      "quickFiltersTitle": "Pikasuodattimet",
+      "quickFiltersDescription": "Avaa suoraan yleisimmät vaiheet ja tuoreimmat istunnot ilman erillistä hakua.",
+      "metrics": {
+        "total": "Äänestyksiä rajauksessa",
+        "close": "Tiukkoja äänestyksiä",
+        "latestSession": "Viimeisin istunto",
+        "phases": "Käsittelyvaiheita"
+      },
+      "facets": {
+        "phase": "Suosituimmat vaiheet",
+        "session": "Tuoreimmat istunnot"
+      },
+      "sections": {
+        "recent": {
+          "title": "Viimeisimmät äänestykset",
+          "description": "Ajankohtaisin näkymä viimeksi käsiteltyihin äänestyksiin."
+        },
+        "close": {
+          "title": "Tiukimmat äänestykset",
+          "description": "Äänestykset, joissa jaa- ja ei-äänet menivät lähimmäs toisiaan."
+        },
+        "turnout": {
+          "title": "Suurin osallistuminen",
+          "description": "Äänestykset, joissa osallistujamäärä oli korkein."
+        }
+      }
     },
     "analysis": {},
     "results": {

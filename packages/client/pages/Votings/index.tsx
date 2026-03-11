@@ -1,107 +1,77 @@
-import SearchIcon from "@mui/icons-material/Search";
-import {
-  Box,
-  InputAdornment,
-  LinearProgress,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Box, LinearProgress } from "@mui/material";
 import React from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors } from "#client/theme";
-import { DataCard, InlineSpinner, PageHeader } from "#client/theme/components";
-import { useThemedColors } from "#client/theme/ThemeContext";
+import { InlineSpinner } from "#client/theme/components";
+import { VotingsHero } from "./components/VotingsHero";
 import { VoteResults } from "./VoteResults";
+import {
+  buildVotingsUrl,
+  DEFAULT_VOTINGS_PHASE,
+  DEFAULT_VOTINGS_SESSION,
+  DEFAULT_VOTINGS_SORT,
+  parseVotingsUrlState,
+  type VotingSortMode,
+} from "./url-state";
 
 export default () => {
   const { t } = useScopedTranslation("votings");
-  const themedColors = useThemedColors();
-  const getInitialParams = React.useCallback(() => {
-    const params = new URLSearchParams(window.location.search);
-    const votingRaw = params.get("voting");
-    const voting = votingRaw ? Number(votingRaw) : null;
-    return {
-      query: params.get("q") ?? "",
-      session: params.get("session"),
-      voting: Number.isFinite(voting) ? voting : null,
-    };
-  }, []);
-
-  const [search, setSearch] = React.useState(() => getInitialParams().query);
-  const [focusVotingId, setFocusVotingId] = React.useState<number | null>(
-    () => getInitialParams().voting,
+  const getUrlState = React.useCallback(
+    () => parseVotingsUrlState(window.location.search),
+    [],
   );
-  const [focusSessionKey, setFocusSessionKey] = React.useState<string | null>(
-    () => getInitialParams().session,
+  const initialState = React.useMemo(() => getUrlState(), [getUrlState]);
+
+  const [search, setSearch] = React.useState(initialState.query);
+  const [focusVotingId, setFocusVotingId] = React.useState<number | null>(
+    initialState.voting,
+  );
+  const [sessionFilter, setSessionFilter] = React.useState(initialState.session);
+  const [phaseFilter, setPhaseFilter] = React.useState(initialState.phase);
+  const [sortMode, setSortMode] = React.useState<VotingSortMode>(
+    initialState.sort,
   );
   const deferredQuery = React.useDeferredValue(search);
   const isStale = search !== deferredQuery;
 
   React.useEffect(() => {
     const handlePopState = () => {
-      const next = getInitialParams();
+      const next = getUrlState();
       setSearch(next.query);
       setFocusVotingId(next.voting);
-      setFocusSessionKey(next.session);
+      setSessionFilter(next.session);
+      setPhaseFilter(next.phase);
+      setSortMode(next.sort);
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [getInitialParams]);
+  }, [getUrlState]);
+
+  React.useEffect(() => {
+    const nextUrl = buildVotingsUrl(window.location.pathname, window.location.search, {
+      query: search,
+      session: sessionFilter,
+      phase: phaseFilter,
+      sort: sortMode,
+      voting: focusVotingId,
+    });
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState(null, "", nextUrl);
+    }
+  }, [focusVotingId, phaseFilter, search, sessionFilter, sortMode]);
+
+  const clearFilters = React.useCallback(() => {
+    setSearch("");
+    setFocusVotingId(null);
+    setSessionFilter(DEFAULT_VOTINGS_SESSION);
+    setPhaseFilter(DEFAULT_VOTINGS_PHASE);
+    setSortMode(DEFAULT_VOTINGS_SORT);
+  }, []);
 
   return (
     <Box>
-      <PageHeader title={t("title")} subtitle={t("subtitle")} />
-
-      <DataCard sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
-        <Box sx={{ maxWidth: 900, mx: "auto" }}>
-          <TextField
-            fullWidth
-            label={t("search")}
-            value={search}
-            onChange={(event) => setSearch(event.target.value ?? "")}
-            placeholder={t("searchPlaceholder")}
-            size="small"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon
-                    sx={{ color: themedColors.primary, fontSize: 20 }}
-                  />
-                </InputAdornment>
-              ),
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                background: "#fff",
-              },
-            }}
-          />
-          <Typography
-            variant="caption"
-            sx={{
-              color: themedColors.textTertiary,
-              display: "block",
-              mt: 1,
-            }}
-          >
-            {t("searchHelp")}
-          </Typography>
-        </Box>
-      </DataCard>
-
-      {!deferredQuery && !focusVotingId && (
-        <Typography
-          variant="overline"
-          sx={{
-            color: themedColors.textTertiary,
-            display: "block",
-            mb: 1.5,
-            letterSpacing: "0.08em",
-          }}
-        >
-          {t("recentVotes")}
-        </Typography>
-      )}
+      <VotingsHero title={t("title")} subtitle={t("subtitle")} />
 
       {isStale && (
         <LinearProgress
@@ -109,10 +79,10 @@ export default () => {
             mb: 1.5,
             height: 2,
             borderRadius: 1,
-            backgroundColor: `${colors.primaryLight}20`,
-            "& .MuiLinearProgress-bar": { backgroundColor: colors.primaryLight },
-          }}
-        />
+          backgroundColor: `${colors.primaryLight}20`,
+          "& .MuiLinearProgress-bar": { backgroundColor: colors.primaryLight },
+        }}
+      />
       )}
 
       <React.Suspense fallback={<InlineSpinner />}>
@@ -127,7 +97,16 @@ export default () => {
           <VoteResults
             query={deferredQuery}
             focusVotingId={focusVotingId}
-            initialSessionFilter={focusSessionKey}
+            sessionFilter={sessionFilter}
+            phaseFilter={phaseFilter}
+            sortMode={sortMode}
+            onSearchChange={setSearch}
+            onSessionFilterChange={setSessionFilter}
+            onPhaseFilterChange={setPhaseFilter}
+            onSortModeChange={setSortMode}
+            onFocusVotingChange={setFocusVotingId}
+            onClearFilters={clearFilters}
+            searchValue={search}
           />
         </Box>
       </React.Suspense>

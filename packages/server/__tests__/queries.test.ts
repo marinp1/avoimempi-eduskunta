@@ -43,6 +43,12 @@ import speechActivity from "../database/queries/SPEECH_ACTIVITY.sql";
 import speechesByDate from "../database/queries/SPEECHES_BY_DATE.sql";
 import trustPositions from "../database/queries/TRUST_POSITIONS.sql";
 import votesByPerson from "../database/queries/VOTES_BY_PERSON.sql";
+import votingsBrowse from "../database/queries/VOTINGS_BROWSE.sql";
+import votingsOverviewClose from "../database/queries/VOTINGS_OVERVIEW_CLOSE.sql";
+import votingsOverviewMetrics from "../database/queries/VOTINGS_OVERVIEW_METRICS.sql";
+import votingsOverviewPhases from "../database/queries/VOTINGS_OVERVIEW_PHASES.sql";
+import votingsOverviewSessions from "../database/queries/VOTINGS_OVERVIEW_SESSIONS.sql";
+import votingsOverviewTurnout from "../database/queries/VOTINGS_OVERVIEW_TURNOUT.sql";
 import votingParticipation from "../database/queries/VOTING_PARTICIPATION.sql";
 import votingParticipationByGovernment from "../database/queries/VOTING_PARTICIPATION_BY_GOVERNMENT.sql";
 import votingRelatedById from "../database/queries/VOTING_RELATED_BY_ID.sql";
@@ -94,6 +100,12 @@ const queries = {
   speechesByDate,
   trustPositions,
   votesByPerson,
+  votingsBrowse,
+  votingsOverviewClose,
+  votingsOverviewMetrics,
+  votingsOverviewPhases,
+  votingsOverviewSessions,
+  votingsOverviewTurnout,
   votingParticipation,
   votingParticipationByGovernment,
   votingRelatedById,
@@ -1021,6 +1033,73 @@ describe("Voting queries", () => {
     // Margin 4 should not appear with threshold 3
     const close = rows.find((r: any) => r.id === 101);
     expect(close).toBeUndefined();
+  });
+
+  test("VOTINGS_BROWSE filters and sorts without requiring a text query", () => {
+    const stmt = db.prepare(votingsBrowse);
+    const rows = stmt.all({
+      $query: null,
+      $phase: null,
+      $session: null,
+      $sort: "largest",
+      $startDate: null,
+      $endDateExclusive: null,
+      $limit: 10,
+    }) as any[];
+    stmt.finalize();
+
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows[0]).toHaveProperty("context_title");
+    expect(rows[0].n_total).toBeGreaterThanOrEqual(rows[rows.length - 1].n_total);
+  });
+
+  test("voting overview queries expose summary metrics and curated lists", () => {
+    const metricsStmt = db.prepare(votingsOverviewMetrics);
+    const metrics = metricsStmt.get({
+      $startDate: null,
+      $endDateExclusive: null,
+      $closeThreshold: 10,
+    }) as any;
+    metricsStmt.finalize();
+
+    const closeStmt = db.prepare(votingsOverviewClose);
+    const closeRows = closeStmt.all({
+      $startDate: null,
+      $endDateExclusive: null,
+      $limit: 5,
+    }) as any[];
+    closeStmt.finalize();
+
+    const turnoutStmt = db.prepare(votingsOverviewTurnout);
+    const turnoutRows = turnoutStmt.all({
+      $startDate: null,
+      $endDateExclusive: null,
+      $limit: 5,
+    }) as any[];
+    turnoutStmt.finalize();
+
+    const phaseStmt = db.prepare(votingsOverviewPhases);
+    const phaseRows = phaseStmt.all({
+      $startDate: null,
+      $endDateExclusive: null,
+      $limit: 5,
+    }) as any[];
+    phaseStmt.finalize();
+
+    const sessionStmt = db.prepare(votingsOverviewSessions);
+    const sessionRows = sessionStmt.all({
+      $startDate: null,
+      $endDateExclusive: null,
+      $limit: 5,
+    }) as any[];
+    sessionStmt.finalize();
+
+    expect(metrics.total_votings).toBeGreaterThan(0);
+    expect(metrics.phase_count).toBeGreaterThanOrEqual(0);
+    expect(Array.isArray(closeRows)).toBe(true);
+    expect(Array.isArray(turnoutRows)).toBe(true);
+    expect(Array.isArray(phaseRows)).toBe(true);
+    expect(Array.isArray(sessionRows)).toBe(true);
   });
 });
 
