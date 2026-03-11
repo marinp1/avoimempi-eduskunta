@@ -1,4 +1,3 @@
-import CloseIcon from "@mui/icons-material/Close";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import GavelIcon from "@mui/icons-material/Gavel";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -10,9 +9,6 @@ import {
   Chip,
   CircularProgress,
   Collapse,
-  Dialog,
-  DialogContent,
-  IconButton,
   Link,
   Tab,
   Table,
@@ -23,7 +19,6 @@ import {
   TableRow,
   Tabs,
   Typography,
-  useMediaQuery,
 } from "@mui/material";
 import type React from "react";
 import { useEffect, useState } from "react";
@@ -40,7 +35,8 @@ import { VotingResultsTable } from "#client/components/VotingResultsTable";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
-import theme, { colors } from "#client/theme";
+import { colors, commonStyles, spacing } from "#client/theme";
+import { DataCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 
@@ -52,7 +48,6 @@ type VotingInlineDetails = ApiRouteResponse<`/api/votings/:id/details`>;
 type DissentRow = ApiRouteItem<`/api/analytics/dissent`>;
 type PartyDisciplineRow = ApiRouteItem<`/api/analytics/party-discipline`>;
 
-// ── Members Tab ──
 const MembersTab: React.FC<{
   partyCode: string;
   asOfDate: string;
@@ -87,6 +82,10 @@ const MembersTab: React.FC<{
       .then((res) => res.json())
       .then((data) => {
         setMembers(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setMembers([]);
         setLoading(false);
       });
   }, [
@@ -136,29 +135,31 @@ const MembersTab: React.FC<{
           </TableRow>
         </TableHead>
         <TableBody>
-          {members.map((m) => (
-            <TableRow key={m.person_id}>
+          {members.map((member) => (
+            <TableRow key={member.person_id}>
               <TableCell>
                 <Typography variant="body2" fontWeight={600}>
                   <Link
-                    href={refs.member(m.person_id)}
+                    href={refs.member(member.person_id)}
                     underline="hover"
                     color="inherit"
                   >
-                    {m.last_name}, {m.first_name}
+                    {member.last_name}, {member.first_name}
                   </Link>
                 </Typography>
               </TableCell>
               <TableCell>
                 <Typography variant="body2">
-                  {m.current_municipality || "-"}
+                  {member.current_municipality || "-"}
                 </Typography>
               </TableCell>
               <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
-                <Typography variant="body2">{m.profession || "-"}</Typography>
+                <Typography variant="body2">
+                  {member.profession || "-"}
+                </Typography>
               </TableCell>
               <TableCell>
-                {m.is_minister === 1 && (
+                {member.is_minister === 1 && (
                   <Chip
                     label={tParties("detail.minister")}
                     size="small"
@@ -180,10 +181,7 @@ const MembersTab: React.FC<{
   );
 };
 
-// ── Voting Tab ──
-const VotingTab: React.FC<{ isGovernment: boolean }> = ({
-  isGovernment: _isGovernment,
-}) => {
+const VotingTab: React.FC = () => {
   const themedColors = useThemedColors();
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tParties } = useScopedTranslation("parties");
@@ -217,6 +215,10 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
         setLoadingVotingDetails(new Set());
         setVotingDetailsById({});
         setLoading(false);
+      })
+      .catch(() => {
+        setData([]);
+        setLoading(false);
       });
   }, [selectedHallituskausi]);
 
@@ -246,9 +248,7 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
       else next.add(votingId);
       return next;
     });
-    if (shouldExpand) {
-      void fetchVotingDetails(votingId);
-    }
+    if (shouldExpand) void fetchVotingDetails(votingId);
   };
 
   if (loading)
@@ -277,12 +277,12 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
     context: "no",
   });
 
-  const chartData = data.slice(0, 20).map((d) => ({
-    title: (d.title || d.section_title || "").slice(0, 30),
-    [coalitionYesLabel]: d.coalition_yes,
-    [coalitionNoLabel]: d.coalition_no,
-    [oppositionYesLabel]: d.opposition_yes,
-    [oppositionNoLabel]: d.opposition_no,
+  const chartData = data.slice(0, 20).map((row) => ({
+    title: (row.title || row.section_title || "").slice(0, 30),
+    [coalitionYesLabel]: row.coalition_yes,
+    [coalitionNoLabel]: row.coalition_no,
+    [oppositionYesLabel]: row.opposition_yes,
+    [oppositionNoLabel]: row.opposition_no,
   }));
 
   return (
@@ -364,12 +364,7 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
                 </Typography>
                 <Button
                   size="small"
-                  sx={{
-                    textTransform: "none",
-                    minWidth: 0,
-                    px: 1,
-                    fontSize: "0.68rem",
-                  }}
+                  sx={commonStyles.compactActionButton}
                   endIcon={
                     <ExpandMoreIcon
                       sx={{
@@ -389,12 +384,7 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
                 </Button>
                 <Button
                   size="small"
-                  sx={{
-                    textTransform: "none",
-                    minWidth: 0,
-                    px: 1,
-                    fontSize: "0.68rem",
-                  }}
+                  sx={commonStyles.compactActionButton}
                   endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
                   onClick={() => {
                     window.history.pushState(
@@ -466,7 +456,6 @@ const VotingTab: React.FC<{ isGovernment: boolean }> = ({
   );
 };
 
-// ── Discipline Tab ──
 const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
   partyCode,
   partyName,
@@ -492,22 +481,30 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
       ? (`?${params.toString()}` as `?${string}`)
       : "";
     Promise.all([
-      apiFetch(`/api/analytics/party-discipline${query}`).then((r) => r.json()),
+      apiFetch(`/api/analytics/party-discipline${query}`).then((res) =>
+        res.json(),
+      ),
       apiFetch(
         `/api/analytics/dissent?limit=200${params.toString() ? `&${params.toString()}` : ""}`,
-      ).then((r) => r.json()),
-    ]).then(([allDiscipline, allDissents]) => {
-      const partyDisc = (allDiscipline as PartyDisciplineRow[]).find(
-        (d) => d.party_code === partyCode,
-      );
-      setDisciplineData(partyDisc || null);
+      ).then((res) => res.json()),
+    ])
+      .then(([allDiscipline, allDissents]) => {
+        const partyDiscipline = (allDiscipline as PartyDisciplineRow[]).find(
+          (row) => row.party_code === partyCode,
+        );
+        setDisciplineData(partyDiscipline || null);
 
-      const partyDissents = (allDissents as DissentRow[]).filter(
-        (d) => d.party_code === partyCode,
-      );
-      setDissents(partyDissents);
-      setLoading(false);
-    });
+        const partyDissents = (allDissents as DissentRow[]).filter(
+          (row) => row.party_code === partyCode,
+        );
+        setDissents(partyDissents);
+        setLoading(false);
+      })
+      .catch(() => {
+        setDisciplineData(null);
+        setDissents([]);
+        setLoading(false);
+      });
   }, [partyCode, selectedHallituskausi]);
 
   if (loading)
@@ -527,27 +524,24 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
       </Typography>
     );
 
-  // Group dissents by person to find top dissenters
   const dissentsByPerson = new Map<number, { name: string; count: number }>();
-  dissents?.forEach((d) => {
-    const existing = dissentsByPerson.get(d.person_id);
-    if (existing) {
-      existing.count++;
-    } else {
-      dissentsByPerson.set(d.person_id, {
-        name: `${d.first_name} ${d.last_name}`,
+  dissents?.forEach((row) => {
+    const existing = dissentsByPerson.get(row.person_id);
+    if (existing) existing.count += 1;
+    else {
+      dissentsByPerson.set(row.person_id, {
+        name: `${row.first_name} ${row.last_name}`,
         count: 1,
       });
     }
   });
 
   const topDissenters = Array.from(dissentsByPerson.values())
-    .sort((a, b) => b.count - a.count)
+    .sort((left, right) => right.count - left.count)
     .slice(0, 10);
 
   return (
     <Box>
-      {/* Discipline score prominently */}
       <Box
         sx={{
           textAlign: "center",
@@ -580,7 +574,6 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
         </Typography>
       </Box>
 
-      {/* Top dissenters */}
       {topDissenters.length > 0 && (
         <>
           <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
@@ -624,29 +617,56 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
   );
 };
 
-// ── Main Dialog ──
+const ProfileMetric: React.FC<{
+  label: string;
+  value: string;
+  accentColor: string;
+}> = ({ label, value, accentColor }) => {
+  const themedColors = useThemedColors();
+
+  return (
+    <Box
+      sx={{
+        p: 1.5,
+        borderRadius: 2,
+        border: `1px solid ${themedColors.dataBorder}`,
+        background: themedColors.backgroundPaper,
+      }}
+    >
+      <Typography
+        variant="caption"
+        sx={{ color: themedColors.textSecondary, display: "block", mb: 0.5 }}
+      >
+        {label}
+      </Typography>
+      <Typography sx={{ fontWeight: 700, color: accentColor }}>
+        {value}
+      </Typography>
+    </Box>
+  );
+};
+
 export const PartyDetail: React.FC<{
-  open: boolean;
-  onClose: () => void;
   party: PartySummary | null;
+  partyColor: string;
   asOfDate: string;
   startDate?: string;
   endDate?: string;
   governmentName?: string;
   governmentStartDate?: string;
+  onClearSelection?: () => void;
 }> = ({
-  open,
-  onClose,
   party,
+  partyColor,
   asOfDate,
   startDate,
   endDate,
   governmentName,
   governmentStartDate,
+  onClearSelection,
 }) => {
   const themedColors = useThemedColors();
   const { t } = useScopedTranslation("parties");
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [tabIndex, setTabIndex] = useState(0);
 
   useEffect(() => {
@@ -655,111 +675,159 @@ export const PartyDetail: React.FC<{
 
   if (!party) return null;
 
+  const participationRate = `${(party.participation_rate ?? 0).toFixed(1)}%`;
+  const averageAge = `${(party.average_age ?? 0).toFixed(1)}`;
+  const roleLabel =
+    party.is_in_government === 1 ? t("government") : t("opposition");
+
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      fullScreen={isMobile}
-      PaperProps={{
-        sx: {
-          borderRadius: isMobile ? 0 : 3,
-          maxHeight: isMobile ? "100vh" : "90vh",
-        },
-      }}
-    >
-      {/* Header */}
+    <DataCard sx={{ overflow: "hidden" }}>
       <Box
         sx={{
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          bgcolor: colors.primary,
-          borderRadius: isMobile ? 0 : "12px 12px 0 0",
+          position: "relative",
+          borderLeft: `6px solid ${partyColor}`,
+          background: `linear-gradient(135deg, ${partyColor}14 0%, ${colors.backgroundPaper} 60%)`,
+          px: { xs: 2, sm: 3 },
+          py: { xs: 2.5, sm: 3 },
         }}
       >
-        <Box sx={{ position: "relative", p: { xs: 2, sm: 2.5 } }}>
-          <IconButton
-            onClick={onClose}
-            sx={{
-              position: "absolute",
-              top: { xs: 8, sm: 12 },
-              right: { xs: 8, sm: 12 },
-              color: "white",
-              bgcolor: "rgba(255,255,255,0.1)",
-              "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
-            }}
-          >
-            <CloseIcon />
-          </IconButton>
-
-          <Box sx={{ pr: { xs: 4, sm: 0 } }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: { xs: "flex-start", md: "center" },
+            gap: 2,
+            flexDirection: { xs: "column", md: "row" },
+          }}
+        >
+          <Box sx={{ minWidth: 0 }}>
             <Typography
-              variant="h5"
-              fontWeight={700}
-              sx={{ color: "white", mb: 0.5 }}
+              variant="overline"
+              sx={{
+                color: partyColor,
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+              }}
+            >
+              {t("detail.profileEyebrow")}
+            </Typography>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: themedColors.textPrimary,
+                letterSpacing: "-0.03em",
+              }}
             >
               {party.party_name}
             </Typography>
             <Box
               sx={{
+                mt: 1,
                 display: "flex",
-                gap: 1,
                 flexWrap: "wrap",
+                gap: 1,
                 alignItems: "center",
               }}
             >
-              <Typography
-                variant="body2"
-                sx={{ color: "rgba(255,255,255,0.85)" }}
-              >
-                {party.member_count} {t("members")}
-              </Typography>
               <Chip
-                label={
-                  party.is_in_government === 1
-                    ? t("government")
-                    : t("opposition")
-                }
+                label={party.party_code}
                 size="small"
                 sx={{
-                  height: 20,
-                  fontSize: "0.65rem",
+                  fontWeight: 700,
+                  color: partyColor,
+                  bgcolor: `${partyColor}14`,
+                  border: `1px solid ${partyColor}30`,
+                }}
+              />
+              <Chip
+                label={roleLabel}
+                size="small"
+                sx={{
                   fontWeight: 700,
                   bgcolor:
                     party.is_in_government === 1
-                      ? "rgba(76, 175, 80, 0.25)"
-                      : "rgba(255, 152, 0, 0.25)",
-                  color: "white",
-                  border:
+                      ? colors.coalitionBackground
+                      : colors.oppositionBackground,
+                  color:
                     party.is_in_government === 1
-                      ? "1px solid rgba(76, 175, 80, 0.5)"
-                      : "1px solid rgba(255, 152, 0, 0.5)",
+                      ? colors.coalitionColor
+                      : colors.oppositionColor,
                 }}
               />
+              <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+                {t("detail.profileSummary", {
+                  members: party.member_count,
+                  participation: participationRate,
+                })}
+              </Typography>
             </Box>
           </Box>
+
+          {onClearSelection && (
+            <Button
+              variant="outlined"
+              onClick={onClearSelection}
+              sx={commonStyles.compactOutlinedPrimaryButton}
+            >
+              {t("detail.clearSelection")}
+            </Button>
+          )}
         </Box>
 
+        <Box
+          sx={{
+            mt: spacing.md,
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr 1fr",
+              lg: "repeat(4, minmax(0, 1fr))",
+            },
+            gap: 1.5,
+          }}
+        >
+          <ProfileMetric
+            label={t("members")}
+            value={String(party.member_count)}
+            accentColor={partyColor}
+          />
+          <ProfileMetric
+            label={t("participation")}
+            value={participationRate}
+            accentColor={partyColor}
+          />
+          <ProfileMetric
+            label={t("table.averageAge")}
+            value={averageAge}
+            accentColor={partyColor}
+          />
+          <ProfileMetric
+            label={t("detail.genderSplit")}
+            value={t("genderSplitLine", {
+              womenLabel: t("womenShort"),
+              female: party.female_count ?? 0,
+              menLabel: t("menShort"),
+              male: party.male_count ?? 0,
+            })}
+            accentColor={partyColor}
+          />
+        </Box>
+      </Box>
+
+      <Box sx={{ px: { xs: 1, sm: 2 }, pt: 1.5 }}>
         <Tabs
           value={tabIndex}
-          onChange={(_, v) => setTabIndex(v)}
+          onChange={(_, next) => setTabIndex(next)}
           variant="scrollable"
           scrollButtons="auto"
           sx={{
-            minHeight: 40,
-            px: 1,
+            minHeight: 44,
             "& .MuiTab-root": {
-              color: "rgba(255,255,255,0.6)",
               fontWeight: 600,
-              fontSize: "0.8rem",
-              minHeight: 40,
+              fontSize: "0.82rem",
+              minHeight: 44,
               textTransform: "none",
-              py: 0,
-              "&.Mui-selected": { color: "white" },
             },
-            "& .MuiTabs-indicator": { bgcolor: "white", height: 2 },
           }}
         >
           <Tab
@@ -780,11 +848,11 @@ export const PartyDetail: React.FC<{
         </Tabs>
       </Box>
 
-      <DialogContent
+      <Box
         sx={{
-          p: { xs: 2, sm: 3 },
+          px: { xs: 2, sm: 3 },
+          py: { xs: 2, sm: 3 },
           bgcolor: themedColors.backgroundSubtle,
-          overflowY: "auto",
         }}
       >
         {tabIndex === 0 && (
@@ -797,17 +865,15 @@ export const PartyDetail: React.FC<{
             governmentStartDate={governmentStartDate}
           />
         )}
-        {tabIndex === 1 && (
-          <VotingTab isGovernment={party.is_in_government === 1} />
-        )}
+        {tabIndex === 1 && <VotingTab />}
         {tabIndex === 2 && (
           <DisciplineTab
             partyCode={party.party_code}
             partyName={party.party_name}
           />
         )}
-      </DialogContent>
-    </Dialog>
+      </Box>
+    </DataCard>
   );
 };
 

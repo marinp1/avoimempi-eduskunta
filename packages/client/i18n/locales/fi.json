@@ -61,11 +61,39 @@
     "participation": "Osallistuminen",
     "totalParties": "Puolueita",
     "totalMembers": "Kansanedustajia",
+    "governmentBreakdown": "Hallitus / oppositio",
     "weightedParticipation": "Painotettu osallistuminen",
     "searchPlaceholder": "Hae puolueen nimellä tai tunnuksella",
     "showingResults": "Näytetään {{shown}} / {{total}} puolueesta",
+    "hallituskausiNotice": "Rajattu hallituskauteen: {{period}}",
+    "comparisonTitle": "Puoluevertailu",
+    "comparisonSubtitle": "Selaa puolueita, rajaa näkymää ja avaa tarkempi profiili valitsemalla puolue.",
+    "sortBy": "Järjestä:",
+    "clearSelection": "Tyhjennä valinta",
+    "profilePlaceholderTitle": "Valitse puolue tarkempaan tarkasteluun",
+    "profilePlaceholderDescription": "Avaa puolueen profiili vertailevasta listasta nähdäksesi jäsenet, äänestysnäkymän ja puoluekurin.",
+    "selectedHiddenByFilters": "Valittu puolue {{party}} on piilossa nykyisten suodattimien takana.",
+    "noResultsDescription": "Kokeile muuttaa hakua tai suodattimia.",
     "womenShort": "N",
     "menShort": "M",
+    "scope": {
+      "current": "Luvut kuvaavat nykyistä aktiivista eduskuntakokoonpanoa.",
+      "government": "Luvut on rajattu hallituskauteen {{period}}."
+    },
+    "sort": {
+      "members": "Koko",
+      "participation": "Osallistuminen",
+      "averageAge": "Keski-ikä",
+      "alphabetical": "A-Ö"
+    },
+    "highlights": {
+      "largestParty": "Suurin ryhmä",
+      "highestParticipation": "Aktiivisin osallistuja",
+      "youngestAverageAge": "Nuorin keski-ikä",
+      "membersValue": "{{count}} kansanedustajaa",
+      "averageAgeValue": "{{age}} vuotta",
+      "partyCode": "Tunnus: {{code}}"
+    },
     "filters": {
       "all": "Kaikki"
     },
@@ -78,6 +106,10 @@
       "averageAge": "Keski-ikä"
     },
     "detail": {
+      "profileEyebrow": "Puolueprofiili",
+      "profileSummary": "{{members}} jäsentä, osallistuminen {{participation}}",
+      "clearSelection": "Sulje profiili",
+      "genderSplit": "Sukupuolijakauma",
       "tabs": {
         "members": "Jäsenet",
         "voting": "Äänestykset",
