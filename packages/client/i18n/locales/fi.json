@@ -13,7 +13,9 @@
       "dbBuildTimestamp": "Tietokanta päivitetty: {{timestamp}}",
       "lastScraperRunAt": "Viimeksi tarkistettu: {{timestamp}}",
       "lastMigratorRunAt": "Migraattori ajettu: {{timestamp}}"
-    }
+    },
+    "changesCount": "{{count}} muutosta viime päivityksessä",
+    "noChanges": "Ei muutoksia viime päivityksessä"
   },
   "navigation": {
     "openMenu": "Avaa valikko",
@@ -471,6 +473,7 @@
     },
     "passed": "Hyväksytty",
     "failed": "Hylätty",
+    "resultCount": "{{count}} tulosta",
     "votingCount": "äänestystä",
     "votingCount_one": "{{count}} äänestys",
     "votingCount_other": "{{count}} äänestystä",

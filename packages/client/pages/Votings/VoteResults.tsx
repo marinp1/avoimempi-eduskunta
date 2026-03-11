@@ -1,7 +1,7 @@
 import {
   Alert,
   Box,
-  CircularProgress,
+  FormControl,
   InputLabel,
   MenuItem,
   Select,
@@ -21,7 +21,7 @@ import {
 } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { commonStyles } from "#client/theme";
-import { DataCard } from "#client/theme/components";
+import { DataCard, EmptyState, InlineSpinner } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 
@@ -92,8 +92,8 @@ export const VoteResults: React.FC<{
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tErrors } = useScopedTranslation("errors");
   const { t: tVotings } = useScopedTranslation("votings");
-  const themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
+  const themedColors = useThemedColors();
 
   const [state, setState] = React.useState<SearchState>(emptyState);
   const [focusVoting, setFocusVoting] =
@@ -336,27 +336,13 @@ export const VoteResults: React.FC<{
 
   return (
     <Box>
-      {noSearch && recentState.loading && (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            py: 5,
-          }}
-        >
-          <CircularProgress size={28} sx={{ color: themedColors.primary }} />
-        </Box>
-      )}
+      {noSearch && recentState.loading && <InlineSpinner />}
 
       {noSearch && !recentState.loading && recentGrouped.length > 0 && (
         <Stack spacing={1.5}>{renderGroups(recentGrouped)}</Stack>
       )}
 
-      {!noSearch && (state.loading || focusVoting.loading) && (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
-          <CircularProgress size={28} sx={{ color: themedColors.primary }} />
-        </Box>
-      )}
+      {!noSearch && (state.loading || focusVoting.loading) && <InlineSpinner />}
 
       {!noSearch &&
         !state.loading &&
@@ -393,15 +379,15 @@ export const VoteResults: React.FC<{
                   gap: 2,
                 }}
               >
-                <Box>
-                  <InputLabel sx={{ mb: 0.5, ...commonStyles.compactTextLg }}>
+                <FormControl size="small" fullWidth>
+                  <InputLabel id="phase-filter-label" sx={{ ...commonStyles.compactTextLg }}>
                     {tVotings("filters.phase")}
                   </InputLabel>
                   <Select
+                    labelId="phase-filter-label"
+                    label={tVotings("filters.phase")}
                     value={phaseFilter}
-                    size="small"
                     onChange={(event) => setPhaseFilter(event.target.value)}
-                    fullWidth
                   >
                     <MenuItem value="all">{tVotings("filters.all")}</MenuItem>
                     {phases.map((phase) => (
@@ -410,16 +396,16 @@ export const VoteResults: React.FC<{
                       </MenuItem>
                     ))}
                   </Select>
-                </Box>
-                <Box>
-                  <InputLabel sx={{ mb: 0.5, ...commonStyles.compactTextLg }}>
+                </FormControl>
+                <FormControl size="small" fullWidth>
+                  <InputLabel id="session-filter-label" sx={{ ...commonStyles.compactTextLg }}>
                     {tVotings("filters.session")}
                   </InputLabel>
                   <Select
+                    labelId="session-filter-label"
+                    label={tVotings("filters.session")}
                     value={sessionFilter}
-                    size="small"
                     onChange={(event) => setSessionFilter(event.target.value)}
-                    fullWidth
                   >
                     <MenuItem value="all">{tVotings("filters.all")}</MenuItem>
                     {sessions.map((session) => (
@@ -428,18 +414,18 @@ export const VoteResults: React.FC<{
                       </MenuItem>
                     ))}
                   </Select>
-                </Box>
-                <Box>
-                  <InputLabel sx={{ mb: 0.5, ...commonStyles.compactTextLg }}>
+                </FormControl>
+                <FormControl size="small" fullWidth>
+                  <InputLabel id="sort-filter-label" sx={{ ...commonStyles.compactTextLg }}>
                     {tVotings("filters.sort")}
                   </InputLabel>
                   <Select
+                    labelId="sort-filter-label"
+                    label={tVotings("filters.sort")}
                     value={sortMode}
-                    size="small"
                     onChange={(event) =>
                       setSortMode(event.target.value as SortMode)
                     }
-                    fullWidth
                   >
                     <MenuItem value="newest">
                       {tVotings("sort.newest")}
@@ -454,25 +440,21 @@ export const VoteResults: React.FC<{
                       {tVotings("sort.largest")}
                     </MenuItem>
                   </Select>
-                </Box>
+                </FormControl>
               </Box>
             </DataCard>
 
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Typography variant="caption" sx={{ color: themedColors.textTertiary }}>
+                {tVotings("resultCount", { count: filtered.length })}
+              </Typography>
+            </Box>
+
             {filtered.length === 0 ? (
-              <DataCard sx={{ p: 4, textAlign: "center" }}>
-                <Typography
-                  variant="h6"
-                  sx={{ color: themedColors.textSecondary, mb: 0.5 }}
-                >
-                  {tVotings("noResults")}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ color: themedColors.textTertiary }}
-                >
-                  {tVotings("noResultsHint")}
-                </Typography>
-              </DataCard>
+              <EmptyState
+                title={tVotings("noResults")}
+                description={tVotings("noResultsHint")}
+              />
             ) : (
               <Stack spacing={1.5}>{renderGroups(grouped)}</Stack>
             )}

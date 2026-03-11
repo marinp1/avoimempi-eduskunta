@@ -290,6 +290,22 @@ export const commonStyles = {
   } satisfies SxProps<Theme>,
 
   /**
+   * Table header row - full-width primary background with white uppercase text
+   */
+  tableHeaderRow: {
+    background: colors.primary,
+    "& .MuiTableCell-root": {
+      color: "#ffffff",
+      fontWeight: 600,
+      fontSize: "0.8125rem",
+      letterSpacing: "0.04em",
+      textTransform: "uppercase",
+      borderBottom: "none",
+      whiteSpace: "nowrap",
+    },
+  } satisfies SxProps<Theme>,
+
+  /**
    * Centered flex container
    */
   centeredFlex: {

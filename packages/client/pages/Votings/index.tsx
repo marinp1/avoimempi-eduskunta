@@ -1,15 +1,15 @@
 import SearchIcon from "@mui/icons-material/Search";
 import {
   Box,
-  CircularProgress,
   InputAdornment,
+  LinearProgress,
   TextField,
   Typography,
 } from "@mui/material";
 import React from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { commonStyles, spacing } from "#client/theme";
-import { DataCard, PageHeader } from "#client/theme/components";
+import { colors } from "#client/theme";
+import { DataCard, InlineSpinner, PageHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { VoteResults } from "./VoteResults";
 
@@ -103,13 +103,19 @@ export default () => {
         </Typography>
       )}
 
-      <React.Suspense
-        fallback={
-          <Box sx={{ ...commonStyles.centeredFlex, py: spacing.xl }}>
-            <CircularProgress sx={{ color: themedColors.primary }} />
-          </Box>
-        }
-      >
+      {isStale && (
+        <LinearProgress
+          sx={{
+            mb: 1.5,
+            height: 2,
+            borderRadius: 1,
+            backgroundColor: `${colors.primaryLight}20`,
+            "& .MuiLinearProgress-bar": { backgroundColor: colors.primaryLight },
+          }}
+        />
+      )}
+
+      <React.Suspense fallback={<InlineSpinner />}>
         <Box
           sx={{
             opacity: isStale ? 0.6 : 1,

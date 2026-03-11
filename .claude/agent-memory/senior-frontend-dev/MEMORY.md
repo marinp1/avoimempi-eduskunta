@@ -30,9 +30,15 @@
 - Use `GlassCard` for hero sections
 - Use `Chip` for badges, labels, counts
 - Use `Collapse` for expandable content with `timeout="auto" unmountOnExit`
-- Use `CircularProgress` for loading states
+- Use `InlineSpinner` (from `#client/theme/components`) instead of raw `CircularProgress` for loading states
+- Use `EmptyState` (from `#client/theme/components`) for no-data/no-results UI
+- Use `PageSkeleton` (from `#client/theme/components`) as `<Suspense>` fallback
 - `DocumentCard`, `RelatedVotings`, `extractDocumentIdentifiers` from `#client/components/DocumentCards`
 - `VotingResultsTable` from `#client/components/VotingResultsTable`
+
+### Theme Helpers
+- `commonStyles.tableHeaderRow` — apply to `<TableRow sx={commonStyles.tableHeaderRow}>` in `<TableHead>` for a consistent primary-color header. Handles `background`, `color: #fff`, `fontWeight`, `letterSpacing`, `textTransform`, `borderBottom` on all cells via `& .MuiTableCell-root`. Per-cell color/fontWeight overrides are not needed when using this. `TableSortLabel` inside still needs its own `color: "white !important"` override.
+- `commonStyles.tableHeader` — per-cell header style (older pattern; prefer `tableHeaderRow` on the row going forward)
 
 ### Responsive Design
 - Mobile cards: Display at `xs` to `md` breakpoints with `display: { xs: "block", md: "none" }`

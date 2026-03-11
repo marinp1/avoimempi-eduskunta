@@ -432,7 +432,7 @@ export function GovernmentProposalCard({
                         key={idx}
                         sx={{
                           pl: 2,
-                          borderLeft: `3px solid ${colors.primary}`,
+                          borderLeft: `3px solid ${colors.primaryLight}`,
                         }}
                       >
                         <Typography
@@ -498,7 +498,7 @@ export function GovernmentProposalCard({
                         p: 2,
                         backgroundColor: colors.backgroundSubtle,
                         borderRadius: 1,
-                        borderLeft: `4px solid ${colors.primary}`,
+                        borderLeft: `3px solid ${colors.primaryLight}`,
                       }}
                     >
                       <RichTextRenderer
@@ -533,7 +533,7 @@ export function GovernmentProposalCard({
                         p: 2,
                         backgroundColor: colors.backgroundSubtle,
                         borderRadius: 1,
-                        borderLeft: `4px solid ${colors.primary}`,
+                        borderLeft: `3px solid ${colors.primaryLight}`,
                       }}
                     >
                       <RichTextRenderer
@@ -610,7 +610,7 @@ export function GovernmentProposalCard({
                           sx={{
                             pl: 1.5,
                             py: 0.75,
-                            borderLeft: `3px solid ${colors.info}`,
+                            borderLeft: `3px solid ${colors.primaryLight}`,
                             backgroundColor: `${colors.info}06`,
                             borderRadius: "0 4px 4px 0",
                           }}

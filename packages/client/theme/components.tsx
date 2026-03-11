@@ -1,7 +1,15 @@
-import { Box, Card, type SxProps, type Theme, Typography } from "@mui/material";
+import {
+  Box,
+  Card,
+  CircularProgress,
+  Skeleton,
+  type SxProps,
+  type Theme,
+  Typography,
+} from "@mui/material";
 import type React from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { colors, commonStyles } from "./index";
+import { borderRadius, colors, commonStyles } from "./index";
 import { useThemedColors } from "./ThemeContext";
 
 /**
@@ -217,6 +225,83 @@ export const VoteMarginBar: React.FC<{
           transition: "width 0.3s ease",
         }}
       />
+    </Box>
+  );
+};
+
+/**
+ * PageSkeleton - Suspense fallback replacement showing a loading skeleton
+ */
+export const PageSkeleton: React.FC = () => (
+  <Box sx={{ pt: 1 }}>
+    <Box sx={{ mb: 3 }}>
+      <Skeleton variant="text" width={220} height={36} animation="wave" />
+      <Skeleton variant="text" width={340} height={20} animation="wave" sx={{ mt: 0.5 }} />
+    </Box>
+    {[90, 160, 120].map((h, i) => (
+      <Skeleton
+        key={i}
+        variant="rounded"
+        height={h}
+        animation="wave"
+        sx={{ mb: 2, borderRadius: `${borderRadius.md * 8}px` }}
+      />
+    ))}
+  </Box>
+);
+
+/**
+ * EmptyState - shared no-data UI component
+ */
+export const EmptyState: React.FC<{
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+  icon?: React.ReactNode;
+  sx?: SxProps<Theme>;
+}> = ({ title, description, action, icon, sx }) => {
+  const tc = useThemedColors();
+  return (
+    <Box
+      sx={{
+        textAlign: "center",
+        py: 6,
+        px: 3,
+        border: `1px solid ${tc.dataBorder}`,
+        borderRadius: `${borderRadius.md * 8}px`,
+        background: tc.backgroundPaper,
+        ...sx,
+      }}
+    >
+      {icon && (
+        <Box sx={{ mb: 2, color: tc.textTertiary, fontSize: 40, lineHeight: 1 }}>
+          {icon}
+        </Box>
+      )}
+      <Typography variant="h6" sx={{ color: tc.textSecondary, fontWeight: 600, mb: 0.5 }}>
+        {title}
+      </Typography>
+      {description && (
+        <Typography variant="body2" sx={{ color: tc.textTertiary }}>
+          {description}
+        </Typography>
+      )}
+      {action && <Box sx={{ mt: 2 }}>{action}</Box>}
+    </Box>
+  );
+};
+
+/**
+ * InlineSpinner - replaces scattered loading spinners
+ */
+export const InlineSpinner: React.FC<{ size?: number; py?: number }> = ({
+  size = 28,
+  py = 5,
+}) => {
+  const tc = useThemedColors();
+  return (
+    <Box sx={{ display: "flex", justifyContent: "center", py }}>
+      <CircularProgress size={size} sx={{ color: tc.primary }} />
     </Box>
   );
 };

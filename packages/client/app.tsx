@@ -14,6 +14,7 @@ import { TraceProvider } from "./context/TraceContext";
 import { Navigation } from "./Navigation";
 import { type RouteName, routes } from "./pages";
 import { colors, spacing, transitions } from "./theme";
+import { PageSkeleton } from "./theme/components";
 import { useThemedColors } from "./theme/ThemeContext";
 
 const getInitialTab = (): RouteName => {
@@ -69,6 +70,11 @@ export const App: React.FC = () => {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
+
+  // Scroll to top on navigation
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [activeTab]);
 
   const ActivePage = routes[activeTab] ?? routes[""];
 
@@ -135,9 +141,7 @@ export const App: React.FC = () => {
             },
           }}
         >
-          <React.Suspense
-            fallback={<Typography variant="body2">{t("loading")}</Typography>}
-          >
+          <React.Suspense fallback={<PageSkeleton />}>
             <ActivePage.Component />
           </React.Suspense>
         </Box>
@@ -152,110 +156,62 @@ export const App: React.FC = () => {
             borderTop: `1px solid ${themedColors.dataBorder}`,
           }}
         >
-          <Typography
-            variant="caption"
-            sx={{
-              color: themedColors.textTertiary,
-              display: "block",
-              lineHeight: 1.6,
-            }}
-          >
-            {t("disclaimer.source")}
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: themedColors.textTertiary,
-              display: "block",
-              mt: 0.5,
-              lineHeight: 1.6,
-            }}
-          >
-            {t("disclaimer.unofficial")}
-          </Typography>
-          {dbInfo?.lastScraperRunAt && (
-            <Typography
-              variant="caption"
-              sx={{
-                color: themedColors.textTertiary,
-                display: "block",
-                mt: 0.5,
-                lineHeight: 1.6,
-              }}
-            >
-              {t("disclaimer.lastScraperRunAt", {
-                timestamp: new Date(dbInfo.lastScraperRunAt).toLocaleString("fi-FI"),
-              })}
-            </Typography>
-          )}
-          {dbInfo?.lastMigratorRunAt && (
-            <Typography
-              variant="caption"
-              sx={{
-                color: themedColors.textTertiary,
-                display: "block",
-                mt: 0.5,
-                lineHeight: 1.6,
-              }}
-            >
-              {t("disclaimer.lastMigratorRunAt", {
-                timestamp: new Date(dbInfo.lastMigratorRunAt).toLocaleString("fi-FI"),
-              })}
-            </Typography>
-          )}
-          {dbInfo?.lastMigrationTimestamp && (
-            <Typography
-              variant="caption"
-              sx={{
-                color: themedColors.textTertiary,
-                display: "block",
-                mt: 0.5,
-                lineHeight: 1.6,
-              }}
-            >
-              {t("disclaimer.dbBuildTimestamp", {
-                timestamp: new Date(dbInfo.lastMigrationTimestamp).toLocaleString("fi-FI"),
-              })}
-            </Typography>
-          )}
-          {versionInfo && (
-            <Typography
-              variant="caption"
-              sx={{
-                color: themedColors.textTertiary,
-                display: "block",
-                mt: 0.5,
-                lineHeight: 1.6,
-              }}
-            >
-              {`v${versionInfo.version}${versionInfo.gitHash ? ` (${versionInfo.gitHash})` : ""}`}
-            </Typography>
-          )}
-          {changeSummary && (
-            <Typography
-              variant="caption"
-              sx={{
-                color: themedColors.textTertiary,
-                display: "block",
-                mt: 0.5,
-                lineHeight: 1.6,
-              }}
-            >
-              <Link
-                href="/muutokset"
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.history.pushState({}, "", "/muutokset");
-                  window.dispatchEvent(new PopStateEvent("popstate"));
-                }}
-                sx={{ color: "inherit", textDecorationColor: "inherit" }}
-              >
-                {changeSummary.totalNewRows + changeSummary.totalChangedRows > 0
-                  ? `${changeSummary.totalNewRows + changeSummary.totalChangedRows} muutosta viime päivityksessä`
-                  : "Ei muutoksia viime päivityksessä"}
-              </Link>
-            </Typography>
-          )}
+          {(() => {
+            const footerLineSx = { color: themedColors.textTertiary, display: "block", mt: 0.5, lineHeight: 1.6 };
+            return (
+              <>
+                <Typography variant="caption" sx={{ ...footerLineSx, mt: 0 }}>
+                  {t("disclaimer.source")}
+                </Typography>
+                <Typography variant="caption" sx={footerLineSx}>
+                  {t("disclaimer.unofficial")}
+                </Typography>
+                {dbInfo?.lastScraperRunAt && (
+                  <Typography variant="caption" sx={footerLineSx}>
+                    {t("disclaimer.lastScraperRunAt", {
+                      timestamp: new Date(dbInfo.lastScraperRunAt).toLocaleString("fi-FI"),
+                    })}
+                  </Typography>
+                )}
+                {dbInfo?.lastMigratorRunAt && (
+                  <Typography variant="caption" sx={footerLineSx}>
+                    {t("disclaimer.lastMigratorRunAt", {
+                      timestamp: new Date(dbInfo.lastMigratorRunAt).toLocaleString("fi-FI"),
+                    })}
+                  </Typography>
+                )}
+                {dbInfo?.lastMigrationTimestamp && (
+                  <Typography variant="caption" sx={footerLineSx}>
+                    {t("disclaimer.dbBuildTimestamp", {
+                      timestamp: new Date(dbInfo.lastMigrationTimestamp).toLocaleString("fi-FI"),
+                    })}
+                  </Typography>
+                )}
+                {versionInfo && (
+                  <Typography variant="caption" sx={footerLineSx}>
+                    {`v${versionInfo.version}${versionInfo.gitHash ? ` (${versionInfo.gitHash})` : ""}`}
+                  </Typography>
+                )}
+                {changeSummary && (
+                  <Typography variant="caption" sx={footerLineSx}>
+                    <Link
+                      href="/muutokset"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.history.pushState({}, "", "/muutokset");
+                        window.dispatchEvent(new PopStateEvent("popstate"));
+                      }}
+                      sx={{ color: "inherit", textDecorationColor: "inherit" }}
+                    >
+                      {changeSummary.totalNewRows + changeSummary.totalChangedRows > 0
+                        ? t("changesCount", { count: changeSummary.totalNewRows + changeSummary.totalChangedRows })
+                        : t("noChanges")}
+                    </Link>
+                  </Typography>
+                )}
+              </>
+            );
+          })()}
         </Box>
       </Container>
       <PageDataSourcesDrawer activeRoute={activeTab} />

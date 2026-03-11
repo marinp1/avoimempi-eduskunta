@@ -185,7 +185,7 @@ export function InlineRelatedSessions({
               key={session.section_key}
               sx={{
                 p: 1,
-                borderLeft: `3px solid ${colors.primary}`,
+                borderLeft: `3px solid ${colors.primaryLight}`,
                 borderRadius: 1,
                 backgroundColor: colors.backgroundSubtle,
               }}
