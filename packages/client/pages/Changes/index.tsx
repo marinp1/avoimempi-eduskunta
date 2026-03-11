@@ -74,6 +74,7 @@ function Changes(): ReactNode {
       .then(({ runs: r }) => {
         setRuns(r);
         if (r.length > 0) setSelectedRun(r[0].id);
+        else setSelectedRun("latest");
       })
       .catch(() => {
         // Fall back to latest report
