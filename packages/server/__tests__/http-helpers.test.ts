@@ -7,6 +7,7 @@ import {
   getMappedPaginatedQueryParams,
   getOptionalIntegerQueryParam,
   getPageLimitQueryParams,
+  validateDateRange,
 } from "../routes/http";
 
 describe("route http helpers", () => {
@@ -93,5 +94,49 @@ describe("route http helpers", () => {
     expect(getOptionalIntegerQueryParam(params, "personId")).toBe(42);
     expect(getOptionalIntegerQueryParam(params, "bad")).toBeUndefined();
     expect(getOptionalIntegerQueryParam(params, "missing")).toBeUndefined();
+  });
+});
+
+describe("validateDateRange", () => {
+  test("returns null when no date params are present", () => {
+    const params = new URLSearchParams("q=test");
+    expect(validateDateRange(params)).toBeNull();
+  });
+
+  test("returns null for valid YYYY-MM-DD dates", () => {
+    const params = new URLSearchParams("startDate=2024-01-01&endDate=2024-12-31");
+    expect(validateDateRange(params)).toBeNull();
+  });
+
+  test("returns 400 for non-ISO startDate", async () => {
+    const params = new URLSearchParams("startDate=01-01-2024");
+    const result = validateDateRange(params);
+    expect(result).not.toBeNull();
+    expect(result!.status).toBe(400);
+    await expect(result!.json()).resolves.toMatchObject({
+      message: expect.stringContaining("startDate"),
+    });
+  });
+
+  test("returns 400 for non-ISO endDate", async () => {
+    const params = new URLSearchParams("endDate=2024/12/31");
+    const result = validateDateRange(params);
+    expect(result).not.toBeNull();
+    expect(result!.status).toBe(400);
+  });
+
+  test("returns 400 for partial date string", async () => {
+    const params = new URLSearchParams("startDate=2024-01");
+    const result = validateDateRange(params);
+    expect(result).not.toBeNull();
+    expect(result!.status).toBe(400);
+  });
+
+  test("allows one date param without the other", () => {
+    const paramsStart = new URLSearchParams("startDate=2024-06-01");
+    expect(validateDateRange(paramsStart)).toBeNull();
+
+    const paramsEnd = new URLSearchParams("endDate=2024-06-30");
+    expect(validateDateRange(paramsEnd)).toBeNull();
   });
 });

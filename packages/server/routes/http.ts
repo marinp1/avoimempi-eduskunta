@@ -116,3 +116,20 @@ export const getMappedPaginatedQueryParams = <TKeyMap extends QueryParamKeyMap>(
   ...getMappedOptionalQueryParams(searchParams, map),
   ...getPageLimitQueryParams(searchParams, options),
 });
+
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+export const validateDateRange = (
+  searchParams: URLSearchParams,
+): Response | null => {
+  for (const key of ["startDate", "endDate"] as const) {
+    const value = searchParams.get(key);
+    if (value && !ISO_DATE_RE.test(value)) {
+      return Response.json(
+        { message: `Invalid ${key} format; expected YYYY-MM-DD` },
+        { status: 400 },
+      );
+    }
+  }
+  return null;
+};

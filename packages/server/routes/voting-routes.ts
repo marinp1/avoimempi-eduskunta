@@ -72,9 +72,9 @@ export const createVotingRoutes = (db: VotingRepository) => ({
 
   "/api/votings/by-document/:identifier": {
     GET: async (req: BunRequest<"/api/votings/by-document/:identifier">) => {
-      const data = await db.fetchVotingsByDocument({
-        identifier: decodeURIComponent(req.params.identifier),
-      });
+      const identifier = decodeURIComponent(req.params.identifier).trim();
+      if (!identifier) return badRequest("Missing document identifier");
+      const data = await db.fetchVotingsByDocument({ identifier });
       return json(data);
     },
   },

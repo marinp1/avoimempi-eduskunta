@@ -19,6 +19,35 @@
 - Fetch methods return data directly, API routes wrap in Response with JSON
 - Client-side fetches use standard `fetch()` API
 
+## Security Middleware (packages/server/middleware/)
+
+### `security-headers.ts`
+- Exports `withSecurityHeaders(routes)` — wraps an entire route map to inject security headers on every response
+- Exports `addSecurityHeaders(response)` — wraps a single `Response`
+- Used in `index.ts`: `withSecurityHeaders({ ...staticRoutes, ...apiRoutes, "/api/*": fallback })`
+- Also called in the Bun `error()` handler for 500 responses
+- Type uses `any` for route handlers to accommodate Bun's varied handler signatures (sync, typed, HTMLBundle)
+
+### `rate-limiter.ts`
+- Exports `createRateLimiter({ maxRequests, windowMs })` returning `{ wrap(handler) }`
+- In-memory sliding window per client IP (x-forwarded-for → x-real-ip → "unknown")
+- Applied to: `/api/search` (30 req/60s), `/api/person/search` (30 req/60s), `/api/votings/search` (30 req/60s)
+
+## Route Validation Patterns (packages/server/routes/http.ts)
+
+### `validateDateRange`
+- Validates `startDate` / `endDate` query params against `YYYY-MM-DD` regex
+- Returns `Response | null`; call before building params and early-return if non-null
+- Applied to: interpellations, government-proposals, committee-reports, legislative-initiatives, written-questions, expert-statements, written-question-responses, oral-questions
+
+### Identifier route params
+- Pattern: `const identifier = decodeURIComponent(req.params.identifier).trim(); if (!identifier) return badRequest("Missing document identifier");`
+- Applied to all `by-identifier/:identifier` endpoints
+
+## Known Pre-existing Type Errors
+
+- `packages/client/pages/Composition/helpers.ts` and `index.tsx` have `'result' is of type 'unknown'` TS18046 errors — pre-existing, unrelated to security work
+
 ## UI Patterns
 
 ### Color Scheme

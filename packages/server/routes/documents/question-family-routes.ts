@@ -1,12 +1,14 @@
 import type { BunRequest } from "bun";
 import type { DocumentRepository } from "../../database/repositories/document-repository";
-import { getMappedPaginatedQueryParams, getSearchParams } from "../http";
-import { json, jsonOrNotFound } from "../route-responses";
+import { getMappedPaginatedQueryParams, getSearchParams, validateDateRange } from "../http";
+import { badRequest, json, jsonOrNotFound } from "../route-responses";
 
 export const createQuestionFamilyRoutes = (db: DocumentRepository) => ({
   "/api/written-questions": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
+      const dateError = validateDateRange(searchParams);
+      if (dateError) return dateError;
       const params = getMappedPaginatedQueryParams(
         searchParams,
         {
@@ -47,9 +49,9 @@ export const createQuestionFamilyRoutes = (db: DocumentRepository) => ({
     GET: async (
       req: BunRequest<"/api/written-questions/by-identifier/:identifier">,
     ) => {
-      const data = await db.fetchWrittenQuestionByIdentifier({
-        identifier: decodeURIComponent(req.params.identifier),
-      });
+      const identifier = decodeURIComponent(req.params.identifier).trim();
+      if (!identifier) return badRequest("Missing document identifier");
+      const data = await db.fetchWrittenQuestionByIdentifier({ identifier });
       return jsonOrNotFound(data);
     },
   },
@@ -64,6 +66,8 @@ export const createQuestionFamilyRoutes = (db: DocumentRepository) => ({
   "/api/expert-statements": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
+      const dateError = validateDateRange(searchParams);
+      if (dateError) return dateError;
       const params = getMappedPaginatedQueryParams(
         searchParams,
         {
@@ -113,6 +117,8 @@ export const createQuestionFamilyRoutes = (db: DocumentRepository) => ({
   "/api/written-question-responses": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
+      const dateError = validateDateRange(searchParams);
+      if (dateError) return dateError;
       const params = getMappedPaginatedQueryParams(
         searchParams,
         {
@@ -145,6 +151,8 @@ export const createQuestionFamilyRoutes = (db: DocumentRepository) => ({
   "/api/oral-questions": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
+      const dateError = validateDateRange(searchParams);
+      if (dateError) return dateError;
       const params = getMappedPaginatedQueryParams(
         searchParams,
         {
@@ -185,9 +193,9 @@ export const createQuestionFamilyRoutes = (db: DocumentRepository) => ({
     GET: async (
       req: BunRequest<"/api/oral-questions/by-identifier/:identifier">,
     ) => {
-      const data = await db.fetchOralQuestionByIdentifier({
-        identifier: decodeURIComponent(req.params.identifier),
-      });
+      const identifier = decodeURIComponent(req.params.identifier).trim();
+      if (!identifier) return badRequest("Missing document identifier");
+      const data = await db.fetchOralQuestionByIdentifier({ identifier });
       return jsonOrNotFound(data);
     },
   },
