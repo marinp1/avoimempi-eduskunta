@@ -10,6 +10,7 @@ import React, { useEffect, useState } from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { apiFetch } from "#client/utils/fetch";
 import { PageDataSourcesDrawer } from "./components/PageDataSourcesDrawer";
+import { OverlayDrawerProvider } from "./context/OverlayDrawerContext";
 import { TraceProvider } from "./context/TraceContext";
 import { Navigation } from "./Navigation";
 import { type RouteName, routes } from "./pages";
@@ -80,9 +81,10 @@ export const App: React.FC = () => {
 
   return (
     <TraceProvider>
-      <CssBaseline />
-      <GlobalStyles
-        styles={{
+      <OverlayDrawerProvider>
+        <CssBaseline />
+        <GlobalStyles
+          styles={{
           "@font-face": [
             {
               fontFamily: "Zilla Slab",
@@ -156,102 +158,103 @@ export const App: React.FC = () => {
               scrollBehavior: "auto !important",
             },
           },
-        }}
-      />
-      <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
-      <Container
-        maxWidth="xl"
-        sx={{
-          mt: { xs: 2, sm: spacing.md },
-          px: { xs: 1.5, sm: 3 },
-          pb: { xs: 10, lg: spacing.xl },
-        }}
-      >
-        <Box
-          key={activeTab}
+          }}
+        />
+        <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+        <Container
+          maxWidth="xl"
           sx={{
-            position: "relative",
-            animation: `pageEnter ${transitions.slow}ms ${transitions.easing.emphasized}`,
-            transformOrigin: "top center",
-            "@media (prefers-reduced-motion: reduce)": {
-              animation: "none",
-            },
+            mt: { xs: 2, sm: spacing.md },
+            px: { xs: 1.5, sm: 3 },
+            pb: { xs: 10, lg: spacing.xl },
           }}
         >
-          <React.Suspense fallback={<PageSkeleton />}>
-            <ActivePage.Component />
-          </React.Suspense>
-        </Box>
+          <Box
+            key={activeTab}
+            sx={{
+              position: "relative",
+              animation: `pageEnter ${transitions.slow}ms ${transitions.easing.emphasized}`,
+              transformOrigin: "top center",
+              "@media (prefers-reduced-motion: reduce)": {
+                animation: "none",
+              },
+            }}
+          >
+            <React.Suspense fallback={<PageSkeleton />}>
+              <ActivePage.Component />
+            </React.Suspense>
+          </Box>
 
-        <Box
-          component="footer"
-          sx={{
-            mt: spacing.lg,
-            pt: spacing.md,
-            pb: spacing.sm,
-            textAlign: "center",
-            borderTop: `1px solid ${themedColors.dataBorder}`,
-          }}
-        >
-          {(() => {
-            const footerLineSx = { color: themedColors.textTertiary, display: "block", mt: 0.5, lineHeight: 1.6 };
-            return (
-              <>
-                <Typography variant="caption" sx={{ ...footerLineSx, mt: 0 }}>
-                  {t("disclaimer.source")}
-                </Typography>
-                <Typography variant="caption" sx={footerLineSx}>
-                  {t("disclaimer.unofficial")}
-                </Typography>
-                {dbInfo?.lastScraperRunAt && (
-                  <Typography variant="caption" sx={footerLineSx}>
-                    {t("disclaimer.lastScraperRunAt", {
-                      timestamp: new Date(dbInfo.lastScraperRunAt).toLocaleString("fi-FI"),
-                    })}
+          <Box
+            component="footer"
+            sx={{
+              mt: spacing.lg,
+              pt: spacing.md,
+              pb: spacing.sm,
+              textAlign: "center",
+              borderTop: `1px solid ${themedColors.dataBorder}`,
+            }}
+          >
+            {(() => {
+              const footerLineSx = { color: themedColors.textTertiary, display: "block", mt: 0.5, lineHeight: 1.6 };
+              return (
+                <>
+                  <Typography variant="caption" sx={{ ...footerLineSx, mt: 0 }}>
+                    {t("disclaimer.source")}
                   </Typography>
-                )}
-                {dbInfo?.lastMigratorRunAt && (
                   <Typography variant="caption" sx={footerLineSx}>
-                    {t("disclaimer.lastMigratorRunAt", {
-                      timestamp: new Date(dbInfo.lastMigratorRunAt).toLocaleString("fi-FI"),
-                    })}
+                    {t("disclaimer.unofficial")}
                   </Typography>
-                )}
-                {dbInfo?.lastMigrationTimestamp && (
-                  <Typography variant="caption" sx={footerLineSx}>
-                    {t("disclaimer.dbBuildTimestamp", {
-                      timestamp: new Date(dbInfo.lastMigrationTimestamp).toLocaleString("fi-FI"),
-                    })}
-                  </Typography>
-                )}
-                {versionInfo && (
-                  <Typography variant="caption" sx={footerLineSx}>
-                    {`v${versionInfo.version}${versionInfo.gitHash ? ` (${versionInfo.gitHash})` : ""}`}
-                  </Typography>
-                )}
-                {changeSummary && (
-                  <Typography variant="caption" sx={footerLineSx}>
-                    <Link
-                      href="/muutokset"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        window.history.pushState({}, "", "/muutokset");
-                        window.dispatchEvent(new PopStateEvent("popstate"));
-                      }}
-                      sx={{ color: "inherit", textDecorationColor: "inherit" }}
-                    >
-                      {changeSummary.totalNewRows + changeSummary.totalChangedRows > 0
-                        ? t("changesCount", { count: changeSummary.totalNewRows + changeSummary.totalChangedRows })
-                        : t("noChanges")}
-                    </Link>
-                  </Typography>
-                )}
-              </>
-            );
-          })()}
-        </Box>
-      </Container>
-      <PageDataSourcesDrawer activeRoute={activeTab} />
+                  {dbInfo?.lastScraperRunAt && (
+                    <Typography variant="caption" sx={footerLineSx}>
+                      {t("disclaimer.lastScraperRunAt", {
+                        timestamp: new Date(dbInfo.lastScraperRunAt).toLocaleString("fi-FI"),
+                      })}
+                    </Typography>
+                  )}
+                  {dbInfo?.lastMigratorRunAt && (
+                    <Typography variant="caption" sx={footerLineSx}>
+                      {t("disclaimer.lastMigratorRunAt", {
+                        timestamp: new Date(dbInfo.lastMigratorRunAt).toLocaleString("fi-FI"),
+                      })}
+                    </Typography>
+                  )}
+                  {dbInfo?.lastMigrationTimestamp && (
+                    <Typography variant="caption" sx={footerLineSx}>
+                      {t("disclaimer.dbBuildTimestamp", {
+                        timestamp: new Date(dbInfo.lastMigrationTimestamp).toLocaleString("fi-FI"),
+                      })}
+                    </Typography>
+                  )}
+                  {versionInfo && (
+                    <Typography variant="caption" sx={footerLineSx}>
+                      {`v${versionInfo.version}${versionInfo.gitHash ? ` (${versionInfo.gitHash})` : ""}`}
+                    </Typography>
+                  )}
+                  {changeSummary && (
+                    <Typography variant="caption" sx={footerLineSx}>
+                      <Link
+                        href="/muutokset"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          window.history.pushState({}, "", "/muutokset");
+                          window.dispatchEvent(new PopStateEvent("popstate"));
+                        }}
+                        sx={{ color: "inherit", textDecorationColor: "inherit" }}
+                      >
+                        {changeSummary.totalNewRows + changeSummary.totalChangedRows > 0
+                          ? t("changesCount", { count: changeSummary.totalNewRows + changeSummary.totalChangedRows })
+                          : t("noChanges")}
+                      </Link>
+                    </Typography>
+                  )}
+                </>
+              );
+            })()}
+          </Box>
+        </Container>
+        <PageDataSourcesDrawer activeRoute={activeTab} />
+      </OverlayDrawerProvider>
     </TraceProvider>
   );
 };

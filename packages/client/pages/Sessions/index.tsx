@@ -25,6 +25,7 @@ import { DocumentCard, RelatedVotings } from "#client/components/DocumentCards";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { SourceText } from "#client/components/SourceText";
 import { VotingSubRow } from "#client/components/VotingCard";
+import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import {
   isDateWithinHallituskausi,
   useHallituskausi,
@@ -69,7 +70,9 @@ import {
 } from "#client/utils/eduskunta-links";
 import { apiFetch } from "#client/utils/fetch";
 import { CalendarGrid } from "./components/CalendarGrid";
+import { SessionSectionRow } from "./components/SessionSectionRow";
 import { SessionSectionPanel } from "./components/SessionSectionPanel";
+import { buildSessionsUrl, parseSessionsUrlState } from "./url-state";
 
 const SPEECH_PAGE_SIZE = 20;
 
@@ -80,26 +83,8 @@ type SectionLoadErrorKey =
   | "subSections"
   | "rollCall";
 
-const getInitialDate = (): string => {
-  const params = new URLSearchParams(window.location.search);
-  const dateParam = params.get("date");
-  if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
-    return dateParam;
-  }
-  return new Date().toISOString().split("T")[0];
-};
-
-const getInitialSessionKey = (): string | null => {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("session");
-};
-
-const getInitialSectionKey = (): string | null => {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("section");
-};
-
 export default () => {
+  const initialUrlState = parseSessionsUrlState(window.location.search);
   const { t: tApp } = useScopedTranslation("app");
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tErrors } = useScopedTranslation("errors");
@@ -109,13 +94,19 @@ export default () => {
     tSessions("speechContentLatest", { date });
   const themedColors = useThemedColors();
   const { selectedHallituskausi } = useHallituskausi();
+  const {
+    openRootDrawer,
+    replaceDrawer,
+    resetDrawer,
+    currentDrawerKey,
+  } = useOverlayDrawer();
 
   const [sessions, setSessions] = useState<SessionWithSections[]>([]);
   const [vaskiLatestSpeechDate, setVaskiLatestSpeechDate] = useState<
     string | null
   >(null);
   const [loading, setLoading] = useState(true);
-  const [date, setDate] = useState<string>(getInitialDate());
+  const [date, setDate] = useState<string>(initialUrlState.date);
   const [error, setError] = useState<string | null>(null);
   const [allValidDates, setAllValidDates] = useState<Set<string>>(new Set());
   const [datesLoading, setDatesLoading] = useState(true);
@@ -159,10 +150,10 @@ export default () => {
     Record<number, Partial<Record<SectionLoadErrorKey, string>>>
   >({});
   const [focusedSessionKey, setFocusedSessionKey] = useState<string | null>(
-    getInitialSessionKey(),
+    initialUrlState.sessionKey,
   );
   const [focusedSectionKey, setFocusedSectionKey] = useState<string | null>(
-    getInitialSectionKey(),
+    initialUrlState.sectionKey,
   );
   const [expandedMinutesSessions, setExpandedMinutesSessions] = useState<
     Set<string>
@@ -234,23 +225,42 @@ export default () => {
 
   useEffect(() => {
     const handlePopState = () => {
-      setDate(getInitialDate());
-      setFocusedSessionKey(getInitialSessionKey());
-      setFocusedSectionKey(getInitialSectionKey());
+      const next = parseSessionsUrlState(window.location.search);
+      setDate(next.date);
+      setFocusedSessionKey(next.sessionKey);
+      setFocusedSectionKey(next.sectionKey);
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  const updateURL = (newDate: string) => {
-    const url = new URL(window.location.href);
-    url.searchParams.set("date", newDate);
-    window.history.pushState({}, "", url.toString());
+  const updateURL = ({
+    nextDate,
+    sessionKey,
+    sectionKey,
+  }: {
+    nextDate: string;
+    sessionKey: string | null;
+    sectionKey: string | null;
+  }) => {
+    const nextUrl = buildSessionsUrl(
+      window.location.pathname,
+      window.location.search,
+      {
+        date: nextDate,
+        sessionKey,
+        sectionKey,
+      },
+    );
+    window.history.pushState({}, "", nextUrl);
   };
 
   const handleDateChange = (newDate: string) => {
     setDate(newDate);
-    updateURL(newDate);
+    setFocusedSessionKey(null);
+    setFocusedSectionKey(null);
+    resetDrawer();
+    updateURL({ nextDate: newDate, sessionKey: null, sectionKey: null });
   };
 
   const isValidDate = (dateString: string): boolean =>
@@ -1034,6 +1044,61 @@ export default () => {
           candidate.id === sectionId || candidate.key === sectionKey,
       );
 
+  const findSessionForSection = (sectionKey: string) =>
+    sessions.find((session) =>
+      (session.sections || []).some((section) => section.key === sectionKey),
+    );
+
+  const buildSectionDrawerKey = (sectionKey: string) =>
+    `session-section:${sectionKey}`;
+
+  const openSectionPanel = (
+    sectionId: number,
+    sectionKey: string,
+    sessionKey?: string | null,
+  ) => {
+    const targetSection = findSectionInCurrentSessions(sectionId, sectionKey);
+    if (!targetSection) return;
+    const resolvedSessionKey =
+      sessionKey ||
+      findSessionForSection(targetSection.key)?.key ||
+      focusedSessionKey ||
+      null;
+
+    setFocusedSessionKey(resolvedSessionKey);
+    setFocusedSectionKey(targetSection.key);
+    updateURL({
+      nextDate: date,
+      sessionKey: resolvedSessionKey,
+      sectionKey: targetSection.key,
+    });
+    resetDrawer();
+    void loadSectionData(targetSection.id, targetSection.key);
+  };
+
+  useEffect(() => {
+    if (!focusedSectionKey) return;
+    const targetSession = findSessionForSection(focusedSectionKey);
+    const targetSection = sessions
+      .flatMap((session) => session.sections || [])
+      .find((section) => section.key === focusedSectionKey);
+
+    if (!targetSection) {
+      setFocusedSectionKey(null);
+      return;
+    }
+
+    if (targetSession && focusedSessionKey !== targetSession.key) {
+      setFocusedSessionKey(targetSession.key);
+    }
+
+    void loadSectionData(targetSection.id, targetSection.key);
+  }, [focusedSectionKey, focusedSessionKey, sessions]);
+
+  useEffect(() => {
+    resetDrawer();
+  }, [focusedSectionKey, viewMode, resetDrawer]);
+
   const renderSessionMinutesOutline = (session: SessionWithSections) => {
     const items = (session.minutes_items || [])
       .slice()
@@ -1131,11 +1196,20 @@ export default () => {
                           item.section_key!,
                         );
                         if (!targetSection) return;
-                        setFocusedSectionKey(targetSection.key);
-                        if (!expandedSections.has(targetSection.id)) {
-                          void toggleSection(
+                        setFocusedSessionKey(session.key);
+                        if (viewMode === "timeline") {
+                          setFocusedSectionKey(targetSection.key);
+                          if (!expandedSections.has(targetSection.id)) {
+                            void toggleSection(
+                              targetSection.id,
+                              targetSection.key,
+                            );
+                          }
+                        } else {
+                          openSectionPanel(
                             targetSection.id,
                             targetSection.key,
+                            session.key,
                           );
                         }
                         requestAnimationFrame(() =>
@@ -1976,6 +2050,425 @@ export default () => {
     );
   };
 
+  const renderSectionDetailContent = (
+    section: Section,
+    session: SessionWithSections,
+  ) => {
+    const speechData = sectionSpeechData[section.id];
+    const speeches = speechData?.speeches || [];
+    const hasSpeechContent = speeches.some((speech) => speech.content);
+    const votings = sectionVotings[section.id] || [];
+    const sectionErrorReasons = (
+      Object.entries(
+        sectionLoadErrors[section.id] || {},
+      ) as Array<[SectionLoadErrorKey, string]>
+    )
+      .filter(([, reason]) => Boolean(reason))
+      .map(([key, reason]) => `${sectionLoadErrorLabels[key]} (${reason})`);
+    const sectionSubSectionsContent = renderSectionSubSections(section);
+    const sectionMinutesContent = renderSectionMinutesContent(section);
+    const docRefs = extractSectionDocRefs(section);
+    const sectionLinksContent = renderSectionLinks(section);
+    const sectionNoticesContent = renderSectionNotices(session, section.key);
+    const sectionRollCallContent = renderSectionRollCall(section);
+    const sectionVotingsContent = renderSectionVotings(votings, session);
+    const hasAdditionalExpandedContent =
+      Boolean(renderVaskiInfo(section, false)) ||
+      Boolean(renderMinutesInfo(section, false)) ||
+      Boolean(sectionSubSectionsContent) ||
+      Boolean(sectionMinutesContent) ||
+      docRefs.length > 0 ||
+      Boolean(sectionLinksContent) ||
+      Boolean(sectionNoticesContent) ||
+      Boolean(sectionRollCallContent);
+
+    return (
+      <Box>
+        {sectionErrorReasons.length > 0 && (
+          <Alert
+            severity="warning"
+            sx={{ mb: 1.5 }}
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                onClick={() => void loadSectionData(section.id, section.key)}
+                sx={{
+                  ...commonStyles.compactTextMd,
+                  textTransform: "none",
+                }}
+              >
+                {tCommon("retry")}
+              </Button>
+            }
+          >
+            {tErrors("loadFailedWithReason", {
+              reason: sectionErrorReasons.join(", "),
+            })}
+          </Alert>
+        )}
+        {renderVaskiInfo(section, false)}
+        {renderMinutesInfo(section, false)}
+        {sectionSubSectionsContent}
+        {sectionMinutesContent}
+        {docRefs.map((ref) => (
+          <DocumentCard key={ref.identifier} docRef={ref} />
+        ))}
+        {docRefs.length > 0 && section.voting_count === 0 && (
+          <RelatedVotings identifiers={docRefs.map((r) => r.identifier)} />
+        )}
+        {sectionLinksContent}
+        {sectionNoticesContent}
+        {sectionRollCallContent}
+        {loadingVotings.has(section.id) ? (
+          <Box
+            sx={{ py: 2, textAlign: "center" }}
+            role="status"
+            aria-live="polite"
+            aria-label={tApp("loading")}
+          >
+            <CircularProgress size={20} sx={{ color: themedColors.primary }} />
+            <Typography
+              sx={{
+                ...commonStyles.compactTextXs,
+                color: colors.textTertiary,
+              }}
+            >
+              {tApp("loading")}
+            </Typography>
+          </Box>
+        ) : (
+          sectionVotingsContent
+        )}
+
+        {loadingSpeeches.has(section.id) ? (
+          <Box
+            sx={{ py: 2, textAlign: "center" }}
+            role="status"
+            aria-live="polite"
+            aria-label={tApp("loading")}
+          >
+            <CircularProgress size={20} sx={{ color: themedColors.primary }} />
+            <Typography
+              sx={{
+                ...commonStyles.compactTextXs,
+                color: colors.textTertiary,
+              }}
+            >
+              {tApp("loading")}
+            </Typography>
+          </Box>
+        ) : speeches.length > 0 ? (
+          <Box
+            sx={{
+              mt: 1.5,
+              display: "flex",
+              flexDirection: "column",
+              gap: 0.75,
+            }}
+          >
+            <Typography
+              sx={{
+                ...commonStyles.compactTextLg,
+                fontWeight: 600,
+                color: colors.textSecondary,
+                textTransform: "uppercase",
+              }}
+            >
+              {tSessions("speeches")} ({speechData?.total ?? speeches.length})
+            </Typography>
+            {!hasSpeechContent && (
+              <Typography
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textTertiary,
+                }}
+              >
+                {tSessions("speechContentPending")}
+              </Typography>
+            )}
+            {!hasSpeechContent && vaskiLatestSpeechDate && (
+              <Typography
+                sx={{
+                  ...commonStyles.compactTextLg,
+                  color: colors.textTertiary,
+                }}
+              >
+                {speechContentLatestLabel(formatDate(vaskiLatestSpeechDate))}
+              </Typography>
+            )}
+            {speeches.map((speech) => {
+              const speechTime = formatSpeechTimeRange(speech);
+              return (
+                <Box
+                  key={speech.id}
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 1,
+                    background: colors.backgroundSubtle,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: speech.content ? 1 : 0,
+                    }}
+                  >
+                    <Chip
+                      label={speech.ordinal_number ?? speech.ordinal}
+                      size="small"
+                      sx={{
+                        background: `${colors.primaryLight}30`,
+                        color: colors.primaryLight,
+                        fontWeight: 600,
+                        fontSize: "0.625rem",
+                        height: 18,
+                        minWidth: 24,
+                      }}
+                    />
+                    <Typography
+                      sx={{
+                        fontWeight: 600,
+                        fontSize: "0.8125rem",
+                        flex: 1,
+                      }}
+                    >
+                      {speech.first_name} {speech.last_name}
+                    </Typography>
+                    {speech.party_abbreviation && (
+                      <Chip
+                        label={speech.party_abbreviation}
+                        size="small"
+                        sx={{
+                          fontSize: "0.625rem",
+                          height: 18,
+                        }}
+                      />
+                    )}
+                    {speech.speech_type && (
+                      <Typography
+                        sx={{
+                          fontSize: "0.6875rem",
+                          color: colors.textTertiary,
+                        }}
+                      >
+                        {speech.speech_type}
+                      </Typography>
+                    )}
+                    {speechTime && (
+                      <Typography
+                        sx={{
+                          fontSize: "0.6875rem",
+                          color: colors.textTertiary,
+                        }}
+                      >
+                        {speechTime}
+                      </Typography>
+                    )}
+                  </Box>
+                  {speech.content && (
+                    <Box
+                      sx={{
+                        p: 1.5,
+                        borderRadius: 1,
+                        borderLeft: `3px solid ${colors.primaryLight}`,
+                        background: colors.backgroundDefault,
+                      }}
+                    >
+                      <SourceText
+                        sx={{
+                          fontSize: "0.8125rem",
+                          color: colors.textPrimary,
+                          whiteSpace: "pre-wrap",
+                          lineHeight: 1.6,
+                        }}
+                      >
+                        {speech.content}
+                      </SourceText>
+                    </Box>
+                  )}
+                </Box>
+              );
+            })}
+            {speechData && speechData.page < speechData.totalPages && (
+              <Box sx={{ textAlign: "center", mt: 1 }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    loadMoreSpeeches(section.id, section.key);
+                  }}
+                  disabled={loadingMoreSpeeches.has(section.id)}
+                  sx={{
+                    textTransform: "none",
+                    borderColor: colors.primaryLight,
+                    color: colors.primaryLight,
+                    fontSize: "0.8125rem",
+                  }}
+                >
+                  {loadingMoreSpeeches.has(section.id) ? (
+                    <CircularProgress size={16} sx={{ mr: 1 }} />
+                  ) : null}
+                  {tSessions("loadMoreProgress", {
+                    loaded: speeches.length,
+                    total: speechData.total,
+                  })}
+                </Button>
+              </Box>
+            )}
+          </Box>
+        ) : null}
+        {!loadingSpeeches.has(section.id) &&
+          !loadingVotings.has(section.id) &&
+          speeches.length === 0 &&
+          votings.length === 0 &&
+          sectionErrorReasons.length === 0 &&
+          !hasAdditionalExpandedContent && (
+            <Typography
+              sx={{
+                py: 2,
+                textAlign: "center",
+                fontSize: "0.8125rem",
+                color: colors.textTertiary,
+              }}
+            >
+              {tSessions("noSectionContent")}
+            </Typography>
+          )}
+      </Box>
+    );
+  };
+
+  const activeSession =
+    focusedSectionKey
+      ? findSessionForSection(focusedSectionKey)
+      : sessions.find((session) => session.key === focusedSessionKey) || null;
+  const activeSection =
+    focusedSectionKey && activeSession
+      ? (activeSession.sections || []).find(
+          (section) => section.key === focusedSectionKey,
+        ) || null
+      : null;
+
+  const buildSectionDrawerConfig = (
+    section: Section,
+    session: SessionWithSections,
+  ) => ({
+    drawerKey: buildSectionDrawerKey(section.key),
+    title: `${session.key} · ${formatDate(session.date || date)}`,
+    subtitle:
+      section.title || section.processing_title || tSessions("noTitle"),
+    meta: (
+      <>
+        <Chip
+          label={getSectionOrderLabel(section)}
+          size="small"
+          sx={{
+            background: colors.primary,
+            color: "#fff",
+            fontWeight: 700,
+            ...commonStyles.compactTextMd,
+          }}
+        />
+        <Chip
+          label={tSessions("votingsCount", {
+            count: section.voting_count ?? 0,
+          })}
+          size="small"
+          sx={{
+            background: `${themedColors.success}15`,
+            color: themedColors.success,
+          }}
+        />
+        <Chip
+          label={tSessions("speechesCount", {
+            count: section.speech_count ?? 0,
+          })}
+          size="small"
+          sx={{
+            background: `${colors.primaryLight}20`,
+            color: colors.primaryLight,
+          }}
+        />
+      </>
+    ),
+    actions: (
+      <Link
+        href={refs.session(session.key, session.date)}
+        underline="hover"
+        sx={{
+          ...commonStyles.compactTextLg,
+          fontWeight: 700,
+          color: colors.primaryLight,
+        }}
+      >
+        {tSessions("sectionPanelOpenSession")}
+      </Link>
+    ),
+    content: renderSectionDetailContent(section, session),
+    onClose: () => {
+      setFocusedSectionKey(null);
+      updateURL({
+        nextDate: date,
+        sessionKey: session.key,
+        sectionKey: null,
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (viewMode !== "list") {
+      resetDrawer();
+      return;
+    }
+
+    if (!activeSection || !activeSession) {
+      resetDrawer();
+      return;
+    }
+
+    const sectionDrawerKey = buildSectionDrawerKey(activeSection.key);
+    const config = buildSectionDrawerConfig(activeSection, activeSession);
+
+    if (currentDrawerKey === sectionDrawerKey) {
+      replaceDrawer(config);
+      return;
+    }
+
+    if (currentDrawerKey === null) {
+      openRootDrawer(config);
+    }
+  }, [
+    activeSection,
+    activeSession,
+    currentDrawerKey,
+    date,
+    focusedSectionKey,
+    focusedSessionKey,
+    openRootDrawer,
+    replaceDrawer,
+    resetDrawer,
+    sectionLinks,
+    sectionLoadErrors,
+    sectionRollCalls,
+    sectionSpeechData,
+    sectionSubSections,
+    sectionVotings,
+    tSessions,
+    themedColors.success,
+    viewMode,
+    loadingLinks,
+    loadingMoreSpeeches,
+    loadingRollCalls,
+    loadingSpeeches,
+    loadingSubSections,
+    loadingVotings,
+    vaskiLatestSpeechDate,
+  ]);
+
   return (
     <Box>
       <PageHeader
@@ -2125,7 +2618,12 @@ export default () => {
             })()}
         </Box>
       ) : (
-        <DataCard sx={{ p: 0, overflow: "hidden" }}>
+        <DataCard
+          sx={{
+            p: 0,
+            overflow: "hidden",
+          }}
+        >
           {/* Date banner */}
           <Box sx={{ p: 2.5, borderBottom: `1px solid ${colors.dataBorder}` }}>
             <Box
@@ -2144,7 +2642,423 @@ export default () => {
             </Box>
           </Box>
 
-          {sessions.map((session) => {
+          {viewMode === "list" ? (
+            <Box
+              sx={{
+                display: "block",
+              }}
+            >
+              <Box sx={{ minWidth: 0 }}>
+                {sessions.map((session) => {
+                  const isFocusedSession = focusedSessionKey === session.key;
+                  return (
+                    <Box
+                      key={session.id}
+                      sx={{
+                        outline: isFocusedSession
+                          ? `2px solid ${colors.primaryLight}`
+                          : "none",
+                        outlineOffset: isFocusedSession ? "-2px" : 0,
+                      }}
+                    >
+                      {/* Session header */}
+                      <Box
+                        sx={{
+                          p: 2,
+                          borderBottom: `1px solid ${colors.dataBorder}`,
+                          background: isFocusedSession
+                            ? `${colors.primaryLight}14`
+                            : colors.backgroundSubtle,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1.5,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <Link
+                          href={refs.session(session.key, session.date)}
+                          underline="hover"
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: "0.9375rem",
+                            color: colors.textPrimary,
+                          }}
+                        >
+                          {session.key || tSessions("session")}
+                        </Link>
+                        {session.number !== undefined && (
+                          <Chip
+                            label={tSessions("sessionNumberLine", {
+                              value: session.number,
+                            })}
+                            size="small"
+                            sx={{
+                              fontSize: "0.6875rem",
+                              height: 22,
+                              background: "#fff",
+                              color: colors.textSecondary,
+                            }}
+                          />
+                        )}
+                        {session.type && (
+                          <Chip
+                            label={tSessions("sessionTypeLine", {
+                              value: session.type,
+                            })}
+                            size="small"
+                            sx={{
+                              fontSize: "0.6875rem",
+                              height: 22,
+                              background: "#fff",
+                              color: colors.textSecondary,
+                            }}
+                          />
+                        )}
+                        <Box
+                          sx={{
+                            flex: "1 1 100%",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 0.5,
+                          }}
+                        >
+                          {session.agenda_title && (
+                            <Typography
+                              sx={{
+                                fontSize: "0.8125rem",
+                                color: colors.textSecondary,
+                              }}
+                            >
+                              {session.agenda_title}
+                            </Typography>
+                          )}
+                          {session.description && (
+                            <Typography
+                              sx={{
+                                ...commonStyles.compactTextLg,
+                                color: colors.textTertiary,
+                              }}
+                            >
+                              {session.description}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+
+                      {/* Session summary */}
+                      <Box
+                        sx={{
+                          p: 2,
+                          borderBottom: `1px solid ${colors.dataBorder}`,
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 2,
+                          alignItems: "center",
+                          background: "#fff",
+                        }}
+                      >
+                        <Chip
+                          label={tHome("sectionCount", {
+                            count: session.section_count,
+                          })}
+                          size="small"
+                          sx={{
+                            fontSize: "0.6875rem",
+                            height: 22,
+                            background: `${colors.primaryLight}20`,
+                            color: colors.primaryLight,
+                          }}
+                        />
+                        <Chip
+                          icon={<HowToVoteIcon sx={{ fontSize: 14 }} />}
+                          label={tHome("votingCount", {
+                            count: session.voting_count,
+                          })}
+                          size="small"
+                          sx={{
+                            fontSize: "0.6875rem",
+                            height: 22,
+                            background: `${themedColors.success}15`,
+                            color: themedColors.success,
+                          }}
+                        />
+                        {session.start_time_reported && (
+                          <Typography
+                            sx={{
+                              ...commonStyles.compactTextLg,
+                              color: colors.textSecondary,
+                            }}
+                          >
+                            {tSessions("startReportedLine", {
+                              value: formatTime(session.start_time_reported),
+                            })}
+                          </Typography>
+                        )}
+                        {session.start_time_actual && (
+                          <Typography
+                            sx={{
+                              ...commonStyles.compactTextLg,
+                              color: colors.textSecondary,
+                            }}
+                          >
+                            {tSessions("startActualLine", {
+                              value: formatTime(session.start_time_actual),
+                            })}
+                          </Typography>
+                        )}
+                        {session.agenda_state && (
+                          <Typography
+                            sx={{
+                              ...commonStyles.compactTextLg,
+                              color: colors.textSecondary,
+                            }}
+                          >
+                            {tSessions("agendaStateLine", {
+                              value: session.agenda_state,
+                            })}
+                          </Typography>
+                        )}
+                        {session.year !== undefined && (
+                          <Typography
+                            sx={{
+                              ...commonStyles.compactTextLg,
+                              color: colors.textSecondary,
+                            }}
+                          >
+                            {tSessions("sessionYearLine", { value: session.year })}
+                          </Typography>
+                        )}
+                      </Box>
+
+                      {renderSessionNotices(session)}
+                      {renderSessionMinutesOutline(session)}
+                      {renderSessionAttachments(session)}
+
+                      {vaskiLatestSpeechDate &&
+                        new Date(session.date!).getTime() >
+                          new Date(vaskiLatestSpeechDate).getTime() && (
+                          <Box
+                            sx={{
+                              p: 2,
+                              borderBottom: `1px solid ${colors.dataBorder}`,
+                            }}
+                          >
+                            <Alert severity="info" sx={{ alignItems: "center" }}>
+                              <Typography sx={{ fontSize: "0.8125rem" }}>
+                                {tSessions("speechContentPending")}
+                              </Typography>
+                              <Typography sx={{ fontSize: "0.8125rem" }}>
+                                {speechContentLatestLabel(
+                                  formatDate(vaskiLatestSpeechDate),
+                                )}
+                              </Typography>
+                            </Alert>
+                          </Box>
+                        )}
+
+                      {session.sections?.map((section) => {
+                        const isActive = focusedSectionKey === section.key;
+                        const vaskiInfoCompact = renderVaskiInfo(section, true);
+                        const minutesInfoCompact = renderMinutesInfo(section, true);
+
+                        return (
+                          <SessionSectionRow
+                            key={section.id}
+                            sectionKey={section.key}
+                            isActive={isActive}
+                            isFocused={isActive}
+                            onSelect={() =>
+                              openSectionPanel(section.id, section.key, session.key)
+                            }
+                          >
+                            <Box sx={{ display: "flex", gap: 1.25 }}>
+                              <Chip
+                                label={getSectionOrderLabel(section)}
+                                size="small"
+                                sx={{
+                                  background: isActive ? colors.primary : "#fff",
+                                  color: isActive ? "#fff" : colors.textSecondary,
+                                  fontWeight: 700,
+                                  ...commonStyles.compactTextMd,
+                                  height: 22,
+                                  minWidth: 28,
+                                  flexShrink: 0,
+                                  mt: 0.1,
+                                }}
+                              />
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography
+                                  sx={{
+                                    fontWeight: 700,
+                                    fontSize: "0.875rem",
+                                    color: colors.textPrimary,
+                                    wordBreak: "break-word",
+                                  }}
+                                >
+                                  {section.title ||
+                                    section.processing_title ||
+                                    tSessions("noTitle")}
+                                </Typography>
+                                {section.minutes_item_order != null && (
+                                  <Typography
+                                    sx={{
+                                      ...commonStyles.compactTextLg,
+                                      color: colors.textTertiary,
+                                      mt: 0.25,
+                                    }}
+                                  >
+                                    {tSessions("minutesOrder")}{" "}
+                                    {section.minutes_item_order}
+                                  </Typography>
+                                )}
+                                {section.note && (
+                                  <Typography
+                                    sx={{
+                                      ...commonStyles.compactTextLg,
+                                      color: colors.textSecondary,
+                                      mt: 0.35,
+                                    }}
+                                  >
+                                    {section.note}
+                                  </Typography>
+                                )}
+                                {section.processing_title &&
+                                  section.processing_title !== section.title && (
+                                    <Typography
+                                      sx={{
+                                        ...commonStyles.compactTextLg,
+                                        color: colors.textTertiary,
+                                        mt: 0.25,
+                                      }}
+                                    >
+                                      {tSessions("processingLine", {
+                                        value: section.processing_title,
+                                      })}
+                                    </Typography>
+                                  )}
+                                {section.resolution && (
+                                  <Typography
+                                    sx={{
+                                      ...commonStyles.compactTextLg,
+                                      color: colors.textTertiary,
+                                      mt: 0.25,
+                                    }}
+                                  >
+                                    {tSessions("resolutionLine", {
+                                      value: section.resolution,
+                                    })}
+                                  </Typography>
+                                )}
+                                {vaskiInfoCompact}
+                                {minutesInfoCompact}
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    gap: 0.75,
+                                    flexWrap: "wrap",
+                                    mt: 0.9,
+                                  }}
+                                >
+                                  <Chip
+                                    label={tSessions("votingsCount", {
+                                      count: section.voting_count ?? 0,
+                                    })}
+                                    size="small"
+                                    sx={{
+                                      fontSize: "0.6875rem",
+                                      height: 20,
+                                      background: `${themedColors.success}15`,
+                                      color: themedColors.success,
+                                    }}
+                                  />
+                                  <Chip
+                                    label={tSessions("speechesCount", {
+                                      count: section.speech_count ?? 0,
+                                    })}
+                                    size="small"
+                                    sx={{
+                                      fontSize: "0.6875rem",
+                                      height: 20,
+                                      background: `${colors.primaryLight}20`,
+                                      color: colors.primaryLight,
+                                    }}
+                                  />
+                                  <Chip
+                                    label={tSessions("speakersCount", {
+                                      count: section.speaker_count ?? 0,
+                                    })}
+                                    size="small"
+                                    sx={{ fontSize: "0.6875rem", height: 20 }}
+                                  />
+                                  <Chip
+                                    label={tSessions("partiesCount", {
+                                      count: section.party_count ?? 0,
+                                    })}
+                                    size="small"
+                                    sx={{ fontSize: "0.6875rem", height: 20 }}
+                                  />
+                                </Box>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    gap: 1.25,
+                                    flexWrap: "wrap",
+                                    mt: 0.65,
+                                  }}
+                                >
+                                  {section.agenda_key && (
+                                    <Typography
+                                      sx={{
+                                        ...commonStyles.compactTextLg,
+                                        color: colors.textTertiary,
+                                      }}
+                                    >
+                                      {tSessions("agendaKeyLine", {
+                                        value: section.agenda_key,
+                                      })}
+                                    </Typography>
+                                  )}
+                                  {section.vaski_id !== undefined &&
+                                    section.vaski_id !== null && (
+                                      <Typography
+                                        sx={{
+                                          ...commonStyles.compactTextLg,
+                                          color: colors.textTertiary,
+                                        }}
+                                      >
+                                        {tSessions("vaskiIdLine", {
+                                          value: section.vaski_id,
+                                        })}
+                                      </Typography>
+                                    )}
+                                  {section.modified_datetime && (
+                                    <Typography
+                                      sx={{
+                                        ...commonStyles.compactTextLg,
+                                        color: colors.textTertiary,
+                                      }}
+                                    >
+                                      {tSessions("sectionUpdatedLine", {
+                                        value: formatDateTime(
+                                          section.modified_datetime,
+                                        ),
+                                      })}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              </Box>
+                            </Box>
+                          </SessionSectionRow>
+                        );
+                      })}
+                    </Box>
+                  );
+                })}
+              </Box>
+
+            </Box>
+          ) : (
+            sessions.map((session) => {
             const isFocusedSession = focusedSessionKey === session.key;
             return (
               <Box
@@ -2350,1057 +3264,537 @@ export default () => {
                       </Alert>
                     </Box>
                   )}
-
-                {/* Sections list */}
-                {viewMode !== "timeline" &&
-                  session.sections?.map((section) => {
-                    const isExpanded = expandedSections.has(section.id);
-                    const isFocusedSection = focusedSectionKey === section.key;
-                    const speechData = sectionSpeechData[section.id];
-                    const speeches = speechData?.speeches || [];
-                    const hasSpeechContent = speeches.some(
-                      (speech) => speech.content,
-                    );
-                    const votings = sectionVotings[section.id] || [];
-                    const sectionErrorReasons = (
-                      Object.entries(
-                        sectionLoadErrors[section.id] || {},
-                      ) as Array<[SectionLoadErrorKey, string]>
-                    )
-                      .filter(([, reason]) => Boolean(reason))
-                      .map(
-                        ([key, reason]) =>
-                          `${sectionLoadErrorLabels[key]} (${reason})`,
+                <Box
+                  sx={{
+                    p: 2,
+                    borderBottom: `1px solid ${colors.dataBorder}`,
+                  }}
+                >
+                  <Box sx={{ position: "relative", pl: 2.5 }}>
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        left: 8,
+                        top: 4,
+                        bottom: 4,
+                        width: 2,
+                        background: `${colors.primaryLight}35`,
+                      }}
+                    />
+                    {session.sections?.map((section) => {
+                      const isExpanded = expandedSections.has(section.id);
+                      const speechData = sectionSpeechData[section.id];
+                      const speeches = speechData?.speeches || [];
+                      const hasSpeechContent = speeches.some(
+                        (speech) => speech.content,
                       );
-                    const vaskiInfoCompact = renderVaskiInfo(section, true);
-                    const vaskiInfoContent = renderVaskiInfo(section, false);
-                    const minutesInfoCompact = renderMinutesInfo(section, true);
-                    const minutesInfoContent = renderMinutesInfo(
-                      section,
-                      false,
-                    );
-                    const sectionSubSectionsContent =
-                      renderSectionSubSections(section);
-                    const sectionMinutesContent =
-                      renderSectionMinutesContent(section);
-                    const docRefs = extractSectionDocRefs(section);
-                    const sectionLinksContent = renderSectionLinks(section);
-                    const sectionNoticesContent = renderSectionNotices(
-                      session,
-                      section.key,
-                    );
-                    const sectionRollCallContent =
-                      renderSectionRollCall(section);
-                    const sectionVotingsContent = renderSectionVotings(
-                      votings,
-                      session,
-                    );
-                    const hasAdditionalExpandedContent =
-                      Boolean(vaskiInfoContent) ||
-                      Boolean(minutesInfoContent) ||
-                      Boolean(sectionSubSectionsContent) ||
-                      Boolean(sectionMinutesContent) ||
-                      docRefs.length > 0 ||
-                      Boolean(sectionLinksContent) ||
-                      Boolean(sectionNoticesContent) ||
-                      Boolean(sectionRollCallContent);
+                      const votings = sectionVotings[section.id] || [];
+                      const votingCount =
+                        section.voting_count ?? votings.length;
+                      const speechCount =
+                        section.speech_count ??
+                        speechData?.total ??
+                        speeches.length;
+                      const sectionErrorReasons = (
+                        Object.entries(
+                          sectionLoadErrors[section.id] || {},
+                        ) as Array<[SectionLoadErrorKey, string]>
+                      )
+                        .filter(([, reason]) => Boolean(reason))
+                        .map(
+                          ([key, reason]) =>
+                            `${sectionLoadErrorLabels[key]} (${reason})`,
+                        );
 
-                    return (
-                      <SessionSectionPanel
-                        key={section.id}
-                        sectionId={section.id}
-                        sectionKey={section.key}
-                        isExpanded={isExpanded}
-                        isFocused={isFocusedSection}
-                        onToggle={() => toggleSection(section.id, section.key)}
-                        headerContent={
-                          <>
-                            <Chip
-                              label={getSectionOrderLabel(section)}
-                              size="small"
+                      return (
+                        <Box
+                          key={section.id}
+                          id={`session-section-${section.key}`}
+                          sx={{ position: "relative", pl: 2, mb: 2 }}
+                        >
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              left: -2,
+                              top: 2,
+                              width: 16,
+                              height: 16,
+                              borderRadius: "50%",
+                              background: colors.primary,
+                              boxShadow: `0 0 0 3px ${colors.primaryLight}20`,
+                            }}
+                          />
+                          <Box
+                            sx={{
+                              p: 1.5,
+                              borderRadius: 1,
+                              background: colors.backgroundSubtle,
+                            }}
+                          >
+                            <Box
                               sx={{
-                                background: colors.primary,
-                                color: "#fff",
-                                fontWeight: 600,
-                                ...commonStyles.compactTextMd,
-                                height: 22,
-                                minWidth: 28,
-                                flexShrink: 0,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                flexWrap: "wrap",
                               }}
-                            />
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                            >
+                              <Chip
+                                label={getSectionOrderLabel(section)}
+                                size="small"
+                                sx={{
+                                  background: "#fff",
+                                  color: colors.textSecondary,
+                                  fontWeight: 600,
+                                  ...commonStyles.compactTextMd,
+                                  height: 22,
+                                }}
+                              />
                               <Typography
                                 sx={{
                                   fontWeight: 600,
                                   fontSize: "0.875rem",
                                   color: colors.textPrimary,
-                                  wordBreak: "break-word",
                                 }}
                               >
                                 {section.title ||
                                   section.processing_title ||
                                   tSessions("noTitle")}
                               </Typography>
-                              {section.minutes_item_order != null && (
-                                <Typography
-                                  sx={{
-                                    ...commonStyles.compactTextLg,
-                                    color: colors.textTertiary,
-                                  }}
-                                >
-                                  {tSessions("minutesOrder")}{" "}
-                                  {section.minutes_item_order}
-                                </Typography>
-                              )}
-                              {section.note && (
-                                <Typography
-                                  sx={{
-                                    ...commonStyles.compactTextLg,
-                                    color: colors.textSecondary,
-                                  }}
-                                >
-                                  {section.note}
-                                </Typography>
-                              )}
-                              {section.processing_title &&
-                                section.processing_title !== section.title && (
-                                  <Typography
-                                    sx={{
-                                      ...commonStyles.compactTextLg,
-                                      color: colors.textTertiary,
-                                    }}
-                                  >
-                                    {tSessions("processingLine", {
-                                      value: section.processing_title,
-                                    })}
-                                  </Typography>
-                                )}
-                              {section.resolution && (
-                                <Typography
-                                  sx={{
-                                    ...commonStyles.compactTextLg,
-                                    color: colors.textTertiary,
-                                  }}
-                                >
-                                  {tSessions("resolutionLine", {
-                                    value: section.resolution,
-                                  })}
-                                </Typography>
-                              )}
-                              {vaskiInfoCompact}
-                              {minutesInfoCompact}
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  gap: 1,
-                                  flexWrap: "wrap",
-                                  mt: 0.75,
-                                }}
-                              >
-                                <Chip
-                                  label={tSessions("votingsCount", {
-                                    count: section.voting_count ?? 0,
-                                  })}
-                                  size="small"
-                                  sx={{
-                                    fontSize: "0.6875rem",
-                                    height: 20,
-                                    background: `${themedColors.success}15`,
-                                    color: themedColors.success,
-                                  }}
-                                />
-                                <Chip
-                                  label={tSessions("speechesCount", {
-                                    count: section.speech_count ?? 0,
-                                  })}
-                                  size="small"
-                                  sx={{
-                                    fontSize: "0.6875rem",
-                                    height: 20,
-                                    background: `${colors.primaryLight}20`,
-                                    color: colors.primaryLight,
-                                  }}
-                                />
-                                <Chip
-                                  label={tSessions("speakersCount", {
-                                    count: section.speaker_count ?? 0,
-                                  })}
-                                  size="small"
-                                  sx={{ fontSize: "0.6875rem", height: 20 }}
-                                />
-                                <Chip
-                                  label={tSessions("partiesCount", {
-                                    count: section.party_count ?? 0,
-                                  })}
-                                  size="small"
-                                  sx={{ fontSize: "0.6875rem", height: 20 }}
-                                />
-                              </Box>
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  gap: 1.5,
-                                  flexWrap: "wrap",
-                                  mt: 0.5,
-                                }}
-                              >
-                                {section.agenda_key && (
-                                  <Typography
-                                    sx={{
-                                      ...commonStyles.compactTextLg,
-                                      color: colors.textTertiary,
-                                    }}
-                                  >
-                                    {tSessions("agendaKeyLine", {
-                                      value: section.agenda_key,
-                                    })}
-                                  </Typography>
-                                )}
-                                {section.vaski_id !== undefined &&
-                                  section.vaski_id !== null && (
-                                    <Typography
-                                      sx={{
-                                        ...commonStyles.compactTextLg,
-                                        color: colors.textTertiary,
-                                      }}
-                                    >
-                                      {tSessions("vaskiIdLine", {
-                                        value: section.vaski_id,
-                                      })}
-                                    </Typography>
-                                  )}
-                                {section.modified_datetime && (
-                                  <Typography
-                                    sx={{
-                                      ...commonStyles.compactTextLg,
-                                      color: colors.textTertiary,
-                                    }}
-                                  >
-                                    {tSessions("sectionUpdatedLine", {
-                                      value: formatDateTime(
-                                        section.modified_datetime,
-                                      ),
-                                    })}
-                                  </Typography>
-                                )}
-                              </Box>
                             </Box>
-                          </>
-                        }
-                      >
-                        {sectionErrorReasons.length > 0 && (
-                          <Alert
-                            severity="warning"
-                            sx={{ mt: 1.5, mb: 0.5 }}
-                            action={
-                              <Button
-                                color="inherit"
+                            {section.minutes_item_order != null && (
+                              <Typography
+                                sx={{
+                                  ...commonStyles.compactTextLg,
+                                  color: colors.textTertiary,
+                                  mt: 0.25,
+                                }}
+                              >
+                                {tSessions("minutesOrder")}{" "}
+                                {section.minutes_item_order}
+                              </Typography>
+                            )}
+                            {section.note && (
+                              <Typography
+                                sx={{
+                                  ...commonStyles.compactTextLg,
+                                  color: colors.textSecondary,
+                                  mt: 0.25,
+                                }}
+                              >
+                                {section.note}
+                              </Typography>
+                            )}
+                            {section.processing_title &&
+                              section.processing_title !== section.title && (
+                                <Typography
+                                  sx={{
+                                    ...commonStyles.compactTextLg,
+                                    color: colors.textTertiary,
+                                    mt: 0.25,
+                                  }}
+                                >
+                                  {tSessions("processingLine", {
+                                    value: section.processing_title,
+                                  })}
+                                </Typography>
+                              )}
+                            {section.resolution && (
+                              <Typography
+                                sx={{
+                                  ...commonStyles.compactTextLg,
+                                  color: colors.textTertiary,
+                                  mt: 0.25,
+                                }}
+                              >
+                                {tSessions("resolutionLine", {
+                                  value: section.resolution,
+                                })}
+                              </Typography>
+                            )}
+                            {renderVaskiInfo(section, true)}
+                            {renderMinutesInfo(section, true)}
+
+                            <Box
+                              sx={{
+                                display: "flex",
+                                gap: 1,
+                                flexWrap: "wrap",
+                                mt: 1,
+                              }}
+                            >
+                              <Chip
+                                label={tSessions("votingsCount", {
+                                  count: votingCount,
+                                })}
                                 size="small"
+                                sx={{
+                                  fontSize: "0.6875rem",
+                                  height: 22,
+                                  background: `${themedColors.success}15`,
+                                  color: themedColors.success,
+                                }}
+                              />
+                              <Chip
+                                label={tSessions("speechesCount", {
+                                  count: speechCount,
+                                })}
+                                size="small"
+                                sx={{
+                                  fontSize: "0.6875rem",
+                                  height: 22,
+                                  background: `${colors.primaryLight}20`,
+                                  color: colors.primaryLight,
+                                }}
+                              />
+                              <Chip
+                                label={tSessions("speakersCount", {
+                                  count: section.speaker_count ?? 0,
+                                })}
+                                size="small"
+                                sx={{ fontSize: "0.6875rem", height: 22 }}
+                              />
+                              <Chip
+                                label={tSessions("partiesCount", {
+                                  count: section.party_count ?? 0,
+                                })}
+                                size="small"
+                                sx={{ fontSize: "0.6875rem", height: 22 }}
+                              />
+                              {!hasSpeechContent && speeches.length > 0 && (
+                                <Typography
+                                  sx={{
+                                    ...commonStyles.compactTextLg,
+                                    color: colors.textTertiary,
+                                  }}
+                                >
+                                  {tSessions("speechContentPending")}
+                                </Typography>
+                              )}
+                              {!hasSpeechContent &&
+                                speeches.length > 0 &&
+                                vaskiLatestSpeechDate && (
+                                  <Typography
+                                    sx={{
+                                      ...commonStyles.compactTextLg,
+                                      color: colors.textTertiary,
+                                    }}
+                                  >
+                                    {speechContentLatestLabel(
+                                      formatDate(vaskiLatestSpeechDate),
+                                    )}
+                                  </Typography>
+                                )}
+                            </Box>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                gap: 1.5,
+                                flexWrap: "wrap",
+                                mt: 0.75,
+                              }}
+                            >
+                              {section.agenda_key && (
+                                <Typography
+                                  sx={{
+                                    ...commonStyles.compactTextLg,
+                                    color: colors.textTertiary,
+                                  }}
+                                >
+                                  {tSessions("agendaKeyLine", {
+                                    value: section.agenda_key,
+                                  })}
+                                </Typography>
+                              )}
+                              {section.vaski_id !== undefined &&
+                                section.vaski_id !== null && (
+                                  <Typography
+                                    sx={{
+                                      ...commonStyles.compactTextLg,
+                                      color: colors.textTertiary,
+                                    }}
+                                  >
+                                    {tSessions("vaskiIdLine", {
+                                      value: section.vaski_id,
+                                    })}
+                                  </Typography>
+                                )}
+                              {section.modified_datetime && (
+                                <Typography
+                                  sx={{
+                                    ...commonStyles.compactTextLg,
+                                    color: colors.textTertiary,
+                                  }}
+                                >
+                                  {tSessions("sectionUpdatedLine", {
+                                    value: formatDateTime(
+                                      section.modified_datetime,
+                                    ),
+                                  })}
+                                </Typography>
+                              )}
+                            </Box>
+
+                            <Box sx={{ mt: 1 }}>
+                              <Button
+                                size="small"
+                                variant="outlined"
                                 onClick={() =>
-                                  void loadSectionData(section.id, section.key)
+                                  toggleSection(section.id, section.key)
                                 }
                                 sx={{
-                                  ...commonStyles.compactTextMd,
                                   textTransform: "none",
+                                  borderColor: colors.primaryLight,
+                                  color: colors.primaryLight,
+                                  ...commonStyles.compactTextLg,
                                 }}
                               >
-                                {tCommon("retry")}
+                                {isExpanded
+                                  ? tSessions("detailsToggle", {
+                                      context: "hide",
+                                    })
+                                  : tSessions("detailsToggle", {
+                                      context: "show",
+                                    })}
                               </Button>
-                            }
-                          >
-                            {tErrors("loadFailedWithReason", {
-                              reason: sectionErrorReasons.join(", "),
-                            })}
-                          </Alert>
-                        )}
-                        {vaskiInfoContent}
-                        {minutesInfoContent}
-                        {sectionSubSectionsContent}
-                        {sectionMinutesContent}
-                        {docRefs.map((ref) => (
-                          <DocumentCard key={ref.identifier} docRef={ref} />
-                        ))}
-                        {docRefs.length > 0 && section.voting_count === 0 && (
-                          <RelatedVotings
-                            identifiers={docRefs.map((r) => r.identifier)}
-                          />
-                        )}
-                        {sectionLinksContent}
-                        {sectionNoticesContent}
-                        {sectionRollCallContent}
-                        {/* Votings */}
-                        {loadingVotings.has(section.id) ? (
-                          <Box
-                            sx={{ py: 2, textAlign: "center" }}
-                            role="status"
-                            aria-live="polite"
-                            aria-label={tApp("loading")}
-                          >
-                            <CircularProgress
-                              size={20}
-                              sx={{ color: themedColors.primary }}
-                            />
-                            <Typography
-                              sx={{
-                                ...commonStyles.compactTextXs,
-                                color: colors.textTertiary,
-                              }}
-                            >
-                              {tApp("loading")}
-                            </Typography>
-                          </Box>
-                        ) : (
-                          sectionVotingsContent
-                        )}
+                            </Box>
 
-                        {/* Speeches */}
-                        {loadingSpeeches.has(section.id) ? (
-                          <Box
-                            sx={{ py: 2, textAlign: "center" }}
-                            role="status"
-                            aria-live="polite"
-                            aria-label={tApp("loading")}
-                          >
-                            <CircularProgress
-                              size={20}
-                              sx={{ color: themedColors.primary }}
-                            />
-                            <Typography
-                              sx={{
-                                ...commonStyles.compactTextXs,
-                                color: colors.textTertiary,
-                              }}
+                            <Collapse
+                              in={isExpanded}
+                              timeout="auto"
+                              unmountOnExit
                             >
-                              {tApp("loading")}
-                            </Typography>
-                          </Box>
-                        ) : speeches.length > 0 ? (
-                          <Box
-                            sx={{
-                              mt: 1.5,
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: 0.75,
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                ...commonStyles.compactTextLg,
-                                fontWeight: 600,
-                                color: colors.textSecondary,
-                                textTransform: "uppercase",
-                              }}
-                            >
-                              {tSessions("speeches")} (
-                              {speechData?.total ?? speeches.length})
-                            </Typography>
-                            {!hasSpeechContent && (
-                              <Typography
-                                sx={{
-                                  ...commonStyles.compactTextLg,
-                                  color: colors.textTertiary,
-                                }}
-                              >
-                                {tSessions("speechContentPending")}
-                              </Typography>
-                            )}
-                            {!hasSpeechContent && vaskiLatestSpeechDate && (
-                              <Typography
-                                sx={{
-                                  ...commonStyles.compactTextLg,
-                                  color: colors.textTertiary,
-                                }}
-                              >
-                                {speechContentLatestLabel(
-                                  formatDate(vaskiLatestSpeechDate),
-                                )}
-                              </Typography>
-                            )}
-                            {speeches.map((speech) => {
-                              const speechTime = formatSpeechTimeRange(speech);
-                              return (
-                                <Box
-                                  key={speech.id}
-                                  sx={{
-                                    p: 1.5,
-                                    borderRadius: 1,
-                                    background: colors.backgroundSubtle,
-                                  }}
-                                >
-                                  <Box
-                                    sx={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 1,
-                                      mb: speech.content ? 1 : 0,
-                                    }}
+                              <Box sx={{ mt: 1.5 }}>
+                                {sectionErrorReasons.length > 0 && (
+                                  <Alert
+                                    severity="warning"
+                                    sx={{ mb: 1 }}
+                                    action={
+                                      <Button
+                                        color="inherit"
+                                        size="small"
+                                        onClick={() =>
+                                          void loadSectionData(
+                                            section.id,
+                                            section.key,
+                                          )
+                                        }
+                                        sx={{
+                                          ...commonStyles.compactTextMd,
+                                          textTransform: "none",
+                                        }}
+                                      >
+                                        {tCommon("retry")}
+                                      </Button>
+                                    }
                                   >
-                                    <Chip
-                                      label={
-                                        speech.ordinal_number ?? speech.ordinal
-                                      }
-                                      size="small"
-                                      sx={{
-                                        background: `${colors.primaryLight}30`,
-                                        color: colors.primaryLight,
-                                        fontWeight: 600,
-                                        fontSize: "0.625rem",
-                                        height: 18,
-                                        minWidth: 24,
-                                      }}
+                                    {tErrors("loadFailedWithReason", {
+                                      reason: sectionErrorReasons.join(", "),
+                                    })}
+                                  </Alert>
+                                )}
+                                {renderVaskiInfo(section, false)}
+                                {renderMinutesInfo(section, false)}
+                                {renderSectionSubSections(section)}
+                                {renderSectionMinutesContent(section)}
+                                {(() => {
+                                  const refs = extractSectionDocRefs(section);
+                                  return (
+                                    <>
+                                      {refs.map((ref) => (
+                                        <DocumentCard
+                                          key={ref.identifier}
+                                          docRef={ref}
+                                        />
+                                      ))}
+                                      {refs.length > 0 &&
+                                        section.voting_count === 0 && (
+                                          <RelatedVotings
+                                            identifiers={refs.map(
+                                              (r) => r.identifier,
+                                            )}
+                                          />
+                                        )}
+                                    </>
+                                  );
+                                })()}
+                                {renderSectionLinks(section)}
+                                {renderSectionNotices(session, section.key)}
+                                {renderSectionRollCall(section)}
+                                {loadingVotings.has(section.id) ? (
+                                  <Box
+                                    sx={{ py: 1, textAlign: "center" }}
+                                    role="status"
+                                    aria-live="polite"
+                                    aria-label={tApp("loading")}
+                                  >
+                                    <CircularProgress
+                                      size={20}
+                                      sx={{ color: themedColors.primary }}
                                     />
                                     <Typography
                                       sx={{
-                                        fontWeight: 600,
-                                        fontSize: "0.8125rem",
-                                        flex: 1,
+                                        ...commonStyles.compactTextXs,
+                                        color: colors.textTertiary,
                                       }}
                                     >
-                                      {speech.first_name} {speech.last_name}
+                                      {tApp("loading")}
                                     </Typography>
-                                    {speech.party_abbreviation && (
-                                      <Chip
-                                        label={speech.party_abbreviation}
-                                        size="small"
-                                        sx={{
-                                          fontSize: "0.625rem",
-                                          height: 18,
-                                        }}
-                                      />
-                                    )}
-                                    {speech.speech_type && (
-                                      <Typography
-                                        sx={{
-                                          fontSize: "0.6875rem",
-                                          color: colors.textTertiary,
-                                        }}
-                                      >
-                                        {speech.speech_type}
-                                      </Typography>
-                                    )}
-                                    {speechTime && (
-                                      <Typography
-                                        sx={{
-                                          fontSize: "0.6875rem",
-                                          color: colors.textTertiary,
-                                        }}
-                                      >
-                                        {speechTime}
-                                      </Typography>
-                                    )}
                                   </Box>
-                                  {speech.content && (
-                                    <Box
+                                ) : (
+                                  renderSectionVotings(votings, session)
+                                )}
+
+                                {loadingSpeeches.has(section.id) ? (
+                                  <Box
+                                    sx={{ py: 1, textAlign: "center" }}
+                                    role="status"
+                                    aria-live="polite"
+                                    aria-label={tApp("loading")}
+                                  >
+                                    <CircularProgress
+                                      size={20}
+                                      sx={{ color: themedColors.primary }}
+                                    />
+                                    <Typography
                                       sx={{
-                                        p: 1.5,
-                                        borderRadius: 1,
-                                        borderLeft: `3px solid ${colors.primaryLight}`,
-                                        background: colors.backgroundDefault,
+                                        ...commonStyles.compactTextXs,
+                                        color: colors.textTertiary,
                                       }}
                                     >
-                                      <SourceText
+                                      {tApp("loading")}
+                                    </Typography>
+                                  </Box>
+                                ) : speeches.length > 0 ? (
+                                  <Box
+                                    sx={{
+                                      mt: 1,
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: 0.75,
+                                    }}
+                                  >
+                                    {!hasSpeechContent && (
+                                      <Typography
                                         sx={{
-                                          fontSize: "0.8125rem",
-                                          color: colors.textPrimary,
-                                          whiteSpace: "pre-wrap",
-                                          lineHeight: 1.6,
+                                          ...commonStyles.compactTextLg,
+                                          color: colors.textTertiary,
                                         }}
                                       >
-                                        {speech.content}
-                                      </SourceText>
-                                    </Box>
-                                  )}
-                                </Box>
-                              );
-                            })}
-                            {/* Load more button */}
-                            {speechData &&
-                              speechData.page < speechData.totalPages && (
-                                <Box sx={{ textAlign: "center", mt: 1 }}>
-                                  <Button
-                                    size="small"
-                                    variant="outlined"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      loadMoreSpeeches(section.id, section.key);
-                                    }}
-                                    disabled={loadingMoreSpeeches.has(
-                                      section.id,
+                                        {tSessions("speechContentPending")}
+                                      </Typography>
                                     )}
-                                    sx={{
-                                      textTransform: "none",
-                                      borderColor: colors.primaryLight,
-                                      color: colors.primaryLight,
-                                      fontSize: "0.8125rem",
-                                    }}
-                                  >
-                                    {loadingMoreSpeeches.has(section.id) ? (
-                                      <CircularProgress
-                                        size={16}
-                                        sx={{ mr: 1 }}
-                                      />
-                                    ) : null}
-                                    {tSessions("loadMoreProgress", {
-                                      loaded: speeches.length,
-                                      total: speechData.total,
-                                    })}
-                                  </Button>
-                                </Box>
-                              )}
-                          </Box>
-                        ) : null}
-                        {!loadingSpeeches.has(section.id) &&
-                          !loadingVotings.has(section.id) &&
-                          speeches.length === 0 &&
-                          votings.length === 0 &&
-                          sectionErrorReasons.length === 0 &&
-                          !hasAdditionalExpandedContent && (
-                            <Typography
-                              sx={{
-                                py: 2,
-                                textAlign: "center",
-                                fontSize: "0.8125rem",
-                                color: colors.textTertiary,
-                              }}
-                            >
-                              {tSessions("noSectionContent")}
-                            </Typography>
-                          )}
-                      </SessionSectionPanel>
-                    );
-                  })}
-
-                {viewMode === "timeline" && (
-                  <Box
-                    sx={{
-                      p: 2,
-                      borderBottom: `1px solid ${colors.dataBorder}`,
-                    }}
-                  >
-                    <Box sx={{ position: "relative", pl: 2.5 }}>
-                      <Box
-                        sx={{
-                          position: "absolute",
-                          left: 8,
-                          top: 4,
-                          bottom: 4,
-                          width: 2,
-                          background: `${colors.primaryLight}35`,
-                        }}
-                      />
-                      {session.sections?.map((section) => {
-                        const isExpanded = expandedSections.has(section.id);
-                        const speechData = sectionSpeechData[section.id];
-                        const speeches = speechData?.speeches || [];
-                        const hasSpeechContent = speeches.some(
-                          (speech) => speech.content,
-                        );
-                        const votings = sectionVotings[section.id] || [];
-                        const votingCount =
-                          section.voting_count ?? votings.length;
-                        const speechCount =
-                          section.speech_count ??
-                          speechData?.total ??
-                          speeches.length;
-                        const sectionErrorReasons = (
-                          Object.entries(
-                            sectionLoadErrors[section.id] || {},
-                          ) as Array<[SectionLoadErrorKey, string]>
-                        )
-                          .filter(([, reason]) => Boolean(reason))
-                          .map(
-                            ([key, reason]) =>
-                              `${sectionLoadErrorLabels[key]} (${reason})`,
-                          );
-
-                        return (
-                          <Box
-                            key={section.id}
-                            id={`session-section-${section.key}`}
-                            sx={{ position: "relative", pl: 2, mb: 2 }}
-                          >
-                            <Box
-                              sx={{
-                                position: "absolute",
-                                left: -2,
-                                top: 2,
-                                width: 16,
-                                height: 16,
-                                borderRadius: "50%",
-                                background: colors.primary,
-                                boxShadow: `0 0 0 3px ${colors.primaryLight}20`,
-                              }}
-                            />
-                            <Box
-                              sx={{
-                                p: 1.5,
-                                borderRadius: 1,
-                                background: colors.backgroundSubtle,
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 1,
-                                  flexWrap: "wrap",
-                                }}
-                              >
-                                <Chip
-                                  label={getSectionOrderLabel(section)}
-                                  size="small"
-                                  sx={{
-                                    background: "#fff",
-                                    color: colors.textSecondary,
-                                    fontWeight: 600,
-                                    ...commonStyles.compactTextMd,
-                                    height: 22,
-                                  }}
-                                />
-                                <Typography
-                                  sx={{
-                                    fontWeight: 600,
-                                    fontSize: "0.875rem",
-                                    color: colors.textPrimary,
-                                  }}
-                                >
-                                  {section.title ||
-                                    section.processing_title ||
-                                    tSessions("noTitle")}
-                                </Typography>
-                              </Box>
-                              {section.minutes_item_order != null && (
-                                <Typography
-                                  sx={{
-                                    ...commonStyles.compactTextLg,
-                                    color: colors.textTertiary,
-                                    mt: 0.25,
-                                  }}
-                                >
-                                  {tSessions("minutesOrder")}{" "}
-                                  {section.minutes_item_order}
-                                </Typography>
-                              )}
-                              {section.note && (
-                                <Typography
-                                  sx={{
-                                    ...commonStyles.compactTextLg,
-                                    color: colors.textSecondary,
-                                    mt: 0.25,
-                                  }}
-                                >
-                                  {section.note}
-                                </Typography>
-                              )}
-                              {section.processing_title &&
-                                section.processing_title !== section.title && (
-                                  <Typography
-                                    sx={{
-                                      ...commonStyles.compactTextLg,
-                                      color: colors.textTertiary,
-                                      mt: 0.25,
-                                    }}
-                                  >
-                                    {tSessions("processingLine", {
-                                      value: section.processing_title,
-                                    })}
-                                  </Typography>
-                                )}
-                              {section.resolution && (
-                                <Typography
-                                  sx={{
-                                    ...commonStyles.compactTextLg,
-                                    color: colors.textTertiary,
-                                    mt: 0.25,
-                                  }}
-                                >
-                                  {tSessions("resolutionLine", {
-                                    value: section.resolution,
-                                  })}
-                                </Typography>
-                              )}
-                              {renderVaskiInfo(section, true)}
-                              {renderMinutesInfo(section, true)}
-
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  gap: 1,
-                                  flexWrap: "wrap",
-                                  mt: 1,
-                                }}
-                              >
-                                <Chip
-                                  label={tSessions("votingsCount", {
-                                    count: votingCount,
-                                  })}
-                                  size="small"
-                                  sx={{
-                                    fontSize: "0.6875rem",
-                                    height: 22,
-                                    background: `${themedColors.success}15`,
-                                    color: themedColors.success,
-                                  }}
-                                />
-                                <Chip
-                                  label={tSessions("speechesCount", {
-                                    count: speechCount,
-                                  })}
-                                  size="small"
-                                  sx={{
-                                    fontSize: "0.6875rem",
-                                    height: 22,
-                                    background: `${colors.primaryLight}20`,
-                                    color: colors.primaryLight,
-                                  }}
-                                />
-                                <Chip
-                                  label={tSessions("speakersCount", {
-                                    count: section.speaker_count ?? 0,
-                                  })}
-                                  size="small"
-                                  sx={{ fontSize: "0.6875rem", height: 22 }}
-                                />
-                                <Chip
-                                  label={tSessions("partiesCount", {
-                                    count: section.party_count ?? 0,
-                                  })}
-                                  size="small"
-                                  sx={{ fontSize: "0.6875rem", height: 22 }}
-                                />
-                                {!hasSpeechContent && speeches.length > 0 && (
-                                  <Typography
-                                    sx={{
-                                      ...commonStyles.compactTextLg,
-                                      color: colors.textTertiary,
-                                    }}
-                                  >
-                                    {tSessions("speechContentPending")}
-                                  </Typography>
-                                )}
-                                {!hasSpeechContent &&
-                                  speeches.length > 0 &&
-                                  vaskiLatestSpeechDate && (
-                                    <Typography
-                                      sx={{
-                                        ...commonStyles.compactTextLg,
-                                        color: colors.textTertiary,
-                                      }}
-                                    >
-                                      {speechContentLatestLabel(
-                                        formatDate(vaskiLatestSpeechDate),
-                                      )}
-                                    </Typography>
-                                  )}
-                              </Box>
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  gap: 1.5,
-                                  flexWrap: "wrap",
-                                  mt: 0.75,
-                                }}
-                              >
-                                {section.agenda_key && (
-                                  <Typography
-                                    sx={{
-                                      ...commonStyles.compactTextLg,
-                                      color: colors.textTertiary,
-                                    }}
-                                  >
-                                    {tSessions("agendaKeyLine", {
-                                      value: section.agenda_key,
-                                    })}
-                                  </Typography>
-                                )}
-                                {section.vaski_id !== undefined &&
-                                  section.vaski_id !== null && (
-                                    <Typography
-                                      sx={{
-                                        ...commonStyles.compactTextLg,
-                                        color: colors.textTertiary,
-                                      }}
-                                    >
-                                      {tSessions("vaskiIdLine", {
-                                        value: section.vaski_id,
-                                      })}
-                                    </Typography>
-                                  )}
-                                {section.modified_datetime && (
-                                  <Typography
-                                    sx={{
-                                      ...commonStyles.compactTextLg,
-                                      color: colors.textTertiary,
-                                    }}
-                                  >
-                                    {tSessions("sectionUpdatedLine", {
-                                      value: formatDateTime(
-                                        section.modified_datetime,
-                                      ),
-                                    })}
-                                  </Typography>
-                                )}
-                              </Box>
-
-                              <Box sx={{ mt: 1 }}>
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  onClick={() =>
-                                    toggleSection(section.id, section.key)
-                                  }
-                                  sx={{
-                                    textTransform: "none",
-                                    borderColor: colors.primaryLight,
-                                    color: colors.primaryLight,
-                                    ...commonStyles.compactTextLg,
-                                  }}
-                                >
-                                  {isExpanded
-                                    ? tSessions("detailsToggle", {
-                                        context: "hide",
-                                      })
-                                    : tSessions("detailsToggle", {
-                                        context: "show",
-                                      })}
-                                </Button>
-                              </Box>
-
-                              <Collapse
-                                in={isExpanded}
-                                timeout="auto"
-                                unmountOnExit
-                              >
-                                <Box sx={{ mt: 1.5 }}>
-                                  {sectionErrorReasons.length > 0 && (
-                                    <Alert
-                                      severity="warning"
-                                      sx={{ mb: 1 }}
-                                      action={
-                                        <Button
-                                          color="inherit"
-                                          size="small"
-                                          onClick={() =>
-                                            void loadSectionData(
-                                              section.id,
-                                              section.key,
-                                            )
-                                          }
-                                          sx={{
-                                            ...commonStyles.compactTextMd,
-                                            textTransform: "none",
-                                          }}
-                                        >
-                                          {tCommon("retry")}
-                                        </Button>
-                                      }
-                                    >
-                                      {tErrors("loadFailedWithReason", {
-                                        reason: sectionErrorReasons.join(", "),
-                                      })}
-                                    </Alert>
-                                  )}
-                                  {renderVaskiInfo(section, false)}
-                                  {renderMinutesInfo(section, false)}
-                                  {renderSectionSubSections(section)}
-                                  {renderSectionMinutesContent(section)}
-                                  {(() => {
-                                    const refs = extractSectionDocRefs(section);
-                                    return (
-                                      <>
-                                        {refs.map((ref) => (
-                                          <DocumentCard
-                                            key={ref.identifier}
-                                            docRef={ref}
-                                          />
-                                        ))}
-                                        {refs.length > 0 &&
-                                          section.voting_count === 0 && (
-                                            <RelatedVotings
-                                              identifiers={refs.map(
-                                                (r) => r.identifier,
-                                              )}
-                                            />
-                                          )}
-                                      </>
-                                    );
-                                  })()}
-                                  {renderSectionLinks(section)}
-                                  {renderSectionNotices(session, section.key)}
-                                  {renderSectionRollCall(section)}
-                                  {loadingVotings.has(section.id) ? (
-                                    <Box
-                                      sx={{ py: 1, textAlign: "center" }}
-                                      role="status"
-                                      aria-live="polite"
-                                      aria-label={tApp("loading")}
-                                    >
-                                      <CircularProgress
-                                        size={20}
-                                        sx={{ color: themedColors.primary }}
-                                      />
-                                      <Typography
-                                        sx={{
-                                          ...commonStyles.compactTextXs,
-                                          color: colors.textTertiary,
-                                        }}
-                                      >
-                                        {tApp("loading")}
-                                      </Typography>
-                                    </Box>
-                                  ) : (
-                                    renderSectionVotings(votings, session)
-                                  )}
-
-                                  {loadingSpeeches.has(section.id) ? (
-                                    <Box
-                                      sx={{ py: 1, textAlign: "center" }}
-                                      role="status"
-                                      aria-live="polite"
-                                      aria-label={tApp("loading")}
-                                    >
-                                      <CircularProgress
-                                        size={20}
-                                        sx={{ color: themedColors.primary }}
-                                      />
-                                      <Typography
-                                        sx={{
-                                          ...commonStyles.compactTextXs,
-                                          color: colors.textTertiary,
-                                        }}
-                                      >
-                                        {tApp("loading")}
-                                      </Typography>
-                                    </Box>
-                                  ) : speeches.length > 0 ? (
-                                    <Box
-                                      sx={{
-                                        mt: 1,
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        gap: 0.75,
-                                      }}
-                                    >
-                                      {!hasSpeechContent && (
+                                    {!hasSpeechContent &&
+                                      vaskiLatestSpeechDate && (
                                         <Typography
                                           sx={{
                                             ...commonStyles.compactTextLg,
                                             color: colors.textTertiary,
                                           }}
                                         >
-                                          {tSessions("speechContentPending")}
+                                          {speechContentLatestLabel(
+                                            formatDate(vaskiLatestSpeechDate),
+                                          )}
                                         </Typography>
                                       )}
-                                      {!hasSpeechContent &&
-                                        vaskiLatestSpeechDate && (
-                                          <Typography
-                                            sx={{
-                                              ...commonStyles.compactTextLg,
-                                              color: colors.textTertiary,
-                                            }}
-                                          >
-                                            {speechContentLatestLabel(
-                                              formatDate(vaskiLatestSpeechDate),
-                                            )}
-                                          </Typography>
-                                        )}
-                                      {speeches.map((speech) => {
-                                        const speechTime =
-                                          formatSpeechTimeRange(speech);
-                                        return (
+                                    {speeches.map((speech) => {
+                                      const speechTime =
+                                        formatSpeechTimeRange(speech);
+                                      return (
+                                        <Box
+                                          key={speech.id}
+                                          sx={{
+                                            p: 1.25,
+                                            borderRadius: 1,
+                                            background: "#fff",
+                                          }}
+                                        >
                                           <Box
-                                            key={speech.id}
                                             sx={{
-                                              p: 1.25,
-                                              borderRadius: 1,
-                                              background: "#fff",
+                                              display: "flex",
+                                              alignItems: "center",
+                                              gap: 1,
+                                              mb: speech.content ? 0.75 : 0,
                                             }}
                                           >
-                                            <Box
+                                            <Chip
+                                              label={
+                                                speech.ordinal_number ??
+                                                speech.ordinal
+                                              }
+                                              size="small"
                                               sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 1,
-                                                mb: speech.content ? 0.75 : 0,
+                                                background: `${colors.primaryLight}30`,
+                                                color: colors.primaryLight,
+                                                fontWeight: 600,
+                                                fontSize: "0.625rem",
+                                                height: 18,
+                                                minWidth: 24,
+                                              }}
+                                            />
+                                            <Typography
+                                              sx={{
+                                                fontWeight: 600,
+                                                fontSize: "0.8125rem",
+                                                flex: 1,
                                               }}
                                             >
+                                              {speech.first_name}{" "}
+                                              {speech.last_name}
+                                            </Typography>
+                                            {speech.party_abbreviation && (
                                               <Chip
                                                 label={
-                                                  speech.ordinal_number ??
-                                                  speech.ordinal
+                                                  speech.party_abbreviation
                                                 }
                                                 size="small"
                                                 sx={{
-                                                  background: `${colors.primaryLight}30`,
-                                                  color: colors.primaryLight,
-                                                  fontWeight: 600,
                                                   fontSize: "0.625rem",
                                                   height: 18,
-                                                  minWidth: 24,
                                                 }}
                                               />
+                                            )}
+                                            {speechTime && (
                                               <Typography
                                                 sx={{
-                                                  fontWeight: 600,
-                                                  fontSize: "0.8125rem",
-                                                  flex: 1,
+                                                  fontSize: "0.6875rem",
+                                                  color: colors.textTertiary,
                                                 }}
                                               >
-                                                {speech.first_name}{" "}
-                                                {speech.last_name}
+                                                {speechTime}
                                               </Typography>
-                                              {speech.party_abbreviation && (
-                                                <Chip
-                                                  label={
-                                                    speech.party_abbreviation
-                                                  }
-                                                  size="small"
-                                                  sx={{
-                                                    fontSize: "0.625rem",
-                                                    height: 18,
-                                                  }}
-                                                />
-                                              )}
-                                              {speechTime && (
-                                                <Typography
-                                                  sx={{
-                                                    fontSize: "0.6875rem",
-                                                    color: colors.textTertiary,
-                                                  }}
-                                                >
-                                                  {speechTime}
-                                                </Typography>
-                                              )}
-                                            </Box>
-                                            {speech.content && (
-                                              <SourceText
-                                                sx={{
-                                                  fontSize: "0.8125rem",
-                                                  color: colors.textPrimary,
-                                                  whiteSpace: "pre-wrap",
-                                                  lineHeight: 1.6,
-                                                }}
-                                              >
-                                                {speech.content}
-                                              </SourceText>
                                             )}
                                           </Box>
-                                        );
-                                      })}
-                                    </Box>
-                                  ) : null}
-                                </Box>
-                              </Collapse>
-                            </Box>
+                                          {speech.content && (
+                                            <SourceText
+                                              sx={{
+                                                fontSize: "0.8125rem",
+                                                color: colors.textPrimary,
+                                                whiteSpace: "pre-wrap",
+                                                lineHeight: 1.6,
+                                              }}
+                                            >
+                                              {speech.content}
+                                            </SourceText>
+                                          )}
+                                        </Box>
+                                      );
+                                    })}
+                                  </Box>
+                                ) : null}
+                              </Box>
+                            </Collapse>
                           </Box>
-                        );
-                      })}
-                    </Box>
+                        </Box>
+                      );
+                    })}
                   </Box>
-                )}
+                </Box>
               </Box>
             );
-          })}
+          })
+          )}
+
         </DataCard>
       )}
     </Box>
