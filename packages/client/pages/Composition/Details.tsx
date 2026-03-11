@@ -614,6 +614,14 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
   const [failedVotingDetails, setFailedVotingDetails] = React.useState<
     Set<number>
   >(new Set());
+  const [selectedGovName, setSelectedGovName] = React.useState<string | null>(null);
+  const DISPLAY_LIMIT = 200;
+  const [displayCount, setDisplayCount] = React.useState(DISPLAY_LIMIT);
+
+  const selectGov = (name: string | null) => {
+    setSelectedGovName(name);
+    setDisplayCount(DISPLAY_LIMIT);
+  };
 
   React.useEffect(() => {
     let ignore = false;
@@ -626,6 +634,8 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
         setVotingDetailsById({});
         setLoadingVotingDetails(new Set());
         setFailedVotingDetails(new Set());
+        setSelectedGovName(null);
+        setDisplayCount(DISPLAY_LIMIT);
       })
       .finally(() => {
         if (ignore) return;
@@ -695,6 +705,47 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
     ? failedVotingDetails.has(selectedVoting.id)
     : false;
 
+  const governmentStats = React.useMemo(() => {
+    if (!votes) return [];
+    const map = new Map<string, {
+      governmentName: string;
+      governmentStartDate: string;
+      governmentEndDate: string | null;
+      isCoalition: boolean;
+      yes: number; no: number; abstain: number; absent: number; total: number;
+    }>();
+    for (const v of votes) {
+      if (!v.government_name) continue;
+      const key = v.government_name;
+      if (!map.has(key)) {
+        map.set(key, {
+          governmentName: v.government_name,
+          governmentStartDate: v.government_start_date!,
+          governmentEndDate: v.government_end_date,
+          isCoalition: v.is_coalition === 1,
+          yes: 0, no: 0, abstain: 0, absent: 0, total: 0,
+        });
+      }
+      const s = map.get(key)!;
+      s.total++;
+      if (v.vote === "Jaa") s.yes++;
+      else if (v.vote === "Ei") s.no++;
+      else if (v.vote === "Tyhjää") s.abstain++;
+      else if (v.vote === "Poissa") s.absent++;
+    }
+    return [...map.values()].sort(
+      (a, b) => new Date(b.governmentStartDate).getTime() - new Date(a.governmentStartDate).getTime(),
+    );
+  }, [votes]);
+
+  const filteredVotes = React.useMemo(
+    () =>
+      selectedGovName
+        ? (votes ?? []).filter((v) => v.government_name === selectedGovName)
+        : (votes ?? []),
+    [votes, selectedGovName],
+  );
+
   if (loading)
     return (
       <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
@@ -712,95 +763,33 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
       ? (((totalVotes - absentVotes) / totalVotes) * 100).toFixed(1)
       : "0";
 
+  const selectedGovStats = selectedGovName
+    ? governmentStats.find((s) => s.governmentName === selectedGovName) ?? null
+    : null;
+
+  const displayStats = selectedGovStats
+    ? {
+        yes: selectedGovStats.yes,
+        no: selectedGovStats.no,
+        empty: selectedGovStats.abstain,
+        absent: selectedGovStats.absent,
+        total: selectedGovStats.total,
+      }
+    : {
+        yes: yesVotes,
+        no: noVotes,
+        empty: emptyVotes,
+        absent: absentVotes,
+        total: totalVotes,
+      };
+  const displayParticipationRate =
+    displayStats.total > 0
+      ? (((displayStats.total - displayStats.absent) / displayStats.total) * 100).toFixed(1)
+      : "0";
+
   return (
     <Box>
-      {/* Metrics row */}
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)" },
-          gap: 1.5,
-          mb: 3,
-        }}
-      >
-        <Box
-          sx={{
-            p: 1.5,
-            borderRadius: 2,
-            border: `1px solid ${themedColors.dataBorder}`,
-            textAlign: "center",
-          }}
-        >
-          <Typography
-            sx={{
-              fontSize: "1.25rem",
-              fontWeight: 700,
-              color: themedColors.textPrimary,
-            }}
-          >
-            {participationRate}%
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{ color: themedColors.textSecondary }}
-          >
-            {tComposition("details.votes.participation")}
-          </Typography>
-        </Box>
-        <Box
-          sx={{
-            p: 1.5,
-            borderRadius: 2,
-            border: `1px solid ${themedColors.dataBorder}`,
-            textAlign: "center",
-          }}
-        >
-          <Typography
-            sx={{
-              fontSize: "1.25rem",
-              fontWeight: 700,
-              color: themedColors.textPrimary,
-            }}
-          >
-            {totalVotes}
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{ color: themedColors.textSecondary }}
-          >
-            {tComposition("details.votes.totalVotes")}
-          </Typography>
-        </Box>
-        <Box
-          sx={{
-            p: 1.5,
-            borderRadius: 2,
-            border: `1px solid ${themedColors.dataBorder}`,
-            textAlign: "center",
-          }}
-        >
-          <VoteMarginBar
-            yes={yesVotes}
-            no={noVotes}
-            empty={emptyVotes}
-            absent={absentVotes}
-            height={6}
-            sx={{ mb: 0.5, mt: 0.5 }}
-          />
-          <Typography
-            variant="caption"
-            sx={{ color: themedColors.textSecondary }}
-          >
-            {tComposition("details.votes.voteBreakdown", {
-              yes: yesVotes,
-              no: noVotes,
-              empty: emptyVotes,
-            })}
-          </Typography>
-        </Box>
-      </Box>
-
-      {/* Recent votes */}
+      {/* Recent votes (flat list) */}
       {votes && votes.length > 0 && (
         <>
           <SectionLabel
@@ -811,8 +800,115 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
             }
             label={tComposition("details.votes.recentVotes")}
           />
+          {governmentStats.length > 0 && (
+            <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", mb: 1.5 }}>
+              <Chip
+                label={tComposition("details.votes.allGovernments")}
+                size="small"
+                onClick={() => selectGov(null)}
+                sx={{
+                  height: 22,
+                  fontSize: "0.7rem",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  ...(selectedGovName === null
+                    ? { bgcolor: colors.primary, color: "white" }
+                    : { variant: "outlined", bgcolor: "transparent", border: `1px solid ${themedColors.dataBorder}`, color: themedColors.textSecondary }),
+                }}
+              />
+              {governmentStats.map((s) => (
+                <Chip
+                  key={s.governmentName}
+                  label={`${s.governmentName} (${new Date(s.governmentStartDate).getFullYear()}–${s.governmentEndDate ? new Date(s.governmentEndDate).getFullYear() : ""})`}
+                  size="small"
+                  onClick={() => selectGov(s.governmentName)}
+                  sx={{
+                    height: 22,
+                    fontSize: "0.7rem",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    ...(selectedGovName === s.governmentName
+                      ? { bgcolor: colors.primary, color: "white" }
+                      : {
+                          bgcolor: "transparent",
+                          border: `1px solid ${s.isCoalition ? "#3B82F6" : "#F97316"}`,
+                          color: s.isCoalition ? "#2563EB" : "#EA580C",
+                        }),
+                  }}
+                />
+              ))}
+            </Box>
+          )}
+          {/* Metrics row — context-aware (reflects selected gov or overall) */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)" },
+              gap: 1.5,
+              mb: 1.5,
+            }}
+          >
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                border: `1px solid ${themedColors.dataBorder}`,
+                textAlign: "center",
+              }}
+            >
+              <Typography
+                sx={{ fontSize: "1.25rem", fontWeight: 700, color: themedColors.textPrimary }}
+              >
+                {displayParticipationRate}%
+              </Typography>
+              <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                {tComposition("details.votes.participation")}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                border: `1px solid ${themedColors.dataBorder}`,
+                textAlign: "center",
+              }}
+            >
+              <Typography
+                sx={{ fontSize: "1.25rem", fontWeight: 700, color: themedColors.textPrimary }}
+              >
+                {displayStats.total}
+              </Typography>
+              <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                {tComposition("details.votes.totalVotes")}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                border: `1px solid ${themedColors.dataBorder}`,
+                textAlign: "center",
+              }}
+            >
+              <VoteMarginBar
+                yes={displayStats.yes}
+                no={displayStats.no}
+                empty={displayStats.empty}
+                absent={displayStats.absent}
+                height={6}
+                sx={{ mb: 0.5, mt: 0.5 }}
+              />
+              <Typography variant="caption" sx={{ color: themedColors.textSecondary }}>
+                {tComposition("details.votes.voteBreakdown", {
+                  yes: displayStats.yes,
+                  no: displayStats.no,
+                  empty: displayStats.empty,
+                })}
+              </Typography>
+            </Box>
+          </Box>
           <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
-            {votes.slice(0, 30).map((v) => (
+            {filteredVotes.slice(0, displayCount).map((v) => (
               <Box
                 key={`${v.id}-${v.vote}`}
                 sx={{
@@ -875,34 +971,59 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     </Button>
                   </Box>
                 </Box>
-                <Chip
-                  label={v.vote}
-                  size="small"
-                  sx={{
-                    height: 22,
-                    fontSize: "0.7rem",
-                    fontWeight: 700,
-                    flexShrink: 0,
-                    bgcolor:
-                      v.vote === "Jaa"
-                        ? "#22C55E20"
-                        : v.vote === "Ei"
-                          ? "#EF444420"
-                          : v.vote === "Poissa"
-                            ? `${colors.neutral}20`
-                            : "#F59E0B20",
-                    color:
-                      v.vote === "Jaa"
-                        ? "#16A34A"
-                        : v.vote === "Ei"
-                          ? "#DC2626"
-                          : v.vote === "Poissa"
-                            ? colors.neutral
-                            : "#D97706",
-                  }}
-                />
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, alignItems: "flex-end", flexShrink: 0 }}>
+                  <Chip
+                    label={v.vote}
+                    size="small"
+                    sx={{
+                      height: 22,
+                      fontSize: "0.7rem",
+                      fontWeight: 700,
+                      bgcolor:
+                        v.vote === "Jaa"
+                          ? "#22C55E20"
+                          : v.vote === "Ei"
+                            ? "#EF444420"
+                            : v.vote === "Poissa"
+                              ? `${colors.neutral}20`
+                              : "#F59E0B20",
+                      color:
+                        v.vote === "Jaa"
+                          ? "#16A34A"
+                          : v.vote === "Ei"
+                            ? "#DC2626"
+                            : v.vote === "Poissa"
+                              ? colors.neutral
+                              : "#D97706",
+                    }}
+                  />
+                  {v.government_name !== null && (
+                    <Chip
+                      label={v.is_coalition ? tComposition("details.votes.coalition") : tComposition("details.votes.opposition")}
+                      size="small"
+                      sx={{
+                        height: 22,
+                        fontSize: "0.7rem",
+                        fontWeight: 700,
+                        bgcolor: v.is_coalition ? "#3B82F620" : "#F9731620",
+                        color: v.is_coalition ? "#2563EB" : "#EA580C",
+                      }}
+                    />
+                  )}
+                </Box>
               </Box>
             ))}
+            {filteredVotes.length > displayCount && (
+              <Box sx={{ pt: 1.5, textAlign: "center" }}>
+                <Button
+                  size="small"
+                  onClick={() => setDisplayCount((n) => n + DISPLAY_LIMIT)}
+                  sx={{ textTransform: "none", fontSize: "0.75rem" }}
+                >
+                  {tComposition("details.votes.showMore", { shown: displayCount, total: filteredVotes.length })}
+                </Button>
+              </Box>
+            )}
           </Box>
         </>
       )}
@@ -1004,6 +1125,18 @@ const VotesTab: React.FC<{ personId: number }> = ({ personId }) => {
                     })}
                     sx={{ height: 20, fontSize: "0.65rem" }}
                   />
+                  {selectedVoting.government_name !== null && (
+                    <Chip
+                      size="small"
+                      label={selectedVoting.is_coalition ? tComposition("details.votes.coalition") : tComposition("details.votes.opposition")}
+                      sx={{
+                        height: 20,
+                        fontSize: "0.65rem",
+                        bgcolor: selectedVoting.is_coalition ? "#3B82F620" : "#F9731620",
+                        color: selectedVoting.is_coalition ? "#2563EB" : "#EA580C",
+                      }}
+                    />
+                  )}
                 </Box>
                 <Button
                   onClick={() =>
