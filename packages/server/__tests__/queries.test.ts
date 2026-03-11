@@ -1676,7 +1676,7 @@ describe("Schema integrity", () => {
     expect(indexNames).toContain("idx_vote_vote");
     expect(indexNames).toContain("idx_vote_group_vote");
     expect(indexNames).toContain("idx_voting_start_time");
-    expect(indexNames).toContain("idx_vote_person_voting");
+    expect(indexNames).toContain("idx_vote_person_covering");
     expect(indexNames).toContain("idx_vote_voting_id");
   });
 });
