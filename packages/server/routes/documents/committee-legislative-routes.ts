@@ -4,13 +4,16 @@ import {
   getMappedOptionalQueryParams,
   getMappedPaginatedQueryParams,
   getSearchParams,
+  validateDateRange,
 } from "../http";
-import { json, jsonOrNotFound } from "../route-responses";
+import { badRequest, json, jsonOrNotFound } from "../route-responses";
 
 export const createCommitteeLegislativeRoutes = (db: DocumentRepository) => ({
   "/api/committee-reports": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
+      const dateError = validateDateRange(searchParams);
+      if (dateError) return dateError;
       const params = getMappedPaginatedQueryParams(
         searchParams,
         {
@@ -75,9 +78,9 @@ export const createCommitteeLegislativeRoutes = (db: DocumentRepository) => ({
     GET: async (
       req: BunRequest<"/api/committee-reports/by-identifier/:identifier">,
     ) => {
-      const data = await db.fetchCommitteeReportByIdentifier({
-        identifier: decodeURIComponent(req.params.identifier),
-      });
+      const identifier = decodeURIComponent(req.params.identifier).trim();
+      if (!identifier) return badRequest("Missing document identifier");
+      const data = await db.fetchCommitteeReportByIdentifier({ identifier });
       return jsonOrNotFound(data);
     },
   },
@@ -92,6 +95,8 @@ export const createCommitteeLegislativeRoutes = (db: DocumentRepository) => ({
   "/api/legislative-initiatives": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
+      const dateError = validateDateRange(searchParams);
+      if (dateError) return dateError;
       const params = getMappedPaginatedQueryParams(
         searchParams,
         {
@@ -137,8 +142,10 @@ export const createCommitteeLegislativeRoutes = (db: DocumentRepository) => ({
     GET: async (
       req: BunRequest<"/api/legislative-initiatives/by-identifier/:identifier">,
     ) => {
+      const identifier = decodeURIComponent(req.params.identifier).trim();
+      if (!identifier) return badRequest("Missing document identifier");
       const data = await db.fetchLegislativeInitiativeByIdentifier({
-        identifier: decodeURIComponent(req.params.identifier),
+        identifier,
       });
       return jsonOrNotFound(data);
     },

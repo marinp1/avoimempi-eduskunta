@@ -31,7 +31,13 @@ export class LocalStorageProvider implements IStorageProvider {
   }
 
   private keyToPath(key: StorageKey): string {
-    return path.join(this.baseDir, key);
+    const resolved = path.resolve(this.baseDir, key);
+    if (!resolved.startsWith(this.baseDir + path.sep)) {
+      throw new Error(
+        `Storage key "${key}" escapes the storage base directory`,
+      );
+    }
+    return resolved;
   }
 
   async put(

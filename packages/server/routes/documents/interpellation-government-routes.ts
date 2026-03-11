@@ -1,7 +1,7 @@
 import type { BunRequest } from "bun";
 import type { DocumentRepository } from "../../database/repositories/document-repository";
-import { getMappedPaginatedQueryParams, getSearchParams } from "../http";
-import { json, jsonOrNotFound } from "../route-responses";
+import { getMappedPaginatedQueryParams, getSearchParams, validateDateRange } from "../http";
+import { badRequest, json, jsonOrNotFound } from "../route-responses";
 
 export const createInterpellationGovernmentRoutes = (
   db: DocumentRepository,
@@ -9,6 +9,8 @@ export const createInterpellationGovernmentRoutes = (
   "/api/interpellations": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
+      const dateError = validateDateRange(searchParams);
+      if (dateError) return dateError;
       const params = getMappedPaginatedQueryParams(
         searchParams,
         {
@@ -49,9 +51,9 @@ export const createInterpellationGovernmentRoutes = (
     GET: async (
       req: BunRequest<"/api/interpellations/by-identifier/:identifier">,
     ) => {
-      const data = await db.fetchInterpellationByIdentifier({
-        identifier: decodeURIComponent(req.params.identifier),
-      });
+      const identifier = decodeURIComponent(req.params.identifier).trim();
+      if (!identifier) return badRequest("Missing document identifier");
+      const data = await db.fetchInterpellationByIdentifier({ identifier });
       return jsonOrNotFound(data);
     },
   },
@@ -66,6 +68,8 @@ export const createInterpellationGovernmentRoutes = (
   "/api/government-proposals": {
     GET: async (req: Request) => {
       const searchParams = getSearchParams(req);
+      const dateError = validateDateRange(searchParams);
+      if (dateError) return dateError;
       const params = getMappedPaginatedQueryParams(
         searchParams,
         {
@@ -106,9 +110,9 @@ export const createInterpellationGovernmentRoutes = (
     GET: async (
       req: BunRequest<"/api/government-proposals/by-identifier/:identifier">,
     ) => {
-      const data = await db.fetchGovernmentProposalByIdentifier({
-        identifier: decodeURIComponent(req.params.identifier),
-      });
+      const identifier = decodeURIComponent(req.params.identifier).trim();
+      if (!identifier) return badRequest("Missing document identifier");
+      const data = await db.fetchGovernmentProposalByIdentifier({ identifier });
       return jsonOrNotFound(data);
     },
   },

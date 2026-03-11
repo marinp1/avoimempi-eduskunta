@@ -30,6 +30,7 @@ import { createSanityRoutes } from "./routes/sanity-routes";
 import { createSessionRoutes } from "./routes/session-routes";
 import { createStaticPageRoutes } from "./routes/static-page-routes";
 import { createVotingRoutes } from "./routes/voting-routes";
+import { addSecurityHeaders, withSecurityHeaders } from "./middleware/security-headers";
 import { getQualityDb } from "./sanity/quality-db";
 import { ResolutionStore } from "./sanity/resolution-store";
 
@@ -184,11 +185,11 @@ const apiRoutes = devFeatures
 export type ApiRoutes = typeof baseApiRoutes &
   ReturnType<typeof import("./routes/sanity-dev-routes").createSanityDevRoutes>;
 
-const allRoutes = {
+const allRoutes = withSecurityHeaders({
   ...createStaticPageRoutes(homepage),
   ...apiRoutes,
   "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
-};
+});
 
 const commonServeOptions = {
   port,
@@ -202,12 +203,14 @@ const commonServeOptions = {
 
   error(error: Error) {
     console.error(error);
-    return new Response(`Internal Error: ${error.message}`, {
-      status: 500,
-      headers: {
-        "Content-Type": "text/plain",
-      },
-    });
+    return addSecurityHeaders(
+      new Response("Internal Server Error", {
+        status: 500,
+        headers: {
+          "Content-Type": "text/plain",
+        },
+      }),
+    );
   },
 };
 

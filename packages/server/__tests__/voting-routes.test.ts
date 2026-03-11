@@ -62,4 +62,24 @@ describe("voting routes", () => {
       },
     });
   });
+
+  test("by-document rejects empty identifier after URL decode", async () => {
+    const routes = createVotingRoutes({
+      fetchVotingsByDocument: () => [],
+      fetchDocumentRelations: () => [],
+      fetchVotingOverview: () => ({ metrics: {}, facets: {}, sections: {} }),
+      browseVotings: () => [],
+      fetchRecentVotings: () => [],
+      queryVotings: () => [],
+      fetchVotingById: () => null,
+      fetchVotingInlineDetails: () => null,
+    } as any);
+
+    const response = await routes["/api/votings/by-document/:identifier"].GET({
+      url: "https://example.test/api/votings/by-document/%20",
+      params: { identifier: "%20" },
+    } as any);
+
+    expect(response.status).toBe(400);
+  });
 });
