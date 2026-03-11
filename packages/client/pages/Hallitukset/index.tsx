@@ -445,6 +445,9 @@ const GovernmentHero: React.FC<{
               color: "white",
               fontWeight: 700,
               border: "1px solid rgba(255,255,255,0.28)",
+              "& .MuiChip-label": {
+                color: "inherit",
+              },
             }}
           />
         </Stack>
@@ -457,6 +460,7 @@ const GovernmentHero: React.FC<{
               fontWeight: 700,
               lineHeight: 1.1,
               letterSpacing: "-0.02em",
+              color: "#fff",
             }}
           >
             {government.name}
@@ -481,6 +485,9 @@ const GovernmentHero: React.FC<{
                 color: "white",
                 border: "1px solid rgba(255,255,255,0.22)",
                 fontWeight: 600,
+                "& .MuiChip-label": {
+                  color: "inherit",
+                },
               }}
             />
           ))}
