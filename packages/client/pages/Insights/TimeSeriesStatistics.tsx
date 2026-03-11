@@ -1,11 +1,9 @@
-import CloseIcon from "@mui/icons-material/Close";
 import {
   Alert,
   Box,
   CardContent,
   CircularProgress,
   Fade,
-  IconButton,
   Typography,
 } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
@@ -24,7 +22,7 @@ import {
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
-import { DataCard } from "#client/theme/components";
+import { DataCard, PanelHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 
@@ -170,22 +168,18 @@ export default function TimeSeriesStatistics({
 
   return (
     <Box sx={{ p: spacing.lg, minHeight: "100vh" }}>
-      {/* Header */}
-      <Box
+      <PanelHeader
+        title={tInsights("timeSeries.title")}
+        subtitle="Sukupuoli- ja ikäjakauman pitkän aikavälin kehitys eduskunnassa."
+        icon={<Typography sx={{ color: colors.primary, fontWeight: 700 }}>TS</Typography>}
+        onClose={onClose}
         sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
           mb: spacing.lg,
+          p: spacing.md,
+          border: `1px solid ${colors.dataBorder}`,
+          borderRadius: 2,
         }}
-      >
-        <Typography variant="h4" sx={{ fontWeight: 600 }}>
-          {tInsights("timeSeries.title")}
-        </Typography>
-        <IconButton onClick={onClose} size="large">
-          <CloseIcon />
-        </IconButton>
-      </Box>
+      />
 
       {/* Gender Division Section */}
       {selectedHallituskausi && (

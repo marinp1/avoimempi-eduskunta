@@ -26,7 +26,6 @@ export const DocumentDetailSection: React.FC<{
         sx={{
           fontWeight: 700,
           color: colors.textPrimary,
-          fontFamily: '"Zilla Slab", Georgia, serif',
           letterSpacing: "-0.01em",
         }}
       >

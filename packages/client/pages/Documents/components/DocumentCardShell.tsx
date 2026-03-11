@@ -91,7 +91,6 @@ const DocumentCardShellComponent: React.FC<{
           variant="h5"
           sx={{
             color: colors.textPrimary,
-            fontFamily: '"Zilla Slab", Georgia, serif',
             fontWeight: 600,
             letterSpacing: "-0.02em",
             lineHeight: 1.22,

@@ -16,7 +16,7 @@ import {
 import React from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { commonStyles } from "#client/theme";
-import { DataCard } from "#client/theme/components";
+import { ToolbarCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import type { VotingSortMode } from "../url-state";
 
@@ -60,15 +60,12 @@ const VotingsControlBarComponent: React.FC<{
   const themedColors = useThemedColors();
 
   return (
-    <DataCard
+    <ToolbarCard
+      description={searchHint}
+      icon={<TuneIcon sx={{ fontSize: 18 }} />}
+      sticky
       sx={{
-        p: { xs: 2, sm: 2.5 },
         mb: 3,
-        position: "sticky",
-        top: 12,
-        zIndex: 4,
-        background: "#fbfcfd",
-        boxShadow: "0 4px 12px rgba(15, 27, 51, 0.04)",
       }}
     >
       <Stack spacing={1.5}>
@@ -175,12 +172,11 @@ const VotingsControlBarComponent: React.FC<{
             display: "flex",
             alignItems: { xs: "flex-start", sm: "center" },
             justifyContent: "space-between",
-            flexDirection: { xs: "column", sm: "row" },
-            gap: 1.25,
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-            <TuneIcon sx={{ fontSize: 16, color: themedColors.textTertiary }} />
+          flexDirection: { xs: "column", sm: "row" },
+          gap: 1.25,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
             <Typography
               variant="caption"
               sx={{ color: themedColors.textSecondary, fontWeight: 600 }}
@@ -210,7 +206,7 @@ const VotingsControlBarComponent: React.FC<{
           )}
         </Box>
       </Stack>
-    </DataCard>
+    </ToolbarCard>
   );
 };
 

@@ -20,13 +20,12 @@ import {
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
 import {
+  borderRadius,
   colors,
   commonStyles,
-  serifFontFamily,
   spacing,
 } from "#client/theme";
-import { DataCard, VoteMarginBar } from "#client/theme/components";
-import { useThemedColors } from "#client/theme/ThemeContext";
+import { DataCard, PanelHeader, VoteMarginBar } from "#client/theme/components";
 import { formatDateLongFi, formatDateTimeCompactFi } from "#client/utils/date-time";
 import type {
   HomeCloseVote,
@@ -44,6 +43,8 @@ type SessionsTranslation = ReturnType<
 
 const heroGradient =
   "linear-gradient(135deg, rgba(19,33,62,0.97) 0%, rgba(27,42,74,0.96) 56%, rgba(74,111,165,0.94) 100%)";
+const heroOuterRadius = `${borderRadius.heroOuter * 8}px`;
+const heroInnerRadius = `${borderRadius.heroInner * 8}px`;
 
 export const HomeHero = ({
   overview,
@@ -52,7 +53,6 @@ export const HomeHero = ({
   overview: HomeOverview;
   tHome: HomeTranslation;
 }) => {
-  const themedColors = useThemedColors();
   const latestSession = overview.latestDay.sessions[0] ?? null;
 
   const quickLinks = [
@@ -68,12 +68,23 @@ export const HomeHero = ({
       sx={{
         position: "relative",
         overflow: "hidden",
-        borderRadius: 3,
+        borderRadius: heroOuterRadius,
         color: "#fff",
-        background: heroGradient,
-        boxShadow: "0 24px 48px rgba(19, 33, 62, 0.22)",
+        background: `linear-gradient(135deg, rgba(13,24,48,0.98) 0%, rgba(20,34,61,0.98) 44%, rgba(37,59,98,0.96) 100%), ${heroGradient}`,
+        boxShadow: "0 28px 56px rgba(19, 33, 62, 0.22)",
         border: "1px solid rgba(255,255,255,0.14)",
         mb: spacing.md,
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: { xs: 144, md: 220 },
+          height: 4,
+          borderBottomRightRadius: 999,
+          background:
+            "linear-gradient(90deg, rgba(255,255,255,0.92) 0%, rgba(74,111,165,0.94) 58%, rgba(232,145,58,0.95) 100%)",
+        },
       }}
     >
       <Box
@@ -81,34 +92,70 @@ export const HomeHero = ({
           position: "absolute",
           inset: 0,
           background:
-            "radial-gradient(560px 260px at 10% 0%, rgba(232,145,58,0.18), transparent 70%), radial-gradient(540px 280px at 100% 0%, rgba(255,255,255,0.12), transparent 72%)",
+            "radial-gradient(560px 260px at 10% 0%, rgba(232,145,58,0.18), transparent 70%), radial-gradient(540px 280px at 100% 0%, rgba(255,255,255,0.14), transparent 72%), linear-gradient(135deg, rgba(255,255,255,0.04), transparent 48%)",
+          pointerEvents: "none",
+        }}
+      />
+      <Box
+        sx={{
+          position: "absolute",
+          inset: { xs: 10, md: 12 },
+          borderRadius: heroInnerRadius,
+          border: "1px solid rgba(255,255,255,0.08)",
           pointerEvents: "none",
         }}
       />
       <Grid container sx={{ position: "relative" }}>
         <Grid size={{ xs: 12, lg: 8 }}>
           <Box sx={{ p: { xs: 2.25, md: 3.5 } }}>
-            <Typography
+            <Box
               sx={{
-                fontSize: "0.78rem",
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                color: "#fff",
-                opacity: 0.72,
-                mb: 1,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 0.9,
+                px: 1,
+                py: 0.7,
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.14)",
+                boxShadow: "0 8px 18px rgba(0,0,0,0.08)",
+                mb: 1.25,
               }}
             >
-              {tHome("eyebrow")}
-            </Typography>
+              <Box
+                sx={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: "50%",
+                  display: "grid",
+                  placeItems: "center",
+                  background: "rgba(255,255,255,0.12)",
+                }}
+              >
+                <NotificationsActiveIcon sx={{ fontSize: 15, color: "#fff" }} />
+              </Box>
+              <Typography
+                sx={{
+                  fontSize: "0.78rem",
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  color: "#fff",
+                  opacity: 0.76,
+                  fontWeight: 700,
+                }}
+              >
+                {tHome("eyebrow")}
+              </Typography>
+            </Box>
             <Typography
               sx={{
-                fontFamily: serifFontFamily,
-                fontSize: { xs: "2rem", md: "2.7rem" },
-                lineHeight: 1.05,
-                letterSpacing: "-0.04em",
+                fontSize: { xs: "2.15rem", md: "3rem" },
+                lineHeight: 1.01,
+                letterSpacing: "-0.05em",
                 color: "#fff",
-                mb: 1.25,
-                maxWidth: "12ch",
+                mb: 1.1,
+                maxWidth: "11ch",
+                textWrap: "balance",
               }}
             >
               {tHome("heroTitle")}
@@ -117,8 +164,8 @@ export const HomeHero = ({
               sx={{
                 maxWidth: 760,
                 color: "#fff",
-                opacity: 0.82,
-                fontSize: { xs: "0.95rem", md: "1.02rem" },
+                opacity: 0.84,
+                fontSize: { xs: "0.96rem", md: "1.04rem" },
                 lineHeight: 1.6,
               }}
             >
@@ -127,13 +174,13 @@ export const HomeHero = ({
 
             <Box
               sx={{
-                mt: 2.25,
+                mt: 2.35,
                 display: "grid",
                 gridTemplateColumns: {
                   xs: "repeat(2, minmax(0, 1fr))",
                   md: "repeat(4, minmax(0, 1fr))",
                 },
-                gap: 1,
+                gap: 1.1,
               }}
             >
               <HeroMetric
@@ -158,7 +205,20 @@ export const HomeHero = ({
               />
             </Box>
 
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 2.5 }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 1,
+                flexWrap: "wrap",
+                mt: 2.5,
+                p: 1,
+                borderRadius: heroInnerRadius,
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.10)",
+                width: "fit-content",
+                maxWidth: "100%",
+              }}
+            >
               {quickLinks.map((link) => (
                 <Button
                   key={link.href}
@@ -167,9 +227,10 @@ export const HomeHero = ({
                   endIcon={<ArrowForwardIcon sx={{ fontSize: 14 }} />}
                   sx={{
                     color: "#fff",
-                    borderColor: "rgba(255,255,255,0.26)",
+                    borderColor: "rgba(255,255,255,0.22)",
                     background: "rgba(255,255,255,0.06)",
                     textTransform: "none",
+                    px: 1.4,
                     "&:hover": {
                       borderColor: "rgba(255,255,255,0.44)",
                       background: "rgba(255,255,255,0.11)",
@@ -190,42 +251,54 @@ export const HomeHero = ({
               p: { xs: 2.25, md: 3 },
               borderLeft: { xs: "none", lg: "1px solid rgba(255,255,255,0.12)" },
               borderTop: { xs: "1px solid rgba(255,255,255,0.12)", lg: "none" },
-              background: "linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02))",
+              background: "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))",
             }}
           >
-            <Typography
+            <Box
               sx={{
-                color: "#fff",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                fontSize: "0.72rem",
-                opacity: 0.74,
-                mb: 1.25,
+                p: 1.5,
+                borderRadius: heroInnerRadius,
+                border: "1px solid rgba(255,255,255,0.12)",
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.11), rgba(255,255,255,0.05))",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.09)",
               }}
             >
-              {tHome("freshnessTitle")}
-            </Typography>
-            <FreshnessLine
-              label={tHome("freshnessDb")}
-              value={overview.freshness.lastMigrationTimestamp}
-            />
-            <FreshnessLine
-              label={tHome("freshnessScraper")}
-              value={overview.freshness.lastScraperRunAt}
-            />
-            <FreshnessLine
-              label={tHome("freshnessMigrator")}
-              value={overview.freshness.lastMigratorRunAt}
-            />
+              <Typography
+                sx={{
+                  color: "#fff",
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  fontSize: "0.72rem",
+                  opacity: 0.74,
+                  mb: 1.25,
+                }}
+              >
+                {tHome("freshnessTitle")}
+              </Typography>
+              <FreshnessLine
+                label={tHome("freshnessDb")}
+                value={overview.freshness.lastMigrationTimestamp}
+              />
+              <FreshnessLine
+                label={tHome("freshnessScraper")}
+                value={overview.freshness.lastScraperRunAt}
+              />
+              <FreshnessLine
+                label={tHome("freshnessMigrator")}
+                value={overview.freshness.lastMigratorRunAt}
+              />
+            </Box>
             {latestSession && (
               <Box
                 sx={{
                   mt: 2,
                   p: 1.5,
-                  borderRadius: 2,
+                  borderRadius: heroInnerRadius,
                   border: "1px solid rgba(255,255,255,0.14)",
-                  background: "rgba(255,255,255,0.06)",
+                  background: "linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.04))",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
                 }}
               >
                 <Typography
@@ -302,21 +375,35 @@ export const HomeHero = ({
 const HeroMetric = ({ label, value }: { label: string; value: string }) => (
   <Box
     sx={{
-      p: 1.25,
-      borderRadius: 2,
-      background: "rgba(255,255,255,0.07)",
+      position: "relative",
+      overflow: "hidden",
+      p: 1.35,
+      borderRadius: heroInnerRadius,
+      background:
+        "linear-gradient(180deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.05) 100%)",
       border: "1px solid rgba(255,255,255,0.12)",
-      minHeight: 72,
+      boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
+      minHeight: 82,
+      "&::before": {
+        content: '""',
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: 2,
+        background:
+          "linear-gradient(90deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.08) 100%)",
+      },
     }}
   >
     <Typography
       sx={{
         color: "#fff",
-        opacity: 0.68,
+        opacity: 0.7,
         fontSize: "0.7rem",
         textTransform: "uppercase",
-        letterSpacing: "0.07em",
-        mb: 0.5,
+        letterSpacing: "0.08em",
+        mb: 0.7,
       }}
     >
       {label}
@@ -324,8 +411,8 @@ const HeroMetric = ({ label, value }: { label: string; value: string }) => (
     <Typography
       sx={{
         fontWeight: 700,
-        fontSize: "0.95rem",
-        lineHeight: 1.3,
+        fontSize: "1rem",
+        lineHeight: 1.25,
         color: "#fff",
       }}
     >
@@ -341,11 +428,39 @@ const FreshnessLine = ({
   label: string;
   value: string | null;
 }) => (
-  <Box sx={{ mb: 1.1 }}>
-    <Typography sx={{ fontSize: "0.72rem", color: "#fff", opacity: 0.62 }}>
+  <Box
+    sx={{
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 1.5,
+      alignItems: "flex-start",
+      py: 0.9,
+      borderTop: "1px solid rgba(255,255,255,0.08)",
+      "&:first-of-type": {
+        pt: 0,
+        borderTop: "none",
+      },
+    }}
+  >
+    <Typography
+      sx={{
+        fontSize: "0.72rem",
+        color: "#fff",
+        opacity: 0.62,
+        textTransform: "uppercase",
+        letterSpacing: "0.06em",
+      }}
+    >
       {label}
     </Typography>
-    <Typography sx={{ fontSize: "0.84rem", color: "#fff" }}>
+    <Typography
+      sx={{
+        fontSize: "0.84rem",
+        color: "#fff",
+        fontWeight: 600,
+        textAlign: "right",
+      }}
+    >
       {value ? formatDateTimeCompactFi(value) : "-"}
     </Typography>
   </Box>
@@ -461,9 +576,21 @@ export const CompositionPanel = ({
       <PanelHeader
         eyebrow={tHome("compositionEyebrow")}
         title={tHome("compositionTitle")}
-        description={tHome("compositionDescription")}
-        actionHref="/puolueet"
-        actionLabel={tHome("openParties")}
+        subtitle={tHome("compositionDescription")}
+        actions={
+          <Button
+            href="/puolueet"
+            size="small"
+            endIcon={<ArrowForwardIcon sx={{ fontSize: 14 }} />}
+            sx={{
+              ...commonStyles.compactOutlinedPrimaryButton,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {tHome("openParties")}
+          </Button>
+        }
+        sx={{ p: 2, background: "rgba(255,255,255,0.84)" }}
       />
       <Box sx={{ p: 2 }}>
         <Box
@@ -597,15 +724,27 @@ export const ProceedingsShell = ({
     <PanelHeader
       eyebrow={tHome("proceedingsEyebrow")}
       title={tHome("proceedingsTitle")}
-      description={
+      subtitle={
         latestDate
           ? tHome("proceedingsDescription", {
               date: formatDateLongFi(latestDate),
             })
           : tHome("proceedingsDescriptionEmpty")
       }
-      actionHref="/istunnot"
-      actionLabel={tHome("openSessions")}
+      actions={
+        <Button
+          href="/istunnot"
+          size="small"
+          endIcon={<ArrowForwardIcon sx={{ fontSize: 14 }} />}
+          sx={{
+            ...commonStyles.compactOutlinedPrimaryButton,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {tHome("openSessions")}
+        </Button>
+      }
+      sx={{ p: 2, background: "rgba(255,255,255,0.84)" }}
     />
     {children}
   </DataCard>
@@ -762,67 +901,6 @@ export const SignalsPanel = ({
   );
 };
 
-const PanelHeader = ({
-  eyebrow,
-  title,
-  description,
-  actionHref,
-  actionLabel,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-  actionHref?: string;
-  actionLabel?: string;
-}) => (
-  <Box
-    sx={{
-      p: 2,
-      borderBottom: `1px solid ${colors.dataBorder}`,
-      display: "flex",
-      justifyContent: "space-between",
-      gap: 2,
-      alignItems: "flex-start",
-      flexWrap: "wrap",
-      background: "rgba(255,255,255,0.84)",
-    }}
-  >
-    <Box sx={{ minWidth: 0 }}>
-      <Typography
-        sx={{
-          fontSize: "0.72rem",
-          color: colors.primaryLight,
-          textTransform: "uppercase",
-          letterSpacing: "0.09em",
-          fontWeight: 700,
-          mb: 0.4,
-        }}
-      >
-        {eyebrow}
-      </Typography>
-      <Typography sx={{ fontSize: "1.08rem", fontWeight: 700, color: colors.textPrimary }}>
-        {title}
-      </Typography>
-      <Typography sx={{ color: colors.textSecondary, mt: 0.45, maxWidth: 720 }}>
-        {description}
-      </Typography>
-    </Box>
-    {actionHref && actionLabel ? (
-      <Button
-        href={actionHref}
-        size="small"
-        endIcon={<ArrowForwardIcon sx={{ fontSize: 14 }} />}
-        sx={{
-          ...commonStyles.compactOutlinedPrimaryButton,
-          whiteSpace: "nowrap",
-        }}
-      >
-        {actionLabel}
-      </Button>
-    ) : null}
-  </Box>
-);
-
 const SignalCard = ({
   eyebrow,
   title,
@@ -842,9 +920,23 @@ const SignalCard = ({
     <PanelHeader
       eyebrow={eyebrow}
       title={title}
-      description={description}
-      actionHref={actionHref}
-      actionLabel={actionLabel}
+      subtitle={description}
+      actions={
+        actionHref && actionLabel ? (
+          <Button
+            href={actionHref}
+            size="small"
+            endIcon={<ArrowForwardIcon sx={{ fontSize: 14 }} />}
+            sx={{
+              ...commonStyles.compactOutlinedPrimaryButton,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {actionLabel}
+          </Button>
+        ) : null
+      }
+      sx={{ p: 2, background: "rgba(255,255,255,0.84)" }}
     />
     <Box sx={{ p: 1.25, display: "flex", flexDirection: "column", gap: 1 }}>
       {children}

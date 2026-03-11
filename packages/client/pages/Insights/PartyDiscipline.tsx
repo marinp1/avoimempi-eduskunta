@@ -1,10 +1,8 @@
-import CloseIcon from "@mui/icons-material/Close";
 import GavelIcon from "@mui/icons-material/Gavel";
 import {
   Alert,
   Box,
   CircularProgress,
-  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -27,6 +25,7 @@ import {
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
+import { PanelHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 
@@ -117,32 +116,13 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
 
   return (
     <Box sx={{ p: spacing.lg, minHeight: "100vh" }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: spacing.lg,
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
-          <GavelIcon sx={{ fontSize: 36, color: colors.primary }} />
-          <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            {tInsights("partyDiscipline.title")}
-          </Typography>
-        </Box>
-        <IconButton onClick={onClose} size="large">
-          <CloseIcon />
-        </IconButton>
-      </Box>
-
-      <Typography
-        variant="body1"
-        color="text.secondary"
+      <PanelHeader
+        title={tInsights("partyDiscipline.title")}
+        subtitle={tInsights("partyDiscipline.description")}
+        icon={<GavelIcon sx={{ fontSize: 28, color: colors.primary }} />}
+        onClose={onClose}
         sx={{ mb: spacing.lg }}
-      >
-        {tInsights("partyDiscipline.description")}
-      </Typography>
+      />
       {selectedHallituskausi && (
         <Alert severity="info" sx={{ mb: spacing.md }}>
           Rajattu hallituskauteen: {selectedHallituskausi.label}

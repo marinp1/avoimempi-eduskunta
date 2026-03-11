@@ -16,12 +16,17 @@ import {
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { DataCard, EmptyState, InlineSpinner, MetricCard } from "#client/theme/components";
+import {
+  DataCard,
+  EmptyState,
+  InlineSpinner,
+  MetricCard,
+  PageIntro,
+} from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 import { VotingCard, type VotingCardData, VotingGroupCard } from "#client/components/VotingCard";
 import { VotingsControlBar } from "./components/VotingsControlBar";
-import { VotingsResultsSummary } from "./components/VotingsResultsSummary";
 import {
   buildVotingViewModels,
   getNextVisibleGroupCount,
@@ -533,6 +538,109 @@ export const VoteResults: React.FC<{
 
   return (
     <Box>
+      <PageIntro
+        title={tVotings("title")}
+        subtitle={tVotings("subtitle")}
+        eyebrow={tVotings("eyebrow")}
+        icon={<HowToVoteOutlinedIcon sx={{ fontSize: 22 }} />}
+        chips={
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            {selectedHallituskausi ? (
+              <Chip
+                size="small"
+                label={tCommon("filteredByGovernmentPeriodLine", {
+                  value: selectedHallituskausi.label,
+                })}
+                sx={{
+                  backgroundColor: `${themedColors.primary}10`,
+                  color: themedColors.primary,
+                  fontWeight: 700,
+                }}
+              />
+            ) : null}
+            {!isOverviewMode ? (
+              <Chip
+                size="small"
+                label={tVotings("groupedByDocument")}
+                variant="outlined"
+                sx={{
+                  borderColor: `${themedColors.primary}30`,
+                  color: themedColors.primary,
+                  fontWeight: 600,
+                }}
+              />
+            ) : null}
+          </Stack>
+        }
+        meta={
+          !loading && !error ? (
+            <Stack spacing={0.75}>
+              {!isOverviewMode ? (
+                <Typography variant="body2" sx={{ color: themedColors.textSecondary }}>
+                  {tVotings("resultCount", { count: combinedRows.length })}
+                </Typography>
+              ) : null}
+              {activeFilters.length > 0 ? (
+                <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+                  {activeFilters.map((filter) => (
+                    <Chip
+                      key={filter.key}
+                      label={filter.label}
+                      onDelete={filter.onDelete}
+                      size="small"
+                      sx={{
+                        backgroundColor: "rgba(255,255,255,0.82)",
+                        color: themedColors.primary,
+                        fontWeight: 600,
+                      }}
+                    />
+                  ))}
+                </Box>
+              ) : null}
+            </Stack>
+          ) : null
+        }
+        stats={
+          !loading && !error && isOverviewMode && overviewState.data ? (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "repeat(2, minmax(0, 1fr))",
+                  xl: "repeat(4, minmax(0, 1fr))",
+                },
+                gap: 1.5,
+              }}
+            >
+              <MetricCard
+                label={tVotings("overview.metrics.total")}
+                value={overviewState.data.metrics.total_votings}
+                icon={<HowToVoteOutlinedIcon />}
+              />
+              <MetricCard
+                label={tVotings("overview.metrics.close")}
+                value={overviewState.data.metrics.close_votings}
+                icon={<FlashOnOutlinedIcon />}
+              />
+              <MetricCard
+                label={tVotings("overview.metrics.latestSession")}
+                value={
+                  overviewState.data.metrics.latest_session_key ?? tCommon("none")
+                }
+                icon={<CalendarMonthOutlinedIcon />}
+              />
+              <MetricCard
+                label={tVotings("overview.metrics.phases")}
+                value={overviewState.data.metrics.phase_count}
+                icon={<CategoryOutlinedIcon />}
+              />
+            </Box>
+          ) : null
+        }
+        variant="feature"
+      />
+
       <VotingsControlBar
         search={searchValue}
         onSearchChange={onSearchChange}
@@ -550,14 +658,6 @@ export const VoteResults: React.FC<{
         activeFilters={activeFilters}
       />
 
-      {selectedHallituskausi && (
-        <Alert severity="info" sx={{ mb: 2 }}>
-          {tCommon("filteredByGovernmentPeriodLine", {
-            value: selectedHallituskausi.label,
-          })}
-        </Alert>
-      )}
-
       {loading && <InlineSpinner />}
 
       {!loading && error && (
@@ -568,41 +668,6 @@ export const VoteResults: React.FC<{
 
       {!loading && !error && isOverviewMode && overviewState.data && (
         <Stack spacing={2.5}>
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, minmax(0, 1fr))",
-                xl: "repeat(4, minmax(0, 1fr))",
-              },
-              gap: 1.5,
-            }}
-          >
-            <MetricCard
-              label={tVotings("overview.metrics.total")}
-              value={overviewState.data.metrics.total_votings}
-              icon={<HowToVoteOutlinedIcon />}
-            />
-            <MetricCard
-              label={tVotings("overview.metrics.close")}
-              value={overviewState.data.metrics.close_votings}
-              icon={<FlashOnOutlinedIcon />}
-            />
-            <MetricCard
-              label={tVotings("overview.metrics.latestSession")}
-              value={
-                overviewState.data.metrics.latest_session_key ?? tCommon("none")
-              }
-              icon={<CalendarMonthOutlinedIcon />}
-            />
-            <MetricCard
-              label={tVotings("overview.metrics.phases")}
-              value={overviewState.data.metrics.phase_count}
-              icon={<CategoryOutlinedIcon />}
-            />
-          </Box>
-
           <DataCard sx={{ p: { xs: 2, sm: 2.5 } }}>
             <Stack spacing={1.75}>
               <Box>
@@ -702,18 +767,6 @@ export const VoteResults: React.FC<{
 
       {!loading && !error && !isOverviewMode && (
         <Box>
-          <VotingsResultsSummary
-            count={combinedRows.length}
-            groupingLabel={tVotings("groupedByDocument")}
-            contextLabel={
-              selectedHallituskausi
-                ? tCommon("filteredByGovernmentPeriodLine", {
-                    value: selectedHallituskausi.label,
-                  })
-                : null
-            }
-          />
-
           {combinedRows.length === 0 ? (
             <EmptyState
               title={tVotings("noResults")}

@@ -17,7 +17,7 @@ import {
   Typography,
 } from "@mui/material";
 import { type ReactNode, useEffect, useState } from "react";
-import { DataCard, PageHeader } from "#client/theme/components";
+import { DataCard, MetricCard, PageIntro } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 
@@ -101,11 +101,18 @@ function Changes(): ReactNode {
   }, [selectedRun]);
 
   const showRunSelector = runs.length > 1;
+  const changedTables = report
+    ? Object.entries(report.tables).filter(
+        ([, table]) => table.newRows > 0 || table.changedRows.length > 0,
+      )
+    : [];
 
   return (
     <Box>
-      <PageHeader
+      <PageIntro
+        eyebrow="Tietokannan päivitykset"
         title="Muutokset"
+        icon={<HistoryIcon fontSize="small" />}
         subtitle={
           report
             ? report.previousRebuildAt
@@ -113,35 +120,93 @@ function Changes(): ReactNode {
               : "Ensimmäinen tietokantapäivitys"
             : "Tietokannan päivityshistoria"
         }
+        utility={
+          showRunSelector ? (
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              spacing={1}
+            >
+              <Typography
+                variant="body2"
+                sx={{ color: themedColors.textSecondary, fontWeight: 600 }}
+              >
+                Päivitysajo
+              </Typography>
+              <Select
+                size="small"
+                value={selectedRun ?? ""}
+                onChange={(e) => setSelectedRun(e.target.value)}
+                sx={{ minWidth: { xs: "100%", sm: 240 } }}
+              >
+                {runs.map((run, i) => (
+                  <MenuItem key={run.id} value={run.id}>
+                    {fmtDate(run.generatedAt)}
+                    {i === 0 ? " (uusin)" : ""}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Stack>
+          ) : null
+        }
+        chips={
+          report ? (
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Chip
+                icon={<NewReleasesIcon />}
+                label={`${report.totalNewRows} uutta riviä`}
+                color="success"
+                variant="outlined"
+                size="small"
+              />
+              <Chip
+                icon={<UpdateIcon />}
+                label={`${report.totalChangedRows} muuttunutta riviä`}
+                color="warning"
+                variant="outlined"
+                size="small"
+              />
+              <Chip
+                label={`Raportti luotu ${fmtDate(report.generatedAt)}`}
+                variant="outlined"
+                size="small"
+                sx={{ color: themedColors.textTertiary }}
+              />
+            </Stack>
+          ) : null
+        }
+        stats={
+          report ? (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  sm: "repeat(2, minmax(0, 1fr))",
+                  lg: "repeat(3, minmax(0, 1fr))",
+                },
+                gap: 1.5,
+              }}
+            >
+              <MetricCard
+                label="Uudet rivit"
+                value={report.totalNewRows}
+                icon={<NewReleasesIcon fontSize="small" />}
+              />
+              <MetricCard
+                label="Muuttuneet rivit"
+                value={report.totalChangedRows}
+                icon={<UpdateIcon fontSize="small" />}
+              />
+              <MetricCard
+                label="Muuttuneet taulut"
+                value={changedTables.length}
+                icon={<HistoryIcon fontSize="small" />}
+              />
+            </Box>
+          ) : null
+        }
       />
-
-      {showRunSelector && (
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3 }}>
-          <HistoryIcon
-            fontSize="small"
-            sx={{ color: themedColors.textSecondary }}
-          />
-          <Typography
-            variant="body2"
-            sx={{ color: themedColors.textSecondary }}
-          >
-            Päivitysajo:
-          </Typography>
-          <Select
-            size="small"
-            value={selectedRun ?? ""}
-            onChange={(e) => setSelectedRun(e.target.value)}
-            sx={{ minWidth: 240 }}
-          >
-            {runs.map((run, i) => (
-              <MenuItem key={run.id} value={run.id}>
-                {fmtDate(run.generatedAt)}
-                {i === 0 ? " (uusin)" : ""}
-              </MenuItem>
-            ))}
-          </Select>
-        </Stack>
-      )}
 
       {loading && (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
@@ -157,36 +222,7 @@ function Changes(): ReactNode {
 
       {!loading && report && (
         <>
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{ mb: 3, flexWrap: "wrap", gap: 1 }}
-          >
-            <Chip
-              icon={<NewReleasesIcon />}
-              label={`${report.totalNewRows} uutta riviä`}
-              color="success"
-              variant="outlined"
-              size="small"
-            />
-            <Chip
-              icon={<UpdateIcon />}
-              label={`${report.totalChangedRows} muuttunutta riviä`}
-              color="warning"
-              variant="outlined"
-              size="small"
-            />
-            <Chip
-              label={`Raportti luotu ${fmtDate(report.generatedAt)}`}
-              variant="outlined"
-              size="small"
-              sx={{ color: themedColors.textTertiary }}
-            />
-          </Stack>
-
-          {Object.entries(report.tables).filter(
-            ([, t]) => t.newRows > 0 || t.changedRows.length > 0,
-          ).length === 0 ? (
+          {changedTables.length === 0 ? (
             <DataCard>
               <Box sx={{ p: 3 }}>
                 <Typography color="text.secondary">
@@ -196,9 +232,7 @@ function Changes(): ReactNode {
             </DataCard>
           ) : (
             <Stack spacing={2}>
-              {Object.entries(report.tables)
-                .filter(([, t]) => t.newRows > 0 || t.changedRows.length > 0)
-                .map(([tableName, tableChanges]) => (
+              {changedTables.map(([tableName, tableChanges]) => (
                   <DataCard key={tableName}>
                     <Box sx={{ p: 2, pb: 1 }}>
                       <Stack direction="row" alignItems="center" spacing={1.5}>

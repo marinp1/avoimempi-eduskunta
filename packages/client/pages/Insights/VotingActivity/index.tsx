@@ -1,11 +1,9 @@
-import CloseIcon from "@mui/icons-material/Close";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import {
   Alert,
   Box,
   CircularProgress,
   Grid,
-  IconButton,
   TextField,
   Typography,
 } from "@mui/material";
@@ -16,7 +14,7 @@ import {
 } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, commonStyles, spacing } from "#client/theme";
-import { DataCard, MetricCard } from "#client/theme/components";
+import { MetricCard, PanelHeader, ToolbarCard } from "#client/theme/components";
 import { apiFetch } from "#client/utils/fetch";
 import { HistoricalComparison } from "./HistoricalComparison";
 import { ParticipationTable } from "./ParticipationTable";
@@ -131,47 +129,13 @@ export default function Osallistumisaktiivisuus({
         bgcolor: "background.default",
       }}
     >
-      {/* Fixed Header */}
-      <Box
-        sx={{
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          bgcolor: "background.default",
-          borderBottom: "1px solid",
-          borderColor: "divider",
-        }}
-      >
-        <Box sx={{ p: spacing.md }}>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              mb: spacing.sm,
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: spacing.sm,
-              }}
-            >
-              <HowToVoteIcon sx={{ fontSize: 32, color: colors.primary }} />
-              <Typography variant="h4" sx={commonStyles.gradientText}>
-                {tInsights("votingActivity.title")}
-              </Typography>
-            </Box>
-            <IconButton onClick={onClose} size="large">
-              <CloseIcon />
-            </IconButton>
-          </Box>
-          <Typography variant="body1" color="text.secondary">
-            {tInsights("votingActivity.description")}
-          </Typography>
-        </Box>
-      </Box>
+      <PanelHeader
+        title={tInsights("votingActivity.title")}
+        subtitle={tInsights("votingActivity.description")}
+        icon={<HowToVoteIcon sx={{ fontSize: 28, color: colors.primary }} />}
+        onClose={onClose}
+        sticky
+      />
 
       {/* Scrollable Content */}
       <Box
@@ -221,14 +185,8 @@ export default function Osallistumisaktiivisuus({
 
           {/* Filters */}
           <Box>
-            <DataCard sx={{ mb: spacing.md }}>
-              <Box sx={{ p: spacing.md }}>
-                <Typography
-                  variant="h6"
-                  sx={{ mb: spacing.sm, fontWeight: 600 }}
-                >
-                  {tInsights("votingActivity.filters")}
-                </Typography>
+            <ToolbarCard title={tInsights("votingActivity.filters")} sx={{ mb: spacing.md }}>
+              <Box>
                 <Grid container spacing={spacing.sm}>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <TextField
@@ -261,7 +219,7 @@ export default function Osallistumisaktiivisuus({
                   </Alert>
                 )}
               </Box>
-            </DataCard>
+            </ToolbarCard>
           </Box>
 
           {/* Loading State */}

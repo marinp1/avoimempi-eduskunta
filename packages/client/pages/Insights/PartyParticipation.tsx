@@ -1,4 +1,3 @@
-import CloseIcon from "@mui/icons-material/Close";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import {
   Alert,
@@ -10,7 +9,6 @@ import {
   FormControlLabel,
   FormGroup,
   Grid,
-  IconButton,
   TextField,
   Typography,
 } from "@mui/material";
@@ -31,7 +29,7 @@ import {
 } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, commonStyles, spacing } from "#client/theme";
-import { DataCard } from "#client/theme/components";
+import { DataCard, PanelHeader, ToolbarCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 
@@ -277,41 +275,19 @@ export default function PartyParticipation({
   return (
     <Box sx={{ p: spacing.lg, minHeight: "100vh" }}>
       {/* Header */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: spacing.lg,
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
-          <HowToVoteIcon sx={{ fontSize: 36, color: colors.primary }} />
-          <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            {tInsights("partyParticipation.title")}
-          </Typography>
-        </Box>
-        <IconButton onClick={onClose} size="large">
-          <CloseIcon />
-        </IconButton>
-      </Box>
-
-      <Typography
-        variant="body1"
-        color="text.secondary"
+      <PanelHeader
+        title={tInsights("partyParticipation.title")}
+        subtitle={tInsights("partyParticipation.description")}
+        icon={<HowToVoteIcon sx={{ fontSize: 28, color: colors.primary }} />}
+        onClose={onClose}
         sx={{ mb: spacing.lg }}
-      >
-        {tInsights("partyParticipation.description")}
-      </Typography>
+      />
 
       {/* Filters */}
       <Fade in timeout={400}>
         <Box sx={{ mb: spacing.lg }}>
-          <DataCard>
-            <CardContent sx={{ p: spacing.md }}>
-              <Typography variant="h6" sx={{ mb: spacing.sm, fontWeight: 600 }}>
-                {tInsights("partyParticipation.filters")}
-              </Typography>
+          <ToolbarCard title={tInsights("partyParticipation.filters")}>
+            <CardContent sx={{ p: 0 }}>
               <Grid container spacing={spacing.sm}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
@@ -344,7 +320,7 @@ export default function PartyParticipation({
                 </Alert>
               )}
             </CardContent>
-          </DataCard>
+          </ToolbarCard>
         </Box>
       </Fade>
 

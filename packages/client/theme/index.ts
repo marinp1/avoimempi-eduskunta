@@ -86,6 +86,8 @@ export const borderRadius = {
   sm: 1, // 8px
   md: 1.5, // 12px
   lg: 2, // 16px
+  heroInner: 1, // 8px
+  heroOuter: 1.5, // 12px
 } as const;
 
 /**
@@ -324,6 +326,7 @@ export const commonStyles = {
     }) satisfies SxProps<Theme>,
 } as const;
 
+// Reserved for official source-content rendering only.
 export const serifFontFamily = '"Zilla Slab", Georgia, "Times New Roman", serif';
 
 /**

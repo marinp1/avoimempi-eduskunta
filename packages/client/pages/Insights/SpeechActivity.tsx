@@ -1,10 +1,8 @@
-import CloseIcon from "@mui/icons-material/Close";
 import MicIcon from "@mui/icons-material/Mic";
 import {
   Alert,
   Box,
   CircularProgress,
-  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -26,6 +24,7 @@ import {
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
+import { PanelHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 
@@ -97,32 +96,13 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
 
   return (
     <Box sx={{ p: spacing.lg, minHeight: "100vh" }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: spacing.lg,
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
-          <MicIcon sx={{ fontSize: 36, color: colors.primary }} />
-          <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            {tInsights("speechActivity.title")}
-          </Typography>
-        </Box>
-        <IconButton onClick={onClose} size="large">
-          <CloseIcon />
-        </IconButton>
-      </Box>
-
-      <Typography
-        variant="body1"
-        color="text.secondary"
+      <PanelHeader
+        title={tInsights("speechActivity.title")}
+        subtitle={tInsights("speechActivity.description")}
+        icon={<MicIcon sx={{ fontSize: 28, color: colors.primary }} />}
+        onClose={onClose}
         sx={{ mb: spacing.lg }}
-      >
-        {tInsights("speechActivity.description")}
-      </Typography>
+      />
       {selectedHallituskausi && (
         <Alert severity="info" sx={{ mb: spacing.md }}>
           Rajattu hallituskauteen: {selectedHallituskausi.label}

@@ -1,18 +1,16 @@
 import BalanceIcon from "@mui/icons-material/Balance";
-import CloseIcon from "@mui/icons-material/Close";
 import {
   Alert,
   Box,
   CircularProgress,
-  IconButton,
   Stack,
-  Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { VotingCard, type VotingCardData } from "#client/components/VotingCard";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
+import { PanelHeader } from "#client/theme/components";
 import { apiFetch } from "#client/utils/fetch";
 
 type CloseVoteData = ApiRouteItem<`/api/analytics/close-votes`>;
@@ -79,32 +77,13 @@ export default function CloseVotes({ onClose }: CloseVotesProps) {
 
   return (
     <Box sx={{ p: spacing.lg, minHeight: "100vh" }}>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mb: spacing.lg,
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
-          <BalanceIcon sx={{ fontSize: 36, color: colors.primary }} />
-          <Typography variant="h4" sx={{ fontWeight: 600 }}>
-            {tInsights("closeVotes.title")}
-          </Typography>
-        </Box>
-        <IconButton onClick={onClose} size="large">
-          <CloseIcon />
-        </IconButton>
-      </Box>
-
-      <Typography
-        variant="body1"
-        color="text.secondary"
+      <PanelHeader
+        title={tInsights("closeVotes.title")}
+        subtitle={tInsights("closeVotes.description")}
+        icon={<BalanceIcon sx={{ fontSize: 28, color: colors.primary }} />}
+        onClose={onClose}
         sx={{ mb: spacing.lg }}
-      >
-        {tInsights("closeVotes.description")}
-      </Typography>
+      />
       {selectedHallituskausi && (
         <Alert severity="info" sx={{ mb: spacing.md }}>
           {tCommon("filteredByGovernmentPeriodLine", {

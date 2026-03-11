@@ -37,6 +37,7 @@ import {
 import type React from "react";
 import { useEffect, useState } from "react";
 import { sanityChecksEnabled } from "#client/dev-constraints";
+import { PageIntro } from "#client/theme/components";
 import { apiFetch } from "#client/utils/fetch";
 import { colors, spacing } from "../../theme";
 
@@ -676,41 +677,24 @@ export default function Laadunvalvonta() {
 
   return (
     <Box>
-      {/* Header */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          mb: spacing.md,
-          gap: 2,
-        }}
-      >
-        <Box>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            Laadunvalvonta
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{ color: colors.textSecondary, mt: 0.5 }}
-          >
-            Tietokannasta suoritettavat tarkistukset datan laadun
-            varmistamiseksi. Hylätty tarkistus voi johtua koodivirheestä tai
-            lähdedatan ongelmasta.
-          </Typography>
-        </Box>
-        {sanityChecksEnabled && (
-          <Button
-            variant="contained"
-            startIcon={<PlayArrow />}
-            onClick={runChecks}
-            disabled={running}
-            sx={{ flexShrink: 0, mt: 0.5 }}
-          >
-            Suorita tarkistukset
-          </Button>
-        )}
-      </Box>
+      <PageIntro
+        title="Laadunvalvonta"
+        subtitle="Tietokannasta suoritettavat tarkistukset datan laadun varmistamiseksi. Hylätty tarkistus voi johtua koodivirheestä tai lähdedatan ongelmasta."
+        eyebrow="Tietolaatu"
+        icon={<BugReport sx={{ fontSize: 22 }} />}
+        actions={
+          sanityChecksEnabled ? (
+            <Button
+              variant="contained"
+              startIcon={<PlayArrow />}
+              onClick={runChecks}
+              disabled={running}
+            >
+              Suorita tarkistukset
+            </Button>
+          ) : undefined
+        }
+      />
 
       {!sanityChecksEnabled && (
         <Alert severity="info" sx={{ mb: spacing.md }}>
