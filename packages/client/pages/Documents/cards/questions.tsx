@@ -1,9 +1,9 @@
 import {
   Article as ArticleIcon,
-  ExpandMore as ExpandMoreIcon,
   Gavel as GavelIcon,
   Person as PersonIcon,
   Timeline as TimelineIcon,
+  UnfoldMore as UnfoldMoreIcon,
 } from "@mui/icons-material";
 import {
   Alert,
@@ -21,14 +21,15 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
+import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
-import { DataCard } from "#client/theme/components";
+import { DataCard, InlineSpinner } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { apiFetch } from "#client/utils/fetch";
 import {
@@ -113,6 +114,121 @@ export interface OralQuestionListItem {
 
 type OralQuestionDetail = ApiRouteResponse<`/api/oral-questions/:id`>;
 
+// ─── WrittenQuestionResponse drawer content ───
+
+function WrittenQuestionResponseDrawerContent({
+  item,
+}: {
+  item: WrittenQuestionResponseListItem;
+}) {
+  const { t } = useScopedTranslation("documents");
+
+  const [questionDetail, setQuestionDetail] = useState<Pick<
+    WrittenQuestionDetail,
+    "question_text" | "question_rich_text" | "answer_parliament_identifier"
+  > | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const eduskuntaUrl = buildKysymysPdfUrl(item.parliament_identifier);
+  const questionEduskuntaUrl = buildKysymysPdfUrl(item.question_identifier);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+
+    apiFetch(`/api/written-questions/${item.question_id}`)
+      .then(async (res) => {
+        if (!cancelled && res.ok) {
+          setQuestionDetail(await res.json());
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [item.question_id]);
+
+  if (loading) return <InlineSpinner size={24} py={3} />;
+
+  return (
+    <Stack spacing={2}>
+      {/* External link buttons */}
+      {(eduskuntaUrl || questionEduskuntaUrl) && (
+        <Stack
+          direction="row"
+          spacing={1}
+          flexWrap="wrap"
+          gap={0.5}
+        >
+          {eduskuntaUrl && (
+            <EduskuntaSourceLink href={eduskuntaUrl}>
+              {t("viewResponseOnEduskunta")}
+            </EduskuntaSourceLink>
+          )}
+          {questionEduskuntaUrl && (
+            <EduskuntaSourceLink href={questionEduskuntaUrl}>
+              {t("viewQuestionOnEduskunta")}
+            </EduskuntaSourceLink>
+          )}
+        </Stack>
+      )}
+
+      {/* Question text from fetched detail */}
+      {questionDetail?.question_rich_text ? (
+        <Box>
+          <Typography
+            variant="subtitle2"
+            sx={{ color: colors.textSecondary, mb: 1 }}
+          >
+            {t("questionText")}
+          </Typography>
+          <Box
+            sx={{
+              p: 2,
+              backgroundColor: colors.backgroundSubtle,
+              borderRadius: 1,
+              borderLeft: `4px solid ${colors.info}`,
+            }}
+          >
+            <RichTextRenderer document={questionDetail.question_rich_text} />
+          </Box>
+        </Box>
+      ) : questionDetail?.question_text ? (
+        <Box>
+          <Typography
+            variant="subtitle2"
+            sx={{ color: colors.textSecondary, mb: 1 }}
+          >
+            {t("questionText")}
+          </Typography>
+          <Box
+            sx={{
+              p: 2,
+              backgroundColor: colors.backgroundSubtle,
+              borderRadius: 1,
+              borderLeft: `4px solid ${colors.info}`,
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{ color: colors.textPrimary, whiteSpace: "pre-wrap" }}
+            >
+              {questionDetail.question_text}
+            </Typography>
+          </Box>
+        </Box>
+      ) : questionDetail ? (
+        <Typography variant="body2" sx={{ color: colors.textSecondary }}>
+          {t("noQuestionText")}
+        </Typography>
+      ) : null}
+    </Stack>
+  );
+}
+
 function WrittenQuestionResponseCardComponent({
   item,
   onSubjectClick,
@@ -121,13 +237,7 @@ function WrittenQuestionResponseCardComponent({
   onSubjectClick?: (subject: string) => void;
 }) {
   const { t } = useScopedTranslation("documents");
-
-  const [expanded, setExpanded] = useState(false);
-  const [questionDetail, setQuestionDetail] = useState<Pick<
-    WrittenQuestionDetail,
-    "question_text" | "question_rich_text" | "answer_parliament_identifier"
-  > | null>(null);
-  const [loading, setLoading] = useState(false);
+  const { openRootDrawer } = useOverlayDrawer();
 
   const subjects = item.subjects
     ? item.subjects.split("||").filter(Boolean)
@@ -139,37 +249,18 @@ function WrittenQuestionResponseCardComponent({
     .filter(Boolean)
     .join(" ");
 
-  const eduskuntaUrl = buildKysymysPdfUrl(item.parliament_identifier);
-  const questionEduskuntaUrl = buildKysymysPdfUrl(item.question_identifier);
-
-  const handleExpand = async () => {
-    if (!expanded && !questionDetail) {
-      setLoading(true);
-      try {
-        const res = await apiFetch(
-          `/api/written-questions/${item.question_id}`,
-        );
-        if (res.ok) setQuestionDetail(await res.json());
-      } finally {
-        setLoading(false);
-      }
-    }
-    setExpanded((e) => !e);
+  const handleOpenDrawer = () => {
+    openRootDrawer({
+      drawerKey: `wq-response:${item.id}`,
+      title: item.parliament_identifier,
+      subtitle: item.title || item.question_title || t("noTitle"),
+      content: <WrittenQuestionResponseDrawerContent item={item} />,
+    });
   };
 
   return (
     <DataCard sx={{ contentVisibility: "auto", containIntrinsicSize: "360px" }}>
-      <Box
-        sx={{
-          cursor: "pointer",
-          "&:hover": {
-            backgroundColor: colors.backgroundSubtle,
-          },
-          transition: "background-color 0.2s",
-          p: 2,
-        }}
-        onClick={handleExpand}
-      >
+      <Box sx={{ p: 2 }}>
         <Stack spacing={1.5}>
           {/* Identifier + answered chip row */}
           <Stack
@@ -269,106 +360,23 @@ function WrittenQuestionResponseCardComponent({
               )}
             </Stack>
           )}
-        </Stack>
 
-        {/* Expand toggle icon */}
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 1 }}>
-          <ExpandMoreIcon
-            sx={{
-              transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.3s",
-              color: colors.textSecondary,
-            }}
-          />
-        </Box>
-      </Box>
-
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <Box sx={{ p: 2, pt: 0, borderTop: `1px solid ${colors.dataBorder}` }}>
-          {loading && (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
-              <CircularProgress size={32} />
-            </Box>
-          )}
-
-          {/* External link buttons */}
-          {(eduskuntaUrl || questionEduskuntaUrl) && (
-            <Stack
-              direction="row"
-              spacing={1}
-              flexWrap="wrap"
-              gap={0.5}
-              sx={{ mb: 2, pt: 2 }}
+          {/* Open drawer button */}
+          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button
+              variant="outlined"
+              color="primary"
+              size="small"
+              startIcon={<UnfoldMoreIcon />}
+              aria-haspopup="dialog"
+              onClick={handleOpenDrawer}
+              sx={{ minWidth: 140 }}
             >
-              {eduskuntaUrl && (
-                <EduskuntaSourceLink href={eduskuntaUrl} stopPropagation>
-                  {t("viewResponseOnEduskunta")}
-                </EduskuntaSourceLink>
-              )}
-              {questionEduskuntaUrl && (
-                <EduskuntaSourceLink
-                  href={questionEduskuntaUrl}
-                  stopPropagation
-                >
-                  {t("viewQuestionOnEduskunta")}
-                </EduskuntaSourceLink>
-              )}
-            </Stack>
-          )}
-
-          {/* Question text from fetched detail */}
-          {!loading && questionDetail?.question_rich_text ? (
-            <Box>
-              <Typography
-                variant="subtitle2"
-                sx={{ color: colors.textSecondary, mb: 1 }}
-              >
-                {t("questionText")}
-              </Typography>
-              <Box
-                sx={{
-                  p: 2,
-                  backgroundColor: colors.backgroundSubtle,
-                  borderRadius: 1,
-                  borderLeft: `4px solid ${colors.info}`,
-                }}
-              >
-                <RichTextRenderer
-                  document={questionDetail.question_rich_text}
-                />
-              </Box>
-            </Box>
-          ) : !loading && questionDetail?.question_text ? (
-            <Box>
-              <Typography
-                variant="subtitle2"
-                sx={{ color: colors.textSecondary, mb: 1 }}
-              >
-                {t("questionText")}
-              </Typography>
-              <Box
-                sx={{
-                  p: 2,
-                  backgroundColor: colors.backgroundSubtle,
-                  borderRadius: 1,
-                  borderLeft: `4px solid ${colors.info}`,
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{ color: colors.textPrimary, whiteSpace: "pre-wrap" }}
-                >
-                  {questionDetail.question_text}
-                </Typography>
-              </Box>
-            </Box>
-          ) : !loading && questionDetail ? (
-            <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-              {t("noQuestionText")}
-            </Typography>
-          ) : null}
-        </Box>
-      </Collapse>
+              {t("showDetails")}
+            </Button>
+          </Box>
+        </Stack>
+      </Box>
     </DataCard>
   );
 }
@@ -376,6 +384,7 @@ function WrittenQuestionResponseCardComponent({
 export const WrittenQuestionResponseCard = memo(
   WrittenQuestionResponseCardComponent,
 );
+
 const DocumentPrefixMap = Object.freeze({
   HE: "government-proposals",
   VK: "interpellations",
@@ -718,6 +727,112 @@ function ExpertStatementCardComponent({
 
 export const ExpertStatementCard = memo(ExpertStatementCardComponent);
 
+// ─── OralQuestion drawer content ───
+
+function OralQuestionDrawerContent({
+  item,
+}: {
+  item: OralQuestionListItem;
+}) {
+  const { t } = useScopedTranslation("documents");
+
+  const [detail, setDetail] = useState<OralQuestionDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showQuestionText, setShowQuestionText] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    apiFetch(`/api/oral-questions/${item.id}`)
+      .then(async (res) => {
+        if (!cancelled) {
+          if (res.ok) {
+            setDetail(await res.json());
+          } else {
+            setError(`HTTP ${res.status}`);
+          }
+        }
+      })
+      .catch((err) => {
+        if (!cancelled)
+          setError(err instanceof Error ? err.message : "Tuntematon virhe");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [item.id]);
+
+  if (loading) return <InlineSpinner size={24} py={3} />;
+
+  if (error) {
+    return (
+      <Alert severity="error">
+        {t("loadErrorLine", { value: error })}
+      </Alert>
+    );
+  }
+
+  if (!detail) return null;
+
+  return (
+    <Stack spacing={2}>
+      {detail.question_text && (
+        <Box>
+          <Button
+            startIcon={<ArticleIcon />}
+            onClick={() => setShowQuestionText(!showQuestionText)}
+            sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
+          >
+            {showQuestionText
+              ? t("questionToggle", { context: "hide" })
+              : t("questionToggle", { context: "show" })}
+          </Button>
+          <Collapse in={showQuestionText}>
+            <Box
+              sx={{
+                p: 2,
+                backgroundColor: colors.backgroundSubtle,
+                borderRadius: 1,
+                borderLeft: `4px solid ${colors.info}`,
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
+                  color: colors.textPrimary,
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {detail.question_text}
+              </Typography>
+            </Box>
+          </Collapse>
+        </Box>
+      )}
+
+      <DocumentLifecycle
+        currentIdentifier={item.parliament_identifier}
+        directReferenceValues={[
+          ...detail.stages.map((stage) => stage.stage_title),
+          ...detail.stages.map((stage) => stage.event_title),
+          ...detail.stages.map((stage) => stage.event_description),
+        ]}
+      />
+
+      <InlineRelatedSessions sessions={detail.sessions} />
+
+      <RelatedVotings identifiers={[item.parliament_identifier]} />
+    </Stack>
+  );
+}
+
 function OralQuestionCardComponent({
   item,
   onSubjectClick,
@@ -726,12 +841,7 @@ function OralQuestionCardComponent({
   onSubjectClick?: (subject: string) => void;
 }) {
   const { t } = useScopedTranslation("documents");
-
-  const [expanded, setExpanded] = useState(false);
-  const [detail, setDetail] = useState<OralQuestionDetail | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showQuestionText, setShowQuestionText] = useState(false);
+  const { openRootDrawer } = useOverlayDrawer();
 
   const subjects = item.subjects
     ? item.subjects.split("||").filter(Boolean)
@@ -739,39 +849,18 @@ function OralQuestionCardComponent({
   const displaySubjects = subjects.slice(0, 3);
   const remainingSubjects = subjects.length - 3;
 
-  const handleExpand = async () => {
-    if (!expanded && !detail) {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await apiFetch(`/api/oral-questions/${item.id}`);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        const data = await response.json();
-        setDetail(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load");
-      } finally {
-        setLoading(false);
-      }
-    }
-    setExpanded(!expanded);
+  const handleOpenDrawer = () => {
+    openRootDrawer({
+      drawerKey: `oral-question:${item.id}`,
+      title: item.parliament_identifier,
+      subtitle: item.title || t("noTitle"),
+      content: <OralQuestionDrawerContent item={item} />,
+    });
   };
 
   return (
     <DataCard sx={{ contentVisibility: "auto", containIntrinsicSize: "380px" }}>
-      <Box
-        sx={{
-          cursor: "pointer",
-          "&:hover": {
-            backgroundColor: colors.backgroundSubtle,
-          },
-          transition: "background-color 0.2s",
-          p: 2,
-        }}
-        onClick={handleExpand}
-      >
+      <Box sx={{ p: 2 }}>
         <Stack spacing={1.5}>
           <Stack
             direction="row"
@@ -870,92 +959,360 @@ function OralQuestionCardComponent({
               )}
             </Stack>
           )}
+
+          {/* Open drawer button */}
+          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button
+              variant="outlined"
+              color="primary"
+              size="small"
+              startIcon={<UnfoldMoreIcon />}
+              aria-haspopup="dialog"
+              onClick={handleOpenDrawer}
+              sx={{ minWidth: 140 }}
+            >
+              {t("showDetails")}
+            </Button>
+          </Box>
         </Stack>
-
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            mt: 1,
-            transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-            transition: "transform 0.2s",
-          }}
-        >
-          <ExpandMoreIcon sx={{ color: colors.textSecondary }} />
-        </Box>
       </Box>
-
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <Box sx={{ px: 2, pb: 2 }}>
-          {loading && (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-              <CircularProgress size={24} />
-            </Box>
-          )}
-
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {t("loadErrorLine", { value: error })}
-            </Alert>
-          )}
-
-          {detail && (
-            <Stack spacing={2}>
-              {detail.question_text && (
-                <Box>
-                  <Button
-                    startIcon={<ArticleIcon />}
-                    onClick={() => setShowQuestionText(!showQuestionText)}
-                    sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
-                  >
-                    {showQuestionText
-                      ? t("questionToggle", { context: "hide" })
-                      : t("questionToggle", { context: "show" })}
-                  </Button>
-                  <Collapse in={showQuestionText}>
-                    <Box
-                      sx={{
-                        p: 2,
-                        backgroundColor: colors.backgroundSubtle,
-                        borderRadius: 1,
-                        borderLeft: `4px solid ${colors.info}`,
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: colors.textPrimary,
-                          whiteSpace: "pre-wrap",
-                        }}
-                      >
-                        {detail.question_text}
-                      </Typography>
-                    </Box>
-                  </Collapse>
-                </Box>
-              )}
-
-              <DocumentLifecycle
-                currentIdentifier={item.parliament_identifier}
-                directReferenceValues={[
-                  ...detail.stages.map((stage) => stage.stage_title),
-                  ...detail.stages.map((stage) => stage.event_title),
-                  ...detail.stages.map((stage) => stage.event_description),
-                ]}
-              />
-
-              <InlineRelatedSessions sessions={detail.sessions} />
-
-              <RelatedVotings identifiers={[item.parliament_identifier]} />
-            </Stack>
-          )}
-        </Box>
-      </Collapse>
     </DataCard>
   );
 }
 
 export const OralQuestionCard = memo(OralQuestionCardComponent);
+
+// ─── WrittenQuestion drawer content ───
+
+function WrittenQuestionDrawerContent({
+  item,
+}: {
+  item: WrittenQuestionListItem;
+}) {
+  const { t: tCommon } = useScopedTranslation("common");
+  const { t: tDocuments } = useScopedTranslation("documents");
+
+  const [detail, setDetail] = useState<WrittenQuestionDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showQuestionText, setShowQuestionText] = useState(false);
+
+  const kkPdfUrl = buildKysymysPdfUrl(item.parliament_identifier);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    apiFetch(`/api/written-questions/${item.id}`)
+      .then(async (res) => {
+        if (!cancelled) {
+          if (res.ok) {
+            setDetail(await res.json());
+          } else {
+            setError(`HTTP ${res.status}`);
+          }
+        }
+      })
+      .catch((err) => {
+        if (!cancelled)
+          setError(err instanceof Error ? err.message : "Tuntematon virhe");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [item.id]);
+
+  if (loading) return <InlineSpinner size={24} py={3} />;
+
+  if (error) {
+    return <Alert severity="error">{error}</Alert>;
+  }
+
+  if (!detail) return null;
+
+  return (
+    <Stack spacing={3}>
+      {(kkPdfUrl || detail.answer_parliament_identifier) && (
+        <Stack direction="row" spacing={1} flexWrap="wrap" gap={0.5}>
+          {kkPdfUrl && (
+            <EduskuntaSourceLink href={kkPdfUrl}>
+              {tDocuments("viewQuestionPdf")}
+            </EduskuntaSourceLink>
+          )}
+          {(() => {
+            const url = buildKysymysPdfUrl(
+              detail.answer_parliament_identifier,
+            );
+            return url ? (
+              <EduskuntaSourceLink href={url}>
+                {tDocuments("viewResponsePdf")}
+              </EduskuntaSourceLink>
+            ) : null;
+          })()}
+        </Stack>
+      )}
+
+      {detail.signers.length > 0 && (
+        <Box>
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            sx={{ mb: 1.5 }}
+          >
+            <PersonIcon sx={{ color: colors.primary }} />
+            <Typography
+              variant="subtitle1"
+              sx={{ fontWeight: 600, color: colors.textPrimary }}
+            >
+              {tDocuments("signers")}
+            </Typography>
+          </Stack>
+          <TableContainer>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>#</TableCell>
+                  <TableCell>{tDocuments("author")}</TableCell>
+                  <TableCell>{tCommon("party")}</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {detail.signers.map((signer, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell>
+                      <Stack
+                        direction="row"
+                        spacing={0.5}
+                        alignItems="center"
+                      >
+                        {idx + 1}
+                      </Stack>
+                    </TableCell>
+                    <TableCell>
+                      {[signer.first_name, signer.last_name]
+                        .filter(Boolean)
+                        .join(" ") || "—"}
+                    </TableCell>
+                    <TableCell>{signer.party || "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      )}
+
+      {/* Answer section */}
+      {(detail.answer_date || detail.answer_minister_first_name) && (
+        <Box>
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            sx={{ mb: 1.5 }}
+          >
+            <GavelIcon sx={{ color: colors.primary }} />
+            <Typography
+              variant="subtitle1"
+              sx={{ fontWeight: 600, color: colors.textPrimary }}
+            >
+              {tDocuments("answerMinister")}
+            </Typography>
+          </Stack>
+          <Box sx={{ pl: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: colors.textPrimary }}
+            >
+              {detail.answer_minister_title &&
+                `${detail.answer_minister_title} `}
+              {detail.answer_minister_first_name}{" "}
+              {detail.answer_minister_last_name}
+            </Typography>
+            {detail.answer_date && (
+              <Typography
+                variant="caption"
+                sx={{ color: colors.textSecondary }}
+              >
+                {formatDate(detail.answer_date)}
+                {detail.answer_parliament_identifier &&
+                  ` — ${detail.answer_parliament_identifier}`}
+              </Typography>
+            )}
+            {detail.response_subjects.length > 0 && (
+              <Stack
+                direction="row"
+                spacing={0.5}
+                flexWrap="wrap"
+                gap={0.5}
+                sx={{ mt: 1 }}
+              >
+                {detail.response_subjects.map((s, idx) => (
+                  <Chip
+                    key={idx}
+                    label={s.subject_text}
+                    size="small"
+                    variant="outlined"
+                    sx={{
+                      borderColor: colors.dataBorder,
+                      color: colors.textSecondary,
+                    }}
+                  />
+                ))}
+              </Stack>
+            )}
+          </Box>
+        </Box>
+      )}
+
+      {detail.stages.length > 0 && (
+        <Box>
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            sx={{ mb: 1.5 }}
+          >
+            <TimelineIcon sx={{ color: colors.primary }} />
+            <Typography
+              variant="subtitle1"
+              sx={{ fontWeight: 600, color: colors.textPrimary }}
+            >
+              {tDocuments("stages")}
+            </Typography>
+          </Stack>
+          <Stack spacing={1.5}>
+            {detail.stages.map((stage, idx) => (
+              <Box
+                key={idx}
+                sx={{
+                  pl: 2,
+                  borderLeft: `3px solid ${colors.primary}`,
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{ fontWeight: 500, color: colors.textPrimary }}
+                >
+                  {stage.stage_title || "—"}
+                </Typography>
+                {stage.event_date && (
+                  <Typography
+                    variant="caption"
+                    sx={{ color: colors.textSecondary }}
+                  >
+                    {formatDate(stage.event_date)}
+                  </Typography>
+                )}
+                {stage.event_title &&
+                  stage.event_title !== stage.stage_title && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        mt: 0.25,
+                        color: colors.textPrimary,
+                        fontWeight: 400,
+                      }}
+                    >
+                      {stage.event_title}
+                    </Typography>
+                  )}
+                {stage.event_description && (
+                  <Typography
+                    variant="body2"
+                    sx={{ mt: 0.5, color: colors.textSecondary }}
+                  >
+                    {stage.event_description}
+                  </Typography>
+                )}
+              </Box>
+            ))}
+          </Stack>
+        </Box>
+      )}
+
+      {(detail.question_text || detail.question_rich_text) && (
+        <Box>
+          <Button
+            startIcon={<ArticleIcon />}
+            onClick={() => setShowQuestionText(!showQuestionText)}
+            sx={{
+              textTransform: "none",
+              color: colors.primary,
+              mb: 1,
+            }}
+          >
+            {showQuestionText
+              ? tDocuments("questionTextToggle", { context: "hide" })
+              : tDocuments("questionTextToggle", { context: "show" })}
+          </Button>
+          <Collapse in={showQuestionText}>
+            <Box
+              sx={{
+                p: 2,
+                backgroundColor: colors.backgroundSubtle,
+                borderRadius: 1,
+                borderLeft: `4px solid ${colors.primary}`,
+              }}
+            >
+              <RichTextRenderer
+                document={detail.question_rich_text}
+                fallbackText={detail.question_text}
+                paragraphVariant="body2"
+              />
+            </Box>
+          </Collapse>
+        </Box>
+      )}
+
+      {/* Subjects */}
+      {detail.subjects.length > 0 && (
+        <Box>
+          <Stack
+            direction="row"
+            spacing={0.5}
+            flexWrap="wrap"
+            gap={0.5}
+          >
+            {detail.subjects.map((s, idx) => (
+              <Chip
+                key={idx}
+                label={s.subject_text}
+                size="small"
+                variant="outlined"
+                sx={{
+                  borderColor: colors.dataBorder,
+                  color: colors.textSecondary,
+                }}
+              />
+            ))}
+          </Stack>
+        </Box>
+      )}
+
+      <DocumentLifecycle
+        currentIdentifier={item.parliament_identifier}
+        directReferenceValues={[
+          detail.answer_parliament_identifier,
+          ...detail.stages.map((stage) => stage.stage_title),
+          ...detail.stages.map((stage) => stage.event_title),
+          ...detail.stages.map((stage) => stage.event_description),
+        ]}
+        richTextValues={[detail.question_rich_text]}
+      />
+
+      <InlineRelatedSessions sessions={detail.sessions} />
+
+      <RelatedVotings identifiers={[item.parliament_identifier]} />
+    </Stack>
+  );
+}
 
 function WrittenQuestionCardComponent({
   item,
@@ -964,22 +1321,14 @@ function WrittenQuestionCardComponent({
   item: WrittenQuestionListItem;
   onSubjectClick?: (subject: string) => void;
 }) {
-  const { t: tCommon } = useScopedTranslation("common");
   const { t: tDocuments } = useScopedTranslation("documents");
-
-  const [expanded, setExpanded] = useState(false);
-  const [detail, setDetail] = useState<WrittenQuestionDetail | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showQuestionText, setShowQuestionText] = useState(false);
+  const { openRootDrawer } = useOverlayDrawer();
 
   const subjects = item.subjects
     ? item.subjects.split("||").filter(Boolean)
     : [];
   const displaySubjects = subjects.slice(0, 3);
   const remainingSubjects = subjects.length - 3;
-
-  const kkPdfUrl = buildKysymysPdfUrl(item.parliament_identifier);
 
   const signerName = [item.first_signer_first_name, item.first_signer_last_name]
     .filter(Boolean)
@@ -995,39 +1344,18 @@ function WrittenQuestionCardComponent({
     .filter(Boolean)
     .join(" ");
 
-  const handleExpand = async () => {
-    if (!expanded && !detail) {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await apiFetch(`/api/written-questions/${item.id}`);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        const data = await response.json();
-        setDetail(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load");
-      } finally {
-        setLoading(false);
-      }
-    }
-    setExpanded(!expanded);
+  const handleOpenDrawer = () => {
+    openRootDrawer({
+      drawerKey: `written-question:${item.id}`,
+      title: item.parliament_identifier,
+      subtitle: item.title || tDocuments("noTitle"),
+      content: <WrittenQuestionDrawerContent item={item} />,
+    });
   };
 
   return (
     <DataCard sx={{ contentVisibility: "auto", containIntrinsicSize: "400px" }}>
-      <Box
-        sx={{
-          cursor: "pointer",
-          "&:hover": {
-            backgroundColor: colors.backgroundSubtle,
-          },
-          transition: "background-color 0.2s",
-          p: 2,
-        }}
-        onClick={handleExpand}
-      >
+      <Box sx={{ p: 2 }}>
         <Stack spacing={1.5}>
           {/* Title row */}
           <Stack
@@ -1170,318 +1498,23 @@ function WrittenQuestionCardComponent({
               )}
             </Stack>
           )}
+
+          {/* Open drawer button */}
+          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button
+              variant="outlined"
+              color="primary"
+              size="small"
+              startIcon={<UnfoldMoreIcon />}
+              aria-haspopup="dialog"
+              onClick={handleOpenDrawer}
+              sx={{ minWidth: 140 }}
+            >
+              {tDocuments("showDetails")}
+            </Button>
+          </Box>
         </Stack>
-
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            mt: 1,
-          }}
-        >
-          <ExpandMoreIcon
-            sx={{
-              transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.3s",
-              color: colors.textSecondary,
-            }}
-          />
-        </Box>
       </Box>
-
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <Box sx={{ p: 2, pt: 0, borderTop: `1px solid ${colors.dataBorder}` }}>
-          {loading && (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
-              <CircularProgress size={32} />
-            </Box>
-          )}
-
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          {detail && (
-            <Stack spacing={3}>
-              {(kkPdfUrl || detail.answer_parliament_identifier) && (
-                <Stack direction="row" spacing={1} flexWrap="wrap" gap={0.5}>
-                  {kkPdfUrl && (
-                    <EduskuntaSourceLink href={kkPdfUrl} stopPropagation>
-                      {tDocuments("viewQuestionPdf")}
-                    </EduskuntaSourceLink>
-                  )}
-                  {(() => {
-                    const url = buildKysymysPdfUrl(
-                      detail.answer_parliament_identifier,
-                    );
-                    return url ? (
-                      <EduskuntaSourceLink href={url} stopPropagation>
-                        {tDocuments("viewResponsePdf")}
-                      </EduskuntaSourceLink>
-                    ) : null;
-                  })()}
-                </Stack>
-              )}
-
-              {detail.signers.length > 0 && (
-                <Box>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    sx={{ mb: 1.5 }}
-                  >
-                    <PersonIcon sx={{ color: colors.primary }} />
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 600, color: colors.textPrimary }}
-                    >
-                      {tDocuments("signers")}
-                    </Typography>
-                  </Stack>
-                  <TableContainer>
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>#</TableCell>
-                          <TableCell>{tDocuments("author")}</TableCell>
-                          <TableCell>{tCommon("party")}</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {detail.signers.map((signer, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell>
-                              <Stack
-                                direction="row"
-                                spacing={0.5}
-                                alignItems="center"
-                              >
-                                {idx + 1}
-                              </Stack>
-                            </TableCell>
-                            <TableCell>
-                              {[signer.first_name, signer.last_name]
-                                .filter(Boolean)
-                                .join(" ") || "—"}
-                            </TableCell>
-                            <TableCell>{signer.party || "—"}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </Box>
-              )}
-
-              {/* Answer section */}
-              {(detail.answer_date || detail.answer_minister_first_name) && (
-                <Box>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    sx={{ mb: 1.5 }}
-                  >
-                    <GavelIcon sx={{ color: colors.primary }} />
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 600, color: colors.textPrimary }}
-                    >
-                      {tDocuments("answerMinister")}
-                    </Typography>
-                  </Stack>
-                  <Box sx={{ pl: 2 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: colors.textPrimary }}
-                    >
-                      {detail.answer_minister_title &&
-                        `${detail.answer_minister_title} `}
-                      {detail.answer_minister_first_name}{" "}
-                      {detail.answer_minister_last_name}
-                    </Typography>
-                    {detail.answer_date && (
-                      <Typography
-                        variant="caption"
-                        sx={{ color: colors.textSecondary }}
-                      >
-                        {formatDate(detail.answer_date)}
-                        {detail.answer_parliament_identifier &&
-                          ` — ${detail.answer_parliament_identifier}`}
-                      </Typography>
-                    )}
-                    {detail.response_subjects.length > 0 && (
-                      <Stack
-                        direction="row"
-                        spacing={0.5}
-                        flexWrap="wrap"
-                        gap={0.5}
-                        sx={{ mt: 1 }}
-                      >
-                        {detail.response_subjects.map((s, idx) => (
-                          <Chip
-                            key={idx}
-                            label={s.subject_text}
-                            size="small"
-                            variant="outlined"
-                            sx={{
-                              borderColor: colors.dataBorder,
-                              color: colors.textSecondary,
-                            }}
-                          />
-                        ))}
-                      </Stack>
-                    )}
-                  </Box>
-                </Box>
-              )}
-
-              {detail.stages.length > 0 && (
-                <Box>
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    sx={{ mb: 1.5 }}
-                  >
-                    <TimelineIcon sx={{ color: colors.primary }} />
-                    <Typography
-                      variant="subtitle1"
-                      sx={{ fontWeight: 600, color: colors.textPrimary }}
-                    >
-                      {tDocuments("stages")}
-                    </Typography>
-                  </Stack>
-                  <Stack spacing={1.5}>
-                    {detail.stages.map((stage, idx) => (
-                      <Box
-                        key={idx}
-                        sx={{
-                          pl: 2,
-                          borderLeft: `3px solid ${colors.primary}`,
-                        }}
-                      >
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: 500, color: colors.textPrimary }}
-                        >
-                          {stage.stage_title || "—"}
-                        </Typography>
-                        {stage.event_date && (
-                          <Typography
-                            variant="caption"
-                            sx={{ color: colors.textSecondary }}
-                          >
-                            {formatDate(stage.event_date)}
-                          </Typography>
-                        )}
-                        {stage.event_title &&
-                          stage.event_title !== stage.stage_title && (
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                mt: 0.25,
-                                color: colors.textPrimary,
-                                fontWeight: 400,
-                              }}
-                            >
-                              {stage.event_title}
-                            </Typography>
-                          )}
-                        {stage.event_description && (
-                          <Typography
-                            variant="body2"
-                            sx={{ mt: 0.5, color: colors.textSecondary }}
-                          >
-                            {stage.event_description}
-                          </Typography>
-                        )}
-                      </Box>
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-
-              {(detail.question_text || detail.question_rich_text) && (
-                <Box>
-                  <Button
-                    startIcon={<ArticleIcon />}
-                    onClick={() => setShowQuestionText(!showQuestionText)}
-                    sx={{
-                      textTransform: "none",
-                      color: colors.primary,
-                      mb: 1,
-                    }}
-                  >
-                    {showQuestionText
-                      ? tDocuments("questionTextToggle", { context: "hide" })
-                      : tDocuments("questionTextToggle", { context: "show" })}
-                  </Button>
-                  <Collapse in={showQuestionText}>
-                    <Box
-                      sx={{
-                        p: 2,
-                        backgroundColor: colors.backgroundSubtle,
-                        borderRadius: 1,
-                        borderLeft: `4px solid ${colors.primary}`,
-                      }}
-                    >
-                      <RichTextRenderer
-                        document={detail.question_rich_text}
-                        fallbackText={detail.question_text}
-                        paragraphVariant="body2"
-                      />
-                    </Box>
-                  </Collapse>
-                </Box>
-              )}
-
-              {/* Subjects */}
-              {detail.subjects.length > 0 && (
-                <Box>
-                  <Stack
-                    direction="row"
-                    spacing={0.5}
-                    flexWrap="wrap"
-                    gap={0.5}
-                  >
-                    {detail.subjects.map((s, idx) => (
-                      <Chip
-                        key={idx}
-                        label={s.subject_text}
-                        size="small"
-                        variant="outlined"
-                        sx={{
-                          borderColor: colors.dataBorder,
-                          color: colors.textSecondary,
-                        }}
-                      />
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-
-              <DocumentLifecycle
-                currentIdentifier={item.parliament_identifier}
-                directReferenceValues={[
-                  detail.answer_parliament_identifier,
-                  ...detail.stages.map((stage) => stage.stage_title),
-                  ...detail.stages.map((stage) => stage.event_title),
-                  ...detail.stages.map((stage) => stage.event_description),
-                ]}
-                richTextValues={[detail.question_rich_text]}
-              />
-
-              <InlineRelatedSessions sessions={detail.sessions} />
-
-              <RelatedVotings identifiers={[item.parliament_identifier]} />
-            </Stack>
-          )}
-        </Box>
-      </Collapse>
     </DataCard>
   );
 }

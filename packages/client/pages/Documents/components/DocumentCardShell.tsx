@@ -23,8 +23,9 @@ const DocumentCardShellComponent: React.FC<{
   meta?: React.ReactNode;
   topics?: React.ReactNode;
   actions?: React.ReactNode;
-  expanded: boolean;
-  onToggle: () => void;
+  expanded?: boolean;
+  onToggle?: () => void;
+  onOpenDrawer?: () => void;
   toggleLabel: string;
   collapseLabel: string;
   loadingState?: React.ReactNode;
@@ -40,6 +41,7 @@ const DocumentCardShellComponent: React.FC<{
   actions,
   expanded,
   onToggle,
+  onOpenDrawer,
   toggleLabel,
   collapseLabel,
   loadingState,
@@ -131,39 +133,50 @@ const DocumentCardShellComponent: React.FC<{
             {actions}
           </Box>
           <Button
-            variant={expanded ? "contained" : "outlined"}
+            variant="outlined"
             color="primary"
-            onClick={onToggle}
-            startIcon={expanded ? <ExpandMoreIcon /> : <UnfoldMoreIcon />}
-            aria-expanded={expanded}
+            onClick={onOpenDrawer ?? onToggle}
+            startIcon={
+              onOpenDrawer ? (
+                <UnfoldMoreIcon />
+              ) : expanded ? (
+                <ExpandMoreIcon />
+              ) : (
+                <UnfoldMoreIcon />
+              )
+            }
+            aria-haspopup={onOpenDrawer ? "dialog" : undefined}
+            aria-expanded={onOpenDrawer ? undefined : expanded}
             sx={{
               alignSelf: { xs: "stretch", sm: "center" },
               minWidth: { sm: 152 },
             }}
           >
-            {expanded ? collapseLabel : toggleLabel}
+            {onOpenDrawer ? toggleLabel : expanded ? collapseLabel : toggleLabel}
           </Button>
         </Stack>
       </Stack>
     </Box>
 
-    <Collapse in={expanded} timeout="auto" unmountOnExit>
-      <Box
-        sx={{
-          borderTop: `1px solid ${colors.dataBorder}`,
-          backgroundColor: colors.backgroundPaper,
-          p: { xs: 2, md: 2.5 },
-        }}
-      >
-        {loadingState}
-        {!loadingState && error && (
-          <Alert severity="error" sx={{ mb: children ? 2 : 0 }}>
-            {error}
-          </Alert>
-        )}
-        {!loadingState && children}
-      </Box>
-    </Collapse>
+    {!onOpenDrawer && (
+      <Collapse in={expanded} timeout="auto" unmountOnExit>
+        <Box
+          sx={{
+            borderTop: `1px solid ${colors.dataBorder}`,
+            backgroundColor: colors.backgroundPaper,
+            p: { xs: 2, md: 2.5 },
+          }}
+        >
+          {loadingState}
+          {!loadingState && error && (
+            <Alert severity="error" sx={{ mb: children ? 2 : 0 }}>
+              {error}
+            </Alert>
+          )}
+          {!loadingState && children}
+        </Box>
+      </Collapse>
+    )}
   </DataCard>
 );
 

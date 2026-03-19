@@ -10,10 +10,14 @@ import {
 } from "@mui/material";
 import React from "react";
 import {
+  getPrimaryVotingTitle,
   VotingCard,
   type VotingCardData,
+  VotingDrawerContent,
   VotingGroupCard,
 } from "#client/components/VotingCard";
+import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
+import { formatDateFi } from "#client/utils/date-time";
 import {
   isDateWithinHallituskausi,
   useHallituskausi,
@@ -75,12 +79,27 @@ const emptyOverviewState: OverviewState = {
   data: null,
 };
 
-const renderGroups = (groups: VotingGroupViewModel[]) =>
+const renderGroups = (
+  groups: VotingGroupViewModel[],
+  onOpenDetails?: (v: VotingCardData) => void,
+) =>
   groups.map((group) =>
     group.votes.length === 1 ? (
-      <VotingCard key={group.id} voting={group.votes[0] as VotingCardData} />
+      <VotingCard
+        key={group.id}
+        voting={group.votes[0] as VotingCardData}
+        onOpenDetails={
+          onOpenDetails
+            ? () => onOpenDetails(group.votes[0] as VotingCardData)
+            : undefined
+        }
+      />
     ) : (
-      <VotingGroupCard key={group.id} votes={group.votes as VotingCardData[]} />
+      <VotingGroupCard
+        key={group.id}
+        votes={group.votes as VotingCardData[]}
+        onOpenDetails={onOpenDetails}
+      />
     ),
   );
 
@@ -88,7 +107,8 @@ const OverviewSection: React.FC<{
   title: string;
   description: string;
   groups: VotingGroupViewModel[];
-}> = ({ title, description, groups }) => {
+  onOpenDetails?: (v: VotingCardData) => void;
+}> = ({ title, description, groups, onOpenDetails }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const [expanded, setExpanded] = React.useState(false);
 
@@ -134,7 +154,9 @@ const OverviewSection: React.FC<{
         {visibleGroups.length === 0 ? (
           <EmptyState title={title} description={description} />
         ) : (
-          <Stack spacing={1.25}>{renderGroups(visibleGroups)}</Stack>
+          <Stack spacing={1.25}>
+            {renderGroups(visibleGroups, onOpenDetails)}
+          </Stack>
         )}
 
         {!expanded && hasMoreGroups(groups, OVERVIEW_GROUP_LIMIT) && (
@@ -183,6 +205,7 @@ export const VoteResults: React.FC<{
   const { t: tVotings } = useScopedTranslation("votings");
   const { selectedHallituskausi } = useHallituskausi();
   const themedColors = useThemedColors();
+  const { openRootDrawer, closeDrawer } = useOverlayDrawer();
 
   const [browseState, setBrowseState] =
     React.useState<BrowseState>(emptyBrowseState);
@@ -335,6 +358,44 @@ export const VoteResults: React.FC<{
     return () => ac.abort();
   }, [focusVotingId, tCommon, tErrors]);
 
+  const handleOpenVotingDrawer = React.useCallback(
+    (voting: VotingCardData) => {
+      const primaryTitle = getPrimaryVotingTitle(voting);
+      openRootDrawer({
+        drawerKey: `voting:${voting.id}`,
+        title: primaryTitle || `Äänestys #${voting.id}`,
+        subtitle: voting.start_time ? formatDateFi(voting.start_time) : undefined,
+        content: <VotingDrawerContent votingId={voting.id} />,
+        onClose: () => onFocusVotingChange(null),
+      });
+      onFocusVotingChange(voting.id);
+    },
+    [openRootDrawer, onFocusVotingChange],
+  );
+
+  const openedFocusRef = React.useRef<number | null>(null);
+  React.useEffect(() => {
+    if (
+      focusVoting.row &&
+      focusVotingId &&
+      openedFocusRef.current !== focusVotingId
+    ) {
+      openedFocusRef.current = focusVotingId;
+      const voting = buildVotingViewModels([focusVoting.row])[0] as VotingCardData;
+      const primaryTitle = getPrimaryVotingTitle(voting);
+      openRootDrawer({
+        drawerKey: `voting:${focusVotingId}`,
+        title: primaryTitle || `Äänestys #${focusVotingId}`,
+        subtitle: voting.start_time ? formatDateFi(voting.start_time) : undefined,
+        content: <VotingDrawerContent votingId={focusVotingId} />,
+        onClose: () => onFocusVotingChange(null),
+      });
+    }
+    if (!focusVotingId) {
+      openedFocusRef.current = null;
+    }
+  }, [focusVoting.row, focusVotingId, openRootDrawer, onFocusVotingChange]);
+
   const combinedRows = React.useMemo(() => {
     const rows = [...browseState.rows];
     if (
@@ -432,7 +493,10 @@ export const VoteResults: React.FC<{
           ? {
               key: "focus",
               label: tVotings("focusedVoting", { id: focusVotingId }),
-              onDelete: () => onFocusVotingChange(null),
+              onDelete: () => {
+                onFocusVotingChange(null);
+                closeDrawer();
+              },
             }
           : null,
       ].filter(Boolean) as Array<{
@@ -772,16 +836,19 @@ export const VoteResults: React.FC<{
             title={tVotings("overview.sections.recent.title")}
             description={tVotings("overview.sections.recent.description")}
             groups={overviewGroups.recent}
+            onOpenDetails={handleOpenVotingDrawer}
           />
           <OverviewSection
             title={tVotings("overview.sections.close.title")}
             description={tVotings("overview.sections.close.description")}
             groups={overviewGroups.close}
+            onOpenDetails={handleOpenVotingDrawer}
           />
           <OverviewSection
             title={tVotings("overview.sections.turnout.title")}
             description={tVotings("overview.sections.turnout.description")}
             groups={overviewGroups.turnout}
+            onOpenDetails={handleOpenVotingDrawer}
           />
         </Stack>
       )}
@@ -806,7 +873,7 @@ export const VoteResults: React.FC<{
             />
           ) : (
             <Stack spacing={1.5}>
-              {renderGroups(visibleResultGroups)}
+              {renderGroups(visibleResultGroups, handleOpenVotingDrawer)}
               {hasMoreGroups(groupedResults, visibleResultGroupCount) && (
                 <>
                   <Box ref={resultsSentinelRef} sx={{ height: 1 }} />

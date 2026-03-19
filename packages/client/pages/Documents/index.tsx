@@ -978,6 +978,7 @@ export default function Documents() {
 
         <Box id="documents-content">
           <DocumentsFilterPanel
+            collapsible={isMobile}
             secondaryFilters={
               <>
                 {documentType === "committee-reports" && (

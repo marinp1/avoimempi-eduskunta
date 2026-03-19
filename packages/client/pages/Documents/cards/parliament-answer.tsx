@@ -1,26 +1,26 @@
 import {
   Article as ArticleIcon,
   Balance as BalanceIcon,
-  ExpandMore as ExpandMoreIcon,
   Gavel as GavelIcon,
   HowToVote as HowToVoteIcon,
+  UnfoldMore as UnfoldMoreIcon,
 } from "@mui/icons-material";
 import {
   Alert,
   Box,
   Button,
   Chip,
-  CircularProgress,
   Collapse,
   Stack,
   Typography,
 } from "@mui/material";
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { EduskuntaSourceLink } from "#client/components/EduskuntaSourceLink";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
+import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
-import { DataCard } from "#client/theme/components";
+import { DataCard, InlineSpinner } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { apiFetch } from "#client/utils/fetch";
 import { buildEdkDocumentUrl, formatDate } from "./shared";
@@ -41,6 +41,145 @@ export interface ParliamentAnswerListItem {
 
 type ParliamentAnswerDetail = ApiRouteResponse<`/api/parliament-answers/:id`>;
 
+// ─── Drawer content component ───
+
+function ParliamentAnswerDrawerContent({
+  item,
+}: {
+  item: ParliamentAnswerListItem;
+}) {
+  const { t: tDocuments } = useScopedTranslation("documents");
+
+  const [detail, setDetail] = useState<ParliamentAnswerDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showDecision, setShowDecision] = useState(false);
+  const [showLegislation, setShowLegislation] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    apiFetch(`/api/parliament-answers/${item.id}`)
+      .then(async (res) => {
+        if (!cancelled) {
+          if (res.ok) {
+            setDetail(await res.json());
+          } else {
+            setError(`HTTP ${res.status}`);
+          }
+        }
+      })
+      .catch((err) => {
+        if (!cancelled)
+          setError(err instanceof Error ? err.message : "Tuntematon virhe");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [item.id]);
+
+  if (loading) return <InlineSpinner size={24} py={3} />;
+
+  if (error) {
+    return <Alert severity="error">{error}</Alert>;
+  }
+
+  if (!detail) return null;
+
+  return (
+    <Stack spacing={3}>
+      {/* Decision section */}
+      {(detail.decision_text || detail.decision_rich_text) && (
+        <Box>
+          <Button
+            startIcon={<GavelIcon />}
+            onClick={() => setShowDecision(!showDecision)}
+            sx={{
+              textTransform: "none",
+              color: colors.primary,
+              mb: 1,
+            }}
+          >
+            {showDecision
+              ? tDocuments("decisionToggle", { context: "hide" })
+              : tDocuments("decisionToggle", { context: "show" })}
+          </Button>
+          <Collapse in={showDecision}>
+            <Box
+              sx={{
+                p: 2,
+                backgroundColor: colors.backgroundSubtle,
+                borderRadius: 1,
+                borderLeft: `3px solid ${colors.primaryLight}`,
+              }}
+            >
+              <RichTextRenderer
+                document={detail.decision_rich_text}
+                fallbackText={detail.decision_text}
+                paragraphVariant="body2"
+              />
+            </Box>
+          </Collapse>
+        </Box>
+      )}
+
+      {/* Legislation section */}
+      {(detail.legislation_text || detail.legislation_rich_text) && (
+        <Box>
+          <Button
+            startIcon={<BalanceIcon />}
+            onClick={() => setShowLegislation(!showLegislation)}
+            sx={{
+              textTransform: "none",
+              color: colors.primary,
+              mb: 1,
+            }}
+          >
+            {showLegislation
+              ? tDocuments("legislationToggle", { context: "hide" })
+              : tDocuments("legislationToggle", { context: "show" })}
+          </Button>
+          <Collapse in={showLegislation}>
+            <Box
+              sx={{
+                p: 2,
+                backgroundColor: colors.backgroundSubtle,
+                borderRadius: 1,
+                borderLeft: `3px solid ${colors.primaryLight}`,
+              }}
+            >
+              <RichTextRenderer
+                document={detail.legislation_rich_text}
+                fallbackText={detail.legislation_text}
+                paragraphVariant="body2"
+              />
+            </Box>
+          </Collapse>
+        </Box>
+      )}
+
+      {/* PDF link */}
+      {detail.edk_identifier && (
+        <Box>
+          <EduskuntaSourceLink
+            href={buildEdkDocumentUrl(detail.edk_identifier) ?? "#"}
+            sx={{ fontSize: "0.85rem" }}
+          >
+            <ArticleIcon fontSize="small" sx={{ mr: 0.5 }} />
+            PDF
+          </EduskuntaSourceLink>
+        </Box>
+      )}
+    </Stack>
+  );
+}
+
 function ParliamentAnswerCardComponent({
   item,
   onSubjectClick,
@@ -49,13 +188,7 @@ function ParliamentAnswerCardComponent({
   onSubjectClick?: (subject: string) => void;
 }) {
   const { t: tDocuments } = useScopedTranslation("documents");
-
-  const [expanded, setExpanded] = useState(false);
-  const [detail, setDetail] = useState<ParliamentAnswerDetail | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showDecision, setShowDecision] = useState(false);
-  const [showLegislation, setShowLegislation] = useState(false);
+  const { openRootDrawer } = useOverlayDrawer();
 
   const subjects = item.subjects
     ? item.subjects.split("||").filter(Boolean)
@@ -63,44 +196,23 @@ function ParliamentAnswerCardComponent({
   const displaySubjects = subjects.slice(0, 3);
   const remainingSubjects = subjects.length - 3;
 
-  const handleExpand = async () => {
-    if (!expanded && !detail) {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await apiFetch(`/api/parliament-answers/${item.id}`);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        const data = await response.json();
-        setDetail(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load");
-      } finally {
-        setLoading(false);
-      }
-    }
-    setExpanded(!expanded);
-  };
-
   const navigateTo = (href: string) => {
     window.history.pushState({}, "", href);
     window.dispatchEvent(new PopStateEvent("popstate"));
   };
 
+  const handleOpenDrawer = () => {
+    openRootDrawer({
+      drawerKey: `parliament-answer:${item.id}`,
+      title: item.parliament_identifier,
+      subtitle: item.title || tDocuments("noTitle"),
+      content: <ParliamentAnswerDrawerContent item={item} />,
+    });
+  };
+
   return (
     <DataCard sx={{ contentVisibility: "auto", containIntrinsicSize: "320px" }}>
-      <Box
-        sx={{
-          cursor: "pointer",
-          "&:hover": {
-            backgroundColor: colors.backgroundSubtle,
-          },
-          transition: "background-color 0.2s",
-          p: 2,
-        }}
-        onClick={handleExpand}
-      >
+      <Box sx={{ p: 2 }}>
         <Stack spacing={1.5}>
           {/* Title row */}
           <Stack
@@ -250,127 +362,23 @@ function ParliamentAnswerCardComponent({
               )}
             </Stack>
           )}
+
+          {/* Open drawer button */}
+          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button
+              variant="outlined"
+              color="primary"
+              size="small"
+              startIcon={<UnfoldMoreIcon />}
+              aria-haspopup="dialog"
+              onClick={handleOpenDrawer}
+              sx={{ minWidth: 140 }}
+            >
+              {tDocuments("showDetails")}
+            </Button>
+          </Box>
         </Stack>
-
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            mt: 1,
-          }}
-        >
-          <ExpandMoreIcon
-            sx={{
-              transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
-              transition: "transform 0.3s",
-              color: colors.textSecondary,
-            }}
-          />
-        </Box>
       </Box>
-
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <Box sx={{ p: 2, pt: 0, borderTop: `1px solid ${colors.dataBorder}` }}>
-          {loading && (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
-              <CircularProgress size={32} />
-            </Box>
-          )}
-
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-
-          {detail && (
-            <Stack spacing={3}>
-              {/* Decision section */}
-              {(detail.decision_text || detail.decision_rich_text) && (
-                <Box>
-                  <Button
-                    startIcon={<GavelIcon />}
-                    onClick={() => setShowDecision(!showDecision)}
-                    sx={{
-                      textTransform: "none",
-                      color: colors.primary,
-                      mb: 1,
-                    }}
-                  >
-                    {showDecision
-                      ? tDocuments("decisionToggle", { context: "hide" })
-                      : tDocuments("decisionToggle", { context: "show" })}
-                  </Button>
-                  <Collapse in={showDecision}>
-                    <Box
-                      sx={{
-                        p: 2,
-                        backgroundColor: colors.backgroundSubtle,
-                        borderRadius: 1,
-                        borderLeft: `3px solid ${colors.primaryLight}`,
-                      }}
-                    >
-                      <RichTextRenderer
-                        document={detail.decision_rich_text}
-                        fallbackText={detail.decision_text}
-                        paragraphVariant="body2"
-                      />
-                    </Box>
-                  </Collapse>
-                </Box>
-              )}
-
-              {/* Legislation section */}
-              {(detail.legislation_text || detail.legislation_rich_text) && (
-                <Box>
-                  <Button
-                    startIcon={<BalanceIcon />}
-                    onClick={() => setShowLegislation(!showLegislation)}
-                    sx={{
-                      textTransform: "none",
-                      color: colors.primary,
-                      mb: 1,
-                    }}
-                  >
-                    {showLegislation
-                      ? tDocuments("legislationToggle", { context: "hide" })
-                      : tDocuments("legislationToggle", { context: "show" })}
-                  </Button>
-                  <Collapse in={showLegislation}>
-                    <Box
-                      sx={{
-                        p: 2,
-                        backgroundColor: colors.backgroundSubtle,
-                        borderRadius: 1,
-                        borderLeft: `3px solid ${colors.primaryLight}`,
-                      }}
-                    >
-                      <RichTextRenderer
-                        document={detail.legislation_rich_text}
-                        fallbackText={detail.legislation_text}
-                        paragraphVariant="body2"
-                      />
-                    </Box>
-                  </Collapse>
-                </Box>
-              )}
-
-              {/* PDF link */}
-              {detail.edk_identifier && (
-                <Box>
-                  <EduskuntaSourceLink
-                    href={buildEdkDocumentUrl(detail.edk_identifier) ?? "#"}
-                    sx={{ fontSize: "0.85rem" }}
-                  >
-                    <ArticleIcon fontSize="small" sx={{ mr: 0.5 }} />
-                    PDF
-                  </EduskuntaSourceLink>
-                </Box>
-              )}
-            </Stack>
-          )}
-        </Box>
-      </Collapse>
     </DataCard>
   );
 }
