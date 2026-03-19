@@ -1,6 +1,18 @@
-import { Close as CloseIcon, Tune as TuneIcon } from "@mui/icons-material";
-import { Box, Button, Chip, Stack, Typography } from "@mui/material";
-import React from "react";
+import {
+  Close as CloseIcon,
+  ExpandMore as ExpandMoreIcon,
+  Tune as TuneIcon,
+} from "@mui/icons-material";
+import {
+  Badge,
+  Box,
+  Button,
+  Chip,
+  Collapse,
+  Stack,
+  Typography,
+} from "@mui/material";
+import React, { useState } from "react";
 import { colors } from "#client/theme";
 import { ToolbarCard } from "#client/theme/components";
 
@@ -20,6 +32,7 @@ const DocumentsFilterPanelComponent: React.FC<{
   activeFilters?: ActiveFilterChip[];
   children: React.ReactNode;
   secondaryFilters?: React.ReactNode;
+  collapsible?: boolean;
 }> = ({
   title,
   helperText,
@@ -30,32 +43,13 @@ const DocumentsFilterPanelComponent: React.FC<{
   activeFilters = [],
   children,
   secondaryFilters,
-}) => (
-  <ToolbarCard
-    title={title}
-    description={helperText}
-    icon={<TuneIcon sx={{ fontSize: 18 }} />}
-    actions={
-      clearLabel && onClear ? (
-        <Button
-          variant="text"
-          color="inherit"
-          onClick={canClear ? onClear : undefined}
-          disabled={!canClear}
-          startIcon={<CloseIcon />}
-          sx={{
-            color: canClear ? colors.primary : colors.textTertiary,
-            px: 0,
-          }}
-        >
-          {clearLabel}
-        </Button>
-      ) : undefined
-    }
-    sx={{
-      mb: 0,
-    }}
-  >
+  collapsible = false,
+}) => {
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const activeFilterCount = activeFilters.length;
+
+  const filterContent = (
     <Stack spacing={2}>
       <Box
         sx={{
@@ -120,7 +114,64 @@ const DocumentsFilterPanelComponent: React.FC<{
         </Stack>
       ) : null}
     </Stack>
-  </ToolbarCard>
-);
+  );
+
+  return (
+    <ToolbarCard
+      title={title}
+      description={helperText}
+      icon={<TuneIcon sx={{ fontSize: 18 }} />}
+      actions={
+        clearLabel && onClear ? (
+          <Button
+            variant="text"
+            color="inherit"
+            onClick={canClear ? onClear : undefined}
+            disabled={!canClear}
+            startIcon={<CloseIcon />}
+            sx={{
+              color: canClear ? colors.primary : colors.textTertiary,
+              px: 0,
+            }}
+          >
+            {clearLabel}
+          </Button>
+        ) : undefined
+      }
+      sx={{
+        mb: 0,
+      }}
+    >
+      {collapsible ? (
+        <>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: filtersOpen ? 2 : 0 }}>
+            <Badge badgeContent={activeFilterCount} color="primary">
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => setFiltersOpen((prev) => !prev)}
+                endIcon={
+                  <ExpandMoreIcon
+                    sx={{
+                      transform: filtersOpen ? "rotate(180deg)" : "none",
+                      transition: "transform 0.2s",
+                    }}
+                  />
+                }
+              >
+                Suodattimet
+              </Button>
+            </Badge>
+          </Box>
+          <Collapse in={filtersOpen} timeout="auto" unmountOnExit>
+            {filterContent}
+          </Collapse>
+        </>
+      ) : (
+        filterContent
+      )}
+    </ToolbarCard>
+  );
+};
 
 export const DocumentsFilterPanel = React.memo(DocumentsFilterPanelComponent);

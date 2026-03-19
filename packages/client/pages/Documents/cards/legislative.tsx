@@ -5,19 +5,21 @@ import {
   Person as PersonIcon,
 } from "@mui/icons-material";
 import {
+  Alert,
   Box,
   Button,
   Chip,
-  CircularProgress,
   Collapse,
   Stack,
 } from "@mui/material";
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
+import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors } from "#client/theme/index";
+import { InlineSpinner } from "#client/theme/components";
 import { apiFetch } from "#client/utils/fetch";
 import { DocumentCardShell, DocumentMetaItem } from "../components";
 import { formatDate, getOutcomeColor, InlineRelatedSessions } from "./shared";
@@ -43,6 +45,177 @@ export interface LegislativeInitiativeListItem {
 type LegislativeInitiativeDetail =
   ApiRouteResponse<`/api/legislative-initiatives/:id`>;
 
+// ─── Drawer content component ───
+
+function LegislativeInitiativeDrawerContent({
+  item,
+}: {
+  item: LegislativeInitiativeListItem;
+}) {
+  const { t } = useScopedTranslation("documents");
+
+  const [detail, setDetail] = useState<LegislativeInitiativeDetail | null>(
+    null,
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showJustification, setShowJustification] = useState(false);
+  const [showProposalText, setShowProposalText] = useState(false);
+  const [showLawText, setShowLawText] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    apiFetch(`/api/legislative-initiatives/${item.id}`)
+      .then(async (res) => {
+        if (!cancelled) {
+          if (res.ok) {
+            setDetail(await res.json());
+          } else {
+            setError(`HTTP ${res.status}`);
+          }
+        }
+      })
+      .catch((err) => {
+        if (!cancelled)
+          setError(err instanceof Error ? err.message : "Tuntematon virhe");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [item.id]);
+
+  if (loading) return <InlineSpinner size={24} py={3} />;
+
+  if (error) {
+    return (
+      <Alert severity="error">
+        {t("loadErrorLine", { value: error })}
+      </Alert>
+    );
+  }
+
+  if (!detail) return null;
+
+  return (
+    <Stack spacing={2}>
+      {(detail.justification_text || detail.justification_rich_text) && (
+        <Box>
+          <Button
+            startIcon={<ArticleIcon />}
+            onClick={() => setShowJustification(!showJustification)}
+            sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
+          >
+            {showJustification
+              ? t("justificationToggle", { context: "hide" })
+              : t("justificationToggle", { context: "show" })}
+          </Button>
+          <Collapse in={showJustification}>
+            <Box
+              sx={{
+                p: 2,
+                backgroundColor: colors.backgroundSubtle,
+                borderRadius: 1,
+                borderLeft: `3px solid ${colors.primaryLight}`,
+              }}
+            >
+              <RichTextRenderer
+                document={detail.justification_rich_text}
+                fallbackText={detail.justification_text}
+                paragraphVariant="body2"
+              />
+            </Box>
+          </Collapse>
+        </Box>
+      )}
+
+      {(detail.proposal_text || detail.proposal_rich_text) && (
+        <Box>
+          <Button
+            startIcon={<GavelIcon />}
+            onClick={() => setShowProposalText(!showProposalText)}
+            sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
+          >
+            {showProposalText
+              ? t("clausesToggle", { context: "hide" })
+              : t("clausesToggle", { context: "show" })}
+          </Button>
+          <Collapse in={showProposalText}>
+            <Box
+              sx={{
+                p: 2,
+                backgroundColor: colors.backgroundSubtle,
+                borderRadius: 1,
+                borderLeft: `3px solid ${colors.primaryLight}`,
+              }}
+            >
+              <RichTextRenderer
+                document={detail.proposal_rich_text}
+                fallbackText={detail.proposal_text}
+                paragraphVariant="body2"
+              />
+            </Box>
+          </Collapse>
+        </Box>
+      )}
+
+      {(detail.law_text || detail.law_rich_text) && (
+        <Box>
+          <Button
+            startIcon={<BalanceIcon />}
+            onClick={() => setShowLawText(!showLawText)}
+            sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
+          >
+            {showLawText
+              ? t("lawTextToggle", { context: "hide" })
+              : t("lawTextToggle", { context: "show" })}
+          </Button>
+          <Collapse in={showLawText}>
+            <Box
+              sx={{
+                p: 2,
+                backgroundColor: colors.backgroundSubtle,
+                borderRadius: 1,
+                borderLeft: `3px solid ${colors.success}`,
+              }}
+            >
+              <RichTextRenderer
+                document={detail.law_rich_text}
+                fallbackText={detail.law_text}
+                paragraphVariant="body2"
+              />
+            </Box>
+          </Collapse>
+        </Box>
+      )}
+
+      <DocumentLifecycle
+        currentIdentifier={item.parliament_identifier}
+        directReferenceValues={[
+          ...detail.stages.map((stage) => stage.stage_title),
+          ...detail.stages.map((stage) => stage.event_title),
+          ...detail.stages.map((stage) => stage.event_description),
+        ]}
+        richTextValues={[
+          detail.justification_rich_text,
+          detail.proposal_rich_text,
+          detail.law_rich_text,
+        ]}
+      />
+
+      <InlineRelatedSessions sessions={detail.sessions} />
+
+      <RelatedVotings identifiers={[item.parliament_identifier]} />
+    </Stack>
+  );
+}
+
 function LegislativeInitiativeCardComponent({
   item,
   onSubjectClick,
@@ -51,15 +224,7 @@ function LegislativeInitiativeCardComponent({
   onSubjectClick?: (subject: string) => void;
 }) {
   const { t } = useScopedTranslation("documents");
-  const [expanded, setExpanded] = useState(false);
-  const [detail, setDetail] = useState<LegislativeInitiativeDetail | null>(
-    null,
-  );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showJustification, setShowJustification] = useState(false);
-  const [showProposalText, setShowProposalText] = useState(false);
-  const [showLawText, setShowLawText] = useState(false);
+  const { openRootDrawer } = useOverlayDrawer();
 
   const subjects = item.subjects
     ? item.subjects.split("||").filter(Boolean)
@@ -67,34 +232,21 @@ function LegislativeInitiativeCardComponent({
   const displaySubjects = subjects.slice(0, 3);
   const remainingSubjects = subjects.length - 3;
 
-  const handleExpand = async () => {
-    if (!expanded && !detail) {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await apiFetch(
-          `/api/legislative-initiatives/${item.id}`,
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        const data = await response.json();
-        setDetail(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load");
-      } finally {
-        setLoading(false);
-      }
-    }
-    setExpanded(!expanded);
-  };
-
   const signer = [item.first_signer_first_name, item.first_signer_last_name]
     .filter(Boolean)
     .join(" ");
   const signerWithParty = item.first_signer_party
     ? `${signer} (${item.first_signer_party})`
     : signer;
+
+  const handleOpenDrawer = () => {
+    openRootDrawer({
+      drawerKey: `legislative-initiative:${item.id}`,
+      title: item.parliament_identifier,
+      subtitle: item.title || t("noTitle"),
+      content: <LegislativeInitiativeDrawerContent item={item} />,
+    });
+  };
 
   return (
     <DocumentCardShell
@@ -184,131 +336,10 @@ function LegislativeInitiativeCardComponent({
           </Stack>
         ) : null
       }
-      expanded={expanded}
-      onToggle={handleExpand}
+      onOpenDrawer={handleOpenDrawer}
       toggleLabel={t("showDetails")}
       collapseLabel={t("hideDetails")}
-      loadingState={
-        loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-            <CircularProgress size={24} />
-          </Box>
-        ) : undefined
-      }
-      error={error ? t("loadErrorLine", { value: error }) : null}
-    >
-      {detail && (
-        <Stack spacing={2}>
-          {(detail.justification_text || detail.justification_rich_text) && (
-            <Box>
-              <Button
-                startIcon={<ArticleIcon />}
-                onClick={() => setShowJustification(!showJustification)}
-                sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
-              >
-                {showJustification
-                  ? t("justificationToggle", { context: "hide" })
-                  : t("justificationToggle", { context: "show" })}
-              </Button>
-              <Collapse in={showJustification}>
-                <Box
-                  sx={{
-                    p: 2,
-                    backgroundColor: colors.backgroundSubtle,
-                    borderRadius: 1,
-                    borderLeft: `3px solid ${colors.primaryLight}`,
-                  }}
-                >
-                  <RichTextRenderer
-                    document={detail.justification_rich_text}
-                    fallbackText={detail.justification_text}
-                    paragraphVariant="body2"
-                  />
-                </Box>
-              </Collapse>
-            </Box>
-          )}
-
-          {(detail.proposal_text || detail.proposal_rich_text) && (
-            <Box>
-              <Button
-                startIcon={<GavelIcon />}
-                onClick={() => setShowProposalText(!showProposalText)}
-                sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
-              >
-                {showProposalText
-                  ? t("clausesToggle", { context: "hide" })
-                  : t("clausesToggle", { context: "show" })}
-              </Button>
-              <Collapse in={showProposalText}>
-                <Box
-                  sx={{
-                    p: 2,
-                    backgroundColor: colors.backgroundSubtle,
-                    borderRadius: 1,
-                    borderLeft: `3px solid ${colors.primaryLight}`,
-                  }}
-                >
-                  <RichTextRenderer
-                    document={detail.proposal_rich_text}
-                    fallbackText={detail.proposal_text}
-                    paragraphVariant="body2"
-                  />
-                </Box>
-              </Collapse>
-            </Box>
-          )}
-
-          {(detail.law_text || detail.law_rich_text) && (
-            <Box>
-              <Button
-                startIcon={<BalanceIcon />}
-                onClick={() => setShowLawText(!showLawText)}
-                sx={{ textTransform: "none", color: colors.primary, mb: 1 }}
-              >
-                {showLawText
-                  ? t("lawTextToggle", { context: "hide" })
-                  : t("lawTextToggle", { context: "show" })}
-              </Button>
-              <Collapse in={showLawText}>
-                <Box
-                  sx={{
-                    p: 2,
-                    backgroundColor: colors.backgroundSubtle,
-                    borderRadius: 1,
-                    borderLeft: `3px solid ${colors.success}`,
-                  }}
-                >
-                  <RichTextRenderer
-                    document={detail.law_rich_text}
-                    fallbackText={detail.law_text}
-                    paragraphVariant="body2"
-                  />
-                </Box>
-              </Collapse>
-            </Box>
-          )}
-
-          <DocumentLifecycle
-            currentIdentifier={item.parliament_identifier}
-            directReferenceValues={[
-              ...detail.stages.map((stage) => stage.stage_title),
-              ...detail.stages.map((stage) => stage.event_title),
-              ...detail.stages.map((stage) => stage.event_description),
-            ]}
-            richTextValues={[
-              detail.justification_rich_text,
-              detail.proposal_rich_text,
-              detail.law_rich_text,
-            ]}
-          />
-
-          <InlineRelatedSessions sessions={detail.sessions} />
-
-          <RelatedVotings identifiers={[item.parliament_identifier]} />
-        </Stack>
-      )}
-    </DocumentCardShell>
+    />
   );
 }
 

@@ -23,6 +23,7 @@ import {
 } from "@mui/material";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { RepresentativeDetails } from "#client/pages/Composition/Details";
 import {
   type HallituskausiPeriod,
   useHallituskausi,
@@ -632,7 +633,8 @@ const GovernmentSummaryCards: React.FC<{
 const GovernmentMinistersSection: React.FC<{
   members: GovernmentMember[];
   selectedDate: string;
-}> = ({ members, selectedDate }) => {
+  onSelectMember: (personId: number) => void;
+}> = ({ members, selectedDate, onSelectMember }) => {
   const { t } = useScopedTranslation("hallitukset");
   const tc = useThemedColors();
 
@@ -699,8 +701,23 @@ const GovernmentMinistersSection: React.FC<{
               }}
             >
               {segmented.featuredCurrent.map(({ key, member }) => (
-                <DataCard
+                <Box
                   key={member.id}
+                  onClick={
+                    member.person_id
+                      ? () => onSelectMember(member.person_id as number)
+                      : undefined
+                  }
+                  sx={{
+                    cursor: member.person_id ? "pointer" : "default",
+                    borderRadius: 2,
+                    transition: "box-shadow 0.18s ease",
+                    "&:hover": member.person_id
+                      ? { boxShadow: "0 8px 24px rgba(15, 27, 51, 0.14)" }
+                      : undefined,
+                  }}
+                >
+                <DataCard
                   sx={{
                     p: 2.25,
                     borderColor: `${featuredRoleColors[key]}30`,
@@ -772,6 +789,7 @@ const GovernmentMinistersSection: React.FC<{
                     </Typography>
                   </Stack>
                 </DataCard>
+                </Box>
               ))}
             </Box>
           </Box>
@@ -801,11 +819,21 @@ const GovernmentMinistersSection: React.FC<{
                 <Paper
                   key={member.id}
                   elevation={0}
+                  onClick={
+                    member.person_id
+                      ? () => onSelectMember(member.person_id as number)
+                      : undefined
+                  }
                   sx={{
                     p: 1.5,
                     borderRadius: 2,
                     border: `1px solid ${tc.dataBorder}`,
                     bgcolor: tc.backgroundPaper,
+                    cursor: member.person_id ? "pointer" : "default",
+                    transition: "background-color 0.15s ease",
+                    "&:hover": member.person_id
+                      ? { bgcolor: tc.backgroundSubtle }
+                      : undefined,
                   }}
                 >
                   <Stack spacing={1}>
@@ -885,11 +913,21 @@ const GovernmentMinistersSection: React.FC<{
                 <Paper
                   key={member.id}
                   elevation={0}
+                  onClick={
+                    member.person_id
+                      ? () => onSelectMember(member.person_id as number)
+                      : undefined
+                  }
                   sx={{
                     p: 1.5,
                     borderRadius: 2,
                     border: `1px solid ${tc.dataBorder}`,
                     bgcolor: tc.backgroundSubtle,
+                    cursor: member.person_id ? "pointer" : "default",
+                    transition: "background-color 0.15s ease",
+                    "&:hover": member.person_id
+                      ? { bgcolor: tc.backgroundPaper }
+                      : undefined,
                   }}
                 >
                   <Stack spacing={0.75}>
@@ -1150,6 +1188,7 @@ export default () => {
   const [activeGovernmentError, setActiveGovernmentError] = useState<
     string | null
   >(null);
+  const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null);
 
   const ministersRef = useRef<HTMLDivElement | null>(null);
   const archiveRef = useRef<HTMLDivElement | null>(null);
@@ -1258,6 +1297,7 @@ export default () => {
               <GovernmentMinistersSection
                 members={activeMembers}
                 selectedDate={selectedDate}
+                onSelectMember={setSelectedPersonId}
               />
             </Box>
           ) : (
@@ -1313,6 +1353,15 @@ export default () => {
           </Stack>
         </Box>
       </Stack>
+
+      {selectedPersonId !== null && (
+        <RepresentativeDetails
+          open={true}
+          onClose={() => setSelectedPersonId(null)}
+          selectedRepresentative={{ personId: selectedPersonId }}
+          selectedDate={selectedDate}
+        />
+      )}
     </Box>
   );
 };

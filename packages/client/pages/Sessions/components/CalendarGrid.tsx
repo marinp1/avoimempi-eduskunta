@@ -176,6 +176,11 @@ export const CalendarGrid = ({
               sx={{
                 textAlign: "center",
                 py: 0.75,
+                minHeight: 44,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
                 borderRadius: 1,
                 cursor: hasSession ? "pointer" : "default",
                 position: "relative",

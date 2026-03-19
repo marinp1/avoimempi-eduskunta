@@ -395,11 +395,44 @@ const VotingDetailsPanel: React.FC<{
   );
 };
 
+// ─── VotingDrawerContent ──────────────────────────────────────────────────────
+
+export const VotingDrawerContent: React.FC<{
+  votingId: number;
+}> = ({ votingId }) => {
+  const [details, setDetails] = React.useState<VotingFetchedDetails | null>(
+    null,
+  );
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    apiFetch(`/api/votings/${votingId}/details`).then(async (res) => {
+      if (!cancelled && res.ok) {
+        const data = await res.json();
+        setDetails(data);
+      }
+      if (!cancelled) setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [votingId]);
+
+  return (
+    <Box sx={{ p: { xs: 2, sm: 2.5 } }}>
+      <VotingDetailsPanel details={details} loading={loading} />
+    </Box>
+  );
+};
+
 // ─── VotingCard (full standalone) ─────────────────────────────────────────────
 
 const VotingCardComponent: React.FC<{
   voting: VotingCardData;
-}> = ({ voting }) => {
+  onOpenDetails?: () => void;
+}> = ({ voting, onOpenDetails }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tVotings } = useScopedTranslation("votings");
   const themedColors = useThemedColors();
@@ -673,19 +706,20 @@ const VotingCardComponent: React.FC<{
       >
         <Button
           size="small"
-          onClick={() => void toggle()}
+          onClick={() => (onOpenDetails ? onOpenDetails() : void toggle())}
           sx={{ ...commonStyles.compactActionButton }}
           endIcon={
             <ExpandMoreIcon
               sx={{
                 fontSize: "14px !important",
-                transform: expanded ? "rotate(180deg)" : "none",
+                transform:
+                  !onOpenDetails && expanded ? "rotate(180deg)" : "none",
                 transition: "transform 0.2s",
               }}
             />
           }
         >
-          {expanded
+          {!onOpenDetails && expanded
             ? tCommon("detailsToggle", { context: "hide" })
             : tCommon("detailsToggle", { context: "show" })}
         </Button>
@@ -719,18 +753,20 @@ const VotingCardComponent: React.FC<{
       </Box>
 
       {/* Details panel */}
-      <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <Box
-          sx={{
-            borderTop: `1px solid ${themedColors.dataBorder}`,
-            px: { xs: 1.5, sm: 2 },
-            py: 1.5,
-            bgcolor: `${themedColors.primary}03`,
-          }}
-        >
-          <VotingDetailsPanel details={details} loading={loading} />
-        </Box>
-      </Collapse>
+      {!onOpenDetails && (
+        <Collapse in={expanded} timeout="auto" unmountOnExit>
+          <Box
+            sx={{
+              borderTop: `1px solid ${themedColors.dataBorder}`,
+              px: { xs: 1.5, sm: 2 },
+              py: 1.5,
+              bgcolor: `${themedColors.primary}03`,
+            }}
+          >
+            <VotingDetailsPanel details={details} loading={loading} />
+          </Box>
+        </Collapse>
+      )}
     </DataCard>
   );
 };
@@ -745,7 +781,9 @@ const VotingSubRowComponent: React.FC<{
   showTitle?: boolean;
   /** SPA navigate callback (e.g. Sessions "open in Votings page") */
   onOpenInView?: () => void;
-}> = ({ voting, showTitle = false, onOpenInView }) => {
+  /** Open details in a drawer instead of inline expand */
+  onOpenDetails?: () => void;
+}> = ({ voting, showTitle = false, onOpenInView, onOpenDetails }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tVotings } = useScopedTranslation("votings");
   const themedColors = useThemedColors();
@@ -835,21 +873,22 @@ const VotingSubRowComponent: React.FC<{
         >
           <Button
             size="small"
-            onClick={() => void toggle()}
-            aria-expanded={expanded}
-            aria-controls={detailsPanelId}
+            onClick={() => (onOpenDetails ? onOpenDetails() : void toggle())}
+            aria-expanded={onOpenDetails ? undefined : expanded}
+            aria-controls={onOpenDetails ? undefined : detailsPanelId}
             sx={{ ...commonStyles.compactActionButton }}
             endIcon={
               <ExpandMoreIcon
                 sx={{
                   fontSize: "14px !important",
-                  transform: expanded ? "rotate(180deg)" : "none",
+                  transform:
+                    !onOpenDetails && expanded ? "rotate(180deg)" : "none",
                   transition: "transform 0.2s",
                 }}
               />
             }
           >
-            {expanded
+            {!onOpenDetails && expanded
               ? tCommon("detailsToggle", { context: "hide" })
               : tCommon("detailsToggle", { context: "show" })}
           </Button>
@@ -888,19 +927,26 @@ const VotingSubRowComponent: React.FC<{
       </Box>
 
       {/* Details panel */}
-      <Collapse id={detailsPanelId} in={expanded} timeout="auto" unmountOnExit>
-        <Box
-          sx={{
-            mt: 0.75,
-            p: 1,
-            borderRadius: 1,
-            border: `1px solid ${themedColors.dataBorder}60`,
-            bgcolor: `${themedColors.primary}04`,
-          }}
+      {!onOpenDetails && (
+        <Collapse
+          id={detailsPanelId}
+          in={expanded}
+          timeout="auto"
+          unmountOnExit
         >
-          <VotingDetailsPanel details={details} loading={loading} />
-        </Box>
-      </Collapse>
+          <Box
+            sx={{
+              mt: 0.75,
+              p: 1,
+              borderRadius: 1,
+              border: `1px solid ${themedColors.dataBorder}60`,
+              bgcolor: `${themedColors.primary}04`,
+            }}
+          >
+            <VotingDetailsPanel details={details} loading={loading} />
+          </Box>
+        </Collapse>
+      )}
     </Box>
   );
 };
@@ -911,7 +957,8 @@ export const VotingSubRow = React.memo(VotingSubRowComponent);
 
 const VotingGroupCardComponent: React.FC<{
   votes: VotingCardData[];
-}> = ({ votes }) => {
+  onOpenDetails?: (voting: VotingCardData) => void;
+}> = ({ votes, onOpenDetails }) => {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tVotings } = useScopedTranslation("votings");
   const themedColors = useThemedColors();
@@ -1064,6 +1111,9 @@ const VotingGroupCardComponent: React.FC<{
               showTitle={
                 vote.title != null &&
                 vote.title !== getPrimaryVotingTitle(first)
+              }
+              onOpenDetails={
+                onOpenDetails ? () => onOpenDetails(vote) : undefined
               }
             />
           ))}
