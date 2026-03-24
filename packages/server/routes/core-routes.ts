@@ -151,19 +151,24 @@ export const createCoreRoutes = (
 
   "/api/changes-history": {
     GET: () => {
-      const archiveDir = getChangesArchiveDir();
-      if (!existsSync(archiveDir)) {
-        return json({ runs: [] });
+      try {
+        const archiveDir = getChangesArchiveDir();
+        if (!existsSync(archiveDir)) {
+          return json({ runs: [] });
+        }
+        const runs = readdirSync(archiveDir)
+          .filter((f) => f.endsWith(".json"))
+          .map((f) => f.slice(0, -5))
+          .filter((id) => /^\d+$/.test(id))
+          .sort((a, b) => Number(b) - Number(a))
+          .map((id) => ({
+            id,
+            generatedAt: new Date(Number(id)).toISOString(),
+          }));
+        return json({ runs });
+      } catch {
+        return json({ runs: [] }, { status: 500 });
       }
-      const runs = readdirSync(archiveDir)
-        .filter((f) => f.endsWith(".json"))
-        .map((f) => f.slice(0, -5))
-        .sort((a, b) => Number(b) - Number(a))
-        .map((id) => ({
-          id,
-          generatedAt: new Date(Number(id)).toISOString(),
-        }));
-      return json({ runs });
     },
   },
 });

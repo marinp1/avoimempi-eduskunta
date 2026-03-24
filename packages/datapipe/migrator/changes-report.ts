@@ -166,10 +166,13 @@ export async function generateChangesReport(
   let totalNewRows = 0;
   let totalChangedRows = 0;
 
-  // Count new rows for every active pipeline table
+  // Count new rows for every active pipeline table.
+  // When sinceMs is null (first-ever run) count all existing rows as "new".
   for (const tableName of ActivePipelineTableNames) {
     const newRows =
-      sinceMs !== null ? await store.countNewRows(tableName, sinceMs) : 0;
+      sinceMs !== null
+        ? await store.countNewRows(tableName, sinceMs)
+        : await store.countAllRows(tableName);
     tables[tableName] = { newRows, changedRows: [] };
     totalNewRows += newRows;
   }

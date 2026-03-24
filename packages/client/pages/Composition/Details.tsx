@@ -2398,7 +2398,9 @@ const SpeechesTab: React.FC<{
     selectedSpeech?.id,
     sectionConversations,
     failedContextSections,
-    loadingContextSection,
+    // loadingContextSection intentionally omitted: it is set inside this effect,
+    // including it causes a cleanup→abort→reset loop (max update depth exceeded).
+    // Request deduplication is handled by contextLoadRequestRef instead.
     tComposition,
   ]);
 
@@ -2451,7 +2453,8 @@ const SpeechesTab: React.FC<{
     selectedSectionKey,
     selectedSectionDetails,
     failedSectionDetailsKeys,
-    loadingSectionDetailsKey,
+    // loadingSectionDetailsKey intentionally omitted: same reason as above —
+    // it is set inside this effect and causes an infinite cleanup loop.
     tComposition,
   ]);
 
