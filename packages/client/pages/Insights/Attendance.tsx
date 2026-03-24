@@ -11,6 +11,7 @@ import {
   TableHead,
   TableRow,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import {
@@ -24,7 +25,7 @@ import {
 } from "recharts";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { colors, spacing } from "#client/theme";
+import theme, { colors, spacing } from "#client/theme";
 import { PanelHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
@@ -41,6 +42,7 @@ export default function Attendance({ onClose }: AttendanceProps) {
   const { t: tCommon } = useScopedTranslation("common");
   const { t: tInsights } = useScopedTranslation("insights");
   const { selectedHallituskausi } = useHallituskausi();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [data, setData] = useState<AttendanceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +109,7 @@ export default function Attendance({ onClose }: AttendanceProps) {
 
   const totalRollCalls = data[0]?.total_roll_calls ?? 0;
 
-  const chartData = data.slice(0, 15).map((d) => ({
+  const chartData = data.slice(0, isMobile ? 10 : 15).map((d) => ({
     name: d.last_name,
     absences: d.absent_count,
     party: d.party,
@@ -143,22 +145,27 @@ export default function Attendance({ onClose }: AttendanceProps) {
           </Box>
 
           <Box sx={{ mb: spacing.lg }}>
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="100%" height={isMobile ? 260 : 400}>
               <BarChart
                 data={chartData}
                 layout="vertical"
-                margin={{ top: 10, right: 30, left: 80, bottom: 10 }}
+                margin={{
+                  top: 10,
+                  right: isMobile ? 16 : 30,
+                  left: isMobile ? 55 : 80,
+                  bottom: 10,
+                }}
               >
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                 <XAxis
                   type="number"
-                  tick={{ fill: themedColors.textSecondary }}
+                  tick={{ fill: themedColors.textSecondary, fontSize: isMobile ? 10 : 12 }}
                 />
                 <YAxis
                   type="category"
                   dataKey="name"
-                  tick={{ fill: themedColors.textSecondary, fontSize: 12 }}
-                  width={70}
+                  tick={{ fill: themedColors.textSecondary, fontSize: isMobile ? 10 : 12 }}
+                  width={isMobile ? 48 : 70}
                 />
                 <Tooltip
                   formatter={(value: number) => [

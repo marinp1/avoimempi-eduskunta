@@ -684,6 +684,18 @@ export class SqliteRowStore implements IRowStore {
     return row?.cnt ?? 0;
   }
 
+  async countAllRows(tableName: string): Promise<number> {
+    if (this.mode !== "raw") return 0;
+
+    const tableId = this.getTableId(tableName, false);
+    if (tableId === null) return 0;
+
+    const row = this.db
+      .prepare(`SELECT COUNT(*) AS cnt FROM rows WHERE table_id = ?`)
+      .get(tableId) as { cnt: number } | null;
+    return row?.cnt ?? 0;
+  }
+
   async listChangedRows(
     tableName: string,
     sinceMs?: number,

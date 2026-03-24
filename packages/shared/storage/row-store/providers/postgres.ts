@@ -355,6 +355,10 @@ export class PostgresRowStore implements IRowStore {
     return 0;
   }
 
+  async countAllRows(_tableName: string): Promise<number> {
+    return 0;
+  }
+
   async delete(tableName: string, pk: number): Promise<void> {
     await this.initPromise;
 

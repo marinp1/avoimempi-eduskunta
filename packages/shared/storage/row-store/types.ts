@@ -103,6 +103,9 @@ export interface IRowStore {
    */
   countNewRows(tableName: string, sinceMs: number): Promise<number>;
 
+  /** Count all rows for a table regardless of when they were created. Always 0 for parsed-mode stores. */
+  countAllRows(tableName: string): Promise<number>;
+
   /** Close DB connections. */
   close(): void;
 }
