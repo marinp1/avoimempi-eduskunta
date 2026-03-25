@@ -81,7 +81,6 @@ const HomeHeroComponent = ({
     },
     { href: "/aanestykset", label: tHome("jumpVotes") },
     { href: "/puolueet", label: tHome("jumpParties") },
-    { href: "/analytiikka", label: tHome("jumpAnalytics") },
   ];
   const scopeItems = [
     overview.scope.governmentName || tHome("allGovernments"),
@@ -492,8 +491,8 @@ const HomeHeroComponent = ({
                       })
                     : tHome("signalsEmpty")
                 }
-                href="/analytiikka?insight=speechActivity"
-                actionLabel={tHome("jumpAnalytics")}
+                href="/edustajat"
+                actionLabel={tHome("jumpRepresentatives")}
               />
             </Box>
           </Box>
@@ -1155,8 +1154,8 @@ export const SignalsPanel = ({
           eyebrow={tHome("signalsCloseVoteEyebrow")}
           title={tHome("signalsCloseVoteTitle")}
           description={tHome("signalsCloseVoteDescription")}
-          actionHref="/analytiikka?insight=closeVotes"
-          actionLabel={tHome("openAnalytics")}
+          actionHref="/aanestykset"
+          actionLabel={tHome("jumpVotes")}
         >
           {overview.signals.closeVotes.length > 0 ? (
             overview.signals.closeVotes.map((vote) => (
@@ -1172,8 +1171,8 @@ export const SignalsPanel = ({
           eyebrow={tHome("signalsSpeechEyebrow")}
           title={tHome("signalsSpeechTitle")}
           description={tHome("signalsSpeechDescription")}
-          actionHref="/analytiikka?insight=speechActivity"
-          actionLabel={tHome("openAnalytics")}
+          actionHref="/edustajat"
+          actionLabel={tHome("jumpRepresentatives")}
         >
           {overview.signals.speechActivity.length > 0 ? (
             overview.signals.speechActivity.map((item) => (
@@ -1189,8 +1188,8 @@ export const SignalsPanel = ({
           eyebrow={tHome("signalsCoalitionEyebrow")}
           title={tHome("signalsCoalitionTitle")}
           description={tHome("signalsCoalitionDescription")}
-          actionHref="/analytiikka?insight=coalitionOpposition"
-          actionLabel={tHome("openAnalytics")}
+          actionHref="/aanestykset"
+          actionLabel={tHome("jumpVotes")}
         >
           {overview.signals.coalitionOpposition.length > 0 ? (
             overview.signals.coalitionOpposition.map((item) => (

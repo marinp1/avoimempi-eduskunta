@@ -41,7 +41,6 @@ const desktopPrimaryRoutes: RouteName[] = [
   "istunnot",
   "aanestykset",
   "asiakirjat",
-  "analytiikka",
 ];
 
 /** Secondary routes shown in the "More" popover on desktop */

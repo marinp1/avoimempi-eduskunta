@@ -66,6 +66,7 @@
     "jumpVotes": "Äänestykset",
     "jumpParties": "Puolueet",
     "jumpAnalytics": "Analytiikka",
+    "jumpRepresentatives": "Kansanedustajat",
     "jumpChanges": "Muutokset",
     "totalMPs": "kansanedustajia",
     "government": "Hallituksessa",
@@ -208,7 +209,18 @@
       "votingDetailsLoadError": "Äänestyksen lisätietojen lataus epäonnistui.",
       "disciplineLoadError": "Puoluekuritietojen lataus epäonnistui."
     },
-    "genderSplitLine": "{{womenLabel}}: {{female}} | {{menLabel}}: {{male}}"
+    "genderSplitLine": "{{womenLabel}}: {{female}} | {{menLabel}}: {{male}}",
+    "analyticsSection": {
+      "title": "Tilastot",
+      "partyParticipation": {
+        "title": "Puolueiden osallistuminen",
+        "description": "Seuraa puolueiden äänestysosallistumista eri hallitusten aikana"
+      },
+      "partyDiscipline": {
+        "title": "Puoluekuri",
+        "description": "Vertaile puolueiden yhtenäisyyttä äänestyksissä"
+      }
+    }
   },
   "documents": {
     "title": "Asiakirjat",
@@ -547,6 +559,21 @@
       "birthPlace": "Syntymäpaikka",
       "occupation": "Ammatti"
     },
+    "analyticsSection": {
+      "title": "Tilastot",
+      "attendance": {
+        "title": "Läsnäolotilastot",
+        "description": "Seuraa kansanedustajien läsnäoloa istunnoissa nimenhuutotietojen perusteella"
+      },
+      "speechActivity": {
+        "title": "Puheaktiivisuus",
+        "description": "Aktiivisimmat puhujat ja puheenvuorotilastot"
+      },
+      "timeSeries": {
+        "title": "Tilastot ajassa",
+        "description": "Seuraa eduskunnan sukupuoli- ja ikäjakaumaa ajan mittain"
+      }
+    },
     "details": {
       "years": "v",
       "basicInfo": "Perustiedot",
@@ -582,7 +609,8 @@
         "speeches": "Puheenvuorot",
         "initiatives": "Aloitteet",
         "questions": "Kysymykset",
-        "positions": "Luottamustehtävät"
+        "positions": "Luottamustehtävät",
+        "activity": "Aktiivisuus"
       },
       "analysis": {
         "selectedDate": "Päivä: {{value}}",
@@ -800,7 +828,18 @@
       "representative": "Edustaja",
       "vote": "Ääni"
     },
-    "relatedVotings": "Liittyvät äänestykset"
+    "relatedVotings": "Liittyvät äänestykset",
+    "analyticsSection": {
+      "title": "Tilastot",
+      "closeVotes": {
+        "title": "Tiukat äänestykset",
+        "description": "Äänestykset, joissa tulos ratkaistiin pienellä äänierolla"
+      },
+      "coalitionOpposition": {
+        "title": "Hallitus vs. oppositio",
+        "description": "Hallituksen ja opposition äänestysasetelmat"
+      }
+    }
   },
   "sessions": {
     "title": "Istunnot",
