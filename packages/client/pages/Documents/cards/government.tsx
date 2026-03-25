@@ -28,8 +28,8 @@ import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
-import { colors } from "#client/theme/index";
 import { InlineSpinner } from "#client/theme/components";
+import { colors } from "#client/theme/index";
 import { apiFetch } from "#client/utils/fetch";
 import {
   DocumentCardShell,
@@ -94,8 +94,9 @@ function GovernmentProposalDrawerContent({
   const [error, setError] = useState<string | null>(null);
   const [showSummary, setShowSummary] = useState(false);
   const [showProposalText, setShowProposalText] = useState(false);
-  const [expertStatements, setExpertStatements] =
-    useState<ExpertStatementPreview[] | null>(null);
+  const [expertStatements, setExpertStatements] = useState<
+    ExpertStatementPreview[] | null
+  >(null);
   const [parliamentAnswer, setParliamentAnswer] = useState<
     ParliamentAnswerPreview | null | undefined
   >(undefined);
@@ -153,9 +154,7 @@ function GovernmentProposalDrawerContent({
   if (loading) return <InlineSpinner size={24} py={3} />;
 
   if (error) {
-    return (
-      <Alert severity="error">{error}</Alert>
-    );
+    return <Alert severity="error">{error}</Alert>;
   }
 
   if (!detail) return null;
@@ -501,12 +500,7 @@ function GovernmentProposalDrawerContent({
 
       {parliamentAnswer && (
         <Box>
-          <Stack
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            sx={{ mb: 1 }}
-          >
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
             <GavelIcon sx={{ color: colors.primary }} />
             <Typography
               variant="subtitle1"

@@ -1,13 +1,13 @@
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import EventBusyIcon from "@mui/icons-material/EventBusy";
-import MicIcon from "@mui/icons-material/Mic";
-import TimelineIcon from "@mui/icons-material/Timeline";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ClearIcon from "@mui/icons-material/Clear";
+import EventBusyIcon from "@mui/icons-material/EventBusy";
 import HistoryEduIcon from "@mui/icons-material/HistoryEdu";
+import MicIcon from "@mui/icons-material/Mic";
 import SearchIcon from "@mui/icons-material/Search";
 import TableRowsIcon from "@mui/icons-material/TableRows";
+import TimelineIcon from "@mui/icons-material/Timeline";
 import ViewAgendaIcon from "@mui/icons-material/ViewAgenda";
 import {
   Alert,
@@ -45,6 +45,9 @@ import {
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
+import Attendance from "#client/pages/Insights/Attendance";
+import SpeechActivity from "#client/pages/Insights/SpeechActivity";
+import TimeSeriesStatistics from "#client/pages/Insights/TimeSeriesStatistics";
 import { colors, commonStyles, spacing } from "#client/theme";
 import {
   DataCard,
@@ -55,9 +58,6 @@ import {
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 import { warnInDevelopment } from "#client/utils/request-errors";
-import Attendance from "#client/pages/Insights/Attendance";
-import SpeechActivity from "#client/pages/Insights/SpeechActivity";
-import TimeSeriesStatistics from "#client/pages/Insights/TimeSeriesStatistics";
 import { RepresentativeDetails, type RepresentativeSelection } from "./Details";
 import {
   buildCompositionUrl,
@@ -1740,7 +1740,13 @@ export default () => {
       <Box sx={{ mt: 4 }}>
         <Typography
           variant="subtitle2"
-          sx={{ mb: 1.5, fontWeight: 700, color: themedColors.textSecondary, textTransform: "uppercase", letterSpacing: "0.06em" }}
+          sx={{
+            mb: 1.5,
+            fontWeight: 700,
+            color: themedColors.textSecondary,
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+          }}
         >
           {t("analyticsSection.title")}
         </Typography>
@@ -1771,19 +1777,59 @@ export default () => {
                   onClick={() => setActiveInsightDrawer(card.key)}
                   sx={{ height: "100%", borderRadius: "inherit" }}
                 >
-                  <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-                        <Box sx={{ color: themedColors.primary, display: "flex", alignItems: "center" }}>
+                  <CardContent
+                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1.25,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            color: themedColors.primary,
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
                           {card.icon}
                         </Box>
-                        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "0.9375rem", lineHeight: 1.3 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 600,
+                            fontSize: "0.9375rem",
+                            lineHeight: 1.3,
+                          }}
+                        >
                           {card.title}
                         </Typography>
                       </Box>
-                      <ChevronRightIcon sx={{ fontSize: 18, color: themedColors.textTertiary, flexShrink: 0, ml: 1 }} />
+                      <ChevronRightIcon
+                        sx={{
+                          fontSize: 18,
+                          color: themedColors.textTertiary,
+                          flexShrink: 0,
+                          ml: 1,
+                        }}
+                      />
                     </Box>
-                    <Typography variant="body2" sx={{ color: themedColors.textSecondary, lineHeight: 1.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: themedColors.textSecondary,
+                        lineHeight: 1.5,
+                      }}
+                    >
                       {card.description}
                     </Typography>
                   </CardContent>
@@ -1798,7 +1844,12 @@ export default () => {
         anchor="right"
         open={activeInsightDrawer === "attendance"}
         onClose={() => setActiveInsightDrawer(null)}
-        PaperProps={{ sx: { width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" }, maxWidth: "1400px" } }}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" },
+            maxWidth: "1400px",
+          },
+        }}
       >
         <Attendance onClose={() => setActiveInsightDrawer(null)} />
       </Drawer>
@@ -1806,7 +1857,12 @@ export default () => {
         anchor="right"
         open={activeInsightDrawer === "speechActivity"}
         onClose={() => setActiveInsightDrawer(null)}
-        PaperProps={{ sx: { width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" }, maxWidth: "1400px" } }}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" },
+            maxWidth: "1400px",
+          },
+        }}
       >
         <SpeechActivity onClose={() => setActiveInsightDrawer(null)} />
       </Drawer>
@@ -1814,7 +1870,12 @@ export default () => {
         anchor="right"
         open={activeInsightDrawer === "timeSeries"}
         onClose={() => setActiveInsightDrawer(null)}
-        PaperProps={{ sx: { width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" }, maxWidth: "1400px" } }}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" },
+            maxWidth: "1400px",
+          },
+        }}
       >
         <TimeSeriesStatistics onClose={() => setActiveInsightDrawer(null)} />
       </Drawer>

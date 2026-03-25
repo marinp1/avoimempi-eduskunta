@@ -157,12 +157,7 @@ function WrittenQuestionResponseDrawerContent({
     <Stack spacing={2}>
       {/* External link buttons */}
       {(eduskuntaUrl || questionEduskuntaUrl) && (
-        <Stack
-          direction="row"
-          spacing={1}
-          flexWrap="wrap"
-          gap={0.5}
-        >
+        <Stack direction="row" spacing={1} flexWrap="wrap" gap={0.5}>
           {eduskuntaUrl && (
             <EduskuntaSourceLink href={eduskuntaUrl}>
               {t("viewResponseOnEduskunta")}
@@ -729,11 +724,7 @@ export const ExpertStatementCard = memo(ExpertStatementCardComponent);
 
 // ─── OralQuestion drawer content ───
 
-function OralQuestionDrawerContent({
-  item,
-}: {
-  item: OralQuestionListItem;
-}) {
+function OralQuestionDrawerContent({ item }: { item: OralQuestionListItem }) {
   const { t } = useScopedTranslation("documents");
 
   const [detail, setDetail] = useState<OralQuestionDetail | null>(null);
@@ -773,9 +764,7 @@ function OralQuestionDrawerContent({
 
   if (error) {
     return (
-      <Alert severity="error">
-        {t("loadErrorLine", { value: error })}
-      </Alert>
+      <Alert severity="error">{t("loadErrorLine", { value: error })}</Alert>
     );
   }
 
@@ -1045,9 +1034,7 @@ function WrittenQuestionDrawerContent({
             </EduskuntaSourceLink>
           )}
           {(() => {
-            const url = buildKysymysPdfUrl(
-              detail.answer_parliament_identifier,
-            );
+            const url = buildKysymysPdfUrl(detail.answer_parliament_identifier);
             return url ? (
               <EduskuntaSourceLink href={url}>
                 {tDocuments("viewResponsePdf")}
@@ -1086,11 +1073,7 @@ function WrittenQuestionDrawerContent({
                 {detail.signers.map((signer, idx) => (
                   <TableRow key={idx}>
                     <TableCell>
-                      <Stack
-                        direction="row"
-                        spacing={0.5}
-                        alignItems="center"
-                      >
+                      <Stack direction="row" spacing={0.5} alignItems="center">
                         {idx + 1}
                       </Stack>
                     </TableCell>
@@ -1126,10 +1109,7 @@ function WrittenQuestionDrawerContent({
             </Typography>
           </Stack>
           <Box sx={{ pl: 2 }}>
-            <Typography
-              variant="body2"
-              sx={{ color: colors.textPrimary }}
-            >
+            <Typography variant="body2" sx={{ color: colors.textPrimary }}>
               {detail.answer_minister_title &&
                 `${detail.answer_minister_title} `}
               {detail.answer_minister_first_name}{" "}
@@ -1274,12 +1254,7 @@ function WrittenQuestionDrawerContent({
       {/* Subjects */}
       {detail.subjects.length > 0 && (
         <Box>
-          <Stack
-            direction="row"
-            spacing={0.5}
-            flexWrap="wrap"
-            gap={0.5}
-          >
+          <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
             {detail.subjects.map((s, idx) => (
               <Chip
                 key={idx}

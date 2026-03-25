@@ -35,14 +35,14 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import React from "react";
-import AttendancePersonDetail from "#client/pages/Insights/AttendancePersonDetail";
-import VotingActivity from "#client/pages/Insights/VotingActivity";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { SourceText } from "#client/components/SourceText";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
+import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
+import AttendancePersonDetail from "#client/pages/Insights/AttendancePersonDetail";
+import VotingActivity from "#client/pages/Insights/VotingActivity";
 import { refs } from "#client/references";
 import theme, { borderRadius, colors } from "#client/theme";
 import { MetricCard, VoteMarginBar } from "#client/theme/components";

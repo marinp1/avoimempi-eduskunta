@@ -27,6 +27,8 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
+import PartyDiscipline from "#client/pages/Insights/PartyDiscipline";
+import PartyParticipation from "#client/pages/Insights/PartyParticipation";
 import { colors, commonStyles, spacing } from "#client/theme";
 import {
   DataCard,
@@ -37,8 +39,6 @@ import {
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { formatDateFi } from "#client/utils/date-time";
 import { apiFetch } from "#client/utils/fetch";
-import PartyDiscipline from "#client/pages/Insights/PartyDiscipline";
-import PartyParticipation from "#client/pages/Insights/PartyParticipation";
 import { PartyDetail } from "./PartyDetail";
 import { getPartyColor } from "./partyColors";
 import {
@@ -704,7 +704,13 @@ const Parties = () => {
       <Box sx={{ mt: 4 }}>
         <Typography
           variant="subtitle2"
-          sx={{ mb: 1.5, fontWeight: 700, color: themedColors.textSecondary, textTransform: "uppercase", letterSpacing: "0.06em" }}
+          sx={{
+            mb: 1.5,
+            fontWeight: 700,
+            color: themedColors.textSecondary,
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+          }}
         >
           {tParties("analyticsSection.title")}
         </Typography>
@@ -714,13 +720,17 @@ const Parties = () => {
               key: "partyParticipation" as const,
               icon: <AssessmentIcon sx={{ fontSize: 24 }} />,
               title: tParties("analyticsSection.partyParticipation.title"),
-              description: tParties("analyticsSection.partyParticipation.description"),
+              description: tParties(
+                "analyticsSection.partyParticipation.description",
+              ),
             },
             {
               key: "partyDiscipline" as const,
               icon: <GavelIcon sx={{ fontSize: 24 }} />,
               title: tParties("analyticsSection.partyDiscipline.title"),
-              description: tParties("analyticsSection.partyDiscipline.description"),
+              description: tParties(
+                "analyticsSection.partyDiscipline.description",
+              ),
             },
           ].map((card) => (
             <Grid key={card.key} size={{ xs: 12, sm: 6 }}>
@@ -729,18 +739,51 @@ const Parties = () => {
                   onClick={() => setActiveInsightDrawer(card.key)}
                   sx={{ height: "100%", borderRadius: "inherit" }}
                 >
-                  <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-                        <Box sx={{ color: themedColors.primary, display: "flex", alignItems: "center" }}>
+                  <CardContent
+                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1.25,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            color: themedColors.primary,
+                            display: "flex",
+                            alignItems: "center",
+                          }}
+                        >
                           {card.icon}
                         </Box>
-                        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "0.9375rem", lineHeight: 1.3 }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 600,
+                            fontSize: "0.9375rem",
+                            lineHeight: 1.3,
+                          }}
+                        >
                           {card.title}
                         </Typography>
                       </Box>
                     </Box>
-                    <Typography variant="body2" sx={{ color: themedColors.textSecondary, lineHeight: 1.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: themedColors.textSecondary,
+                        lineHeight: 1.5,
+                      }}
+                    >
                       {card.description}
                     </Typography>
                   </CardContent>
@@ -755,7 +798,12 @@ const Parties = () => {
         anchor="right"
         open={activeInsightDrawer === "partyParticipation"}
         onClose={() => setActiveInsightDrawer(null)}
-        PaperProps={{ sx: { width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" }, maxWidth: "1400px" } }}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" },
+            maxWidth: "1400px",
+          },
+        }}
       >
         <PartyParticipation onClose={() => setActiveInsightDrawer(null)} />
       </Drawer>
@@ -763,7 +811,12 @@ const Parties = () => {
         anchor="right"
         open={activeInsightDrawer === "partyDiscipline"}
         onClose={() => setActiveInsightDrawer(null)}
-        PaperProps={{ sx: { width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" }, maxWidth: "1400px" } }}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" },
+            maxWidth: "1400px",
+          },
+        }}
       >
         <PartyDiscipline onClose={() => setActiveInsightDrawer(null)} />
       </Drawer>

@@ -159,12 +159,18 @@ export default function Attendance({ onClose }: AttendanceProps) {
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                 <XAxis
                   type="number"
-                  tick={{ fill: themedColors.textSecondary, fontSize: isMobile ? 10 : 12 }}
+                  tick={{
+                    fill: themedColors.textSecondary,
+                    fontSize: isMobile ? 10 : 12,
+                  }}
                 />
                 <YAxis
                   type="category"
                   dataKey="name"
-                  tick={{ fill: themedColors.textSecondary, fontSize: isMobile ? 10 : 12 }}
+                  tick={{
+                    fill: themedColors.textSecondary,
+                    fontSize: isMobile ? 10 : 12,
+                  }}
                   width={isMobile ? 48 : 70}
                 />
                 <Tooltip

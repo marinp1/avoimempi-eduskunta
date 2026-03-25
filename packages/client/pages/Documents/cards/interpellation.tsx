@@ -25,8 +25,8 @@ import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { colors } from "#client/theme/index";
 import { InlineSpinner } from "#client/theme/components";
+import { colors } from "#client/theme/index";
 import { apiFetch } from "#client/utils/fetch";
 import {
   DocumentCardShell,
@@ -127,11 +127,7 @@ function InterpellationDrawerContent({
                 {detail.signers.map((signer, idx) => (
                   <TableRow key={idx}>
                     <TableCell>
-                      <Stack
-                        direction="row"
-                        spacing={0.5}
-                        alignItems="center"
-                      >
+                      <Stack direction="row" spacing={0.5} alignItems="center">
                         {idx + 1}
                       </Stack>
                     </TableCell>

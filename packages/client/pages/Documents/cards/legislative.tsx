@@ -4,22 +4,15 @@ import {
   Gavel as GavelIcon,
   Person as PersonIcon,
 } from "@mui/icons-material";
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  Collapse,
-  Stack,
-} from "@mui/material";
+import { Alert, Box, Button, Chip, Collapse, Stack } from "@mui/material";
 import { memo, useEffect, useState } from "react";
 import { RelatedVotings } from "#client/components/DocumentCards";
 import { DocumentLifecycle } from "#client/components/DocumentLifecycle";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { colors } from "#client/theme/index";
 import { InlineSpinner } from "#client/theme/components";
+import { colors } from "#client/theme/index";
 import { apiFetch } from "#client/utils/fetch";
 import { DocumentCardShell, DocumentMetaItem } from "../components";
 import { formatDate, getOutcomeColor, InlineRelatedSessions } from "./shared";
@@ -95,9 +88,7 @@ function LegislativeInitiativeDrawerContent({
 
   if (error) {
     return (
-      <Alert severity="error">
-        {t("loadErrorLine", { value: error })}
-      </Alert>
+      <Alert severity="error">{t("loadErrorLine", { value: error })}</Alert>
     );
   }
 
