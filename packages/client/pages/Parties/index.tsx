@@ -1,4 +1,6 @@
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import GavelIcon from "@mui/icons-material/Gavel";
 import GroupsIcon from "@mui/icons-material/Groups";
 import InsightsIcon from "@mui/icons-material/Insights";
 import PieChartOutlineIcon from "@mui/icons-material/PieChartOutline";
@@ -7,8 +9,11 @@ import {
   Box,
   Button,
   ButtonBase,
+  CardActionArea,
+  CardContent,
   Chip,
   CircularProgress,
+  Drawer,
   Grid,
   Table,
   TableBody,
@@ -32,6 +37,8 @@ import {
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { formatDateFi } from "#client/utils/date-time";
 import { apiFetch } from "#client/utils/fetch";
+import PartyDiscipline from "#client/pages/Insights/PartyDiscipline";
+import PartyParticipation from "#client/pages/Insights/PartyParticipation";
 import { PartyDetail } from "./PartyDetail";
 import { getPartyColor } from "./partyColors";
 import {
@@ -84,6 +91,9 @@ const Parties = () => {
   const [selectedPartyCode, setSelectedPartyCode] = useState<string | null>(
     () => parseSelectedPartyCode(window.location.search),
   );
+  const [activeInsightDrawer, setActiveInsightDrawer] = useState<
+    "partyParticipation" | "partyDiscipline" | null
+  >(null);
 
   const profileRef = useRef<HTMLDivElement | null>(null);
   const selectionSourceRef = useRef<"user" | "url" | "sync">("url");
@@ -689,6 +699,74 @@ const Parties = () => {
           )}
         </Box>
       </Box>
+
+      {/* Analytics sections */}
+      <Box sx={{ mt: 4 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{ mb: 1.5, fontWeight: 700, color: themedColors.textSecondary, textTransform: "uppercase", letterSpacing: "0.06em" }}
+        >
+          {tParties("analyticsSection.title")}
+        </Typography>
+        <Grid container spacing={2}>
+          {[
+            {
+              key: "partyParticipation" as const,
+              icon: <AssessmentIcon sx={{ fontSize: 24 }} />,
+              title: tParties("analyticsSection.partyParticipation.title"),
+              description: tParties("analyticsSection.partyParticipation.description"),
+            },
+            {
+              key: "partyDiscipline" as const,
+              icon: <GavelIcon sx={{ fontSize: 24 }} />,
+              title: tParties("analyticsSection.partyDiscipline.title"),
+              description: tParties("analyticsSection.partyDiscipline.description"),
+            },
+          ].map((card) => (
+            <Grid key={card.key} size={{ xs: 12, sm: 6 }}>
+              <DataCard sx={{ height: "100%", p: 0 }}>
+                <CardActionArea
+                  onClick={() => setActiveInsightDrawer(card.key)}
+                  sx={{ height: "100%", borderRadius: "inherit" }}
+                >
+                  <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+                        <Box sx={{ color: themedColors.primary, display: "flex", alignItems: "center" }}>
+                          {card.icon}
+                        </Box>
+                        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "0.9375rem", lineHeight: 1.3 }}>
+                          {card.title}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    <Typography variant="body2" sx={{ color: themedColors.textSecondary, lineHeight: 1.5 }}>
+                      {card.description}
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </DataCard>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+
+      <Drawer
+        anchor="right"
+        open={activeInsightDrawer === "partyParticipation"}
+        onClose={() => setActiveInsightDrawer(null)}
+        PaperProps={{ sx: { width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" }, maxWidth: "1400px" } }}
+      >
+        <PartyParticipation onClose={() => setActiveInsightDrawer(null)} />
+      </Drawer>
+      <Drawer
+        anchor="right"
+        open={activeInsightDrawer === "partyDiscipline"}
+        onClose={() => setActiveInsightDrawer(null)}
+        PaperProps={{ sx: { width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" }, maxWidth: "1400px" } }}
+      >
+        <PartyDiscipline onClose={() => setActiveInsightDrawer(null)} />
+      </Drawer>
     </Box>
   );
 };

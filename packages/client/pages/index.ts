@@ -5,7 +5,6 @@ import {
   Groups,
   Home,
   HowToVote,
-  Insights,
   NewReleases,
   People,
   VerifiedUser,
@@ -44,11 +43,6 @@ export const routes = {
     title: "Asiakirjat",
     icon: Description,
     Component: React.lazy(() => import("./Documents")),
-  },
-  analytiikka: {
-    title: "Analytiikka",
-    icon: Insights,
-    Component: React.lazy(() => import("./Insights")),
   },
   hallitukset: {
     title: "Hallitukset",

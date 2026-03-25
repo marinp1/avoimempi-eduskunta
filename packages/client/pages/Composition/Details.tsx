@@ -1,4 +1,5 @@
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 import CloseIcon from "@mui/icons-material/Close";
 import EmailIcon from "@mui/icons-material/Email";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -36,6 +37,8 @@ import {
 } from "@mui/material";
 import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import React from "react";
+import AttendancePersonDetail from "#client/pages/Insights/AttendancePersonDetail";
+import VotingActivity from "#client/pages/Insights/VotingActivity";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { SourceText } from "#client/components/SourceText";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
@@ -4260,6 +4263,12 @@ const RepresentativeDetailsBody: React.FC<{
             iconPosition="start"
             {...tabA11yProps(4)}
           />
+          <Tab
+            label={t("details.tabs.activity")}
+            icon={<AssessmentIcon sx={{ fontSize: 18 }} />}
+            iconPosition="start"
+            {...tabA11yProps(5)}
+          />
         </Tabs>
       </Box>
 
@@ -4313,6 +4322,29 @@ const RepresentativeDetailsBody: React.FC<{
               governmentMemberships={details.governmentMemberships || []}
             />
           ) : null}
+        </AnalysisTabPanel>
+        <AnalysisTabPanel value={tabIndex} index={5}>
+          <AttendancePersonDetail
+            personId={selectedRepresentative.personId}
+            personName={[
+              selectedRepresentative.summary?.firstName,
+              selectedRepresentative.summary?.lastName,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            startDate={
+              analysisScope.selectedGovernmentPeriod?.government_start_date
+            }
+            endDate={
+              analysisScope.selectedGovernmentPeriod?.government_end_date ??
+              undefined
+            }
+            onClose={() => {}}
+          />
+          <VotingActivity
+            onClose={() => {}}
+            initialPersonId={selectedRepresentative.personId}
+          />
         </AnalysisTabPanel>
       </Box>
     </>

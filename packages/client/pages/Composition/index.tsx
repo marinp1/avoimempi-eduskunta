@@ -1,4 +1,8 @@
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import EventBusyIcon from "@mui/icons-material/EventBusy";
+import MicIcon from "@mui/icons-material/Mic";
+import TimelineIcon from "@mui/icons-material/Timeline";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ClearIcon from "@mui/icons-material/Clear";
 import HistoryEduIcon from "@mui/icons-material/HistoryEdu";
@@ -10,7 +14,10 @@ import {
   Box,
   Button,
   CardActionArea,
+  CardContent,
   Chip,
+  Drawer,
+  Grid,
   IconButton,
   InputAdornment,
   LinearProgress,
@@ -48,6 +55,9 @@ import {
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 import { warnInDevelopment } from "#client/utils/request-errors";
+import Attendance from "#client/pages/Insights/Attendance";
+import SpeechActivity from "#client/pages/Insights/SpeechActivity";
+import TimeSeriesStatistics from "#client/pages/Insights/TimeSeriesStatistics";
 import { RepresentativeDetails, type RepresentativeSelection } from "./Details";
 import {
   buildCompositionUrl,
@@ -444,6 +454,9 @@ export default () => {
   const [govFilter, setGovFilter] =
     React.useState<GovernmentFilterValue>("all");
   const [compositionSearch, setCompositionSearch] = React.useState("");
+  const [activeInsightDrawer, setActiveInsightDrawer] = React.useState<
+    "attendance" | "speechActivity" | "timeSeries" | null
+  >(null);
   const [sortBy, setSortBy] = React.useState<CompositionSortValue>("party");
   const [viewMode, setViewMode] = React.useState<CompositionBrowserView>(
     initialUrlState.view,
@@ -1722,6 +1735,89 @@ export default () => {
         selectedRepresentative={selectedRepresentative}
         selectedDate={date}
       />
+
+      {/* Analytics sections */}
+      <Box sx={{ mt: 4 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{ mb: 1.5, fontWeight: 700, color: themedColors.textSecondary, textTransform: "uppercase", letterSpacing: "0.06em" }}
+        >
+          {t("analyticsSection.title")}
+        </Typography>
+        <Grid container spacing={2}>
+          {[
+            {
+              key: "attendance" as const,
+              icon: <EventBusyIcon sx={{ fontSize: 24 }} />,
+              title: t("analyticsSection.attendance.title"),
+              description: t("analyticsSection.attendance.description"),
+            },
+            {
+              key: "speechActivity" as const,
+              icon: <MicIcon sx={{ fontSize: 24 }} />,
+              title: t("analyticsSection.speechActivity.title"),
+              description: t("analyticsSection.speechActivity.description"),
+            },
+            {
+              key: "timeSeries" as const,
+              icon: <TimelineIcon sx={{ fontSize: 24 }} />,
+              title: t("analyticsSection.timeSeries.title"),
+              description: t("analyticsSection.timeSeries.description"),
+            },
+          ].map((card) => (
+            <Grid key={card.key} size={{ xs: 12, sm: 4 }}>
+              <DataCard sx={{ height: "100%", p: 0 }}>
+                <CardActionArea
+                  onClick={() => setActiveInsightDrawer(card.key)}
+                  sx={{ height: "100%", borderRadius: "inherit" }}
+                >
+                  <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+                        <Box sx={{ color: themedColors.primary, display: "flex", alignItems: "center" }}>
+                          {card.icon}
+                        </Box>
+                        <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "0.9375rem", lineHeight: 1.3 }}>
+                          {card.title}
+                        </Typography>
+                      </Box>
+                      <ChevronRightIcon sx={{ fontSize: 18, color: themedColors.textTertiary, flexShrink: 0, ml: 1 }} />
+                    </Box>
+                    <Typography variant="body2" sx={{ color: themedColors.textSecondary, lineHeight: 1.5 }}>
+                      {card.description}
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </DataCard>
+            </Grid>
+          ))}
+        </Grid>
+      </Box>
+
+      <Drawer
+        anchor="right"
+        open={activeInsightDrawer === "attendance"}
+        onClose={() => setActiveInsightDrawer(null)}
+        PaperProps={{ sx: { width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" }, maxWidth: "1400px" } }}
+      >
+        <Attendance onClose={() => setActiveInsightDrawer(null)} />
+      </Drawer>
+      <Drawer
+        anchor="right"
+        open={activeInsightDrawer === "speechActivity"}
+        onClose={() => setActiveInsightDrawer(null)}
+        PaperProps={{ sx: { width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" }, maxWidth: "1400px" } }}
+      >
+        <SpeechActivity onClose={() => setActiveInsightDrawer(null)} />
+      </Drawer>
+      <Drawer
+        anchor="right"
+        open={activeInsightDrawer === "timeSeries"}
+        onClose={() => setActiveInsightDrawer(null)}
+        PaperProps={{ sx: { width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" }, maxWidth: "1400px" } }}
+      >
+        <TimeSeriesStatistics onClose={() => setActiveInsightDrawer(null)} />
+      </Drawer>
     </Box>
   );
 };

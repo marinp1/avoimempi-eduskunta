@@ -132,15 +132,6 @@ const PAGE_SOURCES: Record<RouteName, TableSourceDefinition[]> = {
       purpose: "Asiakirjan linkitys istuntoihin",
     },
   ],
-  analytiikka: [
-    { tableName: "MemberOfParliament", purpose: "Edustaja- ja puoluejakaumat" },
-    { tableName: "SaliDBAanestys", purpose: "Aanestysaktiivisuuden pohjadata" },
-    {
-      tableName: "SaliDBAanestysEdustaja",
-      purpose: "Henkilo- ja puoluekohtainen aanestysdata",
-    },
-    { tableName: "SaliDBPuheenvuoro", purpose: "Puheaktiivisuuden tilastot" },
-  ],
   hallitukset: [
     { tableName: "MemberOfParliament", purpose: "Ministerien henkilotiedot" },
   ],
