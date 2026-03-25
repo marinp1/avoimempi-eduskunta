@@ -160,12 +160,12 @@ function WrittenQuestionResponseDrawerContent({
         <Stack direction="row" spacing={1} flexWrap="wrap" gap={0.5}>
           {eduskuntaUrl && (
             <EduskuntaSourceLink href={eduskuntaUrl}>
-              {t("viewResponseOnEduskunta")}
+              {t("viewResponsePdf")}
             </EduskuntaSourceLink>
           )}
           {questionEduskuntaUrl && (
             <EduskuntaSourceLink href={questionEduskuntaUrl}>
-              {t("viewQuestionOnEduskunta")}
+              {t("viewQuestionPdf")}
             </EduskuntaSourceLink>
           )}
         </Stack>

@@ -1049,7 +1049,7 @@ export const SessionSummaryCard = ({
           </Typography>
           <Chip
             size="small"
-            label={tHome("sessionCountShort", { count: session.section_count })}
+            label={tHome("sectionCount", { count: session.section_count })}
             sx={{
               ...commonStyles.compactChipSm,
               color: colors.primaryLight,
