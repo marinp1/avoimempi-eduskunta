@@ -18,8 +18,6 @@ import {
   ButtonBase,
   Chip,
   CircularProgress,
-  Dialog,
-  DialogContent,
   Drawer,
   FormControl,
   IconButton,
@@ -36,6 +34,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
+import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import React from "react";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { SourceText } from "#client/components/SourceText";
@@ -3876,16 +3875,13 @@ const PositionsTab: React.FC<{
 
 // ──────────────────────────── Main Component ────────────────────────────
 
-export const RepresentativeDetails: React.FC<{
-  open: boolean;
-  onClose: () => void;
-  selectedRepresentative: RepresentativeSelection | null;
+const RepresentativeDetailsBody: React.FC<{
+  selectedRepresentative: RepresentativeSelection;
   selectedDate: string;
-}> = ({ open, onClose, selectedRepresentative, selectedDate }) => {
+}> = ({ selectedRepresentative, selectedDate }) => {
   const { t } = useScopedTranslation("composition");
   const themedColors = useThemedColors();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const dialogTitleId = React.useId();
   const [tabIndex, setTabIndex] = React.useState(0);
   const [selectedGovName, setSelectedGovName] = React.useState<string | null>(
     null,
@@ -3904,55 +3900,68 @@ export const RepresentativeDetails: React.FC<{
     React.useState<Awaited<ReturnType<typeof fetchPersonDetails>>>();
 
   React.useEffect(() => {
-    if (selectedRepresentative) {
-      const controller = new AbortController();
-      setDetails(undefined);
-      setDetailsLoadError(null);
-      setTabIndex(0);
-      setSelectedGovName(null);
-      setGovernmentPeriods([]);
-      setGovernmentPeriodsError(null);
-      fetchPersonDetails(selectedRepresentative.personId, controller.signal)
-        .then((data) => {
-          if (!controller.signal.aborted) setDetails(data);
-        })
-        .catch((err) => {
-          if (controller.signal.aborted) return;
-          warnInDevelopment(
-            `Failed to fetch representative details for ${selectedRepresentative.personId}`,
-            err,
-          );
-          setDetailsLoadError(t("details.profileLoadError"));
-        });
-      apiFetch(
-        `/api/person/${selectedRepresentative.personId}/government-periods`,
-        { signal: controller.signal },
-      )
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
-        .then((data) => {
-          if (!controller.signal.aborted) setGovernmentPeriods(data);
-        })
-        .catch((err) => {
-          if (controller.signal.aborted) return;
-          warnInDevelopment(
-            `Failed to fetch government periods for ${selectedRepresentative.personId}`,
-            err,
-          );
-          setGovernmentPeriodsError(t("details.governmentPeriodsLoadError"));
-        });
-      return () => controller.abort();
-    } else {
-      setDetails(undefined);
-      setDetailsLoadError(null);
-      setGovernmentPeriods([]);
-      setGovernmentPeriodsError(null);
-    }
+    const controller = new AbortController();
+    setDetails(undefined);
+    setDetailsLoadError(null);
+    setTabIndex(0);
+    setSelectedGovName(null);
+    setGovernmentPeriods([]);
+    setGovernmentPeriodsError(null);
+    fetchPersonDetails(selectedRepresentative.personId, controller.signal)
+      .then((data) => {
+        if (!controller.signal.aborted) setDetails(data);
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        warnInDevelopment(
+          `Failed to fetch representative details for ${selectedRepresentative.personId}`,
+          err,
+        );
+        setDetailsLoadError(t("details.profileLoadError"));
+      });
+    apiFetch(
+      `/api/person/${selectedRepresentative.personId}/government-periods`,
+      { signal: controller.signal },
+    )
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => {
+        if (!controller.signal.aborted) setGovernmentPeriods(data);
+      })
+      .catch((err) => {
+        if (controller.signal.aborted) return;
+        warnInDevelopment(
+          `Failed to fetch government periods for ${selectedRepresentative.personId}`,
+          err,
+        );
+        setGovernmentPeriodsError(t("details.governmentPeriodsLoadError"));
+      });
+    return () => controller.abort();
   }, [selectedRepresentative, t]);
 
-  if (!selectedRepresentative) return null;
+  if (details?.representativeDetails === undefined) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: 400,
+          px: 3,
+        }}
+      >
+        {detailsLoadError ? (
+          <Alert severity="error" sx={{ maxWidth: 420 }}>
+            {detailsLoadError}
+          </Alert>
+        ) : (
+          <CircularProgress />
+        )}
+      </Box>
+    );
+  }
 
   const membershipForDate = [...(details?.groupMemberships ?? [])]
     .reverse()
@@ -4023,115 +4032,81 @@ export const RepresentativeDetails: React.FC<{
   ];
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      fullScreen={isMobile}
-      aria-labelledby={dialogTitleId}
-      PaperProps={{
-        sx: {
-          borderRadius: isMobile ? 0 : 3,
-          maxHeight: isMobile ? "100vh" : "90vh",
-        },
-      }}
-    >
-      {details?.representativeDetails === undefined ? (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: 400,
-            px: 3,
-          }}
-        >
-          {detailsLoadError ? (
-            <Alert severity="error" sx={{ maxWidth: 420 }}>
-              {detailsLoadError}
-            </Alert>
-          ) : (
-            <CircularProgress />
-          )}
-        </Box>
-      ) : (
-        <>
-          {/* Header - clean, no gradient */}
+    <>
+      {/* Sticky header — bleeds through the drawer's padding to go edge-to-edge */}
+      <Box
+        sx={{
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          bgcolor: colors.primary,
+          mx: -2.5,
+          mt: -2.5,
+          px: 2.5,
+        }}
+      >
+        <Box sx={{ p: { xs: 2, sm: 2.5 } }}>
           <Box
             sx={{
-              position: "sticky",
-              top: 0,
-              zIndex: 10,
-              bgcolor: colors.primary,
-              borderRadius: isMobile ? 0 : "12px 12px 0 0",
+              display: "flex",
+              alignItems: "center",
+              gap: { xs: 1.5, sm: 2 },
             }}
           >
-            <Box sx={{ position: "relative", p: { xs: 2, sm: 2.5 } }}>
-              <IconButton
-                onClick={onClose}
-                aria-label={t("details.analysis.closeDialog")}
-                sx={{
-                  position: "absolute",
-                  top: { xs: 8, sm: 12 },
-                  right: { xs: 8, sm: 12 },
-                  color: "white",
-                  bgcolor: "rgba(255,255,255,0.1)",
-                  "&:hover": { bgcolor: "rgba(255,255,255,0.2)" },
-                }}
+            <Avatar
+              sx={{
+                width: { xs: 48, sm: 56 },
+                height: { xs: 48, sm: 56 },
+                background: "rgba(255,255,255,0.15)",
+                color: "white",
+                fontSize: { xs: 18, sm: 22 },
+                fontWeight: 700,
+                border: "2px solid rgba(255,255,255,0.2)",
+                flexShrink: 0,
+              }}
+            >
+              {representativeFirstName[0] ?? "?"}
+              {representativeLastName[0] ?? ""}
+            </Avatar>
+
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography
+                variant="h6"
+                fontWeight="700"
+                sx={{ color: "white", lineHeight: 1.3 }}
               >
-                <CloseIcon />
-              </IconButton>
+                {representativeFirstName} {representativeLastName}
+              </Typography>
 
               <Box
                 sx={{
                   display: "flex",
+                  gap: 1,
+                  flexWrap: "wrap",
                   alignItems: "center",
-                  gap: { xs: 1.5, sm: 2 },
-                  pr: { xs: 4, sm: 0 },
+                  mt: 0.5,
                 }}
               >
-                <Avatar
-                  sx={{
-                    width: { xs: 48, sm: 56 },
-                    height: { xs: 48, sm: 56 },
-                    background: "rgba(255,255,255,0.15)",
-                    color: "white",
-                    fontSize: { xs: 18, sm: 22 },
-                    fontWeight: 700,
-                    border: "2px solid rgba(255,255,255,0.2)",
-                    flexShrink: 0,
-                  }}
+                <Typography
+                  variant="body2"
+                  sx={{ color: "rgba(255,255,255,0.85)" }}
                 >
-                  {representativeFirstName[0] ?? "?"}
-                  {representativeLastName[0] ?? ""}
-                </Avatar>
-
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography
-                    variant="h6"
-                    fontWeight="700"
-                    id={dialogTitleId}
-                    sx={{ color: "white", lineHeight: 1.3 }}
-                  >
-                    {representativeFirstName} {representativeLastName}
-                  </Typography>
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      gap: 1,
-                      flexWrap: "wrap",
-                      alignItems: "center",
-                      mt: 0.5,
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "rgba(255,255,255,0.85)" }}
-                    >
-                      {currentParty}
-                    </Typography>
+                  {currentParty}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "rgba(255,255,255,0.5)" }}
+                >
+                  |
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "rgba(255,255,255,0.85)" }}
+                >
+                  {currentDistrict}
+                </Typography>
+                {age && (
+                  <>
                     <Typography
                       variant="body2"
                       sx={{ color: "rgba(255,255,255,0.5)" }}
@@ -4142,221 +4117,239 @@ export const RepresentativeDetails: React.FC<{
                       variant="body2"
                       sx={{ color: "rgba(255,255,255,0.85)" }}
                     >
-                      {currentDistrict}
+                      {age} {t("details.years")}
                     </Typography>
-                    {age && (
-                      <>
-                        <Typography
-                          variant="body2"
-                          sx={{ color: "rgba(255,255,255,0.5)" }}
-                        >
-                          |
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{ color: "rgba(255,255,255,0.85)" }}
-                        >
-                          {age} {t("details.years")}
-                        </Typography>
-                      </>
-                    )}
-                    {governmentStatus !== null && (
-                      <Chip
-                        icon={<AccountBalanceIcon sx={{ fontSize: 14 }} />}
-                        label={
-                          governmentStatus === 1
-                            ? t("details.header.government")
-                            : t("details.header.opposition")
-                        }
-                        size="small"
-                        sx={{
-                          height: 20,
-                          fontSize: "0.65rem",
-                          fontWeight: 700,
-                          bgcolor:
-                            governmentStatus === 1
-                              ? "rgba(76, 175, 80, 0.25)"
-                              : "rgba(255, 152, 0, 0.25)",
-                          color: "white",
-                          border:
-                            governmentStatus === 1
-                              ? "1px solid rgba(76, 175, 80, 0.5)"
-                              : "1px solid rgba(255, 152, 0, 0.5)",
-                        }}
-                      />
-                    )}
-                    <Chip
-                      label={t("details.analysis.selectedDate", {
-                        value: displayDate(selectedDate),
-                      })}
-                      size="small"
-                      sx={{
-                        height: 20,
-                        fontSize: "0.65rem",
-                        fontWeight: 700,
-                        bgcolor: "rgba(255,255,255,0.1)",
-                        color: "white",
-                        border: "1px solid rgba(255,255,255,0.2)",
-                      }}
-                    />
-                  </Box>
-                </Box>
+                  </>
+                )}
+                {governmentStatus !== null && (
+                  <Chip
+                    icon={<AccountBalanceIcon sx={{ fontSize: 14 }} />}
+                    label={
+                      governmentStatus === 1
+                        ? t("details.header.government")
+                        : t("details.header.opposition")
+                    }
+                    size="small"
+                    sx={{
+                      height: 20,
+                      fontSize: "0.65rem",
+                      fontWeight: 700,
+                      bgcolor:
+                        governmentStatus === 1
+                          ? "rgba(76, 175, 80, 0.25)"
+                          : "rgba(255, 152, 0, 0.25)",
+                      color: "white",
+                      border:
+                        governmentStatus === 1
+                          ? "1px solid rgba(76, 175, 80, 0.5)"
+                          : "1px solid rgba(255, 152, 0, 0.5)",
+                    }}
+                  />
+                )}
+                <Chip
+                  label={t("details.analysis.selectedDate", {
+                    value: displayDate(selectedDate),
+                  })}
+                  size="small"
+                  sx={{
+                    height: 20,
+                    fontSize: "0.65rem",
+                    fontWeight: 700,
+                    bgcolor: "rgba(255,255,255,0.1)",
+                    color: "white",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                  }}
+                />
               </Box>
             </Box>
-
-            {!isMobile ? (
-              <Box
-                sx={{
-                  px: { xs: 2, sm: 2.5 },
-                  pb: 1.5,
-                  display: "grid",
-                  gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
-                  gap: 1,
-                }}
-              >
-                {quickSummary.map((item) => (
-                  <Box
-                    key={item.label}
-                    sx={{
-                      p: 1.1,
-                      borderRadius: 1.5,
-                      bgcolor: "rgba(255,255,255,0.08)",
-                      border: "1px solid rgba(255,255,255,0.12)",
-                    }}
-                  >
-                    <Typography
-                      variant="caption"
-                      sx={{ color: "rgba(255,255,255,0.75)" }}
-                    >
-                      {item.label}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        color: "white",
-                        fontWeight: 700,
-                        lineHeight: 1.2,
-                        mt: 0.25,
-                      }}
-                    >
-                      {item.value}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            ) : null}
-
-            <Tabs
-              value={tabIndex}
-              onChange={(_, v) => setTabIndex(v)}
-              variant="scrollable"
-              scrollButtons="auto"
-              aria-label={t("details.analysis.sectionsAria")}
-              sx={{
-                minHeight: 40,
-                px: 1,
-                "& .MuiTab-root": {
-                  color: "rgba(255,255,255,0.6)",
-                  fontWeight: 600,
-                  fontSize: "0.8rem",
-                  minHeight: 40,
-                  textTransform: "none",
-                  py: 0,
-                  "&.Mui-selected": { color: "white" },
-                },
-                "& .MuiTabs-indicator": {
-                  bgcolor: "white",
-                  height: 2,
-                },
-              }}
-            >
-              <Tab
-                label={t("details.tabs.overview")}
-                icon={<PersonIcon sx={{ fontSize: 18 }} />}
-                iconPosition="start"
-                {...tabA11yProps(0)}
-              />
-              <Tab
-                label={t("details.tabs.votes")}
-                icon={<HowToVoteIcon sx={{ fontSize: 18 }} />}
-                iconPosition="start"
-                {...tabA11yProps(1)}
-              />
-              <Tab
-                label={t("details.tabs.speeches")}
-                icon={<MicIcon sx={{ fontSize: 18 }} />}
-                iconPosition="start"
-                {...tabA11yProps(2)}
-              />
-              <Tab
-                label={t("details.tabs.initiatives")}
-                icon={<QuizIcon sx={{ fontSize: 18 }} />}
-                iconPosition="start"
-                {...tabA11yProps(3)}
-              />
-              <Tab
-                label={t("details.tabs.positions")}
-                icon={<WorkIcon sx={{ fontSize: 18 }} />}
-                iconPosition="start"
-                {...tabA11yProps(4)}
-              />
-            </Tabs>
           </Box>
+        </Box>
 
-          {/* Tab Content */}
-          <DialogContent
+        {!isMobile ? (
+          <Box
             sx={{
-              p: { xs: 2, sm: 3 },
-              bgcolor: themedColors.backgroundSubtle,
-              overflowY: "auto",
+              px: { xs: 2, sm: 2.5 },
+              pb: 1.5,
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
+              gap: 1,
             }}
           >
-            {governmentPeriodsError ? (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {governmentPeriodsError}
-              </Alert>
-            ) : null}
-            <AnalysisScopeToolbar
-              selectedDate={selectedDate}
-              scope={analysisScope}
-              governments={governmentPeriods}
-              onSelectGovernment={setSelectedGovName}
-            />
+            {quickSummary.map((item) => (
+              <Box
+                key={item.label}
+                sx={{
+                  p: 1.1,
+                  borderRadius: 1.5,
+                  bgcolor: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{ color: "rgba(255,255,255,0.75)" }}
+                >
+                  {item.label}
+                </Typography>
+                <Typography
+                  sx={{
+                    color: "white",
+                    fontWeight: 700,
+                    lineHeight: 1.2,
+                    mt: 0.25,
+                  }}
+                >
+                  {item.value}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ) : null}
 
-            <AnalysisTabPanel value={tabIndex} index={0}>
-              {details ? (
-                <OverviewTab details={details} selectedDate={selectedDate} />
-              ) : null}
-            </AnalysisTabPanel>
-            <AnalysisTabPanel value={tabIndex} index={1}>
-              <VotesTab
-                personId={selectedRepresentative.personId}
-                scope={analysisScope}
-              />
-            </AnalysisTabPanel>
-            <AnalysisTabPanel value={tabIndex} index={2}>
-              <SpeechesTab
-                personId={selectedRepresentative.personId}
-                scope={analysisScope}
-              />
-            </AnalysisTabPanel>
-            <AnalysisTabPanel value={tabIndex} index={3}>
-              <QuestionsTab
-                personId={selectedRepresentative.personId}
-                scope={analysisScope}
-              />
-            </AnalysisTabPanel>
-            <AnalysisTabPanel value={tabIndex} index={4}>
-              {details ? (
-                <PositionsTab
-                  personId={selectedRepresentative.personId}
-                  trustPositions={details.trustPositions || []}
-                  governmentMemberships={details.governmentMemberships || []}
-                />
-              ) : null}
-            </AnalysisTabPanel>
-          </DialogContent>
-        </>
-      )}
-    </Dialog>
+        <Tabs
+          value={tabIndex}
+          onChange={(_, v) => setTabIndex(v)}
+          variant="scrollable"
+          scrollButtons="auto"
+          aria-label={t("details.analysis.sectionsAria")}
+          sx={{
+            minHeight: 40,
+            px: 1,
+            "& .MuiTab-root": {
+              color: "rgba(255,255,255,0.6)",
+              fontWeight: 600,
+              fontSize: "0.8rem",
+              minHeight: 40,
+              textTransform: "none",
+              py: 0,
+              "&.Mui-selected": { color: "white" },
+            },
+            "& .MuiTabs-indicator": {
+              bgcolor: "white",
+              height: 2,
+            },
+          }}
+        >
+          <Tab
+            label={t("details.tabs.overview")}
+            icon={<PersonIcon sx={{ fontSize: 18 }} />}
+            iconPosition="start"
+            {...tabA11yProps(0)}
+          />
+          <Tab
+            label={t("details.tabs.votes")}
+            icon={<HowToVoteIcon sx={{ fontSize: 18 }} />}
+            iconPosition="start"
+            {...tabA11yProps(1)}
+          />
+          <Tab
+            label={t("details.tabs.speeches")}
+            icon={<MicIcon sx={{ fontSize: 18 }} />}
+            iconPosition="start"
+            {...tabA11yProps(2)}
+          />
+          <Tab
+            label={t("details.tabs.initiatives")}
+            icon={<QuizIcon sx={{ fontSize: 18 }} />}
+            iconPosition="start"
+            {...tabA11yProps(3)}
+          />
+          <Tab
+            label={t("details.tabs.positions")}
+            icon={<WorkIcon sx={{ fontSize: 18 }} />}
+            iconPosition="start"
+            {...tabA11yProps(4)}
+          />
+        </Tabs>
+      </Box>
+
+      {/* Tab Content */}
+      <Box
+        sx={{
+          p: { xs: 2, sm: 3 },
+          bgcolor: themedColors.backgroundSubtle,
+        }}
+      >
+        {governmentPeriodsError ? (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {governmentPeriodsError}
+          </Alert>
+        ) : null}
+        <AnalysisScopeToolbar
+          selectedDate={selectedDate}
+          scope={analysisScope}
+          governments={governmentPeriods}
+          onSelectGovernment={setSelectedGovName}
+        />
+
+        <AnalysisTabPanel value={tabIndex} index={0}>
+          {details ? (
+            <OverviewTab details={details} selectedDate={selectedDate} />
+          ) : null}
+        </AnalysisTabPanel>
+        <AnalysisTabPanel value={tabIndex} index={1}>
+          <VotesTab
+            personId={selectedRepresentative.personId}
+            scope={analysisScope}
+          />
+        </AnalysisTabPanel>
+        <AnalysisTabPanel value={tabIndex} index={2}>
+          <SpeechesTab
+            personId={selectedRepresentative.personId}
+            scope={analysisScope}
+          />
+        </AnalysisTabPanel>
+        <AnalysisTabPanel value={tabIndex} index={3}>
+          <QuestionsTab
+            personId={selectedRepresentative.personId}
+            scope={analysisScope}
+          />
+        </AnalysisTabPanel>
+        <AnalysisTabPanel value={tabIndex} index={4}>
+          {details ? (
+            <PositionsTab
+              personId={selectedRepresentative.personId}
+              trustPositions={details.trustPositions || []}
+              governmentMemberships={details.governmentMemberships || []}
+            />
+          ) : null}
+        </AnalysisTabPanel>
+      </Box>
+    </>
   );
+};
+
+export const RepresentativeDetails: React.FC<{
+  onClose: () => void;
+  selectedRepresentative: RepresentativeSelection | null;
+  selectedDate: string;
+}> = ({ onClose, selectedRepresentative, selectedDate }) => {
+  const { openRootDrawer, closeDrawer } = useOverlayDrawer();
+  const onCloseRef = React.useRef(onClose);
+  onCloseRef.current = onClose;
+
+  React.useEffect(() => {
+    if (!selectedRepresentative) {
+      closeDrawer();
+      return;
+    }
+    const firstName = selectedRepresentative.summary?.firstName ?? "";
+    const lastName = selectedRepresentative.summary?.lastName ?? "";
+    const subtitle =
+      [firstName, lastName].filter(Boolean).join(" ") || undefined;
+    openRootDrawer({
+      drawerKey: `representative:${selectedRepresentative.personId}`,
+      title: "Edustaja",
+      subtitle,
+      content: (
+        <RepresentativeDetailsBody
+          selectedRepresentative={selectedRepresentative}
+          selectedDate={selectedDate}
+        />
+      ),
+      onClose: () => onCloseRef.current(),
+    });
+  }, [selectedRepresentative, selectedDate, openRootDrawer, closeDrawer]);
+
+  return null;
 };

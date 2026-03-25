@@ -1354,14 +1354,13 @@ export default () => {
         </Box>
       </Stack>
 
-      {selectedPersonId !== null && (
-        <RepresentativeDetails
-          open={true}
-          onClose={() => setSelectedPersonId(null)}
-          selectedRepresentative={{ personId: selectedPersonId }}
-          selectedDate={selectedDate}
-        />
-      )}
+      <RepresentativeDetails
+        onClose={() => setSelectedPersonId(null)}
+        selectedRepresentative={
+          selectedPersonId !== null ? { personId: selectedPersonId } : null
+        }
+        selectedDate={selectedDate}
+      />
     </Box>
   );
 };
