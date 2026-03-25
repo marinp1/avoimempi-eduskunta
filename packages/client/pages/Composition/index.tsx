@@ -440,9 +440,6 @@ export default () => {
   const [selectedPersonId, setSelectedPersonId] = React.useState<number | null>(
     initialUrlState.personId,
   );
-  const [dialogOpen, setDialogOpen] = React.useState(
-    initialUrlState.personId !== null,
-  );
   const [partyFilter, setPartyFilter] = React.useState<string | null>(null);
   const [govFilter, setGovFilter] =
     React.useState<GovernmentFilterValue>("all");
@@ -597,7 +594,7 @@ export default () => {
       setLookupQuery(next.query);
       setCommittedLookupQuery(next.query.trim());
       setSelectedPersonId(next.personId);
-      setDialogOpen(next.personId !== null);
+
       setViewMode(next.view);
       if (next.personId === null) {
         setSelectedRepresentative(null);
@@ -754,7 +751,6 @@ export default () => {
       }
       setSelectedPersonId(selection.personId);
       setSelectedRepresentative(selection);
-      setDialogOpen(true);
       syncUrl({
         date: nextDate && nextDate !== date ? nextDate : undefined,
         person: selection.personId,
@@ -829,7 +825,6 @@ export default () => {
   );
 
   const handleCloseDialog = React.useCallback(() => {
-    setDialogOpen(false);
     setSelectedPersonId(null);
     setSelectedRepresentative(null);
     syncUrl({ person: null });
@@ -1723,7 +1718,6 @@ export default () => {
       )}
 
       <RepresentativeDetails
-        open={dialogOpen}
         onClose={handleCloseDialog}
         selectedRepresentative={selectedRepresentative}
         selectedDate={date}
