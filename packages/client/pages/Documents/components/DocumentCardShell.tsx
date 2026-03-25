@@ -152,7 +152,11 @@ const DocumentCardShellComponent: React.FC<{
               minWidth: { sm: 152 },
             }}
           >
-            {onOpenDrawer ? toggleLabel : expanded ? collapseLabel : toggleLabel}
+            {onOpenDrawer
+              ? toggleLabel
+              : expanded
+                ? collapseLabel
+                : toggleLabel}
           </Button>
         </Stack>
       </Stack>

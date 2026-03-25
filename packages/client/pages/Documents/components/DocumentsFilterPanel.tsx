@@ -144,7 +144,14 @@ const DocumentsFilterPanelComponent: React.FC<{
     >
       {collapsible ? (
         <>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: filtersOpen ? 2 : 0 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              mb: filtersOpen ? 2 : 0,
+            }}
+          >
             <Badge badgeContent={activeFilterCount} color="primary">
               <Button
                 size="small"

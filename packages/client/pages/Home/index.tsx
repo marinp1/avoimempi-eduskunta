@@ -696,8 +696,7 @@ const Home = () => {
                           {session.sections
                             .slice(0, previewCount)
                             .map((section) => {
-                              const isActive =
-                                activeSection?.id === section.id;
+                              const isActive = activeSection?.id === section.id;
                               const sectionNotices = (
                                 session.notices || []
                               ).filter(

@@ -23,12 +23,12 @@ import {
 } from "@mui/material";
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { RepresentativeDetails } from "#client/pages/Composition/Details";
 import {
   type HallituskausiPeriod,
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
+import { RepresentativeDetails } from "#client/pages/Composition/Details";
 import { spacing } from "#client/theme";
 import {
   DataCard,
@@ -717,78 +717,78 @@ const GovernmentMinistersSection: React.FC<{
                       : undefined,
                   }}
                 >
-                <DataCard
-                  sx={{
-                    p: 2.25,
-                    borderColor: `${featuredRoleColors[key]}30`,
-                    borderTop: `4px solid ${featuredRoleColors[key]}`,
-                    boxShadow: "0 6px 18px rgba(15, 27, 51, 0.08)",
-                  }}
-                >
-                  <Stack spacing={1.25}>
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      sx={{
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Chip
-                        label={t(key)}
-                        size="small"
+                  <DataCard
+                    sx={{
+                      p: 2.25,
+                      borderColor: `${featuredRoleColors[key]}30`,
+                      borderTop: `4px solid ${featuredRoleColors[key]}`,
+                      boxShadow: "0 6px 18px rgba(15, 27, 51, 0.08)",
+                    }}
+                  >
+                    <Stack spacing={1.25}>
+                      <Stack
+                        direction="row"
+                        spacing={1}
                         sx={{
-                          ...wrapChipSx,
-                          height: 24,
-                          fontSize: "0.72rem",
-                          fontWeight: 800,
-                          bgcolor: `${featuredRoleColors[key]}14`,
-                          color: featuredRoleColors[key],
+                          alignItems: "center",
+                          justifyContent: "space-between",
                         }}
-                      />
-                      {member.party && (
+                      >
                         <Chip
-                          label={member.party}
+                          label={t(key)}
                           size="small"
                           sx={{
                             ...wrapChipSx,
-                            height: 22,
-                            fontSize: "0.7rem",
-                            fontWeight: 700,
-                            bgcolor: tc.backgroundSubtle,
-                            color: tc.textPrimary,
-                            border: `1px solid ${tc.dataBorder}`,
+                            height: 24,
+                            fontSize: "0.72rem",
+                            fontWeight: 800,
+                            bgcolor: `${featuredRoleColors[key]}14`,
+                            color: featuredRoleColors[key],
                           }}
                         />
-                      )}
+                        {member.party && (
+                          <Chip
+                            label={member.party}
+                            size="small"
+                            sx={{
+                              ...wrapChipSx,
+                              height: 22,
+                              fontSize: "0.7rem",
+                              fontWeight: 700,
+                              bgcolor: tc.backgroundSubtle,
+                              color: tc.textPrimary,
+                              border: `1px solid ${tc.dataBorder}`,
+                            }}
+                          />
+                        )}
+                      </Stack>
+
+                      <Box>
+                        <Typography
+                          variant="h6"
+                          sx={{ fontWeight: 800, color: tc.textPrimary }}
+                        >
+                          {getMemberDisplayName(member)}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: tc.textSecondary, mt: 0.5 }}
+                        >
+                          {member.name}
+                        </Typography>
+                      </Box>
+
+                      <Typography
+                        variant="caption"
+                        sx={{ color: tc.textSecondary, fontSize: "0.78rem" }}
+                      >
+                        {formatOptionalDateRange(
+                          member.start_date,
+                          member.end_date,
+                        )}
+                      </Typography>
                     </Stack>
-
-                    <Box>
-                      <Typography
-                        variant="h6"
-                        sx={{ fontWeight: 800, color: tc.textPrimary }}
-                      >
-                        {getMemberDisplayName(member)}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: tc.textSecondary, mt: 0.5 }}
-                      >
-                        {member.name}
-                      </Typography>
-                    </Box>
-
-                    <Typography
-                      variant="caption"
-                      sx={{ color: tc.textSecondary, fontSize: "0.78rem" }}
-                    >
-                      {formatOptionalDateRange(
-                        member.start_date,
-                        member.end_date,
-                      )}
-                    </Typography>
-                  </Stack>
-                </DataCard>
+                  </DataCard>
                 </Box>
               ))}
             </Box>

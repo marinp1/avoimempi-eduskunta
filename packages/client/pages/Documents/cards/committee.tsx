@@ -180,9 +180,7 @@ function CommitteeReportDrawerContent({
                   <TableCell>#</TableCell>
                   <TableCell>{tCommon("name")}</TableCell>
                   <TableCell>{tDocuments("expertTitle")}</TableCell>
-                  <TableCell>
-                    {tDocuments("expertOrganization")}
-                  </TableCell>
+                  <TableCell>{tDocuments("expertOrganization")}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -362,8 +360,7 @@ function CommitteeReportDrawerContent({
       )}
 
       {/* Minority opinion */}
-      {(detail.minority_opinion_text ||
-        detail.minority_opinion_rich_text) && (
+      {(detail.minority_opinion_text || detail.minority_opinion_rich_text) && (
         <Box>
           <Button
             startIcon={<PersonIcon />}
@@ -423,10 +420,7 @@ function CommitteeReportDrawerContent({
 
       <DocumentLifecycle
         currentIdentifier={item.parliament_identifier}
-        directReferenceValues={[
-          item.source_reference,
-          detail.source_reference,
-        ]}
+        directReferenceValues={[item.source_reference, detail.source_reference]}
         richTextValues={[
           detail.summary_rich_text,
           detail.general_reasoning_rich_text,

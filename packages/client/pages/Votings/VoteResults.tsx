@@ -17,7 +17,6 @@ import {
   VotingGroupCard,
 } from "#client/components/VotingCard";
 import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
-import { formatDateFi } from "#client/utils/date-time";
 import {
   isDateWithinHallituskausi,
   useHallituskausi,
@@ -30,6 +29,7 @@ import {
   PageIntro,
 } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
+import { formatDateFi } from "#client/utils/date-time";
 import { apiFetch } from "#client/utils/fetch";
 import { VotingsControlBar } from "./components/VotingsControlBar";
 import {
@@ -364,7 +364,9 @@ export const VoteResults: React.FC<{
       openRootDrawer({
         drawerKey: `voting:${voting.id}`,
         title: primaryTitle || `Äänestys #${voting.id}`,
-        subtitle: voting.start_time ? formatDateFi(voting.start_time) : undefined,
+        subtitle: voting.start_time
+          ? formatDateFi(voting.start_time)
+          : undefined,
         content: <VotingDrawerContent votingId={voting.id} />,
         onClose: () => onFocusVotingChange(null),
       });
@@ -381,12 +383,16 @@ export const VoteResults: React.FC<{
       openedFocusRef.current !== focusVotingId
     ) {
       openedFocusRef.current = focusVotingId;
-      const voting = buildVotingViewModels([focusVoting.row])[0] as VotingCardData;
+      const voting = buildVotingViewModels([
+        focusVoting.row,
+      ])[0] as VotingCardData;
       const primaryTitle = getPrimaryVotingTitle(voting);
       openRootDrawer({
         drawerKey: `voting:${focusVotingId}`,
         title: primaryTitle || `Äänestys #${focusVotingId}`,
-        subtitle: voting.start_time ? formatDateFi(voting.start_time) : undefined,
+        subtitle: voting.start_time
+          ? formatDateFi(voting.start_time)
+          : undefined,
         content: <VotingDrawerContent votingId={focusVotingId} />,
         onClose: () => onFocusVotingChange(null),
       });

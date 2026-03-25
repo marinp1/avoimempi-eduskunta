@@ -1,5 +1,5 @@
-import BalanceIcon from "@mui/icons-material/Balance";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import BalanceIcon from "@mui/icons-material/Balance";
 import {
   Box,
   CardActionArea,
@@ -139,7 +139,13 @@ export default () => {
       <Box sx={{ mt: 4 }}>
         <Typography
           variant="subtitle2"
-          sx={{ mb: 1.5, fontWeight: 700, color: themedColors.textSecondary, textTransform: "uppercase", letterSpacing: "0.06em" }}
+          sx={{
+            mb: 1.5,
+            fontWeight: 700,
+            color: themedColors.textSecondary,
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+          }}
         >
           {t("analyticsSection.title")}
         </Typography>
@@ -155,7 +161,9 @@ export default () => {
               key: "coalitionOpposition" as const,
               icon: <AccountBalanceIcon sx={{ fontSize: 24 }} />,
               title: t("analyticsSection.coalitionOpposition.title"),
-              description: t("analyticsSection.coalitionOpposition.description"),
+              description: t(
+                "analyticsSection.coalitionOpposition.description",
+              ),
             },
           ].map((card) => (
             <Grid key={card.key} size={{ xs: 12, sm: 6 }}>
@@ -164,16 +172,39 @@ export default () => {
                   onClick={() => setActiveInsightDrawer(card.key)}
                   sx={{ height: "100%", borderRadius: "inherit" }}
                 >
-                  <CardContent sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-                      <Box sx={{ color: themedColors.primary, display: "flex", alignItems: "center" }}>
+                  <CardContent
+                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                  >
+                    <Box
+                      sx={{ display: "flex", alignItems: "center", gap: 1.25 }}
+                    >
+                      <Box
+                        sx={{
+                          color: themedColors.primary,
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
                         {card.icon}
                       </Box>
-                      <Typography variant="h6" sx={{ fontWeight: 600, fontSize: "0.9375rem", lineHeight: 1.3 }}>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: "0.9375rem",
+                          lineHeight: 1.3,
+                        }}
+                      >
                         {card.title}
                       </Typography>
                     </Box>
-                    <Typography variant="body2" sx={{ color: themedColors.textSecondary, lineHeight: 1.5 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: themedColors.textSecondary,
+                        lineHeight: 1.5,
+                      }}
+                    >
                       {card.description}
                     </Typography>
                   </CardContent>
@@ -188,7 +219,12 @@ export default () => {
         anchor="right"
         open={activeInsightDrawer === "closeVotes"}
         onClose={() => setActiveInsightDrawer(null)}
-        PaperProps={{ sx: { width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" }, maxWidth: "1400px" } }}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" },
+            maxWidth: "1400px",
+          },
+        }}
       >
         <CloseVotes onClose={() => setActiveInsightDrawer(null)} />
       </Drawer>
@@ -196,7 +232,12 @@ export default () => {
         anchor="right"
         open={activeInsightDrawer === "coalitionOpposition"}
         onClose={() => setActiveInsightDrawer(null)}
-        PaperProps={{ sx: { width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" }, maxWidth: "1400px" } }}
+        PaperProps={{
+          sx: {
+            width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" },
+            maxWidth: "1400px",
+          },
+        }}
       >
         <CoalitionOpposition onClose={() => setActiveInsightDrawer(null)} />
       </Drawer>
