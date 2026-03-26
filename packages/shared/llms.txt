@@ -1,0 +1,189 @@
+# Avoimempi Eduskunta — Shared Package
+
+> Shared TypeScript types, constants, storage abstraction, and database path utilities used across all packages in the monorepo.
+
+## Path Aliases (tsconfig.json)
+
+```typescript
+"#constants"      → packages/shared/constants/index.ts
+"#database"       → packages/shared/database/index.ts
+"#storage"        → packages/shared/storage/index.ts
+"#storage/*"      → packages/shared/storage/*
+"#table-counts"   → packages/shared/table-counts/index.ts
+"#client/*"       → packages/client/*
+```
+
+## Constants (`constants/index.ts`)
+
+### Table Names
+
+```typescript
+import { TableNames, TableNameMap } from "#constants";
+
+// All supported API table names
+TableNames: string[]
+
+TableNameMap = {
+  MemberOfParliament: "MemberOfParliament",
+  SeatingOfParliament: "SeatingOfParliament",
+  SaliDBAanestys: "SaliDBAanestys",         // Voting sessions
+  SaliDBAanestysEdustaja: "SaliDBAanestysEdustaja", // Representative votes
+  SaliDBAanestysAsiakirja: "SaliDBAanestysAsiakirja",
+  SaliDBAanestysJakauma: "SaliDBAanestysJakauma",
+  SaliDBAanestysKieli: "SaliDBAanestysKieli",
+  SaliDBIstunto: "SaliDBIstunto",           // Sessions/plenary sittings
+  SaliDBKohta: "SaliDBKohta",               // Agenda items/sections
+  SaliDBKohtaAanestys: "SaliDBKohtaAanestys",
+  SaliDBKohtaAsiakirja: "SaliDBKohtaAsiakirja",
+  SaliDBMessageLog: "SaliDBMessageLog",
+  SaliDBPuheenvuoro: "SaliDBPuheenvuoro",   // Speeches
+  SaliDBTiedote: "SaliDBTiedote",           // Notices
+  VaskiData: "VaskiData",                   // Legislative documents (XML)
+  Attachment: "Attachment",
+  AttachmentGroup: "AttachmentGroup",
+  HetekaData: "HetekaData",
+  PrimaryKeys: "PrimaryKeys",
+}
+```
+
+### Primary Keys
+
+```typescript
+import { PrimaryKeys } from "#constants";
+
+// Maps table name → primary key column name
+PrimaryKeys = {
+  MemberOfParliament: "personId",
+  SaliDBAanestys: "AanestysId",
+  SaliDBIstunto: "IstuntoId",
+  SaliDBKohta: "KohtaId",
+  SaliDBPuheenvuoro: "PuheenvuoroId",
+  // ...
+}
+```
+
+### Pipeline Subsets
+
+```typescript
+// Tables excluded from the pipeline (auxiliary/reference)
+OmittedPipelineTableNames: string[]
+
+// Tables always re-scraped from PK 0 (non-incremental)
+AlwaysFullScrapeTables = ["MemberOfParliament", "SeatingOfParliament"]
+```
+
+### Vote and Language Constants
+
+```typescript
+VoteResults = { Yes: "Jaa", No: "Ei", Absent: "Poissa" }
+LanguageIds = { Finnish: "1", Swedish: "2" }
+```
+
+## Database Path Utilities (`database/index.ts`)
+
+```typescript
+import {
+  getDatabasePath,
+  getTraceDatabasePath,
+  getQualityDatabasePath,
+  getChangesReportPath,
+  getChangesArchiveDir,
+  getLastScraperRunAtPath,
+  getLastMigratorRunAtPath,
+} from "#database";
+```
+
+- `getDatabasePath()` — main SQLite DB (`avoimempi-eduskunta.db`)
+- `getTraceDatabasePath()` — data lineage DB (`avoimempi-eduskunta-trace.db`)
+- `getQualityDatabasePath()` — data quality DB
+- `getChangesReportPath()` — current changes report file
+- `getChangesArchiveDir()` — archived changes reports directory
+- `getLastScraperRunAtPath()` — timestamp file for last scraper run
+- `getLastMigratorRunAtPath()` — timestamp file for last migrator run
+
+## Storage Abstraction (`storage/index.ts`)
+
+Offline-first storage abstraction. Currently backed by local filesystem; designed to be swapped for S3, Azure Blob, etc.
+
+```typescript
+import { storage } from "#storage";
+
+await storage.put(key, data)        // Write JSON data
+await storage.get(key)              // Read JSON data (or null)
+await storage.list(prefix)          // List all keys with prefix
+```
+
+**Configuration** (`storage/config.ts`): controls storage backend selection.
+**Factory** (`storage/factory.ts`): creates the appropriate `Storage` implementation.
+**Local provider** (`storage/providers/local.ts`): `LocalFilesystemStorage` — reads/writes JSON files to `data/` directory.
+
+### Row Store (`storage/row-store/`)
+
+SQLite-backed row store for the scraper/parser pipeline. Interface in `row-store/types.ts`. Providers:
+- `row-store/providers/sqlite.ts` — SQLite implementation (used in local dev)
+- `row-store/providers/postgres.ts` — PostgreSQL implementation (for cloud deployments)
+
+Functions:
+- `getRawRowStore()` — access raw API responses
+- `getParsedRowStore()` — access transformed data
+
+## Type Definitions (`typings/`)
+
+### Global Namespace (`typings/globals.d.ts`)
+
+```typescript
+namespace Modules.Common {
+  type DateString = string           // ISO 8601 date, e.g. "2024-03-15"
+  type TableName = string            // One of TableNames values
+  type VoteResult = "Jaa" | "Ei" | "Poissa"
+  type LanguageId = "1" | "2"       // Finnish | Swedish
+}
+```
+
+### Rich Text (`typings/RichText.ts`)
+
+Used for session minutes and legislative document content.
+
+```typescript
+type RichTextDocument = {
+  type: "doc"
+  content: RichTextBlock[]
+}
+
+type RichTextBlock =
+  | RichTextParagraphBlock
+  | RichTextHeadingBlock
+  | RichTextListBlock
+  | RichTextTableBlock
+
+type RichTextInline =
+  | RichTextTextInline    // { type: "text", text: string, marks?: RichTextMark[] }
+  | RichTextLineBreakInline
+
+type RichTextMark =
+  | { type: "bold" | "italic" | "underline" | "strike" }
+  | { type: "link", attrs: { href: string } }
+
+// Helper functions
+parseRichTextDocument(raw: unknown): RichTextDocument
+isRichTextDocument(raw: unknown): raw is RichTextDocument
+```
+
+### SQL Model Types (`typings/SQLModel/`)
+
+TypeScript interfaces matching the normalized SQLite schema:
+
+- **`Representatives.ts`** — `MemberOfParliament`, `SeatingOfParliament`, committee memberships, government roles, trust positions, districts, leaving records
+- **`Session.ts`** — sessions, sections/agenda items, subsections, roll call entries
+- **`Speech.ts`** — speech transcripts, speaker references
+- **`Voting.ts`** — voting sessions, party breakdowns, member vote records
+- **`VaskiDocuments.ts`** — parsed document types: `GovernmentProposal`, `CommitteeReport`, `Interpellation`, `WrittenQuestion`, `ExpertStatement`, `OralQuestion`, `LegislativeInitiative`, `ParliamentAnswer`
+- **`SaliDBExtensions.ts`** — additional SaliDB-specific types
+
+### Raw Data Types (`typings/RawData.ts`)
+
+TypeScript interfaces for the raw Eduskunta API response format (before parsing/migration).
+
+## Table Counts (`table-counts/index.ts`)
+
+Utilities for tracking row counts per table — used by the scraper for incremental decisions and status reporting.
