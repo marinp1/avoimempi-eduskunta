@@ -149,6 +149,15 @@ export const createCoreRoutes = (
     },
   },
 
+  "/llms.txt": {
+    GET: async () => {
+      const file = Bun.file(new URL("../../../llms.txt", import.meta.url));
+      return new Response(file, {
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      });
+    },
+  },
+
   "/api/changes-history": {
     GET: () => {
       try {

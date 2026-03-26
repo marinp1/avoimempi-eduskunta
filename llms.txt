@@ -1,0 +1,95 @@
+# Avoimempi Eduskunta
+
+> Data aggregation and analysis platform for Finnish Parliament (Eduskunta). Fetches, parses, and imports data from the Eduskunta Open API into a normalized SQLite database, then serves it through a React-based web application.
+
+## Overview
+
+Avoimempi Eduskunta ("More Open Parliament") is a full-stack TypeScript monorepo that makes Finnish parliamentary data transparent and searchable. It covers voting records, session minutes, speeches, representative profiles, party composition, legislative documents, and government periods.
+
+The system has two main parts:
+- **Data pipeline** (`packages/datapipe`): ETL process that scrapes the Eduskunta Open API, parses the raw data, and migrates it into a normalized SQLite database.
+- **Web application** (`packages/server` + `packages/client`): Bun HTTP server with a React SPA frontend that exposes the parliamentary data through a typed REST API.
+
+## Tech Stack
+
+- **Runtime**: Bun v1.2.2 (required — not Node.js)
+- **Language**: TypeScript (ESM modules, `"type": "module"`)
+- **Database**: SQLite with WAL mode (main DB + trace DB + quality DB)
+- **Frontend**: React 19, Material-UI (MUI) 7, Emotion, Recharts, i18next
+- **Build/lint**: Biome, Bun bundler
+- **Container**: Podman or Docker
+
+## Workspace Structure
+
+```
+packages/
+  client/      React SPA frontend (browser)
+  server/      Bun HTTP API server (node/server-side)
+  datapipe/    Data pipeline CLIs: scraper, parser, migrator
+  shared/      Shared TypeScript types, constants, storage abstraction
+```
+
+## Common Commands
+
+```bash
+# Start the web application (dev mode with HMR)
+bun run start
+
+# Data pipeline (run in order)
+bun run scrape <TableName>   # Fetch raw data from Eduskunta API
+bun run parse <TableName>    # Transform raw data
+bun run migrate              # Import transformed data into SQLite
+
+# Type checking
+bun run typecheck
+
+# Linting
+bun run lint
+bun run lint:fix
+```
+
+## Key Architecture Patterns
+
+### ETL Data Pipeline
+
+Three-stage process: **scrape → parse → migrate**
+
+1. **Scraper** — Fetches paginated data from `https://avoindata.eduskunta.fi/api/v1/tables/{TableName}/batch` and stores raw JSON in `data/raw.db` (SQLite row-store).
+2. **Parser** — Reads raw data, applies custom transform functions from `packages/datapipe/parser/fn/{TableName}.ts` (falls back to default), writes to `data/parsed.db`.
+3. **Migrator** — Runs SQL migrations (`bun-sqlite-migrations`), imports parsed data into the normalized schema in `avoimempi-eduskunta.db`.
+
+### Repository Pattern (Server)
+
+The server uses domain-specific repository classes that encapsulate all SQLite queries:
+- `PersonRepository`, `VotingRepository`, `SessionRepository`, `HomeRepository`, `AnalyticsRepository`, `DocumentRepository`, `MetadataRepository`, `ImportSourceRepository`
+
+SQL queries live in external `.sql` files under `packages/server/database/queries/`.
+
+### Response Caching
+
+In-memory cache with 5-minute TTL, keyed by URL. Disabled in dev mode. Invalidated by migration timestamp (generation key).
+
+### Offline-First Storage Abstraction
+
+`packages/shared/storage/index.ts` provides `storage.put(key, data)`, `storage.get(key)`, `storage.list(prefix)`. Currently backed by local filesystem; interface supports swapping to S3 or other providers.
+
+### SPA Navigation
+
+The React frontend is a single-page app. Navigation uses `window.history.pushState({}, "", href)` followed by `window.dispatchEvent(new PopStateEvent("popstate"))`. Deep links are supported.
+
+### OverlayDrawer Detail Panel
+
+Detail views open in a side drawer (not separate pages or inline accordions). Entry point: `useOverlayDrawer()` from `OverlayDrawerContext`. Methods: `openRootDrawer`, `openDrawer` (pushes, shows back button), `replaceDrawer`, `closeDrawer`.
+
+## Data Sources
+
+- **SaliDB tables** — Parliament session, voting, and speech data from the Eduskunta API
+- **VASKI documents** — Legislative documents (XML) including government proposals, committee reports, interpellations, written questions, etc.
+- **MemberOfParliament** — Representative biographical and membership data
+
+## Package Documentation
+
+- [packages/client/llms.txt](packages/client/llms.txt) — React frontend: pages, components, contexts, navigation
+- [packages/server/llms.txt](packages/server/llms.txt) — HTTP server: routes, repositories, caching, middleware
+- [packages/datapipe/llms.txt](packages/datapipe/llms.txt) — ETL pipeline: scraper, parser, migrator, VASKI documents
+- [packages/shared/llms.txt](packages/shared/llms.txt) — Shared code: types, constants, storage, database paths

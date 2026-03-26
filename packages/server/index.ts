@@ -198,11 +198,7 @@ const commonServeOptions = {
   port,
   reusePort,
   idleTimeout,
-  development: isDev
-    ? {
-        hmr: true,
-      }
-    : false,
+  development: isDev,
 
   error(error: Error) {
     console.error(error);

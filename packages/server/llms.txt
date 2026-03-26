@@ -1,0 +1,200 @@
+# Avoimempi Eduskunta — Server Package
+
+> Bun HTTP server exposing Finnish Parliament data through a typed REST API. Uses a readonly SQLite database, domain-specific repository classes, in-memory response caching, and security headers middleware.
+
+## Entry Point
+
+`index.ts` — Initializes the database connection, instantiates all repositories, configures the response cache, registers all route groups, and starts `Bun.serve()`.
+
+## Database Layer (`database/`)
+
+### Connection (`database/db.ts`)
+- `DatabaseConnection` class — opens the main SQLite database in **readonly** mode
+- Pragmas: `query_only=ON`, `temp_store=memory`, `cache_size=64MB`, `mmap_size=30GB`
+- Path from `getDatabasePath()` in `packages/shared/database`
+
+### Query Helpers (`database/query-helpers.ts`)
+- `buildSearchQuery(raw)` — tokenizes search string with `%` separators
+- `buildFtsSearchQuery(raw)` — FTS-style `"token"*` query
+- `endDateExclusive(date)` — converts inclusive end date to exclusive upper bound
+- `buildDocumentIdentifierVariants(id)` — generates 3 matching variants for a document identifier
+- `paginatedResult(items, total, page, limit)` — wraps paginated data with metadata
+
+### SQL Files (`database/queries/`)
+153 parameterized `.sql` files organized by domain. Repositories load these as strings and prepare typed statements with `db.prepare<RowType, ParamType>(sql)`.
+
+### Startup (`database/launch-db.ts`)
+Supports 3 modes: `local` (use local DB), `latest` (download from storage manifest), `storage-key` (explicit key). Handles WAL sidecar cleanup and optional trace DB download.
+
+## Repositories (`database/repositories/`)
+
+All repositories receive the `db` instance and expose typed async query methods.
+
+### PersonRepository
+`fetchRepresentativePage`, `fetchPersonSearch(q, limit?, date?)`, `fetchPersonGroupMemberships`, `fetchPersonTerms`, `fetchPersonVotes`, `fetchRepresentativeDetails`, `fetchRepresentativeDistricts`, `fetchLeavingParliamentRecords`, `fetchTrustPositions`, `fetchGovernmentMemberships`, `fetchGovernmentPeriods`, `fetchPersonSpeeches(personId, limit?, offset?)`, `fetchPersonQuestions(personId, limit?)`, `fetchPersonCommittees`, `fetchPersonDissents(personId, limit?)`
+
+### VotingRepository
+`fetchVotingOverview(startDate?, endDate?)`, `queryVotings(q, ...)`, `browseVotings(q?, phase?, session?, sort?, startDate?, endDate?, limit?)`, `fetchRecentVotings`, `fetchVotingById`, `fetchVotingInlineDetails(id)` (party breakdown + member votes + gov/opposition), `fetchVotingsByDocument(identifier)`, `fetchDocumentRelations(identifier)`
+
+### SessionRepository
+`fetchSessions(page, limit)`, `fetchSectionByKey(sectionKey)`, `fetchSectionSpeeches(sectionKey, limit, offset)`, `fetchSectionVotings`, `fetchSectionSubSections`, `fetchSectionRollCall`, `fetchSessionByDate`, `fetchSessionWithSectionsByDate`, `fetchSpeechesByDate`, `fetchSessionDates`, `fetchCompletedSessionDates`, `fetchSectionDocumentLinks`, `fetchLatestSpeechDate`, `fetchSessionNotices`
+
+### HomeRepository
+Aggregates session and analytics data. `fetchOverview(params)` — returns scope, freshness timestamps, party composition, latest day activities, and analytics signals (close votes, speech activity, coalition/opposition).
+
+### AnalyticsRepository
+`fetchVotingParticipation`, `fetchVotingParticipationByGovernment(personId, ...)`, `fetchGenderDivisionOverTime`, `fetchAgeDivisionOverTime`, `fetchAttendanceByParty`, `fetchAttendancePerPerson`, `fetchCloseVotes(threshold, limit, ...)`, `fetchCoalitionVsOpposition`, `fetchRecentActivity`, `fetchSpeechActivity`, `fetchPartySummary(asOfDate?, startDate?, endDate?, governmentName?, governmentStartDate?)`, `fetchPartyMembers(partyCode, ...)`, `fetchPartyDiscipline`
+
+### DocumentRepository (largest — 1,868 lines)
+One method group per document type: `WrittenQuestion`, `ExpertStatement`, `CommitteeReport`, `Interpellation`, `ParliamentAnswer`, `GovernmentProposal`, `LegislativeInitiative`, `OralQuestion`. Each group has: `fetch*List/Count`, `fetch*ById/ByIdentifier`, `fetch*Subjects/Years`, plus related data (signers, sessions, stages, laws). Also: `federatedSearch(q, limit)`.
+
+### MetadataRepository
+`fetchParliamentComposition(date)`, `fetchGovernments`, `fetchGovernmentByDate`, `fetchGovernmentMembers(id)`, `fetchHallituskaudet`
+
+### ImportSourceRepository
+Reads from the trace database (`avoimempi-eduskunta-trace.db`). `fetchRowTrace(table, pkName, pkValue)` — returns scrape and migration timestamps. `fetchImportSourceTableSummaries(tableNames)` — per-table import statistics.
+
+## Routes (`routes/`)
+
+All route groups are wrapped with `withSecurityHeaders`. API routes are also wrapped by the response cache.
+
+### Core Routes (`core-routes.ts`)
+```
+GET /api/health
+GET /api/ready                          (excluded from cache)
+GET /api/import-source/row-trace        ?table=&pkName=&pkValue=
+GET /api/import-source/table-summaries  ?tableNames=...
+GET /api/composition/:date
+GET /api/hallituskaudet
+GET /api/db-info
+GET /api/version
+GET /api/changes-report                 ?runId=
+GET /api/changes-history
+```
+
+### Person Routes (`person-routes.ts`)
+```
+GET /api/person/search                  ?q= (min 2 chars)
+GET /api/person/:id/group-memberships
+GET /api/person/:id/terms
+GET /api/person/:id/votes
+GET /api/person/:id/details
+GET /api/person/:id/districts
+GET /api/person/:id/leaving-records
+GET /api/person/:id/trust-positions
+GET /api/person/:id/government-memberships
+GET /api/person/:id/government-periods
+GET /api/person/:id/speeches            ?limit=50&offset=0 (max 500)
+GET /api/person/:id/questions           ?limit=500 (max 2000)
+GET /api/person/:id/committees
+GET /api/person/:id/dissents            ?limit=100 (max 1000)
+```
+
+### Voting Routes (`voting-routes.ts`)
+```
+GET /api/votings/recent                 ?startDate=&endDate=
+GET /api/votings/overview               ?startDate=&endDate=
+GET /api/votings/search                 ?q= (min 3 chars)
+GET /api/votings/browse                 ?q=&phase=&session=&sort=newest|oldest|closest|largest&startDate=&endDate=
+GET /api/votings/by-document/:identifier
+GET /api/documents/:identifier/relations
+GET /api/votings/:id
+GET /api/votings/:id/details
+```
+
+### Session Routes (`session-routes.ts`)
+```
+GET /api/sessions                       ?page=1&limit=20 (max 200)
+GET /api/sections/:sectionKey
+GET /api/sections/:sectionKey/speeches  ?limit=20&offset=0 (max 500)
+GET /api/sections/:sectionKey/votings
+GET /api/sections/:sectionKey/subsections
+GET /api/sections/:sectionKey/roll-call
+GET /api/sections/:sectionKey/links
+GET /api/day/:date/session
+GET /api/day/:date/sessions
+GET /api/day/:date/speeches
+GET /api/session-dates
+GET /api/session-dates/completed
+```
+
+### Party Routes (`party-routes.ts`)
+```
+GET /api/parties/summary                ?asOfDate=&startDate=&endDate=&governmentName=&governmentStartDate=
+GET /api/parties/:code/members          ?asOfDate=...
+```
+
+### Home Routes (`home-routes.ts`)
+```
+GET /api/home/overview                  ?asOfDate=&startDate=&endDate=&governmentName=&governmentStartDate=
+```
+
+### Government Routes (`government-routes.ts`)
+```
+GET /api/hallitukset
+GET /api/hallitukset/active             ?date=YYYY-MM-DD
+GET /api/hallitukset/:id/members
+```
+
+### Analytics Routes (`insight-analytics-routes.ts`)
+```
+GET /api/insights/participation         ?startDate=&endDate=
+GET /api/insights/participation/:personId/by-government
+GET /api/insights/gender-division
+GET /api/insights/age-division
+GET /api/insights/attendance-by-party   ?startDate=&endDate=
+GET /api/insights/attendance-per-person ?startDate=&endDate=
+GET /api/insights/close-votes           ?threshold=&limit=&startDate=&endDate=
+GET /api/insights/coalition-opposition  ?limit=&startDate=&endDate=
+GET /api/insights/speech-activity       ?limit=&startDate=&endDate=
+GET /api/insights/party-discipline      ?startDate=&endDate=
+GET /api/insights/recent-activity       ?limit=&startDate=&endDate=
+```
+
+### Document Routes (`document-routes.ts` + subdirectories)
+```
+GET /api/search                         ?q= (min 2 chars, limit 30-200) — federated across all doc types
+GET /api/interpellations                (list, search, by-id, by-identifier, subjects, years, stages, sessions, signers)
+GET /api/written-questions              (same structure)
+GET /api/expert-statements              (same structure)
+GET /api/oral-questions                 (same structure)
+GET /api/committee-reports              (same structure + source/recipient committees)
+GET /api/legislative-initiatives        (same structure)
+GET /api/parliament-answers             (same structure)
+GET /api/government-proposals           (same structure)
+```
+
+### Static Page Routes (`static-page-routes.ts`)
+Serves the React SPA HTML bundle for all client-side routes:
+`/`, `/edustajat`, `/puolueet`, `/istunnot`, `/aanestykset`, `/asiakirjat`, `/analytiikka`, `/hallitukset`, `/muutokset`, `/laadunvalvonta`
+
+## Middleware (`middleware/`)
+
+### Security Headers (`middleware/security-headers.ts`)
+Applied to all routes via `withSecurityHeaders()`. Sets: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Content-Security-Policy` (self-only, unsafe-inline for styles/fonts).
+
+## HTTP Utilities (`routes/http.ts`)
+
+- `getSearchParams(req)` — extract `URLSearchParams`
+- `getOptionalQueryParam(params, key)` — string or undefined
+- `getIntegerQueryParam(params, key, fallback)` — parse integer
+- `getBoundedIntegerQueryParam(params, key, min, max, fallback)` — bounded integer
+- `getPageLimitQueryParams(params, maxLimit)` — validated `{ page, limit }`
+- `getLimitOffsetQueryParams(params, maxLimit)` — validated `{ limit, offset }`
+- `validateDateRange(startDate?, endDate?)` — validates ISO date format
+
+## Route Response Helpers (`routes/route-responses.ts`)
+
+- `json(data, init?)` — typed JSON response
+- `badRequest(message)` — 400
+- `notFound(message?)` — 404
+- `jsonOrNotFound(data, message?)` — data or 404
+
+## Response Cache (`cache/response-cache.ts`)
+
+- In-memory, keyed by URL (pathname + query string)
+- TTL: 5 minutes
+- Max entries: 2000
+- Generation key: migration timestamp (disabled in dev, invalidates cache on new data)
+- Caches 2xx and 4xx; never 5xx
+- `cache.wrapRoutes(routes, { exclude? })` — wraps route handlers transparently

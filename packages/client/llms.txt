@@ -1,0 +1,121 @@
+# Avoimempi Eduskunta — Client Package
+
+> React 19 SPA frontend for the Finnish Parliament data platform. Uses Material-UI (MUI) 7 with Emotion styling, i18next for Finnish/Swedish translations, and Recharts for data visualization.
+
+## Entry Points
+
+- `root.tsx` — Creates React DOM root, wraps `App` with `ThemeProvider` and `HallituskausiProvider`, initializes i18n
+- `app.tsx` — Main app component: fetches `/api/db-info`, `/api/version`, `/api/changes-report`; sets up providers (`TraceProvider`, `OverlayDrawerProvider`); manages SPA routing via `popstate`; renders active page inside Suspense
+
+## Pages
+
+Defined in `pages/index.ts` as a route map. Each page is lazy-loaded.
+
+| Route key    | URL path       | Title (FI)     | Component file                        |
+|--------------|----------------|----------------|---------------------------------------|
+| (empty)      | `/`            | Etusivu        | `pages/Home/index.tsx`                |
+| edustajat    | `/edustajat`   | Edustajat      | `pages/Composition/index.tsx`         |
+| puolueet     | `/puolueet`    | Puolueet       | `pages/Parties/index.tsx`             |
+| istunnot     | `/istunnot`    | Istunnot       | `pages/Sessions/index.tsx`            |
+| aanestykset  | `/aanestykset` | Äänestykset    | `pages/Votings/index.tsx`             |
+| asiakirjat   | `/asiakirjat`  | Asiakirjat     | `pages/Documents/index.tsx`           |
+| hallitukset  | `/hallitukset` | Hallitukset    | `pages/Hallitukset/index.tsx`         |
+| muutokset    | `/muutokset`   | Muutokset      | `pages/Changes/index.tsx`             |
+| laadunvalvonta | `/laadunvalvonta` | Laadunvalvonta | `pages/Laadunvalvonta/index.tsx`   |
+
+### Page Subdirectories
+
+- `pages/Home/` — Dashboard with recent sessions, votings, party composition, and analytics signals
+- `pages/Composition/` — Parliament member list with `Details.tsx` for representative detail view
+- `pages/Parties/` — Party list; `PartyDetail.tsx` for party-level analytics
+- `pages/Sessions/` — Calendar and session browser; components in `pages/Sessions/components/`
+- `pages/Votings/` — Voting browser with filters; `VoteResults.tsx` for vote breakdown
+- `pages/Documents/` — Legislative document browser by type; `cards/` and `components/` subdirectories
+- `pages/Insights/` — Advanced analytics: attendance, party discipline, close votes, coalition/opposition, speech activity, time-series stats, voting activity
+- `pages/Hallitukset/` — Government period browser with minister lists
+- `pages/Changes/` — Data change log
+- `pages/Laadunvalvonta/` — Data quality dashboard
+
+## Key Components (`components/`)
+
+- **`VotingCard.tsx`** — Voting result card with collapse/expand and OverlayDrawer support. Accepts `onOpenDetails?: () => void`; when provided, uses drawer instead of inline collapse. Contains `VotingDrawerContent` for drawer use.
+- **`DocumentCards.tsx`** — Document card rendering for all legislative document types.
+- **`PageDataSourcesDrawer.tsx`** — Data provenance overlay. Shows row-level import trace and per-table summaries. Reads `traceItem` from `TraceContext`.
+- **`ItemTraceIcon.tsx`** — Hover-visible icon that opens the data trace drawer. Parent element needs `className="trace-hover-parent"` for hover CSS.
+- **`VotingResultsTable.tsx`** — Party and member voting breakdown table.
+- **`RichTextRenderer.tsx`** — Renders `RichTextDocument` (parliament minutes rich text).
+- **`MinutesContentBlock.tsx`** — Session minutes content blocks.
+- **`DocumentLifecycle.tsx`** — Legislative document lifecycle/stage display.
+- **`EduskuntaSourceLink.tsx`** — External link to eduskunta.fi for a document.
+
+## Context Providers (`context/`)
+
+### `OverlayDrawerContext.tsx`
+Standard pattern for all detail views. Provides a slide-in side drawer with navigation stack.
+
+```typescript
+const { openRootDrawer, openDrawer, replaceDrawer, closeDrawer } = useOverlayDrawer();
+
+openRootDrawer({
+  title: "Title",
+  subtitle: "Optional subtitle",
+  meta: "Optional meta info",
+  actions: [<Button />],
+  content: <MyDetailComponent />,
+  onClose: () => {},
+});
+// openDrawer pushes onto stack (shows back button)
+// replaceDrawer updates top of stack
+// openRootDrawer resets stack
+```
+
+Already wired into: Votings, Documents, Home, Sessions, Parties, Composition, Insights.
+
+### `TraceContext.tsx`
+Holds `traceItem | null` and `setTraceItem`. Used by `ItemTraceIcon` to set the item being traced, and by `PageDataSourcesDrawer` to display the trace. The drawer registers its open callback via `registerOpenDrawer`.
+
+### `HallituskausiProvider` (`filters/HallituskausiContext.tsx`)
+Government period filter context — wraps the app and lets pages filter data by government period.
+
+### `ThemeContext` (`theme/ThemeContext.tsx`)
+Light/dark mode theme provider for MUI.
+
+## Navigation Pattern
+
+```typescript
+// Navigate to a page
+window.history.pushState({}, "", "/aanestykset?q=talousarvio");
+window.dispatchEvent(new PopStateEvent("popstate"));
+```
+
+The app listens to `popstate` and re-renders the active page. URL params are read on mount and on `popstate` to support deep-linking and intra-page navigation.
+
+## Document Type Navigation
+
+```typescript
+import { inferDocumentType } from "pages/Documents";
+
+// Maps identifier prefixes to document page types
+inferDocumentType("HE 1/2024")   // → "hallituksen_esitys"
+inferDocumentType("KK 1/2024")   // → "kirjallinen_kysymys"
+
+// Build navigation URL
+refs.documents(type, q)  // → "/asiakirjat?type=...&q=..."
+```
+
+## i18n
+
+Uses i18next with Finnish as the primary language. Translation keys are Finnish-language strings. Translations are initialized in `root.tsx`.
+
+## EDK Document PDF URL Pattern
+
+```
+https://www.eduskunta.fi/FI/vaski/JulkaisuMetatieto/Documents/{edk_identifier}.pdf
+```
+
+## Styling
+
+- MUI 7 components with Emotion (`@emotion/react`, `@emotion/styled`)
+- Global font: Zilla Slab (loaded from `/fonts/Zilla_Slab/`)
+- Dark gradient background on the app shell
+- Mobile-first responsive layouts

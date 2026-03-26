@@ -1,0 +1,166 @@
+# Avoimempi Eduskunta — Datapipe Package
+
+> ETL data pipeline for Finnish Parliament (Eduskunta) data. Three-stage process: scrape raw data from the Eduskunta Open API → parse/transform → migrate into the normalized SQLite database.
+
+## Pipeline Overview
+
+Run stages in order:
+
+```bash
+bun run scrape <TableName>   # Stage 1: fetch raw data from API
+bun run parse <TableName>    # Stage 2: transform raw data
+bun run migrate              # Stage 3: import into SQLite
+```
+
+Data flows through three SQLite row-stores:
+1. `data/raw.db` — raw API responses (created by scraper)
+2. `data/parsed.db` — transformed data (created by parser)
+3. `avoimempi-eduskunta.db` — normalized schema (created by migrator)
+
+## Stage 1: Scraper (`scraper/`)
+
+**Entry**: `scraper/cli.ts`
+**Core**: `scraper/scraper.ts`
+
+Fetches paginated data from:
+```
+GET https://avoindata.eduskunta.fi/api/v1/tables/{TableName}/batch
+  ?pkName={pkName}&pkStartValue={lastPk}&perPage=100
+```
+
+- Rate-limited: 10ms between requests
+- Continues until no more rows returned
+- Safety limit: `MAX_LOOP_LIMIT = 10_000` pages (throws on breach)
+- `AlwaysFullScrapeTables` (`MemberOfParliament`, `SeatingOfParliament`) are always re-scraped from PK 0
+- Other tables are scraped incrementally (resuming from last known PK)
+- Writes raw rows to the row-store abstraction under key `raw/{TableName}/page_N`
+
+**Other CLIs**:
+- `scraper/fetch-counts-cli.ts` — fetch row counts from API
+- `scraper/history-cli.ts` — scraping history
+
+## Stage 2: Parser (`parser/`)
+
+**Entry**: `parser/cli.ts`
+**Core**: `parser/parser.ts`
+
+- Reads raw data from `data/raw.db`
+- Applies custom transform from `parser/fn/{TableName}.ts` if it exists
+- Falls back to default identity transform if no custom parser
+- Writes parsed data to `data/parsed.db`
+
+**Custom parsers**:
+- `parser/fn/MemberOfParliament.ts` — representative data normalization
+- `parser/fn/VaskiData.ts` — VASKI XML document parsing
+
+## Stage 3: Migrator (`migrator/`)
+
+**Entry**: `migrator/cli.ts`
+**Core**: `migrator/migrate.ts`
+
+- Runs SQL schema migrations via `bun-sqlite-migrations`
+- Migration SQL files: `migrator/migrations/V001.001.sql` … `V001.031.sql`
+- After migrations, imports parsed data into normalized tables
+- Import order defined in `IMPORT_ORDER` (respects foreign key dependencies)
+- Clears all tables before import (idempotent full reload)
+- Calls `rebuildTraceDatabase()` after import to populate the trace DB
+
+**Important migration file rules** (parser splits on `;`):
+- No inline comments on the same line as SQL statements
+- One statement per line/block, separated by blank lines
+
+### Table Migrators (`migrator/fn/`)
+
+One migrator function per table:
+
+| File | Table |
+|------|-------|
+| `SaliDBAanestys.ts` | Voting sessions |
+| `SaliDBAanestysEdustaja.ts` | Individual representative votes |
+| `SaliDBAanestysAsiakirja.ts` | Voting-document links |
+| `SaliDBIstunto.ts` | Parliament sessions |
+| `SaliDBKohta.ts` | Agenda items / sections |
+| `SaliDBKohtaAanestys.ts` | Section-level vote references |
+| `SaliDBKohtaAsiakirja.ts` | Section-document links |
+| `SaliDBPuheenvuoro.ts` | Speeches / statements |
+| `SaliDBTiedote.ts` | Session notices/announcements |
+| `MemberOfParliament.ts` | Representative biographical data |
+
+### VASKI Document Migrator (`migrator/fn/VaskiData/`)
+
+Processes XML-based legislative documents from the VASKI system. Entry: `migrator.ts`.
+
+**Submigrators** (`migrator/fn/VaskiData/submigrators/`):
+
+| File | Finnish term | Document type |
+|------|-------------|---------------|
+| `asiantuntijalausunto*.ts` | Asiantuntijalausunto | Expert statements |
+| `eduskunnan_vastaus.ts` | Eduskunnan vastaus | Parliamentary answers |
+| `hallituksen_esitys.ts` | Hallituksen esitys (HE) | Government proposals |
+| `kansalaisaloite.ts` | Kansalaisaloite | Citizen initiatives |
+| `keskustelualoite.ts` | Keskustelualoite | Discussion proposals |
+| `kirjallinen_kysymys.ts` | Kirjallinen kysymys (KK) | Written questions |
+| `lakialoite.ts` | Lakialoite (LA) | Legislative initiatives |
+| `lisätalousarvioaloite.ts` | Lisätalousarvioaloite | Supplementary budget initiatives |
+| `nimenhuutoraportti.ts` | Nimenhuutoraportti | Roll call attendance reports |
+| `pöytäkirja.ts` | Pöytäkirja | Session minutes |
+| `suullinen_kysymys.ts` | Suullinen kysymys | Oral questions |
+| `talousarvioaloite.ts` | Talousarvioaloite | Budget initiatives |
+| `toimenpidealoite.ts` | Toimenpidealoite | Action initiatives |
+| `välikysymys.ts` | Välikysymys | Interpellations |
+| `valiokunnan_lausunto.ts` | Valiokunnan lausunto | Committee statements |
+| `valiokunnan_mietintö.ts` | Valiokunnan mietintö | Committee reports |
+| `vastaus_kirjalliseen_kysymykseen.ts` | Vastaus kirjalliseen kysymykseen | Written question responses |
+
+**Support files**:
+- `reader.ts` — reads VASKI data from the row-store
+- `rich-text.ts` — parses XML into `RichTextDocument` structures (used in session minutes)
+
+### Post-Import (`migrator/post-import.ts`)
+Runs after all table imports. Handles derived data: aggregates, computed columns, cross-table joins, analytics pre-computation.
+
+### Trace Database (`migrator/trace-db.ts`)
+`rebuildTraceDatabase()` populates `avoimempi-eduskunta-trace.db` with:
+- `ImportSourceReference` — per-row scrape timestamp and API URL
+- `ImportSourceReferenceSummary` — per-table aggregate statistics
+
+Reads raw row-store for `pk`, `createdAt` (scraped_at), and `column_schemas` for `pkName`.
+
+### Changes Report (`migrator/changes-report.ts`)
+Generates a diff report comparing current data to the previous migration run. Output stored at path from `getChangesReportPath()` and archived in `getChangesArchiveDir()`.
+
+### Document Reference Mapping (`migrator/salidb-document-ref.ts`)
+Maps SaliDB document references to VASKI identifiers (enables cross-linking between session data and legislative documents).
+
+## Table Names and Constants
+
+From `packages/shared/constants`:
+
+```typescript
+// Tables included in the pipeline
+TableNames = [
+  "MemberOfParliament", "SeatingOfParliament",
+  "SaliDBAanestys", "SaliDBAanestysEdustaja", "SaliDBIstunto",
+  "SaliDBKohta", "SaliDBKohtaAanestys", "SaliDBPuheenvuoro",
+  "SaliDBTiedote", "VaskiData",
+  // + more
+]
+
+// Always re-scraped from scratch (not incremental)
+AlwaysFullScrapeTables = ["MemberOfParliament", "SeatingOfParliament"]
+
+// Excluded from pipeline (reference/auxiliary tables)
+OmittedPipelineTableNames = [
+  "HetekaData", "PrimaryKeys", "SaliDBAanestysAsiakirja",
+  "SaliDBAanestysJakauma", "SaliDBAanestysKieli", "SaliDBMessageLog"
+]
+```
+
+## Adding Support for a New Table
+
+1. Ensure table name exists in `packages/shared/constants/TableNames.ts`
+2. Optionally create custom parser: `parser/fn/{TableName}.ts`
+3. Create migrator: `migrator/fn/{TableName}/migrator.ts`
+4. Add migration SQL if needed: `migrator/migrations/V001.NNN.sql`
+5. Update `IMPORT_ORDER` in `migrator/import-data.ts` if the table has dependencies
+6. Run: `bun run scrape {TableName}` → `bun run parse {TableName}` → `bun run migrate`
