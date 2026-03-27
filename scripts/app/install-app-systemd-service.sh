@@ -38,8 +38,6 @@ Restart=always
 RestartSec=3
 TimeoutStopSec=20
 KillSignal=SIGTERM
-AmbientCapabilities=CAP_NET_BIND_SERVICE
-CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 NoNewPrivileges=true
 PrivateTmp=true
 

@@ -12,6 +12,7 @@ APP_DATA_DIR="/var/lib/avoimempi-eduskunta-app"
 PIPELINE_DATA_DIR="/var/lib/avoimempi-eduskunta-pipeline"
 APP_ENV_FILE="${APP_DIR}/shared/app.env"
 PIPELINE_ENV_FILE="${APP_DIR}/shared/pipeline.env"
+APP_DOMAIN="avoimempieduskunta.eu, www.avoimempieduskunta.eu"
 
 # Ensure bun is on PATH for systemd services (which don't inherit shell profiles)
 if [[ ! -x /usr/local/bin/bun ]]; then
@@ -70,7 +71,7 @@ if [[ ! -f "${APP_ENV_FILE}" ]]; then
 NODE_ENV=production
 DB_PATH=${APP_DATA_DIR}/current.db
 QUALITY_DB_PATH=${APP_DATA_DIR}/avoimempi-eduskunta-quality.db
-PORT=80
+PORT=3000
 BUN_REUSE_PORT=true
 BUN_IDLE_TIMEOUT_SECONDS=120
 EOF
@@ -101,6 +102,32 @@ ${PIPELINE_USER} ALL=(ALL) NOPASSWD: ${RESTART_SCRIPT}
 EOF
 chmod 440 "${SUDOERS_FILE}"
 echo "Wrote sudoers entry: ${SUDOERS_FILE}"
+
+# --- Install Caddy ---
+
+if ! command -v caddy &>/dev/null; then
+  DEBIAN_FRONTEND=noninteractive apt-get install -y debian-keyring debian-archive-keyring apt-transport-https curl
+  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' \
+    | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' \
+    | tee /etc/apt/sources.list.d/caddy-stable.list
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y caddy
+  echo "Installed Caddy"
+else
+  echo "Caddy already installed: $(caddy version)"
+fi
+
+CADDYFILE="/etc/caddy/Caddyfile"
+cat > "${CADDYFILE}" <<EOF
+${APP_DOMAIN} {
+    reverse_proxy localhost:3000
+}
+EOF
+echo "Wrote ${CADDYFILE} for domain(s): ${APP_DOMAIN}"
+
+systemctl enable --now caddy
+echo "Caddy enabled and started"
 
 # --- Install systemd units ---
 
