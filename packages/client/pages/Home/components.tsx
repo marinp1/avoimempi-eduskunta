@@ -753,13 +753,6 @@ export const CompositionPanel = ({
     start: formatDateFi(participationWindowStart, participationWindowStart),
     end: formatDateFi(overview.scope.asOfDate, overview.scope.asOfDate),
   });
-  const governmentWidth =
-    overview.composition.totalMembers > 0
-      ? (overview.composition.governmentMembers /
-          overview.composition.totalMembers) *
-        100
-      : 0;
-
   return (
     <DataCard sx={{ p: 0, overflow: "hidden", height: "100%" }}>
       <PanelHeader
@@ -782,88 +775,7 @@ export const CompositionPanel = ({
         sx={{ p: 2, background: "rgba(255,255,255,0.84)" }}
       />
       <Box sx={{ p: 2 }}>
-        <Box
-          sx={{
-            p: 2,
-            borderRadius: 2,
-            background:
-              "linear-gradient(180deg, rgba(27,42,74,0.03) 0%, rgba(27,42,74,0.08) 100%)",
-            border: `1px solid ${colors.dataBorder}`,
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 2,
-              flexWrap: "wrap",
-            }}
-          >
-            <Box>
-              <Typography
-                sx={{
-                  ...commonStyles.compactTextLg,
-                  color: colors.textSecondary,
-                }}
-              >
-                {tHome("government")}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "1.4rem",
-                  fontWeight: 700,
-                  color: colors.success,
-                }}
-              >
-                {overview.composition.governmentMembers}
-              </Typography>
-            </Box>
-            <Box sx={{ textAlign: { xs: "left", sm: "right" } }}>
-              <Typography
-                sx={{
-                  ...commonStyles.compactTextLg,
-                  color: colors.textSecondary,
-                }}
-              >
-                {tHome("opposition")}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "1.4rem",
-                  fontWeight: 700,
-                  color: colors.warning,
-                }}
-              >
-                {overview.composition.oppositionMembers}
-              </Typography>
-            </Box>
-          </Box>
-          <Box
-            sx={{
-              mt: 1.25,
-              height: 16,
-              borderRadius: 99,
-              overflow: "hidden",
-              display: "flex",
-              background: `${colors.warning}18`,
-            }}
-          >
-            <Box
-              sx={{
-                width: `${governmentWidth}%`,
-                background: `linear-gradient(90deg, ${colors.success} 0%, ${colors.successLight} 100%)`,
-              }}
-            />
-            <Box
-              sx={{
-                flex: 1,
-                background: `linear-gradient(90deg, ${colors.warningLight} 0%, ${colors.warning} 100%)`,
-              }}
-            />
-          </Box>
-        </Box>
-
-        <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 1 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <Typography
             variant="caption"
             sx={{ color: colors.textTertiary, display: "block" }}
