@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.0.1-alpha.9] — 2026-03-27
+
+### Features
+- remove analytics page (9c1501c)
+- replace inline expansion with side-panel drawers across pages (d40a238)
+
+### Bug Fixes
+- improve translations (fecf587)
+- improve mobile ui (3abe26b)
+- fix issues with representatives and votings (84f8f61)
+
+### Other
+- infra: add https (43e497d)
+- client: minor improvements (cd81cab)
+- docs: add llms.txt (ca80dd0)
+- houskeeping: fix linter issues (f8a468e)
+
 ## [1.0.1-alpha.8] — 2026-03-11
 
 ### Features
