@@ -229,10 +229,20 @@ export const PageDataSourcesDrawer = ({
           bottom: { xs: 74, lg: 20 },
           zIndex: 1200,
           textTransform: "none",
+          "& .fab-label": {
+            maxWidth: 0,
+            overflow: "hidden",
+            transition: "max-width 0.2s ease, margin 0.2s ease",
+            whiteSpace: "nowrap",
+          },
+          "&:hover .fab-label": {
+            maxWidth: "120px",
+            ml: 1,
+          },
         }}
       >
-        <TravelExploreIcon sx={{ mr: 1 }} />
-        {tPageSources("buttonLabel")}
+        <TravelExploreIcon />
+        <span className="fab-label">{tPageSources("buttonLabel")}</span>
       </Fab>
     </Tooltip>
   );

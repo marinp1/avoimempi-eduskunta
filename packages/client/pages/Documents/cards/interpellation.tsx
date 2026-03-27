@@ -303,8 +303,6 @@ function InterpellationCardComponent({
   const subjects = item.subjects
     ? item.subjects.split("||").filter(Boolean)
     : [];
-  const displaySubjects = subjects.slice(0, 3);
-  const remainingSubjects = subjects.length - 3;
 
   const handleOpenDrawer = () => {
     openRootDrawer({
@@ -326,7 +324,10 @@ function InterpellationCardComponent({
             size="small"
             sx={{
               backgroundColor: getOutcomeColor(item.decision_outcome_code),
-              color: "#fff",
+              color:
+                getOutcomeColor(item.decision_outcome_code) === colors.dataBorder
+                  ? colors.textPrimary
+                  : "#fff",
               fontWeight: 700,
             }}
           />
@@ -357,7 +358,7 @@ function InterpellationCardComponent({
       topics={
         subjects.length > 0 ? (
           <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
-            {displaySubjects.map((subject, idx) => (
+            {subjects.map((subject, idx) => (
               <Chip
                 key={idx}
                 label={subject}
@@ -377,17 +378,6 @@ function InterpellationCardComponent({
                 }}
               />
             ))}
-            {remainingSubjects > 0 && (
-              <Chip
-                label={`+${remainingSubjects}`}
-                size="small"
-                variant="outlined"
-                sx={{
-                  borderColor: colors.dataBorder,
-                  color: colors.textSecondary,
-                }}
-              />
-            )}
           </Stack>
         ) : null
       }

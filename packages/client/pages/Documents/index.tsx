@@ -565,7 +565,9 @@ export default function Documents() {
         if (!response.ok) throw new Error("Failed to fetch subjects");
         const data: { subject_text: string; count: number }[] =
           await response.json();
-        setSubjectOptions(data.map((item) => item.subject_text));
+        setSubjectOptions(
+          data.map((item) => item.subject_text).sort((a, b) => a.localeCompare(b, "fi")),
+        );
       } catch (err: any) {
         if (err?.name !== "AbortError") {
           console.warn("Error fetching subjects:", err);

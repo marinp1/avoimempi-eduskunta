@@ -134,7 +134,6 @@ const DocumentCardShellComponent: React.FC<{
           </Box>
           <Button
             variant="outlined"
-            color="primary"
             onClick={onOpenDrawer ?? onToggle}
             startIcon={
               onOpenDrawer ? (
@@ -150,6 +149,14 @@ const DocumentCardShellComponent: React.FC<{
             sx={{
               alignSelf: { xs: "stretch", sm: "center" },
               minWidth: { sm: 152 },
+              textTransform: "none",
+              borderColor: colors.primaryLight,
+              color: colors.primaryLight,
+              "&:hover": {
+                borderColor: colors.primary,
+                color: colors.primary,
+                backgroundColor: `${colors.primary}06`,
+              },
             }}
           >
             {onOpenDrawer
