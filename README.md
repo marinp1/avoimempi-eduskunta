@@ -1,4 +1,4 @@
-# Eduskuntapeili.fi
+# Eduskuntapeili
 
 Data aggregation and analysis platform for Finnish Parliament (Eduskunta) data.
 
