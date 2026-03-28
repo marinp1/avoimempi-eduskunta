@@ -12,7 +12,7 @@ APP_DATA_DIR="/var/lib/avoimempi-eduskunta-app"
 PIPELINE_DATA_DIR="/var/lib/avoimempi-eduskunta-pipeline"
 APP_ENV_FILE="${APP_DIR}/shared/app.env"
 PIPELINE_ENV_FILE="${APP_DIR}/shared/pipeline.env"
-APP_DOMAIN="avoimempieduskunta.eu, www.avoimempieduskunta.eu"
+APP_DOMAIN="eduskuntapeili.eu, www.eduskuntapeili.eu"
 
 # Ensure bun is on PATH for systemd services (which don't inherit shell profiles)
 if [[ ! -x /usr/local/bin/bun ]]; then
