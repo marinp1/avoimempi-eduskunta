@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1-alpha.10] — 2026-03-29
+
+### Bug Fixes
+- fix port config (bcb3ee3)
+- minor client fixes (6fc2e66)
+- remove tld from title (9e79dc1)
+- fix domain (7eafa7d)
+
 ## [1.0.1-alpha.9] — 2026-03-27
 
 ### Features
