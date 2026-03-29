@@ -19,6 +19,8 @@ import {
   ButtonBase,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogContent,
   Drawer,
   FormControl,
   IconButton,
@@ -39,7 +41,6 @@ import React from "react";
 import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { SourceText } from "#client/components/SourceText";
 import { VotingResultsTable } from "#client/components/VotingResultsTable";
-import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import AttendancePersonDetail from "#client/pages/Insights/AttendancePersonDetail";
 import VotingActivity from "#client/pages/Insights/VotingActivity";
@@ -4273,10 +4274,11 @@ const RepresentativeDetailsBody: React.FC<{
       </Box>
 
       {/* Tab Content */}
-      <Box
+      <DialogContent
         sx={{
           p: { xs: 2, sm: 3 },
           bgcolor: themedColors.backgroundSubtle,
+          overflowY: "auto",
         }}
       >
         {governmentPeriodsError ? (
@@ -4346,7 +4348,7 @@ const RepresentativeDetailsBody: React.FC<{
             initialPersonId={selectedRepresentative.personId}
           />
         </AnalysisTabPanel>
-      </Box>
+      </DialogContent>
     </>
   );
 };
@@ -4356,32 +4358,33 @@ export const RepresentativeDetails: React.FC<{
   selectedRepresentative: RepresentativeSelection | null;
   selectedDate: string;
 }> = ({ onClose, selectedRepresentative, selectedDate }) => {
-  const { openRootDrawer, closeDrawer } = useOverlayDrawer();
-  const onCloseRef = React.useRef(onClose);
-  onCloseRef.current = onClose;
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  React.useEffect(() => {
-    if (!selectedRepresentative) {
-      closeDrawer();
-      return;
-    }
-    const firstName = selectedRepresentative.summary?.firstName ?? "";
-    const lastName = selectedRepresentative.summary?.lastName ?? "";
-    const subtitle =
-      [firstName, lastName].filter(Boolean).join(" ") || undefined;
-    openRootDrawer({
-      drawerKey: `representative:${selectedRepresentative.personId}`,
-      title: "Edustaja",
-      subtitle,
-      content: (
+  return (
+    <Dialog
+      open={selectedRepresentative !== null}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      fullScreen={isMobile}
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: isMobile ? 0 : 3,
+            maxHeight: isMobile ? "100vh" : "90vh",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+          },
+        },
+      }}
+    >
+      {selectedRepresentative && (
         <RepresentativeDetailsBody
           selectedRepresentative={selectedRepresentative}
           selectedDate={selectedDate}
         />
-      ),
-      onClose: () => onCloseRef.current(),
-    });
-  }, [selectedRepresentative, selectedDate, openRootDrawer, closeDrawer]);
-
-  return null;
+      )}
+    </Dialog>
+  );
 };
