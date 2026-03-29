@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.1-alpha.12] — 2026-03-29
+
+### Bug Fixes
+- fix votings page link (e560ad8)
+
 ## [1.0.1-alpha.11] — 2026-03-29
 
 ### Bug Fixes
