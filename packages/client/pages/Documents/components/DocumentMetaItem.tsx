@@ -6,8 +6,11 @@ export const DocumentMetaItem: React.FC<{
   icon?: React.ReactNode;
   children: React.ReactNode;
   sx?: SxProps<Theme>;
-}> = ({ icon, children, sx }) => (
+  onClick?: () => void;
+}> = ({ icon, children, sx, onClick }) => (
   <Box
+    component={onClick ? "button" : "div"}
+    onClick={onClick}
     sx={{
       display: "inline-flex",
       alignItems: "center",
@@ -19,6 +22,16 @@ export const DocumentMetaItem: React.FC<{
       border: `1px solid ${colors.dataBorder}`,
       backgroundColor: colors.backgroundPaper,
       color: colors.textSecondary,
+      ...(onClick && {
+        cursor: "pointer",
+        fontFamily: "inherit",
+        fontSize: "inherit",
+        "&:hover": {
+          borderColor: colors.primary,
+          color: colors.primary,
+          backgroundColor: `${colors.primary}06`,
+        },
+      }),
       ...sx,
     }}
   >
