@@ -343,7 +343,14 @@ function InterpellationCardComponent({
             </DocumentMetaItem>
           )}
           {(item.first_signer_first_name || item.first_signer_last_name) && (
-            <DocumentMetaItem icon={<PersonIcon />}>
+            <DocumentMetaItem
+              icon={<PersonIcon />}
+              onClick={
+                item.co_signer_count && item.co_signer_count > 0
+                  ? handleOpenDrawer
+                  : undefined
+              }
+            >
               {[item.first_signer_first_name, item.first_signer_last_name]
                 .filter(Boolean)
                 .join(" ")}
