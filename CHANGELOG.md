@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.1-alpha.11] — 2026-03-29
+
+### Bug Fixes
+- add header to cached result (d7d0990)
+- add content encoding (86d8b8c)
+
 ## [1.0.1-alpha.10] — 2026-03-29
 
 ### Bug Fixes
