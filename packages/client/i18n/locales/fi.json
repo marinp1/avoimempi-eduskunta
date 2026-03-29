@@ -827,7 +827,7 @@
     "title": "Istunnot",
     "subtitle": "Selaa eduskunnan täysistuntoja",
     "eyebrow": "Istuntojen näkymä",
-    "summary": "Näytät päivän {{date}} täysistunnot näkymässä {{view}}.",
+    "summary": "Näytät päivän {{date}} täysistunnot.",
     "session": "Istunto",
     "speeches": "Puheenvuorot",
     "noSpeeches": "Ei puheenvuoroja",
