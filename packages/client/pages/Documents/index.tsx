@@ -566,7 +566,9 @@ export default function Documents() {
         const data: { subject_text: string; count: number }[] =
           await response.json();
         setSubjectOptions(
-          data.map((item) => item.subject_text).sort((a, b) => a.localeCompare(b, "fi")),
+          data
+            .map((item) => item.subject_text)
+            .sort((a, b) => a.localeCompare(b, "fi")),
         );
       } catch (err: any) {
         if (err?.name !== "AbortError") {

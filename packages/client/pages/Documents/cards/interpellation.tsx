@@ -325,7 +325,8 @@ function InterpellationCardComponent({
             sx={{
               backgroundColor: getOutcomeColor(item.decision_outcome_code),
               color:
-                getOutcomeColor(item.decision_outcome_code) === colors.dataBorder
+                getOutcomeColor(item.decision_outcome_code) ===
+                colors.dataBorder
                   ? colors.textPrimary
                   : "#fff",
               fontWeight: 700,

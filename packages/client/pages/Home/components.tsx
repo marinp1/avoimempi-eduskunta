@@ -472,7 +472,15 @@ const HomeHeroComponent = ({
                     ? tightestVote.title || tightestVote.section_title
                     : tHome("signalsEmpty")
                 }
-                href={tightestVote ? refs.voting(tightestVote.id, tightestVote.session_key, tightestVote.start_time) : "/aanestykset"}
+                href={
+                  tightestVote
+                    ? refs.voting(
+                        tightestVote.id,
+                        tightestVote.session_key,
+                        tightestVote.start_time,
+                      )
+                    : "/aanestykset"
+                }
                 actionLabel={tHome("jumpVotes")}
               />
               <HeroSignalCard
