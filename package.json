@@ -7,7 +7,6 @@
   "license": "ISC",
   "description": "Data aggregation and analysis platform for Finnish Parliament",
   "dependencies": {
-    "postgres": "3.4.8",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
     "@mui/icons-material": "7.3.4",
@@ -15,14 +14,13 @@
     "@types/react": "19.0.10",
     "@types/react-dom": "19.0.4",
     "bun-sqlite-migrations": "1.0.2",
-    "fast-xml-parser": "5.0.9",
+    "fast-xml-parser": "5.5.7",
     "i18next": "25.8.4",
+    "postgres": "3.4.8",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-i18next": "16.5.4",
-    "recharts": "3.4.1",
-    "xlsx": "0.18.5",
-    "xml-js": "1.6.11"
+    "recharts": "3.4.1"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.6",
