@@ -2,7 +2,6 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import EventIcon from "@mui/icons-material/Event";
 import HowToVoteIcon from "@mui/icons-material/HowToVote";
-import ViewListIcon from "@mui/icons-material/ViewList";
 import {
   Alert,
   Box,
@@ -10,11 +9,10 @@ import {
   Chip,
   CircularProgress,
   Collapse,
+  IconButton,
   InputAdornment,
   Link,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
   Typography,
 } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
@@ -105,7 +103,7 @@ export default () => {
   const [error, setError] = useState<string | null>(null);
   const [allValidDates, setAllValidDates] = useState<Set<string>>(new Set());
   const [datesLoading, setDatesLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const [sectionSpeechData, setSectionSpeechData] = useState<
     Record<number, SpeechData>
@@ -300,7 +298,6 @@ export default () => {
     }),
     [sessions],
   );
-  const viewModeLabel = viewMode === "list" ? "Lista" : "Kalenteri";
 
   const formatSpeechTimeRange = (speech: Speech) => {
     const start = formatTime(speech.start_time);
@@ -1009,7 +1006,7 @@ export default () => {
 
   useEffect(() => {
     resetDrawer();
-  }, [focusedSectionKey, viewMode, resetDrawer]);
+  }, [focusedSectionKey, resetDrawer]);
 
   const renderSessionMinutesOutline = (session: SessionWithSections) => {
     const items = (session.minutes_items || [])
@@ -2301,11 +2298,6 @@ export default () => {
   });
 
   useEffect(() => {
-    if (viewMode !== "list") {
-      resetDrawer();
-      return;
-    }
-
     if (!activeSection || !activeSession) {
       resetDrawer();
       return;
@@ -2330,7 +2322,6 @@ export default () => {
     sectionVotings,
     tSessions,
     themedColors.success,
-    viewMode,
     loadingLinks,
     loadingMoreSpeeches,
     loadingRollCalls,
@@ -2344,10 +2335,7 @@ export default () => {
     <Box>
       <PageIntro
         title={tSessions("title")}
-        summary={tSessions("summary", {
-          date: formatDateLongFi(date),
-          view: viewModeLabel,
-        })}
+        summary={tSessions("summary", { date: formatDateLongFi(date) })}
         mobileMode="compact"
         mobileAnchorId="sessions-content"
         mobileStatsPlacement="hidden"
@@ -2362,11 +2350,6 @@ export default () => {
               <Chip
                 size="small"
                 label={`Asiakohtia: ${sessionSummary.totalSections}`}
-                sx={{ fontWeight: 700 }}
-              />
-              <Chip
-                size="small"
-                label={`Näkymä: ${viewModeLabel}`}
                 sx={{ fontWeight: 700 }}
               />
             </Box>
@@ -2418,71 +2401,63 @@ export default () => {
               flexWrap: "wrap",
             }}
           >
-            <ToggleButtonGroup
-              value={viewMode}
-              exclusive
-              onChange={(_, val) => val && setViewMode(val)}
+            <IconButton
               size="small"
+              onClick={() => setShowCalendar((v) => !v)}
               sx={{
-                "& .MuiToggleButton-root": {
-                  border: `1px solid ${colors.dataBorder}`,
-                  color: colors.textSecondary,
-                  "&.Mui-selected": {
-                    background: colors.primary,
-                    color: "#fff",
-                    "&:hover": { background: colors.primary },
-                  },
+                border: `1px solid ${showCalendar ? colors.primary : colors.dataBorder}`,
+                borderRadius: 1,
+                color: showCalendar ? "#fff" : colors.textSecondary,
+                background: showCalendar ? colors.primary : "transparent",
+                "&:hover": {
+                  background: showCalendar ? colors.primary : undefined,
                 },
+                p: "5px",
               }}
             >
-              <ToggleButton value="list">
-                <ViewListIcon sx={{ fontSize: 18 }} />
-              </ToggleButton>
-              <ToggleButton value="calendar">
-                <CalendarMonthIcon sx={{ fontSize: 18 }} />
-              </ToggleButton>
-            </ToggleButtonGroup>
-            {viewMode !== "calendar" && (
-              <TextField
-                type="date"
-                value={date}
-                onChange={(e) => handleDateChange(e.target.value)}
-                size="small"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <CalendarTodayIcon
-                        sx={{ fontSize: 16, color: colors.primaryLight }}
-                      />
-                    </InputAdornment>
-                  ),
-                }}
-                error={!datesLoading && !isValidDate(date)}
-                helperText={
-                  !datesLoading && !isValidDate(date)
-                    ? tSessions("noSessionsSelected")
-                    : undefined
-                }
-                sx={{
-                  minWidth: 200,
-                  "& .MuiOutlinedInput-root": {
-                    background: "#fff",
-                  },
-                }}
-              />
-            )}
+              <CalendarMonthIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+            <TextField
+              type="date"
+              value={date}
+              onChange={(e) => handleDateChange(e.target.value)}
+              size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <CalendarTodayIcon
+                      sx={{ fontSize: 16, color: colors.primaryLight }}
+                    />
+                  </InputAdornment>
+                ),
+              }}
+              error={!datesLoading && !isValidDate(date)}
+              helperText={
+                !datesLoading && !isValidDate(date)
+                  ? tSessions("noSessionsSelected")
+                  : undefined
+              }
+              sx={{
+                minWidth: 200,
+                "& .MuiOutlinedInput-root": {
+                  background: "#fff",
+                },
+              }}
+            />
           </Box>
         </ToolbarCard>
       </Box>
 
-      {/* Calendar view */}
-      {viewMode === "calendar" && !datesLoading && (
+      <Collapse in={showCalendar && !datesLoading}>
         <CalendarGrid
           validDates={validDates}
           selectedDate={date}
-          onSelectDate={handleDateChange}
+          onSelectDate={(d) => {
+            handleDateChange(d);
+            setShowCalendar(false);
+          }}
         />
-      )}
+      </Collapse>
 
       {loading ? (
         <Box sx={{ ...commonStyles.centeredFlex, py: 4 }}>
