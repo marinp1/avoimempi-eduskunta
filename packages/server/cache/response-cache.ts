@@ -74,7 +74,7 @@ export function createResponseCache(
       if (hit) {
         return new Response(hit.body, {
           status: hit.status,
-          headers: [...hit.headers, ["Cache-Control", "public, max-age=300"]],
+          headers: [...hit.headers, ["Cache-Control", "public, max-age=300"], ["X-Cache", "HIT"]],
         });
       }
 
@@ -94,6 +94,7 @@ export function createResponseCache(
           headers: [
             ...response.headers.entries(),
             ["Cache-Control", "public, max-age=300"],
+            ["X-Cache", "MISS"],
           ],
         });
       }
