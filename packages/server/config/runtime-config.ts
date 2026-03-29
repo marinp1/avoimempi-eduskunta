@@ -38,7 +38,7 @@ export const loadRuntimeConfig = (
 
   return {
     isDev,
-    port: configuredPort ?? (isDev ? 3000 : 80),
+    port: configuredPort ?? 3000,
     idleTimeout: configuredIdleTimeout ?? 120,
     reusePort:
       typeof env.BUN_REUSE_PORT === "string" &&
