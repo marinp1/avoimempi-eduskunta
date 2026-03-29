@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.0-alpha.1] — 2026-03-29
+
+### Other
+- tools: add stress test utility (0ee444b)
+- housekeeping: update dependencies (5a6ba94)
+
 ## [1.1.0] — 2026-03-29
 
 ### Features
