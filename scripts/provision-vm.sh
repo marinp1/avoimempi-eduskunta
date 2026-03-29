@@ -122,6 +122,7 @@ CADDYFILE="/etc/caddy/Caddyfile"
 cat > "${CADDYFILE}" <<EOF
 ${APP_DOMAIN} {
     reverse_proxy localhost:3000
+    encode zstd gzip
 }
 EOF
 echo "Wrote ${CADDYFILE} for domain(s): ${APP_DOMAIN}"
