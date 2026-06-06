@@ -1,4 +1,5 @@
 SELECT
+    id,
     name AS government,
     start_date,
     end_date

@@ -4,12 +4,13 @@ import type {
   SittingTick,
 } from "../../../webapp/templates/partials/timeline";
 import type { SessionRepository } from "../../database/repositories/session-repository";
+import type { MetadataRepository } from "../../database/repositories/metadata-repository";
 import { assetVersion } from "./assets";
 
 const PEILI_DATE_COOKIE = "peili_date";
 const PEILI_PERIOD_COOKIE = "peili_period";
-const VALID_PERIODS = new Set(["2023", "2019", "all"]);
-const DEFAULT_PERIOD = "2023";
+
+export type PeriodSelection = number[] | "all";
 
 export interface TermBounds {
   startDate: string;
@@ -17,19 +18,70 @@ export interface TermBounds {
   governmentStartDate: string;
 }
 
-const TERM_BOUNDS: Record<string, TermBounds> = {
-  "2023": { startDate: "2023-06-20", governmentStartDate: "2023-06-20" },
-  "2019": {
-    startDate: "2019-06-06",
-    endDate: "2023-06-19",
-    governmentStartDate: "2019-06-06",
-  },
-  // "all" spans everything; governmentStartDate uses current coalition for tagging
-  all: { startDate: "1907-01-01", governmentStartDate: "2023-06-20" },
-};
+type GovPeriod = ReturnType<MetadataRepository["fetchHallituskaudet"]>[number];
 
-export function getTermBounds(period: string): TermBounds {
-  return TERM_BOUNDS[period] ?? TERM_BOUNDS[DEFAULT_PERIOD]!;
+let _governments: GovPeriod[] | null = null;
+
+function loadGovernments(repo: MetadataRepository): GovPeriod[] {
+  if (!_governments) _governments = repo.fetchHallituskaudet();
+  return _governments;
+}
+
+function currentGovernment(govs: GovPeriod[]): GovPeriod {
+  return govs.find((g) => g.endDate === null) ?? govs[0]!;
+}
+
+/** Parse cookie value into a period selection. Handles legacy "2023"/"2019" → defaults to current. */
+function parsePeriod(val: string | null, govs: GovPeriod[]): PeriodSelection {
+  if (val === "all") return "all";
+  if (!val) return [currentGovernment(govs).id];
+  // Detect legacy format (year-based)
+  if (/^\d{4}$/.test(val)) return [currentGovernment(govs).id];
+  const ids = val
+    .split(",")
+    .map(Number)
+    .filter((id) => !Number.isNaN(id));
+  const valid = ids.filter((id) => govs.some((g) => g.id === id));
+  return valid.length > 0 ? valid : [currentGovernment(govs).id];
+}
+
+export function getTermBounds(
+  period: PeriodSelection,
+  repo: MetadataRepository,
+): TermBounds {
+  const govs = loadGovernments(repo);
+
+  if (period === "all") {
+    const sorted = [...govs].sort((a, b) =>
+      a.startDate.localeCompare(b.startDate),
+    );
+    const earliest = sorted[0]!;
+    const latest = sorted[sorted.length - 1]!;
+    return {
+      startDate: earliest.startDate,
+      endDate: latest.endDate ?? undefined,
+      governmentStartDate: latest.startDate,
+    };
+  }
+
+  const selected = govs.filter((g) => period.includes(g.id));
+  if (selected.length === 0) {
+    const c = currentGovernment(govs);
+    return {
+      startDate: c.startDate,
+      governmentStartDate: c.startDate,
+    };
+  }
+
+  selected.sort((a, b) => a.startDate.localeCompare(b.startDate));
+  const earliest = selected[0]!;
+  const latest = selected[selected.length - 1]!;
+
+  return {
+    startDate: earliest.startDate,
+    endDate: latest.endDate ?? undefined,
+    governmentStartDate: latest.startDate,
+  };
 }
 
 // All sitting ticks cached after the first DB read (no limit on restarts)
@@ -52,9 +104,13 @@ function readCookie(req: Request, name: string): string | null {
   return match ? decodeURIComponent(match[1]!) : null;
 }
 
-export function readPeriod(req: Request): string {
+export function readPeriod(
+  req: Request,
+  repo: MetadataRepository,
+): PeriodSelection {
   const val = readCookie(req, PEILI_PERIOD_COOKIE);
-  return val && VALID_PERIODS.has(val) ? val : DEFAULT_PERIOD;
+  const govs = loadGovernments(repo);
+  return parsePeriod(val, govs);
 }
 
 function readCursorDate(req: Request, termToday: string): string {
@@ -71,9 +127,10 @@ function formatFi(iso: string): string {
 export function getTimelineData(
   req: Request,
   sessionRepo: SessionRepository,
+  metadataRepo: MetadataRepository,
 ): TimelineData {
-  const period = readPeriod(req);
-  const bounds = getTermBounds(period);
+  const period = readPeriod(req, metadataRepo);
+  const bounds = getTermBounds(period, metadataRepo);
   const allTicks = getAllTicks(sessionRepo);
 
   const ticks = allTicks.filter(
@@ -93,8 +150,10 @@ export function getTimelineData(
       ? cursor
       : termToday;
 
+  const termStr = period === "all" ? "all" : period.join(",");
+
   return {
-    term: period,
+    term: termStr,
     today: termToday,
     cursor: clampedCursor,
     cursorFormatted: formatFi(clampedCursor),

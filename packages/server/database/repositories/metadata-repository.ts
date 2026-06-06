@@ -76,6 +76,7 @@ export class MetadataRepository {
   public fetchHallituskaudet() {
     const stmt = this.db.prepare<
       {
+        id: number;
         government: string;
         start_date: string;
         end_date: string | null;
@@ -86,7 +87,7 @@ export class MetadataRepository {
     stmt.finalize();
 
     return rows.map((row) => ({
-      id: `${row.start_date}|${row.government}`,
+      id: row.id,
       name: row.government,
       label: `${row.government} (${row.start_date} - ${row.end_date ?? "..."})`,
       startDate: row.start_date,

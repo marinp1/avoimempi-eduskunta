@@ -22,11 +22,15 @@ export function createSimplePageRoutes(deps: WebappDeps) {
       GET: async (req: Request) => {
         const url = new URL(req.url);
         const dateParam = url.searchParams.get("date");
-        const tlData = getTimelineData(req, deps.sessionRepository);
+        const tlData = getTimelineData(
+          req,
+          deps.sessionRepository,
+          deps.metadataRepository,
+        );
         const cursor = dateParam ?? tlData.cursor;
 
-        const period = readPeriod(req);
-        const bounds = getTermBounds(period);
+        const period = readPeriod(req, deps.metadataRepository);
+        const bounds = getTermBounds(period, deps.metadataRepository);
         const data = await deps.homeRepository.fetchOverview({
           asOfDate: cursor,
           startDate: bounds.startDate,
@@ -81,7 +85,11 @@ export function createSimplePageRoutes(deps: WebappDeps) {
     },
     "/puolueet": {
       GET: (req: Request) => {
-        const tlData = getTimelineData(req, deps.sessionRepository);
+        const tlData = getTimelineData(
+          req,
+          deps.sessionRepository,
+          deps.metadataRepository,
+        );
         return page(
           req,
           Puolueet({ title: "Puolueet" }),
@@ -93,7 +101,11 @@ export function createSimplePageRoutes(deps: WebappDeps) {
     },
     "/aanestykset": {
       GET: (req: Request) => {
-        const tlData = getTimelineData(req, deps.sessionRepository);
+        const tlData = getTimelineData(
+          req,
+          deps.sessionRepository,
+          deps.metadataRepository,
+        );
         return page(
           req,
           Aanestykset({ title: "Äänestykset" }),
@@ -105,7 +117,11 @@ export function createSimplePageRoutes(deps: WebappDeps) {
     },
     "/asiakirjat": {
       GET: (req: Request) => {
-        const tlData = getTimelineData(req, deps.sessionRepository);
+        const tlData = getTimelineData(
+          req,
+          deps.sessionRepository,
+          deps.metadataRepository,
+        );
         return page(
           req,
           Asiakirjat({ title: "Asiakirjat" }),
@@ -117,7 +133,11 @@ export function createSimplePageRoutes(deps: WebappDeps) {
     },
     "/hallitukset": {
       GET: (req: Request) => {
-        const tlData = getTimelineData(req, deps.sessionRepository);
+        const tlData = getTimelineData(
+          req,
+          deps.sessionRepository,
+          deps.metadataRepository,
+        );
         return page(
           req,
           Hallitukset({ title: "Hallitukset" }),
@@ -129,7 +149,11 @@ export function createSimplePageRoutes(deps: WebappDeps) {
     },
     "/analytiikka": {
       GET: (req: Request) => {
-        const tlData = getTimelineData(req, deps.sessionRepository);
+        const tlData = getTimelineData(
+          req,
+          deps.sessionRepository,
+          deps.metadataRepository,
+        );
         return page(
           req,
           Analytiikka({ title: "Analytiikka" }),
@@ -141,7 +165,11 @@ export function createSimplePageRoutes(deps: WebappDeps) {
     },
     "/muutokset": {
       GET: (req: Request) => {
-        const tlData = getTimelineData(req, deps.sessionRepository);
+        const tlData = getTimelineData(
+          req,
+          deps.sessionRepository,
+          deps.metadataRepository,
+        );
         return page(
           req,
           Muutokset({ title: "Muutokset" }),

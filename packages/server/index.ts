@@ -202,6 +202,7 @@ const allRoutes = withSecurityHeaders({
   ...cache.wrapRoutes(
     createWebappPageRoutes({
       homeRepository,
+      metadataRepository,
       personRepository,
       sessionRepository,
     }),

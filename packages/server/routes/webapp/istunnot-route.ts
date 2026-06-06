@@ -21,11 +21,15 @@ export function createIstunnotRoute(deps: WebappDeps) {
         const q = url.searchParams.get("q") ?? undefined;
         const dateParam = url.searchParams.get("date");
 
-        const tlData = getTimelineData(req, deps.sessionRepository);
+        const tlData = getTimelineData(
+          req,
+          deps.sessionRepository,
+          deps.metadataRepository,
+        );
         const cursor = dateParam ?? tlData.cursor;
 
-        const period = readPeriod(req);
-        const bounds = getTermBounds(period);
+        const period = readPeriod(req, deps.metadataRepository);
+        const bounds = getTermBounds(period, deps.metadataRepository);
 
         const raw = deps.sessionRepository.fetchSessionsIndex(2000);
         const termFiltered = raw.filter(

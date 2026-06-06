@@ -36,7 +36,11 @@ export function createEdustajatRoute(deps: WebappDeps) {
           );
         }
 
-        const tlData = getTimelineData(req, deps.sessionRepository);
+        const tlData = getTimelineData(
+          req,
+          deps.sessionRepository,
+          deps.metadataRepository,
+        );
         return page(
           req,
           Edustajat({ title: "Kansanedustajat", allRows, filtered, params }),

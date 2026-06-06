@@ -1,90 +1,287 @@
 /** @jsxImportSource ./jsx */
 
-// Period selector island — lives in the masthead shell (never swapped by htmx),
-// so DOMContentLoaded is sufficient for initial setup.
+// Period selector island — fetches real government periods from the API,
+// renders them as checkboxes with shift-click range selection, and persists
+// the choice via a cookie for server-side data scoping.
 
-/** Available electoral periods with their display metadata. */
-const PERIODS: Record<
-  string,
-  { label: string; gov: string; badge: string; detail: string }
-> = {
-  "2023": {
-    label: "Vaalikausi 2023–2027",
-    gov: "Orpon hallitus",
-    badge: "nykyinen",
-    detail: "20.6.2023 – kesken · 200 paikkaa · hallitus 108 / oppositio 92",
-  },
-  "2019": {
-    label: "Vaalikausi 2019–2023",
-    gov: "Marinin / Rinteen hallitus",
-    badge: "päättynyt",
-    detail: "6.6.2019 – 20.6.2023 · 200 paikkaa",
-  },
-  all: {
-    label: "Kaikki vaalikaudet",
-    gov: "koko avoin data",
-    badge: "koko aineisto",
-    detail: "1907 – 2026 · kaikki kaudet ja jäsenyydet",
-  },
-};
+interface GovernmentPeriod {
+  id: number;
+  name: string;
+  label: string;
+  startDate: string;
+  endDate: string | null;
+}
 
+const API_URL = "/api/hallituskaudet";
 const PERIOD_KEY = "peili.period";
-const DEFAULT_PERIOD = "2023";
+const DEFAULT_COOKIE = "peili_period";
 
-/** Reads the user's period preference from localStorage. */
-function currentPeriod(): string {
+/** Formats an ISO date to Finnish `d.m.yyyy`. */
+function fmtDate(iso: string): string {
+  const [y, m, d] = iso.split("-");
+  return `${Number(d)}.${Number(m)}.${y}`;
+}
+
+/** Reads the currently selected government IDs from localStorage or cookie. */
+function readStoredIds(): string {
   try {
     const v = localStorage.getItem(PERIOD_KEY);
-    return v && PERIODS[v] ? v : DEFAULT_PERIOD;
+    if (v) return v;
   } catch {
-    return DEFAULT_PERIOD;
+    /* ignore */
+  }
+  // Fallback: read from existing cookie
+  const cookie = document.cookie.match(
+    new RegExp(`(?:^|;\\s*)${DEFAULT_COOKIE}=([^;]+)`),
+  );
+  return cookie ? decodeURIComponent(cookie[1]!) : "";
+}
+
+/** Serializes a set of government IDs to a comma-separated string. */
+function joinIds(ids: Set<number>): string {
+  return [...ids].sort((a, b) => a - b).join(",");
+}
+
+/** Parses a comma-separated government ID string. */
+function parseIds(str: string): Set<number> {
+  if (!str || str === "all") return new Set();
+  return new Set(
+    str
+      .split(",")
+      .map(Number)
+      .filter((id) => !Number.isNaN(id)),
+  );
+}
+
+/** Builds display texts describing the current selection. */
+function describeSelection(
+  governments: GovernmentPeriod[],
+  selected: Set<number>,
+  allSelected: boolean,
+): {
+  btnLabel: string;
+  badge: string;
+  badgeClass: string;
+  footLabel: string;
+  footDetail: string;
+} {
+  if (allSelected || selected.size === governments.length) {
+    return {
+      btnLabel: "Kaikki hallituskaudet",
+      badge: "koko aineisto",
+      badgeClass: "",
+      footLabel: "Kaikki hallituskaudet · koko avoin data",
+      footDetail: "1907 – tähän päivään · kaikki kaudet",
+    };
+  }
+
+  const chosen = governments.filter((g) => selected.has(g.id));
+  if (chosen.length === 0) {
+    const c = governments[0]!;
+    const endStr = c.endDate ? fmtDate(c.endDate) : "kesken";
+    return {
+      btnLabel: c.name,
+      badge: c.endDate ? "päättynyt" : "nykyinen",
+      badgeClass: c.endDate ? "" : "is-now",
+      footLabel: `${c.name} · ${c.endDate ? "päättynyt hallituskausi" : "nykyinen hallituskausi"}`,
+      footDetail: `${fmtDate(c.startDate)} – ${endStr}`,
+    };
+  }
+
+  if (chosen.length === 1) {
+    const c = chosen[0]!;
+    const endStr = c.endDate ? fmtDate(c.endDate) : "kesken";
+    return {
+      btnLabel: c.name,
+      badge: c.endDate ? "päättynyt" : "nykyinen",
+      badgeClass: c.endDate ? "" : "is-now",
+      footLabel: `${c.name} · ${c.endDate ? "päättynyt hallituskausi" : "nykyinen hallituskausi"}`,
+      footDetail: `${fmtDate(c.startDate)} – ${endStr}`,
+    };
+  }
+
+  // Multiple selected
+  const sorted = [...chosen].sort((a, b) =>
+    a.startDate.localeCompare(b.startDate),
+  );
+  const earliest = sorted[0]!;
+  const latest = sorted[sorted.length - 1]!;
+  const endStr = latest.endDate ? fmtDate(latest.endDate) : "kesken";
+  const hasCurrent = chosen.some((g) => g.endDate === null);
+
+  return {
+    btnLabel: `${chosen.length} hallituskautta`,
+    badge: hasCurrent ? "nykyinen + muita" : "valitut",
+    badgeClass: hasCurrent ? "is-now" : "",
+    footLabel: `${chosen.length} hallituskautta · ${sorted.map((g) => g.name).join(" + ")}`,
+    footDetail: `${fmtDate(earliest.startDate)} – ${endStr}`,
+  };
+}
+
+/** Applies a selection to all `[data-period-*]` DOM elements. */
+function applyDom(
+  governments: GovernmentPeriod[],
+  selected: Set<number>,
+  allSelected: boolean,
+): void {
+  const desc = describeSelection(governments, selected, allSelected);
+
+  document.querySelectorAll("[data-period-v]").forEach((el) => {
+    el.textContent = desc.btnLabel;
+  });
+  document.querySelectorAll("[data-period-badge]").forEach((el) => {
+    el.textContent = desc.badge;
+    el.className = `period__badge ${desc.badgeClass}`;
+  });
+  document.querySelectorAll("[data-period-label]").forEach((el) => {
+    el.textContent = desc.footLabel;
+  });
+  document.querySelectorAll("[data-period-detail]").forEach((el) => {
+    el.textContent = desc.footDetail;
+  });
+  document.querySelectorAll("[data-period-badge-foot]").forEach((el) => {
+    el.textContent = desc.badge;
+    el.className = `pbadge ${desc.badgeClass}`;
+  });
+  document.body.setAttribute("data-active-period", desc.btnLabel);
+}
+
+/** Builds the checkbox menu inside `.period__menu-list`. */
+function buildMenu(
+  listEl: HTMLElement,
+  governments: GovernmentPeriod[],
+  selected: Set<number>,
+): void {
+  listEl.innerHTML = "";
+
+  const allChecked = selected.size === governments.length;
+  let lastClickedIndex = -1;
+
+  // "All" toggle
+  const allRow = document.createElement("label");
+  allRow.className = "period__opt";
+  allRow.innerHTML = `
+    <input type="checkbox" class="period__cb" data-period-all
+      ${allChecked ? "checked" : ""} />
+    <div class="period__opt-text">
+      <span class="period__opt-main">Kaikki hallituskaudet</span>
+      <span class="period__opt-sub">koko avoin data</span>
+    </div>
+  `;
+  const allCb = allRow.querySelector<HTMLInputElement>("input")!;
+  allCb.addEventListener("change", () => {
+    if (allCb.checked) {
+      governments.forEach((g) => selected.add(g.id));
+    } else {
+      selected.clear();
+    }
+    rebuildMenu(listEl, governments, selected);
+  });
+  listEl.appendChild(allRow);
+
+  // Individual government rows
+  governments.forEach((gov, index) => {
+    const row = document.createElement("label");
+    row.className = "period__opt";
+    if (selected.has(gov.id)) row.classList.add("is-selected");
+    const endStr = gov.endDate ? fmtDate(gov.endDate) : "kesken";
+
+    row.innerHTML = `
+      <input type="checkbox" class="period__cb" value="${gov.id}"
+        ${selected.has(gov.id) ? "checked" : ""} />
+      <div class="period__opt-text">
+        <span class="period__opt-main">${gov.name}</span>
+        <span class="period__opt-sub">${fmtDate(gov.startDate)} – ${endStr}</span>
+      </div>
+    `;
+
+    const cb = row.querySelector<HTMLInputElement>("input")!;
+
+    cb.addEventListener("change", () => {
+      // Shift-click range selection
+      if (
+        selected.size > 0 &&
+        (window as any).__periodShiftHeld &&
+        lastClickedIndex >= 0 &&
+        lastClickedIndex !== index
+      ) {
+        const rangeStart = Math.min(lastClickedIndex, index);
+        const rangeEnd = Math.max(lastClickedIndex, index);
+        for (let i = rangeStart; i <= rangeEnd; i++) {
+          selected.add(governments[i]!.id);
+        }
+      } else {
+        if (cb.checked) {
+          selected.add(gov.id);
+        } else {
+          selected.delete(gov.id);
+        }
+      }
+      lastClickedIndex = index;
+      rebuildMenu(listEl, governments, selected);
+    });
+
+    listEl.appendChild(row);
+  });
+
+  // Shift key tracking (once, at document level)
+  if (!(window as any).__periodShiftBound) {
+    (window as any).__periodShiftBound = true;
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Shift") (window as any).__periodShiftHeld = true;
+    });
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "Shift") (window as any).__periodShiftHeld = false;
+    });
   }
 }
 
-/** Applies a period selection: updates all `[data-period-*]` placeholders
- * and persists the choice to localStorage. */
-function applyPeriod(val: string): void {
-  const p = PERIODS[val] ?? PERIODS[DEFAULT_PERIOD];
+function rebuildMenu(
+  listEl: HTMLElement,
+  governments: GovernmentPeriod[],
+  selected: Set<number>,
+): void {
+  const allCb = listEl.querySelector<HTMLInputElement>("[data-period-all]");
+  if (allCb) {
+    allCb.checked = selected.size === governments.length;
+  }
+
+  const rows = listEl.querySelectorAll<HTMLLabelElement>(".period__opt");
+  rows.forEach((row) => {
+    const cb = row.querySelector<HTMLInputElement>("input");
+    if (!cb || cb.dataset.periodAll !== undefined) return;
+    const id = Number(cb.value);
+    cb.checked = selected.has(id);
+    row.classList.toggle("is-selected", selected.has(id));
+  });
+
+  applyDom(governments, selected, selected.size === governments.length);
+}
+
+/** Persist selection and trigger page reload so the server re-scopes. */
+function commit(governments: GovernmentPeriod[], selected: Set<number>): void {
+  const val = selected.size === governments.length ? "all" : joinIds(selected);
   try {
     localStorage.setItem(PERIOD_KEY, val);
   } catch {
     /* ignore */
   }
 
-  document.querySelectorAll("[data-period-v]").forEach((el) => {
-    el.textContent = p.label;
-  });
-  document.querySelectorAll("[data-period-badge]").forEach((el) => {
-    el.textContent = p.badge;
-    el.classList.toggle("is-now", val === DEFAULT_PERIOD);
-  });
-  document.querySelectorAll("[data-period-label]").forEach((el) => {
-    el.textContent = `${p.label} · ${p.gov}`;
-  });
-  document.querySelectorAll("[data-period-detail]").forEach((el) => {
-    el.textContent = p.detail;
-  });
-  document.querySelectorAll("[data-period-badge-foot]").forEach((el) => {
-    el.textContent = p.badge;
-    el.classList.toggle("is-now", val === DEFAULT_PERIOD);
-  });
-  document.body.setAttribute("data-active-period", p.label);
-  document.querySelectorAll(".period__opt").forEach((opt) => {
-    const optVal = (opt as HTMLElement).dataset.val ?? "";
-    opt.classList.toggle("is-selected", optVal === val);
-    opt.setAttribute("aria-checked", optVal === val ? "true" : "false");
-  });
+  const exp = new Date(Date.now() + 365 * 864e5).toUTCString();
+  document.cookie = `${DEFAULT_COOKIE}=${val}; Path=/; SameSite=Lax; expires=${exp}`;
+  // Clear the date cursor — it may be out of range for the new term
+  document.cookie = "peili_date=; Path=/; Max-Age=0";
+  window.location.reload();
 }
 
-/** Initialises the period selector UI on page load. */
-document.addEventListener("DOMContentLoaded", () => {
-  applyPeriod(currentPeriod());
-
+/** Initialises the period selector island on page load. */
+document.addEventListener("DOMContentLoaded", async () => {
   const root = document.querySelector<HTMLElement>("[data-period]");
   if (!root) return;
   const btn = root.querySelector<HTMLElement>(".period__btn");
   const menu = root.querySelector<HTMLElement>(".period__menu");
-  if (!btn || !menu) return;
+  const listEl = root.querySelector<HTMLElement>("[data-period-menu-list]");
+  if (!btn || !menu || !listEl) return;
 
   const openMenu = () => {
     menu.hidden = false;
@@ -97,20 +294,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
-    menu.hidden ? openMenu() : closeMenu();
-  });
-  root.querySelectorAll<HTMLElement>(".period__opt").forEach((opt) => {
-    opt.addEventListener("click", () => {
-      const val = opt.dataset.val ?? DEFAULT_PERIOD;
-      applyPeriod(val);
+    if (menu.hidden) {
+      openMenu();
+    } else {
       closeMenu();
-      // Persist as a server-readable cookie and reload so all data re-filters
-      const exp = new Date(Date.now() + 365 * 864e5).toUTCString();
-      document.cookie = `peili_period=${val}; Path=/; SameSite=Lax; expires=${exp}`;
-      // Clear the date cursor — it may be out of range for the new term
-      document.cookie = "peili_date=; Path=/; Max-Age=0";
-      window.location.reload();
-    });
+    }
   });
   document.addEventListener("click", (e) => {
     if (!root.contains(e.target as Node)) closeMenu();
@@ -118,11 +306,46 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeMenu();
   });
+
+  // Fetch real government periods
+  let governments: GovernmentPeriod[] = [];
+  try {
+    const res = await fetch(API_URL);
+    if (res.ok) {
+      const json: GovernmentPeriod[] = await res.json();
+      governments = json
+        .filter((g) => g.id != null)
+        .sort((a, b) => b.startDate.localeCompare(a.startDate));
+    }
+  } catch {
+    /* API unavailable — menu stays empty */
+  }
+
+  if (governments.length === 0) return;
+
+  const stored = readStoredIds();
+  const selected = parseIds(stored);
+
+  // Default to current government if nothing is selected or stored value invalid
+  if (selected.size === 0) {
+    const current =
+      governments.find((g) => g.endDate === null) ?? governments[0]!;
+    selected.add(current.id);
+  }
+
+  buildMenu(listEl, governments, selected);
+  applyDom(governments, selected, selected.size === governments.length);
+
+  // Save / apply button
+  const applyBtn = document.createElement("button");
+  applyBtn.className = "period__apply";
+  applyBtn.textContent = "Käytä valintaa →";
+  applyBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    commit(governments, selected);
+  });
+  listEl.parentElement!.insertBefore(applyBtn, listEl.nextSibling);
 });
 
-/** Expose period API for page-level interop from server-rendered scripts. */
-(window as any).EPPeriod = {
-  apply: applyPeriod,
-  current: currentPeriod,
-  PERIODS,
-};
+/** Expose for interop if needed. */
+(window as any).EPPeriod = {};

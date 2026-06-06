@@ -72,7 +72,11 @@ export function createIstuntoRoute(deps: WebappDeps) {
           seatCounts,
         );
 
-        const tlData = getTimelineData(req, deps.sessionRepository);
+        const tlData = getTimelineData(
+          req,
+          deps.sessionRepository,
+          deps.metadataRepository,
+        );
         return page(
           req,
           Istunto({ data }),
