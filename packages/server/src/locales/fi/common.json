@@ -1,6 +1,6 @@
 {
   "brand_name": "Eduskuntapeili",
-  "brand_tagline": "Eduskunnan avoin data, luettavassa muodossa",
+  "brand_tagline": "Toinen näkökulma Eduskunnan avoimeen dataan.",
   "source": "Lähde:",
   "fetched": "haettu {{timestamp}}",
   "loading": "Ladataan…",
@@ -55,8 +55,6 @@
   "absent_uppercase": "POISSA",
   "source_eduskunta": "Eduskunnan avoin data",
   "parliament_open_data": "avoin parlamenttidata",
-  "not_official": "Ei virallinen",
-  "data_cc_by": "data Creative Commons BY 4.0",
   "open_original": "Avaa aineisto",
   "open_source": "Avaa alkuperäinen",
   "show_all_speeches": "Näytä kaikki {{count}} puheenvuoroa pöytäkirjasta ↗",
