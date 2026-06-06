@@ -1,6 +1,16 @@
 {
   "editor.formatOnSave": true,
   "files.insertFinalNewline": true,
+  "files.associations": {
+    "*.eta": "html"
+  },
+  "[html]": {
+    "editor.formatOnSave": false
+  },
+  "css.styleSheets": [
+    "packages/webapp/src/styles/*.css",
+    "packages/webapp/src/styles.css"
+  ],
   "yaml.schemas": {
     "./packages/server/config/sanity-constraints.schema.json": "packages/server/config/sanity-constraints.yaml"
   }

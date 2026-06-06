@@ -12,7 +12,8 @@
       "biome.json",
       "package.json",
       "packages/**",
-      "scripts/*"
+      "scripts/*",
+      "!**/*.eta"
     ]
   },
   "formatter": {
