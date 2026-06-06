@@ -94,6 +94,7 @@ async function deployAppBuild() {
 
   const result = await build({
     outdir: dist,
+    minify: true,
     define: {
       "process.env.NODE_ENV": JSON.stringify("production"),
     },

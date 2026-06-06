@@ -1,5 +1,5 @@
 import React from "react";
-import { apiFetch } from "#client/utils/fetch";
+import { apiFetch, clearApiCache } from "#client/utils/fetch";
 
 const HALLITUSKAUSI_PARAM = "hallituskausi";
 
@@ -185,6 +185,7 @@ export const HallituskausiProvider: React.FC<{ children: React.ReactNode }> = ({
   const setSelectedHallituskausiId = React.useCallback((id: string) => {
     setSelectedHallituskausiIdState(id);
     writeSelectedIdToUrl(id);
+    clearApiCache();
   }, []);
 
   const value = React.useMemo(

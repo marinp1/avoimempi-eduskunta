@@ -72,23 +72,29 @@ export const gradients = {
  * Spacing (in MUI spacing units, 1 = 8px)
  */
 export const spacing = {
-  xs: 1,
-  sm: 2,
-  md: 3,
-  lg: 4,
-  xl: 6,
+  xs: 0.5,
+  sm: 1,
+  md: 2,
+  lg: 3,
+  xl: 4,
 } as const;
 
 /**
- * Border radius - spacious Nordic feel
+ * Border radius - compact professional feel
  */
 export const borderRadius = {
-  sm: 1, // 8px
-  md: 1.5, // 12px
-  lg: 2, // 16px
-  heroInner: 1, // 8px
-  heroOuter: 1.5, // 12px
+  sm: 0.5, // 4px
+  md: 1, // 8px
+  lg: 1.5, // 12px
+  heroInner: 0.5, // 4px
+  heroOuter: 1, // 8px
 } as const;
+
+/**
+ * Monospace font for numeric data display
+ */
+export const monoFontFamily =
+  '"JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Consolas", monospace';
 
 /**
  * Shadows - extremely subtle
@@ -129,10 +135,9 @@ export const commonStyles = {
     background: colors.backgroundPaper,
     border: `1px solid ${colors.dataBorder}`,
     boxShadow: shadows.card,
-    transition: `transform ${transitions.normal}ms ${transitions.easing.smooth}, box-shadow ${transitions.normal}ms ${transitions.easing.standard}, border-color ${transitions.normal}ms ${transitions.easing.standard}`,
+    transition: `box-shadow ${transitions.fast}ms ${transitions.easing.standard}, border-color ${transitions.fast}ms ${transitions.easing.standard}`,
     "@media (hover: hover) and (pointer: fine)": {
       "&:hover": {
-        transform: "translateY(-2px)",
         boxShadow: shadows.cardHover,
         borderColor: colors.primaryLight,
       },
@@ -219,12 +224,11 @@ export const commonStyles = {
    * Interactive hover effect
    */
   interactiveHover: {
-    transition: `transform ${transitions.normal}ms ${transitions.easing.smooth}, box-shadow ${transitions.normal}ms ${transitions.easing.standard}`,
+    transition: `background-color ${transitions.fast}ms ${transitions.easing.standard}`,
     cursor: "pointer",
     "@media (hover: hover) and (pointer: fine)": {
       "&:hover": {
-        transform: "translateY(-1px)",
-        boxShadow: shadows.subtle,
+        backgroundColor: colors.backgroundSubtle,
       },
     },
   } satisfies SxProps<Theme>,
@@ -261,7 +265,8 @@ export const commonStyles = {
    */
   dataCell: {
     fontWeight: 600,
-    fontSize: "1rem",
+    fontSize: "0.875rem",
+    fontFamily: monoFontFamily,
     letterSpacing: "-0.01em",
   } satisfies SxProps<Theme>,
 
@@ -270,7 +275,7 @@ export const commonStyles = {
    */
   labelCell: {
     fontWeight: 500,
-    fontSize: "0.875rem",
+    fontSize: "0.8125rem",
   } satisfies SxProps<Theme>,
 
   /**
@@ -324,6 +329,12 @@ export const commonStyles = {
       gridTemplateColumns: `repeat(auto-fit, minmax(${minWidth}px, 1fr))`,
       gap: spacing.sm,
     }) satisfies SxProps<Theme>,
+
+  zebraRow: {
+    "&:nth-of-type(even)": {
+      backgroundColor: colors.backgroundSubtle,
+    },
+  } satisfies SxProps<Theme>,
 } as const;
 
 // Reserved for official source-content rendering only.

@@ -66,3 +66,64 @@ export function apiFetch<
 >(input: T, init?: R[1]): Promise<R[0]> {
   return fetch(input, init) as Promise<R[0]>;
 }
+
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+const jsonCache = new Map<string, CacheEntry<unknown>>();
+const inflight = new Map<string, Promise<unknown>>();
+
+const DEFAULT_STALE_MS = 60_000;
+
+export function clearApiCache() {
+  jsonCache.clear();
+  inflight.clear();
+}
+
+type JsonResult<T extends SubRoute | BaseRoute> =
+  GetProperRoute<T> extends [TypedFetchResponse<infer D>, ...any[]] ? D : unknown;
+
+export function cachedJsonFetch<T extends SubRoute | BaseRoute>(
+  input: T,
+  options?: { staleMs?: number; signal?: AbortSignal },
+): Promise<JsonResult<T>> {
+  const key = input;
+  const staleMs = options?.staleMs ?? DEFAULT_STALE_MS;
+  const cached = jsonCache.get(key) as CacheEntry<JsonResult<T>> | undefined;
+
+  if (cached && Date.now() - cached.timestamp < staleMs) {
+    return Promise.resolve(cached.data);
+  }
+
+  if (cached) {
+    // Stale — return cached immediately, revalidate in background
+    const existing = inflight.get(key);
+    if (!existing) {
+      const revalidate = doFetch<T>(key, options?.signal);
+      inflight.set(key, revalidate);
+      revalidate.finally(() => inflight.delete(key));
+    }
+    return Promise.resolve(cached.data);
+  }
+
+  // No cache — deduplicate concurrent requests
+  const existing = inflight.get(key);
+  if (existing) return existing as Promise<JsonResult<T>>;
+
+  const promise = doFetch<T>(key, options?.signal);
+  inflight.set(key, promise);
+  promise.finally(() => inflight.delete(key));
+  return promise;
+}
+
+async function doFetch<T extends SubRoute | BaseRoute>(
+  input: T,
+  signal?: AbortSignal,
+): Promise<JsonResult<T>> {
+  const res = await apiFetch(input, { signal } as any);
+  const data = await (res as any).json();
+  jsonCache.set(input, { data, timestamp: Date.now() });
+  return data as JsonResult<T>;
+}
