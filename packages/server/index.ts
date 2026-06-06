@@ -198,7 +198,7 @@ const webappCacheKey = (req: Request, url: URL) =>
 
 const allRoutes = withSecurityHeaders({
   ...createWebappStaticRoutes(), // in-memory strings, no cache wrapper needed
-  ...cache.wrapRoutes(createWebappPageRoutes(), { cacheKey: webappCacheKey }),
+  ...cache.wrapRoutes(createWebappPageRoutes({ homeRepository, personRepository }), { cacheKey: webappCacheKey }),
   ...apiRoutes,
   "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
 });

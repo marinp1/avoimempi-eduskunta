@@ -1,4 +1,5 @@
 import type { Database } from "bun:sqlite";
+import roster from "../queries/ROSTER.sql";
 import governmentMemberships from "../queries/GOVERNMENT_MEMBERSHIPS.sql";
 import leavingParliamentRecords from "../queries/LEAVING_PARLIAMENT.sql";
 import personCommittees from "../queries/PERSON_COMMITTEES.sql";
@@ -20,8 +21,28 @@ import trustPositions from "../queries/TRUST_POSITIONS.sql";
 import votesByPerson from "../queries/VOTES_BY_PERSON.sql";
 import { buildSearchQuery } from "../query-helpers";
 
+export interface RosterRow {
+  person_id: number;
+  first_name: string;
+  last_name: string;
+  sort_name: string;
+  birth_year: number | null;
+  minister: number;
+  group_abbreviation: string | null;
+  is_in_government: number;
+  district_name: string | null;
+  participation_rate: number;
+}
+
 export class PersonRepository {
   constructor(private readonly db: Database) {}
+
+  public fetchRoster(): RosterRow[] {
+    const stmt = this.db.prepare<RosterRow, []>(roster);
+    const data = stmt.all();
+    stmt.finalize();
+    return data;
+  }
 
   public fetchRepresentativePage(params: { page: number; limit: number }) {
     const offset = (params.page - 1) * params.limit;

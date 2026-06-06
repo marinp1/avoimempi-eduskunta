@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import type { HomeRepository } from "../database/repositories/home-repository";
+import type { PersonRepository } from "../database/repositories/person-repository";
 import { htmlResponse, renderLayout } from "../../webapp/templates/layout";
 import {
   AANESTYKSET_TITLE,
@@ -13,14 +15,16 @@ import {
   renderAsiakirjat,
 } from "../../webapp/templates/pages/asiakirjat";
 import {
-  EDUSTAJAT_TITLE,
-  renderEdustajat,
-} from "../../webapp/templates/pages/edustajat";
-import {
   HALLITUKSET_TITLE,
   renderHallitukset,
 } from "../../webapp/templates/pages/hallitukset";
 import { HOME_TITLE, renderHome } from "../../webapp/templates/pages/home";
+import {
+  EDUSTAJAT_TITLE,
+  applyFilters as applyRosterFilters,
+  renderEdustajat as renderEdustajatPage,
+  renderRosterContent,
+} from "../../webapp/templates/pages/edustajat";
 import {
   ISTUNNOT_TITLE,
   renderIstunnot,
@@ -107,9 +111,9 @@ function page(
 
 function notFoundFragment(path: string): string {
   return `<title>Sivua ei löydy — Eduskuntapeili</title>
-<section class="page-hero">
+<section class="page-head wrap">
     <h1>Sivua ei löydy</h1>
-    <p class="page-lead">Polkua <code>${path}</code> ei löydy.</p>
+    <p class="sub">Polkua <code>${path}</code> ei löydy.</p>
     <p><a href="/">Palaa etusivulle</a></p>
 </section>`;
 }
@@ -130,14 +134,41 @@ export function createWebappStaticRoutes() {
   } as const;
 }
 
-export function createWebappPageRoutes() {
+export interface WebappDeps {
+  homeRepository: HomeRepository;
+  personRepository: PersonRepository;
+}
+
+export function createWebappPageRoutes(deps: WebappDeps) {
   return {
     "/": {
-      GET: (req: Request) => page(req, renderHome(), "/", HOME_TITLE),
+      GET: async (req: Request) => {
+        const data = await deps.homeRepository.fetchOverview({});
+        return page(req, renderHome(data), "/", HOME_TITLE);
+      },
     },
     "/edustajat": {
-      GET: (req: Request) =>
-        page(req, renderEdustajat(), "/edustajat", EDUSTAJAT_TITLE),
+      GET: async (req: Request) => {
+        const url = new URL(req.url);
+        const params = {
+          q: url.searchParams.get("q") ?? undefined,
+          party: url.searchParams.get("party") ?? undefined,
+          bloc: url.searchParams.get("bloc") ?? undefined,
+          sort: url.searchParams.get("sort") ?? undefined,
+          dir: url.searchParams.get("dir") ?? undefined,
+        };
+        const allRows = deps.personRepository.fetchRoster();
+        const isHtmx = req.headers.get("HX-Request") === "true";
+        if (isHtmx) {
+          // Partial swap: return roster-content fragment only (chips + table + list)
+          const filtered = applyRosterFilters(allRows, params);
+          const fragment = renderRosterContent(allRows, filtered, params, true);
+          return new Response(fragment, {
+            headers: { "Content-Type": "text/html; charset=utf-8", "Vary": "HX-Request" },
+          });
+        }
+        return page(req, renderEdustajatPage(allRows, params), "/edustajat", EDUSTAJAT_TITLE);
+      },
     },
     "/puolueet": {
       GET: (req: Request) =>

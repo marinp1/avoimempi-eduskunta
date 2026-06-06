@@ -67,19 +67,19 @@ function applyPeriod(val: string): void {
     /* ignore */
   }
 
-  document
-    .querySelectorAll("[data-period-v]")
-    .forEach((el) => (el.textContent = p.label));
+  document.querySelectorAll("[data-period-v]").forEach((el) => {
+    el.textContent = p.label;
+  });
   document.querySelectorAll("[data-period-badge]").forEach((el) => {
     el.textContent = p.badge;
     el.classList.toggle("is-now", val === DEFAULT_PERIOD);
   });
-  document
-    .querySelectorAll("[data-period-label]")
-    .forEach((el) => (el.textContent = `${p.label} · ${p.gov}`));
-  document
-    .querySelectorAll("[data-period-detail]")
-    .forEach((el) => (el.textContent = p.detail));
+  document.querySelectorAll("[data-period-label]").forEach((el) => {
+    el.textContent = `${p.label} · ${p.gov}`;
+  });
+  document.querySelectorAll("[data-period-detail]").forEach((el) => {
+    el.textContent = p.detail;
+  });
   document.querySelectorAll("[data-period-badge-foot]").forEach((el) => {
     el.textContent = p.badge;
     el.classList.toggle("is-now", val === DEFAULT_PERIOD);
