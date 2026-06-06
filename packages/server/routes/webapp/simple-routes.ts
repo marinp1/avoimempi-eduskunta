@@ -1,10 +1,14 @@
 import Aanestykset from "../../../webapp/templates/pages/aanestykset";
 import Analytiikka from "../../../webapp/templates/pages/analytiikka";
-import Asiakirjat from "../../../webapp/templates/pages/asiakirjat";
+import Asiakirjat, {
+  type AsiakirjatIndexData,
+  type QuestionRow,
+} from "../../../webapp/templates/pages/asiakirjat";
 import Hallitukset from "../../../webapp/templates/pages/hallitukset";
 import Home, { HomeReactive } from "../../../webapp/templates/pages/home";
 import Muutokset from "../../../webapp/templates/pages/muutokset";
 import Puolueet from "../../../webapp/templates/pages/puolueet";
+import { partyColor } from "../../../webapp/templates/helpers";
 import { htmlResponse } from "../../../webapp/eta";
 import {
   page,
@@ -130,14 +134,94 @@ export function createSimplePageRoutes(deps: WebappDeps) {
     },
     "/asiakirjat": {
       GET: (req: Request) => {
+        const url = new URL(req.url);
+        const q = url.searchParams.get("q") ?? undefined;
+        const currentPage =
+          parseInt(url.searchParams.get("page") ?? "1", 10) || 1;
+        const limit = 50;
+
+        const result = deps.documentRepository.fetchWrittenQuestions({
+          query: q,
+          page: currentPage,
+          limit,
+        });
+
+        const fetchedAt = new Date().toLocaleString("fi-FI", {
+          day: "numeric",
+          month: "numeric",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        const questions: QuestionRow[] = result.items.map((item: any) => ({
+          id: item.id,
+          parliamentIdentifier: item.parliament_identifier,
+          title: item.title ?? "",
+          submissionDate: item.submission_date ?? "",
+          firstSignerName:
+            [item.first_signer_first_name, item.first_signer_last_name]
+              .filter(Boolean)
+              .join(" ") || "—",
+          firstSignerParty: item.first_signer_party ?? "",
+          firstSignerPartyColor: partyColor(item.first_signer_party ?? ""),
+          answerDate: item.answer_date ?? null,
+          answerMinisterTitle: item.answer_minister_title ?? null,
+          subjects: item.subjects
+            ? item.subjects.split("||").filter(Boolean)
+            : [],
+        }));
+
+        const data: AsiakirjatIndexData = {
+          questions,
+          totalCount: result.totalCount,
+          page: result.page,
+          totalPages: result.totalPages,
+          fetchedAt,
+        };
+
         const tlData = getTimelineData(
           req,
           deps.sessionRepository,
           deps.metadataRepository,
         );
+
+        const isHtmx = req.headers.get("HX-Request") === "true";
+        if (isHtmx) {
+          const hxTarget = req.headers.get("HX-Target") || "";
+          if (
+            hxTarget.includes("doc-root") ||
+            hxTarget.includes("tl-reactive")
+          ) {
+            const fragment = Asiakirjat({
+              title: "Asiakirjat",
+              data,
+              query: q,
+            });
+            const tlHtml = timelineOobHtml(tlData);
+            return new Response(tlHtml + fragment, {
+              headers: {
+                "Content-Type": "text/html; charset=utf-8",
+                Vary: "HX-Request",
+              },
+            });
+          }
+
+          const tlHtml = timelineOobHtml(tlData);
+          return new Response(
+            tlHtml + Asiakirjat({ title: "Asiakirjat", data, query: q }),
+            {
+              headers: {
+                "Content-Type": "text/html; charset=utf-8",
+                Vary: "HX-Request",
+              },
+            },
+          );
+        }
+
         return page(
           req,
-          Asiakirjat({ title: "Asiakirjat" }),
+          Asiakirjat({ title: "Asiakirjat", data, query: q }),
           "/asiakirjat",
           "Asiakirjat",
           tlData,

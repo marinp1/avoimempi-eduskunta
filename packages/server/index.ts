@@ -201,6 +201,7 @@ const allRoutes = withSecurityHeaders({
   ...createWebappStaticRoutes(), // in-memory strings, no cache wrapper needed
   ...cache.wrapRoutes(
     createWebappPageRoutes({
+      documentRepository,
       homeRepository,
       metadataRepository,
       personRepository,

@@ -1,13 +1,11 @@
 import { cssAsset, jsAsset } from "./assets";
+import { createAsiakirjaRoute } from "./asiakirja-route";
 import { createEdustajaRoute } from "./edustaja-route";
 import { createEdustajatRoute } from "./edustajat-route";
 import { createIstunnotRoute } from "./istunnot-route";
 import { createIstuntoRoute } from "./istunto-route";
 import { createSimplePageRoutes } from "./simple-routes";
-import type { HomeRepository } from "../../database/repositories/home-repository";
-import type { MetadataRepository } from "../../database/repositories/metadata-repository";
-import type { PersonRepository } from "../../database/repositories/person-repository";
-import type { SessionRepository } from "../../database/repositories/session-repository";
+import type { WebappDeps } from "./deps";
 
 export function createWebappStaticRoutes() {
   return {
@@ -16,15 +14,11 @@ export function createWebappStaticRoutes() {
   } as const;
 }
 
-export interface WebappDeps {
-  homeRepository: HomeRepository;
-  metadataRepository: MetadataRepository;
-  personRepository: PersonRepository;
-  sessionRepository: SessionRepository;
-}
+export type { WebappDeps } from "./deps";
 
 export function createWebappPageRoutes(deps: WebappDeps) {
   return {
+    ...createAsiakirjaRoute(deps),
     ...createEdustajaRoute(deps),
     ...createEdustajatRoute(deps),
     ...createIstunnotRoute(deps),

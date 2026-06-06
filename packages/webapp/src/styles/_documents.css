@@ -422,4 +422,205 @@
     grid-template-columns: 1fr;
     gap: 32px;
   }
+  .lifecycle {
+    flex-wrap: wrap;
+  }
+  .lc-step {
+    flex: 1 1 33%;
+  }
+}
+
+/* ============================================================
+   LIFECYCLE STEPPER (Asian kulku)
+   flex nav with ruled steps, dots, and numbers
+   ============================================================ */
+.lifecycle {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin: 22px 0 4px;
+  border: 1px solid var(--rule);
+}
+.lc-step {
+  flex: 1;
+  display: block;
+  text-decoration: none;
+  padding: 14px 16px;
+  border-left: 1px solid var(--rule);
+  position: relative;
+  min-width: 0;
+}
+.lc-step:first-child {
+  border-left: 0;
+}
+.lc-step:hover {
+  background: var(--paper-2);
+}
+.lc-step__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+.lc-step__dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  border: 2px solid var(--faint);
+  background: var(--paper);
+}
+.lc-step.done .lc-step__dot {
+  background: var(--hall);
+  border-color: var(--hall);
+}
+.lc-step__num {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--faint);
+  letter-spacing: 0.04em;
+}
+.lc-step__label {
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.lc-step__date {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.lc-step__tag {
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.lc-step__tag.ok {
+  color: var(--hall);
+}
+
+/* ============================================================
+   TOPIC TAGS
+   ============================================================ */
+.topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 4px;
+}
+.topic-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--rule);
+  padding: 8px 12px;
+  font: 500 14px var(--text);
+  color: var(--ink);
+  background: var(--paper);
+}
+
+/* ============================================================
+   DOCUMENT LIST (asiakirjat index)
+   ============================================================ */
+.doc-list {
+  display: flex;
+  flex-direction: column;
+}
+.doc-row {
+  display: grid;
+  grid-template-columns: 140px 1fr auto;
+  gap: 20px;
+  align-items: start;
+  padding: 18px 0;
+  border-top: 1px solid var(--rule-soft);
+  text-decoration: none;
+  color: inherit;
+}
+.doc-row:first-of-type {
+  border-top: 1px solid var(--rule);
+}
+.doc-row:hover {
+  background: var(--paper-2);
+  margin: 0 -16px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+.doc-row__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 2px;
+}
+.doc-row__id {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  font-weight: 600;
+  color: var(--blue);
+  padding: 3px 8px;
+  border: 1px solid var(--rule);
+  white-space: nowrap;
+}
+.doc-row__main {
+  min-width: 0;
+}
+.doc-row__title {
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ink);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.doc-row:hover .doc-row__title {
+  color: var(--blue);
+}
+.doc-row__sub {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  font-size: var(--fs-sm);
+  color: var(--body);
+}
+.doc-row__sub .who {
+  font-weight: 600;
+  color: var(--ink);
+}
+.doc-row__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.doc-row__tags .topic-tag {
+  font-size: 11px;
+  padding: 3px 8px;
+}
+.doc-row__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  padding-top: 2px;
+}
+.doc-row__right .sit-go {
+  font-family: var(--head);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--blue);
+  white-space: nowrap;
+  opacity: 0;
+}
+.doc-row:hover .doc-row__right .sit-go {
+  opacity: 1;
+}
+.doc-row__right .spill {
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 2px;
 }
