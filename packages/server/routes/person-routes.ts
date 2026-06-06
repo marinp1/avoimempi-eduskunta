@@ -148,4 +148,115 @@ export const createPersonRoutes = (db: PersonRepository) => ({
       return json(data);
     },
   },
+
+  "/api/person/:id/initiatives": {
+    GET: async (req: BunRequest<"/api/person/:id/initiatives">) => {
+      const searchParams = getSearchParams(req);
+      const data = await db.fetchPersonInitiatives({
+        personId: req.params.id,
+        limit: getBoundedIntegerQueryParam(searchParams, "limit", {
+          fallback: 200,
+          min: 1,
+          max: 2_000,
+        }),
+      });
+      return json(data);
+    },
+  },
+
+  "/api/person/:id/interpellations": {
+    GET: async (req: BunRequest<"/api/person/:id/interpellations">) => {
+      const data = await db.fetchPersonInterpellations({
+        personId: req.params.id,
+      });
+      return json(data);
+    },
+  },
+
+  "/api/person/:id/ties": {
+    GET: async (req: BunRequest<"/api/person/:id/ties">) => {
+      const data = await db.fetchPersonTies({ personId: req.params.id });
+      return json(data);
+    },
+  },
+
+  "/api/person/:id/focus-areas": {
+    GET: async (req: BunRequest<"/api/person/:id/focus-areas">) => {
+      const searchParams = getSearchParams(req);
+      const data = await db.fetchPersonFocusAreas({
+        personId: req.params.id,
+        topN: getBoundedIntegerQueryParam(searchParams, "topN", {
+          fallback: 12,
+          min: 1,
+          max: 50,
+        }),
+      });
+      return json(data);
+    },
+  },
+
+  "/api/person/:id/election-context": {
+    GET: async (req: BunRequest<"/api/person/:id/election-context">) => {
+      const data = await db.fetchPersonElectionContext({
+        personId: req.params.id,
+      });
+      return json(data);
+    },
+  },
+
+  "/api/person/:id/capabilities": {
+    GET: async (req: BunRequest<"/api/person/:id/capabilities">) => {
+      const data = await db.fetchPersonCapabilities({
+        personId: req.params.id,
+      });
+      return json(data);
+    },
+  },
+
+  "/api/person/:id/annotations": {
+    GET: async (req: BunRequest<"/api/person/:id/annotations">) => {
+      const searchParams = getSearchParams(req);
+      const data = await db.fetchPersonAnnotations({
+        personId: req.params.id,
+        kind: searchParams.get("kind"),
+      });
+      return json(data);
+    },
+  },
+
+  "/api/person/:id/metrics": {
+    GET: async (req: BunRequest<"/api/person/:id/metrics">) => {
+      const data = await db.fetchPersonMetricsWithBaselines({
+        personId: req.params.id,
+      });
+      return json(data);
+    },
+  },
+
+  "/api/baselines": {
+    GET: async (req: Request) => {
+      const searchParams = getSearchParams(req);
+      const data = await db.fetchBaselines({
+        partyId: searchParams.get("partyId"),
+      });
+      return json(data);
+    },
+  },
+
+  "/api/people/compare": {
+    GET: async (req: Request) => {
+      const searchParams = getSearchParams(req);
+      const idsParam = searchParams.get("ids")?.trim() || "";
+      if (!idsParam) return badRequest("Missing ids query parameter");
+      const personIds = idsParam
+        .split(",")
+        .map((s) => Number.parseInt(s.trim(), 10))
+        .filter((n) => Number.isFinite(n) && n > 0);
+      if (personIds.length === 0) return badRequest("No valid ids provided");
+      if (personIds.length > 10)
+        return badRequest("At most 10 ids may be compared");
+      const data = await db.fetchPeopleCompare({ personIds });
+      return json(data);
+    },
+  },
 });

@@ -1,6 +1,8 @@
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import CloseIcon from "@mui/icons-material/Close";
 import {
   Box,
+  ButtonBase,
   Card,
   CircularProgress,
   IconButton,
@@ -14,7 +16,7 @@ import {
 } from "@mui/material";
 import type React from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { borderRadius, colors, commonStyles, monoFontFamily } from "./index";
+import { colors, commonStyles, monoFontFamily } from "./index";
 import { useThemedColors } from "./ThemeContext";
 
 /**
@@ -77,8 +79,6 @@ export const PageIntro: React.FC<{
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isFeature = variant === "feature";
   const isImmersiveMobile = isMobile && mobileMode === "immersive";
-  const heroOuterRadius = `${borderRadius.heroOuter * 8}px`;
-  const heroInnerRadius = `${borderRadius.heroInner * 8}px`;
   const showInlineStats = Boolean(
     stats && (!isImmersiveMobile || mobileStatsPlacement === "inline"),
   );
@@ -422,19 +422,10 @@ export const PageSection: React.FC<{
   description?: string;
   eyebrow?: string;
   actions?: React.ReactNode;
-  surface?: "none" | "card";
   children: React.ReactNode;
   sx?: SxProps<Theme>;
-}> = ({
-  title,
-  description,
-  eyebrow,
-  actions,
-  surface = "none",
-  children,
-  sx,
-}) => {
-  const content = (
+}> = ({ title, description, eyebrow, actions, children, sx }) => (
+  <Box sx={sx}>
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
       {title ? (
         <SectionTitle
@@ -446,94 +437,8 @@ export const PageSection: React.FC<{
       ) : null}
       {children}
     </Box>
-  );
-
-  if (surface === "card") {
-    return <DataCard sx={{ p: { xs: 1.5, md: 2 }, ...sx }}>{content}</DataCard>;
-  }
-
-  return <Box sx={sx}>{content}</Box>;
-};
-
-/**
- * ToolbarCard - consistent shell for filters and toolbars
- */
-export const ToolbarCard: React.FC<{
-  title?: string;
-  description?: string;
-  icon?: React.ReactNode;
-  actions?: React.ReactNode;
-  sticky?: boolean;
-  children: React.ReactNode;
-  sx?: SxProps<Theme>;
-}> = ({ title, description, icon, actions, sticky = false, children, sx }) => {
-  const tc = useThemedColors();
-
-  return (
-    <DataCard
-      sx={{
-        p: { xs: 1.5, md: 2 },
-        background: colors.backgroundSubtle,
-        boxShadow: "none",
-        position: sticky ? "sticky" : "relative",
-        top: sticky ? 12 : "auto",
-        zIndex: sticky ? 4 : "auto",
-        ...sx,
-      }}
-    >
-      <Stack spacing={2}>
-        {title || description || actions ? (
-          <Box
-            sx={{
-              display: "flex",
-              gap: 1.5,
-              justifyContent: "space-between",
-              alignItems: { xs: "flex-start", md: "center" },
-              flexDirection: { xs: "column", md: "row" },
-            }}
-          >
-            <Box sx={{ minWidth: 0 }}>
-              {title ? (
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    mb: description ? 0.5 : 0,
-                  }}
-                >
-                  {icon ? (
-                    <Box sx={{ display: "flex", color: tc.primary }}>
-                      {icon}
-                    </Box>
-                  ) : null}
-                  <Typography
-                    variant="subtitle1"
-                    sx={{
-                      fontWeight: 700,
-                      color: tc.textPrimary,
-                    }}
-                  >
-                    {title}
-                  </Typography>
-                </Box>
-              ) : null}
-              {description ? (
-                <Typography variant="body2" sx={{ color: tc.textSecondary }}>
-                  {description}
-                </Typography>
-              ) : null}
-            </Box>
-            {actions ? (
-              <Box sx={{ display: "flex", gap: 1 }}>{actions}</Box>
-            ) : null}
-          </Box>
-        ) : null}
-        {children}
-      </Stack>
-    </DataCard>
-  );
-};
+  </Box>
+);
 
 /**
  * PanelHeader - shared drawer/detail panel top bar
@@ -640,9 +545,91 @@ export const PanelHeader: React.FC<{
 };
 
 /**
- * MetricCard - number + label + optional trend indicator
+ * FilterBar - borderless toolbar for filters and controls.
+ * Replaces ToolbarCard: no card wrapper, just a subtle bottom border.
  */
-export const MetricCard: React.FC<{
+export const FilterBar: React.FC<{
+  title?: string;
+  description?: string;
+  icon?: React.ReactNode;
+  actions?: React.ReactNode;
+  sticky?: boolean;
+  children: React.ReactNode;
+  sx?: SxProps<Theme>;
+}> = ({ title, description, icon, actions, sticky = false, children, sx }) => {
+  const tc = useThemedColors();
+
+  return (
+    <Box
+      sx={{
+        p: { xs: 1.5, md: 2 },
+        background: colors.backgroundSubtle,
+        borderBottom: `1px solid ${tc.dataBorder}`,
+        position: sticky ? "sticky" : "relative",
+        top: sticky ? 12 : "auto",
+        zIndex: sticky ? 4 : "auto",
+        ...sx,
+      }}
+    >
+      <Stack spacing={2}>
+        {title || description || actions ? (
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1.5,
+              justifyContent: "space-between",
+              alignItems: { xs: "flex-start", md: "center" },
+              flexDirection: { xs: "column", md: "row" },
+            }}
+          >
+            <Box sx={{ minWidth: 0 }}>
+              {title ? (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mb: description ? 0.5 : 0,
+                  }}
+                >
+                  {icon ? (
+                    <Box sx={{ display: "flex", color: tc.primary }}>
+                      {icon}
+                    </Box>
+                  ) : null}
+                  <Typography
+                    variant="subtitle1"
+                    sx={{
+                      fontWeight: 700,
+                      color: tc.textPrimary,
+                    }}
+                  >
+                    {title}
+                  </Typography>
+                </Box>
+              ) : null}
+              {description ? (
+                <Typography variant="body2" sx={{ color: tc.textSecondary }}>
+                  {description}
+                </Typography>
+              ) : null}
+            </Box>
+            {actions ? (
+              <Box sx={{ display: "flex", gap: 1 }}>{actions}</Box>
+            ) : null}
+          </Box>
+        ) : null}
+        {children}
+      </Stack>
+    </Box>
+  );
+};
+
+/**
+ * InlineMetric - flat number + label display without card wrapper.
+ * Replaces MetricCard: no border, no background, just typography.
+ */
+export const InlineMetric: React.FC<{
   label: string;
   value: React.ReactNode;
   caption?: React.ReactNode;
@@ -671,14 +658,7 @@ export const MetricCard: React.FC<{
   const iconColor = tone === "emphasis" ? "#fff" : colors.primaryLight;
 
   return (
-    <Card
-      sx={{
-        ...commonStyles.dataCard,
-        p: 1.5,
-        background: colors.backgroundPaper,
-        ...sx,
-      }}
-    >
+    <Box sx={{ p: 1.5, ...sx }}>
       <Box
         sx={{
           display: "flex",
@@ -766,7 +746,85 @@ export const MetricCard: React.FC<{
           </Box>
         )}
       </Box>
-    </Card>
+    </Box>
+  );
+};
+
+/**
+ * ActionLink - flat clickable row for navigation/actions.
+ * Replaces insight card grids (DataCard>CardActionArea>CardContent).
+ */
+export const ActionLink: React.FC<{
+  icon?: React.ReactNode;
+  title: string;
+  description?: string;
+  onClick: () => void;
+  sx?: SxProps<Theme>;
+}> = ({ icon, title, description, onClick, sx }) => {
+  const tc = useThemedColors();
+
+  return (
+    <ButtonBase
+      onClick={onClick}
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        width: "100%",
+        textAlign: "left",
+        px: 2,
+        py: 1.25,
+        gap: 1.5,
+        borderBottom: `1px solid ${tc.dataBorder}`,
+        "&:hover": {
+          background: `${tc.primary}06`,
+        },
+        ...sx,
+      }}
+    >
+      {icon ? (
+        <Box
+          sx={{
+            color: tc.primary,
+            display: "flex",
+            alignItems: "center",
+            flexShrink: 0,
+          }}
+        >
+          {icon}
+        </Box>
+      ) : null}
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            fontWeight: 600,
+            color: tc.textPrimary,
+            lineHeight: 1.3,
+          }}
+        >
+          {title}
+        </Typography>
+        {description ? (
+          <Typography
+            variant="body2"
+            sx={{
+              color: tc.textSecondary,
+              lineHeight: 1.4,
+              mt: 0.25,
+            }}
+          >
+            {description}
+          </Typography>
+        ) : null}
+      </Box>
+      <ChevronRightIcon
+        sx={{
+          fontSize: 18,
+          color: tc.textTertiary,
+          flexShrink: 0,
+        }}
+      />
+    </ButtonBase>
   );
 };
 

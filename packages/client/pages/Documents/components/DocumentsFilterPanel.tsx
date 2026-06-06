@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import React, { useState } from "react";
 import { colors } from "#client/theme";
-import { ToolbarCard } from "#client/theme/components";
+import { FilterBar } from "#client/theme/components";
 
 type ActiveFilterChip = {
   key: string;
@@ -117,7 +117,7 @@ const DocumentsFilterPanelComponent: React.FC<{
   );
 
   return (
-    <ToolbarCard
+    <FilterBar
       title={title}
       description={helperText}
       icon={<TuneIcon sx={{ fontSize: 18 }} />}
@@ -177,7 +177,7 @@ const DocumentsFilterPanelComponent: React.FC<{
       ) : (
         filterContent
       )}
-    </ToolbarCard>
+    </FilterBar>
   );
 };
 

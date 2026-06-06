@@ -2,7 +2,6 @@ import HowToVoteIcon from "@mui/icons-material/HowToVote";
 import {
   Alert,
   Box,
-  CardContent,
   Checkbox,
   CircularProgress,
   Fade,
@@ -29,7 +28,7 @@ import {
 } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, commonStyles, spacing } from "#client/theme";
-import { DataCard, PanelHeader, ToolbarCard } from "#client/theme/components";
+import { FilterBar, PanelHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 
@@ -317,8 +316,8 @@ export default function PartyParticipation({
       {/* Filters */}
       <Fade in timeout={400}>
         <Box sx={{ mb: spacing.lg }}>
-          <ToolbarCard title={tInsights("partyParticipation.filters")}>
-            <CardContent sx={{ p: 0 }}>
+          <FilterBar title={tInsights("partyParticipation.filters")}>
+            <Box>
               <Grid container spacing={spacing.sm}>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
@@ -350,16 +349,16 @@ export default function PartyParticipation({
                   })}
                 </Alert>
               )}
-            </CardContent>
-          </ToolbarCard>
+            </Box>
+          </FilterBar>
         </Box>
       </Fade>
 
       {/* Party Selection */}
       <Fade in timeout={500}>
         <Box sx={{ mb: spacing.lg }}>
-          <DataCard>
-            <CardContent sx={{ p: spacing.md }}>
+          <Box>
+            <Box sx={{ p: spacing.md }}>
               <Typography variant="h6" sx={{ mb: spacing.sm, fontWeight: 600 }}>
                 {tInsights("partyParticipation.selectParties")}
               </Typography>
@@ -403,16 +402,16 @@ export default function PartyParticipation({
                   />
                 ))}
               </FormGroup>
-            </CardContent>
-          </DataCard>
+            </Box>
+          </Box>
         </Box>
       </Fade>
 
       {/* Chart */}
       <Fade in timeout={600}>
         <Box>
-          <DataCard>
-            <CardContent sx={{ p: spacing.lg }}>
+          <Box>
+            <Box sx={{ p: spacing.lg }}>
               <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
                 {tInsights("partyParticipation.chartTitle")}
               </Typography>
@@ -479,8 +478,8 @@ export default function PartyParticipation({
                   {tInsights("partyParticipation.noData")}
                 </Alert>
               )}
-            </CardContent>
-          </DataCard>
+            </Box>
+          </Box>
         </Box>
       </Fade>
 
@@ -488,8 +487,8 @@ export default function PartyParticipation({
       {data.length > 0 && (
         <Fade in timeout={700}>
           <Box sx={{ mt: spacing.lg }}>
-            <DataCard>
-              <CardContent sx={{ p: spacing.lg }}>
+            <Box>
+              <Box sx={{ p: spacing.lg }}>
                 <Typography
                   variant="h5"
                   sx={{ mb: spacing.md, fontWeight: 600 }}
@@ -554,8 +553,8 @@ export default function PartyParticipation({
                     </Typography>
                   </Box>
                 </Box>
-              </CardContent>
-            </DataCard>
+              </Box>
+            </Box>
           </Box>
         </Fade>
       )}

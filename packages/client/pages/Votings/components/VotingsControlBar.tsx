@@ -16,7 +16,7 @@ import {
 import React from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { commonStyles } from "#client/theme";
-import { ToolbarCard } from "#client/theme/components";
+import { FilterBar } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import type { VotingSortMode } from "../url-state";
 
@@ -60,7 +60,7 @@ const VotingsControlBarComponent: React.FC<{
   const themedColors = useThemedColors();
 
   return (
-    <ToolbarCard
+    <FilterBar
       description={searchHint}
       icon={<TuneIcon sx={{ fontSize: 18 }} />}
       sticky
@@ -215,7 +215,7 @@ const VotingsControlBarComponent: React.FC<{
           )}
         </Box>
       </Stack>
-    </ToolbarCard>
+    </FilterBar>
   );
 };
 

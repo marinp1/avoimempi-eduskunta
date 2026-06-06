@@ -14,7 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { type ReactNode, useEffect, useState } from "react";
-import { DataCard, PageIntro } from "#client/theme/components";
+import { PageIntro } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 
@@ -175,7 +175,9 @@ function Changes(): ReactNode {
 
       <Box id="changes-content">
         {historyEntries.length > 0 && (
-          <DataCard sx={{ mb: 2 }}>
+          <Box
+            sx={{ mb: 2, borderBottom: `1px solid ${themedColors.dataBorder}` }}
+          >
             <Box sx={{ p: 2 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
                 Päivityshistoria
@@ -210,7 +212,7 @@ function Changes(): ReactNode {
                 })}
               </Stack>
             </Box>
-          </DataCard>
+          </Box>
         )}
 
         {loading && (
@@ -229,17 +231,18 @@ function Changes(): ReactNode {
         {!loading &&
           report &&
           (changedTables.length === 0 ? (
-            <DataCard>
-              <Box sx={{ p: 3 }}>
-                <Typography color="text.secondary">
-                  Ei muutoksia edellisen päivityksen jälkeen.
-                </Typography>
-              </Box>
-            </DataCard>
+            <Box sx={{ p: 3 }}>
+              <Typography color="text.secondary">
+                Ei muutoksia edellisen päivityksen jälkeen.
+              </Typography>
+            </Box>
           ) : (
             <Stack spacing={2}>
               {changedTables.map(([tableName, tableChanges]) => (
-                <DataCard key={tableName}>
+                <Box
+                  key={tableName}
+                  sx={{ borderBottom: `1px solid ${themedColors.dataBorder}` }}
+                >
                   <Box sx={{ p: 2, pb: 1 }}>
                     <Stack direction="row" alignItems="center" spacing={1.5}>
                       <Typography variant="subtitle1" fontWeight={600}>
@@ -375,7 +378,7 @@ function Changes(): ReactNode {
                       </Box>
                     </>
                   )}
-                </DataCard>
+                </Box>
               ))}
             </Stack>
           ))}

@@ -19,7 +19,6 @@ import {
 import React from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, gradients, spacing } from "#client/theme";
-import { DataCard } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 import type { ParticipationByGovernmentData } from "./types";
@@ -147,7 +146,7 @@ export function HistoricalComparison({
   };
 
   return (
-    <DataCard>
+    <Box>
       <Box sx={{ p: spacing.md }}>
         <Box
           sx={{
@@ -334,6 +333,6 @@ export function HistoricalComparison({
           </Box>
         )}
       </Box>
-    </DataCard>
+    </Box>
   );
 }

@@ -97,6 +97,17 @@ export const createVotingRoutes = (db: VotingRepository) => ({
     },
   },
 
+  "/api/votings/:id/proposing-document": {
+    GET: async (req: BunRequest<"/api/votings/:id/proposing-document">) => {
+      const votingId = Number.parseInt(req.params.id, 10);
+      if (!Number.isFinite(votingId) || votingId <= 0) {
+        return badRequest("Invalid voting id");
+      }
+      const data = await db.fetchVotingProposingDocuments({ id: req.params.id });
+      return json(data);
+    },
+  },
+
   "/api/votings/:id/details": {
     GET: async (req: BunRequest<"/api/votings/:id/details">) => {
       const votingId = Number.parseInt(req.params.id, 10);

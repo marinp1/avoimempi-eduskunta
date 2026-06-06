@@ -21,8 +21,8 @@ import {
 import { memo } from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
-import { borderRadius, colors, commonStyles, spacing } from "#client/theme";
-import { DataCard, PanelHeader, VoteMarginBar } from "#client/theme/components";
+import { colors, commonStyles, spacing } from "#client/theme";
+import { PanelHeader, VoteMarginBar } from "#client/theme/components";
 import {
   formatDateFi,
   formatDateLongFi,
@@ -41,10 +41,6 @@ type HomeTranslation = ReturnType<typeof useScopedTranslation<"home">>["t"];
 type SessionsTranslation = ReturnType<
   typeof useScopedTranslation<"sessions">
 >["t"];
-
-// Border radius constants (all 0 in terminal design)
-const heroOuterRadius = `${borderRadius.heroOuter * 8}px`;
-const heroInnerRadius = `${borderRadius.heroInner * 8}px`;
 
 const shiftIsoDateByMonths = (value: string, months: number) => {
   const date = new Date(`${value}T00:00:00Z`);
@@ -709,7 +705,13 @@ export const CompositionPanel = ({
     end: formatDateFi(overview.scope.asOfDate, overview.scope.asOfDate),
   });
   return (
-    <DataCard sx={{ p: 0, overflow: "hidden", height: "100%" }}>
+    <Box
+      sx={{
+        overflow: "hidden",
+        height: "100%",
+        borderBottom: `1px solid ${colors.dataBorder}`,
+      }}
+    >
       <PanelHeader
         eyebrow={tHome("compositionEyebrow")}
         title={tHome("compositionTitle")}
@@ -828,7 +830,7 @@ export const CompositionPanel = ({
           ))}
         </Box>
       </Box>
-    </DataCard>
+    </Box>
   );
 };
 
@@ -841,7 +843,9 @@ export const ProceedingsShell = ({
   latestDate: string | null;
   children: React.ReactNode;
 }) => (
-  <DataCard sx={{ p: 0, overflow: "hidden" }}>
+  <Box
+    sx={{ overflow: "hidden", borderBottom: `1px solid ${colors.dataBorder}` }}
+  >
     <PanelHeader
       eyebrow={tHome("proceedingsEyebrow")}
       title={tHome("proceedingsTitle")}
@@ -868,7 +872,7 @@ export const ProceedingsShell = ({
       sx={{ p: 1.5, background: "rgba(255,255,255,0.84)" }}
     />
     {children}
-  </DataCard>
+  </Box>
 );
 
 export const SessionSummaryCard = ({
@@ -1085,7 +1089,13 @@ const SignalCard = ({
   actionLabel: string;
   children: React.ReactNode;
 }) => (
-  <DataCard sx={{ p: 0, overflow: "hidden", height: "100%" }}>
+  <Box
+    sx={{
+      overflow: "hidden",
+      height: "100%",
+      borderBottom: `1px solid ${colors.dataBorder}`,
+    }}
+  >
     <PanelHeader
       eyebrow={eyebrow}
       title={title}
@@ -1110,7 +1120,7 @@ const SignalCard = ({
     <Box sx={{ p: 1.25, display: "flex", flexDirection: "column", gap: 1 }}>
       {children}
     </Box>
-  </DataCard>
+  </Box>
 );
 
 const EmptySignalState = ({ label }: { label: string }) => (

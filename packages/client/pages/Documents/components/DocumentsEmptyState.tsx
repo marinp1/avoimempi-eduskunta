@@ -2,7 +2,6 @@ import { SearchOff as SearchOffIcon } from "@mui/icons-material";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import type React from "react";
 import { colors } from "#client/theme";
-import { DataCard } from "#client/theme/components";
 
 export const DocumentsEmptyState: React.FC<{
   title: string;
@@ -10,7 +9,7 @@ export const DocumentsEmptyState: React.FC<{
   clearLabel: string;
   onClear?: () => void;
 }> = ({ title, description, clearLabel, onClear }) => (
-  <DataCard sx={{ p: { xs: 3, md: 4 } }}>
+  <Box sx={{ p: { xs: 3, md: 4 } }}>
     <Stack spacing={1.5} alignItems="center" textAlign="center">
       <Box
         sx={{
@@ -46,5 +45,5 @@ export const DocumentsEmptyState: React.FC<{
         </Button>
       )}
     </Stack>
-  </DataCard>
+  </Box>
 );

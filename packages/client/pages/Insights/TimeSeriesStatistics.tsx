@@ -1,11 +1,4 @@
-import {
-  Alert,
-  Box,
-  CardContent,
-  CircularProgress,
-  Fade,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, CircularProgress, Fade, Typography } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
 import {
   Area,
@@ -22,7 +15,7 @@ import {
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, spacing } from "#client/theme";
-import { DataCard, PanelHeader } from "#client/theme/components";
+import { PanelHeader } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
 
@@ -193,8 +186,8 @@ export default function TimeSeriesStatistics({
       )}
       <Fade in timeout={500}>
         <Box sx={{ mb: spacing.xl }}>
-          <DataCard>
-            <CardContent sx={{ p: spacing.lg }}>
+          <Box>
+            <Box sx={{ p: spacing.lg }}>
               <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
                 {tInsights("timeSeries.gender.title")}
               </Typography>
@@ -372,16 +365,16 @@ export default function TimeSeriesStatistics({
                   </Typography>
                 </Box>
               </Box>
-            </CardContent>
-          </DataCard>
+            </Box>
+          </Box>
         </Box>
       </Fade>
 
       {/* Age Distribution Section */}
       <Fade in timeout={600}>
         <Box>
-          <DataCard>
-            <CardContent sx={{ p: spacing.lg }}>
+          <Box>
+            <Box sx={{ p: spacing.lg }}>
               <Typography variant="h5" sx={{ mb: spacing.sm, fontWeight: 600 }}>
                 {tInsights("timeSeries.age.title")}
               </Typography>
@@ -581,8 +574,8 @@ export default function TimeSeriesStatistics({
                   </Typography>
                 </Box>
               </Box>
-            </CardContent>
-          </DataCard>
+            </Box>
+          </Box>
         </Box>
       </Fade>
     </Box>

@@ -4,6 +4,7 @@ import votingById from "../queries/VOTING_BY_ID.sql";
 import votingGovernmentOppositionById from "../queries/VOTING_GOVERNMENT_OPPOSITION_BY_ID.sql";
 import votingMemberVotesById from "../queries/VOTING_MEMBER_VOTES_BY_ID.sql";
 import votingPartyBreakdownById from "../queries/VOTING_PARTY_BREAKDOWN_BY_ID.sql";
+import votingProposingDocuments from "../queries/VOTING_PROPOSING_DOCUMENTS.sql";
 import votingRelatedById from "../queries/VOTING_RELATED_BY_ID.sql";
 import votingsBrowse from "../queries/VOTINGS_BROWSE.sql";
 import votingsByDocument from "../queries/VOTINGS_BY_DOCUMENT.sql";
@@ -293,6 +294,23 @@ export class VotingRepository {
       governmentOpposition,
       relatedVotings,
     };
+  }
+
+  public fetchVotingProposingDocuments(params: { id: string }) {
+    const votingId = Number.parseInt(params.id, 10);
+    if (!Number.isFinite(votingId)) return [];
+    const stmt = this.db.prepare<
+      {
+        identifier: string;
+        source_type: string;
+        source_text: string | null;
+        source_url: string | null;
+      },
+      { $votingId: number }
+    >(votingProposingDocuments);
+    const data = stmt.all({ $votingId: votingId });
+    stmt.finalize();
+    return data;
   }
 
   public fetchVotingsByDocument(params: { identifier: string }) {

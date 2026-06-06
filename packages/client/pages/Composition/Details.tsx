@@ -45,8 +45,8 @@ import { useScopedTranslation } from "#client/i18n/scoped";
 import AttendancePersonDetail from "#client/pages/Insights/AttendancePersonDetail";
 import VotingActivity from "#client/pages/Insights/VotingActivity";
 import { refs } from "#client/references";
-import theme, { borderRadius, colors } from "#client/theme";
-import { MetricCard, VoteMarginBar } from "#client/theme/components";
+import theme, { colors } from "#client/theme";
+import { InlineMetric, VoteMarginBar } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { isSafeExternalUrl } from "#client/utils/eduskunta-links";
 import { apiFetch } from "#client/utils/fetch";
@@ -88,13 +88,6 @@ type PersonQuestionType = ApiRouteItem<`/api/person/:id/questions`>;
 
 type VotingInlineDetails = ApiRouteResponse<`/api/votings/:id/details`>;
 
-const detailMetricCardSx = {
-  borderRadius: {
-    xs: `${borderRadius.md * 8}px`,
-    sm: `${borderRadius.md * 8}px`,
-  },
-} as const;
-
 type GovernmentPeriod = {
   government_name: string;
   government_start_date: string;
@@ -114,7 +107,7 @@ type GovernmentVoteStat = {
   total: number;
 };
 
-type RepresentativeAnalysisScope = {
+export type RepresentativeAnalysisScope = {
   selectedGovernmentName: string | null;
   selectedGovernmentPeriod: GovernmentPeriod | null;
 };
@@ -135,7 +128,7 @@ const visuallyHiddenSx = {
   border: 0,
 } as const;
 
-const fetchPersonDetails = async (personId: number, signal?: AbortSignal) => {
+export const fetchPersonDetails = async (personId: number, signal?: AbortSignal) => {
   const jsonOrThrow = async <T,>(
     responsePromise: Promise<{
       ok: boolean;
@@ -929,7 +922,7 @@ const AnalysisScopeToolbar: React.FC<{
 
 // ──────────────────────────── Tab: Yleistiedot ────────────────────────────
 
-const OverviewTab: React.FC<{
+export const OverviewTab: React.FC<{
   details: Awaited<ReturnType<typeof fetchPersonDetails>>;
   selectedDate: string;
 }> = ({ details, selectedDate }) => {
@@ -990,12 +983,11 @@ const OverviewTab: React.FC<{
         }}
       >
         {overviewMetrics.map((metric) => (
-          <MetricCard
+          <InlineMetric
             key={metric.label}
             label={metric.label}
             value={metric.value}
             caption={metric.caption}
-            sx={detailMetricCardSx}
           />
         ))}
       </Box>
@@ -1292,7 +1284,7 @@ const OverviewTab: React.FC<{
 
 // ──────────────────────────── Tab: Aanestykset ────────────────────────────
 
-const VotesTab: React.FC<{
+export const VotesTab: React.FC<{
   personId: number;
   scope: RepresentativeAnalysisScope;
 }> = ({ personId, scope }) => {
@@ -1837,16 +1829,15 @@ const VotesTab: React.FC<{
           mb: 1.5,
         }}
       >
-        <MetricCard
+        <InlineMetric
           label={tComposition("details.votes.participation")}
           value={`${displayParticipationRate}%`}
           caption={tCommon("voteRatio", {
             cast: displayStats.total - displayStats.absent,
             total: displayStats.total,
           })}
-          sx={detailMetricCardSx}
         />
-        <MetricCard
+        <InlineMetric
           label={tComposition("details.votes.totalVotes")}
           value={displayStats.total}
           caption={
@@ -1854,7 +1845,6 @@ const VotesTab: React.FC<{
               ? scope.selectedGovernmentName
               : tComposition("details.analysis.scopeAll")
           }
-          sx={detailMetricCardSx}
         />
         <Box
           sx={{
@@ -2190,7 +2180,7 @@ const VotesTab: React.FC<{
 
 // ──────────────────────────── Tab: Puheenvuorot ────────────────────────────
 
-const SpeechesTab: React.FC<{
+export const SpeechesTab: React.FC<{
   personId: number;
   scope: RepresentativeAnalysisScope;
 }> = ({ personId, scope }) => {
@@ -2972,13 +2962,12 @@ const SpeechesTab: React.FC<{
           mb: 1.5,
         }}
       >
-        <MetricCard
+        <InlineMetric
           label={tComposition("details.speeches.count")}
           value={filteredSpeeches.length}
           caption={`${speechesTotal ?? 0} ${tComposition("details.analysis.availableTotal")}`}
-          sx={detailMetricCardSx}
         />
-        <MetricCard
+        <InlineMetric
           label={tComposition("details.speeches.totalWords")}
           value={
             filteredWords > 1000
@@ -2990,16 +2979,14 @@ const SpeechesTab: React.FC<{
               ? `${totalWords} ${tComposition("details.analysis.scopeAll")}`
               : undefined
           }
-          sx={detailMetricCardSx}
         />
-        <MetricCard
+        <InlineMetric
           label={tComposition("details.analysis.scope")}
           value={
             scope.selectedGovernmentPeriod
               ? scope.selectedGovernmentPeriod.government_name
               : tComposition("details.analysis.scopeAll")
           }
-          sx={detailMetricCardSx}
         />
       </Box>
 
@@ -3298,7 +3285,7 @@ const SpeechesTab: React.FC<{
 
 // ─────────────────────────── Tab: Kysymykset ─────────────────────────────
 
-const QuestionsTab: React.FC<{
+export const QuestionsTab: React.FC<{
   personId: number;
   scope: RepresentativeAnalysisScope;
 }> = ({ personId, scope }) => {
@@ -3416,31 +3403,27 @@ const QuestionsTab: React.FC<{
           mb: 1.5,
         }}
       >
-        <MetricCard
+        <InlineMetric
           label={t("details.questions.total", { count: totalQuestions })}
           value={filteredQuestions.length}
-          sx={detailMetricCardSx}
         />
-        <MetricCard
+        <InlineMetric
           label={t("details.questions.interpellations", {
             count: interpellationsCount,
           })}
           value={interpellationsCount}
-          sx={detailMetricCardSx}
         />
-        <MetricCard
+        <InlineMetric
           label={t("details.questions.oralQuestions", {
             count: oralQuestionsCount,
           })}
           value={oralQuestionsCount}
-          sx={detailMetricCardSx}
         />
-        <MetricCard
+        <InlineMetric
           label={t("details.questions.writtenQuestions", {
             count: writtenQuestionsCount,
           })}
           value={writtenQuestionsCount}
-          sx={detailMetricCardSx}
         />
       </Box>
 
@@ -3674,7 +3657,7 @@ const QuestionsTab: React.FC<{
 
 // ──────────────────────── Tab: Luottamustehtavat ──────────────────────────
 
-const PositionsTab: React.FC<{
+export const PositionsTab: React.FC<{
   personId: number;
   trustPositions: DatabaseTables.TrustPosition[];
   governmentMemberships: DatabaseTables.GovernmentMembership[];

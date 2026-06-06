@@ -71,9 +71,8 @@ const toEpochDay = (date: string): number => {
 const toIsoDate = (epochDay: number): string => {
   try {
     return new Date(epochDay).toISOString().slice(0, 10);
-  }
-  catch (err) {
-    console.error("Invalid date to convert", epochDay)
+  } catch (err) {
+    console.error("Invalid date to convert", epochDay);
     throw err;
   }
 };
@@ -176,7 +175,9 @@ const intersectTermRowsWithGroupMemberships = (
       const overlapEnd = Math.min(termEnd, groupEnd);
 
       if (Number.isNaN(overlapStart) || Number.isNaN(overlapEnd)) {
-        console.warn(`Overlaps are probably not correct ${JSON.stringify(group)}`)
+        console.warn(
+          `Overlaps are probably not correct ${JSON.stringify(group)}`,
+        );
       }
 
       if (overlapStart > overlapEnd) {

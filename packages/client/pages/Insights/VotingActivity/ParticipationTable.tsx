@@ -15,7 +15,6 @@ import {
 import React, { useState } from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, commonStyles, gradients } from "#client/theme";
-import { DataCard } from "#client/theme/components";
 import type { ParticipationData, SortDirection, SortField } from "./types";
 
 interface ParticipationTableProps {
@@ -89,7 +88,7 @@ export function ParticipationTable({
   };
 
   return (
-    <DataCard>
+    <Box>
       <TableContainer>
         <Table>
           <TableHead>
@@ -245,6 +244,6 @@ export function ParticipationTable({
           }`
         }
       />
-    </DataCard>
+    </Box>
   );
 }

@@ -95,18 +95,6 @@ export const monoFontFamily =
   '"JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Consolas", monospace';
 
 /**
- * Shadows - eliminated. Borders only.
- */
-export const shadows = {
-  card: "none",
-  cardHover: "none",
-  elevated: "none",
-  subtle: "none",
-  inner: "none",
-  none: "none",
-} as const;
-
-/**
  * Animation durations (in ms)
  */
 export const transitions = {

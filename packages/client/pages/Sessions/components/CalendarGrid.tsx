@@ -2,7 +2,6 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { Box, IconButton, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
-import { DataCard } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { useThemedColors } from "#client/theme/ThemeContext";
 
@@ -108,7 +107,7 @@ export const CalendarGrid = ({
   };
 
   return (
-    <DataCard sx={{ p: 1.5, mb: 2 }}>
+    <Box sx={{ p: 1.5, mb: 2 }}>
       {/* Month navigation */}
       <Box
         sx={{
@@ -235,6 +234,6 @@ export const CalendarGrid = ({
           );
         })}
       </Box>
-    </DataCard>
+    </Box>
   );
 };

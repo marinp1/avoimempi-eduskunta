@@ -1,20 +1,12 @@
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import BalanceIcon from "@mui/icons-material/Balance";
-import {
-  Box,
-  CardActionArea,
-  CardContent,
-  Drawer,
-  Grid,
-  LinearProgress,
-  Typography,
-} from "@mui/material";
+import { Box, Drawer, LinearProgress, Stack, Typography } from "@mui/material";
 import React from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import CloseVotes from "#client/pages/Insights/CloseVotes";
 import CoalitionOpposition from "#client/pages/Insights/CoalitionOpposition";
 import { colors } from "#client/theme";
-import { DataCard, InlineSpinner } from "#client/theme/components";
+import { ActionLink, InlineSpinner } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import {
   buildVotingsUrl,
@@ -149,75 +141,20 @@ export default () => {
         >
           {t("analyticsSection.title")}
         </Typography>
-        <Grid container spacing={1.5}>
-          {[
-            {
-              key: "closeVotes" as const,
-              icon: <BalanceIcon sx={{ fontSize: 20 }} />,
-              title: t("analyticsSection.closeVotes.title"),
-              description: t("analyticsSection.closeVotes.description"),
-            },
-            {
-              key: "coalitionOpposition" as const,
-              icon: <AccountBalanceIcon sx={{ fontSize: 20 }} />,
-              title: t("analyticsSection.coalitionOpposition.title"),
-              description: t(
-                "analyticsSection.coalitionOpposition.description",
-              ),
-            },
-          ].map((card) => (
-            <Grid key={card.key} size={{ xs: 12, sm: 6 }}>
-              <DataCard sx={{ height: "100%", p: 0 }}>
-                <CardActionArea
-                  onClick={() => setActiveInsightDrawer(card.key)}
-                  sx={{ height: "100%", borderRadius: "inherit" }}
-                >
-                  <CardContent
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 0.75,
-                      p: { xs: 1.25, sm: 1.5 },
-                      "&:last-child": { pb: { xs: 1.25, sm: 1.5 } },
-                    }}
-                  >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Box
-                        sx={{
-                          color: themedColors.primary,
-                          display: "flex",
-                          alignItems: "center",
-                        }}
-                      >
-                        {card.icon}
-                      </Box>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontWeight: 600,
-                          fontSize: "0.875rem",
-                          lineHeight: 1.3,
-                        }}
-                      >
-                        {card.title}
-                      </Typography>
-                    </Box>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: themedColors.textSecondary,
-                        lineHeight: 1.45,
-                        fontSize: "0.8125rem",
-                      }}
-                    >
-                      {card.description}
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </DataCard>
-            </Grid>
-          ))}
-        </Grid>
+        <Stack spacing={0}>
+          <ActionLink
+            icon={<BalanceIcon sx={{ fontSize: 20 }} />}
+            title={t("analyticsSection.closeVotes.title")}
+            description={t("analyticsSection.closeVotes.description")}
+            onClick={() => setActiveInsightDrawer("closeVotes")}
+          />
+          <ActionLink
+            icon={<AccountBalanceIcon sx={{ fontSize: 20 }} />}
+            title={t("analyticsSection.coalitionOpposition.title")}
+            description={t("analyticsSection.coalitionOpposition.description")}
+            onClick={() => setActiveInsightDrawer("coalitionOpposition")}
+          />
+        </Stack>
       </Box>
 
       <Drawer

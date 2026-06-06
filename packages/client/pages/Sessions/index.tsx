@@ -55,7 +55,7 @@ import {
 } from "#client/pages/Sessions/shared/utils";
 import { refs } from "#client/references";
 import { commonStyles } from "#client/theme";
-import { DataCard, PageIntro, ToolbarCard } from "#client/theme/components";
+import { FilterBar, PageIntro } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import {
@@ -2392,7 +2392,7 @@ export default () => {
       />
 
       <Box id="sessions-content">
-        <ToolbarCard sx={{ mb: 2 }}>
+        <FilterBar sx={{ mb: 2 }}>
           <Box
             sx={{
               display: "flex",
@@ -2445,7 +2445,7 @@ export default () => {
               }}
             />
           </Box>
-        </ToolbarCard>
+        </FilterBar>
       </Box>
 
       <Collapse in={showCalendar && !datesLoading}>
@@ -2477,7 +2477,9 @@ export default () => {
             (() => {
               const { before, after } = findNearestValidDates(date);
               return before || after ? (
-                <DataCard sx={{ p: 2 }}>
+                <Box
+                  sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}
+                >
                   <Typography
                     sx={{
                       fontSize: "0.8125rem",
@@ -2516,15 +2518,15 @@ export default () => {
                       />
                     )}
                   </Box>
-                </DataCard>
+                </Box>
               ) : null;
             })()}
         </Box>
       ) : (
-        <DataCard
+        <Box
           sx={{
-            p: 0,
             overflow: "hidden",
+            borderBottom: `1px solid ${colors.dataBorder}`,
           }}
         >
           {/* Date banner */}
@@ -2967,7 +2969,7 @@ export default () => {
               })}
             </Box>
           </Box>
-        </DataCard>
+        </Box>
       )}
     </Box>
   );

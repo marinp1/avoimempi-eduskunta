@@ -14,7 +14,7 @@ import {
 } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { colors, commonStyles, spacing } from "#client/theme";
-import { MetricCard, PanelHeader, ToolbarCard } from "#client/theme/components";
+import { FilterBar, InlineMetric, PanelHeader } from "#client/theme/components";
 import { apiFetch } from "#client/utils/fetch";
 import { HistoricalComparison } from "./HistoricalComparison";
 import { ParticipationTable } from "./ParticipationTable";
@@ -152,28 +152,28 @@ export default function Osallistumisaktiivisuus({
             <Box>
               <Grid container spacing={spacing.sm} sx={{ mb: spacing.md }}>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <MetricCard
+                  <InlineMetric
                     label={tInsights("votingActivity.members")}
                     value={stats.totalRepresentatives.toString()}
                     icon="👥"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <MetricCard
+                  <InlineMetric
                     label={tInsights("votingActivity.average")}
                     value={`${stats.averageParticipation}%`}
                     icon="📊"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <MetricCard
+                  <InlineMetric
                     label={tInsights("votingActivity.highest")}
                     value={`${stats.highestParticipation}%`}
                     icon="🏆"
                   />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                  <MetricCard
+                  <InlineMetric
                     label={tInsights("votingActivity.lowest")}
                     value={`${stats.lowestParticipation}%`}
                     icon="⚠️"
@@ -185,7 +185,7 @@ export default function Osallistumisaktiivisuus({
 
           {/* Filters */}
           <Box>
-            <ToolbarCard
+            <FilterBar
               title={tInsights("votingActivity.filters")}
               sx={{ mb: spacing.md }}
             >
@@ -222,7 +222,7 @@ export default function Osallistumisaktiivisuus({
                   </Alert>
                 )}
               </Box>
-            </ToolbarCard>
+            </FilterBar>
           </Box>
 
           {/* Loading State */}

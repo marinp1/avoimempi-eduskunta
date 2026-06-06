@@ -24,11 +24,23 @@ const getInitialTab = (): RouteName => {
   return "";
 };
 
+const getRepresentativePersonId = (): number | null => {
+  const match = window.location.pathname.match(/^\/edustaja\/(\d+)(?:\/|$)/);
+  if (!match) return null;
+  const id = Number.parseInt(match[1]!, 10);
+  return Number.isFinite(id) && id > 0 ? id : null;
+};
+
+const Representative = React.lazy(() => import("./pages/Representative"));
+
 export const App: React.FC = () => {
   const themedColors = useThemedColors();
   const { t } = useScopedTranslation("app");
 
   const [activeTab, setActiveTab] = useState<RouteName>(getInitialTab());
+  const [representativePersonId, setRepresentativePersonId] = useState<
+    number | null
+  >(getRepresentativePersonId());
   const [dbInfo, setDbInfo] = useState<ApiRouteResponse<"/api/db-info"> | null>(
     null,
   );
@@ -83,15 +95,18 @@ export const App: React.FC = () => {
   useEffect(() => {
     const handlePopState = () => {
       setActiveTab(getInitialTab());
+      setRepresentativePersonId(getRepresentativePersonId());
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  // Scroll to top on navigation
+  // Scroll to top on navigation (only for tab-level switches, not within
+  // a representative profile where in-page anchor scrolling is used).
   useEffect(() => {
+    if (representativePersonId !== null) return;
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [activeTab]);
+  }, [activeTab, representativePersonId]);
 
   const ActivePage = routes[activeTab] ?? routes[""];
 
@@ -177,7 +192,11 @@ export const App: React.FC = () => {
             }}
           >
             <React.Suspense fallback={<PageSkeleton />}>
-              <ActivePage.Component />
+              {representativePersonId !== null ? (
+                <Representative personId={representativePersonId} />
+              ) : (
+                <ActivePage.Component />
+              )}
             </React.Suspense>
           </Box>
 

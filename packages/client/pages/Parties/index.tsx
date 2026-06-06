@@ -9,8 +9,6 @@ import {
   Box,
   Button,
   ButtonBase,
-  CardActionArea,
-  CardContent,
   Chip,
   CircularProgress,
   Drawer,
@@ -31,9 +29,9 @@ import PartyDiscipline from "#client/pages/Insights/PartyDiscipline";
 import PartyParticipation from "#client/pages/Insights/PartyParticipation";
 import { colors, commonStyles, spacing } from "#client/theme";
 import {
-  DataCard,
+  ActionLink,
   EmptyState,
-  MetricCard,
+  InlineMetric,
   PageIntro,
 } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -373,28 +371,28 @@ const Parties = () => {
         stats={
           <Grid container spacing={spacing.sm}>
             <Grid size={{ xs: 6, md: 3 }}>
-              <MetricCard
+              <InlineMetric
                 label={tParties("totalParties")}
                 value={parties.length}
                 icon={<GroupsIcon fontSize="small" />}
               />
             </Grid>
             <Grid size={{ xs: 6, md: 3 }}>
-              <MetricCard
+              <InlineMetric
                 label={tParties("totalMembers")}
                 value={summary.totalMembers}
                 icon={<AccountBalanceIcon fontSize="small" />}
               />
             </Grid>
             <Grid size={{ xs: 6, md: 3 }}>
-              <MetricCard
+              <InlineMetric
                 label={tParties("governmentBreakdown")}
                 value={`${summary.governmentParties} / ${summary.oppositionParties}`}
                 icon={<PieChartOutlineIcon fontSize="small" />}
               />
             </Grid>
             <Grid size={{ xs: 6, md: 3 }}>
-              <MetricCard
+              <InlineMetric
                 label={tParties("weightedParticipation")}
                 value={`${summary.weightedParticipation.toFixed(1)}%`}
                 icon={<InsightsIcon fontSize="small" />}
@@ -482,7 +480,7 @@ const Parties = () => {
           </Grid>
         </Grid>
 
-        <DataCard sx={{ p: { xs: 1.5, md: 2 }, mb: spacing.sm }}>
+        <Box sx={{ p: { xs: 1.5, md: 2 }, mb: spacing.sm }}>
           <Box
             sx={{
               display: "flex",
@@ -659,7 +657,7 @@ const Parties = () => {
               </TableContainer>
 
               <Box sx={{ display: { xs: "block", md: "none" } }}>
-                <DataCard sx={{ p: 0 }}>
+                <Box>
                   {visibleParties.map((party, index) => (
                     <MobilePartyCard
                       key={party.party_code}
@@ -672,11 +670,11 @@ const Parties = () => {
                       onSelect={handlePartySelect}
                     />
                   ))}
-                </DataCard>
+                </Box>
               </Box>
             </>
           )}
-        </DataCard>
+        </Box>
 
         <Box ref={profileRef}>
           {selectedParty ? (
@@ -714,84 +712,24 @@ const Parties = () => {
         >
           {tParties("analyticsSection.title")}
         </Typography>
-        <Grid container spacing={2}>
-          {[
-            {
-              key: "partyParticipation" as const,
-              icon: <AssessmentIcon sx={{ fontSize: 24 }} />,
-              title: tParties("analyticsSection.partyParticipation.title"),
-              description: tParties(
-                "analyticsSection.partyParticipation.description",
-              ),
-            },
-            {
-              key: "partyDiscipline" as const,
-              icon: <GavelIcon sx={{ fontSize: 24 }} />,
-              title: tParties("analyticsSection.partyDiscipline.title"),
-              description: tParties(
-                "analyticsSection.partyDiscipline.description",
-              ),
-            },
-          ].map((card) => (
-            <Grid key={card.key} size={{ xs: 12, sm: 6 }}>
-              <DataCard sx={{ height: "100%", p: 0 }}>
-                <CardActionArea
-                  onClick={() => setActiveInsightDrawer(card.key)}
-                  sx={{ height: "100%", borderRadius: "inherit" }}
-                >
-                  <CardContent
-                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                  >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1.25,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            color: themedColors.primary,
-                            display: "flex",
-                            alignItems: "center",
-                          }}
-                        >
-                          {card.icon}
-                        </Box>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontWeight: 600,
-                            fontSize: "0.9375rem",
-                            lineHeight: 1.3,
-                          }}
-                        >
-                          {card.title}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: themedColors.textSecondary,
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {card.description}
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </DataCard>
-            </Grid>
-          ))}
-        </Grid>
+        <Box>
+          <ActionLink
+            icon={<AssessmentIcon sx={{ fontSize: 24 }} />}
+            title={tParties("analyticsSection.partyParticipation.title")}
+            description={tParties(
+              "analyticsSection.partyParticipation.description",
+            )}
+            onClick={() => setActiveInsightDrawer("partyParticipation")}
+          />
+          <ActionLink
+            icon={<GavelIcon sx={{ fontSize: 24 }} />}
+            title={tParties("analyticsSection.partyDiscipline.title")}
+            description={tParties(
+              "analyticsSection.partyDiscipline.description",
+            )}
+            onClick={() => setActiveInsightDrawer("partyDiscipline")}
+          />
+        </Box>
       </Box>
 
       <Drawer
@@ -836,7 +774,7 @@ const HighlightCard: React.FC<{
   const visibleCode = party?.party_display_code ?? party?.party_code ?? "";
 
   return (
-    <DataCard sx={{ p: 1.5, height: "100%" }}>
+    <Box sx={{ p: 1.5, height: "100%" }}>
       <Typography
         variant="caption"
         sx={{
@@ -905,7 +843,7 @@ const HighlightCard: React.FC<{
           {tParties("noResultsDescription")}
         </Typography>
       )}
-    </DataCard>
+    </Box>
   );
 };
 

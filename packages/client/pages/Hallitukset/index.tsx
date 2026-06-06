@@ -33,7 +33,7 @@ import { spacing } from "#client/theme";
 import {
   DataCard,
   EmptyState,
-  MetricCard,
+  InlineMetric,
   PageIntro,
 } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
@@ -606,22 +606,22 @@ const GovernmentSummaryCards: React.FC<{
         gap: spacing.sm,
       }}
     >
-      <MetricCard
+      <InlineMetric
         label={t("members")}
         value={government.member_count}
         icon={<PersonIcon fontSize="small" />}
       />
-      <MetricCard
+      <InlineMetric
         label={t("governmentPartiesCount")}
         value={government.parties.length}
         icon={<GroupsIcon fontSize="small" />}
       />
-      <MetricCard
+      <InlineMetric
         label={t("durationToDate")}
         value={formatDurationFi(government.start_date, government.end_date)}
         icon={<CalendarTodayIcon fontSize="small" />}
       />
-      <MetricCard
+      <InlineMetric
         label={t("totalGovernments")}
         value={totalGovernments}
         icon={<AccountBalanceIcon fontSize="small" />}
@@ -649,7 +649,7 @@ const GovernmentMinistersSection: React.FC<{
     segmented.previous.length === 0
   ) {
     return (
-      <DataCard sx={{ p: { xs: 1.5, md: 2 } }}>
+      <Box sx={{ p: { xs: 1.5, md: 2 } }}>
         <Stack spacing={0.5} sx={{ mb: 2 }}>
           <Typography
             variant="h5"
@@ -664,12 +664,12 @@ const GovernmentMinistersSection: React.FC<{
           description={t("ministersUnavailableDescription")}
           icon={<PersonIcon fontSize="inherit" />}
         />
-      </DataCard>
+      </Box>
     );
   }
 
   return (
-    <DataCard sx={{ p: { xs: 1.5, md: 2 } }}>
+    <Box sx={{ p: { xs: 1.5, md: 2 } }}>
       <Stack spacing={0.5} sx={{ mb: 2 }}>
         <Typography
           variant="h5"
@@ -978,7 +978,7 @@ const GovernmentMinistersSection: React.FC<{
           </Box>
         )}
       </Stack>
-    </DataCard>
+    </Box>
   );
 };
 
@@ -1281,11 +1281,11 @@ export default () => {
 
         <Box id="governments-content">
           {loadingActiveGovernment ? (
-            <DataCard sx={{ p: { xs: 2, md: 3 } }}>
+            <Box sx={{ p: { xs: 2, md: 3 } }}>
               <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
                 <CircularProgress sx={{ color: tc.primary }} />
               </Box>
-            </DataCard>
+            </Box>
           ) : activeGovernmentError ? (
             <Alert severity="error">{activeGovernmentError}</Alert>
           ) : activeGovernment ? (
@@ -1323,11 +1323,11 @@ export default () => {
             />
 
             {loadingGovernments ? (
-              <DataCard sx={{ p: 3 }}>
+              <Box sx={{ p: 3 }}>
                 <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
                   <CircularProgress sx={{ color: tc.primary }} />
                 </Box>
-              </DataCard>
+              </Box>
             ) : governmentsError ? (
               <Alert severity="error">{governmentsError}</Alert>
             ) : (

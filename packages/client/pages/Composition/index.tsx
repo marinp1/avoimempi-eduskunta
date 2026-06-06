@@ -1,6 +1,5 @@
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ClearIcon from "@mui/icons-material/Clear";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import HistoryEduIcon from "@mui/icons-material/HistoryEdu";
@@ -14,10 +13,8 @@ import {
   Box,
   Button,
   CardActionArea,
-  CardContent,
   Chip,
   Drawer,
-  Grid,
   IconButton,
   InputAdornment,
   LinearProgress,
@@ -50,10 +47,10 @@ import SpeechActivity from "#client/pages/Insights/SpeechActivity";
 import TimeSeriesStatistics from "#client/pages/Insights/TimeSeriesStatistics";
 import { colors, commonStyles, spacing } from "#client/theme";
 import {
-  DataCard,
+  ActionLink,
   EmptyState,
+  FilterBar,
   PageIntro,
-  ToolbarCard,
 } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { apiFetch } from "#client/utils/fetch";
@@ -758,18 +755,14 @@ export default () => {
   }, [members, partyFilter]);
 
   const openRepresentative = React.useCallback(
-    (selection: RepresentativeSelection, nextDate?: string) => {
-      if (nextDate && nextDate !== date) {
-        setDate(nextDate);
-      }
-      setSelectedPersonId(selection.personId);
-      setSelectedRepresentative(selection);
-      syncUrl({
-        date: nextDate && nextDate !== date ? nextDate : undefined,
-        person: selection.personId,
-      });
+    (selection: RepresentativeSelection, _nextDate?: string) => {
+      // Navigate to the new dedicated representative profile page.
+      // Deep-linkable URL — replaces the legacy in-page Dialog.
+      const href = `/edustaja/${selection.personId}`;
+      window.history.pushState({}, "", href);
+      window.dispatchEvent(new PopStateEvent("popstate"));
     },
-    [date, syncUrl],
+    [],
   );
 
   const handleDateChange = React.useCallback(
@@ -925,7 +918,7 @@ export default () => {
       />
 
       <Box id="composition-content">
-        <ToolbarCard sx={{ mb: spacing.md }}>
+        <FilterBar sx={{ mb: spacing.md }}>
           <TimelineSelector
             hallituskaudet={hallituskaudet}
             selectedHallituskausi={selectedHallituskausi}
@@ -933,10 +926,16 @@ export default () => {
             todayIso={todayIso}
             onDateChange={handleDateChange}
           />
-        </ToolbarCard>
+        </FilterBar>
       </Box>
 
-      <DataCard sx={{ p: 1.5, mb: spacing.md }}>
+      <Box
+        sx={{
+          p: 1.5,
+          mb: spacing.md,
+          borderBottom: `1px solid ${themedColors.dataBorder}`,
+        }}
+      >
         <Typography
           variant="h6"
           sx={{ color: themedColors.textPrimary, fontWeight: 700 }}
@@ -1082,7 +1081,7 @@ export default () => {
             ))}
           </Box>
         )}
-      </DataCard>
+      </Box>
 
       {loading ? (
         <Box sx={{ mb: spacing.md }}>
@@ -1121,7 +1120,7 @@ export default () => {
               mb: spacing.md,
             }}
           >
-            <DataCard sx={{ p: 1.5 }}>
+            <Box sx={{ p: 1.5 }}>
               <Stack
                 direction={{ xs: "column", md: "row" }}
                 spacing={1}
@@ -1304,9 +1303,9 @@ export default () => {
                   </Typography>
                 </Box>
               </Box>
-            </DataCard>
+            </Box>
 
-            <DataCard sx={{ p: 1.5 }}>
+            <Box sx={{ p: 1.5 }}>
               <Typography
                 variant="h6"
                 sx={{
@@ -1388,11 +1387,11 @@ export default () => {
                   </CardActionArea>
                 ))}
               </Stack>
-            </DataCard>
+            </Box>
           </Box>
 
           <Box>
-            <DataCard sx={{ p: 1.5 }}>
+            <Box sx={{ p: 1.5 }}>
               <Stack
                 direction={{ xs: "column", md: "row" }}
                 spacing={1}
@@ -1729,7 +1728,7 @@ export default () => {
                   </Table>
                 </TableContainer>
               )}
-            </DataCard>
+            </Box>
           </Box>
         </>
       )}
@@ -1754,7 +1753,7 @@ export default () => {
         >
           {t("analyticsSection.title")}
         </Typography>
-        <Grid container spacing={1.5}>
+        <Stack spacing={0}>
           {[
             {
               key: "attendance" as const,
@@ -1775,77 +1774,15 @@ export default () => {
               description: t("analyticsSection.timeSeries.description"),
             },
           ].map((card) => (
-            <Grid key={card.key} size={{ xs: 12, sm: 4 }}>
-              <DataCard sx={{ height: "100%", p: 0 }}>
-                <CardActionArea
-                  onClick={() => setActiveInsightDrawer(card.key)}
-                  sx={{ height: "100%", borderRadius: "inherit" }}
-                >
-                  <CardContent
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 0.75,
-                      p: "12px !important",
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            color: themedColors.primary,
-                            display: "flex",
-                            alignItems: "center",
-                          }}
-                        >
-                          {card.icon}
-                        </Box>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontWeight: 600,
-                            lineHeight: 1.3,
-                          }}
-                        >
-                          {card.title}
-                        </Typography>
-                      </Box>
-                      <ChevronRightIcon
-                        sx={{
-                          fontSize: 16,
-                          color: themedColors.textTertiary,
-                          flexShrink: 0,
-                          ml: 1,
-                        }}
-                      />
-                    </Box>
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: themedColors.textSecondary,
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {card.description}
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-              </DataCard>
-            </Grid>
+            <ActionLink
+              key={card.key}
+              icon={card.icon}
+              title={card.title}
+              description={card.description}
+              onClick={() => setActiveInsightDrawer(card.key)}
+            />
           ))}
-        </Grid>
+        </Stack>
       </Box>
 
       <Drawer

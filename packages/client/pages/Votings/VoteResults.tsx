@@ -22,12 +22,7 @@ import {
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import {
-  DataCard,
-  EmptyState,
-  InlineSpinner,
-  PageIntro,
-} from "#client/theme/components";
+import { EmptyState, InlineSpinner, PageIntro } from "#client/theme/components";
 import { useThemedColors } from "#client/theme/ThemeContext";
 import { formatDateFi } from "#client/utils/date-time";
 import { apiFetch } from "#client/utils/fetch";
@@ -109,6 +104,7 @@ const OverviewSection: React.FC<{
   groups: VotingGroupViewModel[];
   onOpenDetails?: (v: VotingCardData) => void;
 }> = ({ title, description, groups, onOpenDetails }) => {
+  const themedColors = useThemedColors();
   const { t: tCommon } = useScopedTranslation("common");
   const [expanded, setExpanded] = React.useState(false);
 
@@ -122,7 +118,12 @@ const OverviewSection: React.FC<{
   );
 
   return (
-    <DataCard sx={{ p: { xs: 1.5, sm: 2 } }}>
+    <Box
+      sx={{
+        p: { xs: 1.5, sm: 2 },
+        borderBottom: `1px solid ${themedColors.dataBorder}`,
+      }}
+    >
       <Stack spacing={1}>
         <Box
           sx={{
@@ -167,7 +168,7 @@ const OverviewSection: React.FC<{
           </Box>
         )}
       </Stack>
-    </DataCard>
+    </Box>
   );
 };
 
@@ -759,7 +760,12 @@ export const VoteResults: React.FC<{
 
       {!loading && !error && isOverviewMode && overviewState.data && (
         <Stack spacing={2}>
-          <DataCard sx={{ p: { xs: 1.5, sm: 2 } }}>
+          <Box
+            sx={{
+              p: { xs: 1.5, sm: 2 },
+              borderBottom: `1px solid ${themedColors.dataBorder}`,
+            }}
+          >
             <Stack spacing={1.25}>
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
@@ -838,7 +844,7 @@ export const VoteResults: React.FC<{
                 </Box>
               </Stack>
             </Stack>
-          </DataCard>
+          </Box>
 
           <OverviewSection
             title={tVotings("overview.sections.recent.title")}
