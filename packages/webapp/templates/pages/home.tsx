@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import i18next from "i18next";
 import { clsx } from "clsx";
 import Kicker from "../components/kicker";
 import {
@@ -25,7 +26,12 @@ interface Props {
 export default function Home({ title, data, sessionCount }: Props) {
   return (
     <>
-      <title>{title} — Eduskuntapeili</title>
+      <title>
+        {i18next.t("common:page_title_format", {
+          title: title || "",
+          brand: i18next.t("common:brand_name"),
+        })}
+      </title>
 
       <div
         id="tl-reactive"
@@ -37,13 +43,16 @@ export default function Home({ title, data, sessionCount }: Props) {
         hx-push-url="true"
         hx-indicator="#tl-reactive"
       >
-        <div class="htmx-indicator loading-spinner">Ladataan…</div>
+        <div class="htmx-indicator loading-spinner">
+          {i18next.t("common:loading")}
+        </div>
         <div class="wrap">
           <section class="lead">
             <p class="kicker kicker--red" data-tl-kicker>
-              <span class="dot"></span>Eduskunta juuri nyt
+              <span class="dot"></span>
+              {i18next.t("home:kicker")}
             </p>
-            <h1 data-tl-headline>Avoin näkymä Suomen parlamentin toimintaan</h1>
+            <h1 data-tl-headline>{i18next.t("home:headline")}</h1>
             <div class="lead__meta">
               {data?.latestDay?.date ? (
                 <>
@@ -52,7 +61,9 @@ export default function Home({ title, data, sessionCount }: Props) {
                     return (
                       <>
                         <span>
-                          <span data-tl-sessionlabel>Viimeisin istunto</span>{" "}
+                          <span data-tl-sessionlabel>
+                            {i18next.t("home:latest_session")}
+                          </span>{" "}
                           <b data-tl-session>{esc(s?.key ?? "")}</b>
                         </span>
                         <span class="sep"></span>
@@ -63,19 +74,23 @@ export default function Home({ title, data, sessionCount }: Props) {
                           <>
                             <span class="sep"></span>
                             <span data-tl-agenda>
-                              {s.voting_count} äänestystä
+                              {i18next.t("common:voting_section_count", {
+                                count: s.voting_count,
+                              })}
                             </span>
                           </>
                         ) : null}
                         <span class="link-arrow ml-auto">
-                          <a href="/istunnot">Avaa istunnot →</a>
+                          <a href="/istunnot">
+                            {i18next.t("common:open_session")}
+                          </a>
                         </span>
                       </>
                     );
                   })()}
                 </>
               ) : (
-                <span>Edustajat · äänestykset · istunnot · asiakirjat</span>
+                <span>{i18next.t("home:fallback")}</span>
               )}
             </div>
           </section>
@@ -85,7 +100,7 @@ export default function Home({ title, data, sessionCount }: Props) {
           <HomeBody data={data} sessionCount={sessionCount} />
         ) : (
           <div class="wrap">
-            <p class="pv-40 text-muted">Ladataan tietoja…</p>
+            <p class="pv-40 text-muted">{i18next.t("common:loading_data")}</p>
           </div>
         )}
       </div>
@@ -116,12 +131,16 @@ export function HomeReactive({
       hx-push-url="true"
       hx-indicator="#tl-reactive"
     >
-      <div class="htmx-indicator loading-spinner">Ladataan…</div>
+      <div class="htmx-indicator loading-spinner">
+        {i18next.t("common:loading")}
+      </div>
       {data ? (
         <HomeBody data={data} sessionCount={sessionCount} />
       ) : (
         <div class="wrap">
-          <p style="padding:40px 0;color:var(--muted)">Ladataan tietoja…</p>
+          <p style="padding:40px 0;color:var(--muted)">
+            {i18next.t("common:loading_data")}
+          </p>
         </div>
       )}
     </div>
@@ -158,23 +177,25 @@ export function HomeBody({
       <div class="wrap">
         <div class="stat-row">
           <div class="stat">
-            <div class="stat__label">Kansanedustajat</div>
+            <div class="stat__label">{i18next.t("home:stat_mps")}</div>
             <div class="stat__value">{comp.totalMembers}</div>
           </div>
           <div class="stat">
-            <div class="stat__label">Hallitus</div>
+            <div class="stat__label">{i18next.t("common:government")}</div>
             <div class="stat__value hall" data-tl-hall>
               {govTotal}
             </div>
           </div>
           <div class="stat">
-            <div class="stat__label">Oppositio</div>
+            <div class="stat__label">{i18next.t("common:opposition")}</div>
             <div class="stat__value opp" data-tl-opp>
               {oppTotal}
             </div>
           </div>
           <div class="stat">
-            <div class="stat__label">Istuntoja kaudella</div>
+            <div class="stat__label">
+              {i18next.t("home:stat_sessions_term")}
+            </div>
             <div class="stat__value" data-tl-statval>
               {sessionCount ?? "—"}
             </div>
@@ -186,7 +207,7 @@ export function HomeBody({
 
       <div class="home-main wrap">
         <div>
-          <Kicker text="Poliittinen kokoonpano" />
+          <Kicker text={i18next.t("home:composition_kicker")} />
 
           <div class="bloc-bar mt-18">
             {govParties.map((p) => (
@@ -208,15 +229,17 @@ export function HomeBody({
           <div class="bloc-legend">
             <span class="item">
               <span class="swatch" style="background:var(--hall)"></span>
-              Hallitus <b>{govTotal}</b>
+              {i18next.t("home:gov_bloc_label")} <b>{govTotal}</b>
             </span>
             <span class="item">
               <span class="swatch" style="background:var(--opp)"></span>
-              Oppositio <b>{oppTotal}</b>
+              {i18next.t("home:opp_bloc_label")} <b>{oppTotal}</b>
             </span>
             <span class="note">
-              {comp.totalMembers} paikkaa ·{" "}
-              {govParties.length + oppParties.length} puoluetta
+              {i18next.t("home:composition_seats_parties", {
+                seats: comp.totalMembers,
+                parties: govParties.length + oppParties.length,
+              })}
             </span>
           </div>
 
@@ -224,7 +247,10 @@ export function HomeBody({
             {visParties.map((p) => {
               const color = partyColor(p.party_display_code);
               const name = partyShortName(p.party_display_code);
-              const bloc = p.is_in_government === 1 ? "Hallitus" : "Oppositio";
+              const bloc =
+                p.is_in_government === 1
+                  ? i18next.t("home:gov_bloc_label")
+                  : i18next.t("home:opp_bloc_label");
               const widthPct = pct(p.member_count, comp.totalMembers);
               return (
                 <tr>
@@ -251,18 +277,25 @@ export function HomeBody({
           {closeVotes.length > 0 && (
             <div class="psec mt-32">
               <div class="psec__h">
-                <h2>Tiukimmat äänestykset</h2>
-                <small class="kicker">vaalikausi tähän mennessä</small>
+                <h2>{i18next.t("home:close_votes_title")}</h2>
+                <small class="kicker">
+                  {i18next.t("home:close_votes_subtitle")}
+                </small>
               </div>
               <div class="dissent">
                 {closeVotes.map((v) => {
                   const passed = v.n_yes >= v.n_no;
-                  const resultText = `${v.n_yes} JAA – ${v.n_no} EI`;
+                  const resultText = i18next.t("common:voting_result_format", {
+                    yes: v.n_yes,
+                    no: v.n_no,
+                  });
                   const voteTitle = esc(v.title || v.section_title);
                   return (
                     <div class="vote-row">
                       <div class={clsx("vote-row__badge", { jaa: passed })}>
-                        {passed ? "JAA" : "EI"}
+                        {passed
+                          ? i18next.t("common:yes_uppercase")
+                          : i18next.t("common:no_uppercase")}
                       </div>
                       <div>
                         <div class="vote-row__title">{voteTitle}</div>
@@ -275,7 +308,9 @@ export function HomeBody({
                         <div class="r-line">{resultText}</div>
                         <div class="r-line">
                           <span class={clsx(passed ? "pass" : "fail")}>
-                            {v.margin} ään. ero
+                            {i18next.t("home:vote_margin", {
+                              margin: v.margin,
+                            })}
                           </span>
                         </div>
                       </div>
@@ -291,7 +326,7 @@ export function HomeBody({
           {speakers.length > 0 && (
             <div class="psec">
               <div class="psec__h">
-                <h2>Eniten puheenvuoroja</h2>
+                <h2>{i18next.t("home:top_speakers")}</h2>
               </div>
               <div class="rail mt-12">
                 {speakers.map((s) => {
@@ -310,7 +345,10 @@ export function HomeBody({
                         {name}
                       </div>
                       <div class="rail__meta">
-                        {shortParty} · {s.speech_count} puheenvuoroa
+                        {shortParty} ·{" "}
+                        {i18next.t("home:speech_count", {
+                          count: s.speech_count,
+                        })}
                       </div>
                     </div>
                   );

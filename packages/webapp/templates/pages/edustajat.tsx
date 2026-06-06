@@ -2,6 +2,7 @@
 import { clsx } from "clsx";
 import type { RosterRow } from "#shared-types";
 import Kicker from "../components/kicker";
+import i18next from "i18next";
 import {
   type RosterParams,
   buildBlocBar,
@@ -36,16 +37,18 @@ export default function Edustajat({
 
   return (
     <>
-      <title>{title} — Eduskuntapeili</title>
+      <title>
+        {i18next.t("common:page_title_format", {
+          title: title || "",
+          brand: i18next.t("common:brand_name"),
+        })}
+      </title>
 
       <div class="wrap">
         <section class="page-head">
-          <Kicker text="Kansanedustajat" />
-          <h1>{allRows.length} kansanedustajaa</h1>
-          <p class="sub">
-            Nykyisen vaalikauden edustajat. Suodata ryhmän tai blokin mukaan tai
-            hae nimellä ja vaalipiirillä.
-          </p>
+          <Kicker text={i18next.t("edustajat:kicker")} />
+          <h1>{i18next.t("edustajat:heading", { count: allRows.length })}</h1>
+          <p class="sub">{i18next.t("edustajat:subtitle")}</p>
         </section>
       </div>
 
@@ -62,13 +65,15 @@ export default function Edustajat({
         <div class="bloc-legend">
           <span class="item">
             <span class="swatch" style="background:var(--hall)"></span>
-            Hallitus <b>{bloc.govTotal}</b>
+            {i18next.t("common:government")} <b>{bloc.govTotal}</b>
           </span>
           <span class="item">
             <span class="swatch" style="background:var(--opp)"></span>
-            Oppositio <b>{bloc.oppTotal}</b>
+            {i18next.t("common:opposition")} <b>{bloc.oppTotal}</b>
           </span>
-          <span class="note">{bloc.total} edustajaa</span>
+          <span class="note">
+            {i18next.t("edustajat:count", { count: bloc.total })}
+          </span>
         </div>
       </div>
 
@@ -95,7 +100,7 @@ export default function Edustajat({
               name="q"
               type="text"
               value={esc(q)}
-              placeholder="Hae nimellä tai vaalipiirillä…"
+              placeholder={i18next.t("edustajat:search_placeholder")}
               hx-get="/edustajat"
               hx-trigger="input changed delay:300ms"
               hx-target="#roster-content"
@@ -105,7 +110,10 @@ export default function Edustajat({
             />
           </label>
           <span class="count" id="mp-count">
-            <b>{filtered.length}</b> / {allRows.length} edustajaa
+            {i18next.t("edustajat:count_of", {
+              filtered: filtered.length,
+              total: allRows.length,
+            })}
           </span>
         </div>
         <input
@@ -123,7 +131,9 @@ export default function Edustajat({
       </div>
 
       <div id="roster-content" class="wrap loading-overlay">
-        <div class="htmx-indicator loading-spinner">Ladataan…</div>
+        <div class="htmx-indicator loading-spinner">
+          {i18next.t("common:loading")}
+        </div>
         <RosterContent allRows={allRows} filtered={filtered} params={params} />
       </div>
     </>

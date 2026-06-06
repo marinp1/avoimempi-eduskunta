@@ -11,6 +11,7 @@ import { assetVersion } from "./assets";
 import { formatFi, isHtmx, getRouteParam } from "#shared-helpers";
 export { formatFi, isHtmx, getRouteParam };
 import type { WebappDeps } from "./deps";
+import i18next from "i18next";
 
 const PEILI_DATE_COOKIE = "peili_date";
 const PEILI_PERIOD_COOKIE = "peili_period";
@@ -138,8 +139,18 @@ export function getTimelineData(
     tickSource === "composition"
       ? sessionRepo.fetchCompositionChangeDates().map((r) => {
           const parts: string[] = [];
-          if (r.joined > 0) parts.push(`${r.joined} liittyi`);
-          if (r.left_count > 0) parts.push(`${r.left_count} jätti`);
+          if (r.joined > 0)
+            parts.push(
+              i18next.t("components:composition.tick_joined", {
+                count: r.joined,
+              }),
+            );
+          if (r.left_count > 0)
+            parts.push(
+              i18next.t("components:composition.tick_left", {
+                count: r.left_count,
+              }),
+            );
           return {
             d: r.date,
             id: parts.join(", "),
@@ -234,7 +245,7 @@ export function personNotFoundResponse(req: Request, path: string): Response {
     ? fragment
     : renderFullPage(fragment, {
         activePath: "/edustajat",
-        title: "Sivua ei löydy",
+        title: i18next.t("edustajat:profile.not_found"),
         assetVersion,
       });
   return new Response(body, {
@@ -247,10 +258,10 @@ export function personNotFoundResponse(req: Request, path: string): Response {
 }
 
 function notFoundFragment(path: string): string {
-  return `<title>Sivua ei löydy — Eduskuntapeili</title>
+  return `<title>${i18next.t("common:page_title_format", { title: i18next.t("errors:not_found_title"), brand: i18next.t("common:brand_name") })}</title>
 <section class="page-head wrap">
-    <h1>Sivua ei löydy</h1>
-    <p class="sub">Polkua <code>${esc(path)}</code> ei löydy.</p>
-    <p><a href="/">Palaa etusivulle</a></p>
+    <h1>${i18next.t("errors:not_found_title")}</h1>
+    <p class="sub">${i18next.t("errors:not_found_desc", { path: esc(path) })}</p>
+    <p><a href="/">${i18next.t("errors:back_to_home")}</a></p>
 </section>`;
 }

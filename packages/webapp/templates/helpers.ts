@@ -1,5 +1,8 @@
 import type { RosterRow } from "#shared-types";
 import { clsx } from "clsx";
+import i18next from "i18next";
+
+export { i18next };
 
 export type { RosterRow };
 export { partyColor, partyShortName } from "./components/party";

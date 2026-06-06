@@ -2,6 +2,7 @@
 import { clsx } from "clsx";
 import Kicker from "../components/kicker";
 import { esc } from "../helpers";
+import i18next from "i18next";
 import type { AanestyksetData, VoteRow } from "./aanestykset-view-model";
 
 const NAV = {
@@ -20,15 +21,22 @@ export default function Aanestykset({ title, data }: Props) {
 
   return (
     <>
-      <title>{title} — Eduskuntapeili</title>
+      <title>
+        {i18next.t("common:page_title_format", {
+          title: title || "",
+          brand: i18next.t("common:brand_name"),
+        })}
+      </title>
 
       <div class="wrap">
         <section class="page-head">
-          <Kicker text="Äänestykset" />
-          <h1>Äänestykset</h1>
+          <Kicker text={i18next.t("aanestykset:kicker")} />
+          <h1>{i18next.t("aanestykset:heading")}</h1>
           <p class="sub">
-            Täysistuntojen äänestystulokset ·{" "}
-            <b style="color:var(--ink)">{d.totalCount}</b> äänestystä
+            {i18next.t("aanestykset:subtitle")} ·{" "}
+            <b style="color:var(--ink)">
+              {i18next.t("aanestykset:count", { count: d.totalCount })}
+            </b>
           </p>
         </section>
 
@@ -39,7 +47,7 @@ export default function Aanestykset({ title, data }: Props) {
               id="aanestys-search"
               type="search"
               name="q"
-              placeholder="Hae äänestyksellä, asiakirjalla tai istunnolla…"
+              placeholder={i18next.t("aanestykset:search_placeholder")}
               hx-get="/aanestykset"
               hx-trigger="keyup changed delay:300ms"
               hx-target="#main-content"
@@ -48,35 +56,39 @@ export default function Aanestykset({ title, data }: Props) {
             />
           </label>
           <span class="count">
-            <b id="aanestys-count">{d.totalCount}</b> äänestystä
+            <b id="aanestys-count">
+              {i18next.t("aanestykset:count", { count: d.totalCount })}
+            </b>
           </span>
         </div>
 
         <div class="fchips mt-14">
           <button type="button" class="fchip is-active" data-filter="all">
-            Kaikki
+            {i18next.t("aanestykset:filter_all")}
           </button>
           <button type="button" class="fchip" data-filter="lait">
-            Lait
+            {i18next.t("aanestykset:filter_laws")}
           </button>
           <button type="button" class="fchip" data-filter="selonteot">
-            Selonteot
+            {i18next.t("aanestykset:filter_reports")}
           </button>
           <button type="button" class="fchip" data-filter="luottamus">
-            Luottamusäänestykset
+            {i18next.t("aanestykset:filter_confidence")}
           </button>
           <button type="button" class="fchip" data-filter="tiukat">
-            Tiukat
+            {i18next.t("aanestykset:filter_tight")}
           </button>
         </div>
 
         {d.groups.map((group) => (
           <div class="vgroup">
             <div class="week-head">
-              <span class="week-head__k">Istunto</span>
+              <span class="week-head__k">
+                {i18next.t("aanestykset:group_header")}
+              </span>
               <span class="week-head__t">{esc(group.sessionDateLabel)}</span>
               <span class="week-head__meta">
-                {group.rows.length} äänestystä
+                {i18next.t("aanestykset:count", { count: group.rows.length })}
               </span>
             </div>
             <div class="vrow-list">
@@ -89,17 +101,19 @@ export default function Aanestykset({ title, data }: Props) {
 
         {d.groups.length === 0 && (
           <div style="text-align:center;color:var(--muted);padding:40px 0">
-            Ei äänestyksiä näillä hakuehdoilla.
+            {i18next.t("aanestykset:none_found")}
           </div>
         )}
 
         <div class="source-note mt-32">
-          <span>Lähde:</span>
+          <span>{i18next.t("common:source")}</span>
           <span class="dset">
             Eduskunnan avoin data · SaliDBAanestys + Vote
           </span>
           <span>·</span>
-          <span class="fresh">haettu {d.fetchedAt}</span>
+          <span class="fresh">
+            {i18next.t("common:fetched", { timestamp: d.fetchedAt })}
+          </span>
         </div>
       </div>
     </>

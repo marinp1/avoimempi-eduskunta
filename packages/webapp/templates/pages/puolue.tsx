@@ -4,6 +4,7 @@ import Kicker from "../components/kicker";
 import Tag from "../components/tag";
 import { esc } from "../helpers";
 import type { PartyDetailData } from "./puolue-view-model";
+import i18next from "i18next";
 
 const NAV = {
   "hx-target": "#main-content",
@@ -22,7 +23,12 @@ export default function Puolue({ title, data }: Props) {
 
   return (
     <>
-      <title>{title} — Eduskuntapeili</title>
+      <title>
+        {i18next.t("common:page_title_format", {
+          title: title || "",
+          brand: i18next.t("common:brand_name"),
+        })}
+      </title>
 
       <div class="wrap">
         <div style="padding-top:16px;font-size:13px;color:var(--muted)">
@@ -32,7 +38,7 @@ export default function Puolue({ title, data }: Props) {
             hx-get="/puolueet"
             {...NAV}
           >
-            Puolueet
+            {i18next.t("puolueet:detail.breadcrumb")}
           </a>
           &nbsp;›&nbsp; <span>{esc(p.name)}</span>
         </div>
@@ -47,28 +53,42 @@ export default function Puolue({ title, data }: Props) {
           <div class="bio-head__main">
             <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">
               <Tag
-                text={p.bloc === "government" ? "Hallitus" : "Oppositio"}
+                text={
+                  p.bloc === "government"
+                    ? i18next.t("common:government")
+                    : i18next.t("common:opposition")
+                }
                 modifier={p.bloc === "government" ? "hall" : "opp"}
               />
             </div>
             <h1 class="bio-name">{esc(p.name)}</h1>
             <div class="bio-meta">
-              <span>{esc(p.name)} eduskuntaryhmä</span>
+              <span>
+                {esc(p.name)} {i18next.t("puolueet:detail.mp_group_suffix")}
+              </span>
               <span class="sep"></span>
               {p.chairName && (
                 <>
                   <span>
-                    pj. <b style="color:var(--ink)">{esc(p.chairName)}</b>
+                    {i18next.t("puolueet:chair_prefix")}{" "}
+                    <b style="color:var(--ink)">{esc(p.chairName)}</b>
                   </span>
                   <span class="sep"></span>
                 </>
               )}
               <span>
-                {p.seatCount} / {data.totalSeats} paikkaa
+                {i18next.t("puolueet:seat_ratio_format", {
+                  own: p.seatCount,
+                  total: data.totalSeats,
+                })}
               </span>
               <span class="sep"></span>
               {p.govtSince && (
-                <span>hallituksessa vuodesta {esc(p.govtSince)}</span>
+                <span>
+                  {i18next.t("puolueet:detail.in_government_since", {
+                    year: esc(p.govtSince),
+                  })}
+                </span>
               )}
             </div>
           </div>
@@ -76,27 +96,27 @@ export default function Puolue({ title, data }: Props) {
 
         <div class="bio-stats">
           <div class="bio-stat">
-            <div class="k">Paikkoja eduskunnassa</div>
+            <div class="k">{i18next.t("puolueet:detail.stat_seats")}</div>
             <div class="v">
               {p.seatCount} <small>{p.seatShare}</small>
             </div>
           </div>
           <div class="bio-stat">
-            <div class="k">Ryhmäkuri äänestyksissä</div>
+            <div class="k">{i18next.t("puolueet:detail.stat_cohesion")}</div>
             <div class="v">
               {coh.pct != null ? coh.pct : "–"}
               {coh.pct != null ? <small>%</small> : null}
             </div>
           </div>
           <div class="bio-stat">
-            <div class="k">Läsnäolo keskimäärin</div>
+            <div class="k">{i18next.t("puolueet:detail.stat_attendance")}</div>
             <div class="v">
               {p.avgAttendance ?? "–"}
               {p.avgAttendance ? <small>%</small> : null}
             </div>
           </div>
           <div class="bio-stat">
-            <div class="k">Edustajien ikä ka.</div>
+            <div class="k">{i18next.t("puolueet:detail.stat_avg_age")}</div>
             <div class="v">
               {p.avgAge ?? "–"}
               {p.avgAge ? <small>v</small> : null}
@@ -109,33 +129,39 @@ export default function Puolue({ title, data }: Props) {
             <div class="ai">
               <div class="ai__head">
                 <span class="ai__spark">✦</span>
-                <span class="ai__label">Tekoälykooste · millainen ryhmä</span>
+                <span class="ai__label">
+                  {i18next.t("puolueet:detail.ai_summary_label")}
+                </span>
               </div>
               <p class="ai__body">
-                Tekoälykoostetta ei ole vielä saatavilla tälle ryhmälle.
+                {i18next.t("puolueet:detail.ai_not_available")}
               </p>
               <div class="ai__foot">
-                <span>Koneellisesti tuotettu kooste ryhmän profiilista.</span>
+                <span>{i18next.t("puolueet:detail.ai_disclaimer")}</span>
               </div>
             </div>
 
             {coh.pct != null && (
               <section class="psec mt-28">
                 <Kicker
-                  text="Ryhmäkuri · äänestysyhtenäisyys"
+                  text={i18next.t("puolueet:detail.cohesion_kicker")}
                   modifier="blue"
                   dot
                 />
                 <div class="psec__h">
-                  <h2>Kuinka yhtenäisesti ryhmä äänestää</h2>
+                  <h2>{i18next.t("puolueet:detail.cohesion_title")}</h2>
                   {coh.totalVotings != null && (
-                    <span class="meta">{coh.totalVotings} äänestystä</span>
+                    <span class="meta">
+                      {i18next.t("puolueet:detail.cohesion_vote_count", {
+                        count: coh.totalVotings,
+                      })}
+                    </span>
                   )}
                 </div>
                 <p class="psec__intro">{esc(coh.label)}</p>
                 <div class="vote-bar mt-14">
                   <span class="v-jaa" style={`width:${coh.pct}%`}>
-                    Yhtenäinen {coh.pct}%
+                    {i18next.t("puolueet:detail.cohesion_unified")} {coh.pct}%
                   </span>
                   <span class="v-ei" style={`width:${100 - coh.pct}%`}></span>
                 </div>
@@ -143,14 +169,18 @@ export default function Puolue({ title, data }: Props) {
                   <div class="vl">
                     <span class="sw" style="background:var(--hall)"></span>
                     <div>
-                      <span class="vk">Yhtenäinen</span>
+                      <span class="vk">
+                        {i18next.t("puolueet:detail.cohesion_unified")}
+                      </span>
                       <span class="vv">{coh.pct}%</span>
                     </div>
                   </div>
                   <div class="vl">
                     <span class="sw" style="background:var(--red)"></span>
                     <div>
-                      <span class="vk">Hajaantunut</span>
+                      <span class="vk">
+                        {i18next.t("puolueet:detail.cohesion_split")}
+                      </span>
                       <span class="vv">{100 - coh.pct}%</span>
                     </div>
                   </div>
@@ -162,7 +192,7 @@ export default function Puolue({ title, data }: Props) {
                       style="font-size:14.5px;color:var(--body);line-height:1.5"
                       class="mt-22"
                     >
-                      Eniten hajaannusta aiheuttaneet äänestykset:
+                      {i18next.t("puolueet:detail.cohesion_most_split")}
                     </p>
                     {data.splitVotes.map((v) => (
                       <a
@@ -189,7 +219,11 @@ export default function Puolue({ title, data }: Props) {
             )}
 
             <section class="psec mt-28">
-              <Kicker text="Jäsenet · kansanedustajat" modifier="blue" dot />
+              <Kicker
+                text={i18next.t("puolueet:detail.members_kicker")}
+                modifier="blue"
+                dot
+              />
               <div class="mp-list">
                 {data.members.map((m) => (
                   <a
@@ -207,7 +241,9 @@ export default function Puolue({ title, data }: Props) {
                     <span class="mp-party">
                       {esc(m.partyCode)}{" "}
                       <small>
-                        {p.bloc === "government" ? "Hallitus" : "Oppositio"}
+                        {p.bloc === "government"
+                          ? i18next.t("common:government")
+                          : i18next.t("common:opposition")}
                       </small>
                     </span>
                     <span class="mp-district">{esc(m.district)}</span>
@@ -231,7 +267,7 @@ export default function Puolue({ title, data }: Props) {
             {data.committeeChairs.length > 0 && (
               <section class="psec mt-28">
                 <Kicker
-                  text="Valiokunnat · puheenjohtajuudet"
+                  text={i18next.t("puolueet:detail.committees_kicker")}
                   modifier="blue"
                   dot
                 />
@@ -249,32 +285,41 @@ export default function Puolue({ title, data }: Props) {
 
           <div>
             <section class="psec">
-              <Kicker text="Faktat" modifier="blue" dot />
+              <Kicker
+                text={i18next.t("puolueet:detail.facts_kicker")}
+                modifier="blue"
+                dot
+              />
               <dl class="mt-16 flex-col-g12">
                 <div>
                   <dt style="font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">
-                    Sukupuolijakauma
+                    {i18next.t("puolueet:detail.facts_gender")}
                   </dt>
                   <dd style="font-size:14px;color:var(--ink);margin:4px 0 0">
-                    {p.femaleCount} naista · {p.maleCount} miestä
+                    {i18next.t("puolueet:detail.facts_gender_format", {
+                      female: p.femaleCount,
+                      male: p.maleCount,
+                    })}
                   </dd>
                 </div>
                 <div>
                   <dt style="font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">
-                    Keski-ikä
+                    {i18next.t("puolueet:detail.facts_avg_age")}
                   </dt>
                   <dd style="font-size:14px;color:var(--ink);margin:4px 0 0">
-                    {p.avgAge ?? "–"} vuotta
+                    {i18next.t("puolueet:detail.facts_age_format", {
+                      age: p.avgAge ?? "–",
+                    })}
                   </dd>
                 </div>
                 <div>
                   <dt style="font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">
-                    Asema
+                    {i18next.t("puolueet:detail.facts_status")}
                   </dt>
                   <dd style="font-size:14px;color:var(--ink);margin:4px 0 0">
                     {p.bloc === "government"
-                      ? "Hallituspuolue"
-                      : "Oppositiopuolue"}
+                      ? i18next.t("puolueet:detail.status_gov")
+                      : i18next.t("puolueet:detail.status_opp")}
                   </dd>
                 </div>
               </dl>
@@ -282,7 +327,11 @@ export default function Puolue({ title, data }: Props) {
 
             {data.topics.length > 0 && (
               <section class="psec mt-28">
-                <Kicker text="Aiheet · mistä puhuu" modifier="blue" dot />
+                <Kicker
+                  text={i18next.t("puolueet:detail.topics_kicker")}
+                  modifier="blue"
+                  dot
+                />
                 <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:14px">
                   {data.topics.map((t) => (
                     <span class="topic-tag">{esc(t)}</span>
@@ -293,7 +342,11 @@ export default function Puolue({ title, data }: Props) {
 
             {data.recentSpeeches.length > 0 && (
               <section class="psec mt-28">
-                <Kicker text="Viimeisimmät puheenvuorot" modifier="blue" dot />
+                <Kicker
+                  text={i18next.t("puolueet:detail.recent_speeches_kicker")}
+                  modifier="blue"
+                  dot
+                />
                 {data.recentSpeeches.map((sp) => (
                   <div class="spoke-row">
                     <div class="st">{esc(sp.title)}</div>
@@ -308,12 +361,14 @@ export default function Puolue({ title, data }: Props) {
         </div>
 
         <div class="source-note mt-32">
-          <span>Lähde:</span>
+          <span>{i18next.t("common:source")}</span>
           <span class="dset">
             Eduskunnan avoin data · MemberOfParliament + Voting
           </span>
           <span>·</span>
-          <span class="fresh">haettu {data.fetchedAt}</span>
+          <span class="fresh">
+            {i18next.t("common:fetched", { timestamp: data.fetchedAt })}
+          </span>
         </div>
       </div>
     </>

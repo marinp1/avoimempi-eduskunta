@@ -1,0 +1,20 @@
+{
+  "title": "Etusivu",
+  "kicker": "Eduskunta juuri nyt",
+  "headline": "Avoin näkymä Suomen parlamentin toimintaan",
+  "latest_session": "Viimeisin istunto",
+  "fallback": "Edustajat · äänestykset · istunnot · asiakirjat",
+  "stat_mps": "Kansanedustajat",
+  "stat_government": "Hallitus",
+  "stat_opposition": "Oppositio",
+  "stat_sessions_term": "Istuntoja kaudella",
+  "composition_kicker": "Poliittinen kokoonpano",
+  "composition_seats_parties": "{{seats}} paikkaa · {{parties}} puoluetta",
+  "close_votes_title": "Tiukimmat äänestykset",
+  "close_votes_subtitle": "vaalikausi tähän mennessä",
+  "vote_margin": "{{margin}} ään. ero",
+  "top_speakers": "Eniten puheenvuoroja",
+  "speech_count": "{{count}} puheenvuoroa",
+  "gov_bloc_label": "Hallitus",
+  "opp_bloc_label": "Oppositio"
+}

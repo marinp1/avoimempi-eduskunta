@@ -1,5 +1,6 @@
 /** @jsxImportSource ../../src/jsx */
 import { clsx } from "clsx";
+import i18next from "i18next";
 import Kicker from "../components/kicker";
 import { esc } from "../helpers";
 
@@ -39,47 +40,47 @@ export interface DocKindChip {
 export const DOC_KIND_CHIPS: DocKindChip[] = [
   {
     key: "kk",
-    chipLabel: "Kirjalliset kysymykset",
+    chipLabel: i18next.t("asiakirjat:chip_labels.kk"),
     dotColor: "var(--blue)",
   },
   {
     key: "suullinen",
-    chipLabel: "Suulliset kysymykset",
+    chipLabel: i18next.t("asiakirjat:chip_labels.suullinen"),
     dotColor: "var(--blue)",
   },
   {
     key: "valikysymys",
-    chipLabel: "Välikysymykset",
+    chipLabel: i18next.t("asiakirjat:chip_labels.valikysymys"),
     dotColor: "var(--red)",
   },
   {
     key: "vastaus",
-    chipLabel: "Kirj. vastaukset",
+    chipLabel: i18next.t("asiakirjat:chip_labels.vastaus"),
     dotColor: "var(--hall)",
   },
   {
     key: "he",
-    chipLabel: "Hallituksen esitykset",
+    chipLabel: i18next.t("asiakirjat:chip_labels.he"),
     dotColor: "var(--opp)",
   },
   {
     key: "aloite",
-    chipLabel: "Lakialoitteet",
+    chipLabel: i18next.t("asiakirjat:chip_labels.aloite"),
     dotColor: "var(--hall)",
   },
   {
     key: "mietinto",
-    chipLabel: "Mietinnöt",
+    chipLabel: i18next.t("asiakirjat:chip_labels.mietinto"),
     dotColor: "var(--muted)",
   },
   {
     key: "asiantuntija",
-    chipLabel: "Asiantuntijalausunnot",
+    chipLabel: i18next.t("asiakirjat:chip_labels.asiantuntija"),
     dotColor: "var(--faint)",
   },
   {
     key: "vastaus-edk",
-    chipLabel: "Eduskunnan vastaukset",
+    chipLabel: i18next.t("asiakirjat:chip_labels.vastaus-edk"),
     dotColor: "var(--hall)",
   },
 ];
@@ -94,17 +95,18 @@ interface Props {
 export default function Asiakirjat({ title, data, query, kind }: Props) {
   return (
     <>
-      <title>{title} — Eduskuntapeili</title>
+      <title>
+        {i18next.t("common:page_title_format", {
+          title: title || "",
+          brand: i18next.t("common:brand_name"),
+        })}
+      </title>
 
       <div class="wrap">
         <section class="page-head">
-          <Kicker text="Asiakirjat" />
-          <h1>Asiakirjat</h1>
-          <p class="sub">
-            Lakiehdotukset, kirjalliset kysymykset, aloitteet ja muut
-            parlamenttiasiakirjat. Jokainen luku avautuu alkuperäiseen
-            asiakirjaan ja sen käsittelytietoihin.
-          </p>
+          <Kicker text={i18next.t("asiakirjat:kicker")} />
+          <h1>{i18next.t("asiakirjat:heading")}</h1>
+          <p class="sub">{i18next.t("asiakirjat:subtitle")}</p>
         </section>
       </div>
 
@@ -136,7 +138,9 @@ function AsiakirjatList({
       hx-push-url="true"
       hx-indicator="#tl-reactive"
     >
-      <div class="htmx-indicator loading-spinner">Ladataan…</div>
+      <div class="htmx-indicator loading-spinner">
+        {i18next.t("common:loading")}
+      </div>
       <div class="toolbar">
         <label class="search">
           <span class="ic">⌕</span>
@@ -144,7 +148,7 @@ function AsiakirjatList({
             id="doc-search"
             type="text"
             autocomplete="off"
-            placeholder="Hae asiakirjoista — tunnus, otsikko tai aihe…"
+            placeholder={i18next.t("asiakirjat:search_placeholder")}
             name="q"
             value={query ?? ""}
             hx-get={`/asiakirjat${activeKind ? `?kind=${activeKind}` : ""}`}
@@ -158,7 +162,8 @@ function AsiakirjatList({
         </label>
         {data && (
           <span class="count">
-            <b id="doc-count">{data.totalCount}</b> asiakirjaa
+            <b id="doc-count">{data.totalCount}</b>{" "}
+            {i18next.t("asiakirjat:count", { count: data.totalCount })}
           </span>
         )}
       </div>
@@ -168,7 +173,7 @@ function AsiakirjatList({
           class={clsx("fchip", { "is-active": !activeKind })}
           href="/asiakirjat"
         >
-          Kaikki
+          {i18next.t("common:all")}
         </a>
         {DOC_KIND_CHIPS.map((chip) => (
           <a
@@ -182,7 +187,9 @@ function AsiakirjatList({
       </div>
 
       <div id="doc-root" class="loading-overlay">
-        <div class="htmx-indicator loading-spinner">Ladataan…</div>
+        <div class="htmx-indicator loading-spinner">
+          {i18next.t("common:loading")}
+        </div>
         {data ? (
           data.rows.length > 0 ? (
             <div class="doc-list">
@@ -195,7 +202,7 @@ function AsiakirjatList({
               id="doc-empty"
               style="display:block;text-align:center;color:var(--muted);padding:40px 0"
             >
-              Ei asiakirjoja näillä hakuehdoilla.
+              {i18next.t("asiakirjat:none_found")}
             </div>
           )
         ) : (
@@ -203,7 +210,7 @@ function AsiakirjatList({
             id="doc-empty"
             style="display:block;text-align:center;color:var(--muted);padding:40px 0"
           >
-            Ladataan…
+            {i18next.t("common:loading")}
           </div>
         )}
       </div>
@@ -211,13 +218,15 @@ function AsiakirjatList({
       {data && (
         <div class="wrap" style="padding:0">
           <div class="source-note">
-            <span>Lähde:</span>
+            <span>{i18next.t("common:source")}</span>
             <span class="dset">
               Eduskunnan avoin data · VaskiData
               {activeKind ? ` · ${currentChipLabel(activeKind)}` : ""}
             </span>
             <span>·</span>
-            <span class="fresh">haettu {data.fetchedAt}</span>
+            <span class="fresh">
+              {i18next.t("common:fetched", { timestamp: data.fetchedAt })}
+            </span>
             <span>·</span>
             <span
               class="cite verify"
@@ -232,9 +241,9 @@ function AsiakirjatList({
               data-fetched={data.fetchedAt}
               data-chain="avoindata.eduskunta.fi > Asiakirjat"
               data-url="https://avoindata.eduskunta.fi/"
-              data-orig="Avaa aineisto"
+              data-orig={i18next.t("common:open_original")}
             >
-              varmenna jäljite
+              {i18next.t("common:verify_trace")}
             </span>
           </div>
         </div>
@@ -284,7 +293,9 @@ function DocumentRowComponent({ row }: { row: DocumentRow }) {
         {row.statusLabel && (
           <span class={clsx("spill", row.statusClass)}>{row.statusLabel}</span>
         )}
-        {row.hasDetail && <span class="sit-go">Avaa →</span>}
+        {row.hasDetail && (
+          <span class="sit-go">{i18next.t("common:open")}</span>
+        )}
       </div>
     </>
   );

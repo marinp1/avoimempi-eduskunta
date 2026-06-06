@@ -7,6 +7,7 @@ import {
   fetchedAt,
 } from "../../../webapp/templates/helpers";
 import type { WebappDeps } from "./deps";
+import i18next from "i18next";
 
 const MONTH_NAMES = [
   "tammikuuta",
@@ -53,9 +54,9 @@ export function createAanestysRoute(deps: WebappDeps) {
         if (!voting) {
           return page(
             req,
-            `<section class="page-hero"><h1>Äänestystä ei löytynyt</h1><p>Äänestystä tunnuksella ${id} ei löytynyt.</p></section>`,
+            `<section class="page-hero"><h1>${i18next.t("common:vote_not_found")}</h1><p>${i18next.t("common:vote_not_found_id", { id })}</p></section>`,
             `/aanestys/${id}`,
-            "Äänestystä ei löytynyt",
+            i18next.t("common:vote_not_found"),
             tlData,
           );
         }
@@ -136,7 +137,9 @@ export function createAanestysRoute(deps: WebappDeps) {
             absentPct: nTotal > 0 ? (nAbsent / nTotal) * 100 : 0,
             outcome: nYes > nNo ? "ok" : "no",
             outcomeLabel:
-              nYes > nNo ? "Ehdotus hyväksyttiin" : "Ehdotus hylättiin",
+              nYes > nNo
+                ? i18next.t("aanestykset:outcome_approved")
+                : i18next.t("aanestykset:outcome_rejected"),
             yesProposition: null,
             noProposition: null,
           },
@@ -181,8 +184,8 @@ export function createAanestysRoute(deps: WebappDeps) {
               nNo: rv.n_no,
               outcomeLabel:
                 rv.n_yes > rv.n_no
-                  ? "Ehdotus hyväksyttiin"
-                  : "Ehdotus hylättiin",
+                  ? i18next.t("aanestykset:outcome_approved")
+                  : i18next.t("aanestykset:outcome_rejected"),
             })) ?? [],
           fetchedAt: fetchedAt(),
         };
@@ -191,7 +194,7 @@ export function createAanestysRoute(deps: WebappDeps) {
           req,
           Aanestys({ title: voting.title ?? undefined, data }),
           `/aanestys/${id}`,
-          voting.title ?? "Äänestys",
+          voting.title ?? i18next.t("aanestykset:title"),
           tlData,
         );
       },

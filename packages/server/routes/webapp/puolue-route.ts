@@ -7,6 +7,7 @@ import {
   fetchedAt,
 } from "../../../webapp/templates/helpers";
 import type { WebappDeps } from "./deps";
+import i18next from "i18next";
 
 export function createPuolueRoute(deps: WebappDeps) {
   return {
@@ -80,8 +81,10 @@ export function createPuolueRoute(deps: WebappDeps) {
             pct: cohesionPct != null ? Math.round(cohesionPct) : null,
             label:
               cohesionPct != null
-                ? `Ryhmä äänestää yhtenäisesti ${Math.round(cohesionPct)} % äänestyksistä`
-                : "Ei tietoa ryhmäkurista",
+                ? i18next.t("puolueet:detail.cohesion_unified_format", {
+                    pct: Math.round(cohesionPct),
+                  })
+                : i18next.t("puolueet:detail.cohesion_no_data"),
             totalVotings: cohRow?.total_votes ?? null,
           },
           members: members.map((m) => {

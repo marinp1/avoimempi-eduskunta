@@ -2,6 +2,7 @@
 import { clsx } from "clsx";
 import Kicker from "../components/kicker";
 import Spill from "../components/spill";
+import i18next from "i18next";
 import type {
   SessionsIndexData,
   WeekGroup,
@@ -19,11 +20,11 @@ interface Props {
 function statusLabel(s: "done" | "draft" | "live"): string {
   switch (s) {
     case "live":
-      return "käynnissä";
+      return i18next.t("istunnot:status_live");
     case "done":
-      return "päättynyt";
+      return i18next.t("istunnot:status_done");
     case "draft":
-      return "pöytäkirja laadittu";
+      return i18next.t("istunnot:status_draft");
   }
 }
 
@@ -31,17 +32,18 @@ export default function Istunnot({ title, data, cursorFormatted }: Props) {
   const d = data!;
   return (
     <>
-      <title>{title} — Eduskuntapeili</title>
+      <title>
+        {i18next.t("common:page_title_format", {
+          title: title || "",
+          brand: i18next.t("common:brand_name"),
+        })}
+      </title>
 
       <div class="wrap">
         <section class="page-head">
-          <Kicker text="Täysistunnot" />
-          <h1>Istunnot</h1>
-          <p class="sub">
-            Eduskunnan täysistunnot istuntoviikoittain — mitä käsiteltiin, mistä
-            äänestettiin ja mistä keskusteltiin. Jokainen luku avautuu
-            alkuperäiseen pöytäkirjaan ja äänestystulokseen.
-          </p>
+          <Kicker text={i18next.t("istunnot:kicker")} />
+          <h1>{i18next.t("istunnot:heading")}</h1>
+          <p class="sub">{i18next.t("istunnot:subtitle")}</p>
         </section>
       </div>
 
@@ -55,12 +57,14 @@ export default function Istunnot({ title, data, cursorFormatted }: Props) {
 
       <div class="wrap">
         <div class="source-note">
-          <span>Lähde:</span>
+          <span>{i18next.t("common:source")}</span>
           <span class="dset">
             Eduskunnan avoin data · Session + Voting + Speech
           </span>
           <span>·</span>
-          <span class="fresh">haettu {d.fetchedAt}</span>
+          <span class="fresh">
+            {i18next.t("common:fetched", { timestamp: d.fetchedAt })}
+          </span>
           <span>·</span>
           <span
             class="cite verify"
@@ -77,7 +81,7 @@ export default function Istunnot({ title, data, cursorFormatted }: Props) {
             data-url="https://avoindata.eduskunta.fi/"
             data-orig="Avaa aineisto"
           >
-            varmenna jäljite
+            {i18next.t("common:verify_trace")}
           </span>
         </div>
       </div>
@@ -105,14 +109,16 @@ export function SessionList({
       hx-push-url="true"
       hx-indicator="#tl-reactive"
     >
-      <div class="htmx-indicator loading-spinner">Ladataan…</div>
+      <div class="htmx-indicator loading-spinner">
+        {i18next.t("common:loading")}
+      </div>
       <div class="toolbar">
         <label class="search">
           <span class="ic">⌕</span>
           <input
             id="sit-search"
             type="text"
-            placeholder="Hae istunnoista — laki, aihe tai istuntonumero…"
+            placeholder={i18next.t("istunnot:search_placeholder")}
             name="q"
             hx-get="/istunnot"
             hx-trigger="input changed delay:200ms"
@@ -124,11 +130,12 @@ export function SessionList({
           />
         </label>
         <span class="count">
-          <b id="sit-count">{totalSessions}</b> istuntoa
+          <b id="sit-count">{totalSessions}</b>{" "}
+          {i18next.t("istunnot:count_suffix")}
         </span>
         {cursorFormatted && (
           <span class="sit-asof" data-sit-asof>
-            tilanne <b data-tl-asof>{cursorFormatted}</b>
+            {i18next.t("istunnot:as_of")} <b data-tl-asof>{cursorFormatted}</b>
           </span>
         )}
       </div>
@@ -144,7 +151,7 @@ export function SessionList({
           hx-push-url="true"
           hx-indicator="#sit-root"
         >
-          Kaikki
+          {i18next.t("istunnot:filter_all")}
         </a>
         <a
           class="fchip"
@@ -157,7 +164,7 @@ export function SessionList({
           hx-indicator="#sit-root"
         >
           <span class="pdot" style="background:var(--blue)"></span>
-          Äänestyspäivät
+          {i18next.t("istunnot:filter_vote_days")}
         </a>
         <a
           class="fchip"
@@ -169,7 +176,8 @@ export function SessionList({
           hx-push-url="true"
           hx-indicator="#sit-root"
         >
-          <span class="pdot" style="background:var(--opp)"></span>Kyselytunti
+          <span class="pdot" style="background:var(--opp)"></span>
+          {i18next.t("istunnot:filter_question_hour")}
         </a>
         <a
           class="fchip"
@@ -181,7 +189,8 @@ export function SessionList({
           hx-push-url="true"
           hx-indicator="#sit-root"
         >
-          <span class="pdot" style="background:var(--red)"></span>Välikysymys
+          <span class="pdot" style="background:var(--red)"></span>
+          {i18next.t("istunnot:filter_interpellation")}
         </a>
         <a
           class="fchip"
@@ -193,12 +202,15 @@ export function SessionList({
           hx-push-url="true"
           hx-indicator="#sit-root"
         >
-          <span class="pdot" style="background:var(--faint)"></span>Keskustelut
+          <span class="pdot" style="background:var(--faint)"></span>
+          {i18next.t("istunnot:filter_discussions")}
         </a>
       </div>
 
       <div id="sit-root" class="loading-overlay">
-        <div class="htmx-indicator loading-spinner">Ladataan…</div>
+        <div class="htmx-indicator loading-spinner">
+          {i18next.t("common:loading")}
+        </div>
         {weeks.map((week) => (
           <section class="week" data-week>
             <div class="week-head">
@@ -220,7 +232,7 @@ export function SessionList({
           hidden
           style="display:block;text-align:center;color:var(--muted);padding:40px 0;border:0"
         >
-          Ei istuntoja näillä hakuehdoilla.
+          {i18next.t("istunnot:none_found")}
         </div>
       </div>
     </div>
@@ -268,14 +280,18 @@ function SessionRowComponent({ session }: { session: SessionRow }) {
             <b class={clsx({ zero: session.votingCount === 0 })}>
               {session.votingCount}
             </b>
-            <span>{session.votingCount === 1 ? "Äänestys" : "Äänestystä"}</span>
+            <span>
+              {session.votingCount === 1
+                ? i18next.t("common:voting_count_one")
+                : i18next.t("common:voting_count_many")}
+            </span>
           </div>
           <div class="sit-fig">
             <b>{session.sectionCount}</b>
-            <span>Asiakohtaa</span>
+            <span>{i18next.t("common:agenda_items")}</span>
           </div>
         </div>
-        <span class="sit-go">Avaa istunto →</span>
+        <span class="sit-go">{i18next.t("common:open_istunto")}</span>
       </div>
     </a>
   );

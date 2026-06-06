@@ -1,5 +1,6 @@
 /** @jsxImportSource ../../src/jsx */
 import { clsx } from "clsx";
+import i18next from "i18next";
 import Kicker from "../components/kicker";
 import { cite, sourceNote } from "../components/provenance";
 import { esc, partyShortName } from "../helpers";
@@ -94,12 +95,17 @@ export default function Asiakirja({ data }: Props) {
   const title = `${d.identifier} — ${d.title}`;
   return (
     <>
-      <title>{title} — Eduskuntapeili</title>
+      <title>
+        {i18next.t("common:page_title_format", {
+          title: title || "",
+          brand: i18next.t("common:brand_name"),
+        })}
+      </title>
 
       <div class="wrap">
         <div style="padding-top:16px;font-size:13px;color:var(--muted)">
           <a href="/asiakirjat" style="color:var(--blue)">
-            Asiakirjat
+            {i18next.t("asiakirjat:detail.breadcrumb")}
           </a>
           &nbsp;›&nbsp; <span>{d.identifier}</span>
         </div>
@@ -151,16 +157,19 @@ export default function Asiakirja({ data }: Props) {
 
         <div class="doc-toolbar">
           <button class="tbtn">
-            <span class="ic">↗</span> Alkuperäinen (PDF)
+            <span class="ic">↗</span> {i18next.t("common:original_pdf")}
           </button>
           <button class="tbtn">
-            <span class="ic">⧉</span> Jaa
+            <span class="ic">⧉</span> {i18next.t("common:share")}
           </button>
         </div>
 
         {d.lifecycleStages.length > 0 && (
           <>
-            <Kicker text="Asian kulku" modifier="" />
+            <Kicker
+              text={i18next.t("asiakirjat:detail.lifecycle_kicker")}
+              modifier=""
+            />
             <nav class="lifecycle mt-8">
               {d.lifecycleStages.map((stage) => (
                 <div class={clsx("lc-step", { done: stage.done })}>
@@ -196,14 +205,19 @@ export default function Asiakirja({ data }: Props) {
               <div class="summary__bar">
                 <span class="l">
                   <span class="spark">✦</span>
-                  <span class="lbl">Asiakirjan sisältö</span>
+                  <span class="lbl">
+                    {i18next.t("asiakirjat:detail.content_label")}
+                  </span>
                 </span>
                 <span class="read">
-                  {d.charCount.toLocaleString("fi")} merkkiä
+                  {d.charCount.toLocaleString("fi")}{" "}
+                  {i18next.t("common:characters")}
                 </span>
               </div>
               <div class="summary__in">
-                <div class="summary__q">Mistä tässä on kyse?</div>
+                <div class="summary__q">
+                  {i18next.t("asiakirjat:detail.content_question")}
+                </div>
                 <p class="summary__lead">
                   {d.textSections[0]!.paragraphs[0]
                     ? esc(d.textSections[0]!.paragraphs[0]!.slice(0, 280)) + "…"
@@ -240,7 +254,7 @@ export default function Asiakirja({ data }: Props) {
             <div class="mt-28 pt-20 bt-rule">
               {d.signatories.length > 0 && (
                 <div style="margin-bottom:20px">
-                  <h3>Allekirjoittajat</h3>
+                  <h3>{i18next.t("asiakirjat:detail.signatories")}</h3>
                   <div class="signatory-list">
                     {d.signatories.map((sig) => (
                       <div class="signatory-row">
@@ -269,7 +283,7 @@ export default function Asiakirja({ data }: Props) {
               )}
               {d.laws.length > 0 && (
                 <div>
-                  <h3>Lait</h3>
+                  <h3>{i18next.t("asiakirjat:detail.laws")}</h3>
                   <ul class="law-list">
                     {d.laws.map((law) => (
                       <li>
@@ -301,7 +315,7 @@ export default function Asiakirja({ data }: Props) {
           {sourceNote({
             dataset: "Eduskunnan avoin data · VaskiData",
             fetchedAt: d.fetchedAt,
-            extra: cite("varmenna teksti", {
+            extra: cite(i18next.t("common:verify_text"), {
               value: d.identifier,
               caption: `${d.documentTypeLabel}n koko teksti`,
               set: "Eduskunnan avoin data · VaskiData",
@@ -311,7 +325,7 @@ export default function Asiakirja({ data }: Props) {
               fetched: d.fetchedAt,
               chain: "avoindata.eduskunta.fi > VaskiData > Asiakirjanäkymä",
               url: "https://avoindata.eduskunta.fi/",
-              orig: "Avaa alkuperäinen",
+              orig: i18next.t("common:open_source"),
               mark: "off",
             }),
           })}
@@ -319,34 +333,44 @@ export default function Asiakirja({ data }: Props) {
           {d.hasAnswer && (
             <div id="vastaus" class="mt-40 pt-4 bt-ink">
               <div class="article__phase mt-20">
-                Vastaus — {d.answerMinisterTitle} ·{" "}
-                {d.answerDate ? formatFi(d.answerDate) : ""}
+                {i18next.t("asiakirjat:detail.answer_section_title", {
+                  ministerTitle: d.answerMinisterTitle,
+                  date: d.answerDate ? formatFi(d.answerDate) : "",
+                })}
               </div>
-              <h3>Ministerin vastaus</h3>
+              <h3>{i18next.t("asiakirjat:detail.answer_heading")}</h3>
 
               <div class="summary" style="margin:14px 0 22px">
                 <div class="summary__bar">
                   <span class="l">
                     <span class="spark">✦</span>
-                    <span class="lbl">Vastauksen tiedot</span>
+                    <span class="lbl">
+                      {i18next.t("asiakirjat:detail.answer_info_label")}
+                    </span>
                   </span>
                 </div>
                 <div class="summary__in">
-                  <div class="summary__q">Mitä ministeri vastasi?</div>
+                  <div class="summary__q">
+                    {i18next.t("asiakirjat:detail.answer_question")}
+                  </div>
                   <p class="summary__lead">
-                    Ministeri {d.answerMinisterName ?? ""} antoi vastauksen{" "}
-                    {d.answerDate ? formatFi(d.answerDate) : ""}.
+                    {i18next.t("asiakirjat:detail.answer_minister_gave", {
+                      name: d.answerMinisterName ?? "",
+                      date: d.answerDate ? formatFi(d.answerDate) : "",
+                    })}
                   </p>
                   <ul class="summary__points">
                     <li>
-                      Vastauksen tunnus: <b>{esc(d.answerIdentifier ?? "")}</b>
+                      {i18next.t("asiakirjat:detail.answer_id_label")}{" "}
+                      <b>{esc(d.answerIdentifier ?? "")}</b>
                     </li>
                     <li>
-                      Vastaaja: <b>{esc(d.answerMinisterName ?? "")}</b> ·{" "}
+                      {i18next.t("asiakirjat:detail.answer_respondent_label")}{" "}
+                      <b>{esc(d.answerMinisterName ?? "")}</b> ·{" "}
                       {esc(d.answerMinisterTitle ?? "")}
                     </li>
                     <li>
-                      Vastaus annettu:{" "}
+                      {i18next.t("asiakirjat:detail.answer_given_label")}{" "}
                       <b>{d.answerDate ? formatFi(d.answerDate) : ""}</b>
                     </li>
                   </ul>
@@ -360,17 +384,23 @@ export default function Asiakirja({ data }: Props) {
                   target="_blank"
                   rel="noopener"
                 >
-                  <span class="ic">↗</span> Alkuperäinen vastaus
+                  <span class="ic">↗</span>{" "}
+                  {i18next.t("asiakirjat:detail.answer_original_link")}
                 </a>
               </div>
 
               <div class="article__sig">
                 <div class="name">
-                  {esc(d.answerMinisterTitle ?? "Ministeri")}
+                  {esc(
+                    d.answerMinisterTitle ??
+                      i18next.t("asiakirjat:detail.answer_signature_title"),
+                  )}
                 </div>
                 <div class="meta">
-                  Vastaus annettu {d.answerDate ? formatFi(d.answerDate) : ""} ·{" "}
-                  {esc(d.answerIdentifier ?? "")}
+                  {i18next.t("asiakirjat:detail.answer_signature_meta", {
+                    date: d.answerDate ? formatFi(d.answerDate) : "",
+                    id: esc(d.answerIdentifier ?? ""),
+                  })}
                 </div>
               </div>
 
@@ -378,7 +408,7 @@ export default function Asiakirja({ data }: Props) {
                 dataset:
                   "Eduskunnan avoin data · VaskiData (ministerin vastaus)",
                 fetchedAt: d.fetchedAt,
-                extra: cite("varmenna vastaus", {
+                extra: cite(i18next.t("common:verify_answer"), {
                   value: `Vastaus ${d.identifier}`,
                   caption: "Ministerin kirjallinen vastaus",
                   set: "Eduskunnan avoin data · VaskiData",
@@ -398,7 +428,7 @@ export default function Asiakirja({ data }: Props) {
 
         <aside class="doc-aside">
           <div class="blk">
-            <h4>Käsittelyn vaihe</h4>
+            <h4>{i18next.t("asiakirjat:detail.statusline_phase")}</h4>
             <div class="statusline">
               <span
                 class="statusdot"
@@ -421,11 +451,11 @@ export default function Asiakirja({ data }: Props) {
           </div>
 
           <div class="blk">
-            <h4>Tiedot</h4>
+            <h4>{i18next.t("asiakirjat:detail.details_block")}</h4>
             <dl>
-              <dt>Tunnus</dt>
+              <dt>{i18next.t("asiakirjat:detail.details_identifier")}</dt>
               <dd>{esc(d.identifier)}</dd>
-              <dt>Tyyppi</dt>
+              <dt>{i18next.t("asiakirjat:detail.details_type")}</dt>
               <dd>{esc(d.documentTypeLabel)}</dd>
               <dt>{d.primaryDateLabel}</dt>
               <dd>{d.primaryDate}</dd>
@@ -437,11 +467,11 @@ export default function Asiakirja({ data }: Props) {
               )}
               {d.sourceReference && (
                 <>
-                  <dt>Viite</dt>
+                  <dt>{i18next.t("asiakirjat:detail.details_ref")}</dt>
                   <dd>{esc(d.sourceReference)}</dd>
                 </>
               )}
-              <dt>Pituus</dt>
+              <dt>{i18next.t("asiakirjat:detail.details_length")}</dt>
               <dd>{d.charCount.toLocaleString("fi")} merkkiä</dd>
             </dl>
           </div>
@@ -449,12 +479,12 @@ export default function Asiakirja({ data }: Props) {
           <div class="blk">
             <h4>
               {d.kind === "he"
-                ? "Esittelijä"
+                ? i18next.t("asiakirjat:detail.author_presenter")
                 : d.kind === "mietinto"
-                  ? "Valiokunta"
+                  ? i18next.t("asiakirjat:detail.author_committee")
                   : d.kind === "vastaus"
-                    ? "Vastaaja"
-                    : "Tekijä"}
+                    ? i18next.t("asiakirjat:detail.author_respondent")
+                    : i18next.t("asiakirjat:detail.author_creator")}
             </h4>
             <a
               href={d.authorPersonId ? `/edustaja/${d.authorPersonId}` : "#"}
@@ -488,7 +518,7 @@ export default function Asiakirja({ data }: Props) {
 
           {d.subjects.length > 0 && (
             <div class="blk">
-              <h4>Aiheet</h4>
+              <h4>{i18next.t("asiakirjat:detail.subjects")}</h4>
               <div class="topics">
                 {d.subjects.map((s) => (
                   <span
@@ -504,7 +534,7 @@ export default function Asiakirja({ data }: Props) {
 
           {d.sessions.length > 0 && (
             <div class="blk">
-              <h4>Liittyvät istunnot</h4>
+              <h4>{i18next.t("asiakirjat:detail.related_sessions")}</h4>
               {d.sessions.map((s) => (
                 <a
                   class="related-row"
@@ -512,7 +542,10 @@ export default function Asiakirja({ data }: Props) {
                 >
                   <span class="rid">{s.sessionKey}</span>
                   <span class="rt">
-                    {s.sectionTitle ?? `Istunto ${s.sessionKey}`}
+                    {s.sectionTitle ??
+                      i18next.t("asiakirjat:detail.session_label", {
+                        key: s.sessionKey,
+                      })}
                   </span>
                 </a>
               ))}

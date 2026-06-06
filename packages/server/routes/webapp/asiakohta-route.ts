@@ -7,23 +7,24 @@ import {
   fetchedAt,
 } from "../../../webapp/templates/helpers";
 import type { WebappDeps } from "./deps";
+import i18next from "i18next";
 
 function phaseLabel(code: string | null): string {
   switch (code) {
     case "yksikasittely":
-      return "Yksi käsittely";
+      return i18next.t("istunnot:detail.phase_yksi_kasittely");
     case "ensimmainenkasittely":
-      return "Ensimmäinen käsittely";
+      return i18next.t("istunnot:detail.phase_ensimmainen_kasittely");
     case "toinenkasittely":
-      return "Toinen käsittely";
+      return i18next.t("istunnot:detail.phase_toinen_kasittely");
     case "ainoa":
-      return "Ainoa käsittely";
+      return i18next.t("istunnot:detail.phase_ainoa_kasittely");
     case "kasittely":
-      return "Käsittely";
+      return i18next.t("istunnot:detail.phase_kasittely");
     case "poydallepano":
-      return "Pöydällepano";
+      return i18next.t("istunnot:detail.phase_poydallepano");
     default:
-      return code ?? "Käsittely";
+      return code ?? i18next.t("istunnot:detail.phase_kasittely");
   }
 }
 
@@ -46,9 +47,9 @@ export function createAsiakohtaRoute(deps: WebappDeps) {
         if (!section) {
           return page(
             req,
-            `<section class="page-hero"><h1>Asiakohtaa ei löytynyt</h1></section>`,
+            `<section class="page-hero"><h1>${i18next.t("istunnot:detail.asiakohta_not_found")}</h1></section>`,
             `/asiakohta/${key}`,
-            "Asiakohtaa ei löytynyt",
+            i18next.t("istunnot:detail.asiakohta_not_found"),
             tlData,
           );
         }
@@ -110,7 +111,9 @@ export function createAsiakohtaRoute(deps: WebappDeps) {
             sessionKey: section.session_key,
             sessionDate: "",
             sessionDateLabel: "",
-            sessionTitle: `Täysistunto ${section.session_key}`,
+            sessionTitle: i18next.t("common:session_title_format", {
+              key: section.session_key,
+            }),
             identifier:
               section.minutes_related_document_identifier ??
               section.identifier ??
@@ -153,7 +156,10 @@ export function createAsiakohtaRoute(deps: WebappDeps) {
               yesPct: total > 0 ? (nYes / total) * 100 : 0,
               noPct: total > 0 ? (nNo / total) * 100 : 0,
               outcome: nYes > nNo ? "ok" : "no",
-              outcomeLabel: nYes > nNo ? "hyväksytty" : "hylätty",
+              outcomeLabel:
+                nYes > nNo
+                  ? i18next.t("aanestykset:outcome_approved").toLowerCase()
+                  : i18next.t("aanestykset:outcome_rejected").toLowerCase(),
             };
           }),
           speeches: (speechesResult?.speeches ?? []).map((s) => {
@@ -171,10 +177,12 @@ export function createAsiakohtaRoute(deps: WebappDeps) {
               bloc: isGov === 1 ? "hallitus" : "oppositio",
               roleLabel:
                 s.speech_type === "NR"
-                  ? "Ryhmäpuheenvuoro"
+                  ? i18next.t("components:keskustelu.speech_type_group")
                   : s.speech_type === "IPV"
-                    ? "Ilmoituspuheenvuoro"
-                    : "Puheenvuoro",
+                    ? i18next.t(
+                        "components:keskustelu.speech_type_notification",
+                      )
+                    : i18next.t("components:keskustelu.speech_type_default"),
               roleClass:
                 s.speech_type === "IPV"
                   ? "min"
@@ -182,7 +190,9 @@ export function createAsiakohtaRoute(deps: WebappDeps) {
                     ? "reply"
                     : "",
               timeLabel: s.start_time
-                ? `klo ${s.start_time.slice(11, 16).replace(":", ".")}`
+                ? i18next.t("istunnot:detail.attendance_time_format", {
+                    time: s.start_time.slice(11, 16).replace(":", "."),
+                  })
                 : "",
               durationLabel: null,
               summary: null,
@@ -196,7 +206,9 @@ export function createAsiakohtaRoute(deps: WebappDeps) {
         return page(
           req,
           Asiakohta({
-            title: `Asiakohta ${data.section.itemNumber ?? ""}`,
+            title: i18next.t("common:asiakohta_title_format", {
+              number: data.section.itemNumber ?? "",
+            }),
             data,
           }),
           `/asiakohta/${key}`,

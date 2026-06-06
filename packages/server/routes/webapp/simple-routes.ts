@@ -35,6 +35,7 @@ import {
 } from "./helpers";
 import { assetVersion } from "./assets";
 import type { WebappDeps } from "./deps";
+import i18next from "i18next";
 
 export function createSimplePageRoutes(deps: WebappDeps) {
   return {
@@ -87,7 +88,13 @@ export function createSimplePageRoutes(deps: WebappDeps) {
               `/?date=${encodeURIComponent(cursor)}`;
           }
           return new Response(
-            tlHtml + Home({ title: "Etusivu", data, cursor, sessionCount }),
+            tlHtml +
+              Home({
+                title: i18next.t("home:title"),
+                data,
+                cursor,
+                sessionCount,
+              }),
             { headers: fullHeaders },
           );
         }
@@ -97,9 +104,9 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           : tlData;
         const resp = page(
           req,
-          Home({ title: "Etusivu", data, cursor, sessionCount }),
+          Home({ title: i18next.t("home:title"), data, cursor, sessionCount }),
           "/",
-          "Etusivu",
+          i18next.t("home:title"),
           resolvedTl,
         );
         if (cookieHeader && resp.status === 200) {
@@ -178,9 +185,9 @@ export function createSimplePageRoutes(deps: WebappDeps) {
 
         return page(
           req,
-          Puolueet({ title: "Puolueet", data }),
+          Puolueet({ title: i18next.t("puolueet:title"), data }),
           "/puolueet",
-          "Puolueet",
+          i18next.t("puolueet:title"),
           tlData,
         );
       },
@@ -240,7 +247,10 @@ export function createSimplePageRoutes(deps: WebappDeps) {
             yesPct: nTotal > 0 ? (nYes / nTotal) * 100 : 0,
             noPct: nTotal > 0 ? (nNo / nTotal) * 100 : 0,
             outcome: nYes > nNo ? "ok" : "no",
-            outcomeLabel: nYes > nNo ? "Hyväksytty" : "Hylätty",
+            outcomeLabel:
+              nYes > nNo
+                ? i18next.t("aanestykset:outcome_approved")
+                : i18next.t("aanestykset:outcome_rejected"),
           };
           const sk = v.session_key ?? "";
           if (!groupMap.has(sk)) groupMap.set(sk, []);
@@ -253,7 +263,9 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           .map(([sessionKey, rows]) => ({
             sessionKey,
             sessionDate: rows[0]?.sessionDate ?? "",
-            sessionDateLabel: `Täysistunto ${sessionKey}`,
+            sessionDateLabel: i18next.t("aanestykset:group_session_prefix", {
+              key: sessionKey,
+            }),
             rows,
           }));
 
@@ -269,9 +281,9 @@ export function createSimplePageRoutes(deps: WebappDeps) {
 
         return page(
           req,
-          Aanestykset({ title: "Äänestykset", data }),
+          Aanestykset({ title: i18next.t("aanestykset:title"), data }),
           pageUrl,
-          "Äänestykset",
+          i18next.t("aanestykset:title"),
           tlData,
         );
       },
@@ -339,7 +351,7 @@ export function createSimplePageRoutes(deps: WebappDeps) {
             hxTarget.includes("tl-reactive")
           ) {
             const fragment = Asiakirjat({
-              title: "Asiakirjat",
+              title: i18next.t("asiakirjat:title"),
               data,
               query: q,
               kind,
@@ -355,7 +367,13 @@ export function createSimplePageRoutes(deps: WebappDeps) {
 
           const tlHtml = timelineOobHtml(tlData);
           return new Response(
-            tlHtml + Asiakirjat({ title: "Asiakirjat", data, query: q, kind }),
+            tlHtml +
+              Asiakirjat({
+                title: i18next.t("asiakirjat:title"),
+                data,
+                query: q,
+                kind,
+              }),
             {
               headers: {
                 "Content-Type": "text/html; charset=utf-8",
@@ -367,9 +385,14 @@ export function createSimplePageRoutes(deps: WebappDeps) {
 
         return page(
           req,
-          Asiakirjat({ title: "Asiakirjat", data, query: q, kind }),
+          Asiakirjat({
+            title: i18next.t("asiakirjat:title"),
+            data,
+            query: q,
+            kind,
+          }),
           "/asiakirjat",
-          "Asiakirjat",
+          i18next.t("asiakirjat:title"),
           tlData,
         );
       },
@@ -383,9 +406,9 @@ export function createSimplePageRoutes(deps: WebappDeps) {
         );
         return page(
           req,
-          Hallitukset({ title: "Hallitukset" }),
+          Hallitukset({ title: i18next.t("nav:governments") }),
           "/hallitukset",
-          "Hallitukset",
+          i18next.t("nav:governments"),
           tlData,
         );
       },
@@ -399,9 +422,9 @@ export function createSimplePageRoutes(deps: WebappDeps) {
         );
         return page(
           req,
-          Analytiikka({ title: "Analytiikka" }),
+          Analytiikka({ title: i18next.t("nav:analytics") }),
           "/analytiikka",
-          "Analytiikka",
+          i18next.t("nav:analytics"),
           tlData,
         );
       },
@@ -415,9 +438,9 @@ export function createSimplePageRoutes(deps: WebappDeps) {
         );
         return page(
           req,
-          Muutokset({ title: "Muutokset" }),
+          Muutokset({ title: i18next.t("nav:changes") }),
           "/muutokset",
-          "Muutokset",
+          i18next.t("nav:changes"),
           tlData,
         );
       },
@@ -426,11 +449,11 @@ export function createSimplePageRoutes(deps: WebappDeps) {
       GET: (req: Request) =>
         htmlResponse(
           req,
-          `<title>Laadunvalvonta — Eduskuntapeili</title>
-<section class="page-hero"><h1>Laadunvalvonta</h1></section>`,
+          `<title>${i18next.t("common:page_title_format", { title: i18next.t("nav:quality_control"), brand: i18next.t("common:brand_name") })}</title>
+<section class="page-hero"><h1>${i18next.t("nav:quality_control")}</h1></section>`,
           {
             activePath: "/laadunvalvonta",
-            title: "Laadunvalvonta",
+            title: i18next.t("nav:quality_control"),
             assetVersion,
           },
         ),
@@ -442,7 +465,7 @@ interface DocKindConfig {
   key: string;
   label: string;
   dateField: string;
-  datePrefix: string;
+  dateFormatKey: string;
   identifierField: string;
   authorFields: string[];
   partyField: string;
@@ -484,9 +507,9 @@ const DOC_KIND_DISPATCH: Record<
 const DOC_KINDS: DocKindConfig[] = [
   {
     key: "kk",
-    label: "Kirjalliset kysymykset",
+    label: i18next.t("asiakirjat:chip_labels.kk"),
     dateField: "submission_date",
-    datePrefix: "Jätetty",
+    dateFormatKey: "asiakirjat:status_labels.submitted_on",
     identifierField: "parliament_identifier",
     authorFields: ["first_signer_first_name", "first_signer_last_name"],
     partyField: "first_signer_party",
@@ -495,14 +518,20 @@ const DOC_KINDS: DocKindConfig[] = [
     hasDetail: true,
     statusMapper: (item) =>
       item.answer_date
-        ? { label: "Vastattu", class: "spill--done" }
-        : { label: "Vireillä", class: "spill--draft" },
+        ? {
+            label: i18next.t("asiakirjat:status_labels.answered"),
+            class: "spill--done",
+          }
+        : {
+            label: i18next.t("asiakirjat:status_labels.pending"),
+            class: "spill--draft",
+          },
   },
   {
     key: "suullinen",
-    label: "Suulliset kysymykset",
+    label: i18next.t("asiakirjat:chip_labels.suullinen"),
     dateField: "submission_date",
-    datePrefix: "Jätetty",
+    dateFormatKey: "asiakirjat:status_labels.submitted_on",
     identifierField: "parliament_identifier",
     authorFields: [],
     partyField: "",
@@ -511,14 +540,20 @@ const DOC_KINDS: DocKindConfig[] = [
     hasDetail: true,
     statusMapper: (item) =>
       item.decision_outcome
-        ? { label: "Käsitelty", class: "spill--done" }
-        : { label: "Vireillä", class: "spill--draft" },
+        ? {
+            label: i18next.t("asiakirjat:status_labels.handled"),
+            class: "spill--done",
+          }
+        : {
+            label: i18next.t("asiakirjat:status_labels.pending"),
+            class: "spill--draft",
+          },
   },
   {
     key: "valikysymys",
-    label: "Välikysymykset",
+    label: i18next.t("asiakirjat:chip_labels.valikysymys"),
     dateField: "submission_date",
-    datePrefix: "Jätetty",
+    dateFormatKey: "asiakirjat:status_labels.submitted_on",
     identifierField: "parliament_identifier",
     authorFields: ["first_signer_first_name", "first_signer_last_name"],
     partyField: "first_signer_party",
@@ -527,27 +562,36 @@ const DOC_KINDS: DocKindConfig[] = [
     hasDetail: true,
     statusMapper: (item) =>
       item.decision_outcome
-        ? { label: "Käsitelty", class: "spill--done" }
-        : { label: "Vireillä", class: "spill--draft" },
+        ? {
+            label: i18next.t("asiakirjat:status_labels.handled"),
+            class: "spill--done",
+          }
+        : {
+            label: i18next.t("asiakirjat:status_labels.pending"),
+            class: "spill--draft",
+          },
   },
   {
     key: "vastaus",
-    label: "Kirjalliset vastaukset",
+    label: i18next.t("asiakirjat:chip_labels.vastaus"),
     dateField: "answer_date",
-    datePrefix: "Vastattu",
+    dateFormatKey: "asiakirjat:status_labels.answered_on",
     identifierField: "parliament_identifier",
     authorFields: [],
     partyField: "",
     highlightFields: ["minister_title", "question_identifier"],
     linkField: "question_id",
     hasDetail: true,
-    statusMapper: () => ({ label: "Vastaus", class: "spill--done" }),
+    statusMapper: () => ({
+      label: i18next.t("asiakirjat:status_labels.response"),
+      class: "spill--done",
+    }),
   },
   {
     key: "he",
-    label: "Hallituksen esitykset",
+    label: i18next.t("asiakirjat:chip_labels.he"),
     dateField: "submission_date",
-    datePrefix: "Jätetty",
+    dateFormatKey: "asiakirjat:status_labels.submitted_on",
     identifierField: "parliament_identifier",
     authorFields: [],
     partyField: "",
@@ -556,14 +600,20 @@ const DOC_KINDS: DocKindConfig[] = [
     hasDetail: true,
     statusMapper: (item) =>
       item.decision_outcome
-        ? { label: "Käsitelty", class: "spill--done" }
-        : { label: "Vireillä", class: "spill--draft" },
+        ? {
+            label: i18next.t("asiakirjat:status_labels.handled"),
+            class: "spill--done",
+          }
+        : {
+            label: i18next.t("asiakirjat:status_labels.pending"),
+            class: "spill--draft",
+          },
   },
   {
     key: "aloite",
-    label: "Lakialoitteet",
+    label: i18next.t("asiakirjat:chip_labels.aloite"),
     dateField: "submission_date",
-    datePrefix: "Jätetty",
+    dateFormatKey: "asiakirjat:status_labels.submitted_on",
     identifierField: "parliament_identifier",
     authorFields: ["first_signer_first_name", "first_signer_last_name"],
     partyField: "first_signer_party",
@@ -572,14 +622,20 @@ const DOC_KINDS: DocKindConfig[] = [
     hasDetail: true,
     statusMapper: (item) =>
       item.decision_outcome
-        ? { label: "Käsitelty", class: "spill--done" }
-        : { label: "Vireillä", class: "spill--draft" },
+        ? {
+            label: i18next.t("asiakirjat:status_labels.handled"),
+            class: "spill--done",
+          }
+        : {
+            label: i18next.t("asiakirjat:status_labels.pending"),
+            class: "spill--draft",
+          },
   },
   {
     key: "mietinto",
-    label: "Mietinnöt",
+    label: i18next.t("asiakirjat:chip_labels.mietinto"),
     dateField: "signature_date",
-    datePrefix: "Annettu",
+    dateFormatKey: "asiakirjat:status_labels.given_on",
     identifierField: "parliament_identifier",
     authorFields: [],
     partyField: "",
@@ -590,9 +646,9 @@ const DOC_KINDS: DocKindConfig[] = [
   },
   {
     key: "asiantuntija",
-    label: "Asiantuntijalausunnot",
+    label: i18next.t("asiakirjat:chip_labels.asiantuntija"),
     dateField: "meeting_date",
-    datePrefix: "",
+    dateFormatKey: "",
     identifierField: "edk_identifier",
     authorFields: [],
     partyField: "",
@@ -603,9 +659,9 @@ const DOC_KINDS: DocKindConfig[] = [
   },
   {
     key: "vastaus-edk",
-    label: "Eduskunnan vastaukset",
+    label: i18next.t("asiakirjat:chip_labels.vastaus-edk"),
     dateField: "submission_date",
-    datePrefix: "Annettu",
+    dateFormatKey: "asiakirjat:status_labels.given_on",
     identifierField: "parliament_identifier",
     authorFields: [],
     partyField: "",
@@ -621,7 +677,10 @@ function mapToDocRow(
   config: DocKindConfig,
 ): DocumentRow {
   const date = (item[config.dateField] as string) ?? "";
-  const dateLabel = date ? `${config.datePrefix} ${formatFi(date)}`.trim() : "";
+  const dateLabel =
+    date && config.dateFormatKey
+      ? i18next.t(config.dateFormatKey, { date: formatFi(date) })
+      : "";
   const status = config.statusMapper(item);
   const authorName =
     config.authorFields.length > 0
@@ -640,15 +699,19 @@ function mapToDocRow(
         if (!v) return null;
         if (f === "initiative_type_code") {
           const LABELS: Record<string, string> = {
-            LA: "Lakialoite",
-            TPA: "Toimenpidealoite",
-            RA: "Rahoitusaloite",
+            LA: i18next.t("asiakirjat:initiative_type_labels.LA"),
+            TPA: i18next.t("asiakirjat:initiative_type_labels.TPA"),
+            RA: i18next.t("asiakirjat:initiative_type_labels.RA"),
           };
           return LABELS[v as string] ?? String(v);
         }
         if (f === "report_type_code") {
           const vStr = v as string;
-          return vStr === "M" ? "Mietintö" : vStr === "L" ? "Lausunto" : vStr;
+          return vStr === "M"
+            ? i18next.t("asiakirjat:report_type_labels.M")
+            : vStr === "L"
+              ? i18next.t("asiakirjat:report_type_labels.L")
+              : vStr;
         }
         return String(v);
       })

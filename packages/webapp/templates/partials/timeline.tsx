@@ -1,5 +1,6 @@
 /** @jsxImportSource ../../src/jsx */
 import { clsx } from "clsx";
+import i18next from "i18next";
 
 /** Sitting tick: minimal data needed to render the timeline track. */
 export interface SittingTick {
@@ -38,7 +39,9 @@ function safeJson(data: unknown): string {
 export function timeline(data: TimelineData): string {
   const { cursor, today, sittings, showLegend = true, oob } = data;
   const isNow = cursor >= today;
-  const relLabel = isNow ? "nykyhetki" : "arkistonäkymä";
+  const relLabel = isNow
+    ? i18next.t("components:timeline.now_label")
+    : i18next.t("components:timeline.archive_label");
   const todayHidden = isNow || !sittings.some((s) => s.d === today);
   const currentId =
     sittings.find((s) => s.d === cursor)?.id ??
@@ -50,12 +53,14 @@ export function timeline(data: TimelineData): string {
       id="timeline"
       class="timeline"
       data-timeline
-      aria-label="Selaa vaalikautta"
+      aria-label={i18next.t("components:timeline.scroll_aria")}
       hx-swap-oob={oob ? "true" : undefined}
     >
       <div class="tl__head">
         <div class="tl__lead">
-          <span class="tl__kicker">Tarkasteluhetki</span>
+          <span class="tl__kicker">
+            {i18next.t("components:timeline.kicker")}
+          </span>
           <span class="tl__date" data-tl-date>
             {data.cursorFormatted}
           </span>
@@ -69,7 +74,7 @@ export function timeline(data: TimelineData): string {
             data-tl-now
             type="button"
           >
-            Palaa nykyhetkeen →
+            {i18next.t("components:timeline.back_to_now")}
           </button>
           <span class="tl__pair">
             <button
@@ -78,7 +83,7 @@ export function timeline(data: TimelineData): string {
               type="button"
               disabled={sittings.length <= 1}
             >
-              ‹ edellinen
+              {i18next.t("components:timeline.prev")}
             </button>
             <button
               class="tl__step"
@@ -86,7 +91,7 @@ export function timeline(data: TimelineData): string {
               type="button"
               disabled={isNow}
             >
-              seuraava ›
+              {i18next.t("components:timeline.next")}
             </button>
           </span>
         </div>
@@ -100,7 +105,7 @@ export function timeline(data: TimelineData): string {
           class="tl__handle"
           data-tl-handle
           role="slider"
-          aria-label="Tarkasteluhetki"
+          aria-label={i18next.t("components:timeline.handle_aria")}
           tabindex="0"
         >
           <div class="tl__flag" data-tl-flag>
@@ -113,15 +118,18 @@ export function timeline(data: TimelineData): string {
       {showLegend && (
         <div class="tl__legend">
           <span class="it">
-            <span class="k t-vote"></span>äänestyspäivä
+            <span class="k t-vote"></span>
+            {i18next.t("components:timeline.legend_vote")}
           </span>
           <span class="it">
-            <span class="k t-talk"></span>keskustelu
+            <span class="k t-talk"></span>
+            {i18next.t("components:timeline.legend_talk")}
           </span>
           <span class="it">
-            <span class="k t-quiet"></span>muu istunto
+            <span class="k t-quiet"></span>
+            {i18next.t("components:timeline.legend_quiet")}
           </span>
-          <span class="hint">vedä kahvasta · ‹ › · tai napauta janaa</span>
+          <span class="hint">{i18next.t("components:timeline.hint")}</span>
         </div>
       )}
       <input type="hidden" id="tl-date-input" name="date" value={cursor} />

@@ -1,4 +1,5 @@
 /** @jsxImportSource ../src/jsx */
+import i18next from "i18next";
 import Footer from "./partials/footer";
 import Masthead from "./partials/masthead";
 import { timeline, type TimelineData } from "./partials/timeline";
@@ -29,7 +30,8 @@ export default function Layout({
   timelineData,
 }: LayoutOptions) {
   const v = assetVersion ? `?v=${assetVersion}` : "";
-  const pageTitle = title ? `${title} — Eduskuntapeili` : "Eduskuntapeili";
+  const brandName = i18next.t("common:brand_name");
+  const pageTitle = title ? `${title} — ${brandName}` : brandName;
   const fontsHref =
     "https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap";
 

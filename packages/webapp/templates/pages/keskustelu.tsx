@@ -1,5 +1,6 @@
 /** @jsxImportSource ../../src/jsx */
 import { clsx } from "clsx";
+import i18next from "i18next";
 import Kicker from "../components/kicker";
 import type {
   DebateData,
@@ -19,12 +20,19 @@ export default function Keskustelu({ data }: Props) {
 
   return (
     <>
-      <title>{sec.title} — Keskustelu — Eduskuntapeili</title>
+      <title>
+        {i18next.t("common:page_title_format", {
+          title: i18next.t("components:keskustelu.title_format", {
+            title: sec.title,
+          }),
+          brand: i18next.t("common:brand_name"),
+        })}
+      </title>
 
       <div class="wrap">
         <div style="padding-top:16px;font-size:13px;color:var(--muted)">
           <a href="/istunnot" style="color:var(--blue)">
-            Istunnot
+            {i18next.t("components:keskustelu.breadcrumb_session")}
           </a>
           &nbsp;›&nbsp;{" "}
           <a href={`/istunto/${ses.key}`} style="color:var(--blue)">
@@ -32,8 +40,10 @@ export default function Keskustelu({ data }: Props) {
           </a>
           &nbsp;›&nbsp;{" "}
           <span>
-            Keskustelu
-            {sec.itemNumber ? ` · asiakohta ${sec.itemNumber}` : ""}
+            {i18next.t("components:keskustelu.breadcrumb_discussion")}
+            {sec.itemNumber
+              ? ` · ${i18next.t("components:keskustelu.breadcrumb_item_format", { number: sec.itemNumber })}`
+              : ""}
           </span>
         </div>
 
@@ -73,11 +83,18 @@ function DebateHead({ data }: Props) {
     <section class="doc-head">
       <div class="doc-head__top">
         {sec.itemNumber && (
-          <span class="doc-id">Asiakohta {sec.itemNumber}</span>
+          <span class="doc-id">
+            {i18next.t("components:keskustelu.breadcrumb_item_format", {
+              number: sec.itemNumber,
+            })}
+          </span>
         )}
         <span class="doc-type">
-          Täysistuntokeskustelu
-          {sec.processingTitle ? ` · ${sec.processingTitle}` : ""}
+          {sec.processingTitle
+            ? i18next.t("components:keskustelu.type_format", {
+                processing: sec.processingTitle,
+              })
+            : i18next.t("components:keskustelu.type_label")}
         </span>
         {sec.identifier && (
           <span class="tag tag--ghost" style="margin-left:auto">
@@ -85,7 +102,13 @@ function DebateHead({ data }: Props) {
           </span>
         )}
       </div>
-      <h1>Keskustelu{sec.title ? `: ${sec.title.toLowerCase()}` : ""}</h1>
+      <h1>
+        {sec.title
+          ? i18next.t("components:keskustelu.heading_format", {
+              title: sec.title.toLowerCase(),
+            })
+          : i18next.t("components:keskustelu.heading_prefix")}
+      </h1>
       <div class="debate-meta">
         <span>
           <b>{ses.dateLabel}</b>
@@ -98,15 +121,17 @@ function DebateHead({ data }: Props) {
           </>
         )}
         <span>
-          <b>{sec.totalSpeeches}</b> puheenvuoroa
+          <b>{sec.totalSpeeches}</b>{" "}
+          {i18next.t("components:keskustelu.speech_count")}
         </span>
         <span class="sep"></span>
         <span>
-          <b>{sec.groupSpeechCount}</b> ryhmäpuheenvuoroa
+          <b>{sec.groupSpeechCount}</b>{" "}
+          {i18next.t("components:keskustelu.group_speech_count")}
         </span>
         <span class="sep"></span>
         <a href={`/istunto/${ses.key}`} style="color:var(--blue)">
-          Avaa istunto ↗
+          {i18next.t("common:open_istunto")}
         </a>
       </div>
     </section>
@@ -139,11 +164,12 @@ function DocToolbar({
         ),
       )}
       <a href={`/istunto/${sessionKey}`} class="tbtn">
-        <span class="ic">⚖</span> Istunnon äänestykset
+        <span class="ic">⚖</span>{" "}
+        {i18next.t("components:keskustelu.toolbar_session_votings")}
       </a>
       <span class="grow"></span>
       <button class="tbtn">
-        <span class="ic">⧉</span> Jaa
+        <span class="ic">⧉</span> {i18next.t("common:share")}
       </button>
     </div>
   );
@@ -161,22 +187,27 @@ function AiSummaryBlock({
       <div class="summary__bar">
         <span class="l">
           <span class="spark">✦</span>
-          <span class="lbl">Tekoälykooste · keskustelu</span>
+          <span class="lbl">
+            {i18next.t("components:keskustelu.ai_summary_label")}
+          </span>
         </span>
         <span class="read">
-          {groupSpeechCount} ryhmäpuheenvuoroa · {totalSpeeches} puheenvuoroa
-          yhteensä
+          {i18next.t("components:keskustelu.ai_summary_meta", {
+            group: groupSpeechCount,
+            total: totalSpeeches,
+          })}
         </span>
       </div>
       <div class="summary__in">
-        <div class="summary__q">Mistä keskusteltiin?</div>
+        <div class="summary__q">
+          {i18next.t("components:keskustelu.ai_question")}
+        </div>
         <p class="summary__lead">
-          Tekoälykoostetta ei ole vielä saatavilla tälle keskustelulle.
+          {i18next.t("components:keskustelu.ai_not_available")}
         </p>
         <div class="summary__foot">
           <span class="summary__disc">
-            Koneellisesti tuotettu kooste ryhmäpuheenvuoroista. Lue alkuperäiset
-            puheenvuorot alta tai pöytäkirjasta.
+            {i18next.t("components:keskustelu.ai_disclaimer")}
           </span>
         </div>
       </div>
@@ -191,7 +222,7 @@ function ContextSection({ data }: Props) {
   return (
     <section class="ph mt-30" id="asiayhteys">
       <Kicker
-        text="Asiayhteys · mistä keskustelussa on kyse"
+        text={i18next.t("components:keskustelu.context_kicker")}
         modifier="blue"
         dot
       />
@@ -201,46 +232,59 @@ function ContextSection({ data }: Props) {
       </div>
       <div class="ctx-grid">
         <div class="ctx-box">
-          <h3>Keskustelun tiedot</h3>
+          <h3>{i18next.t("components:keskustelu.context_info_title")}</h3>
           <ul class="ctx-themes">
             <li>
-              <b>Täysistunto:</b>{" "}
+              <b>{i18next.t("components:keskustelu.context_session")}</b>{" "}
               <a href={`/istunto/${ses.key}`} style="color:var(--blue)">
                 {ses.key}
               </a>
             </li>
             <li>
-              <b>Ajankohta:</b> {ses.dateLabel}
+              <b>{i18next.t("components:keskustelu.context_time")}</b>{" "}
+              {ses.dateLabel}
             </li>
             <li>
-              <b>Puheenvuoroja:</b> {sec.totalSpeeches} ({sec.groupSpeechCount}{" "}
-              ryhmäpuheenvuoroa)
+              <b>{i18next.t("components:keskustelu.context_speeches")}</b>{" "}
+              {sec.totalSpeeches} (
+              {i18next.t("components:keskustelu.group_speech_count", {
+                count: sec.groupSpeechCount,
+              })}
+              )
             </li>
             {sec.processingTitle && (
               <li>
-                <b>Käsittelyvaihe:</b> {sec.processingTitle}
+                <b>{i18next.t("components:keskustelu.context_processing")}</b>{" "}
+                {sec.processingTitle}
               </li>
             )}
           </ul>
         </div>
         <div class="ctx-box">
           <h3>
-            {sec.identifier ? "Asiakirja" : "Lisätiedot"}
-            <small>Tietoja keskustelun kohteesta</small>
+            {sec.identifier
+              ? i18next.t("components:keskustelu.context_doc_title")
+              : i18next.t("components:keskustelu.context_info_title_extra")}
+            <small>
+              {i18next.t("components:keskustelu.context_doc_subtitle")}
+            </small>
           </h3>
           <ul class="ctx-list">
             {sec.identifier && (
               <li>
-                <span class="n">1</span>Asiakirjatunnus: <b>{sec.identifier}</b>
+                <span class="n">1</span>
+                {i18next.t("components:keskustelu.context_doc_identifier")}{" "}
+                <b>{sec.identifier}</b>
               </li>
             )}
             <li>
               <span class="n">{sec.identifier ? "2" : "1"}</span>
-              Tietolähde: <b>Eduskunnan avoin data</b>
+              {i18next.t("components:keskustelu.context_source")}{" "}
+              <b>{i18next.t("components:keskustelu.context_source_value")}</b>
             </li>
           </ul>
           <div class="ctx-src">
-            Lähde: Speech + Section · avoindata.eduskunta.fi
+            {i18next.t("components:keskustelu.context_source_detail")}
           </div>
         </div>
       </div>
@@ -262,22 +306,27 @@ function FilterToolbar({
           <input
             id="sp-search"
             type="text"
-            placeholder="Hae puhujalla tai puolueella…"
+            placeholder={i18next.t("components:keskustelu.search_placeholder")}
           />
         </label>
         <span class="count">
-          <b id="sp-count">{groupCount}</b> ryhmäpuheenvuoroa
+          <b id="sp-count">{groupCount}</b>{" "}
+          {i18next.t("components:keskustelu.group_speech_count_label", {
+            count: groupCount,
+          })}
         </span>
       </div>
       <div class="fchips">
         <button class="fchip is-active" data-filter="all">
-          Kaikki
+          {i18next.t("common:all")}
         </button>
         <button class="fchip" data-filter="hallitus">
-          <span class="pdot" style="background:var(--hall)"></span>Hallitus
+          <span class="pdot" style="background:var(--hall)"></span>
+          {i18next.t("common:government")}
         </button>
         <button class="fchip" data-filter="oppositio">
-          <span class="pdot" style="background:var(--opp)"></span>Oppositio
+          <span class="pdot" style="background:var(--opp)"></span>
+          {i18next.t("common:opposition")}
         </button>
       </div>
     </>
@@ -293,13 +342,10 @@ function SpeechTranscript({
   return (
     <>
       <p class="kicker" style="margin:26px 0 14px">
-        Ryhmäpuheenvuorot · puhejärjestyksessä
+        {i18next.t("components:keskustelu.speech_section_header")}
       </p>
       <p style="font-size:14px;line-height:1.55;color:var(--muted);max-width:66ch;margin:0 0 16px">
-        Kaikki ryhmäpuheenvuorot kokonaisina, lyhentämättöminä. Kunkin edellä on{" "}
-        <b style="color:var(--ink);font-weight:600">tekoälytiivistelmä</b>{" "}
-        nopeaa silmäilyä varten — varsinainen puheenvuoro on aina luettavissa
-        sen alla.
+        {i18next.t("components:keskustelu.speech_section_intro")}
       </p>
       <div class="transcript" id="transcript">
         {speeches.map((sp) => (
@@ -311,7 +357,7 @@ function SpeechTranscript({
         hidden
         style="text-align:center;color:var(--muted);padding:34px 0"
       >
-        Ei puheenvuoroja näillä hakuehdoilla.
+        {i18next.t("components:keskustelu.none_found")}
       </div>
     </>
   );
@@ -344,7 +390,8 @@ function SpeechCard({ speech: sp }: { speech: SpeechEntry }) {
         {sp.summary && (
           <div class="speech__sum">
             <span class="speech__sum-tag">
-              <span class="sp">✦</span>Tekoälytiivistelmä
+              <span class="sp">✦</span>
+              {i18next.t("components:keskustelu.speech_ai_tag")}
             </span>
             <p>{sp.summary}</p>
           </div>
@@ -352,12 +399,14 @@ function SpeechCard({ speech: sp }: { speech: SpeechEntry }) {
         <div class="speech__body">{sp.content && <p>{sp.content}</p>}</div>
         <div class="speech__foot">
           <span class="meta">
-            {sp.contentLength.toLocaleString("fi-FI")} merkkiä
+            {sp.contentLength.toLocaleString("fi-FI")}{" "}
+            {i18next.t("common:characters")}
             {sp.durationLabel ? ` · ${sp.durationLabel}` : ""}
-            {" · "}suomi
+            {" · "}
+            {i18next.t("common:language_fi")}
           </span>
           <button type="button" class="link-arrow">
-            Avaa pöytäkirjassa (PTK) ↗
+            {i18next.t("common:open_in_minutes")}
           </button>
         </div>
       </div>
@@ -379,10 +428,11 @@ function MoreSpeeches({
 
   return (
     <div class="more-speeches">
-      <h4>Ryhmäpuheenvuorojen jälkeen</h4>
+      <h4>{i18next.t("components:keskustelu.response_section_title")}</h4>
       <p style="font-size:14.5px;line-height:1.55;color:var(--body);margin:0">
-        Ryhmäpuheenvuorokierroksen jälkeen käytiin debatti, jossa pidettiin{" "}
-        <b style="color:var(--ink)">{total} vastaus- ja muuta puheenvuoroa</b>.
+        {i18next.t("components:keskustelu.response_section_intro", {
+          count: total,
+        })}
       </p>
       {sample.map((sp) => (
         <div class="reply-row">
@@ -397,17 +447,21 @@ function MoreSpeeches({
         <div class="reply-row">
           <span class="d" style="background:var(--faint)"></span>
           <span class="nm">
-            <small>…ja {speeches.length - 8} muuta puheenvuoroa</small>
+            <small>
+              {i18next.t("components:keskustelu.response_more", {
+                count: speeches.length - 8,
+              })}
+            </small>
           </span>
           <span class="tm"></span>
         </div>
       )}
       <div class="mt-14 flex-wrap-g16">
         <a href={`/istunto/${sessionKey}`} class="link-arrow">
-          Näytä kaikki {total} puheenvuoroa pöytäkirjasta ↗
+          {i18next.t("common:show_all_speeches", { count: total })}
         </a>
         <a href={`/istunto/${sessionKey}`} class="link-arrow">
-          Takaisin istuntoon →
+          {i18next.t("common:back_to_istuntoon")}
         </a>
       </div>
     </div>
@@ -426,14 +480,24 @@ function VoteOutcome({
 
   return (
     <section class="ph" id="paatos">
-      <Kicker text="Päätös · ainoa käsittely" modifier="blue" dot />
+      <Kicker
+        text={i18next.t("components:keskustelu.vote_section_kicker")}
+        modifier="blue"
+        dot
+      />
       <div class="ph__head">
-        <h2>Miten asia ratkesi</h2>
-        <span class="meta">{votings.length} äänestystä</span>
+        <h2>{i18next.t("components:keskustelu.vote_section_title")}</h2>
+        <span class="meta">
+          {i18next.t("components:keskustelu.vote_section_meta", {
+            count: votings.length,
+          })}
+        </span>
       </div>
       <p class="ph__intro">
-        Keskustelun jälkeen asiasta äänestettiin.{" "}
-        {hasMultiple ? "Äänestyksiä oli useita." : ""}
+        {i18next.t("components:keskustelu.vote_section_intro")}{" "}
+        {hasMultiple
+          ? i18next.t("components:keskustelu.vote_section_intro_multiple")
+          : ""}
       </p>
       <div class="ag-votes mt-8">
         {votings.map((v) => (
@@ -457,19 +521,30 @@ function VoteOutcome({
         <div class="decision__main">
           <div class="t">
             {mainVote.outcomeClass === "ok"
-              ? `Eduskunta hyväksyi kannanoton, ${mainVote.nYes}–${mainVote.nNo}`
-              : `Kannanotto hylättiin, ${mainVote.nYes}–${mainVote.nNo}`}
+              ? i18next.t("components:keskustelu.vote_decision_approved", {
+                  yes: mainVote.nYes,
+                  no: mainVote.nNo,
+                })
+              : i18next.t("components:keskustelu.vote_decision_rejected", {
+                  yes: mainVote.nYes,
+                  no: mainVote.nNo,
+                })}
           </div>
           <div class="s">
-            Äänestystulos: JAA {mainVote.nYes}, EI {mainVote.nNo}.
+            {i18next.t("components:keskustelu.vote_result_text", {
+              yes: mainVote.nYes,
+              no: mainVote.nNo,
+            })}
           </div>
         </div>
       </div>
       <div class="source-note">
-        <span>Lähde:</span>
+        <span>{i18next.t("common:source")}</span>
         <span class="dset">Eduskunnan avoin data · Voting</span>
         <span>·</span>
-        <span class="fresh">haettu {fetchedAt}</span>
+        <span class="fresh">
+          {i18next.t("common:fetched", { timestamp: fetchedAt })}
+        </span>
       </div>
     </section>
   );
@@ -478,10 +553,12 @@ function VoteOutcome({
 function SpeechSourceNote({ fetchedAt }: { fetchedAt: string }) {
   return (
     <div class="source-note mt-32">
-      <span>Lähde:</span>
+      <span>{i18next.t("common:source")}</span>
       <span class="dset">Eduskunnan avoin data · Speech + SpeechContent</span>
       <span>·</span>
-      <span class="fresh">haettu {fetchedAt}</span>
+      <span class="fresh">
+        {i18next.t("common:fetched", { timestamp: fetchedAt })}
+      </span>
     </div>
   );
 }

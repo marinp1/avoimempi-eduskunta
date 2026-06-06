@@ -13,28 +13,29 @@ import { richTextToHtml } from "../../../webapp/templates/components/rich-text";
 import { renderFullPage } from "../../../webapp/eta";
 import { page, getWebappContext, getRouteParam, isHtmx } from "./helpers";
 import type { WebappDeps } from "./deps";
+import i18next from "i18next";
 
 const KIND_TO_LABEL: Record<string, string> = {
-  kk: "Kirjallinen kysymys",
-  suullinen: "Suullinen kysymys",
-  valikysymys: "Välikysymys",
-  he: "Hallituksen esitys",
-  aloite: "Lakialoite",
-  mietinto: "Mietintö",
-  vastaus: "Kirjallinen vastaus",
-  "vastaus-edk": "Eduskunnan vastaus",
+  kk: i18next.t("asiakirjat:kind_labels.kk"),
+  suullinen: i18next.t("asiakirjat:kind_labels.suullinen"),
+  valikysymys: i18next.t("asiakirjat:kind_labels.valikysymys"),
+  he: i18next.t("asiakirjat:kind_labels.he"),
+  aloite: i18next.t("asiakirjat:kind_labels.aloite"),
+  mietinto: i18next.t("asiakirjat:kind_labels.mietinto"),
+  vastaus: i18next.t("asiakirjat:kind_labels.vastaus"),
+  "vastaus-edk": i18next.t("asiakirjat:kind_labels.vastaus-edk"),
 };
 
 const LA_LABELS: Record<string, string> = {
-  LA: "Lakialoite",
-  TPA: "Toimenpidealoite",
-  RA: "Rahoitusaloite",
-  A: "Aloite",
+  LA: i18next.t("asiakirjat:initiative_type_labels.LA"),
+  TPA: i18next.t("asiakirjat:initiative_type_labels.TPA"),
+  RA: i18next.t("asiakirjat:initiative_type_labels.RA"),
+  A: i18next.t("asiakirjat:initiative_type_labels.RA"),
 };
 
 const REPORT_LABELS: Record<string, string> = {
-  M: "Mietintö",
-  L: "Lausunto",
+  M: i18next.t("asiakirjat:report_type_labels.M"),
+  L: i18next.t("asiakirjat:report_type_labels.L"),
 };
 
 export function createAsiakirjaRoute(deps: WebappDeps) {
@@ -71,19 +72,19 @@ type BuilderFn = (id: string, deps: WebappDeps) => AsiakirjaViewModel | null;
 
 function notFoundResponse(req: Request): Response {
   const htmx = isHtmx(req);
-  const fragment = `<title>Sivua ei löydy — Eduskuntapeili</title>
+  const fragment = `<title>${i18next.t("common:page_title_format", { title: i18next.t("asiakirjat:detail.not_found_title"), brand: i18next.t("common:brand_name") })}</title>
 <div class="wrap">
   <section class="page-head">
-    <h1>Sivua ei löydy</h1>
-    <p class="sub">Asiakirjaa ei löytynyt tietokannasta.</p>
-    <p><a href="/asiakirjat">Palaa asiakirjoihin</a></p>
+    <h1>${i18next.t("asiakirjat:detail.not_found_title")}</h1>
+    <p class="sub">${i18next.t("asiakirjat:detail.not_found_desc")}</p>
+    <p><a href="/asiakirjat">${i18next.t("asiakirjat:detail.back_to_docs")}</a></p>
   </section>
 </div>`;
   const body = htmx
     ? fragment
     : renderFullPage(fragment, {
         activePath: "/asiakirjat",
-        title: "Sivua ei löydy",
+        title: i18next.t("asiakirjat:detail.not_found_title"),
       });
   return new Response(body, {
     status: 404,
@@ -108,7 +109,10 @@ function authorsByName(
   first: string | null | undefined,
   last: string | null | undefined,
 ): string {
-  return [first, last].filter(Boolean).join(" ") || "Tuntematon";
+  return (
+    [first, last].filter(Boolean).join(" ") ||
+    i18next.t("asiakirjat:detail.unknown_author")
+  );
 }
 
 function initialsFrom(
@@ -203,7 +207,7 @@ function buildWrittenQuestion(
   if (submissionDate) {
     lifecycleStages.push({
       step: 1,
-      label: "Kysymys jätetty",
+      label: i18next.t("asiakirjat:detail.stage_question_submitted"),
       date: submissionDate,
       done: true,
     });
@@ -215,7 +219,9 @@ function buildWrittenQuestion(
     for (const s of rawStages) {
       lifecycleStages.push({
         step: lifecycleStages.length + 1,
-        label: (s.stage_title || s.event_title || "Käsittelyvaihe") as string,
+        label: (s.stage_title ||
+          s.event_title ||
+          i18next.t("asiakirjat:detail.stage_processing")) as string,
         date: (s.event_date as string) ?? null,
         done: true,
       });
@@ -224,7 +230,7 @@ function buildWrittenQuestion(
   if (answerDate) {
     lifecycleStages.push({
       step: lifecycleStages.length + 1,
-      label: "Ministerin vastaus",
+      label: i18next.t("asiakirjat:detail.stage_minister_answer"),
       date: answerDate,
       done: true,
       tag: "vastattu",
@@ -233,7 +239,7 @@ function buildWrittenQuestion(
 
   const textSections: TextSection[] = [];
   const qs = buildTextSection(
-    "Kysymys",
+    i18next.t("asiakirjat:detail.text_section_question"),
     detail.question_text,
     detail.question_rich_text,
   );
@@ -246,8 +252,10 @@ function buildWrittenQuestion(
   const signatories: Signatory[] = rawSigners.map((s) => ({
     name:
       ([s.first_name, s.last_name].filter(Boolean).join(" ") as string) ||
-      "Tuntematon",
-    role: s.is_first_signer ? "Ensimmäinen allekirjoittaja" : "Allekirjoittaja",
+      i18next.t("asiakirjat:detail.unknown_author"),
+    role: s.is_first_signer
+      ? i18next.t("asiakirjat:detail.first_signer")
+      : i18next.t("asiakirjat:detail.signer"),
     party: (s.party as string) ?? null,
     partyColor: s.party ? partyColor(s.party as string) : null,
     personId: (s.person_id as number) ?? null,
@@ -264,7 +272,7 @@ function buildWrittenQuestion(
       detail.first_signer_first_name,
       detail.first_signer_last_name,
     ),
-    authorRole: "Kansanedustaja",
+    authorRole: i18next.t("asiakirjat:detail.mp_role"),
     authorParty,
     authorPartyColor: partyColor(authorParty),
     authorPersonId: detail.first_signer_person_id,
@@ -274,14 +282,20 @@ function buildWrittenQuestion(
     ),
     authorDistrict: mpDistrict(detail.first_signer_person_id, deps),
     primaryDate: formatFi(submissionDate),
-    primaryDateLabel: "Jätetty",
+    primaryDateLabel: i18next.t("asiakirjat:status_labels.submitted"),
     secondaryDate: answerDate ? formatFi(answerDate) : null,
-    secondaryDateLabel: answerDate ? "Vastattu" : null,
+    secondaryDateLabel: answerDate
+      ? i18next.t("asiakirjat:status_labels.answered")
+      : null,
     statusLabel: answerDate
-      ? "Vastattu " + formatFi(answerDate)
+      ? i18next.t("asiakirjat:status_labels.answered_on", {
+          date: formatFi(answerDate),
+        })
       : submissionDate
-        ? "Jätetty " + formatFi(submissionDate)
-        : "Vireillä",
+        ? i18next.t("asiakirjat:status_labels.submitted_on", {
+            date: formatFi(submissionDate),
+          })
+        : i18next.t("asiakirjat:status_labels.pending"),
     statusColor: answerDate ? "var(--hall)" : "var(--muted)",
     textSections,
     lifecycleStages,
@@ -319,7 +333,11 @@ function buildOralQuestion(
   );
 
   const textSections: TextSection[] = [];
-  const qs = buildTextSection("Suullinen kysymys", detail.question_text, null);
+  const qs = buildTextSection(
+    i18next.t("asiakirjat:detail.text_section_oral_question"),
+    detail.question_text,
+    null,
+  );
   if (qs) textSections.push(qs);
 
   const author = detail.asker_text ?? "";
@@ -330,7 +348,7 @@ function buildOralQuestion(
     identifier: detail.parliament_identifier,
     documentTypeLabel: KIND_TO_LABEL.suullinen!,
     title: detail.title ?? "",
-    authorName: author || "Tuntematon",
+    authorName: author || i18next.t("asiakirjat:detail.unknown_author"),
     authorRole: null,
     authorParty: null,
     authorPartyColor: "#999999",
@@ -338,14 +356,16 @@ function buildOralQuestion(
     authorInitials: author ? author.slice(0, 2).toUpperCase() : "?",
     authorDistrict: null,
     primaryDate: formatFi(submissionDate),
-    primaryDateLabel: "Jätetty",
+    primaryDateLabel: i18next.t("asiakirjat:status_labels.submitted"),
     secondaryDate: null,
     secondaryDateLabel: null,
     statusLabel: detail.decision_outcome
-      ? "Käsitelty"
+      ? i18next.t("asiakirjat:status_labels.handled")
       : submissionDate
-        ? "Jätetty " + formatFi(submissionDate)
-        : "Vireillä",
+        ? i18next.t("asiakirjat:status_labels.submitted_on", {
+            date: formatFi(submissionDate),
+          })
+        : i18next.t("asiakirjat:status_labels.pending"),
     statusColor: detail.decision_outcome ? "var(--hall)" : "var(--muted)",
     textSections,
     lifecycleStages,
@@ -380,13 +400,13 @@ function buildInterpellation(
 
   const textSections: TextSection[] = [];
   const qs = buildTextSection(
-    "Välikysymys",
+    i18next.t("asiakirjat:detail.text_section_interpellation"),
     detail.question_text,
     detail.question_rich_text,
   );
   if (qs) textSections.push(qs);
   const rs = buildTextSection(
-    "Ponsi",
+    i18next.t("asiakirjat:detail.text_section_resolution"),
     detail.resolution_text,
     detail.resolution_rich_text,
   );
@@ -399,8 +419,10 @@ function buildInterpellation(
   const signatories: Signatory[] = rawSigners.map((s) => ({
     name:
       ([s.first_name, s.last_name].filter(Boolean).join(" ") as string) ||
-      "Tuntematon",
-    role: s.is_first_signer ? "Ensimmäinen allekirjoittaja" : "Allekirjoittaja",
+      i18next.t("asiakirjat:detail.unknown_author"),
+    role: s.is_first_signer
+      ? i18next.t("asiakirjat:detail.first_signer")
+      : i18next.t("asiakirjat:detail.signer"),
     party: (s.party as string) ?? null,
     partyColor: s.party ? partyColor(s.party as string) : null,
     personId: (s.person_id as number) ?? null,
@@ -417,7 +439,7 @@ function buildInterpellation(
       detail.first_signer_first_name,
       detail.first_signer_last_name,
     ),
-    authorRole: "Kansanedustaja",
+    authorRole: i18next.t("asiakirjat:detail.mp_role"),
     authorParty,
     authorPartyColor: partyColor(authorParty),
     authorPersonId: detail.first_signer_person_id,
@@ -427,10 +449,12 @@ function buildInterpellation(
     ),
     authorDistrict: mpDistrict(detail.first_signer_person_id, deps),
     primaryDate: formatFi(submissionDate),
-    primaryDateLabel: "Jätetty",
+    primaryDateLabel: i18next.t("asiakirjat:status_labels.submitted"),
     secondaryDate: null,
     secondaryDateLabel: null,
-    statusLabel: detail.decision_outcome ? "Käsitelty" : "Vireillä",
+    statusLabel: detail.decision_outcome
+      ? i18next.t("asiakirjat:status_labels.handled")
+      : i18next.t("asiakirjat:status_labels.pending"),
     statusColor: detail.decision_outcome ? "var(--hall)" : "var(--muted)",
     textSections,
     lifecycleStages,
@@ -465,25 +489,25 @@ function buildGovernmentProposal(
 
   const textSections: TextSection[] = [];
   const sum = buildTextSection(
-    "Tiivistelmä",
+    i18next.t("asiakirjat:detail.text_section_summary"),
     detail.summary_text,
     detail.summary_rich_text,
   );
   if (sum) textSections.push(sum);
   const jst = buildTextSection(
-    "Perustelut",
+    i18next.t("asiakirjat:detail.text_section_justification"),
     detail.justification_text,
     detail.justification_rich_text,
   );
   if (jst) textSections.push(jst);
   const prop = buildTextSection(
-    "Ehdotus",
+    i18next.t("asiakirjat:detail.text_section_proposal"),
     detail.proposal_text,
     detail.proposal_rich_text,
   );
   if (prop) textSections.push(prop);
   const app = buildTextSection(
-    "Liite",
+    i18next.t("asiakirjat:detail.text_section_appendix"),
     detail.appendix_text,
     detail.appendix_rich_text,
   );
@@ -496,7 +520,7 @@ function buildGovernmentProposal(
   const signatories: Signatory[] = rawSignatories.map((s) => ({
     name:
       ([s.first_name, s.last_name].filter(Boolean).join(" ") as string) ||
-      "Tuntematon",
+      i18next.t("asiakirjat:detail.unknown_author"),
     role: (s.title_text as string) ?? null,
     party: null,
     partyColor: null,
@@ -520,20 +544,24 @@ function buildGovernmentProposal(
     identifier: detail.parliament_identifier,
     documentTypeLabel: KIND_TO_LABEL.he!,
     title: detail.title ?? "",
-    authorName: author || "Tuntematon",
-    authorRole: "Ministeriö",
+    authorName: author || i18next.t("asiakirjat:detail.unknown_author"),
+    authorRole: i18next.t("asiakirjat:detail.ministry_role"),
     authorParty: null,
     authorPartyColor: "#999999",
     authorPersonId: null,
     authorInitials: author ? author.slice(0, 2).toUpperCase() : "?",
     authorDistrict: null,
     primaryDate: formatFi(submissionDate),
-    primaryDateLabel: "Jätetty",
+    primaryDateLabel: i18next.t("asiakirjat:status_labels.submitted"),
     secondaryDate: detail.signature_date
       ? formatFi(detail.signature_date)
       : null,
-    secondaryDateLabel: detail.signature_date ? "Allekirjoitettu" : null,
-    statusLabel: detail.decision_outcome ? "Käsitelty" : "Vireillä",
+    secondaryDateLabel: detail.signature_date
+      ? i18next.t("asiakirjat:status_labels.signed")
+      : null,
+    statusLabel: detail.decision_outcome
+      ? i18next.t("asiakirjat:status_labels.handled")
+      : i18next.t("asiakirjat:status_labels.pending"),
     statusColor: detail.decision_outcome ? "var(--hall)" : "var(--muted)",
     textSections,
     lifecycleStages,
@@ -569,19 +597,19 @@ function buildLegislativeInitiative(
 
   const textSections: TextSection[] = [];
   const jst = buildTextSection(
-    "Perustelut",
+    i18next.t("asiakirjat:detail.text_section_justification"),
     detail.justification_text,
     detail.justification_rich_text,
   );
   if (jst) textSections.push(jst);
   const prop = buildTextSection(
-    "Ehdotus",
+    i18next.t("asiakirjat:detail.text_section_proposal"),
     detail.proposal_text,
     detail.proposal_rich_text,
   );
   if (prop) textSections.push(prop);
   const law = buildTextSection(
-    "Lakiteksti",
+    i18next.t("asiakirjat:detail.text_section_law_text"),
     detail.law_text,
     detail.law_rich_text,
   );
@@ -594,15 +622,18 @@ function buildLegislativeInitiative(
   const signatories: Signatory[] = rawSigners.map((s) => ({
     name:
       ([s.first_name, s.last_name].filter(Boolean).join(" ") as string) ||
-      "Tuntematon",
-    role: s.is_first_signer ? "Ensimmäinen allekirjoittaja" : "Allekirjoittaja",
+      i18next.t("asiakirjat:detail.unknown_author"),
+    role: s.is_first_signer
+      ? i18next.t("asiakirjat:detail.first_signer")
+      : i18next.t("asiakirjat:detail.signer"),
     party: (s.party as string) ?? null,
     partyColor: s.party ? partyColor(s.party as string) : null,
     personId: (s.person_id as number) ?? null,
   }));
 
   const authorParty = detail.first_signer_party ?? "";
-  const label = LA_LABELS[typeCode] ?? "Aloite";
+  const label =
+    LA_LABELS[typeCode] ?? i18next.t("asiakirjat:initiative_type_labels.RA");
   return {
     kind: "aloite",
     id: detail.id,
@@ -613,7 +644,7 @@ function buildLegislativeInitiative(
       detail.first_signer_first_name,
       detail.first_signer_last_name,
     ),
-    authorRole: "Kansanedustaja",
+    authorRole: i18next.t("asiakirjat:detail.mp_role"),
     authorParty,
     authorPartyColor: partyColor(authorParty),
     authorPersonId: detail.first_signer_person_id,
@@ -623,10 +654,12 @@ function buildLegislativeInitiative(
     ),
     authorDistrict: mpDistrict(detail.first_signer_person_id, deps),
     primaryDate: formatFi(submissionDate),
-    primaryDateLabel: "Jätetty",
+    primaryDateLabel: i18next.t("asiakirjat:status_labels.submitted"),
     secondaryDate: null,
     secondaryDateLabel: null,
-    statusLabel: detail.decision_outcome ? "Käsitelty" : "Vireillä",
+    statusLabel: detail.decision_outcome
+      ? i18next.t("asiakirjat:status_labels.handled")
+      : i18next.t("asiakirjat:status_labels.pending"),
     statusColor: detail.decision_outcome ? "var(--hall)" : "var(--muted)",
     textSections,
     lifecycleStages,
@@ -653,47 +686,49 @@ function buildCommitteeReport(
   if (!detail) return null;
 
   const signatureDate = detail.signature_date ?? detail.draft_date ?? "";
-  const reportType = REPORT_LABELS[detail.report_type_code ?? ""] ?? "Mietintö";
+  const reportType =
+    REPORT_LABELS[detail.report_type_code ?? ""] ??
+    i18next.t("asiakirjat:report_type_labels.M");
 
   const textSections: TextSection[] = [];
   const sum = buildTextSection(
-    "Tiivistelmä",
+    i18next.t("asiakirjat:detail.text_section_summary"),
     detail.summary_text,
     detail.summary_rich_text,
   );
   if (sum) textSections.push(sum);
   const gen = buildTextSection(
-    "Yleisperustelut",
+    i18next.t("asiakirjat:detail.text_section_general_reasoning"),
     detail.general_reasoning_text,
     detail.general_reasoning_rich_text,
   );
   if (gen) textSections.push(gen);
   const det = buildTextSection(
-    "Yksityiskohtaiset perustelut",
+    i18next.t("asiakirjat:detail.text_section_detailed_reasoning"),
     detail.detailed_reasoning_text,
     detail.detailed_reasoning_rich_text,
   );
   if (det) textSections.push(det);
   const dec = buildTextSection(
-    "Päätösehdotus",
+    i18next.t("asiakirjat:detail.text_section_decision_proposal"),
     detail.decision_text,
     detail.decision_rich_text,
   );
   if (dec) textSections.push(dec);
   const amd = buildTextSection(
-    "Lainsäädäntömuutos",
+    i18next.t("asiakirjat:detail.text_section_legislation_amendment"),
     detail.legislation_amendment_text,
     detail.legislation_amendment_rich_text,
   );
   if (amd) textSections.push(amd);
   const min = buildTextSection(
-    "Eriävä mielipide",
+    i18next.t("asiakirjat:detail.text_section_minority_opinion"),
     detail.minority_opinion_text,
     detail.minority_opinion_rich_text,
   );
   if (min) textSections.push(min);
   const res = buildTextSection(
-    "Ponsi",
+    i18next.t("asiakirjat:detail.text_section_resolution"),
     detail.resolution_text,
     detail.resolution_rich_text,
   );
@@ -711,8 +746,8 @@ function buildCommitteeReport(
     ...rawMembers.map((m) => ({
       name:
         ([m.first_name, m.last_name].filter(Boolean).join(" ") as string) ||
-        "Tuntematon",
-      role: (m.role as string) ?? "Jäsen",
+        i18next.t("asiakirjat:detail.unknown_author"),
+      role: (m.role as string) ?? i18next.t("asiakirjat:detail.member_role"),
       party: (m.party as string) ?? null,
       partyColor: m.party ? partyColor(m.party as string) : null,
       personId: (m.person_id as number) ?? null,
@@ -720,8 +755,11 @@ function buildCommitteeReport(
     ...rawExperts.map((e) => ({
       name:
         ([e.first_name, e.last_name].filter(Boolean).join(" ") as string) ||
-        "Tuntematon",
-      role: (e.title as string) ?? (e.organization as string) ?? "Asiantuntija",
+        i18next.t("asiakirjat:detail.unknown_author"),
+      role:
+        (e.title as string) ??
+        (e.organization as string) ??
+        i18next.t("asiakirjat:detail.expert_role"),
       party: null,
       partyColor: null,
       personId: (e.person_id as number) ?? null,
@@ -735,18 +773,20 @@ function buildCommitteeReport(
     identifier: detail.parliament_identifier,
     documentTypeLabel: reportType,
     title: detail.title ?? "",
-    authorName: committee || "Tuntematon",
-    authorRole: "Valiokunta",
+    authorName: committee || i18next.t("asiakirjat:detail.unknown_author"),
+    authorRole: i18next.t("asiakirjat:detail.committee_role"),
     authorParty: null,
     authorPartyColor: "#999999",
     authorPersonId: null,
     authorInitials: committee ? committee.slice(0, 2).toUpperCase() : "?",
     authorDistrict: null,
     primaryDate: formatFi(signatureDate),
-    primaryDateLabel: "Annettu",
+    primaryDateLabel: i18next.t("asiakirjat:status_labels.given"),
     secondaryDate: detail.draft_date ? formatFi(detail.draft_date) : null,
-    secondaryDateLabel: detail.draft_date ? "Luonnos" : null,
-    statusLabel: "Annettu",
+    secondaryDateLabel: detail.draft_date
+      ? i18next.t("asiakirjat:detail.stage_draft")
+      : null,
+    statusLabel: i18next.t("asiakirjat:status_labels.given"),
     statusColor: "var(--hall)",
     textSections,
     lifecycleStages: [],
@@ -776,13 +816,13 @@ function buildParliamentAnswer(
 
   const textSections: TextSection[] = [];
   const dec = buildTextSection(
-    "Päätös",
+    i18next.t("asiakirjat:detail.text_section_decision"),
     detail.decision_text,
     detail.decision_rich_text,
   );
   if (dec) textSections.push(dec);
   const leg = buildTextSection(
-    "Lainsäädäntö",
+    i18next.t("asiakirjat:detail.text_section_legislation"),
     detail.legislation_text,
     detail.legislation_rich_text,
   );
@@ -794,7 +834,7 @@ function buildParliamentAnswer(
     identifier: detail.parliament_identifier,
     documentTypeLabel: KIND_TO_LABEL["vastaus-edk"]!,
     title: detail.title ?? "",
-    authorName: "Eduskunta",
+    authorName: i18next.t("asiakirjat:detail.author_parliament"),
     authorRole: null,
     authorParty: null,
     authorPartyColor: "#999999",
@@ -802,12 +842,14 @@ function buildParliamentAnswer(
     authorInitials: "E",
     authorDistrict: null,
     primaryDate: formatFi(submissionDate),
-    primaryDateLabel: "Annettu",
+    primaryDateLabel: i18next.t("asiakirjat:status_labels.given"),
     secondaryDate: detail.signature_date
       ? formatFi(detail.signature_date)
       : null,
-    secondaryDateLabel: detail.signature_date ? "Allekirjoitettu" : null,
-    statusLabel: "Annettu",
+    secondaryDateLabel: detail.signature_date
+      ? i18next.t("asiakirjat:status_labels.signed")
+      : null,
+    statusLabel: i18next.t("asiakirjat:status_labels.given"),
     statusColor: "var(--hall)",
     textSections,
     lifecycleStages: [],
@@ -834,7 +876,11 @@ function buildLifecycleFromStages(
   for (const s of stages) {
     result.push({
       step: result.length + 1,
-      label: String(s.stage_title || s.event_title || "Käsittelyvaihe"),
+      label: String(
+        s.stage_title ||
+          s.event_title ||
+          i18next.t("asiakirjat:detail.stage_processing"),
+      ),
       date: (s.event_date as string) ?? null,
       done: true,
     });

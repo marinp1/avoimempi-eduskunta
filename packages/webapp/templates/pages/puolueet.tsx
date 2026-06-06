@@ -2,6 +2,7 @@
 import Kicker from "../components/kicker";
 import { esc } from "../helpers";
 import type { PuolueetData, PartyRow } from "./puolueet-view-model";
+import i18next from "i18next";
 
 const NAV = {
   "hx-target": "#main-content",
@@ -21,14 +22,22 @@ export default function Puolueet({ title, data }: Props) {
 
   return (
     <>
-      <title>{title} — Eduskuntapeili</title>
+      <title>
+        {i18next.t("common:page_title_format", {
+          title: title || "",
+          brand: i18next.t("common:brand_name"),
+        })}
+      </title>
 
       <div class="wrap">
         <section class="page-head">
-          <Kicker text="Puolueet" />
-          <h1>Eduskuntaryhmät</h1>
+          <Kicker text={i18next.t("puolueet:kicker")} />
+          <h1>{i18next.t("puolueet:heading")}</h1>
           <p class="sub">
-            {d.totalSeats} kansanedustajaa · {d.rows.length} eduskuntaryhmää
+            {i18next.t("puolueet:subtitle", {
+              seats: d.totalSeats,
+              groups: d.rows.length,
+            })}
           </p>
         </section>
 
@@ -47,11 +56,11 @@ export default function Puolueet({ title, data }: Props) {
             <div class="bloc-legend">
               <span>
                 <span class="dot" style="background:var(--hall)"></span>
-                Hallitus · {d.govSeats} paikkaa
+                {i18next.t("puolueet:gov_seats", { seats: d.govSeats })}
               </span>
               <span>
                 <span class="dot" style="background:var(--red)"></span>
-                Oppositio · {d.oppSeats} paikkaa
+                {i18next.t("puolueet:opp_seats", { seats: d.oppSeats })}
               </span>
             </div>
           </>
@@ -60,9 +69,13 @@ export default function Puolueet({ title, data }: Props) {
         {govRows.length > 0 && (
           <div class="pgroup">
             <div class="week-head">
-              <span class="week-head__k">Hallitus</span>
-              <span class="week-head__t">Hallituspuolueet</span>
-              <span class="week-head__meta">{govRows.length} ryhmää</span>
+              <span class="week-head__k">{i18next.t("common:government")}</span>
+              <span class="week-head__t">
+                {i18next.t("puolueet:gov_label")}
+              </span>
+              <span class="week-head__meta">
+                {i18next.t("puolueet:groups_label", { count: govRows.length })}
+              </span>
             </div>
             <div class="prow-list">
               {govRows.map((r) => (
@@ -75,9 +88,13 @@ export default function Puolueet({ title, data }: Props) {
         {oppRows.length > 0 && (
           <div class="pgroup">
             <div class="week-head">
-              <span class="week-head__k">Oppositio</span>
-              <span class="week-head__t">Oppositiopuolueet</span>
-              <span class="week-head__meta">{oppRows.length} ryhmää</span>
+              <span class="week-head__k">{i18next.t("common:opposition")}</span>
+              <span class="week-head__t">
+                {i18next.t("puolueet:opp_label")}
+              </span>
+              <span class="week-head__meta">
+                {i18next.t("puolueet:groups_label", { count: oppRows.length })}
+              </span>
             </div>
             <div class="prow-list">
               {oppRows.map((r) => (
@@ -88,12 +105,14 @@ export default function Puolueet({ title, data }: Props) {
         )}
 
         <div class="source-note mt-32">
-          <span>Lähde:</span>
+          <span>{i18next.t("common:source")}</span>
           <span class="dset">
             Eduskunnan avoin data · MemberOfParliament + Voting
           </span>
           <span>·</span>
-          <span class="fresh">haettu {d.fetchedAt}</span>
+          <span class="fresh">
+            {i18next.t("common:fetched", { timestamp: d.fetchedAt })}
+          </span>
         </div>
       </div>
     </>
@@ -114,15 +133,19 @@ function PartyRowItem({ row }: { row: PartyRow }) {
       <div class="prow__id">
         <span class="prow__name">{esc(row.name)}</span>
         {row.chairName && (
-          <span class="prow__sub">pj. {esc(row.chairName)}</span>
+          <span class="prow__sub">
+            {i18next.t("puolueet:chair_prefix")} {esc(row.chairName)}
+          </span>
         )}
       </div>
       <div class="prow__seats">
         <b>{row.seatCount}</b>
-        <small>{row.seatShare} paikoista</small>
+        <small>
+          {row.seatShare} {i18next.t("puolueet:share_of_seats")}
+        </small>
       </div>
       <div class="prow__coh">
-        <span class="prow__coh-k">Ryhmäkuri</span>
+        <span class="prow__coh-k">{i18next.t("puolueet:cohesion_label")}</span>
         <span class="prow__track">
           <span
             class="fill"

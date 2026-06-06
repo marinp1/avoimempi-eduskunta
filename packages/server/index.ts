@@ -1,4 +1,5 @@
 // modules/server/server.ts
+import "../shared/i18n";
 import packageJson from "../../package.json";
 import {
   getLastMigratorRunAtPath,

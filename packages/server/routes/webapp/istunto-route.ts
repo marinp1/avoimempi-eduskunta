@@ -4,6 +4,7 @@ import { page, getRouteParam, getWebappContext } from "./helpers";
 import { fetchedAt } from "../../../webapp/templates/helpers";
 import type { PartySeatRow } from "#shared-types";
 import type { WebappDeps } from "./deps";
+import i18next from "i18next";
 
 export function createIstuntoRoute(deps: WebappDeps) {
   return {
@@ -78,7 +79,7 @@ export function createIstuntoRoute(deps: WebappDeps) {
           req,
           Istunto({ data }),
           "/istunnot",
-          `Täysistunto ${key}`,
+          i18next.t("common:session_title_format", { key }),
           tlData,
         );
       },

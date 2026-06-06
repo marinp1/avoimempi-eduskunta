@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import i18next from "i18next";
 import { esc } from "../helpers";
 
 function attrs(data: Record<string, unknown>): Record<string, string> {
@@ -53,10 +54,14 @@ export function SourceNote({ dataset, fetchedAt, extra }: SourceNoteOptions) {
   const showDot = (dataset && fetchedAt) || extra;
   return (
     <div class="source-note">
-      <span>Lähde:</span>
+      <span>{i18next.t("common:source")}</span>
       {dataset ? <span class="dset">{esc(dataset)}</span> : null}
       {showDot ? <span>·</span> : null}
-      {fetchedAt ? <span class="fresh">haettu {esc(fetchedAt)}</span> : null}
+      {fetchedAt ? (
+        <span class="fresh">
+          {i18next.t("common:fetched", { timestamp: esc(fetchedAt) })}
+        </span>
+      ) : null}
       {extra ? <span>·</span> : null}
       {extra ? <span>{extra}</span> : null}
     </div>

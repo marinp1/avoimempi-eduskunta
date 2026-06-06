@@ -9,18 +9,19 @@ import {
   getRouteParam,
 } from "./helpers";
 import type { WebappDeps } from "./deps";
+import i18next from "i18next";
 
 const INITIATIVE_LABELS: Record<string, string> = {
-  LA: "Lakialoite",
-  TPA: "Toimenpidealoite",
-  RA: "Rahoitusaloite",
-  A: "Aloite",
+  LA: i18next.t("asiakirjat:initiative_type_labels.LA"),
+  TPA: i18next.t("asiakirjat:initiative_type_labels.TPA"),
+  RA: i18next.t("asiakirjat:initiative_type_labels.RA"),
+  A: i18next.t("asiakirjat:initiative_type_labels.A"),
 };
 
 const QUESTION_LABELS: Record<string, string> = {
-  written_question: "Kirjallinen kysymys",
-  interpellation: "Välikysymys",
-  oral_question: "Suullinen kysymys",
+  written_question: i18next.t("asiakirjat:kind_labels.kk"),
+  interpellation: i18next.t("asiakirjat:kind_labels.valikysymys"),
+  oral_question: i18next.t("asiakirjat:kind_labels.suullinen"),
 };
 
 export function createEdustajaRoute(deps: WebappDeps) {
@@ -96,9 +97,13 @@ export function createEdustajaRoute(deps: WebappDeps) {
 
         const firstTerm = terms[0];
         const memberSince = firstTerm?.start_year
-          ? `vuodesta ${firstTerm.start_year}`
+          ? i18next.t("edustajat:profile.member_since_prefix", {
+              year: firstTerm.start_year,
+            })
           : firstTerm?.start_date
-            ? `vuodesta ${new Date(firstTerm.start_date).getFullYear()}`
+            ? i18next.t("edustajat:profile.member_since_prefix", {
+                year: new Date(firstTerm.start_date).getFullYear(),
+              })
             : "";
 
         const nTotal = votes.length;
@@ -204,7 +209,8 @@ export function createEdustajaRoute(deps: WebappDeps) {
             parliamentIdentifier: i.parliament_identifier ?? "",
             initiativeTypeCode: i.initiative_type_code ?? "",
             initiativeTypeLabel:
-              INITIATIVE_LABELS[i.initiative_type_code ?? ""] ?? "Aloite",
+              INITIATIVE_LABELS[i.initiative_type_code ?? ""] ??
+              i18next.t("asiakirjat:initiative_type_labels.A"),
             title: i.title ?? "",
             submissionDate: i.submission_date ?? null,
             relationRole: i.relation_role ?? "",

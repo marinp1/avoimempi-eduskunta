@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import i18next from "i18next";
 
 export interface CompositionChangeRow {
   person_id: number;
@@ -39,12 +40,16 @@ export default function Koostumusmuutos({ date, rows }: Props) {
         hx-swap="outerHTML"
         hx-indicator="#comp-detail"
       >
-        <div class="htmx-indicator loading-spinner">Ladataan…</div>
+        <div class="htmx-indicator loading-spinner">
+          {i18next.t("common:loading")}
+        </div>
         <div class="comp-detail__head">
-          <span class="comp-detail__kicker">Kokoonpanomuutokset</span>
+          <span class="comp-detail__kicker">
+            {i18next.t("components:composition.kicker")}
+          </span>
           <span class="comp-detail__date">{date ? formatDate(date) : ""}</span>
           <span class="comp-detail__summary comp-detail__summary--empty">
-            Ei muutoksia tänä päivänä
+            {i18next.t("components:composition.empty")}
           </span>
         </div>
       </div>
@@ -61,20 +66,32 @@ export default function Koostumusmuutos({ date, rows }: Props) {
       hx-swap="outerHTML"
       hx-indicator="#comp-detail"
     >
-      <div class="htmx-indicator loading-spinner">Ladataan…</div>
+      <div class="htmx-indicator loading-spinner">
+        {i18next.t("common:loading")}
+      </div>
       <div class="comp-detail__head">
-        <span class="comp-detail__kicker">Kokoonpanomuutokset</span>
+        <span class="comp-detail__kicker">
+          {i18next.t("components:composition.kicker")}
+        </span>
         <span class="comp-detail__date">{formatDate(date)}</span>
         <span class="comp-detail__summary">
-          {joined.length > 0 && `${joined.length} liittyi`}
+          {joined.length > 0 &&
+            i18next.t("components:composition.joined_count", {
+              count: joined.length,
+            })}
           {joined.length > 0 && left.length > 0 && ", "}
-          {left.length > 0 && `${left.length} jätti`}
+          {left.length > 0 &&
+            i18next.t("components:composition.left_count", {
+              count: left.length,
+            })}
         </span>
       </div>
 
       {joined.length > 0 && (
         <div class="comp-detail__group">
-          <h3 class="comp-detail__grouptitle">Saapuneet edustajat</h3>
+          <h3 class="comp-detail__grouptitle">
+            {i18next.t("components:composition.joined_label")}
+          </h3>
           <ul class="comp-detail__list">
             {joined.map((r) => (
               <li class="comp-detail__item">
@@ -84,7 +101,10 @@ export default function Koostumusmuutos({ date, rows }: Props) {
                 <span class="comp-detail__party">{partyShort(r.party)}</span>
                 {r.replacement_person && (
                   <span class="comp-detail__repl">
-                    → korvasi {r.replacement_person}
+                    →{" "}
+                    {i18next.t("components:composition.replaced", {
+                      name: r.replacement_person,
+                    })}
                   </span>
                 )}
               </li>
@@ -95,7 +115,9 @@ export default function Koostumusmuutos({ date, rows }: Props) {
 
       {left.length > 0 && (
         <div class="comp-detail__group">
-          <h3 class="comp-detail__grouptitle">Lähteneet edustajat</h3>
+          <h3 class="comp-detail__grouptitle">
+            {i18next.t("components:composition.left_label")}
+          </h3>
           <ul class="comp-detail__list">
             {left.map((r) => (
               <li class="comp-detail__item">
@@ -105,7 +127,10 @@ export default function Koostumusmuutos({ date, rows }: Props) {
                 <span class="comp-detail__party">{partyShort(r.party)}</span>
                 {r.replacement_person && (
                   <span class="comp-detail__repl">
-                    → korvattiin: {r.replacement_person}
+                    →{" "}
+                    {i18next.t("components:composition.replaced_by", {
+                      name: r.replacement_person,
+                    })}
                   </span>
                 )}
               </li>

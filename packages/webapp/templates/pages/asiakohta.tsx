@@ -1,5 +1,6 @@
 /** @jsxImportSource ../../src/jsx */
 import { clsx } from "clsx";
+import i18next from "i18next";
 import Kicker from "../components/kicker";
 import { esc } from "../helpers";
 import type { AsiakohtaData } from "./asiakohta-view-model";
@@ -22,8 +23,10 @@ export default function Asiakohta({
   return (
     <>
       <title>
-        {sec.itemNumber ? `Asiakohta ${sec.itemNumber} · ` : ""}
-        {sec.sessionTitle} — Eduskuntapeili
+        {i18next.t("common:page_title_format", {
+          title: `${sec.itemNumber ? `Asiakohta ${sec.itemNumber} · ` : ""}${sec.sessionTitle}`,
+          brand: i18next.t("common:brand_name"),
+        })}
       </title>
 
       <div class="wrap">
@@ -34,7 +37,7 @@ export default function Asiakohta({
             hx-get="/istunnot"
             {...NAV}
           >
-            Istunnot
+            {i18next.t("components:asiakohta.breadcrumb_sessions")}
           </a>
           &nbsp;›&nbsp;{" "}
           <a
@@ -47,12 +50,20 @@ export default function Asiakohta({
           </a>
           {sec.itemNumber && (
             <>
-              &nbsp;›&nbsp; <span>Asiakohta {sec.itemNumber}</span>
+              &nbsp;›&nbsp;{" "}
+              <span>
+                {i18next.t("components:asiakohta.breadcrumb_item", {
+                  number: sec.itemNumber,
+                })}
+              </span>
             </>
           )}
         </div>
 
-        <nav class="subnav" aria-label="Selaa istunnon asiakohtia">
+        <nav
+          class="subnav"
+          aria-label={i18next.t("components:asiakohta.nav_aria_label")}
+        >
           {data.prevSection ? (
             <a
               class="subnav__side prev"
@@ -63,8 +74,8 @@ export default function Asiakohta({
               <span class="subnav__dir">
                 ‹{" "}
                 {data.prevSection.itemNumber
-                  ? `Asiakohta ${data.prevSection.itemNumber}`
-                  : "Edellinen"}
+                  ? `${i18next.t("components:asiakohta.breadcrumb_item", { number: data.prevSection.itemNumber })}`
+                  : i18next.t("components:asiakohta.prev_label")}
               </span>
               <span class="subnav__t">{esc(data.prevSection.title)}</span>
             </a>
@@ -80,7 +91,9 @@ export default function Asiakohta({
             <span class="subnav__pos">
               {data.currentItemIndex} / {data.sessionItemsCount}
             </span>
-            <span class="subnav__lbl">Päiväjärjestys</span>
+            <span class="subnav__lbl">
+              {i18next.t("components:asiakohta.agenda_label")}
+            </span>
           </a>
           {data.nextSection ? (
             <a
@@ -91,8 +104,8 @@ export default function Asiakohta({
             >
               <span class="subnav__dir">
                 {data.nextSection.itemNumber
-                  ? `Asiakohta ${data.nextSection.itemNumber}`
-                  : "Seuraava"}{" "}
+                  ? `${i18next.t("components:asiakohta.breadcrumb_item", { number: data.nextSection.itemNumber })}`
+                  : i18next.t("components:asiakohta.next_label")}{" "}
                 ›
               </span>
               <span class="subnav__t">{esc(data.nextSection.title)}</span>
@@ -105,12 +118,19 @@ export default function Asiakohta({
         <section class="doc-head">
           <div class="doc-head__top">
             <span class="doc-id">
-              {sec.itemNumber ? `Asiakohta ${sec.itemNumber} · ` : ""}
-              PTK {esc(sec.sessionKey)} vp
+              {sec.itemNumber
+                ? i18next.t("components:asiakohta.doc_id_format", {
+                    number: sec.itemNumber,
+                    sessionKey: esc(sec.sessionKey),
+                  })
+                : `PTK ${esc(sec.sessionKey)} vp`}
             </span>
             <span class="doc-type">
-              Täysistunnon asiakohta
-              {sec.processingTitle ? ` · ${esc(sec.processingTitle)}` : ""}
+              {sec.processingTitle
+                ? i18next.t("components:asiakohta.section_type_format", {
+                    processing: esc(sec.processingTitle),
+                  })
+                : i18next.t("components:asiakohta.section_type")}
             </span>
             {sec.identifier && (
               <span class="tag tag--ghost" style="margin-left:auto">
@@ -138,59 +158,76 @@ export default function Asiakohta({
               hx-get={`/istunto/${esc(sec.sessionKey)}`}
               {...NAV}
             >
-              Avaa istunto ↗
+              {i18next.t("common:open_istunto")}
             </a>
           </div>
         </section>
 
         <div class="doc-toolbar">
           <button type="button" class="tbtn">
-            <span class="ic">↗</span> Pöytäkirja (PDF)
+            <span class="ic">↗</span>{" "}
+            {i18next.t("components:asiakohta.toolbar_minutes")}
           </button>
           <a href="#vaiheet" class="tbtn">
-            <span class="ic">▤</span> Käsittely
+            <span class="ic">▤</span>{" "}
+            {i18next.t("components:asiakohta.toolbar_processing")}
           </a>
           {data.votings.length > 0 && (
             <a href="#aanestykset" class="tbtn">
-              <span class="ic">⚖</span> Äänestykset
+              <span class="ic">⚖</span>{" "}
+              {i18next.t("components:asiakohta.toolbar_votings")}
             </a>
           )}
           {data.speeches.length > 0 && (
             <a href="#puheenvuorot" class="tbtn">
-              <span class="ic">🗣</span> Puheenvuorot
+              <span class="ic">🗣</span>{" "}
+              {i18next.t("components:asiakohta.toolbar_speeches")}
             </a>
           )}
           <span class="grow"></span>
           <button type="button" class="tbtn">
-            <span class="ic">⧉</span> Jaa
+            <span class="ic">⧉</span> {i18next.t("common:share")}
           </button>
         </div>
 
         <nav class="sess-jump">
           {data.lifecycleSteps.length > 0 && (
-            <a href="#vaiheet">Käsittelyvaihe</a>
+            <a href="#vaiheet">
+              {i18next.t("components:asiakohta.jump_processing")}
+            </a>
           )}
           {data.votings.length > 0 && (
-            <a href="#aanestykset">Äänestykset · {data.votings.length}</a>
+            <a href="#aanestykset">
+              {i18next.t("components:asiakohta.jump_votings", {
+                count: data.votings.length,
+              })}
+            </a>
           )}
           {data.speeches.length > 0 && (
-            <a href="#puheenvuorot">Puheenvuorot · {data.speeches.length}</a>
+            <a href="#puheenvuorot">
+              {i18next.t("components:asiakohta.jump_speeches", {
+                count: data.speeches.length,
+              })}
+            </a>
           )}
-          {data.section.resolution && <a href="#paatos">Päätös</a>}
+          {data.section.resolution && (
+            <a href="#paatos">
+              {i18next.t("components:asiakohta.jump_decision")}
+            </a>
+          )}
         </nav>
 
         {sec.note && (
           <div class="ai mt-24">
             <div class="ai__head">
               <span class="ai__spark">✦</span>
-              <span class="ai__label">Tekoälykooste · mistä on kyse</span>
+              <span class="ai__label">
+                {i18next.t("components:asiakohta.ai_summary_label")}
+              </span>
             </div>
             <p class="ai__body">{esc(sec.note)}</p>
             <div class="ai__foot">
-              <span>
-                Koneellisesti tuotettu kooste asiakohtaan liittyvistä
-                käsittelytiedoista.
-              </span>
+              <span>{i18next.t("components:asiakohta.ai_disclaimer")}</span>
             </div>
           </div>
         )}
@@ -198,7 +235,7 @@ export default function Asiakohta({
         {data.lifecycleSteps.length > 0 && (
           <section id="vaiheet" class="mt-30 scroll-mt-14">
             <Kicker
-              text="Käsittelyvaihe · eduskunnan käsittelytiedot"
+              text={i18next.t("components:asiakohta.lifecycle_kicker")}
               modifier="blue"
               dot
             />
@@ -232,7 +269,7 @@ export default function Asiakohta({
           data.viewpoints.against.length > 0) && (
           <section class="mt-24">
             <Kicker
-              text="Kannanotot · puolesta ja vastaan"
+              text={i18next.t("components:asiakohta.viewpoints_kicker")}
               modifier="blue"
               dot
             />
@@ -240,7 +277,9 @@ export default function Asiakohta({
               {data.viewpoints.for.length > 0 && (
                 <div class="vp for">
                   <div class="vp__h">
-                    <span class="vp__t">Puolesta</span>
+                    <span class="vp__t">
+                      {i18next.t("components:asiakohta.viewpoints_for")}
+                    </span>
                   </div>
                   <ul>
                     {data.viewpoints.for.map((pt) => (
@@ -252,7 +291,9 @@ export default function Asiakohta({
               {data.viewpoints.against.length > 0 && (
                 <div class="vp against">
                   <div class="vp__h">
-                    <span class="vp__t">Vastaan</span>
+                    <span class="vp__t">
+                      {i18next.t("components:asiakohta.viewpoints_against")}
+                    </span>
                   </div>
                   <ul>
                     {data.viewpoints.against.map((pt) => (
@@ -267,10 +308,18 @@ export default function Asiakohta({
 
         {data.votings.length > 0 && (
           <section id="aanestykset" class="mt-36 scroll-mt-14">
-            <Kicker text="Äänestykset · miten asia eteni" modifier="blue" dot />
+            <Kicker
+              text={i18next.t("components:asiakohta.voting_kicker")}
+              modifier="blue"
+              dot
+            />
             <div class="ph__head">
-              <h2>Äänestykset</h2>
-              <span class="meta">{data.votings.length} äänestystä</span>
+              <h2>{i18next.t("components:asiakohta.voting_title")}</h2>
+              <span class="meta">
+                {i18next.t("components:asiakohta.voting_meta", {
+                  count: data.votings.length,
+                })}
+              </span>
             </div>
             {data.votings.map((vo, i) => (
               <div class="vote-block" style={i === 0 ? "margin-top:4px" : ""}>
@@ -289,7 +338,7 @@ export default function Asiakohta({
                 <div class="vote-block__result">
                   <span class="big">{vo.nYes}</span>
                   <span style="font-size:15px;color:var(--muted)">
-                    JAA – EI
+                    {i18next.t("components:asiakohta.voting_jaa_ei")}
                   </span>
                   <span class="big">{vo.nNo}</span>
                   <span
@@ -315,14 +364,14 @@ export default function Asiakohta({
                   <div class="vl">
                     <span class="sw" style="background:var(--hall)"></span>
                     <div>
-                      <span class="vk">Jaa</span>
+                      <span class="vk">{i18next.t("common:yes")}</span>
                       <span class="vv">{vo.nYes}</span>
                     </div>
                   </div>
                   <div class="vl">
                     <span class="sw" style="background:var(--red)"></span>
                     <div>
-                      <span class="vk">Ei</span>
+                      <span class="vk">{i18next.t("common:no")}</span>
                       <span class="vv">{vo.nNo}</span>
                     </div>
                   </div>
@@ -345,24 +394,25 @@ export default function Asiakohta({
 
         {data.speeches.length > 0 && (
           <section id="puheenvuorot" class="mt-36 scroll-mt-14">
-            <Kicker text="Puheenvuorot · kuka sanoi mitä" modifier="blue" dot />
+            <Kicker
+              text={i18next.t("components:asiakohta.speech_kicker")}
+              modifier="blue"
+              dot
+            />
             <p style="font-size:14px;color:var(--muted);margin:6px 0 16px;max-width:66ch">
-              Kaikki asiakohtaan liittyvät puheenvuorot kokonaisina,
-              lyhentämättöminä. Kunkin edellä on{" "}
-              <b style="color:var(--ink);font-weight:600">tekoälytiivistelmä</b>{" "}
-              nopeaa silmäilyä varten.
+              {i18next.t("components:asiakohta.speech_intro")}
             </p>
             <div class="fchips mt-6">
               <button class="fchip is-active" data-filter="all">
-                Kaikki
+                {i18next.t("common:all")}
               </button>
               <button class="fchip" data-filter="hallitus">
                 <span class="pdot" style="background:var(--hall)"></span>
-                Hallitus
+                {i18next.t("common:government")}
               </button>
               <button class="fchip" data-filter="oppositio">
                 <span class="pdot" style="background:var(--opp)"></span>
-                Oppositio
+                {i18next.t("common:opposition")}
               </button>
             </div>
             <div
@@ -370,7 +420,7 @@ export default function Asiakohta({
               hidden
               style="text-align:center;color:var(--muted);padding:34px 0"
             >
-              Ei puheenvuoroja näillä hakuehdoilla.
+              {i18next.t("components:keskustelu.none_found")}
             </div>
             <div class="transcript">
               {data.speeches.map((sp) => (
@@ -404,7 +454,8 @@ export default function Asiakohta({
                     {sp.summary && (
                       <div class="speech__sum">
                         <span class="speech__sum-tag">
-                          <span class="sp">✦</span>Tekoälytiivistelmä
+                          <span class="sp">✦</span>
+                          {i18next.t("components:keskustelu.speech_ai_tag")}
                         </span>
                         <p>{esc(sp.summary)}</p>
                       </div>
@@ -418,12 +469,14 @@ export default function Asiakohta({
                     )}
                     <div class="speech__foot">
                       <span class="meta">
-                        {sp.contentLength.toLocaleString("fi-FI")} merkkiä
+                        {sp.contentLength.toLocaleString("fi-FI")}{" "}
+                        {i18next.t("common:characters")}
                         {sp.durationLabel ? ` · ${sp.durationLabel}` : ""}
-                        {" · "}suomi
+                        {" · "}
+                        {i18next.t("common:language_fi")}
                       </span>
                       <button type="button" class="link-arrow">
-                        Avaa pöytäkirjassa (PTK) ↗
+                        {i18next.t("common:open_in_minutes")}
                       </button>
                     </div>
                   </div>
@@ -436,7 +489,7 @@ export default function Asiakohta({
         {(data.section.resolution || data.votings.length > 0) && (
           <section class="ph mt-36 scroll-mt-14" id="paatos">
             <Kicker
-              text="Päätös · miten asiakohta ratkesi"
+              text={i18next.t("components:asiakohta.decision_kicker")}
               modifier="blue"
               dot
             />
@@ -446,7 +499,10 @@ export default function Asiakohta({
               </div>
               <div class="decision__main">
                 <div class="t">
-                  {esc(data.section.resolution ?? "Asiakohta käsitelty")}
+                  {esc(
+                    data.section.resolution ??
+                      i18next.t("components:asiakohta.decision_default"),
+                  )}
                 </div>
               </div>
             </div>
@@ -457,7 +513,7 @@ export default function Asiakohta({
                 {...NAV}
                 class="link-arrow"
               >
-                ← Takaisin istuntoon
+                {i18next.t("common:back_to_istuntoon")}
               </a>
             </div>
           </section>
@@ -466,7 +522,7 @@ export default function Asiakohta({
         {(data.prevSection || data.nextSection) && (
           <nav
             class="subnav subnav--foot"
-            aria-label="Selaa istunnon asiakohtia"
+            aria-label={i18next.t("components:asiakohta.nav_aria_label")}
           >
             {data.prevSection ? (
               <a
@@ -478,8 +534,8 @@ export default function Asiakohta({
                 <span class="subnav__dir">
                   ‹{" "}
                   {data.prevSection.itemNumber
-                    ? `Asiakohta ${data.prevSection.itemNumber}`
-                    : "Edellinen"}
+                    ? `${i18next.t("components:asiakohta.breadcrumb_item", { number: data.prevSection.itemNumber })}`
+                    : i18next.t("components:asiakohta.prev_label")}
                 </span>
                 <span class="subnav__t">{esc(data.prevSection.title)}</span>
               </a>
@@ -495,7 +551,9 @@ export default function Asiakohta({
               <span class="subnav__pos">
                 {data.currentItemIndex} / {data.sessionItemsCount}
               </span>
-              <span class="subnav__lbl">Päiväjärjestys</span>
+              <span class="subnav__lbl">
+                {i18next.t("components:asiakohta.agenda_label")}
+              </span>
             </a>
             {data.nextSection ? (
               <a
@@ -506,8 +564,8 @@ export default function Asiakohta({
               >
                 <span class="subnav__dir">
                   {data.nextSection.itemNumber
-                    ? `Asiakohta ${data.nextSection.itemNumber}`
-                    : "Seuraava"}{" "}
+                    ? `${i18next.t("components:asiakohta.breadcrumb_item", { number: data.nextSection.itemNumber })}`
+                    : i18next.t("components:asiakohta.next_label")}{" "}
                   ›
                 </span>
                 <span class="subnav__t">{esc(data.nextSection.title)}</span>
@@ -519,12 +577,14 @@ export default function Asiakohta({
         )}
 
         <div class="source-note mt-32">
-          <span>Lähde:</span>
+          <span>{i18next.t("common:source")}</span>
           <span class="dset">
             Eduskunnan avoin data · Section + Speech + Voting
           </span>
           <span>·</span>
-          <span class="fresh">haettu {data.fetchedAt}</span>
+          <span class="fresh">
+            {i18next.t("common:fetched", { timestamp: data.fetchedAt })}
+          </span>
         </div>
       </div>
     </>

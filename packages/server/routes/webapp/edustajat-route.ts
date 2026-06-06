@@ -8,6 +8,7 @@ import RosterContent from "../../../webapp/templates/pages/roster-content";
 import { fragmentResponse } from "../../../webapp/eta";
 import { page, getTimelineData, timelineOobHtml, isHtmx } from "./helpers";
 import type { WebappDeps } from "./deps";
+import i18next from "i18next";
 
 export function createEdustajatRoute(deps: WebappDeps) {
   return {
@@ -42,7 +43,7 @@ export function createEdustajatRoute(deps: WebappDeps) {
           return new Response(
             tlHtml +
               Edustajat({
-                title: "Kansanedustajat",
+                title: i18next.t("edustajat:title"),
                 allRows,
                 filtered,
                 params,
@@ -74,14 +75,14 @@ export function createEdustajatRoute(deps: WebappDeps) {
         return page(
           req,
           Edustajat({
-            title: "Kansanedustajat",
+            title: i18next.t("edustajat:title"),
             allRows,
             filtered,
             params,
             compDetailHtml,
           }),
           "/edustajat",
-          "Kansanedustajat",
+          i18next.t("edustajat:title"),
           tlData,
         );
       },

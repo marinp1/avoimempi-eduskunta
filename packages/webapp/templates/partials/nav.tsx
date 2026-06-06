@@ -1,5 +1,6 @@
 /** @jsxImportSource ../../src/jsx */
 import { clsx } from "clsx";
+import i18next from "i18next";
 
 interface Props {
   /** Current navigation path for active-link highlighting. */
@@ -8,15 +9,15 @@ interface Props {
 
 /** Navigation items definition: label and href for each top-level page. */
 const NAV_ITEMS = [
-  { href: "/", label: "Etusivu" },
-  { href: "/edustajat", label: "Kansanedustajat" },
-  { href: "/puolueet", label: "Puolueet" },
-  { href: "/istunnot", label: "Istunnot" },
-  { href: "/aanestykset", label: "Äänestykset" },
-  { href: "/asiakirjat", label: "Asiakirjat" },
-  { href: "/hallitukset", label: "Hallitukset" },
-  { href: "/analytiikka", label: "Analytiikka" },
-  { href: "/muutokset", label: "Muutokset" },
+  { href: "/", label: "nav:home" },
+  { href: "/edustajat", label: "nav:mps" },
+  { href: "/puolueet", label: "nav:parties" },
+  { href: "/istunnot", label: "nav:sessions" },
+  { href: "/aanestykset", label: "nav:votings" },
+  { href: "/asiakirjat", label: "nav:documents" },
+  { href: "/hallitukset", label: "nav:governments" },
+  { href: "/analytiikka", label: "nav:analytics" },
+  { href: "/muutokset", label: "nav:changes" },
 ];
 
 /** Top-level navigation bar. Uses explicit hx-get so the server can return
@@ -34,10 +35,10 @@ export default function Nav({ activePath }: Props) {
           hx-push-url="true"
           hx-swap="innerHTML"
         >
-          {item.label}
+          {i18next.t(item.label)}
         </a>
       ))}
-      <span class="nav__search">Haku ⌕</span>
+      <span class="nav__search">{i18next.t("common:search")}</span>
     </nav>
   );
 }

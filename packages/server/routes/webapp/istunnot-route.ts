@@ -13,6 +13,7 @@ import {
   formatFi,
 } from "./helpers";
 import type { WebappDeps } from "./deps";
+import i18next from "i18next";
 
 export function createIstunnotRoute(deps: WebappDeps) {
   return {
@@ -91,7 +92,7 @@ export function createIstunnotRoute(deps: WebappDeps) {
           return new Response(
             tlHtml +
               Istunnot({
-                title: "Istunnot",
+                title: i18next.t("istunnot:title"),
                 data,
                 cursorFormatted: shownCursor,
               }),
@@ -104,9 +105,13 @@ export function createIstunnotRoute(deps: WebappDeps) {
           : tlData;
         const resp = page(
           req,
-          Istunnot({ title: "Istunnot", data, cursorFormatted: shownCursor }),
+          Istunnot({
+            title: i18next.t("istunnot:title"),
+            data,
+            cursorFormatted: shownCursor,
+          }),
           "/istunnot",
-          "Istunnot",
+          i18next.t("istunnot:title"),
           resolvedTl,
         );
         if (cookieHeader) {

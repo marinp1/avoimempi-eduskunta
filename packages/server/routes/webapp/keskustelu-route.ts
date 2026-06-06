@@ -4,6 +4,7 @@ import { page, getWebappContext } from "./helpers";
 import { fetchedAt } from "../../../webapp/templates/helpers";
 import type { PartySeatRow } from "#shared-types";
 import type { WebappDeps } from "./deps";
+import i18next from "i18next";
 
 export function createKeskusteluRoute(deps: WebappDeps) {
   return {
@@ -67,7 +68,9 @@ export function createKeskusteluRoute(deps: WebappDeps) {
           fetchedAt: fetchedAt(),
         });
 
-        const title = `Keskustelu: ${data.section.title}`;
+        const title = i18next.t("common:debate_title_format", {
+          title: data.section.title,
+        });
         const { tlData } = getWebappContext(req, deps);
 
         return page(req, Keskustelu({ data }), "/istunnot", title, tlData);

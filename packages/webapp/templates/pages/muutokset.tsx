@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import i18next from "i18next";
 import Kicker from "../components/kicker";
 
 interface Props {
@@ -10,11 +11,16 @@ interface Props {
 export default function Muutokset({ title }: Props) {
   return (
     <>
-      <title>{title} — Eduskuntapeili</title>
+      <title>
+        {i18next.t("common:page_title_format", {
+          title: title || "",
+          brand: i18next.t("common:brand_name"),
+        })}
+      </title>
       <section class="page-head wrap">
-        <Kicker text="Muutokset" />
-        <h1>Muutokset</h1>
-        <p class="sub">Palvelun ja datan päivityshistoria. Tulossa pian.</p>
+        <Kicker text={i18next.t("nav:changes")} />
+        <h1>{i18next.t("nav:changes")}</h1>
+        <p class="sub">{i18next.t("errors:muutokset.body")}</p>
       </section>
     </>
   );

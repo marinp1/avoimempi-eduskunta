@@ -4,6 +4,7 @@ import Kicker from "../components/kicker";
 import Tag from "../components/tag";
 import { cite, sourceNote } from "../components/provenance";
 import { esc, formatDate, pctNum } from "../helpers";
+import i18next from "i18next";
 
 export interface PersonProfileData {
   person: {
@@ -92,7 +93,9 @@ export default function Edustaja({ data }: Props) {
   const p = data.person;
   const s = data.stats;
   const blocTag = p.isInGovernment ? "hall" : "opp";
-  const blocLabel = p.isInGovernment ? "Hallitus" : "Oppositio";
+  const blocLabel = p.isInGovernment
+    ? i18next.t("common:government")
+    : i18next.t("common:opposition");
   const topicLgThreshold =
     data.focusAreas.length > 0
       ? Math.max(2, Math.max(...data.focusAreas.map((a) => a.weight)) * 0.35)
@@ -101,13 +104,16 @@ export default function Edustaja({ data }: Props) {
   return (
     <>
       <title>
-        {esc(p.firstName)} {esc(p.lastName)} — Eduskuntapeili
+        {i18next.t("common:page_title_format", {
+          title: `${esc(p.firstName)} ${esc(p.lastName)}`,
+          brand: i18next.t("common:brand_name"),
+        })}
       </title>
 
       <div class="wrap">
         <div style="padding-top:16px;font-size:13px;color:var(--muted)">
           <a href="/edustajat" style="color:var(--blue)">
-            Kansanedustajat
+            {i18next.t("edustajat:title")}
           </a>
           &nbsp;›&nbsp;{" "}
           <span>
@@ -139,7 +145,10 @@ export default function Edustaja({ data }: Props) {
                 <>
                   <span class="sep"></span>
                   <span>
-                    s. {p.birthYear} · {esc(p.age)} v.
+                    {i18next.t("edustajat:profile.born_age_format", {
+                      year: p.birthYear,
+                      age: esc(p.age),
+                    })}
                   </span>
                 </>
               ) : null}
@@ -152,7 +161,11 @@ export default function Edustaja({ data }: Props) {
               {p.memberSince ? (
                 <>
                   <span class="sep"></span>
-                  <span>kansanedustaja {esc(p.memberSince)}</span>
+                  <span>
+                    {i18next.t("edustajat:mp_member_since", {
+                      date: esc(p.memberSince),
+                    })}
+                  </span>
                 </>
               ) : null}
             </div>
@@ -161,12 +174,16 @@ export default function Edustaja({ data }: Props) {
 
         <div class="bio-stats">
           <div class="bio-stat">
-            <div class="k">Osallistui äänestyksiin</div>
+            <div class="k">
+              {i18next.t("edustajat:profile.participation_label")}
+            </div>
             <div class="v">
               {s.nTotal > 0
                 ? cite(`${s.participationPct}<small>%</small>`, {
                     value: `${s.participationPct} % (${s.nCast} / ${s.nTotal})`,
-                    caption: "Osallistuminen täysistuntoäänestyksiin",
+                    caption: i18next.t(
+                      "edustajat:profile.participation_caption",
+                    ),
                     set: "Eduskunnan avoin data · Vote",
                     table: "Vote",
                     record: `annetut ${s.nCast} · poissa ${s.nAbsent}`,
@@ -176,45 +193,64 @@ export default function Edustaja({ data }: Props) {
             </div>
           </div>
           <div class="bio-stat">
-            <div class="k">Äänesti "ei"</div>
+            <div class="k">{i18next.t("edustajat:profile.voted_no")}</div>
             <div class="v">
               {s.nNo > 0
                 ? cite(`${s.nNo}<small>×</small>`, {
-                    value: `${s.nNo} kertaa`,
-                    caption: "Ei-äänet annetuista äänistä",
+                    value: i18next.t("edustajat:profile.voted_no_caption"),
+                    caption: i18next.t("edustajat:profile.voted_no_caption"),
                     set: "Eduskunnan avoin data · Vote",
                     table: "Vote",
-                    record: `${s.nNo} Ei · ${s.nEmpty} Tyhjää · ${s.nYes} Jaa`,
+                    record: i18next.t("edustajat:profile.voted_no_record", {
+                      nYes: s.nYes,
+                      nNo: s.nNo,
+                      nEmpty: s.nEmpty,
+                    }),
                     markText: "*",
                   })
                 : "—"}
             </div>
           </div>
           <div class="bio-stat">
-            <div class="k">Omia aloitteita</div>
+            <div class="k">
+              {i18next.t("edustajat:profile.own_initiatives")}
+            </div>
             <div class="v">
               {s.nInitiatives > 0
                 ? cite(String(s.nInitiatives), {
-                    value: `${s.nInitiatives} aloitetta`,
-                    caption: "Aloitteet ensimmäisenä allekirjoittajana",
+                    value: i18next.t("edustajat:profile.initiatives_n", {
+                      count: s.nInitiatives,
+                    }),
+                    caption: i18next.t("edustajat:profile.initiatives_caption"),
                     set: "Eduskunnan avoin data · VaskiData",
                     table: "LegislativeInitiative",
-                    record: `${s.nInitiatives} aloitetta ensimmäisenä allekirjoittajana`,
+                    record: i18next.t("edustajat:profile.initiatives_record", {
+                      count: s.nInitiatives,
+                    }),
                     markText: "*",
                   })
                 : "—"}
             </div>
           </div>
           <div class="bio-stat">
-            <div class="k">Kirjallisia kysymyksiä</div>
+            <div class="k">
+              {i18next.t("edustajat:profile.written_questions_label")}
+            </div>
             <div class="v">
               {s.nWrittenQuestions > 0
                 ? cite(String(s.nWrittenQuestions), {
-                    value: `${s.nWrittenQuestions} kysymystä`,
-                    caption: "Kirjalliset kysymykset ministerille",
+                    value: i18next.t("edustajat:profile.written_questions_n", {
+                      count: s.nWrittenQuestions,
+                    }),
+                    caption: i18next.t(
+                      "edustajat:profile.written_questions_caption",
+                    ),
                     set: "Eduskunnan avoin data · VaskiData",
                     table: "WrittenQuestion",
-                    record: `${s.nWrittenQuestions} kysymystä`,
+                    record: i18next.t(
+                      "edustajat:profile.written_questions_record",
+                      { count: s.nWrittenQuestions },
+                    ),
                     markText: "*",
                   })
                 : "—"}
@@ -228,37 +264,48 @@ export default function Edustaja({ data }: Props) {
               <div class="ai__head">
                 <span class="ai__spark">✦</span>
                 <span class="ai__label">
-                  Tekoälykooste · mitä edustaja on tehnyt
+                  {i18next.t("edustajat:profile.ai_summary_heading")}
                 </span>
               </div>
               {data.hasAiSummary ? null : (
                 <p class="ai__body">
                   <span style="color:var(--muted)">
-                    AI-yhteenvedot tulossa — tämä kooste tuotetaan
-                    automaattisesti, kun edustajan äänestys-, aloite- ja
-                    puheenvuorotiedot on käsitelty.
+                    {i18next.t("edustajat:profile.ai_summary_pending")}
                   </span>
                 </p>
               )}
             </div>
 
             <section class="psec">
-              <Kicker text="Äänestyskäyttäytyminen · kuluva kausi" />
+              <Kicker
+                text={i18next.t("edustajat:profile.voting_section_kicker")}
+              />
               <div class="psec__h">
-                <h2>Miten edustaja äänesti</h2>
-                <span class="meta">{s.nTotal} äänestystä</span>
+                <h2>{i18next.t("edustajat:profile.voting_section_title")}</h2>
+                <span class="meta">
+                  {i18next.t("edustajat:profile.voting_section_vote_count", {
+                    count: s.nTotal,
+                  })}
+                </span>
               </div>
               <p class="psec__intro">
-                {esc(p.firstName)} antoi äänensä {s.nCast} äänestyksessä (
-                {s.participationPct} %).
-                {s.nYes > 0 ? ` Jaa-ääniä ${s.nYes}.` : ""}
-                {s.nNo > 0 ? ` Ei-ääniä ${s.nNo}.` : ""}
-                {s.nEmpty > 0 ? ` Tyhjiä ${s.nEmpty}.` : ""}
+                {i18next.t("edustajat:profile.voting_intro_prefix", {
+                  cast: s.nCast,
+                  pct: s.participationPct,
+                })}
+                {s.nYes > 0
+                  ? ` ${i18next.t("edustajat:profile.voting_yes_votes", { count: s.nYes })}`
+                  : ""}
+                {s.nNo > 0
+                  ? ` ${i18next.t("edustajat:profile.voting_no_votes", { count: s.nNo })}`
+                  : ""}
+                {s.nEmpty > 0
+                  ? ` ${i18next.t("edustajat:profile.voting_empty_votes", { count: s.nEmpty })}`
+                  : ""}
                 {s.nAbsent > 0
-                  ? ` Poissa ${s.nAbsent} äänestyksestä.`
+                  ? ` ${i18next.t("edustajat:profile.voting_absent_votes", { count: s.nAbsent })}`
                   : ""}{" "}
-                Alla erittely ja ne kerrat, jolloin edustaja poikkesi ryhmänsä
-                enemmistöstä.
+                {i18next.t("edustajat:profile.voting_dissent_heading")}
               </p>
               <div class="vote-bar">
                 {s.nYes > 0 ? (
@@ -266,7 +313,9 @@ export default function Edustaja({ data }: Props) {
                     class="v-jaa"
                     style={`width:${pctNum(s.nYes, s.nTotal)}%`}
                   >
-                    Jaa {s.nYes}
+                    {i18next.t("edustajat:profile.vote_yes_label", {
+                      count: s.nYes,
+                    })}
                   </span>
                 ) : null}
                 {s.nAbsent > 0 ? (
@@ -274,7 +323,9 @@ export default function Edustaja({ data }: Props) {
                     class="v-poi"
                     style={`width:${pctNum(s.nAbsent, s.nTotal)}%`}
                   >
-                    Poissa {s.nAbsent}
+                    {i18next.t("edustajat:profile.vote_absent_label", {
+                      count: s.nAbsent,
+                    })}
                   </span>
                 ) : null}
                 {s.nNo > 0 ? (
@@ -288,28 +339,28 @@ export default function Edustaja({ data }: Props) {
                 <div class="vl">
                   <span class="sw" style="background:var(--hall)"></span>
                   <div>
-                    <span class="vk">Jaa</span>
+                    <span class="vk">{i18next.t("common:yes")}</span>
                     <span class="vv">{s.nYes}</span>
                   </div>
                 </div>
                 <div class="vl">
                   <span class="sw" style="background:var(--red)"></span>
                   <div>
-                    <span class="vk">Ei</span>
+                    <span class="vk">{i18next.t("common:no")}</span>
                     <span class="vv">{s.nNo}</span>
                   </div>
                 </div>
                 <div class="vl">
                   <span class="sw" style="background:var(--opp)"></span>
                   <div>
-                    <span class="vk">Tyhjää</span>
+                    <span class="vk">{i18next.t("common:empty")}</span>
                     <span class="vv">{s.nEmpty}</span>
                   </div>
                 </div>
                 <div class="vl">
                   <span class="sw" style="background:var(--paper-3)"></span>
                   <div>
-                    <span class="vk">Poissa</span>
+                    <span class="vk">{i18next.t("common:absent")}</span>
                     <span class="vv">{s.nAbsent}</span>
                   </div>
                 </div>
@@ -322,14 +373,15 @@ export default function Edustaja({ data }: Props) {
                       style="border-color:transparent;background:var(--red);color:#fff"
                     >
                       {data.dissents[0].mpVote === "Jaa"
-                        ? "Jaa-äänet"
+                        ? i18next.t("edustajat:profile.dissent_jayes")
                         : data.dissents[0].mpVote === "Tyhjää"
-                          ? "Tyhjää"
-                          : "Ei-äänet"}
+                          ? i18next.t("common:empty")
+                          : i18next.t("common:no")}
                     </span>{" "}
                     <b>
-                      Kaikki {data.dissents.length} kertaa, jolloin edustaja
-                      poikkesi ryhmänsä enemmistöstä
+                      {i18next.t("edustajat:profile.dissent_all_times", {
+                        count: data.dissents.length,
+                      })}
                     </b>
                   </div>
                   {data.dissents.map((d) => (
@@ -363,17 +415,24 @@ export default function Edustaja({ data }: Props) {
 
             {data.initiatives.length > 0 || data.questions.length > 0 ? (
               <section class="psec">
-                <Kicker text="Aloitteet &amp; kysymykset · kuluva kausi" />
+                <Kicker
+                  text={i18next.t(
+                    "edustajat:profile.initiatives_section_kicker",
+                  )}
+                />
                 <div class="psec__h">
-                  <h2>Mitä edustaja on nostanut esiin</h2>
+                  <h2>
+                    {i18next.t("edustajat:profile.initiatives_section_title")}
+                  </h2>
                   <span class="meta">
-                    {s.nInitiatives} aloitetta · {s.nWrittenQuestions} kysymystä
+                    {i18next.t("edustajat:profile.initiatives_section_meta", {
+                      initiatives: s.nInitiatives,
+                      questions: s.nWrittenQuestions,
+                    })}
                   </span>
                 </div>
                 <p class="psec__intro">
-                  Edustajan omat aloitteet (ensimmäisenä allekirjoittajana) ja
-                  kirjalliset kysymykset ministereille — konkreettinen jälki
-                  siitä, mihin hän on halunnut vaikuttaa.
+                  {i18next.t("edustajat:profile.initiatives_section_intro")}
                 </p>
                 {data.initiatives.slice(0, 5).map((init) => (
                   <a class="act-row" href={`/asiakirja/${init.documentId}`}>
@@ -385,8 +444,8 @@ export default function Edustaja({ data }: Props) {
                       <div class="act-row__sub">
                         {esc(init.initiativeTypeLabel)}
                         {init.relationRole === "first_signer"
-                          ? " · ensimmäinen allekirjoittaja"
-                          : " · allekirjoittaja"}
+                          ? ` · ${i18next.t("edustajat:profile.first_signer")}`
+                          : ` · ${i18next.t("edustajat:profile.signer")}`}
                       </div>
                     </div>
                     <div class="act-row__date">
@@ -422,11 +481,15 @@ export default function Edustaja({ data }: Props) {
 
             {data.committees.length > 0 ? (
               <section class="psec">
-                <Kicker text="Valiokunnat &amp; toimielimet" />
+                <Kicker
+                  text={i18next.t("edustajat:profile.committees_kicker")}
+                />
                 <div class="psec__h">
-                  <h2>Jäsenyydet</h2>
+                  <h2>{i18next.t("edustajat:profile.committees_title")}</h2>
                   <span class="meta">
-                    {data.committees.filter((c) => !c.endDate).length} voimassa
+                    {i18next.t("edustajat:profile.committees_active", {
+                      count: data.committees.filter((c) => !c.endDate).length,
+                    })}
                   </span>
                 </div>
                 <div class="committee-list">
@@ -444,7 +507,12 @@ export default function Edustaja({ data }: Props) {
                       >
                         {esc(c.role)}
                         {c.startDate
-                          ? ` · alkaen ${formatDate(c.startDate)}`
+                          ? i18next.t(
+                              "edustajat:profile.committee_since_format",
+                              {
+                                date: formatDate(c.startDate),
+                              },
+                            )
                           : ""}
                       </span>
                     </div>
@@ -461,10 +529,9 @@ export default function Edustaja({ data }: Props) {
           <aside>
             {data.focusAreas.length > 0 ? (
               <div class="rail__item" style="padding-top:0">
-                <Kicker text="Teemat · mistä edustaja puhuu ja kysyy" />
+                <Kicker text={i18next.t("edustajat:profile.topics_kicker")} />
                 <p style="font-size:13px;color:var(--muted);margin:0 0 14px">
-                  Kirjallisten kysymysten ja puheenvuorojen aiheet —
-                  painotettuna kuinka usein.
+                  {i18next.t("edustajat:profile.topics_description")}
                 </p>
                 <div class="topics">
                   {data.focusAreas.map((area) => (
@@ -487,9 +554,11 @@ export default function Edustaja({ data }: Props) {
 
             {data.speeches.length > 0 ? (
               <div class="rail__item">
-                <Kicker text="Viimeisimmät puheenvuorot" />
+                <Kicker
+                  text={i18next.t("edustajat:profile.recent_speeches_kicker")}
+                />
                 <p style="font-size:13px;color:var(--muted);margin:0 0 6px">
-                  Mistä asioista
+                  {i18next.t("edustajat:profile.recent_speeches_subtitle")}
                 </p>
                 {data.speeches.map((sp) => (
                   <div class="spoke-row">
@@ -511,43 +580,60 @@ export default function Edustaja({ data }: Props) {
             ) : null}
 
             <div class="rail__item">
-              <Kicker text="Perustiedot" />
+              <Kicker text={i18next.t("edustajat:profile.basics_kicker")} />
               <dl style="display:grid;grid-template-columns:auto 1fr;gap:9px 18px;margin:6px 0 0">
                 {p.birthYear ? (
                   <>
-                    <dt style="font-size:13px;color:var(--muted)">Ikä</dt>
+                    <dt style="font-size:13px;color:var(--muted)">
+                      {i18next.t("edustajat:profile.basics_age")}
+                    </dt>
                     <dd style="margin:0;font-size:14px;color:var(--ink)">
-                      {esc(p.age)} v. (s. {p.birthYear})
+                      {i18next.t("edustajat:profile.age_format", {
+                        age: esc(p.age),
+                      })}{" "}
+                      (
+                      {i18next.t("edustajat:profile.born_format", {
+                        year: p.birthYear,
+                      })}
+                      )
                     </dd>
                   </>
                 ) : null}
-                <dt style="font-size:13px;color:var(--muted)">Vaalipiiri</dt>
+                <dt style="font-size:13px;color:var(--muted)">
+                  {i18next.t("edustajat:profile.basics_district")}
+                </dt>
                 <dd style="margin:0;font-size:14px;color:var(--ink)">
                   {esc(p.currentDistrict)}
                 </dd>
                 {p.profession ? (
                   <>
-                    <dt style="font-size:13px;color:var(--muted)">Ammatti</dt>
+                    <dt style="font-size:13px;color:var(--muted)">
+                      {i18next.t("edustajat:profile.basics_profession")}
+                    </dt>
                     <dd style="margin:0;font-size:14px;color:var(--ink)">
                       {esc(p.profession)}
                     </dd>
                   </>
                 ) : null}
-                <dt style="font-size:13px;color:var(--muted)">Ryhmä</dt>
+                <dt style="font-size:13px;color:var(--muted)">
+                  {i18next.t("edustajat:profile.basics_party")}
+                </dt>
                 <dd style="margin:0;font-size:14px;color:var(--ink)">
                   {esc(p.partyName)}
                 </dd>
                 {p.memberSince ? (
                   <>
                     <dt style="font-size:13px;color:var(--muted)">
-                      Eduskunnassa
+                      {i18next.t("edustajat:profile.basics_member_since")}
                     </dt>
                     <dd style="margin:0;font-size:14px;color:var(--ink)">
                       {esc(p.memberSince)}
                     </dd>
                   </>
                 ) : null}
-                <dt style="font-size:13px;color:var(--muted)">Asema</dt>
+                <dt style="font-size:13px;color:var(--muted)">
+                  {i18next.t("edustajat:profile.basics_status")}
+                </dt>
                 <dd
                   style={`margin:0;font-size:14px;color:${p.isInGovernment ? "var(--hall)" : "var(--opp)"}`}
                 >
@@ -562,40 +648,81 @@ export default function Edustaja({ data }: Props) {
 
             {data.baselines ? (
               <div class="rail__item">
-                <Kicker text="Vertailu keskiarvoihin" />
+                <Kicker
+                  text={i18next.t("edustajat:profile.baselines_kicker")}
+                />
                 <p style="font-size:13px;color:var(--muted);margin:0 0 6px">
-                  Edustajan luvut vs. eduskunnan ja puolueen keskiarvot
+                  {i18next.t("edustajat:profile.baselines_description")}
                 </p>
                 <dl style="display:grid;grid-template-columns:auto 1fr;gap:6px 18px;margin:6px 0 0">
                   <dt style="font-size:12.5px;color:var(--muted)">
-                    Puheenvuorot
+                    {i18next.t("edustajat:profile.baselines_speeches")}
                   </dt>
                   <dd style="margin:0;font-size:13px;color:var(--ink)">
-                    {data.baselines.speech.own} (edusk.{" "}
-                    {data.baselines.speech.parliamentAvg.toFixed(0)}, puol.{" "}
-                    {data.baselines.speech.partyAvg.toFixed(0)})
-                  </dd>
-                  <dt style="font-size:12.5px;color:var(--muted)">Aloitteet</dt>
-                  <dd style="margin:0;font-size:13px;color:var(--ink)">
-                    {data.baselines.initiative.own} (edusk.{" "}
-                    {data.baselines.initiative.parliamentAvg.toFixed(0)}, puol.{" "}
-                    {data.baselines.initiative.partyAvg.toFixed(0)})
-                  </dd>
-                  <dt style="font-size:12.5px;color:var(--muted)">
-                    Kysymykset
-                  </dt>
-                  <dd style="margin:0;font-size:13px;color:var(--ink)">
-                    {data.baselines.writtenQuestion.own} (edusk.{" "}
-                    {data.baselines.writtenQuestion.parliamentAvg.toFixed(0)},
-                    puol. {data.baselines.writtenQuestion.partyAvg.toFixed(0)})
+                    {i18next.t("edustajat:profile.baselines_detail_format", {
+                      own: data.baselines.speech.own,
+                      parlAbbr: i18next.t(
+                        "edustajat:profile.baselines_abbr_parliament",
+                      ),
+                      parl: data.baselines.speech.parliamentAvg.toFixed(0),
+                      partyAbbr: i18next.t(
+                        "edustajat:profile.baselines_abbr_party",
+                      ),
+                      party: data.baselines.speech.partyAvg.toFixed(0),
+                    })}
                   </dd>
                   <dt style="font-size:12.5px;color:var(--muted)">
-                    Osallistuminen
+                    {i18next.t("edustajat:profile.baselines_initiatives")}
                   </dt>
                   <dd style="margin:0;font-size:13px;color:var(--ink)">
-                    {data.baselines.participation.own} % (edusk.{" "}
-                    {data.baselines.participation.parliamentAvg} %, puol.{" "}
-                    {data.baselines.participation.partyAvg} %)
+                    {i18next.t("edustajat:profile.baselines_detail_format", {
+                      own: data.baselines.initiative.own,
+                      parlAbbr: i18next.t(
+                        "edustajat:profile.baselines_abbr_parliament",
+                      ),
+                      parl: data.baselines.initiative.parliamentAvg.toFixed(0),
+                      partyAbbr: i18next.t(
+                        "edustajat:profile.baselines_abbr_party",
+                      ),
+                      party: data.baselines.initiative.partyAvg.toFixed(0),
+                    })}
+                  </dd>
+                  <dt style="font-size:12.5px;color:var(--muted)">
+                    {i18next.t("edustajat:profile.baselines_questions")}
+                  </dt>
+                  <dd style="margin:0;font-size:13px;color:var(--ink)">
+                    {i18next.t("edustajat:profile.baselines_detail_format", {
+                      own: data.baselines.writtenQuestion.own,
+                      parlAbbr: i18next.t(
+                        "edustajat:profile.baselines_abbr_parliament",
+                      ),
+                      parl: data.baselines.writtenQuestion.parliamentAvg.toFixed(
+                        0,
+                      ),
+                      partyAbbr: i18next.t(
+                        "edustajat:profile.baselines_abbr_party",
+                      ),
+                      party: data.baselines.writtenQuestion.partyAvg.toFixed(0),
+                    })}
+                  </dd>
+                  <dt style="font-size:12.5px;color:var(--muted)">
+                    {i18next.t("edustajat:profile.baselines_participation")}
+                  </dt>
+                  <dd style="margin:0;font-size:13px;color:var(--ink)">
+                    {i18next.t(
+                      "edustajat:profile.baselines_detail_pct_format",
+                      {
+                        own: data.baselines.participation.own,
+                        parlAbbr: i18next.t(
+                          "edustajat:profile.baselines_abbr_parliament",
+                        ),
+                        parl: data.baselines.participation.parliamentAvg,
+                        partyAbbr: i18next.t(
+                          "edustajat:profile.baselines_abbr_party",
+                        ),
+                        party: data.baselines.participation.partyAvg,
+                      },
+                    )}
                   </dd>
                 </dl>
               </div>

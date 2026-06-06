@@ -1,6 +1,7 @@
 /** @jsxImportSource ../../src/jsx */
 import { clsx } from "clsx";
 import type { RosterRow } from "../../../server/database/repositories/person-repository";
+import i18next from "i18next";
 import {
   CHIP_PARTIES,
   type RosterParams,
@@ -42,7 +43,10 @@ export default function RosterContent({
     <>
       {oob && (
         <span id="mp-count" hx-swap-oob="true">
-          <b>{filtered.length}</b> / {allRows.length} edustajaa
+          {i18next.t("edustajat:count_of", {
+            filtered: filtered.length,
+            total: allRows.length,
+          })}
         </span>
       )}
 
@@ -57,7 +61,7 @@ export default function RosterContent({
           hx-push-url="true"
           hx-indicator="#roster-content"
         >
-          Kaikki
+          {i18next.t("common:all")}
         </a>
 
         <a
@@ -68,7 +72,8 @@ export default function RosterContent({
           hx-push-url="true"
           hx-indicator="#roster-content"
         >
-          <span class="pdot" style="background:var(--hall)"></span>Hallitus
+          <span class="pdot" style="background:var(--hall)"></span>
+          {i18next.t("common:government")}
         </a>
 
         <a
@@ -79,7 +84,8 @@ export default function RosterContent({
           hx-push-url="true"
           hx-indicator="#roster-content"
         >
-          <span class="pdot" style="background:var(--opp)"></span>Oppositio
+          <span class="pdot" style="background:var(--opp)"></span>
+          {i18next.t("common:opposition")}
         </a>
 
         {CHIP_PARTIES.map((cp) => {
@@ -117,7 +123,7 @@ export default function RosterContent({
           hx-push-url="true"
           hx-indicator="#roster-content"
         >
-          Edustaja <span class="ar"></span>
+          {i18next.t("edustajat:col_name")} <span class="ar"></span>
         </a>
         <a
           class={sortClass(params, "party")}
@@ -127,7 +133,7 @@ export default function RosterContent({
           hx-push-url="true"
           hx-indicator="#roster-content"
         >
-          Ryhmä <span class="ar"></span>
+          {i18next.t("edustajat:col_party")} <span class="ar"></span>
         </a>
         <a
           class={sortClass(params, "district")}
@@ -137,7 +143,7 @@ export default function RosterContent({
           hx-push-url="true"
           hx-indicator="#roster-content"
         >
-          Vaalipiiri <span class="ar"></span>
+          {i18next.t("edustajat:col_district")} <span class="ar"></span>
         </a>
         <a
           class={sortClass(params, "age", true)}
@@ -147,7 +153,7 @@ export default function RosterContent({
           hx-push-url="true"
           hx-indicator="#roster-content"
         >
-          Ikä <span class="ar"></span>
+          {i18next.t("edustajat:col_age")} <span class="ar"></span>
         </a>
         <a
           class={sortClass(params, "att", true)}
@@ -157,7 +163,7 @@ export default function RosterContent({
           hx-push-url="true"
           hx-indicator="#roster-content"
         >
-          Läsnäolo <span class="ar"></span>
+          {i18next.t("edustajat:col_attendance")} <span class="ar"></span>
         </a>
       </div>
 
@@ -165,7 +171,10 @@ export default function RosterContent({
         {filtered.map((r) => {
           const color = partyColor(r.group_abbreviation || "");
           const shortParty = partyShortName(r.group_abbreviation || "");
-          const bloc = r.is_in_government === 1 ? "Hallitus" : "Oppositio";
+          const bloc =
+            r.is_in_government === 1
+              ? i18next.t("common:government")
+              : i18next.t("common:opposition");
           const firstName = esc(r.first_name);
           const lastName = esc(r.last_name);
           const district = esc(districtShort(r.district_name));

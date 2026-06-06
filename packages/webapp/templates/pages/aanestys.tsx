@@ -2,6 +2,7 @@
 import { clsx } from "clsx";
 import Kicker from "../components/kicker";
 import { esc } from "../helpers";
+import i18next from "i18next";
 import type { SingleVoteData } from "./aanestys-view-model";
 
 /** htmx link attributes used for SPA-like navigation within #main-content. */
@@ -21,7 +22,12 @@ export default function Aanestys({ title, data }: Props) {
 
   return (
     <>
-      <title>{v.title || title} — Äänestys — Eduskuntapeili</title>
+      <title>
+        {i18next.t("common:page_title_format", {
+          title: `${v.title || title} — Äänestys`,
+          brand: i18next.t("common:brand_name"),
+        })}
+      </title>
 
       <div class="wrap">
         <div class="pt-16 text-muted" style="font-size:13px">
@@ -31,7 +37,7 @@ export default function Aanestys({ title, data }: Props) {
             hx-get="/aanestykset"
             {...NAV}
           >
-            Äänestykset
+            {i18next.t("aanestykset:title")}
           </a>
           &nbsp;›&nbsp;{" "}
           <a
@@ -40,18 +46,28 @@ export default function Aanestys({ title, data }: Props) {
             hx-get={`/istunto/${esc(v.sessionKey)}`}
             {...NAV}
           >
-            Täysistunto {esc(v.sessionKey)}
+            {i18next.t("aanestykset:detail.breadcrumb_session", {
+              key: esc(v.sessionKey),
+            })}
           </a>
-          &nbsp;›&nbsp; <span>Äänestys {v.votingNumber}</span>
+          &nbsp;›&nbsp;{" "}
+          <span>
+            {i18next.t("aanestykset:detail.breadcrumb_voting", {
+              number: v.votingNumber,
+            })}
+          </span>
         </div>
 
         <section class="doc-head">
           <div class="doc-head__top">
             <span class="doc-id">
-              Äänestys {v.votingNumber} · PTK {esc(v.sessionKey)} vp
+              {i18next.t("aanestykset:detail.doc_id_format", {
+                number: v.votingNumber,
+                sessionKey: esc(v.sessionKey),
+              })}
             </span>
             <span class="doc-type">
-              {v.titleExtra ?? "Täysistunnon äänestys"}
+              {v.titleExtra ?? i18next.t("aanestykset:detail.type_fallback")}
             </span>
             <span
               class={clsx(
@@ -79,7 +95,9 @@ export default function Aanestys({ title, data }: Props) {
                   hx-get={`/asiakohta/${esc(v.sectionKey)}`}
                   {...NAV}
                 >
-                  Asiakohta {v.asiakohtaNum}
+                  {i18next.t("aanestykset:detail.section_link", {
+                    num: v.asiakohtaNum,
+                  })}
                 </a>
               </>
             )}
@@ -90,7 +108,7 @@ export default function Aanestys({ title, data }: Props) {
               hx-get={`/istunto/${esc(v.sessionKey)}`}
               {...NAV}
             >
-              Avaa istunto ↗
+              {i18next.t("common:open_istunto")}
             </a>
           </div>
         </section>
@@ -103,7 +121,10 @@ export default function Aanestys({ title, data }: Props) {
               hx-get={`/asiakohta/${esc(v.sectionKey)}`}
               {...NAV}
             >
-              <span class="ic">▤</span>Asiakohta {v.asiakohtaNum}
+              <span class="ic">▤</span>
+              {i18next.t("aanestykset:detail.toolbar_section", {
+                number: v.asiakohtaNum,
+              })}
             </a>
           )}
           <a href="#ryhmat" class="tbtn">
@@ -114,7 +135,8 @@ export default function Aanestys({ title, data }: Props) {
           </a>
           <span class="grow"></span>
           <button type="button" class="tbtn">
-            <span class="ic">⧉</span>Jaa
+            <span class="ic">⧉</span>
+            {i18next.t("common:share")}
           </button>
         </div>
 
@@ -122,23 +144,23 @@ export default function Aanestys({ title, data }: Props) {
           <div class="vresult__q">
             {v.yesProposition && (
               <span class="prop">
-                <span class="k j">JAA</span>
+                <span class="k j">{i18next.t("common:yes_uppercase")}</span>
                 {esc(v.yesProposition)}
               </span>
             )}
             {v.noProposition && (
               <span class="prop">
-                <span class="k e">EI</span>
+                <span class="k e">{i18next.t("common:no_uppercase")}</span>
                 {esc(v.noProposition)}
               </span>
             )}
           </div>
           <div class="vote-bar mt-16">
             <span class="v-jaa" style={`width:${v.yesPct.toFixed(1)}%`}>
-              JAA {v.nYes}
+              {i18next.t("common:yes_uppercase")} {v.nYes}
             </span>
             <span class="v-ei" style={`width:${v.noPct.toFixed(1)}%`}>
-              EI {v.nNo}
+              {i18next.t("common:no_uppercase")} {v.nNo}
             </span>
             {v.nEmpty > 0 && (
               <span
@@ -147,21 +169,23 @@ export default function Aanestys({ title, data }: Props) {
               ></span>
             )}
             <span class="v-poi" style={`width:${v.absentPct.toFixed(1)}%`}>
-              Poissa {v.nAbsent}
+              {i18next.t("aanestykset:detail.result_bar_absent", {
+                count: v.nAbsent,
+              })}
             </span>
           </div>
           <div class="vote-legend">
             <div class="vl">
               <span class="sw" style="background:var(--hall)"></span>
               <div>
-                <span class="vk">Jaa</span>
+                <span class="vk">{i18next.t("common:yes")}</span>
                 <span class="vv">{v.nYes}</span>
               </div>
             </div>
             <div class="vl">
               <span class="sw" style="background:var(--red)"></span>
               <div>
-                <span class="vk">Ei</span>
+                <span class="vk">{i18next.t("common:no")}</span>
                 <span class="vv">{v.nNo}</span>
               </div>
             </div>
@@ -169,7 +193,7 @@ export default function Aanestys({ title, data }: Props) {
               <div class="vl">
                 <span class="sw" style="background:var(--opp)"></span>
                 <div>
-                  <span class="vk">Tyhjää</span>
+                  <span class="vk">{i18next.t("common:empty")}</span>
                   <span class="vv">{v.nEmpty}</span>
                 </div>
               </div>
@@ -177,7 +201,7 @@ export default function Aanestys({ title, data }: Props) {
             <div class="vl">
               <span class="sw" style="background:var(--paper-3)"></span>
               <div>
-                <span class="vk">Poissa</span>
+                <span class="vk">{i18next.t("common:absent")}</span>
                 <span class="vv">{v.nAbsent}</span>
               </div>
             </div>
@@ -196,17 +220,21 @@ export default function Aanestys({ title, data }: Props) {
           <div class="summary__bar">
             <span class="l">
               <span class="spark">✦</span>
-              <span class="lbl">Tekoälykooste · mitä tulos tarkoittaa</span>
+              <span class="lbl">
+                {i18next.t("aanestykset:detail.ai_summary")}
+              </span>
             </span>
           </div>
           <div class="summary__in">
-            <div class="summary__q">Mitä tulos tarkoittaa?</div>
+            <div class="summary__q">
+              {i18next.t("aanestykset:detail.ai_question")}
+            </div>
             <p class="summary__lead">
-              Tekoälykoostetta ei ole vielä saatavilla tälle äänestykselle.
+              {i18next.t("aanestykset:detail.ai_not_available")}
             </p>
             <div class="summary__foot">
               <span class="summary__disc">
-                Koneellisesti tuotettu tulkinta äänestystuloksesta.
+                {i18next.t("aanestykset:detail.ai_disclaimer")}
               </span>
             </div>
           </div>
@@ -214,13 +242,15 @@ export default function Aanestys({ title, data }: Props) {
 
         <section id="ryhmat" class="mt-28" style="scroll-margin-top:14px">
           <Kicker
-            text="Ryhmittäin · äänestyskäyttäytyminen"
+            text={i18next.t("aanestykset:detail.section_groups_kicker")}
             modifier="blue"
             dot
           />
           <div class="vote-block">
             <div class="vote-block__h">
-              <span class="vote-block__title">Eduskuntaryhmät</span>
+              <span class="vote-block__title">
+                {i18next.t("aanestykset:detail.section_groups_title")}
+              </span>
             </div>
             {data.partyBreakdown.map((pb) => (
               <div class="pvote">
@@ -245,7 +275,9 @@ export default function Aanestys({ title, data }: Props) {
                 <div class="pvote__num">
                   <b>{pb.nYes}</b>–{pb.nNo}
                   {pb.nEmpty > 0 ? ` · ${pb.nEmpty}` : ""}
-                  {pb.nAbsent > 0 ? ` · ${pb.nAbsent} poissa` : ""}
+                  {pb.nAbsent > 0
+                    ? ` · ${i18next.t("common:absent_count", { count: pb.nAbsent })}`
+                    : ""}
                 </div>
               </div>
             ))}
@@ -257,7 +289,7 @@ export default function Aanestys({ title, data }: Props) {
         {data.relatedVotes.length > 0 && (
           <section class="mt-28">
             <Kicker
-              text="Samasta asiasta · muut äänestykset"
+              text={i18next.t("aanestykset:detail.related_votes_kicker")}
               modifier="blue"
               dot
             />
@@ -291,12 +323,14 @@ export default function Aanestys({ title, data }: Props) {
         )}
 
         <div class="source-note mt-32">
-          <span>Lähde:</span>
+          <span>{i18next.t("common:source")}</span>
           <span class="dset">
             Eduskunnan avoin data · SaliDBAanestys + Vote
           </span>
           <span>·</span>
-          <span class="fresh">haettu {data.fetchedAt}</span>
+          <span class="fresh">
+            {i18next.t("common:fetched", { timestamp: data.fetchedAt })}
+          </span>
         </div>
       </div>
     </>
@@ -306,7 +340,11 @@ export default function Aanestys({ title, data }: Props) {
 function SectionKartta({ data }: { data: SingleVoteData }) {
   return (
     <section id="kartta" class="mt-28" style="scroll-margin-top:14px">
-      <Kicker text="Edustajakartta · miten kukin äänesti" modifier="blue" dot />
+      <Kicker
+        text={i18next.t("aanestykset:detail.section_map_kicker")}
+        modifier="blue"
+        dot
+      />
       <div class="attend__grid mt-14">
         <div class="seatwrap">
           <div class="seatgrid" id="vote-seatgrid">
@@ -330,16 +368,20 @@ function SectionKartta({ data }: { data: SingleVoteData }) {
           </div>
           <div class="seat-legend">
             <div class="it">
-              <span class="d" style="background:var(--hall)"></span>Jaa
+              <span class="d" style="background:var(--hall)"></span>
+              {i18next.t("common:yes")}
             </div>
             <div class="it">
-              <span class="d" style="background:var(--red)"></span>Ei
+              <span class="d" style="background:var(--red)"></span>
+              {i18next.t("common:no")}
             </div>
             <div class="it">
-              <span class="d" style="background:var(--opp)"></span>Tyhjää
+              <span class="d" style="background:var(--opp)"></span>
+              {i18next.t("common:empty")}
             </div>
             <div class="it">
-              <span class="d ring"></span>Poissa
+              <span class="d ring"></span>
+              {i18next.t("common:absent")}
             </div>
           </div>
         </div>
@@ -349,7 +391,7 @@ function SectionKartta({ data }: { data: SingleVoteData }) {
             <input
               id="mp-search"
               type="search"
-              placeholder="Hae edustajalla…"
+              placeholder={i18next.t("aanestykset:detail.search_mp")}
               hx-get=""
               hx-trigger="keyup changed delay:200ms"
               hx-target="#mp-list"
@@ -376,12 +418,12 @@ function SectionKartta({ data }: { data: SingleVoteData }) {
                   )}
                 >
                   {mp.vote === "jaa"
-                    ? "JAA"
+                    ? i18next.t("common:yes_uppercase")
                     : mp.vote === "ei"
-                      ? "EI"
+                      ? i18next.t("common:no_uppercase")
                       : mp.vote === "tyhjaa"
-                        ? "TYHJÄÄ"
-                        : "POISSA"}
+                        ? i18next.t("common:empty_uppercase")
+                        : i18next.t("common:absent_uppercase")}
                 </span>
               </div>
             ))}

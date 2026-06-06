@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import i18next from "i18next";
 import Kicker from "../components/kicker";
 
 interface Props {
@@ -10,13 +11,16 @@ interface Props {
 export default function Hallitukset({ title }: Props) {
   return (
     <>
-      <title>{title} — Eduskuntapeili</title>
+      <title>
+        {i18next.t("common:page_title_format", {
+          title: title || "",
+          brand: i18next.t("common:brand_name"),
+        })}
+      </title>
       <section class="page-head wrap">
-        <Kicker text="Hallitukset" />
-        <h1>Hallitukset</h1>
-        <p class="sub">
-          Suomen hallitusten kokoonpanot ja kaudet. Tulossa pian.
-        </p>
+        <Kicker text={i18next.t("nav:governments")} />
+        <h1>{i18next.t("nav:governments")}</h1>
+        <p class="sub">{i18next.t("errors:hallitukset.body")}</p>
       </section>
     </>
   );

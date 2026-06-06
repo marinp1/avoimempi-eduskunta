@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import i18next from "i18next";
 import Nav from "./nav";
 import PeriodSelector from "./period-selector";
 
@@ -15,11 +16,9 @@ export default function Masthead({ finnishDate, activePath }: Props) {
     <>
       <div class="masthead__top">
         <div>
-          <div class="brand__name">Eduskuntapeili</div>
+          <div class="brand__name">{i18next.t("common:brand_name")}</div>
 
-          <div class="brand__tag">
-            Eduskunnan avoin data, luettavassa muodossa
-          </div>
+          <div class="brand__tag">{i18next.t("common:brand_tagline")}</div>
         </div>
 
         <div class="masthead__meta">
