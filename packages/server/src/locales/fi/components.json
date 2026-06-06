@@ -126,5 +126,23 @@
     "legend_talk": "keskustelu",
     "legend_quiet": "muu istunto",
     "hint": "vedä kahvasta · ‹ › · tai napauta janaa"
+  },
+  "about": {
+    "bar_label": "Toimitukselta",
+    "close_aria": "Sulje",
+    "kicker": "Pääkirjoitus",
+    "title": "Miksi Eduskuntapeili on olemassa",
+    "writer_name": "Patrik Marin",
+    "writer_role": "Tekijä · Eduskuntapeili",
+    "writer_date": "päivitetty 2.6.2026",
+    "body_p1": "Eduskunnan päätökset syntyvät avoimesta datasta — äänestyksistä, pöytäkirjoista, asiakirjoista — mutta data on hajallaan ja vaikealukuista. Eduskuntapeili kokoaa sen yhteen ja esittää luettavassa, journalistisessa muodossa.",
+    "body_p2": "Jokainen luku tällä sivustolla on jäljitettävissä alkuperäiseen lähteeseensä. Emme tulkitse politiikkaa puolueiden puolesta — näytämme, mitä salissa todella tapahtui, ja annamme lukijan tehdä johtopäätökset.",
+    "body_p3": "Sivusto on riippumaton ja ei-kaupallinen. Tiedot haetaan suoraan eduskunnan avoimesta rajapinnasta, ja päivitykset näkyvät sellaisenaan.",
+    "signature": "Patrik Marin",
+    "signature_meta_html": "<b>Patrik Marin</b> · Eduskuntapeilin tekijä",
+    "colophon_source_label": "Tietolähde: Eduskunnan avoin data · ",
+    "colophon_link_url": "https://avoindata.eduskunta.fi/",
+    "colophon_link_text": "avoindata.eduskunta.fi",
+    "colophon_independent": "Riippumaton, ei-kaupallinen palvelu."
   }
 }

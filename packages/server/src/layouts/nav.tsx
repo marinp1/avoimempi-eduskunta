@@ -40,6 +40,10 @@ export default function Nav({ activePath }: Props) {
         </a>
       ))}
       <span class="nav__search">{i18next.t("common:search")}</span>
+      <button type="button" class="nav__about" data-about-open>
+        <span class="ic">i</span>
+        {i18next.t("nav:about")}
+      </button>
     </nav>
   );
 }

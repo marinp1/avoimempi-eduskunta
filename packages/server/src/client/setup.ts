@@ -12,3 +12,4 @@ import "./speech-filter-island";
 import "./vote-filter-island";
 import "./mp-search-island";
 import "./nav-morph";
+import "./about-island";

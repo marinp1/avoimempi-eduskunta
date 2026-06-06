@@ -34,6 +34,7 @@
 @import "./styles/_parties.css" layer(parties);
 @import "./styles/_votes.css" layer(votes);
 @import "./styles/_timeline.css" layer(timeline);
+@import "./styles/_about.css" layer(components);
 @import "./styles/_responsive.css" layer(responsive);
 
 /* Cross-document (MPA) View Transitions opt-in. MUST be top-level: this
