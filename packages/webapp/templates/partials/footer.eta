@@ -1,0 +1,12 @@
+<footer class="foot">
+  <div class="foot__period">
+    <span class="pk">Tietojakso</span>
+    <span class="pv" data-period-label>Vaalikausi 2023–2027 · Orpon hallitus</span>
+    <span class="pbadge is-now" data-period-badge-foot>nykyinen</span>
+    <span class="pdetail" data-period-detail>20.6.2023 – kesken · 200 paikkaa · hallitus 108 / oppositio 92</span>
+  </div>
+  <div class="foot__legal">
+    <span>Eduskuntapeili — avoin parlamenttidata · <a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avoindata.eduskunta.fi</a></span>
+    <span>Ei virallinen · data Creative Commons BY 4.0</span>
+  </div>
+</footer>

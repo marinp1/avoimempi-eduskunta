@@ -1,0 +1,5 @@
+<% if (it.href) { %>
+<a class="btn<%= it.modifier ? ' btn--' + it.modifier : '' %>" href="<%= it.href %>"><%= it.text %></a>
+<% } else { %>
+<button class="btn<%= it.modifier ? ' btn--' + it.modifier : '' %>"><%= it.text %></button>
+<% } %>

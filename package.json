@@ -14,6 +14,7 @@
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "bun-sqlite-migrations": "1.0.2",
+    "eta": "4.6.0",
     "fast-xml-parser": "5.5.7",
     "htmx.org": "4.0.0-beta4",
     "i18next": "26.0.1",

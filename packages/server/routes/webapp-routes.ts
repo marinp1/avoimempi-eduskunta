@@ -1,44 +1,11 @@
 import { createHash } from "node:crypto";
+import { eta, htmlResponse, renderFullPage } from "../../webapp/eta";
+import type { RosterParams } from "../../webapp/templates/helpers";
+import * as helpers from "../../webapp/templates/helpers";
 import type { HomeRepository } from "../database/repositories/home-repository";
 import type { PersonRepository } from "../database/repositories/person-repository";
-import { htmlResponse, renderLayout } from "../../webapp/templates/layout";
-import {
-  AANESTYKSET_TITLE,
-  renderAanestykset,
-} from "../../webapp/templates/pages/aanestykset";
-import {
-  ANALYTIIKKA_TITLE,
-  renderAnalytiikka,
-} from "../../webapp/templates/pages/analytiikka";
-import {
-  ASIAKIRJAT_TITLE,
-  renderAsiakirjat,
-} from "../../webapp/templates/pages/asiakirjat";
-import {
-  HALLITUKSET_TITLE,
-  renderHallitukset,
-} from "../../webapp/templates/pages/hallitukset";
-import { HOME_TITLE, renderHome } from "../../webapp/templates/pages/home";
-import {
-  EDUSTAJAT_TITLE,
-  applyFilters as applyRosterFilters,
-  renderEdustajat as renderEdustajatPage,
-  renderRosterContent,
-} from "../../webapp/templates/pages/edustajat";
-import {
-  ISTUNNOT_TITLE,
-  renderIstunnot,
-} from "../../webapp/templates/pages/istunnot";
-import {
-  MUUTOKSET_TITLE,
-  renderMuutokset,
-} from "../../webapp/templates/pages/muutokset";
-import {
-  PUOLUEET_TITLE,
-  renderPuolueet,
-} from "../../webapp/templates/pages/puolueet";
 
-// ── Build setup.ts and read CSS once at module load (top-level await, ESM) ──
+// ── Build setup.ts and CSS once at module load (top-level await, ESM) ─────────
 
 const setupJsPath = new URL("../../webapp/src/setup.ts", import.meta.url)
   .pathname;
@@ -83,7 +50,6 @@ const assetVersion = createHash("sha256")
   .slice(0, 8);
 
 // ── Static asset responses ────────────────────────────────────────────────────
-// One year / immutable is safe because the URL includes the content hash.
 
 const ASSET_CACHE = "public, max-age=31536000, immutable";
 const NO_CACHE = "no-store";
@@ -110,14 +76,15 @@ function cssAsset() {
 }
 
 // ── Page helper ───────────────────────────────────────────────────────────────
-// Injects assetVersion so every full-page render links versioned asset URLs.
 
 function page(
   req: Request,
-  fragment: string,
+  templateName: string,
+  data: Record<string, unknown>,
   activePath: string,
   title?: string,
 ): Response {
+  const fragment = eta.render(templateName, { ...helpers, title, ...data });
   return htmlResponse(req, fragment, { activePath, title, assetVersion });
 }
 
@@ -131,13 +98,6 @@ function notFoundFragment(path: string): string {
 }
 
 // ── Route maps ────────────────────────────────────────────────────────────────
-//
-// Static asset routes: plain functions, NOT wrapped by ResponseCache.
-// These are already in-memory strings; caching adds overhead without benefit.
-//
-// Page routes: { GET } objects so ResponseCache.wrapRoutes() can wrap them.
-// They must be wrapped with the htmx-aware cache key (see index.ts) so that
-// fragment and full-page responses are cached separately.
 
 export function createWebappStaticRoutes() {
   return {
@@ -156,13 +116,13 @@ export function createWebappPageRoutes(deps: WebappDeps) {
     "/": {
       GET: async (req: Request) => {
         const data = await deps.homeRepository.fetchOverview({});
-        return page(req, renderHome(data), "/", HOME_TITLE);
+        return page(req, "pages/home", { data }, "/", "Etusivu");
       },
     },
     "/edustajat": {
       GET: async (req: Request) => {
         const url = new URL(req.url);
-        const params = {
+        const params: RosterParams = {
           q: url.searchParams.get("q") ?? undefined,
           party: url.searchParams.get("party") ?? undefined,
           bloc: url.searchParams.get("bloc") ?? undefined,
@@ -170,56 +130,70 @@ export function createWebappPageRoutes(deps: WebappDeps) {
           dir: url.searchParams.get("dir") ?? undefined,
         };
         const allRows = deps.personRepository.fetchRoster();
+        const filtered = helpers.applyFilters(allRows, params);
         const isHtmx = req.headers.get("HX-Request") === "true";
         if (isHtmx) {
-          // Partial swap: return roster-content fragment only (chips + table + list)
-          const filtered = applyRosterFilters(allRows, params);
-          const fragment = renderRosterContent(allRows, filtered, params, true);
+          const fragment = eta.render("pages/roster-content", {
+            ...helpers,
+            allRows,
+            filtered,
+            params,
+            oob: true,
+          });
           return new Response(fragment, {
-            headers: { "Content-Type": "text/html; charset=utf-8", "Vary": "HX-Request" },
+            headers: {
+              "Content-Type": "text/html; charset=utf-8",
+              Vary: "HX-Request",
+            },
           });
         }
-        return page(req, renderEdustajatPage(allRows, params), "/edustajat", EDUSTAJAT_TITLE);
+        return page(
+          req,
+          "pages/edustajat",
+          { allRows, filtered, params },
+          "/edustajat",
+          "Kansanedustajat",
+        );
       },
     },
     "/puolueet": {
       GET: (req: Request) =>
-        page(req, renderPuolueet(), "/puolueet", PUOLUEET_TITLE),
+        page(req, "pages/puolueet", {}, "/puolueet", "Puolueet"),
     },
     "/istunnot": {
       GET: (req: Request) =>
-        page(req, renderIstunnot(), "/istunnot", ISTUNNOT_TITLE),
+        page(req, "pages/istunnot", {}, "/istunnot", "Istunnot"),
     },
     "/aanestykset": {
       GET: (req: Request) =>
-        page(req, renderAanestykset(), "/aanestykset", AANESTYKSET_TITLE),
+        page(req, "pages/aanestykset", {}, "/aanestykset", "Äänestykset"),
     },
     "/asiakirjat": {
       GET: (req: Request) =>
-        page(req, renderAsiakirjat(), "/asiakirjat", ASIAKIRJAT_TITLE),
+        page(req, "pages/asiakirjat", {}, "/asiakirjat", "Asiakirjat"),
     },
     "/hallitukset": {
       GET: (req: Request) =>
-        page(req, renderHallitukset(), "/hallitukset", HALLITUKSET_TITLE),
+        page(req, "pages/hallitukset", {}, "/hallitukset", "Hallitukset"),
     },
     "/analytiikka": {
       GET: (req: Request) =>
-        page(req, renderAnalytiikka(), "/analytiikka", ANALYTIIKKA_TITLE),
+        page(req, "pages/analytiikka", {}, "/analytiikka", "Analytiikka"),
     },
     "/muutokset": {
       GET: (req: Request) =>
-        page(req, renderMuutokset(), "/muutokset", MUUTOKSET_TITLE),
+        page(req, "pages/muutokset", {}, "/muutokset", "Muutokset"),
     },
     "/edustaja/:id": {
       GET: (req: Request) => {
         const path = new URL(req.url).pathname;
-        return page(req, notFoundFragment(path), "/edustajat", "Edustaja");
+        return page(req, "/", { notFound: path }, "/edustajat", "Edustaja");
       },
     },
     "/laadunvalvonta": {
       GET: (_req: Request) =>
         new Response(
-          renderLayout(
+          renderFullPage(
             `<section class="page-hero"><h1>Laadunvalvonta</h1></section>`,
             { activePath: "/laadunvalvonta", assetVersion },
           ),

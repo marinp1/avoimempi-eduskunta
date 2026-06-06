@@ -1,0 +1,5 @@
+<% if (it.href) { %>
+<a class="link-arrow" href="<%= it.href %>"><%= it.text %></a>
+<% } else { %>
+<span class="link-arrow"><%= it.text %></span>
+<% } %>

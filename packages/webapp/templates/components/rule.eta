@@ -1,0 +1,1 @@
+<% if (it.variant === 'ink') { %><hr class="rule-ink" /><% } else if (it.variant === 'soft') { %><hr class="rule-soft" /><% } else { %><hr class="rule" /><% } %>

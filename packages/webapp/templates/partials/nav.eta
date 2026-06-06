@@ -1,0 +1,21 @@
+<nav class="nav">
+  <% [
+    { href: "/",            label: "Etusivu" },
+    { href: "/edustajat",   label: "Kansanedustajat" },
+    { href: "/puolueet",    label: "Puolueet" },
+    { href: "/istunnot",    label: "Istunnot" },
+    { href: "/aanestykset", label: "Äänestykset" },
+    { href: "/asiakirjat",  label: "Asiakirjat" },
+    { href: "/hallitukset", label: "Hallitukset" },
+    { href: "/analytiikka", label: "Analytiikka" },
+    { href: "/muutokset",   label: "Muutokset" },
+  ].forEach(function(item) { %>
+    <a href="<%= item.href %>"
+       class="<%= item.href === it.activePath ? 'is-active' : '' %>"
+       hx-boost="true"
+       hx-target="#main-content"
+       hx-push-url="true"
+       hx-swap="innerHTML transition:true"><%= item.label %></a>
+  <% }) %>
+  <span class="nav__search">Haku ⌕</span>
+</nav>

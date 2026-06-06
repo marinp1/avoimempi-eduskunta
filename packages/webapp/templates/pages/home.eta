@@ -1,0 +1,152 @@
+<title><%= it.title %> — Eduskuntapeili</title>
+
+<div class="wrap">
+  <section class="lead">
+    <%~ include("../components/kicker", { text: "Eduskunta juuri nyt", modifier: "red", dot: true }) %>
+    <h1>Avoin näkymä Suomen parlamentin toimintaan</h1>
+    <div class="lead__meta">
+      <% if (it.data && it.data.latestDay && it.data.latestDay.date) {
+           const s = it.data.latestDay.sessions[0];
+      %>
+        <span>Viimeisin istunto <b><%= s ? it.esc(s.key) : "" %></b></span>
+        <span class="sep"></span>
+        <span><%= it.formatDate(it.data.latestDay.date) %></span>
+        <% if (s && s.voting_count) { %>
+          <span class="sep"></span>
+          <span><%= s.voting_count %> äänestystä</span>
+        <% } %>
+        <span class="link-arrow" style="margin-left:auto"><a href="/istunnot">Avaa istunnot →</a></span>
+      <% } else { %>
+        <span>Edustajat · äänestykset · istunnot · asiakirjat</span>
+      <% } %>
+    </div>
+  </section>
+</div>
+
+<% if (it.data) {
+  const comp = it.data.composition;
+  const govParties  = comp.parties.filter(p => p.is_in_government === 1 && p.party_display_code !== "unknown");
+  const oppParties  = comp.parties.filter(p => p.is_in_government !== 1 && p.party_display_code !== "unknown");
+  const visParties  = comp.parties.filter(p => p.party_display_code !== "unknown" && p.member_count > 0)
+                        .sort((a, b) => b.member_count - a.member_count);
+  const govTotal    = govParties.reduce((s, p) => s + p.member_count, 0);
+  const oppTotal    = oppParties.reduce((s, p) => s + p.member_count, 0);
+  const closeVotes  = it.data.signals.closeVotes;
+  const speakers    = it.data.signals.speechActivity;
+%>
+
+<hr class="rule" />
+
+<div class="wrap">
+  <%~ include("../components/stat-row", { stats: [
+    { label: "Kansanedustajat",  value: comp.totalMembers },
+    { label: "Hallitus",         value: comp.governmentMembers, modifier: "hall" },
+    { label: "Oppositio",        value: comp.oppositionMembers, modifier: "opp" },
+    { label: "Puolueet",         value: comp.partyCount },
+  ]}) %>
+</div>
+
+<hr class="rule" />
+
+<div class="home-main wrap">
+
+  <div>
+    <%~ include("../components/kicker", { text: "Poliittinen kokoonpano" }) %>
+
+    <div class="bloc-bar" style="margin-top:18px">
+      <% govParties.forEach(function(p) { %>
+        <span class="seg-hall"
+          style="width:<%~ it.pct(p.member_count, comp.totalMembers) %>;background:<%~ it.partyColor(p.party_display_code) %>"
+          title="<%= it.partyShortName(p.party_display_code) %> <%= p.member_count %>"></span>
+      <% }) %>
+      <% oppParties.forEach(function(p) { %>
+        <span class="seg-opp"
+          style="width:<%~ it.pct(p.member_count, comp.totalMembers) %>;background:<%~ it.partyColor(p.party_display_code) %>"
+          title="<%= it.partyShortName(p.party_display_code) %> <%= p.member_count %>"></span>
+      <% }) %>
+    </div>
+
+    <div class="bloc-legend">
+      <span class="item"><span class="swatch" style="background:var(--hall)"></span>Hallitus <b><%= govTotal %></b></span>
+      <span class="item"><span class="swatch" style="background:var(--opp)"></span>Oppositio <b><%= oppTotal %></b></span>
+      <span class="note"><%= comp.totalMembers %> paikkaa · <%= govParties.length + oppParties.length %> puoluetta</span>
+    </div>
+
+    <table class="party-table">
+      <% visParties.forEach(function(p) {
+        const color   = it.partyColor(p.party_display_code);
+        const name    = it.partyShortName(p.party_display_code);
+        const bloc    = p.is_in_government === 1 ? "Hallitus" : "Oppositio";
+        const widthPct = it.pct(p.member_count, comp.totalMembers);
+      %>
+        <tr>
+          <td class="pt-dot"><span style="background:<%~ color %>"></span></td>
+          <td class="pt-name"><%= name %> <small><%= bloc %></small></td>
+          <td class="pt-bar"><div class="track"><div class="fill" style="width:<%~ widthPct %>;background:<%~ color %>"></div></div></td>
+          <td class="pt-seats"><%= p.member_count %></td>
+        </tr>
+      <% }) %>
+    </table>
+
+    <% if (closeVotes.length > 0) { %>
+      <div class="psec" style="margin-top:32px">
+        <div class="psec__h"><h2>Tiukimmat äänestykset</h2></div>
+        <div class="dissent">
+          <% closeVotes.forEach(function(v) {
+            const passed = v.n_yes >= v.n_no;
+            const resultText = v.n_yes + " JAA – " + v.n_no + " EI";
+            const title = v.title || v.section_title;
+          %>
+            <div class="vote-row">
+              <div class="vote-row__badge<%= passed ? ' jaa' : '' %>"><%= passed ? "JAA" : "EI" %></div>
+              <div>
+                <div class="vote-row__title"><%= title %></div>
+                <div class="vote-row__sub">
+                  <span class="date"><%= it.formatDate(v.start_time) %></span>
+                  <span><%= v.section_title %></span>
+                </div>
+              </div>
+              <div class="vote-row__result">
+                <div class="r-line"><%= resultText %></div>
+                <div class="r-line">
+                  <span class="<%= passed ? 'pass' : 'fail' %>"><%= v.margin %> ään. ero</span>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+
+  <div>
+    <% if (speakers.length > 0) { %>
+      <div class="psec">
+        <div class="psec__h"><h2>Eniten puheenvuoroja</h2></div>
+        <div class="rail" style="margin-top:12px">
+          <% speakers.forEach(function(s) {
+            const color      = it.partyColor(s.party);
+            const shortParty = it.partyShortName(s.party);
+            const name       = s.last_name + ", " + s.first_name;
+          %>
+            <div class="rail__item">
+              <div class="rail__title">
+                <span style="display:inline-flex;align-items:center;gap:8px;margin-right:4px">
+                  <span style="background:<%~ color %>;width:10px;height:10px;border-radius:50%;display:inline-block;flex:0 0 auto"></span>
+                </span><%= name %>
+              </div>
+              <div class="rail__meta"><%= shortParty %> · <%= s.speech_count %> puheenvuoroa</div>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+
+</div>
+
+<% } else { %>
+<div class="wrap">
+  <p style="padding:40px 0;color:var(--muted)">Ladataan tietoja…</p>
+</div>
+<% } %>

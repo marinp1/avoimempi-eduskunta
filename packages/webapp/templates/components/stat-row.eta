@@ -1,0 +1,5 @@
+<div class="stat-row">
+  <% it.stats.forEach(function(s) { %>
+    <%~ include("./stat", s) %>
+  <% }) %>
+</div>

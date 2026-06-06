@@ -1,4 +1,12 @@
-import { esc, html } from "../../html";
+import { esc } from "../helpers";
+
+function html(strings: TemplateStringsArray, ...values: unknown[]): string {
+  return strings.reduce<string>(
+    (result, str, i) =>
+      result + str + (i < values.length ? String(values[i] ?? "") : ""),
+    "",
+  );
+}
 
 export interface CiteData {
   value?: string;

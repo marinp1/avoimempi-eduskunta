@@ -1,0 +1,109 @@
+<%
+  const params      = it.params;
+  const allRows     = it.allRows;
+  const filtered    = it.filtered;
+  const activeParty = params.party || "all";
+  const activeBloc  = params.bloc  || "";
+
+  const chipParties = [
+    { code: "kok",  label: "Kokoomus" },
+    { code: "ps",   label: "Perussuomalaiset" },
+    { code: "sd",   label: "SDP" },
+    { code: "kesk", label: "Keskusta" },
+    { code: "vihr", label: "Vihreät" },
+    { code: "vas",  label: "Vasemmistoliitto" },
+    { code: "r",    label: "RKP" },
+    { code: "kd",   label: "KD" },
+  ];
+%>
+
+<% if (it.oob) { %>
+<span id="mp-count" hx-swap-oob="true"><b><%= filtered.length %></b> / <%= allRows.length %> edustajaa</span>
+<% } %>
+
+<div class="fchips">
+  <a class="fchip<%= !activeParty || activeParty === 'all' ? ' is-active' : '' %>"
+     href="/edustajat"
+     hx-get="/edustajat" hx-target="#roster-content" hx-push-url="true">Kaikki</a>
+
+  <% const hallHref = it.buildHref({ ...params, bloc: "hallitus", party: undefined }); %>
+  <a class="fchip<%= activeBloc === 'hallitus' ? ' is-active' : '' %>"
+     href="<%= hallHref %>"
+     hx-get="<%= hallHref %>" hx-target="#roster-content" hx-push-url="true">
+    <span class="pdot" style="background:var(--hall)"></span>Hallitus</a>
+
+  <% const oppHref = it.buildHref({ ...params, bloc: "oppositio", party: undefined }); %>
+  <a class="fchip<%= activeBloc === 'oppositio' ? ' is-active' : '' %>"
+     href="<%= oppHref %>"
+     hx-get="<%= oppHref %>" hx-target="#roster-content" hx-push-url="true">
+    <span class="pdot" style="background:var(--opp)"></span>Oppositio</a>
+
+  <% chipParties.forEach(function(cp) {
+    const cpHref = it.buildHref({ ...params, party: cp.code, bloc: undefined });
+  %>
+    <a class="fchip<%= activeParty === cp.code ? ' is-active' : '' %>"
+       href="<%= cpHref %>"
+       hx-get="<%= cpHref %>" hx-target="#roster-content" hx-push-url="true">
+      <span class="pdot" style="background:<%~ it.partyColor(cp.code) %>"></span><%= cp.label %></a>
+  <% }) %>
+</div>
+
+<%
+  function sortHref(key) {
+    const active = params.sort === key || (!params.sort && key === "name");
+    const nextDir = active && params.dir !== "desc" ? "desc" : "asc";
+    return it.buildHref({ ...params, sort: key, dir: nextDir });
+  }
+  function sortCls(key, rightAlign) {
+    const active = params.sort === key || (!params.sort && key === "name");
+    const dirCls = active ? (params.dir === "desc" ? " is-desc" : " is-asc") : "";
+    return "mp-sort" + (rightAlign ? " ta-r" : "") + dirCls;
+  }
+%>
+
+<div class="mp-table-head">
+  <span></span>
+  <a class="<%= sortCls('name', false) %>"
+     href="<%= sortHref('name') %>"
+     hx-get="<%= sortHref('name') %>" hx-target="#roster-content" hx-push-url="true">Edustaja <span class="ar"></span></a>
+  <a class="<%= sortCls('party', false) %>"
+     href="<%= sortHref('party') %>"
+     hx-get="<%= sortHref('party') %>" hx-target="#roster-content" hx-push-url="true">Ryhmä <span class="ar"></span></a>
+  <a class="<%= sortCls('district', false) %>"
+     href="<%= sortHref('district') %>"
+     hx-get="<%= sortHref('district') %>" hx-target="#roster-content" hx-push-url="true">Vaalipiiri <span class="ar"></span></a>
+  <a class="<%= sortCls('age', true) %>"
+     href="<%= sortHref('age') %>"
+     hx-get="<%= sortHref('age') %>" hx-target="#roster-content" hx-push-url="true">Ikä <span class="ar"></span></a>
+  <a class="<%= sortCls('att', true) %>"
+     href="<%= sortHref('att') %>"
+     hx-get="<%= sortHref('att') %>" hx-target="#roster-content" hx-push-url="true">Läsnäolo <span class="ar"></span></a>
+</div>
+
+<div id="mp-list">
+  <% filtered.forEach(function(r) {
+    const color      = it.partyColor(r.group_abbreviation || "");
+    const shortParty = it.partyShortName(r.group_abbreviation || "");
+    const bloc       = r.is_in_government === 1 ? "Hallitus" : "Oppositio";
+    const name       = r.first_name + " " + r.last_name;
+    const district   = it.districtShort(r.district_name);
+    const grp        = r.group_abbreviation || "unknown";
+    const attW       = Math.min(100, Math.max(0, r.participation_rate));
+  %>
+    <a class="mp-row" href="/edustaja/<%= r.person_id %>"
+       data-name="<%= it.esc(name.toLowerCase()) %>"
+       data-party="<%= it.esc(grp) %>"
+       data-bloc="<%= it.esc(bloc.toLowerCase()) %>"
+       data-district="<%= it.esc(district.toLowerCase()) %>">
+      <span class="c-dot"><span style="background:<%~ color %>"></span></span>
+      <span class="mp-name"><%= r.first_name %> <%= r.last_name %></span>
+      <span class="mp-party"><%= shortParty %> <small><%= bloc %></small></span>
+      <span class="mp-district"><%= district %></span>
+      <span class="mp-age"><%= it.age(r.birth_year) %></span>
+      <span class="mp-att">
+        <span class="track"><span class="fill" style="width:<%= attW.toFixed(0) %>%"></span></span>
+        <span class="pct"><%= r.participation_rate.toFixed(0) %> %</span>
+      </span>
+    </a>
+  <% }) %>
+</div>
