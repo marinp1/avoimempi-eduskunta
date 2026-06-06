@@ -1,0 +1,176 @@
+/* ---------- Kicker / labels ---------- */
+.kicker {
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: var(--fs-kicker);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.kicker--red {
+  color: var(--red);
+}
+.kicker--blue {
+  color: var(--blue);
+}
+.kicker .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+
+/* ---------- Rules ---------- */
+.rule {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin: 0;
+}
+.rule-ink {
+  border: 0;
+  border-top: 2px solid var(--ink);
+  margin: 0;
+}
+.rule-soft {
+  border: 0;
+  border-top: 1px solid var(--rule-soft);
+  margin: 0;
+}
+
+/* ============================================================
+   BLOC TAG / PARTY TAG / STATUS
+   ============================================================ */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  line-height: 1;
+  padding: 5px 9px;
+  border: 1px solid var(--rule);
+  color: var(--body);
+  white-space: nowrap;
+}
+.tag--hall {
+  color: var(--hall);
+  border-color: color-mix(in srgb, var(--hall) 35%, transparent);
+  background: var(--hall-soft);
+}
+.tag--opp {
+  color: #8a531a;
+  border-color: color-mix(in srgb, var(--opp) 38%, transparent);
+  background: var(--opp-soft);
+}
+.tag--ghost {
+  background: var(--paper-2);
+  border-color: transparent;
+  color: var(--muted);
+}
+
+/* ============================================================
+   BUTTONS / LINKS
+   ============================================================ */
+.link-arrow {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--blue);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.link-arrow:hover {
+  color: var(--blue-ink);
+}
+.btn {
+  font-family: var(--text);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  padding: 9px 15px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn:hover {
+  background: #2a241d;
+}
+.btn--ghost {
+  background: transparent;
+  color: var(--ink);
+}
+.btn--ghost:hover {
+  background: var(--paper-2);
+}
+
+/* ============================================================
+   RAIL items (editorial, ruled — no card)
+   ============================================================ */
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.rail__item {
+  padding: 18px 0;
+  border-top: 1px solid var(--rule);
+}
+.rail__item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.rail__title {
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: var(--fs-h3);
+  line-height: 1.22;
+  color: var(--ink);
+}
+.rail__title.big {
+  font-size: 22px;
+}
+.rail__meta {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  margin-top: 7px;
+  line-height: 1.4;
+}
+
+.spill {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+}
+.spill--live {
+  background: var(--red);
+  color: #fff;
+}
+.spill--live .ld {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+.spill--done {
+  background: var(--paper-3);
+  color: var(--muted);
+}
+.spill--draft {
+  background: var(--hall-soft);
+  color: var(--hall);
+}

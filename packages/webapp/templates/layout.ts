@@ -1,11 +1,4 @@
-import { html } from "../html";
-
-const escHtml = (s: string) =>
-  s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+import { esc, html } from "../html";
 
 const GOOGLE_FONTS = html`<link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -78,7 +71,7 @@ export function renderLayout(content: string, options: LayoutOptions): string {
   ).join("\n      ");
 
   const pageTitle = options.title
-    ? `${escHtml(options.title)} — Eduskuntapeili`
+    ? `${esc(options.title)} — Eduskuntapeili`
     : "Eduskuntapeili";
 
   const v = options.assetVersion ? `?v=${options.assetVersion}` : "";

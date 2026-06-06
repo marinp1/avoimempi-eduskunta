@@ -1,0 +1,65 @@
+/* ============================================================
+   Eduskuntapeili — Suunta A "Uutispöytä"
+   Toimituksellinen tietopöytä · editorial data-desk design system
+   Tokens + components, incl. data provenance (jäljitettävyys).
+   ============================================================ */
+
+:root {
+  /* — Paper & ink — */
+  --paper: #fbfaf7; /* page background, warm paper */
+  --paper-2: #f4f1e8; /* inset / tinted block */
+  --paper-3: #efebdf; /* deeper inset, hovers */
+  --ink: #16130f; /* headlines, primary */
+  --body: #3a352d; /* running text */
+  --muted: #847b6d; /* meta, captions */
+  --faint: #a89f90; /* least-important */
+
+  /* — Rules — */
+  --rule: rgba(22, 19, 15, 0.16);
+  --rule-soft: rgba(22, 19, 15, 0.08);
+  --rule-ink: #16130f;
+
+  /* — Accents (restrained) — */
+  --blue: #1b3a6b; /* links, editorial accent */
+  --blue-ink: #14305a;
+  --red: #bc3a23; /* "now", alerts, footnote markers */
+
+  /* — Data semantics — */
+  --hall: #2f6b4f; /* hallitus / government */
+  --hall-soft: #e4ede7;
+  --opp: #b97324; /* oppositio / opposition */
+  --opp-soft: #f4e9da;
+
+  /* — Type — */
+  --head: "Schibsted Grotesk", system-ui, sans-serif;
+  --text: "Hanken Grotesk", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* — Type scale — */
+  --fs-display: clamp(40px, 4.6vw, 56px);
+  --fs-h1: clamp(30px, 3.2vw, 40px);
+  --fs-h2: 25px;
+  --fs-h3: 19px;
+  --fs-lead: 19px;
+  --fs-body: 16px;
+  --fs-sm: 14px;
+  --fs-meta: 12.5px;
+  --fs-mono: 12px;
+  --fs-kicker: 11px;
+
+  /* — Layout — */
+  --maxw: 1180px;
+  --gutter: 48px;
+
+  /* — Party colors — */
+  --party-kok: #1d4f91;
+  --party-ps: #2c3e8c;
+  --party-sd: #d3243a;
+  --party-kesk: #0b8a4a;
+  --party-vihr: #5aa829;
+  --party-vas: #9e1f4b;
+  --party-r: #1278b6;
+  --party-kd: #1a3f86;
+  --party-liik: #f0841c;
+  --party-pg: #888888;
+}

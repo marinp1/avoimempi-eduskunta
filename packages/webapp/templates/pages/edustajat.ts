@@ -1,5 +1,5 @@
-import { html } from "../../html";
 import type { RosterRow } from "../../../server/database/repositories/person-repository";
+import { esc, html } from "../../html";
 import { partyColor, partyShortName } from "../components/party";
 
 export const EDUSTAJAT_TITLE = "Kansanedustajat";
@@ -13,14 +13,6 @@ export interface RosterParams {
   sort?: string;
   dir?: string;
 }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-const esc = (s: string | number | null | undefined) =>
-  (s == null ? "" : String(s))
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 
 function districtShort(rawName: string | null): string {
   if (!rawName) return "—";
@@ -42,7 +34,10 @@ function pctBar(rate: number): string {
 
 // ── Filtering + sorting ───────────────────────────────────────────────────────
 
-export function applyFilters(rows: RosterRow[], params: RosterParams): RosterRow[] {
+export function applyFilters(
+  rows: RosterRow[],
+  params: RosterParams,
+): RosterRow[] {
   let result = rows;
 
   if (params.q) {
@@ -68,13 +63,18 @@ export function applyFilters(rows: RosterRow[], params: RosterParams): RosterRow
   const dir = params.dir === "desc" ? -1 : 1;
   switch (params.sort) {
     case "party":
-      result = [...result].sort((a, b) =>
-        dir * (a.group_abbreviation ?? "").localeCompare(b.group_abbreviation ?? ""),
+      result = [...result].sort(
+        (a, b) =>
+          dir *
+          (a.group_abbreviation ?? "").localeCompare(
+            b.group_abbreviation ?? "",
+          ),
       );
       break;
     case "district":
-      result = [...result].sort((a, b) =>
-        dir * (a.district_name ?? "").localeCompare(b.district_name ?? ""),
+      result = [...result].sort(
+        (a, b) =>
+          dir * (a.district_name ?? "").localeCompare(b.district_name ?? ""),
       );
       break;
     case "age":
@@ -101,14 +101,14 @@ export function applyFilters(rows: RosterRow[], params: RosterParams): RosterRow
 // ── Party chip list (from visible parties in current roster) ──────────────────
 
 const CHIP_PARTIES = [
-  { code: "kok",  label: "Kokoomus" },
-  { code: "ps",   label: "Perussuomalaiset" },
-  { code: "sd",   label: "SDP" },
+  { code: "kok", label: "Kokoomus" },
+  { code: "ps", label: "Perussuomalaiset" },
+  { code: "sd", label: "SDP" },
   { code: "kesk", label: "Keskusta" },
   { code: "vihr", label: "Vihreät" },
-  { code: "vas",  label: "Vasemmistoliitto" },
-  { code: "r",    label: "RKP" },
-  { code: "kd",   label: "KD" },
+  { code: "vas", label: "Vasemmistoliitto" },
+  { code: "r", label: "RKP" },
+  { code: "kd", label: "KD" },
 ];
 
 // ── Row render ────────────────────────────────────────────────────────────────
@@ -196,9 +196,11 @@ function sortHeader(
 function buildHref(p: RosterParams): string {
   const parts: string[] = [];
   if (p.q) parts.push(`q=${encodeURIComponent(p.q)}`);
-  if (p.party && p.party !== "all") parts.push(`party=${encodeURIComponent(p.party)}`);
+  if (p.party && p.party !== "all")
+    parts.push(`party=${encodeURIComponent(p.party)}`);
   if (p.bloc) parts.push(`bloc=${encodeURIComponent(p.bloc)}`);
-  if (p.sort && p.sort !== "name") parts.push(`sort=${encodeURIComponent(p.sort)}`);
+  if (p.sort && p.sort !== "name")
+    parts.push(`sort=${encodeURIComponent(p.sort)}`);
   if (p.dir && p.dir !== "asc") parts.push(`dir=${encodeURIComponent(p.dir)}`);
   return parts.length ? `/edustajat?${parts.join("&")}` : "/edustajat";
 }

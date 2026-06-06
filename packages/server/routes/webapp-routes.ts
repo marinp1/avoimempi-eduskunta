@@ -59,7 +59,19 @@ const setupJs = setupBuild.success
   ? await setupBuild.outputs[0].text()
   : `console.error("webapp/setup.js build failed")`;
 
-const cssText = await Bun.file(cssPath).text();
+const cssBuild = await Bun.build({
+  entrypoints: [cssPath],
+  target: "browser",
+  minify: process.env.NODE_ENV === "production",
+});
+
+if (!cssBuild.success) {
+  for (const log of cssBuild.logs) console.error("[webapp css build]", log);
+}
+
+const cssText = cssBuild.success
+  ? await cssBuild.outputs[0].text()
+  : await Bun.file(cssPath).text();
 
 // Content-fingerprint both assets into a single version token.
 // The layout embeds ?v=<hash> in asset URLs so browsers can cache them

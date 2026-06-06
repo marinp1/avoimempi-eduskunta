@@ -1,0 +1,376 @@
+/* ============================================================
+   RESPONSIVE — tablet & mobile
+   peili is one shared sheet; rules below cover every page.
+   ============================================================ */
+
+/* — tablet: collapse the two-column body layouts — */
+@media (max-width: 900px) {
+  .home-main {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 34px;
+  }
+  .bio-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 34px;
+  }
+  .attend__grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .seatgrid {
+    grid-template-columns: repeat(20, 1fr);
+  }
+}
+
+/* — large phone / small tablet — */
+@media (max-width: 720px) {
+  .wrap {
+    padding: 0 20px;
+  }
+
+  /* masthead: brand on top, meta (date + period) below, full width */
+  .masthead {
+    padding-top: 22px;
+  }
+  .masthead__top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .masthead__meta {
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px 12px;
+    flex-wrap: wrap;
+  }
+  .masthead__date {
+    white-space: normal;
+    line-height: 1.35;
+  }
+  .brand__name {
+    font-size: 26px;
+  }
+
+  /* nav: a horizontally scrollable tab bar (no wrap, no scrollbar chrome) */
+  .nav {
+    gap: 20px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
+  .nav a,
+  .nav__search {
+    flex: 0 0 auto;
+  }
+  .nav__search {
+    margin-left: 8px;
+  }
+
+  /* period dropdown menu never wider than the viewport */
+  .period__menu {
+    width: max-content;
+    max-width: calc(100vw - 40px);
+  }
+
+  /* roster: the 6-column table row becomes a stacked card */
+  .mp-table-head {
+    display: none;
+  }
+  .mp-row {
+    grid-template-columns: 16px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "dot name     age"
+      "dot party    att"
+      "dot district att";
+    gap: 3px 12px;
+    padding: 14px 2px;
+  }
+  .mp-row .c-dot {
+    grid-area: dot;
+    align-self: start;
+    padding-top: 5px;
+  }
+  .mp-name {
+    grid-area: name;
+    min-width: 0;
+  }
+  .mp-party {
+    grid-area: party;
+  }
+  .mp-district {
+    grid-area: district;
+  }
+  .mp-age {
+    grid-area: age;
+    align-self: start;
+  }
+  .mp-att {
+    grid-area: att;
+    align-self: center;
+    width: 96px;
+  }
+
+  /* istunnot: date rail beside content, figures drop to a full-width row below */
+  .sit-row {
+    grid-template-columns: 50px minmax(0, 1fr);
+    grid-template-areas: "date main" "date meta";
+    gap: 0 16px;
+  }
+  .sit-date {
+    grid-area: date;
+  }
+  .sit-main {
+    grid-area: main;
+  }
+  .sit-meta {
+    grid-area: meta;
+    align-items: flex-start;
+    text-align: left;
+    margin-top: 14px;
+  }
+  .sit-go {
+    margin-top: 12px;
+    padding-top: 0;
+  }
+  .week-head__meta {
+    margin-left: 0;
+    flex-basis: 100%;
+    white-space: normal;
+  }
+  .sit-day {
+    font-size: 22px;
+  }
+
+  /* istunto detail: tighten attendance + agenda for phones */
+  .seatgrid {
+    grid-template-columns: repeat(16, 1fr);
+    gap: 4px;
+  }
+  .abs-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .att-big .n {
+    font-size: 46px;
+  }
+  .agvote {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "t n" "bar n";
+    gap: 6px 12px;
+    align-items: start;
+  }
+  .agvote__t {
+    grid-area: t;
+  }
+  .agvote__bar {
+    grid-area: bar;
+    align-self: center;
+  }
+  .agvote__n {
+    grid-area: n;
+    align-self: center;
+  }
+
+  /* keskustelu: tighter speaker rail */
+  .speech {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 0 14px;
+    padding: 22px 0;
+  }
+  .speech__av {
+    width: 42px;
+    height: 42px;
+    font-size: 14px;
+  }
+  .speech__time {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+  .speech__body p {
+    font-size: 15.5px;
+  }
+
+  .ctx-grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+}
+
+/* — phone — */
+@media (max-width: 560px) {
+  .wrap {
+    padding: 0 15px;
+  }
+
+  /* large headings: shrink + allow long Finnish compound words to break */
+  .lead h1 {
+    font-size: clamp(27px, 7.4vw, 40px);
+  }
+  .lead h1,
+  .doc-head h1,
+  .bio-name,
+  .summary__lead,
+  .rail__title {
+    overflow-wrap: break-word;
+  }
+
+  /* period control can shrink/wrap on very small screens instead of overflowing */
+  .period,
+  .period__btn {
+    max-width: 100%;
+  }
+  .period__btn {
+    flex-wrap: wrap;
+  }
+
+  /* home / profile stat strips → 2-up */
+  .stat-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 0;
+  }
+  .bio-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .bio-stat {
+    padding: 14px 16px 14px 0;
+  }
+  .bio-stat:nth-child(2n + 1) {
+    border-left: 0;
+    padding-left: 0;
+  }
+  .bio-stat:nth-child(2n) {
+    border-left: 1px solid var(--rule);
+    padding-left: 18px;
+  }
+
+  /* bio header: smaller portrait, stays side-by-side */
+  .bio-head {
+    gap: 18px;
+    padding: 20px 0 18px;
+  }
+  .bio-portrait {
+    width: 84px;
+    height: 84px;
+  }
+  .bio-portrait .initials {
+    font-size: 30px;
+  }
+
+  /* party table: drop the inline bar, keep name + seat count */
+  .party-table .pt-bar {
+    display: none;
+  }
+
+  /* composition legend wraps cleanly */
+  .bloc-legend {
+    flex-wrap: wrap;
+    gap: 12px 20px;
+  }
+  .bloc-legend .note {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+
+  /* vote breakdown legend → 2-up */
+  .vote-legend {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 14px;
+  }
+
+  /* per-party vote rows tighten */
+  .vote-block {
+    padding: 16px 16px;
+  }
+  .vote-block__result {
+    flex-wrap: wrap;
+  }
+  .pvote {
+    grid-template-columns: 90px 1fr 58px;
+    gap: 10px;
+  }
+
+  /* matter lifecycle stepper → 2-up */
+  .lc-step {
+    flex: 1 1 50%;
+  }
+
+  /* AI summary chrome padding */
+  .ai {
+    padding: 16px 16px;
+  }
+  .summary__bar {
+    flex-wrap: wrap;
+    padding: 11px 16px;
+  }
+  .summary__bar .read {
+    width: 100%;
+  }
+  .summary__in {
+    padding: 18px 16px 16px;
+  }
+
+  /* profile section heads + committee rows: wrap / shrink long compound words */
+  .psec__h,
+  .ph__head {
+    flex-wrap: wrap;
+  }
+  .psec__h .meta,
+  .ph__head .meta {
+    margin-left: 0;
+    white-space: normal;
+  }
+  .committee-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .committee-row .cname {
+    overflow-wrap: anywhere;
+  }
+
+  /* action rows (initiatives & questions) stack id/date over body */
+  .act-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "id   date"
+      "body body";
+    gap: 5px 12px;
+  }
+  .act-row__id {
+    grid-area: id;
+    padding-top: 0;
+  }
+  .act-row > div:nth-child(2) {
+    grid-area: body;
+  }
+  .act-row__date {
+    grid-area: date;
+    padding-top: 0;
+  }
+
+  /* dissent / notable-vote rows: result drops under the title */
+  .vote-row {
+    grid-template-columns: 46px 1fr;
+    grid-template-areas:
+      "badge title"
+      "badge result";
+    gap: 6px 12px;
+  }
+  .vote-row__badge {
+    grid-area: badge;
+    align-self: start;
+  }
+  .vote-row > div:nth-child(2) {
+    grid-area: title;
+  }
+  .vote-row__result {
+    grid-area: result;
+    text-align: left;
+  }
+  .vote-row__result .r-line {
+    justify-content: flex-start;
+  }
+}

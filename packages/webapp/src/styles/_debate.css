@@ -1,0 +1,312 @@
+/* ============================================================
+   KESKUSTELU — debate transcript (speeches / puheenvuorot)
+   ============================================================ */
+.debate-meta {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  font-size: var(--fs-sm);
+  color: var(--body);
+}
+.debate-meta b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.debate-meta .sep {
+  width: 1px;
+  height: 13px;
+  background: var(--rule);
+}
+
+/* per-party speech tally strip */
+.spk-tally {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.spk-tally__it {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid var(--rule);
+  padding: 6px 10px;
+  font-size: 12.5px;
+  color: var(--body);
+}
+.spk-tally__it .d {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.spk-tally__it b {
+  font-family: var(--head);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.transcript {
+  display: block;
+}
+.speech {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 0 20px;
+  padding: 26px 0;
+  border-top: 1px solid var(--rule);
+  scroll-margin-top: 14px;
+}
+.speech:first-of-type {
+  border-top: 2px solid var(--ink);
+}
+.speech__av {
+  width: 50px;
+  height: 50px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 800 16px var(--head);
+  color: var(--faint);
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+.speech__av .pbar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 5px;
+  width: 100%;
+}
+.speech__main {
+  min-width: 0;
+}
+.speech__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.speech__name {
+  font: 700 17px var(--head);
+  color: var(--ink);
+  letter-spacing: -0.012em;
+}
+.speech__role {
+  font: 700 9.5px var(--head);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--blue);
+  background: var(--paper-3);
+  padding: 3px 7px;
+}
+.speech__role.min {
+  color: var(--hall);
+}
+.speech__role.reply {
+  color: var(--opp);
+}
+.speech__time {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-left: auto;
+  white-space: nowrap;
+}
+.speech__sum {
+  display: flex;
+  gap: 9px;
+  margin: 13px 0;
+  font-size: 13.5px;
+  color: var(--blue-ink);
+  background: var(--paper-2);
+  border-left: 3px solid var(--blue);
+  padding: 10px 14px;
+  line-height: 1.45;
+}
+.speech__sum .sp {
+  color: var(--blue);
+  flex: 0 0 auto;
+}
+.speech__body p {
+  font-size: 16px;
+  line-height: 1.68;
+  color: var(--body);
+  margin: 0 0 14px;
+  max-width: 64ch;
+}
+.speech__body p:last-child {
+  margin-bottom: 0;
+}
+.speech__cont {
+  color: var(--faint);
+}
+.speech__foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+.speech__foot .link-arrow {
+  font-size: 13px;
+}
+.speech__foot .meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+
+/* "show more replies" block */
+.more-speeches {
+  margin-top: 26px;
+  padding: 20px 22px;
+  background: var(--paper-2);
+  border-left: 3px solid var(--rule-ink);
+}
+.more-speeches h4 {
+  font: 700 11px var(--head);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.reply-row {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 0;
+  border-top: 1px solid var(--rule-soft);
+}
+.reply-row:first-of-type {
+  border-top: 0;
+}
+.reply-row .d {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.reply-row .nm {
+  font-size: 14px;
+  color: var(--ink);
+}
+.reply-row .nm small {
+  color: var(--muted);
+}
+.reply-row .tm {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+
+/* ----- debate CONTEXT (selonteko synthesis: lifecycle + kannanotto + dividing line) ----- */
+.lc-step.current {
+  background: var(--paper-2);
+}
+.lc-step.current .lc-step__dot {
+  background: var(--red);
+  border-color: var(--red);
+}
+.lc-step.current::after {
+  content: "olet tässä";
+  position: absolute;
+  left: 16px;
+  bottom: 9px;
+  font: 600 9px var(--mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.lc-step.current {
+  padding-bottom: 28px;
+}
+
+.ctx-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 26px;
+}
+.ctx-box h3 {
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: var(--fs-h3);
+  color: var(--ink);
+  margin-bottom: 13px;
+  letter-spacing: -0.01em;
+}
+.ctx-box h3 small {
+  display: block;
+  font: 500 12px var(--mono);
+  color: var(--muted);
+  margin-top: 4px;
+  letter-spacing: 0;
+}
+.ctx-themes,
+.ctx-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.ctx-themes li {
+  position: relative;
+  padding-left: 19px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--body);
+}
+.ctx-themes li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  width: 7px;
+  height: 7px;
+  background: var(--blue);
+}
+.ctx-themes li b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.ctx-list li {
+  position: relative;
+  padding-left: 32px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--body);
+  min-height: 21px;
+}
+.ctx-list li .n {
+  position: absolute;
+  left: 0;
+  top: 1px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--blue);
+  width: 21px;
+  height: 21px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ctx-list li b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.ctx-src {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--muted);
+  margin-top: 14px;
+}

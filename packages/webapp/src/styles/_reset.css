@@ -1,0 +1,40 @@
+* {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--text);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 40px;
+}
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--head);
+  color: var(--ink);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+a {
+  color: var(--blue);
+  text-decoration: none;
+}
+p {
+  margin: 0;
+}
+::selection {
+  background: #dfe6f0;
+}

@@ -1,27 +1,30 @@
-const PARTY_COLORS: Record<string, string> = {
-  kok:  "#1d4f91",
-  ps:   "#2c3e8c",
-  sd:   "#d3243a",
-  kesk: "#0b8a4a",
-  vihr: "#5aa829",
-  vas:  "#9e1f4b",
-  r:    "#1278b6",
-  kd:   "#1a3f86",
-  liik: "#f0841c",
-  pg:   "#888888",
+// Keys are the canonical party codes; values are the CSS custom property names
+// defined in src/styles/_tokens.css. The CSS var() reference is used for inline
+// style attributes so colors can be updated from one place.
+const PARTY_CSS_VARS: Record<string, string> = {
+  kok: "--party-kok",
+  ps: "--party-ps",
+  sd: "--party-sd",
+  kesk: "--party-kesk",
+  vihr: "--party-vihr",
+  vas: "--party-vas",
+  r: "--party-r",
+  kd: "--party-kd",
+  liik: "--party-liik",
+  pg: "--party-pg",
 };
 
 const PARTY_SHORT: Record<string, string> = {
-  kok:  "Kokoomus",
-  ps:   "Perussuomalaiset",
-  sd:   "SDP",
+  kok: "Kokoomus",
+  ps: "Perussuomalaiset",
+  sd: "SDP",
   kesk: "Keskusta",
   vihr: "Vihreät",
-  vas:  "Vasemmistoliitto",
-  r:    "RKP",
-  kd:   "KD",
+  vas: "Vasemmistoliitto",
+  r: "RKP",
+  kd: "KD",
   liik: "Liike Nyt",
-  pg:   "Vornanen",
+  pg: "Vornanen",
 };
 
 // Representative.party stores English lowercase group descriptions
@@ -45,7 +48,8 @@ function resolveCode(raw: string): string {
 
 export function partyColor(raw: string): string {
   const code = resolveCode(raw);
-  return PARTY_COLORS[code] ?? "#999999";
+  const cssVar = PARTY_CSS_VARS[code];
+  return cssVar ? `var(${cssVar})` : "#999999";
 }
 
 export function partyShortName(raw: string, fallback?: string): string {

@@ -1,0 +1,378 @@
+/* ============================================================
+   MASTHEAD + NAV
+   ============================================================ */
+.masthead {
+  padding-top: 30px;
+}
+.masthead__top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 14px;
+}
+.brand__name {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: 30px;
+  letter-spacing: -0.025em;
+  line-height: 0.9;
+  color: var(--ink);
+}
+.brand__tag {
+  font-size: var(--fs-meta);
+  color: var(--muted);
+  margin-top: 7px;
+  letter-spacing: 0.01em;
+}
+.masthead__meta {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.masthead__date {
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  color: var(--body);
+  white-space: nowrap;
+}
+
+/* ---------- Tietojakso (period) selector ---------- */
+.period {
+  position: relative;
+}
+.period__btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  cursor: pointer;
+  padding: 7px 12px;
+  font-family: var(--text);
+  text-align: left;
+}
+.period__btn:hover {
+  background: var(--paper-2);
+}
+.period__k {
+  font-family: var(--head);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.period__v {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.period__badge {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 6px;
+  background: var(--paper-3);
+  color: var(--muted);
+  text-transform: lowercase;
+  white-space: nowrap;
+}
+.period__badge.is-now {
+  background: var(--hall-soft);
+  color: var(--hall);
+}
+.period__caret {
+  color: var(--muted);
+  font-size: 11px;
+}
+.period__btn[aria-expanded="true"] .period__caret {
+  transform: rotate(180deg);
+}
+
+.period__menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 80;
+  width: 300px;
+  background: var(--paper);
+  border: 1px solid var(--rule-ink);
+  box-shadow:
+    0 1px 0 var(--ink),
+    0 14px 40px rgba(22, 19, 15, 0.16);
+  padding: 6px;
+}
+.period__menu[hidden] {
+  display: none;
+}
+.period__menu-head {
+  font-family: var(--head);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 8px 10px 9px;
+}
+.period__opt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 9px 10px;
+  position: relative;
+}
+.period__opt:hover {
+  background: var(--paper-2);
+}
+.period__opt.is-selected {
+  background: var(--paper-2);
+}
+.period__opt.is-selected::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: var(--red);
+}
+.period__opt-main {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+.period__opt-sub {
+  font-size: var(--fs-meta);
+  color: var(--muted);
+}
+.period__note {
+  font-size: var(--fs-meta);
+  color: var(--muted);
+  line-height: 1.4;
+  padding: 9px 10px 6px;
+  margin-top: 4px;
+  border-top: 1px solid var(--rule-soft);
+}
+.kausi-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--rule);
+  padding: 8px 13px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  background: var(--paper);
+}
+.kausi-select:hover {
+  background: var(--paper-2);
+}
+.kausi-select .caret {
+  color: var(--muted);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  padding-top: 12px;
+}
+.nav a {
+  font-family: var(--text);
+  font-weight: 500;
+  font-size: 14.5px;
+  color: var(--body);
+  padding-bottom: 12px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.nav a:hover {
+  color: var(--ink);
+}
+.nav a.is-active {
+  color: var(--ink);
+  font-weight: 700;
+  border-bottom-color: var(--red);
+}
+.nav__search {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 14.5px;
+  padding-bottom: 12px;
+  cursor: pointer;
+}
+.nav__search:hover {
+  color: var(--ink);
+}
+
+/* ============================================================
+   FOOTER + period statement
+   ============================================================ */
+.foot {
+  margin-top: 36px;
+  border-top: 1px solid var(--rule);
+}
+.foot__period {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 18px 0 16px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.foot__period .pk {
+  font-family: var(--head);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.foot__period .pv {
+  font-family: var(--head);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.foot__period .pbadge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 7px;
+  background: var(--hall-soft);
+  color: var(--hall);
+}
+.foot__period .pbadge.is-now {
+  background: var(--hall-soft);
+  color: var(--hall);
+}
+.foot__period .pdetail {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--muted);
+  margin-left: auto;
+}
+.foot__legal {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px 0 40px;
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--muted);
+}
+
+/* ============================================================
+   DESIGN-SYSTEM PAGE specifics
+   ============================================================ */
+.ds-section {
+  padding: 40px 0;
+  border-top: 1px solid var(--rule);
+}
+.ds-section:first-of-type {
+  border-top: 0;
+}
+.ds-section > .kicker {
+  margin-bottom: 6px;
+}
+.ds-section__h {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.ds-section__lead {
+  font-size: var(--fs-lead);
+  color: var(--body);
+  max-width: 60ch;
+  line-height: 1.5;
+  margin-bottom: 28px;
+}
+.ds-grid {
+  display: grid;
+  gap: 24px;
+}
+.ds-grid--2 {
+  grid-template-columns: 1fr 1fr;
+}
+.ds-grid--swatch {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+.ds-label {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--muted);
+  margin-top: 10px;
+}
+.ds-label b {
+  color: var(--ink);
+}
+
+.swatch-card .chip {
+  height: 72px;
+  border: 1px solid var(--rule);
+}
+.swatch-card .name {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  margin-top: 9px;
+  color: var(--ink);
+}
+.swatch-card .hex {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--muted);
+}
+
+.type-spec {
+  padding: 16px 0;
+  border-top: 1px solid var(--rule-soft);
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 20px;
+  align-items: baseline;
+}
+.type-spec:first-child {
+  border-top: 0;
+}
+.type-spec .tok {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--muted);
+}
+.type-spec .tok small {
+  display: block;
+  color: var(--faint);
+  margin-top: 3px;
+}
+
+.demo {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 26px;
+}
+.demo + .ds-label {
+  margin-top: 12px;
+}
+
+@media (max-width: 900px) {
+  .ds-grid--2 {
+    grid-template-columns: 1fr;
+  }
+  .stat-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 18px 0;
+  }
+}

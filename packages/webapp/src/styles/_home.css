@@ -1,0 +1,188 @@
+/* ============================================================
+   LEAD
+   ============================================================ */
+.lead {
+  padding: 28px 0 22px;
+}
+.lead h1 {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: var(--fs-display);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  max-width: 17ch;
+}
+.lead__meta {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+.lead__meta b {
+  color: var(--body);
+  font-weight: 600;
+}
+.lead__meta .sep {
+  width: 1px;
+  height: 13px;
+  background: var(--rule);
+}
+
+/* ============================================================
+   STATS — inline, ruled (no boxes)
+   ============================================================ */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.stat {
+  padding: 4px 22px 4px 0;
+  border-left: 1px solid var(--rule);
+  padding-left: 22px;
+}
+.stat:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+.stat__label {
+  font-size: var(--fs-meta);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.stat__value {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: 40px;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  margin-top: 8px;
+}
+.stat__value.hall {
+  color: var(--hall);
+}
+.stat__value.opp {
+  color: var(--opp);
+}
+
+/* ============================================================
+   COMPOSITION — bloc bar + party table
+   ============================================================ */
+.bloc-bar {
+  display: flex;
+  height: 30px;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+}
+.bloc-bar > span {
+  display: block;
+  border-right: 1.5px solid var(--paper);
+}
+.bloc-bar > span:last-child {
+  border-right: 0;
+}
+.bloc-bar .seg-hall {
+  background: var(--hall);
+}
+.bloc-bar .seg-opp {
+  background: var(--opp);
+}
+
+.bloc-legend {
+  display: flex;
+  gap: 26px;
+  margin-top: 12px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.bloc-legend .item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--body);
+}
+.bloc-legend .item b {
+  color: var(--ink);
+}
+.bloc-legend .swatch {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+}
+.bloc-legend .note {
+  margin-left: auto;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.party-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+.party-table tr {
+  border-bottom: 1px solid var(--rule-soft);
+}
+.party-table tr:first-child {
+  border-top: 1px solid var(--rule);
+}
+.party-table td {
+  padding: 12px 0;
+  vertical-align: middle;
+}
+.party-table .pt-dot {
+  width: 26px;
+}
+.party-table .pt-dot span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.party-table .pt-name {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+}
+.party-table .pt-name small {
+  display: block;
+  font-weight: 500;
+  font-size: var(--fs-meta);
+  color: var(--muted);
+  margin-top: 2px;
+}
+.party-table .pt-bar {
+  width: 200px;
+}
+.party-table .pt-bar .track {
+  height: 7px;
+  background: var(--rule-soft);
+  overflow: hidden;
+}
+.party-table .pt-bar .fill {
+  height: 100%;
+}
+.party-table .pt-seats {
+  text-align: right;
+  width: 52px;
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   ETUSIVU main grid (composition + rail)
+   ============================================================ */
+.home-main {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 48px;
+  padding-top: 34px;
+}

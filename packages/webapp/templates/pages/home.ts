@@ -1,4 +1,4 @@
-import { html } from "../../html";
+import { esc, html } from "../../html";
 import { partyColor, partyShortName } from "../components/party";
 
 export const HOME_TITLE = "Etusivu";
@@ -36,7 +36,11 @@ interface SpeakerActivity {
 export interface HomeData {
   latestDay: {
     date: string | null;
-    sessions: Array<{ key: string; voting_count: number; section_count: number }>;
+    sessions: Array<{
+      key: string;
+      voting_count: number;
+      section_count: number;
+    }>;
   };
   composition: {
     totalMembers: number;
@@ -52,12 +56,6 @@ export interface HomeData {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-const esc = (s: string | number | null | undefined) =>
-  (s == null ? "" : String(s))
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("fi-FI", {
@@ -87,14 +85,24 @@ function pct(part: number, total: number): string {
 // ── Sub-sections ──────────────────────────────────────────────────────────────
 
 function renderBlocBar(parties: PartyInfo[], total: number): string {
-  const govParties = parties.filter((p) => p.is_in_government === 1 && p.party_display_code !== "unknown");
-  const oppParties = parties.filter((p) => p.is_in_government !== 1 && p.party_display_code !== "unknown");
+  const govParties = parties.filter(
+    (p) => p.is_in_government === 1 && p.party_display_code !== "unknown",
+  );
+  const oppParties = parties.filter(
+    (p) => p.is_in_government !== 1 && p.party_display_code !== "unknown",
+  );
 
   const govSegs = govParties
-    .map((p) => html`<span class="seg-hall" style="width:${pct(p.member_count, total)};background:${partyColor(p.party_display_code)}" title="${esc(partyDisplayName(p))} ${esc(p.member_count)}"></span>`)
+    .map(
+      (p) =>
+        html`<span class="seg-hall" style="width:${pct(p.member_count, total)};background:${partyColor(p.party_display_code)}" title="${esc(partyDisplayName(p))} ${esc(p.member_count)}"></span>`,
+    )
     .join("");
   const oppSegs = oppParties
-    .map((p) => html`<span class="seg-opp" style="width:${pct(p.member_count, total)};background:${partyColor(p.party_display_code)}" title="${esc(partyDisplayName(p))} ${esc(p.member_count)}"></span>`)
+    .map(
+      (p) =>
+        html`<span class="seg-opp" style="width:${pct(p.member_count, total)};background:${partyColor(p.party_display_code)}" title="${esc(partyDisplayName(p))} ${esc(p.member_count)}"></span>`,
+    )
     .join("");
 
   const govTotal = govParties.reduce((s, p) => s + p.member_count, 0);
@@ -113,19 +121,21 @@ function renderPartyTable(parties: PartyInfo[], total: number): string {
     .filter((p) => p.party_display_code !== "unknown" && p.member_count > 0)
     .sort((a, b) => b.member_count - a.member_count);
 
-  const rows = visible.map((p) => {
-    const color = partyColor(p.party_display_code);
-    const name = partyDisplayName(p);
-    const bloc = p.is_in_government === 1 ? "Hallitus" : "Oppositio";
-    const widthPct = pct(p.member_count, total);
+  const rows = visible
+    .map((p) => {
+      const color = partyColor(p.party_display_code);
+      const name = partyDisplayName(p);
+      const bloc = p.is_in_government === 1 ? "Hallitus" : "Oppositio";
+      const widthPct = pct(p.member_count, total);
 
-    return html`<tr>
+      return html`<tr>
       <td class="pt-dot"><span style="background:${color}"></span></td>
       <td class="pt-name">${esc(name)} <small>${esc(bloc)}</small></td>
       <td class="pt-bar"><div class="track"><div class="fill" style="width:${widthPct};background:${color}"></div></div></td>
       <td class="pt-seats">${p.member_count}</td>
     </tr>`;
-  }).join("");
+    })
+    .join("");
 
   return html`<table class="party-table">${rows}</table>`;
 }
@@ -133,14 +143,15 @@ function renderPartyTable(parties: PartyInfo[], total: number): string {
 function renderCloseVotesRail(votes: CloseVote[]): string {
   if (votes.length === 0) return "";
 
-  const items = votes.map((v) => {
-    const passed = v.n_yes >= v.n_no;
-    const badge = passed ? "jaa" : "";
-    const badgeText = passed ? "JAA" : "EI";
-    const resultText = `${v.n_yes} JAA – ${v.n_no} EI`;
-    const title = v.title || v.section_title;
+  const items = votes
+    .map((v) => {
+      const passed = v.n_yes >= v.n_no;
+      const badge = passed ? "jaa" : "";
+      const badgeText = passed ? "JAA" : "EI";
+      const resultText = `${v.n_yes} JAA – ${v.n_no} EI`;
+      const title = v.title || v.section_title;
 
-    return html`<div class="vote-row">
+      return html`<div class="vote-row">
   <div class="vote-row__badge ${badge}">${badgeText}</div>
   <div>
     <div class="vote-row__title">${esc(title)}</div>
@@ -154,7 +165,8 @@ function renderCloseVotesRail(votes: CloseVote[]): string {
     <div class="r-line"><span class="${passed ? "pass" : "fail"}">${v.margin} ään. ero</span></div>
   </div>
 </div>`;
-  }).join("");
+    })
+    .join("");
 
   return html`<div class="psec">
   <div class="psec__h"><h2>Tiukimmat äänestykset</h2></div>
@@ -165,15 +177,17 @@ function renderCloseVotesRail(votes: CloseVote[]): string {
 function renderSpeechActivityRail(speakers: SpeakerActivity[]): string {
   if (speakers.length === 0) return "";
 
-  const items = speakers.map((s) => {
-    const color = partyColor(s.party);
-    const shortParty = partyShortName(s.party);
-    const name = `${s.last_name}, ${s.first_name}`;
-    return html`<div class="rail__item">
+  const items = speakers
+    .map((s) => {
+      const color = partyColor(s.party);
+      const shortParty = partyShortName(s.party);
+      const name = `${s.last_name}, ${s.first_name}`;
+      return html`<div class="rail__item">
   <div class="rail__title"><span style="display:inline-flex;align-items:center;gap:8px;margin-right:4px"><span style="background:${color};width:10px;height:10px;border-radius:50%;display:inline-block;flex:0 0 auto"></span></span>${esc(name)}</div>
   <div class="rail__meta">${esc(shortParty)} · ${esc(s.speech_count)} puheenvuoroa</div>
 </div>`;
-  }).join("");
+    })
+    .join("");
 
   return html`<div class="psec" style="margin-top:32px">
   <div class="psec__h"><h2>Eniten puheenvuoroja</h2></div>

@@ -1,13 +1,4 @@
-import { html } from "../../html";
-
-const esc = (s: string | number | undefined | null) =>
-  s == null
-    ? ""
-    : String(s)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
+import { esc, html } from "../../html";
 
 export interface CiteData {
   value?: string;

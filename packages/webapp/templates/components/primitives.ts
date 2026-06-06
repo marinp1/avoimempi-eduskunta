@@ -1,11 +1,4 @@
-import { html } from "../../html";
-
-const esc = (s: string | number) =>
-  String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+import { esc, html } from "../../html";
 
 export type KickerModifier = "red" | "blue";
 export function kicker(

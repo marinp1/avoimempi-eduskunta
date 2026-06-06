@@ -1,0 +1,412 @@
+/* ============================================================
+   MP PROFILE
+   ============================================================ */
+.bio-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 26px;
+  align-items: center;
+  padding: 26px 0 24px;
+}
+.bio-portrait {
+  width: 116px;
+  height: 116px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+.bio-portrait .initials {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: 40px;
+  color: var(--faint);
+}
+.bio-portrait .pbar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 6px;
+  width: 100%;
+}
+.bio-head__main {
+  min-width: 0;
+}
+.bio-name {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: var(--fs-h1);
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+}
+.bio-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  font-size: var(--fs-sm);
+  color: var(--body);
+}
+.bio-meta .sep {
+  width: 1px;
+  height: 13px;
+  background: var(--rule);
+}
+
+.bio-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.bio-stat {
+  padding: 18px 22px 18px 0;
+  border-left: 1px solid var(--rule);
+  padding-left: 22px;
+}
+.bio-stat:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+.bio-stat .k {
+  font-size: var(--fs-meta);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.bio-stat .v {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: 30px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  margin-top: 8px;
+  line-height: 1;
+}
+.bio-stat .v small {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+.bio-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 48px;
+  padding-top: 30px;
+}
+.committee-list {
+  margin-top: 4px;
+}
+.committee-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: baseline;
+  padding: 12px 0;
+  border-top: 1px solid var(--rule-soft);
+}
+.committee-row:first-child {
+  border-top: 0;
+}
+.committee-row .cname {
+  font-size: 15px;
+  color: var(--ink);
+  font-weight: 500;
+}
+.committee-row .crole {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.committee-row .crole.lead {
+  color: var(--hall);
+}
+
+/* ============================================================
+   MP PROFILE — substance: voting record, topics, actions
+   ============================================================ */
+/* section heading shared in profile body */
+.psec {
+  margin-top: 36px;
+}
+.psec:first-child {
+  margin-top: 0;
+}
+.psec__h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 4px;
+}
+.psec__h h2 {
+  font-size: var(--fs-h2);
+}
+.psec__h .meta {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.psec__intro {
+  font-size: var(--fs-sm);
+  color: var(--body);
+  margin: 6px 0 18px;
+  max-width: 64ch;
+  line-height: 1.5;
+}
+
+/* vote breakdown bar */
+.vote-bar {
+  display: flex;
+  height: 34px;
+  border: 1px solid var(--rule);
+  overflow: hidden;
+}
+.vote-bar > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 12px var(--text);
+  color: #fff;
+  min-width: 0;
+}
+.vote-bar .v-jaa {
+  background: var(--hall);
+}
+.vote-bar .v-ei {
+  background: var(--red);
+}
+.vote-bar .v-tyh {
+  background: var(--opp);
+}
+.vote-bar .v-poi {
+  background: var(--paper-3);
+  color: var(--muted);
+}
+.vote-legend {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+.vote-legend .vl {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.vote-legend .sw {
+  width: 11px;
+  height: 11px;
+  flex: 0 0 auto;
+  position: relative;
+  top: 1px;
+}
+.vote-legend .vk {
+  font-size: var(--fs-meta);
+  color: var(--muted);
+}
+.vote-legend .vv {
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.vote-legend .vl > div {
+  display: flex;
+  flex-direction: column;
+}
+
+/* dissent / notable-vote list */
+.dissent {
+  margin-top: 8px;
+}
+.dissent__lead {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: var(--fs-sm);
+  color: var(--body);
+  margin-bottom: 4px;
+}
+.dissent__lead b {
+  color: var(--ink);
+}
+.vote-row {
+  display: grid;
+  grid-template-columns: 58px 1fr auto;
+  gap: 16px;
+  align-items: start;
+  padding: 14px 0;
+  border-top: 1px solid var(--rule-soft);
+}
+.vote-row:first-of-type {
+  border-top: 1px solid var(--rule);
+}
+.vote-row__badge {
+  font: 700 11px var(--text);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 4px 0;
+  text-align: center;
+  color: #fff;
+  background: var(--red);
+}
+.vote-row__badge.jaa {
+  background: var(--hall);
+}
+.vote-row__badge.tyh {
+  background: var(--opp);
+}
+.vote-row__title {
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.35;
+  font-weight: 500;
+}
+.vote-row__sub {
+  font-size: var(--fs-meta);
+  color: var(--muted);
+  margin-top: 5px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.vote-row__sub .date {
+  font-family: var(--mono);
+}
+.vote-row__result {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--muted);
+  white-space: nowrap;
+  text-align: right;
+}
+.vote-row__result .r-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.vote-row__result .pass {
+  color: var(--hall);
+}
+.vote-row__result .fail {
+  color: var(--red);
+}
+.outcome {
+  display: inline-block;
+  font: 600 10px var(--mono);
+  padding: 2px 6px;
+  margin-top: 6px;
+}
+.outcome.ok {
+  background: var(--hall-soft);
+  color: var(--hall);
+}
+.outcome.no {
+  background: var(--opp-soft);
+  color: #8a531a;
+}
+
+/* topic / theme tags */
+.topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 4px;
+}
+.topic-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--rule);
+  padding: 8px 12px;
+  font: 500 14px var(--text);
+  color: var(--ink);
+  background: var(--paper);
+}
+.topic-tag .tc {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+.topic-tag.lg {
+  font-size: 16px;
+  font-weight: 600;
+}
+.topic-tag.lg .tc {
+  font-size: 12px;
+}
+
+/* action list — questions & initiatives */
+.act-row {
+  display: grid;
+  grid-template-columns: 92px 1fr auto;
+  gap: 16px;
+  align-items: start;
+  padding: 14px 0;
+  border-top: 1px solid var(--rule-soft);
+}
+.act-row:first-of-type {
+  border-top: 1px solid var(--rule);
+}
+.act-row__id {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--blue);
+  padding-top: 2px;
+}
+.act-row__title {
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.38;
+  font-weight: 500;
+}
+.act-row__title:hover {
+  color: var(--blue);
+}
+.act-row__sub {
+  font-size: var(--fs-meta);
+  color: var(--muted);
+  margin-top: 5px;
+}
+.act-row__date {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--faint);
+  white-space: nowrap;
+  text-align: right;
+  padding-top: 2px;
+}
+
+/* sidebar topic spoken */
+.spoke-row {
+  padding: 11px 0;
+  border-top: 1px solid var(--rule-soft);
+}
+.spoke-row:first-child {
+  border-top: 0;
+}
+.spoke-row .st {
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.spoke-row .sd {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
