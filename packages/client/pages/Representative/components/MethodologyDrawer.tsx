@@ -1,5 +1,5 @@
 import { Box, Link, Stack, Typography } from "@mui/material";
-import React from "react";
+import type React from "react";
 import { useThemedColors } from "../../../theme/ThemeContext";
 
 export interface MethodologyTraceLink {

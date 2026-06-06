@@ -4,7 +4,7 @@ export const fetchPersonDetails = async (
   personId: number,
   signal?: AbortSignal,
 ) => {
-  const jsonOrThrow = async <T,>(
+  const jsonOrThrow = async <T>(
     responsePromise: Promise<{
       ok: boolean;
       status: number;
@@ -54,4 +54,6 @@ export const fetchPersonDetails = async (
   };
 };
 
-export type PersonDetailsBundle = Awaited<ReturnType<typeof fetchPersonDetails>>;
+export type PersonDetailsBundle = Awaited<
+  ReturnType<typeof fetchPersonDetails>
+>;

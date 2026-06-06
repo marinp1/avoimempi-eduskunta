@@ -1,7 +1,8 @@
 import { Box, Stack } from "@mui/material";
 import React from "react";
-import { Hero } from "./Hero";
 import { LazySection } from "./components/LazySection";
+import { Hero } from "./Hero";
+import { StickyRail } from "./StickyRail";
 import {
   getVisibleSections,
   type PersonCapabilities,
@@ -10,7 +11,6 @@ import {
   fetchPersonDetails,
   type PersonDetailsBundle,
 } from "./utils/fetchPersonDetails";
-import { StickyRail } from "./StickyRail";
 
 interface RepresentativeProps {
   personId: number;
@@ -70,7 +70,9 @@ const Representative: React.FC<RepresentativeProps> = ({ personId }) => {
         .catch(() => {}),
       fetch(`/api/person/${personId}/election-context`, { signal })
         .then((r) => (r.ok ? r.json() : null))
-        .then((data) => setElectionContext(data as ElectionContextResponse | null)),
+        .then((data) =>
+          setElectionContext(data as ElectionContextResponse | null),
+        ),
       fetch(`/api/person/${personId}/capabilities`, { signal })
         .then((r) => (r.ok ? r.json() : null))
         .then((data) => {
@@ -158,7 +160,9 @@ const Representative: React.FC<RepresentativeProps> = ({ personId }) => {
           sections={sections}
           activeAnchor={activeAnchor}
         />
-        <Box sx={{ flex: 1, minWidth: 0, width: "100%", px: { xs: 1.5, lg: 0 } }}>
+        <Box
+          sx={{ flex: 1, minWidth: 0, width: "100%", px: { xs: 1.5, lg: 0 } }}
+        >
           {sections.map((section) => (
             <LazySection key={section.key} anchor={section.anchor}>
               <section.Component

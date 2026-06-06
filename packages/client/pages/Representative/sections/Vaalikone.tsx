@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { SectionPlaceholder } from "./_placeholder";
 import type { ProfileSectionProps } from "./registry";
 

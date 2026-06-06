@@ -1,10 +1,14 @@
 import { Box, Divider, Skeleton, Stack } from "@mui/material";
 import React from "react";
 import { apiFetch } from "#client/utils/fetch";
+
 const AttendancePersonDetail = React.lazy(
   () => import("../../Insights/AttendancePersonDetail"),
 );
-const VotingActivity = React.lazy(() => import("../../Insights/VotingActivity"));
+const VotingActivity = React.lazy(
+  () => import("../../Insights/VotingActivity"),
+);
+
 import { JudgmentLine, judgeAgainstBaseline } from "../components/JudgmentLine";
 import { MetricWithBaseline } from "../components/MetricWithBaseline";
 import { SectionShell } from "../components/SectionShell";
@@ -77,7 +81,10 @@ const Activity: React.FC<ProfileSectionProps> = ({ personId, scope }) => {
   const partyInitiatives = metrics?.party?.avgInitiativeCount ?? null;
   const parliamentInitiatives = metrics?.parliament.avgInitiativeCount ?? null;
 
-  const judgments: Array<{ text: string; tone: ReturnType<typeof judgeAgainstBaseline> }> = [];
+  const judgments: Array<{
+    text: string;
+    tone: ReturnType<typeof judgeAgainstBaseline>;
+  }> = [];
   if (personRate != null && parliamentRate != null) {
     const tone = judgeAgainstBaseline(personRate, parliamentRate, {
       tolerance: 3,
@@ -184,12 +191,16 @@ const Activity: React.FC<ProfileSectionProps> = ({ personId, scope }) => {
 
       <Divider sx={{ my: 3 }} />
 
-      <React.Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+      <React.Suspense
+        fallback={<Skeleton variant="rectangular" height={200} />}
+      >
         <AttendancePersonDetail
           personId={personId}
           personName=""
           startDate={scope.selectedGovernmentPeriod?.government_start_date}
-          endDate={scope.selectedGovernmentPeriod?.government_end_date ?? undefined}
+          endDate={
+            scope.selectedGovernmentPeriod?.government_end_date ?? undefined
+          }
           onClose={noop}
         />
         <VotingActivity onClose={noop} initialPersonId={personId} />

@@ -1,8 +1,8 @@
 import type React from "react";
 import type { RepresentativeAnalysisScope } from "../../Composition/Details";
 import type { PersonDetailsBundle as PersonDetailsBundleImport } from "../utils/fetchPersonDetails";
-import AiSummary from "./AiSummary";
 import Activity from "./Activity";
+import AiSummary from "./AiSummary";
 import Background from "./Background";
 import Bills from "./Bills";
 import Committees from "./Committees";
@@ -145,9 +145,7 @@ export const profileSections: ProfileSection[] = [
  * Returns the sections that should actually render for a given person.
  * Core sections always pass; optional sections check their `isAvailable`.
  */
-export const getVisibleSections = (
-  capabilities: PersonCapabilities | null,
-) =>
+export const getVisibleSections = (capabilities: PersonCapabilities | null) =>
   profileSections.filter(
     (section) =>
       section.variant === "core" ||

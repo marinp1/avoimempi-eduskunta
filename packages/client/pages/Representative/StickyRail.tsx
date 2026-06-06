@@ -1,5 +1,5 @@
-import { Box, Divider, Link, Stack, Typography } from "@mui/material";
-import React from "react";
+import { Box, Divider, Link, Typography } from "@mui/material";
+import type React from "react";
 import { useThemedColors } from "../../theme/ThemeContext";
 import { ActionsCluster } from "./ActionsCluster";
 import type { ProfileSection } from "./sections/registry";
@@ -105,14 +105,10 @@ export const StickyRail: React.FC<StickyRailProps> = ({
                 fontWeight: isActive ? 700 : 500,
                 color: isActive ? themed.textPrimary : themed.textSecondary,
                 borderLeft: {
-                  lg: `2px solid ${
-                    isActive ? themed.accent : "transparent"
-                  }`,
+                  lg: `2px solid ${isActive ? themed.accent : "transparent"}`,
                 },
                 borderBottom: {
-                  xs: `2px solid ${
-                    isActive ? themed.accent : "transparent"
-                  }`,
+                  xs: `2px solid ${isActive ? themed.accent : "transparent"}`,
                   lg: "none",
                 },
                 whiteSpace: "nowrap",

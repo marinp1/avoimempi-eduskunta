@@ -1,5 +1,5 @@
 import { Box, Chip, Stack, Typography } from "@mui/material";
-import React from "react";
+import type React from "react";
 import { useThemedColors } from "../../theme/ThemeContext";
 import { ElectionContextStrip } from "./ElectionContextStrip";
 
@@ -10,9 +10,7 @@ interface HeroProps {
     last_name?: string | null;
     party?: string | null;
   } | null;
-  electionContext: React.ComponentProps<
-    typeof ElectionContextStrip
-  >["context"];
+  electionContext: React.ComponentProps<typeof ElectionContextStrip>["context"];
   loading: boolean;
 }
 

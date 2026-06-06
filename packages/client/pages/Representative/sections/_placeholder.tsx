@@ -1,5 +1,5 @@
 import { Skeleton, Stack } from "@mui/material";
-import React from "react";
+import type React from "react";
 import { SectionShell } from "../components/SectionShell";
 
 interface PlaceholderProps {

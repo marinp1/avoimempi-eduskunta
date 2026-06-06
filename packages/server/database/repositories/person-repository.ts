@@ -4,10 +4,10 @@ import leavingParliamentRecords from "../queries/LEAVING_PARLIAMENT.sql";
 import personCommittees from "../queries/PERSON_COMMITTEES.sql";
 import personDissents from "../queries/PERSON_DISSENTS.sql";
 import personFocusAreasRaw from "../queries/PERSON_FOCUS_AREAS_RAW.sql";
-import personInitiatives from "../queries/PERSON_INITIATIVES.sql";
-import personMetricAggregates from "../queries/PERSON_METRIC_AGGREGATES.sql";
 import personGovernmentPeriods from "../queries/PERSON_GOVERNMENT_PERIODS.sql";
 import personGroupMemberships from "../queries/PERSON_GROUP_MEMBERSHIPS.sql";
+import personInitiatives from "../queries/PERSON_INITIATIVES.sql";
+import personMetricAggregates from "../queries/PERSON_METRIC_AGGREGATES.sql";
 import personQuestions from "../queries/PERSON_QUESTIONS.sql";
 import personSearch from "../queries/PERSON_SEARCH.sql";
 import personSpeeches from "../queries/PERSON_SPEECHES.sql";
@@ -429,7 +429,9 @@ export class PersonRepository {
     };
   }
 
-  public fetchPersonMetricsWithBaselines(params: { personId: string | number }) {
+  public fetchPersonMetricsWithBaselines(params: {
+    personId: string | number;
+  }) {
     const id =
       typeof params.personId === "string"
         ? Number.parseInt(params.personId, 10)
@@ -437,14 +439,10 @@ export class PersonRepository {
     const { rows, baselines } = this.fetchPersonMetricAggregates();
     const person = rows.find((r) => r.person_id === id) ?? null;
     const partyId = person?.party ?? null;
-    const partyRows = partyId
-      ? rows.filter((r) => r.party === partyId)
-      : [];
+    const partyRows = partyId ? rows.filter((r) => r.party === partyId) : [];
     return {
       person,
-      party: partyId
-        ? this.computeAverageRow(partyRows, partyId)
-        : null,
+      party: partyId ? this.computeAverageRow(partyRows, partyId) : null,
       parliament: baselines.parliament,
     };
   }
@@ -473,18 +471,17 @@ export class PersonRepository {
     }>,
   ) {
     const parliament = this.computeAverageRow(rows, null);
-    const partyMap = new Map<
-      string,
-      typeof rows
-    >();
+    const partyMap = new Map<string, typeof rows>();
     for (const r of rows) {
       if (!r.party) continue;
       const list = partyMap.get(r.party) ?? [];
       list.push(r);
       partyMap.set(r.party, list);
     }
-    const parties: Record<string, ReturnType<typeof this.computeAverageRow>> =
-      {};
+    const parties: Record<
+      string,
+      ReturnType<typeof this.computeAverageRow>
+    > = {};
     for (const [party, partyRows] of partyMap.entries()) {
       parties[party] = this.computeAverageRow(partyRows, party);
     }

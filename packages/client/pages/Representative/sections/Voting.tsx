@@ -29,7 +29,9 @@ const Voting: React.FC<ProfileSectionProps> = ({ personId, scope }) => {
         </Box>
       </Box>
       <Divider sx={{ my: 2 }} />
-      <React.Suspense fallback={<Skeleton variant="rectangular" height={240} />}>
+      <React.Suspense
+        fallback={<Skeleton variant="rectangular" height={240} />}
+      >
         <VotesTab personId={personId} scope={scope} />
       </React.Suspense>
     </SectionShell>

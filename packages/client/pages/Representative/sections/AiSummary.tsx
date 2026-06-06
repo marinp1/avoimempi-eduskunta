@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { AiSummaryBlock } from "../components/annotations/AiSummaryBlock";
 import { SectionShell } from "../components/SectionShell";
 import type { ProfileSectionProps } from "./registry";

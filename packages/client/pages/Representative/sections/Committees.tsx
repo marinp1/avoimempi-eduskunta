@@ -76,7 +76,11 @@ const Committees: React.FC<ProfileSectionProps> = ({ personId }) => {
       </Box>
       <Typography
         variant="caption"
-        sx={{ color: themed.textTertiary, fontFamily: "monospace", flexShrink: 0 }}
+        sx={{
+          color: themed.textTertiary,
+          fontFamily: "monospace",
+          flexShrink: 0,
+        }}
       >
         {formatDate(r.start_date)} – {formatDate(r.end_date)}
       </Typography>
@@ -103,7 +107,11 @@ const Committees: React.FC<ProfileSectionProps> = ({ personId }) => {
             {active.length === 0 ? (
               <Typography
                 variant="body2"
-                sx={{ color: themed.textTertiary, fontStyle: "italic", mt: 0.5 }}
+                sx={{
+                  color: themed.textTertiary,
+                  fontStyle: "italic",
+                  mt: 0.5,
+                }}
               >
                 Ei voimassa olevia valiokuntajäsenyyksiä.
               </Typography>

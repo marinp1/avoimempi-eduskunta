@@ -103,7 +103,9 @@ export const createVotingRoutes = (db: VotingRepository) => ({
       if (!Number.isFinite(votingId) || votingId <= 0) {
         return badRequest("Invalid voting id");
       }
-      const data = await db.fetchVotingProposingDocuments({ id: req.params.id });
+      const data = await db.fetchVotingProposingDocuments({
+        id: req.params.id,
+      });
       return json(data);
     },
   },

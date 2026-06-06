@@ -11,7 +11,9 @@ const readShortlist = (): number[] => {
     const raw = window.localStorage.getItem(COMPARE_STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((n) => Number.isFinite(n)) : [];
+    return Array.isArray(parsed)
+      ? parsed.filter((n) => Number.isFinite(n))
+      : [];
   } catch {
     return [];
   }

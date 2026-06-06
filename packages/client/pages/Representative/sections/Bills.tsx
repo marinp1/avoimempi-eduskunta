@@ -174,9 +174,7 @@ const Bills: React.FC<ProfileSectionProps> = ({ personId }) => {
                 textAlign: "left",
               }}
             >
-              {showAll
-                ? "Näytä vähemmän"
-                : `Näytä kaikki (${rows.length})`}
+              {showAll ? "Näytä vähemmän" : `Näytä kaikki (${rows.length})`}
             </Box>
           )}
         </Stack>

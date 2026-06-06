@@ -1,5 +1,5 @@
 import { Box, Typography } from "@mui/material";
-import React from "react";
+import type React from "react";
 import { useThemedColors } from "../../../theme/ThemeContext";
 
 export type JudgmentTone = "above" | "below" | "near" | "neutral";

@@ -1,5 +1,5 @@
 import { Box, Stack, Typography } from "@mui/material";
-import React from "react";
+import type React from "react";
 import { useThemedColors } from "../../../theme/ThemeContext";
 
 export interface MetricWithBaselineProps {
@@ -40,7 +40,9 @@ const deltaColor = (
   const diff = value - baseline;
   if (Math.abs(diff) < 0.05) return themed.textTertiary;
   const isPositive = lowerIsBetter ? diff < 0 : diff > 0;
-  return isPositive ? themed.success ?? "#2e7d32" : themed.warning ?? "#c77700";
+  return isPositive
+    ? (themed.success ?? "#2e7d32")
+    : (themed.warning ?? "#c77700");
 };
 
 export const MetricWithBaseline: React.FC<MetricWithBaselineProps> = ({

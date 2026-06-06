@@ -7,14 +7,19 @@ const OverviewTab = React.lazy(() =>
   import("../../Composition/Details").then((m) => ({ default: m.OverviewTab })),
 );
 
-const Background: React.FC<ProfileSectionProps> = ({ details, selectedDate }) => (
+const Background: React.FC<ProfileSectionProps> = ({
+  details,
+  selectedDate,
+}) => (
   <SectionShell
     anchor="tausta"
     title="Tausta"
     methodology="Henkilötiedot, koulutus, työhistoria ja julkaisut tulevat suoraan eduskunnan avoimesta datasta."
   >
     {details ? (
-      <React.Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+      <React.Suspense
+        fallback={<Skeleton variant="rectangular" height={200} />}
+      >
         <OverviewTab details={details} selectedDate={selectedDate} />
       </React.Suspense>
     ) : (

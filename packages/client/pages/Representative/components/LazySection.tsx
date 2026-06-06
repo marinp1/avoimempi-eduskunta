@@ -78,7 +78,10 @@ export const LazySection: React.FC<LazySectionProps> = ({
       {mounted ? (
         <React.Suspense
           fallback={
-            <Skeleton variant="rectangular" height={Math.max(120, minHeight - 80)} />
+            <Skeleton
+              variant="rectangular"
+              height={Math.max(120, minHeight - 80)}
+            />
           }
         >
           {children}

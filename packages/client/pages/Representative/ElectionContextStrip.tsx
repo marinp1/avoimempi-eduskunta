@@ -1,6 +1,6 @@
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import { Box, Stack, Typography } from "@mui/material";
-import React from "react";
+import type React from "react";
 import { useThemedColors } from "../../theme/ThemeContext";
 
 interface ElectionContextStripProps {
@@ -43,7 +43,9 @@ export const ElectionContextStrip: React.FC<ElectionContextStripProps> = ({
         <Typography variant="caption" sx={{ color: themed.textSecondary }}>
           {candidacy
             ? `Ehdolla ${candidacy.district_name ?? ""} — ${election.type} ${election.year}${
-                candidacy.list_number ? ` — listanumero ${candidacy.list_number}` : ""
+                candidacy.list_number
+                  ? ` — listanumero ${candidacy.list_number}`
+                  : ""
               }`
             : `${election.type} ${election.year} — ei aseta ehdolle`}
         </Typography>

@@ -1,5 +1,5 @@
 import { Box, Stack, Typography } from "@mui/material";
-import React from "react";
+import type React from "react";
 import { useThemedColors } from "../../../../theme/ThemeContext";
 import type { AiSummaryAnnotation } from "./types";
 import { useAnnotations } from "./useAnnotations";

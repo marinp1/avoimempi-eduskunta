@@ -1,11 +1,5 @@
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import {
-  Box,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import React from "react";
 import { useThemedColors } from "../../../theme/ThemeContext";
 import {
