@@ -63,6 +63,8 @@ export function createIstuntoRoute(deps: WebappDeps) {
           };
         }
 
+        const docIdMap = resolveDocumentIds(sections, deps);
+
         const data = buildSessionDetailViewModel(
           session,
           sections,
@@ -70,6 +72,7 @@ export function createIstuntoRoute(deps: WebappDeps) {
           rollCallData,
           fetchedAt,
           seatCounts,
+          docIdMap,
         );
 
         const tlData = getTimelineData(
@@ -87,4 +90,26 @@ export function createIstuntoRoute(deps: WebappDeps) {
       },
     },
   } as const;
+}
+
+function resolveDocumentIds(
+  sections: any[],
+  deps: WebappDeps,
+): Map<string, number> {
+  const map = new Map<string, number>();
+  const seen = new Set<string>();
+  for (const section of sections) {
+    const ident = section.minutes_related_document_identifier;
+    if (!ident || seen.has(ident)) continue;
+    seen.add(ident);
+    try {
+      const wq = deps.documentRepository.fetchWrittenQuestionByIdentifier({
+        identifier: ident,
+      });
+      if (wq) map.set(ident, wq.id);
+    } catch {
+      // Identifier not found in WrittenQuestion — skip
+    }
+  }
+  return map;
 }

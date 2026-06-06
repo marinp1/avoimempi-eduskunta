@@ -104,6 +104,7 @@ export interface SpeakerChip {
 export interface DocRef {
   tunnus: string;
   isCommittee: boolean;
+  documentId?: number;
 }
 
 const MONTH_NAMES = [
@@ -213,6 +214,7 @@ export function buildSessionDetailViewModel(
   rollCallData: any | null,
   fetchedAt: string,
   seatCounts: Record<string, { seats: number; inGov: boolean }> = {},
+  docIdMap?: Map<string, number>,
 ): SessionDetailData {
   const stateInfo = deriveState(session.state, session.state_text_fi);
   const dateLabel = session.date ? finnishDateLabel(session.date) : "";
@@ -318,7 +320,7 @@ export function buildSessionDetailViewModel(
     const title = section.minutes_item_title ?? section.title ?? "";
     if (!title) continue;
 
-    const documents: DocRef[] = buildDocRefs(section);
+    const documents: DocRef[] = buildDocRefs(section, docIdMap);
 
     const out = determineOutcome(phaseCode, sectionVotings.length);
     const speechCount = section.speech_count ?? 0;
@@ -411,7 +413,7 @@ function countAbsent(map: Map<string, AbsenteeGroup>, party: string): number {
   return map.get(party)?.members.filter((m) => !m.isLate).length ?? 0;
 }
 
-function buildDocRefs(section: any): DocRef[] {
+function buildDocRefs(section: any, docIdMap?: Map<string, number>): DocRef[] {
   const refs: DocRef[] = [];
   const docId = section.minutes_related_document_identifier;
   const docType = section.minutes_related_document_type;
@@ -421,6 +423,7 @@ function buildDocRefs(section: any): DocRef[] {
       isCommittee:
         docType === "valiokunnan_mietinto" ||
         docType === "valiokunnan_lausunto",
+      documentId: docIdMap?.get(docId),
     });
   }
   return refs;

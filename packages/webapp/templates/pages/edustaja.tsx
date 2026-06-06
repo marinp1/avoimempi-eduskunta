@@ -41,6 +41,7 @@ export interface PersonProfileData {
     partyName: string;
   }>;
   initiatives: Array<{
+    documentId?: number;
     parliamentIdentifier: string;
     initiativeTypeCode: string;
     initiativeTypeLabel: string;
@@ -49,6 +50,7 @@ export interface PersonProfileData {
     relationRole: string;
   }>;
   questions: Array<{
+    documentId?: number;
     questionKind: string;
     questionKindLabel: string;
     parliamentIdentifier: string;
@@ -373,7 +375,7 @@ export default function Edustaja({ data }: Props) {
                   siitä, mihin hän on halunnut vaikuttaa.
                 </p>
                 {data.initiatives.slice(0, 5).map((init) => (
-                  <div class="act-row">
+                  <a class="act-row" href={`/asiakirja/${init.documentId}`}>
                     <div class="act-row__id">
                       {esc(init.parliamentIdentifier)}
                     </div>
@@ -391,10 +393,15 @@ export default function Edustaja({ data }: Props) {
                         ? formatDate(init.submissionDate)
                         : ""}
                     </div>
-                  </div>
+                  </a>
                 ))}
                 {data.questions.slice(0, 5).map((q) => (
-                  <div class="act-row">
+                  <a
+                    class="act-row"
+                    href={
+                      q.documentId ? `/asiakirja/${q.documentId}` : undefined
+                    }
+                  >
                     <div class="act-row__id">{esc(q.parliamentIdentifier)}</div>
                     <div>
                       <div class="act-row__title">{esc(q.title ?? "")}</div>
@@ -403,7 +410,7 @@ export default function Edustaja({ data }: Props) {
                     <div class="act-row__date">
                       {q.submissionDate ? formatDate(q.submissionDate) : ""}
                     </div>
-                  </div>
+                  </a>
                 ))}
                 {sourceNote({
                   dataset: "Eduskunnan avoin data · VaskiData",

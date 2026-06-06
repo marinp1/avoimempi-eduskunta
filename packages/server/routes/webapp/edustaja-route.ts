@@ -200,6 +200,7 @@ export function createEdustajaRoute(deps: WebappDeps) {
             partyName: d.party_name ?? "",
           })),
           initiatives: initiatives.map((i) => ({
+            documentId: i.id,
             parliamentIdentifier: i.parliament_identifier ?? "",
             initiativeTypeCode: i.initiative_type_code ?? "",
             initiativeTypeLabel:
@@ -209,6 +210,7 @@ export function createEdustajaRoute(deps: WebappDeps) {
             relationRole: i.relation_role ?? "",
           })),
           questions: questions.map((q) => ({
+            documentId: q.id,
             questionKind: q.question_kind ?? "",
             questionKindLabel:
               QUESTION_LABELS[q.question_kind ?? ""] ?? q.question_kind ?? "",

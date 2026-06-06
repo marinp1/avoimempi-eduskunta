@@ -482,11 +482,20 @@ function AgendaItemComponent({
 
         {item.documents.length > 0 && (
           <div class="ag-docs">
-            {item.documents.map((doc) => (
-              <span class={`ag-doc${doc.isCommittee ? " cmt" : ""}`}>
-                {doc.tunnus}
-              </span>
-            ))}
+            {item.documents.map((doc) =>
+              doc.documentId ? (
+                <a
+                  class={`ag-doc${doc.isCommittee ? " cmt" : ""}`}
+                  href={`/asiakirja/${doc.documentId}`}
+                >
+                  {doc.tunnus}
+                </a>
+              ) : (
+                <span class={`ag-doc${doc.isCommittee ? " cmt" : ""}`}>
+                  {doc.tunnus}
+                </span>
+              ),
+            )}
           </div>
         )}
 

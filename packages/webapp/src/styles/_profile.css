@@ -358,6 +358,14 @@
   align-items: start;
   padding: 14px 0;
   border-top: 1px solid var(--rule-soft);
+  text-decoration: none;
+  color: inherit;
+}
+.act-row:hover {
+  background: var(--paper-2);
+  margin: 0 -8px;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 .act-row:first-of-type {
   border-top: 1px solid var(--rule);

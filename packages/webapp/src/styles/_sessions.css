@@ -965,6 +965,10 @@ a.ag-title:hover {
   border: 1px solid var(--rule);
   padding: 3px 7px;
   white-space: nowrap;
+  text-decoration: none;
+}
+a.ag-doc:hover {
+  background: var(--paper-2);
 }
 .ag-doc.cmt {
   color: var(--muted);

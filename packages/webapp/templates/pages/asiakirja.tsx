@@ -34,6 +34,13 @@ export interface AsiakirjaViewModel {
   answerText: string | null;
   subjects: string[];
   charCount: number;
+  sessions: Array<{
+    sessionKey: string;
+    sessionDate: string;
+    sessionNumber: number;
+    sessionYear: string;
+    sectionTitle: string | null;
+  }>;
   fetchedAt: string;
 }
 
@@ -380,6 +387,23 @@ export default function Asiakirja({ data }: Props) {
                   </span>
                 ))}
               </div>
+            </div>
+          )}
+
+          {d.sessions.length > 0 && (
+            <div class="blk">
+              <h4>Liittyvät istunnot</h4>
+              {d.sessions.map((s) => (
+                <a
+                  class="related-row"
+                  href={`/istunto/${s.sessionYear}/${s.sessionNumber}`}
+                >
+                  <span class="rid">{s.sessionKey}</span>
+                  <span class="rt">
+                    {s.sectionTitle ?? `Istunto ${s.sessionKey}`}
+                  </span>
+                </a>
+              ))}
             </div>
           )}
         </aside>

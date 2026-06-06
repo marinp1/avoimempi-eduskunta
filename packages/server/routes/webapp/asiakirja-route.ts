@@ -160,6 +160,16 @@ export function createAsiakirjaRoute(deps: WebappDeps) {
           minute: "2-digit",
         });
 
+        const sessions: AsiakirjaViewModel["sessions"] = (
+          (detail as any).sessions ?? []
+        ).map((s: any) => ({
+          sessionKey: s.session_key,
+          sessionDate: s.session_date,
+          sessionNumber: s.session_number,
+          sessionYear: s.session_year,
+          sectionTitle: s.section_title ?? null,
+        }));
+
         const data: AsiakirjaViewModel = {
           id: detail.id,
           identifier: detail.parliament_identifier,
@@ -185,6 +195,7 @@ export function createAsiakirjaRoute(deps: WebappDeps) {
           answerText: null,
           subjects,
           charCount,
+          sessions,
           fetchedAt,
         };
 
