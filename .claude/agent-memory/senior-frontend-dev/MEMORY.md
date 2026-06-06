@@ -65,7 +65,6 @@ Note: The `analytics-repository.ts` uses direct SQL file imports (not `readFileS
 - Pattern: `const identifier = decodeURIComponent(req.params.identifier).trim(); if (!identifier) return badRequest("Missing document identifier");`
 - Applied to all `by-identifier/:identifier` endpoints
 
-
 ## Server Route Structure
 
 Routes live in `packages/server/routes/documents/` split by domain:
