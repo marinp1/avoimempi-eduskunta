@@ -316,7 +316,7 @@ export default function Edustaja({ data }: Props) {
               </div>
               {data.dissents.length > 0 ? (
                 <div class="dissent">
-                  <div class="dissent__lead" style="margin-top:24px">
+                  <div class="dissent__lead mt-24">
                     <span
                       class="tag tag--opp"
                       style="border-color:transparent;background:var(--red);color:#fff"

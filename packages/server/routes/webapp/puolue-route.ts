@@ -1,21 +1,19 @@
 import Puolue from "../../../webapp/templates/pages/puolue";
 import type { PartyDetailData } from "../../../webapp/templates/pages/puolue-view-model";
-import { page, getTimelineData, readPeriod, getTermBounds } from "./helpers";
-import { partyColor, partyShortName } from "../../../webapp/templates/helpers";
+import { page, getWebappContext, getRouteParam } from "./helpers";
+import {
+  partyColor,
+  partyShortName,
+  fetchedAt,
+} from "../../../webapp/templates/helpers";
 import type { WebappDeps } from "./deps";
 
 export function createPuolueRoute(deps: WebappDeps) {
   return {
     "/puolue/:code": {
       GET: async (req: Request) => {
-        const code = (req as any).params.code as string;
-        const tlData = getTimelineData(
-          req,
-          deps.sessionRepository,
-          deps.metadataRepository,
-        );
-        const period = readPeriod(req, deps.metadataRepository);
-        const bounds = getTermBounds(period, deps.metadataRepository);
+        const code = getRouteParam(req, "code") ?? "";
+        const { tlData, bounds } = getWebappContext(req, deps);
 
         const summaryRows = deps.analyticsRepository.fetchPartySummary({
           asOfDate: tlData.cursor,
@@ -38,14 +36,6 @@ export function createPuolueRoute(deps: WebappDeps) {
           endDate: bounds.endDate,
         });
 
-        const fetchedAt = new Date().toLocaleString("fi-FI", {
-          day: "numeric",
-          month: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-
         const govSeats = summaryRows
           .filter((r) => r.is_in_government === 1)
           .reduce((s, r) => s + r.member_count, 0);
@@ -60,6 +50,7 @@ export function createPuolueRoute(deps: WebappDeps) {
         const cohesionPct = cohRow?.discipline_rate ?? null;
 
         const data: PartyDetailData = {
+          totalSeats,
           party: {
             code,
             name: pName,
@@ -91,20 +82,36 @@ export function createPuolueRoute(deps: WebappDeps) {
               cohesionPct != null
                 ? `Ryhmä äänestää yhtenäisesti ${Math.round(cohesionPct)} % äänestyksistä`
                 : "Ei tietoa ryhmäkurista",
+            totalVotings: cohRow?.total_votes ?? null,
           },
-          members: members.map((m) => ({
-            id: m.person_id,
-            firstName: m.first_name,
-            lastName: m.last_name,
-            partyCode: m.party,
-            color: partyColor(m.party),
-            district: m.current_municipality ?? "",
-          })),
+          members: members.map((m) => {
+            const birthDate = m.birth_date ? new Date(m.birth_date) : null;
+            const age =
+              birthDate != null
+                ? new Date().getFullYear() -
+                  birthDate.getFullYear() -
+                  (new Date().getMonth() < birthDate.getMonth() ||
+                  (new Date().getMonth() === birthDate.getMonth() &&
+                    new Date().getDate() < birthDate.getDate())
+                    ? 1
+                    : 0)
+                : null;
+            return {
+              id: m.person_id,
+              firstName: m.first_name,
+              lastName: m.last_name,
+              partyCode: m.party,
+              color: partyColor(m.party),
+              district: m.current_municipality ?? "",
+              age,
+              attendancePct: null,
+            };
+          }),
           splitVotes: [],
           topics: [],
           committeeChairs: [],
           recentSpeeches: [],
-          fetchedAt,
+          fetchedAt: fetchedAt(),
         };
 
         return page(

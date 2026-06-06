@@ -4,9 +4,13 @@ import {
   type TimelineData,
   type SittingTick,
 } from "../../../webapp/templates/partials/timeline";
+import { esc } from "../../../webapp/templates/helpers";
 import type { SessionRepository } from "../../database/repositories/session-repository";
 import type { MetadataRepository } from "../../database/repositories/metadata-repository";
 import { assetVersion } from "./assets";
+import { formatFi, isHtmx, getRouteParam } from "#shared-helpers";
+export { formatFi, isHtmx, getRouteParam };
+import type { WebappDeps } from "./deps";
 
 const PEILI_DATE_COOKIE = "peili_date";
 const PEILI_PERIOD_COOKIE = "peili_period";
@@ -120,11 +124,6 @@ function readCursorDate(req: Request, termToday: string): string {
   return termToday;
 }
 
-function formatFi(iso: string): string {
-  const [y, m, d] = iso.split("-");
-  return `${Number(d)}.${Number(m)}.${y}`;
-}
-
 export type TickSource = "sessions" | "composition";
 
 export function getTimelineData(
@@ -182,6 +181,23 @@ export function setCursorCookie(date: string): string {
   return `${PEILI_DATE_COOKIE}=${encodeURIComponent(date)}; Path=/; SameSite=Lax; Max-Age=31536000`;
 }
 
+/** Convenience wrapper: fetches timeline data, period, and term bounds in one call. */
+export function getWebappContext(
+  req: Request,
+  deps: Pick<WebappDeps, "sessionRepository" | "metadataRepository">,
+  tickSource?: TickSource,
+) {
+  const tlData = getTimelineData(
+    req,
+    deps.sessionRepository,
+    deps.metadataRepository,
+    tickSource,
+  );
+  const period = readPeriod(req, deps.metadataRepository);
+  const bounds = getTermBounds(period, deps.metadataRepository);
+  return { tlData, period, bounds };
+}
+
 export function timelineOobHtml(data: TimelineData): string {
   return timeline({ ...data, oob: true });
 }
@@ -193,8 +209,8 @@ export function page(
   title?: string,
   timelineData?: TimelineData,
 ): Response {
-  const isHtmx = req.headers.get("HX-Request") === "true";
-  if (isHtmx && timelineData) {
+  const htmx = isHtmx(req);
+  if (htmx && timelineData) {
     const tlHtml = timeline({ ...timelineData, oob: true });
     return new Response(tlHtml + fragment, {
       headers: {
@@ -212,9 +228,9 @@ export function page(
 }
 
 export function personNotFoundResponse(req: Request, path: string): Response {
-  const isHtmx = req.headers.get("HX-Request") === "true";
+  const htmx = isHtmx(req);
   const fragment = notFoundFragment(path);
-  const body = isHtmx
+  const body = htmx
     ? fragment
     : renderFullPage(fragment, {
         activePath: "/edustajat",
@@ -230,19 +246,11 @@ export function personNotFoundResponse(req: Request, path: string): Response {
   });
 }
 
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 function notFoundFragment(path: string): string {
   return `<title>Sivua ei löydy — Eduskuntapeili</title>
 <section class="page-head wrap">
     <h1>Sivua ei löydy</h1>
-    <p class="sub">Polkua <code>${escapeHtml(path)}</code> ei löydy.</p>
+    <p class="sub">Polkua <code>${esc(path)}</code> ei löydy.</p>
     <p><a href="/">Palaa etusivulle</a></p>
 </section>`;
 }

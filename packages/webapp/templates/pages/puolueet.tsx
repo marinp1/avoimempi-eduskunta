@@ -3,6 +3,12 @@ import Kicker from "../components/kicker";
 import { esc } from "../helpers";
 import type { PuolueetData, PartyRow } from "./puolueet-view-model";
 
+const NAV = {
+  "hx-target": "#main-content",
+  "hx-push-url": "true",
+  "hx-swap": "innerHTML",
+} as const;
+
 interface Props {
   title?: string;
   data: PuolueetData;
@@ -81,7 +87,7 @@ export default function Puolueet({ title, data }: Props) {
           </div>
         )}
 
-        <div class="source-note" style="margin-top:32px">
+        <div class="source-note mt-32">
           <span>Lähde:</span>
           <span class="dset">
             Eduskunnan avoin data · MemberOfParliament + Voting
@@ -100,9 +106,7 @@ function PartyRowItem({ row }: { row: PartyRow }) {
       href={`/puolue/${esc(row.code)}`}
       class="prow"
       hx-get={`/puolue/${esc(row.code)}`}
-      hx-target="#main-content"
-      hx-push-url="true"
-      hx-swap="innerHTML"
+      {...NAV}
     >
       <div class="prow__sq" style={`--p:${row.color}`}>
         {row.shortName}

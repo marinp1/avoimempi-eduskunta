@@ -1,8 +1,15 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 import Kicker from "../components/kicker";
 import Tag from "../components/tag";
 import { esc } from "../helpers";
 import type { PartyDetailData } from "./puolue-view-model";
+
+const NAV = {
+  "hx-target": "#main-content",
+  "hx-push-url": "true",
+  "hx-swap": "innerHTML",
+} as const;
 
 interface Props {
   title?: string;
@@ -19,7 +26,12 @@ export default function Puolue({ title, data }: Props) {
 
       <div class="wrap">
         <div style="padding-top:16px;font-size:13px;color:var(--muted)">
-          <a href="/puolueet" style="color:var(--blue)">
+          <a
+            href="/puolueet"
+            style="color:var(--blue)"
+            hx-get="/puolueet"
+            {...NAV}
+          >
             Puolueet
           </a>
           &nbsp;›&nbsp; <span>{esc(p.name)}</span>
@@ -52,7 +64,7 @@ export default function Puolue({ title, data }: Props) {
                 </>
               )}
               <span>
-                {p.seatCount} / {200} paikkaa
+                {p.seatCount} / {data.totalSeats} paikkaa
               </span>
               <span class="sep"></span>
               {p.govtSince && (
@@ -94,36 +106,40 @@ export default function Puolue({ title, data }: Props) {
 
         <div class="bio-grid">
           <div>
-            {p.bloc === "government" && (
-              <div class="ai">
-                <div class="ai__head">
-                  <span class="ai__spark">✦</span>
-                  <span class="ai__label">Tekoälykooste · millainen ryhmä</span>
-                </div>
-                <p class="ai__body">
-                  Tekoälykoostetta ei ole vielä saatavilla tälle ryhmälle.
-                </p>
-                <div class="ai__foot">
-                  <span>Koneellisesti tuotettu kooste ryhmän profiilista.</span>
-                </div>
+            <div class="ai">
+              <div class="ai__head">
+                <span class="ai__spark">✦</span>
+                <span class="ai__label">Tekoälykooste · millainen ryhmä</span>
               </div>
-            )}
+              <p class="ai__body">
+                Tekoälykoostetta ei ole vielä saatavilla tälle ryhmälle.
+              </p>
+              <div class="ai__foot">
+                <span>Koneellisesti tuotettu kooste ryhmän profiilista.</span>
+              </div>
+            </div>
 
             {coh.pct != null && (
-              <section class="psec" style="margin-top:28px">
+              <section class="psec mt-28">
                 <Kicker
                   text="Ryhmäkuri · äänestysyhtenäisyys"
                   modifier="blue"
                   dot
                 />
-                <h2>{coh.label}</h2>
-                <div class="vote-bar" style="margin-top:14px">
+                <div class="psec__h">
+                  <h2>Kuinka yhtenäisesti ryhmä äänestää</h2>
+                  {coh.totalVotings != null && (
+                    <span class="meta">{coh.totalVotings} äänestystä</span>
+                  )}
+                </div>
+                <p class="psec__intro">{esc(coh.label)}</p>
+                <div class="vote-bar mt-14">
                   <span class="v-jaa" style={`width:${coh.pct}%`}>
                     Yhtenäinen {coh.pct}%
                   </span>
                   <span class="v-ei" style={`width:${100 - coh.pct}%`}></span>
                 </div>
-                <div class="vote-legend" style="margin-top:10px">
+                <div class="vote-legend mt-10">
                   <div class="vl">
                     <span class="sw" style="background:var(--hall)"></span>
                     <div>
@@ -142,23 +158,20 @@ export default function Puolue({ title, data }: Props) {
 
                 {data.splitVotes.length > 0 && (
                   <>
-                    <p style="margin-top:22px;font-size:14.5px;color:var(--body);line-height:1.5">
+                    <p
+                      style="font-size:14.5px;color:var(--body);line-height:1.5"
+                      class="mt-22"
+                    >
                       Eniten hajaannusta aiheuttaneet äänestykset:
                     </p>
                     {data.splitVotes.map((v) => (
                       <a
                         href={`/aanestys/${v.id}`}
                         hx-get={`/aanestys/${v.id}`}
-                        hx-target="#main-content"
-                        hx-push-url="true"
-                        hx-swap="innerHTML"
+                        {...NAV}
                         class="vote-row"
                       >
-                        <span
-                          class={`vote-row__badge ${v.nYes > v.nNo ? "jaa" : ""}`}
-                        >
-                          {v.nYes > v.nNo ? "JAA" : "EI"}
-                        </span>
+                        <span class="vote-row__badge tyh">{v.dissenters}×</span>
                         <span class="vote-row__info">
                           <span class="vote-row__title">{esc(v.title)}</span>
                           <span class="vote-row__sub">{v.date}</span>
@@ -175,36 +188,48 @@ export default function Puolue({ title, data }: Props) {
               </section>
             )}
 
-            <section class="psec" style="margin-top:28px">
+            <section class="psec mt-28">
               <Kicker text="Jäsenet · kansanedustajat" modifier="blue" dot />
               <div class="mp-list">
                 {data.members.map((m) => (
                   <a
                     href={`/edustaja/${m.id}`}
                     hx-get={`/edustaja/${m.id}`}
-                    hx-target="#main-content"
-                    hx-push-url="true"
-                    hx-swap="innerHTML"
+                    {...NAV}
                     class="mp-row"
                   >
-                    <span class="mp-row__av" style={`--p:${m.color}`}>
-                      {esc(m.firstName.charAt(0))}
-                      {esc(m.lastName.charAt(0))}
+                    <span class="c-dot">
+                      <span style={`background:${m.color}`}></span>
                     </span>
-                    <span class="mp-row__main">
-                      <span class="mp-row__name">
-                        {esc(m.firstName)} {esc(m.lastName)}
+                    <span class="mp-name">
+                      {esc(m.firstName)} {esc(m.lastName)}
+                    </span>
+                    <span class="mp-party">
+                      {esc(m.partyCode)}{" "}
+                      <small>
+                        {p.bloc === "government" ? "Hallitus" : "Oppositio"}
+                      </small>
+                    </span>
+                    <span class="mp-district">{esc(m.district)}</span>
+                    <span class="mp-age">{m.age ?? "–"}</span>
+                    <span class="mp-att">
+                      <span class="track">
+                        <span
+                          class="fill"
+                          style={`width:${m.attendancePct ?? 0}%`}
+                        ></span>
                       </span>
-                      <span class="mp-row__dist">{esc(m.district)}</span>
+                      <span class="pct">
+                        {m.attendancePct != null ? `${m.attendancePct} %` : "–"}
+                      </span>
                     </span>
-                    <span class="mp-row__go">→</span>
                   </a>
                 ))}
               </div>
             </section>
 
             {data.committeeChairs.length > 0 && (
-              <section class="psec" style="margin-top:28px">
+              <section class="psec mt-28">
                 <Kicker
                   text="Valiokunnat · puheenjohtajuudet"
                   modifier="blue"
@@ -212,8 +237,10 @@ export default function Puolue({ title, data }: Props) {
                 />
                 {data.committeeChairs.map((cc) => (
                   <div class="committee-row">
-                    <span class="committee-row__name">{esc(cc.committee)}</span>
-                    <span class="committee-row__role">{esc(cc.name)}</span>
+                    <span class="cname">{esc(cc.committee)}</span>
+                    <span class={clsx("crole", cc.isLead && "lead")}>
+                      {esc(cc.name)}
+                    </span>
                   </div>
                 ))}
               </section>
@@ -223,7 +250,7 @@ export default function Puolue({ title, data }: Props) {
           <div>
             <section class="psec">
               <Kicker text="Faktat" modifier="blue" dot />
-              <dl style="margin-top:16px;display:flex;flex-direction:column;gap:12px">
+              <dl class="mt-16 flex-col-g12">
                 <div>
                   <dt style="font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">
                     Sukupuolijakauma
@@ -254,7 +281,7 @@ export default function Puolue({ title, data }: Props) {
             </section>
 
             {data.topics.length > 0 && (
-              <section class="psec" style="margin-top:28px">
+              <section class="psec mt-28">
                 <Kicker text="Aiheet · mistä puhuu" modifier="blue" dot />
                 <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:14px">
                   {data.topics.map((t) => (
@@ -265,15 +292,14 @@ export default function Puolue({ title, data }: Props) {
             )}
 
             {data.recentSpeeches.length > 0 && (
-              <section class="psec" style="margin-top:28px">
+              <section class="psec mt-28">
                 <Kicker text="Viimeisimmät puheenvuorot" modifier="blue" dot />
                 {data.recentSpeeches.map((sp) => (
                   <div class="spoke-row">
-                    <span class="spoke-row__name">
-                      {esc(sp.name)} <small>{esc(sp.partyCode)}</small>
-                    </span>
-                    <span class="spoke-row__title">{esc(sp.title)}</span>
-                    <span class="spoke-row__date">{sp.date}</span>
+                    <div class="st">{esc(sp.title)}</div>
+                    <div class="sd">
+                      {sp.date} · {esc(sp.name)}
+                    </div>
                   </div>
                 ))}
               </section>
@@ -281,7 +307,7 @@ export default function Puolue({ title, data }: Props) {
           </div>
         </div>
 
-        <div class="source-note" style="margin-top:32px">
+        <div class="source-note mt-32">
           <span>Lähde:</span>
           <span class="dset">
             Eduskunnan avoin data · MemberOfParliament + Voting

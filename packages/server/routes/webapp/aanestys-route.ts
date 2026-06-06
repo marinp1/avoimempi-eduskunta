@@ -1,7 +1,11 @@
 import Aanestys from "../../../webapp/templates/pages/aanestys";
 import type { SingleVoteData } from "../../../webapp/templates/pages/aanestys-view-model";
-import { page, getTimelineData } from "./helpers";
-import { partyColor, partyShortName } from "../../../webapp/templates/helpers";
+import { page, getWebappContext, getRouteParam } from "./helpers";
+import {
+  partyColor,
+  partyShortName,
+  fetchedAt,
+} from "../../../webapp/templates/helpers";
 import type { WebappDeps } from "./deps";
 
 const MONTH_NAMES = [
@@ -17,7 +21,7 @@ const MONTH_NAMES = [
   "lokakuuta",
   "marraskuuta",
   "joulukuuta",
-];
+] as const;
 
 const DAY_NAMES = [
   "sunnuntaina",
@@ -27,7 +31,7 @@ const DAY_NAMES = [
   "torstaina",
   "perjantaina",
   "lauantaina",
-];
+] as const;
 
 function finnishDateLabel(iso: string): string {
   const d = new Date(iso + "T00:00:00");
@@ -42,12 +46,8 @@ export function createAanestysRoute(deps: WebappDeps) {
   return {
     "/aanestys/:id": {
       GET: async (req: Request) => {
-        const id = (req as any).params.id as string;
-        const tlData = getTimelineData(
-          req,
-          deps.sessionRepository,
-          deps.metadataRepository,
-        );
+        const id = getRouteParam(req, "id") ?? "";
+        const { tlData } = getWebappContext(req, deps);
 
         const voting = deps.votingRepository.fetchVotingById({ id });
         if (!voting) {
@@ -61,13 +61,6 @@ export function createAanestysRoute(deps: WebappDeps) {
         }
 
         const details = deps.votingRepository.fetchVotingInlineDetails({ id });
-        const fetchedAt = new Date().toLocaleString("fi-FI", {
-          day: "numeric",
-          month: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
 
         const nYes = voting.n_yes ?? 0;
         const nNo = voting.n_no ?? 0;
@@ -178,8 +171,20 @@ export function createAanestysRoute(deps: WebappDeps) {
                 oppositionAbsent: 0,
                 oppositionTotal: 0,
               },
-          relatedVotes: [],
-          fetchedAt,
+          relatedVotes:
+            details?.relatedVotings?.map((rv) => ({
+              id: rv.id,
+              votingNumber: rv.number ?? 0,
+              title: rv.context_title ?? "",
+              date: rv.start_time ?? "",
+              nYes: rv.n_yes,
+              nNo: rv.n_no,
+              outcomeLabel:
+                rv.n_yes > rv.n_no
+                  ? "Ehdotus hyväksyttiin"
+                  : "Ehdotus hylättiin",
+            })) ?? [],
+          fetchedAt: fetchedAt(),
         };
 
         return page(

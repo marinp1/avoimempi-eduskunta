@@ -4,11 +4,17 @@ import Kicker from "../components/kicker";
 import { esc } from "../helpers";
 import type { AsiakohtaData } from "./asiakohta-view-model";
 
+const NAV = {
+  "hx-target": "#main-content",
+  "hx-push-url": "true",
+  "hx-swap": "innerHTML",
+} as const;
+
 export default function Asiakohta({
-  _title,
+  title: _title,
   data,
 }: {
-  _title?: string;
+  title?: string;
   data: AsiakohtaData;
 }) {
   const sec = data.section;
@@ -22,11 +28,21 @@ export default function Asiakohta({
 
       <div class="wrap">
         <div style="padding-top:16px;font-size:13px;color:var(--muted)">
-          <a href="/istunnot" style="color:var(--blue)">
+          <a
+            href="/istunnot"
+            style="color:var(--blue)"
+            hx-get="/istunnot"
+            {...NAV}
+          >
             Istunnot
           </a>
           &nbsp;›&nbsp;{" "}
-          <a href={`/istunto/${esc(sec.sessionKey)}`} style="color:var(--blue)">
+          <a
+            href={`/istunto/${esc(sec.sessionKey)}`}
+            style="color:var(--blue)"
+            hx-get={`/istunto/${esc(sec.sessionKey)}`}
+            {...NAV}
+          >
             {esc(sec.sessionTitle)}
           </a>
           {sec.itemNumber && (
@@ -42,9 +58,7 @@ export default function Asiakohta({
               class="subnav__side prev"
               href={`/asiakohta/${esc(data.prevSection.key)}`}
               hx-get={`/asiakohta/${esc(data.prevSection.key)}`}
-              hx-target="#main-content"
-              hx-push-url="true"
-              hx-swap="innerHTML"
+              {...NAV}
             >
               <span class="subnav__dir">
                 ‹{" "}
@@ -57,7 +71,12 @@ export default function Asiakohta({
           ) : (
             <a class="subnav__side prev" style="visibility:hidden"></a>
           )}
-          <a class="subnav__mid" href={`/istunto/${esc(sec.sessionKey)}`}>
+          <a
+            class="subnav__mid"
+            href={`/istunto/${esc(sec.sessionKey)}`}
+            hx-get={`/istunto/${esc(sec.sessionKey)}`}
+            {...NAV}
+          >
             <span class="subnav__pos">
               {data.currentItemIndex} / {data.sessionItemsCount}
             </span>
@@ -68,9 +87,7 @@ export default function Asiakohta({
               class="subnav__side next"
               href={`/asiakohta/${esc(data.nextSection.key)}`}
               hx-get={`/asiakohta/${esc(data.nextSection.key)}`}
-              hx-target="#main-content"
-              hx-push-url="true"
-              hx-swap="innerHTML"
+              {...NAV}
             >
               <span class="subnav__dir">
                 {data.nextSection.itemNumber
@@ -118,6 +135,8 @@ export default function Asiakohta({
             <a
               href={`/istunto/${esc(sec.sessionKey)}`}
               style="color:var(--blue)"
+              hx-get={`/istunto/${esc(sec.sessionKey)}`}
+              {...NAV}
             >
               Avaa istunto ↗
             </a>
@@ -125,9 +144,9 @@ export default function Asiakohta({
         </section>
 
         <div class="doc-toolbar">
-          <a href="#" class="tbtn">
+          <button type="button" class="tbtn">
             <span class="ic">↗</span> Pöytäkirja (PDF)
-          </a>
+          </button>
           <a href="#vaiheet" class="tbtn">
             <span class="ic">▤</span> Käsittely
           </a>
@@ -142,13 +161,26 @@ export default function Asiakohta({
             </a>
           )}
           <span class="grow"></span>
-          <button class="tbtn">
+          <button type="button" class="tbtn">
             <span class="ic">⧉</span> Jaa
           </button>
         </div>
 
+        <nav class="sess-jump">
+          {data.lifecycleSteps.length > 0 && (
+            <a href="#vaiheet">Käsittelyvaihe</a>
+          )}
+          {data.votings.length > 0 && (
+            <a href="#aanestykset">Äänestykset · {data.votings.length}</a>
+          )}
+          {data.speeches.length > 0 && (
+            <a href="#puheenvuorot">Puheenvuorot · {data.speeches.length}</a>
+          )}
+          {data.section.resolution && <a href="#paatos">Päätös</a>}
+        </nav>
+
         {sec.note && (
-          <div class="ai" style="margin-top:24px">
+          <div class="ai mt-24">
             <div class="ai__head">
               <span class="ai__spark">✦</span>
               <span class="ai__label">Tekoälykooste · mistä on kyse</span>
@@ -164,7 +196,7 @@ export default function Asiakohta({
         )}
 
         {data.lifecycleSteps.length > 0 && (
-          <section id="vaiheet" style="margin-top:30px;scroll-margin-top:14px">
+          <section id="vaiheet" class="mt-30 scroll-mt-14">
             <Kicker
               text="Käsittelyvaihe · eduskunnan käsittelytiedot"
               modifier="blue"
@@ -181,9 +213,10 @@ export default function Asiakohta({
                 >
                   <div class="lc-step__top">
                     <span class="lc-step__dot"></span>
-                    <span class="lc-step__num">{step.date ?? ""}</span>
+                    <span class="lc-step__num">{step.stepNumber ?? ""}</span>
                   </div>
                   <div class="lc-step__label">{esc(step.label)}</div>
+                  {step.date && <div class="lc-step__date">{step.date}</div>}
                   {step.tag && (
                     <div class={clsx("lc-step__tag", step.tagClass)}>
                       {esc(step.tag)}
@@ -197,7 +230,7 @@ export default function Asiakohta({
 
         {(data.viewpoints.for.length > 0 ||
           data.viewpoints.against.length > 0) && (
-          <section style="margin-top:24px">
+          <section class="mt-24">
             <Kicker
               text="Kannanotot · puolesta ja vastaan"
               modifier="blue"
@@ -233,10 +266,7 @@ export default function Asiakohta({
         )}
 
         {data.votings.length > 0 && (
-          <section
-            id="aanestykset"
-            style="margin-top:36px;scroll-margin-top:14px"
-          >
+          <section id="aanestykset" class="mt-36 scroll-mt-14">
             <Kicker text="Äänestykset · miten asia eteni" modifier="blue" dot />
             <div class="ph__head">
               <h2>Äänestykset</h2>
@@ -249,9 +279,7 @@ export default function Asiakohta({
                     <a
                       href={`/aanestys/${vo.id}`}
                       hx-get={`/aanestys/${vo.id}`}
-                      hx-target="#main-content"
-                      hx-push-url="true"
-                      hx-swap="innerHTML"
+                      {...NAV}
                       style="color:var(--blue);text-decoration:none"
                     >
                       {esc(vo.title)}
@@ -283,7 +311,7 @@ export default function Asiakohta({
                     style={`width:${vo.noPct.toFixed(1)}%`}
                   ></span>
                 </div>
-                <div class="vote-legend" style="margin-top:10px">
+                <div class="vote-legend mt-10">
                   <div class="vl">
                     <span class="sw" style="background:var(--hall)"></span>
                     <div>
@@ -301,7 +329,7 @@ export default function Asiakohta({
                 </div>
               </div>
             ))}
-            <div class="decision" style="margin-top:18px">
+            <div class="decision mt-18">
               <div class="decision__icon">
                 {data.votings[0]!.outcome === "ok" ? "✓" : "✗"}
               </div>
@@ -316,10 +344,7 @@ export default function Asiakohta({
         )}
 
         {data.speeches.length > 0 && (
-          <section
-            id="puheenvuorot"
-            style="margin-top:36px;scroll-margin-top:14px"
-          >
+          <section id="puheenvuorot" class="mt-36 scroll-mt-14">
             <Kicker text="Puheenvuorot · kuka sanoi mitä" modifier="blue" dot />
             <p style="font-size:14px;color:var(--muted);margin:6px 0 16px;max-width:66ch">
               Kaikki asiakohtaan liittyvät puheenvuorot kokonaisina,
@@ -327,6 +352,26 @@ export default function Asiakohta({
               <b style="color:var(--ink);font-weight:600">tekoälytiivistelmä</b>{" "}
               nopeaa silmäilyä varten.
             </p>
+            <div class="fchips mt-6">
+              <button class="fchip is-active" data-filter="all">
+                Kaikki
+              </button>
+              <button class="fchip" data-filter="hallitus">
+                <span class="pdot" style="background:var(--hall)"></span>
+                Hallitus
+              </button>
+              <button class="fchip" data-filter="oppositio">
+                <span class="pdot" style="background:var(--opp)"></span>
+                Oppositio
+              </button>
+            </div>
+            <div
+              id="sp-empty"
+              hidden
+              style="text-align:center;color:var(--muted);padding:34px 0"
+            >
+              Ei puheenvuoroja näillä hakuehdoilla.
+            </div>
             <div class="transcript">
               {data.speeches.map((sp) => (
                 <article class="speech" data-bloc={sp.bloc}>
@@ -377,13 +422,43 @@ export default function Asiakohta({
                         {sp.durationLabel ? ` · ${sp.durationLabel}` : ""}
                         {" · "}suomi
                       </span>
-                      <a href="#" class="link-arrow">
-                        Avaa pöytäkirjassa ↗
-                      </a>
+                      <button type="button" class="link-arrow">
+                        Avaa pöytäkirjassa (PTK) ↗
+                      </button>
                     </div>
                   </div>
                 </article>
               ))}
+            </div>
+          </section>
+        )}
+
+        {(data.section.resolution || data.votings.length > 0) && (
+          <section class="ph mt-36 scroll-mt-14" id="paatos">
+            <Kicker
+              text="Päätös · miten asiakohta ratkesi"
+              modifier="blue"
+              dot
+            />
+            <div class="decision mt-8">
+              <div class="decision__icon">
+                {data.votings[0]?.outcome === "ok" ? "✓" : "✗"}
+              </div>
+              <div class="decision__main">
+                <div class="t">
+                  {esc(data.section.resolution ?? "Asiakohta käsitelty")}
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;margin-top:18px">
+              <a
+                href={`/istunto/${esc(sec.sessionKey)}`}
+                hx-get={`/istunto/${esc(sec.sessionKey)}`}
+                {...NAV}
+                class="link-arrow"
+              >
+                ← Takaisin istuntoon
+              </a>
             </div>
           </section>
         )}
@@ -398,9 +473,7 @@ export default function Asiakohta({
                 class="subnav__side prev"
                 href={`/asiakohta/${esc(data.prevSection.key)}`}
                 hx-get={`/asiakohta/${esc(data.prevSection.key)}`}
-                hx-target="#main-content"
-                hx-push-url="true"
-                hx-swap="innerHTML"
+                {...NAV}
               >
                 <span class="subnav__dir">
                   ‹{" "}
@@ -413,7 +486,12 @@ export default function Asiakohta({
             ) : (
               <span></span>
             )}
-            <a class="subnav__mid" href={`/istunto/${esc(sec.sessionKey)}`}>
+            <a
+              class="subnav__mid"
+              href={`/istunto/${esc(sec.sessionKey)}`}
+              hx-get={`/istunto/${esc(sec.sessionKey)}`}
+              {...NAV}
+            >
               <span class="subnav__pos">
                 {data.currentItemIndex} / {data.sessionItemsCount}
               </span>
@@ -424,9 +502,7 @@ export default function Asiakohta({
                 class="subnav__side next"
                 href={`/asiakohta/${esc(data.nextSection.key)}`}
                 hx-get={`/asiakohta/${esc(data.nextSection.key)}`}
-                hx-target="#main-content"
-                hx-push-url="true"
-                hx-swap="innerHTML"
+                {...NAV}
               >
                 <span class="subnav__dir">
                   {data.nextSection.itemNumber
@@ -442,7 +518,7 @@ export default function Asiakohta({
           </nav>
         )}
 
-        <div class="source-note" style="margin-top:32px">
+        <div class="source-note mt-32">
           <span>Lähde:</span>
           <span class="dset">
             Eduskunnan avoin data · Section + Speech + Voting

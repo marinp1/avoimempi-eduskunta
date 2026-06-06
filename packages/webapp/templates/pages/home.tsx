@@ -67,7 +67,7 @@ export default function Home({ title, data, sessionCount }: Props) {
                             </span>
                           </>
                         ) : null}
-                        <span class="link-arrow" style="margin-left:auto">
+                        <span class="link-arrow ml-auto">
                           <a href="/istunnot">Avaa istunnot →</a>
                         </span>
                       </>
@@ -85,7 +85,7 @@ export default function Home({ title, data, sessionCount }: Props) {
           <HomeBody data={data} sessionCount={sessionCount} />
         ) : (
           <div class="wrap">
-            <p style="padding:40px 0;color:var(--muted)">Ladataan tietoja…</p>
+            <p class="pv-40 text-muted">Ladataan tietoja…</p>
           </div>
         )}
       </div>
@@ -188,7 +188,7 @@ export function HomeBody({
         <div>
           <Kicker text="Poliittinen kokoonpano" />
 
-          <div class="bloc-bar" style="margin-top:18px">
+          <div class="bloc-bar mt-18">
             {govParties.map((p) => (
               <span
                 class="seg-hall"
@@ -249,7 +249,7 @@ export function HomeBody({
           </table>
 
           {closeVotes.length > 0 && (
-            <div class="psec" style="margin-top:32px">
+            <div class="psec mt-32">
               <div class="psec__h">
                 <h2>Tiukimmat äänestykset</h2>
                 <small class="kicker">vaalikausi tähän mennessä</small>
@@ -293,7 +293,7 @@ export function HomeBody({
               <div class="psec__h">
                 <h2>Eniten puheenvuoroja</h2>
               </div>
-              <div class="rail" style="margin-top:12px">
+              <div class="rail mt-12">
                 {speakers.map((s) => {
                   const color = partyColor(s.party);
                   const shortParty = partyShortName(s.party);
@@ -301,9 +301,10 @@ export function HomeBody({
                   return (
                     <div class="rail__item">
                       <div class="rail__title">
-                        <span style="display:inline-flex;align-items:center;gap:8px;margin-right:4px">
+                        <span class="flex-inline" style="margin-right:4px">
                           <span
-                            style={`background:${color};width:10px;height:10px;border-radius:50%;display:inline-block;flex:0 0 auto`}
+                            class="party-dot"
+                            style={`background:${color}`}
                           ></span>
                         </span>
                         {name}

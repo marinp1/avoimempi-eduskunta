@@ -1,4 +1,4 @@
-import type { RosterRow } from "../../server/database/repositories/person-repository";
+import type { RosterRow } from "#shared-types";
 import { clsx } from "clsx";
 
 export type { RosterRow };
@@ -7,6 +7,8 @@ export type { CiteProps, SourceNoteOptions } from "./components/provenance";
 export { cite, sourceNote } from "./components/provenance";
 export type { BlocBar, BlocSegment } from "./view-models";
 export { buildBlocBar } from "./view-models";
+
+export { formatFi, fetchedAt, isHtmx } from "#shared-helpers";
 
 /**
  * Escapes HTML metacharacters (`&`, `<`, `>`, `"`).

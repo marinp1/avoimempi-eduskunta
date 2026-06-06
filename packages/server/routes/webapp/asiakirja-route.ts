@@ -4,10 +4,14 @@ import Asiakirja, {
   type Signatory,
   type Law,
 } from "../../../webapp/templates/pages/asiakirja";
-import { partyColor } from "../../../webapp/templates/helpers";
+import {
+  partyColor,
+  fetchedAt,
+  formatFi,
+} from "../../../webapp/templates/helpers";
 import { richTextToHtml } from "../../../webapp/templates/components/rich-text";
 import { renderFullPage } from "../../../webapp/eta";
-import { page, getTimelineData } from "./helpers";
+import { page, getWebappContext, getRouteParam, isHtmx } from "./helpers";
 import type { WebappDeps } from "./deps";
 
 const KIND_TO_LABEL: Record<string, string> = {
@@ -37,7 +41,7 @@ export function createAsiakirjaRoute(deps: WebappDeps) {
   return {
     "/asiakirja/:id": {
       GET: (req: Request) => {
-        const rawId = (req as any).params.id;
+        const rawId = getRouteParam(req, "id") ?? "";
         if (!rawId || !/^\d+$/.test(rawId)) {
           return notFoundResponse(req);
         }
@@ -50,11 +54,7 @@ export function createAsiakirjaRoute(deps: WebappDeps) {
         const data = builder ? builder(id, deps) : null;
         if (!data) return notFoundResponse(req);
 
-        const tlData = getTimelineData(
-          req,
-          deps.sessionRepository,
-          deps.metadataRepository,
-        );
+        const { tlData } = getWebappContext(req, deps);
         return page(
           req,
           Asiakirja({ data }),
@@ -70,16 +70,16 @@ export function createAsiakirjaRoute(deps: WebappDeps) {
 type BuilderFn = (id: string, deps: WebappDeps) => AsiakirjaViewModel | null;
 
 function notFoundResponse(req: Request): Response {
-  const isHtmx = req.headers.get("HX-Request") === "true";
+  const htmx = isHtmx(req);
   const fragment = `<title>Sivua ei löydy — Eduskuntapeili</title>
 <div class="wrap">
   <section class="page-head">
     <h1>Sivua ei löydy</h1>
     <p class="sub">Asiakirjaa ei löytynyt tietokannasta.</p>
-    <p><a href="/asiakirjat" style="color:var(--blue)">Palaa asiakirjoihin</a></p>
+    <p><a href="/asiakirjat">Palaa asiakirjoihin</a></p>
   </section>
 </div>`;
-  const body = isHtmx
+  const body = htmx
     ? fragment
     : renderFullPage(fragment, {
         activePath: "/asiakirjat",
@@ -103,12 +103,6 @@ const KIND_BUILDERS: Record<string, BuilderFn> = {
 };
 
 // ─── Shared helpers ───────────────────────────────────────
-
-function formatFi(iso: string | null): string {
-  if (!iso) return "";
-  const [y, m, d] = iso.split("-");
-  return `${Number(d)}.${Number(m)}.${y}`;
-}
 
 function authorsByName(
   first: string | null | undefined,
@@ -153,64 +147,28 @@ function textCharCount(sections: TextSection[]): number {
   );
 }
 
-function fetchedAt(): string {
-  return new Date().toLocaleString("fi-FI", {
-    day: "numeric",
-    month: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function mapSessions(detail: any): AsiakirjaViewModel["sessions"] {
-  return ((detail as any).sessions ?? []).map((s: any) => ({
-    sessionKey: s.session_key,
-    sessionDate: s.session_date,
-    sessionNumber: s.session_number,
-    sessionYear: s.session_year,
-    sectionTitle: s.section_title ?? null,
+function mapSessions(
+  detail: Record<string, unknown>,
+): AsiakirjaViewModel["sessions"] {
+  const sessions = (detail.sessions ?? []) as Array<Record<string, unknown>>;
+  return sessions.map((s) => ({
+    sessionKey: String(s.session_key ?? ""),
+    sessionDate: String(s.session_date ?? ""),
+    sessionNumber: Number(s.session_number ?? 0),
+    sessionYear: String(s.session_year ?? ""),
+    sectionTitle: s.section_title ? String(s.section_title) : null,
   }));
 }
 
-function mapSubjects(detail: any): string[] {
-  const raw = (detail as any).subjects;
+function mapSubjects(detail: Record<string, unknown>): string[] {
+  const raw = detail.subjects;
   if (!raw) return [];
   if (Array.isArray(raw))
-    return raw.map((s: any) => s.subject_text ?? s).filter(Boolean);
+    return (raw as Array<{ subject_text?: string } | string>)
+      .map((s) => (typeof s === "string" ? s : (s.subject_text ?? "")))
+      .filter(Boolean);
   if (typeof raw === "string") return raw.split("||").filter(Boolean);
   return [];
-}
-
-function stagesFromDb(detail: any): any[] {
-  return (detail as any).stages ?? [];
-}
-
-function buildLifecycleFromStages(
-  stages: any[],
-  extras?: Array<{ label: string; date: string | null; tag?: string }>,
-): AsiakirjaViewModel["lifecycleStages"] {
-  const result: AsiakirjaViewModel["lifecycleStages"] = [];
-  for (const s of stages) {
-    result.push({
-      step: result.length + 1,
-      label: s.stage_title || s.event_title || "Käsittelyvaihe",
-      date: s.event_date ?? null,
-      done: true,
-    });
-  }
-  if (extras) {
-    for (const e of extras) {
-      result.push({
-        step: result.length + 1,
-        label: e.label,
-        date: e.date,
-        done: true,
-        tag: e.tag,
-      });
-    }
-  }
-  return result;
 }
 
 function mpDistrict(
@@ -240,7 +198,6 @@ function buildWrittenQuestion(
 
   const submissionDate = detail.submission_date ?? "";
   const answerDate = detail.answer_date ?? null;
-  const stages = stagesFromDb(detail);
 
   const lifecycleStages: AsiakirjaViewModel["lifecycleStages"] = [];
   if (submissionDate) {
@@ -251,13 +208,18 @@ function buildWrittenQuestion(
       done: true,
     });
   }
-  for (const s of stages) {
-    lifecycleStages.push({
-      step: lifecycleStages.length + 1,
-      label: s.stage_title || s.event_title || "Käsittelyvaihe",
-      date: s.event_date ?? null,
-      done: true,
-    });
+  const rawStages = (detail as Record<string, unknown>).stages as
+    | Array<Record<string, unknown>>
+    | undefined;
+  if (rawStages) {
+    for (const s of rawStages) {
+      lifecycleStages.push({
+        step: lifecycleStages.length + 1,
+        label: (s.stage_title || s.event_title || "Käsittelyvaihe") as string,
+        date: (s.event_date as string) ?? null,
+        done: true,
+      });
+    }
   }
   if (answerDate) {
     lifecycleStages.push({
@@ -277,13 +239,18 @@ function buildWrittenQuestion(
   );
   if (qs) textSections.push(qs);
 
-  const signers = (detail as any).signers ?? [];
-  const signatories: Signatory[] = signers.map((s: any) => ({
-    name: [s.first_name, s.last_name].filter(Boolean).join(" ") || "Tuntematon",
+  const rawSigners =
+    ((detail as Record<string, unknown>).signers as
+      | Array<Record<string, unknown>>
+      | undefined) ?? [];
+  const signatories: Signatory[] = rawSigners.map((s) => ({
+    name:
+      ([s.first_name, s.last_name].filter(Boolean).join(" ") as string) ||
+      "Tuntematon",
     role: s.is_first_signer ? "Ensimmäinen allekirjoittaja" : "Allekirjoittaja",
-    party: s.party ?? null,
-    partyColor: s.party ? partyColor(s.party) : null,
-    personId: s.person_id ?? null,
+    party: (s.party as string) ?? null,
+    partyColor: s.party ? partyColor(s.party as string) : null,
+    personId: (s.person_id as number) ?? null,
   }));
 
   const authorParty = detail.first_signer_party ?? "";
@@ -330,9 +297,9 @@ function buildWrittenQuestion(
     signatories,
     laws: [],
     sourceReference: null,
-    subjects: mapSubjects(detail),
+    subjects: mapSubjects(detail as Record<string, unknown>),
     charCount: textCharCount(textSections),
-    sessions: mapSessions(detail),
+    sessions: mapSessions(detail as Record<string, unknown>),
     fetchedAt: fetchedAt(),
   };
 }
@@ -345,7 +312,11 @@ function buildOralQuestion(
   if (!detail) return null;
 
   const submissionDate = detail.submission_date ?? "";
-  const lifecycleStages = buildLifecycleFromStages(stagesFromDb(detail));
+  const lifecycleStages = buildLifecycleFromStages(
+    ((detail as Record<string, unknown>).stages as
+      | Array<Record<string, unknown>>
+      | undefined) ?? [],
+  );
 
   const textSections: TextSection[] = [];
   const qs = buildTextSection("Suullinen kysymys", detail.question_text, null);
@@ -386,9 +357,9 @@ function buildOralQuestion(
     signatories: [],
     laws: [],
     sourceReference: null,
-    subjects: mapSubjects(detail),
+    subjects: mapSubjects(detail as Record<string, unknown>),
     charCount: textCharCount(textSections),
-    sessions: mapSessions(detail),
+    sessions: mapSessions(detail as Record<string, unknown>),
     fetchedAt: fetchedAt(),
   };
 }
@@ -401,7 +372,11 @@ function buildInterpellation(
   if (!detail) return null;
 
   const submissionDate = detail.submission_date ?? "";
-  const lifecycleStages = buildLifecycleFromStages(stagesFromDb(detail));
+  const lifecycleStages = buildLifecycleFromStages(
+    ((detail as Record<string, unknown>).stages as
+      | Array<Record<string, unknown>>
+      | undefined) ?? [],
+  );
 
   const textSections: TextSection[] = [];
   const qs = buildTextSection(
@@ -417,13 +392,18 @@ function buildInterpellation(
   );
   if (rs) textSections.push(rs);
 
-  const signers = (detail as any).signers ?? [];
-  const signatories: Signatory[] = signers.map((s: any) => ({
-    name: [s.first_name, s.last_name].filter(Boolean).join(" ") || "Tuntematon",
+  const rawSigners =
+    ((detail as Record<string, unknown>).signers as
+      | Array<Record<string, unknown>>
+      | undefined) ?? [];
+  const signatories: Signatory[] = rawSigners.map((s) => ({
+    name:
+      ([s.first_name, s.last_name].filter(Boolean).join(" ") as string) ||
+      "Tuntematon",
     role: s.is_first_signer ? "Ensimmäinen allekirjoittaja" : "Allekirjoittaja",
-    party: s.party ?? null,
-    partyColor: s.party ? partyColor(s.party) : null,
-    personId: s.person_id ?? null,
+    party: (s.party as string) ?? null,
+    partyColor: s.party ? partyColor(s.party as string) : null,
+    personId: (s.person_id as number) ?? null,
   }));
 
   const authorParty = detail.first_signer_party ?? "";
@@ -462,9 +442,9 @@ function buildInterpellation(
     signatories,
     laws: [],
     sourceReference: null,
-    subjects: mapSubjects(detail),
+    subjects: mapSubjects(detail as Record<string, unknown>),
     charCount: textCharCount(textSections),
-    sessions: mapSessions(detail),
+    sessions: mapSessions(detail as Record<string, unknown>),
     fetchedAt: fetchedAt(),
   };
 }
@@ -477,7 +457,11 @@ function buildGovernmentProposal(
   if (!detail) return null;
 
   const submissionDate = detail.submission_date ?? "";
-  const lifecycleStages = buildLifecycleFromStages(stagesFromDb(detail));
+  const lifecycleStages = buildLifecycleFromStages(
+    ((detail as Record<string, unknown>).stages as
+      | Array<Record<string, unknown>>
+      | undefined) ?? [],
+  );
 
   const textSections: TextSection[] = [];
   const sum = buildTextSection(
@@ -505,20 +489,28 @@ function buildGovernmentProposal(
   );
   if (app) textSections.push(app);
 
-  const rawSignatories = (detail as any).signatories ?? [];
-  const signatories: Signatory[] = rawSignatories.map((s: any) => ({
-    name: [s.first_name, s.last_name].filter(Boolean).join(" ") || "Tuntematon",
-    role: s.title_text ?? null,
+  const rawSignatories =
+    ((detail as Record<string, unknown>).signatories as
+      | Array<Record<string, unknown>>
+      | undefined) ?? [];
+  const signatories: Signatory[] = rawSignatories.map((s) => ({
+    name:
+      ([s.first_name, s.last_name].filter(Boolean).join(" ") as string) ||
+      "Tuntematon",
+    role: (s.title_text as string) ?? null,
     party: null,
     partyColor: null,
     personId: null,
   }));
 
-  const rawLaws = (detail as any).laws ?? [];
-  const laws: Law[] = rawLaws.map((l: any) => ({
-    order: l.law_order,
-    type: l.law_type ?? null,
-    name: l.law_name ?? null,
+  const rawLaws =
+    ((detail as Record<string, unknown>).laws as
+      | Array<Record<string, unknown>>
+      | undefined) ?? [];
+  const laws: Law[] = rawLaws.map((l) => ({
+    order: l.law_order as number,
+    type: (l.law_type as string) ?? null,
+    name: (l.law_name as string) ?? null,
   }));
 
   const author = detail.author ?? "";
@@ -553,9 +545,9 @@ function buildGovernmentProposal(
     signatories,
     laws,
     sourceReference: null,
-    subjects: mapSubjects(detail),
+    subjects: mapSubjects(detail as Record<string, unknown>),
     charCount: textCharCount(textSections),
-    sessions: mapSessions(detail),
+    sessions: mapSessions(detail as Record<string, unknown>),
     fetchedAt: fetchedAt(),
   };
 }
@@ -569,7 +561,11 @@ function buildLegislativeInitiative(
 
   const submissionDate = detail.submission_date ?? "";
   const typeCode = detail.initiative_type_code ?? "";
-  const lifecycleStages = buildLifecycleFromStages(stagesFromDb(detail));
+  const lifecycleStages = buildLifecycleFromStages(
+    ((detail as Record<string, unknown>).stages as
+      | Array<Record<string, unknown>>
+      | undefined) ?? [],
+  );
 
   const textSections: TextSection[] = [];
   const jst = buildTextSection(
@@ -591,13 +587,18 @@ function buildLegislativeInitiative(
   );
   if (law) textSections.push(law);
 
-  const signers = (detail as any).signers ?? [];
-  const signatories: Signatory[] = signers.map((s: any) => ({
-    name: [s.first_name, s.last_name].filter(Boolean).join(" ") || "Tuntematon",
+  const rawSigners =
+    ((detail as Record<string, unknown>).signers as
+      | Array<Record<string, unknown>>
+      | undefined) ?? [];
+  const signatories: Signatory[] = rawSigners.map((s) => ({
+    name:
+      ([s.first_name, s.last_name].filter(Boolean).join(" ") as string) ||
+      "Tuntematon",
     role: s.is_first_signer ? "Ensimmäinen allekirjoittaja" : "Allekirjoittaja",
-    party: s.party ?? null,
-    partyColor: s.party ? partyColor(s.party) : null,
-    personId: s.person_id ?? null,
+    party: (s.party as string) ?? null,
+    partyColor: s.party ? partyColor(s.party as string) : null,
+    personId: (s.person_id as number) ?? null,
   }));
 
   const authorParty = detail.first_signer_party ?? "";
@@ -637,9 +638,9 @@ function buildLegislativeInitiative(
     signatories,
     laws: [],
     sourceReference: null,
-    subjects: mapSubjects(detail),
+    subjects: mapSubjects(detail as Record<string, unknown>),
     charCount: textCharCount(textSections),
-    sessions: mapSessions(detail),
+    sessions: mapSessions(detail as Record<string, unknown>),
     fetchedAt: fetchedAt(),
   };
 }
@@ -698,24 +699,32 @@ function buildCommitteeReport(
   );
   if (res) textSections.push(res);
 
-  const members = (detail as any).members ?? [];
-  const experts = (detail as any).experts ?? [];
+  const rawMembers =
+    ((detail as Record<string, unknown>).members as
+      | Array<Record<string, unknown>>
+      | undefined) ?? [];
+  const rawExperts =
+    ((detail as Record<string, unknown>).experts as
+      | Array<Record<string, unknown>>
+      | undefined) ?? [];
   const signatories: Signatory[] = [
-    ...members.map((m: any) => ({
+    ...rawMembers.map((m) => ({
       name:
-        [m.first_name, m.last_name].filter(Boolean).join(" ") || "Tuntematon",
-      role: m.role ?? "Jäsen",
-      party: m.party ?? null,
-      partyColor: m.party ? partyColor(m.party) : null,
-      personId: m.person_id ?? null,
+        ([m.first_name, m.last_name].filter(Boolean).join(" ") as string) ||
+        "Tuntematon",
+      role: (m.role as string) ?? "Jäsen",
+      party: (m.party as string) ?? null,
+      partyColor: m.party ? partyColor(m.party as string) : null,
+      personId: (m.person_id as number) ?? null,
     })),
-    ...experts.map((e: any) => ({
+    ...rawExperts.map((e) => ({
       name:
-        [e.first_name, e.last_name].filter(Boolean).join(" ") || "Tuntematon",
-      role: e.title ?? e.organization ?? "Asiantuntija",
+        ([e.first_name, e.last_name].filter(Boolean).join(" ") as string) ||
+        "Tuntematon",
+      role: (e.title as string) ?? (e.organization as string) ?? "Asiantuntija",
       party: null,
       partyColor: null,
-      personId: e.person_id ?? null,
+      personId: (e.person_id as number) ?? null,
     })),
   ];
 
@@ -749,9 +758,9 @@ function buildCommitteeReport(
     signatories,
     laws: [],
     sourceReference: detail.source_reference ?? null,
-    subjects: mapSubjects(detail),
+    subjects: mapSubjects(detail as Record<string, unknown>),
     charCount: textCharCount(textSections),
-    sessions: mapSessions(detail),
+    sessions: mapSessions(detail as Record<string, unknown>),
     fetchedAt: fetchedAt(),
   };
 }
@@ -811,9 +820,24 @@ function buildParliamentAnswer(
     laws: [],
     sourceReference:
       detail.source_reference ?? detail.committee_report_reference ?? null,
-    subjects: mapSubjects(detail),
+    subjects: mapSubjects(detail as Record<string, unknown>),
     charCount: textCharCount(textSections),
-    sessions: mapSessions(detail),
+    sessions: mapSessions(detail as Record<string, unknown>),
     fetchedAt: fetchedAt(),
   };
+}
+
+function buildLifecycleFromStages(
+  stages: Array<Record<string, unknown>>,
+): AsiakirjaViewModel["lifecycleStages"] {
+  const result: AsiakirjaViewModel["lifecycleStages"] = [];
+  for (const s of stages) {
+    result.push({
+      step: result.length + 1,
+      label: String(s.stage_title || s.event_title || "Käsittelyvaihe"),
+      date: (s.event_date as string) ?? null,
+      done: true,
+    });
+  }
+  return result;
 }

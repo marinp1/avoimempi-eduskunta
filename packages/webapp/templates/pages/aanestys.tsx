@@ -4,6 +4,13 @@ import Kicker from "../components/kicker";
 import { esc } from "../helpers";
 import type { SingleVoteData } from "./aanestys-view-model";
 
+/** htmx link attributes used for SPA-like navigation within #main-content. */
+const NAV = {
+  "hx-target": "#main-content",
+  "hx-push-url": "true",
+  "hx-swap": "innerHTML",
+} as const;
+
 interface Props {
   title?: string;
   data: SingleVoteData;
@@ -17,12 +24,22 @@ export default function Aanestys({ title, data }: Props) {
       <title>{v.title || title} — Äänestys — Eduskuntapeili</title>
 
       <div class="wrap">
-        <div style="padding-top:16px;font-size:13px;color:var(--muted)">
-          <a href="/aanestykset" style="color:var(--blue)">
+        <div class="pt-16 text-muted" style="font-size:13px">
+          <a
+            href="/aanestykset"
+            class="link-clr"
+            hx-get="/aanestykset"
+            {...NAV}
+          >
             Äänestykset
           </a>
           &nbsp;›&nbsp;{" "}
-          <a href={`/istunto/${esc(v.sessionKey)}`} style="color:var(--blue)">
+          <a
+            href={`/istunto/${esc(v.sessionKey)}`}
+            class="link-clr"
+            hx-get={`/istunto/${esc(v.sessionKey)}`}
+            {...NAV}
+          >
             Täysistunto {esc(v.sessionKey)}
           </a>
           &nbsp;›&nbsp; <span>Äänestys {v.votingNumber}</span>
@@ -37,8 +54,11 @@ export default function Aanestys({ title, data }: Props) {
               {v.titleExtra ?? "Täysistunnon äänestys"}
             </span>
             <span
-              class={clsx("tag", `tag--${v.outcome === "ok" ? "hall" : "opp"}`)}
-              style="margin-left:auto"
+              class={clsx(
+                "tag",
+                `tag--${v.outcome === "ok" ? "hall" : "opp"}`,
+                "ml-auto",
+              )}
             >
               {v.outcomeLabel}
             </span>
@@ -55,14 +75,21 @@ export default function Aanestys({ title, data }: Props) {
                 <span class="sep"></span>
                 <a
                   href={`/asiakohta/${esc(v.sectionKey)}`}
-                  style="color:var(--blue)"
+                  class="link-clr"
+                  hx-get={`/asiakohta/${esc(v.sectionKey)}`}
+                  {...NAV}
                 >
                   Asiakohta {v.asiakohtaNum}
                 </a>
               </>
             )}
             <span class="sep"></span>
-            <a href={`/istunto/${esc(v.sessionKey)}`} style="color:var(--blue)">
+            <a
+              href={`/istunto/${esc(v.sessionKey)}`}
+              class="link-clr"
+              hx-get={`/istunto/${esc(v.sessionKey)}`}
+              {...NAV}
+            >
               Avaa istunto ↗
             </a>
           </div>
@@ -70,7 +97,12 @@ export default function Aanestys({ title, data }: Props) {
 
         <div class="doc-toolbar">
           {v.sectionKey && (
-            <a href={`/asiakohta/${esc(v.sectionKey)}`} class="tbtn">
+            <a
+              href={`/asiakohta/${esc(v.sectionKey)}`}
+              class="tbtn"
+              hx-get={`/asiakohta/${esc(v.sectionKey)}`}
+              {...NAV}
+            >
               <span class="ic">▤</span>Asiakohta {v.asiakohtaNum}
             </a>
           )}
@@ -81,7 +113,7 @@ export default function Aanestys({ title, data }: Props) {
             <span class="ic">▦</span>Edustajakartta
           </a>
           <span class="grow"></span>
-          <button class="tbtn">
+          <button type="button" class="tbtn">
             <span class="ic">⧉</span>Jaa
           </button>
         </div>
@@ -101,7 +133,7 @@ export default function Aanestys({ title, data }: Props) {
               </span>
             )}
           </div>
-          <div class="vote-bar" style="margin-top:16px">
+          <div class="vote-bar mt-16">
             <span class="v-jaa" style={`width:${v.yesPct.toFixed(1)}%`}>
               JAA {v.nYes}
             </span>
@@ -150,7 +182,7 @@ export default function Aanestys({ title, data }: Props) {
               </div>
             </div>
           </div>
-          <div class="decision" style="margin-top:18px">
+          <div class="decision mt-18">
             <div class="decision__icon">{v.outcome === "ok" ? "✓" : "✗"}</div>
             <div class="decision__main">
               <div class="t">
@@ -160,7 +192,7 @@ export default function Aanestys({ title, data }: Props) {
           </div>
         </section>
 
-        <div class="summary" style="margin-top:24px">
+        <div class="summary mt-24">
           <div class="summary__bar">
             <span class="l">
               <span class="spark">✦</span>
@@ -180,7 +212,7 @@ export default function Aanestys({ title, data }: Props) {
           </div>
         </div>
 
-        <section id="ryhmat" style="margin-top:28px;scroll-margin-top:14px">
+        <section id="ryhmat" class="mt-28" style="scroll-margin-top:14px">
           <Kicker
             text="Ryhmittäin · äänestyskäyttäytyminen"
             modifier="blue"
@@ -223,20 +255,18 @@ export default function Aanestys({ title, data }: Props) {
         <SectionKartta data={data} />
 
         {data.relatedVotes.length > 0 && (
-          <section style="margin-top:28px">
+          <section class="mt-28">
             <Kicker
               text="Samasta asiasta · muut äänestykset"
               modifier="blue"
               dot
             />
-            <div class="ag-votes" style="margin-top:4px">
+            <div class="ag-votes mt-4">
               {data.relatedVotes.map((rv) => (
                 <a
                   href={`/aanestys/${rv.id}`}
                   hx-get={`/aanestys/${rv.id}`}
-                  hx-target="#main-content"
-                  hx-push-url="true"
-                  hx-swap="innerHTML"
+                  {...NAV}
                   class="agvote"
                 >
                   <div class="agvote__t">{esc(rv.title)}</div>
@@ -260,7 +290,7 @@ export default function Aanestys({ title, data }: Props) {
           </section>
         )}
 
-        <div class="source-note" style="margin-top:32px">
+        <div class="source-note mt-32">
           <span>Lähde:</span>
           <span class="dset">
             Eduskunnan avoin data · SaliDBAanestys + Vote
@@ -275,39 +305,9 @@ export default function Aanestys({ title, data }: Props) {
 
 function SectionKartta({ data }: { data: SingleVoteData }) {
   return (
-    <section id="kartta" style="margin-top:28px;scroll-margin-top:14px">
+    <section id="kartta" class="mt-28" style="scroll-margin-top:14px">
       <Kicker text="Edustajakartta · miten kukin äänesti" modifier="blue" dot />
-      <div class="attend__grid" style="margin-top:14px">
-        <div class="mlookup">
-          <label class="search" style="margin-bottom:0">
-            <span class="ic">⌕</span>
-            <input id="mp-search" type="text" placeholder="Hae edustajalla…" />
-          </label>
-          <div class="mlist" id="mp-list">
-            {data.mpVotes.map((mp) => (
-              <div
-                class="mvote"
-                data-search={`${mp.firstName} ${mp.lastName} ${mp.partyCode}`.toLowerCase()}
-              >
-                <span class="mn">
-                  {esc(mp.firstName)} {esc(mp.lastName)}
-                  <small>{esc(mp.partyCode)}</small>
-                </span>
-                <span
-                  class={`mb ${mp.vote === "jaa" ? "j" : mp.vote === "ei" ? "e" : mp.vote === "tyhjaa" ? "tyh" : "out"}`}
-                >
-                  {mp.vote === "jaa"
-                    ? "JAA"
-                    : mp.vote === "ei"
-                      ? "EI"
-                      : mp.vote === "tyhjaa"
-                        ? "TYHJÄÄ"
-                        : "POISSA"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div class="attend__grid mt-14">
         <div class="seatwrap">
           <div class="seatgrid" id="vote-seatgrid">
             {data.mpVotes.map((mp) => {
@@ -319,10 +319,9 @@ function SectionKartta({ data }: { data: SingleVoteData }) {
                     : mp.vote === "tyhjaa"
                       ? "var(--opp)"
                       : "transparent";
-              const absentClass = mp.vote === "poissa" ? "absent" : "";
               return (
                 <span
-                  class={`seat ${absentClass}`}
+                  class={clsx("seat", mp.vote === "poissa" && "absent")}
                   style={`--p:${seatColor}`}
                   title={`${esc(mp.firstName)} ${esc(mp.lastName)} (${esc(mp.partyCode)})`}
                 ></span>
@@ -342,6 +341,50 @@ function SectionKartta({ data }: { data: SingleVoteData }) {
             <div class="it">
               <span class="d ring"></span>Poissa
             </div>
+          </div>
+        </div>
+        <div class="mlookup">
+          <label class="search mb-0">
+            <span class="ic">⌕</span>
+            <input
+              id="mp-search"
+              type="search"
+              placeholder="Hae edustajalla…"
+              hx-get=""
+              hx-trigger="keyup changed delay:200ms"
+              hx-target="#mp-list"
+              hx-select="#mp-list > *"
+            />
+          </label>
+          <div class="mlist" id="mp-list">
+            {data.mpVotes.map((mp) => (
+              <div
+                class="mvote"
+                data-search={`${mp.firstName} ${mp.lastName} ${mp.partyCode}`.toLowerCase()}
+              >
+                <span class="mn">
+                  {esc(mp.firstName)} {esc(mp.lastName)}
+                  <small>{esc(mp.partyCode)}</small>
+                </span>
+                <span
+                  class={clsx(
+                    "mb",
+                    mp.vote === "jaa" && "j",
+                    mp.vote === "ei" && "e",
+                    mp.vote === "tyhjaa" && "tyh",
+                    mp.vote === "poissa" && "out",
+                  )}
+                >
+                  {mp.vote === "jaa"
+                    ? "JAA"
+                    : mp.vote === "ei"
+                      ? "EI"
+                      : mp.vote === "tyhjaa"
+                        ? "TYHJÄÄ"
+                        : "POISSA"}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>

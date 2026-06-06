@@ -17,7 +17,11 @@ import type {
   PuolueetData,
   PartyRow,
 } from "../../../webapp/templates/pages/puolueet-view-model";
-import { partyColor, partyShortName } from "../../../webapp/templates/helpers";
+import {
+  partyColor,
+  partyShortName,
+  fetchedAt,
+} from "../../../webapp/templates/helpers";
 import { htmlResponse } from "../../../webapp/eta";
 import {
   page,
@@ -26,6 +30,8 @@ import {
   readPeriod,
   getTermBounds,
   timelineOobHtml,
+  isHtmx,
+  formatFi,
 } from "./helpers";
 import { assetVersion } from "./assets";
 import type { WebappDeps } from "./deps";
@@ -55,10 +61,10 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           (s) => s.d <= cursor,
         ).length;
 
-        const isHtmx = req.headers.get("HX-Request") === "true";
+        const htmx = isHtmx(req);
         const cookieHeader = dateParam ? setCursorCookie(dateParam) : undefined;
 
-        if (isHtmx) {
+        if (htmx) {
           const hxTarget = req.headers.get("HX-Target") || "";
           if (hxTarget.includes("tl-reactive") && dateParam) {
             const fragment = HomeReactive({ data, cursor, sessionCount });
@@ -139,14 +145,6 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           .reduce((s, r) => s + r.member_count, 0);
         const totalSeats = govSeats + oppSeats;
 
-        const fetchedAt = new Date().toLocaleString("fi-FI", {
-          day: "numeric",
-          month: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-
         const rows: PartyRow[] = summaryRows.map((r) => {
           const disc = partyDiscipline?.find(
             (d) => d.party_code === r.party_code,
@@ -175,7 +173,7 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           govSeats,
           oppSeats,
           totalSeats,
-          fetchedAt,
+          fetchedAt: fetchedAt(),
         };
 
         return page(
@@ -197,6 +195,9 @@ export function createSimplePageRoutes(deps: WebappDeps) {
         const period = readPeriod(req, deps.metadataRepository);
         const bounds = getTermBounds(period, deps.metadataRepository);
 
+        const url = new URL(req.url);
+        const searchQuery = url.searchParams.get("q")?.trim().toLowerCase();
+
         const browseResult = deps.votingRepository.browseVotings({
           startDate: bounds.startDate,
           endDate: bounds.endDate,
@@ -204,17 +205,16 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           limit: 500,
         });
 
-        const fetchedAt = new Date().toLocaleString("fi-FI", {
-          day: "numeric",
-          month: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
+        const filtered = searchQuery
+          ? browseResult.filter(
+              (v) =>
+                (v.title ?? "").toLowerCase().includes(searchQuery) ||
+                (v.session_key ?? "").toLowerCase().includes(searchQuery),
+            )
+          : browseResult;
 
-        // Group votes by session
         const groupMap = new Map<string, VoteRow[]>();
-        for (const v of browseResult) {
+        for (const v of filtered) {
           const nYes = v.n_yes ?? 0;
           const nNo = v.n_no ?? 0;
           const nEmpty = v.n_abstain ?? 0;
@@ -259,14 +259,18 @@ export function createSimplePageRoutes(deps: WebappDeps) {
 
         const data: AanestyksetData = {
           groups,
-          totalCount: browseResult.length,
-          fetchedAt,
+          totalCount: filtered.length,
+          fetchedAt: fetchedAt(),
         };
+
+        const pageUrl = searchQuery
+          ? `/aanestykset?q=${encodeURIComponent(searchQuery)}`
+          : "/aanestykset";
 
         return page(
           req,
           Aanestykset({ title: "Äänestykset", data }),
-          "/aanestykset",
+          pageUrl,
           "Äänestykset",
           tlData,
         );
@@ -287,31 +291,17 @@ export function createSimplePageRoutes(deps: WebappDeps) {
         let totalCount: number;
 
         if (config) {
-          const method = (deps.documentRepository as any)[
-            config.repoMethod
-          ] as Function;
-          const result = method.call(deps.documentRepository, {
-            query: q,
-            page: currentPage,
-            limit,
-          });
-          rows = (result.items as any[]).map((item) =>
-            mapToDocRow(item, config),
-          );
+          const dispatch = DOC_KIND_DISPATCH[config.key]!;
+          const result = dispatch(deps, { query: q, page: currentPage, limit });
+          rows = result.items.map((item) => mapToDocRow(item, config));
           totalCount = result.totalCount;
         } else {
           const allRows: DocumentRow[] = [];
           for (const c of DOC_KINDS) {
             try {
-              const method = (deps.documentRepository as any)[
-                c.repoMethod
-              ] as Function;
-              const result = method.call(deps.documentRepository, {
-                query: q,
-                page: 1,
-                limit: 10,
-              });
-              for (const item of result.items as any[]) {
+              const dispatch = DOC_KIND_DISPATCH[c.key]!;
+              const result = dispatch(deps, { query: q, page: 1, limit: 10 });
+              for (const item of result.items) {
                 allRows.push(mapToDocRow(item, c));
               }
             } catch {
@@ -326,21 +316,13 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           totalCount = allRows.length;
         }
 
-        const fetchedAt = new Date().toLocaleString("fi-FI", {
-          day: "numeric",
-          month: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-
         const data: AsiakirjatIndexData = {
           rows,
           totalCount,
           page: currentPage,
           totalPages: Math.ceil(totalCount / limit),
           kind: kind ?? "",
-          fetchedAt,
+          fetchedAt: fetchedAt(),
         };
 
         const tlData = getTimelineData(
@@ -349,8 +331,8 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           deps.metadataRepository,
         );
 
-        const isHtmx = req.headers.get("HX-Request") === "true";
-        if (isHtmx) {
+        const htmx = isHtmx(req);
+        if (htmx) {
           const hxTarget = req.headers.get("HX-Target") || "";
           if (
             hxTarget.includes("doc-root") ||
@@ -456,15 +438,9 @@ export function createSimplePageRoutes(deps: WebappDeps) {
   } as const;
 }
 
-function formatFi(iso: string): string {
-  const [y, m, d] = iso.split("-");
-  return `${Number(d)}.${Number(m)}.${y}`;
-}
-
 interface DocKindConfig {
   key: string;
   label: string;
-  repoMethod: string;
   dateField: string;
   datePrefix: string;
   identifierField: string;
@@ -473,17 +449,42 @@ interface DocKindConfig {
   highlightFields: string[];
   linkField: string;
   hasDetail: boolean;
-  statusMapper: (item: any) => {
+  statusMapper: (item: Record<string, unknown>) => {
     label: string | null;
     class: string;
   };
 }
 
+type DocQueryParams = { query?: string; page: number; limit: number };
+type DocResult = { items: Record<string, unknown>[]; totalCount: number };
+
+const DOC_KIND_DISPATCH: Record<
+  string,
+  (deps: WebappDeps, params: DocQueryParams) => DocResult
+> = {
+  kk: (deps, params) => deps.documentRepository.fetchWrittenQuestions(params),
+  suullinen: (deps, params) =>
+    deps.documentRepository.fetchOralQuestions(params),
+  valikysymys: (deps, params) =>
+    deps.documentRepository.fetchInterpellations(params),
+  vastaus: (deps, params) =>
+    deps.documentRepository.fetchWrittenQuestionResponses(params),
+  he: (deps, params) =>
+    deps.documentRepository.fetchGovernmentProposals(params),
+  aloite: (deps, params) =>
+    deps.documentRepository.fetchLegislativeInitiatives(params),
+  mietinto: (deps, params) =>
+    deps.documentRepository.fetchCommitteeReports(params),
+  asiantuntija: (deps, params) =>
+    deps.documentRepository.fetchExpertStatements(params),
+  "vastaus-edk": (deps, params) =>
+    deps.documentRepository.fetchParliamentAnswers(params),
+};
+
 const DOC_KINDS: DocKindConfig[] = [
   {
     key: "kk",
     label: "Kirjalliset kysymykset",
-    repoMethod: "fetchWrittenQuestions",
     dateField: "submission_date",
     datePrefix: "Jätetty",
     identifierField: "parliament_identifier",
@@ -492,7 +493,7 @@ const DOC_KINDS: DocKindConfig[] = [
     highlightFields: ["answer_minister_title"],
     linkField: "id",
     hasDetail: true,
-    statusMapper: (item: any) =>
+    statusMapper: (item) =>
       item.answer_date
         ? { label: "Vastattu", class: "spill--done" }
         : { label: "Vireillä", class: "spill--draft" },
@@ -500,7 +501,6 @@ const DOC_KINDS: DocKindConfig[] = [
   {
     key: "suullinen",
     label: "Suulliset kysymykset",
-    repoMethod: "fetchOralQuestions",
     dateField: "submission_date",
     datePrefix: "Jätetty",
     identifierField: "parliament_identifier",
@@ -509,7 +509,7 @@ const DOC_KINDS: DocKindConfig[] = [
     highlightFields: [],
     linkField: "id",
     hasDetail: true,
-    statusMapper: (item: any) =>
+    statusMapper: (item) =>
       item.decision_outcome
         ? { label: "Käsitelty", class: "spill--done" }
         : { label: "Vireillä", class: "spill--draft" },
@@ -517,7 +517,6 @@ const DOC_KINDS: DocKindConfig[] = [
   {
     key: "valikysymys",
     label: "Välikysymykset",
-    repoMethod: "fetchInterpellations",
     dateField: "submission_date",
     datePrefix: "Jätetty",
     identifierField: "parliament_identifier",
@@ -526,7 +525,7 @@ const DOC_KINDS: DocKindConfig[] = [
     highlightFields: [],
     linkField: "id",
     hasDetail: true,
-    statusMapper: (item: any) =>
+    statusMapper: (item) =>
       item.decision_outcome
         ? { label: "Käsitelty", class: "spill--done" }
         : { label: "Vireillä", class: "spill--draft" },
@@ -534,7 +533,6 @@ const DOC_KINDS: DocKindConfig[] = [
   {
     key: "vastaus",
     label: "Kirjalliset vastaukset",
-    repoMethod: "fetchWrittenQuestionResponses",
     dateField: "answer_date",
     datePrefix: "Vastattu",
     identifierField: "parliament_identifier",
@@ -548,7 +546,6 @@ const DOC_KINDS: DocKindConfig[] = [
   {
     key: "he",
     label: "Hallituksen esitykset",
-    repoMethod: "fetchGovernmentProposals",
     dateField: "submission_date",
     datePrefix: "Jätetty",
     identifierField: "parliament_identifier",
@@ -557,7 +554,7 @@ const DOC_KINDS: DocKindConfig[] = [
     highlightFields: ["author"],
     linkField: "id",
     hasDetail: true,
-    statusMapper: (item: any) =>
+    statusMapper: (item) =>
       item.decision_outcome
         ? { label: "Käsitelty", class: "spill--done" }
         : { label: "Vireillä", class: "spill--draft" },
@@ -565,7 +562,6 @@ const DOC_KINDS: DocKindConfig[] = [
   {
     key: "aloite",
     label: "Lakialoitteet",
-    repoMethod: "fetchLegislativeInitiatives",
     dateField: "submission_date",
     datePrefix: "Jätetty",
     identifierField: "parliament_identifier",
@@ -574,7 +570,7 @@ const DOC_KINDS: DocKindConfig[] = [
     highlightFields: ["initiative_type_code"],
     linkField: "id",
     hasDetail: true,
-    statusMapper: (item: any) =>
+    statusMapper: (item) =>
       item.decision_outcome
         ? { label: "Käsitelty", class: "spill--done" }
         : { label: "Vireillä", class: "spill--draft" },
@@ -582,7 +578,6 @@ const DOC_KINDS: DocKindConfig[] = [
   {
     key: "mietinto",
     label: "Mietinnöt",
-    repoMethod: "fetchCommitteeReports",
     dateField: "signature_date",
     datePrefix: "Annettu",
     identifierField: "parliament_identifier",
@@ -596,7 +591,6 @@ const DOC_KINDS: DocKindConfig[] = [
   {
     key: "asiantuntija",
     label: "Asiantuntijalausunnot",
-    repoMethod: "fetchExpertStatements",
     dateField: "meeting_date",
     datePrefix: "",
     identifierField: "edk_identifier",
@@ -610,7 +604,6 @@ const DOC_KINDS: DocKindConfig[] = [
   {
     key: "vastaus-edk",
     label: "Eduskunnan vastaukset",
-    repoMethod: "fetchParliamentAnswers",
     dateField: "submission_date",
     datePrefix: "Annettu",
     identifierField: "parliament_identifier",
@@ -623,23 +616,26 @@ const DOC_KINDS: DocKindConfig[] = [
   },
 ];
 
-function mapToDocRow(item: any, config: DocKindConfig): DocumentRow {
-  const date = item[config.dateField] ?? "";
+function mapToDocRow(
+  item: Record<string, unknown>,
+  config: DocKindConfig,
+): DocumentRow {
+  const date = (item[config.dateField] as string) ?? "";
   const dateLabel = date ? `${config.datePrefix} ${formatFi(date)}`.trim() : "";
   const status = config.statusMapper(item);
   const authorName =
     config.authorFields.length > 0
       ? config.authorFields
-          .map((f: string) => item[f] ?? "")
+          .map((f) => (item[f] as string) ?? "")
           .filter(Boolean)
           .join(" ") || null
       : null;
   const authorParty = config.partyField
-    ? (item[config.partyField] ?? null)
+    ? ((item[config.partyField] as string) ?? null)
     : null;
   const highlight =
     config.highlightFields
-      .map((f: string) => {
+      .map((f) => {
         const v = item[f];
         if (!v) return null;
         if (f === "initiative_type_code") {
@@ -648,28 +644,30 @@ function mapToDocRow(item: any, config: DocKindConfig): DocumentRow {
             TPA: "Toimenpidealoite",
             RA: "Rahoitusaloite",
           };
-          return LABELS[v] ?? v;
+          return LABELS[v as string] ?? String(v);
         }
         if (f === "report_type_code") {
-          return v === "M" ? "Mietintö" : v === "L" ? "Lausunto" : v;
+          const vStr = v as string;
+          return vStr === "M" ? "Mietintö" : vStr === "L" ? "Lausunto" : vStr;
         }
         return String(v);
       })
       .filter(Boolean)
       .join(" · ") || null;
 
-  const subjects: string[] = item.subjects
-    ? item.subjects.split("||").filter(Boolean)
-    : [];
+  const subjects: string[] =
+    typeof item.subjects === "string"
+      ? (item.subjects as string).split("||").filter(Boolean)
+      : [];
 
   return {
-    id: item.id,
-    linkId: item[config.linkField] ?? item.id,
+    id: item.id as number,
+    linkId: (item[config.linkField] as number) ?? (item.id as number),
     hasDetail: config.hasDetail,
     kind: config.key,
-    identifier: item[config.identifierField] ?? "",
-    title: item.title ?? "",
-    date,
+    identifier: (item[config.identifierField] as string) ?? "",
+    title: (item.title as string) ?? "",
+    date: date as string,
     dateLabel,
     authorName,
     authorParty,

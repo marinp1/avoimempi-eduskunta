@@ -14,9 +14,11 @@ export interface PartyDetailData {
     femaleCount: number;
     maleCount: number;
   };
+  totalSeats: number;
   cohesion: {
     pct: number | null;
     label: string;
+    totalVotings: number | null;
   };
   members: Array<{
     id: number;
@@ -25,6 +27,8 @@ export interface PartyDetailData {
     partyCode: string;
     color: string;
     district: string;
+    age: number | null;
+    attendancePct: number | null;
   }>;
   splitVotes: Array<{
     id: number;
@@ -32,11 +36,13 @@ export interface PartyDetailData {
     date: string;
     nYes: number;
     nNo: number;
+    dissenters: number;
   }>;
   topics: string[];
   committeeChairs: Array<{
     committee: string;
     name: string;
+    isLead: boolean;
   }>;
   recentSpeeches: Array<{
     personId: number;

@@ -290,3 +290,119 @@ body.is-loading .nav a.is-active {
     transform: translateY(0);
   }
 }
+
+/* ============================================================
+   SPACING / LAYOUT UTILITIES
+   ============================================================ */
+.mt-4 {
+  margin-top: 4px;
+}
+.mt-6 {
+  margin-top: 6px;
+}
+.mt-8 {
+  margin-top: 8px;
+}
+.mt-10 {
+  margin-top: 10px;
+}
+.mt-12 {
+  margin-top: 12px;
+}
+.mt-14 {
+  margin-top: 14px;
+}
+.mt-16 {
+  margin-top: 16px;
+}
+.mt-18 {
+  margin-top: 18px;
+}
+.mt-20 {
+  margin-top: 20px;
+}
+.mt-22 {
+  margin-top: 22px;
+}
+.mt-24 {
+  margin-top: 24px;
+}
+.mt-28 {
+  margin-top: 28px;
+}
+.mt-30 {
+  margin-top: 30px;
+}
+.mt-32 {
+  margin-top: 32px;
+}
+.mt-36 {
+  margin-top: 36px;
+}
+.mt-40 {
+  margin-top: 40px;
+}
+.mb-0 {
+  margin-bottom: 0;
+}
+.pt-16 {
+  padding-top: 16px;
+}
+.pt-20 {
+  padding-top: 20px;
+}
+.pt-4 {
+  padding-top: 4px;
+}
+.pb-8 {
+  padding-bottom: 8px;
+}
+.pv-40 {
+  padding: 40px 0;
+}
+.ml-auto {
+  margin-left: auto;
+}
+.text-muted {
+  color: var(--muted);
+}
+.link-clr {
+  color: var(--blue);
+}
+.flex-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.flex-wrap-g16 {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.flex-col-g12 {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bt-rule {
+  border-top: 1px solid var(--rule);
+}
+.bt-ink {
+  border-top: 2px solid var(--ink);
+}
+.scroll-mt-14 {
+  scroll-margin-top: 14px;
+}
+
+/* Dot swatches used in party legends and indicators. */
+.party-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.party-dot--sm {
+  width: 8px;
+  height: 8px;
+}

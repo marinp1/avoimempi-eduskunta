@@ -1,6 +1,6 @@
 /** @jsxImportSource ../../src/jsx */
 import { clsx } from "clsx";
-import type { RosterRow } from "../../../server/database/repositories/person-repository";
+import type { RosterRow } from "#shared-types";
 import Kicker from "../components/kicker";
 import {
   type RosterParams,
@@ -49,7 +49,7 @@ export default function Edustajat({
         </section>
       </div>
 
-      <div class="wrap" style="padding-bottom:8px">
+      <div class="wrap pb-8">
         <div class="bloc-bar">
           {bloc.segments.map((seg) => (
             <span

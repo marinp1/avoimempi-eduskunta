@@ -1,7 +1,14 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 import Kicker from "../components/kicker";
 import { esc } from "../helpers";
 import type { AanestyksetData, VoteRow } from "./aanestykset-view-model";
+
+const NAV = {
+  "hx-target": "#main-content",
+  "hx-push-url": "true",
+  "hx-swap": "innerHTML",
+} as const;
 
 interface Props {
   title?: string;
@@ -25,13 +32,19 @@ export default function Aanestykset({ title, data }: Props) {
           </p>
         </section>
 
-        <div class="toolbar" style="margin-top:20px">
+        <div class="toolbar mt-20">
           <label class="search">
             <span class="ic">⌕</span>
             <input
               id="aanestys-search"
-              type="text"
+              type="search"
+              name="q"
               placeholder="Hae äänestyksellä, asiakirjalla tai istunnolla…"
+              hx-get="/aanestykset"
+              hx-trigger="keyup changed delay:300ms"
+              hx-target="#main-content"
+              hx-push-url="true"
+              hx-swap="innerHTML"
             />
           </label>
           <span class="count">
@@ -39,20 +52,20 @@ export default function Aanestykset({ title, data }: Props) {
           </span>
         </div>
 
-        <div class="fchips" style="margin-top:14px">
-          <button class="fchip is-active" data-filter="all">
+        <div class="fchips mt-14">
+          <button type="button" class="fchip is-active" data-filter="all">
             Kaikki
           </button>
-          <button class="fchip" data-filter="lait">
+          <button type="button" class="fchip" data-filter="lait">
             Lait
           </button>
-          <button class="fchip" data-filter="selonteot">
+          <button type="button" class="fchip" data-filter="selonteot">
             Selonteot
           </button>
-          <button class="fchip" data-filter="luottamus">
+          <button type="button" class="fchip" data-filter="luottamus">
             Luottamusäänestykset
           </button>
-          <button class="fchip" data-filter="tiukat">
+          <button type="button" class="fchip" data-filter="tiukat">
             Tiukat
           </button>
         </div>
@@ -80,7 +93,7 @@ export default function Aanestykset({ title, data }: Props) {
           </div>
         )}
 
-        <div class="source-note" style="margin-top:32px">
+        <div class="source-note mt-32">
           <span>Lähde:</span>
           <span class="dset">
             Eduskunnan avoin data · SaliDBAanestys + Vote
@@ -94,14 +107,33 @@ export default function Aanestykset({ title, data }: Props) {
 }
 
 function VoteRowItem({ row }: { row: VoteRow }) {
+  const title = (row.questionText || row.title).toLowerCase();
+  const diff = Math.abs(row.nYes - row.nNo);
+  const types: string[] = [];
+  if (
+    title.includes("laki") &&
+    !title.includes("luottamus") &&
+    !title.includes("selonteko")
+  ) {
+    types.push("lait");
+  }
+  if (title.includes("selonteko")) {
+    types.push("selonteot");
+  }
+  if (title.includes("luottamus") || title.includes("välikysymys")) {
+    types.push("luottamus");
+  }
+  if (diff < 20 && row.nTotal > 0) {
+    types.push("tiukat");
+  }
+
   return (
     <a
       href={`/aanestys/${row.id}`}
       hx-get={`/aanestys/${row.id}`}
-      hx-target="#main-content"
-      hx-push-url="true"
-      hx-swap="innerHTML"
+      {...NAV}
       class="vrow"
+      data-type={types.join(" ")}
     >
       <div class="vrow__rail">
         <span class="vrow__id">Ä {row.votingNumber}</span>
@@ -112,7 +144,7 @@ function VoteRowItem({ row }: { row: VoteRow }) {
         {row.documents.length > 0 && (
           <div class="vrow__docs">
             {row.documents.map((doc) => (
-              <span class={`ag-doc${doc.isCommittee ? " cmt" : ""}`}>
+              <span class={clsx("ag-doc", doc.isCommittee && "cmt")}>
                 {esc(doc.label)}
               </span>
             ))}
@@ -139,7 +171,7 @@ function VoteRowItem({ row }: { row: VoteRow }) {
           <span class="j" style={`width:${row.yesPct.toFixed(1)}%`}></span>
           <span class="e" style={`width:${row.noPct.toFixed(1)}%`}></span>
         </div>
-        <span class={`vrow__out ${row.outcome}`}>{row.outcomeLabel}</span>
+        <span class={clsx("vrow__out", row.outcome)}>{row.outcomeLabel}</span>
       </div>
       <span class="vrow__go">→</span>
     </a>

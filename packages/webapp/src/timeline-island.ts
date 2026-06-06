@@ -8,6 +8,7 @@
  * `hx-trigger="tl:commit from:document"` — htmx then fetches the updated
  * fragment from the server, which sets the peili_date cookie and re-renders.
  */
+import { island } from "./island";
 
 interface SittingTick {
   d: string;
@@ -302,10 +303,9 @@ function initTimeline(force = false) {
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => initTimeline());
+island(() => initTimeline());
 
-// Re-init after any htmx swap, including OOB swaps where the
-// timeline arrives outside the main hx-target element.
-document.addEventListener("htmx:after:settle", () => {
-  initTimeline();
+// Re-init after htmx swap with force=true to pick up new #tl-data
+document.addEventListener("htmx:afterSettle", () => {
+  initTimeline(true);
 });

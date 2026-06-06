@@ -1,9 +1,9 @@
+import { island } from "./island";
+
 /**
  * Speech filter island — pure client-side filtering for the debate page.
  * Filters `.speech` elements by bloc (hallitus/oppositio) and text search.
- * Runs on DOMContentLoaded and after htmx swaps for HTMX-driven navigation.
  */
-
 function initSpeechFilter() {
   const rows = Array.from(document.querySelectorAll<HTMLElement>(".speech"));
   if (rows.length === 0) return;
@@ -42,5 +42,4 @@ function initSpeechFilter() {
   if (search) search.addEventListener("input", apply);
 }
 
-document.addEventListener("DOMContentLoaded", initSpeechFilter);
-document.addEventListener("htmx:after:settle", initSpeechFilter);
+island(initSpeechFilter);

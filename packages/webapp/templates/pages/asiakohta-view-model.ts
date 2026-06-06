@@ -31,6 +31,7 @@ export interface AsiakohtaData {
     isDone: boolean;
     isCurrent: boolean;
     date: string | null;
+    stepNumber: string | null;
     tag: string | null;
     tagClass: string | null;
   }>;

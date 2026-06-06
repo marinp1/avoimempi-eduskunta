@@ -161,7 +161,7 @@ export default function Asiakirja({ data }: Props) {
         {d.lifecycleStages.length > 0 && (
           <>
             <Kicker text="Asian kulku" modifier="" />
-            <nav class="lifecycle" style="margin-top:8px">
+            <nav class="lifecycle mt-8">
               {d.lifecycleStages.map((stage) => (
                 <div class={clsx("lc-step", { done: stage.done })}>
                   <div class="lc-step__top">
@@ -237,7 +237,7 @@ export default function Asiakirja({ data }: Props) {
           ))}
 
           {(d.signatories.length > 0 || d.laws.length > 0) && (
-            <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--rule)">
+            <div class="mt-28 pt-20 bt-rule">
               {d.signatories.length > 0 && (
                 <div style="margin-bottom:20px">
                   <h3>Allekirjoittajat</h3>
@@ -317,15 +317,12 @@ export default function Asiakirja({ data }: Props) {
           })}
 
           {d.hasAnswer && (
-            <div
-              id="vastaus"
-              style="margin-top:40px;padding-top:4px;border-top:2px solid var(--ink)"
-            >
-              <div class="article__phase" style="margin-top:20px">
+            <div id="vastaus" class="mt-40 pt-4 bt-ink">
+              <div class="article__phase mt-20">
                 Vastaus — {d.answerMinisterTitle} ·{" "}
                 {d.answerDate ? formatFi(d.answerDate) : ""}
               </div>
-              <h3 style="margin-top:0">Ministerin vastaus</h3>
+              <h3>Ministerin vastaus</h3>
 
               <div class="summary" style="margin:14px 0 22px">
                 <div class="summary__bar">
@@ -356,7 +353,7 @@ export default function Asiakirja({ data }: Props) {
                 </div>
               </div>
 
-              <div style="margin-top:14px">
+              <div class="mt-14">
                 <a
                   href={`https://avoindata.eduskunta.fi/`}
                   class="tbtn"
@@ -410,7 +407,7 @@ export default function Asiakirja({ data }: Props) {
               {esc(d.statusLabel)}
             </div>
             {d.lifecycleStages.length > 0 && (
-              <ul class="timeline" style="margin-top:14px">
+              <ul class="timeline mt-14">
                 {d.lifecycleStages.map((stage) => (
                   <li class={stage.done ? "done" : ""}>
                     <div class="tl-when">

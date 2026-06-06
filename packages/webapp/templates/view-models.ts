@@ -1,4 +1,4 @@
-import type { RosterRow } from "../../server/database/repositories/person-repository";
+import type { RosterRow } from "#shared-types";
 import { partyColor } from "./components/party";
 
 /** A single segment within the bloc bar — one party's share of government or opposition. */

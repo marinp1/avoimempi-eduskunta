@@ -1,7 +1,11 @@
 import Asiakohta from "../../../webapp/templates/pages/asiakohta";
 import type { AsiakohtaData } from "../../../webapp/templates/pages/asiakohta-view-model";
-import { page, getTimelineData } from "./helpers";
-import { partyColor, partyShortName } from "../../../webapp/templates/helpers";
+import { page, getRouteParam, getWebappContext } from "./helpers";
+import {
+  partyColor,
+  partyShortName,
+  fetchedAt,
+} from "../../../webapp/templates/helpers";
 import type { WebappDeps } from "./deps";
 
 function phaseLabel(code: string | null): string {
@@ -33,12 +37,8 @@ export function createAsiakohtaRoute(deps: WebappDeps) {
   return {
     "/asiakohta/:key": {
       GET: async (req: Request) => {
-        const key = (req as any).params.key as string;
-        const tlData = getTimelineData(
-          req,
-          deps.sessionRepository,
-          deps.metadataRepository,
-        );
+        const key = getRouteParam(req, "key") ?? "";
+        const { tlData } = getWebappContext(req, deps);
 
         const section = deps.sessionRepository.fetchSectionByKey({
           sectionKey: key,
@@ -64,7 +64,6 @@ export function createAsiakohtaRoute(deps: WebappDeps) {
           }),
         ]);
 
-        // Get the full session to compute prev/next
         const sessionData = deps.sessionRepository.fetchSessionByKey({
           key: section.session_key,
         });
@@ -102,14 +101,6 @@ export function createAsiakohtaRoute(deps: WebappDeps) {
               }
             : null;
 
-        const fetchedAt = new Date().toLocaleString("fi-FI", {
-          day: "numeric",
-          month: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-
         const data: AsiakohtaData = {
           section: {
             key: section.key,
@@ -139,6 +130,7 @@ export function createAsiakohtaRoute(deps: WebappDeps) {
               isDone: true,
               isCurrent: true,
               date: null,
+              stepNumber: "01",
               tag: null,
               tagClass: null,
             },
@@ -164,21 +156,19 @@ export function createAsiakohtaRoute(deps: WebappDeps) {
               outcomeLabel: nYes > nNo ? "hyväksytty" : "hylätty",
             };
           }),
-          speeches: (speechesResult?.speeches ?? []).map((s: any) => {
+          speeches: (speechesResult?.speeches ?? []).map((s) => {
             const pCode = (s.party_abbreviation ?? "").toLowerCase();
             const content = s.content ?? null;
+            const isGov = (s as Record<string, unknown>).is_government;
             return {
               personId: s.person_id,
               firstName: s.first_name ?? "",
               lastName: s.last_name ?? "",
               initials: initials(s.first_name, s.last_name),
               partyCode: pCode,
-              partyName: partyShortName(
-                s.party_abbreviation ?? "",
-                s.party_abbreviation ?? "",
-              ),
+              partyName: partyShortName(s.party_abbreviation ?? ""),
               partyColor: partyColor(s.party_abbreviation ?? ""),
-              bloc: "unknown",
+              bloc: isGov === 1 ? "hallitus" : "oppositio",
               roleLabel:
                 s.speech_type === "NR"
                   ? "Ryhmäpuheenvuoro"
@@ -200,13 +190,13 @@ export function createAsiakohtaRoute(deps: WebappDeps) {
               contentLength: content?.length ?? 0,
             };
           }),
-          fetchedAt,
+          fetchedAt: fetchedAt(),
         };
 
         return page(
           req,
           Asiakohta({
-            _title: `Asiakohta ${data.section.itemNumber ?? ""}`,
+            title: `Asiakohta ${data.section.itemNumber ?? ""}`,
             data,
           }),
           `/asiakohta/${key}`,

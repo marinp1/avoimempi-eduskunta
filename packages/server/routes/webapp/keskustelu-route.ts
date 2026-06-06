@@ -1,6 +1,8 @@
 import Keskustelu from "../../../webapp/templates/pages/keskustelu";
 import { buildDebateViewModel } from "../../../webapp/templates/pages/keskustelu-view-model";
-import { page, getTimelineData } from "./helpers";
+import { page, getWebappContext } from "./helpers";
+import { fetchedAt } from "../../../webapp/templates/helpers";
+import type { PartySeatRow } from "#shared-types";
 import type { WebappDeps } from "./deps";
 
 export function createKeskusteluRoute(deps: WebappDeps) {
@@ -20,7 +22,7 @@ export function createKeskusteluRoute(deps: WebappDeps) {
           return new Response("Section not found", { status: 404 });
         }
 
-        const sessionKey: string = (section as any).session_key;
+        const sessionKey = section.session_key;
         if (!sessionKey) {
           return new Response("Section has no session", { status: 404 });
         }
@@ -46,21 +48,14 @@ export function createKeskusteluRoute(deps: WebappDeps) {
           sectionKey,
         });
 
-        const partySeatRows = deps.sessionRepository.fetchPartySeatCounts(
-          (session as any).date ?? new Date().toISOString().slice(0, 10),
-        );
+        const partySeatRows: PartySeatRow[] =
+          deps.sessionRepository.fetchPartySeatCounts(
+            session.date ?? new Date().toISOString().slice(0, 10),
+          );
         const partyGovMap = new Map<string, number>();
         for (const row of partySeatRows) {
           partyGovMap.set(row.party_code, row.is_in_government);
         }
-
-        const fetchedAt = new Date().toLocaleString("fi-FI", {
-          day: "numeric",
-          month: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
 
         const data = buildDebateViewModel({
           session,
@@ -69,16 +64,11 @@ export function createKeskusteluRoute(deps: WebappDeps) {
           sectionVotings,
           sectionDocs,
           partyGovMap,
-          fetchedAt,
+          fetchedAt: fetchedAt(),
         });
 
         const title = `Keskustelu: ${data.section.title}`;
-
-        const tlData = getTimelineData(
-          req,
-          deps.sessionRepository,
-          deps.metadataRepository,
-        );
+        const { tlData } = getWebappContext(req, deps);
 
         return page(req, Keskustelu({ data }), "/istunnot", title, tlData);
       },

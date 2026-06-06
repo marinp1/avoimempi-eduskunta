@@ -1,15 +1,33 @@
-import { partyColor, partyShortName } from "../../../webapp/templates/helpers";
 import Edustaja, {
   type PersonProfileData,
 } from "../../../webapp/templates/pages/edustaja";
-import { page, personNotFoundResponse, getTimelineData } from "./helpers";
+import { partyColor, partyShortName } from "../../../webapp/templates/helpers";
+import {
+  page,
+  personNotFoundResponse,
+  getWebappContext,
+  getRouteParam,
+} from "./helpers";
 import type { WebappDeps } from "./deps";
+
+const INITIATIVE_LABELS: Record<string, string> = {
+  LA: "Lakialoite",
+  TPA: "Toimenpidealoite",
+  RA: "Rahoitusaloite",
+  A: "Aloite",
+};
+
+const QUESTION_LABELS: Record<string, string> = {
+  written_question: "Kirjallinen kysymys",
+  interpellation: "Välikysymys",
+  oral_question: "Suullinen kysymys",
+};
 
 export function createEdustajaRoute(deps: WebappDeps) {
   return {
     "/edustaja/:id": {
       GET: async (req: Request) => {
-        const id = (req as any).params.id;
+        const id = getRouteParam(req, "id") ?? "";
         if (!id || !/^\d+$/.test(id)) {
           return personNotFoundResponse(req, `/edustaja/${id}`);
         }
@@ -70,7 +88,7 @@ export function createEdustajaRoute(deps: WebappDeps) {
         );
         const partyCode =
           currentGroup?.group_abbreviation ?? details.party ?? "unknown";
-        const isInGovernment = groupMemberships.some((g) => !g.end_date);
+        const isInGovernment = !!currentGroup && !currentGroup.end_date;
 
         const currentDistrict = districts.find((d) => !d.end_date);
         const districtName =
@@ -107,17 +125,7 @@ export function createEdustajaRoute(deps: WebappDeps) {
         const partyName = partyShortName(partyCode, partyCode);
         const color = partyColor(partyCode);
 
-        const INITIATIVE_LABELS: Record<string, string> = {
-          LA: "Lakialoite",
-          TPA: "Toimenpidealoite",
-          RA: "Rahoitusaloite",
-          A: "Aloite",
-        };
-        const QUESTION_LABELS: Record<string, string> = {
-          written_question: "Kirjallinen kysymys",
-          interpellation: "Välikysymys",
-          oral_question: "Suullinen kysymys",
-        };
+        const { tlData } = getWebappContext(req, deps);
 
         const baselinesParty = metrics.party;
         const baselinesParliament = metrics.parliament;
@@ -150,14 +158,6 @@ export function createEdustajaRoute(deps: WebappDeps) {
                 },
               }
             : null;
-
-        const fetchedAt = new Date().toLocaleString("fi-FI", {
-          day: "numeric",
-          month: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
 
         const capabilities = deps.personRepository.fetchPersonCapabilities({
           personId: id,
@@ -236,14 +236,15 @@ export function createEdustajaRoute(deps: WebappDeps) {
           })),
           baselines,
           hasAiSummary: capabilities.hasAiSummary,
-          fetchedAt,
+          fetchedAt: new Date().toLocaleString("fi-FI", {
+            day: "numeric",
+            month: "numeric",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
         };
 
-        const tlData = getTimelineData(
-          req,
-          deps.sessionRepository,
-          deps.metadataRepository,
-        );
         return page(
           req,
           Edustaja({ data }),

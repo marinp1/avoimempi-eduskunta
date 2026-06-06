@@ -189,7 +189,7 @@ function ContextSection({ data }: Props) {
   const ses = data.session;
 
   return (
-    <section class="ph" id="asiayhteys" style="margin-top:30px">
+    <section class="ph mt-30" id="asiayhteys">
       <Kicker
         text="Asiayhteys · mistä keskustelussa on kyse"
         modifier="blue"
@@ -356,9 +356,9 @@ function SpeechCard({ speech: sp }: { speech: SpeechEntry }) {
             {sp.durationLabel ? ` · ${sp.durationLabel}` : ""}
             {" · "}suomi
           </span>
-          <a href="#" class="link-arrow">
+          <button type="button" class="link-arrow">
             Avaa pöytäkirjassa (PTK) ↗
-          </a>
+          </button>
         </div>
       </div>
     </article>
@@ -402,7 +402,7 @@ function MoreSpeeches({
           <span class="tm"></span>
         </div>
       )}
-      <div style="margin-top:14px;display:flex;gap:16px;flex-wrap:wrap">
+      <div class="mt-14 flex-wrap-g16">
         <a href={`/istunto/${sessionKey}`} class="link-arrow">
           Näytä kaikki {total} puheenvuoroa pöytäkirjasta ↗
         </a>
@@ -435,7 +435,7 @@ function VoteOutcome({
         Keskustelun jälkeen asiasta äänestettiin.{" "}
         {hasMultiple ? "Äänestyksiä oli useita." : ""}
       </p>
-      <div class="ag-votes" style="margin-top:8px">
+      <div class="ag-votes mt-8">
         {votings.map((v) => (
           <div class="agvote">
             <div class="agvote__t">{v.title}</div>
@@ -450,7 +450,7 @@ function VoteOutcome({
           </div>
         ))}
       </div>
-      <div class="decision" style="margin-top:18px">
+      <div class="decision mt-18">
         <div class="decision__icon">
           {mainVote.outcomeClass === "ok" ? "✓" : "✗"}
         </div>
@@ -477,7 +477,7 @@ function VoteOutcome({
 
 function SpeechSourceNote({ fetchedAt }: { fetchedAt: string }) {
   return (
-    <div class="source-note" style="margin-top:32px">
+    <div class="source-note mt-32">
       <span>Lähde:</span>
       <span class="dset">Eduskunnan avoin data · Speech + SpeechContent</span>
       <span>·</span>

@@ -6,7 +6,7 @@ import Koostumusmuutos from "../../../webapp/templates/components/koostumusmuuto
 import Edustajat from "../../../webapp/templates/pages/edustajat";
 import RosterContent from "../../../webapp/templates/pages/roster-content";
 import { fragmentResponse } from "../../../webapp/eta";
-import { page, getTimelineData, timelineOobHtml } from "./helpers";
+import { page, getTimelineData, timelineOobHtml, isHtmx } from "./helpers";
 import type { WebappDeps } from "./deps";
 
 export function createEdustajatRoute(deps: WebappDeps) {
@@ -23,9 +23,8 @@ export function createEdustajatRoute(deps: WebappDeps) {
         };
         const allRows = deps.personRepository.fetchRoster();
         const filtered = applyFilters(allRows, params);
-        const isHtmx = req.headers.get("HX-Request") === "true";
 
-        if (isHtmx) {
+        if (isHtmx(req)) {
           const hxTarget = req.headers.get("HX-Target") || "";
           if (hxTarget.includes("roster-content")) {
             return fragmentResponse(

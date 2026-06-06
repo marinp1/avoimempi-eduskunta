@@ -9,6 +9,8 @@ import {
   readPeriod,
   getTermBounds,
   timelineOobHtml,
+  isHtmx,
+  formatFi,
 } from "./helpers";
 import type { WebappDeps } from "./deps";
 
@@ -43,13 +45,12 @@ export function createIstunnotRoute(deps: WebappDeps) {
             : termFiltered;
         const data = buildSessionsViewModel(filtered, { kind, q });
 
-        const isHtmx = req.headers.get("HX-Request") === "true";
         const cookieHeader = dateParam ? setCursorCookie(dateParam) : undefined;
         const cursorFormatted = formatFi(cursor);
         const isAtPresent = cursor >= tlData.today;
         const shownCursor = isAtPresent ? undefined : cursorFormatted;
 
-        if (isHtmx) {
+        if (isHtmx(req)) {
           const hxTarget = req.headers.get("HX-Target") || "";
           if (
             hxTarget.includes("sit-root") ||
@@ -122,11 +123,6 @@ export function createIstunnotRoute(deps: WebappDeps) {
       },
     },
   } as const;
-}
-
-function formatFi(iso: string): string {
-  const [y, m, d] = iso.split("-");
-  return `${Number(d)}.${Number(m)}.${y}`;
 }
 
 function buildIstunnotUrl(opts: {

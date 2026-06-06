@@ -20,19 +20,9 @@ import representativesPaginated from "../queries/REPRESENTATIVES_PAGINATED.sql";
 import trustPositions from "../queries/TRUST_POSITIONS.sql";
 import votesByPerson from "../queries/VOTES_BY_PERSON.sql";
 import { buildSearchQuery } from "../query-helpers";
+import type { RosterRow } from "#shared-types";
 
-export interface RosterRow {
-  person_id: number;
-  first_name: string;
-  last_name: string;
-  sort_name: string;
-  birth_year: number | null;
-  minister: number;
-  group_abbreviation: string | null;
-  is_in_government: number;
-  district_name: string | null;
-  participation_rate: number;
-}
+export type { RosterRow };
 
 export class PersonRepository {
   constructor(private readonly db: Database) {}

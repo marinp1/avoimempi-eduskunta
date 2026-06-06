@@ -4,3 +4,4 @@ import "./period-island";
 import "./trace-island";
 import "./timeline-island";
 import "./speech-filter-island";
+import "./vote-filter-island";
