@@ -7,44 +7,60 @@ import type { SessionRepository } from "../../database/repositories/session-repo
 import { assetVersion } from "./assets";
 
 const PEILI_DATE_COOKIE = "peili_date";
-const TERM = "2023";
+const PEILI_PERIOD_COOKIE = "peili_period";
+const VALID_PERIODS = new Set(["2023", "2019", "all"]);
+const DEFAULT_PERIOD = "2023";
 
-let _ticksCache: SittingTick[] | null = null;
-let _todayCache: string | null = null;
+export interface TermBounds {
+  startDate: string;
+  endDate?: string;
+  governmentStartDate: string;
+}
 
-function buildTicks(repo: SessionRepository): {
-  ticks: SittingTick[];
-  today: string;
-} {
-  if (_ticksCache && _todayCache)
-    return { ticks: _ticksCache, today: _todayCache };
+const TERM_BOUNDS: Record<string, TermBounds> = {
+  "2023": { startDate: "2023-06-20", governmentStartDate: "2023-06-20" },
+  "2019": {
+    startDate: "2019-06-06",
+    endDate: "2023-06-19",
+    governmentStartDate: "2019-06-06",
+  },
+  // "all" spans everything; governmentStartDate uses current coalition for tagging
+  all: { startDate: "1907-01-01", governmentStartDate: "2023-06-20" },
+};
 
+export function getTermBounds(period: string): TermBounds {
+  return TERM_BOUNDS[period] ?? TERM_BOUNDS[DEFAULT_PERIOD]!;
+}
+
+// All sitting ticks cached after the first DB read (no limit on restarts)
+let _allTicksCache: SittingTick[] | null = null;
+
+function getAllTicks(repo: SessionRepository): SittingTick[] {
+  if (_allTicksCache) return _allTicksCache;
   const rows = repo.fetchSittingTicks();
-  const ticks: SittingTick[] = rows.map((r) => ({
+  _allTicksCache = rows.map((r) => ({
     d: r.date,
     id: r.key,
     type: r.voting_count > 0 ? "vote" : r.speech_count > 30 ? "talk" : "quiet",
   }));
-
-  const today =
-    ticks.length > 0
-      ? ticks[ticks.length - 1]!.d
-      : new Date().toISOString().slice(0, 10);
-  _ticksCache = ticks;
-  _todayCache = today;
-  return { ticks, today };
+  return _allTicksCache;
 }
 
-function readCursorDate(req: Request, today: string): string {
+function readCookie(req: Request, name: string): string | null {
   const cookie = req.headers.get("cookie") ?? "";
-  const match = cookie.match(
-    new RegExp(`(?:^|;\\s*)${PEILI_DATE_COOKIE}=([^;]+)`),
-  );
-  if (match) {
-    const val = decodeURIComponent(match[1]!).trim();
-    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
-  }
-  return today;
+  const match = cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
+  return match ? decodeURIComponent(match[1]!) : null;
+}
+
+export function readPeriod(req: Request): string {
+  const val = readCookie(req, PEILI_PERIOD_COOKIE);
+  return val && VALID_PERIODS.has(val) ? val : DEFAULT_PERIOD;
+}
+
+function readCursorDate(req: Request, termToday: string): string {
+  const val = readCookie(req, PEILI_DATE_COOKIE);
+  if (val && /^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+  return termToday;
 }
 
 function formatFi(iso: string): string {
@@ -56,13 +72,32 @@ export function getTimelineData(
   req: Request,
   sessionRepo: SessionRepository,
 ): TimelineData {
-  const { ticks, today } = buildTicks(sessionRepo);
-  const cursor = readCursorDate(req, today);
+  const period = readPeriod(req);
+  const bounds = getTermBounds(period);
+  const allTicks = getAllTicks(sessionRepo);
+
+  const ticks = allTicks.filter(
+    (t) =>
+      t.d >= bounds.startDate && (!bounds.endDate || t.d <= bounds.endDate),
+  );
+
+  const termToday =
+    ticks.length > 0
+      ? ticks[ticks.length - 1]!.d
+      : new Date().toISOString().slice(0, 10);
+
+  const cursor = readCursorDate(req, termToday);
+  // Clamp cursor to term bounds — a stale peili_date from a different term is ignored
+  const clampedCursor =
+    cursor >= bounds.startDate && (!bounds.endDate || cursor <= bounds.endDate)
+      ? cursor
+      : termToday;
+
   return {
-    term: TERM,
-    today,
-    cursor,
-    cursorFormatted: formatFi(cursor),
+    term: period,
+    today: termToday,
+    cursor: clampedCursor,
+    cursorFormatted: formatFi(clampedCursor),
     sittings: ticks,
   };
 }

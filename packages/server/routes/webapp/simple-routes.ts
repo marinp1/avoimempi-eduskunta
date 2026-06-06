@@ -6,7 +6,13 @@ import Home, { HomeReactive } from "../../../webapp/templates/pages/home";
 import Muutokset from "../../../webapp/templates/pages/muutokset";
 import Puolueet from "../../../webapp/templates/pages/puolueet";
 import { htmlResponse } from "../../../webapp/eta";
-import { page, getTimelineData, setCursorCookie } from "./helpers";
+import {
+  page,
+  getTimelineData,
+  setCursorCookie,
+  readPeriod,
+  getTermBounds,
+} from "./helpers";
 import { assetVersion } from "./assets";
 import type { WebappDeps } from "./deps";
 
@@ -19,8 +25,13 @@ export function createSimplePageRoutes(deps: WebappDeps) {
         const tlData = getTimelineData(req, deps.sessionRepository);
         const cursor = dateParam ?? tlData.cursor;
 
+        const period = readPeriod(req);
+        const bounds = getTermBounds(period);
         const data = await deps.homeRepository.fetchOverview({
           asOfDate: cursor,
+          startDate: bounds.startDate,
+          endDate: bounds.endDate,
+          governmentStartDate: bounds.governmentStartDate,
         });
         const sessionCount = tlData.sittings.filter(
           (s) => s.d <= cursor,

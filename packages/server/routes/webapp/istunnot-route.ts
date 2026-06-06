@@ -2,7 +2,13 @@ import Istunnot, {
   SessionList,
 } from "../../../webapp/templates/pages/istunnot";
 import { buildSessionsViewModel } from "../../../webapp/templates/pages/istunnot-view-models";
-import { page, getTimelineData, setCursorCookie } from "./helpers";
+import {
+  page,
+  getTimelineData,
+  setCursorCookie,
+  readPeriod,
+  getTermBounds,
+} from "./helpers";
 import type { WebappDeps } from "./deps";
 
 export function createIstunnotRoute(deps: WebappDeps) {
@@ -17,9 +23,20 @@ export function createIstunnotRoute(deps: WebappDeps) {
         const tlData = getTimelineData(req, deps.sessionRepository);
         const cursor = dateParam ?? tlData.cursor;
 
-        const raw = deps.sessionRepository.fetchSessionsIndex(500);
+        const period = readPeriod(req);
+        const bounds = getTermBounds(period);
+
+        // Fetch a large set; filter in-process by term bounds then cursor
+        const raw = deps.sessionRepository.fetchSessionsIndex(2000);
+        const termFiltered = raw.filter(
+          (r) =>
+            r.date >= bounds.startDate &&
+            (!bounds.endDate || r.date <= bounds.endDate),
+        );
         const filtered =
-          cursor < tlData.today ? raw.filter((r) => r.date <= cursor) : raw;
+          cursor < tlData.today
+            ? termFiltered.filter((r) => r.date <= cursor)
+            : termFiltered;
         const data = buildSessionsViewModel(filtered, { kind, q });
 
         const isHtmx = req.headers.get("HX-Request") === "true";
@@ -31,10 +48,6 @@ export function createIstunnotRoute(deps: WebappDeps) {
         const shownCursor = isAtPresent ? undefined : cursorFormatted;
 
         if (isHtmx && !isBoosted) {
-          // Both search/filter and timeline cursor change return SessionList.
-          // Search uses hx-select="#sit-root" + hx-swap="outerHTML" to extract
-          // only #sit-root from the response. Timeline uses hx-swap="outerHTML"
-          // on #tl-reactive to replace the whole section.
           const fragment = SessionList({
             weeks: data.weeks,
             totalSessions: data.totalSessions,

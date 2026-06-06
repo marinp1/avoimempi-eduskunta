@@ -101,8 +101,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   root.querySelectorAll<HTMLElement>(".period__opt").forEach((opt) => {
     opt.addEventListener("click", () => {
-      applyPeriod(opt.dataset.val ?? DEFAULT_PERIOD);
+      const val = opt.dataset.val ?? DEFAULT_PERIOD;
+      applyPeriod(val);
       closeMenu();
+      // Persist as a server-readable cookie and reload so all data re-filters
+      const exp = new Date(Date.now() + 365 * 864e5).toUTCString();
+      document.cookie = `peili_period=${val}; Path=/; SameSite=Lax; expires=${exp}`;
+      // Clear the date cursor — it may be out of range for the new term
+      document.cookie = "peili_date=; Path=/; Max-Age=0";
+      window.location.reload();
     });
   });
   document.addEventListener("click", (e) => {
