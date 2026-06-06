@@ -1,10 +1,13 @@
-import { Box, Divider, Typography } from "@mui/material";
+import { Box, Divider, Skeleton, Typography } from "@mui/material";
 import React from "react";
 import { useThemedColors } from "../../../theme/ThemeContext";
-import { VotesTab } from "../../Composition/Details";
 import { PartyLineDissentPanel } from "../components/PartyLineDissentPanel";
 import { SectionShell } from "../components/SectionShell";
 import type { ProfileSectionProps } from "./registry";
+
+const VotesTab = React.lazy(() =>
+  import("../../Composition/Details").then((m) => ({ default: m.VotesTab })),
+);
 
 const Voting: React.FC<ProfileSectionProps> = ({ personId, scope }) => {
   const themed = useThemedColors();
@@ -26,7 +29,9 @@ const Voting: React.FC<ProfileSectionProps> = ({ personId, scope }) => {
         </Box>
       </Box>
       <Divider sx={{ my: 2 }} />
-      <VotesTab personId={personId} scope={scope} />
+      <React.Suspense fallback={<Skeleton variant="rectangular" height={240} />}>
+        <VotesTab personId={personId} scope={scope} />
+      </React.Suspense>
     </SectionShell>
   );
 };

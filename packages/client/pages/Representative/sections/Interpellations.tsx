@@ -3,6 +3,7 @@ import React from "react";
 import { apiFetch } from "#client/utils/fetch";
 import { useThemedColors } from "../../../theme/ThemeContext";
 import { SectionShell } from "../components/SectionShell";
+import { navigateToDocument } from "../utils/navigateToDocument";
 import type { ProfileSectionProps } from "./registry";
 
 interface QuestionRow {
@@ -57,9 +58,19 @@ const Interpellations: React.FC<ProfileSectionProps> = ({ personId }) => {
           {rows.map((row) => (
             <Box
               key={row.id}
+              component="button"
+              type="button"
+              onClick={() => navigateToDocument(row.parliament_identifier)}
               sx={{
                 py: 1,
+                background: "none",
+                border: "none",
                 borderBottom: `1px solid ${themed.dataBorder}`,
+                textAlign: "left",
+                width: "100%",
+                cursor: "pointer",
+                px: 0,
+                "&:hover": { backgroundColor: themed.backgroundSubtle },
               }}
             >
               <Stack

@@ -1,12 +1,15 @@
 import { Box, Stack } from "@mui/material";
 import React from "react";
-import { fetchPersonDetails } from "../Composition/Details";
 import { Hero } from "./Hero";
+import { LazySection } from "./components/LazySection";
 import {
   getVisibleSections,
   type PersonCapabilities,
-  type PersonDetailsBundle,
 } from "./sections/registry";
+import {
+  fetchPersonDetails,
+  type PersonDetailsBundle,
+} from "./utils/fetchPersonDetails";
 import { StickyRail } from "./StickyRail";
 
 interface RepresentativeProps {
@@ -157,13 +160,14 @@ const Representative: React.FC<RepresentativeProps> = ({ personId }) => {
         />
         <Box sx={{ flex: 1, minWidth: 0, width: "100%", px: { xs: 1.5, lg: 0 } }}>
           {sections.map((section) => (
-            <section.Component
-              key={section.key}
-              personId={personId}
-              details={details ?? undefined}
-              selectedDate={selectedDate}
-              scope={scope}
-            />
+            <LazySection key={section.key} anchor={section.anchor}>
+              <section.Component
+                personId={personId}
+                details={details ?? undefined}
+                selectedDate={selectedDate}
+                scope={scope}
+              />
+            </LazySection>
           ))}
         </Box>
       </Stack>

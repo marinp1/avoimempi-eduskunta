@@ -53,9 +53,8 @@ export const SectionShell: React.FC<SectionShellProps> = ({
   return (
     <Box
       component="section"
-      id={anchor}
+      data-section-anchor={anchor}
       sx={{
-        scrollMarginTop: 96,
         py: 3,
         borderTop: `1px solid ${themed.dataBorder}`,
         "&:first-of-type": { borderTop: "none", pt: 1 },

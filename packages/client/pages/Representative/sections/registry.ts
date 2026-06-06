@@ -1,8 +1,6 @@
 import type React from "react";
-import type {
-  fetchPersonDetails,
-  RepresentativeAnalysisScope,
-} from "../../Composition/Details";
+import type { RepresentativeAnalysisScope } from "../../Composition/Details";
+import type { PersonDetailsBundle as PersonDetailsBundleImport } from "../utils/fetchPersonDetails";
 import AiSummary from "./AiSummary";
 import Activity from "./Activity";
 import Background from "./Background";
@@ -16,7 +14,7 @@ import Speeches from "./Speeches";
 import Vaalikone from "./Vaalikone";
 import Voting from "./Voting";
 
-export type PersonDetailsBundle = Awaited<ReturnType<typeof fetchPersonDetails>>;
+export type PersonDetailsBundle = PersonDetailsBundleImport;
 
 export interface ProfileSectionProps {
   personId: number;

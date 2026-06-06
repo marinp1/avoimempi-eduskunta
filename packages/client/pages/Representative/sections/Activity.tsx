@@ -1,8 +1,10 @@
 import { Box, Divider, Skeleton, Stack } from "@mui/material";
 import React from "react";
 import { apiFetch } from "#client/utils/fetch";
-import AttendancePersonDetail from "../../Insights/AttendancePersonDetail";
-import VotingActivity from "../../Insights/VotingActivity";
+const AttendancePersonDetail = React.lazy(
+  () => import("../../Insights/AttendancePersonDetail"),
+);
+const VotingActivity = React.lazy(() => import("../../Insights/VotingActivity"));
 import { JudgmentLine, judgeAgainstBaseline } from "../components/JudgmentLine";
 import { MetricWithBaseline } from "../components/MetricWithBaseline";
 import { SectionShell } from "../components/SectionShell";
@@ -182,14 +184,16 @@ const Activity: React.FC<ProfileSectionProps> = ({ personId, scope }) => {
 
       <Divider sx={{ my: 3 }} />
 
-      <AttendancePersonDetail
-        personId={personId}
-        personName=""
-        startDate={scope.selectedGovernmentPeriod?.government_start_date}
-        endDate={scope.selectedGovernmentPeriod?.government_end_date ?? undefined}
-        onClose={noop}
-      />
-      <VotingActivity onClose={noop} initialPersonId={personId} />
+      <React.Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+        <AttendancePersonDetail
+          personId={personId}
+          personName=""
+          startDate={scope.selectedGovernmentPeriod?.government_start_date}
+          endDate={scope.selectedGovernmentPeriod?.government_end_date ?? undefined}
+          onClose={noop}
+        />
+        <VotingActivity onClose={noop} initialPersonId={personId} />
+      </React.Suspense>
     </SectionShell>
   );
 };
