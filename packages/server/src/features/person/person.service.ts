@@ -1,6 +1,7 @@
 import type { PersonRepository } from "./person.repository";
 import {
   buildPersonProfileData,
+  buildPersonSpeeches,
   type PersonProfileData,
 } from "./pages/profile.view-model";
 import { fetchedAt } from "#server/helpers";
@@ -23,7 +24,6 @@ export class PersonService {
       questions,
       committees,
       focusAreas,
-      speeches,
     ] = await Promise.all([
       this.personRepo.fetchPersonGroupMemberships({ personId }),
       this.personRepo.fetchRepresentativeDistricts({ personId }),
@@ -35,7 +35,6 @@ export class PersonService {
       this.personRepo.fetchPersonQuestions({ personId, limit: 10 }),
       this.personRepo.fetchPersonCommittees({ personId }),
       this.personRepo.fetchPersonFocusAreas({ personId, topN: 12 }),
-      this.personRepo.fetchPersonSpeeches({ personId, limit: 10 }),
     ]);
 
     const capabilities = this.personRepo.fetchPersonCapabilities({ personId });
@@ -52,8 +51,23 @@ export class PersonService {
       questions,
       committees,
       focusAreas,
-      speeches,
       capabilities,
+      fetchedAt: fetchedAt(),
+    });
+  }
+
+  getPersonSpeeches(personId: string) {
+    const details = this.personRepo.fetchRepresentativeDetails({ personId });
+    if (!details) return null;
+    const { speeches } = this.personRepo.fetchPersonSpeeches({
+      personId,
+      limit: 10,
+    });
+    return buildPersonSpeeches({
+      personId: details.person_id,
+      firstName: details.first_name ?? "",
+      lastName: details.last_name ?? "",
+      speeches,
       fetchedAt: fetchedAt(),
     });
   }

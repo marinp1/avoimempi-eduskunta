@@ -10,4 +10,5 @@ import "./trace-island";
 import "./timeline-island";
 import "./speech-filter-island";
 import "./vote-filter-island";
+import "./mp-search-island";
 import "./nav-morph";

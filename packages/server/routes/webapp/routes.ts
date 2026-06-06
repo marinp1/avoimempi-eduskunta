@@ -1,11 +1,13 @@
 import { cssAsset, jsAsset } from "./assets";
 import { createAanestysRoute } from "./aanestys-route";
+import { createAanestysKarttaRoute } from "./aanestys-kartta-route";
 import { createAanestyksetListRoute } from "./aanestykset-list-route";
 import { createAnalytiikkaRoute } from "./analytiikka-route";
 import { createAsiakirjaRoute } from "./asiakirja-route";
 import { createAsiakirjatListRoute } from "./asiakirjat-list-route";
 import { createAsiakohtaRoute } from "./asiakohta-route";
 import { createEdustajaRoute } from "./edustaja-route";
+import { createEdustajaSpeechesRoute } from "./edustaja-speeches-route";
 import { createEdustajatRoute } from "./edustajat-route";
 import { createHallituksetRoute } from "./hallitukset-route";
 import { createHomeRoute } from "./home-route";
@@ -30,12 +32,14 @@ export type { WebappDeps } from "./deps";
 export function createWebappPageRoutes(deps: WebappDeps) {
   return {
     ...createAanestysRoute(deps),
+    ...createAanestysKarttaRoute(deps),
     ...createAanestyksetListRoute(deps),
     ...createAnalytiikkaRoute(deps),
     ...createAsiakirjaRoute(deps),
     ...createAsiakirjatListRoute(deps),
     ...createAsiakohtaRoute(deps),
     ...createEdustajaRoute(deps),
+    ...createEdustajaSpeechesRoute(deps),
     ...createEdustajatRoute(deps),
     ...createHallituksetRoute(deps),
     ...createHomeRoute(deps),

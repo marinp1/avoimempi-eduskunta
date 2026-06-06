@@ -7,6 +7,12 @@ import { esc, formatDate, pctNum } from "#server/helpers/template-helpers";
 import i18next from "i18next";
 import type { PersonProfileData } from "./profile.view-model";
 
+const NAV = {
+  "hx-target": "#main-content",
+  "hx-push-url": "true",
+  "hx-swap": "innerHTML",
+} as const;
+
 interface Props {
   data: PersonProfileData;
 }
@@ -34,7 +40,9 @@ export default function Edustaja({ data }: Props) {
 
       <div class="wrap">
         <div class="breadcrumb">
-          <a href="/edustajat">{i18next.t("edustajat:title")}</a>
+          <a href="/edustajat" hx-get="/edustajat" {...NAV}>
+            {i18next.t("edustajat:title")}
+          </a>
           &nbsp;›&nbsp;{" "}
           <span>
             {esc(p.firstName)} {esc(p.lastName)}
@@ -352,7 +360,12 @@ export default function Edustaja({ data }: Props) {
                   {i18next.t("edustajat:profile.initiatives_section_intro")}
                 </p>
                 {data.initiatives.slice(0, 5).map((init) => (
-                  <a class="act-row" href={`/asiakirja/${init.documentId}`}>
+                  <a
+                    class="act-row"
+                    href={`/asiakirja/${init.documentId}`}
+                    hx-get={`/asiakirja/${init.documentId}`}
+                    {...NAV}
+                  >
                     <div class="act-row__id">
                       {esc(init.parliamentIdentifier)}
                     </div>
@@ -378,6 +391,10 @@ export default function Edustaja({ data }: Props) {
                     href={
                       q.documentId ? `/asiakirja/${q.documentId}` : undefined
                     }
+                    hx-get={
+                      q.documentId ? `/asiakirja/${q.documentId}` : undefined
+                    }
+                    {...NAV}
                   >
                     <div class="act-row__id">{esc(q.parliamentIdentifier)}</div>
                     <div>
@@ -469,32 +486,11 @@ export default function Edustaja({ data }: Props) {
               </div>
             ) : null}
 
-            {data.speeches.length > 0 ? (
-              <div class="rail__item">
-                <Kicker
-                  text={i18next.t("edustajat:profile.recent_speeches_kicker")}
-                />
-                <p class="psec__desc psec__desc--tight">
-                  {i18next.t("edustajat:profile.recent_speeches_subtitle")}
-                </p>
-                {data.speeches.map((sp) => (
-                  <div class="spoke-row">
-                    <div class="st">{esc(sp.sectionTitle ?? "")}</div>
-                    <div class="sd">
-                      {sp.startTime
-                        ? `${formatDate(sp.startTime)}${sp.speechType ? ` · ${esc(sp.speechType)}` : ""}`
-                        : sp.speechType
-                          ? esc(sp.speechType)
-                          : ""}
-                    </div>
-                  </div>
-                ))}
-                {sourceNote({
-                  dataset: `Speech · ${p.firstName} ${p.lastName}`,
-                  fetchedAt: data.fetchedAt,
-                })}
-              </div>
-            ) : null}
+            <div
+              hx-get={`/edustaja/${p.id}/puheet`}
+              hx-trigger="load"
+              style="min-height:60px"
+            ></div>
 
             <div class="rail__item">
               <Kicker text={i18next.t("edustajat:profile.basics_kicker")} />

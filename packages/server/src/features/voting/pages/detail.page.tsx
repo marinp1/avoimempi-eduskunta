@@ -284,7 +284,12 @@ export default function Aanestys({ title, data }: Props) {
           </div>
         </section>
 
-        <SectionKartta data={data} />
+        <div
+          id="kartta"
+          hx-get={`/aanestys/${data.vote.id}/kartta`}
+          hx-trigger="load"
+          style="min-height:300px;scroll-margin-top:14px"
+        ></div>
 
         {data.relatedVotes.length > 0 && (
           <section class="mt-28">
@@ -334,102 +339,5 @@ export default function Aanestys({ title, data }: Props) {
         </div>
       </div>
     </>
-  );
-}
-
-function SectionKartta({ data }: { data: SingleVoteData }) {
-  return (
-    <section id="kartta" class="mt-28" style="scroll-margin-top:14px">
-      <Kicker
-        text={i18next.t("aanestykset:detail.section_map_kicker")}
-        modifier="blue"
-        dot
-      />
-      <div class="attend__grid mt-14">
-        <div class="seatwrap">
-          <div class="seatgrid" id="vote-seatgrid">
-            {data.mpVotes.map((mp) => {
-              const seatColor =
-                mp.vote === "jaa"
-                  ? "var(--hall)"
-                  : mp.vote === "ei"
-                    ? "var(--red)"
-                    : mp.vote === "tyhjaa"
-                      ? "var(--opp)"
-                      : "transparent";
-              return (
-                <span
-                  class={clsx("seat", mp.vote === "poissa" && "absent")}
-                  style={`--p:${seatColor}`}
-                  title={`${esc(mp.firstName)} ${esc(mp.lastName)} (${esc(mp.partyCode)})`}
-                ></span>
-              );
-            })}
-          </div>
-          <div class="seat-legend">
-            <div class="it">
-              <span class="d" style="background:var(--hall)"></span>
-              {i18next.t("common:yes")}
-            </div>
-            <div class="it">
-              <span class="d" style="background:var(--red)"></span>
-              {i18next.t("common:no")}
-            </div>
-            <div class="it">
-              <span class="d" style="background:var(--opp)"></span>
-              {i18next.t("common:empty")}
-            </div>
-            <div class="it">
-              <span class="d ring"></span>
-              {i18next.t("common:absent")}
-            </div>
-          </div>
-        </div>
-        <div class="mlookup">
-          <label class="search mb-0">
-            <span class="ic">⌕</span>
-            <input
-              id="mp-search"
-              type="search"
-              placeholder={i18next.t("aanestykset:detail.search_mp")}
-              hx-get=""
-              hx-trigger="keyup changed delay:200ms"
-              hx-target="#mp-list"
-              hx-select="#mp-list > *"
-            />
-          </label>
-          <div class="mlist" id="mp-list">
-            {data.mpVotes.map((mp) => (
-              <div
-                class="mvote"
-                data-search={`${mp.firstName} ${mp.lastName} ${mp.partyCode}`.toLowerCase()}
-              >
-                <span class="mn">
-                  {esc(mp.firstName)} {esc(mp.lastName)}
-                  <small>{esc(mp.partyCode)}</small>
-                </span>
-                <span
-                  class={clsx(
-                    "mb",
-                    mp.vote === "jaa" && "j",
-                    mp.vote === "ei" && "e",
-                    mp.vote === "tyhjaa" && "tyh",
-                    mp.vote === "poissa" && "out",
-                  )}
-                >
-                  {mp.vote === "jaa"
-                    ? i18next.t("common:yes_uppercase")
-                    : mp.vote === "ei"
-                      ? i18next.t("common:no_uppercase")
-                      : mp.vote === "tyhjaa"
-                        ? i18next.t("common:empty_uppercase")
-                        : i18next.t("common:absent_uppercase")}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
   );
 }

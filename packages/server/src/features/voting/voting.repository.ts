@@ -61,6 +61,25 @@ export class VotingRepository {
     return data ?? null;
   }
 
+  public fetchVotingMemberVotes(params: { votingId: string }) {
+    const votingId = Number.parseInt(params.votingId, 10);
+    if (!Number.isFinite(votingId)) return null;
+    const stmt = this.db.prepare<
+      {
+        person_id: number;
+        first_name: string;
+        last_name: string;
+        party_code: string;
+        vote: string;
+        is_government: 0 | 1;
+      },
+      { $id: number }
+    >(votingMemberVotesById);
+    const data = stmt.all({ $id: votingId });
+    stmt.finalize();
+    return data;
+  }
+
   public fetchVotingInlineDetails(params: { votingId: string }) {
     const votingId = Number.parseInt(params.votingId, 10);
     if (!Number.isFinite(votingId)) return null;

@@ -10,6 +10,12 @@ import {
 } from "#server/helpers/template-helpers";
 import type { DocumentKind } from "../kinds/types";
 
+const NAV = {
+  "hx-target": "#main-content",
+  "hx-push-url": "true",
+  "hx-swap": "innerHTML",
+} as const;
+
 export interface TextSection {
   heading: string;
   paragraphs: string[];
@@ -107,7 +113,12 @@ export default function Asiakirja({ data }: Props) {
 
       <div class="wrap">
         <div style="padding-top:16px;font-size:13px;color:var(--muted)">
-          <a href="/asiakirjat" style="color:var(--blue)">
+          <a
+            href="/asiakirjat"
+            hx-get="/asiakirjat"
+            {...NAV}
+            style="color:var(--blue)"
+          >
             {i18next.t("asiakirjat:detail.breadcrumb")}
           </a>
           &nbsp;›&nbsp; <span>{d.identifier}</span>
@@ -129,6 +140,8 @@ export default function Asiakirja({ data }: Props) {
             {d.authorPersonId ? (
               <a
                 href={`/edustaja/${d.authorPersonId}`}
+                hx-get={`/edustaja/${d.authorPersonId}`}
+                {...NAV}
                 class="who"
                 style="color:var(--ink)"
               >
@@ -269,7 +282,11 @@ export default function Asiakirja({ data }: Props) {
                         )}
                         <span class="signatory-name">
                           {sig.personId ? (
-                            <a href={`/edustaja/${sig.personId}`}>
+                            <a
+                              href={`/edustaja/${sig.personId}`}
+                              hx-get={`/edustaja/${sig.personId}`}
+                              {...NAV}
+                            >
                               {esc(sig.name)}
                             </a>
                           ) : (
@@ -542,6 +559,8 @@ export default function Asiakirja({ data }: Props) {
                 <a
                   class="related-row"
                   href={`/istunto/${s.sessionYear}/${s.sessionNumber}`}
+                  hx-get={`/istunto/${s.sessionYear}/${s.sessionNumber}`}
+                  {...NAV}
                 >
                   <span class="rid">{s.sessionKey}</span>
                   <span class="rt">

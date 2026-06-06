@@ -2,14 +2,10 @@ import { createHash } from "node:crypto";
 
 async function loadAssets(): Promise<{ setupJs: string; cssText: string }> {
   if (process.env.NODE_ENV !== "production") {
-    const setupJsPath = new URL(
-      "../../src/client/setup.ts",
-      import.meta.url,
-    ).pathname;
-    const cssPath = new URL(
-      "../../src/client/styles.css",
-      import.meta.url,
-    ).pathname;
+    const setupJsPath = new URL("../../src/client/setup.ts", import.meta.url)
+      .pathname;
+    const cssPath = new URL("../../src/client/styles.css", import.meta.url)
+      .pathname;
 
     const setupBuild = await Bun.build({
       entrypoints: [setupJsPath],

@@ -9,6 +9,12 @@ import type {
   AbsenteeGroup,
 } from "./detail.view-model";
 
+const NAV = {
+  "hx-target": "#main-content",
+  "hx-push-url": "true",
+  "hx-swap": "innerHTML",
+} as const;
+
 interface Props {
   data: SessionDetailData;
 }
@@ -32,7 +38,12 @@ export default function Istunto({ data }: Props) {
 
       <div class="wrap">
         <div style="padding-top:16px;font-size:13px;color:var(--muted)">
-          <a href="/istunnot" style="color:var(--blue)">
+          <a
+            href="/istunnot"
+            hx-get="/istunnot"
+            {...NAV}
+            style="color:var(--blue)"
+          >
             {i18next.t("nav:sessions")}
           </a>
           &nbsp;›&nbsp; <span>{s.title}</span>
@@ -501,7 +512,7 @@ function TabledSection({ items }: { items: AgendaSectionData[] }) {
 
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:22px;padding-top:16px;border-top:1px solid var(--rule)">
         <div style="font-family:var(--mono);font-size:var(--fs-mono);color:var(--muted)"></div>
-        <a href="/istunnot" class="link-arrow">
+        <a href="/istunnot" hx-get="/istunnot" {...NAV} class="link-arrow">
           {i18next.t("common:back_to_sessions")}
         </a>
       </div>

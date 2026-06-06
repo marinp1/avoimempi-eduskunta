@@ -1,6 +1,6 @@
 import type { VotingRepository } from "./voting.repository";
 import { buildAanestyksetData } from "./pages/list.view-model";
-import { buildSingleVoteData } from "./pages/detail.view-model";
+import { buildSingleVoteData, buildMpVotes } from "./pages/detail.view-model";
 import { fetchedAt } from "#server/helpers";
 
 export class VotingService {
@@ -48,5 +48,15 @@ export class VotingService {
       details,
       fetchedAt: fetchedAt(),
     });
+  }
+
+  getVotingKartta(votingId: string) {
+    const voting = this.votingRepo.fetchVotingById({ votingId });
+    if (!voting) return null;
+    const memberVotes = this.votingRepo.fetchVotingMemberVotes({ votingId });
+    return {
+      votingId: voting.id,
+      mpVotes: buildMpVotes(memberVotes ?? []),
+    };
   }
 }

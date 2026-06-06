@@ -101,16 +101,6 @@ interface FocusAreasData {
   areas: FocusAreaItem[];
 }
 
-interface SpeechItem {
-  section_title: string | null;
-  start_time: string | null;
-  speech_type: string | null;
-}
-
-interface SpeechesData {
-  speeches: SpeechItem[];
-}
-
 export interface PersonProfileData {
   person: {
     id: number;
@@ -175,11 +165,6 @@ export interface PersonProfileData {
     label: string;
     weight: number;
   }>;
-  speeches: Array<{
-    sectionTitle: string | null;
-    startTime: string | null;
-    speechType: string | null;
-  }>;
   baselines: {
     speech: { own: number; partyAvg: number; parliamentAvg: number };
     initiative: { own: number; partyAvg: number; parliamentAvg: number };
@@ -187,6 +172,17 @@ export interface PersonProfileData {
     participation: { own: string; partyAvg: string; parliamentAvg: string };
   } | null;
   hasAiSummary: boolean;
+  fetchedAt: string;
+}
+
+export interface PersonSpeechesData {
+  personId: number;
+  personName: string;
+  speeches: Array<{
+    sectionTitle: string | null;
+    startTime: string | null;
+    speechType: string | null;
+  }>;
   fetchedAt: string;
 }
 
@@ -202,7 +198,6 @@ export function buildPersonProfileData(input: {
   questions: QuestionRow[];
   committees: CommitteeRow[];
   focusAreas: FocusAreasData;
-  speeches: SpeechesData;
   capabilities: { hasAiSummary: boolean };
   fetchedAt: string;
 }): PersonProfileData {
@@ -218,7 +213,6 @@ export function buildPersonProfileData(input: {
     questions,
     committees,
     focusAreas,
-    speeches,
     capabilities,
     fetchedAt,
   } = input;
@@ -359,13 +353,31 @@ export function buildPersonProfileData(input: {
       label: a.label,
       weight: a.weight,
     })),
-    speeches: speeches.speeches.slice(0, 10).map((sp) => ({
+    baselines,
+    hasAiSummary: capabilities.hasAiSummary,
+    fetchedAt,
+  };
+}
+
+export function buildPersonSpeeches(input: {
+  personId: number;
+  firstName: string;
+  lastName: string;
+  speeches: Array<{
+    section_title: string | null;
+    start_time: string | null;
+    speech_type: string | null;
+  }>;
+  fetchedAt: string;
+}): PersonSpeechesData {
+  return {
+    personId: input.personId,
+    personName: `${input.firstName} ${input.lastName}`,
+    speeches: input.speeches.map((sp) => ({
       sectionTitle: sp.section_title ?? null,
       startTime: sp.start_time ?? null,
       speechType: sp.speech_type ?? null,
     })),
-    baselines,
-    hasAiSummary: capabilities.hasAiSummary,
-    fetchedAt,
+    fetchedAt: input.fetchedAt,
   };
 }

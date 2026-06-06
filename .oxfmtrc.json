@@ -11,5 +11,5 @@
   "arrowParens": "always",
   "bracketSameLine": false,
   "bracketSpacing": true,
-  "ignorePatterns": ["**/*.eta", "design/**/*"]
+  "ignorePatterns": ["**/*.eta", "design/**/*", "CHANGELOG.md"]
 }

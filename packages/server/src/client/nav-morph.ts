@@ -46,7 +46,7 @@ if (!reduceMotion && "onpageswap" in window) {
 
     // Clear the names once the transition settles so a bfcache restore of this
     // page doesn't leave duplicate names lying around for the next navigation.
-    e.viewTransition.finished.finally(() => {
+    void e.viewTransition.finished.finally(() => {
       if (name) name.style.viewTransitionName = "";
       if (accent) accent.style.viewTransitionName = "";
     });

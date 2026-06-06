@@ -147,6 +147,31 @@ export interface SingleVoteData {
   fetchedAt: string;
 }
 
+export function buildMpVotes(
+  memberVotes: Array<{
+    person_id: number;
+    first_name: string;
+    last_name: string;
+    party_code: string;
+    vote: string;
+    is_government: 0 | 1;
+  }>,
+): SingleVoteData["mpVotes"] {
+  return memberVotes.map(
+    (mv) =>
+      ({
+        personId: mv.person_id,
+        firstName: mv.first_name,
+        lastName: mv.last_name,
+        partyCode: mv.party_code,
+        partyColor: resolveParty(mv.party_code).color,
+        vote: normalizeVote(mv.vote),
+        bloc: normalizeBloc(mv.is_government),
+        personSort: `${mv.last_name} ${mv.first_name}`.toLowerCase(),
+      }) as const,
+  );
+}
+
 export function buildSingleVoteData(input: {
   voting: VotingRow;
   details: VotingInlineDetails | null;
@@ -186,20 +211,7 @@ export function buildSingleVoteData(input: {
       };
     }) ?? [];
 
-  const mpVotes =
-    details?.memberVotes?.map(
-      (mv) =>
-        ({
-          personId: mv.person_id,
-          firstName: mv.first_name,
-          lastName: mv.last_name,
-          partyCode: mv.party_code,
-          partyColor: resolveParty(mv.party_code).color,
-          vote: normalizeVote(mv.vote),
-          bloc: normalizeBloc(mv.is_government),
-          personSort: `${mv.last_name} ${mv.first_name}`.toLowerCase(),
-        }) as const,
-    ) ?? [];
+  const mpVotes = buildMpVotes(details?.memberVotes ?? []);
 
   const govOppBreakdown = details?.governmentOpposition
     ? {
