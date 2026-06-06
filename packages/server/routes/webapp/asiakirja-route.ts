@@ -11,64 +11,132 @@ import {
 } from "../../../webapp/templates/helpers";
 import { richTextToHtml } from "../../../webapp/templates/components/rich-text";
 import { renderFullPage } from "../../../webapp/eta";
-import { page, getWebappContext, getRouteParam, isHtmx } from "./helpers";
+import {
+  page,
+  getWebappContext,
+  isHtmx,
+  getPeriodSelectorData,
+} from "./helpers";
+import { assetVersion } from "./assets";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
+import { defineRoute } from "#shared-helpers";
+import {
+  type DocumentKind,
+  DOC_KIND_REGISTRY,
+  LA_LABELS,
+  REPORT_LABELS,
+} from "#shared/constants/DocumentKinds";
 
-const KIND_TO_LABEL: Record<string, string> = {
-  kk: i18next.t("asiakirjat:kind_labels.kk"),
-  suullinen: i18next.t("asiakirjat:kind_labels.suullinen"),
-  valikysymys: i18next.t("asiakirjat:kind_labels.valikysymys"),
-  he: i18next.t("asiakirjat:kind_labels.he"),
-  aloite: i18next.t("asiakirjat:kind_labels.aloite"),
-  mietinto: i18next.t("asiakirjat:kind_labels.mietinto"),
-  vastaus: i18next.t("asiakirjat:kind_labels.vastaus"),
-  "vastaus-edk": i18next.t("asiakirjat:kind_labels.vastaus-edk"),
+interface DocSigner {
+  person_id: number | null;
+  first_name: string;
+  last_name: string;
+  party: string | null;
+  is_first_signer?: number;
+  signer_order?: number;
+}
+
+interface DocStage {
+  stage_order?: number;
+  stage_title?: string;
+  stage_code?: string | null;
+  event_date?: string | null;
+  event_title?: string | null;
+  event_description?: string | null;
+}
+
+interface DocSession {
+  session_key: string;
+  session_date: string;
+  session_number: number;
+  session_year: string;
+  section_title: string | null;
+}
+
+interface DocMember {
+  person_id: number | null;
+  first_name: string | null;
+  last_name: string | null;
+  party?: string | null;
+  role?: string | null;
+  title?: string | null;
+  organization?: string | null;
+}
+
+interface DocSignatory {
+  person_id?: number | null;
+  first_name: string;
+  last_name: string;
+  title_text?: string | null;
+  signatory_order?: number;
+}
+
+interface DocLaw {
+  law_order: number;
+  law_type: string | null;
+  law_name: string | null;
+}
+
+interface DocSubject {
+  subject_text: string;
+}
+
+interface DocDetail {
+  stages?: DocStage[];
+  signers?: DocSigner[];
+  signatories?: DocSignatory[];
+  members?: DocMember[];
+  experts?: DocMember[];
+  laws?: DocLaw[];
+  subjects?: unknown;
+  sessions?: DocSession[];
+}
+
+const KIND_BUILDERS: Record<DocumentKind, BuilderFn | undefined> = {
+  kk: buildWrittenQuestion,
+  suullinen: buildOralQuestion,
+  valikysymys: buildInterpellation,
+  he: buildGovernmentProposal,
+  aloite: buildLegislativeInitiative,
+  mietinto: buildCommitteeReport,
+  vastaus: buildWrittenQuestion,
+  asiantuntija: undefined, // expert statements are not supported as standalone documents — available via committee reports
+  "vastaus-edk": buildParliamentAnswer,
 };
 
-const LA_LABELS: Record<string, string> = {
-  LA: i18next.t("asiakirjat:initiative_type_labels.LA"),
-  TPA: i18next.t("asiakirjat:initiative_type_labels.TPA"),
-  RA: i18next.t("asiakirjat:initiative_type_labels.RA"),
-  A: i18next.t("asiakirjat:initiative_type_labels.RA"),
-};
-
-const REPORT_LABELS: Record<string, string> = {
-  M: i18next.t("asiakirjat:report_type_labels.M"),
-  L: i18next.t("asiakirjat:report_type_labels.L"),
-};
+type BuilderFn = (id: string, deps: WebappDeps) => AsiakirjaViewModel | null;
 
 export function createAsiakirjaRoute(deps: WebappDeps) {
-  return {
-    "/asiakirja/:id": {
-      GET: (req: Request) => {
-        const rawId = getRouteParam(req, "id") ?? "";
+  return defineRoute({
+    path: "/asiakirja/:id",
+    GET: (req, params) => {
+      const rawId = params.id;
         if (!rawId || !/^\d+$/.test(rawId)) {
           return notFoundResponse(req);
         }
         const id = rawId;
 
         const url = new URL(req.url);
-        const kind = url.searchParams.get("kind") ?? "kk";
+        const kind = (url.searchParams.get("kind") ?? "kk") as DocumentKind;
 
         const builder = KIND_BUILDERS[kind];
         const data = builder ? builder(id, deps) : null;
         if (!data) return notFoundResponse(req);
 
         const { tlData } = getWebappContext(req, deps);
-        return page(
+        const periodData = getPeriodSelectorData(req, deps.metadataRepository);
+        return page({
           req,
-          Asiakirja({ data }),
-          "/asiakirjat",
-          data.identifier,
-          tlData,
-        );
+          fragment: Asiakirja({ data }),
+          activePath: "/asiakirjat",
+          title: data.identifier,
+          timelineData: tlData,
+          periodData,
+        });
       },
-    },
-  } as const;
+  });
 }
-
-type BuilderFn = (id: string, deps: WebappDeps) => AsiakirjaViewModel | null;
 
 function notFoundResponse(req: Request): Response {
   const htmx = isHtmx(req);
@@ -85,23 +153,13 @@ function notFoundResponse(req: Request): Response {
     : renderFullPage(fragment, {
         activePath: "/asiakirjat",
         title: i18next.t("asiakirjat:detail.not_found_title"),
+        assetVersion,
       });
   return new Response(body, {
     status: 404,
     headers: { "Content-Type": "text/html; charset=utf-8", Vary: "HX-Request" },
   });
 }
-
-const KIND_BUILDERS: Record<string, BuilderFn> = {
-  kk: buildWrittenQuestion,
-  suullinen: buildOralQuestion,
-  valikysymys: buildInterpellation,
-  he: buildGovernmentProposal,
-  aloite: buildLegislativeInitiative,
-  mietinto: buildCommitteeReport,
-  vastaus: buildWrittenQuestion,
-  "vastaus-edk": buildParliamentAnswer,
-};
 
 // ─── Shared helpers ───────────────────────────────────────
 
@@ -152,9 +210,9 @@ function textCharCount(sections: TextSection[]): number {
 }
 
 function mapSessions(
-  detail: Record<string, unknown>,
+  detail: DocDetail,
 ): AsiakirjaViewModel["sessions"] {
-  const sessions = (detail.sessions ?? []) as Array<Record<string, unknown>>;
+  const sessions = detail.sessions ?? [];
   return sessions.map((s) => ({
     sessionKey: String(s.session_key ?? ""),
     sessionDate: String(s.session_date ?? ""),
@@ -164,12 +222,12 @@ function mapSessions(
   }));
 }
 
-function mapSubjects(detail: Record<string, unknown>): string[] {
+function mapSubjects(detail: DocDetail): string[] {
   const raw = detail.subjects;
   if (!raw) return [];
   if (Array.isArray(raw))
-    return (raw as Array<{ subject_text?: string } | string>)
-      .map((s) => (typeof s === "string" ? s : (s.subject_text ?? "")))
+    return (raw as DocSubject[])
+      .map((s) => s.subject_text ?? "")
       .filter(Boolean);
   if (typeof raw === "string") return raw.split("||").filter(Boolean);
   return [];
@@ -212,17 +270,16 @@ function buildWrittenQuestion(
       done: true,
     });
   }
-  const rawStages = (detail as Record<string, unknown>).stages as
-    | Array<Record<string, unknown>>
-    | undefined;
+  const rawStages = (detail as DocDetail).stages;
   if (rawStages) {
     for (const s of rawStages) {
       lifecycleStages.push({
         step: lifecycleStages.length + 1,
-        label: (s.stage_title ||
+        label: String(
+          s.stage_title ||
           s.event_title ||
-          i18next.t("asiakirjat:detail.stage_processing")) as string,
-        date: (s.event_date as string) ?? null,
+          i18next.t("asiakirjat:detail.stage_processing")),
+        date: s.event_date ?? null,
         done: true,
       });
     }
@@ -246,9 +303,7 @@ function buildWrittenQuestion(
   if (qs) textSections.push(qs);
 
   const rawSigners =
-    ((detail as Record<string, unknown>).signers as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [];
+    ((detail as DocDetail).signers ?? []);
   const signatories: Signatory[] = rawSigners.map((s) => ({
     name:
       ([s.first_name, s.last_name].filter(Boolean).join(" ") as string) ||
@@ -266,7 +321,7 @@ function buildWrittenQuestion(
     kind: "kk",
     id: detail.id,
     identifier: detail.parliament_identifier,
-    documentTypeLabel: KIND_TO_LABEL.kk!,
+    documentTypeLabel: i18next.t(DOC_KIND_REGISTRY.kk.detailLabelI18n),
     title: detail.title ?? "",
     authorName: authorsByName(
       detail.first_signer_first_name,
@@ -311,9 +366,9 @@ function buildWrittenQuestion(
     signatories,
     laws: [],
     sourceReference: null,
-    subjects: mapSubjects(detail as Record<string, unknown>),
+    subjects: mapSubjects(detail as DocDetail),
     charCount: textCharCount(textSections),
-    sessions: mapSessions(detail as Record<string, unknown>),
+    sessions: mapSessions(detail as DocDetail),
     fetchedAt: fetchedAt(),
   };
 }
@@ -327,9 +382,7 @@ function buildOralQuestion(
 
   const submissionDate = detail.submission_date ?? "";
   const lifecycleStages = buildLifecycleFromStages(
-    ((detail as Record<string, unknown>).stages as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [],
+    ((detail as DocDetail).stages ?? []),
   );
 
   const textSections: TextSection[] = [];
@@ -346,7 +399,7 @@ function buildOralQuestion(
     kind: "suullinen",
     id: detail.id,
     identifier: detail.parliament_identifier,
-    documentTypeLabel: KIND_TO_LABEL.suullinen!,
+    documentTypeLabel: i18next.t(DOC_KIND_REGISTRY.suullinen.detailLabelI18n),
     title: detail.title ?? "",
     authorName: author || i18next.t("asiakirjat:detail.unknown_author"),
     authorRole: null,
@@ -377,9 +430,9 @@ function buildOralQuestion(
     signatories: [],
     laws: [],
     sourceReference: null,
-    subjects: mapSubjects(detail as Record<string, unknown>),
+    subjects: mapSubjects(detail as DocDetail),
     charCount: textCharCount(textSections),
-    sessions: mapSessions(detail as Record<string, unknown>),
+    sessions: mapSessions(detail as DocDetail),
     fetchedAt: fetchedAt(),
   };
 }
@@ -393,9 +446,7 @@ function buildInterpellation(
 
   const submissionDate = detail.submission_date ?? "";
   const lifecycleStages = buildLifecycleFromStages(
-    ((detail as Record<string, unknown>).stages as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [],
+    ((detail as DocDetail).stages ?? []),
   );
 
   const textSections: TextSection[] = [];
@@ -413,9 +464,7 @@ function buildInterpellation(
   if (rs) textSections.push(rs);
 
   const rawSigners =
-    ((detail as Record<string, unknown>).signers as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [];
+    ((detail as DocDetail).signers ?? []);
   const signatories: Signatory[] = rawSigners.map((s) => ({
     name:
       ([s.first_name, s.last_name].filter(Boolean).join(" ") as string) ||
@@ -433,7 +482,7 @@ function buildInterpellation(
     kind: "valikysymys",
     id: detail.id,
     identifier: detail.parliament_identifier,
-    documentTypeLabel: KIND_TO_LABEL.valikysymys!,
+    documentTypeLabel: i18next.t(DOC_KIND_REGISTRY.valikysymys.detailLabelI18n),
     title: detail.title ?? "",
     authorName: authorsByName(
       detail.first_signer_first_name,
@@ -466,9 +515,9 @@ function buildInterpellation(
     signatories,
     laws: [],
     sourceReference: null,
-    subjects: mapSubjects(detail as Record<string, unknown>),
+    subjects: mapSubjects(detail as DocDetail),
     charCount: textCharCount(textSections),
-    sessions: mapSessions(detail as Record<string, unknown>),
+    sessions: mapSessions(detail as DocDetail),
     fetchedAt: fetchedAt(),
   };
 }
@@ -482,9 +531,7 @@ function buildGovernmentProposal(
 
   const submissionDate = detail.submission_date ?? "";
   const lifecycleStages = buildLifecycleFromStages(
-    ((detail as Record<string, unknown>).stages as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [],
+    ((detail as DocDetail).stages ?? []),
   );
 
   const textSections: TextSection[] = [];
@@ -514,9 +561,7 @@ function buildGovernmentProposal(
   if (app) textSections.push(app);
 
   const rawSignatories =
-    ((detail as Record<string, unknown>).signatories as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [];
+    ((detail as DocDetail).signatories ?? []);
   const signatories: Signatory[] = rawSignatories.map((s) => ({
     name:
       ([s.first_name, s.last_name].filter(Boolean).join(" ") as string) ||
@@ -528,9 +573,7 @@ function buildGovernmentProposal(
   }));
 
   const rawLaws =
-    ((detail as Record<string, unknown>).laws as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [];
+    ((detail as DocDetail).laws ?? []);
   const laws: Law[] = rawLaws.map((l) => ({
     order: l.law_order as number,
     type: (l.law_type as string) ?? null,
@@ -542,7 +585,7 @@ function buildGovernmentProposal(
     kind: "he",
     id: detail.id,
     identifier: detail.parliament_identifier,
-    documentTypeLabel: KIND_TO_LABEL.he!,
+    documentTypeLabel: i18next.t(DOC_KIND_REGISTRY.he.detailLabelI18n),
     title: detail.title ?? "",
     authorName: author || i18next.t("asiakirjat:detail.unknown_author"),
     authorRole: i18next.t("asiakirjat:detail.ministry_role"),
@@ -573,9 +616,9 @@ function buildGovernmentProposal(
     signatories,
     laws,
     sourceReference: null,
-    subjects: mapSubjects(detail as Record<string, unknown>),
+    subjects: mapSubjects(detail as DocDetail),
     charCount: textCharCount(textSections),
-    sessions: mapSessions(detail as Record<string, unknown>),
+    sessions: mapSessions(detail as DocDetail),
     fetchedAt: fetchedAt(),
   };
 }
@@ -590,9 +633,7 @@ function buildLegislativeInitiative(
   const submissionDate = detail.submission_date ?? "";
   const typeCode = detail.initiative_type_code ?? "";
   const lifecycleStages = buildLifecycleFromStages(
-    ((detail as Record<string, unknown>).stages as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [],
+    ((detail as DocDetail).stages ?? []),
   );
 
   const textSections: TextSection[] = [];
@@ -616,9 +657,7 @@ function buildLegislativeInitiative(
   if (law) textSections.push(law);
 
   const rawSigners =
-    ((detail as Record<string, unknown>).signers as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [];
+    ((detail as DocDetail).signers ?? []);
   const signatories: Signatory[] = rawSigners.map((s) => ({
     name:
       ([s.first_name, s.last_name].filter(Boolean).join(" ") as string) ||
@@ -633,7 +672,7 @@ function buildLegislativeInitiative(
 
   const authorParty = detail.first_signer_party ?? "";
   const label =
-    LA_LABELS[typeCode] ?? i18next.t("asiakirjat:initiative_type_labels.RA");
+    i18next.t(LA_LABELS[typeCode] ?? "asiakirjat:initiative_type_labels.RA");
   return {
     kind: "aloite",
     id: detail.id,
@@ -671,9 +710,9 @@ function buildLegislativeInitiative(
     signatories,
     laws: [],
     sourceReference: null,
-    subjects: mapSubjects(detail as Record<string, unknown>),
+    subjects: mapSubjects(detail as DocDetail),
     charCount: textCharCount(textSections),
-    sessions: mapSessions(detail as Record<string, unknown>),
+    sessions: mapSessions(detail as DocDetail),
     fetchedAt: fetchedAt(),
   };
 }
@@ -687,8 +726,8 @@ function buildCommitteeReport(
 
   const signatureDate = detail.signature_date ?? detail.draft_date ?? "";
   const reportType =
-    REPORT_LABELS[detail.report_type_code ?? ""] ??
-    i18next.t("asiakirjat:report_type_labels.M");
+    i18next.t(REPORT_LABELS[detail.report_type_code ?? ""] ??
+     "asiakirjat:report_type_labels.M");
 
   const textSections: TextSection[] = [];
   const sum = buildTextSection(
@@ -735,13 +774,9 @@ function buildCommitteeReport(
   if (res) textSections.push(res);
 
   const rawMembers =
-    ((detail as Record<string, unknown>).members as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [];
+    ((detail as DocDetail).members ?? []);
   const rawExperts =
-    ((detail as Record<string, unknown>).experts as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [];
+    ((detail as DocDetail).experts ?? []);
   const signatories: Signatory[] = [
     ...rawMembers.map((m) => ({
       name:
@@ -798,9 +833,9 @@ function buildCommitteeReport(
     signatories,
     laws: [],
     sourceReference: detail.source_reference ?? null,
-    subjects: mapSubjects(detail as Record<string, unknown>),
+    subjects: mapSubjects(detail as DocDetail),
     charCount: textCharCount(textSections),
-    sessions: mapSessions(detail as Record<string, unknown>),
+    sessions: mapSessions(detail as DocDetail),
     fetchedAt: fetchedAt(),
   };
 }
@@ -832,7 +867,7 @@ function buildParliamentAnswer(
     kind: "vastaus-edk",
     id: detail.id,
     identifier: detail.parliament_identifier,
-    documentTypeLabel: KIND_TO_LABEL["vastaus-edk"]!,
+    documentTypeLabel: i18next.t(DOC_KIND_REGISTRY["vastaus-edk"].detailLabelI18n),
     title: detail.title ?? "",
     authorName: i18next.t("asiakirjat:detail.author_parliament"),
     authorRole: null,
@@ -862,15 +897,15 @@ function buildParliamentAnswer(
     laws: [],
     sourceReference:
       detail.source_reference ?? detail.committee_report_reference ?? null,
-    subjects: mapSubjects(detail as Record<string, unknown>),
+    subjects: mapSubjects(detail as DocDetail),
     charCount: textCharCount(textSections),
-    sessions: mapSessions(detail as Record<string, unknown>),
+    sessions: mapSessions(detail as DocDetail),
     fetchedAt: fetchedAt(),
   };
 }
 
 function buildLifecycleFromStages(
-  stages: Array<Record<string, unknown>>,
+  stages: DocStage[],
 ): AsiakirjaViewModel["lifecycleStages"] {
   const result: AsiakirjaViewModel["lifecycleStages"] = [];
   for (const s of stages) {

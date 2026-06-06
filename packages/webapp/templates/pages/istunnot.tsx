@@ -1,7 +1,8 @@
 /** @jsxImportSource ../../src/jsx */
 import { clsx } from "clsx";
-import Kicker from "../components/kicker";
+import PageHead from "../components/page-head";
 import Spill from "../components/spill";
+import Rule from "../components/rule";
 import i18next from "i18next";
 import type {
   SessionsIndexData,
@@ -40,14 +41,14 @@ export default function Istunnot({ title, data, cursorFormatted }: Props) {
       </title>
 
       <div class="wrap">
-        <section class="page-head">
-          <Kicker text={i18next.t("istunnot:kicker")} />
-          <h1>{i18next.t("istunnot:heading")}</h1>
-          <p class="sub">{i18next.t("istunnot:subtitle")}</p>
-        </section>
+        <PageHead
+          kicker={i18next.t("istunnot:kicker")}
+          heading={i18next.t("istunnot:heading")}
+          subtitle={i18next.t("istunnot:subtitle")}
+        />
       </div>
 
-      <hr class="rule" />
+      <Rule />
 
       <SessionList
         weeks={d.weeks}

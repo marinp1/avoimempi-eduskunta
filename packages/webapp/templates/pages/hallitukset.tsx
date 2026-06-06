@@ -1,6 +1,6 @@
 /** @jsxImportSource ../../src/jsx */
 import i18next from "i18next";
-import Kicker from "../components/kicker";
+import PageHead from "../components/page-head";
 
 interface Props {
   /** Page `<title>` suffix. */
@@ -17,11 +17,13 @@ export default function Hallitukset({ title }: Props) {
           brand: i18next.t("common:brand_name"),
         })}
       </title>
-      <section class="page-head wrap">
-        <Kicker text={i18next.t("nav:governments")} />
-        <h1>{i18next.t("nav:governments")}</h1>
-        <p class="sub">{i18next.t("errors:hallitukset.body")}</p>
-      </section>
+      <div class="wrap">
+        <PageHead
+          kicker={i18next.t("nav:governments")}
+          heading={i18next.t("nav:governments")}
+          subtitle={i18next.t("errors:hallitukset.body")}
+        />
+      </div>
     </>
   );
 }

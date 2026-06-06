@@ -1,7 +1,7 @@
 /** @jsxImportSource ../../src/jsx */
 import { clsx } from "clsx";
 import type { RosterRow } from "#shared-types";
-import Kicker from "../components/kicker";
+import PageHead from "../components/page-head";
 import i18next from "i18next";
 import {
   type RosterParams,
@@ -45,11 +45,11 @@ export default function Edustajat({
       </title>
 
       <div class="wrap">
-        <section class="page-head">
-          <Kicker text={i18next.t("edustajat:kicker")} />
-          <h1>{i18next.t("edustajat:heading", { count: allRows.length })}</h1>
-          <p class="sub">{i18next.t("edustajat:subtitle")}</p>
-        </section>
+        <PageHead
+          kicker={i18next.t("edustajat:kicker")}
+          heading={i18next.t("edustajat:heading", { count: allRows.length })}
+          subtitle={i18next.t("edustajat:subtitle")}
+        />
       </div>
 
       <div class="wrap pb-8">

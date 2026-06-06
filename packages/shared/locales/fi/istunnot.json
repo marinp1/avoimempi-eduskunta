@@ -15,6 +15,7 @@
   "status_live": "käynnissä",
   "status_done": "päättynyt",
   "status_draft": "pöytäkirja laadittu",
+  "status_unknown": "Luonnos",
   "none_found": "Ei istuntoja näillä hakuehdoilla.",
   "detail": {
     "breadcrumb": "Istunnot",
@@ -60,6 +61,7 @@
     "phase_ainoa_kasittely": "Ainoa käsittely",
     "phase_kasittely": "Käsittely",
     "phase_poydallepano": "Pöydällepano",
+    "phase_lahetekeskustelu": "Lähetekeskustelu",
     "agenda_speeches_label": "puheenvuoroa",
     "agenda_no_votings": "ei äänestyksiä",
     "ai_summary_label": "Tekoälykooste · koko istunto",
@@ -69,6 +71,8 @@
     "not_found_title": "Sivua ei löytynyt",
     "not_found_body": "Asiakohtaa ei löytynyt tietokannasta.",
     "asiakohta_not_found": "Asiakohtaa ei löytynyt",
+    "minutes_protocol_label": "Täysistunnon pöytäkirja",
+    "section_tabled_label": "Pöydälle pannut",
     "toolbar_minutes": "Pöytäkirja (PDF)",
     "toolbar_agenda": "Päiväjärjestys",
     "toolbar_votings": "Äänestykset"

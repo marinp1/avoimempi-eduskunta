@@ -2,14 +2,16 @@
 import i18next from "i18next";
 import { clsx } from "clsx";
 import Kicker from "../components/kicker";
+import Rule from "../components/rule";
+import StatRow from "../components/stat-row";
 import {
-  type HomeData,
   esc,
   formatDate,
   partyColor,
   partyShortName,
   pct,
 } from "../helpers";
+import type { HomeData } from "./home-view-model";
 
 interface Props {
   /** Page `<title>` suffix. */
@@ -117,7 +119,6 @@ export function HomeReactive({
   sessionCount,
 }: {
   data?: HomeData;
-  cursor?: string;
   sessionCount?: number;
 }) {
   return (
@@ -172,38 +173,37 @@ export function HomeBody({
 
   return (
     <>
-      <hr class="rule" />
+      <Rule />
 
       <div class="wrap">
-        <div class="stat-row">
-          <div class="stat">
-            <div class="stat__label">{i18next.t("home:stat_mps")}</div>
-            <div class="stat__value">{comp.totalMembers}</div>
-          </div>
-          <div class="stat">
-            <div class="stat__label">{i18next.t("common:government")}</div>
-            <div class="stat__value hall" data-tl-hall>
-              {govTotal}
-            </div>
-          </div>
-          <div class="stat">
-            <div class="stat__label">{i18next.t("common:opposition")}</div>
-            <div class="stat__value opp" data-tl-opp>
-              {oppTotal}
-            </div>
-          </div>
-          <div class="stat">
-            <div class="stat__label">
-              {i18next.t("home:stat_sessions_term")}
-            </div>
-            <div class="stat__value" data-tl-statval>
-              {sessionCount ?? "—"}
-            </div>
-          </div>
-        </div>
+        <StatRow
+          stats={[
+            {
+              label: i18next.t("home:stat_mps"),
+              value: comp.totalMembers,
+            },
+            {
+              label: i18next.t("common:government"),
+              value: govTotal,
+              modifier: "hall",
+              data: { "data-tl-hall": "" },
+            },
+            {
+              label: i18next.t("common:opposition"),
+              value: oppTotal,
+              modifier: "opp",
+              data: { "data-tl-opp": "" },
+            },
+            {
+              label: i18next.t("home:stat_sessions_term"),
+              value: sessionCount ?? "—",
+              data: { "data-tl-statval": "" },
+            },
+          ]}
+        />
       </div>
 
-      <hr class="rule" />
+      <Rule />
 
       <div class="home-main wrap">
         <div>

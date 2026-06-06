@@ -1,14 +1,20 @@
 /** @jsxImportSource ../../src/jsx */
 import { clsx } from "clsx";
 import i18next from "i18next";
-import Kicker from "../components/kicker";
+import PageHead from "../components/page-head";
 import { esc } from "../helpers";
+import Rule from "../components/rule";
+import {
+  type DocumentKind,
+  DOC_KIND_KEYS,
+  DOC_KIND_REGISTRY,
+} from "#shared/constants/DocumentKinds";
 
 export interface DocumentRow {
   id: number;
   linkId: number;
   hasDetail: boolean;
-  kind: string;
+  kind: DocumentKind;
   identifier: string;
   title: string;
   date: string;
@@ -32,58 +38,16 @@ export interface AsiakirjatIndexData {
 }
 
 export interface DocKindChip {
-  key: string;
+  key: DocumentKind;
   chipLabel: string;
   dotColor: string;
 }
 
-export const DOC_KIND_CHIPS: DocKindChip[] = [
-  {
-    key: "kk",
-    chipLabel: i18next.t("asiakirjat:chip_labels.kk"),
-    dotColor: "var(--blue)",
-  },
-  {
-    key: "suullinen",
-    chipLabel: i18next.t("asiakirjat:chip_labels.suullinen"),
-    dotColor: "var(--blue)",
-  },
-  {
-    key: "valikysymys",
-    chipLabel: i18next.t("asiakirjat:chip_labels.valikysymys"),
-    dotColor: "var(--red)",
-  },
-  {
-    key: "vastaus",
-    chipLabel: i18next.t("asiakirjat:chip_labels.vastaus"),
-    dotColor: "var(--hall)",
-  },
-  {
-    key: "he",
-    chipLabel: i18next.t("asiakirjat:chip_labels.he"),
-    dotColor: "var(--opp)",
-  },
-  {
-    key: "aloite",
-    chipLabel: i18next.t("asiakirjat:chip_labels.aloite"),
-    dotColor: "var(--hall)",
-  },
-  {
-    key: "mietinto",
-    chipLabel: i18next.t("asiakirjat:chip_labels.mietinto"),
-    dotColor: "var(--muted)",
-  },
-  {
-    key: "asiantuntija",
-    chipLabel: i18next.t("asiakirjat:chip_labels.asiantuntija"),
-    dotColor: "var(--faint)",
-  },
-  {
-    key: "vastaus-edk",
-    chipLabel: i18next.t("asiakirjat:chip_labels.vastaus-edk"),
-    dotColor: "var(--hall)",
-  },
-];
+export const DOC_KIND_CHIPS: DocKindChip[] = DOC_KIND_KEYS.map((kind) => ({
+  key: kind,
+  chipLabel: i18next.t(DOC_KIND_REGISTRY[kind].chipLabelI18n),
+  dotColor: DOC_KIND_REGISTRY[kind].dotColor,
+}));
 
 interface Props {
   title?: string;
@@ -103,14 +67,14 @@ export default function Asiakirjat({ title, data, query, kind }: Props) {
       </title>
 
       <div class="wrap">
-        <section class="page-head">
-          <Kicker text={i18next.t("asiakirjat:kicker")} />
-          <h1>{i18next.t("asiakirjat:heading")}</h1>
-          <p class="sub">{i18next.t("asiakirjat:subtitle")}</p>
-        </section>
+        <PageHead
+          kicker={i18next.t("asiakirjat:kicker")}
+          heading={i18next.t("asiakirjat:heading")}
+          subtitle={i18next.t("asiakirjat:subtitle")}
+        />
       </div>
 
-      <hr class="rule" />
+      <Rule />
 
       <AsiakirjatList data={data} query={query} kind={kind} />
     </>
@@ -254,7 +218,7 @@ function AsiakirjatList({
 
 function DocumentRowComponent({ row }: { row: DocumentRow }) {
   const href = row.hasDetail
-    ? row.kind === "written_question"
+    ? row.kind === "kk"
       ? `/asiakirja/${row.linkId}`
       : `/asiakirja/${row.linkId}?kind=${row.kind}`
     : undefined;

@@ -1,90 +1,96 @@
 import Istunto from "../../../webapp/templates/pages/istunto";
 import { buildSessionDetailViewModel } from "../../../webapp/templates/pages/istunto-view-model";
-import { page, getRouteParam, getWebappContext } from "./helpers";
+import {
+  page,
+  getWebappContext,
+  getPeriodSelectorData,
+  notFoundResponse,
+} from "./helpers";
 import { fetchedAt } from "../../../webapp/templates/helpers";
 import type { PartySeatRow } from "#shared-types";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
+import { defineRoute } from "#shared-helpers";
 
 export function createIstuntoRoute(deps: WebappDeps) {
-  return {
-    "/istunto/:year/:num": {
-      GET: (req: Request) => {
-        const year = getRouteParam(req, "year");
-        const num = getRouteParam(req, "num");
-        if (!year || !num) {
-          return new Response("Not found", { status: 404 });
-        }
+  return defineRoute({
+    path: "/istunto/:year/:num",
+    GET: (req, params) => {
+      const { year, num } = params;
+      if (!year || !num) {
+        return notFoundResponse(req, `/istunto/${year}/${num}`);
+      }
 
-        const key = `${year}/${num}`;
-        const { session, sections } = deps.sessionRepository.fetchSessionByKey({
-          key,
-        });
+      const key = `${year}/${num}`;
+      const { session, sections } = deps.sessionRepository.fetchSessionByKey({
+        key,
+      });
 
-        if (!session) {
-          return new Response("Session not found", { status: 404 });
-        }
+      if (!session) {
+        return notFoundResponse(req, `/istunto/${key}`);
+      }
 
-        const votingsBySectionKey = new Map<
-          string,
-          ReturnType<typeof deps.sessionRepository.fetchSectionVotings>
-        >();
-        for (const section of sections) {
-          if (section.voting_count > 0) {
-            const votings = deps.sessionRepository.fetchSectionVotings({
-              sectionKey: section.key,
-            });
-            votingsBySectionKey.set(section.key, votings);
-          }
-        }
-
-        let rollCallData = null;
-        for (const section of sections) {
-          const result = deps.sessionRepository.fetchSectionRollCall({
+      const votingsBySectionKey = new Map<
+        string,
+        ReturnType<typeof deps.sessionRepository.fetchSectionVotings>
+      >();
+      for (const section of sections) {
+        if (section.voting_count > 0) {
+          const votings = deps.sessionRepository.fetchSectionVotings({
             sectionKey: section.key,
           });
-          if (result) {
-            rollCallData = result;
-            break;
-          }
+          votingsBySectionKey.set(section.key, votings);
         }
+      }
 
-        const partySeatRows: PartySeatRow[] =
-          deps.sessionRepository.fetchPartySeatCounts(
-            session.date ?? new Date().toISOString().slice(0, 10),
-          );
-        const seatCounts: Record<string, { seats: number; inGov: boolean }> =
-          {};
-        for (const row of partySeatRows) {
-          seatCounts[row.party_code] = {
-            seats: row.seat_count,
-            inGov: row.is_in_government === 1,
-          };
+      let rollCallData = null;
+      for (const section of sections) {
+        const result = deps.sessionRepository.fetchSectionRollCall({
+          sectionKey: section.key,
+        });
+        if (result) {
+          rollCallData = result;
+          break;
         }
+      }
 
-        const docIdMap = resolveDocumentIds(sections, deps);
-
-        const data = buildSessionDetailViewModel(
-          session,
-          sections,
-          votingsBySectionKey,
-          rollCallData,
-          fetchedAt(),
-          seatCounts,
-          docIdMap,
+      const partySeatRows: PartySeatRow[] =
+        deps.sessionRepository.fetchPartySeatCounts(
+          session.date ?? new Date().toISOString().slice(0, 10),
         );
+      const seatCounts: Record<string, { seats: number; inGov: boolean }> =
+        {};
+      for (const row of partySeatRows) {
+        seatCounts[row.party_code] = {
+          seats: row.seat_count,
+          inGov: row.is_in_government === 1,
+        };
+      }
 
-        const { tlData } = getWebappContext(req, deps);
-        return page(
-          req,
-          Istunto({ data }),
-          "/istunnot",
-          i18next.t("common:session_title_format", { key }),
-          tlData,
-        );
-      },
+      const docIdMap = resolveDocumentIds(sections, deps);
+
+      const data = buildSessionDetailViewModel(
+        session,
+        sections,
+        votingsBySectionKey,
+        rollCallData,
+        fetchedAt(),
+        seatCounts,
+        docIdMap,
+      );
+
+      const { tlData } = getWebappContext(req, deps);
+      const periodData = getPeriodSelectorData(req, deps.metadataRepository);
+      return page({
+        req,
+        fragment: Istunto({ data }),
+        activePath: "/istunnot",
+        title: i18next.t("common:session_title_format", { key }),
+        timelineData: tlData,
+        periodData,
+      });
     },
-  } as const;
+  });
 }
 
 function resolveDocumentIds(

@@ -1,4 +1,5 @@
 import type { SessionsIndexRow } from "../../../server/database/repositories/session-repository";
+import { formatFiDateParts } from "#shared-helpers";
 
 export interface SessionsIndexData {
   weeks: WeekGroup[];
@@ -48,41 +49,8 @@ export interface Dchip {
   isMore?: boolean;
 }
 
-const MONTH_ABBR: Record<string, string> = {
-  "01": "tammi",
-  "02": "helmi",
-  "03": "maalis",
-  "04": "huhti",
-  "05": "touko",
-  "06": "kesä",
-  "07": "heinä",
-  "08": "elo",
-  "09": "syys",
-  "10": "loka",
-  "11": "marras",
-  "12": "joulu",
-};
-
-const DAY_ABBR: Record<string, string> = {
-  "1": "Ma",
-  "2": "Ti",
-  "3": "Ke",
-  "4": "To",
-  "5": "Pe",
-  "6": "La",
-  "7": "Su",
-};
-
 function toLocalISODate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function finnishDate(iso: string): { dow: string; day: string; mon: string } {
-  const d = new Date(iso + "T00:00:00");
-  const dow = DAY_ABBR[String(d.getDay() || 7)] ?? "";
-  const day = String(d.getDate());
-  const monKey = String(d.getMonth() + 1).padStart(2, "0");
-  return { dow, day, mon: MONTH_ABBR[monKey] ?? "" };
 }
 
 function formatDateRange(start: string, end: string): string {
@@ -344,7 +312,7 @@ export function buildSessionsViewModel(
       sessions: rows
         .sort((a, b) => b.date.localeCompare(a.date) || b.number - a.number)
         .map((row) => {
-          const fd = finnishDate(row.date);
+          const fd = formatFiDateParts(row.date);
           const kind = deriveKind(row);
           const status = deriveStatus(row);
           return {

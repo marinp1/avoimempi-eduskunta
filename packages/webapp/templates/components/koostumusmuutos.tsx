@@ -1,7 +1,8 @@
 /** @jsxImportSource ../../src/jsx */
 import i18next from "i18next";
+import { formatDate } from "../helpers";
 
-export interface CompositionChangeRow {
+export interface PersonChangeRow {
   person_id: number;
   first_name: string;
   last_name: string;
@@ -13,16 +14,11 @@ export interface CompositionChangeRow {
 
 interface Props {
   date: string;
-  rows: CompositionChangeRow[];
+  rows: PersonChangeRow[];
 }
 
 function partyShort(p: string | null): string {
   return p ?? "";
-}
-
-function formatDate(iso: string): string {
-  const [y, m, d] = iso.split("-");
-  return `${Number(d)}.${Number(m)}.${y}`;
 }
 
 export default function Koostumusmuutos({ date, rows }: Props) {

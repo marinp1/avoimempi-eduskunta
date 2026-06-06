@@ -3,21 +3,16 @@ import i18next from "i18next";
 import Footer from "./partials/footer";
 import Masthead from "./partials/masthead";
 import { timeline, type TimelineData } from "./partials/timeline";
+import type { PeriodSelectorData } from "../src/period-selector-data";
+import type { LayoutOptions } from "../eta";
 
-/** Options passed to the root HTML layout template. */
-export interface LayoutOptions {
+/** Options passed to the root HTML layout template. Extends the public
+ *  {@link LayoutOptions} with fields needed for full-page rendering. */
+export interface LayoutProps extends LayoutOptions {
   /** Pre-rendered page content fragment inserted into `<main>`. */
   content: string;
-  /** Current navigation path for active-link highlighting. */
-  activePath: string;
-  /** Page title shown in the browser tab. */
-  title?: string;
-  /** Version string appended to asset URLs for cache busting. */
-  assetVersion?: string;
   /** Today's date formatted in Finnish locale, shown in the masthead. */
   finnishDate: string;
-  /** When provided, renders the time scrubber after the masthead. */
-  timelineData?: TimelineData;
 }
 
 /** Root HTML document shell: `<head>`, masthead, `<main>`, and footer. */
@@ -28,7 +23,8 @@ export default function Layout({
   assetVersion,
   finnishDate,
   timelineData,
-}: LayoutOptions) {
+  periodData,
+}: LayoutProps) {
   const v = assetVersion ? `?v=${assetVersion}` : "";
   const brandName = i18next.t("common:brand_name");
   const pageTitle = title ? `${title} — ${brandName}` : brandName;
@@ -55,7 +51,11 @@ export default function Layout({
         <body>
           <div class="wrap">
             <header class="masthead">
-              <Masthead finnishDate={finnishDate} activePath={activePath} />
+              <Masthead
+                finnishDate={finnishDate}
+                activePath={activePath}
+                periodData={periodData}
+              />
             </header>
             {timelineData ? timeline(timelineData) + '<hr class="rule">' : ""}
           </div>

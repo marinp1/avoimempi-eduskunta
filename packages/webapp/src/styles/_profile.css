@@ -320,34 +320,10 @@
   color: #8a531a;
 }
 
-/* topic / theme tags */
-.topics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-  margin-top: 4px;
-}
-.topic-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--rule);
-  padding: 8px 12px;
-  font: 500 14px var(--text);
-  color: var(--ink);
-  background: var(--paper);
-}
-.topic-tag .tc {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-}
-.topic-tag.lg {
-  font-size: 16px;
-  font-weight: 600;
-}
-.topic-tag.lg .tc {
-  font-size: 12px;
+.dissent-tag {
+  border-color: transparent;
+  background: var(--red);
+  color: #fff;
 }
 
 /* action list — questions & initiatives */
@@ -417,4 +393,73 @@
   font-size: 11px;
   color: var(--muted);
   margin-top: 4px;
+}
+
+/* breadcrumb */
+.breadcrumb {
+  padding-top: 16px;
+  font-size: var(--fs-meta);
+  color: var(--muted);
+}
+.breadcrumb a {
+  color: var(--blue);
+}
+
+/* bio tag row */
+.bio-tags {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+/* profile section description text */
+.psec__desc {
+  font-size: var(--fs-meta);
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+.psec__desc--tight {
+  margin-bottom: 6px;
+}
+
+/* bio definition list */
+.bio-dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 9px 18px;
+  margin: 6px 0 0;
+}
+.bio-dl dt {
+  font-size: var(--fs-meta);
+  color: var(--muted);
+}
+.bio-dl dd {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--ink);
+}
+.bio-dl dd.gov {
+  color: var(--hall);
+}
+.bio-dl dd.opp {
+  color: var(--opp);
+}
+
+/* baselines definition list (tighter) */
+.baselines-dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 18px;
+  margin: 6px 0 0;
+}
+.baselines-dl dt {
+  font-size: var(--fs-meta);
+  color: var(--muted);
+}
+.baselines-dl dd {
+  margin: 0;
+  font-size: var(--fs-meta);
+  color: var(--ink);
 }

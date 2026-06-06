@@ -247,7 +247,7 @@ export class SessionRepository {
   }
 
   public fetchSessionByKey(params: { key: string }): {
-    session: SessionRow | null;
+    session: (SessionRow & { voting_count: number; section_count: number; speech_count: number; speaker_count: number; minutes_title?: string | null; minutes_start_time?: string | null; minutes_end_time?: string | null }) | null;
     sections: SessionSectionRow[];
   } {
     const stmt = this.db.prepare<

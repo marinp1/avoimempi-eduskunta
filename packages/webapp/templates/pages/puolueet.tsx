@@ -1,5 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
-import Kicker from "../components/kicker";
+import PageHead from "../components/page-head";
 import { esc } from "../helpers";
 import type { PuolueetData, PartyRow } from "./puolueet-view-model";
 import i18next from "i18next";
@@ -30,20 +30,18 @@ export default function Puolueet({ title, data }: Props) {
       </title>
 
       <div class="wrap">
-        <section class="page-head">
-          <Kicker text={i18next.t("puolueet:kicker")} />
-          <h1>{i18next.t("puolueet:heading")}</h1>
-          <p class="sub">
-            {i18next.t("puolueet:subtitle", {
-              seats: d.totalSeats,
-              groups: d.rows.length,
-            })}
-          </p>
-        </section>
+        <PageHead
+          kicker={i18next.t("puolueet:kicker")}
+          heading={i18next.t("puolueet:heading")}
+          subtitle={i18next.t("puolueet:subtitle", {
+            seats: d.totalSeats,
+            groups: d.rows.length,
+          })}
+        />
 
         {d.totalSeats > 0 && (
           <>
-            <div class="bloc-bar">
+            <div class="bloc-bar bloc-bar--sm">
               <span
                 class="gov"
                 style={`width:${((d.govSeats / d.totalSeats) * 100).toFixed(1)}%`}

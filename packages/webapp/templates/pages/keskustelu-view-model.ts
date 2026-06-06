@@ -1,4 +1,34 @@
 import { partyColor, partyShortName } from "../components/party";
+import { formatFiLongDate } from "#shared-helpers";
+import i18next from "i18next";
+
+interface DebateSessionRow {
+  key: string;
+  date: string | null | undefined;
+}
+
+interface DebateSectionRow {
+  key: string;
+  minutes_related_document_identifier: string | null | undefined;
+  identifier: string | null | undefined;
+  minutes_item_title: string | null | undefined;
+  title: string | null | undefined;
+  processing_title: string | null | undefined;
+  minutes_item_number: string | null | undefined;
+}
+
+interface DebateVotingRow {
+  n_yes: number | null | undefined;
+  n_no: number | null | undefined;
+  title: string | null | undefined;
+}
+
+interface DebateDocRow {
+  document_id: number | null;
+  document_tunnus: string | null;
+  label: string | null;
+  document_type_name: string | null;
+}
 
 export interface DebateData {
   session: DebateSessionRef;
@@ -77,40 +107,6 @@ export interface BlocStats {
   groupGov: number;
   groupOpp: number;
   totalReply: number;
-}
-
-const MONTH_NAMES = [
-  "tammikuuta",
-  "helmikuuta",
-  "maaliskuuta",
-  "huhtikuuta",
-  "toukokuuta",
-  "kesäkuuta",
-  "heinäkuuta",
-  "elokuuta",
-  "syyskuuta",
-  "lokakuuta",
-  "marraskuuta",
-  "joulukuuta",
-];
-
-const DAY_NAMES = [
-  "sunnuntaina",
-  "maanantaina",
-  "tiistaina",
-  "keskiviikkona",
-  "torstaina",
-  "perjantaina",
-  "lauantaina",
-];
-
-function finnishDateLabel(iso: string): string {
-  const d = new Date(iso + "T00:00:00");
-  const dayName = DAY_NAMES[d.getDay()] ?? "";
-  const day = d.getDate();
-  const month = MONTH_NAMES[d.getMonth()] ?? "";
-  const year = d.getFullYear();
-  return `${dayName} ${day}.${month.slice(0, 4)}${month.slice(4)} ${year}`;
 }
 
 function initials(first: string, last: string): string {
@@ -216,11 +212,11 @@ function contentPreview(content: string | null): {
 }
 
 export function buildDebateViewModel(params: {
-  session: any;
-  section: any;
+  session: DebateSessionRow;
+  section: DebateSectionRow;
   speeches: SpeechRow[];
-  sectionVotings: any[];
-  sectionDocs: any[];
+  sectionVotings: DebateVotingRow[];
+  sectionDocs: DebateDocRow[];
   partyGovMap: Map<string, number>;
   fetchedAt: string;
 }): DebateData {
@@ -284,8 +280,8 @@ export function buildDebateViewModel(params: {
   const sessionComp = {
     key: session.key ?? "",
     date: session.date ?? "",
-    dateLabel: session.date ? finnishDateLabel(session.date) : "",
-    title: `Täysistunto ${session.key ?? ""}`,
+    dateLabel: session.date ? formatFiLongDate(session.date) : "",
+    title: i18next.t("common:session_title_format", { key: session.key ?? "" }),
   };
 
   const sectionComp: DebateSectionInfo = {
@@ -302,14 +298,14 @@ export function buildDebateViewModel(params: {
     durationMin: null,
   };
 
-  const docs: DocLink[] = (sectionDocs ?? []).map((d: any) => ({
+  const docs: DocLink[] = (sectionDocs ?? []).map((d) => ({
     documentId: d.document_id ?? null,
     tunnus: d.document_tunnus ?? d.label ?? null,
     label: d.label ?? null,
     typeName: d.document_type_name ?? null,
   }));
 
-  const votes: VoteResultData[] = (sectionVotings ?? []).map((v: any) => {
+  const votes: VoteResultData[] = (sectionVotings ?? []).map((v) => {
     const nYes = v.n_yes ?? 0;
     const nNo = v.n_no ?? 0;
     const total = nYes + nNo;

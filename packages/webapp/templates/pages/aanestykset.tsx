@@ -1,6 +1,6 @@
 /** @jsxImportSource ../../src/jsx */
 import { clsx } from "clsx";
-import Kicker from "../components/kicker";
+import PageHead from "../components/page-head";
 import { esc } from "../helpers";
 import i18next from "i18next";
 import type { AanestyksetData, VoteRow } from "./aanestykset-view-model";
@@ -29,16 +29,11 @@ export default function Aanestykset({ title, data }: Props) {
       </title>
 
       <div class="wrap">
-        <section class="page-head">
-          <Kicker text={i18next.t("aanestykset:kicker")} />
-          <h1>{i18next.t("aanestykset:heading")}</h1>
-          <p class="sub">
-            {i18next.t("aanestykset:subtitle")} ·{" "}
-            <b style="color:var(--ink)">
-              {i18next.t("aanestykset:count", { count: d.totalCount })}
-            </b>
-          </p>
-        </section>
+        <PageHead
+          kicker={i18next.t("aanestykset:kicker")}
+          heading={i18next.t("aanestykset:heading")}
+          subtitle={`${i18next.t("aanestykset:subtitle")} · ${i18next.t("aanestykset:count", { count: d.totalCount })}`}
+        />
 
         <div class="toolbar mt-20">
           <label class="search">

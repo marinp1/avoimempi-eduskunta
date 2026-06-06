@@ -1,4 +1,5 @@
-import { htmlResponse, renderFullPage } from "../../../webapp/eta";
+import { renderFullPage, type LayoutOptions } from "../../../webapp/eta";
+import type { PeriodSelectorData } from "../../../webapp/src/period-selector-data";
 import {
   timeline,
   type TimelineData,
@@ -8,8 +9,9 @@ import { esc } from "../../../webapp/templates/helpers";
 import type { SessionRepository } from "../../database/repositories/session-repository";
 import type { MetadataRepository } from "../../database/repositories/metadata-repository";
 import { assetVersion } from "./assets";
-import { formatFi, isHtmx, getRouteParam } from "#shared-helpers";
-export { formatFi, isHtmx, getRouteParam };
+import { formatFi, isHtmx } from "#shared-helpers";
+export { formatFi, isHtmx };
+export type { PeriodSelectorData };
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 
@@ -26,10 +28,16 @@ export interface TermBounds {
 
 type GovPeriod = ReturnType<MetadataRepository["fetchHallituskaudet"]>[number];
 
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
 let _governments: GovPeriod[] | null = null;
+let _governmentsTs = 0;
 
 function loadGovernments(repo: MetadataRepository): GovPeriod[] {
-  if (!_governments) _governments = repo.fetchHallituskaudet();
+  const now = Date.now();
+  if (_governments && now - _governmentsTs < CACHE_TTL_MS) return _governments;
+  _governments = repo.fetchHallituskaudet();
+  _governmentsTs = now;
   return _governments;
 }
 
@@ -92,22 +100,30 @@ export function getTermBounds(
 
 // All sitting ticks cached after the first DB read (no limit on restarts)
 let _allTicksCache: SittingTick[] | null = null;
+let _allTicksTs = 0;
 
 function getAllTicks(repo: SessionRepository): SittingTick[] {
-  if (_allTicksCache) return _allTicksCache;
+  const now = Date.now();
+  if (_allTicksCache && now - _allTicksTs < CACHE_TTL_MS) return _allTicksCache;
   const rows = repo.fetchSittingTicks();
   _allTicksCache = rows.map((r) => ({
     d: r.date,
     id: r.key,
     type: r.voting_count > 0 ? "vote" : r.speech_count > 30 ? "talk" : "quiet",
   }));
+  _allTicksTs = now;
   return _allTicksCache;
 }
 
 function readCookie(req: Request, name: string): string | null {
   const cookie = req.headers.get("cookie") ?? "";
   const match = cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
-  return match ? decodeURIComponent(match[1]!) : null;
+  if (!match) return null;
+  try {
+    return decodeURIComponent(match[1]!);
+  } catch {
+    return null;
+  }
 }
 
 export function readPeriod(
@@ -209,32 +225,119 @@ export function getWebappContext(
   return { tlData, period, bounds };
 }
 
+export function getPeriodSelectorData(
+  req: Request,
+  repo: MetadataRepository,
+): PeriodSelectorData {
+  const govs = loadGovernments(repo);
+  const period = readPeriod(req, repo);
+  const selectedIds = period === "all" ? govs.map((g) => g.id) : period;
+  const selectedSet = new Set(selectedIds);
+  const allSelected = selectedIds.length === govs.length;
+
+  return {
+    governments: govs.map((g) => ({
+      id: g.id,
+      name: g.name,
+      dateRange: `${formatFi(g.startDate)} – ${g.endDate ? formatFi(g.endDate) : "kesken"}`,
+    })),
+    selectedIds,
+    description: describePeriodSelection(govs, selectedSet, allSelected),
+  };
+}
+
+function describePeriodSelection(
+  govs: GovPeriod[],
+  selected: Set<number>,
+  allSelected: boolean,
+): PeriodSelectorData["description"] {
+  if (allSelected) {
+    return {
+      btnLabel: "Kaikki hallituskaudet",
+      badge: "koko aineisto",
+      badgeClass: "",
+    };
+  }
+
+  const chosen = govs.filter((g) => selected.has(g.id));
+  if (chosen.length === 0) {
+    const c = govs[0]!;
+    const isNow = c.endDate === null;
+    return {
+      btnLabel: c.name,
+      badge: isNow ? "nykyinen" : "päättynyt",
+      badgeClass: isNow ? "is-now" : "",
+    };
+  }
+
+  if (chosen.length === 1) {
+    const c = chosen[0]!;
+    const isNow = c.endDate === null;
+    return {
+      btnLabel: c.name,
+      badge: isNow ? "nykyinen" : "päättynyt",
+      badgeClass: isNow ? "is-now" : "",
+    };
+  }
+
+  const hasCurrent = chosen.some((g) => g.endDate === null);
+  return {
+    btnLabel: `${chosen.length} hallituskautta`,
+    badge: hasCurrent ? "nykyinen + muita" : "valitut",
+    badgeClass: hasCurrent ? "is-now" : "",
+  };
+}
+
 export function timelineOobHtml(data: TimelineData): string {
   return timeline({ ...data, oob: true });
 }
 
-export function page(
-  req: Request,
-  fragment: string,
-  activePath: string,
-  title?: string,
-  timelineData?: TimelineData,
-): Response {
-  const htmx = isHtmx(req);
-  if (htmx && timelineData) {
-    const tlHtml = timeline({ ...timelineData, oob: true });
-    return new Response(tlHtml + fragment, {
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        Vary: "HX-Request",
-      },
-    });
+export interface PageOptions extends Pick<LayoutOptions, "activePath" | "title" | "timelineData" | "periodData"> {
+  req: Request;
+  fragment: string;
+  extraHeaders?: Record<string, string>;
+}
+
+export function page(opts: PageOptions): Response {
+  const htmx = isHtmx(opts.req);
+  const baseHeaders: Record<string, string> = {
+    "Content-Type": "text/html; charset=utf-8",
+    Vary: "HX-Request",
+  };
+  if (opts.extraHeaders) Object.assign(baseHeaders, opts.extraHeaders);
+  if (htmx && opts.timelineData) {
+    const tlHtml = timeline({ ...opts.timelineData, oob: true });
+    return new Response(tlHtml + opts.fragment, { headers: baseHeaders });
   }
-  return htmlResponse(req, fragment, {
-    activePath,
-    title,
+  if (htmx) {
+    return new Response(opts.fragment, { headers: baseHeaders });
+  }
+  const fullPage = renderFullPage(opts.fragment, {
+    activePath: opts.activePath,
+    title: opts.title,
     assetVersion,
-    timelineData,
+    timelineData: opts.timelineData,
+    periodData: opts.periodData,
+  });
+  return new Response(fullPage, { headers: baseHeaders });
+}
+
+export function notFoundResponse(req: Request, path: string): Response {
+  const htmx = isHtmx(req);
+  const fragment = notFoundFragment(path);
+  const body = htmx
+    ? fragment
+    : renderFullPage(fragment, {
+        activePath: path,
+        title: i18next.t("errors:not_found_title"),
+        assetVersion,
+      });
+  return new Response(body, {
+    status: 404,
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      Vary: "HX-Request",
+    },
   });
 }
 

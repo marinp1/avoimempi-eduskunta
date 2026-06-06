@@ -6,14 +6,22 @@ import Koostumusmuutos from "../../../webapp/templates/components/koostumusmuuto
 import Edustajat from "../../../webapp/templates/pages/edustajat";
 import RosterContent from "../../../webapp/templates/pages/roster-content";
 import { fragmentResponse } from "../../../webapp/eta";
-import { page, getTimelineData, timelineOobHtml, isHtmx } from "./helpers";
+import {
+  page,
+  getTimelineData,
+  timelineOobHtml,
+  isHtmx,
+  getPeriodSelectorData,
+} from "./helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
+import { defineRoute } from "#shared-helpers";
 
 export function createEdustajatRoute(deps: WebappDeps) {
   return {
-    "/edustajat": {
-      GET: async (req: Request) => {
+    ...defineRoute({
+      path: "/edustajat",
+      GET: async (req) => {
         const url = new URL(req.url);
         const params: RosterParams = {
           q: url.searchParams.get("q") ?? undefined,
@@ -64,6 +72,8 @@ export function createEdustajatRoute(deps: WebappDeps) {
           "composition",
         );
 
+        const periodData = getPeriodSelectorData(req, deps.metadataRepository);
+
         const compRows = deps.sessionRepository.fetchCompositionChangeDetail({
           date: tlData.cursor,
         });
@@ -72,24 +82,25 @@ export function createEdustajatRoute(deps: WebappDeps) {
           rows: compRows,
         });
 
-        return page(
+        return page({
           req,
-          Edustajat({
+          fragment: Edustajat({
             title: i18next.t("edustajat:title"),
             allRows,
             filtered,
             params,
             compDetailHtml,
           }),
-          "/edustajat",
-          i18next.t("edustajat:title"),
-          tlData,
-        );
+          activePath: "/edustajat",
+          title: i18next.t("edustajat:title"),
+          timelineData: tlData,
+          periodData,
+        });
       },
-    },
-
-    "/koostumusmuutos": {
-      GET: async (req: Request) => {
+    }),
+    ...defineRoute({
+      path: "/koostumusmuutos",
+      GET: async (req) => {
         const url = new URL(req.url);
         const dateParam = url.searchParams.get("date");
 
@@ -108,6 +119,6 @@ export function createEdustajatRoute(deps: WebappDeps) {
           }),
         );
       },
-    },
-  } as const;
+    }),
+  };
 }

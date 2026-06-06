@@ -3,7 +3,8 @@ import { clsx } from "clsx";
 import i18next from "i18next";
 import Kicker from "../components/kicker";
 import { cite, sourceNote } from "../components/provenance";
-import { esc, partyShortName } from "../helpers";
+import { esc, partyShortName, formatFi as formatFiBase } from "../helpers";
+import type { DocumentKind } from "#shared/constants/DocumentKinds";
 
 export interface TextSection {
   heading: string;
@@ -26,7 +27,7 @@ export interface Law {
 }
 
 export interface AsiakirjaViewModel {
-  kind: string;
+  kind: DocumentKind;
   id: number;
   identifier: string;
   documentTypeLabel: string;
@@ -85,9 +86,7 @@ interface Props {
 }
 
 function formatFi(iso: string | null): string {
-  if (!iso) return "";
-  const [y, m, d] = iso.split("-");
-  return `${Number(d)}.${Number(m)}.${y}`;
+  return iso ? formatFiBase(iso) : "";
 }
 
 export default function Asiakirja({ data }: Props) {

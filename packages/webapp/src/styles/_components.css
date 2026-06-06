@@ -25,6 +25,23 @@
   flex: 0 0 auto;
 }
 
+/* page-head — shared section header across all pages */
+.page-head {
+  padding: 28px 0 22px;
+}
+.page-head h1 {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: var(--fs-h1);
+  letter-spacing: -0.025em;
+}
+.page-head .sub {
+  font-size: var(--fs-lead);
+  color: var(--body);
+  margin-top: 10px;
+  max-width: 60ch;
+}
+
 /* ---------- Rules ---------- */
 .rule {
   border: 0;
@@ -354,6 +371,9 @@ body.is-loading .nav a.is-active {
 .pt-4 {
   padding-top: 4px;
 }
+.pt-0 {
+  padding-top: 0;
+}
 .pb-8 {
   padding-bottom: 8px;
 }
@@ -405,4 +425,98 @@ body.is-loading .nav a.is-active {
 .party-dot--sm {
   width: 8px;
   height: 8px;
+}
+
+/* topic / theme tags */
+.topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 4px;
+}
+.topic-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--rule);
+  padding: 8px 12px;
+  font: 500 14px var(--text);
+  color: var(--ink);
+  background: var(--paper);
+}
+.topic-tag .tc {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+.topic-tag.lg {
+  font-size: 16px;
+  font-weight: 600;
+}
+.topic-tag.lg .tc {
+  font-size: 12px;
+}
+
+/* bloc bar — government/opposition composition strip */
+.bloc-bar {
+  display: flex;
+  height: 30px;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+}
+.bloc-bar > span {
+  display: block;
+  border-right: 1.5px solid var(--paper);
+}
+.bloc-bar > span:last-child {
+  border-right: 0;
+}
+.bloc-bar .seg-hall {
+  background: var(--hall);
+}
+.bloc-bar .seg-opp {
+  background: var(--opp);
+}
+.bloc-bar--sm {
+  height: 16px;
+  margin: 20px 0 14px;
+}
+.bloc-bar--sm .gov {
+  background: var(--hall);
+}
+.bloc-bar--sm .opp {
+  background: var(--red);
+}
+
+.bloc-legend {
+  display: flex;
+  gap: 22px;
+  margin-top: 12px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.bloc-legend .item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--body);
+}
+.bloc-legend .item b {
+  color: var(--ink);
+}
+.bloc-legend .swatch {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+}
+.bloc-legend .note {
+  margin-left: auto;
+  color: var(--muted);
+  font-weight: 500;
+}
+.bloc-legend .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: 0 0 auto;
 }

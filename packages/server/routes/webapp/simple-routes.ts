@@ -32,15 +32,31 @@ import {
   timelineOobHtml,
   isHtmx,
   formatFi,
+  getPeriodSelectorData,
 } from "./helpers";
 import { assetVersion } from "./assets";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
+import { defineRoute } from "#shared-helpers";
+import {
+  type DocumentKind,
+  type DocKindDescriptor,
+  type DocSearchItem,
+  type DocQueryParams,
+  type DocResult,
+  DOC_KIND_REGISTRY,
+  docKindList,
+  docStatus,
+  mapDocHighlight,
+  LA_LABELS,
+  REPORT_LABELS,
+} from "#shared/constants/DocumentKinds";
 
 export function createSimplePageRoutes(deps: WebappDeps) {
   return {
-    "/": {
-      GET: async (req: Request) => {
+    ...defineRoute({
+      path: "/",
+      GET: async (req) => {
         const url = new URL(req.url);
         const dateParam = url.searchParams.get("date");
         const tlData = getTimelineData(
@@ -68,7 +84,7 @@ export function createSimplePageRoutes(deps: WebappDeps) {
         if (htmx) {
           const hxTarget = req.headers.get("HX-Target") || "";
           if (hxTarget.includes("tl-reactive") && dateParam) {
-            const fragment = HomeReactive({ data, cursor, sessionCount });
+            const fragment = HomeReactive({ data, sessionCount });
             const headers: Record<string, string> = {
               "Content-Type": "text/html; charset=utf-8",
               Vary: "HX-Request",
@@ -102,28 +118,28 @@ export function createSimplePageRoutes(deps: WebappDeps) {
         const resolvedTl = dateParam
           ? { ...tlData, cursor, cursorFormatted: formatFi(cursor) }
           : tlData;
-        const resp = page(
+        const periodData = getPeriodSelectorData(req, deps.metadataRepository);
+        return page({
           req,
-          Home({ title: i18next.t("home:title"), data, cursor, sessionCount }),
-          "/",
-          i18next.t("home:title"),
-          resolvedTl,
-        );
-        if (cookieHeader && resp.status === 200) {
-          const bodyStr = await resp.text();
-          return new Response(bodyStr, {
-            status: resp.status,
-            headers: {
-              ...Object.fromEntries(resp.headers),
-              "Set-Cookie": cookieHeader,
-            },
-          });
-        }
-        return resp;
+          fragment: Home({
+            title: i18next.t("home:title"),
+            data,
+            cursor,
+            sessionCount,
+          }),
+          activePath: "/",
+          title: i18next.t("home:title"),
+          timelineData: resolvedTl,
+          extraHeaders: cookieHeader
+            ? { "Set-Cookie": cookieHeader }
+            : undefined,
+          periodData,
+        });
       },
-    },
-    "/puolueet": {
-      GET: (req: Request) => {
+    }),
+    ...defineRoute({
+      path: "/puolueet",
+      GET: (req) => {
         const tlData = getTimelineData(
           req,
           deps.sessionRepository,
@@ -183,17 +199,20 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           fetchedAt: fetchedAt(),
         };
 
-        return page(
+        const periodData = getPeriodSelectorData(req, deps.metadataRepository);
+        return page({
           req,
-          Puolueet({ title: i18next.t("puolueet:title"), data }),
-          "/puolueet",
-          i18next.t("puolueet:title"),
-          tlData,
-        );
+          fragment: Puolueet({ title: i18next.t("puolueet:title"), data }),
+          activePath: "/puolueet",
+          title: i18next.t("puolueet:title"),
+          timelineData: tlData,
+          periodData,
+        });
       },
-    },
-    "/aanestykset": {
-      GET: (req: Request) => {
+    }),
+    ...defineRoute({
+      path: "/aanestykset",
+      GET: (req) => {
         const tlData = getTimelineData(
           req,
           deps.sessionRepository,
@@ -279,25 +298,31 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           ? `/aanestykset?q=${encodeURIComponent(searchQuery)}`
           : "/aanestykset";
 
-        return page(
+        const periodData = getPeriodSelectorData(req, deps.metadataRepository);
+        return page({
           req,
-          Aanestykset({ title: i18next.t("aanestykset:title"), data }),
-          pageUrl,
-          i18next.t("aanestykset:title"),
-          tlData,
-        );
+          fragment: Aanestykset({
+            title: i18next.t("aanestykset:title"),
+            data,
+          }),
+          activePath: pageUrl,
+          title: i18next.t("aanestykset:title"),
+          timelineData: tlData,
+          periodData,
+        });
       },
-    },
-    "/asiakirjat": {
-      GET: (req: Request) => {
+    }),
+    ...defineRoute({
+      path: "/asiakirjat",
+      GET: (req) => {
         const url = new URL(req.url);
         const q = url.searchParams.get("q") ?? undefined;
         const kind = url.searchParams.get("kind") ?? undefined;
-        const currentPage =
-          parseInt(url.searchParams.get("page") ?? "1", 10) || 1;
+        const rawPage = parseInt(url.searchParams.get("page") ?? "1", 10);
+        let currentPage = Number.isFinite(rawPage) && rawPage >= 1 ? rawPage : 1;
         const limit = 50;
 
-        const config = kind ? DOC_KINDS.find((c) => c.key === kind) : undefined;
+        const config = kind && kind in DOC_KIND_REGISTRY ? DOC_KIND_REGISTRY[kind as DocumentKind] : undefined;
 
         let rows: DocumentRow[];
         let totalCount: number;
@@ -309,10 +334,15 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           totalCount = result.totalCount;
         } else {
           const allRows: DocumentRow[] = [];
-          for (const c of DOC_KINDS) {
+          const perKindLimit = 100;
+          for (const c of docKindList()) {
             try {
               const dispatch = DOC_KIND_DISPATCH[c.key]!;
-              const result = dispatch(deps, { query: q, page: 1, limit: 10 });
+              const result = dispatch(deps, {
+                query: q,
+                page: 1,
+                limit: perKindLimit,
+              });
               for (const item of result.items) {
                 allRows.push(mapToDocRow(item, c));
               }
@@ -327,6 +357,8 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           rows = allRows.slice(start, start + limit);
           totalCount = allRows.length;
         }
+
+        currentPage = Math.min(currentPage, Math.ceil(totalCount / limit) || 1);
 
         const data: AsiakirjatIndexData = {
           rows,
@@ -383,70 +415,82 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           );
         }
 
-        return page(
+        const periodData = getPeriodSelectorData(req, deps.metadataRepository);
+        return page({
           req,
-          Asiakirjat({
+          fragment: Asiakirjat({
             title: i18next.t("asiakirjat:title"),
             data,
             query: q,
             kind,
           }),
-          "/asiakirjat",
-          i18next.t("asiakirjat:title"),
-          tlData,
-        );
+          activePath: "/asiakirjat",
+          title: i18next.t("asiakirjat:title"),
+          timelineData: tlData,
+          periodData,
+        });
       },
-    },
-    "/hallitukset": {
-      GET: (req: Request) => {
+    }),
+    ...defineRoute({
+      path: "/hallitukset",
+      GET: (req) => {
         const tlData = getTimelineData(
           req,
           deps.sessionRepository,
           deps.metadataRepository,
         );
-        return page(
+        const periodData = getPeriodSelectorData(req, deps.metadataRepository);
+        return page({
           req,
-          Hallitukset({ title: i18next.t("nav:governments") }),
-          "/hallitukset",
-          i18next.t("nav:governments"),
-          tlData,
-        );
+          fragment: Hallitukset({ title: i18next.t("nav:governments") }),
+          activePath: "/hallitukset",
+          title: i18next.t("nav:governments"),
+          timelineData: tlData,
+          periodData,
+        });
       },
-    },
-    "/analytiikka": {
-      GET: (req: Request) => {
+    }),
+    ...defineRoute({
+      path: "/analytiikka",
+      GET: (req) => {
         const tlData = getTimelineData(
           req,
           deps.sessionRepository,
           deps.metadataRepository,
         );
-        return page(
+        const periodData = getPeriodSelectorData(req, deps.metadataRepository);
+        return page({
           req,
-          Analytiikka({ title: i18next.t("nav:analytics") }),
-          "/analytiikka",
-          i18next.t("nav:analytics"),
-          tlData,
-        );
+          fragment: Analytiikka({ title: i18next.t("nav:analytics") }),
+          activePath: "/analytiikka",
+          title: i18next.t("nav:analytics"),
+          timelineData: tlData,
+          periodData,
+        });
       },
-    },
-    "/muutokset": {
-      GET: (req: Request) => {
+    }),
+    ...defineRoute({
+      path: "/muutokset",
+      GET: (req) => {
         const tlData = getTimelineData(
           req,
           deps.sessionRepository,
           deps.metadataRepository,
         );
-        return page(
+        const periodData = getPeriodSelectorData(req, deps.metadataRepository);
+        return page({
           req,
-          Muutokset({ title: i18next.t("nav:changes") }),
-          "/muutokset",
-          i18next.t("nav:changes"),
-          tlData,
-        );
+          fragment: Muutokset({ title: i18next.t("nav:changes") }),
+          activePath: "/muutokset",
+          title: i18next.t("nav:changes"),
+          timelineData: tlData,
+          periodData,
+        });
       },
-    },
-    "/laadunvalvonta": {
-      GET: (req: Request) =>
+    }),
+    ...defineRoute({
+      path: "/laadunvalvonta",
+      GET: (req) =>
         htmlResponse(
           req,
           `<title>${i18next.t("common:page_title_format", { title: i18next.t("nav:quality_control"), brand: i18next.t("common:brand_name") })}</title>
@@ -457,32 +501,13 @@ export function createSimplePageRoutes(deps: WebappDeps) {
             assetVersion,
           },
         ),
-    },
+    }),
   } as const;
 }
-
-interface DocKindConfig {
-  key: string;
-  label: string;
-  dateField: string;
-  dateFormatKey: string;
-  identifierField: string;
-  authorFields: string[];
-  partyField: string;
-  highlightFields: string[];
-  linkField: string;
-  hasDetail: boolean;
-  statusMapper: (item: Record<string, unknown>) => {
-    label: string | null;
-    class: string;
-  };
-}
-
-type DocQueryParams = { query?: string; page: number; limit: number };
-type DocResult = { items: Record<string, unknown>[]; totalCount: number };
+// ─── Document-kind dispatch & listing helpers ──────────
 
 const DOC_KIND_DISPATCH: Record<
-  string,
+  DocumentKind,
   (deps: WebappDeps, params: DocQueryParams) => DocResult
 > = {
   kk: (deps, params) => deps.documentRepository.fetchWrittenQuestions(params),
@@ -504,219 +529,28 @@ const DOC_KIND_DISPATCH: Record<
     deps.documentRepository.fetchParliamentAnswers(params),
 };
 
-const DOC_KINDS: DocKindConfig[] = [
-  {
-    key: "kk",
-    label: i18next.t("asiakirjat:chip_labels.kk"),
-    dateField: "submission_date",
-    dateFormatKey: "asiakirjat:status_labels.submitted_on",
-    identifierField: "parliament_identifier",
-    authorFields: ["first_signer_first_name", "first_signer_last_name"],
-    partyField: "first_signer_party",
-    highlightFields: ["answer_minister_title"],
-    linkField: "id",
-    hasDetail: true,
-    statusMapper: (item) =>
-      item.answer_date
-        ? {
-            label: i18next.t("asiakirjat:status_labels.answered"),
-            class: "spill--done",
-          }
-        : {
-            label: i18next.t("asiakirjat:status_labels.pending"),
-            class: "spill--draft",
-          },
-  },
-  {
-    key: "suullinen",
-    label: i18next.t("asiakirjat:chip_labels.suullinen"),
-    dateField: "submission_date",
-    dateFormatKey: "asiakirjat:status_labels.submitted_on",
-    identifierField: "parliament_identifier",
-    authorFields: [],
-    partyField: "",
-    highlightFields: [],
-    linkField: "id",
-    hasDetail: true,
-    statusMapper: (item) =>
-      item.decision_outcome
-        ? {
-            label: i18next.t("asiakirjat:status_labels.handled"),
-            class: "spill--done",
-          }
-        : {
-            label: i18next.t("asiakirjat:status_labels.pending"),
-            class: "spill--draft",
-          },
-  },
-  {
-    key: "valikysymys",
-    label: i18next.t("asiakirjat:chip_labels.valikysymys"),
-    dateField: "submission_date",
-    dateFormatKey: "asiakirjat:status_labels.submitted_on",
-    identifierField: "parliament_identifier",
-    authorFields: ["first_signer_first_name", "first_signer_last_name"],
-    partyField: "first_signer_party",
-    highlightFields: [],
-    linkField: "id",
-    hasDetail: true,
-    statusMapper: (item) =>
-      item.decision_outcome
-        ? {
-            label: i18next.t("asiakirjat:status_labels.handled"),
-            class: "spill--done",
-          }
-        : {
-            label: i18next.t("asiakirjat:status_labels.pending"),
-            class: "spill--draft",
-          },
-  },
-  {
-    key: "vastaus",
-    label: i18next.t("asiakirjat:chip_labels.vastaus"),
-    dateField: "answer_date",
-    dateFormatKey: "asiakirjat:status_labels.answered_on",
-    identifierField: "parliament_identifier",
-    authorFields: [],
-    partyField: "",
-    highlightFields: ["minister_title", "question_identifier"],
-    linkField: "question_id",
-    hasDetail: true,
-    statusMapper: () => ({
-      label: i18next.t("asiakirjat:status_labels.response"),
-      class: "spill--done",
-    }),
-  },
-  {
-    key: "he",
-    label: i18next.t("asiakirjat:chip_labels.he"),
-    dateField: "submission_date",
-    dateFormatKey: "asiakirjat:status_labels.submitted_on",
-    identifierField: "parliament_identifier",
-    authorFields: [],
-    partyField: "",
-    highlightFields: ["author"],
-    linkField: "id",
-    hasDetail: true,
-    statusMapper: (item) =>
-      item.decision_outcome
-        ? {
-            label: i18next.t("asiakirjat:status_labels.handled"),
-            class: "spill--done",
-          }
-        : {
-            label: i18next.t("asiakirjat:status_labels.pending"),
-            class: "spill--draft",
-          },
-  },
-  {
-    key: "aloite",
-    label: i18next.t("asiakirjat:chip_labels.aloite"),
-    dateField: "submission_date",
-    dateFormatKey: "asiakirjat:status_labels.submitted_on",
-    identifierField: "parliament_identifier",
-    authorFields: ["first_signer_first_name", "first_signer_last_name"],
-    partyField: "first_signer_party",
-    highlightFields: ["initiative_type_code"],
-    linkField: "id",
-    hasDetail: true,
-    statusMapper: (item) =>
-      item.decision_outcome
-        ? {
-            label: i18next.t("asiakirjat:status_labels.handled"),
-            class: "spill--done",
-          }
-        : {
-            label: i18next.t("asiakirjat:status_labels.pending"),
-            class: "spill--draft",
-          },
-  },
-  {
-    key: "mietinto",
-    label: i18next.t("asiakirjat:chip_labels.mietinto"),
-    dateField: "signature_date",
-    dateFormatKey: "asiakirjat:status_labels.given_on",
-    identifierField: "parliament_identifier",
-    authorFields: [],
-    partyField: "",
-    highlightFields: ["committee_name", "report_type_code"],
-    linkField: "id",
-    hasDetail: true,
-    statusMapper: () => ({ label: null, class: "" }),
-  },
-  {
-    key: "asiantuntija",
-    label: i18next.t("asiakirjat:chip_labels.asiantuntija"),
-    dateField: "meeting_date",
-    dateFormatKey: "",
-    identifierField: "edk_identifier",
-    authorFields: [],
-    partyField: "",
-    highlightFields: ["committee_name", "bill_identifier"],
-    linkField: "id",
-    hasDetail: false,
-    statusMapper: () => ({ label: null, class: "" }),
-  },
-  {
-    key: "vastaus-edk",
-    label: i18next.t("asiakirjat:chip_labels.vastaus-edk"),
-    dateField: "submission_date",
-    dateFormatKey: "asiakirjat:status_labels.given_on",
-    identifierField: "parliament_identifier",
-    authorFields: [],
-    partyField: "",
-    highlightFields: ["source_reference"],
-    linkField: "id",
-    hasDetail: true,
-    statusMapper: () => ({ label: null, class: "" }),
-  },
-];
-
 function mapToDocRow(
-  item: Record<string, unknown>,
-  config: DocKindConfig,
+  item: DocSearchItem,
+  desc: DocKindDescriptor,
 ): DocumentRow {
-  const date = (item[config.dateField] as string) ?? "";
+  const date = (item[desc.dateField] as string) ?? "";
   const dateLabel =
-    date && config.dateFormatKey
-      ? i18next.t(config.dateFormatKey, { date: formatFi(date) })
+    date && desc.dateFormatKey
+      ? i18next.t(desc.dateFormatKey, { date: formatFi(date) })
       : "";
-  const status = config.statusMapper(item);
+
+  const status = docStatus(item, desc.key);
   const authorName =
-    config.authorFields.length > 0
-      ? config.authorFields
+    desc.authorFields.length > 0
+      ? desc.authorFields
           .map((f) => (item[f] as string) ?? "")
           .filter(Boolean)
           .join(" ") || null
       : null;
-  const authorParty = config.partyField
-    ? ((item[config.partyField] as string) ?? null)
+
+  const authorParty = desc.partyField
+    ? ((item[desc.partyField] as string) ?? null)
     : null;
-  const highlight =
-    config.highlightFields
-      .map((f) => {
-        const v = item[f];
-        if (!v) return null;
-        if (f === "initiative_type_code") {
-          const LABELS: Record<string, string> = {
-            LA: i18next.t("asiakirjat:initiative_type_labels.LA"),
-            TPA: i18next.t("asiakirjat:initiative_type_labels.TPA"),
-            RA: i18next.t("asiakirjat:initiative_type_labels.RA"),
-          };
-          return LABELS[v as string] ?? String(v);
-        }
-        if (f === "report_type_code") {
-          const vStr = v as string;
-          return vStr === "M"
-            ? i18next.t("asiakirjat:report_type_labels.M")
-            : vStr === "L"
-              ? i18next.t("asiakirjat:report_type_labels.L")
-              : vStr;
-        }
-        return String(v);
-      })
-      .filter(Boolean)
-      .join(" · ") || null;
 
   const subjects: string[] =
     typeof item.subjects === "string"
@@ -725,19 +559,19 @@ function mapToDocRow(
 
   return {
     id: item.id as number,
-    linkId: (item[config.linkField] as number) ?? (item.id as number),
-    hasDetail: config.hasDetail,
-    kind: config.key,
-    identifier: (item[config.identifierField] as string) ?? "",
+    linkId: (item[desc.linkField] as number) ?? (item.id as number),
+    hasDetail: desc.hasDetail,
+    kind: desc.key,
+    identifier: (item[desc.identifierField] as string) ?? "",
     title: (item.title as string) ?? "",
     date: date as string,
     dateLabel,
     authorName,
     authorParty,
     authorPartyColor: partyColor(authorParty ?? ""),
-    statusLabel: status.label,
+    statusLabel: status.label ? i18next.t(status.label) : null,
     statusClass: status.class,
     subjects,
-    highlight,
+    highlight: mapDocHighlight(item, desc.key),
   };
 }

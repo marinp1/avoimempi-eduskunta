@@ -1,3 +1,56 @@
+import { partyColor, partyShortName } from "../components/party";
+import { formatFiLongDate } from "#shared-helpers";
+import i18next from "i18next";
+
+interface SessionDetailRow {
+  state: string | null | undefined;
+  state_text_fi: string | null | undefined;
+  date: string | null | undefined;
+  key: string;
+  minutes_start_time?: string | null;
+  minutes_end_time?: string | null;
+  section_count: number | null | undefined;
+  voting_count: number | null | undefined;
+  speech_count: number | null | undefined;
+  speaker_count: number | null | undefined;
+  minutes_title?: string | null;
+}
+
+interface SectionDetailRow {
+  key: string;
+  minutes_processing_phase_code?: string | null;
+  minutes_item_title?: string | null;
+  title: string | null | undefined;
+  speech_count: number | null | undefined;
+  minutes_related_document_identifier?: string | null;
+  minutes_related_document_type?: string | null;
+}
+
+interface VotingDetailRow {
+  id?: number;
+  n_yes: number | null | undefined;
+  n_no: number | null | undefined;
+  title: string | null | undefined;
+}
+
+interface RollCallReport {
+  title: string | null;
+  roll_call_start_time: string | null;
+}
+
+interface RollCallEntry {
+  entry_type: string;
+  party?: string | null;
+  first_name: string;
+  last_name: string;
+  absence_reason?: string | null;
+}
+
+interface RollCallData {
+  report: RollCallReport;
+  entries: RollCallEntry[];
+}
+
 export interface SessionDetailData {
   session: SessionHeaderData;
   attendance: AttendanceData | null;
@@ -109,42 +162,6 @@ export interface DocRef {
   documentId?: number;
 }
 
-const MONTH_NAMES = [
-  "tammikuuta",
-  "helmikuuta",
-  "maaliskuuta",
-  "huhtikuuta",
-  "toukokuuta",
-  "kesäkuuta",
-  "heinäkuuta",
-  "elokuuta",
-  "syyskuuta",
-  "lokakuuta",
-  "marraskuuta",
-  "joulukuuta",
-];
-
-const DAY_NAMES = [
-  "sunnuntaina",
-  "maanantaina",
-  "tiistaina",
-  "keskiviikkona",
-  "torstaina",
-  "perjantaina",
-  "lauantaina",
-];
-
-import { partyColor, partyShortName } from "../components/party";
-
-function finnishDateLabel(iso: string): string {
-  const d = new Date(iso + "T00:00:00");
-  const dayName = DAY_NAMES[d.getDay()] ?? "";
-  const day = d.getDate();
-  const month = MONTH_NAMES[d.getMonth()] ?? "";
-  const year = d.getFullYear();
-  return `${dayName} ${day}.${month.slice(0, 4)}${month.slice(4)} ${year}`;
-}
-
 function extractTimeRange(row: {
   minutes_start_time?: string | null;
   minutes_end_time?: string | null;
@@ -184,42 +201,42 @@ function deriveState(
   stateTextFi: string | null | undefined,
 ): { class: "done" | "live" | "draft"; label: string } {
   if (state === "KAYNNISSA")
-    return { class: "live", label: "Istunto käynnissä" };
+    return { class: "live", label: i18next.t("istunnot:status_live") };
   if (state === "LOPETETTU" && stateTextFi === "Istunto päättynyt")
-    return { class: "done", label: "Istunto päättynyt" };
+    return { class: "done", label: i18next.t("istunnot:status_done") };
   if (state === "PJLAADITTU")
-    return { class: "draft", label: "Pöytäkirjaa laaditaan" };
-  return { class: "draft", label: "Luonnos" };
+    return { class: "draft", label: i18next.t("istunnot:status_draft") };
+  return { class: "draft", label: i18next.t("istunnot:status_unknown") };
 }
 
 function phaseLabel(code: string | null | undefined): string {
   switch (code) {
     case "2_kasittely":
-      return "Toinen käsittely";
+      return i18next.t("istunnot:detail.phase_toinen_kasittely");
     case "lahetekeskustelu":
-      return "Lähetekeskustelu";
+      return i18next.t("istunnot:detail.phase_lahetekeskustelu");
     case "1_kasittely":
-      return "Ensimmäinen käsittely";
+      return i18next.t("istunnot:detail.phase_ensimmainen_kasittely");
     case "ainoakasittely":
-      return "Ainoa käsittely";
+      return i18next.t("istunnot:detail.phase_ainoa_kasittely");
     case "poydallepano":
-      return "Pöydällepano";
+      return i18next.t("istunnot:detail.phase_poydallepano");
     default:
       return code ?? "";
   }
 }
 
 export function buildSessionDetailViewModel(
-  session: any,
-  sections: any[],
-  votingsBySectionKey: Map<string, any[]>,
-  rollCallData: any | null,
+  session: SessionDetailRow,
+  sections: SectionDetailRow[],
+  votingsBySectionKey: Map<string, VotingDetailRow[]>,
+  rollCallData: RollCallData | null,
   fetchedAt: string,
   seatCounts: Record<string, { seats: number; inGov: boolean }> = {},
   docIdMap?: Map<string, number>,
 ): SessionDetailData {
   const stateInfo = deriveState(session.state, session.state_text_fi);
-  const dateLabel = session.date ? finnishDateLabel(session.date) : "";
+  const dateLabel = session.date ? formatFiLongDate(session.date) : "";
   const timeRange = extractTimeRange(session);
   const duration = computeDuration(
     session.minutes_start_time,
@@ -229,10 +246,10 @@ export function buildSessionDetailViewModel(
   const header: SessionHeaderData = {
     key: session.key,
     ptkId: `PTK ${session.key.split("/")[1]}/${session.key.split("/")[0]} vp`,
-    typeLabel: "Täysistunnon pöytäkirja",
+    typeLabel: i18next.t("istunnot:detail.minutes_protocol_label"),
     stateClass: stateInfo.class,
     stateLabel: stateInfo.label,
-    title: `Täysistunto ${session.key}`,
+    title: i18next.t("common:session_title_format", { key: session.key }),
     dateLabel,
     timeRange,
     duration,
@@ -247,8 +264,8 @@ export function buildSessionDetailViewModel(
   if (rollCallData) {
     const report = rollCallData.report;
     const entries = rollCallData.entries;
-    const absentEntries = entries.filter((e: any) => e.entry_type === "absent");
-    const lateEntries = entries.filter((e: any) => e.entry_type === "late");
+    const absentEntries = entries.filter((e) => e.entry_type === "absent");
+    const lateEntries = entries.filter((e) => e.entry_type === "late");
     const totalAbsent = absentEntries.length;
     const totalLate = lateEntries.length;
     const totalMembers =
@@ -287,9 +304,7 @@ export function buildSessionDetailViewModel(
         color: partyColor(code),
         total: seatCounts[code]?.seats ?? 0,
         absent: countAbsent(absentByParty, code),
-        bloc: (seatCounts[code]?.inGov ? "hallitus" : "oppositio") as
-          | "hallitus"
-          | "oppositio",
+        bloc: (seatCounts[code]?.inGov ? "hallitus" : "oppositio") as "hallitus" | "oppositio",
       }))
       .sort((a, b) => b.total - a.total);
 
@@ -347,7 +362,7 @@ export function buildSessionDetailViewModel(
     };
 
     if (out.isVoting) {
-      const votes: VoteResultData[] = sectionVotings.map((v: any) => {
+      const votes: VoteResultData[] = sectionVotings.map((v) => {
         const nYes = v.n_yes ?? 0;
         const nNo = v.n_no ?? 0;
         const total = nYes + nNo;
@@ -384,7 +399,7 @@ export function buildSessionDetailViewModel(
       if (!currentTabled) {
         currentTabled = {
           phaseCode: "poydallepano",
-          phaseLabel: "Pöydälle pannut",
+          phaseLabel: i18next.t("istunnot:detail.section_tabled_label"),
           items: [],
         };
         tabledItems.push(currentTabled);
@@ -420,7 +435,7 @@ function countAbsent(map: Map<string, AbsenteeGroup>, party: string): number {
   return map.get(party)?.members.filter((m) => !m.isLate).length ?? 0;
 }
 
-function buildDocRefs(section: any, docIdMap?: Map<string, number>): DocRef[] {
+function buildDocRefs(section: SectionDetailRow, docIdMap?: Map<string, number>): DocRef[] {
   const refs: DocRef[] = [];
   const docId = section.minutes_related_document_identifier;
   const docType = section.minutes_related_document_type;

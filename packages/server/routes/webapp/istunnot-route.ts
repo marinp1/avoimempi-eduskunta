@@ -11,14 +11,16 @@ import {
   timelineOobHtml,
   isHtmx,
   formatFi,
+  getPeriodSelectorData,
 } from "./helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
+import { defineRoute } from "#shared-helpers";
 
 export function createIstunnotRoute(deps: WebappDeps) {
-  return {
-    "/istunnot": {
-      GET: async (req: Request) => {
+  return defineRoute({
+    path: "/istunnot",
+    GET: async (req) => {
         const url = new URL(req.url);
         const kind = url.searchParams.get("kind") ?? undefined;
         const q = url.searchParams.get("q") ?? undefined;
@@ -103,31 +105,24 @@ export function createIstunnotRoute(deps: WebappDeps) {
         const resolvedTl = dateParam
           ? { ...tlData, cursor, cursorFormatted }
           : tlData;
-        const resp = page(
+        const periodData = getPeriodSelectorData(req, deps.metadataRepository);
+        return page({
           req,
-          Istunnot({
+          fragment: Istunnot({
             title: i18next.t("istunnot:title"),
             data,
             cursorFormatted: shownCursor,
           }),
-          "/istunnot",
-          i18next.t("istunnot:title"),
-          resolvedTl,
-        );
-        if (cookieHeader) {
-          const bodyStr = await resp.text();
-          return new Response(bodyStr, {
-            status: resp.status,
-            headers: {
-              ...Object.fromEntries(resp.headers),
-              "Set-Cookie": cookieHeader,
-            },
-          });
-        }
-        return resp;
+          activePath: "/istunnot",
+          title: i18next.t("istunnot:title"),
+          timelineData: resolvedTl,
+          extraHeaders: cookieHeader
+            ? { "Set-Cookie": cookieHeader }
+            : undefined,
+          periodData,
+        });
       },
-    },
-  } as const;
+  });
 }
 
 function buildIstunnotUrl(opts: {

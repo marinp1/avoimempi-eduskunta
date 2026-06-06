@@ -1,5 +1,6 @@
 import Layout from "./templates/layout";
 import type { TimelineData } from "./templates/partials/timeline";
+import type { PeriodSelectorData } from "./src/period-selector-data";
 
 /** Options for configuring the HTML layout wrapper. */
 export interface LayoutOptions {
@@ -11,6 +12,8 @@ export interface LayoutOptions {
   assetVersion?: string;
   /** When provided, renders the time scrubber after the masthead. */
   timelineData?: TimelineData;
+  /** When provided, renders the period selector menu with pre-checked state. */
+  periodData?: PeriodSelectorData;
 }
 
 /**

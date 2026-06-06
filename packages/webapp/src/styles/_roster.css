@@ -1,22 +1,6 @@
 /* ============================================================
    KANSANEDUSTAJAT — roster (list)
    ============================================================ */
-.page-head {
-  padding: 28px 0 22px;
-}
-.page-head h1 {
-  font-family: var(--head);
-  font-weight: 800;
-  font-size: var(--fs-h1);
-  letter-spacing: -0.025em;
-}
-.page-head .sub {
-  font-size: var(--fs-lead);
-  color: var(--body);
-  margin-top: 10px;
-  max-width: 60ch;
-}
-
 .toolbar {
   display: flex;
   align-items: center;

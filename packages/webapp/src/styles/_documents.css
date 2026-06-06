@@ -504,26 +504,6 @@
 }
 
 /* ============================================================
-   TOPIC TAGS
-   ============================================================ */
-.topics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-  margin-top: 4px;
-}
-.topic-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--rule);
-  padding: 8px 12px;
-  font: 500 14px var(--text);
-  color: var(--ink);
-  background: var(--paper);
-}
-
-/* ============================================================
    DOCUMENT LIST (asiakirjat index)
    ============================================================ */
 .doc-list {

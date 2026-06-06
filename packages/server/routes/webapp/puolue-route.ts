@@ -1,6 +1,10 @@
 import Puolue from "../../../webapp/templates/pages/puolue";
 import type { PartyDetailData } from "../../../webapp/templates/pages/puolue-view-model";
-import { page, getWebappContext, getRouteParam } from "./helpers";
+import {
+  page,
+  getWebappContext,
+  getPeriodSelectorData,
+} from "./helpers";
 import {
   partyColor,
   partyShortName,
@@ -8,13 +12,15 @@ import {
 } from "../../../webapp/templates/helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
+import { defineRoute } from "#shared-helpers";
 
 export function createPuolueRoute(deps: WebappDeps) {
-  return {
-    "/puolue/:code": {
-      GET: async (req: Request) => {
-        const code = getRouteParam(req, "code") ?? "";
+  return defineRoute({
+    path: "/puolue/:code",
+    GET: async (req, params) => {
+      const code = params.code;
         const { tlData, bounds } = getWebappContext(req, deps);
+        const periodData = getPeriodSelectorData(req, deps.metadataRepository);
 
         const summaryRows = deps.analyticsRepository.fetchPartySummary({
           asOfDate: tlData.cursor,
@@ -117,14 +123,14 @@ export function createPuolueRoute(deps: WebappDeps) {
           fetchedAt: fetchedAt(),
         };
 
-        return page(
+        return page({
           req,
-          Puolue({ title: pName, data }),
-          `/puolue/${code}`,
-          pName,
-          tlData,
-        );
+          fragment: Puolue({ title: pName, data }),
+          activePath: `/puolue/${code}`,
+          title: pName,
+          timelineData: tlData,
+          periodData,
+        });
       },
-    },
-  } as const;
+  });
 }

@@ -1,34 +1,42 @@
-import Edustaja, {
-  type PersonProfileData,
-} from "../../../webapp/templates/pages/edustaja";
-import { partyColor, partyShortName } from "../../../webapp/templates/helpers";
+import Edustaja from "../../../webapp/templates/pages/edustaja";
+import type { PersonProfileData } from "../../../webapp/templates/pages/edustaja-view-model";
+import {
+  partyColor,
+  partyShortName,
+  fetchedAt,
+} from "../../../webapp/templates/helpers";
 import {
   page,
   personNotFoundResponse,
   getWebappContext,
-  getRouteParam,
+  getPeriodSelectorData,
 } from "./helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
+import { defineRoute } from "#shared-helpers";
+import {
+  LA_LABELS,
+  DOC_KIND_REGISTRY,
+} from "#shared/constants/DocumentKinds";
 
 const INITIATIVE_LABELS: Record<string, string> = {
-  LA: i18next.t("asiakirjat:initiative_type_labels.LA"),
-  TPA: i18next.t("asiakirjat:initiative_type_labels.TPA"),
-  RA: i18next.t("asiakirjat:initiative_type_labels.RA"),
-  A: i18next.t("asiakirjat:initiative_type_labels.A"),
+  LA: i18next.t(LA_LABELS.LA),
+  TPA: i18next.t(LA_LABELS.TPA),
+  RA: i18next.t(LA_LABELS.RA),
+  A: i18next.t(LA_LABELS.A),
 };
 
 const QUESTION_LABELS: Record<string, string> = {
-  written_question: i18next.t("asiakirjat:kind_labels.kk"),
-  interpellation: i18next.t("asiakirjat:kind_labels.valikysymys"),
-  oral_question: i18next.t("asiakirjat:kind_labels.suullinen"),
+  written_question: i18next.t(DOC_KIND_REGISTRY.kk.detailLabelI18n),
+  interpellation: i18next.t(DOC_KIND_REGISTRY.valikysymys.detailLabelI18n),
+  oral_question: i18next.t(DOC_KIND_REGISTRY.suullinen.detailLabelI18n),
 };
 
 export function createEdustajaRoute(deps: WebappDeps) {
-  return {
-    "/edustaja/:id": {
-      GET: async (req: Request) => {
-        const id = getRouteParam(req, "id") ?? "";
+  return defineRoute({
+    path: "/edustaja/:id",
+    GET: async (req, params) => {
+      const id = params.id;
         if (!id || !/^\d+$/.test(id)) {
           return personNotFoundResponse(req, `/edustaja/${id}`);
         }
@@ -131,6 +139,7 @@ export function createEdustajaRoute(deps: WebappDeps) {
         const color = partyColor(partyCode);
 
         const { tlData } = getWebappContext(req, deps);
+        const periodData = getPeriodSelectorData(req, deps.metadataRepository);
 
         const baselinesParty = metrics.party;
         const baselinesParliament = metrics.parliament;
@@ -242,23 +251,17 @@ export function createEdustajaRoute(deps: WebappDeps) {
           })),
           baselines,
           hasAiSummary: capabilities.hasAiSummary,
-          fetchedAt: new Date().toLocaleString("fi-FI", {
-            day: "numeric",
-            month: "numeric",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
+          fetchedAt: fetchedAt(),
         };
 
-        return page(
+        return page({
           req,
-          Edustaja({ data }),
-          "/edustajat",
-          `${firstName} ${lastName}`,
-          tlData,
-        );
+          fragment: Edustaja({ data }),
+          activePath: "/edustajat",
+          title: `${firstName} ${lastName}`,
+          timelineData: tlData,
+          periodData,
+        });
       },
-    },
-  } as const;
+  });
 }
