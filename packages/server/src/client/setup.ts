@@ -13,3 +13,4 @@ import "./vote-filter-island";
 import "./mp-search-island";
 import "./nav-morph";
 import "./about-island";
+import "./nav-island";

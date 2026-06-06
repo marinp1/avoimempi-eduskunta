@@ -236,8 +236,22 @@
   align-items: center;
   gap: 26px;
   padding-top: 12px;
+  position: relative;
 }
-.nav a {
+
+/* Hamburger toggle — hidden on desktop */
+.nav__toggle {
+  display: none;
+}
+
+/* Nav menu — horizontal flex row on desktop */
+.nav__menu {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 26px;
+}
+.nav__menu a {
   font-family: var(--text);
   font-weight: 500;
   font-size: 14.5px;
@@ -246,22 +260,22 @@
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 }
-.nav a:hover {
+.nav__menu a:hover {
   color: var(--ink);
 }
-.nav a.is-active {
+.nav__menu a.is-active {
   color: var(--ink);
   font-weight: 700;
   border-bottom-color: var(--red);
 }
-.nav__search {
+.nav__menu .nav__search {
   margin-left: auto;
   color: var(--muted);
   font-size: 14.5px;
   padding-bottom: 12px;
   cursor: pointer;
 }
-.nav__search:hover {
+.nav__menu .nav__search:hover {
   color: var(--ink);
 }
 

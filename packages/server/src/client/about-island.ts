@@ -53,7 +53,7 @@ function toggle() {
   else open();
 }
 
-function init() {
+function initAbout() {
   if (initialized) return;
   initialized = true;
 
@@ -82,4 +82,4 @@ function init() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", init);
+document.addEventListener("DOMContentLoaded", initAbout);

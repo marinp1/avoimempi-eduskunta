@@ -20,30 +20,45 @@ const NAV_ITEMS = [
   { href: "/muutokset", label: "nav:changes" },
 ] as const satisfies Array<{ href: string; label: ParseKeys<Namespace> }>;
 
-/** Top-level navigation bar. Uses explicit hx-get so the server can return
- *  content-area-only fragments (no layout wrapper), avoiding the nested-DOM
- *  problems that hx-boost with hx-target causes. */
+/** Top-level navigation bar. On desktop the links are a horizontal flex row;
+ *  on mobile (≤720px) the toggle button shows/hides a vertical overlay menu.
+ *  Uses explicit hx-get so the server can return content-area-only fragments
+ *  (no layout wrapper), avoiding the nested-DOM problems that hx-boost with
+ *  hx-target causes. */
 export default function Nav({ activePath }: Props) {
   return (
     <nav class="nav">
-      {NAV_ITEMS.map((item) => (
-        <a
-          href={item.href}
-          class={clsx({ "is-active": activePath === item.href })}
-          hx-get={item.href}
-          hx-target="#main-content"
-          hx-push-url="true"
-          hx-swap="innerHTML"
-          hx-browser-indicator="true"
-        >
-          {i18next.t(item.label)}
-        </a>
-      ))}
-      <span class="nav__search">{i18next.t("common:search")}</span>
-      <button type="button" class="nav__about" data-about-open>
-        <span class="ic">i</span>
-        {i18next.t("nav:about")}
+      <button
+        type="button"
+        class="nav__toggle"
+        aria-label={i18next.t("common:menu")}
+        aria-expanded="false"
+        data-nav-toggle
+      >
+        <span></span>
+        <span></span>
+        <span></span>
       </button>
+      <div class="nav__menu" data-nav-menu>
+        {NAV_ITEMS.map((item) => (
+          <a
+            href={item.href}
+            class={clsx({ "is-active": activePath === item.href })}
+            hx-get={item.href}
+            hx-target="#main-content"
+            hx-push-url="true"
+            hx-swap="innerHTML"
+            hx-browser-indicator="true"
+          >
+            {i18next.t(item.label)}
+          </a>
+        ))}
+        <span class="nav__search">{i18next.t("common:search")}</span>
+        <button type="button" class="nav__about" data-about-open>
+          <span class="ic">i</span>
+          {i18next.t("nav:about")}
+        </button>
+      </div>
     </nav>
   );
 }

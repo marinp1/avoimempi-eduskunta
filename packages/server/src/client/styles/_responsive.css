@@ -52,23 +52,98 @@
     font-size: 26px;
   }
 
-  /* nav: a horizontally scrollable tab bar (no wrap, no scrollbar chrome) */
+  /* nav: hamburger toggle + overlay menu */
   .nav {
-    gap: 20px;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
+    gap: 0;
   }
-  .nav::-webkit-scrollbar {
-    display: none;
+  .nav__toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    padding: 4px 0 12px;
   }
-  .nav a,
-  .nav__search {
-    flex: 0 0 auto;
+  .nav__toggle span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--ink);
+    border-radius: 1px;
+    transition:
+      transform 0.2s,
+      opacity 0.2s;
   }
-  .nav__search {
-    margin-left: 8px;
+  .nav__toggle[aria-expanded="true"] span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .nav__toggle[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+  }
+  .nav__toggle[aria-expanded="true"] span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  /* overlay menu — slides down from beneath the nav bar */
+  .nav__menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    background: var(--paper);
+    border-top: 1px solid var(--rule);
+    padding: 6px 0 10px;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition:
+      opacity 0.2s,
+      transform 0.2s;
+    pointer-events: none;
+  }
+  .nav__menu.is-open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .nav__menu a {
+    display: block;
+    padding: 11px 20px;
+    font-size: 16px;
+    border-bottom: 0;
+    margin-bottom: 0;
+  }
+  .nav__menu a.is-active {
+    border-left: 3px solid var(--red);
+    font-weight: 700;
+  }
+  .nav__menu .nav__search {
+    display: block;
+    padding: 11px 20px;
+    margin-left: 0;
+    font-size: 16px;
+    border-bottom: 0;
+  }
+  .nav__menu .nav__about {
+    margin-left: 0;
+    display: flex;
+    width: auto;
+    align-self: stretch;
+    justify-content: center;
+    border: 0;
+    border-top: 1px solid var(--rule-soft);
+    border-radius: 0;
+    margin: 6px 0 0;
+    padding: 12px 20px;
+    background: transparent;
+    font-size: 14px;
+  }
+  .nav__menu .nav__about:hover {
+    background: var(--paper-2);
   }
 
   /* period dropdown menu never wider than the viewport */

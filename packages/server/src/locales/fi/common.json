@@ -59,6 +59,7 @@
   "open_source": "Avaa alkuperäinen",
   "show_all_speeches": "Näytä kaikki {{count}} puheenvuoroa pöytäkirjasta ↗",
   "open_in_minutes": "Avaa pöytäkirjassa (PTK) ↗",
+  "menu": "Avaa valikko",
   "language_fi": "suomi",
   "characters": "merkkiä",
   "page_title_format": "{{title}} — {{brand}}"
