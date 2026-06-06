@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.0-alpha.2] — 2026-03-30
+
+### Other
+- housekeeping: update deps and improve build (162019d)
+
 ## [1.1.0-alpha.1] — 2026-03-29
 
 ### Other
