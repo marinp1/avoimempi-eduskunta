@@ -69,7 +69,6 @@ function assertReleased() {
 
 async function deployAppBuild() {
   const dist = path.join(import.meta.dirname, "../dist");
-  const config = path.join(import.meta.dirname, "../packages/server/config");
   const appScriptsDir = path.join(import.meta.dirname, "app");
   const runAppScript = path.join(appScriptsDir, "run-app.sh");
   const installSystemdScript = path.join(
@@ -91,6 +90,31 @@ async function deployAppBuild() {
   }
 
   fs.rmSync(dist, { recursive: true, force: true });
+
+  // Pre-build browser assets so the server bundle can load them at runtime
+  // from dist/client/ instead of trying to compile source files on the VM.
+  const clientDist = path.join(dist, "client");
+  await build({
+    outdir: clientDist,
+    entrypoints: [
+      path.join(import.meta.dirname, "../packages/server/src/client/setup.ts"),
+    ],
+    target: "browser",
+    naming: "[name].[ext]",
+    minify: true,
+  });
+  await build({
+    outdir: clientDist,
+    entrypoints: [
+      path.join(
+        import.meta.dirname,
+        "../packages/server/src/client/styles.css",
+      ),
+    ],
+    target: "browser",
+    naming: "[name].[ext]",
+    minify: true,
+  });
 
   const result = await build({
     outdir: dist,
@@ -114,10 +138,9 @@ async function deployAppBuild() {
     );
   }
 
-  await $`ssh ${HOST} mkdir -p ${APP_DIR}/releases ${APP_DIR}/scripts/app ${APP_DIR}/shared ${releaseDir}/dist ${releaseDir}/config ${releaseDir}/scripts`;
+  await $`ssh ${HOST} mkdir -p ${APP_DIR}/releases ${APP_DIR}/scripts/app ${APP_DIR}/shared ${releaseDir}/dist ${releaseDir}/scripts`;
 
   await $`scp -r ${dist}/. ${HOST}:${releaseDir}/dist`;
-  await $`scp -r ${config}/. ${HOST}:${releaseDir}/config`;
   await $`scp ${runAppScript} ${HOST}:${releaseDir}/scripts/run-app.sh`;
   await $`scp ${installSystemdScript} ${HOST}:${APP_DIR}/scripts/app/install-app-systemd-service.sh`;
   await $`scp ${releaseScript} ${HOST}:${APP_DIR}/scripts/app/app-release.sh`;
