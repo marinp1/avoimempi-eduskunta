@@ -6,11 +6,14 @@ import {
   Link,
   Typography,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { apiFetch } from "#client/utils/fetch";
 import { PageDataSourcesDrawer } from "./components/PageDataSourcesDrawer";
-import { OverlayDrawerProvider } from "./context/OverlayDrawerContext";
+import {
+  OverlayDrawerProvider,
+  useOverlayDrawer,
+} from "./context/OverlayDrawerContext";
 import { TraceProvider } from "./context/TraceContext";
 import { Navigation } from "./Navigation";
 import { type RouteName, routes } from "./pages";
@@ -32,6 +35,19 @@ const getRepresentativePersonId = (): number | null => {
 };
 
 const Representative = React.lazy(() => import("./pages/Representative"));
+
+/** Resets the overlay drawer whenever the active tab changes. */
+const DrawerResetter: React.FC<{ activeTab: RouteName }> = ({ activeTab }) => {
+  const { resetDrawer } = useOverlayDrawer();
+  const prevTab = React.useRef(activeTab);
+  useEffect(() => {
+    if (prevTab.current !== activeTab) {
+      resetDrawer();
+      prevTab.current = activeTab;
+    }
+  }, [activeTab, resetDrawer]);
+  return null;
+};
 
 export const App: React.FC = () => {
   const themedColors = useThemedColors();
@@ -101,6 +117,14 @@ export const App: React.FC = () => {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
+  const handleNavigate = useCallback(
+    (tab: RouteName) => {
+      setActiveTab(tab);
+      setRepresentativePersonId(null);
+    },
+    [],
+  );
+
   // Scroll to top on navigation (only for tab-level switches, not within
   // a representative profile where in-page anchor scrolling is used).
   useEffect(() => {
@@ -113,6 +137,7 @@ export const App: React.FC = () => {
   return (
     <TraceProvider>
       <OverlayDrawerProvider>
+        <DrawerResetter activeTab={activeTab} />
         <CssBaseline />
         <GlobalStyles
           styles={{
@@ -176,7 +201,7 @@ export const App: React.FC = () => {
             },
           }}
         />
-        <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+        <Navigation activeTab={activeTab} setActiveTab={handleNavigate} />
         <Container
           maxWidth="xl"
           sx={{
