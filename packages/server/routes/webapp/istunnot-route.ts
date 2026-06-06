@@ -11,11 +11,11 @@ export function createIstunnotRoute(deps: WebappDeps) {
     "/istunnot": {
       GET: (req: Request) => {
         const url = new URL(req.url);
-        const _kind = url.searchParams.get("kind") ?? undefined;
-        const _q = url.searchParams.get("q") ?? undefined;
+        const kind = url.searchParams.get("kind") ?? undefined;
+        const q = url.searchParams.get("q") ?? undefined;
 
         const raw = deps.sessionRepository.fetchSessionsIndex(50);
-        const data = buildSessionsViewModel(raw);
+        const data = buildSessionsViewModel(raw, { kind, q });
 
         const isHtmx = req.headers.get("HX-Request") === "true";
         const isBoosted = req.headers.get("HX-Boosted") === "true";

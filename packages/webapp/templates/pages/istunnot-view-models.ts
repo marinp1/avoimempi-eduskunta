@@ -71,9 +71,13 @@ const DAY_ABBR: Record<string, string> = {
   "7": "Su",
 };
 
+function toLocalISODate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function finnishDate(iso: string): { dow: string; day: string; mon: string } {
   const d = new Date(iso + "T00:00:00");
-  const dow = DAY_ABBR[String(d.getDay())] ?? "";
+  const dow = DAY_ABBR[String(d.getDay() || 7)] ?? "";
   const day = String(d.getDate());
   const monKey = String(d.getMonth() + 1).padStart(2, "0");
   return { dow, day, mon: MONTH_ABBR[monKey] ?? "" };
@@ -108,22 +112,21 @@ function getWeekStart(iso: string): string {
   const d = new Date(iso + "T00:00:00");
   const day = d.getDay() || 7;
   d.setDate(d.getDate() - day + 1);
-  return d.toISOString().slice(0, 10);
+  return toLocalISODate(d);
 }
 
 function getWeekEnd(iso: string): string {
   const d = new Date(iso + "T00:00:00");
   const day = d.getDay() || 7;
   d.setDate(d.getDate() + (7 - day));
-  return d.toISOString().slice(0, 10);
+  return toLocalISODate(d);
 }
 
 function isCurrentWeek(iso: string): boolean {
-  const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+  const todayStr = toLocalISODate(new Date());
   return (
     isoWeek(iso) === isoWeek(todayStr) &&
-    isoWeekYear(iso) === today.getFullYear()
+    isoWeekYear(iso) === isoWeekYear(todayStr)
   );
 }
 
@@ -180,7 +183,11 @@ function buildHeadline(row: SessionsIndexRow): string {
     return `Välikysymyskeskustelu — hallituksen luottamus äänestykseen`;
   }
   if (hasVali) {
-    return `Välikysymyskeskustelu talouspolitiikasta`;
+    const match = secTitles.match(/Välikysymys\s+([^|]+)/);
+    const subject = match ? match[1].trim() : "";
+    return subject
+      ? `Välikysymyskeskustelu — ${subject}`
+      : "Välikysymyskeskustelu";
   }
   if (hasKysely && row.voting_count > 0) {
     return `Kyselytunti ja äänestyksiä`;
@@ -293,12 +300,24 @@ function computeWeekStats(rows: SessionsIndexRow[]): WeekStats {
 
 export function buildSessionsViewModel(
   raw: SessionsIndexRow[],
+  filters: { kind?: string; q?: string } = {},
 ): SessionsIndexData {
   const today = new Date();
 
+  const filtered = raw.filter((row) => {
+    if (filters.kind && filters.kind !== "all") {
+      if (!deriveKind(row).includes(filters.kind)) return false;
+    }
+    if (filters.q) {
+      if (!buildSearchText(row).toLowerCase().includes(filters.q.toLowerCase()))
+        return false;
+    }
+    return true;
+  });
+
   const groups = new Map<string, SessionsIndexRow[]>();
 
-  for (const row of raw) {
+  for (const row of filtered) {
     const key = `${isoWeekYear(row.date)}-W${String(isoWeek(row.date)).padStart(2, "0")}`;
     const existing = groups.get(key) ?? [];
     existing.push(row);
@@ -349,7 +368,7 @@ export function buildSessionsViewModel(
 
   return {
     weeks,
-    weekStats: computeWeekStats(raw),
+    weekStats: computeWeekStats(filtered),
     fetchedAt: today.toLocaleString("fi-FI", {
       day: "numeric",
       month: "numeric",
@@ -357,6 +376,6 @@ export function buildSessionsViewModel(
       hour: "2-digit",
       minute: "2-digit",
     }),
-    totalSessions: raw.length,
+    totalSessions: filtered.length,
   };
 }

@@ -131,29 +131,7 @@ const DAY_NAMES = [
   "lauantaina",
 ];
 
-const PARTY_LABELS: Record<string, string> = {
-  kok: "Kokoomus",
-  ps: "Perussuomalaiset",
-  sd: "SDP",
-  kesk: "Keskusta",
-  vihr: "Vihreät",
-  vas: "Vasemmistoliitto",
-  r: "RKP",
-  kd: "Kristillisdemokraatit",
-  liik: "Liike Nyt",
-};
-
-const PARTY_COLORS: Record<string, string> = {
-  kok: "#1d4f91",
-  ps: "#2c3e8c",
-  sd: "#d3243a",
-  kesk: "#0b8a4a",
-  vihr: "#5aa829",
-  vas: "#9e1f4b",
-  r: "#1278b6",
-  kd: "#1a3f86",
-  liik: "#e0922f",
-};
+import { partyColor, partyShortName } from "../components/party";
 
 function finnishDateLabel(iso: string): string {
   const d = new Date(iso + "T00:00:00");
@@ -234,6 +212,7 @@ export function buildSessionDetailViewModel(
   votingsBySectionKey: Map<string, any[]>,
   rollCallData: any | null,
   fetchedAt: string,
+  seatCounts: Record<string, { seats: number; inGov: boolean }> = {},
 ): SessionDetailData {
   const stateInfo = deriveState(session.state, session.state_text_fi);
   const dateLabel = session.date ? finnishDateLabel(session.date) : "";
@@ -268,8 +247,9 @@ export function buildSessionDetailViewModel(
     const lateEntries = entries.filter((e: any) => e.entry_type === "late");
     const totalAbsent = absentEntries.length;
     const totalLate = lateEntries.length;
-    const totalMembers = 200;
-    const totalPresent = totalMembers - totalAbsent;
+    const totalMembers =
+      Object.values(seatCounts).reduce((s, v) => s + v.seats, 0) || 200;
+    const totalPresent = totalMembers - totalAbsent - totalLate;
 
     const absentByParty = new Map<string, AbsenteeGroup>();
     for (const entry of entries) {
@@ -277,8 +257,8 @@ export function buildSessionDetailViewModel(
       if (!absentByParty.has(party)) {
         absentByParty.set(party, {
           partyCode: party,
-          partyLabel: PARTY_LABELS[party] ?? party.toUpperCase(),
-          color: PARTY_COLORS[party] ?? "#8a8178",
+          partyLabel: partyShortName(party, party.toUpperCase()),
+          color: partyColor(party),
           members: [],
         });
       }
@@ -291,88 +271,23 @@ export function buildSessionDetailViewModel(
       });
     }
 
-    const parties: AttendanceParty[] = [
-      {
-        code: "kok",
-        label: "Kokoomus",
-        color: "#1d4f91",
-        total: 48,
-        absent: countAbsent(absentByParty, "kok"),
-        bloc: "hallitus",
-      },
-      {
-        code: "ps",
-        label: "Perussuomalaiset",
-        color: "#2c3e8c",
-        total: 45,
-        absent: countAbsent(absentByParty, "ps"),
-        bloc: "hallitus",
-      },
-      {
-        code: "r",
-        label: "RKP",
-        color: "#1278b6",
-        total: 10,
-        absent: countAbsent(absentByParty, "r"),
-        bloc: "hallitus",
-      },
-      {
-        code: "kd",
-        label: "Kristillisdemokraatit",
-        color: "#1a3f86",
-        total: 5,
-        absent: countAbsent(absentByParty, "kd"),
-        bloc: "hallitus",
-      },
-      {
-        code: "sd",
-        label: "SDP",
-        color: "#d3243a",
-        total: 43,
-        absent: countAbsent(absentByParty, "sd"),
-        bloc: "oppositio",
-      },
-      {
-        code: "kesk",
-        label: "Keskusta",
-        color: "#0b8a4a",
-        total: 23,
-        absent: countAbsent(absentByParty, "kesk"),
-        bloc: "oppositio",
-      },
-      {
-        code: "vihr",
-        label: "Vihreät",
-        color: "#5aa829",
-        total: 13,
-        absent: countAbsent(absentByParty, "vihr"),
-        bloc: "oppositio",
-      },
-      {
-        code: "vas",
-        label: "Vasemmistoliitto",
-        color: "#9e1f4b",
-        total: 11,
-        absent: countAbsent(absentByParty, "vas"),
-        bloc: "oppositio",
-      },
-      {
-        code: "liik",
-        label: "Liike Nyt",
-        color: "#e0922f",
-        total: 1,
-        absent: countAbsent(absentByParty, "liik"),
-        bloc: "oppositio",
-      },
-      {
-        code: "muu",
-        label: "Muu",
-        color: "#8a8178",
-        total: 1,
-        absent: countAbsent(absentByParty, "muu"),
-        bloc: "oppositio",
-      },
-    ];
+    const allPartyCodes = new Set<string>([
+      ...Array.from(absentByParty.keys()),
+      ...Object.keys(seatCounts),
+    ]);
+
+    const parties: AttendanceParty[] = Array.from(allPartyCodes)
+      .map((code) => ({
+        code,
+        label: partyShortName(code, code.toUpperCase()),
+        color: partyColor(code),
+        total: seatCounts[code]?.seats ?? 0,
+        absent: countAbsent(absentByParty, code),
+        bloc: (seatCounts[code]?.inGov ? "hallitus" : "oppositio") as
+          | "hallitus"
+          | "oppositio",
+      }))
+      .sort((a, b) => b.total - a.total);
 
     attendance = {
       totalPresent,
@@ -516,6 +431,8 @@ function determineOutcome(
   votingCount: number,
 ): { isVoting: boolean } {
   return {
-    isVoting: phaseCode === "2_kasittely" && votingCount > 0,
+    isVoting:
+      (phaseCode === "2_kasittely" || phaseCode === "ainoakasittely") &&
+      votingCount > 0,
   };
 }

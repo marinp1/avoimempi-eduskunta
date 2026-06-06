@@ -51,12 +51,25 @@ export function createIstuntoRoute(deps: WebappDeps) {
           minute: "2-digit",
         });
 
+        const partySeatRows = deps.sessionRepository.fetchPartySeatCounts(
+          (session as any).date,
+        );
+        const seatCounts: Record<string, { seats: number; inGov: boolean }> =
+          {};
+        for (const row of partySeatRows) {
+          seatCounts[row.party_code] = {
+            seats: row.seat_count,
+            inGov: row.is_in_government === 1,
+          };
+        }
+
         const data = buildSessionDetailViewModel(
           session,
           sections,
           votingsBySectionKey,
           rollCallData,
           fetchedAt,
+          seatCounts,
         );
 
         return page(req, Istunto({ data }), "/istunnot", `Täysistunto ${key}`);

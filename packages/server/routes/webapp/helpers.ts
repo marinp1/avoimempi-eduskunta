@@ -29,11 +29,19 @@ export function personNotFoundResponse(req: Request, path: string): Response {
   });
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function notFoundFragment(path: string): string {
   return `<title>Sivua ei löydy — Eduskuntapeili</title>
 <section class="page-head wrap">
     <h1>Sivua ei löydy</h1>
-    <p class="sub">Polkua <code>${path}</code> ei löydy.</p>
+    <p class="sub">Polkua <code>${escapeHtml(path)}</code> ei löydy.</p>
     <p><a href="/">Palaa etusivulle</a></p>
 </section>`;
 }

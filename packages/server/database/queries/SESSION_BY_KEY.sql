@@ -30,6 +30,6 @@ SELECT
 FROM Session s
 LEFT JOIN Agenda a ON s.agenda_key = a.key
 LEFT JOIN (SELECT session_key, COUNT(*) AS voting_count FROM Voting WHERE annulled = 0 GROUP BY session_key) vc ON vc.session_key = s.key
-LEFT JOIN (SELECT session_key, COUNT(*) AS section_count FROM Section GROUP BY session_key) sc ON sc.session_key = s.key
+LEFT JOIN (SELECT session_key, COUNT(*) AS section_count FROM Section WHERE minutes_entry_kind = 'asiakohta' GROUP BY session_key) sc ON sc.session_key = s.key
 LEFT JOIN (SELECT session_key, COUNT(*) AS speech_count, COUNT(DISTINCT person_id) AS speaker_count FROM Speech WHERE COALESCE(has_spoken, 1) = 1 GROUP BY session_key) spc ON spc.session_key = s.key
 WHERE s.key = $key;

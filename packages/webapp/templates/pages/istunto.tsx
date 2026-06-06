@@ -291,7 +291,7 @@ function SeatGrid({
       aria-label={`${totalPresent} läsnä ja ${totalAbsent} poissa, puolueittain väritettynä`}
     >
       {parties
-        .filter((p) => p.code !== "muu" && p.code !== "liik")
+        .filter((p) => p.total > 0)
         .map((p) => {
           const present = p.total - p.absent;
           const seats: string[] = [];
@@ -312,12 +312,12 @@ function SeatGrid({
 function SeatLegend({
   parties,
 }: {
-  parties: { code: string; color: string }[];
+  parties: { code: string; color: string; total: number }[];
 }) {
   return (
     <div class="seat-legend">
       {parties
-        .filter((p) => p.code !== "muu" && p.code !== "liik")
+        .filter((p) => p.total > 0)
         .map((p) => (
           <span class="it">
             <span class="d" style={`background:${p.color}`}></span>

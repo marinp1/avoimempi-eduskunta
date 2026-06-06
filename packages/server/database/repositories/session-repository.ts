@@ -1,4 +1,5 @@
 import type { Database } from "bun:sqlite";
+import partySeatCounts from "../queries/PARTY_SEAT_COUNTS.sql";
 import latestSpeechDate from "../queries/LATEST_SPEECH_DATE.sql";
 import rollCallEntries from "../queries/ROLL_CALL_ENTRIES.sql";
 import sectionByKey from "../queries/SECTION_BY_KEY.sql";
@@ -410,6 +411,22 @@ export class SessionRepository {
       report: info,
       entries,
     };
+  }
+
+  public fetchPartySeatCounts(
+    date: string,
+  ): Array<{
+    party_code: string;
+    seat_count: number;
+    is_in_government: number;
+  }> {
+    const stmt = this.db.prepare<
+      { party_code: string; seat_count: number; is_in_government: number },
+      { $date: string }
+    >(partySeatCounts);
+    const rows = stmt.all({ $date: date });
+    stmt.finalize();
+    return rows;
   }
 
   public fetchSessionByDate(params: { date: string }) {
