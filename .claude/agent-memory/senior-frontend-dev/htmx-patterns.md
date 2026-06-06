@@ -24,6 +24,7 @@ HTMX is **server-driven HTML**, not client-driven JSON+JS. The server owns state
 - CSS: `src/styles.css` — CSS custom properties, reset, layout
 
 Valid `htmx.config` properties (v4 `HtmxConfig` type):
+
 ```
 defaultSwap, defaultFocusScroll, defaultSettleDelay, defaultTimeout,
 transitions, history, mode, prefix, logAll, indicatorClass,
@@ -34,18 +35,18 @@ noSwap, implicitInheritance, metaCharacter
 
 ## Core Attributes
 
-| Attribute | Purpose |
-|---|---|
-| `hx-get/post/put/patch/delete` | HTTP method + URL |
-| `hx-target` | CSS selector for where response is swapped |
-| `hx-swap` | Swap strategy (see below) |
-| `hx-trigger` | Event that fires the request |
-| `hx-push-url="true"` | Adds URL to browser history |
-| `hx-boost="true"` | Converts child `<a>` and `<form>` to htmx |
-| `hx-select` | Extract a portion of the response |
-| `hx-include` | Add extra form values to request |
-| `hx-indicator` | Element that shows htmx-request class during load |
-| `hx-ignore` | Block htmx from processing this subtree (for untrusted content) |
+| Attribute                      | Purpose                                                         |
+| ------------------------------ | --------------------------------------------------------------- |
+| `hx-get/post/put/patch/delete` | HTTP method + URL                                               |
+| `hx-target`                    | CSS selector for where response is swapped                      |
+| `hx-swap`                      | Swap strategy (see below)                                       |
+| `hx-trigger`                   | Event that fires the request                                    |
+| `hx-push-url="true"`           | Adds URL to browser history                                     |
+| `hx-boost="true"`              | Converts child `<a>` and `<form>` to htmx                       |
+| `hx-select`                    | Extract a portion of the response                               |
+| `hx-include`                   | Add extra form values to request                                |
+| `hx-indicator`                 | Element that shows htmx-request class during load               |
+| `hx-ignore`                    | Block htmx from processing this subtree (for untrusted content) |
 
 ## hx-swap Values
 
@@ -67,24 +68,35 @@ With modifiers: `hx-swap="innerHTML transition:true"` — enables View Transitio
 ## hx-trigger Modifiers
 
 ```html
-hx-trigger="click"                  <!-- default for buttons -->
-hx-trigger="change"                 <!-- default for inputs -->
-hx-trigger="submit"                 <!-- default for forms -->
-hx-trigger="load"                   <!-- on page load -->
-hx-trigger="revealed"               <!-- when scrolled into view -->
-hx-trigger="intersect"              <!-- IntersectionObserver -->
-hx-trigger="every 30s"              <!-- polling -->
-hx-trigger="keyup changed delay:500ms"  <!-- debounced search -->
-hx-trigger="click from:#other-el"  <!-- listen on different element -->
+hx-trigger="click"
+<!-- default for buttons -->
+hx-trigger="change"
+<!-- default for inputs -->
+hx-trigger="submit"
+<!-- default for forms -->
+hx-trigger="load"
+<!-- on page load -->
+hx-trigger="revealed"
+<!-- when scrolled into view -->
+hx-trigger="intersect"
+<!-- IntersectionObserver -->
+hx-trigger="every 30s"
+<!-- polling -->
+hx-trigger="keyup changed delay:500ms"
+<!-- debounced search -->
+hx-trigger="click from:#other-el"
+<!-- listen on different element -->
 ```
 
 ## Navigation Pattern (nav in index.html)
 
 ```html
-<nav hx-boost="true"
-     hx-target="#main-content"
-     hx-push-url="true"
-     hx-swap="innerHTML transition:true">
+<nav
+  hx-boost="true"
+  hx-target="#main-content"
+  hx-push-url="true"
+  hx-swap="innerHTML transition:true"
+>
   <a href="/edustajat">Edustajat</a>
 </nav>
 <main id="main-content">...</main>
@@ -92,19 +104,19 @@ hx-trigger="click from:#other-el"  <!-- listen on different element -->
 
 `hx-boost` on the `<nav>` converts all child `<a>` tags to htmx requests that swap `#main-content`. The server returns only the page fragment, not the full shell.
 
-## Server Response Headers (HX-*)
+## Server Response Headers (HX-\*)
 
 The Bun server can return these headers to control client behaviour:
 
-| Header | Effect |
-|---|---|
-| `HX-Push-Url: /path` | Push a URL to history |
-| `HX-Replace-Url: /path` | Replace current URL |
-| `HX-Redirect: /path` | Client-side redirect (no full reload) |
-| `HX-Refresh: true` | Trigger full page refresh |
-| `HX-Retarget: #selector` | Override hx-target |
-| `HX-Reswap: outerHTML` | Override hx-swap |
-| `HX-Trigger: event-name` | Fire a client event |
+| Header                   | Effect                                |
+| ------------------------ | ------------------------------------- |
+| `HX-Push-Url: /path`     | Push a URL to history                 |
+| `HX-Replace-Url: /path`  | Replace current URL                   |
+| `HX-Redirect: /path`     | Client-side redirect (no full reload) |
+| `HX-Refresh: true`       | Trigger full page refresh             |
+| `HX-Retarget: #selector` | Override hx-target                    |
+| `HX-Reswap: outerHTML`   | Override hx-swap                      |
+| `HX-Trigger: event-name` | Fire a client event                   |
 
 ## Request Headers (htmx sends automatically)
 
@@ -117,9 +129,12 @@ HX-Boosted: "true"  (only for hx-boost requests)
 ```
 
 Use these in Bun route handlers to detect and return partial HTML:
+
 ```typescript
 if (req.headers.get("HX-Request")) {
-  return new Response(fragmentHtml, { headers: { "Content-Type": "text/html" } });
+  return new Response(fragmentHtml, {
+    headers: { "Content-Type": "text/html" },
+  });
 }
 // else return full page
 ```
@@ -127,10 +142,12 @@ if (req.headers.get("HX-Request")) {
 ## Status-Code Conditional Swaps (v4 feature)
 
 ```html
-<form hx-post="/submit"
-      hx-target="#result"
-      hx-status:422="target:#validation-errors"
-      hx-status:500="target:#server-error">
+<form
+  hx-post="/submit"
+  hx-target="#result"
+  hx-status:422="target:#validation-errors"
+  hx-status:500="target:#server-error"
+></form>
 ```
 
 ## Security Rules

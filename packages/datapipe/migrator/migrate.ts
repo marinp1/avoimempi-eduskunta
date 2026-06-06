@@ -705,7 +705,9 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
         `✅ VACUUM complete (${toMb(sizeBeforeBytes)} MB -> ${toMb(sizeAfterBytes)} MB)`,
       );
     } else {
-      console.log("⏭️  Skipping VACUUM (MIGRATOR_VACUUM_AFTER_IMPORT disabled)");
+      console.log(
+        "⏭️  Skipping VACUUM (MIGRATOR_VACUUM_AFTER_IMPORT disabled)",
+      );
     }
 
     console.log("✅ Safety features restored");
@@ -754,7 +756,7 @@ export function getLastMigrationTimestamp(): string | null {
       .get();
     db.close();
     return result?.value || null;
-  } catch (_error) {
+  } catch {
     return null;
   }
 }

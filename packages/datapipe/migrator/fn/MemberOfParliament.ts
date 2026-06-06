@@ -456,31 +456,32 @@ export default (db: Database) => {
 
     let unknownCommitteeInd = 0;
     const committeeRows: DatabaseTables.Committee[] = [];
-    const committeeMembershipRows: DatabaseTables.CommitteeMembership[] = [
-      ...mergeArrays(
+    const committeeMembershipRows: DatabaseTables.CommitteeMembership[] =
+      mergeArrays(
         XmlDataFi.Henkilo.NykyisetToimielinjasenyydet?.Toimielin,
         XmlDataFi.Henkilo.AiemmatToimielinjasenyydet?.Toimielin,
-      ).flatMap((s) =>
-        mergeArrays(s.Jasenyys).map((j) => ({ ...j, __parent__: s })),
-      ),
-    ].map((v) => {
-      const committee_code =
-        v.__parent__.Tunnus ||
-        `unknown${String(unknownCommitteeInd++).padStart(5, "0")}`;
-      if (!committeeRows.find((r) => r.code === committee_code)) {
-        committeeRows.push({
-          code: committee_code,
-          name: v.__parent__.Nimi ?? committee_code,
+      )
+        .flatMap((s) =>
+          mergeArrays(s.Jasenyys).map((j) => ({ ...j, __parent__: s })),
+        )
+        .map((v) => {
+          const committee_code =
+            v.__parent__.Tunnus ||
+            `unknown${String(unknownCommitteeInd++).padStart(5, "0")}`;
+          if (!committeeRows.find((r) => r.code === committee_code)) {
+            committeeRows.push({
+              code: committee_code,
+              name: v.__parent__.Nimi ?? committee_code,
+            });
+          }
+          return {
+            person_id: +dataToImport.personId,
+            committee_code: committee_code,
+            role: v.Rooli,
+            start_date: parseDate(v.AlkuPvm)!,
+            end_date: parseDate(v.LoppuPvm),
+          };
         });
-      }
-      return {
-        person_id: +dataToImport.personId,
-        committee_code: committee_code,
-        role: v.Rooli,
-        start_date: parseDate(v.AlkuPvm)!,
-        end_date: parseDate(v.LoppuPvm),
-      };
-    });
 
     let unknownGroupCode = 0;
     const parliamentGroupRows: DatabaseTables.ParliamentGroup[] = [];

@@ -1,24 +1,9 @@
 {
   "name": "eduskunta-forum",
   "version": "1.1.0",
-  "type": "module",
   "private": true,
-  "author": "",
-  "license": "ISC",
   "description": "Data aggregation and analysis platform for Finnish Parliament",
-  "dependencies": {
-    "bun-sqlite-migrations": "1.0.2",
-    "fast-xml-parser": "5.5.7",
-    "htmx.org": "4.0.0-beta4"
-  },
-  "devDependencies": {
-    "@types/bun": "1.3.8",
-    "@types/node": "22.13.4",
-    "@typescript/native-preview": "7.0.0-dev.20260330.1",
-    "oxfmt": "0.52.0",
-    "oxlint": "1.67.0",
-    "oxlint-tsgolint": "0.23.0"
-  },
+  "type": "module",
   "scripts": {
     "typecheck": "tsgo -p tsconfig.json --noEmit",
     "start": "NODE_ENV=development bun run packages/server/index.ts",
@@ -37,10 +22,23 @@
     "bench:sql": "bun run packages/server/scripts/benchmark-query-latency.ts",
     "bench:http": "bun run packages/server/scripts/benchmark-http-load.ts",
     "lint": "oxlint && oxfmt --check",
-    "lint:fix": "oxlint --fix %% oxfmt",
+    "lint:fix": "oxlint --fix && oxfmt",
     "check:table-coverage": "bun run scripts/check-table-coverage-vs-api.ts",
     "release": "bun run scripts/release.ts",
     "release:minor": "bun run scripts/release.ts minor",
     "release:major": "bun run scripts/release.ts major"
+  },
+  "dependencies": {
+    "bun-sqlite-migrations": "1.0.2",
+    "fast-xml-parser": "5.5.7",
+    "htmx.org": "4.0.0-beta4"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.8",
+    "@types/node": "22.13.4",
+    "@typescript/native-preview": "7.0.0-dev.20260330.1",
+    "oxfmt": "0.52.0",
+    "oxlint": "1.67.0",
+    "oxlint-tsgolint": "0.23.0"
   }
 }

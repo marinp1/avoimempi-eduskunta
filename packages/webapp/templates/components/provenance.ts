@@ -32,7 +32,7 @@ export function cite(inner: string, data: CiteData): string {
         ` data-${k.replace(/([A-Z])/g, "-$1").toLowerCase()}="${esc(v as string)}"`,
     )
     .join("");
-  return html`<span class="cite"${attrs}>${inner}</span>`;
+  return html`<span class="cite" ${attrs}>${inner}</span>`;
 }
 
 export interface SourceNoteOptions {
@@ -47,10 +47,12 @@ export function sourceNote({
   extra,
 }: SourceNoteOptions): string {
   return html`<div class="source-note">
-  <span>Lähde:</span>
-  ${dataset ? html`<span class="dset">${esc(dataset)}</span>` : ""}
-  ${dataset && fetchedAt ? `<span>·</span>` : ""}
-  ${fetchedAt ? html`<span class="fresh">haettu ${esc(fetchedAt)}</span>` : ""}
-  ${extra ? `<span>·</span><span>${extra}</span>` : ""}
-</div>`;
+    <span>Lähde:</span>
+    ${dataset ? html`<span class="dset">${esc(dataset)}</span>` : ""}
+    ${dataset && fetchedAt ? `<span>·</span>` : ""}
+    ${fetchedAt
+      ? html`<span class="fresh">haettu ${esc(fetchedAt)}</span>`
+      : ""}
+    ${extra ? `<span>·</span><span>${extra}</span>` : ""}
+  </div>`;
 }

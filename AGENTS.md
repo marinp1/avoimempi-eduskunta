@@ -36,11 +36,12 @@ packages/
 
 The project uses an offline-first storage abstraction that writes to local filesystem:
 
-1. **data/raw/{TableName}/page_*.json** - Raw API responses (created by scraper)
-2. **data/parsed/{TableName}/page_*.json** - Parsed/transformed data (created by parser)
+1. **data/raw/{TableName}/page\_\*.json** - Raw API responses (created by scraper)
+2. **data/parsed/{TableName}/page\_\*.json** - Parsed/transformed data (created by parser)
 3. **avoimempi-eduskunta.db** - Final normalized SQLite schema (created by migrator)
 
 Storage abstraction is managed through `packages/shared/storage/index.ts` which provides:
+
 - `storage.put(key, data)` - Write data to storage
 - `storage.get(key)` - Read data from storage
 - `storage.list(prefix)` - List keys with prefix
@@ -48,6 +49,7 @@ Storage abstraction is managed through `packages/shared/storage/index.ts` which 
 ## Common Commands
 
 ### Type Checking
+
 ```bash
 # Check all workspaces
 bun run typecheck
@@ -60,6 +62,7 @@ cd packages/shared && bun run typecheck
 ```
 
 ### Application Development
+
 ```bash
 # Start the web application server (from root)
 bun run start
@@ -74,6 +77,7 @@ cd packages/server && bun run start
 The data pipeline follows this order: scrape → parse → migrate
 
 **1. Scraping (fetch raw data from API)**
+
 ```bash
 # From root
 bun run scrape <TableName>
@@ -85,6 +89,7 @@ bun run scrape:status                # Check scraping status
 ```
 
 **2. Parsing (transform raw data)**
+
 ```bash
 # From root
 bun run parse <TableName>
@@ -96,6 +101,7 @@ bun run parse:status                 # Check parsing status
 ```
 
 **3. Migration (import to final schema)**
+
 ```bash
 bun run migrate
 ```
@@ -153,6 +159,7 @@ The web application is split into clear client/server separation:
 ### Path Aliasing
 
 TypeScript path aliases are configured per workspace. Common pattern:
+
 - `#database` → `../shared/database/index.ts`
 - `#constants` → `../shared/constants/index.ts`
 - `#storage` → `../shared/storage/index.ts`
@@ -164,6 +171,7 @@ Check each workspace's `tsconfig.json` for specific path mappings.
 All supported table names are defined in `packages/shared/constants/TableNames.ts`. Primary keys for each table are in `packages/shared/constants/PrimaryKeys.ts`.
 
 Common tables:
+
 - `MemberOfParliament` - Representative data
 - `SaliDBAanestys` - Voting sessions
 - `SaliDBAanestysEdustaja` - Individual votes by representatives
@@ -190,6 +198,7 @@ Common tables:
 3. **Separate statements with blank lines** - Improves readability and ensures proper parsing
 
 **Good Example:**
+
 ```sql
 ALTER TABLE Term ADD COLUMN start_year INTEGER;
 
@@ -199,6 +208,7 @@ CREATE INDEX idx_term_start_year ON Term(start_year);
 ```
 
 **Bad Example (will fail):**
+
 ```sql
 -- Add year columns to Term table
 ALTER TABLE Term ADD COLUMN start_year INTEGER;  -- For optimization
@@ -218,6 +228,7 @@ All packages use ESM modules (`"type": "module"` in package.json). Import statem
 ### Storage Abstraction
 
 The storage layer is designed to be cloud-agnostic and offline-first:
+
 - Current implementation uses local filesystem (`LocalFilesystemStorage`)
 - Can be swapped for S3, Azure Blob, etc. by implementing the `Storage` interface
 - All datapipe operations go through the storage abstraction
@@ -225,7 +236,6 @@ The storage layer is designed to be cloud-agnostic and offline-first:
 ### Error Handling in Scraper
 
 The scraper has a safety limit (`MAX_LOOP_LIMIT = 10_000`) to prevent infinite loops. If this limit is reached, it throws a "Sanity check error". This can be adjusted for large tables.
-
 
 ## Available Agents
 

@@ -29,6 +29,7 @@ export class StorageFactory {
         }
         return new LocalStorageProvider(config.local.baseDir);
       default:
+        // oxlint-disable-next-line typescript/restrict-template-expressions
         throw new Error(`Unknown storage provider: ${config.provider}`);
     }
   }

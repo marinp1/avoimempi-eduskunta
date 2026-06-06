@@ -1,12 +1,14 @@
 # SQLite Backend Engineer Memory
 
 ## Database Overview
+
 - Path: `avoimempi-eduskunta.db`
-- 28 user tables + _migration_info + sqlite_sequence
+- 28 user tables + \_migration_info + sqlite_sequence
 - Largest tables: Vote (4.28M), DocumentSubject (139K), Speech (138K), ExcelSpeech (115K)
 - See `data-quality.md` for comprehensive quality issues found 2026-02-09
 
 ## Schema Quick Reference
+
 - `Representative` (2677 rows): person_id PK, names, party, demographics
 - `Vote` (4.28M rows): voting_id FK, person_id FK, vote text, group_abbrviation (typo in column name)
 - `Voting` (21448 rows): voting sessions with section linkage
@@ -20,6 +22,7 @@
 - `Term` (3416 rows): parliamentary terms
 
 ## Key Issues Found
+
 - Vote.group_abbrviation: column name typo, ALL 4.28M rows have trailing whitespace (padded to 10 chars)
 - Representative.last_name: 413 rows have leading space
 - CommitteeMembership.role: 6 pairs of case-inconsistent values (jäsen/Jäsen, varajäsen/Varajäsen, etc.)
@@ -34,6 +37,7 @@
 - ExcelSpeech.speech_type: many hyphenated/broken word variants from PDF extraction
 
 ## Row Store Architecture
+
 - `IRowStore` interface in `packages/shared/storage/row-store/types.ts`
 - SQLite provider: `packages/shared/storage/row-store/providers/sqlite.ts`
 - Postgres provider: `packages/shared/storage/row-store/providers/postgres.ts`
@@ -44,12 +48,14 @@
 - Upserts chunked at 500 rows; `list()` uses keyset pagination `pk > lastPk`, batch 1000
 
 ## Query Patterns & Gotchas
+
 - **NEVER JOIN Voting → Section → Session**: 97.8% of votings have empty section_key ('')
 - Use `Voting.session_key` directly for counting votings per session
 - Empty string ('') is NOT the same as NULL - check both when filtering
 - Fixed: SESSION_VOTING_COUNT.sql now uses direct session_key (2026-02-16)
 
 ## Migration Conventions
+
 - Files in `packages/datapipe/migrator/migrations/V*.sql`
 - No inline comments, semicolon-split execution
 - Tables use snake_case column names mostly

@@ -8,9 +8,8 @@ type RouteResponse<TData, TError = ErrorResponse> = TypedResponse<
   TData | TError
 >;
 
-type InferResponseBody<TResponse> = TResponse extends TypedResponse<infer TData>
-  ? TData
-  : never;
+type InferResponseBody<TResponse> =
+  TResponse extends TypedResponse<infer TData> ? TData : never;
 
 type InferRouteResponse<THandler> = THandler extends (
   ...args: any[]

@@ -31,13 +31,13 @@ ssh hetzner ".../provision-vm.sh"  → creates users, dirs, sudoers, installs sy
 
 Two systemd-managed applications run under separate users:
 
-| | `avoimempi-eduskunta-app` | `avoimempi-eduskunta-pipeline` |
-|---|---|---|
-| What | Bun HTTP server | scraper / parser / migrator timers |
-| Port | 80 | — |
-| Data reads | `/var/lib/avoimempi-eduskunta-app/current.db` | Parliament API, row stores |
-| Data writes | `shared/migration.lock` | row stores, SQLite DB, app releases dir |
-| Special | `CAP_NET_BIND_SERVICE` | `sudo /opt/.../scripts/restart-app.sh` only |
+|             | `avoimempi-eduskunta-app`                     | `avoimempi-eduskunta-pipeline`              |
+| ----------- | --------------------------------------------- | ------------------------------------------- |
+| What        | Bun HTTP server                               | scraper / parser / migrator timers          |
+| Port        | 80                                            | —                                           |
+| Data reads  | `/var/lib/avoimempi-eduskunta-app/current.db` | Parliament API, row stores                  |
+| Data writes | `shared/migration.lock`                       | row stores, SQLite DB, app releases dir     |
+| Special     | `CAP_NET_BIND_SERVICE`                        | `sudo /opt/.../scripts/restart-app.sh` only |
 
 After migration the pipeline user copies the finished SQLite DB into
 `/var/lib/avoimempi-eduskunta-app/releases/` (group-writable via shared group membership),

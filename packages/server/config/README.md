@@ -4,6 +4,7 @@
 The file is validated by `sanity-constraints.schema.json` (IDE + loader validation).
 
 Each constraint entry includes:
+
 - `id` - Stable identifier for the constraint
 - `name` - Must match the emitted check name
 - `category` and `description` - User-facing metadata
@@ -14,12 +15,14 @@ Each constraint entry includes:
 The server validates the YAML at startup and exposes this metadata in `/api/status/sanity-checks`.
 
 Adding a new constraint is easiest when done in this order:
+
 1. Add or update the check implementation in `packages/server/services/sanity-checks.ts`.
 2. Add one YAML entry in `sanity-constraints.yaml` with matching `name`.
 3. Link any SQL key via `query_keys` and optional tuning values via `params`.
 4. Run `bun test packages/server/__tests__/sanity-constraint-definitions.test.ts`.
 
 Notes:
+
 - `name` is the join key between runtime checks and YAML metadata.
 - Unknown `query_keys` fail fast during YAML load.
 - Missing or unused YAML definitions fail tests.

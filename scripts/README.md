@@ -118,16 +118,19 @@ ssh hetzner "journalctl -u 'avoimempi-eduskunta-pipeline-*' -n 50 --no-pager"
 ## Troubleshooting
 
 **Stale lock file** — a job crashed without releasing the lock:
+
 ```bash
 ssh hetzner "rm -rf /var/lib/avoimempi-eduskunta-pipeline/locks/pipeline.lock"
 ```
 
 **App fails to start** — check journal for the actual error:
+
 ```bash
 ssh hetzner "journalctl -u avoimempi-eduskunta-app -n 100 --no-pager"
 ```
 
 **DB not updated after migration** — run migrate-sync manually:
+
 ```bash
 ssh hetzner "sudo -u avoimempi-eduskunta-pipeline /opt/avoimempi-eduskunta/scripts/pipeline-jobs.sh migrate-sync"
 ```

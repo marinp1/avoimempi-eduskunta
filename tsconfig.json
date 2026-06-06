@@ -2,11 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "preserve",
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -14,39 +10,21 @@
     "strict": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "types": [
-      "bun-types"
-    ],
+    "types": ["bun-types"],
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noImplicitAny": true,
     "paths": {
-      "#constants": [
-        "./packages/shared/constants/index.ts"
-      ],
-      "#constants/*": [
-        "./packages/shared/constants/*"
-      ],
-      "#database": [
-        "./packages/shared/database/index.ts"
-      ],
-      "#storage": [
-        "./packages/shared/storage/index.ts"
-      ],
-      "#storage/*": [
-        "./packages/shared/storage/*"
-      ],
-      "#table-counts": [
-        "./packages/shared/table-counts/index.ts"
-      ],
-      "#table-counts/*": [
-        "./packages/shared/table-counts/*"
-      ],
-      "#client/*": [
-        "./packages/client/*"
-      ],
-    },
+      "#constants": ["./packages/shared/constants/index.ts"],
+      "#constants/*": ["./packages/shared/constants/*"],
+      "#database": ["./packages/shared/database/index.ts"],
+      "#storage": ["./packages/shared/storage/index.ts"],
+      "#storage/*": ["./packages/shared/storage/*"],
+      "#table-counts": ["./packages/shared/table-counts/index.ts"],
+      "#table-counts/*": ["./packages/shared/table-counts/*"],
+      "#client/*": ["./packages/client/*"]
+    }
   },
   "include": [
     "packages/**/*.ts",
@@ -54,7 +32,5 @@
     "packages/**/*.d.ts",
     "scripts"
   ],
-  "exclude": [
-    "node_modules"
-  ],
+  "exclude": ["node_modules"]
 }

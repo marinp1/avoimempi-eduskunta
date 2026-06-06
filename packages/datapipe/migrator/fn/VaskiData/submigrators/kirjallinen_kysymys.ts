@@ -765,6 +765,7 @@ export default function createKirallinenKysymysSubMigrator(db: Database) {
         }
       } catch (error) {
         console.error(
+          // oxlint-disable-next-line typescript/restrict-template-expressions
           `[kirjallinen_kysymys] Error processing KKV answers: ${error}`,
         );
       }

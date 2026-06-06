@@ -393,9 +393,8 @@ async function probeTailFromApi(
 async function main() {
   const args = parseArgs(process.argv.slice(2));
 
-  const { getRawRowStore, getParsedRowStore } = await import(
-    "../packages/shared/storage/row-store/factory.ts"
-  );
+  const { getRawRowStore, getParsedRowStore } =
+    await import("../packages/shared/storage/row-store/factory.ts");
   const rowStore =
     args.stage === "raw" ? getRawRowStore() : getParsedRowStore();
 

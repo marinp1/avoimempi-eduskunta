@@ -3,6 +3,7 @@
 ## [1.1.0] — 2026-06-04
 
 ### Features
+
 - add speech conversation drawer (c8dc112)
 - add inter fonts locally (d551e73)
 - remove analytics page (0039456)
@@ -181,6 +182,7 @@
 - add parser and migrations (9e3e3f0)
 
 ### Bug Fixes
+
 - minor UI fixes (d13e4ea)
 - properly handle null membership entries (5a261a7)
 - fix full scrape issue (6021adc)
@@ -304,6 +306,7 @@
 - improve schema generation (71cb149)
 
 ### Other
+
 - script: summarise sections (2db0272)
 - chore: release v1.1.0-alpha.5 (208e4ea)
 - refactor(client): redesign documents and hallitukset pages (5a230c3)
@@ -397,7 +400,7 @@
 - housekeeping: cleanup (45a492e)
 - script: improve validation script (cc1309b)
 - refactor(server): split database file (9a49375)
-- datapipe: migrate vaskidata/aloite_* (d455f60)
+- datapipe: migrate vaskidata/aloite\_\* (d455f60)
 - datapipe: migrate vaskidata/toimenpidealoite (b791f97)
 - datapipe: migrate vaskidata/talousaloite (8129328)
 - datapipe: migrate vaskidata/suullinen_kysymys (11a5437)
@@ -483,6 +486,7 @@
 ## [1.1.0] — 2026-03-29
 
 ### Features
+
 - remove analytics page (9c1501c)
 - replace inline expansion with side-panel drawers across pages (d40a238)
 - add votings reference (70c5b64)
@@ -506,6 +510,7 @@
 - show additional timestamps in client (96c5fed)
 
 ### Bug Fixes
+
 - representative details view (7028067)
 - show finnish party names and fix session calendar ui (77472d8)
 - fix votings page link (e560ad8)
@@ -537,6 +542,7 @@
 - properly validate runId query parameter (c503f56)
 
 ### Other
+
 - housekeeping: run linter (2870a2e)
 - chore: release v1.0.1-alpha.12 (3a2a27e)
 - chore: release v1.0.1-alpha.11 (6579e1f)

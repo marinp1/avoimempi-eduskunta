@@ -47,9 +47,12 @@ function parseArgs() {
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--url" && args[i + 1]) url = args[++i];
-    else if (args[i] === "--concurrency" && args[i + 1]) concurrency = parseInt(args[++i], 10);
-    else if (args[i] === "--duration" && args[i + 1]) duration = parseInt(args[++i], 10);
-    else if (args[i] === "--ramp" && args[i + 1]) ramp = parseInt(args[++i], 10);
+    else if (args[i] === "--concurrency" && args[i + 1])
+      concurrency = parseInt(args[++i], 10);
+    else if (args[i] === "--duration" && args[i + 1])
+      duration = parseInt(args[++i], 10);
+    else if (args[i] === "--ramp" && args[i + 1])
+      ramp = parseInt(args[++i], 10);
   }
 
   return { url, concurrency, duration, ramp };
@@ -94,7 +97,10 @@ const C = {
   clear: "\x1b[2J\x1b[H",
 };
 
-function renderTable(state: SharedState, args: ReturnType<typeof parseArgs>): string {
+function renderTable(
+  state: SharedState,
+  args: ReturnType<typeof parseArgs>,
+): string {
   const elapsed = (Date.now() - state.startedAt) / 1000;
   const remaining = Math.max(0, args.duration - elapsed);
 
@@ -106,20 +112,22 @@ function renderTable(state: SharedState, args: ReturnType<typeof parseArgs>): st
   const lines: string[] = [];
 
   lines.push(`${C.bold}${C.cyan}Avoimempi Eduskunta — Stress Test${C.reset}`);
-  lines.push(`${C.dim}${args.url}  concurrency=${args.concurrency}  duration=${args.duration}s${C.reset}`);
+  lines.push(
+    `${C.dim}${args.url}  concurrency=${args.concurrency}  duration=${args.duration}s${C.reset}`,
+  );
   lines.push("");
 
   const okColor = totalFail > 0 ? C.yellow : C.green;
   lines.push(
     `  ${C.bold}elapsed${C.reset}  ${elapsed.toFixed(1).padStart(6)}s   ` +
       `${C.bold}remaining${C.reset}  ${remaining.toFixed(1).padStart(6)}s   ` +
-      `${C.bold}in-flight${C.reset}  ${String(state.inFlight).padStart(4)}`
+      `${C.bold}in-flight${C.reset}  ${String(state.inFlight).padStart(4)}`,
   );
   lines.push(
     `  ${C.bold}rps${C.reset}      ${String(rps).padStart(7)}    ` +
       `${C.bold}total${C.reset}      ${String(totalHits).padStart(7)}    ` +
       `${okColor}${C.bold}ok${C.reset}  ${String(totalOk).padStart(6)}  ` +
-      `${C.red}${C.bold}fail${C.reset}  ${String(totalFail).padStart(5)}`
+      `${C.red}${C.bold}fail${C.reset}  ${String(totalFail).padStart(5)}`,
   );
   lines.push("");
 
@@ -151,7 +159,7 @@ function renderTable(state: SharedState, args: ReturnType<typeof parseArgs>): st
         `  ${failColor}${pad(String(ep.fail), 4, true)}${C.reset}` +
         `  ${latencyColor}${pad(formatMs(mean(ep)), 8, true)}${C.reset}` +
         `  ${latencyColor}${pad(formatMs(p95), 8, true)}${C.reset}` +
-        `  ${latencyColor}${pad(formatMs(p99), 8, true)}${C.reset}`
+        `  ${latencyColor}${pad(formatMs(p99), 8, true)}${C.reset}`,
     );
   }
 
@@ -161,7 +169,7 @@ function renderTable(state: SharedState, args: ReturnType<typeof parseArgs>): st
 async function runWorker(
   workerIndex: number,
   state: SharedState,
-  args: ReturnType<typeof parseArgs>
+  args: ReturnType<typeof parseArgs>,
 ): Promise<void> {
   const endpoints = state.endpointStats;
   const n = endpoints.length;
@@ -236,13 +244,19 @@ function printFinalSummary(state: SharedState): void {
   console.log(`\n${C.bold}${C.cyan}═══ Final Summary ═══${C.reset}`);
   console.log(`  duration   ${elapsed.toFixed(1)}s`);
   console.log(`  requests   ${totalHits}  (${rps} req/s)`);
-  console.log(`  ${C.green}success    ${totalOk}${C.reset}  ${C.red}failed    ${totalFail}${C.reset}`);
-  console.log(`  latency    mean=${formatMs(avgMs).trim()}  p50=${formatMs(p50).trim()}  p95=${formatMs(p95).trim()}  p99=${formatMs(p99).trim()}`);
+  console.log(
+    `  ${C.green}success    ${totalOk}${C.reset}  ${C.red}failed    ${totalFail}${C.reset}`,
+  );
+  console.log(
+    `  latency    mean=${formatMs(avgMs).trim()}  p50=${formatMs(p50).trim()}  p95=${formatMs(p95).trim()}  p99=${formatMs(p99).trim()}`,
+  );
 
   if (totalFail > 0) {
     console.log(`\n  ${C.bold}Failures by endpoint:${C.reset}`);
     for (const ep of state.endpointStats.filter((e) => e.fail > 0)) {
-      console.log(`    ${ep.path.padEnd(38)} ${C.red}${ep.fail} failed${C.reset}`);
+      console.log(
+        `    ${ep.path.padEnd(38)} ${C.red}${ep.fail} failed${C.reset}`,
+      );
     }
   }
   console.log();
@@ -270,10 +284,12 @@ async function main() {
 
   process.stdout.write(C.clear);
   console.log(`${C.bold}Starting stress test against ${args.url}${C.reset}`);
-  console.log(`  concurrency=${args.concurrency}  duration=${args.duration}s  ramp=${args.ramp}s\n`);
+  console.log(
+    `  concurrency=${args.concurrency}  duration=${args.duration}s  ramp=${args.ramp}s\n`,
+  );
 
   const workers = Array.from({ length: args.concurrency }, (_, i) =>
-    runWorker(i, state, args)
+    runWorker(i, state, args),
   );
 
   const displayInterval = setInterval(() => {
@@ -281,7 +297,9 @@ async function main() {
     process.stdout.write(renderTable(state, args) + "\n");
   }, 500);
 
-  await new Promise<void>((resolve) => setTimeout(resolve, args.duration * 1000));
+  await new Promise<void>((resolve) =>
+    setTimeout(resolve, args.duration * 1000),
+  );
 
   state.running = false;
   clearInterval(displayInterval);

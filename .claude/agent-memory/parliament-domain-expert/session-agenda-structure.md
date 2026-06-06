@@ -5,12 +5,14 @@
 ### Primary Hierarchy
 
 **Täysistunto (Session/Plenary Session)**
+
 - The main plenary meeting of parliament
 - Occurs on specific dates (e.g., "Maanantai 2.6.2014 klo 11.00")
 - Database table: `Session`
 - Key field: `key` (format: "YYYY/NNN" where NNN is session number)
 
 **Asiakohta / Kohta (Section/Agenda Item)**
+
 - Individual discussion items within a session
 - Each section has a title, ordinal number, and resolution
 - Database table: `Section`
@@ -22,6 +24,7 @@
   - "Seuraava täysistunto" (next session announcement)
 
 **Puheenvuoro (Speech/Speaking Turn)**
+
 - Individual speeches within a section
 - Database table: `Speech`
 - Links to Representative via `person_id`
@@ -30,6 +33,7 @@
 - Full speech text available in `ExcelSpeech` table
 
 **Äänestys (Voting)**
+
 - Votes that occur within sections
 - Database table: `Voting`
 - Not all sections have votes
@@ -45,6 +49,7 @@ Session (1) ──┬─> (many) Section ──┬─> (many) Speech
 ```
 
 **Key Fields:**
+
 - Session.key = "YYYY/NNN" (e.g., "2014/257")
 - Section.session_key → Session.key
 - Section.ordinal = ordering within session (2, 3, 4...)
@@ -63,11 +68,13 @@ Session (1) ──┬─> (many) Section ──┬─> (many) Speech
 ## Data Patterns
 
 ### Session States
+
 - "LOPETETTU" = completed session
 - Sessions have date, year, session number
 - Speaker (puhemies) tracked via `speaker_id`
 
 ### Section Structure
+
 - Ordered by `ordinal` (monotonically increasing)
 - `identifier` is human-readable number ("1", "2", "3")
 - `title` is the main heading
@@ -76,6 +83,7 @@ Session (1) ──┬─> (many) Section ──┬─> (many) Speech
 - `vaski_id` links to document database for bills/proposals
 
 ### Speech Metadata
+
 - `speech_type`: "T" = normal speech
 - `request_method`: "I" = requested via system
 - `ordinal_number`: sequence within section
@@ -83,6 +91,7 @@ Session (1) ──┬─> (many) Section ──┬─> (many) Speech
 - `has_spoken`: 1 = speech delivered, 0 = not delivered
 
 ### Voting Structure
+
 - Most votings are on legislative items
 - `section_processing_phase`: "Ensimmäinen käsittely" (first reading), "Ainoa käsittely" (single reading), etc.
 - Vote totals: n_yes + n_no + n_abstain + n_absent = n_total (always 199 or 200)
@@ -93,17 +102,20 @@ Session (1) ──┬─> (many) Section ──┬─> (many) Speech
 ### Session Detail View Structure
 
 **Header:**
+
 - Session date and number
 - Session type and state
 - Speaker (puhemies) name
 
 **Agenda (Section List):**
+
 - Numbered list of sections (using `identifier`)
 - Each showing: title, processing_title (if present)
 - Visual indicators for: has votings, has speeches
 - Click to expand/navigate
 
 **Section Detail:**
+
 - Title and resolution
 - Link to VaskiDocument if available (bills, proposals)
 - Speeches list (ordered by ordinal)
@@ -117,6 +129,7 @@ Session (1) ──┬─> (many) Section ──┬─> (many) Speech
 ### Query Patterns
 
 **Get session agenda:**
+
 ```sql
 SELECT * FROM Section
 WHERE session_key = ?
@@ -124,6 +137,7 @@ ORDER BY ordinal
 ```
 
 **Get speeches for section:**
+
 ```sql
 SELECT s.*, r.party, r.district
 FROM Speech s
@@ -133,6 +147,7 @@ ORDER BY s.ordinal
 ```
 
 **Get votings for section:**
+
 ```sql
 SELECT * FROM Voting
 WHERE section_key = ?
@@ -140,6 +155,7 @@ ORDER BY number
 ```
 
 **Get full session with counts:**
+
 ```sql
 SELECT
   ses.*,
