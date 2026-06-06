@@ -1,53 +1,20 @@
 import {
-  Close as CloseIcon,
   ExpandMore as ExpandMoreIcon,
   Tune as TuneIcon,
 } from "@mui/icons-material";
-import {
-  Badge,
-  Box,
-  Button,
-  Chip,
-  Collapse,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Badge, Box, Button, Collapse, Stack } from "@mui/material";
 import React, { useState } from "react";
-import { colors } from "#client/theme";
 import { FilterBar } from "#client/theme/components";
 
-type ActiveFilterChip = {
-  key: string;
-  label: string;
-  onDelete: () => void;
-};
-
 const DocumentsFilterPanelComponent: React.FC<{
-  title?: string;
-  helperText?: string;
-  activeFiltersTitle?: string;
-  clearLabel?: string;
-  canClear?: boolean;
-  onClear?: () => void;
-  activeFilters?: ActiveFilterChip[];
   children: React.ReactNode;
   secondaryFilters?: React.ReactNode;
   collapsible?: boolean;
-}> = ({
-  title,
-  helperText,
-  activeFiltersTitle,
-  clearLabel,
-  canClear = false,
-  onClear,
-  activeFilters = [],
-  children,
-  secondaryFilters,
-  collapsible = false,
-}) => {
+  sticky?: boolean;
+}> = ({ children, secondaryFilters, collapsible = false, sticky = false }) => {
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const activeFilterCount = activeFilters.length;
+  const hasSecondary = Boolean(secondaryFilters);
 
   const filterContent = (
     <Stack spacing={1.5}>
@@ -56,9 +23,10 @@ const DocumentsFilterPanelComponent: React.FC<{
           display: "grid",
           gridTemplateColumns: {
             xs: "1fr",
-            md: "minmax(0, 2fr) repeat(2, minmax(180px, 1fr))",
+            md: "minmax(0, 2fr) minmax(180px, 1fr)",
           },
-          gap: 1.5,
+          gap: 1,
+          alignItems: "start",
         }}
       >
         {children}
@@ -70,74 +38,21 @@ const DocumentsFilterPanelComponent: React.FC<{
             display: "grid",
             gridTemplateColumns: {
               xs: "1fr",
-              md: "repeat(2, minmax(220px, 1fr))",
+              md: "repeat(auto-fit, minmax(200px, 1fr))",
             },
-            gap: 1.5,
+            gap: 1,
           }}
         >
           {secondaryFilters}
         </Box>
       )}
-
-      {activeFiltersTitle ? (
-        <Stack spacing={0.75}>
-          <Typography
-            variant="caption"
-            sx={{
-              color: colors.textSecondary,
-              fontWeight: 700,
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-            }}
-          >
-            {activeFiltersTitle}
-          </Typography>
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-            {activeFilters.length > 0 ? (
-              activeFilters.map((filter) => (
-                <Chip
-                  key={filter.key}
-                  label={filter.label}
-                  onDelete={filter.onDelete}
-                  sx={{
-                    backgroundColor: `${colors.primary}10`,
-                    color: colors.primary,
-                  }}
-                />
-              ))
-            ) : (
-              <Typography variant="body2" sx={{ color: colors.textTertiary }}>
-                -
-              </Typography>
-            )}
-          </Box>
-        </Stack>
-      ) : null}
     </Stack>
   );
 
   return (
     <FilterBar
-      title={title}
-      description={helperText}
       icon={<TuneIcon sx={{ fontSize: 18 }} />}
-      actions={
-        clearLabel && onClear ? (
-          <Button
-            variant="text"
-            color="inherit"
-            onClick={canClear ? onClear : undefined}
-            disabled={!canClear}
-            startIcon={<CloseIcon />}
-            sx={{
-              color: canClear ? colors.primary : colors.textTertiary,
-              px: 0,
-            }}
-          >
-            {clearLabel}
-          </Button>
-        ) : undefined
-      }
+      sticky={sticky}
       sx={{
         mb: 0,
       }}
@@ -149,10 +64,14 @@ const DocumentsFilterPanelComponent: React.FC<{
               display: "flex",
               alignItems: "center",
               gap: 1,
-              mb: filtersOpen ? 2 : 0,
+              mb: filtersOpen ? 1.5 : 0,
             }}
           >
-            <Badge badgeContent={activeFilterCount} color="primary">
+            <Badge
+              badgeContent={hasSecondary ? 1 : 0}
+              color="primary"
+              variant="dot"
+            >
               <Button
                 size="small"
                 variant="outlined"

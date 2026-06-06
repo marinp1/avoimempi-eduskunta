@@ -4,3 +4,4 @@ export { DocumentMetaItem } from "./DocumentMetaItem";
 export { DocumentsEmptyState } from "./DocumentsEmptyState";
 export { DocumentsFilterPanel } from "./DocumentsFilterPanel";
 export { DocumentsLoadingState } from "./DocumentsLoadingState";
+export { DocumentTypePicker } from "./DocumentTypePicker";

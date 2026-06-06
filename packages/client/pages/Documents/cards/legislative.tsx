@@ -15,7 +15,12 @@ import { InlineSpinner } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { apiFetch } from "#client/utils/fetch";
 import { DocumentCardShell, DocumentMetaItem } from "../components";
-import { formatDate, getOutcomeColor, InlineRelatedSessions } from "./shared";
+import {
+  DOCUMENT_TYPE_ACCENT,
+  formatDate,
+  getOutcomeColor,
+  InlineRelatedSessions,
+} from "./shared";
 
 export interface LegislativeInitiativeListItem {
   id: number;
@@ -243,12 +248,18 @@ function LegislativeInitiativeCardComponent({
     <DocumentCardShell
       title={item.title || t("noTitle")}
       identifier={item.parliament_identifier}
-      eyebrow={
+      accentColor={DOCUMENT_TYPE_ACCENT["legislative-initiatives-law"]}
+      typeBadge={
         <Chip
           label={item.initiative_type_code}
           size="small"
-          variant="outlined"
-          sx={{ borderColor: colors.dataBorder }}
+          sx={{
+            backgroundColor: `${DOCUMENT_TYPE_ACCENT["legislative-initiatives-law"]}15`,
+            color: DOCUMENT_TYPE_ACCENT["legislative-initiatives-law"],
+            fontWeight: 700,
+            fontSize: "0.6875rem",
+            height: 22,
+          }}
         />
       }
       status={

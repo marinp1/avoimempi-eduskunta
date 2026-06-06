@@ -25,10 +25,12 @@ SELECT
     t.start_date AS t_start_date,
     t.end_date AS t_end_date,
     pgm.group_name AS party_name,
+    pgm.group_code AS party_code,
     CASE
         WHEN gg.group_name IS NOT NULL THEN 1
         ELSE 0
-    END AS is_in_government
+    END AS is_in_government,
+    d.name AS district_name
 FROM
     representative r
 JOIN
@@ -39,6 +41,12 @@ LEFT JOIN
     AND (pgm.end_date IS NULL OR pgm.end_date >= $date)
 LEFT JOIN
     government_groups gg ON gg.group_name = pgm.group_name
+LEFT JOIN
+    RepresentativeDistrict rd ON r.person_id = rd.person_id
+    AND rd.start_date <= $date
+    AND (rd.end_date IS NULL OR rd.end_date >= $date)
+LEFT JOIN
+    District d ON rd.district_code = d.code
 WHERE
     t.start_date <= $date
     AND (t.end_date IS NULL OR t.end_date >= $date)

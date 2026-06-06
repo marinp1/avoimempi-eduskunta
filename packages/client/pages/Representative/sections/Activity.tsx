@@ -1,13 +1,6 @@
-import { Box, Divider, Skeleton, Stack } from "@mui/material";
+import { Box, Skeleton, Stack } from "@mui/material";
 import React from "react";
 import { apiFetch } from "#client/utils/fetch";
-
-const AttendancePersonDetail = React.lazy(
-  () => import("../../Insights/AttendancePersonDetail"),
-);
-const VotingActivity = React.lazy(
-  () => import("../../Insights/VotingActivity"),
-);
 
 import { JudgmentLine, judgeAgainstBaseline } from "../components/JudgmentLine";
 import { MetricWithBaseline } from "../components/MetricWithBaseline";
@@ -39,8 +32,6 @@ interface MetricsResponse {
   parliament: AverageRow;
 }
 
-const noop = () => {};
-
 const participationRate = (row: MetricRow | null): number | null => {
   if (!row || row.vote_total <= 0) return null;
   return (row.vote_cast / row.vote_total) * 100;
@@ -50,7 +41,7 @@ const formatPercent = (n: number) => `${n.toFixed(0)} %`;
 const formatCount = (n: number) =>
   Number.isInteger(n) ? n.toLocaleString("fi-FI") : n.toFixed(1);
 
-const Activity: React.FC<ProfileSectionProps> = ({ personId, scope }) => {
+const Activity: React.FC<ProfileSectionProps> = ({ personId }) => {
   const [metrics, setMetrics] = React.useState<MetricsResponse | null>(null);
   const [error, setError] = React.useState(false);
 
@@ -188,23 +179,6 @@ const Activity: React.FC<ProfileSectionProps> = ({ personId, scope }) => {
       ) : (
         <Skeleton variant="rectangular" height={120} />
       )}
-
-      <Divider sx={{ my: 3 }} />
-
-      <React.Suspense
-        fallback={<Skeleton variant="rectangular" height={200} />}
-      >
-        <AttendancePersonDetail
-          personId={personId}
-          personName=""
-          startDate={scope.selectedGovernmentPeriod?.government_start_date}
-          endDate={
-            scope.selectedGovernmentPeriod?.government_end_date ?? undefined
-          }
-          onClose={noop}
-        />
-        <VotingActivity onClose={noop} initialPersonId={personId} />
-      </React.Suspense>
     </SectionShell>
   );
 };

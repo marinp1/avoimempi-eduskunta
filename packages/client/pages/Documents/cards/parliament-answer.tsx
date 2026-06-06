@@ -20,10 +20,16 @@ import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
-import { DataCard, InlineSpinner } from "#client/theme/components";
+import { InlineSpinner } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { apiFetch } from "#client/utils/fetch";
-import { buildEdkDocumentUrl, formatDate } from "./shared";
+import {
+  buildEdkDocumentUrl,
+  DOCUMENT_TYPE_ABBR,
+  DOCUMENT_TYPE_ACCENT,
+  formatDate,
+  paperDocumentSx,
+} from "./shared";
 
 export interface ParliamentAnswerListItem {
   id: number;
@@ -211,9 +217,30 @@ function ParliamentAnswerCardComponent({
   };
 
   return (
-    <DataCard sx={{ contentVisibility: "auto", containIntrinsicSize: "320px" }}>
+    <Box
+      sx={{
+        ...paperDocumentSx,
+        contentVisibility: "auto",
+        containIntrinsicSize: "auto 140px",
+        borderLeft: `3px solid ${DOCUMENT_TYPE_ACCENT["parliament-answers"]}`,
+        mb: 1.5,
+      }}
+    >
       <Box sx={{ p: 2 }}>
         <Stack spacing={1.5}>
+          <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+            <Chip
+              label={DOCUMENT_TYPE_ABBR["parliament-answers"]}
+              size="small"
+              sx={{
+                backgroundColor: `${DOCUMENT_TYPE_ACCENT["parliament-answers"]}15`,
+                color: DOCUMENT_TYPE_ACCENT["parliament-answers"],
+                fontWeight: 700,
+                fontSize: "0.6875rem",
+                height: 22,
+              }}
+            />
+          </Stack>
           {/* Title row */}
           <Stack
             direction="row"
@@ -379,7 +406,7 @@ function ParliamentAnswerCardComponent({
           </Box>
         </Stack>
       </Box>
-    </DataCard>
+    </Box>
   );
 }
 

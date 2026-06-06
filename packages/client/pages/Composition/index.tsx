@@ -1,61 +1,25 @@
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ClearIcon from "@mui/icons-material/Clear";
-import EventBusyIcon from "@mui/icons-material/EventBusy";
 import HistoryEduIcon from "@mui/icons-material/HistoryEdu";
-import MicIcon from "@mui/icons-material/Mic";
-import SearchIcon from "@mui/icons-material/Search";
-import TableRowsIcon from "@mui/icons-material/TableRows";
-import TimelineIcon from "@mui/icons-material/Timeline";
-import ViewAgendaIcon from "@mui/icons-material/ViewAgenda";
-import {
-  Alert,
-  Box,
-  Button,
-  CardActionArea,
-  Chip,
-  Drawer,
-  IconButton,
-  InputAdornment,
-  LinearProgress,
-  MenuItem,
-  Paper,
-  Select,
-  Skeleton,
-  Slider,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, Button, Chip, Skeleton, Stack } from "@mui/material";
 import React from "react";
-import { TraceRegistration } from "#client/context/TraceContext";
 import {
-  type HallituskausiPeriod,
   isDateWithinHallituskausi,
   useHallituskausi,
 } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import Attendance from "#client/pages/Insights/Attendance";
-import SpeechActivity from "#client/pages/Insights/SpeechActivity";
-import TimeSeriesStatistics from "#client/pages/Insights/TimeSeriesStatistics";
-import { colors, commonStyles, spacing } from "#client/theme";
-import {
-  ActionLink,
-  EmptyState,
-  FilterBar,
-  PageIntro,
-} from "#client/theme/components";
-import { useThemedColors } from "#client/theme/ThemeContext";
+import { commonStyles, spacing } from "#client/theme";
+import { FilterBar, PageIntro } from "#client/theme/components";
 import { apiFetch } from "#client/utils/fetch";
 import { warnInDevelopment } from "#client/utils/request-errors";
-import { RepresentativeDetails, type RepresentativeSelection } from "./Details";
+import { AnalyticsSection } from "./components/AnalyticsSection";
+import { CompositionDiffBanner } from "./components/CompositionDiffBanner";
+import { GlobalPersonSearch } from "./components/GlobalPersonSearch";
+import { MemberBrowser } from "./components/MemberBrowser";
+import { PartyDetailPanel } from "./components/PartyDetailPanel";
+import { PartyDistribution } from "./components/PartyDistribution";
+import { TimelineSelector } from "./components/TimelineSelector";
+import type { RepresentativeSelection } from "./Details";
 import {
   buildCompositionUrl,
   buildPartySummaries,
@@ -63,6 +27,7 @@ import {
   type CompositionSortValue,
   calculateAgeAtDate,
   formatFinnishDate,
+  type GenderFilterValue,
   type GovernmentFilterValue,
   getActivationDateForSearchResult,
   getMemberStartDate,
@@ -73,297 +38,6 @@ import {
 } from "./helpers";
 
 const LOOKUP_DEBOUNCE_MS = 250;
-
-const TimelineSelector: React.FC<{
-  hallituskaudet: HallituskausiPeriod[];
-  selectedHallituskausi: HallituskausiPeriod | null;
-  date: string;
-  todayIso: string;
-  onDateChange: (date: string) => void;
-}> = ({
-  hallituskaudet,
-  selectedHallituskausi,
-  date,
-  todayIso,
-  onDateChange,
-}) => {
-  const tc = useThemedColors();
-
-  const rangeStart =
-    selectedHallituskausi?.startDate ??
-    hallituskaudet.reduce(
-      (min, period) => (period.startDate < min ? period.startDate : min),
-      hallituskaudet[0]?.startDate ?? "2000-01-01",
-    );
-  const rangeEnd = selectedHallituskausi?.endDate ?? todayIso;
-
-  const startMs = new Date(rangeStart).getTime();
-  const endMs = new Date(rangeEnd).getTime();
-  const span = endMs - startMs;
-
-  if (span <= 0 || hallituskaudet.length === 0) return null;
-
-  const toMs = (value: string) => new Date(value).getTime();
-  const toDate = (value: number) => new Date(value).toISOString().split("T")[0];
-  const toPct = (value: string) =>
-    Math.max(0, Math.min(100, ((toMs(value) - startMs) / span) * 100));
-
-  const visible = hallituskaudet
-    .filter(
-      (period) =>
-        period.startDate <= rangeEnd &&
-        (period.endDate ?? todayIso) >= rangeStart,
-    )
-    .sort((a, b) => (a.startDate < b.startDate ? -1 : 1));
-  const minTimelineWidth = Math.max(visible.length * 88, 720);
-
-  type Segment =
-    | {
-        kind: "period";
-        period: HallituskausiPeriod;
-        duration: number;
-        idx: number;
-      }
-    | { kind: "gap"; duration: number }
-    | {
-        kind: "overlap";
-        duration: number;
-        prev: HallituskausiPeriod;
-        curr: HallituskausiPeriod;
-      };
-
-  const segments: Segment[] = [];
-  let cursor = startMs;
-  for (let index = 0; index < visible.length; index++) {
-    const period = visible[index];
-    const periodStart = Math.max(toMs(period.startDate), startMs);
-    const periodEnd = Math.min(toMs(period.endDate ?? todayIso), endMs);
-
-    if (periodStart < cursor) {
-      const overlapDuration = cursor - periodStart;
-      const previousPeriod = visible[index - 1];
-      if (overlapDuration > 2 * 86_400_000 && previousPeriod) {
-        segments.push({
-          kind: "overlap",
-          duration: overlapDuration,
-          prev: previousPeriod,
-          curr: period,
-        });
-      }
-      if (periodEnd > cursor) {
-        segments.push({
-          kind: "period",
-          period,
-          duration: periodEnd - cursor,
-          idx: index,
-        });
-        cursor = periodEnd;
-      }
-    } else {
-      if (periodStart > cursor) {
-        segments.push({ kind: "gap", duration: periodStart - cursor });
-      }
-      if (periodEnd > periodStart) {
-        segments.push({
-          kind: "period",
-          period,
-          duration: periodEnd - periodStart,
-          idx: index,
-        });
-        cursor = periodEnd;
-      }
-    }
-  }
-
-  if (cursor < endMs) {
-    segments.push({ kind: "gap", duration: endMs - cursor });
-  }
-
-  const startYear = new Date(rangeStart).getFullYear();
-  const endYear = new Date(rangeEnd).getFullYear();
-  const yearSpan = endYear - startYear;
-  const yearStep = yearSpan <= 5 ? 1 : yearSpan <= 10 ? 2 : 4;
-  const yearTicks: number[] = [];
-  for (let year = startYear + 1; year <= endYear; year++) {
-    if ((year - startYear) % yearStep === 0) {
-      const pct = toPct(`${year}-01-01`);
-      if (pct > 2 && pct < 98) yearTicks.push(year);
-    }
-  }
-
-  const currentMs = Math.max(startMs, Math.min(endMs, toMs(date)));
-
-  return (
-    <Box sx={{ overflowX: "auto", pb: 0.5, scrollbarWidth: "thin" }}>
-      <Box sx={{ minWidth: minTimelineWidth }}>
-        <Box
-          sx={{
-            display: "flex",
-            height: 28,
-            borderRadius: 1,
-            overflow: "hidden",
-            border: `1px solid ${tc.dataBorder}`,
-            background: tc.backgroundPaper,
-          }}
-        >
-          {segments.map((segment, index) => {
-            if (segment.kind === "gap") {
-              return (
-                <Box
-                  key={`gap-${index}`}
-                  sx={{
-                    flexGrow: segment.duration,
-                    flexBasis: 0,
-                    flexShrink: 1,
-                  }}
-                />
-              );
-            }
-
-            if (segment.kind === "overlap") {
-              return (
-                <Tooltip
-                  key={`overlap-${index}`}
-                  title={`${segment.prev.label}\n${segment.curr.label}`}
-                  arrow
-                >
-                  <Box
-                    sx={{
-                      flexGrow: segment.duration,
-                      flexBasis: 0,
-                      flexShrink: 1,
-                      bgcolor: `${tc.warning}30`,
-                      borderLeft: `1px solid ${tc.warning}60`,
-                      borderRight: `1px solid ${tc.warning}60`,
-                    }}
-                  />
-                </Tooltip>
-              );
-            }
-
-            const isSelected = selectedHallituskausi?.id === segment.period.id;
-            return (
-              <Box
-                key={segment.period.id}
-                onClick={() =>
-                  onDateChange(
-                    segment.period.startDate > rangeStart
-                      ? segment.period.startDate
-                      : rangeStart,
-                  )
-                }
-                sx={{
-                  flexGrow: segment.duration,
-                  flexBasis: 0,
-                  flexShrink: 1,
-                  minWidth: 84,
-                  px: 0.75,
-                  display: "flex",
-                  alignItems: "center",
-                  cursor: "pointer",
-                  bgcolor: isSelected
-                    ? `${tc.primary}18`
-                    : segment.idx % 2 === 0
-                      ? `${tc.primary}08`
-                      : `${tc.primary}03`,
-                  borderRight: `1px solid ${tc.dataBorder}`,
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontSize: "0.62rem",
-                    fontWeight: isSelected ? 700 : 500,
-                    color: isSelected ? tc.primary : tc.textTertiary,
-                    lineHeight: 1,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {segment.period.name}
-                </Typography>
-              </Box>
-            );
-          })}
-        </Box>
-
-        <Box sx={{ px: 0.75 }}>
-          <Slider
-            value={currentMs}
-            min={startMs}
-            max={endMs}
-            step={86_400_000}
-            onChange={(_, value) => onDateChange(toDate(value as number))}
-            valueLabelDisplay="auto"
-            valueLabelFormat={(value) => formatFinnishDate(toDate(value))}
-            sx={{
-              py: "6px !important",
-              color: tc.primary,
-              "& .MuiSlider-thumb": {
-                width: 14,
-                height: 14,
-              },
-              "& .MuiSlider-rail": {
-                bgcolor: tc.dataBorder,
-                opacity: 1,
-                height: 4,
-              },
-              "& .MuiSlider-track": {
-                height: 4,
-                bgcolor: `${tc.primary}40`,
-                border: "none",
-              },
-              "& .MuiSlider-valueLabel": {
-                fontSize: "0.7rem",
-                py: 0.25,
-                px: 0.75,
-                bgcolor: tc.primary,
-              },
-            }}
-          />
-        </Box>
-
-        <Box sx={{ position: "relative", height: 14 }}>
-          {yearTicks.map((year) => (
-            <Typography
-              key={year}
-              sx={{
-                position: "absolute",
-                left: `${toPct(`${year}-01-01`)}%`,
-                transform: "translateX(-50%)",
-                top: 0,
-                fontSize: "0.62rem",
-                color: tc.textTertiary,
-                lineHeight: 1,
-              }}
-            >
-              {year}
-            </Typography>
-          ))}
-        </Box>
-      </Box>
-    </Box>
-  );
-};
-
-const BrowserToggleButton: React.FC<{
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-}> = ({ active, onClick, icon }) => (
-  <IconButton
-    size="small"
-    onClick={onClick}
-    sx={{
-      border: `1px solid ${active ? colors.primary : colors.dataBorder}`,
-      bgcolor: active ? `${colors.primary}10` : "transparent",
-      color: active ? colors.primary : colors.textSecondary,
-      borderRadius: 1,
-    }}
-  >
-    {icon}
-  </IconButton>
-);
 
 const readUrlState = () => {
   const params = new URLSearchParams(window.location.search);
@@ -380,26 +54,6 @@ const readUrlState = () => {
     query: params.get("q") ?? "",
     view: viewParam === "table" ? "table" : "list",
   } as const;
-};
-
-const getStatusColor = (governmentCount: number, oppositionCount: number) => {
-  if (governmentCount > 0 && oppositionCount === 0) return colors.success;
-  if (oppositionCount > 0 && governmentCount === 0) return colors.warning;
-  return colors.primary;
-};
-
-const getPartyBlocLabel = (
-  t: ReturnType<typeof useScopedTranslation>["t"],
-  governmentCount: number,
-  oppositionCount: number,
-) => {
-  if (governmentCount > 0 && oppositionCount === 0) {
-    return t("partyMatrix.government");
-  }
-  if (oppositionCount > 0 && governmentCount === 0) {
-    return t("partyMatrix.opposition");
-  }
-  return t("partyMatrix.mixed");
 };
 
 const fetchRepresentativeSelection = async (
@@ -433,12 +87,14 @@ const fetchRepresentativeSelection = async (
 
 export default () => {
   const { t } = useScopedTranslation("composition");
-  const themedColors = useThemedColors();
   const { hallituskaudet, selectedHallituskausi, setSelectedHallituskausiId } =
     useHallituskausi();
 
   const initialUrlState = React.useMemo(() => readUrlState(), []);
   const [members, setMembers] = React.useState<MemberWithExtras[]>([]);
+  const [previousMembers, setPreviousMembers] = React.useState<
+    MemberWithExtras[]
+  >([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [date, setDate] = React.useState(initialUrlState.date);
@@ -450,6 +106,12 @@ export default () => {
   const [partyFilter, setPartyFilter] = React.useState<string | null>(null);
   const [govFilter, setGovFilter] =
     React.useState<GovernmentFilterValue>("all");
+  const [genderFilter, setGenderFilter] =
+    React.useState<GenderFilterValue>("all");
+  const [districtFilter, setDistrictFilter] = React.useState<string | null>(
+    null,
+  );
+  const [ageRange, setAgeRange] = React.useState<[number, number] | null>(null);
   const [compositionSearch, setCompositionSearch] = React.useState("");
   const [activeInsightDrawer, setActiveInsightDrawer] = React.useState<
     "attendance" | "speechActivity" | "timeSeries" | null
@@ -538,7 +200,10 @@ export default () => {
         }
         const data = await response.json();
         if (controller.signal.aborted) return;
-        setMembers(data);
+        setMembers((prev) => {
+          if (prev.length > 0) setPreviousMembers(prev);
+          return data;
+        });
       } catch (loadError) {
         if (controller.signal.aborted) return;
         warnInDevelopment("Failed to fetch composition members", loadError);
@@ -689,6 +354,18 @@ export default () => {
       member.gender.toLowerCase().startsWith("m"),
     ).length;
 
+    const ages = members.map((m) => calculateAgeAtDate(m.birth_date, date));
+    const minAge = ages.length > 0 ? Math.min(...ages) : 20;
+    const maxAge = ages.length > 0 ? Math.max(...ages) : 80;
+
+    const districts = [
+      ...new Set(
+        members
+          .map((m) => m.district_name)
+          .filter((d): d is string => d != null),
+      ),
+    ].sort((a, b) => a.localeCompare(b));
+
     return {
       totalMembers,
       governmentMembers,
@@ -698,8 +375,11 @@ export default () => {
       womenCount,
       menCount,
       partySummaries,
+      minAge,
+      maxAge,
+      districts,
     };
-  }, [members]);
+  }, [members, date]);
 
   const filteredMembers = React.useMemo(() => {
     const q = compositionSearch.trim().toLowerCase();
@@ -718,6 +398,27 @@ export default () => {
       }
       if (govFilter === "opposition" && member.is_in_government === 1) {
         return false;
+      }
+      if (
+        genderFilter === "female" &&
+        !member.gender.toLowerCase().startsWith("n")
+      ) {
+        return false;
+      }
+      if (
+        genderFilter === "male" &&
+        !member.gender.toLowerCase().startsWith("m")
+      ) {
+        return false;
+      }
+      if (districtFilter && member.district_name !== districtFilter) {
+        return false;
+      }
+      if (ageRange) {
+        const age = calculateAgeAtDate(member.birth_date, date);
+        if (age < ageRange[0] || age > ageRange[1]) {
+          return false;
+        }
       }
       return true;
     });
@@ -746,7 +447,17 @@ export default () => {
     });
 
     return sorted;
-  }, [compositionSearch, date, govFilter, members, partyFilter, sortBy]);
+  }, [
+    ageRange,
+    compositionSearch,
+    date,
+    districtFilter,
+    genderFilter,
+    govFilter,
+    members,
+    partyFilter,
+    sortBy,
+  ]);
 
   React.useEffect(() => {
     if (!partyFilter) return;
@@ -756,8 +467,6 @@ export default () => {
 
   const openRepresentative = React.useCallback(
     (selection: RepresentativeSelection, _nextDate?: string) => {
-      // Navigate to the new dedicated representative profile page.
-      // Deep-linkable URL — replaces the legacy in-page Dialog.
       const href = `/edustaja/${selection.personId}`;
       window.history.pushState({}, "", href);
       window.dispatchEvent(new PopStateEvent("popstate"));
@@ -829,12 +538,6 @@ export default () => {
     },
     [openRepresentative],
   );
-
-  const handleCloseDialog = React.useCallback(() => {
-    setSelectedPersonId(null);
-    setSelectedRepresentative(null);
-    syncUrl({ person: null });
-  }, [syncUrl]);
 
   return (
     <Box>
@@ -929,159 +632,17 @@ export default () => {
         </FilterBar>
       </Box>
 
-      <Box
-        sx={{
-          p: 1.5,
-          mb: spacing.md,
-          borderBottom: `1px solid ${themedColors.dataBorder}`,
-        }}
-      >
-        <Typography
-          variant="h6"
-          sx={{ color: themedColors.textPrimary, fontWeight: 700 }}
-        >
-          {t("globalSearch.title")}
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{ color: themedColors.textSecondary, mb: 1.5 }}
-        >
-          {t("globalSearch.description")}
-        </Typography>
-
-        <TextField
-          fullWidth
-          size="small"
-          placeholder={t("globalSearch.placeholder")}
-          value={lookupQuery}
-          onChange={(event) => setLookupQuery(event.target.value)}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ fontSize: 18 }} />
-                </InputAdornment>
-              ),
-              endAdornment: lookupQuery ? (
-                <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => setLookupQuery("")}>
-                    <ClearIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
-                </InputAdornment>
-              ) : undefined,
-            },
-          }}
-        />
-
-        {lookupLoading && <LinearProgress sx={{ mt: 1.5 }} />}
-        {lookupSelectionMessage && (
-          <Alert severity="info" sx={{ mt: 1.5 }}>
-            {lookupSelectionMessage}
-          </Alert>
-        )}
-        {lookupError && (
-          <Alert severity="error" sx={{ mt: 1.5 }}>
-            {lookupError}
-          </Alert>
-        )}
-
-        {committedLookupQuery.length < 2 ? (
-          <EmptyState
-            title={t("globalSearch.startTitle")}
-            description={t("globalSearch.startHint")}
-            sx={{ mt: 2 }}
-          />
-        ) : lookupResults.length === 0 && !lookupLoading ? (
-          <EmptyState
-            title={t("globalSearch.noResults")}
-            description={t("globalSearch.noResultsHint")}
-            sx={{ mt: 2 }}
-          />
-        ) : (
-          <Box
-            sx={{
-              mt: 1.5,
-              display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                md: "repeat(2, minmax(0, 1fr))",
-                xl: "repeat(3, minmax(0, 1fr))",
-              },
-              gap: 1,
-            }}
-          >
-            {lookupResults.map((result) => (
-              <CardActionArea
-                key={result.person_id}
-                onClick={() => handleLookupResultClick(result)}
-                sx={{
-                  borderRadius: 1,
-                  border: `1px solid ${
-                    selectedRepresentative?.personId === result.person_id
-                      ? themedColors.primary
-                      : themedColors.dataBorder
-                  }`,
-                  background:
-                    selectedRepresentative?.personId === result.person_id
-                      ? `${themedColors.primary}08`
-                      : themedColors.backgroundPaper,
-                  px: 1,
-                  py: 0.75,
-                }}
-              >
-                <Stack spacing={0.75}>
-                  <Stack
-                    direction="row"
-                    spacing={0.75}
-                    flexWrap="wrap"
-                    useFlexGap
-                  >
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: 700, color: themedColors.textPrimary }}
-                    >
-                      {result.first_name} {result.last_name}
-                    </Typography>
-                    {result.is_current_mp === 1 && (
-                      <Chip
-                        size="small"
-                        label={t("globalSearch.badges.current")}
-                        sx={{ ...commonStyles.compactChipSm }}
-                      />
-                    )}
-                    {result.is_active_on_selected_date === 1 && (
-                      <Chip
-                        size="small"
-                        label={t("globalSearch.badges.activeOnDate")}
-                        sx={{ ...commonStyles.compactChipSm }}
-                      />
-                    )}
-                  </Stack>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: themedColors.textSecondary }}
-                  >
-                    {result.latest_party_name || t("details.unknownParty")}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    sx={{ color: themedColors.textTertiary }}
-                  >
-                    {t("globalSearch.termRange", {
-                      start: result.first_term_start
-                        ? formatFinnishDate(result.first_term_start)
-                        : "?",
-                      end: result.last_term_end
-                        ? formatFinnishDate(result.last_term_end)
-                        : t("details.ongoing"),
-                    })}
-                  </Typography>
-                </Stack>
-              </CardActionArea>
-            ))}
-          </Box>
-        )}
-      </Box>
+      <GlobalPersonSearch
+        lookupQuery={lookupQuery}
+        setLookupQuery={setLookupQuery}
+        lookupLoading={lookupLoading}
+        lookupError={lookupError}
+        lookupSelectionMessage={lookupSelectionMessage}
+        lookupResults={lookupResults}
+        committedLookupQuery={committedLookupQuery}
+        selectedRepresentative={selectedRepresentative}
+        onResultClick={handleLookupResultClick}
+      />
 
       {loading ? (
         <Box sx={{ mb: spacing.md }}>
@@ -1112,718 +673,70 @@ export default () => {
         </Alert>
       ) : (
         <>
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", xl: "1.15fr 0.85fr" },
-              gap: 2,
-              mb: spacing.md,
-            }}
-          >
-            <Box sx={{ p: 1.5 }}>
-              <Stack
-                direction={{ xs: "column", md: "row" }}
-                spacing={1}
-                justifyContent="space-between"
-                sx={{ mb: 1.5 }}
-              >
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      color: themedColors.textPrimary,
-                      fontWeight: 700,
-                      mb: 0.25,
-                    }}
-                  >
-                    {t("distribution.title")}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: themedColors.textSecondary }}
-                  >
-                    {t("distribution.description")}
-                  </Typography>
-                </Box>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  <Chip
-                    size="small"
-                    label={t("snapshot.genderSplit", {
-                      women: stats.womenCount,
-                      men: stats.menCount,
-                    })}
-                  />
-                  {stats.largestParty && (
-                    <Chip
-                      size="small"
-                      label={t("snapshot.leadingPartySeats", {
-                        party: stats.largestParty.partyName,
-                        count: stats.largestParty.total,
-                      })}
-                    />
-                  )}
-                </Stack>
-              </Stack>
-              <Box
-                sx={{
-                  display: "flex",
-                  height: 18,
-                  overflow: "hidden",
-                  borderRadius: 1,
-                  border: `1px solid ${themedColors.dataBorder}`,
-                  background: themedColors.backgroundSubtle,
-                }}
-              >
-                {stats.partySummaries.map((party) => (
-                  <Tooltip
-                    key={party.partyName}
-                    title={`${party.partyName}: ${party.total} ${t("distribution.seats")}`}
-                    arrow
-                  >
-                    <Box
-                      onClick={() =>
-                        setPartyFilter((current) =>
-                          current === party.partyName ? null : party.partyName,
-                        )
-                      }
-                      sx={{
-                        flex: party.total,
-                        minWidth: party.total <= 2 ? 8 : 0,
-                        cursor: "pointer",
-                        bgcolor: getStatusColor(
-                          party.government,
-                          party.opposition,
-                        ),
-                        opacity:
-                          partyFilter && partyFilter !== party.partyName
-                            ? 0.45
-                            : 1,
-                        transition: "opacity 150ms ease",
-                      }}
-                    />
-                  </Tooltip>
-                ))}
-              </Box>
-              <Box
-                sx={{
-                  mt: 1,
-                  display: "grid",
-                  gridTemplateColumns: {
-                    xs: "repeat(2, minmax(0, 1fr))",
-                    md: "repeat(4, minmax(0, 1fr))",
-                  },
-                  gap: 0.75,
-                }}
-              >
-                <Box
-                  sx={{
-                    p: 0.75,
-                    borderRadius: 1,
-                    background: themedColors.backgroundSubtle,
-                    border: `1px solid ${themedColors.dataBorder}`,
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{ color: themedColors.textSecondary, display: "block" }}
-                  >
-                    {t("snapshot.governmentMembers")}
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{ color: colors.success, fontWeight: 700 }}
-                  >
-                    {stats.governmentMembers}
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    p: 0.75,
-                    borderRadius: 1,
-                    background: themedColors.backgroundSubtle,
-                    border: `1px solid ${themedColors.dataBorder}`,
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{ color: themedColors.textSecondary, display: "block" }}
-                  >
-                    {t("snapshot.oppositionMembers")}
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{ color: colors.warning, fontWeight: 700 }}
-                  >
-                    {stats.oppositionMembers}
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    p: 0.75,
-                    borderRadius: 1,
-                    background: themedColors.backgroundSubtle,
-                    border: `1px solid ${themedColors.dataBorder}`,
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{ color: themedColors.textSecondary, display: "block" }}
-                  >
-                    {t("distribution.majorityLine")}
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{ color: themedColors.textPrimary, fontWeight: 700 }}
-                  >
-                    {Math.max(0, 101 - stats.governmentMembers)}
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    p: 0.75,
-                    borderRadius: 1,
-                    background: themedColors.backgroundSubtle,
-                    border: `1px solid ${themedColors.dataBorder}`,
-                  }}
-                >
-                  <Typography
-                    variant="caption"
-                    sx={{ color: themedColors.textSecondary, display: "block" }}
-                  >
-                    {t("distribution.topThreeLine")}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: themedColors.textPrimary, fontWeight: 700 }}
-                  >
-                    {stats.partySummaries
-                      .slice(0, 3)
-                      .map((party) => `${party.partyName} ${party.total}`)
-                      .join(" · ")}
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
+          {previousMembers.length > 0 && (
+            <CompositionDiffBanner
+              previousMembers={previousMembers}
+              currentMembers={members}
+            />
+          )}
 
-            <Box sx={{ p: 1.5 }}>
-              <Typography
-                variant="h6"
-                sx={{
-                  color: themedColors.textPrimary,
-                  fontWeight: 700,
-                  mb: 0.75,
-                }}
-              >
-                {t("partyMatrix.title")}
-              </Typography>
-              <Stack spacing={0.75}>
-                {stats.partySummaries.map((party) => (
-                  <CardActionArea
-                    key={party.partyName}
-                    onClick={() =>
-                      setPartyFilter((current) =>
-                        current === party.partyName ? null : party.partyName,
-                      )
-                    }
-                    sx={{
-                      borderRadius: 1,
-                      border: `1px solid ${
-                        partyFilter === party.partyName
-                          ? themedColors.primary
-                          : themedColors.dataBorder
-                      }`,
-                      p: 0.75,
-                    }}
-                  >
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: themedColors.textPrimary,
-                            fontWeight: 700,
-                          }}
-                        >
-                          {party.partyName}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{ color: themedColors.textSecondary }}
-                        >
-                          {getPartyBlocLabel(
-                            t,
-                            party.government,
-                            party.opposition,
-                          )}
-                        </Typography>
-                      </Box>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight: 700,
-                          color: themedColors.textPrimary,
-                        }}
-                      >
-                        {party.total}
-                      </Typography>
-                    </Stack>
-                    <LinearProgress
-                      variant="determinate"
-                      value={party.share * 100}
-                      sx={{
-                        mt: 0.75,
-                        height: 6,
-                        borderRadius: 1,
-                        bgcolor: themedColors.backgroundSubtle,
-                        "& .MuiLinearProgress-bar": {
-                          borderRadius: 1,
-                          bgcolor: getStatusColor(
-                            party.government,
-                            party.opposition,
-                          ),
-                        },
-                      }}
-                    />
-                  </CardActionArea>
-                ))}
-              </Stack>
-            </Box>
-          </Box>
+          <PartyDistribution
+            stats={stats}
+            partyFilter={partyFilter}
+            setPartyFilter={setPartyFilter}
+          />
 
-          <Box>
-            <Box sx={{ p: 1.5 }}>
-              <Stack
-                direction={{ xs: "column", md: "row" }}
-                spacing={1}
-                justifyContent="space-between"
-                sx={{ mb: 1.5 }}
-              >
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ color: themedColors.textPrimary, fontWeight: 700 }}
-                  >
-                    {t("browser.title")}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: themedColors.textSecondary }}
-                  >
-                    {t("browser.description")}
-                  </Typography>
-                </Box>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <BrowserToggleButton
-                    active={viewMode === "list"}
-                    onClick={() => setViewMode("list")}
-                    icon={<ViewAgendaIcon fontSize="small" />}
-                  />
-                  <BrowserToggleButton
-                    active={viewMode === "table"}
-                    onClick={() => setViewMode("table")}
-                    icon={<TableRowsIcon fontSize="small" />}
-                  />
-                </Stack>
-              </Stack>
-
-              <Stack spacing={1} sx={{ mb: 1.5 }}>
-                <Stack
-                  direction={{ xs: "column", md: "row" }}
-                  spacing={1}
-                  alignItems={{ xs: "stretch", md: "center" }}
-                >
-                  <TextField
-                    size="small"
-                    fullWidth
-                    placeholder={t("browser.searchPlaceholder")}
-                    value={compositionSearch}
-                    onChange={(event) =>
-                      setCompositionSearch(event.target.value)
-                    }
-                    slotProps={{
-                      input: {
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <SearchIcon sx={{ fontSize: 18 }} />
-                          </InputAdornment>
-                        ),
-                        endAdornment: compositionSearch ? (
-                          <InputAdornment position="end">
-                            <IconButton
-                              size="small"
-                              onClick={() => setCompositionSearch("")}
-                            >
-                              <ClearIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
-                          </InputAdornment>
-                        ) : undefined,
-                      },
-                    }}
-                  />
-
-                  <Select
-                    size="small"
-                    value={sortBy}
-                    onChange={(event) =>
-                      setSortBy(event.target.value as CompositionSortValue)
-                    }
-                    sx={{ minWidth: 180 }}
-                  >
-                    <MenuItem value="party">{t("browser.sort.party")}</MenuItem>
-                    <MenuItem value="name">{t("browser.sort.name")}</MenuItem>
-                    <MenuItem value="age">{t("browser.sort.age")}</MenuItem>
-                    <MenuItem value="tenure">
-                      {t("browser.sort.tenure")}
-                    </MenuItem>
-                  </Select>
-                </Stack>
-
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {(["all", "government", "opposition"] as const).map(
-                    (value) => (
-                      <Chip
-                        key={value}
-                        size="small"
-                        label={
-                          value === "all"
-                            ? t("details.filters.all")
-                            : value === "government"
-                              ? t("details.filters.government")
-                              : t("details.filters.opposition")
-                        }
-                        onClick={() => setGovFilter(value)}
-                        sx={{
-                          fontWeight: 700,
-                          bgcolor:
-                            govFilter === value
-                              ? themedColors.primary
-                              : themedColors.backgroundPaper,
-                          color:
-                            govFilter === value
-                              ? "white"
-                              : themedColors.textSecondary,
-                          border: `1px solid ${
-                            govFilter === value
-                              ? themedColors.primary
-                              : themedColors.dataBorder
-                          }`,
-                        }}
-                      />
-                    ),
-                  )}
-                  {partyFilter && (
-                    <Chip
-                      size="small"
-                      color="primary"
-                      label={t("browser.partyFilter", { value: partyFilter })}
-                      onDelete={() => setPartyFilter(null)}
-                    />
-                  )}
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      color: themedColors.textTertiary,
-                      ml: "auto",
-                      alignSelf: "center",
-                    }}
-                  >
-                    {t("browser.resultCount", {
-                      shown: filteredMembers.length,
-                      total: members.length,
-                    })}
-                  </Typography>
-                </Stack>
-              </Stack>
-
-              {filteredMembers.length === 0 ? (
-                <EmptyState
-                  title={t("noResults")}
-                  description={t("noResultsHint")}
-                  action={
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => {
-                        setCompositionSearch("");
-                        setPartyFilter(null);
-                        setGovFilter("all");
-                      }}
-                    >
-                      {t("resetFilters")}
-                    </Button>
-                  }
+          {partyFilter &&
+            (() => {
+              const selectedPartySummary = stats.partySummaries.find(
+                (p) => p.partyName === partyFilter,
+              );
+              const partyCode = members.find(
+                (m) => m.party_name === partyFilter,
+              )?.party_code;
+              return selectedPartySummary && partyCode ? (
+                <PartyDetailPanel
+                  partyCode={partyCode}
+                  partyName={partyFilter}
+                  partySummary={selectedPartySummary}
+                  date={date}
                 />
-              ) : viewMode === "list" ? (
-                <Stack spacing={0.5}>
-                  {filteredMembers.map((member) => {
-                    const isSelected =
-                      selectedRepresentative?.personId === member.person_id;
-                    const age = calculateAgeAtDate(member.birth_date, date);
-                    return (
-                      <CardActionArea
-                        key={member.person_id}
-                        onClick={() => handleMemberClick(member)}
-                        sx={{
-                          borderRadius: 1,
-                          border: `1px solid ${
-                            isSelected
-                              ? themedColors.primary
-                              : themedColors.dataBorder
-                          }`,
-                          background: isSelected
-                            ? `${themedColors.primary}08`
-                            : themedColors.backgroundPaper,
-                          px: 1,
-                          py: 0.625,
-                        }}
-                      >
-                        <Stack
-                          direction={{ xs: "column", md: "row" }}
-                          spacing={0.75}
-                          justifyContent="space-between"
-                          alignItems={{ xs: "flex-start", md: "center" }}
-                        >
-                          <Box sx={{ minWidth: 0 }}>
-                            <Stack
-                              direction="row"
-                              spacing={0.75}
-                              alignItems="center"
-                            >
-                              <Typography
-                                variant="body2"
-                                sx={{
-                                  color: themedColors.textPrimary,
-                                  fontWeight: 700,
-                                }}
-                              >
-                                {member.first_name} {member.last_name}
-                              </Typography>
-                            </Stack>
-                            <TraceRegistration
-                              table="MemberOfParliament"
-                              pkName="personId"
-                              pkValue={String(member.person_id)}
-                              label={`${member.first_name} ${member.last_name}`}
-                            />
-                            <Typography
-                              variant="body2"
-                              sx={{ color: themedColors.textSecondary }}
-                            >
-                              {member.party_name || t("details.unknownParty")} ·{" "}
-                              {member.profession ||
-                                t("browser.unknownProfession")}
-                            </Typography>
-                          </Box>
+              ) : null;
+            })()}
 
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            flexWrap="wrap"
-                            useFlexGap
-                          >
-                            <Chip
-                              size="small"
-                              label={t("browser.age", { value: age })}
-                              sx={{ fontWeight: 600 }}
-                            />
-                            <Chip
-                              size="small"
-                              label={t("browser.tenure", {
-                                value: formatFinnishDate(
-                                  getMemberStartDate(member) || date,
-                                ),
-                              })}
-                              sx={{ fontWeight: 600 }}
-                            />
-                            <Chip
-                              size="small"
-                              label={
-                                member.is_in_government === 1
-                                  ? t("details.filters.government")
-                                  : t("details.filters.opposition")
-                              }
-                              sx={{
-                                fontWeight: 700,
-                                bgcolor:
-                                  member.is_in_government === 1
-                                    ? `${colors.success}12`
-                                    : `${colors.warning}12`,
-                                color:
-                                  member.is_in_government === 1
-                                    ? colors.success
-                                    : colors.warning,
-                              }}
-                            />
-                          </Stack>
-                        </Stack>
-                      </CardActionArea>
-                    );
-                  })}
-                </Stack>
-              ) : (
-                <TableContainer
-                  component={Paper}
-                  elevation={0}
-                  sx={{
-                    border: `1px solid ${themedColors.dataBorder}`,
-                    borderRadius: 1,
-                    overflow: "hidden",
-                  }}
-                >
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow sx={commonStyles.tableHeaderRow}>
-                        <TableCell>{t("table.name")}</TableCell>
-                        <TableCell>{t("table.party")}</TableCell>
-                        <TableCell>{t("table.government")}</TableCell>
-                        <TableCell>{t("browser.ageColumn")}</TableCell>
-                        <TableCell>{t("table.occupation")}</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {filteredMembers.map((member) => (
-                        <TableRow
-                          key={member.person_id}
-                          hover
-                          onClick={() => handleMemberClick(member)}
-                          sx={{
-                            cursor: "pointer",
-                            "&:last-child td": { borderBottom: 0 },
-                            ...(selectedRepresentative?.personId ===
-                            member.person_id
-                              ? { bgcolor: `${themedColors.primary}08` }
-                              : null),
-                          }}
-                        >
-                          <TableCell>
-                            <Stack
-                              direction="row"
-                              spacing={0.75}
-                              alignItems="center"
-                            >
-                              <Typography sx={{ fontWeight: 700 }}>
-                                {member.first_name} {member.last_name}
-                              </Typography>
-                            </Stack>
-                            <TraceRegistration
-                              table="MemberOfParliament"
-                              pkName="personId"
-                              pkValue={String(member.person_id)}
-                              label={`${member.first_name} ${member.last_name}`}
-                            />
-                          </TableCell>
-                          <TableCell>{member.party_name || "-"}</TableCell>
-                          <TableCell>
-                            {member.is_in_government === 1
-                              ? t("details.filters.government")
-                              : t("details.filters.opposition")}
-                          </TableCell>
-                          <TableCell>
-                            {calculateAgeAtDate(member.birth_date, date)}
-                          </TableCell>
-                          <TableCell>{member.profession || "-"}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              )}
-            </Box>
-          </Box>
+          <MemberBrowser
+            filteredMembers={filteredMembers}
+            totalMembers={members.length}
+            compositionSearch={compositionSearch}
+            setCompositionSearch={setCompositionSearch}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            govFilter={govFilter}
+            setGovFilter={setGovFilter}
+            genderFilter={genderFilter}
+            setGenderFilter={setGenderFilter}
+            districtFilter={districtFilter}
+            setDistrictFilter={setDistrictFilter}
+            districts={stats.districts}
+            ageRange={ageRange}
+            setAgeRange={setAgeRange}
+            ageMin={stats.minAge}
+            ageMax={stats.maxAge}
+            partyFilter={partyFilter}
+            setPartyFilter={setPartyFilter}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            onMemberClick={handleMemberClick}
+            selectedRepresentative={selectedRepresentative}
+            date={date}
+          />
         </>
       )}
 
-      <RepresentativeDetails
-        onClose={handleCloseDialog}
-        selectedRepresentative={selectedRepresentative}
-        selectedDate={date}
+      <AnalyticsSection
+        activeInsightDrawer={activeInsightDrawer}
+        setActiveInsightDrawer={setActiveInsightDrawer}
       />
-
-      {/* Analytics sections */}
-      <Box sx={{ mt: 2.5 }}>
-        <Typography
-          variant="subtitle2"
-          sx={{
-            mb: 1,
-            fontWeight: 700,
-            color: themedColors.textSecondary,
-            textTransform: "uppercase",
-            letterSpacing: "0.06em",
-          }}
-        >
-          {t("analyticsSection.title")}
-        </Typography>
-        <Stack spacing={0}>
-          {[
-            {
-              key: "attendance" as const,
-              icon: <EventBusyIcon sx={{ fontSize: 20 }} />,
-              title: t("analyticsSection.attendance.title"),
-              description: t("analyticsSection.attendance.description"),
-            },
-            {
-              key: "speechActivity" as const,
-              icon: <MicIcon sx={{ fontSize: 20 }} />,
-              title: t("analyticsSection.speechActivity.title"),
-              description: t("analyticsSection.speechActivity.description"),
-            },
-            {
-              key: "timeSeries" as const,
-              icon: <TimelineIcon sx={{ fontSize: 20 }} />,
-              title: t("analyticsSection.timeSeries.title"),
-              description: t("analyticsSection.timeSeries.description"),
-            },
-          ].map((card) => (
-            <ActionLink
-              key={card.key}
-              icon={card.icon}
-              title={card.title}
-              description={card.description}
-              onClick={() => setActiveInsightDrawer(card.key)}
-            />
-          ))}
-        </Stack>
-      </Box>
-
-      <Drawer
-        anchor="right"
-        open={activeInsightDrawer === "attendance"}
-        onClose={() => setActiveInsightDrawer(null)}
-        PaperProps={{
-          sx: {
-            width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" },
-            maxWidth: "1400px",
-          },
-        }}
-      >
-        <Attendance onClose={() => setActiveInsightDrawer(null)} />
-      </Drawer>
-      <Drawer
-        anchor="right"
-        open={activeInsightDrawer === "speechActivity"}
-        onClose={() => setActiveInsightDrawer(null)}
-        PaperProps={{
-          sx: {
-            width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" },
-            maxWidth: "1400px",
-          },
-        }}
-      >
-        <SpeechActivity onClose={() => setActiveInsightDrawer(null)} />
-      </Drawer>
-      <Drawer
-        anchor="right"
-        open={activeInsightDrawer === "timeSeries"}
-        onClose={() => setActiveInsightDrawer(null)}
-        PaperProps={{
-          sx: {
-            width: { xs: "100%", sm: "90%", md: "80%", lg: "70%" },
-            maxWidth: "1400px",
-          },
-        }}
-      >
-        <TimeSeriesStatistics onClose={() => setActiveInsightDrawer(null)} />
-      </Drawer>
     </Box>
   );
 };

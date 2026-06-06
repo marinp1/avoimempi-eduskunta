@@ -1,19 +1,15 @@
-import {
-  ExpandMore as ExpandMoreIcon,
-  UnfoldMore as UnfoldMoreIcon,
-} from "@mui/icons-material";
+import { UnfoldMore as UnfoldMoreIcon } from "@mui/icons-material";
 import {
   Alert,
   Box,
-  Button,
-  Chip,
+  ButtonBase,
   Collapse,
   Stack,
   Typography,
 } from "@mui/material";
 import React from "react";
 import { colors } from "#client/theme";
-import { DataCard } from "#client/theme/components";
+import { paperDocumentSx } from "../cards/shared";
 
 const DocumentCardShellComponent: React.FC<{
   title: React.ReactNode;
@@ -31,6 +27,8 @@ const DocumentCardShellComponent: React.FC<{
   loadingState?: React.ReactNode;
   error?: string | null;
   children?: React.ReactNode;
+  accentColor?: string;
+  typeBadge?: React.ReactNode;
 }> = ({
   title,
   identifier,
@@ -47,131 +45,138 @@ const DocumentCardShellComponent: React.FC<{
   loadingState,
   error,
   children,
+  accentColor,
+  typeBadge,
 }) => (
-  <DataCard
+  <Box
     sx={{
+      ...paperDocumentSx,
       contentVisibility: "auto",
-      containIntrinsicSize: "420px",
+      containIntrinsicSize: "auto 160px",
+      ...(accentColor ? { borderLeft: `3px solid ${accentColor}` } : {}),
+      mb: 1.5,
     }}
   >
-    <Box
+    <ButtonBase
+      component="div"
+      onClick={onOpenDrawer ?? onToggle}
+      aria-haspopup={onOpenDrawer ? "dialog" : undefined}
+      aria-expanded={onOpenDrawer ? undefined : expanded}
       sx={{
-        p: { xs: 1.75, md: 2.25 },
+        display: "block",
+        width: "100%",
+        textAlign: "left",
+        p: { xs: 1.5, md: 2 },
+        borderRadius: "4px",
+        "&:hover": {
+          backgroundColor: "rgba(27, 42, 74, 0.015)",
+        },
       }}
     >
-      <Stack spacing={1}>
-        <Stack
-          direction="row"
-          spacing={1}
-          alignItems="center"
-          flexWrap="wrap"
-          justifyContent="space-between"
-          gap={1}
-        >
-          <Stack direction="row" spacing={0.75} flexWrap="wrap" gap={0.75}>
-            {identifier && (
-              <Chip
-                label={identifier}
-                size="small"
-                sx={{
-                  backgroundColor: `${colors.primary}12`,
-                  color: colors.primary,
-                  fontWeight: 700,
-                  fontFamily: '"IBM Plex Mono", "Roboto Mono", monospace',
-                }}
-              />
-            )}
-            {eyebrow}
-          </Stack>
-          {status}
-        </Stack>
+      {/* Top line: type badge + identifier + status */}
+      <Stack
+        direction="row"
+        spacing={0.75}
+        alignItems="center"
+        flexWrap="wrap"
+        gap={0.5}
+        sx={{ mb: 0.75 }}
+      >
+        {typeBadge}
+        {identifier && (
+          <Typography
+            variant="caption"
+            sx={{
+              color: colors.textSecondary,
+              fontFamily: '"IBM Plex Mono", "Roboto Mono", monospace',
+              fontWeight: 600,
+              fontSize: "0.7rem",
+              letterSpacing: "0.02em",
+            }}
+          >
+            {identifier}
+          </Typography>
+        )}
+        {eyebrow}
+        <Box sx={{ flex: 1 }} />
+        {status}
+      </Stack>
 
-        <Typography
-          variant="h6"
+      {/* Title - clamped to 2 lines */}
+      <Typography
+        variant="body1"
+        sx={{
+          color: colors.textPrimary,
+          fontWeight: 600,
+          lineHeight: 1.4,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+          mb: meta || topics ? 0.75 : 0,
+        }}
+      >
+        {title}
+      </Typography>
+
+      {/* Compact meta line */}
+      {meta && (
+        <Box
           sx={{
-            color: colors.textPrimary,
-            fontWeight: 600,
-            letterSpacing: "-0.015em",
-            lineHeight: 1.3,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 0.75,
+            mb: topics ? 0.5 : 0,
           }}
         >
-          {title}
-        </Typography>
+          {meta}
+        </Box>
+      )}
 
-        {meta && (
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 1,
-            }}
-          >
-            {meta}
-          </Box>
-        )}
-
-        {topics && <Box>{topics}</Box>}
-
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={0.75}
-          alignItems={{ xs: "stretch", sm: "center" }}
-          justifyContent="space-between"
-          sx={{ pt: 0.25 }}
+      {/* Topics - single line, overflow hidden */}
+      {topics && (
+        <Box
+          sx={{
+            overflow: "hidden",
+            maxHeight: 28,
+          }}
         >
-          <Box
-            sx={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 1,
-              alignItems: "center",
-            }}
-          >
-            {actions}
-          </Box>
-          <Button
-            variant="outlined"
-            onClick={onOpenDrawer ?? onToggle}
-            startIcon={
-              onOpenDrawer ? (
-                <UnfoldMoreIcon />
-              ) : expanded ? (
-                <ExpandMoreIcon />
-              ) : (
-                <UnfoldMoreIcon />
-              )
-            }
-            aria-haspopup={onOpenDrawer ? "dialog" : undefined}
-            aria-expanded={onOpenDrawer ? undefined : expanded}
-            sx={{
-              alignSelf: { xs: "stretch", sm: "center" },
-              minWidth: { sm: 152 },
-              textTransform: "none",
-              borderColor: colors.primaryLight,
-              color: colors.primaryLight,
-              "&:hover": {
-                borderColor: colors.primary,
-                color: colors.primary,
-                backgroundColor: `${colors.primary}06`,
-              },
-            }}
-          >
-            {onOpenDrawer
-              ? toggleLabel
-              : expanded
-                ? collapseLabel
-                : toggleLabel}
-          </Button>
-        </Stack>
-      </Stack>
-    </Box>
+          {topics}
+        </Box>
+      )}
+
+      {/* Subtle "open" indicator */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          mt: 0.5,
+          gap: 0.5,
+        }}
+      >
+        {actions}
+        <Typography
+          variant="caption"
+          sx={{
+            color: colors.primaryLight,
+            fontWeight: 600,
+            display: "flex",
+            alignItems: "center",
+            gap: 0.25,
+          }}
+        >
+          <UnfoldMoreIcon sx={{ fontSize: 14 }} />
+          {onOpenDrawer ? toggleLabel : expanded ? collapseLabel : toggleLabel}
+        </Typography>
+      </Box>
+    </ButtonBase>
 
     {!onOpenDrawer && (
       <Collapse in={expanded} timeout="auto" unmountOnExit>
         <Box
           sx={{
-            mt: 0.5,
-            borderRadius: 1.5,
+            borderTop: `1px solid ${colors.dataBorder}`,
             p: { xs: 1.5, md: 2 },
           }}
         >
@@ -185,7 +190,7 @@ const DocumentCardShellComponent: React.FC<{
         </Box>
       </Collapse>
     )}
-  </DataCard>
+  </Box>
 );
 
 export const DocumentCardShell = React.memo(DocumentCardShellComponent);

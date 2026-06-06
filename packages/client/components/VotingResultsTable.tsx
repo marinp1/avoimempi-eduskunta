@@ -92,9 +92,7 @@ export const VotingResultsTable: React.FC<{
           {tVotings("resultsTable.groupByRepresentative")}
         </Button>
       </Box>
-      <TableContainer
-        sx={{ borderRadius: 1 }}
-      >
+      <TableContainer sx={{ borderRadius: 1 }}>
         {groupBy === "party" ? (
           <Table size="small">
             <TableHead>

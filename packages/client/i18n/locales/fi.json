@@ -211,6 +211,13 @@
     "title": "Asiakirjat",
     "subtitle": "Selaa eduskunnan asiakirjoja",
     "eyebrow": "Asiakirjojen näkymä",
+    "categoryQuestions": "Kysymykset",
+    "categoryProposals": "Esitykset & aloitteet",
+    "categoryReports": "Mietinnot & lausunnot",
+    "categoryAnswers": "Vastaukset",
+    "allLoaded_one": "Kaikki {{count}} tulos ladattu",
+    "allLoaded_other": "Kaikki {{count}} tulosta ladattu",
+    "moreFilters": "Lisarajaukset",
     "summaryType": "Selaat tyypin {{value}} asiakirjoja.",
     "summaryTypePeriod": "Selaat tyypin {{value}} asiakirjoja hallituskaudelta {{period}}.",
     "heroSummary_one": "{{count}} asiakirja haussa",
@@ -506,7 +513,16 @@
         "name": "Järjestä nimen mukaan",
         "age": "Järjestä iän mukaan",
         "tenure": "Järjestä aloituspäivän mukaan"
-      }
+      },
+      "gender": {
+        "all": "Kaikki",
+        "female": "Naiset",
+        "male": "Miehet"
+      },
+      "district": {
+        "all": "Kaikki vaalipiirit"
+      },
+      "ageRange": "Ikä:"
     },
     "globalSearch": {
       "title": "Hae kaikkia edustajia",
@@ -525,6 +541,23 @@
         "activeOnDate": "Aktiivinen valitulla päivällä"
       }
     },
+    "diffBanner": {
+      "summary": "{{added}} uutta edustajaa, {{removed}} poistunutta",
+      "added": "Uudet edustajat ({{count}})",
+      "removed": "Poistuneet edustajat ({{count}})"
+    },
+    "partyPanel": {
+      "seats": "{{count}} paikkaa",
+      "openPartyPage": "Avaa puoluesivu",
+      "loadError": "Puolueen tietojen lataus epäonnistui.",
+      "ministers": "Ministerit",
+      "stats": {
+        "members": "Jäseniä",
+        "women": "Naisia",
+        "men": "Miehiä",
+        "avgAge": "Keski-ikä"
+      }
+    },
     "partyBreakdown": {
       "title": "Puolueiden jako",
       "members": "jäsentä",
@@ -537,6 +570,7 @@
       "name": "Nimi",
       "party": "Puolue",
       "government": "Hallitus",
+      "district": "Vaalipiiri",
       "gender": "Sukupuoli",
       "birthDate": "Syntymäaika",
       "birthPlace": "Syntymäpaikka",

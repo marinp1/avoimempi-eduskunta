@@ -87,6 +87,83 @@ export const getOutcomeColor = (code: string | null): string => {
   return colors.dataBorder;
 };
 
+/** Shared paper-document card styles for skeuomorphic stacked-papers look */
+export const paperDocumentSx = {
+  position: "relative" as const,
+  backgroundColor: "#fff",
+  borderRadius: "4px",
+  border: `1px solid ${colors.dataBorder}`,
+  boxShadow:
+    "0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.03)",
+  transition: "box-shadow 0.2s ease, transform 0.2s ease",
+  "&:hover": {
+    boxShadow:
+      "0 2px 6px rgba(15, 23, 42, 0.08), 0 8px 24px rgba(15, 23, 42, 0.05)",
+    transform: "translateY(-1px)",
+  },
+  /* Stacked-papers effect: two pseudo-element "pages" behind */
+  "&::before, &::after": {
+    content: '""',
+    position: "absolute",
+    left: 4,
+    right: 4,
+    height: 6,
+    bottom: -4,
+    backgroundColor: "#fff",
+    border: `1px solid ${colors.dataBorder}`,
+    borderTop: "none",
+    borderRadius: "0 0 4px 4px",
+    zIndex: -1,
+  },
+  "&::after": {
+    left: 8,
+    right: 8,
+    bottom: -7,
+    height: 4,
+    opacity: 0.7,
+  },
+};
+
+/** Accent color per document type category for card left-border */
+export const DOCUMENT_TYPE_ACCENT: Record<string, string> = {
+  // Questions
+  interpellations: colors.info,
+  "written-questions": colors.info,
+  "written-question-responses": colors.info,
+  "oral-questions": colors.info,
+  // Proposals & initiatives
+  "government-proposals": colors.chartPurple,
+  "legislative-initiatives-law": colors.chartPurple,
+  "legislative-initiatives-budget": colors.chartPurple,
+  "legislative-initiatives-supplementary-budget": colors.chartPurple,
+  "legislative-initiatives-action": colors.chartPurple,
+  "legislative-initiatives-discussion": colors.chartPurple,
+  "legislative-initiatives-citizens": colors.chartPurple,
+  // Reports & statements
+  "committee-reports": colors.accent,
+  "expert-statements": colors.accent,
+  // Answers
+  "parliament-answers": colors.success,
+};
+
+/** Short abbreviation for document type badge */
+export const DOCUMENT_TYPE_ABBR: Record<string, string> = {
+  interpellations: "VK",
+  "government-proposals": "HE",
+  "written-questions": "KK",
+  "written-question-responses": "KKV",
+  "oral-questions": "SKT",
+  "committee-reports": "VM",
+  "legislative-initiatives-law": "LA",
+  "legislative-initiatives-budget": "TAA",
+  "legislative-initiatives-supplementary-budget": "LTA",
+  "legislative-initiatives-action": "TPA",
+  "legislative-initiatives-discussion": "KA",
+  "legislative-initiatives-citizens": "KAA",
+  "expert-statements": "AL",
+  "parliament-answers": "EV",
+};
+
 export const getCommitteeReportKind = (
   reportTypeCode: string | null | undefined,
 ): "report" | "statement" | null => {

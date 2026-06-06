@@ -203,6 +203,20 @@ const wrapChipSx = {
   },
 } as const;
 
+const officialCardSx = {
+  borderRadius: "2px",
+  background: "linear-gradient(to bottom, #ffffff, #fafaf8)",
+  border: `1px solid #E8EAEE`,
+  boxShadow:
+    "inset 0 1px 0 rgba(255,255,255,0.6), 0 1px 3px rgba(15,23,42,0.08)",
+  transition: "box-shadow 0.2s ease, transform 0.2s ease",
+  "&:hover": {
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,0.6), 0 2px 6px rgba(15,23,42,0.12)",
+    transform: "translateY(-1px)",
+  },
+} as const;
+
 const TimelineSelector: React.FC<{
   hallituskaudet: HallituskausiPeriod[];
   date: string;
@@ -276,7 +290,7 @@ const TimelineSelector: React.FC<{
   }
 
   return (
-    <DataCard sx={{ p: { xs: 1.5, md: 2 } }}>
+    <DataCard sx={{ p: { xs: 1.5, md: 2 }, borderRadius: "2px" }}>
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={1}
@@ -285,7 +299,11 @@ const TimelineSelector: React.FC<{
         <Box sx={{ flexGrow: 1 }}>
           <Typography
             variant="h6"
-            sx={{ fontWeight: 700, color: tc.textPrimary }}
+            sx={{
+              fontWeight: 700,
+              color: tc.textPrimary,
+              letterSpacing: "0.02em",
+            }}
           >
             {t("browseByDate")}
           </Typography>
@@ -307,7 +325,7 @@ const TimelineSelector: React.FC<{
         sx={{
           display: "flex",
           height: 30,
-          borderRadius: 1,
+          borderRadius: "2px",
           overflow: "hidden",
           border: `1px solid ${tc.dataBorder}`,
         }}
@@ -346,7 +364,10 @@ const TimelineSelector: React.FC<{
                 px: 0.75,
                 cursor: "pointer",
                 transition: "background-color 0.15s ease",
+                borderRight: `1px solid ${tc.dataBorder}`,
+                boxShadow: isActive ? "inset 0 -2px 0 currentColor" : undefined,
                 "&:hover": { bgcolor: `${tc.primary}18` },
+                "&:last-child": { borderRight: "none" },
               }}
             >
               <Typography
@@ -653,7 +674,11 @@ const GovernmentMinistersSection: React.FC<{
         <Stack spacing={0.5} sx={{ mb: 2 }}>
           <Typography
             variant="h5"
-            sx={{ fontWeight: 700, color: tc.textPrimary }}
+            sx={{
+              fontWeight: 700,
+              color: tc.textPrimary,
+              letterSpacing: "0.02em",
+            }}
           >
             {t("currentMinistersTitle")}
           </Typography>
@@ -684,7 +709,15 @@ const GovernmentMinistersSection: React.FC<{
           <Box>
             <Typography
               variant="subtitle1"
-              sx={{ fontWeight: 700, color: tc.textPrimary, mb: 1.25 }}
+              sx={{
+                fontWeight: 700,
+                color: tc.textPrimary,
+                mb: 1.25,
+                pb: 0.75,
+                borderBottom: `2px solid ${tc.primary}`,
+                letterSpacing: "0.02em",
+                display: "inline-block",
+              }}
             >
               {t("featuredMinistersTitle")}
             </Typography>
@@ -709,82 +742,103 @@ const GovernmentMinistersSection: React.FC<{
                       : undefined
                   }
                   sx={{
+                    ...officialCardSx,
                     cursor: member.person_id ? "pointer" : "default",
-                    borderRadius: 1,
+                    borderTop: `3px solid ${featuredRoleColors[key]}`,
+                    p: 2.25,
+                    position: "relative",
+                    overflow: "hidden",
+                    "&::after": {
+                      content: '""',
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: "40px",
+                      background: `linear-gradient(to bottom, ${featuredRoleColors[key]}06, transparent)`,
+                      pointerEvents: "none",
+                    },
                   }}
                 >
-                  <DataCard
-                    sx={{
-                      p: 2.25,
-                      borderColor: `${featuredRoleColors[key]}30`,
-                      borderTop: `4px solid ${featuredRoleColors[key]}`,
-                      boxShadow: "none",
-                    }}
+                  <Stack
+                    spacing={1.25}
+                    sx={{ position: "relative", zIndex: 1 }}
                   >
-                    <Stack spacing={1.25}>
-                      <Stack
-                        direction="row"
-                        spacing={1}
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      sx={{
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <Chip
+                        label={t(key)}
+                        size="small"
                         sx={{
-                          alignItems: "center",
-                          justifyContent: "space-between",
+                          ...wrapChipSx,
+                          height: 24,
+                          fontSize: "0.72rem",
+                          fontWeight: 800,
+                          borderRadius: "2px",
+                          bgcolor: `${featuredRoleColors[key]}14`,
+                          color: featuredRoleColors[key],
+                          border: `1px solid ${featuredRoleColors[key]}25`,
                         }}
-                      >
+                      />
+                      {member.party && (
                         <Chip
-                          label={t(key)}
+                          label={member.party}
                           size="small"
                           sx={{
                             ...wrapChipSx,
-                            height: 24,
-                            fontSize: "0.72rem",
-                            fontWeight: 800,
-                            bgcolor: `${featuredRoleColors[key]}14`,
-                            color: featuredRoleColors[key],
+                            height: 22,
+                            fontSize: "0.7rem",
+                            fontWeight: 700,
+                            borderRadius: "2px",
+                            bgcolor: tc.backgroundSubtle,
+                            color: tc.textPrimary,
+                            border: `1px solid ${tc.dataBorder}`,
                           }}
                         />
-                        {member.party && (
-                          <Chip
-                            label={member.party}
-                            size="small"
-                            sx={{
-                              ...wrapChipSx,
-                              height: 22,
-                              fontSize: "0.7rem",
-                              fontWeight: 700,
-                              bgcolor: tc.backgroundSubtle,
-                              color: tc.textPrimary,
-                              border: `1px solid ${tc.dataBorder}`,
-                            }}
-                          />
-                        )}
-                      </Stack>
-
-                      <Box>
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: 800, color: tc.textPrimary }}
-                        >
-                          {getMemberDisplayName(member)}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{ color: tc.textSecondary, mt: 0.5 }}
-                        >
-                          {member.name}
-                        </Typography>
-                      </Box>
-
-                      <Typography
-                        variant="caption"
-                        sx={{ color: tc.textSecondary, fontSize: "0.78rem" }}
-                      >
-                        {formatOptionalDateRange(
-                          member.start_date,
-                          member.end_date,
-                        )}
-                      </Typography>
+                      )}
                     </Stack>
-                  </DataCard>
+
+                    <Box>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 800,
+                          color: tc.textPrimary,
+                          letterSpacing: "-0.01em",
+                        }}
+                      >
+                        {getMemberDisplayName(member)}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: tc.textSecondary, mt: 0.5 }}
+                      >
+                        {member.name}
+                      </Typography>
+                    </Box>
+
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: tc.textSecondary,
+                        fontSize: "0.78rem",
+                        borderTop: `1px solid ${tc.dataBorder}`,
+                        pt: 1,
+                        mt: 0.5,
+                      }}
+                    >
+                      {formatOptionalDateRange(
+                        member.start_date,
+                        member.end_date,
+                      )}
+                    </Typography>
+                  </Stack>
                 </Box>
               ))}
             </Box>
@@ -795,7 +849,15 @@ const GovernmentMinistersSection: React.FC<{
           <Box>
             <Typography
               variant="subtitle1"
-              sx={{ fontWeight: 700, color: tc.textPrimary, mb: 1.25 }}
+              sx={{
+                fontWeight: 700,
+                color: tc.textPrimary,
+                mb: 1.25,
+                pb: 0.75,
+                borderBottom: `2px solid ${tc.primary}`,
+                letterSpacing: "0.02em",
+                display: "inline-block",
+              }}
             >
               {t("otherCurrentMinistersTitle")}
             </Typography>
@@ -822,13 +884,19 @@ const GovernmentMinistersSection: React.FC<{
                   }
                   sx={{
                     p: 1.5,
-                    borderRadius: 1,
+                    borderRadius: "2px",
                     border: `1px solid ${tc.dataBorder}`,
+                    borderLeft: `2px solid ${tc.primary}18`,
                     bgcolor: tc.backgroundPaper,
                     cursor: member.person_id ? "pointer" : "default",
-                    transition: "background-color 0.15s ease",
+                    transition:
+                      "background-color 0.15s ease, transform 0.2s ease, box-shadow 0.2s ease",
                     "&:hover": member.person_id
-                      ? { bgcolor: tc.backgroundSubtle }
+                      ? {
+                          bgcolor: tc.backgroundSubtle,
+                          transform: "translateY(-1px)",
+                          boxShadow: "0 2px 6px rgba(15,23,42,0.08)",
+                        }
                       : undefined,
                   }}
                 >
@@ -860,6 +928,7 @@ const GovernmentMinistersSection: React.FC<{
                             height: 22,
                             fontSize: "0.7rem",
                             fontWeight: 700,
+                            borderRadius: "2px",
                             bgcolor: `${tc.primary}12`,
                             color: tc.primary,
                           }}
@@ -873,6 +942,7 @@ const GovernmentMinistersSection: React.FC<{
                             ...wrapChipSx,
                             height: 22,
                             fontSize: "0.7rem",
+                            borderRadius: "2px",
                             bgcolor: tc.backgroundSubtle,
                             color: tc.textSecondary,
                           }}
@@ -890,7 +960,15 @@ const GovernmentMinistersSection: React.FC<{
           <Box>
             <Typography
               variant="subtitle1"
-              sx={{ fontWeight: 700, color: tc.textPrimary, mb: 1.25 }}
+              sx={{
+                fontWeight: 700,
+                color: tc.textSecondary,
+                mb: 1.25,
+                pb: 0.75,
+                borderBottom: `1px dashed ${tc.dataBorder}`,
+                letterSpacing: "0.02em",
+                display: "inline-block",
+              }}
             >
               {t("previousMinistersTitle")}
             </Typography>
@@ -916,13 +994,16 @@ const GovernmentMinistersSection: React.FC<{
                   }
                   sx={{
                     p: 1.5,
-                    borderRadius: 1,
+                    borderRadius: "2px",
                     border: `1px solid ${tc.dataBorder}`,
+                    borderLeft: `2px dashed ${tc.dataBorder}`,
                     bgcolor: tc.backgroundSubtle,
+                    opacity: 0.85,
                     cursor: member.person_id ? "pointer" : "default",
-                    transition: "background-color 0.15s ease",
+                    transition:
+                      "background-color 0.15s ease, opacity 0.15s ease",
                     "&:hover": member.person_id
-                      ? { bgcolor: tc.backgroundPaper }
+                      ? { bgcolor: tc.backgroundPaper, opacity: 1 }
                       : undefined,
                   }}
                 >
@@ -950,6 +1031,7 @@ const GovernmentMinistersSection: React.FC<{
                             height: 22,
                             fontSize: "0.7rem",
                             fontWeight: 700,
+                            borderRadius: "2px",
                             bgcolor: `${tc.primary}12`,
                             color: tc.primary,
                           }}
@@ -1024,10 +1106,13 @@ const GovernmentArchiveItem: React.FC<{
     <Paper
       elevation={0}
       sx={{
-        borderRadius: 1,
+        borderRadius: "2px",
         overflow: "hidden",
         border: `1px solid ${isActive ? tc.primary : tc.dataBorder}`,
-        boxShadow: isActive ? `0 10px 22px ${tc.primary}18` : "none",
+        boxShadow: isActive
+          ? `0 2px 8px ${tc.primary}18, inset 0 1px 0 rgba(255,255,255,0.5)`
+          : "0 1px 3px rgba(15,23,42,0.06)",
+        transition: "box-shadow 0.2s ease",
       }}
     >
       <Accordion
@@ -1042,7 +1127,12 @@ const GovernmentArchiveItem: React.FC<{
           sx={{
             px: 2,
             py: 1.5,
-            bgcolor: isActive ? `${tc.primary}08` : tc.backgroundPaper,
+            bgcolor: isActive
+              ? `${tc.primary}08`
+              : "linear-gradient(to bottom, #ffffff, #fafaf8)",
+            background: isActive
+              ? `${tc.primary}08`
+              : "linear-gradient(to bottom, #ffffff, #fafaf8)",
             borderBottom: isActive ? `1px solid ${tc.primary}18` : undefined,
             "& .MuiAccordionSummary-content": { my: 0 },
           }}
@@ -1071,6 +1161,7 @@ const GovernmentArchiveItem: React.FC<{
                       height: 22,
                       fontSize: "0.7rem",
                       fontWeight: 700,
+                      borderRadius: "2px",
                       bgcolor: `${tc.primary}18`,
                       color: tc.primary,
                     }}
@@ -1112,7 +1203,16 @@ const GovernmentArchiveItem: React.FC<{
           </Stack>
         </AccordionSummary>
 
-        <AccordionDetails sx={{ px: 2, pt: 0, pb: 2 }}>
+        <AccordionDetails
+          sx={{
+            px: 2,
+            pt: 1.5,
+            pb: 2,
+            bgcolor: "#fafaf8",
+            boxShadow: "inset 0 2px 4px rgba(15,23,42,0.04)",
+            borderTop: `1px solid ${tc.dataBorder}`,
+          }}
+        >
           {loading && (
             <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
               <CircularProgress size={24} sx={{ color: tc.primary }} />
@@ -1310,7 +1410,15 @@ export default () => {
             <Box>
               <Typography
                 variant="h5"
-                sx={{ fontWeight: 700, color: tc.textPrimary, mb: 0.5 }}
+                sx={{
+                  fontWeight: 700,
+                  color: tc.textPrimary,
+                  mb: 0.5,
+                  pb: 0.75,
+                  borderBottom: `2px solid ${tc.primary}`,
+                  letterSpacing: "0.02em",
+                  display: "inline-block",
+                }}
               >
                 {t("governmentArchiveTitle")}
               </Typography>

@@ -1,4 +1,5 @@
-import { Box, Chip, Stack, Typography } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Box, Chip, Link, Stack, Typography } from "@mui/material";
 import type React from "react";
 import { useThemedColors } from "../../theme/ThemeContext";
 import { ElectionContextStrip } from "./ElectionContextStrip";
@@ -33,6 +34,12 @@ export const Hero: React.FC<HeroProps> = ({
       ? "Ladataan..."
       : "Edustajaa ei löytynyt";
 
+  const handleBack = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.history.pushState({}, "", "/edustajat");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  };
+
   return (
     <Box
       sx={{
@@ -41,6 +48,24 @@ export const Hero: React.FC<HeroProps> = ({
         borderBottom: `1px solid ${themed.dataBorder}`,
       }}
     >
+      <Link
+        href="/edustajat"
+        onClick={handleBack}
+        sx={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 0.5,
+          fontSize: "0.75rem",
+          fontWeight: 600,
+          color: themed.textSecondary,
+          textDecoration: "none",
+          mb: 1,
+          "&:hover": { color: themed.textPrimary },
+        }}
+      >
+        <ArrowBackIcon sx={{ fontSize: 14 }} />
+        Kokoonpano
+      </Link>
       <Stack direction="row" alignItems="center" spacing={1.5}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography

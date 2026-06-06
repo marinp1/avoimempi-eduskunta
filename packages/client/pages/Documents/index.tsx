@@ -1,17 +1,18 @@
 import { Search as SearchIcon } from "@mui/icons-material";
 import {
-  Alert,
   Autocomplete,
   Box,
+  Button,
   Chip,
-  CircularProgress,
   FormControl,
   InputAdornment,
   InputLabel,
+  LinearProgress,
   MenuItem,
   Select,
   Stack,
   TextField,
+  Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
@@ -19,12 +20,15 @@ import {
   memo,
   startTransition,
   useCallback,
+  useDeferredValue,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useHallituskausi } from "#client/filters/HallituskausiContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
+import { monoFontFamily } from "#client/theme";
 import { PageIntro } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { apiFetch } from "#client/utils/fetch";
@@ -52,6 +56,7 @@ import {
   DocumentsEmptyState,
   DocumentsFilterPanel,
   DocumentsLoadingState,
+  DocumentTypePicker,
 } from "./components";
 
 type SubjectsRoute =
@@ -324,7 +329,8 @@ export default function Documents() {
     DEFAULT_DOCUMENT_TYPE,
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const debouncedQuery = useDeferredValue(searchQuery.trim());
+  const isSearchStale = searchQuery.trim() !== debouncedQuery;
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<
@@ -417,7 +423,6 @@ export default function Documents() {
   const clearFilters = useCallback(() => {
     startTransition(() => {
       setSearchQuery("");
-      setDebouncedQuery("");
       resetTypeScopedFilters();
     });
   }, [resetTypeScopedFilters]);
@@ -427,7 +432,6 @@ export default function Documents() {
       startTransition(() => {
         setDocumentType(newType);
         setSearchQuery("");
-        setDebouncedQuery("");
         resetTypeScopedFilters();
       });
     },
@@ -445,7 +449,6 @@ export default function Documents() {
 
       setDocumentType(nextType);
       setSearchQuery(params.get("q") ?? "");
-      setDebouncedQuery(params.get("q") ?? "");
       setSelectedYear(params.get("year") ?? "all");
       setSelectedSubject(normalizeParam(params.get("subject")));
       setSelectedSourceCommittee(params.get("sourceCommittee") ?? "all");
@@ -497,13 +500,6 @@ export default function Documents() {
     selectedExpertCommittee,
     selectedExpertDocType,
   ]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery.trim());
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
 
   useEffect(() => {
     const fetchYears = async () => {
@@ -763,6 +759,25 @@ export default function Documents() {
     fetchDocuments(nextPage, true);
   }, [fetchDocuments, page]);
 
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const loadMoreRef = useRef(handleLoadMore);
+  loadMoreRef.current = handleLoadMore;
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMoreRef.current();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [items.length, totalPages, page]);
+
   const handleSubjectClick = useCallback((subject: string) => {
     setSelectedSubject(subject);
   }, []);
@@ -786,7 +801,6 @@ export default function Documents() {
               onDelete: () => {
                 startTransition(() => {
                   setSearchQuery("");
-                  setDebouncedQuery("");
                 });
               },
             }
@@ -866,64 +880,13 @@ export default function Documents() {
                 })
           }
           mobileMode="compact"
-          mobileAnchorId="documents-content"
-          mobileSummary={
-            <Box>
-              <Alert
-                severity="info"
-                sx={{
-                  py: 0,
-                  borderRadius: 1,
-                  backgroundColor: "rgba(37, 99, 235, 0.08)",
-                }}
-              >
-                {t("resultsSummary", {
-                  shown: items.length,
-                  total: totalCount,
-                  count: totalCount,
-                })}
-              </Alert>
-            </Box>
-          }
-          chips={
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <Chip
-                label={t("resultsSummary", {
-                  shown: items.length,
-                  total: totalCount,
-                  count: totalCount,
-                })}
-                sx={{
-                  backgroundColor: `${colors.primary}10`,
-                  color: colors.primary,
-                  fontWeight: 700,
-                }}
-              />
-              <Chip
-                label={
-                  selectedHallituskausi
-                    ? t("hallituskausiLabel", {
-                        value: selectedHallituskausi.label,
-                      })
-                    : t("browseTypeLabel", {
-                        value: getDocumentTypeLabel(documentType),
-                      })
-                }
-                variant="outlined"
-                sx={{
-                  borderColor: `${colors.primary}30`,
-                  backgroundColor: "rgba(255,255,255,0.72)",
-                  color: colors.textSecondary,
-                }}
-              />
-            </Stack>
-          }
           actions={
             canClearFilters ? (
               <Chip
                 label={t("clearFilters")}
                 onClick={clearFilters}
                 onDelete={clearFilters}
+                size="small"
                 sx={{
                   backgroundColor: "rgba(255,255,255,0.8)",
                   color: colors.primary,
@@ -932,62 +895,24 @@ export default function Documents() {
               />
             ) : undefined
           }
-          meta={
-            <Stack spacing={1}>
-              {selectedHallituskausi ? (
-                <Alert
-                  severity="info"
-                  sx={{
-                    py: 0,
-                    borderRadius: 1,
-                    backgroundColor: "rgba(37, 99, 235, 0.08)",
-                  }}
-                >
-                  {t("hallituskausiNotice", {
-                    value: selectedHallituskausi.label,
-                  })}
-                </Alert>
-              ) : null}
-              {!isMobile && activeFilters.length > 0 ? (
-                <Box>
-                  <Chip
-                    label={t("activeFilters")}
-                    size="small"
-                    sx={{
-                      mb: 1,
-                      backgroundColor: `${colors.primary}08`,
-                      color: colors.primary,
-                      fontWeight: 700,
-                    }}
-                  />
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-                    {activeFilters.map((filter) => (
-                      <Chip
-                        key={filter.key}
-                        label={filter.label}
-                        onDelete={filter.onDelete}
-                        sx={{
-                          backgroundColor: "rgba(255,255,255,0.84)",
-                          color: colors.primary,
-                        }}
-                      />
-                    ))}
-                  </Box>
-                </Box>
-              ) : null}
-            </Stack>
-          }
-          variant="feature"
         />
 
+        {/* Document type picker */}
+        <DocumentTypePicker
+          value={documentType}
+          onChange={handleDocumentTypeChange}
+        />
+
+        {/* Filter bar */}
         <Box id="documents-content">
           <DocumentsFilterPanel
             collapsible={isMobile}
+            sticky
             secondaryFilters={
               <>
                 {documentType === "committee-reports" && (
                   <>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth size="small">
                       <InputLabel>{t("sourceCommitteeFilter")}</InputLabel>
                       <Select
                         value={selectedSourceCommittee}
@@ -1012,7 +937,7 @@ export default function Documents() {
                       </Select>
                     </FormControl>
 
-                    <FormControl fullWidth>
+                    <FormControl fullWidth size="small">
                       <InputLabel>{t("targetCommitteeFilter")}</InputLabel>
                       <Select
                         value={selectedRecipientCommittee}
@@ -1041,7 +966,7 @@ export default function Documents() {
 
                 {documentType === "expert-statements" && (
                   <>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth size="small">
                       <InputLabel>{t("committeeFilter")}</InputLabel>
                       <Select
                         value={selectedExpertCommittee}
@@ -1064,7 +989,7 @@ export default function Documents() {
                       </Select>
                     </FormControl>
 
-                    <FormControl fullWidth>
+                    <FormControl fullWidth size="small">
                       <InputLabel>{t("documentSubtype")}</InputLabel>
                       <Select
                         value={selectedExpertDocType}
@@ -1098,6 +1023,7 @@ export default function Documents() {
                         setSelectedSubject(newValue)
                       }
                       loading={subjectsLoading}
+                      size="small"
                       renderInput={(params) => (
                         <TextField
                           {...params}
@@ -1119,6 +1045,7 @@ export default function Documents() {
           >
             <TextField
               fullWidth
+              size="small"
               label={t("searchLabel")}
               placeholder={t("searchPlaceholder")}
               value={searchQuery}
@@ -1126,7 +1053,9 @@ export default function Documents() {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon sx={{ color: colors.textSecondary }} />
+                    <SearchIcon
+                      sx={{ color: colors.textSecondary, fontSize: 20 }}
+                    />
                   </InputAdornment>
                 ),
               }}
@@ -1141,57 +1070,7 @@ export default function Documents() {
               }}
             />
 
-            <FormControl fullWidth>
-              <InputLabel>{t("type")}</InputLabel>
-              <Select
-                value={documentType}
-                label={t("type")}
-                onChange={(e) =>
-                  handleDocumentTypeChange(e.target.value as DocumentType)
-                }
-                sx={{ backgroundColor: colors.backgroundDefault }}
-              >
-                <MenuItem value="interpellations">
-                  {t("interpellations")}
-                </MenuItem>
-                <MenuItem value="government-proposals">
-                  {t("governmentProposals")}
-                </MenuItem>
-                <MenuItem value="written-questions">
-                  {t("writtenQuestions")}
-                </MenuItem>
-                <MenuItem value="written-question-responses">
-                  {t("writtenQuestionResponses")}
-                </MenuItem>
-                <MenuItem value="expert-statements">
-                  {t("expertStatements")}
-                </MenuItem>
-                <MenuItem value="oral-questions">{t("oralQuestions")}</MenuItem>
-                <MenuItem value="committee-reports">
-                  {t("committeeReports")}
-                </MenuItem>
-                <MenuItem value="legislative-initiatives-law">
-                  {t("legislativeInitiativesLaw")}
-                </MenuItem>
-                <MenuItem value="legislative-initiatives-budget">
-                  {t("legislativeInitiativesBudget")}
-                </MenuItem>
-                <MenuItem value="legislative-initiatives-supplementary-budget">
-                  {t("legislativeInitiativesSupplementaryBudget")}
-                </MenuItem>
-                <MenuItem value="legislative-initiatives-action">
-                  {t("legislativeInitiativesAction")}
-                </MenuItem>
-                <MenuItem value="legislative-initiatives-discussion">
-                  {t("legislativeInitiativesDiscussion")}
-                </MenuItem>
-                <MenuItem value="legislative-initiatives-citizens">
-                  {t("legislativeInitiativesCitizens")}
-                </MenuItem>
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth>
+            <FormControl fullWidth size="small">
               <InputLabel>{t("year")}</InputLabel>
               <Select
                 value={selectedYear}
@@ -1211,6 +1090,76 @@ export default function Documents() {
           </DocumentsFilterPanel>
         </Box>
 
+        {/* Stale search indicator */}
+        {isSearchStale && (
+          <LinearProgress
+            sx={{
+              height: 2,
+              borderRadius: 1,
+              backgroundColor: `${colors.primaryLight}20`,
+              "& .MuiLinearProgress-bar": {
+                backgroundColor: colors.primaryLight,
+              },
+            }}
+          />
+        )}
+
+        {/* Results header */}
+        {items.length > 0 && (
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: { xs: "flex-start", sm: "center" },
+              justifyContent: "space-between",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 1,
+            }}
+          >
+            <Typography
+              variant="caption"
+              sx={{
+                color: colors.textSecondary,
+                fontWeight: 600,
+                fontFamily: monoFontFamily,
+              }}
+            >
+              {t("resultsSummary", {
+                shown: items.length,
+                total: totalCount,
+                count: totalCount,
+              })}
+            </Typography>
+            {activeFilters.length > 0 && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.75,
+                  flexWrap: "wrap",
+                }}
+              >
+                {activeFilters.map((filter) => (
+                  <Chip
+                    key={filter.key}
+                    label={filter.label}
+                    onDelete={filter.onDelete}
+                    size="small"
+                    sx={{
+                      backgroundColor: `${colors.primary}10`,
+                      color: colors.primary,
+                      fontWeight: 600,
+                    }}
+                  />
+                ))}
+                <Button size="small" onClick={clearFilters}>
+                  {t("clearFilters")}
+                </Button>
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {/* Results */}
         {loading && page === 1 ? (
           <DocumentsLoadingState />
         ) : items.length === 0 ? (
@@ -1221,7 +1170,15 @@ export default function Documents() {
             onClear={canClearFilters ? clearFilters : undefined}
           />
         ) : (
-          <Stack spacing={2}>
+          <Stack
+            spacing={0}
+            sx={{
+              opacity: isSearchStale ? 0.6 : 1,
+              transition: isSearchStale
+                ? "opacity 0.2s 0.15s linear"
+                : "opacity 0s 0s linear",
+            }}
+          >
             <DocumentsResultsList
               documentType={documentType}
               isLegislativeInitiativeType={isLegislativeInitiativeType}
@@ -1230,37 +1187,44 @@ export default function Documents() {
             />
 
             {page < totalPages && (
-              <Box sx={{ display: "flex", justifyContent: "center", pt: 1 }}>
-                <Stack spacing={1} alignItems="center">
-                  <Box
-                    component="button"
-                    type="button"
-                    onClick={handleLoadMore}
-                    disabled={loading}
+              <Stack spacing={1} alignItems="center" sx={{ py: 2 }}>
+                {loading && (
+                  <LinearProgress
                     sx={{
-                      border: `1px solid ${colors.primary}`,
-                      backgroundColor: colors.backgroundPaper,
-                      color: colors.primary,
+                      width: "100%",
+                      maxWidth: 320,
+                      height: 3,
                       borderRadius: 1,
-                      px: 3,
-                      py: 1.2,
-                      fontSize: "0.95rem",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      "&:hover": {
-                        backgroundColor: `${colors.primary}08`,
-                      },
-                      "&:disabled": {
-                        cursor: "wait",
-                        opacity: 0.7,
+                      backgroundColor: `${colors.primaryLight}20`,
+                      "& .MuiLinearProgress-bar": {
+                        backgroundColor: colors.primaryLight,
                       },
                     }}
-                  >
-                    {loading ? t("loadingMore") : t("loadMore")}
-                  </Box>
-                  {loading && page > 1 && <CircularProgress size={24} />}
-                </Stack>
-              </Box>
+                  />
+                )}
+                <div ref={sentinelRef} />
+                <Button
+                  variant="text"
+                  onClick={handleLoadMore}
+                  disabled={loading}
+                  sx={{ color: colors.primary }}
+                >
+                  {loading ? t("loadingMore") : t("loadMore")}
+                </Button>
+              </Stack>
+            )}
+
+            {page >= totalPages && items.length > 0 && (
+              <Typography
+                variant="caption"
+                sx={{
+                  textAlign: "center",
+                  color: colors.textTertiary,
+                  py: 2,
+                }}
+              >
+                {t("allLoaded", { count: totalCount })}
+              </Typography>
             )}
           </Stack>
         )}

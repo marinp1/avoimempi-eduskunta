@@ -29,15 +29,18 @@ import { RichTextRenderer } from "#client/components/RichTextRenderer";
 import { useOverlayDrawer } from "#client/context/OverlayDrawerContext";
 import { useScopedTranslation } from "#client/i18n/scoped";
 import { refs } from "#client/references";
-import { DataCard, InlineSpinner } from "#client/theme/components";
+import { InlineSpinner } from "#client/theme/components";
 import { colors } from "#client/theme/index";
 import { apiFetch } from "#client/utils/fetch";
 import {
   buildEdkDocumentUrl,
   buildKysymysPdfUrl,
+  DOCUMENT_TYPE_ABBR,
+  DOCUMENT_TYPE_ACCENT,
   formatDate,
   getOutcomeColor,
   InlineRelatedSessions,
+  paperDocumentSx,
   parseExpertInfo,
 } from "./shared";
 
@@ -254,7 +257,15 @@ function WrittenQuestionResponseCardComponent({
   };
 
   return (
-    <DataCard sx={{ contentVisibility: "auto", containIntrinsicSize: "360px" }}>
+    <Box
+      sx={{
+        ...paperDocumentSx,
+        contentVisibility: "auto",
+        containIntrinsicSize: "auto 140px",
+        borderLeft: `3px solid ${DOCUMENT_TYPE_ACCENT["written-question-responses"]}`,
+        mb: 1.5,
+      }}
+    >
       <Box sx={{ p: 2 }}>
         <Stack spacing={1.5}>
           {/* Identifier + answered chip row */}
@@ -265,6 +276,17 @@ function WrittenQuestionResponseCardComponent({
             flexWrap="wrap"
             gap={0.5}
           >
+            <Chip
+              label={DOCUMENT_TYPE_ABBR["written-question-responses"]}
+              size="small"
+              sx={{
+                backgroundColor: `${DOCUMENT_TYPE_ACCENT["written-question-responses"]}15`,
+                color: DOCUMENT_TYPE_ACCENT["written-question-responses"],
+                fontWeight: 700,
+                fontSize: "0.6875rem",
+                height: 22,
+              }}
+            />
             <Typography
               variant="caption"
               sx={{ color: colors.textSecondary, fontFamily: "monospace" }}
@@ -372,7 +394,7 @@ function WrittenQuestionResponseCardComponent({
           </Box>
         </Stack>
       </Box>
-    </DataCard>
+    </Box>
   );
 }
 
@@ -465,7 +487,15 @@ function ExpertStatementCardComponent({
   const isNonPublic = item.publicity === "Ei julkinen";
 
   return (
-    <DataCard sx={{ contentVisibility: "auto", containIntrinsicSize: "300px" }}>
+    <Box
+      sx={{
+        ...paperDocumentSx,
+        contentVisibility: "auto",
+        containIntrinsicSize: "auto 140px",
+        borderLeft: `3px solid ${DOCUMENT_TYPE_ACCENT["expert-statements"]}`,
+        mb: 1.5,
+      }}
+    >
       <Box sx={{ p: 2 }}>
         {/* Top row: chips + date */}
         <Box
@@ -478,6 +508,17 @@ function ExpertStatementCardComponent({
           }}
         >
           <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+            <Chip
+              label={DOCUMENT_TYPE_ABBR["expert-statements"]}
+              size="small"
+              sx={{
+                backgroundColor: `${DOCUMENT_TYPE_ACCENT["expert-statements"]}15`,
+                color: DOCUMENT_TYPE_ACCENT["expert-statements"],
+                fontWeight: 700,
+                fontSize: "0.6875rem",
+                height: 22,
+              }}
+            />
             <Chip
               label={docTypeLabel}
               size="small"
@@ -716,7 +757,7 @@ function ExpertStatementCardComponent({
           </Box>
         </Collapse>
       </Box>
-    </DataCard>
+    </Box>
   );
 }
 
@@ -848,9 +889,30 @@ function OralQuestionCardComponent({
   };
 
   return (
-    <DataCard sx={{ contentVisibility: "auto", containIntrinsicSize: "380px" }}>
+    <Box
+      sx={{
+        ...paperDocumentSx,
+        contentVisibility: "auto",
+        containIntrinsicSize: "auto 140px",
+        borderLeft: `3px solid ${DOCUMENT_TYPE_ACCENT["oral-questions"]}`,
+        mb: 1.5,
+      }}
+    >
       <Box sx={{ p: 2 }}>
         <Stack spacing={1.5}>
+          <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+            <Chip
+              label={DOCUMENT_TYPE_ABBR["oral-questions"]}
+              size="small"
+              sx={{
+                backgroundColor: `${DOCUMENT_TYPE_ACCENT["oral-questions"]}15`,
+                color: DOCUMENT_TYPE_ACCENT["oral-questions"],
+                fontWeight: 700,
+                fontSize: "0.6875rem",
+                height: 22,
+              }}
+            />
+          </Stack>
           <Stack
             direction="row"
             spacing={1}
@@ -965,7 +1027,7 @@ function OralQuestionCardComponent({
           </Box>
         </Stack>
       </Box>
-    </DataCard>
+    </Box>
   );
 }
 
@@ -1329,9 +1391,30 @@ function WrittenQuestionCardComponent({
   };
 
   return (
-    <DataCard sx={{ contentVisibility: "auto", containIntrinsicSize: "400px" }}>
+    <Box
+      sx={{
+        ...paperDocumentSx,
+        contentVisibility: "auto",
+        containIntrinsicSize: "auto 140px",
+        borderLeft: `3px solid ${DOCUMENT_TYPE_ACCENT["written-questions"]}`,
+        mb: 1.5,
+      }}
+    >
       <Box sx={{ p: 2 }}>
         <Stack spacing={1.5}>
+          <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+            <Chip
+              label={DOCUMENT_TYPE_ABBR["written-questions"]}
+              size="small"
+              sx={{
+                backgroundColor: `${DOCUMENT_TYPE_ACCENT["written-questions"]}15`,
+                color: DOCUMENT_TYPE_ACCENT["written-questions"],
+                fontWeight: 700,
+                fontSize: "0.6875rem",
+                height: 22,
+              }}
+            />
+          </Stack>
           {/* Title row */}
           <Stack
             direction="row"
@@ -1490,7 +1573,7 @@ function WrittenQuestionCardComponent({
           </Box>
         </Stack>
       </Box>
-    </DataCard>
+    </Box>
   );
 }
 

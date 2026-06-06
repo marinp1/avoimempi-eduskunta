@@ -1,10 +1,37 @@
+import { colors } from "#client/theme";
 import type { RepresentativeSelection } from "./Details";
 
 export type MemberWithExtras = DatabaseQueries.GetParliamentComposition;
 export type PersonLookupResult = ApiRouteItem<"/api/person/search">;
 export type GovernmentFilterValue = "all" | "government" | "opposition";
+export type GenderFilterValue = "all" | "female" | "male";
 export type CompositionBrowserView = "list" | "table";
 export type CompositionSortValue = "name" | "party" | "age" | "tenure";
+
+export const getStatusColor = (
+  governmentCount: number,
+  oppositionCount: number,
+) => {
+  if (governmentCount > 0 && oppositionCount === 0) return colors.success;
+  if (oppositionCount > 0 && governmentCount === 0) return colors.warning;
+  return colors.primary;
+};
+
+export const getPartyBlocKey = (
+  governmentCount: number,
+  oppositionCount: number,
+):
+  | "partyMatrix.government"
+  | "partyMatrix.opposition"
+  | "partyMatrix.mixed" => {
+  if (governmentCount > 0 && oppositionCount === 0) {
+    return "partyMatrix.government";
+  }
+  if (oppositionCount > 0 && governmentCount === 0) {
+    return "partyMatrix.opposition";
+  }
+  return "partyMatrix.mixed";
+};
 
 export const formatFinnishDate = (isoDate: string): string => {
   const [year, month, day] = isoDate.split("-");

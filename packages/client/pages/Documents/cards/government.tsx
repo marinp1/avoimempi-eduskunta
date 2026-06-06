@@ -38,6 +38,8 @@ import {
 } from "../components";
 import {
   buildEdkDocumentUrl,
+  DOCUMENT_TYPE_ABBR,
+  DOCUMENT_TYPE_ACCENT,
   formatDate,
   getOutcomeColor,
   InlineRelatedSessions,
@@ -596,6 +598,20 @@ function GovernmentProposalCardComponent({
     <DocumentCardShell
       title={item.title || tDocuments("noTitle")}
       identifier={item.parliament_identifier}
+      accentColor={DOCUMENT_TYPE_ACCENT["government-proposals"]}
+      typeBadge={
+        <Chip
+          label={DOCUMENT_TYPE_ABBR["government-proposals"]}
+          size="small"
+          sx={{
+            backgroundColor: `${DOCUMENT_TYPE_ACCENT["government-proposals"]}15`,
+            color: DOCUMENT_TYPE_ACCENT["government-proposals"],
+            fontWeight: 700,
+            fontSize: "0.6875rem",
+            height: 22,
+          }}
+        />
+      }
       status={
         item.decision_outcome ? (
           <Chip

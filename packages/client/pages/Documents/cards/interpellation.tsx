@@ -33,7 +33,13 @@ import {
   DocumentDetailSection,
   DocumentMetaItem,
 } from "../components";
-import { formatDate, getOutcomeColor, InlineRelatedSessions } from "./shared";
+import {
+  DOCUMENT_TYPE_ABBR,
+  DOCUMENT_TYPE_ACCENT,
+  formatDate,
+  getOutcomeColor,
+  InlineRelatedSessions,
+} from "./shared";
 
 // ─── Interpellation types and card ───
 
@@ -317,6 +323,20 @@ function InterpellationCardComponent({
     <DocumentCardShell
       title={item.title || tDocuments("noTitle")}
       identifier={item.parliament_identifier}
+      accentColor={DOCUMENT_TYPE_ACCENT.interpellations}
+      typeBadge={
+        <Chip
+          label={DOCUMENT_TYPE_ABBR.interpellations}
+          size="small"
+          sx={{
+            backgroundColor: `${DOCUMENT_TYPE_ACCENT.interpellations}15`,
+            color: DOCUMENT_TYPE_ACCENT.interpellations,
+            fontWeight: 700,
+            fontSize: "0.6875rem",
+            height: 22,
+          }}
+        />
+      }
       status={
         item.decision_outcome ? (
           <Chip

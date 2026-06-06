@@ -55,7 +55,9 @@ describe("composition helpers", () => {
         start_date: "2023-04-01",
         end_date: "",
         party_name: "SDP",
+        party_code: "sd",
         is_in_government: 1,
+        district_name: "Helsingin vaalipiiri",
       },
       {
         person_id: 2,
@@ -71,7 +73,9 @@ describe("composition helpers", () => {
         start_date: "2023-04-01",
         end_date: "",
         party_name: "SDP",
+        party_code: "sd",
         is_in_government: 1,
+        district_name: "Varsinais-Suomen vaalipiiri",
       },
       {
         person_id: 3,
@@ -87,7 +91,9 @@ describe("composition helpers", () => {
         start_date: "2023-04-01",
         end_date: "",
         party_name: "PS",
+        party_code: "ps",
         is_in_government: 0,
+        district_name: "Oulun vaalipiiri",
       },
     ]);
 
