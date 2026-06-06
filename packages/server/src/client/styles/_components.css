@@ -236,15 +236,22 @@
   position: relative;
 }
 
-/* Only show the overlay spinner when htmx marks the container as busy */
-.loading-overlay.htmx-request > .htmx-indicator {
+/* The overlay spinner is always taken out of flow so toggling it on/off during
+   a request never reserves or releases layout space — otherwise the content
+   below it shifts ("bounces") each time a fetch starts and settles. Its
+   visibility is handled by htmx's injected .htmx-indicator opacity rules. */
+.loading-overlay > .htmx-indicator {
   position: absolute;
   inset: 0;
-  background: rgba(251, 250, 247, 0.7);
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Dim the container only while htmx marks it busy. */
+.loading-overlay.htmx-request > .htmx-indicator {
+  background: rgba(251, 250, 247, 0.7);
 }
 
 /* Global loading bar: thin animated strip at the very top of the viewport,

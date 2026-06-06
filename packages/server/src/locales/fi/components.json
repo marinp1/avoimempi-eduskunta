@@ -2,6 +2,7 @@
   "period_selector": {
     "label": "Tietojakso",
     "select_heading": "Valitse hallituskaudet",
+    "apply": "Käytä valintaa →",
     "note": "Valitse yksi tai useampi hallituskausi. Pitämällä Shift-näppäintä pohjassa voit valita peräkkäisiä kausia. Oletuksena nykyinen kausi."
   },
   "composition": {

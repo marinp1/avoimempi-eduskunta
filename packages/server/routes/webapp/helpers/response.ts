@@ -4,6 +4,18 @@ import { assetVersion } from "../assets";
 import { isHtmx } from "#server/helpers";
 import i18next from "i18next";
 import { timelineOobHtml } from "./timeline";
+import PeriodSelector from "#server/layouts/period-selector";
+import type { PeriodSelectorData } from "#server/helpers/period-selector-data";
+
+/** Renders the masthead period selector as an out-of-band swap so its
+ *  badge/label/checkbox state re-render from server state after an htmx
+ *  navigation. The Apply button's hx-get targets the current page. */
+function periodSelectorOobHtml(
+  periodData: PeriodSelectorData,
+  activePath: string,
+): string {
+  return PeriodSelector({ periodData, activePath, oob: true });
+}
 
 /**
  * Describes a narrower fragment to render for targeted htmx swaps (filter
@@ -47,21 +59,26 @@ export function page(opts: PageOptions): Response {
     Vary: "HX-Request",
   };
   if (opts.extraHeaders) Object.assign(baseHeaders, opts.extraHeaders);
+  const periodOob = opts.periodData
+    ? periodSelectorOobHtml(opts.periodData, opts.activePath)
+    : "";
   if (htmx && opts.partial && partialMatches(opts.req, opts.partial)) {
     const tlHtml =
       opts.partial.oobTimeline && opts.timelineData
         ? timelineOobHtml(opts.timelineData)
         : "";
-    return new Response(tlHtml + opts.partial.fragment, {
+    return new Response(periodOob + tlHtml + opts.partial.fragment, {
       headers: baseHeaders,
     });
   }
   if (htmx && opts.timelineData) {
     const tlHtml = timelineOobHtml(opts.timelineData);
-    return new Response(tlHtml + opts.fragment, { headers: baseHeaders });
+    return new Response(periodOob + tlHtml + opts.fragment, {
+      headers: baseHeaders,
+    });
   }
   if (htmx) {
-    return new Response(opts.fragment, { headers: baseHeaders });
+    return new Response(periodOob + opts.fragment, { headers: baseHeaders });
   }
   const fullPage = renderFullPage(opts.fragment, {
     activePath: opts.activePath,

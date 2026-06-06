@@ -16,5 +16,11 @@
   "top_speakers": "Eniten puheenvuoroja",
   "speech_count": "{{count}} puheenvuoroa",
   "gov_bloc_label": "Hallitus",
-  "opp_bloc_label": "Oppositio"
+  "opp_bloc_label": "Oppositio",
+  "summary_label": "Tekoälykooste · päivän tapahtumat",
+  "summary_meta_overview": "Yleiskatsaus",
+  "summary_q": "Mitä eduskunnassa tapahtui?",
+  "summary_overview": "Tähän tulee tekoälyn tuottama tiivistelmä eduskunnan toiminnasta valitulla ajanjaksolla. Selaa kokoonpanoa, tiukimpia äänestyksiä ja vilkkaimpia puhujia alta.",
+  "summary_day": "Tähän tulee tekoälyn tuottama tiivistelmä {{date}} käydyistä istunnoista, äänestyksistä ja keskusteluista.",
+  "summary_disclaimer": "Koneellisesti tuotettu kooste. Tarkista tiedot alkuperäisistä istunto- ja äänestystiedoista."
 }

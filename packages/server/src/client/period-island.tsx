@@ -1,77 +1,90 @@
-// Period selector island — attaches interaction handlers to the
-// server-rendered period menu and persists the choice via URL params
-// for server-side data scoping.
+// Period selector island — UI interaction only.
+//
+// Applying a selection is an htmx swap, not a full-page reload: the
+// server-rendered Apply button GETs the current page and includes the
+// `#period-value` hidden input (via hx-include). This island keeps that hidden
+// input in sync with the checkbox state — htmx submits it declaratively, with
+// no js: eval. The server re-renders `#main-content` and sends the selector
+// back as an out-of-band swap, so the badge/label come from server state.
+//
+// This island only handles presentation: opening/closing the menu, toggling
+// checkbox visuals, the "all" checkbox sync, shift-click range selection, and
+// mirroring the resulting `period` value into the hidden input + localStorage.
+
+import { island } from "./island";
 
 const PERIOD_KEY = "peili.period";
 
-function collectSelected(menuList: HTMLElement): Set<number> {
-  const ids = new Set<number>();
-  menuList
-    .querySelectorAll<HTMLInputElement>(".period__cb:not([data-period-all])")
-    .forEach((cb) => {
-      if (cb.checked) ids.add(Number(cb.value));
-    });
-  return ids;
+function currentRoot(): HTMLElement | null {
+  return document.querySelector<HTMLElement>("[data-period]");
 }
 
-function commit(selected: Set<number>, govCount: number) {
+function closeMenu(root: HTMLElement) {
+  const btn = root.querySelector<HTMLElement>(".period__btn");
+  const menu = root.querySelector<HTMLElement>(".period__menu");
+  if (menu) menu.hidden = true;
+  btn?.setAttribute("aria-expanded", "false");
+}
+
+/**
+ * Mirrors the current checkbox state into the `#period-value` hidden input
+ * (and localStorage): "all" when every government is checked, otherwise the
+ * sorted, comma-joined ids — the format the server's parsePeriod() expects.
+ */
+function syncPeriodValue(root: HTMLElement) {
+  const govCbs = Array.from(
+    root.querySelectorAll<HTMLInputElement>(
+      ".period__cb:not([data-period-all])",
+    ),
+  );
+  const selected = govCbs
+    .filter((cb) => cb.checked)
+    .map((cb) => Number(cb.value));
   const val =
-    selected.size === govCount
+    selected.length === govCbs.length
       ? "all"
-      : [...selected].sort((a, b) => a - b).join(",");
+      : selected.sort((a, b) => a - b).join(",");
+  const hidden = root.querySelector<HTMLInputElement>("#period-value");
+  if (hidden) hidden.value = val;
   try {
     localStorage.setItem(PERIOD_KEY, val);
   } catch {
     /* ignore */
   }
-  const url = new URL(window.location.href);
-  url.searchParams.set("period", val);
-  url.searchParams.delete("date");
-  window.location.href = url.toString();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const root = document.querySelector<HTMLElement>("[data-period]");
+// Element-scoped handlers — re-bound after every htmx swap of the selector
+// (the OOB swap replaces the selector DOM, so the old handlers are discarded).
+function initPeriod() {
+  const root = currentRoot();
   if (!root) return;
   const btn = root.querySelector<HTMLElement>(".period__btn");
   const menu = root.querySelector<HTMLElement>(".period__menu");
   const listEl = root.querySelector<HTMLElement>("[data-period-menu-list]");
   if (!btn || !menu || !listEl) return;
 
-  const allCbs = Array.from(
-    listEl.querySelectorAll<HTMLInputElement>(".period__cb"),
+  // Government checkboxes excluding the "all" toggle. Use the attribute
+  // selector — a bare `data-period-all` reads back as "" in dataset, which is
+  // falsy, so a `!cb.dataset.periodAll` filter would wrongly keep the toggle.
+  const govCbs = Array.from(
+    listEl.querySelectorAll<HTMLInputElement>(
+      ".period__cb:not([data-period-all])",
+    ),
   );
-  if (allCbs.length === 0) return;
+  if (govCbs.length === 0) return;
 
   const allCb = listEl.querySelector<HTMLInputElement>("[data-period-all]")!;
-  const govCbs = allCbs.filter((cb) => !cb.dataset.periodAll);
   const govCount = govCbs.length;
   let lastClickedIndex = -1;
 
-  // Menu toggle
-  const open = () => {
-    menu.hidden = false;
-    btn.setAttribute("aria-expanded", "true");
-  };
-  const close = () => {
-    menu.hidden = true;
-    btn.setAttribute("aria-expanded", "false");
-  };
   btn.addEventListener("click", (e) => {
     e.stopPropagation();
-    if (menu.hidden) open();
-    else close();
-  });
-  document.addEventListener("click", (e) => {
-    if (!root.contains(e.target as Node)) close();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") close();
+    menu.hidden = !menu.hidden;
+    btn.setAttribute("aria-expanded", String(!menu.hidden));
   });
 
   function syncAllCb() {
-    const checked = govCbs.filter((c) => c.checked).length;
-    allCb.checked = checked === govCount;
+    allCb.checked = govCbs.filter((c) => c.checked).length === govCount;
   }
 
   allCb.addEventListener("change", () => {
@@ -80,6 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
       cb.checked = state;
       cb.closest(".period__opt")?.classList.toggle("is-selected", state);
     });
+    syncPeriodValue(root);
     document.dispatchEvent(new CustomEvent("peili:period"));
   });
 
@@ -105,28 +119,27 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       lastClickedIndex = index;
       syncAllCb();
+      syncPeriodValue(root);
       document.dispatchEvent(new CustomEvent("peili:period"));
     });
   });
+}
 
-  // Shift key tracking
-  if (!(window as any).__periodShiftBound) {
-    (window as any).__periodShiftBound = true;
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Shift") (window as any).__periodShiftHeld = true;
-    });
-    document.addEventListener("keyup", (e) => {
-      if (e.key === "Shift") (window as any).__periodShiftHeld = false;
-    });
+island(initPeriod);
+
+// Document-level handlers — bound once at module load. They re-query the
+// current selector root so they survive OOB swaps without double-binding.
+document.addEventListener("click", (e) => {
+  const root = currentRoot();
+  if (root && !root.contains(e.target as Node)) closeMenu(root);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const root = currentRoot();
+    if (root) closeMenu(root);
   }
-
-  // Apply button
-  const applyBtn = document.createElement("button");
-  applyBtn.className = "period__apply";
-  applyBtn.textContent = "Käytä valintaa →";
-  applyBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    commit(collectSelected(listEl), govCount);
-  });
-  listEl.parentElement!.insertBefore(applyBtn, listEl.nextSibling);
+  if (e.key === "Shift") (window as any).__periodShiftHeld = true;
+});
+document.addEventListener("keyup", (e) => {
+  if (e.key === "Shift") (window as any).__periodShiftHeld = false;
 });

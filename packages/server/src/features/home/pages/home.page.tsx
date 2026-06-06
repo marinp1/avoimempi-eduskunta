@@ -48,55 +48,7 @@ export default function Home({ title, data, sessionCount }: Props) {
         <div class="htmx-indicator loading-spinner">
           {i18next.t("common:loading")}
         </div>
-        <div class="wrap">
-          <section class="lead">
-            <p class="kicker kicker--red" data-tl-kicker>
-              <span class="dot"></span>
-              {i18next.t("home:kicker")}
-            </p>
-            <h1 data-tl-headline>{i18next.t("home:headline")}</h1>
-            <div class="lead__meta">
-              {data?.latestDay?.date ? (
-                <>
-                  {(() => {
-                    const s = data.latestDay.sessions[0];
-                    return (
-                      <>
-                        <span>
-                          <span data-tl-sessionlabel>
-                            {i18next.t("home:latest_session")}
-                          </span>{" "}
-                          <b data-tl-session>{esc(s?.key ?? "")}</b>
-                        </span>
-                        <span class="sep"></span>
-                        <span data-tl-datetime>
-                          {formatDate(data.latestDay.date)}
-                        </span>
-                        {s?.voting_count ? (
-                          <>
-                            <span class="sep"></span>
-                            <span data-tl-agenda>
-                              {i18next.t("common:voting_section_count", {
-                                count: s.voting_count,
-                              })}
-                            </span>
-                          </>
-                        ) : null}
-                        <span class="link-arrow ml-auto">
-                          <a href="/istunnot">
-                            {i18next.t("common:open_session")}
-                          </a>
-                        </span>
-                      </>
-                    );
-                  })()}
-                </>
-              ) : (
-                <span>{i18next.t("home:fallback")}</span>
-              )}
-            </div>
-          </section>
-        </div>
+        <HomeLead data={data} />
 
         {data ? (
           <HomeBody data={data} sessionCount={sessionCount} />
@@ -135,6 +87,7 @@ export function HomeReactive({
       <div class="htmx-indicator loading-spinner">
         {i18next.t("common:loading")}
       </div>
+      <HomeLead data={data} />
       {data ? (
         <HomeBody data={data} sessionCount={sessionCount} />
       ) : (
@@ -144,6 +97,93 @@ export function HomeReactive({
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * The hero lead — kicker, headline, latest-session meta — plus the AI day
+ * summary. Rendered by both the full page and the time-reactive fragment so
+ * it stays visible while scrubbing the timeline.
+ */
+function HomeLead({ data }: { data?: HomeData }) {
+  const day = data?.latestDay;
+  const session = day?.sessions[0];
+
+  return (
+    <div class="wrap">
+      <section class="lead">
+        <p class="kicker kicker--red" data-tl-kicker>
+          <span class="dot"></span>
+          {i18next.t("home:kicker")}
+        </p>
+        <h1 data-tl-headline>{i18next.t("home:headline")}</h1>
+        <div class="lead__meta">
+          {day?.date ? (
+            <>
+              <span>
+                <span data-tl-sessionlabel>
+                  {i18next.t("home:latest_session")}
+                </span>{" "}
+                <b data-tl-session>{esc(session?.key ?? "")}</b>
+              </span>
+              <span class="sep"></span>
+              <span data-tl-datetime>{formatDate(day.date)}</span>
+              {session?.voting_count ? (
+                <>
+                  <span class="sep"></span>
+                  <span data-tl-agenda>
+                    {i18next.t("common:voting_section_count", {
+                      count: session.voting_count,
+                    })}
+                  </span>
+                </>
+              ) : null}
+              <span class="link-arrow ml-auto">
+                <a href="/istunnot">{i18next.t("common:open_session")}</a>
+              </span>
+            </>
+          ) : (
+            <span>{i18next.t("home:fallback")}</span>
+          )}
+        </div>
+      </section>
+
+      <HomeDaySummary date={day?.date ?? null} />
+    </div>
+  );
+}
+
+/**
+ * AI day summary block. The summary itself is model-generated and not yet
+ * wired up, so this shows a generic placeholder (date-aware when a day is
+ * selected) using the shared `.summary` styling.
+ */
+function HomeDaySummary({ date }: { date: string | null }) {
+  return (
+    <div class="summary">
+      <div class="summary__bar">
+        <span class="l">
+          <span class="spark">✦</span>
+          <span class="lbl">{i18next.t("home:summary_label")}</span>
+        </span>
+        <span class="read">
+          {date ? formatDate(date) : i18next.t("home:summary_meta_overview")}
+        </span>
+      </div>
+      <div class="summary__in">
+        <div class="summary__q">{i18next.t("home:summary_q")}</div>
+        <p class="summary__lead">
+          {date
+            ? i18next.t("home:summary_day", { date: formatDate(date) })
+            : i18next.t("home:summary_overview")}
+        </p>
+        <div class="summary__foot">
+          <span class="summary__disc">
+            {i18next.t("home:summary_disclaimer")}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

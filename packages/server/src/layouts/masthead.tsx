@@ -31,7 +31,7 @@ export default function Masthead({
 
         <div class="masthead__meta">
           <span class="masthead__date">{finnishDate}</span>
-          {<PeriodSelector periodData={periodData} />}
+          {<PeriodSelector periodData={periodData} activePath={activePath} />}
         </div>
       </div>
 

@@ -5,11 +5,20 @@ import type { PeriodSelectorData } from "../helpers/period-selector-data";
 
 /** Renders the full period selector menu with checkboxes pre-checked
  *  from the server-side period selection. Falls back to the static
- *  skeleton when no periodData is provided. */
+ *  skeleton when no periodData is provided.
+ *
+ *  Applying a selection is an htmx swap (no full reload): the Apply button
+ *  GETs the current page with the chosen `period` and targets `#main-content`.
+ *  When `oob` is set the whole selector is rendered as an out-of-band swap so
+ *  the masthead badge/label re-render from server state after the swap. */
 export default function PeriodSelector({
   periodData,
+  activePath = "/",
+  oob = false,
 }: {
   periodData?: PeriodSelectorData;
+  activePath?: string;
+  oob?: boolean;
 }) {
   const govs = periodData?.governments ?? [];
   const selected = new Set(periodData?.selectedIds ?? []);
@@ -20,9 +29,21 @@ export default function PeriodSelector({
   };
   const hasData = govs.length > 0;
   const allSelected = hasData && selected.size === govs.length;
+  // The `period` value submitted with the Apply button: "all" when every
+  // government is selected, otherwise the sorted, comma-joined ids — matching
+  // what the server's parsePeriod() expects. The island keeps this hidden
+  // input in sync as checkboxes change; htmx submits it via hx-include.
+  const periodValue = allSelected
+    ? "all"
+    : [...selected].sort((a, b) => a - b).join(",");
 
   return (
-    <div class="period" data-period>
+    <div
+      class="period"
+      id="period-selector"
+      data-period
+      hx-swap-oob={oob ? "true" : undefined}
+    >
       <button class="period__btn" aria-expanded="false" aria-haspopup="true">
         <span class="period__k">
           {i18next.t("components:period_selector.label")}
@@ -76,6 +97,27 @@ export default function PeriodSelector({
             </>
           )}
         </div>
+        {hasData && (
+          <>
+            <input
+              type="hidden"
+              name="period"
+              id="period-value"
+              value={periodValue}
+            />
+            <button
+              type="button"
+              class="period__apply"
+              hx-get={activePath}
+              hx-target="#main-content"
+              hx-swap="innerHTML"
+              hx-push-url="true"
+              hx-include="#period-value"
+            >
+              {i18next.t("components:period_selector.apply")}
+            </button>
+          </>
+        )}
         <div class="period__note">
           {i18next.t("components:period_selector.note")}
         </div>
