@@ -137,7 +137,9 @@ export function createWebappPageRoutes(deps: WebappDeps) {
         const allRows = deps.personRepository.fetchRoster();
         const filtered = helpers.applyFilters(allRows, params);
         const isHtmx = req.headers.get("HX-Request") === "true";
-        if (isHtmx) {
+        const isBoosted = req.headers.get("HX-Boosted") === "true";
+        // Filter/search request (not a full-page navigation): return only roster content
+        if (isHtmx && !isBoosted) {
           const fragment = eta.render("pages/roster-content", {
             ...helpers,
             allRows,

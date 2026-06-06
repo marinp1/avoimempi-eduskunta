@@ -1,13 +1,13 @@
 <div class="period" data-period>
   <button class="period__btn" aria-expanded="false" aria-haspopup="true">
     <span class="period__k">Tietojakso</span>
-    <span class="period__v" data-period-v>Vaalikausi 2023–2027</span>
-    <span class="period__badge is-now" data-period-badge>nykyinen</span>
+    <span class="period__v" data-period-v></span>
+    <span class="period__badge" data-period-badge></span>
     <span class="period__caret">▾</span>
   </button>
   <div class="period__menu" hidden role="menu">
     <div class="period__menu-head">Valitse tietojakso</div>
-    <button class="period__opt is-selected" role="menuitemradio" aria-checked="true" data-val="2023">
+    <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="2023">
       <span class="period__opt-main">Vaalikausi 2023–2027</span>
       <span class="period__opt-sub">Orpon hallitus · nykyinen</span>
     </button>
