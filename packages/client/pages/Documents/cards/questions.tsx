@@ -184,7 +184,7 @@ function WrittenQuestionResponseDrawerContent({
             sx={{
               p: 2,
               backgroundColor: colors.backgroundSubtle,
-              borderRadius: 1,
+              borderRadius: 0,
               borderLeft: `4px solid ${colors.info}`,
             }}
           >
@@ -203,7 +203,7 @@ function WrittenQuestionResponseDrawerContent({
             sx={{
               p: 2,
               backgroundColor: colors.backgroundSubtle,
-              borderRadius: 1,
+              borderRadius: 0,
               borderLeft: `4px solid ${colors.info}`,
             }}
           >
@@ -627,7 +627,7 @@ function ExpertStatementCardComponent({
               mt: 1,
               p: 1.5,
               backgroundColor: `${colors.primary}08`,
-              borderRadius: 1,
+              borderRadius: 0,
               borderLeft: `3px solid ${colors.primary}`,
             }}
           >
@@ -788,7 +788,7 @@ function OralQuestionDrawerContent({ item }: { item: OralQuestionListItem }) {
               sx={{
                 p: 2,
                 backgroundColor: colors.backgroundSubtle,
-                borderRadius: 1,
+                borderRadius: 0,
                 borderLeft: `4px solid ${colors.info}`,
               }}
             >
@@ -1237,7 +1237,7 @@ function WrittenQuestionDrawerContent({
               sx={{
                 p: 2,
                 backgroundColor: colors.backgroundSubtle,
-                borderRadius: 1,
+                borderRadius: 0,
                 borderLeft: `4px solid ${colors.primary}`,
               }}
             >

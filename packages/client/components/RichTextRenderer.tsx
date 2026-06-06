@@ -173,7 +173,7 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
                 py: 0.75,
                 borderLeft: `3px solid ${colors.primary}55`,
                 backgroundColor: `${colors.backgroundSubtle}`,
-                borderRadius: 1,
+                borderRadius: 0,
               }}
             >
               <Typography
@@ -193,7 +193,7 @@ export const RichTextRenderer: React.FC<RichTextRendererProps> = ({
               sx={{
                 mt: marginTop,
                 border: `1px solid ${colors.dataBorder}`,
-                borderRadius: 1,
+                borderRadius: 0,
                 backgroundColor: colors.backgroundPaper,
               }}
             >

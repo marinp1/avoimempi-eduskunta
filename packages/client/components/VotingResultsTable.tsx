@@ -93,7 +93,7 @@ export const VotingResultsTable: React.FC<{
         </Button>
       </Box>
       <TableContainer
-        sx={{ border: `1px solid ${colors.dataBorder}60`, borderRadius: 1 }}
+        sx={{ border: `1px solid ${colors.dataBorder}60`, borderRadius: 0 }}
       >
         {groupBy === "party" ? (
           <Table size="small">

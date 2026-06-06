@@ -58,8 +58,7 @@ const mobileTabRoutes: { key: RouteName; icon: React.ElementType }[] = [
   { key: "istunnot", icon: Event },
 ];
 const MOBILE_MORE_TAB_VALUE = "__more__";
-const headerGradient =
-  "linear-gradient(120deg, #13213E 0%, #1B2A4A 58%, #28426E 100%)";
+const headerBackground = colors.primary;
 
 export const Navigation: React.FC<{
   activeTab: string;
@@ -127,11 +126,10 @@ export const Navigation: React.FC<{
       <Box
         sx={{
           p: 2.5,
-          background: headerGradient,
+          background: headerBackground,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          boxShadow: "0 6px 18px rgba(15, 27, 51, 0.2)",
         }}
       >
         <Box>
@@ -252,10 +250,9 @@ export const Navigation: React.FC<{
         elevation={0}
         sx={{
           borderRadius: 0,
-          background: headerGradient,
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
-          boxShadow: "0 8px 20px rgba(15, 27, 51, 0.24)",
-          backdropFilter: "saturate(130%) blur(8px)",
+          background: headerBackground,
+          borderBottom: "1px solid rgba(255,255,255,0.15)",
+          boxShadow: "none",
           display: { xs: "none", lg: "flex" },
         }}
       >
@@ -340,7 +337,7 @@ export const Navigation: React.FC<{
                 "& .MuiTabs-indicator": {
                   height: 2,
                   background: "white",
-                  borderRadius: "1px 1px 0 0",
+                  borderRadius: 0,
                   transition: `left ${motion.normal}ms ${motion.easing.emphasized}, width ${motion.normal}ms ${motion.easing.emphasized}`,
                 },
               }}
@@ -366,7 +363,7 @@ export const Navigation: React.FC<{
                 bgcolor: isSecondaryActive
                   ? "rgba(255,255,255,0.14)"
                   : "transparent",
-                borderRadius: 1,
+                borderRadius: 0,
                 transition: `background-color ${motion.fast}ms ${motion.easing.standard}, color ${motion.fast}ms ${motion.easing.standard}`,
                 "&:hover": {
                   color: "white",
@@ -388,7 +385,7 @@ export const Navigation: React.FC<{
                   mt: 0.5,
                   minWidth: 180,
                   border: `1px solid ${colors.dataBorder}`,
-                  boxShadow: "0 8px 24px rgba(15,27,51,0.16)",
+                  boxShadow: "none",
                 },
               }}
             >
@@ -463,7 +460,7 @@ export const Navigation: React.FC<{
                 },
                 ".MuiOutlinedInput-notchedOutline": {
                   borderColor: "rgba(255,255,255,0.25)",
-                  borderRadius: "20px",
+                  borderRadius: 0,
                 },
                 "&:hover .MuiOutlinedInput-notchedOutline": {
                   borderColor: "rgba(255,255,255,0.55)",
@@ -474,7 +471,6 @@ export const Navigation: React.FC<{
                 },
                 "&:hover": {
                   backgroundColor: "rgba(255,255,255,0.08)",
-                  borderRadius: "20px",
                 },
                 transition: `background-color ${motion.fast}ms ${motion.easing.standard}`,
               }}
@@ -496,9 +492,9 @@ export const Navigation: React.FC<{
         elevation={0}
         sx={{
           borderRadius: 0,
-          background: headerGradient,
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
-          boxShadow: "0 6px 14px rgba(15, 27, 51, 0.24)",
+          background: headerBackground,
+          borderBottom: "1px solid rgba(255,255,255,0.15)",
+          boxShadow: "none",
           display: { xs: "flex", lg: "none" },
         }}
       >
@@ -553,7 +549,7 @@ export const Navigation: React.FC<{
         PaperProps={{
           sx: {
             borderRight: `1px solid ${colors.dataBorder}`,
-            boxShadow: "0 12px 30px rgba(15, 27, 51, 0.2)",
+            boxShadow: "none",
           },
         }}
       >
@@ -568,10 +564,9 @@ export const Navigation: React.FC<{
           top: "auto",
           bottom: 0,
           borderRadius: 0,
-          background: "rgba(255,255,255,0.92)",
-          backdropFilter: "saturate(160%) blur(12px)",
+          background: colors.backgroundPaper,
           borderTop: `1px solid ${colors.dataBorder}`,
-          boxShadow: "0 -8px 16px rgba(15, 27, 51, 0.08)",
+          boxShadow: "none",
           display: { xs: "flex", lg: "none" },
         }}
       >

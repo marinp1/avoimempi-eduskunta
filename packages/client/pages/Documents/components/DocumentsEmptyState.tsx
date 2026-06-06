@@ -16,7 +16,7 @@ export const DocumentsEmptyState: React.FC<{
         sx={{
           width: 56,
           height: 56,
-          borderRadius: "50%",
+          borderRadius: 0,
           display: "grid",
           placeItems: "center",
           backgroundColor: `${colors.primary}10`,

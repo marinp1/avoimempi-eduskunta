@@ -873,7 +873,7 @@ export default function Documents() {
                 severity="info"
                 sx={{
                   py: 0,
-                  borderRadius: 1.5,
+                  borderRadius: 0,
                   backgroundColor: "rgba(37, 99, 235, 0.08)",
                 }}
               >
@@ -939,7 +939,7 @@ export default function Documents() {
                   severity="info"
                   sx={{
                     py: 0,
-                    borderRadius: 1.5,
+                    borderRadius: 0,
                     backgroundColor: "rgba(37, 99, 235, 0.08)",
                   }}
                 >
@@ -1241,13 +1241,12 @@ export default function Documents() {
                       border: `1px solid ${colors.primary}`,
                       backgroundColor: colors.backgroundPaper,
                       color: colors.primary,
-                      borderRadius: 999,
+                      borderRadius: 0,
                       px: 3,
                       py: 1.2,
                       fontSize: "0.95rem",
                       fontWeight: 600,
                       cursor: "pointer",
-                      transition: "all 0.2s ease",
                       "&:hover": {
                         backgroundColor: `${colors.primary}08`,
                       },

@@ -75,7 +75,7 @@ export default function AttendancePersonDetail({
       sx={{
         border: "1px solid",
         borderColor: "divider",
-        borderRadius: 2,
+        borderRadius: 0,
         p: spacing.md,
         backgroundColor: "background.paper",
       }}

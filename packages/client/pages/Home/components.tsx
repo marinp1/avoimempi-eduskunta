@@ -42,8 +42,7 @@ type SessionsTranslation = ReturnType<
   typeof useScopedTranslation<"sessions">
 >["t"];
 
-const heroGradient =
-  "linear-gradient(135deg, rgba(19,33,62,0.97) 0%, rgba(27,42,74,0.96) 56%, rgba(74,111,165,0.94) 100%)";
+// Border radius constants (all 0 in terminal design)
 const heroOuterRadius = `${borderRadius.heroOuter * 8}px`;
 const heroInnerRadius = `${borderRadius.heroInner * 8}px`;
 
@@ -124,51 +123,13 @@ const HomeHeroComponent = ({
         position: "relative",
         overflow: "hidden",
         color: "#fff",
-        background: {
-          xs: "linear-gradient(160deg, #13213E 0%, #1B2A4A 100%)",
-          md: `linear-gradient(135deg, rgba(13,24,48,0.98) 0%, rgba(20,34,61,0.98) 44%, rgba(37,59,98,0.96) 100%), ${heroGradient}`,
-        },
-        boxShadow: {
-          xs: "none",
-          md: "0 16px 32px rgba(19, 33, 62, 0.18)",
-        },
-        border: "1px solid rgba(255,255,255,0.14)",
+        background: colors.primary,
+        boxShadow: "none",
+        border: `1px solid ${colors.primaryDark}`,
         mb: { xs: 0, md: spacing.sm },
-        borderRadius: { xs: 0, md: heroOuterRadius },
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: { xs: 100, md: 140 },
-          height: 3,
-          borderBottomRightRadius: 999,
-          background:
-            "linear-gradient(90deg, rgba(255,255,255,0.92) 0%, rgba(74,111,165,0.94) 58%, rgba(232,145,58,0.95) 100%)",
-        },
+        borderRadius: 0,
       }}
     >
-      <Box
-        sx={{
-          position: "absolute",
-          inset: 0,
-          display: { xs: "none", md: "block" },
-          background:
-            "radial-gradient(560px 260px at 10% 0%, rgba(232,145,58,0.18), transparent 70%), radial-gradient(540px 280px at 100% 0%, rgba(255,255,255,0.14), transparent 72%), linear-gradient(135deg, rgba(255,255,255,0.04), transparent 48%)",
-          pointerEvents: "none",
-        }}
-      />
-      <Box
-        sx={{
-          position: "absolute",
-          inset: { xs: 8, md: 10 },
-          display: { xs: "none", md: "block" },
-          borderRadius: heroInnerRadius,
-          border: "1px solid rgba(255,255,255,0.08)",
-          pointerEvents: "none",
-        }}
-      />
-
       <Grid
         container
         sx={{ position: "relative" }}
@@ -210,10 +171,9 @@ const HomeHeroComponent = ({
             <Box
               sx={{
                 p: { xs: 1.5, md: 1.75 },
-                borderRadius: heroInnerRadius,
-                border: "1px solid rgba(255,255,255,0.14)",
-                background:
-                  "linear-gradient(180deg, rgba(255,255,255,0.11), rgba(255,255,255,0.05))",
+                borderRadius: 0,
+                border: "1px solid rgba(255,255,255,0.15)",
+                background: "rgba(255,255,255,0.08)",
               }}
             >
               <Box
@@ -382,10 +342,9 @@ const HomeHeroComponent = ({
             <Box
               sx={{
                 p: 1.5,
-                borderRadius: heroInnerRadius,
-                border: "1px solid rgba(255,255,255,0.14)",
-                background:
-                  "linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.04))",
+                borderRadius: 0,
+                border: "1px solid rgba(255,255,255,0.15)",
+                background: "rgba(255,255,255,0.08)",
               }}
             >
               <Typography
@@ -425,7 +384,7 @@ const HomeHeroComponent = ({
               <Box
                 sx={{
                   height: 14,
-                  borderRadius: 99,
+                  borderRadius: 0,
                   overflow: "hidden",
                   display: "flex",
                   background: "rgba(255,255,255,0.08)",
@@ -435,13 +394,13 @@ const HomeHeroComponent = ({
                 <Box
                   sx={{
                     width: `${governmentWidth}%`,
-                    background: `linear-gradient(90deg, ${colors.success} 0%, ${colors.successLight} 100%)`,
+                    background: colors.success,
                   }}
                 />
                 <Box
                   sx={{
                     flex: 1,
-                    background: `linear-gradient(90deg, ${colors.warningLight} 0%, ${colors.warning} 100%)`,
+                    background: colors.warning,
                   }}
                 />
               </Box>
@@ -523,9 +482,9 @@ const HomeHeroComponent = ({
             flexWrap: "wrap",
             px: 1.25,
             py: 1,
-            borderRadius: 999,
+            borderRadius: 0,
             background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.15)",
           }}
         >
           <Typography
@@ -592,28 +551,17 @@ const HeroSummaryStat = ({
       position: "relative",
       overflow: "hidden",
       p: 1.35,
-      borderRadius: heroInnerRadius,
-      background:
-        "linear-gradient(180deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.05) 100%)",
-      border: "1px solid rgba(255,255,255,0.12)",
+      borderRadius: 0,
+      background: "rgba(255,255,255,0.08)",
+      border: "1px solid rgba(255,255,255,0.15)",
       minHeight: 72,
-      "&::before": {
-        content: '""',
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: 2,
-        background:
-          "linear-gradient(90deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.08) 100%)",
-      },
     }}
   >
     <Box
       sx={{
         width: 32,
         height: 32,
-        borderRadius: "50%",
+        borderRadius: 0,
         background: `${tone}22`,
         color: tone,
         display: "flex",
@@ -667,10 +615,9 @@ const HeroSignalCard = ({
   <Box
     sx={{
       p: 1.35,
-      borderRadius: heroInnerRadius,
-      border: "1px solid rgba(255,255,255,0.12)",
-      background:
-        "linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.04))",
+      borderRadius: 0,
+      border: "1px solid rgba(255,255,255,0.15)",
+      background: "rgba(255,255,255,0.08)",
     }}
   >
     <Box
@@ -685,7 +632,7 @@ const HeroSignalCard = ({
         sx={{
           width: 34,
           height: 34,
-          borderRadius: "50%",
+          borderRadius: 0,
           background: "rgba(255,255,255,0.1)",
           color: "#fff",
           display: "flex",
@@ -799,7 +746,7 @@ export const CompositionPanel = ({
                 gap: 1,
                 alignItems: "center",
                 p: 1,
-                borderRadius: 1,
+                borderRadius: 0,
                 border: `1px solid ${colors.dataBorder}`,
                 background: colors.backgroundSubtle,
               }}
@@ -937,8 +884,7 @@ export const SessionSummaryCard = ({
     sx={{
       p: 1.5,
       borderBottom: `1px solid ${colors.dataBorder}`,
-      background:
-        "linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(243,245,247,0.85) 100%)",
+      background: colors.backgroundSubtle,
     }}
   >
     <Box
@@ -1195,7 +1141,7 @@ const RowShell = ({
   <Box
     sx={{
       p: 1.25,
-      borderRadius: 2,
+      borderRadius: 0,
       border: `1px solid ${colors.dataBorder}`,
       background: colors.backgroundSubtle,
     }}
@@ -1205,7 +1151,7 @@ const RowShell = ({
         sx={{
           width: 32,
           height: 32,
-          borderRadius: "50%",
+          borderRadius: 0,
           background: `${colors.primaryLight}12`,
           color: colors.primaryLight,
           display: "flex",

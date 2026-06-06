@@ -239,7 +239,7 @@ const VotingDetailsPanel: React.FC<{
             gap: 1,
             flexWrap: "wrap",
             p: 0.75,
-            borderRadius: 1,
+            borderRadius: 0,
             bgcolor: `${themedColors.primary}05`,
             border: `1px solid ${themedColors.dataBorder}80`,
           }}
@@ -304,7 +304,7 @@ const VotingDetailsPanel: React.FC<{
         <Box
           sx={{
             p: 0.75,
-            borderRadius: 1,
+            borderRadius: 0,
             border: `1px solid ${themedColors.dataBorder}60`,
             bgcolor: `${themedColors.primary}03`,
           }}
@@ -349,7 +349,7 @@ const VotingDetailsPanel: React.FC<{
                     sx={{
                       width: 7,
                       height: 7,
-                      borderRadius: "50%",
+                      borderRadius: 0,
                       flexShrink: 0,
                       bgcolor: rvPassed
                         ? themedColors.success
@@ -489,7 +489,7 @@ const VotingCardComponent: React.FC<{
             flexWrap: "wrap",
             mb: 0.75,
             p: 0.5,
-            borderRadius: 1,
+            borderRadius: 0,
             backgroundColor: `${themedColors.primary}03`,
             border: `1px solid ${themedColors.dataBorder}80`,
           }}
@@ -502,7 +502,7 @@ const VotingCardComponent: React.FC<{
               gap: 0.5,
               px: 1,
               py: 0.25,
-              borderRadius: 1,
+              borderRadius: 0,
               bgcolor: passed
                 ? `${themedColors.success}15`
                 : `${themedColors.error}15`,
@@ -664,7 +664,7 @@ const VotingCardComponent: React.FC<{
           sx={{
             mt: 0.75,
             p: 0.75,
-            borderRadius: 1,
+            borderRadius: 0,
             backgroundColor: `${themedColors.primary}03`,
             border: `1px solid ${themedColors.dataBorder}80`,
           }}
@@ -813,7 +813,7 @@ const VotingSubRowComponent: React.FC<{
           sx={{
             width: 8,
             height: 8,
-            borderRadius: "50%",
+            borderRadius: 0,
             bgcolor: passed ? themedColors.success : themedColors.error,
             flexShrink: 0,
           }}
@@ -942,7 +942,7 @@ const VotingSubRowComponent: React.FC<{
             sx={{
               mt: 0.75,
               p: 1,
-              borderRadius: 1,
+              borderRadius: 0,
               border: `1px solid ${themedColors.dataBorder}60`,
               bgcolor: `${themedColors.primary}04`,
             }}
@@ -1008,7 +1008,7 @@ const VotingGroupCardComponent: React.FC<{
             flexWrap: "wrap",
             mb: 0.75,
             p: 0.5,
-            borderRadius: 1,
+            borderRadius: 0,
             backgroundColor: `${themedColors.primary}03`,
             border: `1px solid ${themedColors.dataBorder}80`,
           }}
@@ -1098,7 +1098,7 @@ const VotingGroupCardComponent: React.FC<{
           spacing={0}
           sx={{
             p: 0.5,
-            borderRadius: 2,
+            borderRadius: 0,
             backgroundColor: `${themedColors.primary}02`,
             border: `1px solid ${themedColors.dataBorder}70`,
           }}

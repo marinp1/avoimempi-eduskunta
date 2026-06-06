@@ -14,7 +14,7 @@ import { OverlayDrawerProvider } from "./context/OverlayDrawerContext";
 import { TraceProvider } from "./context/TraceContext";
 import { Navigation } from "./Navigation";
 import { type RouteName, routes } from "./pages";
-import { colors, spacing, transitions } from "./theme";
+import { colors, monoFontFamily, spacing } from "./theme";
 import { PageSkeleton } from "./theme/components";
 import { useThemedColors } from "./theme/ThemeContext";
 
@@ -143,26 +143,13 @@ export const App: React.FC = () => {
             },
             body: {
               position: "relative",
-              background: `
-              radial-gradient(800px 400px at 8% -10%, var(--ae-ambient-primary), transparent 70%),
-              radial-gradient(600px 360px at 98% 0%, var(--ae-ambient-accent), transparent 74%),
-              linear-gradient(180deg, ${colors.backgroundDefault} 0%, ${colors.backgroundSubtle} 100%)
-          `,
-              backgroundAttachment: "fixed",
+              background: colors.backgroundDefault,
               minHeight: "100vh",
               overflowX: "hidden",
             },
             "#root": {
               position: "relative",
               zIndex: 1,
-            },
-            "@keyframes pageEnter": {
-              from: {
-                opacity: 0,
-              },
-              to: {
-                opacity: 1,
-              },
             },
             "@media (prefers-reduced-motion: reduce)": {
               "*, *::before, *::after": {
@@ -187,11 +174,6 @@ export const App: React.FC = () => {
             key={activeTab}
             sx={{
               position: "relative",
-              animation: `pageEnter ${transitions.fast}ms ${transitions.easing.standard}`,
-              transformOrigin: "top center",
-              "@media (prefers-reduced-motion: reduce)": {
-                animation: "none",
-              },
             }}
           >
             <React.Suspense fallback={<PageSkeleton />}>
@@ -205,8 +187,8 @@ export const App: React.FC = () => {
               mt: spacing.md,
               pt: spacing.sm,
               pb: spacing.xs,
-              textAlign: "center",
               borderTop: `1px solid ${themedColors.dataBorder}`,
+              px: { xs: 1.5, sm: 0 },
             }}
           >
             {(() => {
@@ -215,10 +197,21 @@ export const App: React.FC = () => {
                 display: "block",
                 mt: 0.5,
                 lineHeight: 1.6,
+                fontFamily: monoFontFamily,
+                fontSize: "0.6875rem",
+                letterSpacing: "0",
               };
               return (
                 <>
-                  <Typography variant="caption" sx={{ ...footerLineSx, mt: 0 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      ...footerLineSx,
+                      mt: 0,
+                      color: themedColors.textSecondary,
+                      fontWeight: 600,
+                    }}
+                  >
                     {t("disclaimer.source")}
                   </Typography>
                   <Typography variant="caption" sx={footerLineSx}>

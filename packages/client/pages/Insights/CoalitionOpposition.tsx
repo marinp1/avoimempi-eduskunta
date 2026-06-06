@@ -199,7 +199,7 @@ export default function CoalitionOpposition({
             <Box
               sx={{
                 p: spacing.md,
-                borderRadius: 2,
+                borderRadius: 0,
                 border: `1px solid ${themedColors.dataBorder}`,
                 textAlign: "center",
               }}
@@ -223,7 +223,7 @@ export default function CoalitionOpposition({
             <Box
               sx={{
                 p: spacing.md,
-                borderRadius: 2,
+                borderRadius: 0,
                 border: `1px solid ${themedColors.dataBorder}`,
                 textAlign: "center",
               }}
@@ -247,7 +247,7 @@ export default function CoalitionOpposition({
             <Box
               sx={{
                 p: spacing.md,
-                borderRadius: 2,
+                borderRadius: 0,
                 border: `1px solid ${themedColors.dataBorder}`,
                 textAlign: "center",
               }}
@@ -380,7 +380,7 @@ export default function CoalitionOpposition({
                       sx={{
                         mt: 0.75,
                         p: 1,
-                        borderRadius: 1,
+                        borderRadius: 0,
                         border: `1px solid ${themedColors.dataBorder}60`,
                         backgroundColor: `${colors.primaryLight}04`,
                       }}

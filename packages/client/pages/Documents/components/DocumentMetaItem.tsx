@@ -18,7 +18,7 @@ export const DocumentMetaItem: React.FC<{
       minHeight: 24,
       px: 1,
       py: 0.375,
-      borderRadius: 999,
+      borderRadius: 0,
       border: `1px solid ${colors.dataBorder}`,
       backgroundColor: colors.backgroundPaper,
       color: colors.textSecondary,

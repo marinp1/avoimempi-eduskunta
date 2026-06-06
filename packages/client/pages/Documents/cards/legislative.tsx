@@ -112,7 +112,7 @@ function LegislativeInitiativeDrawerContent({
               sx={{
                 p: 2,
                 backgroundColor: colors.backgroundSubtle,
-                borderRadius: 1,
+                borderRadius: 0,
                 borderLeft: `3px solid ${colors.primaryLight}`,
               }}
             >
@@ -142,7 +142,7 @@ function LegislativeInitiativeDrawerContent({
               sx={{
                 p: 2,
                 backgroundColor: colors.backgroundSubtle,
-                borderRadius: 1,
+                borderRadius: 0,
                 borderLeft: `3px solid ${colors.primaryLight}`,
               }}
             >
@@ -172,7 +172,7 @@ function LegislativeInitiativeDrawerContent({
               sx={{
                 p: 2,
                 backgroundColor: colors.backgroundSubtle,
-                borderRadius: 1,
+                borderRadius: 0,
                 borderLeft: `3px solid ${colors.success}`,
               }}
             >

@@ -74,7 +74,7 @@ const getDecisionColor = (outcomeCode: string | null | undefined): string => {
 const cardSx = {
   p: 1.5,
   mt: 1,
-  borderRadius: 1,
+  borderRadius: 0,
   border: `1px solid ${colors.primaryLight}30`,
   background: `${colors.primaryLight}06`,
   cursor: "pointer",
@@ -91,7 +91,7 @@ const loadingSx = {
   gap: 1,
   p: 1,
   mt: 1,
-  borderRadius: 1,
+  borderRadius: 0,
   border: `1px solid ${colors.primaryLight}30`,
   background: `${colors.primaryLight}08`,
 };
@@ -1122,7 +1122,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
               pl: 1.5,
               py: 0.5,
               borderLeft: `3px solid ${passed ? colors.success : colors.error}`,
-              borderRadius: 1,
+              borderRadius: 0,
               mb: 0.5,
             }}
           >
@@ -1234,7 +1234,7 @@ export const RelatedVotings: React.FC<{ identifiers: string[] }> = ({
                   flex: 1,
                   maxWidth: 100,
                   height: 3,
-                  borderRadius: 2,
+                  borderRadius: 0,
                   overflow: "hidden",
                   display: "flex",
                   backgroundColor: `${colors.dataBorder}40`,
@@ -1270,7 +1270,7 @@ const DrawerLoadingBlock = ({ text }: { text: string }) => (
       alignItems: "center",
       gap: 1,
       p: 1.25,
-      borderRadius: 1,
+      borderRadius: 0,
       border: `1px solid ${colors.primaryLight}24`,
       background: `${colors.primaryLight}08`,
     }}

@@ -1,8 +1,8 @@
 import { createTheme, type SxProps, type Theme } from "@mui/material";
 
 /**
- * Color palette - Nordic minimal design system
- * Clean, spacious, flat design with subtle borders over shadows
+ * Color palette - Data terminal design system
+ * Dense, flat, no decoration. Data is the design.
  */
 export const colors = {
   // Brand colors - Dark slate primary
@@ -43,29 +43,27 @@ export const colors = {
   oppositionColor: "#64748B",
   oppositionBackground: "rgba(100, 116, 139, 0.1)",
 
-  // Background colors - Nordic clean
-  backgroundDefault: "#FAFBFC",
+  // Background colors - flat, no gradients
+  backgroundDefault: "#F8F9FA",
   backgroundPaper: "#FFFFFF",
-  backgroundSubtle: "#F3F5F7",
+  backgroundSubtle: "#F0F1F3",
 
   // Text colors - Clear hierarchy
   textPrimary: "#1A1A2E",
   textSecondary: "#5A5A72",
   textTertiary: "#9A9AB0",
 
-  // Data display
-  dataBorder: "#E2E8F0",
+  // Data display - stronger borders for visible grid lines
+  dataBorder: "#D0D5DD",
 } as const;
 
 /**
- * Gradients - minimal, used sparingly in Nordic design
+ * Gradients - eliminated in terminal design (flat colors only)
  */
 export const gradients = {
-  primary: "#1B2A4A",
-  background: `linear-gradient(180deg, ${colors.backgroundDefault} 0%, ${colors.backgroundSubtle} 100%)`,
-
-  // Stat cards / voting UI
-  scraper: "linear-gradient(180deg, #3B82F6 0%, #2563EB 100%)",
+  primary: colors.primary,
+  background: colors.backgroundDefault,
+  scraper: colors.info,
 } as const;
 
 /**
@@ -80,14 +78,14 @@ export const spacing = {
 } as const;
 
 /**
- * Border radius - compact professional feel
+ * Border radius - zero everywhere for terminal aesthetic
  */
 export const borderRadius = {
-  sm: 0.5, // 4px
-  md: 1, // 8px
-  lg: 1.5, // 12px
-  heroInner: 0.5, // 4px
-  heroOuter: 1, // 8px
+  sm: 0,
+  md: 0,
+  lg: 0,
+  heroInner: 0,
+  heroOuter: 0,
 } as const;
 
 /**
@@ -97,14 +95,14 @@ export const monoFontFamily =
   '"JetBrains Mono", "Fira Code", "SF Mono", "Cascadia Code", "Consolas", monospace';
 
 /**
- * Shadows - extremely subtle
+ * Shadows - eliminated. Borders only.
  */
 export const shadows = {
-  card: "0 1px 2px rgba(0,0,0,0.05)",
-  cardHover: "0 2px 8px rgba(0,0,0,0.08)",
-  elevated: "0 4px 12px rgba(0,0,0,0.08)",
-  subtle: "0 1px 2px rgba(0,0,0,0.04)",
-  inner: "inset 0 1px 2px rgba(0,0,0,0.06)",
+  card: "none",
+  cardHover: "none",
+  elevated: "none",
+  subtle: "none",
+  inner: "none",
   none: "none",
 } as const;
 
@@ -131,17 +129,10 @@ export const commonStyles = {
    * Data card - clean, flat styling with 1px border
    */
   dataCard: {
-    borderRadius: { xs: 0, sm: borderRadius.md },
+    borderRadius: 0,
     background: colors.backgroundPaper,
     border: `1px solid ${colors.dataBorder}`,
-    boxShadow: shadows.card,
-    transition: `box-shadow ${transitions.fast}ms ${transitions.easing.standard}, border-color ${transitions.fast}ms ${transitions.easing.standard}`,
-    "@media (hover: hover) and (pointer: fine)": {
-      "&:hover": {
-        boxShadow: shadows.cardHover,
-        borderColor: colors.primaryLight,
-      },
-    },
+    boxShadow: "none",
   } satisfies SxProps<Theme>,
 
   /**
@@ -283,15 +274,8 @@ export const commonStyles = {
    */
   styledTextField: {
     "& .MuiOutlinedInput-root": {
-      borderRadius: 8,
+      borderRadius: 0,
       background: colors.backgroundPaper,
-      transition: "all 0.2s ease",
-      "&:hover": {
-        background: colors.backgroundPaper,
-      },
-      "&.Mui-focused": {
-        background: colors.backgroundPaper,
-      },
     },
   } satisfies SxProps<Theme>,
 
@@ -465,7 +449,7 @@ export const createLightTheme = () => {
       },
     },
     shape: {
-      borderRadius: 6,
+      borderRadius: 0,
     },
     components: {
       MuiCard: {
@@ -474,10 +458,9 @@ export const createLightTheme = () => {
         },
         styleOverrides: {
           root: {
-            borderRadius: 8,
+            borderRadius: 0,
             border: `1px solid ${colors.dataBorder}`,
-            boxShadow: shadows.card,
-            transition: `box-shadow ${transitions.fast}ms ${transitions.easing.standard}, border-color ${transitions.fast}ms ${transitions.easing.standard}`,
+            boxShadow: "none",
           },
         },
       },
@@ -488,8 +471,7 @@ export const createLightTheme = () => {
         styleOverrides: {
           root: {
             backgroundImage: "none",
-            borderRadius: 8,
-            transition: `box-shadow ${transitions.fast}ms ${transitions.easing.standard}, border-color ${transitions.fast}ms ${transitions.easing.standard}, background-color ${transitions.fast}ms ${transitions.easing.standard}`,
+            borderRadius: 0,
           },
         },
       },
@@ -505,10 +487,9 @@ export const createLightTheme = () => {
           root: {
             textTransform: "none",
             fontWeight: 500,
-            borderRadius: 6,
+            borderRadius: 0,
             padding: "6px 14px",
             boxShadow: "none",
-            transition: `background-color ${transitions.fast}ms ${transitions.easing.standard}, border-color ${transitions.fast}ms ${transitions.easing.standard}, color ${transitions.fast}ms ${transitions.easing.standard}`,
             "&:hover": {
               boxShadow: "none",
             },
@@ -528,8 +509,7 @@ export const createLightTheme = () => {
         styleOverrides: {
           root: {
             fontWeight: 500,
-            borderRadius: 6,
-            transition: `transform ${transitions.fast}ms ${transitions.easing.standard}, background-color ${transitions.fast}ms ${transitions.easing.standard}`,
+            borderRadius: 0,
           },
         },
       },
@@ -553,8 +533,7 @@ export const createLightTheme = () => {
         styleOverrides: {
           root: {
             "& .MuiOutlinedInput-root": {
-              borderRadius: 8,
-              transition: "all 0.15s ease-in-out",
+              borderRadius: 0,
               "&:hover .MuiOutlinedInput-notchedOutline": {
                 borderColor: colors.primaryLight,
               },

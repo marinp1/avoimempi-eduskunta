@@ -198,9 +198,9 @@ export default function PartyParticipation({
           sx={{
             backgroundColor: themedColors.backgroundPaper,
             padding: spacing.md,
-            borderRadius: 2,
+            borderRadius: 0,
             border: `1px solid ${themedColors.dataBorder}`,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            boxShadow: "none",
             maxHeight: "400px",
             overflowY: "auto",
           }}
@@ -239,7 +239,7 @@ export default function PartyParticipation({
                         width: 12,
                         height: 12,
                         backgroundColor: entry.color,
-                        borderRadius: "50%",
+                        borderRadius: 0,
                         flexShrink: 0,
                       }}
                     />
@@ -510,7 +510,7 @@ export default function PartyParticipation({
                   <Box
                     sx={{
                       p: spacing.md,
-                      borderRadius: 2,
+                      borderRadius: 0,
                       background: themedColors.backgroundSubtle,
                     }}
                   >
@@ -524,7 +524,7 @@ export default function PartyParticipation({
                   <Box
                     sx={{
                       p: spacing.md,
-                      borderRadius: 2,
+                      borderRadius: 0,
                       background: themedColors.backgroundSubtle,
                     }}
                   >
@@ -538,7 +538,7 @@ export default function PartyParticipation({
                   <Box
                     sx={{
                       p: spacing.md,
-                      borderRadius: 2,
+                      borderRadius: 0,
                       background: themedColors.backgroundSubtle,
                     }}
                   >

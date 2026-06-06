@@ -43,15 +43,13 @@ export const SessionSectionRow = ({
         cursor: "pointer",
         borderBottom: `1px solid ${colors.dataBorder}`,
         background: isActive
-          ? `linear-gradient(180deg, ${colors.primaryLight}14 0%, ${colors.primaryLight}08 100%)`
+          ? `${colors.primaryLight}14`
           : isFocused
             ? `${colors.primaryLight}0e`
             : "transparent",
-        transition:
-          "background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease",
         "&:hover": {
           background: isActive
-            ? `linear-gradient(180deg, ${colors.primaryLight}16 0%, ${colors.primaryLight}10 100%)`
+            ? `${colors.primaryLight}16`
             : colors.backgroundSubtle,
         },
         "&:focus-visible": {

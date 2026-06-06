@@ -62,7 +62,7 @@ export function EduskuntaSourceLink({
             letterSpacing: 0.2,
             textTransform: "uppercase",
             border: "1px solid currentColor",
-            borderRadius: 999,
+            borderRadius: 0,
             px: 0.5,
             py: 0.125,
             lineHeight: 1.1,

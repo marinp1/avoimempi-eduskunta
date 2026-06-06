@@ -400,7 +400,7 @@ const GovernmentTimelineFilter: React.FC<{
   return (
     <Box
       sx={{
-        borderRadius: 2,
+        borderRadius: 0,
         border: `1px solid ${themedColors.dataBorder}`,
         bgcolor: themedColors.backgroundSubtle,
         p: 1.25,
@@ -472,7 +472,7 @@ const GovernmentTimelineFilter: React.FC<{
             gap: 0.5,
             minWidth: minTimelineWidth + 120,
             p: 0.5,
-            borderRadius: 1.75,
+            borderRadius: 0,
             border: `1px solid ${themedColors.dataBorder}`,
             bgcolor: themedColors.backgroundSubtle,
           }}
@@ -489,7 +489,7 @@ const GovernmentTimelineFilter: React.FC<{
               fontSize: "0.75rem",
               fontWeight: 700,
               flexShrink: 0,
-              borderRadius: 1.25,
+              borderRadius: 0,
               border: `1px solid ${
                 selectedGovName === null
                   ? `${colors.primaryLight}30`
@@ -567,7 +567,7 @@ const GovernmentTimelineFilter: React.FC<{
                     textAlign: "center",
                     transition:
                       "background-color 0.15s ease, color 0.15s ease, opacity 0.15s ease",
-                    borderRadius: 1.25,
+                    borderRadius: 0,
                     border: `1px solid ${
                       isSelected ? `${colors.primaryLight}30` : "transparent"
                     }`,
@@ -637,7 +637,7 @@ const GovernmentTimelineFilter: React.FC<{
                       sx={{
                         position: "absolute",
                         inset: 2,
-                        borderRadius: 1,
+                        borderRadius: 0,
                         border: `1px solid rgba(255,255,255,0.72)`,
                         pointerEvents: "none",
                       }}
@@ -859,7 +859,7 @@ const AnalysisScopeToolbar: React.FC<{
       sx={{
         p: 1.5,
         mb: 2,
-        borderRadius: 2,
+        borderRadius: 0,
         border: `1px solid ${themedColors.dataBorder}`,
         bgcolor: themedColors.backgroundPaper,
       }}
@@ -1686,7 +1686,7 @@ const VotesTab: React.FC<{
               <Box
                 sx={{
                   p: 1.25,
-                  borderRadius: 1.5,
+                  borderRadius: 0,
                   border: `1px solid ${themedColors.dataBorder}`,
                   bgcolor: themedColors.backgroundPaper,
                   mb: 1.25,
@@ -1860,7 +1860,7 @@ const VotesTab: React.FC<{
           sx={{
             p: 1.5,
             gridColumn: { xs: "1 / -1", sm: "auto" },
-            borderRadius: 2,
+            borderRadius: 0,
             border: `1px solid ${themedColors.dataBorder}`,
             bgcolor: themedColors.backgroundPaper,
           }}
@@ -1980,7 +1980,7 @@ const VotesTab: React.FC<{
             sx={{
               maxHeight: 520,
               overflowY: "auto",
-              borderRadius: 2,
+              borderRadius: 0,
               border: `1px solid ${themedColors.dataBorder}`,
               bgcolor: themedColors.backgroundPaper,
             }}
@@ -2150,7 +2150,7 @@ const VotesTab: React.FC<{
                 minHeight: 520,
                 maxHeight: 520,
                 overflow: "hidden",
-                borderRadius: 2,
+                borderRadius: 0,
                 border: `1px solid ${themedColors.dataBorder}`,
                 bgcolor: themedColors.backgroundPaper,
               }}
@@ -2729,7 +2729,7 @@ const SpeechesTab: React.FC<{
               sx={{
                 mt: 1.25,
                 p: 1.25,
-                borderRadius: 1.5,
+                borderRadius: 0,
                 border: `1px solid ${themedColors.dataBorder}`,
                 bgcolor: themedColors.backgroundPaper,
                 maxHeight: { xs: "22vh", sm: "18vh" },
@@ -2877,7 +2877,7 @@ const SpeechesTab: React.FC<{
                         width: "100%",
                         textAlign: "left",
                         p: 1.25,
-                        borderRadius: 1.5,
+                        borderRadius: 0,
                         mb: 1.25,
                         border: `1px solid ${
                           isSelected
@@ -3092,7 +3092,7 @@ const SpeechesTab: React.FC<{
             sx={{
               maxHeight: 520,
               overflowY: "auto",
-              borderRadius: 2,
+              borderRadius: 0,
               border: `1px solid ${themedColors.dataBorder}`,
               bgcolor: themedColors.backgroundPaper,
             }}
@@ -3227,7 +3227,7 @@ const SpeechesTab: React.FC<{
                 minHeight: 520,
                 maxHeight: 520,
                 overflow: "hidden",
-                borderRadius: 2,
+                borderRadius: 0,
                 border: `1px solid ${themedColors.dataBorder}`,
                 bgcolor: themedColors.backgroundPaper,
               }}
@@ -3573,7 +3573,7 @@ const QuestionsTab: React.FC<{
 
       <Box
         sx={{
-          borderRadius: 2,
+          borderRadius: 0,
           border: `1px solid ${themedColors.dataBorder}`,
           bgcolor: themedColors.backgroundPaper,
           overflow: "hidden",
@@ -4184,7 +4184,7 @@ const RepresentativeDetailsBody: React.FC<{
                 key={item.label}
                 sx={{
                   p: 1.1,
-                  borderRadius: 1.5,
+                  borderRadius: 0,
                   bgcolor: "rgba(255,255,255,0.08)",
                   border: "1px solid rgba(255,255,255,0.12)",
                 }}

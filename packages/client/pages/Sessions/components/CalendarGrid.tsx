@@ -185,7 +185,7 @@ export const CalendarGrid = ({
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                borderRadius: 1,
+                borderRadius: 0,
                 cursor: hasSession ? "pointer" : "default",
                 position: "relative",
                 background: isSelected
@@ -224,7 +224,7 @@ export const CalendarGrid = ({
                   sx={{
                     width: 4,
                     height: 4,
-                    borderRadius: "50%",
+                    borderRadius: 0,
                     background: themedColors.success,
                     mx: "auto",
                     mt: 0.25,

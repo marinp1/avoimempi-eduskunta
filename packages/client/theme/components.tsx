@@ -100,14 +100,10 @@ export const PageIntro: React.FC<{
         sx={{
           position: "relative",
           overflow: "hidden",
-          borderRadius: { xs: 0, sm: heroOuterRadius },
+          borderRadius: 0,
           border: `1px solid ${tc.dataBorder}`,
-          background: isFeature
-            ? "linear-gradient(180deg, rgba(255,255,255,0.99) 0%, rgba(244,247,250,0.98) 52%, rgba(239,243,248,0.97) 100%)"
-            : "linear-gradient(180deg, rgba(255,255,255,0.99) 0%, rgba(247,249,251,0.98) 100%)",
-          boxShadow: isFeature
-            ? "0 16px 32px rgba(15, 27, 51, 0.07)"
-            : "0 10px 22px rgba(15, 27, 51, 0.05)",
+          background: colors.backgroundPaper,
+          boxShadow: "none",
           px: { xs: 1.5, md: 2.5 },
           py: { xs: isImmersiveMobile ? 1.5 : 1.25, md: 2 },
           mb: showFooterStats ? 1 : 2,
@@ -117,33 +113,9 @@ export const PageIntro: React.FC<{
           display: "flex",
           flexDirection: "column",
           justifyContent: isImmersiveMobile ? "space-between" : "flex-start",
-          "&::before": {
-            content: '""',
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: isFeature ? { xs: 100, md: 140 } : { xs: 80, md: 100 },
-            height: 3,
-            borderBottomRightRadius: 999,
-            background: isFeature
-              ? `linear-gradient(90deg, ${colors.primary} 0%, ${colors.primaryLight} 68%, ${colors.accent} 100%)`
-              : `linear-gradient(90deg, ${colors.primary} 0%, ${colors.primaryLight} 100%)`,
-            opacity: isFeature ? 0.95 : 0.82,
-            zIndex: 1,
-          },
           ...sx,
         }}
       >
-        <Box
-          sx={{
-            position: "absolute",
-            inset: 0,
-            background: isFeature
-              ? "radial-gradient(620px 240px at 0% 0%, rgba(74,111,165,0.12), transparent 66%), radial-gradient(540px 260px at 100% 0%, rgba(232,145,58,0.10), transparent 72%), linear-gradient(135deg, rgba(255,255,255,0.20), transparent 46%)"
-              : "radial-gradient(540px 210px at 0% 0%, rgba(74,111,165,0.08), transparent 68%), radial-gradient(420px 220px at 100% 0%, rgba(232,145,58,0.06), transparent 74%)",
-            pointerEvents: "none",
-          }}
-        />
         <Box sx={{ position: "relative" }}>
           <Stack
             sx={{
@@ -173,15 +145,6 @@ export const PageIntro: React.FC<{
                       gap: 0.75,
                       mb: 1,
                       flexWrap: "wrap",
-                      px: isFeature ? 1 : 0,
-                      py: isFeature ? 0.55 : 0,
-                      borderRadius: 999,
-                      background: isFeature
-                        ? "rgba(255,255,255,0.78)"
-                        : "transparent",
-                      border: isFeature
-                        ? "1px solid rgba(255,255,255,0.7)"
-                        : "none",
                     }}
                   >
                     {icon ? (
@@ -193,10 +156,6 @@ export const PageIntro: React.FC<{
                           alignItems: "center",
                           justifyContent: "center",
                           color: tc.primary,
-                          borderRadius: "50%",
-                          background: isFeature
-                            ? `${tc.primary}10`
-                            : "transparent",
                         }}
                       >
                         {icon}
@@ -318,11 +277,9 @@ export const PageIntro: React.FC<{
                   flexDirection: "column",
                   gap: 1.25,
                   p: { xs: 1, md: isFeature ? 1.25 : 1 },
-                  borderRadius: heroInnerRadius,
-                  border: `1px solid ${isFeature ? "rgba(255,255,255,0.76)" : tc.dataBorder}`,
-                  background: isFeature
-                    ? "linear-gradient(180deg, rgba(255,255,255,0.74) 0%, rgba(246,248,251,0.9) 100%)"
-                    : "rgba(255,255,255,0.58)",
+                  borderRadius: 0,
+                  border: `1px solid ${tc.dataBorder}`,
+                  background: colors.backgroundSubtle,
                 }}
               >
                 {supportContent ? <Box>{supportContent}</Box> : null}
@@ -347,10 +304,10 @@ export const PageIntro: React.FC<{
           sx={{
             p: { xs: 1.25, md: 1.5 },
             mb: 3,
-            borderRadius: heroInnerRadius,
+            borderRadius: 0,
             border: `1px solid ${tc.dataBorder}`,
-            background: "rgba(255,255,255,0.78)",
-            boxShadow: "0 8px 18px rgba(15, 27, 51, 0.05)",
+            background: colors.backgroundPaper,
+            boxShadow: "none",
           }}
         >
           {stats}
@@ -516,8 +473,8 @@ export const ToolbarCard: React.FC<{
     <DataCard
       sx={{
         p: { xs: 1.5, md: 2 },
-        background: "linear-gradient(180deg, #fbfcfd 0%, #f5f8fa 100%)",
-        boxShadow: "0 4px 12px rgba(15, 27, 51, 0.04)",
+        background: colors.backgroundSubtle,
+        boxShadow: "none",
         position: sticky ? "sticky" : "relative",
         top: sticky ? 12 : "auto",
         zIndex: sticky ? 4 : "auto",
@@ -607,8 +564,7 @@ export const PanelHeader: React.FC<{
       sx={{
         p: { xs: 1.5, md: 2 },
         borderBottom: `1px solid ${tc.dataBorder}`,
-        background:
-          "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(247,249,251,0.98) 100%)",
+        background: colors.backgroundPaper,
         position: sticky ? "sticky" : "relative",
         top: sticky ? 0 : "auto",
         zIndex: sticky ? 10 : "auto",
@@ -719,10 +675,7 @@ export const MetricCard: React.FC<{
       sx={{
         ...commonStyles.dataCard,
         p: 1.5,
-        background:
-          tone === "muted"
-            ? "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(246,248,250,0.98) 100%)"
-            : colors.backgroundPaper,
+        background: colors.backgroundPaper,
         ...sx,
       }}
     >
@@ -801,7 +754,7 @@ export const MetricCard: React.FC<{
           <Box
             sx={{
               p: 1,
-              borderRadius: 2,
+              borderRadius: 0,
               background: iconContainer === "solid" ? colors.primary : iconBg,
               color: iconContainer === "solid" ? "#fff" : iconColor,
               display: "flex",
@@ -846,7 +799,7 @@ export const VoteMarginBar: React.FC<{
         display: "flex",
         width: "100%",
         height,
-        borderRadius: height / 2,
+        borderRadius: 0,
         overflow: "hidden",
         background: colors.backgroundSubtle,
         ...sx,
@@ -898,7 +851,7 @@ export const PageSkeleton: React.FC = () => (
         variant="rounded"
         height={h}
         animation="wave"
-        sx={{ mb: 2, borderRadius: `${borderRadius.md * 8}px` }}
+        sx={{ mb: 2, borderRadius: 0 }}
       />
     ))}
   </Box>
@@ -922,7 +875,7 @@ export const EmptyState: React.FC<{
         py: 4,
         px: 2,
         border: `1px solid ${tc.dataBorder}`,
-        borderRadius: `${borderRadius.md * 8}px`,
+        borderRadius: 0,
         background: tc.backgroundPaper,
         ...sx,
       }}

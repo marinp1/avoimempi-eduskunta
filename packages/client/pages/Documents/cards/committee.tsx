@@ -223,7 +223,7 @@ function CommitteeReportDrawerContent({
               sx={{
                 p: 2,
                 backgroundColor: colors.backgroundSubtle,
-                borderRadius: 1,
+                borderRadius: 0,
                 borderLeft: `3px solid ${colors.primaryLight}`,
               }}
             >
@@ -261,7 +261,7 @@ function CommitteeReportDrawerContent({
               sx={{
                 p: 2,
                 backgroundColor: colors.backgroundSubtle,
-                borderRadius: 1,
+                borderRadius: 0,
                 borderLeft: `3px solid ${colors.primaryLight}`,
               }}
             >
@@ -309,7 +309,7 @@ function CommitteeReportDrawerContent({
               sx={{
                 p: 2,
                 backgroundColor: colors.backgroundSubtle,
-                borderRadius: 1,
+                borderRadius: 0,
                 borderLeft: `3px solid ${colors.primaryLight}`,
               }}
             >
@@ -345,7 +345,7 @@ function CommitteeReportDrawerContent({
               sx={{
                 p: 2,
                 backgroundColor: colors.backgroundSubtle,
-                borderRadius: 1,
+                borderRadius: 0,
                 borderLeft: `3px solid ${colors.primaryLight}`,
               }}
             >
@@ -380,7 +380,7 @@ function CommitteeReportDrawerContent({
               sx={{
                 p: 2,
                 backgroundColor: colors.backgroundSubtle,
-                borderRadius: 1,
+                borderRadius: 0,
                 borderLeft: `3px solid ${colors.error}`,
               }}
             >
@@ -400,7 +400,7 @@ function CommitteeReportDrawerContent({
           sx={{
             p: 2,
             backgroundColor: colors.backgroundSubtle,
-            borderRadius: 1,
+            borderRadius: 0,
             borderLeft: `3px solid ${colors.primaryLight}`,
           }}
         >

@@ -154,7 +154,7 @@ const ResolutionPanel: React.FC<{
       sx={{
         p: 1.5,
         border: `1px solid ${colors.dataBorder}`,
-        borderRadius: 1,
+        borderRadius: 0,
         background: colors.backgroundPaper,
       }}
     >

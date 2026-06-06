@@ -130,7 +130,7 @@ export const OverlayDrawerProvider = ({
               height: "100%",
               display: "flex",
               flexDirection: "column",
-              background: `linear-gradient(180deg, ${colors.backgroundPaper} 0%, ${colors.backgroundSubtle} 100%)`,
+              background: colors.backgroundPaper,
             }}
           >
             <Box

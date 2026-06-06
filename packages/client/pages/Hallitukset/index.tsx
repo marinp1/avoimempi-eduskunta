@@ -307,7 +307,7 @@ const TimelineSelector: React.FC<{
         sx={{
           display: "flex",
           height: 30,
-          borderRadius: 1,
+          borderRadius: 0,
           overflow: "hidden",
           border: `1px solid ${tc.dataBorder}`,
         }}
@@ -710,11 +710,7 @@ const GovernmentMinistersSection: React.FC<{
                   }
                   sx={{
                     cursor: member.person_id ? "pointer" : "default",
-                    borderRadius: 2,
-                    transition: "box-shadow 0.18s ease",
-                    "&:hover": member.person_id
-                      ? { boxShadow: "0 8px 24px rgba(15, 27, 51, 0.14)" }
-                      : undefined,
+                    borderRadius: 0,
                   }}
                 >
                   <DataCard
@@ -722,7 +718,7 @@ const GovernmentMinistersSection: React.FC<{
                       p: 2.25,
                       borderColor: `${featuredRoleColors[key]}30`,
                       borderTop: `4px solid ${featuredRoleColors[key]}`,
-                      boxShadow: "0 6px 18px rgba(15, 27, 51, 0.08)",
+                      boxShadow: "none",
                     }}
                   >
                     <Stack spacing={1.25}>
@@ -826,7 +822,7 @@ const GovernmentMinistersSection: React.FC<{
                   }
                   sx={{
                     p: 1.5,
-                    borderRadius: 2,
+                    borderRadius: 0,
                     border: `1px solid ${tc.dataBorder}`,
                     bgcolor: tc.backgroundPaper,
                     cursor: member.person_id ? "pointer" : "default",
@@ -920,7 +916,7 @@ const GovernmentMinistersSection: React.FC<{
                   }
                   sx={{
                     p: 1.5,
-                    borderRadius: 2,
+                    borderRadius: 0,
                     border: `1px solid ${tc.dataBorder}`,
                     bgcolor: tc.backgroundSubtle,
                     cursor: member.person_id ? "pointer" : "default",
@@ -1028,7 +1024,7 @@ const GovernmentArchiveItem: React.FC<{
     <Paper
       elevation={0}
       sx={{
-        borderRadius: 2,
+        borderRadius: 0,
         overflow: "hidden",
         border: `1px solid ${isActive ? tc.primary : tc.dataBorder}`,
         boxShadow: isActive ? `0 10px 22px ${tc.primary}18` : "none",
