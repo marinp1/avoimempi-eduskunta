@@ -34,3 +34,5 @@ validation-results.json
 .claude/worktrees
 
 meta.json
+
+tmp
