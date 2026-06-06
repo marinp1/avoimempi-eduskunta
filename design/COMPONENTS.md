@@ -27,7 +27,7 @@ src/
     parliament.ts  votes.ts  members.ts  parties.ts  sessions.ts  documents.ts
   html.ts                   # tiny tagged-template `html` helper + escape()
   components/
-    shell.ts                # masthead(), nav(), footer(), periodSelector(), timeline()
+    shell.ts                # masthead(), nav(), footer(), periodSelector(), timeline(), aboutPanel()
     primitives.ts           # kicker(), rule(), tag(), spill(), btn(), linkArrow(), stat()
     provenance.ts           # cite(), sourceNote(), aiSummary(), traceData()  (+ trace.js island)
     data-display.ts         # statRow(), blocBar(), partyTable(), voteBar(), seatGrid(), voteResult(), seatVoteMap(), mpLookup()
@@ -40,7 +40,7 @@ src/
     istunnot.ts  istunto.ts  asiakohta.ts  aanestykset.ts  aanestys.ts
     asia.ts  asiakirja.ts  keskustelu.ts
   public/
-    peili.css   trace.js   period-island.js   fonts/
+    peili.css   trace.js   period-island.js   about-island.js   fonts/
 ```
 htmx fragment endpoints (e.g. `GET /kansanedustajat` returning just `#mp-list`) live in `server.ts` and call the same `mpRow()` partials — fragment and full-page share components.
 
@@ -74,6 +74,7 @@ Each entry: **purpose · variants · canonical markup · suggested signature**. 
     <a href="/aanestykset">Äänestykset</a>
     <a href="/asiakirjat">Asiakirjat</a>
     <span class="nav__search">Haku ⌕</span>
+    <button class="nav__about" data-about-open><span class="ic">i</span>Tietoa</button>
   </nav>
   <hr class="rule" />
 </header>
@@ -108,6 +109,26 @@ Reset button uses `.is-hidden` (visibility, not display) so prev/next never shif
 
 **Time-reactive hooks** — any value that should change with the cursor carries a `data-tl-*` attribute the scrubber writes to (see README for the full list): page-level `data-tl-headline/session/datetime/agenda/hall/opp/statval/ai/…`, rail facts `data-tl-vote-*` / `data-tl-interp-*`, and generic `data-tl-asof` / `data-tl-asof-long` "as of <date>" labels for list/entity pages. In the htmx build the server fills these per request; the `data-tl-*` names are a useful checklist of what each view must recompute by date.
 
+**`aboutPanel()` + `.nav__about` trigger** — the global **“Toimitukselta” editorial side panel** (editor's note / colophon). A **left-edge drawer that pushes** the page content right (`about.js` toggles `html.about-open` → `body { padding-left: var(--about-w) }`, panel slides via `transform`), **not** an overlay; ≤680px falls back to a scrim overlay. Opened/toggled by the `.nav__about` ghost trigger (`[data-about-open]`, auto-injected into `.nav` on pages that don't author it inline), closed by `×` / `Escape`. See README → About panel.
+```html
+<aside class="about" role="dialog" aria-label="Toimitukselta">
+  <div class="about__bar"><span class="lbl">Toimitukselta</span>
+    <span class="edit-hint">tekstit muokattavissa</span><button class="about__close">×</button></div>
+  <div class="about__scroll">
+    <p class="kicker kicker--red"><span class="dot"></span>Pääkirjoitus</p>
+    <h1 class="about__title">Miksi Eduskuntapeili on olemassa</h1>
+    <div class="about__writer">
+      <div class="about__portrait"><!-- round image slot --></div>
+      <div class="about__byline"><div class="name">…</div><div class="role">…</div><div class="date">…</div></div>
+    </div>
+    <div class="about__body"><p>…</p></div>
+    <div class="about__sig"><div class="about__sig-mark">Patrik Marin</div><div class="about__sig-meta">…</div></div>
+    <div class="about__colophon">Tietolähde: …</div>
+  </div>
+</aside>
+```
+Mono = the `.about__colophon` source line; the signature face is `Mr Dafoe` (loaded by `about.js`). Prototype text fields are `contenteditable` + persisted to `localStorage` (`peili.about.*`); **real build = static authored content**, server-rendered once in the layout. → `aboutPanel(model)`; open/close + push is a ~30-line client island.
+
 ### — Primitives —
 
 | Component | Markup | Variants |
@@ -118,6 +139,7 @@ Reset button uses `.is-hidden` (visibility, not display) so prev/next never shif
 | **spill** (status pill) | `<span class="spill spill--live"><span class="ld"></span>Käynnissä</span>` | `--live`, `--done`, `--draft` |
 | **btn** | `<button class="btn">Avaa ↗</button>` | `.btn--ghost` |
 | **link-arrow** | `<span class="link-arrow">Avaa →</span>` | — |
+| **nav__about** (about trigger) | `<button class="nav__about" data-about-open><span class="ic">i</span>Tietoa</button>` | opens `aboutPanel()` |
 | **stat** | `<div class="stat"><div class="stat__label">…</div><div class="stat__value hall">108</div></div>` | value `.hall`/`.opp` |
 
 ### — Provenance (the centerpiece — see README → Data provenance) —

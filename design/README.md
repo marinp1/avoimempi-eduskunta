@@ -34,7 +34,7 @@ Why htmx maps cleanly to each behavior — see **Interactions & Behavior** below
 
 ## Screens / Views
 
-All pages share the same shell: **masthead** (brand + `Tietojakso` period selector), the **time scrubber** (`.timeline`, injected under the masthead by `timeline.js`), **nav** (Etusivu · Kansanedustajat · Puolueet · Istunnot · Äänestykset · Asiakirjat), the page body inside `.wrap` (max-width 1180px, 40px gutters), and a **footer** that restates the active data period. Filenames map 1:1 to views.
+All pages share the same shell: **masthead** (brand + `Tietojakso` period selector), the **time scrubber** (`.timeline`, injected under the masthead by `timeline.js`), **nav** (Etusivu · Kansanedustajat · Puolueet · Istunnot · Äänestykset · Asiakirjat) — with a right-aligned **“ⓘ Tietoa”** trigger (`.nav__about`) that opens the global **“Toimitukselta” about panel** (`about.js`), the page body inside `.wrap` (max-width 1180px, 40px gutters), and a **footer** that restates the active data period. Filenames map 1:1 to views.
 
 The app is organized as **index → entity** pairs across four domains — people (Kansanedustajat → Kansanedustaja), parties (Puolueet → Puolue), sittings (Istunnot → Istunto → Asiakohta), and votes (Äänestykset → Äänestys) — plus the cross-cutting Asia (matter lifecycle), Asiakirja (document) and Keskustelu (debate) views. The deep views cross-link heavily (a vote row → Äänestys; an asiakohta → Asia; a speech → Keskustelu; etc.).
 
@@ -105,7 +105,7 @@ The app is organized as **index → entity** pairs across four domains — peopl
 
 ## Interactions & Behavior
 
-**Four** vanilla-JS modules drive all behavior. In the htmx build, the period selector, roster, and the scrubber's filtering become **server round-trips returning HTML**; only the trace popover and the scrubber's drag interaction stay as small client islands. The data-attribute contracts below are the spec.
+**Five** vanilla-JS modules drive all behavior. In the htmx build, the period selector, roster, and the scrubber's filtering become **server round-trips returning HTML**; only the trace popover, the scrubber's drag interaction, and the about-panel toggle stay as small client islands. The data-attribute contracts below are the spec.
 
 ### Period selector — `period.js`
 - Dropdown in the masthead choosing the **data period (`Tietojakso`)**: `2023` (Vaalikausi 2023–2027, Orpon hallitus — **default**), `2019` (2019–2023), `all` (kaikki vaalikaudet).
@@ -144,6 +144,14 @@ The centerpiece. Two pieces:
 - Live result **count** written to `#mp-count`.
 - **htmx mapping:** this is the cleanest htmx win. The toolbar is a `<form>`; the search input uses `hx-get="/kansanedustajat" hx-trigger="input changed delay:200ms" hx-target="#mp-list" hx-push-url="true"`; chips and sort headers are `hx-get` links carrying `?party=&sort=&dir=` query params. **The server does the filtering/sorting and returns the `#mp-list` fragment + updated count.** No client list logic at all.
 
+### About panel ("Toimitukselta") — `about.js`
+A global **editorial side panel** — an editor's note / colophon explaining what the service is, who makes it, and why. It is **app-wide shell furniture**, present on every page that loads `about.js`.
+- **Trigger:** a ghost **“ⓘ Tietoa”** button (`.nav__about`) at the right end of the `.nav`. On Etusivu it is authored inline (`[data-about-open]`); on every other page `about.js` **auto-injects** it after `.nav__search`, so the control is identical everywhere. Any element carrying `[data-about-open]` toggles the panel.
+- **Behavior:** a **left-edge drawer** (`.about`) that **pushes the page content to the right** rather than overlaying it — `about.js` toggles `html.about-open`, which slides the panel in (`transform`) and shifts `body { padding-left: var(--about-w) }` (width `min(404px, 88vw)`). No scrim on desktop. Toggles open/closed from the trigger; closes on the `×` or `Escape`. At ≤680px it falls back to a slim overlay (with scrim) so narrow screens aren't crushed.
+- **Content (editorial colophon):** ink `.about__bar` (“Toimitukselta”) → red `Pääkirjoitus` kicker → editable headline (`.about__title`) → writer row (`.about__portrait` round image slot + `.about__byline` name/role/date) → freeform body (`.about__body`) → signature (`.about__sig-mark`, a script “Mr Dafoe” face) + `.about__sig-meta` → mono `.about__colophon` source line.
+- **Authoring model (prototype):** every text field is `contenteditable` and the portrait is a click/drag image slot; edits persist to **`localStorage` under `peili.about.*`** keys (`title`, `name`, `role`, `date`, `body`, `sig`, `sigmeta`, `portrait` as a data-URL). This makes the prototype self-editable — **in the real build the about copy is static, server-rendered content** (CMS/markdown), not per-browser localStorage; the portrait is a served asset. The signature font (`Mr Dafoe`) is loaded by `about.js`.
+- **htmx mapping:** pure shell content — server-render the panel markup once in the layout (no round-trip). The open/close + content-push is a tiny client island (toggle one class on `<html>`); ~30 lines. Drop the contenteditable/localStorage entirely; the text is authored content.
+
 ### Shared interaction patterns
 - **Navigation:** standard links between pages. Active nav item gets `.is-active` (red underline).
 - **Hover states:** rows tint to `--paper-2`; links shift `--blue → --blue-ink`; buttons `--ink → #2a241d`.
@@ -160,6 +168,7 @@ Not designed in these mocks. When wiring to the live open-data API, design these
 - **Roster filter/sort** — encoded in the **URL query string** (`?party=&q=&sort=&dir=`); the server derives the list. Shareable/bookmarkable, back-button friendly via `hx-push-url`.
 - **Open trace popover** — the one piece of true client UI state (single-at-a-time), owned by the small trace island.
 - **AI-sources expanded** — CSS/`<details>` state, or a per-request `hx-get`.
+- **About-panel content** — prototype-only client state: the `contenteditable` fields + portrait are persisted in `localStorage` (`peili.about.*`) so the mock is self-editable. In the real build this is **static authored content** (server-rendered), not state; only the open/closed toggle (`html.about-open`) is client-side.
 - **Data fetching:** the Bun/TS data layer queries the Eduskunta open-data API. The mocks reference real table/endpoint shapes in the `.cite` attributes (e.g. `GET /api/v1/tables/SaliDBAanestys/rows?VotingId=…`, `MemberOfParliament`, `ParliamentaryGroupMembership`, `VaskiData`, `SaliDBPuheenvuoro`, `SaliDBPoytakirja`) — use these as the integration starting point. **The provenance metadata must be produced by the real data layer**, not hand-authored, so traces stay truthful. Cache responses server-side and stamp the `data-fetched` time from the real fetch.
 
 ---
@@ -217,7 +226,7 @@ In `design_files/`:
 - `Asia.html` — matter lifecycle · `Asiakirja.html` — document reader · `Keskustelu.html` — debate
 - `Suunnittelujärjestelmä.html` — **design system / style guide (read first)**
 - `peili.css` — **the complete, commented design system (the spec)** · `timeline.css` — time-scrubber styling
-- `period.js` · `trace.js` · `roster.js` · `timeline.js` — behavior modules (logic contracts above)
+- `period.js` · `trace.js` · `roster.js` · `timeline.js` · `about.js` — behavior modules (logic contracts above)
 
 > Index/row components introduced this iteration (`.prow`, `.vrow`, `.subnav`, `.vresult`, `.mlookup`) are defined in **`peili.css` → “Index / row components”** (ported out of the per-page inline `<style>` blocks). They follow the same token/hairline rules as the rest of the system; see COMPONENTS.md for their markup and signatures.
 
