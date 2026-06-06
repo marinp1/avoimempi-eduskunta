@@ -11,10 +11,13 @@ import {
 } from "../helpers";
 
 interface Props {
+  /** Page `<title>` suffix. */
   title?: string;
+  /** Aggregated data for the overview; when null shows a loading state. */
   data?: HomeData;
 }
 
+/** Home / dashboard page — parliament overview, composition, close votes, speaker activity. */
 export default function Home({ title, data }: Props) {
   return (
     <>
@@ -67,6 +70,7 @@ export default function Home({ title, data }: Props) {
   );
 }
 
+/** Renders the home page body when data is available. */
 function HomeBody({ data }: { data: HomeData }) {
   const comp = data.composition;
   const govParties = comp.parties.filter(

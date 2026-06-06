@@ -1,9 +1,11 @@
 /** @jsxImportSource ../../src/jsx */
 
 interface Props {
+  /** Current navigation path for active-link highlighting. */
   activePath: string;
 }
 
+/** Navigation items definition: label and href for each top-level page. */
 const NAV_ITEMS = [
   { href: "/", label: "Etusivu" },
   { href: "/edustajat", label: "Kansanedustajat" },
@@ -16,6 +18,7 @@ const NAV_ITEMS = [
   { href: "/muutokset", label: "Muutokset" },
 ];
 
+/** Top-level navigation bar with htmx-boosted links. */
 export default function Nav({ activePath }: Props) {
   return (
     <nav class="nav">

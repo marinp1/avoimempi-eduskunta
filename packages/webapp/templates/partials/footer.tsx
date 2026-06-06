@@ -1,5 +1,6 @@
 /** @jsxImportSource ../../src/jsx */
 
+/** Page footer — period info, legal text, and data source attribution. */
 export default function Footer() {
   return (
     <footer class="foot">

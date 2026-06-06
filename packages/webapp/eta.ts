@@ -1,11 +1,19 @@
 import Layout from "./templates/layout";
 
+/** Options for configuring the HTML layout wrapper. */
 export interface LayoutOptions {
+  /** Current navigation path, used to highlight the active nav item. */
   activePath: string;
+  /** Page title displayed in the browser tab and `<title>` tag. */
   title?: string;
+  /** Cache-busting version string for asset URLs. */
   assetVersion?: string;
 }
 
+/**
+ * Renders a complete HTML page by wrapping the given content fragment
+ * inside the shared layout (masthead, nav, footer).
+ */
 export function renderFullPage(
   fragment: string,
   options: LayoutOptions,
@@ -22,6 +30,10 @@ export function renderFullPage(
   });
 }
 
+/**
+ * Creates a `Response` containing only the HTML fragment (no layout wrapper).
+ * Used by htmx to swap partial page content.
+ */
 export function fragmentResponse(html: string): Response {
   return new Response(html, {
     headers: {
@@ -31,6 +43,10 @@ export function fragmentResponse(html: string): Response {
   });
 }
 
+/**
+ * Creates a full-page or fragment response depending on whether the request
+ * originates from an htmx navigation (HX-Request header).
+ */
 export function htmlResponse(
   req: Request,
   fragment: string,

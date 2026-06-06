@@ -46,12 +46,20 @@ function resolveCode(raw: string): string {
   return ENGLISH_NAME_TO_CODE[lower] ?? lower;
 }
 
+/**
+ * Resolves a party code or English group name to its CSS color variable.
+ * Falls back to `"#999999"` for unknown groups.
+ */
 export function partyColor(raw: string): string {
   const code = resolveCode(raw);
   const cssVar = PARTY_CSS_VARS[code];
   return cssVar ? `var(${cssVar})` : "#999999";
 }
 
+/**
+ * Resolves a party code or English group name to its short display name
+ * (e.g. `"kok"` → `"Kokoomus"`). Falls back to `fallback` or the raw value.
+ */
 export function partyShortName(raw: string, fallback?: string): string {
   const code = resolveCode(raw);
   return PARTY_SHORT[code] ?? fallback ?? raw;

@@ -3,6 +3,7 @@
 // Period selector island — lives in the masthead shell (never swapped by htmx),
 // so DOMContentLoaded is sufficient for initial setup.
 
+/** Available electoral periods with their display metadata. */
 const PERIODS: Record<
   string,
   { label: string; gov: string; badge: string; detail: string }
@@ -30,6 +31,7 @@ const PERIODS: Record<
 const PERIOD_KEY = "peili.period";
 const DEFAULT_PERIOD = "2023";
 
+/** Reads the user's period preference from localStorage. */
 function currentPeriod(): string {
   try {
     const v = localStorage.getItem(PERIOD_KEY);
@@ -39,6 +41,8 @@ function currentPeriod(): string {
   }
 }
 
+/** Applies a period selection: updates all `[data-period-*]` placeholders
+ * and persists the choice to localStorage. */
 function applyPeriod(val: string): void {
   const p = PERIODS[val] ?? PERIODS[DEFAULT_PERIOD];
   try {
@@ -72,6 +76,7 @@ function applyPeriod(val: string): void {
   });
 }
 
+/** Initialises the period selector UI on page load. */
 document.addEventListener("DOMContentLoaded", () => {
   applyPeriod(currentPeriod());
 
@@ -108,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// Expose for page-level interop
+/** Expose period API for page-level interop from server-rendered scripts. */
 (window as any).EPPeriod = {
   apply: applyPeriod,
   current: currentPeriod,

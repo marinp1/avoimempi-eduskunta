@@ -2,14 +2,21 @@
 import Footer from "./partials/footer";
 import Masthead from "./partials/masthead";
 
+/** Options passed to the root HTML layout template. */
 export interface LayoutOptions {
+  /** Pre-rendered page content fragment inserted into `<main>`. */
   content: string;
+  /** Current navigation path for active-link highlighting. */
   activePath: string;
+  /** Page title shown in the browser tab. */
   title?: string;
+  /** Version string appended to asset URLs for cache busting. */
   assetVersion?: string;
+  /** Today's date formatted in Finnish locale, shown in the masthead. */
   finnishDate: string;
 }
 
+/** Root HTML document shell: `<head>`, masthead, `<main>`, and footer. */
 export default function Layout({
   content,
   activePath,

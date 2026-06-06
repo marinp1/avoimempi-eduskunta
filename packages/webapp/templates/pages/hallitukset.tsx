@@ -2,9 +2,11 @@
 import Kicker from "../components/kicker";
 
 interface Props {
+  /** Page `<title>` suffix. */
   title?: string;
 }
 
+/** Governments page (placeholder — not yet implemented). */
 export default function Hallitukset({ title }: Props) {
   return (
     <>

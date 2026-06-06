@@ -1,6 +1,8 @@
+/** Tagged template helper for raw HTML string building. */
 const html = (strings: TemplateStringsArray, ...values: unknown[]) =>
   String.raw({ raw: strings }, ...values);
 
+/** Period selector dropdown rendered as a static HTML string (no JSX). */
 export default () => html`
   <div class="period" data-period>
     <button class="period__btn" aria-expanded="false" aria-haspopup="true">

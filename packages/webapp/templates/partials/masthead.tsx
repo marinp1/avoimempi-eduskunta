@@ -3,10 +3,13 @@ import Nav from "./nav";
 import PeriodSelector from "./period-selector";
 
 interface Props {
+  /** Today's date formatted in Finnish locale. */
   finnishDate: string;
+  /** Current navigation path for active-link highlighting. */
   activePath: string;
 }
 
+/** Page masthead — brand, date, period selector, and navigation. */
 export default function Masthead({ finnishDate, activePath }: Props) {
   return (
     <>

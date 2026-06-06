@@ -2,9 +2,11 @@
 import Kicker from "../components/kicker";
 
 interface Props {
+  /** Page `<title>` suffix. */
   title?: string;
 }
 
+/** Parties page (placeholder — not yet implemented). */
 export default function Puolueet({ title }: Props) {
   return (
     <>

@@ -7,11 +7,11 @@ export { cite, sourceNote } from "./components/provenance";
 export type { BlocBar, BlocSegment } from "./view-models";
 export { buildBlocBar } from "./view-models";
 
-// ── HTML escaping ─────────────────────────────────────────────────────────────
-// Used by the TS HTML-builders (e.g. components/provenance.ts) that assemble raw
-// markup included via <%~ %>. Do NOT use inside <%= %> — Eta's autoEscape already
-// escapes those, so wrapping in esc() would double-escape.
-
+/**
+ * Escapes HTML metacharacters (`&`, `<`, `>`, `"`).
+ * Used by TS HTML-builders that assemble raw markup via `<%~ %>`.
+ * Do NOT use inside `<%= %>` — Eta's autoEscape already escapes those.
+ */
 export function esc(s: string | number | null | undefined): string {
   return s == null
     ? ""
@@ -22,8 +22,7 @@ export function esc(s: string | number | null | undefined): string {
         .replace(/"/g, "&quot;");
 }
 
-// ── Roster types & logic ──────────────────────────────────────────────────────
-
+/** Query-string parameters for the MP roster page. */
 export interface RosterParams {
   q?: string;
   party?: string;
@@ -32,6 +31,7 @@ export interface RosterParams {
   dir?: string;
 }
 
+/** Party filter chips shown in the roster toolbar. */
 export const CHIP_PARTIES = [
   { code: "kok", label: "Kokoomus" },
   { code: "ps", label: "Perussuomalaiset" },
@@ -43,6 +43,10 @@ export const CHIP_PARTIES = [
   { code: "kd", label: "KD" },
 ] as const;
 
+/**
+ * Filters and sorts the roster rows according to the given query parameters.
+ * Supports text search, party/bloc filtering, and column sorting.
+ */
 export function applyFilters(
   rows: RosterRow[],
   params: RosterParams,
@@ -107,7 +111,10 @@ export function applyFilters(
   return result;
 }
 
-// Builds /edustajat URL with the given query params.
+/**
+ * Builds an `/edustajat` URL with the given query parameters.
+ * Omits default values (`"all"`, `"name"`, `"asc"`) to keep URLs tidy.
+ */
 export function buildHref(p: RosterParams): string {
   const parts: string[] = [];
   if (p.q) parts.push(`q=${encodeURIComponent(p.q)}`);
@@ -120,14 +127,20 @@ export function buildHref(p: RosterParams): string {
   return parts.length ? `/edustajat?${parts.join("&")}` : "/edustajat";
 }
 
-// Returns the href for toggling sort direction on a given column.
+/**
+ * Returns the href for toggling sort direction on a given column.
+ * Toggles between `asc` and `desc` when the column is already active.
+ */
 export function sortHref(params: RosterParams, key: string): string {
   const active = params.sort === key || (!params.sort && key === "name");
   const nextDir = active && params.dir !== "desc" ? "desc" : "asc";
   return buildHref({ ...params, sort: key, dir: nextDir });
 }
 
-// Returns the CSS class string for a sort header link.
+/**
+ * Returns the CSS class string for a sortable column header link.
+ * Includes `is-asc`/`is-desc` and `ta-r` modifiers as appropriate.
+ */
 export function sortClass(
   params: RosterParams,
   key: string,
@@ -142,8 +155,7 @@ export function sortClass(
   return `mp-sort${rightAlign ? " ta-r" : ""}${dirClass}`;
 }
 
-// ── Home page types ───────────────────────────────────────────────────────────
-
+/** A party's composition data for the home page overview. */
 export interface PartyInfo {
   party_code: string;
   party_display_code: string;
@@ -152,6 +164,7 @@ export interface PartyInfo {
   is_in_government: number;
 }
 
+/** A narrowly-decided vote, featured on the home page. */
 export interface CloseVote {
   id: number;
   title: string;
@@ -163,6 +176,7 @@ export interface CloseVote {
   session_key: string;
 }
 
+/** Speech activity stats for a single MP, shown on the home page. */
 export interface SpeakerActivity {
   person_id: number;
   first_name: string;
@@ -172,6 +186,7 @@ export interface SpeakerActivity {
   total_words: number;
 }
 
+/** Aggregated data payload for the home page view. */
 export interface HomeData {
   latestDay: {
     date: string | null;
@@ -194,8 +209,9 @@ export interface HomeData {
   };
 }
 
-// ── Date & number formatters ──────────────────────────────────────────────────
-
+/**
+ * Formats an ISO date string to Finnish locale (dd.mm.yyyy).
+ */
 export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("fi-FI", {
     day: "numeric",
@@ -204,23 +220,36 @@ export function formatDate(iso: string): string {
   });
 }
 
+/**
+ * Formats a fraction as a percentage string with one decimal (e.g. `"25.0%"`).
+ * Returns `"0%"` when total is zero.
+ */
 export function pct(part: number, total: number): string {
   if (total === 0) return "0%";
   return `${((part / total) * 100).toFixed(1)}%`;
 }
 
+/**
+ * Returns the percentage value as a string with one decimal (no `%` suffix).
+ * Returns `"0"` when total is zero.
+ */
 export function pctNum(part: number, total: number): string {
   if (total === 0) return "0";
   return ((part / total) * 100).toFixed(1);
 }
 
-// ── MP display helpers ────────────────────────────────────────────────────────
-
+/**
+ * Computes the age from a birth year. Returns `"—"` when the year is null.
+ */
 export function age(birthYear: number | null): string {
   if (!birthYear) return "—";
   return String(new Date().getFullYear() - birthYear);
 }
 
+/**
+ * Strips the `" vaalipiiri"` suffix and trailing genitive `"n"` from
+ * a Finnish district name for compact display. Returns `"—"` when null.
+ */
 export function districtShort(rawName: string | null): string {
   if (!rawName) return "—";
   return rawName

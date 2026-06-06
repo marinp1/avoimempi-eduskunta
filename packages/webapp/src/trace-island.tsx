@@ -6,6 +6,7 @@ import htmx from "htmx.org";
 // Uses htmx.onLoad() instead of DOMContentLoaded so .cite elements added by
 // htmx swaps are initialised correctly on every navigation.
 
+/** Shared floating popover element for displaying data provenance traces. */
 const pop = document.createElement("div");
 pop.className = "trace-pop";
 pop.hidden = true;
@@ -16,8 +17,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.body.appendChild(pop);
 });
 
+/** Currently open cite element, or null. */
 let traceCurrent: HTMLElement | null = null;
 
+/** Builds the popover content from a cite element's data attributes. */
 function traceBuild(el: HTMLElement): void {
   const d = el.dataset;
   const chain = (d.chain ?? "")
@@ -89,6 +92,7 @@ function traceBuild(el: HTMLElement): void {
   pop.querySelector(".trace-pop__close")?.addEventListener("click", traceClose);
 }
 
+/** Positions the popover relative to the trigger element, keeping it within viewport bounds. */
 function tracePlace(el: HTMLElement): void {
   pop.hidden = false;
   pop.style.left = "0px";
@@ -110,6 +114,7 @@ function tracePlace(el: HTMLElement): void {
   pop.style.top = `${top}px`;
 }
 
+/** Opens the provenance popover for the given cite element. */
 function traceOpen(el: HTMLElement): void {
   if (traceCurrent) traceCurrent.setAttribute("aria-expanded", "false");
   traceCurrent = el;
@@ -118,6 +123,7 @@ function traceOpen(el: HTMLElement): void {
   tracePlace(el);
 }
 
+/** Closes the provenance popover. */
 function traceClose(): void {
   pop.hidden = true;
   if (traceCurrent) {

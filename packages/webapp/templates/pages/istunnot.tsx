@@ -2,9 +2,11 @@
 import Kicker from "../components/kicker";
 
 interface Props {
+  /** Page `<title>` suffix. */
   title?: string;
 }
 
+/** Sessions page (placeholder — not yet implemented). */
 export default function Istunnot({ title }: Props) {
   return (
     <>

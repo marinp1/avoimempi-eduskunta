@@ -10,12 +10,17 @@ import {
 import RosterContent from "./roster-content";
 
 interface Props {
+  /** Page `<title>` suffix. */
   title?: string;
+  /** All roster rows before filtering. */
   allRows: RosterRow[];
+  /** Rows after applying the current filter/sort params. */
   filtered: RosterRow[];
+  /** Current filter and sort parameters from the URL query string. */
   params: RosterParams;
 }
 
+/** MP roster page with bloc bar, search, party filters, and sortable table. */
 export default function Edustajat({ title, allRows, filtered, params }: Props) {
   const q = params.q || "";
   const bloc = buildBlocBar(allRows, partyShortName);

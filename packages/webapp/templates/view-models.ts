@@ -1,11 +1,7 @@
 import type { RosterRow } from "../../server/database/repositories/person-repository";
 import { partyColor } from "./components/party";
 
-// ── Bloc bar view-model ─────────────────────────────────────────────────────
-// Shapes the roster into the stacked hallitus/oppositio bar shown on the
-// /edustajat page. All presentation values (colors, widths) are pre-computed
-// here so the template only iterates — no data construction in .eta.
-
+/** A single segment within the bloc bar — one party's share of government or opposition. */
 export interface BlocSegment {
   code: string;
   /** CSS color string, e.g. "var(--party-kok)". */
@@ -17,6 +13,7 @@ export interface BlocSegment {
   label: string;
 }
 
+/** The full bloc bar model: totals plus ordered segments (government first, then opposition). */
 export interface BlocBar {
   total: number;
   govTotal: number;
@@ -30,6 +27,7 @@ interface PartyTally {
   gov: number;
 }
 
+/** Groups rows by party, counting total members and government members per party. */
 function tallyByParty(rows: RosterRow[]): PartyTally[] {
   const byParty = new Map<string, PartyTally>();
   for (const r of rows) {
@@ -44,6 +42,11 @@ function tallyByParty(rows: RosterRow[]): PartyTally[] {
     .sort((a, b) => b.count - a.count);
 }
 
+/**
+ * Builds the bloc bar view-model from the roster rows.
+ * Pre-computes party colors, widths, and government/opposition grouping
+ * so the template only iterates — no data construction in markup.
+ */
 export function buildBlocBar(
   rows: RosterRow[],
   partyShortName: (code: string) => string,

@@ -14,12 +14,17 @@ import {
 } from "../helpers";
 
 interface Props {
+  /** All roster rows before filtering. */
   allRows: RosterRow[];
+  /** Rows after applying the current filter/sort params. */
   filtered: RosterRow[];
+  /** Current filter and sort parameters from the URL query string. */
   params: RosterParams;
+  /** When true, emits the MP count span with `hx-swap-oob="true"` for out-of-band updates. */
   oob?: boolean;
 }
 
+/** Roster table body with party filter chips, sortable headers, and MP rows. */
 export default function RosterContent({
   allRows,
   filtered,

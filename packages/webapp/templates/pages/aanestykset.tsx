@@ -2,9 +2,11 @@
 import Kicker from "../components/kicker";
 
 interface Props {
+  /** Page `<title>` suffix. */
   title?: string;
 }
 
+/** Voting results page (placeholder — not yet implemented). */
 export default function Aanestykset({ title }: Props) {
   return (
     <>

@@ -2,9 +2,11 @@
 import Kicker from "../components/kicker";
 
 interface Props {
+  /** Page `<title>` suffix. */
   title?: string;
 }
 
+/** Analytics page (placeholder — not yet implemented). */
 export default function Analytiikka({ title }: Props) {
   return (
     <>

@@ -2,7 +2,10 @@ import type { RosterRow } from "../templates/helpers";
 
 let nextId = 1;
 
-// Builds a RosterRow with sensible defaults; override only the fields a test cares about.
+/**
+ * Builds a RosterRow with sensible defaults.
+ * Override only the fields a test cares about via `overrides`.
+ */
 export function makeRow(overrides: Partial<RosterRow> = {}): RosterRow {
   const id = nextId++;
   const first = overrides.first_name ?? "First";

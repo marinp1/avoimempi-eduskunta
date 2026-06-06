@@ -1,5 +1,6 @@
 import { esc } from "../helpers";
 
+/** Tagged template helper for building HTML strings with safe interleaving. */
 function html(strings: TemplateStringsArray, ...values: unknown[]): string {
   return strings.reduce<string>(
     (result, str, i) =>
@@ -8,6 +9,7 @@ function html(strings: TemplateStringsArray, ...values: unknown[]): string {
   );
 }
 
+/** Metadata attached to a citable inline value for the provenance trace popover. */
 export interface CiteData {
   value?: string;
   caption?: string;
@@ -24,6 +26,10 @@ export interface CiteData {
   markText?: string;
 }
 
+/**
+ * Wraps an inline value in a `<span class="cite">` with data attributes for
+ * the provenance trace popover. Converts camelCase keys to kebab-case data attributes.
+ */
 export function cite(inner: string, data: CiteData): string {
   const attrs = Object.entries(data)
     .filter(([, v]) => v != null)
@@ -35,12 +41,16 @@ export function cite(inner: string, data: CiteData): string {
   return html`<span class="cite" ${attrs}>${inner}</span>`;
 }
 
+/** Options for rendering a section-level source attribution note. */
 export interface SourceNoteOptions {
   dataset?: string;
   fetchedAt?: string;
   extra?: string;
 }
 
+/**
+ * Renders a section-level source attribution ("Lähde: … haettu …").
+ */
 export function sourceNote({
   dataset,
   fetchedAt,

@@ -1,3 +1,4 @@
+/** HTML void elements that must not have closing tags. */
 const VOID_ELEMENTS = new Set([
   "area",
   "base",
@@ -15,6 +16,7 @@ const VOID_ELEMENTS = new Set([
   "wbr",
 ]);
 
+/** Escapes HTML metacharacters in attribute values. */
 function escapeHtml(value: unknown): string {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -23,6 +25,7 @@ function escapeHtml(value: unknown): string {
     .replaceAll('"', "&quot;");
 }
 
+/** Recursively renders a child node (string, number, array, boolean, or null) to HTML. */
 function renderChild(child: unknown): string {
   if (child == null || child === false) {
     return "";
@@ -35,8 +38,10 @@ function renderChild(child: unknown): string {
   return String(child);
 }
 
+/** Fragment sentinel — renders children without a wrapper element. */
 export const Fragment = Symbol("Fragment");
 
+/** Custom JSX runtime: converts JSX elements to HTML strings at build time. */
 export function jsx(
   tag: string | Function | typeof Fragment,
   props: Record<string, unknown> | null,
