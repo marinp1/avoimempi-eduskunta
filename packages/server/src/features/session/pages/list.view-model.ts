@@ -32,7 +32,7 @@ export interface SessionRow {
   month: string;
   dotClass: string;
   sessionId: string;
-  status: "done" | "draft" | "live";
+  status: "done" | "draft";
   timeRange: string;
   headline: string;
   note: string;
@@ -134,14 +134,9 @@ function deriveDotClass(kind: string): string {
   return "talk";
 }
 
-function deriveStatus(row: SessionsIndexRow): "done" | "draft" | "live" {
-  if (row.state === "KAYNNISSA") return "live";
-  if (row.state === "LOPETETTU" && row.state_text_fi === "Istunto päättynyt")
-    return "done";
-  if (row.state === "PJLAADITTU") return "draft";
-  if (row.state === "LOPETETTU" && row.state_text_fi !== "Istunto päättynyt")
-    return "draft";
-  return "done";
+function deriveStatus(row: SessionsIndexRow): "done" | "draft" {
+  if (row.speech_count > 0 || row.voting_count > 0) return "done";
+  return "draft";
 }
 
 function buildHeadline(row: SessionsIndexRow): string {

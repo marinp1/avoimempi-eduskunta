@@ -18,10 +18,8 @@ interface Props {
   cursorFormatted?: string;
 }
 
-function statusLabel(s: "done" | "draft" | "live"): string {
+function statusLabel(s: "done" | "draft"): string {
   switch (s) {
-    case "live":
-      return i18next.t("sessions:status_live");
     case "done":
       return i18next.t("sessions:status_done");
     case "draft":

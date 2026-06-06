@@ -8,11 +8,10 @@ interface Props {
   modifier: string;
 }
 
-/** Status badge / spill element for labelling live, done, or draft state. */
+/** Status badge / spill element for labelling done or draft state. */
 export default function Spill({ text, modifier }: Props) {
   return (
     <span class={clsx("spill", `spill--${modifier}`)}>
-      {modifier === "live" && <span class="ld"></span>}
       {text}
     </span>
   );

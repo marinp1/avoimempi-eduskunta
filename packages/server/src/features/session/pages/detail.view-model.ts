@@ -64,7 +64,7 @@ export interface SessionHeaderData {
   key: string;
   ptkId: string;
   typeLabel: string;
-  stateClass: "done" | "live" | "draft";
+  stateClass: "done" | "draft";
   stateLabel: string;
   title: string;
   dateLabel: string;
@@ -197,16 +197,12 @@ function computeDuration(
 }
 
 function deriveState(
-  state: string | null | undefined,
-  stateTextFi: string | null | undefined,
-): { class: "done" | "live" | "draft"; label: string } {
-  if (state === "KAYNNISSA")
-    return { class: "live", label: i18next.t("sessions:status_live") };
-  if (state === "LOPETETTU" && stateTextFi === "Istunto päättynyt")
+  speechCount: number | null | undefined,
+  votingCount: number | null | undefined,
+): { class: "done" | "draft"; label: string } {
+  if ((speechCount ?? 0) > 0 || (votingCount ?? 0) > 0)
     return { class: "done", label: i18next.t("sessions:status_done") };
-  if (state === "PJLAADITTU")
-    return { class: "draft", label: i18next.t("sessions:status_draft") };
-  return { class: "draft", label: i18next.t("sessions:status_unknown") };
+  return { class: "draft", label: i18next.t("sessions:status_draft") };
 }
 
 function phaseLabel(code: string | null | undefined): string {
@@ -235,7 +231,7 @@ export function buildSessionDetailViewModel(
   seatCounts: Record<string, { seats: number; inGov: boolean }> = {},
   docIdMap?: Map<string, number>,
 ): SessionDetailData {
-  const stateInfo = deriveState(session.state, session.state_text_fi);
+  const stateInfo = deriveState(session.speech_count, session.voting_count);
   const dateLabel = session.date ? formatFiLongDate(session.date) : "";
   const timeRange = extractTimeRange(session);
   const duration = computeDuration(
