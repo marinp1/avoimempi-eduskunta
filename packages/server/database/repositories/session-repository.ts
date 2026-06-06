@@ -18,6 +18,7 @@ import sessionNotices from "../queries/SESSION_NOTICES.sql";
 import sessionNoticesBySessionKeys from "../queries/SESSION_NOTICES_BY_SESSION_KEYS.sql";
 import sessionSectionsBySessionKeys from "../queries/SESSION_SECTIONS_BY_SESSION_KEYS.sql";
 import sessionVotingCountsBySessionKeys from "../queries/SESSION_VOTING_COUNTS_BY_SESSION_KEYS.sql";
+import sessionsIndex from "../queries/SESSIONS_INDEX.sql";
 import sessionsPaginated from "../queries/SESSIONS_PAGINATED.sql";
 import speechesByDate from "../queries/SPEECHES_BY_DATE.sql";
 
@@ -66,6 +67,29 @@ type SessionWithSectionsRow = SessionRow & {
   sections: SessionSectionRow[];
   section_count: number;
   voting_count: number;
+};
+
+export type SessionsIndexRow = {
+  id: number;
+  key: string;
+  date: string;
+  number: number;
+  type: string;
+  state: string;
+  state_text_fi: string;
+  description: string;
+  start_time_actual: string | null;
+  minutes_start_time: string | null;
+  minutes_end_time: string | null;
+  minutes_title: string | null;
+  minutes_status: string | null;
+  agenda_key: string | null;
+  agenda_title: string | null;
+  voting_count: number;
+  section_count: number;
+  speech_count: number;
+  section_titles: string;
+  voting_titles: string;
 };
 
 export class SessionRepository {
@@ -215,6 +239,15 @@ export class SessionRepository {
       limit: params.limit,
       totalPages: Math.ceil(totalCount / params.limit),
     };
+  }
+
+  public fetchSessionsIndex(limit: number = 50): SessionsIndexRow[] {
+    const stmt = this.db.prepare<SessionsIndexRow, { $limit: number }>(
+      sessionsIndex,
+    );
+    const rows = stmt.all({ $limit: limit });
+    stmt.finalize();
+    return rows;
   }
 
   public fetchSectionSpeeches(params: {

@@ -199,7 +199,11 @@ const webappCacheKey = (req: Request, url: URL) =>
 const allRoutes = withSecurityHeaders({
   ...createWebappStaticRoutes(), // in-memory strings, no cache wrapper needed
   ...cache.wrapRoutes(
-    createWebappPageRoutes({ homeRepository, personRepository }),
+    createWebappPageRoutes({
+      homeRepository,
+      personRepository,
+      sessionRepository,
+    }),
     { cacheKey: webappCacheKey },
   ),
   ...apiRoutes,

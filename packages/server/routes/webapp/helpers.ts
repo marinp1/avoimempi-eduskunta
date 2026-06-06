@@ -1,7 +1,4 @@
-import {
-  htmlResponse,
-  renderFullPage,
-} from "../../../webapp/eta";
+import { htmlResponse, renderFullPage } from "../../../webapp/eta";
 import { assetVersion } from "./assets";
 
 export function page(

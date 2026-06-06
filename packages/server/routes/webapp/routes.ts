@@ -10,7 +10,10 @@ import Asiakirjat from "../../../webapp/templates/pages/asiakirjat";
 import Edustajat from "../../../webapp/templates/pages/edustajat";
 import Hallitukset from "../../../webapp/templates/pages/hallitukset";
 import Home from "../../../webapp/templates/pages/home";
-import Istunnot from "../../../webapp/templates/pages/istunnot";
+import Istunnot, {
+  SessionList,
+} from "../../../webapp/templates/pages/istunnot";
+import { buildSessionsViewModel } from "../../../webapp/templates/pages/istunnot-view-models";
 import Muutokset from "../../../webapp/templates/pages/muutokset";
 import Puolueet from "../../../webapp/templates/pages/puolueet";
 import RosterContent from "../../../webapp/templates/pages/roster-content";
@@ -19,10 +22,8 @@ import Edustaja, {
 } from "../../../webapp/templates/pages/edustaja";
 import type { HomeRepository } from "../../database/repositories/home-repository";
 import type { PersonRepository } from "../../database/repositories/person-repository";
-import {
-  fragmentResponse,
-  htmlResponse,
-} from "../../../webapp/eta";
+import type { SessionRepository } from "../../database/repositories/session-repository";
+import { fragmentResponse, htmlResponse } from "../../../webapp/eta";
 import { assetVersion, cssAsset, jsAsset } from "./assets";
 import { page, personNotFoundResponse } from "./helpers";
 
@@ -36,6 +37,7 @@ export function createWebappStaticRoutes() {
 export interface WebappDeps {
   homeRepository: HomeRepository;
   personRepository: PersonRepository;
+  sessionRepository: SessionRepository;
 }
 
 export function createWebappPageRoutes(deps: WebappDeps) {
@@ -78,8 +80,33 @@ export function createWebappPageRoutes(deps: WebappDeps) {
         page(req, Puolueet({ title: "Puolueet" }), "/puolueet", "Puolueet"),
     },
     "/istunnot": {
-      GET: (req: Request) =>
-        page(req, Istunnot({ title: "Istunnot" }), "/istunnot", "Istunnot"),
+      GET: (req: Request) => {
+        const url = new URL(req.url);
+        const _kind = url.searchParams.get("kind") ?? undefined;
+        const _q = url.searchParams.get("q") ?? undefined;
+
+        const raw = deps.sessionRepository.fetchSessionsIndex(50);
+        const data = buildSessionsViewModel(raw);
+
+        const isHtmx = req.headers.get("HX-Request") === "true";
+        const isBoosted = req.headers.get("HX-Boosted") === "true";
+
+        if (isHtmx && !isBoosted) {
+          return fragmentResponse(
+            SessionList({
+              weeks: data.weeks,
+              totalSessions: data.totalSessions,
+            }),
+          );
+        }
+
+        return page(
+          req,
+          Istunnot({ title: "Istunnot", data }),
+          "/istunnot",
+          "Istunnot",
+        );
+      },
     },
     "/aanestykset": {
       GET: (req: Request) =>
