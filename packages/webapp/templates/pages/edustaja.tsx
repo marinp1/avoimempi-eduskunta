@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 import Kicker from "../components/kicker";
 import Tag from "../components/tag";
 import { cite, sourceNote } from "../components/provenance";
@@ -433,7 +434,13 @@ export default function Edustaja({ data }: Props) {
                     <div class="committee-row">
                       <span class="cname">{esc(c.committeeName)}</span>
                       <span
-                        class={`crole${["jäsen", "puheenjohtaja", "varapuheenjohtaja"].includes(c.role.toLowerCase()) ? " lead" : ""}`}
+                        class={clsx("crole", {
+                          lead: [
+                            "jäsen",
+                            "puheenjohtaja",
+                            "varapuheenjohtaja",
+                          ].includes(c.role.toLowerCase()),
+                        })}
                       >
                         {esc(c.role)}
                         {c.startDate
@@ -462,7 +469,9 @@ export default function Edustaja({ data }: Props) {
                 <div class="topics">
                   {data.focusAreas.map((area) => (
                     <span
-                      class={`topic-tag${area.weight >= topicLgThreshold ? " lg" : ""}`}
+                      class={clsx("topic-tag", {
+                        lg: area.weight >= topicLgThreshold,
+                      })}
                     >
                       {esc(area.label)}
                       <span class="tc">{area.weight}</span>

@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 import type { RosterRow } from "../../../server/database/repositories/person-repository";
 import {
   CHIP_PARTIES,
@@ -47,7 +48,9 @@ export default function RosterContent({
 
       <div class="fchips">
         <a
-          class={`fchip${!activeParty || activeParty === "all" ? " is-active" : ""}`}
+          class={clsx("fchip", {
+            "is-active": !activeParty || activeParty === "all",
+          })}
           href="/edustajat"
           hx-get="/edustajat"
           hx-target="#roster-content"
@@ -58,7 +61,7 @@ export default function RosterContent({
         </a>
 
         <a
-          class={`fchip${activeBloc === "hallitus" ? " is-active" : ""}`}
+          class={clsx("fchip", { "is-active": activeBloc === "hallitus" })}
           href={hallHref}
           hx-get={hallHref}
           hx-target="#roster-content"
@@ -69,7 +72,7 @@ export default function RosterContent({
         </a>
 
         <a
-          class={`fchip${activeBloc === "oppositio" ? " is-active" : ""}`}
+          class={clsx("fchip", { "is-active": activeBloc === "oppositio" })}
           href={oppHref}
           hx-get={oppHref}
           hx-target="#roster-content"
@@ -87,7 +90,7 @@ export default function RosterContent({
           });
           return (
             <a
-              class={`fchip${activeParty === cp.code ? " is-active" : ""}`}
+              class={clsx("fchip", { "is-active": activeParty === cp.code })}
               href={cpHref}
               hx-get={cpHref}
               hx-target="#roster-content"

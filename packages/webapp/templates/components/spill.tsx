@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 
 interface Props {
   /** Label text. */
@@ -10,7 +11,7 @@ interface Props {
 /** Status badge / spill element for labelling live, done, or draft state. */
 export default function Spill({ text, modifier }: Props) {
   return (
-    <span class={`spill spill--${modifier}`}>
+    <span class={clsx("spill", `spill--${modifier}`)}>
       {modifier === "live" && <span class="ld"></span>}
       {text}
     </span>

@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 import type { RosterRow } from "../../../server/database/repositories/person-repository";
 import Kicker from "../components/kicker";
 import {
@@ -52,7 +53,7 @@ export default function Edustajat({
         <div class="bloc-bar">
           {bloc.segments.map((seg) => (
             <span
-              class={`seg-${seg.side}`}
+              class={clsx("seg", `seg-${seg.side}`)}
               style={`width:${seg.width};background:${seg.color}`}
               title={`${seg.label} ${seg.count}`}
             ></span>

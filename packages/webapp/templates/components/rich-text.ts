@@ -1,3 +1,4 @@
+/** @jsxImportSource ../../src/jsx */
 import {
   parseRichTextDocument,
   type RichTextBlock,
@@ -14,6 +15,11 @@ export function richTextToHtml(
   const doc = parseRichTextDocument(richTextJson);
   if (!doc) return "";
   return doc.blocks.map(renderBlock).join("");
+}
+
+/** JSX component wrapper for richTextToHtml. */
+export function RichText({ json }: { json: string | null | undefined }) {
+  return richTextToHtml(json);
 }
 
 function renderBlock(block: RichTextBlock): string {

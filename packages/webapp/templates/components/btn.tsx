@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 
 interface Props {
   /** Button label text. */
@@ -11,12 +12,11 @@ interface Props {
 
 /** Renders either a `<button>` or an `<a>` styled as a button. */
 export default function Btn({ text, href, modifier }: Props) {
-  const cls = `btn${modifier ? ` btn--${modifier}` : ""}`;
   return href ? (
-    <a class={cls} href={href}>
+    <a class={clsx("btn", modifier && `btn--${modifier}`)} href={href}>
       {text}
     </a>
   ) : (
-    <button class={cls}>{text}</button>
+    <button class={clsx("btn", modifier && `btn--${modifier}`)}>{text}</button>
   );
 }

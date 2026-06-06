@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 
 interface Props {
   /** Stat label (shown above the value). */
@@ -14,7 +15,7 @@ export default function Stat({ label, value, modifier }: Props) {
   return (
     <div class="stat">
       <div class="stat__label">{label}</div>
-      <div class={`stat__value${modifier ? ` ${modifier}` : ""}`}>{value}</div>
+      <div class={clsx("stat__value", modifier)}>{value}</div>
     </div>
   );
 }

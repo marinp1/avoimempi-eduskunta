@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 import Kicker from "../components/kicker";
 import { esc } from "../helpers";
 
@@ -163,12 +164,15 @@ function AsiakirjatList({
       </div>
 
       <div class="fchips">
-        <a class={`fchip${!activeKind ? " is-active" : ""}`} href="/asiakirjat">
+        <a
+          class={clsx("fchip", { "is-active": !activeKind })}
+          href="/asiakirjat"
+        >
           Kaikki
         </a>
         {DOC_KIND_CHIPS.map((chip) => (
           <a
-            class={`fchip${activeKind === chip.key ? " is-active" : ""}`}
+            class={clsx("fchip", { "is-active": activeKind === chip.key })}
             href={`/asiakirjat?kind=${chip.key}`}
           >
             <span class="pdot" style={`background:${chip.dotColor}`}></span>
@@ -278,7 +282,7 @@ function DocumentRowComponent({ row }: { row: DocumentRow }) {
       </div>
       <div class="doc-row__right">
         {row.statusLabel && (
-          <span class={`spill ${row.statusClass}`}>{row.statusLabel}</span>
+          <span class={clsx("spill", row.statusClass)}>{row.statusLabel}</span>
         )}
         {row.hasDetail && <span class="sit-go">Avaa →</span>}
       </div>

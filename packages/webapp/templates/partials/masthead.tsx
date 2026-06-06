@@ -24,7 +24,7 @@ export default function Masthead({ finnishDate, activePath }: Props) {
 
         <div class="masthead__meta">
           <span class="masthead__date">{finnishDate}</span>
-          {PeriodSelector()}
+          {<PeriodSelector />}
         </div>
       </div>
 

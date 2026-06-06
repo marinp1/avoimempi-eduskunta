@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 import type {
   SessionDetailData,
   AgendaSectionData,
@@ -35,7 +36,10 @@ export default function Istunto({ data }: Props) {
           <div class="doc-head__top">
             <span class="doc-id">{s.ptkId}</span>
             <span class="doc-type">{s.typeLabel}</span>
-            <span class={`sess-state ${s.stateClass}`} style="margin-left:auto">
+            <span
+              class={clsx("sess-state", s.stateClass)}
+              style="margin-left:auto"
+            >
               {s.stateLabel}
             </span>
           </div>
@@ -299,7 +303,7 @@ function SeatGrid({
           for (let i = 0; i < p.absent; i++) seats.push("abs");
           return seats.map((kind) => (
             <span
-              class={`seat${kind === "abs" ? " absent" : ""}`}
+              class={clsx("seat", { absent: kind === "abs" })}
               style={`--p:${p.color}`}
               title={`${p.label}${kind === "abs" ? " · poissa" : " · läsnä"}`}
             ></span>
@@ -485,13 +489,13 @@ function AgendaItemComponent({
             {item.documents.map((doc) =>
               doc.documentId ? (
                 <a
-                  class={`ag-doc${doc.isCommittee ? " cmt" : ""}`}
+                  class={clsx("ag-doc", { cmt: doc.isCommittee })}
                   href={`/asiakirja/${doc.documentId}`}
                 >
                   {doc.tunnus}
                 </a>
               ) : (
-                <span class={`ag-doc${doc.isCommittee ? " cmt" : ""}`}>
+                <span class={clsx("ag-doc", { cmt: doc.isCommittee })}>
                   {doc.tunnus}
                 </span>
               ),
@@ -541,7 +545,7 @@ function VoteList({ votes }: { votes: VoteResultData[] }) {
           </div>
           <div class="agvote__n">
             <span class="j">{v.nYes}</span>–<span class="e">{v.nNo}</span>
-            <span class={`out ${v.outcomeClass}`}>{v.outcome}</span>
+            <span class={clsx("out", v.outcomeClass)}>{v.outcome}</span>
           </div>
         </div>
       ))}

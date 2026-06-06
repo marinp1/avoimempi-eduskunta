@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 
 /** Sitting tick: minimal data needed to render the timeline track. */
 export interface SittingTick {
@@ -38,8 +39,6 @@ export function timeline(data: TimelineData): string {
   const { cursor, today, sittings, showLegend = true, oob } = data;
   const isNow = cursor >= today;
   const relLabel = isNow ? "nykyhetki" : "arkistonäkymä";
-  const relClass = isNow ? "tl__rel is-now" : "tl__rel";
-  const nowHidden = isNow ? " is-hidden" : "";
   const todayHidden = isNow || !sittings.some((s) => s.d === today);
   const currentId =
     sittings.find((s) => s.d === cursor)?.id ??
@@ -60,12 +59,16 @@ export function timeline(data: TimelineData): string {
           <span class="tl__date" data-tl-date>
             {data.cursorFormatted}
           </span>
-          <span class={relClass} data-tl-rel>
+          <span class={clsx("tl__rel", { "is-now": isNow })} data-tl-rel>
             {relLabel}
           </span>
         </div>
         <div class="tl__nav">
-          <button class={`tl__now${nowHidden}`} data-tl-now type="button">
+          <button
+            class={clsx("tl__now", { "is-hidden": isNow })}
+            data-tl-now
+            type="button"
+          >
             Palaa nykyhetkeen →
           </button>
           <span class="tl__pair">

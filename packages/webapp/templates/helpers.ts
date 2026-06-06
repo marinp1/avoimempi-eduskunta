@@ -1,8 +1,9 @@
 import type { RosterRow } from "../../server/database/repositories/person-repository";
+import { clsx } from "clsx";
 
 export type { RosterRow };
 export { partyColor, partyShortName } from "./components/party";
-export type { CiteData, SourceNoteOptions } from "./components/provenance";
+export type { CiteProps, SourceNoteOptions } from "./components/provenance";
 export { cite, sourceNote } from "./components/provenance";
 export type { BlocBar, BlocSegment } from "./view-models";
 export { buildBlocBar } from "./view-models";
@@ -147,12 +148,11 @@ export function sortClass(
   rightAlign = false,
 ): string {
   const active = params.sort === key || (!params.sort && key === "name");
-  const dirClass = active
-    ? params.dir === "desc"
-      ? " is-desc"
-      : " is-asc"
-    : "";
-  return `mp-sort${rightAlign ? " ta-r" : ""}${dirClass}`;
+  return clsx(
+    "mp-sort",
+    { "ta-r": rightAlign },
+    active && (params.dir === "desc" ? "is-desc" : "is-asc"),
+  );
 }
 
 /** A party's composition data for the home page overview. */

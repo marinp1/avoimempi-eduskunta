@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 import Kicker from "../components/kicker";
 import { cite, sourceNote } from "../components/provenance";
 import { esc, partyShortName } from "../helpers";
@@ -162,7 +163,7 @@ export default function Asiakirja({ data }: Props) {
             <Kicker text="Asian kulku" modifier="" />
             <nav class="lifecycle" style="margin-top:8px">
               {d.lifecycleStages.map((stage) => (
-                <div class={`lc-step${stage.done ? " done" : ""}`}>
+                <div class={clsx("lc-step", { done: stage.done })}>
                   <div class="lc-step__top">
                     <span class="lc-step__dot"></span>
                     <span class="lc-step__num">
@@ -175,7 +176,9 @@ export default function Asiakirja({ data }: Props) {
                   )}
                   {stage.tag && (
                     <div
-                      class={`lc-step__tag ${stage.tag === "vastattu" ? "ok" : ""}`}
+                      class={clsx("lc-step__tag", {
+                        ok: stage.tag === "vastattu",
+                      })}
                     >
                       {stage.tag}
                     </div>

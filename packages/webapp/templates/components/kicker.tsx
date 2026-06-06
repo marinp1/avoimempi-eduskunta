@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 
 interface Props {
   /** Kicker label text. */
@@ -12,7 +13,7 @@ interface Props {
 /** Section kicker / overline label (small, uppercase heading above section titles). */
 export default function Kicker({ text, modifier, dot }: Props) {
   return (
-    <p class={`kicker${modifier ? ` kicker--${modifier}` : ""}`}>
+    <p class={clsx("kicker", modifier && `kicker--${modifier}`)}>
       {dot && <span class="dot"></span>}
       {text}
     </p>

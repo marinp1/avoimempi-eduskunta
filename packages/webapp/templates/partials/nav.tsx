@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 
 interface Props {
   /** Current navigation path for active-link highlighting. */
@@ -27,7 +28,7 @@ export default function Nav({ activePath }: Props) {
       {NAV_ITEMS.map((item) => (
         <a
           href={item.href}
-          class={activePath === item.href ? "is-active" : undefined}
+          class={clsx({ "is-active": activePath === item.href })}
           hx-get={item.href}
           hx-target="#main-content"
           hx-push-url="true"

@@ -3,6 +3,11 @@ import htmx from "htmx.org";
 htmx.config.defaultSwap = "innerHTML";
 htmx.config.defaultSettleDelay = 20;
 
+// Preserve scroll position in #main-content when navigating back.
+document.body.setAttribute("hx-history-elt", "");
+const mainEl = document.getElementById("main-content");
+if (mainEl) mainEl.setAttribute("hx-history-elt", "");
+
 // After every htmx swap, sync nav active link and update the document title.
 document.addEventListener("htmx:after:settle", () => {
   const path = window.location.pathname;

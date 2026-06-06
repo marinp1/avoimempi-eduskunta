@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 import Kicker from "../components/kicker";
 import Spill from "../components/spill";
 import type {
@@ -264,7 +265,7 @@ function SessionRowComponent({ session }: { session: SessionRow }) {
       <div class="sit-meta">
         <div class="sit-figs">
           <div class="sit-fig">
-            <b class={session.votingCount === 0 ? "zero" : ""}>
+            <b class={clsx({ zero: session.votingCount === 0 })}>
               {session.votingCount}
             </b>
             <span>{session.votingCount === 1 ? "Äänestys" : "Äänestystä"}</span>
@@ -282,14 +283,20 @@ function SessionRowComponent({ session }: { session: SessionRow }) {
 
 function DchipComponent({ chip }: { chip: Dchip }) {
   if (chip.isMore) {
-    return <span class="dchip dchip--more">{chip.text}</span>;
+    return (
+      <span class={clsx("dchip", { "dchip--more": chip.isMore })}>
+        {chip.text}
+      </span>
+    );
   }
   return (
     <span class="dchip">
       {chip.kind && <span class="dchip__k">{chip.kind}</span>}
       <span class="dchip__t">{chip.text}</span>
       {chip.result && (
-        <span class={`dchip__r ${chip.result.class}`}>{chip.result.text}</span>
+        <span class={clsx("dchip__r", chip.result.class)}>
+          {chip.result.text}
+        </span>
       )}
     </span>
   );

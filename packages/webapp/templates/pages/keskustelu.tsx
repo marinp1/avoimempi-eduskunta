@@ -1,4 +1,5 @@
 /** @jsxImportSource ../../src/jsx */
+import { clsx } from "clsx";
 import Kicker from "../components/kicker";
 import type {
   DebateData,
@@ -60,37 +61,6 @@ export default function Keskustelu({ data }: Props) {
         )}
         <SpeechSourceNote fetchedAt={d.fetchedAt} />
       </div>
-
-      <script>{`(function(){
-  var rows=[].slice.call(document.querySelectorAll('.speech'));
-  var chips=[].slice.call(document.querySelectorAll('.fchip'));
-  var search=document.getElementById('sp-search');
-  var countE=document.getElementById('sp-count');
-  var empty=document.getElementById('sp-empty');
-  var filter='all';
-  function apply(){
-    var q=(search.value||'').trim().toLowerCase();
-    var shown=0;
-    rows.forEach(function(r){
-      var okB=filter==='all'||r.getAttribute('data-bloc')===filter;
-      var okT=!q||(r.getAttribute('data-text')||'').indexOf(q)!==-1;
-      var show=okB&&okT;
-      r.style.display=show?'':'none';
-      if(show)shown++;
-    });
-    countE.textContent=shown;
-    empty.hidden=shown!==0;
-  }
-  chips.forEach(function(c){
-    c.addEventListener('click',function(){
-      chips.forEach(function(x){x.classList.remove('is-active')});
-      c.classList.add('is-active');
-      filter=c.getAttribute('data-filter');
-      apply();
-    });
-  });
-  if(search) search.addEventListener('input',apply);
-})();`}</script>
     </>
   );
 }
@@ -359,7 +329,7 @@ function SpeechCard({ speech: sp }: { speech: SpeechEntry }) {
             ></span>{" "}
             {sp.partyName}
           </span>
-          <span class={`speech__role ${sp.roleClass}`}>{sp.roleLabel}</span>
+          <span class={clsx("speech__role", sp.roleClass)}>{sp.roleLabel}</span>
           <span class="speech__time">
             {sp.timeLabel}
             {sp.durationLabel ? ` · ${sp.durationLabel}` : ""}
@@ -472,7 +442,7 @@ function VoteOutcome({
             </div>
             <div class="agvote__n">
               <span class="j">{v.nYes}</span>–<span class="e">{v.nNo}</span>
-              <span class={`out ${v.outcomeClass}`}>{v.outcome}</span>
+              <span class={clsx("out", v.outcomeClass)}>{v.outcome}</span>
             </div>
           </div>
         ))}
