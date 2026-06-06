@@ -394,7 +394,11 @@ export class SessionRepository {
         processing_title: string | null;
         note: string | null;
         resolution: string | null;
+        session_key: string;
         minutes_item_title: string | null;
+        minutes_item_number: string | null;
+        minutes_processing_phase_code: string | null;
+        minutes_related_document_identifier: string | null;
         minutes_content_text: string | null;
       },
       { $sectionKey: string }

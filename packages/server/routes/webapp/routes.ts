@@ -4,6 +4,7 @@ import { createEdustajaRoute } from "./edustaja-route";
 import { createEdustajatRoute } from "./edustajat-route";
 import { createIstunnotRoute } from "./istunnot-route";
 import { createIstuntoRoute } from "./istunto-route";
+import { createKeskusteluRoute } from "./keskustelu-route";
 import { createSimplePageRoutes } from "./simple-routes";
 import type { WebappDeps } from "./deps";
 
@@ -23,6 +24,7 @@ export function createWebappPageRoutes(deps: WebappDeps) {
     ...createEdustajatRoute(deps),
     ...createIstunnotRoute(deps),
     ...createIstuntoRoute(deps),
+    ...createKeskusteluRoute(deps),
     ...createSimplePageRoutes(deps),
   } as const;
 }

@@ -338,6 +338,10 @@ export function buildSessionDetailViewModel(
       title,
       documents,
       activity,
+      titleHref:
+        !out.isVoting && phaseCode !== "poydallepano" && speechCount > 0
+          ? `/keskustelu?key=${encodeURIComponent(section.key)}`
+          : undefined,
     };
 
     if (out.isVoting) {
