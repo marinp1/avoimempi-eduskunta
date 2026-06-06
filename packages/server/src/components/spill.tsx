@@ -10,9 +10,5 @@ interface Props {
 
 /** Status badge / spill element for labelling done or draft state. */
 export default function Spill({ text, modifier }: Props) {
-  return (
-    <span class={clsx("spill", `spill--${modifier}`)}>
-      {text}
-    </span>
-  );
+  return <span class={clsx("spill", `spill--${modifier}`)}>{text}</span>;
 }

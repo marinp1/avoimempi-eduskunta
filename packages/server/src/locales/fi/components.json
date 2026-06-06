@@ -110,6 +110,9 @@
     "jump_decision": "Päätös",
     "nav_aria_label": "Selaa istunnon asiakohtia"
   },
+  "banner": {
+    "text": "Sivustoa kehitetään parhaillaan, pahoittelut rikkinäisistä ja puutteellisista näkymistä."
+  },
   "timeline": {
     "now_label": "nykyhetki",
     "archive_label": "arkistonäkymä",

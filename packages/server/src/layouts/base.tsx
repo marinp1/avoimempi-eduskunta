@@ -1,6 +1,7 @@
 // @ts-nocheck
 /** @jsxImportSource ../jsx */
 import i18next from "i18next";
+import Banner from "./banner";
 import Footer from "./footer";
 import Masthead from "./masthead";
 import Timeline from "./timeline";
@@ -49,6 +50,7 @@ export default function Layout({
           <script src={`/webapp/setup.js${v}`} defer></script>
         </head>
         <body>
+          <Banner />
           <div class="wrap">
             <header class="masthead">
               <Masthead
