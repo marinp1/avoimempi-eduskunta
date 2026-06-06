@@ -23,6 +23,8 @@ import sessionVotingCountsBySessionKeys from "../queries/SESSION_VOTING_COUNTS_B
 import sessionsIndex from "../queries/SESSIONS_INDEX.sql";
 import sessionsPaginated from "../queries/SESSIONS_PAGINATED.sql";
 import sessionTicks from "../queries/SESSION_TICKS.sql";
+import compositionChangeDates from "../queries/COMPOSITION_CHANGE_DATES.sql";
+import compositionChangeDetail from "../queries/COMPOSITION_CHANGE_DETAIL.sql";
 import speechesByDate from "../queries/SPEECHES_BY_DATE.sql";
 
 type SessionRow = DatabaseTables.Session & {
@@ -299,6 +301,46 @@ export class SessionRepository {
       []
     >(sessionTicks);
     const rows = stmt.all();
+    stmt.finalize();
+    return rows;
+  }
+
+  public fetchCompositionChangeDates(): {
+    date: string;
+    joined: number;
+    left_count: number;
+  }[] {
+    const stmt = this.db.prepare<
+      { date: string; joined: number; left_count: number },
+      []
+    >(compositionChangeDates);
+    const rows = stmt.all();
+    stmt.finalize();
+    return rows;
+  }
+
+  public fetchCompositionChangeDetail(params: { date: string }): {
+    person_id: number;
+    first_name: string;
+    last_name: string;
+    party: string | null;
+    change_type: string;
+    description: string | null;
+    replacement_person: string | null;
+  }[] {
+    const stmt = this.db.prepare<
+      {
+        person_id: number;
+        first_name: string;
+        last_name: string;
+        party: string | null;
+        change_type: string;
+        description: string | null;
+        replacement_person: string | null;
+      },
+      { $date: string }
+    >(compositionChangeDetail);
+    const rows = stmt.all({ $date: params.date });
     stmt.finalize();
     return rows;
   }

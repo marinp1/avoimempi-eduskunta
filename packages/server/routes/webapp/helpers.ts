@@ -1,7 +1,8 @@
 import { htmlResponse, renderFullPage } from "../../../webapp/eta";
-import type {
-  TimelineData,
-  SittingTick,
+import {
+  timeline,
+  type TimelineData,
+  type SittingTick,
 } from "../../../webapp/templates/partials/timeline";
 import type { SessionRepository } from "../../database/repositories/session-repository";
 import type { MetadataRepository } from "../../database/repositories/metadata-repository";
@@ -124,14 +125,29 @@ function formatFi(iso: string): string {
   return `${Number(d)}.${Number(m)}.${y}`;
 }
 
+export type TickSource = "sessions" | "composition";
+
 export function getTimelineData(
   req: Request,
   sessionRepo: SessionRepository,
   metadataRepo: MetadataRepository,
+  tickSource: TickSource = "sessions",
 ): TimelineData {
   const period = readPeriod(req, metadataRepo);
   const bounds = getTermBounds(period, metadataRepo);
-  const allTicks = getAllTicks(sessionRepo);
+  const allTicks: SittingTick[] =
+    tickSource === "composition"
+      ? sessionRepo.fetchCompositionChangeDates().map((r) => {
+          const parts: string[] = [];
+          if (r.joined > 0) parts.push(`${r.joined} liittyi`);
+          if (r.left_count > 0) parts.push(`${r.left_count} jätti`);
+          return {
+            d: r.date,
+            id: parts.join(", "),
+            type: "comp",
+          };
+        })
+      : getAllTicks(sessionRepo);
 
   const ticks = allTicks.filter(
     (t) =>
@@ -158,11 +174,16 @@ export function getTimelineData(
     cursor: clampedCursor,
     cursorFormatted: formatFi(clampedCursor),
     sittings: ticks,
+    showLegend: tickSource !== "composition",
   };
 }
 
 export function setCursorCookie(date: string): string {
   return `${PEILI_DATE_COOKIE}=${encodeURIComponent(date)}; Path=/; SameSite=Lax; Max-Age=31536000`;
+}
+
+export function timelineOobHtml(data: TimelineData): string {
+  return timeline({ ...data, oob: true });
 }
 
 export function page(
@@ -172,6 +193,16 @@ export function page(
   title?: string,
   timelineData?: TimelineData,
 ): Response {
+  const isHtmx = req.headers.get("HX-Request") === "true";
+  if (isHtmx && timelineData) {
+    const tlHtml = timeline({ ...timelineData, oob: true });
+    return new Response(tlHtml + fragment, {
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        Vary: "HX-Request",
+      },
+    });
+  }
   return htmlResponse(req, fragment, {
     activePath,
     title,

@@ -173,6 +173,11 @@
   height: 8px;
   background: var(--faint);
 }
+.tl__tick.t-comp {
+  height: 10px;
+  background: var(--opp);
+  opacity: 0.7;
+}
 .tl__tick::after {
   /* fatter invisible hit area */
   content: "";

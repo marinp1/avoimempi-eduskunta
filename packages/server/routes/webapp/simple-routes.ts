@@ -5,13 +5,14 @@ import Hallitukset from "../../../webapp/templates/pages/hallitukset";
 import Home, { HomeReactive } from "../../../webapp/templates/pages/home";
 import Muutokset from "../../../webapp/templates/pages/muutokset";
 import Puolueet from "../../../webapp/templates/pages/puolueet";
-import { htmlResponse, fragmentResponse } from "../../../webapp/eta";
+import { htmlResponse } from "../../../webapp/eta";
 import {
   page,
   getTimelineData,
   setCursorCookie,
   readPeriod,
   getTermBounds,
+  timelineOobHtml,
 } from "./helpers";
 import { assetVersion } from "./assets";
 import type { WebappDeps } from "./deps";
@@ -53,10 +54,22 @@ export function createSimplePageRoutes(deps: WebappDeps) {
               Vary: "HX-Request",
             };
             if (cookieHeader) headers["Set-Cookie"] = cookieHeader;
+            headers["HX-Replace-Url"] = `/?date=${encodeURIComponent(cursor)}`;
             return new Response(fragment, { headers });
           }
-          return fragmentResponse(
-            Home({ title: "Etusivu", data, cursor, sessionCount }),
+
+          const tlHtml = timelineOobHtml(tlData);
+          const fullHeaders: Record<string, string> = {
+            "Content-Type": "text/html; charset=utf-8",
+            Vary: "HX-Request",
+          };
+          if (dateParam && cursor < tlData.today) {
+            fullHeaders["HX-Replace-Url"] =
+              `/?date=${encodeURIComponent(cursor)}`;
+          }
+          return new Response(
+            tlHtml + Home({ title: "Etusivu", data, cursor, sessionCount }),
+            { headers: fullHeaders },
           );
         }
 

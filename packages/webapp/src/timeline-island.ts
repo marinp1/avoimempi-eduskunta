@@ -9,12 +9,10 @@
  * fragment from the server, which sets the peili_date cookie and re-renders.
  */
 
-import htmx from "htmx.org";
-
 interface SittingTick {
   d: string;
   id: string;
-  type: "vote" | "talk" | "quiet";
+  type: "vote" | "talk" | "quiet" | "comp";
 }
 
 interface TlData {
@@ -207,6 +205,7 @@ function initTimeline(force = false) {
   buildTrack();
   render();
   root.setAttribute("data-tl-init", "");
+  document.dispatchEvent(new CustomEvent("tl:ready"));
 
   prevBtn.addEventListener("click", () => {
     if (idx > 0) {
@@ -299,17 +298,14 @@ function initTimeline(force = false) {
     if (idx < 0) idx = sittings.length - 1;
     buildTrack();
     render();
+    document.dispatchEvent(new CustomEvent("tl:ready"));
   });
 }
 
 document.addEventListener("DOMContentLoaded", () => initTimeline());
 
-// Re-init after htmx swaps in case the timeline is re-rendered
-htmx.onLoad((elt: Element) => {
-  if (
-    elt.querySelector?.("[data-timeline]") ||
-    elt.matches?.("[data-timeline]")
-  ) {
-    initTimeline();
-  }
+// Re-init after any htmx swap, including OOB swaps where the
+// timeline arrives outside the main hx-target element.
+document.addEventListener("htmx:after:settle", () => {
+  initTimeline();
 });

@@ -7,7 +7,7 @@ export interface SittingTick {
   /** Session identifier "2026/57" */
   id: string;
   /** Tick type drives visual height/color on the track */
-  type: "vote" | "talk" | "quiet";
+  type: "vote" | "talk" | "quiet" | "comp";
 }
 
 /** Data passed from the server to render the timeline and seed the client island. */
@@ -22,6 +22,10 @@ export interface TimelineData {
   cursorFormatted: string;
   /** All sitting days in the active term, ascending */
   sittings: SittingTick[];
+  /** Whether to show the vote/talk/quiet legend (hidden for composition ticks) */
+  showLegend?: boolean;
+  /** When true, adds hx-swap-oob for out-of-band swaps during htmx navigation */
+  oob?: boolean;
 }
 
 /** Serialises data for a JSON script block, escaping `</script>` sequences. */
@@ -31,7 +35,7 @@ function safeJson(data: unknown): string {
 
 /** Server-rendered timeline scrubber injected after the masthead on every page. */
 export function timeline(data: TimelineData): string {
-  const { cursor, today, sittings } = data;
+  const { cursor, today, sittings, showLegend = true, oob } = data;
   const isNow = cursor >= today;
   const relLabel = isNow ? "nykyhetki" : "arkistonäkymä";
   const relClass = isNow ? "tl__rel is-now" : "tl__rel";
@@ -43,7 +47,13 @@ export function timeline(data: TimelineData): string {
     "";
 
   return (
-    <section class="timeline" data-timeline aria-label="Selaa vaalikautta">
+    <section
+      id="timeline"
+      class="timeline"
+      data-timeline
+      aria-label="Selaa vaalikautta"
+      hx-swap-oob={oob ? "true" : undefined}
+    >
       <div class="tl__head">
         <div class="tl__lead">
           <span class="tl__kicker">Tarkasteluhetki</span>
@@ -97,18 +107,20 @@ export function timeline(data: TimelineData): string {
           <div class="tl__knob"></div>
         </div>
       </div>
-      <div class="tl__legend">
-        <span class="it">
-          <span class="k t-vote"></span>äänestyspäivä
-        </span>
-        <span class="it">
-          <span class="k t-talk"></span>keskustelu
-        </span>
-        <span class="it">
-          <span class="k t-quiet"></span>muu istunto
-        </span>
-        <span class="hint">vedä kahvasta · ‹ › · tai napauta janaa</span>
-      </div>
+      {showLegend && (
+        <div class="tl__legend">
+          <span class="it">
+            <span class="k t-vote"></span>äänestyspäivä
+          </span>
+          <span class="it">
+            <span class="k t-talk"></span>keskustelu
+          </span>
+          <span class="it">
+            <span class="k t-quiet"></span>muu istunto
+          </span>
+          <span class="hint">vedä kahvasta · ‹ › · tai napauta janaa</span>
+        </div>
+      )}
       <input type="hidden" id="tl-date-input" name="date" value={cursor} />
       <script type="application/json" id="tl-data">
         {safeJson({ term: data.term, today, cursor, sittings })}

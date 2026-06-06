@@ -2,10 +2,11 @@ import {
   applyFilters,
   type RosterParams,
 } from "../../../webapp/templates/helpers";
+import Koostumusmuutos from "../../../webapp/templates/components/koostumusmuutos";
 import Edustajat from "../../../webapp/templates/pages/edustajat";
 import RosterContent from "../../../webapp/templates/pages/roster-content";
 import { fragmentResponse } from "../../../webapp/eta";
-import { page, getTimelineData } from "./helpers";
+import { page, getTimelineData, timelineOobHtml } from "./helpers";
 import type { WebappDeps } from "./deps";
 
 export function createEdustajatRoute(deps: WebappDeps) {
@@ -31,8 +32,28 @@ export function createEdustajatRoute(deps: WebappDeps) {
               RosterContent({ allRows, filtered, params, oob: true }),
             );
           }
-          return fragmentResponse(
-            Edustajat({ title: "Kansanedustajat", allRows, filtered, params }),
+
+          const tlData = getTimelineData(
+            req,
+            deps.sessionRepository,
+            deps.metadataRepository,
+            "composition",
+          );
+          const tlHtml = timelineOobHtml(tlData);
+          return new Response(
+            tlHtml +
+              Edustajat({
+                title: "Kansanedustajat",
+                allRows,
+                filtered,
+                params,
+              }),
+            {
+              headers: {
+                "Content-Type": "text/html; charset=utf-8",
+                Vary: "HX-Request",
+              },
+            },
           );
         }
 
@@ -40,13 +61,51 @@ export function createEdustajatRoute(deps: WebappDeps) {
           req,
           deps.sessionRepository,
           deps.metadataRepository,
+          "composition",
         );
+
+        const compRows = deps.sessionRepository.fetchCompositionChangeDetail({
+          date: tlData.cursor,
+        });
+        const compDetailHtml = Koostumusmuutos({
+          date: tlData.cursor,
+          rows: compRows,
+        });
+
         return page(
           req,
-          Edustajat({ title: "Kansanedustajat", allRows, filtered, params }),
+          Edustajat({
+            title: "Kansanedustajat",
+            allRows,
+            filtered,
+            params,
+            compDetailHtml,
+          }),
           "/edustajat",
           "Kansanedustajat",
           tlData,
+        );
+      },
+    },
+
+    "/koostumusmuutos": {
+      GET: async (req: Request) => {
+        const url = new URL(req.url);
+        const dateParam = url.searchParams.get("date");
+
+        if (!dateParam || !/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+          return fragmentResponse(Koostumusmuutos({ date: "", rows: [] }));
+        }
+
+        const rows = deps.sessionRepository.fetchCompositionChangeDetail({
+          date: dateParam,
+        });
+
+        return fragmentResponse(
+          Koostumusmuutos({
+            date: dateParam,
+            rows,
+          }),
         );
       },
     },

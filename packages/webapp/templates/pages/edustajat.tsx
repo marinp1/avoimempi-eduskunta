@@ -18,10 +18,18 @@ interface Props {
   filtered: RosterRow[];
   /** Current filter and sort parameters from the URL query string. */
   params: RosterParams;
+  /** Pre-rendered HTML for the composition change detail section. */
+  compDetailHtml?: string;
 }
 
 /** MP roster page with bloc bar, search, party filters, and sortable table. */
-export default function Edustajat({ title, allRows, filtered, params }: Props) {
+export default function Edustajat({
+  title,
+  allRows,
+  filtered,
+  params,
+  compDetailHtml,
+}: Props) {
   const q = params.q || "";
   const bloc = buildBlocBar(allRows, partyShortName);
 
@@ -62,6 +70,20 @@ export default function Edustajat({ title, allRows, filtered, params }: Props) {
           <span class="note">{bloc.total} edustajaa</span>
         </div>
       </div>
+
+      {compDetailHtml ? (
+        compDetailHtml
+      ) : (
+        <div
+          id="comp-detail"
+          class="wrap"
+          hx-get="/koostumusmuutos"
+          hx-trigger="tl:ready from:document, tl:commit from:document"
+          hx-include="#tl-date-input"
+          hx-swap="outerHTML"
+          hx-indicator="#comp-detail"
+        ></div>
+      )}
 
       <div class="wrap">
         <div class="toolbar">

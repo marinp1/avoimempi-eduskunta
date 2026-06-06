@@ -99,7 +99,7 @@ export function SessionList({
       class="wrap loading-overlay"
       hx-get="/istunnot"
       hx-trigger="tl:commit from:document"
-      hx-include="#tl-date-input"
+      hx-include:inherited="#tl-date-input"
       hx-swap="outerHTML"
       hx-push-url="true"
       hx-indicator="#tl-reactive"

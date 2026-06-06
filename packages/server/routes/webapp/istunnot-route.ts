@@ -8,8 +8,8 @@ import {
   setCursorCookie,
   readPeriod,
   getTermBounds,
+  timelineOobHtml,
 } from "./helpers";
-import { fragmentResponse } from "../../../webapp/eta";
 import type { WebappDeps } from "./deps";
 
 export function createIstunnotRoute(deps: WebappDeps) {
@@ -65,10 +65,36 @@ export function createIstunnotRoute(deps: WebappDeps) {
               Vary: "HX-Request",
             };
             if (cookieHeader) headers["Set-Cookie"] = cookieHeader;
+            const replaceUrl = buildIstunnotUrl({
+              cursor,
+              today: tlData.today,
+              kind,
+              q,
+            });
+            if (replaceUrl) headers["HX-Replace-Url"] = replaceUrl;
             return new Response(fragment, { headers });
           }
-          return fragmentResponse(
-            Istunnot({ title: "Istunnot", data, cursorFormatted: shownCursor }),
+
+          const tlHtml = timelineOobHtml(tlData);
+          const fullHeaders: Record<string, string> = {
+            "Content-Type": "text/html; charset=utf-8",
+            Vary: "HX-Request",
+          };
+          const replaceUrl = buildIstunnotUrl({
+            cursor,
+            today: tlData.today,
+            kind,
+            q,
+          });
+          if (replaceUrl) fullHeaders["HX-Replace-Url"] = replaceUrl;
+          return new Response(
+            tlHtml +
+              Istunnot({
+                title: "Istunnot",
+                data,
+                cursorFormatted: shownCursor,
+              }),
+            { headers: fullHeaders },
           );
         }
 
@@ -101,4 +127,20 @@ export function createIstunnotRoute(deps: WebappDeps) {
 function formatFi(iso: string): string {
   const [y, m, d] = iso.split("-");
   return `${Number(d)}.${Number(m)}.${y}`;
+}
+
+function buildIstunnotUrl(opts: {
+  cursor: string;
+  today: string;
+  kind?: string;
+  q?: string;
+}): string | undefined {
+  const { cursor, today, kind, q } = opts;
+  if (cursor >= today && !kind && !q) return undefined;
+  const qs = new URLSearchParams();
+  if (cursor < today) qs.set("date", cursor);
+  if (kind) qs.set("kind", kind);
+  if (q) qs.set("q", q);
+  const query = qs.toString();
+  return query ? `/istunnot?${query}` : "/istunnot";
 }
