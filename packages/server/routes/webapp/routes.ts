@@ -2,6 +2,7 @@ import { cssAsset, jsAsset } from "./assets";
 import { createEdustajaRoute } from "./edustaja-route";
 import { createEdustajatRoute } from "./edustajat-route";
 import { createIstunnotRoute } from "./istunnot-route";
+import { createIstuntoRoute } from "./istunto-route";
 import { createSimplePageRoutes } from "./simple-routes";
 import type { HomeRepository } from "../../database/repositories/home-repository";
 import type { PersonRepository } from "../../database/repositories/person-repository";
@@ -25,6 +26,7 @@ export function createWebappPageRoutes(deps: WebappDeps) {
     ...createEdustajaRoute(deps),
     ...createEdustajatRoute(deps),
     ...createIstunnotRoute(deps),
+    ...createIstuntoRoute(deps),
     ...createSimplePageRoutes(deps),
   } as const;
 }

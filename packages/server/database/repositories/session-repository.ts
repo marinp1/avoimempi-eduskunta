@@ -3,6 +3,7 @@ import latestSpeechDate from "../queries/LATEST_SPEECH_DATE.sql";
 import rollCallEntries from "../queries/ROLL_CALL_ENTRIES.sql";
 import sectionByKey from "../queries/SECTION_BY_KEY.sql";
 import sectionDocumentLinks from "../queries/SECTION_DOCUMENT_LINKS.sql";
+import sessionByKey from "../queries/SESSION_BY_KEY.sql";
 import sectionRollCallReport from "../queries/SECTION_ROLL_CALL_REPORT.sql";
 import sectionSpeechCount from "../queries/SECTION_SPEECH_COUNT.sql";
 import sectionSpeeches from "../queries/SECTION_SPEECHES.sql";
@@ -239,6 +240,41 @@ export class SessionRepository {
       limit: params.limit,
       totalPages: Math.ceil(totalCount / params.limit),
     };
+  }
+
+  public fetchSessionByKey(params: { key: string }): {
+    session: SessionRow | null;
+    sections: SessionSectionRow[];
+  } {
+    const stmt = this.db.prepare<
+      SessionRow & {
+        agenda_title?: string;
+        agenda_state?: string;
+        minutes_title?: string | null;
+        minutes_status?: string | null;
+        minutes_start_time?: string | null;
+        minutes_end_time?: string | null;
+        minutes_agenda_item_count?: number | null;
+        minutes_other_item_count?: number | null;
+        roll_call_document_id?: number | null;
+        agenda_document_id?: number | null;
+        minutes_document_id?: number | null;
+        voting_count: number;
+        section_count: number;
+        speech_count: number;
+        speaker_count: number;
+      },
+      { $key: string }
+    >(sessionByKey);
+    const session = stmt.get({ $key: params.key });
+    stmt.finalize();
+
+    if (!session) return { session: null, sections: [] };
+
+    const sections = this.fetchSectionRowsBySessionKeys([params.key]);
+    const sectionsForSession = sections.get(params.key) ?? [];
+
+    return { session, sections: sectionsForSession };
   }
 
   public fetchSessionsIndex(limit: number = 50): SessionsIndexRow[] {
