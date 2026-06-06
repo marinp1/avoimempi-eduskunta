@@ -60,6 +60,16 @@ cd packages/datapipe && bun run typecheck
 cd packages/shared && bun run typecheck
 ```
 
+### Linting
+
+```bash
+# Run linter and format check
+bun run lint
+
+# Auto-fix lint issues and format
+bun run lint:fix
+```
+
 ### Application Development
 
 ```bash
