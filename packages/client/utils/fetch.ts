@@ -82,8 +82,12 @@ export function clearApiCache() {
   inflight.clear();
 }
 
-type JsonResult<T extends SubRoute | BaseRoute> =
-  GetProperRoute<T> extends [TypedFetchResponse<infer D>, ...any[]] ? D : unknown;
+type JsonResult<T extends SubRoute | BaseRoute> = GetProperRoute<T> extends [
+  TypedFetchResponse<infer D>,
+  ...any[],
+]
+  ? D
+  : unknown;
 
 export function cachedJsonFetch<T extends SubRoute | BaseRoute>(
   input: T,

@@ -936,7 +936,7 @@ export default () => {
         </ToolbarCard>
       </Box>
 
-      <DataCard sx={{ p: 2.5, mb: spacing.md }}>
+      <DataCard sx={{ p: 1.5, mb: spacing.md }}>
         <Typography
           variant="h6"
           sx={{ color: themedColors.textPrimary, fontWeight: 700 }}
@@ -945,7 +945,7 @@ export default () => {
         </Typography>
         <Typography
           variant="body2"
-          sx={{ color: themedColors.textSecondary, mb: 2 }}
+          sx={{ color: themedColors.textSecondary, mb: 1.5 }}
         >
           {t("globalSearch.description")}
         </Typography>
@@ -1016,7 +1016,7 @@ export default () => {
                 key={result.person_id}
                 onClick={() => handleLookupResultClick(result)}
                 sx={{
-                  borderRadius: 1.5,
+                  borderRadius: 1,
                   border: `1px solid ${
                     selectedRepresentative?.personId === result.person_id
                       ? themedColors.primary
@@ -1026,8 +1026,8 @@ export default () => {
                     selectedRepresentative?.personId === result.person_id
                       ? `${themedColors.primary}08`
                       : themedColors.backgroundPaper,
-                  px: 1.25,
-                  py: 1.25,
+                  px: 1,
+                  py: 0.75,
                 }}
               >
                 <Stack spacing={0.75}>
@@ -1121,12 +1121,12 @@ export default () => {
               mb: spacing.md,
             }}
           >
-            <DataCard sx={{ p: 2.5 }}>
+            <DataCard sx={{ p: 1.5 }}>
               <Stack
                 direction={{ xs: "column", md: "row" }}
-                spacing={1.5}
+                spacing={1}
                 justifyContent="space-between"
-                sx={{ mb: 2 }}
+                sx={{ mb: 1.5 }}
               >
                 <Box>
                   <Typography
@@ -1134,7 +1134,7 @@ export default () => {
                     sx={{
                       color: themedColors.textPrimary,
                       fontWeight: 700,
-                      mb: 0.5,
+                      mb: 0.25,
                     }}
                   >
                     {t("distribution.title")}
@@ -1207,19 +1207,19 @@ export default () => {
               </Box>
               <Box
                 sx={{
-                  mt: 1.5,
+                  mt: 1,
                   display: "grid",
                   gridTemplateColumns: {
                     xs: "repeat(2, minmax(0, 1fr))",
                     md: "repeat(4, minmax(0, 1fr))",
                   },
-                  gap: 1,
+                  gap: 0.75,
                 }}
               >
                 <Box
                   sx={{
-                    p: 1.25,
-                    borderRadius: 1.5,
+                    p: 0.75,
+                    borderRadius: 1,
                     background: themedColors.backgroundSubtle,
                     border: `1px solid ${themedColors.dataBorder}`,
                   }}
@@ -1239,8 +1239,8 @@ export default () => {
                 </Box>
                 <Box
                   sx={{
-                    p: 1.25,
-                    borderRadius: 1.5,
+                    p: 0.75,
+                    borderRadius: 1,
                     background: themedColors.backgroundSubtle,
                     border: `1px solid ${themedColors.dataBorder}`,
                   }}
@@ -1260,8 +1260,8 @@ export default () => {
                 </Box>
                 <Box
                   sx={{
-                    p: 1.25,
-                    borderRadius: 1.5,
+                    p: 0.75,
+                    borderRadius: 1,
                     background: themedColors.backgroundSubtle,
                     border: `1px solid ${themedColors.dataBorder}`,
                   }}
@@ -1281,8 +1281,8 @@ export default () => {
                 </Box>
                 <Box
                   sx={{
-                    p: 1.25,
-                    borderRadius: 1.5,
+                    p: 0.75,
+                    borderRadius: 1,
                     background: themedColors.backgroundSubtle,
                     border: `1px solid ${themedColors.dataBorder}`,
                   }}
@@ -1306,14 +1306,18 @@ export default () => {
               </Box>
             </DataCard>
 
-            <DataCard sx={{ p: 2.5 }}>
+            <DataCard sx={{ p: 1.5 }}>
               <Typography
                 variant="h6"
-                sx={{ color: themedColors.textPrimary, fontWeight: 700, mb: 1 }}
+                sx={{
+                  color: themedColors.textPrimary,
+                  fontWeight: 700,
+                  mb: 0.75,
+                }}
               >
                 {t("partyMatrix.title")}
               </Typography>
-              <Stack spacing={1.25}>
+              <Stack spacing={0.75}>
                 {stats.partySummaries.map((party) => (
                   <CardActionArea
                     key={party.partyName}
@@ -1323,16 +1327,16 @@ export default () => {
                       )
                     }
                     sx={{
-                      borderRadius: 1.5,
+                      borderRadius: 1,
                       border: `1px solid ${
                         partyFilter === party.partyName
                           ? themedColors.primary
                           : themedColors.dataBorder
                       }`,
-                      p: 1.25,
+                      p: 0.75,
                     }}
                   >
-                    <Stack direction="row" spacing={1.5} alignItems="center">
+                    <Stack direction="row" spacing={1} alignItems="center">
                       <Box sx={{ minWidth: 0, flex: 1 }}>
                         <Typography
                           variant="body2"
@@ -1368,8 +1372,8 @@ export default () => {
                       variant="determinate"
                       value={party.share * 100}
                       sx={{
-                        mt: 1,
-                        height: 8,
+                        mt: 0.75,
+                        height: 6,
                         borderRadius: 999,
                         bgcolor: themedColors.backgroundSubtle,
                         "& .MuiLinearProgress-bar": {
@@ -1388,12 +1392,12 @@ export default () => {
           </Box>
 
           <Box>
-            <DataCard sx={{ p: 2.5 }}>
+            <DataCard sx={{ p: 1.5 }}>
               <Stack
                 direction={{ xs: "column", md: "row" }}
-                spacing={1.5}
+                spacing={1}
                 justifyContent="space-between"
-                sx={{ mb: 2 }}
+                sx={{ mb: 1.5 }}
               >
                 <Box>
                   <Typography
@@ -1423,10 +1427,10 @@ export default () => {
                 </Stack>
               </Stack>
 
-              <Stack spacing={1.5} sx={{ mb: 2 }}>
+              <Stack spacing={1} sx={{ mb: 1.5 }}>
                 <Stack
                   direction={{ xs: "column", md: "row" }}
-                  spacing={1.5}
+                  spacing={1}
                   alignItems={{ xs: "stretch", md: "center" }}
                 >
                   <TextField
@@ -1551,7 +1555,7 @@ export default () => {
                   }
                 />
               ) : viewMode === "list" ? (
-                <Stack spacing={1}>
+                <Stack spacing={0.5}>
                   {filteredMembers.map((member) => {
                     const isSelected =
                       selectedRepresentative?.personId === member.person_id;
@@ -1561,7 +1565,7 @@ export default () => {
                         key={member.person_id}
                         onClick={() => handleMemberClick(member)}
                         sx={{
-                          borderRadius: 1.5,
+                          borderRadius: 1,
                           border: `1px solid ${
                             isSelected
                               ? themedColors.primary
@@ -1570,13 +1574,13 @@ export default () => {
                           background: isSelected
                             ? `${themedColors.primary}08`
                             : themedColors.backgroundPaper,
-                          px: 1.5,
-                          py: 1.25,
+                          px: 1,
+                          py: 0.625,
                         }}
                       >
                         <Stack
                           direction={{ xs: "column", md: "row" }}
-                          spacing={1.25}
+                          spacing={0.75}
                           justifyContent="space-between"
                           alignItems={{ xs: "flex-start", md: "center" }}
                         >
@@ -1587,7 +1591,7 @@ export default () => {
                               alignItems="center"
                             >
                               <Typography
-                                variant="body1"
+                                variant="body2"
                                 sx={{
                                   color: themedColors.textPrimary,
                                   fontWeight: 700,
@@ -1737,11 +1741,11 @@ export default () => {
       />
 
       {/* Analytics sections */}
-      <Box sx={{ mt: 4 }}>
+      <Box sx={{ mt: 2.5 }}>
         <Typography
           variant="subtitle2"
           sx={{
-            mb: 1.5,
+            mb: 1,
             fontWeight: 700,
             color: themedColors.textSecondary,
             textTransform: "uppercase",
@@ -1750,23 +1754,23 @@ export default () => {
         >
           {t("analyticsSection.title")}
         </Typography>
-        <Grid container spacing={2}>
+        <Grid container spacing={1.5}>
           {[
             {
               key: "attendance" as const,
-              icon: <EventBusyIcon sx={{ fontSize: 24 }} />,
+              icon: <EventBusyIcon sx={{ fontSize: 20 }} />,
               title: t("analyticsSection.attendance.title"),
               description: t("analyticsSection.attendance.description"),
             },
             {
               key: "speechActivity" as const,
-              icon: <MicIcon sx={{ fontSize: 24 }} />,
+              icon: <MicIcon sx={{ fontSize: 20 }} />,
               title: t("analyticsSection.speechActivity.title"),
               description: t("analyticsSection.speechActivity.description"),
             },
             {
               key: "timeSeries" as const,
-              icon: <TimelineIcon sx={{ fontSize: 24 }} />,
+              icon: <TimelineIcon sx={{ fontSize: 20 }} />,
               title: t("analyticsSection.timeSeries.title"),
               description: t("analyticsSection.timeSeries.description"),
             },
@@ -1778,7 +1782,12 @@ export default () => {
                   sx={{ height: "100%", borderRadius: "inherit" }}
                 >
                   <CardContent
-                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 0.75,
+                      p: "12px !important",
+                    }}
                   >
                     <Box
                       sx={{
@@ -1791,7 +1800,7 @@ export default () => {
                         sx={{
                           display: "flex",
                           alignItems: "center",
-                          gap: 1.25,
+                          gap: 1,
                         }}
                       >
                         <Box
@@ -1807,7 +1816,6 @@ export default () => {
                           variant="h6"
                           sx={{
                             fontWeight: 600,
-                            fontSize: "0.9375rem",
                             lineHeight: 1.3,
                           }}
                         >
@@ -1816,7 +1824,7 @@ export default () => {
                       </Box>
                       <ChevronRightIcon
                         sx={{
-                          fontSize: 18,
+                          fontSize: 16,
                           color: themedColors.textTertiary,
                           flexShrink: 0,
                           ml: 1,
@@ -1827,7 +1835,7 @@ export default () => {
                       variant="body2"
                       sx={{
                         color: themedColors.textSecondary,
-                        lineHeight: 1.5,
+                        lineHeight: 1.4,
                       }}
                     >
                       {card.description}

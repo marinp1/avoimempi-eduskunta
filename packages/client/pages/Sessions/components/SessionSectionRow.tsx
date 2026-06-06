@@ -38,8 +38,8 @@ export const SessionSectionRow = ({
     onKeyDown={(event) => handleActivateOnKeyDown(event, onSelect)}
     sx={[
       {
-        px: 2,
-        py: 1.75,
+        px: 1.5,
+        py: 1,
         cursor: "pointer",
         borderBottom: `1px solid ${colors.dataBorder}`,
         background: isActive

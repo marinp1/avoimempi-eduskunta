@@ -387,85 +387,85 @@ export const createLightTheme = () => {
       fontFamily: '"Inter", "Roboto", "Helvetica Neue", Arial, sans-serif',
       h1: {
         fontWeight: 700,
-        fontSize: "2.25rem",
-        letterSpacing: "-0.01em",
+        fontSize: "1.75rem",
+        letterSpacing: "-0.02em",
         lineHeight: 1.2,
         color: colors.textPrimary,
       },
       h2: {
         fontWeight: 700,
-        fontSize: "1.875rem",
+        fontSize: "1.5rem",
         letterSpacing: "-0.01em",
         lineHeight: 1.25,
         color: colors.textPrimary,
       },
       h3: {
         fontWeight: 600,
-        fontSize: "1.5rem",
+        fontSize: "1.25rem",
         letterSpacing: "-0.005em",
         lineHeight: 1.3,
         color: colors.textPrimary,
       },
       h4: {
         fontWeight: 600,
-        fontSize: "1.25rem",
+        fontSize: "1.0625rem",
         letterSpacing: "0",
         lineHeight: 1.35,
         color: colors.textPrimary,
       },
       h5: {
         fontWeight: 600,
-        fontSize: "1.125rem",
+        fontSize: "0.9375rem",
         letterSpacing: "-0.01em",
         lineHeight: 1.4,
         color: colors.textPrimary,
       },
       h6: {
         fontWeight: 600,
-        fontSize: "1rem",
+        fontSize: "0.875rem",
         letterSpacing: "0",
         lineHeight: 1.4,
         color: colors.textPrimary,
       },
       body1: {
-        fontSize: "0.9375rem",
-        lineHeight: 1.6,
+        fontSize: "0.875rem",
+        lineHeight: 1.5,
         letterSpacing: "0",
         color: colors.textPrimary,
       },
       body2: {
         fontSize: "0.8125rem",
-        lineHeight: 1.6,
+        lineHeight: 1.5,
         letterSpacing: "0",
         color: colors.textSecondary,
       },
       subtitle1: {
-        fontSize: "0.9375rem",
+        fontSize: "0.875rem",
         fontWeight: 500,
-        lineHeight: 1.5,
+        lineHeight: 1.4,
         letterSpacing: "0",
       },
       subtitle2: {
         fontSize: "0.8125rem",
         fontWeight: 500,
-        lineHeight: 1.5,
+        lineHeight: 1.4,
         letterSpacing: "0",
       },
       caption: {
         fontSize: "0.75rem",
-        lineHeight: 1.5,
+        lineHeight: 1.4,
         letterSpacing: "0.01em",
         color: colors.textTertiary,
       },
       button: {
         textTransform: "none",
         fontWeight: 500,
-        fontSize: "0.875rem",
+        fontSize: "0.8125rem",
         letterSpacing: "0.01em",
       },
     },
     shape: {
-      borderRadius: 8,
+      borderRadius: 6,
     },
     components: {
       MuiCard: {
@@ -474,10 +474,10 @@ export const createLightTheme = () => {
         },
         styleOverrides: {
           root: {
-            borderRadius: 12,
+            borderRadius: 8,
             border: `1px solid ${colors.dataBorder}`,
             boxShadow: shadows.card,
-            transition: `box-shadow ${transitions.normal}ms ${transitions.easing.standard}, border-color ${transitions.normal}ms ${transitions.easing.standard}`,
+            transition: `box-shadow ${transitions.fast}ms ${transitions.easing.standard}, border-color ${transitions.fast}ms ${transitions.easing.standard}`,
           },
         },
       },
@@ -488,8 +488,8 @@ export const createLightTheme = () => {
         styleOverrides: {
           root: {
             backgroundImage: "none",
-            borderRadius: 12,
-            transition: `box-shadow ${transitions.normal}ms ${transitions.easing.standard}, border-color ${transitions.normal}ms ${transitions.easing.standard}, background-color ${transitions.normal}ms ${transitions.easing.standard}`,
+            borderRadius: 8,
+            transition: `box-shadow ${transitions.fast}ms ${transitions.easing.standard}, border-color ${transitions.fast}ms ${transitions.easing.standard}, background-color ${transitions.fast}ms ${transitions.easing.standard}`,
           },
         },
       },
@@ -505,18 +505,10 @@ export const createLightTheme = () => {
           root: {
             textTransform: "none",
             fontWeight: 500,
-            borderRadius: 8,
-            padding: "8px 20px",
+            borderRadius: 6,
+            padding: "6px 14px",
             boxShadow: "none",
-            transition: `transform ${transitions.fast}ms ${transitions.easing.standard}, background-color ${transitions.fast}ms ${transitions.easing.standard}, border-color ${transitions.fast}ms ${transitions.easing.standard}, color ${transitions.fast}ms ${transitions.easing.standard}`,
-            "@media (hover: hover) and (pointer: fine)": {
-              "&:hover": {
-                transform: "translateY(-1px)",
-              },
-            },
-            "&:active": {
-              transform: "translateY(0)",
-            },
+            transition: `background-color ${transitions.fast}ms ${transitions.easing.standard}, border-color ${transitions.fast}ms ${transitions.easing.standard}, color ${transitions.fast}ms ${transitions.easing.standard}`,
             "&:hover": {
               boxShadow: "none",
             },
@@ -525,6 +517,10 @@ export const createLightTheme = () => {
             "&:hover": {
               boxShadow: "none",
             },
+          },
+          sizeSmall: {
+            padding: "4px 10px",
+            fontSize: "0.75rem",
           },
         },
       },
@@ -541,13 +537,15 @@ export const createLightTheme = () => {
         styleOverrides: {
           root: {
             borderBottom: `1px solid ${colors.dataBorder}`,
-            padding: "12px 16px",
+            padding: "6px 12px",
+            fontSize: "0.8125rem",
           },
           head: {
             fontWeight: 600,
-            fontSize: "0.8125rem",
+            fontSize: "0.75rem",
             letterSpacing: "0.04em",
             textTransform: "uppercase",
+            padding: "8px 12px",
           },
         },
       },

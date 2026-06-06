@@ -851,8 +851,8 @@ export default function Documents() {
   );
 
   return (
-    <Box sx={{ p: { xs: 0, md: 2.5 } }}>
-      <Stack spacing={3}>
+    <Box sx={{ p: { xs: 0, md: 2 } }}>
+      <Stack spacing={2}>
         <PageIntro
           title={t("title")}
           summary={

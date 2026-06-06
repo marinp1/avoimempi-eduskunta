@@ -122,15 +122,15 @@ const OverviewSection: React.FC<{
   );
 
   return (
-    <DataCard sx={{ p: { xs: 2, sm: 2.5 } }}>
-      <Stack spacing={1.5}>
+    <DataCard sx={{ p: { xs: 1.5, sm: 2 } }}>
+      <Stack spacing={1}>
         <Box
           sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: { xs: "flex-start", sm: "center" },
             flexDirection: { xs: "column", sm: "row" },
-            gap: 1,
+            gap: 0.75,
           }}
         >
           <Box>
@@ -154,7 +154,7 @@ const OverviewSection: React.FC<{
         {visibleGroups.length === 0 ? (
           <EmptyState title={title} description={description} />
         ) : (
-          <Stack spacing={1.25}>
+          <Stack spacing={1}>
             {renderGroups(visibleGroups, onOpenDetails)}
           </Stack>
         )}
@@ -758,9 +758,9 @@ export const VoteResults: React.FC<{
       )}
 
       {!loading && !error && isOverviewMode && overviewState.data && (
-        <Stack spacing={2.5}>
-          <DataCard sx={{ p: { xs: 2, sm: 2.5 } }}>
-            <Stack spacing={1.75}>
+        <Stack spacing={2}>
+          <DataCard sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <Stack spacing={1.25}>
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
                   {tVotings("overview.quickFiltersTitle")}
@@ -773,24 +773,25 @@ export const VoteResults: React.FC<{
                 </Typography>
               </Box>
 
-              <Stack spacing={1.25}>
+              <Stack spacing={1}>
                 <Box>
                   <Typography
                     variant="caption"
                     sx={{
                       display: "block",
                       color: themedColors.textTertiary,
-                      mb: 0.75,
+                      mb: 0.5,
                       textTransform: "uppercase",
                       letterSpacing: "0.08em",
                     }}
                   >
                     {tVotings("overview.facets.phase")}
                   </Typography>
-                  <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+                  <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                     {overviewState.data.facets.phases.map((phase) => (
                       <Chip
                         key={phase.value}
+                        size="small"
                         label={`${phase.value} (${phase.count})`}
                         clickable
                         onClick={() => applyPhaseQuickFilter(phase.value)}
@@ -810,17 +811,18 @@ export const VoteResults: React.FC<{
                     sx={{
                       display: "block",
                       color: themedColors.textTertiary,
-                      mb: 0.75,
+                      mb: 0.5,
                       textTransform: "uppercase",
                       letterSpacing: "0.08em",
                     }}
                   >
                     {tVotings("overview.facets.session")}
                   </Typography>
-                  <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap" }}>
+                  <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                     {overviewState.data.facets.sessions.map((session) => (
                       <Chip
                         key={session.value}
+                        size="small"
                         label={`${session.value} (${session.count})`}
                         clickable
                         onClick={() => applySessionQuickFilter(session.value)}
@@ -878,7 +880,7 @@ export const VoteResults: React.FC<{
               }
             />
           ) : (
-            <Stack spacing={1.5}>
+            <Stack spacing={1}>
               {renderGroups(visibleResultGroups, handleOpenVotingDrawer)}
               {hasMoreGroups(groupedResults, visibleResultGroupCount) && (
                 <>

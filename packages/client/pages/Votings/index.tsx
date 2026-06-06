@@ -136,11 +136,11 @@ export default () => {
       </React.Suspense>
 
       {/* Analytics sections */}
-      <Box sx={{ mt: 4 }}>
+      <Box sx={{ mt: 3 }}>
         <Typography
           variant="subtitle2"
           sx={{
-            mb: 1.5,
+            mb: 1,
             fontWeight: 700,
             color: themedColors.textSecondary,
             textTransform: "uppercase",
@@ -149,17 +149,17 @@ export default () => {
         >
           {t("analyticsSection.title")}
         </Typography>
-        <Grid container spacing={2}>
+        <Grid container spacing={1.5}>
           {[
             {
               key: "closeVotes" as const,
-              icon: <BalanceIcon sx={{ fontSize: 24 }} />,
+              icon: <BalanceIcon sx={{ fontSize: 20 }} />,
               title: t("analyticsSection.closeVotes.title"),
               description: t("analyticsSection.closeVotes.description"),
             },
             {
               key: "coalitionOpposition" as const,
-              icon: <AccountBalanceIcon sx={{ fontSize: 24 }} />,
+              icon: <AccountBalanceIcon sx={{ fontSize: 20 }} />,
               title: t("analyticsSection.coalitionOpposition.title"),
               description: t(
                 "analyticsSection.coalitionOpposition.description",
@@ -173,11 +173,15 @@ export default () => {
                   sx={{ height: "100%", borderRadius: "inherit" }}
                 >
                   <CardContent
-                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 0.75,
+                      p: { xs: 1.25, sm: 1.5 },
+                      "&:last-child": { pb: { xs: 1.25, sm: 1.5 } },
+                    }}
                   >
-                    <Box
-                      sx={{ display: "flex", alignItems: "center", gap: 1.25 }}
-                    >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Box
                         sx={{
                           color: themedColors.primary,
@@ -191,7 +195,7 @@ export default () => {
                         variant="h6"
                         sx={{
                           fontWeight: 600,
-                          fontSize: "0.9375rem",
+                          fontSize: "0.875rem",
                           lineHeight: 1.3,
                         }}
                       >
@@ -202,7 +206,8 @@ export default () => {
                       variant="body2"
                       sx={{
                         color: themedColors.textSecondary,
-                        lineHeight: 1.5,
+                        lineHeight: 1.45,
+                        fontSize: "0.8125rem",
                       }}
                     >
                       {card.description}

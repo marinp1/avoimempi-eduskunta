@@ -130,18 +130,18 @@ const HomeHeroComponent = ({
         },
         boxShadow: {
           xs: "none",
-          md: "0 28px 56px rgba(19, 33, 62, 0.22)",
+          md: "0 16px 32px rgba(19, 33, 62, 0.18)",
         },
         border: "1px solid rgba(255,255,255,0.14)",
-        mb: { xs: 0, md: spacing.md },
+        mb: { xs: 0, md: spacing.sm },
         borderRadius: { xs: 0, md: heroOuterRadius },
         "&::before": {
           content: '""',
           position: "absolute",
           top: 0,
           left: 0,
-          width: { xs: 144, md: 220 },
-          height: 4,
+          width: { xs: 100, md: 140 },
+          height: 3,
           borderBottomRightRadius: 999,
           background:
             "linear-gradient(90deg, rgba(255,255,255,0.92) 0%, rgba(74,111,165,0.94) 58%, rgba(232,145,58,0.95) 100%)",
@@ -161,7 +161,7 @@ const HomeHeroComponent = ({
       <Box
         sx={{
           position: "absolute",
-          inset: { xs: 10, md: 12 },
+          inset: { xs: 8, md: 10 },
           display: { xs: "none", md: "block" },
           borderRadius: heroInnerRadius,
           border: "1px solid rgba(255,255,255,0.08)",
@@ -178,19 +178,19 @@ const HomeHeroComponent = ({
         <Grid size={{ xs: 12, lg: 7 }}>
           <Box
             sx={{
-              p: { xs: 2.25, md: 3.25 },
+              p: { xs: 1.5, md: 2.5 },
               display: "grid",
-              gap: 2,
+              gap: 1.5,
             }}
           >
-            <Box sx={{ display: "grid", gap: 1.25 }}>
+            <Box sx={{ display: "grid", gap: 1 }}>
               <Typography
                 sx={{
-                  fontSize: { xs: "2rem", md: "2.65rem" },
-                  lineHeight: 0.98,
-                  letterSpacing: "-0.05em",
+                  fontSize: { xs: "1.5rem", md: "1.875rem" },
+                  lineHeight: 1.1,
+                  letterSpacing: "-0.03em",
                   color: "#fff",
-                  maxWidth: "10ch",
+                  maxWidth: "14ch",
                 }}
               >
                 {tHome("heroTitle")}
@@ -239,7 +239,7 @@ const HomeHeroComponent = ({
                   </Typography>
                   <Typography
                     sx={{
-                      fontSize: { xs: "1rem", md: "1.08rem" },
+                      fontSize: { xs: "0.875rem", md: "0.9375rem" },
                       fontWeight: 700,
                       color: "#fff",
                     }}
@@ -250,8 +250,8 @@ const HomeHeroComponent = ({
                     sx={{
                       mt: 0.5,
                       color: "rgba(255,255,255,0.82)",
-                      fontSize: "0.87rem",
-                      lineHeight: 1.55,
+                      fontSize: "0.8125rem",
+                      lineHeight: 1.45,
                       maxWidth: 680,
                     }}
                   >
@@ -355,8 +355,8 @@ const HomeHeroComponent = ({
         <Grid size={{ xs: 12, lg: 5 }}>
           <Box
             sx={{
-              p: { xs: 2.25, md: 3.25 },
-              pt: { xs: 0, lg: 3.25 },
+              p: { xs: 1.5, md: 2.5 },
+              pt: { xs: 0, lg: 2.5 },
               display: "grid",
               gap: 1.25,
             }}
@@ -510,8 +510,8 @@ const HomeHeroComponent = ({
       <Box
         sx={{
           position: "relative",
-          px: { xs: 2.25, md: 3.25 },
-          pb: { xs: 2, md: 2.25 },
+          px: { xs: 1.5, md: 2.5 },
+          pb: { xs: 1.5, md: 2 },
         }}
       >
         <Box
@@ -596,7 +596,7 @@ const HeroSummaryStat = ({
       background:
         "linear-gradient(180deg, rgba(255,255,255,0.11) 0%, rgba(255,255,255,0.05) 100%)",
       border: "1px solid rgba(255,255,255,0.12)",
-      minHeight: 88,
+      minHeight: 72,
       "&::before": {
         content: '""',
         position: "absolute",
@@ -639,7 +639,7 @@ const HeroSummaryStat = ({
     <Typography
       sx={{
         fontWeight: 700,
-        fontSize: "1.35rem",
+        fontSize: "1.125rem",
         lineHeight: 1.1,
         color: "#fff",
       }}
@@ -780,7 +780,7 @@ export const CompositionPanel = ({
             {tHome("openParties")}
           </Button>
         }
-        sx={{ p: 2, background: "rgba(255,255,255,0.84)" }}
+        sx={{ p: 1.5, background: "rgba(255,255,255,0.84)" }}
       />
       <Box sx={{ p: 2 }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
@@ -798,8 +798,8 @@ export const CompositionPanel = ({
                 gridTemplateColumns: "minmax(0, 1fr) auto",
                 gap: 1,
                 alignItems: "center",
-                p: 1.25,
-                borderRadius: 2,
+                p: 1,
+                borderRadius: 1,
                 border: `1px solid ${colors.dataBorder}`,
                 background: colors.backgroundSubtle,
               }}
@@ -819,7 +819,7 @@ export const CompositionPanel = ({
                     sx={{
                       fontWeight: 700,
                       color: colors.textPrimary,
-                      fontSize: "0.9rem",
+                      fontSize: "0.8125rem",
                     }}
                   >
                     {party.party_name}
@@ -918,7 +918,7 @@ export const ProceedingsShell = ({
           {tHome("openSessions")}
         </Button>
       }
-      sx={{ p: 2, background: "rgba(255,255,255,0.84)" }}
+      sx={{ p: 1.5, background: "rgba(255,255,255,0.84)" }}
     />
     {children}
   </DataCard>
@@ -935,7 +935,7 @@ export const SessionSummaryCard = ({
 }) => (
   <Box
     sx={{
-      p: 2,
+      p: 1.5,
       borderBottom: `1px solid ${colors.dataBorder}`,
       background:
         "linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(243,245,247,0.85) 100%)",
@@ -960,8 +960,8 @@ export const SessionSummaryCard = ({
         >
           <Typography
             sx={{
-              fontWeight: 800,
-              fontSize: "1rem",
+              fontWeight: 700,
+              fontSize: "0.875rem",
               color: colors.textPrimary,
             }}
           >
@@ -1048,7 +1048,7 @@ export const SignalsPanel = ({
   const emptyLabel = tHome("signalsEmpty");
 
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={1.5}>
       <Grid size={{ xs: 12, md: 6 }}>
         <SignalCard
           eyebrow={tHome("signalsRecentEyebrow")}
@@ -1159,7 +1159,7 @@ const SignalCard = ({
           </Button>
         ) : null
       }
-      sx={{ p: 2, background: "rgba(255,255,255,0.84)" }}
+      sx={{ p: 1.5, background: "rgba(255,255,255,0.84)" }}
     />
     <Box sx={{ p: 1.25, display: "flex", flexDirection: "column", gap: 1 }}>
       {children}

@@ -65,10 +65,10 @@ const VotingsControlBarComponent: React.FC<{
       icon={<TuneIcon sx={{ fontSize: 18 }} />}
       sticky
       sx={{
-        mb: 3,
+        mb: 2,
       }}
     >
-      <Stack spacing={1.5}>
+      <Stack spacing={1}>
         <Box
           sx={{
             display: "grid",
@@ -78,7 +78,7 @@ const VotingsControlBarComponent: React.FC<{
                 ? "minmax(0, 2fr) repeat(3, minmax(0, 1fr))"
                 : "minmax(0, 2fr) repeat(2, minmax(0, 1fr))",
             },
-            gap: 1.25,
+            gap: 1,
             alignItems: "start",
           }}
         >
@@ -175,7 +175,7 @@ const VotingsControlBarComponent: React.FC<{
             alignItems: { xs: "flex-start", sm: "center" },
             justifyContent: "space-between",
             flexDirection: { xs: "column", sm: "row" },
-            gap: 1.25,
+            gap: 1,
           }}
         >
           <Box

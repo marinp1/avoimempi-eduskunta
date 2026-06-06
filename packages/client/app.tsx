@@ -144,8 +144,8 @@ export const App: React.FC = () => {
             body: {
               position: "relative",
               background: `
-              radial-gradient(1100px 620px at 8% -10%, var(--ae-ambient-primary), transparent 70%),
-              radial-gradient(900px 540px at 98% 0%, var(--ae-ambient-accent), transparent 72%),
+              radial-gradient(800px 400px at 8% -10%, var(--ae-ambient-primary), transparent 70%),
+              radial-gradient(600px 360px at 98% 0%, var(--ae-ambient-accent), transparent 74%),
               linear-gradient(180deg, ${colors.backgroundDefault} 0%, ${colors.backgroundSubtle} 100%)
           `,
               backgroundAttachment: "fixed",
@@ -159,11 +159,9 @@ export const App: React.FC = () => {
             "@keyframes pageEnter": {
               from: {
                 opacity: 0,
-                transform: "translateY(10px)",
               },
               to: {
                 opacity: 1,
-                transform: "translateY(0)",
               },
             },
             "@media (prefers-reduced-motion: reduce)": {
@@ -180,16 +178,16 @@ export const App: React.FC = () => {
         <Container
           maxWidth="xl"
           sx={{
-            mt: { xs: 0, sm: spacing.md },
-            px: { xs: 0, sm: 3 },
-            pb: { xs: 10, lg: spacing.xl },
+            mt: { xs: 0, sm: spacing.sm },
+            px: { xs: 0, sm: 2 },
+            pb: { xs: 7, lg: spacing.lg },
           }}
         >
           <Box
             key={activeTab}
             sx={{
               position: "relative",
-              animation: `pageEnter ${transitions.slow}ms ${transitions.easing.emphasized}`,
+              animation: `pageEnter ${transitions.fast}ms ${transitions.easing.standard}`,
               transformOrigin: "top center",
               "@media (prefers-reduced-motion: reduce)": {
                 animation: "none",
@@ -204,9 +202,9 @@ export const App: React.FC = () => {
           <Box
             component="footer"
             sx={{
-              mt: spacing.lg,
-              pt: spacing.md,
-              pb: spacing.sm,
+              mt: spacing.md,
+              pt: spacing.sm,
+              pb: spacing.xs,
               textAlign: "center",
               borderTop: `1px solid ${themedColors.dataBorder}`,
             }}

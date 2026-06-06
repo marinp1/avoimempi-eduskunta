@@ -236,9 +236,9 @@ const VotingDetailsPanel: React.FC<{
         <Box
           sx={{
             display: "flex",
-            gap: 1.5,
+            gap: 1,
             flexWrap: "wrap",
-            p: 1,
+            p: 0.75,
             borderRadius: 1,
             bgcolor: `${themedColors.primary}05`,
             border: `1px solid ${themedColors.dataBorder}80`,
@@ -303,7 +303,7 @@ const VotingDetailsPanel: React.FC<{
       {details.relatedVotings.length > 0 && (
         <Box
           sx={{
-            p: 1,
+            p: 0.75,
             borderRadius: 1,
             border: `1px solid ${themedColors.dataBorder}60`,
             bgcolor: `${themedColors.primary}03`,
@@ -315,7 +315,7 @@ const VotingDetailsPanel: React.FC<{
               fontWeight: 600,
               color: themedColors.textSecondary,
               display: "block",
-              mb: 0.75,
+              mb: 0.5,
             }}
           >
             {tVotings("relatedVotings")}
@@ -421,7 +421,7 @@ export const VotingDrawerContent: React.FC<{
   }, [votingId]);
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 2.5 } }}>
+    <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
       <VotingDetailsPanel details={details} loading={loading} />
     </Box>
   );
@@ -475,9 +475,9 @@ const VotingCardComponent: React.FC<{
       {/* Zone 1 + 2 + 3: header, title, bar */}
       <Box
         sx={{
-          px: { xs: 1.5, sm: 2 },
-          pt: 1.5,
-          pb: 1,
+          px: { xs: 1.25, sm: 1.5 },
+          pt: 1,
+          pb: 0.75,
         }}
       >
         {/* Header row: outcome pill + meta */}
@@ -485,11 +485,11 @@ const VotingCardComponent: React.FC<{
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 1,
+            gap: 0.75,
             flexWrap: "wrap",
-            mb: 1,
-            p: 0.75,
-            borderRadius: 2,
+            mb: 0.75,
+            p: 0.5,
+            borderRadius: 1,
             backgroundColor: `${themedColors.primary}03`,
             border: `1px solid ${themedColors.dataBorder}80`,
           }}
@@ -500,9 +500,9 @@ const VotingCardComponent: React.FC<{
               display: "inline-flex",
               alignItems: "center",
               gap: 0.5,
-              px: 1.25,
-              py: 0.4,
-              borderRadius: 1.5,
+              px: 1,
+              py: 0.25,
+              borderRadius: 1,
               bgcolor: passed
                 ? `${themedColors.success}15`
                 : `${themedColors.error}15`,
@@ -588,10 +588,10 @@ const VotingCardComponent: React.FC<{
         <Typography
           sx={{
             fontWeight: 600,
-            fontSize: "0.9375rem",
+            fontSize: "0.875rem",
             color: themedColors.textPrimary,
-            lineHeight: 1.45,
-            mb: secondaryTitle ? 0.25 : 1,
+            lineHeight: 1.4,
+            mb: secondaryTitle ? 0.25 : 0.75,
           }}
         >
           {primaryTitle || tCommon("none")}
@@ -599,7 +599,11 @@ const VotingCardComponent: React.FC<{
         {secondaryTitle && (
           <Typography
             variant="body2"
-            sx={{ color: themedColors.textSecondary, lineHeight: 1.4, mb: 1 }}
+            sx={{
+              color: themedColors.textSecondary,
+              lineHeight: 1.35,
+              mb: 0.75,
+            }}
           >
             {secondaryTitle}
           </Typography>
@@ -658,9 +662,9 @@ const VotingCardComponent: React.FC<{
         {/* Zone 3: vote bar + counts */}
         <Box
           sx={{
-            mt: 1.25,
-            p: 1.1,
-            borderRadius: 2,
+            mt: 0.75,
+            p: 0.75,
+            borderRadius: 1,
             backgroundColor: `${themedColors.primary}03`,
             border: `1px solid ${themedColors.dataBorder}80`,
           }}
@@ -670,8 +674,8 @@ const VotingCardComponent: React.FC<{
             no={voting.n_no}
             empty={voting.n_abstain}
             absent={voting.n_absent}
-            height={10}
-            sx={{ mb: 0.75 }}
+            height={8}
+            sx={{ mb: 0.5 }}
           />
           <VoteCountsDisplay
             n_yes={voting.n_yes}
@@ -683,7 +687,7 @@ const VotingCardComponent: React.FC<{
 
         {/* Document cards */}
         {docRefs.length > 0 && (
-          <Box sx={{ mt: 1.25 }}>
+          <Box sx={{ mt: 0.75 }}>
             {docRefs.map((ref) => (
               <DocumentCard key={ref.identifier} docRef={ref} />
             ))}
@@ -695,8 +699,8 @@ const VotingCardComponent: React.FC<{
       <Box
         sx={{
           borderTop: `1px solid ${themedColors.dataBorder}`,
-          px: { xs: 1.5, sm: 2 },
-          py: 0.75,
+          px: { xs: 1.25, sm: 1.5 },
+          py: 0.5,
           bgcolor: `${themedColors.primary}02`,
           display: "flex",
           alignItems: "center",
@@ -758,8 +762,8 @@ const VotingCardComponent: React.FC<{
           <Box
             sx={{
               borderTop: `1px solid ${themedColors.dataBorder}`,
-              px: { xs: 1.5, sm: 2 },
-              py: 1.5,
+              px: { xs: 1.25, sm: 1.5 },
+              py: 1,
               bgcolor: `${themedColors.primary}03`,
             }}
           >
@@ -990,9 +994,9 @@ const VotingGroupCardComponent: React.FC<{
     >
       <Box
         sx={{
-          px: { xs: 1.5, sm: 2 },
-          pt: 1.5,
-          pb: 1.5,
+          px: { xs: 1.25, sm: 1.5 },
+          pt: 1,
+          pb: 1,
         }}
       >
         {/* Header row */}
@@ -1000,11 +1004,11 @@ const VotingGroupCardComponent: React.FC<{
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 1,
+            gap: 0.75,
             flexWrap: "wrap",
-            mb: 1,
-            p: 0.75,
-            borderRadius: 2,
+            mb: 0.75,
+            p: 0.5,
+            borderRadius: 1,
             backgroundColor: `${themedColors.primary}03`,
             border: `1px solid ${themedColors.dataBorder}80`,
           }}
@@ -1071,10 +1075,10 @@ const VotingGroupCardComponent: React.FC<{
         <Typography
           sx={{
             fontWeight: 600,
-            fontSize: "0.9375rem",
+            fontSize: "0.875rem",
             color: themedColors.textPrimary,
-            lineHeight: 1.45,
-            mb: 1,
+            lineHeight: 1.4,
+            mb: 0.75,
           }}
         >
           {groupTitle || tCommon("none")}
@@ -1082,7 +1086,7 @@ const VotingGroupCardComponent: React.FC<{
 
         {/* Document cards */}
         {docRefs.length > 0 && (
-          <Box sx={{ mb: 1.25 }}>
+          <Box sx={{ mb: 0.75 }}>
             {docRefs.map((ref) => (
               <DocumentCard key={ref.identifier} docRef={ref} />
             ))}

@@ -276,7 +276,7 @@ const TimelineSelector: React.FC<{
   }
 
   return (
-    <DataCard sx={{ p: { xs: 2, md: 2.5 } }}>
+    <DataCard sx={{ p: { xs: 1.5, md: 2 } }}>
       <Stack
         direction={{ xs: "column", sm: "row" }}
         spacing={1}
@@ -649,7 +649,7 @@ const GovernmentMinistersSection: React.FC<{
     segmented.previous.length === 0
   ) {
     return (
-      <DataCard sx={{ p: { xs: 2, md: 2.5 } }}>
+      <DataCard sx={{ p: { xs: 1.5, md: 2 } }}>
         <Stack spacing={0.5} sx={{ mb: 2 }}>
           <Typography
             variant="h5"
@@ -669,7 +669,7 @@ const GovernmentMinistersSection: React.FC<{
   }
 
   return (
-    <DataCard sx={{ p: { xs: 2, md: 2.5 } }}>
+    <DataCard sx={{ p: { xs: 1.5, md: 2 } }}>
       <Stack spacing={0.5} sx={{ mb: 2 }}>
         <Typography
           variant="h5"
@@ -1230,7 +1230,7 @@ export default () => {
 
   return (
     <Box sx={{ overflowX: "clip" }}>
-      <Stack spacing={spacing.md}>
+      <Stack spacing={spacing.sm}>
         {activeGovernment ? (
           <GovernmentPageHero
             government={activeGovernment}
@@ -1285,8 +1285,8 @@ export default () => {
 
         <Box id="governments-content">
           {loadingActiveGovernment ? (
-            <DataCard sx={{ p: { xs: 3, md: 4 } }}>
-              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+            <DataCard sx={{ p: { xs: 2, md: 3 } }}>
+              <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
                 <CircularProgress sx={{ color: tc.primary }} />
               </Box>
             </DataCard>

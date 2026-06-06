@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import type React from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { borderRadius, colors, commonStyles } from "./index";
+import { borderRadius, colors, commonStyles, monoFontFamily } from "./index";
 import { useThemedColors } from "./ThemeContext";
 
 /**
@@ -108,9 +108,9 @@ export const PageIntro: React.FC<{
           boxShadow: isFeature
             ? "0 16px 32px rgba(15, 27, 51, 0.07)"
             : "0 10px 22px rgba(15, 27, 51, 0.05)",
-          px: { xs: 2, md: 3.25 },
-          py: { xs: isImmersiveMobile ? 2 : 1.5, md: 2.75 },
-          mb: showFooterStats ? 1.5 : 3,
+          px: { xs: 1.5, md: 2.5 },
+          py: { xs: isImmersiveMobile ? 1.5 : 1.25, md: 2 },
+          mb: showFooterStats ? 1 : 2,
           minHeight: isImmersiveMobile
             ? "calc(100dvh - 48px - 56px - 32px - env(safe-area-inset-bottom, 0px))"
             : "auto",
@@ -122,8 +122,8 @@ export const PageIntro: React.FC<{
             position: "absolute",
             top: 0,
             left: 0,
-            width: isFeature ? { xs: 132, md: 188 } : { xs: 104, md: 136 },
-            height: 4,
+            width: isFeature ? { xs: 100, md: 140 } : { xs: 80, md: 100 },
+            height: 3,
             borderBottomRightRadius: 999,
             background: isFeature
               ? `linear-gradient(90deg, ${colors.primary} 0%, ${colors.primaryLight} 68%, ${colors.accent} 100%)`
@@ -221,13 +221,13 @@ export const PageIntro: React.FC<{
                   variant="h2"
                   sx={{
                     fontWeight: 700,
-                    letterSpacing: isFeature ? "-0.04em" : "-0.03em",
-                    lineHeight: 1.03,
+                    letterSpacing: isFeature ? "-0.03em" : "-0.02em",
+                    lineHeight: 1.1,
                     fontSize: {
-                      xs: isFeature ? "2rem" : "1.8rem",
-                      md: isFeature ? "2.45rem" : "2.1rem",
+                      xs: isFeature ? "1.5rem" : "1.375rem",
+                      md: isFeature ? "1.75rem" : "1.5rem",
                     },
-                    maxWidth: isFeature ? "15ch" : "22ch",
+                    maxWidth: isFeature ? "20ch" : "28ch",
                     textWrap: "balance",
                   }}
                 >
@@ -235,13 +235,13 @@ export const PageIntro: React.FC<{
                 </Typography>
                 {subtitle ? (
                   <Typography
-                    variant="body1"
+                    variant="body2"
                     sx={{
                       color: tc.textSecondary,
                       maxWidth: 760,
-                      mt: 0.9,
-                      fontSize: isFeature ? "1rem" : "0.95rem",
-                      lineHeight: 1.65,
+                      mt: 0.5,
+                      fontSize: isFeature ? "0.875rem" : "0.8125rem",
+                      lineHeight: 1.5,
                     }}
                   >
                     {subtitle}
@@ -257,11 +257,11 @@ export const PageIntro: React.FC<{
                   >
                     {typeof summary === "string" ? (
                       <Typography
-                        variant="body1"
+                        variant="body2"
                         sx={{
                           color: "inherit",
-                          fontSize: isFeature ? "1rem" : "0.95rem",
-                          lineHeight: 1.65,
+                          fontSize: isFeature ? "0.875rem" : "0.8125rem",
+                          lineHeight: 1.5,
                         }}
                       >
                         {summary}
@@ -492,7 +492,7 @@ export const PageSection: React.FC<{
   );
 
   if (surface === "card") {
-    return <DataCard sx={{ p: { xs: 2, md: 2.5 }, ...sx }}>{content}</DataCard>;
+    return <DataCard sx={{ p: { xs: 1.5, md: 2 }, ...sx }}>{content}</DataCard>;
   }
 
   return <Box sx={sx}>{content}</Box>;
@@ -515,7 +515,7 @@ export const ToolbarCard: React.FC<{
   return (
     <DataCard
       sx={{
-        p: { xs: 2, md: 2.5 },
+        p: { xs: 1.5, md: 2 },
         background: "linear-gradient(180deg, #fbfcfd 0%, #f5f8fa 100%)",
         boxShadow: "0 4px 12px rgba(15, 27, 51, 0.04)",
         position: sticky ? "sticky" : "relative",
@@ -605,7 +605,7 @@ export const PanelHeader: React.FC<{
   return (
     <Box
       sx={{
-        p: { xs: 2, md: 2.5 },
+        p: { xs: 1.5, md: 2 },
         borderBottom: `1px solid ${tc.dataBorder}`,
         background:
           "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(247,249,251,0.98) 100%)",
@@ -718,7 +718,7 @@ export const MetricCard: React.FC<{
     <Card
       sx={{
         ...commonStyles.dataCard,
-        p: 2.5,
+        p: 1.5,
         background:
           tone === "muted"
             ? "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(246,248,250,0.98) 100%)"
@@ -748,8 +748,9 @@ export const MetricCard: React.FC<{
           </Typography>
           <Typography
             sx={{
-              fontSize: "1.75rem",
+              fontSize: "1.375rem",
               fontWeight: 700,
+              fontFamily: monoFontFamily,
               color: themedColors.textPrimary,
               lineHeight: 1.2,
               letterSpacing: "-0.02em",
@@ -918,8 +919,8 @@ export const EmptyState: React.FC<{
     <Box
       sx={{
         textAlign: "center",
-        py: 6,
-        px: 3,
+        py: 4,
+        px: 2,
         border: `1px solid ${tc.dataBorder}`,
         borderRadius: `${borderRadius.md * 8}px`,
         background: tc.backgroundPaper,

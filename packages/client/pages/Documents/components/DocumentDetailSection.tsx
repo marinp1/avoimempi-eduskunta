@@ -8,21 +8,21 @@ export const DocumentDetailSection: React.FC<{
   children: React.ReactNode;
 }> = ({ title, icon, children }) => (
   <Box>
-    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+    <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mb: 1 }}>
       {icon && (
         <Box
           sx={{
             display: "inline-flex",
             alignItems: "center",
             color: colors.primary,
-            "& svg": { fontSize: 20 },
+            "& svg": { fontSize: 18 },
           }}
         >
           {icon}
         </Box>
       )}
       <Typography
-        variant="subtitle1"
+        variant="subtitle2"
         sx={{
           fontWeight: 700,
           color: colors.textPrimary,

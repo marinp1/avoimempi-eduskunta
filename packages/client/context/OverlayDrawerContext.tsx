@@ -113,7 +113,7 @@ export const OverlayDrawerProvider = ({
         PaperProps={{
           sx: [
             {
-              width: { xs: "100%", sm: "92%", md: "78%", lg: "66%" },
+              width: { xs: "100%", sm: "92%", md: "78%", lg: "60%" },
               maxWidth: "1200px",
             },
             ...(config?.paperSx
@@ -135,13 +135,13 @@ export const OverlayDrawerProvider = ({
           >
             <Box
               sx={{
-                px: 2.5,
-                py: 2,
+                px: 2,
+                py: 1.5,
                 borderBottom: `1px solid ${colors.dataBorder}`,
                 background: colors.backgroundPaper,
                 display: "flex",
                 alignItems: "flex-start",
-                gap: 1.5,
+                gap: 1,
               }}
             >
               <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -171,8 +171,8 @@ export const OverlayDrawerProvider = ({
                 {config.subtitle && (
                   <Typography
                     sx={{
-                      mt: 0.5,
-                      fontSize: "1rem",
+                      mt: 0.25,
+                      fontSize: "0.9375rem",
                       fontWeight: 700,
                       color: colors.textPrimary,
                     }}
@@ -183,7 +183,7 @@ export const OverlayDrawerProvider = ({
                 {config.meta && (
                   <Box
                     sx={{
-                      mt: 1,
+                      mt: 0.75,
                       display: "flex",
                       gap: 0.75,
                       flexWrap: "wrap",
@@ -195,7 +195,7 @@ export const OverlayDrawerProvider = ({
                 {config.actions && (
                   <Box
                     sx={{
-                      mt: 1.25,
+                      mt: 0.75,
                       display: "flex",
                       gap: 1,
                       flexWrap: "wrap",
@@ -214,7 +214,7 @@ export const OverlayDrawerProvider = ({
                 <CloseIcon fontSize="small" />
               </IconButton>
             </Box>
-            <Box sx={{ flex: 1, overflowY: "auto", p: 2.5 }}>
+            <Box sx={{ flex: 1, overflowY: "auto", p: 2 }}>
               {config.content}
             </Box>
           </Box>

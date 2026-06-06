@@ -208,17 +208,16 @@ export const Navigation: React.FC<{
               <ListItemButton
                 onClick={() => handleDrawerNavClick(path as RouteName)}
                 sx={{
-                  py: 1.25,
-                  px: 2.5,
+                  py: 0.75,
+                  px: 2,
                   color: isActive ? colors.primary : colors.textPrimary,
                   bgcolor: isActive ? `${colors.primary}08` : "transparent",
                   borderLeft: isActive
                     ? `3px solid ${colors.primary}`
                     : "3px solid transparent",
-                  transition: `background-color ${motion.fast}ms ${motion.easing.standard}, transform ${motion.fast}ms ${motion.easing.standard}, border-color ${motion.fast}ms ${motion.easing.standard}`,
+                  transition: `background-color ${motion.fast}ms ${motion.easing.standard}, border-color ${motion.fast}ms ${motion.easing.standard}`,
                   "&:hover": {
                     bgcolor: `${colors.primary}08`,
-                    transform: "translateX(2px)",
                   },
                 }}
               >
@@ -263,18 +262,18 @@ export const Navigation: React.FC<{
         <Toolbar
           sx={{
             py: 0,
-            px: { sm: spacing.lg },
-            minHeight: { sm: 56 },
+            px: { sm: spacing.md },
+            minHeight: { sm: 44 },
             justifyContent: "space-between",
-            gap: 1.5,
+            gap: 1,
           }}
         >
           <Box
             sx={{
               flexShrink: 1,
               minWidth: 0,
-              maxWidth: { lg: 240, xl: 320 },
-              mr: { lg: spacing.sm, xl: spacing.lg },
+              maxWidth: { lg: 200, xl: 280 },
+              mr: { lg: spacing.sm, xl: spacing.md },
             }}
           >
             <Typography
@@ -317,22 +316,21 @@ export const Navigation: React.FC<{
               onChange={handleDesktopTabChange}
               sx={{
                 maxWidth: "100%",
-                minHeight: 56,
+                minHeight: 44,
                 "& .MuiTab-root": {
                   position: "relative",
                   fontWeight: 400,
-                  fontSize: "0.8125rem",
+                  fontSize: "0.75rem",
                   py: 0,
-                  px: { lg: 1.2, xl: 2 },
-                  minHeight: 56,
-                  transition: `color ${motion.fast}ms ${motion.easing.standard}, background-color ${motion.fast}ms ${motion.easing.standard}, transform ${motion.fast}ms ${motion.easing.standard}`,
+                  px: { lg: 1, xl: 1.5 },
+                  minHeight: 44,
+                  transition: `color ${motion.fast}ms ${motion.easing.standard}, background-color ${motion.fast}ms ${motion.easing.standard}`,
                   color: "rgba(255,255,255,0.7)",
                   textTransform: "none",
-                  letterSpacing: "0",
+                  letterSpacing: "0.01em",
                   "&:hover": {
                     color: "white",
                     backgroundColor: "rgba(255,255,255,0.08)",
-                    transform: "translateY(-1px)",
                   },
                 },
                 "& .Mui-selected": {
@@ -586,33 +584,28 @@ export const Navigation: React.FC<{
           onChange={handleMobileTabChange}
           variant="fullWidth"
           sx={{
-            minHeight: 56,
+            minHeight: 48,
             width: "100%",
             overflow: "hidden",
             "& .MuiTab-root": {
               minWidth: 0,
               maxWidth: "none",
               flex: "1 1 0",
-              minHeight: 56,
-              py: 1,
+              minHeight: 48,
+              py: 0.5,
               px: 0,
-              fontSize: "0.6875rem",
+              fontSize: "0.625rem",
               fontWeight: 400,
               color: colors.textTertiary,
               textTransform: "none",
               letterSpacing: "0",
-              transition: `color ${motion.fast}ms ${motion.easing.standard}, transform ${motion.fast}ms ${motion.easing.standard}`,
+              transition: `color ${motion.fast}ms ${motion.easing.standard}`,
               "& .MuiTab-iconWrapper": {
-                marginBottom: 0.35,
-                transition: `transform ${motion.fast}ms ${motion.easing.standard}`,
+                marginBottom: 0.25,
               },
               "&.Mui-selected": {
                 color: colors.primary,
                 fontWeight: 500,
-                transform: "translateY(-1px)",
-              },
-              "&.Mui-selected .MuiTab-iconWrapper": {
-                transform: "translateY(-1px)",
               },
             },
             "& .MuiTabs-indicator": {

@@ -108,21 +108,25 @@ export const CalendarGrid = ({
   };
 
   return (
-    <DataCard sx={{ p: 2, mb: 3 }}>
+    <DataCard sx={{ p: 1.5, mb: 2 }}>
       {/* Month navigation */}
       <Box
         sx={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          mb: 2,
+          mb: 1,
         }}
       >
         <IconButton onClick={prevMonth} size="small">
           <ChevronLeftIcon />
         </IconButton>
         <Typography
-          sx={{ fontWeight: 700, fontSize: "1rem", color: colors.textPrimary }}
+          sx={{
+            fontWeight: 700,
+            fontSize: "0.875rem",
+            color: colors.textPrimary,
+          }}
         >
           {monthNames[viewMonth]} {viewYear}
         </Typography>
@@ -136,8 +140,8 @@ export const CalendarGrid = ({
         sx={{
           display: "grid",
           gridTemplateColumns: "repeat(7, 1fr)",
-          gap: 0.5,
-          mb: 0.5,
+          gap: 0.25,
+          mb: 0.25,
         }}
       >
         {weekDays.map((day) => (
@@ -160,7 +164,7 @@ export const CalendarGrid = ({
         sx={{
           display: "grid",
           gridTemplateColumns: "repeat(7, 1fr)",
-          gap: 0.5,
+          gap: 0.25,
         }}
       >
         {daysInMonth.map(({ date, day, isCurrentMonth }) => {
@@ -175,8 +179,8 @@ export const CalendarGrid = ({
               }}
               sx={{
                 textAlign: "center",
-                py: 0.75,
-                minHeight: 44,
+                py: 0.5,
+                minHeight: 36,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",

@@ -58,11 +58,11 @@ const DocumentCardShellComponent: React.FC<{
   >
     <Box
       sx={{
-        p: { xs: 2, md: 2.5 },
+        p: { xs: 1.5, md: 2 },
         background: `${colors.primary}03`,
       }}
     >
-      <Stack spacing={1.5}>
+      <Stack spacing={1}>
         <Stack
           direction="row"
           spacing={1}
@@ -90,12 +90,12 @@ const DocumentCardShellComponent: React.FC<{
         </Stack>
 
         <Typography
-          variant="h5"
+          variant="h6"
           sx={{
             color: colors.textPrimary,
             fontWeight: 600,
-            letterSpacing: "-0.02em",
-            lineHeight: 1.22,
+            letterSpacing: "-0.015em",
+            lineHeight: 1.3,
           }}
         >
           {title}
@@ -117,10 +117,10 @@ const DocumentCardShellComponent: React.FC<{
 
         <Stack
           direction={{ xs: "column", sm: "row" }}
-          spacing={1}
+          spacing={0.75}
           alignItems={{ xs: "stretch", sm: "center" }}
           justifyContent="space-between"
-          sx={{ pt: 0.5 }}
+          sx={{ pt: 0.25 }}
         >
           <Box
             sx={{
@@ -175,7 +175,7 @@ const DocumentCardShellComponent: React.FC<{
           sx={{
             borderTop: `1px solid ${colors.dataBorder}`,
             backgroundColor: colors.backgroundPaper,
-            p: { xs: 2, md: 2.5 },
+            p: { xs: 1.5, md: 2 },
           }}
         >
           {loadingState}

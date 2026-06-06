@@ -50,7 +50,7 @@ const DocumentsFilterPanelComponent: React.FC<{
   const activeFilterCount = activeFilters.length;
 
   const filterContent = (
-    <Stack spacing={2}>
+    <Stack spacing={1.5}>
       <Box
         sx={{
           display: "grid",
@@ -58,7 +58,7 @@ const DocumentsFilterPanelComponent: React.FC<{
             xs: "1fr",
             md: "minmax(0, 2fr) repeat(2, minmax(180px, 1fr))",
           },
-          gap: 2,
+          gap: 1.5,
         }}
       >
         {children}
@@ -72,7 +72,7 @@ const DocumentsFilterPanelComponent: React.FC<{
               xs: "1fr",
               md: "repeat(2, minmax(220px, 1fr))",
             },
-            gap: 2,
+            gap: 1.5,
           }}
         >
           {secondaryFilters}
@@ -80,7 +80,7 @@ const DocumentsFilterPanelComponent: React.FC<{
       )}
 
       {activeFiltersTitle ? (
-        <Stack spacing={1}>
+        <Stack spacing={0.75}>
           <Typography
             variant="caption"
             sx={{

@@ -648,8 +648,8 @@ export default () => {
     return (
       <Box
         sx={{
-          mt: 1.5,
-          p: 1.5,
+          mt: 1,
+          p: 1,
           borderRadius: 1,
           border: `1px solid ${colors.primaryLight}25`,
           background: `${colors.primaryLight}08`,
@@ -661,7 +661,7 @@ export default () => {
             fontWeight: 700,
             color: colors.textSecondary,
             textTransform: "uppercase",
-            mb: 0.75,
+            mb: 0.5,
           }}
         >
           {tSessions("subSections")}
@@ -762,24 +762,24 @@ export default () => {
     if (notices.length === 0) return null;
 
     return (
-      <Box sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}>
+      <Box sx={{ p: 1.5, borderBottom: `1px solid ${colors.dataBorder}` }}>
         <Typography
           sx={{
             ...commonStyles.compactTextLg,
             fontWeight: 600,
             color: colors.textSecondary,
             textTransform: "uppercase",
-            mb: 1,
+            mb: 0.75,
           }}
         >
           {tSessions("sessionNotices")}
         </Typography>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
           {notices.map((notice) => (
             <Box
               key={notice.id}
               sx={{
-                p: 1.5,
+                p: 1,
                 borderRadius: 1,
                 border: `1px solid ${colors.warning}30`,
                 background: `${colors.warning}08`,
@@ -854,24 +854,24 @@ export default () => {
     if (notices.length === 0) return null;
 
     return (
-      <Box sx={{ mt: 1.5 }}>
+      <Box sx={{ mt: 1 }}>
         <Typography
           sx={{
             ...commonStyles.compactTextLg,
             fontWeight: 600,
             color: colors.textSecondary,
             textTransform: "uppercase",
-            mb: 0.75,
+            mb: 0.5,
           }}
         >
           {tSessions("sectionNotices")}
         </Typography>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
           {notices.map((notice) => (
             <Box
               key={notice.id}
               sx={{
-                p: 1.25,
+                p: 1,
                 borderRadius: 1,
                 border: `1px solid ${colors.warning}30`,
                 background: `${colors.warning}08`,
@@ -1016,14 +1016,14 @@ export default () => {
     const isExpanded = expandedMinutesSessions.has(session.key);
 
     return (
-      <Box sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}>
+      <Box sx={{ p: 1.5, borderBottom: `1px solid ${colors.dataBorder}` }}>
         <Box
           sx={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            gap: 2,
-            mb: 1,
+            gap: 1.5,
+            mb: 0.75,
           }}
         >
           <Typography
@@ -1053,12 +1053,12 @@ export default () => {
           </Button>
         </Box>
         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
             {items.map((item) => (
               <Box
                 key={item.id}
                 sx={{
-                  p: 1.25,
+                  p: 1,
                   borderRadius: 1,
                   border: `1px solid ${colors.dataBorder}`,
                   background: colors.backgroundSubtle,
@@ -1177,14 +1177,14 @@ export default () => {
     const isExpanded = expandedAttachmentSessions.has(session.key);
 
     return (
-      <Box sx={{ p: 2, borderBottom: `1px solid ${colors.dataBorder}` }}>
+      <Box sx={{ p: 1.5, borderBottom: `1px solid ${colors.dataBorder}` }}>
         <Box
           sx={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            gap: 2,
-            mb: 1,
+            gap: 1.5,
+            mb: 0.75,
           }}
         >
           <Typography
@@ -1214,12 +1214,12 @@ export default () => {
           </Button>
         </Box>
         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
             {attachments.map((attachment) => (
               <Box
                 key={attachment.id}
                 sx={{
-                  p: 1.25,
+                  p: 1,
                   borderRadius: 1,
                   border: `1px solid ${colors.dataBorder}`,
                   background: colors.backgroundSubtle,
@@ -1306,14 +1306,14 @@ export default () => {
     if (links.length === 0) return null;
 
     return (
-      <Box sx={{ mt: 1.5 }}>
+      <Box sx={{ mt: 1 }}>
         <Typography
           sx={{
             ...commonStyles.compactTextLg,
             fontWeight: 600,
             color: colors.textSecondary,
             textTransform: "uppercase",
-            mb: 0.75,
+            mb: 0.5,
           }}
         >
           {tSessions("sectionDocuments")}
@@ -1478,8 +1478,8 @@ export default () => {
     return (
       <Box
         sx={{
-          mt: 1.5,
-          p: 1.5,
+          mt: 1,
+          p: 1,
           borderRadius: 1,
           border: `1px solid ${colors.primaryLight}25`,
           background: `${colors.primaryLight}08`,
@@ -1890,7 +1890,7 @@ export default () => {
     if (votings.length === 0) return null;
 
     return (
-      <Box sx={{ mt: 1.5, display: "flex", flexDirection: "column", gap: 1 }}>
+      <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 0.75 }}>
         <Typography
           sx={{
             ...commonStyles.compactTextLg,
@@ -2041,10 +2041,10 @@ export default () => {
         ) : speeches.length > 0 ? (
           <Box
             sx={{
-              mt: 1.5,
+              mt: 1,
               display: "flex",
               flexDirection: "column",
-              gap: 0.75,
+              gap: 0.5,
             }}
           >
             <Typography
@@ -2083,7 +2083,7 @@ export default () => {
                 <Box
                   key={speech.id}
                   sx={{
-                    p: 1.5,
+                    p: 1,
                     borderRadius: 1,
                     background: colors.backgroundSubtle,
                   }}
@@ -2093,7 +2093,7 @@ export default () => {
                       display: "flex",
                       alignItems: "center",
                       gap: 1,
-                      mb: speech.content ? 1 : 0,
+                      mb: speech.content ? 0.75 : 0,
                     }}
                   >
                     <Chip
@@ -2151,7 +2151,7 @@ export default () => {
                   {speech.content && (
                     <Box
                       sx={{
-                        p: 1.5,
+                        p: 1,
                         borderRadius: 1,
                         borderLeft: `3px solid ${colors.primaryLight}`,
                         background: colors.backgroundDefault,
@@ -2392,7 +2392,7 @@ export default () => {
       />
 
       <Box id="sessions-content">
-        <ToolbarCard sx={{ mb: 3 }}>
+        <ToolbarCard sx={{ mb: 2 }}>
           <Box
             sx={{
               display: "flex",
@@ -2477,13 +2477,13 @@ export default () => {
             (() => {
               const { before, after } = findNearestValidDates(date);
               return before || after ? (
-                <DataCard sx={{ p: 2.5 }}>
+                <DataCard sx={{ p: 2 }}>
                   <Typography
                     sx={{
                       fontSize: "0.8125rem",
                       fontWeight: 600,
                       color: colors.textSecondary,
-                      mb: 1.5,
+                      mb: 1,
                     }}
                   >
                     {tSessions("nearestSessions")}
@@ -2528,7 +2528,7 @@ export default () => {
           }}
         >
           {/* Date banner */}
-          <Box sx={{ p: 2.5, borderBottom: `1px solid ${colors.dataBorder}` }}>
+          <Box sx={{ p: 1.5, borderBottom: `1px solid ${colors.dataBorder}` }}>
             <Box
               sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.25 }}
             >
@@ -2566,14 +2566,14 @@ export default () => {
                     {/* Session header */}
                     <Box
                       sx={{
-                        p: 2,
+                        p: 1.5,
                         borderBottom: `1px solid ${colors.dataBorder}`,
                         background: isFocusedSession
                           ? `${colors.primaryLight}14`
                           : colors.backgroundSubtle,
                         display: "flex",
                         alignItems: "center",
-                        gap: 1.5,
+                        gap: 1,
                         flexWrap: "wrap",
                       }}
                     >
@@ -2582,7 +2582,7 @@ export default () => {
                         underline="hover"
                         sx={{
                           fontWeight: 700,
-                          fontSize: "0.9375rem",
+                          fontSize: "0.875rem",
                           color: colors.textPrimary,
                         }}
                       >
@@ -2650,11 +2650,11 @@ export default () => {
                     {/* Session summary */}
                     <Box
                       sx={{
-                        p: 2,
+                        p: 1.25,
                         borderBottom: `1px solid ${colors.dataBorder}`,
                         display: "flex",
                         flexWrap: "wrap",
-                        gap: 2,
+                        gap: 1.25,
                         alignItems: "center",
                         background: "#fff",
                       }}
@@ -2782,7 +2782,7 @@ export default () => {
                             )
                           }
                         >
-                          <Box sx={{ display: "flex", gap: 1.25 }}>
+                          <Box sx={{ display: "flex", gap: 1 }}>
                             <Chip
                               label={getSectionOrderLabel(section)}
                               size="small"
@@ -2867,7 +2867,7 @@ export default () => {
                                   display: "flex",
                                   gap: 0.75,
                                   flexWrap: "wrap",
-                                  mt: 0.9,
+                                  mt: 0.5,
                                 }}
                               >
                                 <Chip
@@ -2912,9 +2912,9 @@ export default () => {
                               <Box
                                 sx={{
                                   display: "flex",
-                                  gap: 1.25,
+                                  gap: 1,
                                   flexWrap: "wrap",
-                                  mt: 0.65,
+                                  mt: 0.5,
                                 }}
                               >
                                 {section.agenda_key && (

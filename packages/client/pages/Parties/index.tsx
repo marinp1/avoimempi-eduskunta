@@ -371,7 +371,7 @@ const Parties = () => {
           ) : undefined
         }
         stats={
-          <Grid container spacing={spacing.md}>
+          <Grid container spacing={spacing.sm}>
             <Grid size={{ xs: 6, md: 3 }}>
               <MetricCard
                 label={tParties("totalParties")}
@@ -432,7 +432,7 @@ const Parties = () => {
       />
 
       <Box id="parties-content">
-        <Grid container spacing={spacing.md} sx={{ mb: spacing.md }}>
+        <Grid container spacing={spacing.sm} sx={{ mb: spacing.sm }}>
           <Grid size={{ xs: 12, md: 4 }}>
             <HighlightCard
               title={tParties("highlights.largestParty")}
@@ -482,7 +482,7 @@ const Parties = () => {
           </Grid>
         </Grid>
 
-        <DataCard sx={{ p: { xs: 2, md: 2.5 }, mb: spacing.md }}>
+        <DataCard sx={{ p: { xs: 1.5, md: 2 }, mb: spacing.sm }}>
           <Box
             sx={{
               display: "flex",
@@ -701,7 +701,7 @@ const Parties = () => {
       </Box>
 
       {/* Analytics sections */}
-      <Box sx={{ mt: 4 }}>
+      <Box sx={{ mt: spacing.md }}>
         <Typography
           variant="subtitle2"
           sx={{
@@ -836,7 +836,7 @@ const HighlightCard: React.FC<{
   const visibleCode = party?.party_display_code ?? party?.party_code ?? "";
 
   return (
-    <DataCard sx={{ p: 2.25, height: "100%" }}>
+    <DataCard sx={{ p: 1.5, height: "100%" }}>
       <Typography
         variant="caption"
         sx={{
@@ -871,7 +871,7 @@ const HighlightCard: React.FC<{
           <Typography
             sx={{
               mt: 1,
-              fontSize: "1.35rem",
+              fontSize: "1.125rem",
               fontWeight: 700,
               color: partyColor,
             }}

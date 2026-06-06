@@ -123,16 +123,16 @@ export function InlineRelatedSessions({
 
   return (
     <Box>
-      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
-        <EventIcon sx={{ color: colors.primary }} />
+      <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mb: 1 }}>
+        <EventIcon sx={{ color: colors.primary, fontSize: 18 }} />
         <Typography
-          variant="subtitle1"
+          variant="subtitle2"
           sx={{ fontWeight: 600, color: colors.textPrimary }}
         >
           {tDocuments("relatedSessions")}
         </Typography>
       </Stack>
-      <Stack spacing={1}>
+      <Stack spacing={0.75}>
         {sessions.map((session) => {
           return (
             <Box
