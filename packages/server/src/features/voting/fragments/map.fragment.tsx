@@ -14,6 +14,7 @@ export default function VotingMapFragment({ mpVotes }: Props) {
   const nNo = mpVotes.filter((m) => m.vote === "ei").length;
   const nEmpty = mpVotes.filter((m) => m.vote === "tyhjaa").length;
   const nAbsent = mpVotes.filter((m) => m.vote === "poissa").length;
+  const nUnknown = mpVotes.filter((m) => m.vote === "tuntematon").length;
 
   return (
     <section id="kartta" class="ph mt-28" style="scroll-margin-top:14px">
@@ -34,12 +35,18 @@ export default function VotingMapFragment({ mpVotes }: Props) {
                     ? "var(--red)"
                     : mp.vote === "tyhjaa"
                       ? "var(--opp)"
-                      : "transparent";
+                      : mp.vote === "tuntematon"
+                        ? "var(--faint)"
+                        : "transparent";
               return (
                 <span
-                  class={clsx("seat", mp.vote === "poissa" && "absent")}
+                  class={clsx(
+                    "seat",
+                    mp.vote === "poissa" && "absent",
+                    mp.vote === "tuntematon" && "unknown-vote",
+                  )}
                   style={`--p:${seatColor}`}
-                  title={`${esc(mp.firstName)} ${esc(mp.lastName)} (${esc(mp.partyCode)})`}
+                  title={`${esc(mp.firstName)} ${esc(mp.lastName)} (${esc(mp.partyCode)}) — tuntematon ääniarvo`}
                 ></span>
               );
             })}
@@ -63,6 +70,15 @@ export default function VotingMapFragment({ mpVotes }: Props) {
               <span class="d ring"></span>
               {i18next.t("common:absent")} {nAbsent}
             </div>
+            {nUnknown > 0 && (
+              <div
+                class="it"
+                title="Ääniarvo ei vastaa tunnettuja arvoja — datalaatuvirheen merkki"
+              >
+                <span class="d unknown-vote-swatch"></span>
+                Tuntematon {nUnknown}
+              </div>
+            )}
           </div>
         </div>
         <div class="mlookup">
@@ -93,6 +109,7 @@ export default function VotingMapFragment({ mpVotes }: Props) {
                     mp.vote === "ei" && "e",
                     mp.vote === "tyhjaa" && "tyh",
                     mp.vote === "poissa" && "out",
+                    mp.vote === "tuntematon" && "unk",
                   )}
                 >
                   {mp.vote === "jaa"
@@ -101,7 +118,9 @@ export default function VotingMapFragment({ mpVotes }: Props) {
                       ? i18next.t("common:no_uppercase")
                       : mp.vote === "tyhjaa"
                         ? i18next.t("common:empty_uppercase")
-                        : i18next.t("common:absent_uppercase")}
+                        : mp.vote === "tuntematon"
+                          ? "?"
+                          : i18next.t("common:absent_uppercase")}
                 </span>
               </div>
             ))}

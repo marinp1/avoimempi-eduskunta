@@ -3,6 +3,7 @@ import {
   resolveParty,
   normalizeVote,
   normalizeBloc,
+  type VoteToken,
 } from "#server/domain";
 import { formatFiLongDate } from "#server/helpers";
 import i18next from "i18next";
@@ -119,7 +120,7 @@ export interface SingleVoteData {
     lastName: string;
     partyCode: string;
     partyColor: string;
-    vote: "jaa" | "ei" | "tyhjaa" | "poissa";
+    vote: VoteToken;
     bloc: "government" | "opposition";
     personSort: string;
   }>;

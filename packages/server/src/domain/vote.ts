@@ -1,15 +1,16 @@
-export type VoteToken = "jaa" | "ei" | "tyhjaa" | "poissa";
+export type VoteToken = "jaa" | "ei" | "tyhjaa" | "poissa" | "tuntematon";
 export type Bloc = "government" | "opposition";
 
 const VOTE_MAP: Record<string, VoteToken> = {
-  JAA: "jaa",
-  EI: "ei",
-  TYHJAA: "tyhjaa",
-  POISSA: "poissa",
+  Jaa: "jaa",
+  Ei: "ei",
+  Tyhjää: "tyhjaa",
+  Poissa: "poissa",
 };
 
 export function normalizeVote(raw: string | null | undefined): VoteToken {
-  return raw ? (VOTE_MAP[raw] ?? "poissa") : "poissa";
+  if (!raw) return "poissa";
+  return VOTE_MAP[raw] ?? "tuntematon";
 }
 
 export function normalizeBloc(

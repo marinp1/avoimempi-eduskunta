@@ -232,6 +232,23 @@
   background: var(--paper-3);
   color: var(--muted);
 }
+.mvote .mb.unk {
+  background: var(--paper-3);
+  color: var(--muted);
+  outline: 1.5px dashed var(--muted);
+  outline-offset: -2px;
+}
+
+/* Unknown-vote seat (data quality anomaly) */
+.seat.unknown-vote {
+  outline: 1.5px dashed var(--muted);
+  outline-offset: -1px;
+}
+.unknown-vote-swatch {
+  background: var(--faint) !important;
+  outline: 1.5px dashed var(--muted);
+  outline-offset: -2px;
+}
 
 /* ----- responsive ----- */
 @media (max-width: 760px) {
