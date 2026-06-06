@@ -25,12 +25,14 @@ This is a Bun workspace monorepo with the following structure:
 
 ```
 packages/
-  client/      - [DEPRECATED] React/MUI frontend — being replaced by packages/webapp
-  webapp/      - New frontend (htmx-based, in active development)
-  server/      - Bun backend API (node)
+  server/      - Bun backend + htmx web app, feature-organized under src/features/
   datapipe/    - Data pipeline CLIs (node)
-  shared/      - Shared types & utilities
+  shared/      - Code consumed by BOTH server and datapipe
+  infra/       - Infrastructure-as-code (Terraform/OpenTofu)
 ```
+
+The former `packages/client/` (React/MUI SPA) and `packages/webapp/` (early htmx
+frontend) have been removed — the htmx frontend now lives inside `packages/server/`.
 
 ## Storage Architecture
 
@@ -145,36 +147,43 @@ Each table goes through a three-stage ETL process:
 
 ### Application Architecture
 
-The web application is split into clear client/server separation:
+The web app is a single Bun package organized **by feature** (not by technical layer).
+Data flows: Route → Service → Repository → View Model → Page/Fragment template.
 
-- **packages/server/** - Bun HTTP server
-  - `index.ts` - Main server with type-safe routing
-  - `database/` - Database access layer with `DatabaseConnection` class
-  - `public/` - Static assets and HTML entry point
+- **packages/server/** - Bun HTTP server + htmx frontend
+  - `index.ts` - Main server: constructs repositories + services and registers routes
+  - `routes/webapp/` - Thin route handlers (validate input, dispatch to a service)
+  - `src/features/<name>/` - One module per screen (`home`, `person`, `voting`,
+    `session`, `document`, `analytics`, `metadata`). Each contains:
+    - `<name>.service.ts` - orchestration + business rules; produces view models
+    - `<name>.repository.ts` - database access only (returns raw rows)
+    - `sql/*.sql` - raw SQL, co-located with the feature
+    - `pages/*.page.tsx` + `pages/*.view-model.ts` - full-page templates + view models
+    - `fragments/*.fragment.tsx` - independently htmx-swappable regions
+  - `src/database/` - DB connection, launch, query helpers, SQL type registry + audit
+  - `src/components/`, `src/layouts/` - shared UI components and layout partials
+  - `src/client/` - browser assets (styles, htmx config, JS islands)
+  - `src/domain/`, `src/helpers/`, `src/i18n.ts`, `src/locales/` - server-only logic + i18n
+  - `public/` - static assets and HTML entry point
 
-- **packages/client/** - **[DEPRECATED]** old React/MUI SPA — read for reference only
-
-- **packages/webapp/** - New htmx-based frontend (active development, replaces `packages/client`)
-  - `templates/pages/` - Page templates (home, edustajat, aanestykset, istunnot, etc.)
-  - `templates/components/` - Reusable UI components (btn, stat, tag, etc.)
-  - `templates/partials/` - Layout partials (masthead, nav, footer)
-  - `src/styles.css` - Application styles
-
-- **packages/shared/** - Shared code
+- **packages/shared/** - Code consumed by BOTH `server` and `datapipe`
   - `constants/` - Table names, primary keys, etc.
   - `database/` - Database path utilities
   - `storage/` - Storage abstraction layer
-  - `types/` - Shared TypeScript types
+  - `typings/` - Shared ambient TypeScript types (SQL/raw-data model, rich text)
 
 ### Path Aliasing
 
-TypeScript path aliases are configured per workspace. Common pattern:
+TypeScript path aliases are configured in the root `tsconfig.json`:
 
-- `#database` → `../shared/database/index.ts`
-- `#constants` → `../shared/constants/index.ts`
-- `#storage` → `../shared/storage/index.ts`
+- `#constants` → `packages/shared/constants/index.ts`
+- `#database` → `packages/shared/database/index.ts`
+- `#storage` → `packages/shared/storage/index.ts`
+- `#table-counts` → `packages/datapipe/table-counts/index.ts`
+- `#shared/*` → `packages/shared/*`
+- `#server/*` → `packages/server/src/*`
 
-Check each workspace's `tsconfig.json` for specific path mappings.
+Check the root `tsconfig.json` for the full list.
 
 ### Table Names and Constants
 

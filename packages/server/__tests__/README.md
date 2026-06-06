@@ -1,6 +1,7 @@
 # SQL contract tests
 
-This package keeps raw SQL in `packages/server/database/queries/*.sql` and runs it
+This package keeps raw SQL co-located per feature in
+`packages/server/src/features/<name>/sql/*.sql` and runs it
 through `db.prepare<Result, Params>(sql)`. We keep raw SQL on purpose — each query is
 portable and can be run and inspected outside the app. The price is that the `Result`
 type is **a claim nobody checks**: `prepare<Result>()` is an _unchecked cast_. Bun runs
@@ -18,22 +19,22 @@ The compiler catches drift between the **type and the code that reads it**. It n
 catches drift between the **SQL and the type**. These tests close that second seam.
 **The tests — not the types — are the guarantee.**
 
-## The four layers
+## The three layers
 
-| Layer                | File                                                    | Guards                                                          |
-| -------------------- | ------------------------------------------------------- | --------------------------------------------------------------- |
-| 1. Shape snapshots   | `sql-contract.test.ts` + `sql-snapshots/`               | A query's output column set / types / nullability changed       |
-| 2. Type binding      | `sql-contract.test-d.ts` + `sql-type-registry.ts`       | A result type promises a column the SQL doesn't produce         |
-| 3. Edge fixtures     | `helpers/setup-db.ts` (`seedEdgeCases`) + builder tests | Null/empty/boundary rows are tolerated, not just the happy path |
-| 4. Golden API shapes | `api-response-shapes.test.ts`                           | An outward-facing `/api/*` JSON contract changed                |
+| Layer              | File                                              | Guards                                                          |
+| ------------------ | ------------------------------------------------- | --------------------------------------------------------------- |
+| 1. Shape snapshots | `sql-contract.test.ts` + `sql-snapshots/`         | A query's output column set / types / nullability changed       |
+| 2. Type binding    | `sql-contract.test-d.ts` + `sql-type-registry.ts` | A result type promises a column the SQL doesn't produce         |
+| 3. Edge fixtures   | `sql-contract.test.ts` (`seedEdgeCases`)          | Null/empty/boundary rows are tolerated, not just the happy path |
 
 ### 1. Shape snapshots — does the SQL still return what we think?
 
 `sql-contract.test.ts` runs every runtime-used query (enumerated by
-`collectServerQueryAudit()` in `database/query-audit.ts`) against a seeded in-memory DB
+`collectServerQueryAudit()` in `src/database/query-audit.ts`, which walks every
+`features/*/sql/*.sql`) against a seeded in-memory DB
 and records its shape: `{ columns: name→typeof, hasNulls, rowCount }`. The shape is
-stored **one file per query** in `sql-snapshots/<QUERY>.sql.json` (e.g.
-`SESSIONS_PAGINATED.sql.json`) so diffs stay localized and there are no merge conflicts
+stored **one file per query** in `sql-snapshots/<query>.sql.json` (e.g.
+`session-by-date.sql.json`) so diffs stay localized and there are no merge conflicts
 on a single giant file.
 
 On a normal run the recorded shape is compared to the live one and the test fails if
@@ -68,17 +69,10 @@ non-null in the seed but null in production is the classic silent bug. Two defen
 - `seedEdgeCases(db)` in `helpers/setup-db.ts` adds the awkward rows the happy-path
   `seedFullDataset` omits (a sitting MP with no district/votes/committee, a voting with
   `n_total = 0`, …). Extend it when you find a new null-producing case.
-- The **view-model builder tests** in
-  `packages/webapp/__tests__/view-model-edge-cases.test.ts` feed all-null/empty rows
-  through the pure builders and assert the `?? fallback` logic holds (no throw, no
-  `NaN`). This protects the rendered page — the layer that actually matters.
-
-### 4. Golden API shapes — did an outward contract change?
-
-`api-response-shapes.test.ts` runs the **real repositories + route handlers** against
-the seeded DB and asserts the exact JSON key set of the `/api/*` endpoints. When a
-change alters an endpoint's shape, the matching golden breaks, forcing the change (and
-its external-consumer impact) to be deliberate rather than silent.
+- The **edge-case fixtures** block in `sql-contract.test.ts` seeds those rows and
+  asserts the data layer tolerates them — e.g. the roster still returns the sparse MP
+  with a null district and a defaulted participation rate, and every runtime query
+  still executes against the edge-augmented seed without throwing.
 
 ## Commands
 
@@ -117,8 +111,9 @@ params, which over-filters (e.g. a search term that matches no seeded row, or
 data is genuinely missing, add it to `seedFullDataset`.
 
 **Add a null/boundary case.** Add the row to `seedEdgeCases` and pair it with an
-assertion (a builder edge test, or a repository-method test) that proves the null is
-handled — an unused fixture row is decoration.
+assertion (a repository-method test, or an assertion in the edge-case block of
+`sql-contract.test.ts`) that proves the null is handled — an unused fixture row is
+decoration.
 
 ## Residual risk (read this)
 
@@ -128,7 +123,7 @@ silently. Treat the seed (`seedFullDataset` + `seedEdgeCases`) as a first-class
 contract: when you add a query or discover a production null, add the row and an
 assertion. Coverage is partial by design — queries that return 0 rows on the seed have
 no shape snapshot; the coverage summary is logged on each run
-(`N/164 runtime queries have column snapshots`).
+(`N/M runtime queries have column snapshots`).
 
 ## Why not codegen / a query builder / runtime validation?
 
@@ -143,16 +138,13 @@ no shape snapshot; the coverage summary is logged on each run
 
 ```
 packages/server/
-  database/
-    queries/*.sql                         raw SQL (the source of truth)
-    query-audit.ts                        enumerates runtime-used queries
-    sql-type-registry.ts                  SQL_TYPE_REGISTRY + TYPE_COLUMN_CONTRACTS
+  src/
+    features/<name>/sql/*.sql             raw SQL (the source of truth), co-located per feature
+    database/query-audit.ts               enumerates runtime-used queries (walks features/*/sql)
+    database/sql-type-registry.ts         SQL_TYPE_REGISTRY + TYPE_COLUMN_CONTRACTS
   __tests__/
     sql-contract.test.ts                  runtime: shape snapshots + contract columns
     sql-contract.test-d.ts                compile-time: keyof Type == contract
-    sql-snapshots/<QUERY>.sql.json        per-query shape snapshots
-    api-response-shapes.test.ts           golden /api/* JSON shapes
+    sql-snapshots/<query>.sql.json        per-query shape snapshots
     helpers/setup-db.ts                   createTestDb, seedFullDataset, seedEdgeCases
-packages/webapp/
-  __tests__/view-model-edge-cases.test.ts builder null/edge tolerance
 ```

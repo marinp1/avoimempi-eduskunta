@@ -3,7 +3,7 @@ import {
   getDeleteAllRowsQuery,
   MIGRATOR_SQL,
   SQLITE_PRAGMAS,
-} from "../database/sql-statements";
+} from "../src/database/sql-statements";
 
 describe("SQL statements centralization", () => {
   test("migrator SQL statements are non-empty", () => {

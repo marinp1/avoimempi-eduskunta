@@ -1,24 +1,31 @@
 // modules/server/server.ts
-import "../shared/i18n";
+import "./src/i18n";
 import {
   getLastMigratorRunAtPath,
   getLastScraperRunAtPath,
 } from "../shared/database";
-import { createResponseCache } from "./cache/response-cache";
-import { loadRuntimeConfig } from "./config/runtime-config";
-import { DatabaseConnection } from "./database/db";
-import { prepareDatabaseForServerStartup } from "./database/launch-db";
-import { AnalyticsRepository } from "./database/repositories/analytics-repository";
-import { DocumentRepository } from "./database/repositories/document-repository";
-import { HomeRepository } from "./database/repositories/home-repository";
-import { MetadataRepository } from "./database/repositories/metadata-repository";
-import { PersonRepository } from "./database/repositories/person-repository";
-import { SessionRepository } from "./database/repositories/session-repository";
-import { VotingRepository } from "./database/repositories/voting-repository";
+import { createResponseCache } from "./src/cache/response-cache";
+import { loadRuntimeConfig } from "./src/config/runtime-config";
+import { DatabaseConnection } from "./src/database/db";
+import { prepareDatabaseForServerStartup } from "./src/database/launch-db";
+import { AnalyticsRepository } from "./src/features/analytics/analytics.repository";
+import { DocumentRepository } from "./src/features/document/document.repository";
+import { HomeRepository } from "./src/features/home/home.repository";
+import { MetadataRepository } from "./src/features/metadata/metadata.repository";
+import { PersonRepository } from "./src/features/person/person.repository";
+import { SessionRepository } from "./src/features/session/session.repository";
+import { VotingRepository } from "./src/features/voting/voting.repository";
+import { AnalyticsService } from "./src/features/analytics/analytics.service";
+import { DocumentService } from "./src/features/document/document.service";
+import { HomeService } from "./src/features/home/home.service";
+import { MetadataService } from "./src/features/metadata/metadata.service";
+import { PersonService } from "./src/features/person/person.service";
+import { SessionService } from "./src/features/session/session.service";
+import { VotingService } from "./src/features/voting/voting.service";
 import {
   addSecurityHeaders,
   withSecurityHeaders,
-} from "./middleware/security-headers";
+} from "./src/middleware/security-headers";
 import { createHealthRoutes } from "./routes/health-routes";
 import {
   createWebappPageRoutes,
@@ -34,6 +41,18 @@ const metadataRepository = new MetadataRepository(db);
 const personRepository = new PersonRepository(db);
 const sessionRepository = new SessionRepository(db);
 const votingRepository = new VotingRepository(db);
+const personService = new PersonService(personRepository);
+const analyticsService = new AnalyticsService(analyticsRepository);
+const documentService = new DocumentService(
+  documentRepository,
+  personRepository,
+);
+const metadataService = new MetadataService(metadataRepository);
+const sessionService = new SessionService(
+  sessionRepository,
+  documentRepository,
+);
+const votingService = new VotingService(votingRepository);
 
 const readTimestamp = async (filePath: string): Promise<string | null> => {
   const file = Bun.file(filePath);
@@ -63,6 +82,24 @@ const homeRepository = new HomeRepository(
     fetchLastMigratorRunAt: () => readTimestamp(getLastMigratorRunAtPath()),
   },
 );
+
+const homeService = new HomeService(sessionRepository, analyticsRepository, {
+  fetchLastMigrationTimestamp: () => {
+    try {
+      return (
+        db
+          .query<{ value: string }, []>(
+            `SELECT value FROM _migration_info WHERE key = 'last_migration'`,
+          )
+          .get()?.value ?? null
+      );
+    } catch {
+      return null;
+    }
+  },
+  fetchLastScraperRunAt: () => readTimestamp(getLastScraperRunAtPath()),
+  fetchLastMigratorRunAt: () => readTimestamp(getLastMigratorRunAtPath()),
+});
 
 const { isDev, port, idleTimeout, reusePort } = loadRuntimeConfig();
 
@@ -104,12 +141,19 @@ const allRoutes = withSecurityHeaders({
   ...cache.wrapRoutes(
     createWebappPageRoutes({
       analyticsRepository,
+      analyticsService,
       documentRepository,
+      documentService,
       homeRepository,
+      homeService,
       metadataRepository,
+      metadataService,
       personRepository,
+      personService,
       sessionRepository,
+      sessionService,
       votingRepository,
+      votingService,
     }),
     { cacheKey: webappCacheKey },
   ),

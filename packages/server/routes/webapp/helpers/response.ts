@@ -1,7 +1,7 @@
-import { renderFullPage, type LayoutOptions } from "#webapp/eta";
-import { esc } from "#webapp/templates/helpers";
+import { renderFullPage, type LayoutOptions } from "#server/eta";
+import { esc } from "#server/helpers/template-helpers";
 import { assetVersion } from "../assets";
-import { isHtmx } from "#shared-helpers";
+import { isHtmx } from "#server/helpers";
 import i18next from "i18next";
 import { timelineOobHtml } from "./timeline";
 

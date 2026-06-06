@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createResponseCache } from "../cache/response-cache";
+import { createResponseCache } from "../src/cache/response-cache";
 
 function makeRequest(path: string): Request {
   return new Request(`http://localhost${path}`);

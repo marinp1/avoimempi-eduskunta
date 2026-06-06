@@ -12,27 +12,3 @@ declare global {
     export type LanguageId = (typeof LanguageIds)[keyof typeof LanguageIds];
   }
 }
-
-export type {
-  RichTextBlock,
-  RichTextDocument,
-  RichTextDocumentReference,
-  RichTextHeadingBlock,
-  RichTextIndentedBlock,
-  RichTextInline,
-  RichTextLineBreakInline,
-  RichTextListBlock,
-  RichTextListItem,
-  RichTextMark,
-  RichTextParagraphBlock,
-  RichTextTableBlock,
-  RichTextTableCell,
-  RichTextTableRow,
-  RichTextTextInline,
-} from "./RichText";
-
-export {
-  isRichTextDocument,
-  parseRichTextDocument,
-  RICH_TEXT_VERSION,
-} from "./RichText";

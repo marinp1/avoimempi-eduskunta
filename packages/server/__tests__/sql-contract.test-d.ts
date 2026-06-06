@@ -13,8 +13,8 @@
  * contract list to change; this file then forces the TS type to change. Drift in
  * any one of the three breaks the build.
  */
-import type { RosterRow } from "#shared-types";
-import { TYPE_COLUMN_CONTRACTS } from "../database/sql-type-registry";
+import type { RosterRow } from "#server/types/webapp";
+import { TYPE_COLUMN_CONTRACTS } from "../src/database/sql-type-registry";
 
 type Cols<K extends keyof typeof TYPE_COLUMN_CONTRACTS> =
   (typeof TYPE_COLUMN_CONTRACTS)[K][number];

@@ -1,19 +1,10 @@
-import Asiakirjat from "#webapp/templates/pages/asiakirjat";
-import type {
-  AsiakirjatIndexData,
-  DocumentRow,
-} from "#webapp/templates/pages/asiakirjat";
+import Asiakirjat from "#server/features/document/pages/list.page";
+import type { AsiakirjatIndexData } from "#server/features/document/pages/list.page";
 import { withWebappPage } from "./helpers";
-import { fetchedAt } from "#webapp/templates/helpers";
-import { DOC_KIND_DISPATCH, mapToDocRow } from "./doc-dispatch";
+import { fetchedAt } from "#server/helpers/template-helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
-import { defineRoute } from "#shared-helpers";
-import {
-  type DocumentKind,
-  DOC_KIND_REGISTRY,
-  docKindList,
-} from "#shared/constants/DocumentKinds";
+import { defineRoute } from "#server/helpers";
 
 export function createAsiakirjatListRoute(deps: WebappDeps) {
   return defineRoute({
@@ -26,48 +17,11 @@ export function createAsiakirjatListRoute(deps: WebappDeps) {
       let currentPage = Number.isFinite(rawPage) && rawPage >= 1 ? rawPage : 1;
       const limit = 50;
 
-      const config =
-        kind && kind in DOC_KIND_REGISTRY
-          ? DOC_KIND_REGISTRY[kind as DocumentKind]
-          : undefined;
-
-      let rows: DocumentRow[];
-      let totalCount: number;
-
-      if (config) {
-        const dispatch = DOC_KIND_DISPATCH[config.key]!;
-        const result = dispatch(ctx.deps, {
-          query: q,
-          page: currentPage,
-          limit,
-        });
-        rows = result.items.map((item) => mapToDocRow(item, config));
-        totalCount = result.totalCount;
-      } else {
-        const allRows: DocumentRow[] = [];
-        const perKindLimit = 100;
-        for (const c of docKindList()) {
-          try {
-            const dispatch = DOC_KIND_DISPATCH[c.key]!;
-            const result = dispatch(ctx.deps, {
-              query: q,
-              page: 1,
-              limit: perKindLimit,
-            });
-            for (const item of result.items) {
-              allRows.push(mapToDocRow(item, c));
-            }
-          } catch {
-            // Skip types that don't have data or fail
-          }
-        }
-        allRows.sort(
-          (a, b) => (b.date ?? "").localeCompare(a.date ?? "") || b.id - a.id,
-        );
-        const start = (currentPage - 1) * limit;
-        rows = allRows.slice(start, start + limit);
-        totalCount = allRows.length;
-      }
+      const { rows, totalCount } = ctx.deps.documentService.listByKind(kind, {
+        query: q,
+        page: currentPage,
+        limit,
+      });
 
       currentPage = Math.min(currentPage, Math.ceil(totalCount / limit) || 1);
 

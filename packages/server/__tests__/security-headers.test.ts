@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   addSecurityHeaders,
   withSecurityHeaders,
-} from "../middleware/security-headers";
+} from "../src/middleware/security-headers";
 
 const REQUIRED_HEADERS = [
   "x-content-type-options",

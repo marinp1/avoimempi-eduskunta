@@ -1,8 +1,8 @@
-import Home, { HomeReactive } from "#webapp/templates/pages/home";
-import { setCursorCookie, formatFi, withWebappPage } from "./helpers";
+import Home, { HomeReactive } from "#server/features/home/pages/home.page";
+import { formatFi, withWebappPage } from "./helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
-import { defineRoute } from "#shared-helpers";
+import { defineRoute } from "#server/helpers";
 
 export function createHomeRoute(deps: WebappDeps) {
   return defineRoute({
@@ -22,14 +22,12 @@ export function createHomeRoute(deps: WebappDeps) {
         (s) => s.d <= cursor,
       ).length;
 
-      const cookieHeader = dateParam ? setCursorCookie(dateParam) : undefined;
-      const replaceUrl =
-        dateParam && cursor < ctx.tlData.today
-          ? `/?date=${encodeURIComponent(cursor)}`
-          : undefined;
+      const qs = new URLSearchParams();
+      qs.set("period", ctx.tlData.term);
+      if (cursor < ctx.tlData.today) qs.set("date", cursor);
+      const replaceUrl = `/?${qs.toString()}`;
 
       const extraHeaders: Record<string, string> = {};
-      if (cookieHeader) extraHeaders["Set-Cookie"] = cookieHeader;
       if (replaceUrl) extraHeaders["HX-Replace-Url"] = replaceUrl;
 
       const resolvedTl = dateParam

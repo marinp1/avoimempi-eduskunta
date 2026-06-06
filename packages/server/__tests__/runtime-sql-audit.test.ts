@@ -1,14 +1,11 @@
 import type { Database } from "bun:sqlite";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import {
   collectServerQueryAudit,
   summarizeQueryAudit,
-} from "../database/query-audit";
+} from "../src/database/query-audit";
 import { createTestDb, seedFullDataset } from "./helpers/setup-db";
-
-const QUERIES_DIR = join(import.meta.dirname, "../database/queries");
 
 const DEFAULT_BINDINGS: Record<string, number | string | null> = {
   $asOfDate: "2024-01-15",
@@ -86,7 +83,7 @@ describe("runtime SQL audit", () => {
     expect(records.length).toBeGreaterThan(0);
 
     for (const record of records) {
-      const sql = readFileSync(join(QUERIES_DIR, record.queryFile), "utf8");
+      const sql = readFileSync(record.filePath, "utf8");
       const stmt = db.prepare(sql);
       stmt.all(getBindingsForSql(sql));
       stmt.finalize();

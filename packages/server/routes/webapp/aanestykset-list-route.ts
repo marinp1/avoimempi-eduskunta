@@ -1,10 +1,10 @@
-import Aanestykset from "#webapp/templates/pages/aanestykset";
-import { buildAanestyksetData } from "#webapp/templates/pages/aanestykset-view-model";
-import { fetchedAt } from "#webapp/templates/helpers";
+import Aanestykset from "#server/features/voting/pages/list.page";
+import { buildAanestyksetData } from "#server/features/voting/pages/list.view-model";
+import { fetchedAt } from "#server/helpers/template-helpers";
 import { withWebappPage } from "./helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
-import { defineRoute } from "#shared-helpers";
+import { defineRoute } from "#server/helpers";
 
 export function createAanestyksetListRoute(deps: WebappDeps) {
   return defineRoute({

@@ -1,10 +1,10 @@
-import Asiakohta from "#webapp/templates/pages/asiakohta";
-import { buildAsiakohtaData } from "#webapp/templates/pages/asiakohta-view-model";
+import Asiakohta from "#server/features/session/pages/agenda-item.page";
+import { buildAsiakohtaData } from "#server/features/session/pages/section.view-model";
 import { withWebappPage } from "./helpers";
-import { fetchedAt } from "#webapp/templates/helpers";
+import { fetchedAt } from "#server/helpers/template-helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
-import { defineRoute } from "#shared-helpers";
+import { defineRoute } from "#server/helpers";
 
 export function createAsiakohtaRoute(deps: WebappDeps) {
   return defineRoute({

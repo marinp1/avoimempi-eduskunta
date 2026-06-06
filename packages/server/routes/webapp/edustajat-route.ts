@@ -1,12 +1,15 @@
-import { applyFilters, type RosterParams } from "#webapp/templates/helpers";
-import Koostumusmuutos from "#webapp/templates/components/koostumusmuutos";
-import Edustajat from "#webapp/templates/pages/edustajat";
-import RosterContent from "#webapp/templates/pages/roster-content";
-import { fragmentResponse } from "#webapp/eta";
-import { withWebappPage } from "./helpers";
+import {
+  applyFilters,
+  type RosterParams,
+} from "#server/helpers/template-helpers";
+import Koostumusmuutos from "#server/components/koostumusmuutos";
+import Edustajat from "#server/features/person/pages/roster.page";
+import RosterContent from "#server/features/person/fragments/roster-content.fragment";
+import { fragmentResponse } from "#server/eta";
+import { withWebappPage, readPeriod } from "./helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
-import { defineRoute } from "#shared-helpers";
+import { defineRoute } from "#server/helpers";
 
 function parseRosterParams(url: URL): RosterParams {
   return {
@@ -72,11 +75,28 @@ export function createEdustajatRoute(deps: WebappDeps) {
           date: dateParam,
         });
 
-        return fragmentResponse(
+        const period = readPeriod(url, deps.metadataRepository);
+        const termStr = period === "all" ? "all" : period.join(",");
+        const qs = new URLSearchParams();
+        qs.set("period", termStr);
+        qs.set("date", dateParam);
+        const replaceUrl = `/edustajat?${qs.toString()}`;
+
+        const headers: Record<string, string> = {};
+        if (replaceUrl) headers["HX-Replace-Url"] = replaceUrl;
+
+        return new Response(
           Koostumusmuutos({
             date: dateParam,
             rows,
           }),
+          {
+            headers: {
+              "Content-Type": "text/html; charset=utf-8",
+              Vary: "HX-Request",
+              ...headers,
+            },
+          },
         );
       },
     }),

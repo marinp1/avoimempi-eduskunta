@@ -1,16 +1,16 @@
-import Keskustelu from "#webapp/templates/pages/keskustelu";
-import { buildDebateViewModel } from "#webapp/templates/pages/keskustelu-view-model";
+import Keskustelu from "#server/features/session/fragments/debate.fragment";
+import { buildDebateViewModel } from "#server/features/session/pages/debate.view-model";
 import {
   page,
   getWebappContext,
   getPeriodSelectorData,
   notFoundResponse,
 } from "./helpers";
-import { fetchedAt } from "#webapp/templates/helpers";
-import type { PartySeatRow } from "#shared-types";
+import { fetchedAt } from "#server/helpers/template-helpers";
+import type { PartySeatRow } from "#server/types/webapp";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
-import { defineRoute } from "#shared-helpers";
+import { defineRoute } from "#server/helpers";
 
 export function createKeskusteluRoute(deps: WebappDeps) {
   return defineRoute({
@@ -86,8 +86,8 @@ export function createKeskusteluRoute(deps: WebappDeps) {
       const title = i18next.t("common:debate_title_format", {
         title: data.section.title,
       });
-      const { tlData } = getWebappContext(req, deps);
-      const periodData = getPeriodSelectorData(req, deps.metadataRepository);
+      const { tlData } = getWebappContext(url, deps);
+      const periodData = getPeriodSelectorData(url, deps.metadataRepository);
 
       return page({
         req,

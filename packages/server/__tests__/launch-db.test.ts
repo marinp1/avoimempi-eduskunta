@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { getDatabasePath, getTraceDatabasePath } from "#database";
 import { StorageFactory } from "#storage";
-import { prepareDatabaseForServerStartup } from "../database/launch-db";
+import { prepareDatabaseForServerStartup } from "../src/database/launch-db";
 
 const envKeys = [
   "STORAGE_PROVIDER",

@@ -1,10 +1,8 @@
 import type { Database } from "bun:sqlite";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync } from "node:fs";
+import { listQueryFiles } from "../src/database/query-audit";
 import { createTestDb, seedFullDataset } from "./helpers/setup-db";
-
-const QUERIES_DIR = join(import.meta.dirname, "../database/queries");
 
 const DEFAULT_BINDINGS: Record<string, number | string | null> = {
   $date: "2024-01-15",
@@ -56,25 +54,21 @@ afterAll(() => {
 
 describe("All SQL query files", () => {
   test("every SQL file has content", () => {
-    const queryFiles = readdirSync(QUERIES_DIR)
-      .filter((filename) => filename.endsWith(".sql"))
-      .sort();
+    const queryFiles = listQueryFiles();
 
     expect(queryFiles.length).toBeGreaterThan(0);
 
-    for (const queryFile of queryFiles) {
-      const fileSql = readFileSync(join(QUERIES_DIR, queryFile), "utf-8");
+    for (const { filePath } of queryFiles) {
+      const fileSql = readFileSync(filePath, "utf-8");
       expect(normalizeSql(fileSql).length).toBeGreaterThan(0);
     }
   });
 
   test("every SQL query file executes with default bindings", () => {
-    const queryFiles = readdirSync(QUERIES_DIR)
-      .filter((filename) => filename.endsWith(".sql"))
-      .sort();
+    const queryFiles = listQueryFiles();
 
-    for (const queryFile of queryFiles) {
-      const querySql = readFileSync(join(QUERIES_DIR, queryFile), "utf-8");
+    for (const { queryFile, filePath } of queryFiles) {
+      const querySql = readFileSync(filePath, "utf-8");
       const stmt = db.prepare(querySql);
       const bindings = getBindingsForSql(querySql);
       stmt.all(bindings);

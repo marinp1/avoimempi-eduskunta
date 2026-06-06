@@ -1,8 +1,8 @@
-import Hallitukset from "#webapp/templates/pages/hallitukset";
+import Hallitukset from "#server/features/analytics/pages/governments.page";
 import { withWebappPage } from "./helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
-import { defineRoute } from "#shared-helpers";
+import { defineRoute } from "#server/helpers";
 
 export function createHallituksetRoute(deps: WebappDeps) {
   return defineRoute({

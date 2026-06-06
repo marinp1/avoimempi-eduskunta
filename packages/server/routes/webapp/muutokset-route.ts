@@ -1,8 +1,8 @@
-import Muutokset from "#webapp/templates/pages/muutokset";
+import Muutokset from "#server/features/analytics/pages/changes.page";
 import { withWebappPage } from "./helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
-import { defineRoute } from "#shared-helpers";
+import { defineRoute } from "#server/helpers";
 
 export function createMuutoksetRoute(deps: WebappDeps) {
   return defineRoute({

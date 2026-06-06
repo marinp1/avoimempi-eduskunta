@@ -1,15 +1,11 @@
-import type { PeriodSelectorData } from "#webapp/src/period-selector-data";
-import {
-  timeline,
-  type TimelineData,
-  type SittingTick,
-} from "#webapp/templates/partials/timeline";
-import type { SessionRepository } from "../../../database/repositories/session-repository";
-import type { MetadataRepository } from "../../../database/repositories/metadata-repository";
+import type { PeriodSelectorData } from "#server/helpers/period-selector-data";
+import type { TimelineData, SittingTick } from "#server/layouts/timeline";
+import Timeline from "#server/layouts/timeline";
+import type { SessionRepository } from "../../../src/features/session/session.repository";
+import type { MetadataRepository } from "../../../src/features/metadata/metadata.repository";
 import type { WebappDeps } from "../deps";
 import i18next from "i18next";
-import { formatFi } from "#shared-helpers";
-import { PEILI_DATE_COOKIE, PEILI_PERIOD_COOKIE, readCookie } from "./cookies";
+import { formatFi } from "#server/helpers";
 
 export type PeriodSelection = number[] | "all";
 
@@ -38,7 +34,7 @@ function currentGovernment(govs: GovPeriod[]): GovPeriod {
   return govs.find((g) => g.endDate === null) ?? govs[0]!;
 }
 
-/** Parse cookie value into a period selection. Handles legacy "2023"/"2019" → defaults to current. */
+/** Parse URL param value into a period selection. Handles legacy "2023"/"2019" → defaults to current. */
 function parsePeriod(val: string | null, govs: GovPeriod[]): PeriodSelection {
   if (val === "all") return "all";
   if (!val) return [currentGovernment(govs).id];
@@ -109,16 +105,16 @@ function getAllTicks(repo: SessionRepository): SittingTick[] {
 }
 
 export function readPeriod(
-  req: Request,
+  url: URL,
   repo: MetadataRepository,
 ): PeriodSelection {
-  const val = readCookie(req, PEILI_PERIOD_COOKIE);
+  const val = url.searchParams.get("period") ?? null;
   const govs = loadGovernments(repo);
   return parsePeriod(val, govs);
 }
 
-function readCursorDate(req: Request, termToday: string): string {
-  const val = readCookie(req, PEILI_DATE_COOKIE);
+function readCursorDate(url: URL, termToday: string): string {
+  const val = url.searchParams.get("date");
   if (val && /^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
   return termToday;
 }
@@ -126,12 +122,12 @@ function readCursorDate(req: Request, termToday: string): string {
 export type TickSource = "sessions" | "composition";
 
 export function getTimelineData(
-  req: Request,
+  url: URL,
   sessionRepo: SessionRepository,
   metadataRepo: MetadataRepository,
   tickSource: TickSource = "sessions",
 ): TimelineData {
-  const period = readPeriod(req, metadataRepo);
+  const period = readPeriod(url, metadataRepo);
   const bounds = getTermBounds(period, metadataRepo);
   const allTicks: SittingTick[] =
     tickSource === "composition"
@@ -167,8 +163,8 @@ export function getTimelineData(
       ? ticks[ticks.length - 1]!.d
       : new Date().toISOString().slice(0, 10);
 
-  const cursor = readCursorDate(req, termToday);
-  // Clamp cursor to term bounds — a stale peili_date from a different term is ignored
+  const cursor = readCursorDate(url, termToday);
+  // Clamp cursor to term bounds — a stale date from a different term is ignored
   const clampedCursor =
     cursor >= bounds.startDate && (!bounds.endDate || cursor <= bounds.endDate)
       ? cursor
@@ -188,27 +184,27 @@ export function getTimelineData(
 
 /** Convenience wrapper: fetches timeline data, period, and term bounds in one call. */
 export function getWebappContext(
-  req: Request,
+  url: URL,
   deps: Pick<WebappDeps, "sessionRepository" | "metadataRepository">,
   tickSource?: TickSource,
 ) {
   const tlData = getTimelineData(
-    req,
+    url,
     deps.sessionRepository,
     deps.metadataRepository,
     tickSource,
   );
-  const period = readPeriod(req, deps.metadataRepository);
+  const period = readPeriod(url, deps.metadataRepository);
   const bounds = getTermBounds(period, deps.metadataRepository);
   return { tlData, period, bounds };
 }
 
 export function getPeriodSelectorData(
-  req: Request,
+  url: URL,
   repo: MetadataRepository,
 ): PeriodSelectorData {
   const govs = loadGovernments(repo);
-  const period = readPeriod(req, repo);
+  const period = readPeriod(url, repo);
   const selectedIds = period === "all" ? govs.map((g) => g.id) : period;
   const selectedSet = new Set(selectedIds);
   const allSelected = selectedIds.length === govs.length;
@@ -267,5 +263,5 @@ function describePeriodSelection(
 }
 
 export function timelineOobHtml(data: TimelineData): string {
-  return timeline({ ...data, oob: true });
+  return Timeline({ data: { ...data, oob: true } });
 }

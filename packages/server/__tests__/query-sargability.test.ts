@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import coalitionVsOpposition from "../database/queries/COALITION_VS_OPPOSITION.sql";
-import votingGovernmentOppositionById from "../database/queries/VOTING_GOVERNMENT_OPPOSITION_BY_ID.sql";
-import votingMemberVotesById from "../database/queries/VOTING_MEMBER_VOTES_BY_ID.sql";
-import votingPartyBreakdownById from "../database/queries/VOTING_PARTY_BREAKDOWN_BY_ID.sql";
+import coalitionVsOpposition from "../src/features/analytics/sql/analytics-coalition-opposition.sql";
+import votingGovernmentOppositionById from "../src/features/voting/sql/voting-government-opposition.sql";
+import votingMemberVotesById from "../src/features/voting/sql/voting-member-votes.sql";
+import votingPartyBreakdownById from "../src/features/voting/sql/voting-party-breakdown.sql";
 
 describe("SQL sargability regressions", () => {
   test("voting inline detail queries avoid DATE()/SUBSTR() wrappers on join/filter columns", () => {

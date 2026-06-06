@@ -1,9 +1,11 @@
-import Istunnot, { SessionList } from "#webapp/templates/pages/istunnot";
-import { buildSessionsViewModel } from "#webapp/templates/pages/istunnot-view-models";
-import { setCursorCookie, formatFi, withWebappPage } from "./helpers";
+import Istunnot, {
+  SessionList,
+} from "#server/features/session/pages/list.page";
+import { buildSessionsViewModel } from "#server/features/session/pages/list.view-model";
+import { formatFi, withWebappPage } from "./helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
-import { defineRoute } from "#shared-helpers";
+import { defineRoute } from "#server/helpers";
 
 export function createIstunnotRoute(deps: WebappDeps) {
   return defineRoute({
@@ -31,16 +33,15 @@ export function createIstunnotRoute(deps: WebappDeps) {
       const isAtPresent = cursor >= ctx.tlData.today;
       const shownCursor = isAtPresent ? undefined : formatFi(cursor);
 
-      const cookieHeader = dateParam ? setCursorCookie(dateParam) : undefined;
       const replaceUrl = buildIstunnotUrl({
         cursor,
         today: ctx.tlData.today,
+        term: ctx.tlData.term,
         kind,
         q,
       });
 
       const extraHeaders: Record<string, string> = {};
-      if (cookieHeader) extraHeaders["Set-Cookie"] = cookieHeader;
       if (replaceUrl) extraHeaders["HX-Replace-Url"] = replaceUrl;
 
       const resolvedTl = dateParam
@@ -74,15 +75,15 @@ export function createIstunnotRoute(deps: WebappDeps) {
 function buildIstunnotUrl(opts: {
   cursor: string;
   today: string;
+  term: string;
   kind?: string;
   q?: string;
 }): string | undefined {
-  const { cursor, today, kind, q } = opts;
-  if (cursor >= today && !kind && !q) return undefined;
+  const { cursor, today, term, kind, q } = opts;
   const qs = new URLSearchParams();
+  qs.set("period", term);
   if (cursor < today) qs.set("date", cursor);
   if (kind) qs.set("kind", kind);
   if (q) qs.set("q", q);
-  const query = qs.toString();
-  return query ? `/istunnot?${query}` : "/istunnot";
+  return `/istunnot?${qs.toString()}`;
 }

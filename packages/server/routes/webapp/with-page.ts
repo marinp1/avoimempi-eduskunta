@@ -6,7 +6,7 @@ import {
   type PagePartial,
   type TickSource,
 } from "./helpers";
-import type { TimelineData } from "#webapp/templates/partials/timeline";
+import type { TimelineData } from "#server/layouts/timeline";
 
 export interface PageResult {
   fragment: string;
@@ -40,24 +40,30 @@ export function withWebappPage<P extends Record<string, string>>(
   opts?: { tickSource?: TickSource },
 ): (req: Request, params: P) => Promise<Response> {
   return async (req, params) => {
+    const url = new URL(req.url);
     const { tlData, period, bounds } = getWebappContext(
-      req,
+      url,
       deps,
       opts?.tickSource,
     );
-    const periodData = getPeriodSelectorData(req, deps.metadataRepository);
+    const periodData = getPeriodSelectorData(url, deps.metadataRepository);
     const ctx: WebappCtx = { req, deps, tlData, period, bounds, periodData };
-    const result = await handler(ctx, params);
-    if (result instanceof Response) return result;
-    return page({
-      req,
-      fragment: result.fragment,
-      activePath: result.activePath,
-      title: result.title,
-      timelineData: result.timelineData ?? tlData,
-      periodData,
-      extraHeaders: result.extraHeaders,
-      partial: result.partial,
-    });
+    try {
+      const result = await handler(ctx, params);
+      if (result instanceof Response) return result;
+      return page({
+        req,
+        fragment: result.fragment,
+        activePath: result.activePath,
+        title: result.title,
+        timelineData: result.timelineData ?? tlData,
+        periodData,
+        extraHeaders: result.extraHeaders,
+        partial: result.partial,
+      });
+    } catch (e) {
+      if (e instanceof Response) return e;
+      throw e;
+    }
   };
 }

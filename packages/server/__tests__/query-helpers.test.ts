@@ -5,7 +5,7 @@ import {
   buildSearchQuery,
   endDateExclusive,
   paginatedResult,
-} from "../database/query-helpers";
+} from "../src/database/query-helpers";
 
 describe("database query helpers", () => {
   test("buildSearchQuery tokenizes and joins by wildcard", () => {

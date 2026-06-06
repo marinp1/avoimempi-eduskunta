@@ -29,20 +29,19 @@ import { join } from "node:path";
 import {
   collectServerQueryAudit,
   summarizeQueryAudit,
-} from "../database/query-audit";
+} from "../src/database/query-audit";
 import {
   SQL_TYPE_REGISTRY,
   TYPE_COLUMN_CONTRACTS,
-} from "../database/sql-type-registry";
-import { PersonRepository } from "../database/repositories/person-repository";
+} from "../src/database/sql-type-registry";
+import { PersonRepository } from "../src/features/person/person.repository";
 import {
   createTestDb,
   seedFullDataset,
   seedEdgeCases,
 } from "./helpers/setup-db";
 
-const QUERIES_DIR = join(import.meta.dirname, "../database/queries");
-// One snapshot file per query (e.g. sql-snapshots/VOTING_BY_ID.sql.json) so diffs
+// One snapshot file per query (e.g. sql-snapshots/voting-detail.sql.json) so diffs
 // stay localized and the directory scales to hundreds of queries without a single
 // giant file or merge conflicts.
 const SNAPSHOT_DIR = join(import.meta.dirname, "sql-snapshots");
@@ -102,7 +101,7 @@ const QUERY_BINDING_OVERRIDES: Record<
   "VOTINGS_SEARCH.sql": { $q: "esitys", $query: "esitys" },
   // Optional filters must be NULL (no filter); the `?? 1` fallback would set
   // $session/$phase to 1 and exclude every row.
-  "VOTINGS_BROWSE.sql": {
+  "voting-list.sql": {
     $query: null,
     $session: null,
     $phase: null,
@@ -225,7 +224,7 @@ beforeAll(() => {
     (record) => record.isRuntimeUsed,
   );
   for (const record of records) {
-    const sql = readFileSync(join(QUERIES_DIR, record.queryFile), "utf8");
+    const sql = readFileSync(record.filePath, "utf8");
     const shape = extractColumnShape(
       db,
       sql,
@@ -256,7 +255,7 @@ describe("SQL contract tests", () => {
       const shape = computedShapes.get(record.queryFile);
       if (shape !== undefined) {
         if (shape === null) {
-          const sql = readFileSync(join(QUERIES_DIR, record.queryFile), "utf8");
+          const sql = readFileSync(record.filePath, "utf8");
           const stmt = db.prepare(sql);
           const rows = stmt.all(getBindingsForSql(sql, record.queryFile));
           stmt.finalize();
@@ -414,7 +413,7 @@ describe("SQL contract — edge-case fixtures", () => {
 
   test("every runtime query still executes against the edge-augmented seed", () => {
     for (const record of runtimeRecords) {
-      const sql = readFileSync(join(QUERIES_DIR, record.queryFile), "utf8");
+      const sql = readFileSync(record.filePath, "utf8");
       const stmt = edgeDb.prepare(sql);
       expect(() =>
         stmt.all(getBindingsForSql(sql, record.queryFile)),

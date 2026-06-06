@@ -13,11 +13,10 @@ The project ingests source data from the Eduskunta Open API, transforms it throu
 
 ```txt
 packages/
-├── client/      [DEPRECATED] old React/MUI frontend — replaced by packages/webapp
-├── webapp/      Frontend (htmx-based, active development)
-├── server/      Bun HTTP API + database access
+├── server/      Bun HTTP server + htmx web app (feature modules under src/features/)
 ├── datapipe/    Scraper, parser, and migrator CLIs
-└── shared/      Shared constants, types, storage, and DB utilities
+├── shared/      Shared constants, types, storage, and DB utilities
+└── infra/       Infrastructure-as-code (Terraform/OpenTofu)
 
 data/
 ├── raw.db       Raw rows from scraper

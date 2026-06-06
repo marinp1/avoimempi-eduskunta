@@ -1,18 +1,20 @@
-import Aanestys from "#webapp/templates/pages/aanestys";
-import type { SingleVoteData } from "#webapp/templates/pages/aanestys-view-model";
-import { buildSingleVoteData } from "#webapp/templates/pages/aanestys-view-model";
+import Aanestys from "#server/features/voting/pages/detail.page";
+import type { SingleVoteData } from "#server/features/voting/pages/detail.view-model";
+import { buildSingleVoteData } from "#server/features/voting/pages/detail.view-model";
 import { withWebappPage } from "./helpers";
-import { fetchedAt } from "#webapp/templates/helpers";
+import { fetchedAt } from "#server/helpers/template-helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
-import { defineRoute } from "#shared-helpers";
+import { defineRoute } from "#server/helpers";
 export function createAanestysRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/aanestys/:id",
     GET: withWebappPage(deps, async (ctx, params) => {
       const id = params.id;
 
-      const voting = ctx.deps.votingRepository.fetchVotingById({ id });
+      const voting = ctx.deps.votingRepository.fetchVotingById({
+        votingId: id,
+      });
       if (!voting) {
         return {
           fragment: `<section class="page-hero"><h1>${i18next.t("common:vote_not_found")}</h1><p>${i18next.t("common:vote_not_found_id", { id })}</p></section>`,
@@ -22,7 +24,7 @@ export function createAanestysRoute(deps: WebappDeps) {
       }
 
       const details = ctx.deps.votingRepository.fetchVotingInlineDetails({
-        id,
+        votingId: id,
       });
 
       const data: SingleVoteData = buildSingleVoteData({

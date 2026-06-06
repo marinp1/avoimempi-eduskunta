@@ -1,8 +1,8 @@
-import { htmlResponse } from "#webapp/eta";
+import { htmlResponse } from "#server/eta";
 import { assetVersion } from "./assets";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
-import { defineRoute } from "#shared-helpers";
+import { defineRoute } from "#server/helpers";
 
 export function createLaadunvalvontaRoute(_deps: WebappDeps) {
   return defineRoute({

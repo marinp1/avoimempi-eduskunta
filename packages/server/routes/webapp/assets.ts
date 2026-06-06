@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 
-const setupJsPath = new URL("../../../webapp/src/setup.ts", import.meta.url)
+const setupJsPath = new URL("../../src/client/setup.ts", import.meta.url)
   .pathname;
-const cssPath = new URL("../../../webapp/src/styles.css", import.meta.url)
+const cssPath = new URL("../../src/client/styles.css", import.meta.url)
   .pathname;
 
 const setupBuild = await Bun.build({

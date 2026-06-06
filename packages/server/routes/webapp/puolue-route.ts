@@ -1,18 +1,19 @@
-import Puolue from "#webapp/templates/pages/puolue";
-import type { PartyDetailData } from "#webapp/templates/pages/puolue-view-model";
+import Puolue from "#server/features/metadata/pages/party.page";
+import type { PartyDetailData } from "#server/features/metadata/pages/detail.view-model";
 import { page, getWebappContext, getPeriodSelectorData } from "./helpers";
-import { buildPartyDetailData } from "#webapp/templates/pages/puolue-view-model";
-import { fetchedAt } from "#webapp/templates/helpers";
+import { buildPartyDetailData } from "#server/features/metadata/pages/detail.view-model";
+import { fetchedAt } from "#server/helpers/template-helpers";
 import type { WebappDeps } from "./deps";
-import { defineRoute } from "#shared-helpers";
+import { defineRoute } from "#server/helpers";
 
 export function createPuolueRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/puolue/:code",
     GET: async (req, params) => {
       const code = params.code;
-      const { tlData, bounds } = getWebappContext(req, deps);
-      const periodData = getPeriodSelectorData(req, deps.metadataRepository);
+      const url = new URL(req.url);
+      const { tlData, bounds } = getWebappContext(url, deps);
+      const periodData = getPeriodSelectorData(url, deps.metadataRepository);
 
       const summaryRows = deps.analyticsRepository.fetchPartySummary({
         asOfDate: tlData.cursor,

@@ -1,4 +1,4 @@
-export type { PeriodSelectorData } from "#webapp/src/period-selector-data";
+export type { PeriodSelectorData } from "#server/helpers/period-selector-data";
 
 export { page } from "./response";
 export { notFoundResponse } from "./response";
@@ -15,9 +15,7 @@ export {
 } from "./timeline";
 export type { PeriodSelection, TermBounds, TickSource } from "./timeline";
 
-export { setCursorCookie } from "./cookies";
-
-export { formatFi, isHtmx } from "#shared-helpers";
+export { formatFi, isHtmx } from "#server/helpers";
 
 export { withWebappPage } from "../with-page";
 export type { PageResult, WebappCtx } from "../with-page";

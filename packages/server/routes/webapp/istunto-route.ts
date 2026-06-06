@@ -1,115 +1,28 @@
-import Istunto from "#webapp/templates/pages/istunto";
-import { buildSessionDetailViewModel } from "#webapp/templates/pages/istunto-view-model";
-import {
-  page,
-  getWebappContext,
-  getPeriodSelectorData,
-  notFoundResponse,
-} from "./helpers";
-import { fetchedAt } from "#webapp/templates/helpers";
-import type { PartySeatRow } from "#shared-types";
+import Istunto from "#server/features/session/pages/detail.page";
+import { notFoundResponse, withWebappPage } from "./helpers";
 import type { WebappDeps } from "./deps";
+import { orNotFound } from "#server/helpers/errors";
 import i18next from "i18next";
-import { defineRoute } from "#shared-helpers";
+import { defineRoute } from "#server/helpers";
 
 export function createIstuntoRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/istunto/:year/:num",
-    GET: (req, params) => {
+    GET: withWebappPage(deps, async (ctx, params) => {
       const { year, num } = params;
       if (!year || !num) {
-        return notFoundResponse(req, `/istunto/${year}/${num}`);
+        return notFoundResponse(ctx.req, `/istunto/${year}/${num}`);
       }
 
-      const key = `${year}/${num}`;
-      const { session, sections } = deps.sessionRepository.fetchSessionByKey({
-        key,
-      });
+      const sessionKey = `${year}/${num}`;
+      const data = await ctx.deps.sessionService.getSessionDetail(sessionKey);
+      orNotFound(ctx.req, data, `/istunto/${sessionKey}`);
 
-      if (!session) {
-        return notFoundResponse(req, `/istunto/${key}`);
-      }
-
-      const votingsBySectionKey = new Map<
-        string,
-        ReturnType<typeof deps.sessionRepository.fetchSectionVotings>
-      >();
-      for (const section of sections) {
-        if (section.voting_count > 0) {
-          const votings = deps.sessionRepository.fetchSectionVotings({
-            sectionKey: section.key,
-          });
-          votingsBySectionKey.set(section.key, votings);
-        }
-      }
-
-      let rollCallData = null;
-      for (const section of sections) {
-        const result = deps.sessionRepository.fetchSectionRollCall({
-          sectionKey: section.key,
-        });
-        if (result) {
-          rollCallData = result;
-          break;
-        }
-      }
-
-      const partySeatRows: PartySeatRow[] =
-        deps.sessionRepository.fetchPartySeatCounts(
-          session.date ?? new Date().toISOString().slice(0, 10),
-        );
-      const seatCounts: Record<string, { seats: number; inGov: boolean }> = {};
-      for (const row of partySeatRows) {
-        seatCounts[row.party_code] = {
-          seats: row.seat_count,
-          inGov: row.is_in_government === 1,
-        };
-      }
-
-      const docIdMap = resolveDocumentIds(sections, deps);
-
-      const data = buildSessionDetailViewModel(
-        session,
-        sections,
-        votingsBySectionKey,
-        rollCallData,
-        fetchedAt(),
-        seatCounts,
-        docIdMap,
-      );
-
-      const { tlData } = getWebappContext(req, deps);
-      const periodData = getPeriodSelectorData(req, deps.metadataRepository);
-      return page({
-        req,
+      return {
         fragment: Istunto({ data }),
         activePath: "/istunnot",
-        title: i18next.t("common:session_title_format", { key }),
-        timelineData: tlData,
-        periodData,
-      });
-    },
+        title: i18next.t("common:session_title_format", { key: sessionKey }),
+      };
+    }),
   });
-}
-
-function resolveDocumentIds(
-  sections: Array<{ minutes_related_document_identifier?: string | null }>,
-  deps: WebappDeps,
-): Map<string, number> {
-  const map = new Map<string, number>();
-  const seen = new Set<string>();
-  for (const section of sections) {
-    const ident = section.minutes_related_document_identifier;
-    if (!ident || seen.has(ident)) continue;
-    seen.add(ident);
-    try {
-      const wq = deps.documentRepository.fetchWrittenQuestionByIdentifier({
-        identifier: ident,
-      });
-      if (wq) map.set(ident, wq.id);
-    } catch {
-      // Identifier not found in WrittenQuestion — skip
-    }
-  }
-  return map;
 }
