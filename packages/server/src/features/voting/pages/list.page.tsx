@@ -3,7 +3,7 @@ import { clsx } from "clsx";
 import PageHead from "#server/components/page-head";
 import { esc } from "#server/helpers/template-helpers";
 import i18next from "i18next";
-import type { AanestyksetData, VoteRow } from "./list.view-model";
+import type { AanestyksetData, VoteGroup, VoteRow } from "./list.view-model";
 
 const NAV = {
   "hx-target": "#main-content",
@@ -75,24 +75,7 @@ export default function Aanestykset({ title, data }: Props) {
           </button>
         </div>
 
-        {d.groups.map((group) => (
-          <div class="vgroup">
-            <div class="week-head">
-              <span class="week-head__k">
-                {i18next.t("aanestykset:group_header")}
-              </span>
-              <span class="week-head__t">{esc(group.sessionDateLabel)}</span>
-              <span class="week-head__meta">
-                {i18next.t("aanestykset:count", { count: group.rows.length })}
-              </span>
-            </div>
-            <div class="vrow-list">
-              {group.rows.map((row) => (
-                <VoteRowItem row={row} />
-              ))}
-            </div>
-          </div>
-        ))}
+        <VoteGroupsAndMore data={d} />
 
         {d.groups.length === 0 && (
           <div style="text-align:center;color:var(--muted);padding:40px 0">
@@ -112,6 +95,72 @@ export default function Aanestykset({ title, data }: Props) {
         </div>
       </div>
     </>
+  );
+}
+
+function VoteGroupsAndMore({ data }: { data: AanestyksetData }) {
+  return (
+    <>
+      {data.groups.map((group) => (
+        <VoteGroupBlock group={group} />
+      ))}
+      {data.nextCursor && (
+        <button
+          id="vote-load-more"
+          class="load-more-btn"
+          hx-get={`/aanestykset?cursor=${encodeURIComponent(data.nextCursor)}&load_more=1`}
+          hx-target="this"
+          hx-swap="outerHTML"
+          hx-browser-indicator="true"
+        >
+          {i18next.t("aanestykset:load_more")}
+        </button>
+      )}
+    </>
+  );
+}
+
+/** Partial fragment returned for click-to-load requests (?load_more=1). */
+export function VoteGroupsFragment({ data }: { data: AanestyksetData }) {
+  return (
+    <>
+      {data.groups.map((group) => (
+        <VoteGroupBlock group={group} />
+      ))}
+      {data.nextCursor && (
+        <button
+          id="vote-load-more"
+          class="load-more-btn"
+          hx-get={`/aanestykset?cursor=${encodeURIComponent(data.nextCursor)}&load_more=1`}
+          hx-target="this"
+          hx-swap="outerHTML"
+          hx-browser-indicator="true"
+        >
+          {i18next.t("aanestykset:load_more")}
+        </button>
+      )}
+    </>
+  );
+}
+
+function VoteGroupBlock({ group }: { group: VoteGroup }) {
+  return (
+    <div class="vgroup">
+      <div class="week-head">
+        <span class="week-head__k">
+          {i18next.t("aanestykset:group_header")}
+        </span>
+        <span class="week-head__t">{esc(group.sessionDateLabel)}</span>
+        <span class="week-head__meta">
+          {i18next.t("aanestykset:count", { count: group.rows.length })}
+        </span>
+      </div>
+      <div class="vrow-list">
+        {group.rows.map((row) => (
+          <VoteRowItem row={row} />
+        ))}
+      </div>
+    </div>
   );
 }
 

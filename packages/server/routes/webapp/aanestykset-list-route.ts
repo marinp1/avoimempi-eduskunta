@@ -1,10 +1,19 @@
-import Aanestykset from "#server/features/voting/pages/list.page";
+import Aanestykset, {
+  VoteGroupsFragment,
+} from "#server/features/voting/pages/list.page";
 import { buildAanestyksetData } from "#server/features/voting/pages/list.view-model";
 import { fetchedAt } from "#server/helpers/template-helpers";
 import { withWebappPage } from "./helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
-import { defineRoute } from "#server/helpers";
+import { defineRoute, isHtmx } from "#server/helpers";
+
+/** Returns an endDate (exclusive) that is one day before the given ISO date string. */
+function dayBefore(isoDate: string): string {
+  const d = new Date(isoDate);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
 
 export function createAanestyksetListRoute(deps: WebappDeps) {
   return defineRoute({
@@ -12,10 +21,14 @@ export function createAanestyksetListRoute(deps: WebappDeps) {
     GET: withWebappPage(deps, async (ctx) => {
       const url = new URL(ctx.req.url);
       const searchQuery = url.searchParams.get("q")?.trim().toLowerCase();
+      const cursor = url.searchParams.get("cursor") ?? undefined;
+
+      // When a cursor is present (load-more), fetch sessions strictly before it.
+      const endDate = cursor ? dayBefore(cursor) : ctx.bounds.endDate;
 
       const browseResult = ctx.deps.votingRepository.browseVotings({
         startDate: ctx.bounds.startDate,
-        endDate: ctx.bounds.endDate,
+        endDate,
         sort: "newest",
         limit: 500,
       });
@@ -25,6 +38,13 @@ export function createAanestyksetListRoute(deps: WebappDeps) {
         searchQuery,
         fetchedAt: fetchedAt(),
       });
+
+      // Click-to-load: return only the new groups + updated button, no page wrapper.
+      if (isHtmx(ctx.req) && url.searchParams.has("load_more")) {
+        return new Response(VoteGroupsFragment({ data }), {
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        });
+      }
 
       const pageUrl = searchQuery
         ? `/aanestykset?q=${encodeURIComponent(searchQuery)}`

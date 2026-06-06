@@ -1,10 +1,12 @@
-import Asiakirjat from "#server/features/document/pages/list.page";
+import Asiakirjat, {
+  DocLoadMoreFragment,
+} from "#server/features/document/pages/list.page";
 import type { AsiakirjatIndexData } from "#server/features/document/pages/list.page";
 import { withWebappPage } from "./helpers";
 import { fetchedAt } from "#server/helpers/template-helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
-import { defineRoute } from "#server/helpers";
+import { defineRoute, isHtmx } from "#server/helpers";
 
 export function createAsiakirjatListRoute(deps: WebappDeps) {
   return defineRoute({
@@ -33,6 +35,14 @@ export function createAsiakirjatListRoute(deps: WebappDeps) {
         kind: kind ?? "",
         fetchedAt: fetchedAt(),
       };
+
+      // Click-to-load: return only the new rows + updated button, no page wrapper.
+      if (isHtmx(ctx.req) && url.searchParams.has("load_more")) {
+        return new Response(
+          DocLoadMoreFragment({ data, query: q, kind: kind ?? "" }),
+          { headers: { "Content-Type": "text/html; charset=utf-8" } },
+        );
+      }
 
       return {
         fragment: Asiakirjat({

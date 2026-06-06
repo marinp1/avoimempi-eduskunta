@@ -57,6 +57,8 @@ export interface VoteGroup {
 export interface AanestyksetData {
   groups: VoteGroup[];
   totalCount: number;
+  /** ISO date of the oldest shown session; non-null when more sessions may exist. */
+  nextCursor: string | null;
   fetchedAt: string;
 }
 
@@ -114,9 +116,12 @@ export function buildAanestyksetData(input: {
     groupMap.get(sk)!.push(row);
   }
 
-  const groups: VoteGroup[] = Array.from(groupMap.entries())
-    .sort(([a], [b]) => b.localeCompare(a))
-    .slice(0, 30)
+  const MAX_GROUPS = 30;
+  const sortedEntries = Array.from(groupMap.entries()).sort(([a], [b]) =>
+    b.localeCompare(a),
+  );
+  const groups: VoteGroup[] = sortedEntries
+    .slice(0, MAX_GROUPS)
     .map(([sessionKey, rows]) => ({
       sessionKey,
       sessionDate: rows[0]?.sessionDate ?? "",
@@ -126,9 +131,15 @@ export function buildAanestyksetData(input: {
       rows,
     }));
 
+  const nextCursor =
+    sortedEntries.length > MAX_GROUPS
+      ? (groups[groups.length - 1]?.sessionDate ?? null)
+      : null;
+
   return {
     groups,
     totalCount: filtered.length,
+    nextCursor,
     fetchedAt,
   };
 }

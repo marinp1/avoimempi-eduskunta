@@ -749,3 +749,26 @@ div.doc-row {
   color: var(--blue-ink);
   border-bottom-style: solid;
 }
+.load-more-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  margin-top: 2px;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  color: var(--blue);
+  font-size: 14px;
+  font-family: var(--head);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s;
+}
+.load-more-btn:hover {
+  background: var(--paper-3);
+}
+.load-more-btn.htmx-request {
+  color: var(--muted);
+  pointer-events: none;
+}

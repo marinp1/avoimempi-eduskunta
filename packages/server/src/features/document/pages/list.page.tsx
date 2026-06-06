@@ -141,6 +141,9 @@ function AsiakirjatList({
               {data.rows.map((row) => (
                 <DocumentRowComponent row={row} />
               ))}
+              {data.page < data.totalPages && (
+                <LoadMoreButton data={data} query={query} kind={activeKind} />
+              )}
             </div>
           ) : (
             <div
@@ -251,6 +254,56 @@ function DocumentRowComponent({ row }: { row: DocumentRow }) {
     </a>
   ) : (
     <div class="doc-row">{inner}</div>
+  );
+}
+
+function LoadMoreButton({
+  data,
+  query,
+  kind,
+}: {
+  data: AsiakirjatIndexData;
+  query?: string;
+  kind: string;
+}) {
+  const params = new URLSearchParams();
+  if (kind) params.set("kind", kind);
+  if (query) params.set("q", query);
+  params.set("page", String(data.page + 1));
+  params.set("load_more", "1");
+  return (
+    <button
+      id="doc-load-more"
+      class="load-more-btn"
+      hx-get={`/asiakirjat?${params.toString()}`}
+      hx-target="this"
+      hx-swap="outerHTML"
+      hx-browser-indicator="true"
+    >
+      {i18next.t("asiakirjat:load_more")}
+    </button>
+  );
+}
+
+/** Partial fragment returned for click-to-load requests (HX-Target: doc-load-more). */
+export function DocLoadMoreFragment({
+  data,
+  query,
+  kind,
+}: {
+  data: AsiakirjatIndexData;
+  query?: string;
+  kind: string;
+}) {
+  return (
+    <>
+      {data.rows.map((row) => (
+        <DocumentRowComponent row={row} />
+      ))}
+      {data.page < data.totalPages && (
+        <LoadMoreButton data={data} query={query} kind={kind} />
+      )}
+    </>
   );
 }
 
