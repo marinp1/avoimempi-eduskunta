@@ -90,7 +90,9 @@ async function deployAppBuild() {
     if (!fs.existsSync(p)) throw new Error(`App script missing: ${p}`);
   }
 
-  await build({
+  fs.rmSync(dist, { recursive: true, force: true });
+
+  const result = await build({
     outdir: dist,
     define: {
       "process.env.NODE_ENV": JSON.stringify("production"),
@@ -100,7 +102,17 @@ async function deployAppBuild() {
       path.join(import.meta.dirname, "../packages/server/index.ts"),
     ],
     target: "bun",
+    splitting: true,
+    minify: true,
+    metafile: true,
   });
+
+  if (result.metafile) {
+    await Bun.write(
+      path.join(import.meta.dirname, "../meta.json"),
+      JSON.stringify(result.metafile),
+    );
+  }
 
   await $`ssh ${HOST} mkdir -p ${APP_DIR}/releases ${APP_DIR}/scripts/app ${APP_DIR}/shared ${releaseDir}/dist ${releaseDir}/config ${releaseDir}/scripts`;
 

@@ -31,9 +31,9 @@ const parser: ParserFunction = async (row, primaryKey) => {
   const parsedXml = postProcessXml(row.XmlDataFi);
 
   const sortName =
-    (parsedXml?.Henkilo as Record<string, unknown> | undefined)
-      ?.LajitteluNimi?.toString()
-      .replace(/\s+/g, "_") ?? "tuntematon";
+    (
+      parsedXml?.Henkilo as Record<string, unknown> | undefined
+    )?.LajitteluNimi?.toString().replace(/\s+/g, "_") ?? "tuntematon";
 
   return [
     `${sortName}_${row[primaryKey]}`,

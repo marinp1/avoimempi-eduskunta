@@ -32,3 +32,5 @@ validation-results.json
 *.tfvars
 
 .claude/worktrees
+
+meta.json

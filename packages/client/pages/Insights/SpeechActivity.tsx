@@ -132,8 +132,8 @@ export default function SpeechActivity({ onClose }: SpeechActivityProps) {
                   width={70}
                 />
                 <Tooltip
-                  formatter={(value: number) => [
-                    value.toLocaleString("fi-FI"),
+                  formatter={(value) => [
+                    value?.toLocaleString("fi-FI"),
                     tInsights("speechActivity.speechCount"),
                   ]}
                 />

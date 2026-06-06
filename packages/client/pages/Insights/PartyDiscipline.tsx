@@ -154,8 +154,8 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
                   width={50}
                 />
                 <Tooltip
-                  formatter={(value: number) => [
-                    `${value.toFixed(1)}%`,
+                  formatter={(value) => [
+                    typeof value === "number" ? `${value?.toFixed(1)}%` : "",
                     tInsights("partyDiscipline.disciplineRate"),
                   ]}
                   labelFormatter={(label) => {
