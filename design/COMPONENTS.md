@@ -27,7 +27,7 @@ src/
     parliament.ts  votes.ts  members.ts  sessions.ts  documents.ts
   html.ts                   # tiny tagged-template `html` helper + escape()
   components/
-    shell.ts                # masthead(), nav(), footer(), periodSelector()
+    shell.ts                # masthead(), nav(), footer(), periodSelector(), timeline()
     primitives.ts           # kicker(), rule(), tag(), spill(), btn(), linkArrow(), stat()
     provenance.ts           # cite(), sourceNote(), aiSummary(), traceData()  (+ trace.js island)
     data-display.ts         # statRow(), blocBar(), partyTable(), voteBar(), seatGrid()
@@ -76,6 +76,32 @@ Each entry: **purpose · variants · canonical markup · suggested signature**. 
 Footer restates the active period (`.foot__period`) + legal/source line (`.foot__legal`). The active nav link gets `.is-active`. → `nav(activePath)`.
 
 **`periodSelector(active)`** — masthead dropdown; **htmx: cookie + full re-render** (README → Period selector). Structure: `.period > .period__btn(.period__k/.period__v/.period__badge.is-now/.period__caret) + .period__menu[role=menu] > .period__opt[.is-selected]`. Open/close is the only client JS.
+
+**`timeline()`** — the time scrubber ("tarkasteluhetki"), rendered right after the masthead on **every** product page. Full structure + behavior in README → Time scrubber. Skeleton:
+```html
+<section class="timeline" data-timeline>
+  <div class="tl__head">
+    <div class="tl__lead"><span class="tl__kicker">Tarkasteluhetki</span>
+      <span class="tl__date" data-tl-date>28.5.2026</span>
+      <span class="tl__rel is-now" data-tl-rel>nykyhetki</span></div>
+    <div class="tl__nav">
+      <button class="tl__now is-hidden" data-tl-now>Palaa nykyhetkeen →</button>
+      <span class="tl__pair"><button class="tl__step" data-tl-prev>‹ edellinen</button>
+        <button class="tl__step" data-tl-next>seuraava ›</button></span>
+    </div>
+  </div>
+  <div class="tl__track" data-tl-track>
+    <div class="tl__grid" data-tl-grid></div><div class="tl__axis"></div>
+    <div class="tl__ticks" data-tl-ticks></div><div class="tl__today" data-tl-today></div>
+    <div class="tl__handle" data-tl-handle role="slider">
+      <div class="tl__flag" data-tl-flag>2026/57</div><div class="tl__stem"></div><div class="tl__knob"></div></div>
+  </div>
+  <div class="tl__legend">… t-vote / t-talk / t-quiet keys …</div>
+</section>
+```
+Reset button uses `.is-hidden` (visibility, not display) so prev/next never shift. Ticks/gridlines/handle position are filled by JS from the sittings list. → `timeline(activeTerm, cursorDate, sittings[])`; the drag/keyboard stays a client island, the rendered fragment swaps via `hx-get` on release.
+
+**Time-reactive hooks** — any value that should change with the cursor carries a `data-tl-*` attribute the scrubber writes to (see README for the full list): page-level `data-tl-headline/session/datetime/agenda/hall/opp/statval/ai/…`, rail facts `data-tl-vote-*` / `data-tl-interp-*`, and generic `data-tl-asof` / `data-tl-asof-long` "as of <date>" labels for list/entity pages. In the htmx build the server fills these per request; the `data-tl-*` names are a useful checklist of what each view must recompute by date.
 
 ### — Primitives —
 

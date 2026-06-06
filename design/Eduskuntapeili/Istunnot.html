@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <link href="peili.css" rel="stylesheet" />
+<link href="timeline.css" rel="stylesheet" />
 </head>
 <body>
 <div class="wrap">
@@ -122,6 +123,7 @@
       <input id="sit-search" type="text" placeholder="Hae istunnoista — laki, aihe tai istuntonumero…" />
     </label>
     <span class="count"><b id="sit-count">10</b> istuntoa</span>
+    <span class="sit-asof" data-sit-asof hidden>tilanne <b data-tl-asof>28.5.2026</b></span>
   </div>
   <div class="fchips">
     <button class="fchip is-active" data-filter="all">Kaikki</button>
@@ -142,7 +144,7 @@
         <span class="week-head__meta">1 täysistunto · pöytäkirja laadittu</span>
       </div>
       <div class="sit-list">
-        <a class="sit-row" href="Istunto.html" data-kind="draft" data-text="2026/55 täysistunto pöytäkirja laadittu">
+        <a class="sit-row" href="Istunto.html" data-kind="draft" data-date="2026-05-26" data-text="2026/55 täysistunto pöytäkirja laadittu">
           <div class="sit-date"><span class="sit-dow"><span class="kdot quiet"></span>Ti</span><span class="sit-day">26.5.</span><span class="sit-mon">touko</span></div>
           <div class="sit-main">
             <div class="sit-top"><span class="sit-id">Täysistunto 2026/55</span><span class="spill spill--draft">pöytäkirja laadittu</span></div>
@@ -163,7 +165,7 @@
       </div>
       <div class="sit-list">
 
-        <a class="sit-row" href="Istunto.html" data-kind="vote" data-text="2026/54 äänestyspäivä metsälaki luonnonsuojelu sisäinen turvallisuus hyvinvointialue rahoitus äänestys">
+        <a class="sit-row" href="Istunto.html" data-kind="vote" data-date="2026-05-22" data-text="2026/54 äänestyspäivä metsälaki luonnonsuojelu sisäinen turvallisuus hyvinvointialue rahoitus äänestys">
           <div class="sit-date"><span class="sit-dow"><span class="kdot vote"></span>Pe</span><span class="sit-day">22.5.</span><span class="sit-mon">touko</span></div>
           <div class="sit-main">
             <div class="sit-top"><span class="sit-id">Täysistunto 2026/54</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 13.00–13.31</span></div>
@@ -182,7 +184,7 @@
           </div>
         </a>
 
-        <a class="sit-row" href="Istunto.html" data-kind="kysely talk" data-text="2026/53 kyselytunti suullinen kysymys drooniuhka israel puolustusyhteistyö vaaratiedote eläinten oikeudet kansalaisaloite">
+        <a class="sit-row" href="Istunto.html" data-kind="kysely talk" data-date="2026-05-21" data-text="2026/53 kyselytunti suullinen kysymys drooniuhka israel puolustusyhteistyö vaaratiedote eläinten oikeudet kansalaisaloite">
           <div class="sit-date"><span class="sit-dow"><span class="kdot talk"></span>To</span><span class="sit-day">21.5.</span><span class="sit-mon">touko</span></div>
           <div class="sit-main">
             <div class="sit-top"><span class="sit-id">Täysistunto 2026/53</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 16.00–20.07</span></div>
@@ -200,7 +202,7 @@
           </div>
         </a>
 
-        <a class="sit-row" href="Istunto.html" data-kind="vote" data-text="2026/52 äänestys ammattikorkeakoulu opintotuki työsopimuslaki lastensuojelu poronhoito arkistointi">
+        <a class="sit-row" href="Istunto.html" data-kind="vote" data-date="2026-05-20" data-text="2026/52 äänestys ammattikorkeakoulu opintotuki työsopimuslaki lastensuojelu poronhoito arkistointi">
           <div class="sit-date"><span class="sit-dow"><span class="kdot vote"></span>Ke</span><span class="sit-day">20.5.</span><span class="sit-mon">touko</span></div>
           <div class="sit-main">
             <div class="sit-top"><span class="sit-id">Täysistunto 2026/52</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 14.00–21.38</span></div>
@@ -219,7 +221,7 @@
           </div>
         </a>
 
-        <a class="sit-row" href="Istunto.html" data-kind="talk" data-text="2026/51 lähetekeskustelu venäjä verosopimus keskeytys puolustusvoimalaki vesilaki luonnonsuojelu patentti asunto-osakeyhtiö">
+        <a class="sit-row" href="Istunto.html" data-kind="talk" data-date="2026-05-19" data-text="2026/51 lähetekeskustelu venäjä verosopimus keskeytys puolustusvoimalaki vesilaki luonnonsuojelu patentti asunto-osakeyhtiö">
           <div class="sit-date"><span class="sit-dow"><span class="kdot talk"></span>Ti</span><span class="sit-day">19.5.</span><span class="sit-mon">touko</span></div>
           <div class="sit-main">
             <div class="sit-top"><span class="sit-id">Täysistunto 2026/51</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 14.00–18.46</span></div>
@@ -249,7 +251,7 @@
       </div>
       <div class="sit-list">
 
-        <a class="sit-row" href="Istunto.html" data-kind="vali vote" data-text="2026/50 välikysymys talouspolitiikka luottamus luottamusäänestys hallitus">
+        <a class="sit-row" href="Istunto.html" data-kind="vali vote" data-date="2026-05-13" data-text="2026/50 välikysymys talouspolitiikka luottamus luottamusäänestys hallitus">
           <div class="sit-date"><span class="sit-dow"><span class="kdot vote"></span>Ke</span><span class="sit-day">13.5.</span><span class="sit-mon">touko</span></div>
           <div class="sit-main">
             <div class="sit-top"><span class="sit-id">Täysistunto 2026/50</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 14.00–19.26</span></div>
@@ -266,7 +268,7 @@
           </div>
         </a>
 
-        <a class="sit-row" href="Istunto.html" data-kind="vali talk" data-text="2026/49 välikysymys talouspolitiikka keskustelu työsopimuslaki poronhoito patentti lähetekeskustelu pisin istunto">
+        <a class="sit-row" href="Istunto.html" data-kind="vali talk" data-date="2026-05-12" data-text="2026/49 välikysymys talouspolitiikka keskustelu työsopimuslaki poronhoito patentti lähetekeskustelu pisin istunto">
           <div class="sit-date"><span class="sit-dow"><span class="kdot talk"></span>Ti</span><span class="sit-day">12.5.</span><span class="sit-mon">touko</span></div>
           <div class="sit-main">
             <div class="sit-top"><span class="sit-id">Täysistunto 2026/49</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 14.00–23.00</span></div>
@@ -295,7 +297,7 @@
       </div>
       <div class="sit-list">
 
-        <a class="sit-row" href="Istunto.html" data-kind="vote" data-text="2026/48 äänestys metsälaki valiokuntaan arkistointilaki lastensuojelu poliisi hiilirajamekanismi">
+        <a class="sit-row" href="Istunto.html" data-kind="vote" data-date="2026-05-08" data-text="2026/48 äänestys metsälaki valiokuntaan arkistointilaki lastensuojelu poliisi hiilirajamekanismi">
           <div class="sit-date"><span class="sit-dow"><span class="kdot vote"></span>Pe</span><span class="sit-day">8.5.</span><span class="sit-mon">touko</span></div>
           <div class="sit-main">
             <div class="sit-top"><span class="sit-id">Täysistunto 2026/48</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 13.00–13.29</span></div>
@@ -313,7 +315,7 @@
           </div>
         </a>
 
-        <a class="sit-row" href="Istunto.html" data-kind="talk" data-text="2026/47 lähetekeskustelu metsälaki arvonlisävero kotihoidontuki avioliittolaki tuloverolaki vilkas">
+        <a class="sit-row" href="Istunto.html" data-kind="talk" data-date="2026-05-07" data-text="2026/47 lähetekeskustelu metsälaki arvonlisävero kotihoidontuki avioliittolaki tuloverolaki vilkas">
           <div class="sit-date"><span class="sit-dow"><span class="kdot talk"></span>To</span><span class="sit-day">7.5.</span><span class="sit-mon">touko</span></div>
           <div class="sit-main">
             <div class="sit-top"><span class="sit-id">Täysistunto 2026/47</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 16.00–21.46</span></div>
@@ -331,7 +333,7 @@
           </div>
         </a>
 
-        <a class="sit-row" href="Istunto.html" data-kind="vali talk" data-text="2026/46 ilmastosuunnitelma selonteko alueidenkäyttölaki välikysymys talouspolitiikka julkisen talouden suunnitelma">
+        <a class="sit-row" href="Istunto.html" data-kind="vali talk" data-date="2026-05-06" data-text="2026/46 ilmastosuunnitelma selonteko alueidenkäyttölaki välikysymys talouspolitiikka julkisen talouden suunnitelma">
           <div class="sit-date"><span class="sit-dow"><span class="kdot talk"></span>Ke</span><span class="sit-day">6.5.</span><span class="sit-mon">touko</span></div>
           <div class="sit-main">
             <div class="sit-top"><span class="sit-id">Täysistunto 2026/46</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 14.00–21.32</span></div>
@@ -399,7 +401,10 @@
   var search = document.getElementById('sit-search');
   var count = document.getElementById('sit-count');
   var empty = document.getElementById('sit-empty');
+  var asof = document.querySelector('[data-sit-asof]');
   var filter = 'all';
+  var cursor = '9999-12-31';   // viewing moment (ISO); set by the time scrubber
+  var cursorIsNow = true;
 
   function apply() {
     var q = (search.value || '').trim().toLowerCase();
@@ -407,9 +412,11 @@
     rows.forEach(function (r) {
       var kind = r.getAttribute('data-kind') || '';
       var text = r.getAttribute('data-text') || '';
+      var date = r.getAttribute('data-date') || '0000-00-00';
       var okKind = filter === 'all' || kind.indexOf(filter) !== -1;
       var okText = !q || text.indexOf(q) !== -1;
-      var show = okKind && okText;
+      var okTime = date <= cursor;            // hide sittings later than the viewing moment
+      var show = okKind && okText && okTime;
       r.style.display = show ? '' : 'none';
       if (show) shown++;
     });
@@ -420,6 +427,7 @@
     });
     count.textContent = shown;
     empty.hidden = shown !== 0;
+    if (asof) asof.hidden = cursorIsNow;
   }
 
   chips.forEach(function (c) {
@@ -431,9 +439,17 @@
     });
   });
   search.addEventListener('input', apply);
+
+  // react to the global time scrubber
+  document.addEventListener('peili:date', function (e) {
+    cursor = (e.detail && e.detail.iso) || cursor;
+    cursorIsNow = !!(e.detail && e.detail.isNow);
+    apply();
+  });
 })();
 </script>
 <script defer src="period.js"></script>
 <script defer src="trace.js"></script>
+<script defer src="timeline.js"></script>
 </body>
 </html>

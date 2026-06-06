@@ -5,6 +5,8 @@ Eduskuntapeili ("Parliament Mirror") is a public-facing web app that renders the
 
 The defining feature is **data provenance ("jäljitettävyys")**: every official number, quote, and AI summary is traceable back to its source record — dataset → API table → endpoint → record → fetch timestamp — one click away. This is a product principle, not a decoration; preserve it.
 
+The second core principle is the **time domain ("tarkasteluhetki")**: everything on the page is relative to a point in time. The masthead's `Tietojakso` selector sets the outer bounds (which *vaalikausi* / electoral term), and a **timeline scrubber** under the masthead lets the user move to any sitting day *within* that term — the page then reframes as "Parliament as of that date." This is global, app-wide state: it persists across pages and, in the real build, should scope every data query. Treat time as a first-class control, not a cosmetic label.
+
 The UI language is Finnish. Keep all copy in Finnish unless the team asks for localization.
 
 ## About the Design Files
@@ -32,11 +34,12 @@ Why htmx maps cleanly to each behavior — see **Interactions & Behavior** below
 
 ## Screens / Views
 
-All pages share the same shell: **masthead** (brand + `Tietojakso` period selector), **nav**, the page body inside `.wrap` (max-width 1180px, 40px gutters), and a **footer** that restates the active data period. Filenames map 1:1 to views.
+All pages share the same shell: **masthead** (brand + `Tietojakso` period selector), the **time scrubber** (`.timeline`, injected under the masthead by `timeline.js`), **nav**, the page body inside `.wrap` (max-width 1180px, 40px gutters), and a **footer** that restates the active data period. Filenames map 1:1 to views.
 
 ### 1. `Etusivu.html` — Home / "Eduskunta juuri nyt"
-- **Purpose:** at-a-glance snapshot of Parliament right now.
-- **Layout (top→bottom):** lead headline block (`.lead`) → 4-up stat row (`.stat-row`, ruled, no boxes: 200 / 108 hallitus / 92 oppositio / 8 puolueita) → AI summary inset (`.ai`) with expandable source ledger → two-column `.home-main` grid (1.55fr / 1fr): **left** = bloc bar (`.bloc-bar`) + party table (`.party-table`) + source note; **right** = `.rail` of editorial highlights (tightest vote, most active speaker, latest interpellation), each carrying an inline `.cite` trace.
+- **Purpose:** at-a-glance snapshot of Parliament, reframed by the time scrubber to any selected sitting day.
+- **Layout (top→bottom):** lead headline block (`.lead`) → 4-up stat row (`.stat-row`, ruled, no boxes: 200 / 108 hallitus / 92 oppositio / accruing "Istuntoja kaudella") → AI summary inset (`.ai`) with expandable source ledger → two-column `.home-main` grid (1.55fr / 1fr): **left** = bloc bar (`.bloc-bar`) + party table (`.party-table`) + source note; **right** = `.rail` of editorial highlights (tightest vote, most active speaker, latest interpellation), each carrying an inline `.cite` trace.
+- **Time-reactive:** this is the richest scrubber consumer. The lead headline/kicker, session line, the accruing stat, the AI synthesis, and the rail's *term-so-far* facts (`[data-tl-*]` hooks) all re-render to the selected date. See **Time scrubber** below.
 
 ### 2. `Kansanedustajat.html` — MP roster (list)
 - **Purpose:** browse / filter / sort all 200 MPs.
@@ -50,6 +53,7 @@ All pages share the same shell: **masthead** (brand + `Tietojakso` period select
 ### 4. `Istunnot.html` — Plenary sessions index
 - **Purpose:** chronological list of sittings, grouped by sitting-week.
 - **Layout:** `.week` groups with `.week-head` dividers → `.sit-list` of `.sit-row` (grid `64px 1fr 168px`): left date rail (`.sit-date` with keyed dot — vote/talk/quiet), middle (id, time, status pill `.spill--live/done/draft`, headline, note, agenda chips `.dchip` with result coloring), right meta.
+- **Time-reactive:** each `.sit-row` carries `data-date` (ISO). The scrubber filters the list to sittings on/before the cursor date (later ones hide, empty weeks collapse, count updates); a red "tilanne <date>" note (`[data-sit-asof]`) appears when not viewing the present.
 
 ### 5. `Istunto.html` — Single sitting
 - **Purpose:** one plenary sitting's agenda and outcomes in detail.
@@ -72,7 +76,7 @@ All pages share the same shell: **masthead** (brand + `Tietojakso` period select
 
 ## Interactions & Behavior
 
-Three vanilla-JS modules drive all behavior. In the htmx build, two of the three become **server round-trips returning HTML**; only the trace popover stays as a small client island. The data-attribute contracts below are the spec.
+**Four** vanilla-JS modules drive all behavior. In the htmx build, the period selector, roster, and the scrubber's filtering become **server round-trips returning HTML**; only the trace popover and the scrubber's drag interaction stay as small client islands. The data-attribute contracts below are the spec.
 
 ### Period selector — `period.js`
 - Dropdown in the masthead choosing the **data period (`Tietojakso`)**: `2023` (Vaalikausi 2023–2027, Orpon hallitus — **default**), `2019` (2019–2023), `all` (kaikki vaalikaudet).
@@ -81,6 +85,20 @@ Three vanilla-JS modules drive all behavior. In the htmx build, two of the three
 - **Product meaning:** the period scopes every number and summary on the page. In the real app this should be global app state that filters all data queries — not just cosmetic text.
 - Menu opens on button click; closes on outside-click and `Escape`.
 - **htmx mapping:** keep the period as a **server-side concern**. Store the choice in a cookie (`peili_period`). Selecting an option does `hx-get="/period?val=2019" hx-target="body" hx-push-url="true"` (or a header-driven full re-render) so the whole page re-renders with the new period applied to every query. The cookie makes it persist across pages without client state. The dropdown open/close is the only client JS here (a few lines, or `<details>`).
+
+### Time scrubber ("tarkasteluhetki") — `timeline.js` + `timeline.css`
+The realization of the **time-domain** principle. A horizontal sitting-day timeline, **auto-injected** right after `header.masthead` on every product page (any page that loads `timeline.js`) — so the control is identical and in the same place everywhere. It is scoped to the active *vaalikausi*: changing the period rebuilds its range and ticks.
+
+- **Structure:** `.timeline` › `.tl__head` (kicker "Tarkasteluhetki" + `.tl__date` + `.tl__rel` state) and `.tl__nav` (reset `.tl__now` + `.tl__pair` of prev/next `.tl__step`) › `.tl__track` (`.tl__grid` month/year gridlines, `.tl__axis` baseline, `.tl__ticks` one keyed `.tl__tick.t-vote|t-talk|t-quiet` per sitting, `.tl__today` red "nyt" marker, draggable `.tl__handle` with `.tl__flag`/`.tl__stem`/`.tl__knob`) › `.tl__legend`.
+- **Interaction:** drag the handle, click the axis (snaps to nearest sitting day), `‹ prev / next ›`, or arrow-keys/Home/End on the focused handle (`role="slider"`). The handle snaps to sitting days — that is where data exists. A **"Palaa nykyhetkeen →"** reset (`.tl__now`) appears once you leave the present and is otherwise reserved/hidden so prev/next never shift. The flag is clamped so it never clips past the track edges.
+- **Data model (in the mock):** `timeline.js` holds a `DATASETS` map keyed by term (`2023`, `2019`, `all`); each entry is one sitting `{ d (ISO), id, type, wd, time, agenda, head, sittings, aiCount, ai, stats:{hall,opp} }`. `TODAY` marks the live edge. In the real build this comes from the data layer (one row per sitting), not a hard-coded array.
+- **What it re-renders** (via `[data-tl-*]` hooks present on the page — absent hooks are simply skipped): `[data-tl-kicker]`, `[data-tl-headline]`, `[data-tl-sessionlabel]`, `[data-tl-session]`, `[data-tl-datetime]`, `[data-tl-agenda]`, `[data-tl-hall]`, `[data-tl-opp]`, `[data-tl-statval]`, `[data-tl-ai]`, `[data-tl-ainote]`, `[data-tl-aitoggle]`, the rail facts `[data-tl-vote-n|when|jaa|ei|barj|bare]` and `[data-tl-interp-title|who|when|n]`, plus generic `[data-tl-asof]` / `[data-tl-asof-long]` "as of <date>" labels used on list/entity pages. Updating a `.cite`'s text uses a marker-safe setter so the trace `∗` survives.
+- **Body state:** `document.body.classList.toggle('is-archive', !isNow)` — pages tint to a back-issue state when not at the present.
+- **Persistence:** the selected date is stored per term in `localStorage` (`peili.tl.<term>`) and restored on load — so the cursor is shared as you navigate between pages.
+- **Broadcast:** on every change it dispatches `document` event **`peili:date`** with `detail:{ iso, id, isNow, isLatest, term }`. Page-specific scripts subscribe to react (the Istunnot list filter is the reference consumer). `period.js` likewise dispatches `peili:period` so the scrubber rebuilds when the term changes.
+- **Per-view reactivity (current prototype):** **Etusivu** fully re-renders; **Istunnot** filters its list by the cursor date; **Kansanedustajat** shows a "kokoonpano tarkasteluhetkellä <date>" line; the entity pages (Istunto, Asia, Asiakirja, Kansanedustaja, Keskustelu) carry the scrubber as persistent global context (their internals are not yet recomputed per date — that is the data-layer's job).
+- **htmx mapping:** the scrubber is global time state — carry it in a **cookie** (`peili_date`, default = latest sitting), exactly like the period. The track itself is a small client island (drag/keyboard, ~60 lines). On release it does `hx-get="/?date=2026-03-11" hx-target="…" hx-push-url="true"` to swap the time-dependent fragment (on Etusivu the lead+stats+synthesis block; on Istunnot the `#sit-root` list). **The server filters every query by the cursor date** so the whole page is genuinely "as of" that moment — including the deep entity pages, which is the fidelity gap the mock leaves open. The ticks and per-sitting metadata come from a `sittings` query scoped to the active term.
+- **Responsive:** at ≤720px the head stacks, prev/next become a full-width row and the reset stacks *below* them (no shift); at ≤560px the axis declutters to year-only labels. The handle supports touch (Pointer Events, `touch-action:none`).
 
 ### Data provenance / trace — `trace.js`
 The centerpiece. Two pieces:
@@ -108,7 +126,8 @@ Not designed in these mocks. When wiring to the live open-data API, design these
 ---
 
 ## State Management
-- **Active data period** — server-side, carried in a **cookie** (`peili_period`, default `2023`); filters every data query. Not client state.
+- **Active data period (vaalikausi)** — server-side, carried in a **cookie** (`peili_period`, default `2023`); sets the outer time bounds and filters every data query. Not client state.
+- **Tarkasteluhetki (time cursor)** — the second global axis. Carry in a **cookie** (`peili_date`, default = latest sitting of the active term), shared across pages; the server filters every query by it so the whole app reads "as of" that moment. The track's drag/keyboard is a small client island; on release it `hx-get`s the time-dependent fragment. In the mock this is `localStorage: peili.tl.<term>` + the `peili:date` event — the cookie is the server-side equivalent.
 - **Roster filter/sort** — encoded in the **URL query string** (`?party=&q=&sort=&dir=`); the server derives the list. Shareable/bookmarkable, back-button friendly via `hx-push-url`.
 - **Open trace popover** — the one piece of true client UI state (single-at-a-time), owned by the small trace island.
 - **AI-sources expanded** — CSS/`<details>` state, or a per-request `hx-get`.
@@ -151,7 +170,7 @@ Party dot colors are inline per-party hex (e.g. Kokoomus `#1d4f91`, SDP `#d3243a
 - `--maxw: 1180px`, `.wrap` padding `0 40px`.
 - Section rhythm: `.ds-section` 40px vertical padding with top hairline; grids use `gap: 24px`/`48px`.
 - **Borders are square** — this system deliberately avoids rounded corners and drop-shadow cards. Emphasis comes from hairlines, left-rule insets (`.ai` has a 3px `--blue` left border), and ink rules. Shadows appear only on floating popovers/menus (`0 1px 0 ink, 0 14px 40px rgba(22,19,15,.16-.18)`).
-- Breakpoints: `900px` (grids collapse, stats → 2-up), `980px` (doc/matter two-cols → single).
+- Breakpoints: `900px` (grids collapse, stats → 2-up), `980px` (doc/matter two-cols → single). The time scrubber (`timeline.css`) adds `720px` (head stacks; prev/next become a full-width row with the reset stacked below) and `560px` (axis declutters to year-only labels).
 
 ## Assets
 - **Fonts:** Schibsted Grotesk, Hanken Grotesk, IBM Plex Mono via Google Fonts (`<link>` in each page `<head>`). Self-host in production.
@@ -166,8 +185,8 @@ In `design_files/`:
 - `Istunnot.html` — sessions index · `Istunto.html` — single sitting
 - `Asia.html` — matter lifecycle · `Asiakirja.html` — document reader · `Keskustelu.html` — debate
 - `Suunnittelujärjestelmä.html` — **design system / style guide (read first)**
-- `peili.css` — **the complete, commented design system (the spec)**
-- `period.js` · `trace.js` · `roster.js` — behavior modules (logic contracts above)
+- `peili.css` — **the complete, commented design system (the spec)** · `timeline.css` — time-scrubber styling
+- `period.js` · `trace.js` · `roster.js` · `timeline.js` — behavior modules (logic contracts above)
 
 And alongside this README:
 - **`COMPONENTS.md`** — the reusable **component library**: every primitive/component catalogued with copy-ready markup, the class API, and a proposed partial/file architecture for the Bun+htmx build. Read it before writing any markup so pages share one vocabulary instead of reinventing it.
@@ -179,6 +198,7 @@ And alongside this README:
 4. Build the **typed data layer** against the Eduskunta open-data API; have it return view-models *with* provenance metadata.
 5. Build screens in order of dependency: Etusivu → Kansanedustajat → Kansanedustaja → Istunnot/Istunto → Asia/Asiakirja/Keskustelu, rendering each as a server template.
 6. Wire the **period cookie** (full re-render on change) and the **roster filter/sort** (query-param `hx-get` returning the `#mp-list` fragment).
+7. Wire the **time cursor**: the scrubber client island + `peili_date` cookie, and have the data layer filter every query by it. Start with the two reactive views (Etusivu fragment, Istunnot list) then extend "as of" recomputation to the entity pages — the fidelity gap the mock leaves to the server.
 
 ## Viewing the designs
 `design_files/` are runnable. Open any `.html` in a browser to see the **pixel-accurate, fully-styled, interactive** design (correct fonts, live popovers, working roster filter, period selector). To check the **responsive/mobile** layouts the CSS already implements (breakpoints at 980 / 900 / 720 / 560px — e.g. the roster table collapses to stacked cards, nav becomes a scrollable tab bar), resize the window or use your browser's device-emulation mode (DevTools → toggle device toolbar, e.g. iPhone/390px). This is a more faithful reference than static screenshots — and it lets you inspect computed styles directly.

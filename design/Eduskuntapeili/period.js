@@ -42,6 +42,8 @@
       opt.classList.toggle('is-selected', opt.dataset.val === val);
       opt.setAttribute('aria-checked', opt.dataset.val === val ? 'true' : 'false');
     });
+    // let the timeline scrubber (and anything else) re-scope to this term
+    document.dispatchEvent(new CustomEvent('peili:period', { detail: val }));
   }
 
   document.addEventListener('DOMContentLoaded', function () {

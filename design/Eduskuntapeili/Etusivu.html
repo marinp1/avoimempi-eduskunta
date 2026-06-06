@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <link href="peili.css" rel="stylesheet" />
+<link href="timeline.css" rel="stylesheet" />
 </head>
 <body>
 <div class="wrap">
@@ -53,12 +54,12 @@
 
   <!-- ============ LEAD ============ -->
   <section class="lead">
-    <p class="kicker kicker--red"><span class="dot"></span>Eduskunta juuri nyt</p>
-    <h1>Ilmastostrategia läpi niukasti, talouspolitiikasta välikysymys</h1>
+    <p class="kicker kicker--red" data-tl-kicker><span class="dot"></span>Eduskunta juuri nyt</p>
+    <h1 data-tl-headline>Ilmastostrategia läpi niukasti, talouspolitiikasta välikysymys</h1>
     <div class="lead__meta">
-      <span>Viimeisin istunto <b>2026/57</b></span><span class="sep"></span>
-      <span>torstai 28.5.2026 klo 16.00</span><span class="sep"></span>
-      <span>8 kohtaa · päiväjärjestys lopullinen</span>
+      <span><span data-tl-sessionlabel>Viimeisin istunto</span> <b data-tl-session>2026/57</b></span><span class="sep"></span>
+      <span data-tl-datetime>torstai 28.5.2026 klo 16.00</span><span class="sep"></span>
+      <span data-tl-agenda>8 kohtaa · päiväjärjestys lopullinen</span>
       <span class="link-arrow" style="margin-left:auto">Avaa istunnot ↗</span>
     </div>
   </section>
@@ -68,9 +69,9 @@
   <section style="padding:24px 0">
     <div class="stat-row">
       <div class="stat"><div class="stat__label">Kansanedustajia</div><div class="stat__value">200</div></div>
-      <div class="stat"><div class="stat__label">Hallituksessa</div><div class="stat__value hall">108</div></div>
-      <div class="stat"><div class="stat__label">Oppositiossa</div><div class="stat__value opp">92</div></div>
-      <div class="stat"><div class="stat__label">Puolueita</div><div class="stat__value">8</div></div>
+      <div class="stat"><div class="stat__label">Hallituksessa</div><div class="stat__value hall" data-tl-hall>108</div></div>
+      <div class="stat"><div class="stat__label">Oppositiossa</div><div class="stat__value opp" data-tl-opp>92</div></div>
+      <div class="stat"><div class="stat__label">Istuntoja kaudella</div><div class="stat__value" data-tl-statval>412</div></div>
     </div>
   </section>
   <hr class="rule" />
@@ -79,12 +80,12 @@
   <section style="padding:26px 0 6px">
     <div class="ai">
       <div class="ai__head"><span class="ai__spark">✦</span><span class="ai__label">Tekoälykooste · viikon istunnot</span></div>
-      <p class="ai__body">Viikon istunnoissa painottui talous- ja ilmastopolitiikka. Hallitus vei läpi kansallisen energia- ja
+      <p class="ai__body" data-tl-ai>Viikon istunnoissa painottui talous- ja ilmastopolitiikka. Hallitus vei läpi kansallisen energia- ja
         ilmastostrategian selonteon niukalla enemmistöllä, ja oppositio jätti välikysymyksen talouspolitiikasta.
         Äänestyskuri piti molemmissa blokeissa: ryhmäkurin ylityksiä oli vain kuusi.</p>
       <div class="ai__foot">
-        <span class="ai__note">Koneellisesti tuotettu · pohjautuu 4 tietueeseen</span>
-        <button class="ai-sources-toggle" data-label="Näytä lähteet (4)"><span class="chev">›</span><span class="lbl">Näytä lähteet (4)</span></button>
+        <span class="ai__note" data-tl-ainote>Koneellisesti tuotettu · pohjautuu 4 tietueeseen</span>
+        <button class="ai-sources-toggle" data-tl-aitoggle data-label="Näytä lähteet (4)"><span class="chev">›</span><span class="lbl">Näytä lähteet (4)</span></button>
       </div>
       <div class="ai-sources">
         <div class="ai-sources__title">Koosteen lähteet — tarkistettavissa</div>
@@ -152,14 +153,14 @@
     <!-- RIGHT: rail -->
     <aside class="rail">
       <div class="rail__item">
-        <p class="kicker kicker--red">Tiukin äänestys · kuluva vaalikausi</p>
+        <p class="kicker kicker--red">Tiukin äänestys · vaalikausi tähän mennessä</p>
         <div class="rail__title">Lakiehdotusten hyväksyminen — JAA / hylkääminen EI</div>
         <div style="display:flex;align-items:flex-end;gap:9px;margin-top:14px">
-          <span style="font-family:var(--head);font-weight:800;font-size:38px;line-height:1;color:var(--ink)">7</span>
-          <span style="font-size:14px;color:var(--muted);padding-bottom:5px">äänen ero · 11.3.2026</span>
+          <span style="font-family:var(--head);font-weight:800;font-size:38px;line-height:1;color:var(--ink)" data-tl-vote-n>7</span>
+          <span style="font-size:14px;color:var(--muted);padding-bottom:5px" data-tl-vote-when>äänen ero · 11.3.2026</span>
         </div>
         <div style="display:flex;height:11px;margin-top:14px;border:1px solid var(--rule)">
-          <div style="width:52.2%;background:var(--hall)"></div><div style="width:47.8%;background:var(--red)"></div>
+          <div style="width:52.2%;background:var(--hall)" data-tl-vote-barj></div><div style="width:47.8%;background:var(--red)" data-tl-vote-bare></div>
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:8px;font-weight:600;font-size:13px">
           <span class="cite" style="color:var(--hall)"
@@ -172,8 +173,8 @@
             data-jakso="Vaalikausi 2023–2027"
             data-fetched="30.5.2026 klo 07.16"
             data-chain="avoindata.eduskunta.fi > Voting > Etusivu-kooste"
-            data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa äänestystulos">JAA 83</span>
-          <span style="color:var(--red)">EI 76</span>
+            data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa äänestystulos" data-tl-vote-jaa>JAA 83</span>
+          <span style="color:var(--red)" data-tl-vote-ei>EI 76</span>
         </div>
       </div>
 
@@ -196,9 +197,10 @@
 
       <div class="rail__item">
         <p class="kicker">Tuorein välikysymys</p>
-        <div class="rail__title">Välikysymys hallituksen talouspolitiikan epäonnistumisesta</div>
-        <div class="rail__meta">Tytti Tuppurainen (sd) +
-          <span class="cite"
+        <div class="rail__title" data-tl-interp-title>Välikysymys hallituksen talouspolitiikan epäonnistumisesta</div>
+        <div class="rail__meta">
+          <span data-tl-interp-who>Tytti Tuppurainen (sd)</span> ·
+          <span class="cite" data-tl-interp-n
             data-value="56 allekirjoittajaa"
             data-caption="Välikysymyksen allekirjoittajat · VK 3/2026 vp"
             data-set="Eduskunnan avoin data · VaskiData"
@@ -208,7 +210,7 @@
             data-fetched="30.5.2026 klo 07.16"
             data-chain="avoindata.eduskunta.fi > InterpellationSigner > Etusivu-kooste"
             data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa asiakirja">56 allekirjoittajaa</span>
-          · jätetty 30.4.2026
+          · <span data-tl-interp-when>jätetty 30.4.2026</span>
         </div>
       </div>
     </aside>
@@ -231,5 +233,6 @@
 </div>
 <script defer src="period.js"></script>
 <script defer src="trace.js"></script>
+<script defer src="timeline.js"></script>
 </body>
 </html>

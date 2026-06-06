@@ -1,0 +1,352 @@
+/* ============================================================
+   Eduskuntapeili — Aikajana / arkistoselain (time-domain scrubber)
+   Scrub through sitting days within the selected vaalikausi.
+   Editorial: hairline axis, keyed ticks, ink handle, mono dates.
+   Load AFTER peili.css.
+   ============================================================ */
+
+.timeline {
+  padding: 16px 0 20px;
+}
+
+/* — header row: active date + navigation — */
+.tl__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 14px;
+}
+.tl__lead {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.tl__kicker {
+  font-family: var(--mono);
+  font-size: var(--fs-kicker);
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.tl__date {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: 23px;
+  line-height: 1;
+  letter-spacing: -.01em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.tl__rel {
+  font-size: 13px;
+  color: var(--muted);
+}
+.tl__rel.is-now {
+  color: var(--red);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tl__rel.is-now::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+.tl__nav {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.tl__pair {
+  display: inline-flex;
+  gap: 7px;
+}
+.tl__step,
+.tl__now {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: .01em;
+  padding: 6px 11px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--body);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tl__step:hover:not(:disabled) {
+  background: var(--paper-2);
+  border-color: var(--rule-ink);
+}
+.tl__step:disabled {
+  opacity: .32;
+  cursor: default;
+}
+.tl__now {
+  color: var(--red);
+  border-color: rgba(188, 58, 35, .4);
+}
+.tl__now:hover {
+  background: var(--paper-2);
+}
+/* reserve the slot so prev/next never shift when the reset toggles */
+.tl__now.is-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* — the track — */
+.tl__track {
+  position: relative;
+  height: 62px;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+}
+/* baseline ink rule */
+.tl__axis {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 20px;
+  height: 2px;
+  background: var(--ink);
+}
+/* month / year gridlines + labels */
+.tl__grid {
+  position: absolute;
+  inset: 0;
+}
+.tl__gline {
+  position: absolute;
+  bottom: 20px;
+  width: 1px;
+  height: 7px;
+  background: var(--rule-soft);
+  transform: translateX(-.5px);
+}
+.tl__glabel {
+  position: absolute;
+  bottom: 2px;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--faint);
+  white-space: nowrap;
+}
+.tl__glabel.is-year {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* sitting ticks rising from the axis */
+.tl__ticks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 22px;
+}
+.tl__tick {
+  position: absolute;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-1px);
+  background: var(--faint);
+  transition: background .12s, height .12s;
+}
+.tl__tick.t-vote {
+  height: 17px;
+  background: var(--ink);
+}
+.tl__tick.t-talk {
+  height: 12px;
+  background: var(--blue);
+}
+.tl__tick.t-quiet {
+  height: 8px;
+  background: var(--faint);
+}
+.tl__tick::after {
+  /* fatter invisible hit area */
+  content: "";
+  position: absolute;
+  left: -5px;
+  right: -5px;
+  top: -4px;
+  bottom: -6px;
+}
+.tl__tick:hover {
+  background: var(--blue-ink);
+}
+.tl__tick.is-active {
+  background: var(--red);
+}
+
+/* live "now" marker */
+.tl__today {
+  position: absolute;
+  bottom: 16px;
+  width: 2px;
+  height: 30px;
+  background: var(--red);
+  transform: translateX(-1px);
+}
+.tl__today::after {
+  content: "nyt";
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.tl__today[hidden] {
+  display: none;
+}
+
+/* draggable handle */
+.tl__handle {
+  position: absolute;
+  bottom: 14px;
+  transform: translateX(-50%);
+  cursor: grab;
+  z-index: 3;
+}
+.tl__handle:active {
+  cursor: grabbing;
+}
+.tl__stem {
+  width: 2px;
+  height: 36px;
+  background: var(--ink);
+  margin: 0 auto;
+}
+.tl__knob {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 11px;
+  height: 11px;
+  background: var(--ink);
+  border: 2px solid var(--paper);
+  box-shadow: 0 0 0 1px var(--ink);
+  border-radius: 50%;
+}
+.tl__flag {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .02em;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+.tl__flag::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--ink);
+}
+.tl__handle:focus {
+  outline: none;
+}
+.tl__handle:focus-visible .tl__knob {
+  box-shadow: 0 0 0 1px var(--ink), 0 0 0 4px rgba(27, 58, 107, .35);
+}
+
+/* legend under the track */
+.tl__legend {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.tl__legend .it {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.tl__legend .k {
+  width: 2px;
+  height: 12px;
+  display: inline-block;
+}
+.tl__legend .k.t-vote { background: var(--ink); }
+.tl__legend .k.t-talk { background: var(--blue); }
+.tl__legend .k.t-quiet { background: var(--faint); height: 8px; }
+.tl__legend .hint {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+
+/* archive tint: when not viewing the present, the page reads as a back-issue */
+body.is-archive .lead .kicker--red {
+  color: var(--muted);
+}
+
+/* "as of" indicator used on list/entity pages */
+.sit-asof {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--red);
+  margin-left: 10px;
+}
+.sit-asof[hidden] { display: none; }
+
+.tl-asof-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  padding: 7px 0 0;
+}
+.tl-asof-note b { color: var(--ink); font-weight: 600; }
+body.is-archive .tl-asof-note b { color: var(--red); }
+
+@media (max-width: 720px) {
+  .tl__head { flex-direction: column; align-items: stretch; gap: 10px; }
+  /* stack reset BELOW prev/next so it appears without shifting them and leaves no empty row */
+  .tl__nav { flex-direction: column; align-items: stretch; gap: 8px; }
+  .tl__pair { order: 1; display: flex; gap: 7px; }
+  .tl__pair .tl__step { flex: 1 1 0; text-align: center; }
+  .tl__now { order: 2; text-align: center; }
+  .tl__now.is-hidden { display: none; }
+  .tl__legend .hint { display: none; }
+  /* keep the handle flag from clipping at the track edges */
+  .tl__flag { font-size: 10.5px; padding: 3px 6px; }
+}
+
+/* phone: declutter the axis to year markers only, give the legend room */
+@media (max-width: 560px) {
+  .tl__glabel:not(.is-year) { display: none; }
+  .tl__gline:not(.is-year) { display: none; }
+  .tl__glabel.is-year { font-size: 10.5px; }
+  .tl__track { height: 58px; }
+  .tl__legend { margin-top: 10px; flex-wrap: wrap; gap: 10px 16px; }
+  .tl__date { font-size: 21px; }
+  .tl__pair { flex: 1 0 auto; }
+  .tl__pair .tl__step { flex: 1 1 0; text-align: center; }
+}
