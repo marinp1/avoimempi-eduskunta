@@ -3,20 +3,50 @@ import Kicker from "../components/kicker";
 import { cite, sourceNote } from "../components/provenance";
 import { esc, partyShortName } from "../helpers";
 
+export interface TextSection {
+  heading: string;
+  paragraphs: string[];
+}
+
+export interface Signatory {
+  name: string;
+  role: string | null;
+  party: string | null;
+  partyColor: string | null;
+  personId: number | null;
+}
+
+export interface Law {
+  order: number;
+  type: string | null;
+  name: string | null;
+}
+
 export interface AsiakirjaViewModel {
+  kind: string;
   id: number;
   identifier: string;
-  documentType: string;
+  documentTypeLabel: string;
   title: string;
+
   authorName: string;
-  authorParty: string;
+  authorRole: string | null;
+  authorParty: string | null;
   authorPartyColor: string;
   authorPersonId: number | null;
   authorInitials: string;
   authorDistrict: string | null;
-  submissionDate: string;
+
+  primaryDate: string;
+  primaryDateLabel: string;
+  secondaryDate: string | null;
+  secondaryDateLabel: string | null;
+
   statusLabel: string;
   statusColor: string;
+
+  textSections: TextSection[];
+
   lifecycleStages: Array<{
     step: number;
     label: string;
@@ -24,14 +54,17 @@ export interface AsiakirjaViewModel {
     done: boolean;
     tag?: string;
   }>;
-  questionParagraphs: string[];
-  signatureText: string;
+
   hasAnswer: boolean;
   answerIdentifier: string | null;
   answerDate: string | null;
   answerMinisterTitle: string | null;
   answerMinisterName: string | null;
-  answerText: string | null;
+
+  signatories: Signatory[];
+  laws: Law[];
+  sourceReference: string | null;
+
   subjects: string[];
   charCount: number;
   sessions: Array<{
@@ -72,14 +105,16 @@ export default function Asiakirja({ data }: Props) {
         <section class="doc-head">
           <div class="doc-head__top">
             <span class="doc-id">{d.identifier}</span>
-            <span class="doc-type">{d.documentType}</span>
+            <span class="doc-type">{d.documentTypeLabel}</span>
           </div>
           <h1>{esc(d.title)}</h1>
           <div class="doc-byline">
-            <span
-              class="pdot"
-              style={`background:${d.authorPartyColor}`}
-            ></span>
+            {d.authorPartyColor && (
+              <span
+                class="pdot"
+                style={`background:${d.authorPartyColor}`}
+              ></span>
+            )}
             {d.authorPersonId ? (
               <a
                 href={`/edustaja/${d.authorPersonId}`}
@@ -91,13 +126,22 @@ export default function Asiakirja({ data }: Props) {
             ) : (
               <span class="who">{esc(d.authorName)}</span>
             )}
-            <span>({d.authorParty})</span>
+            {d.authorRole && (
+              <span style="font-size:12px;color:var(--muted)">
+                {esc(d.authorRole)}
+              </span>
+            )}
+            {d.authorParty && <span>({d.authorParty})</span>}
             <span class="sep"></span>
-            <span>Jätetty {d.submissionDate}</span>
-            {d.hasAnswer && d.answerMinisterTitle && (
+            <span>
+              {d.primaryDateLabel} {d.primaryDate}
+            </span>
+            {d.secondaryDate && (
               <>
                 <span class="sep"></span>
-                <span>Vastattavana: {d.answerMinisterTitle}</span>
+                <span>
+                  {d.secondaryDateLabel} {d.secondaryDate}
+                </span>
               </>
             )}
           </div>
@@ -114,10 +158,7 @@ export default function Asiakirja({ data }: Props) {
 
         {d.lifecycleStages.length > 0 && (
           <>
-            <Kicker
-              text="Asian kulku — kysymys ja vastaus yhdessä näkymässä"
-              modifier=""
-            />
+            <Kicker text="Asian kulku" modifier="" />
             <nav class="lifecycle" style="margin-top:8px">
               {d.lifecycleStages.map((stage) => (
                 <div class={`lc-step${stage.done ? " done" : ""}`}>
@@ -144,51 +185,103 @@ export default function Asiakirja({ data }: Props) {
           </>
         )}
 
-        <div class="summary">
-          <div class="summary__bar">
-            <span class="l">
-              <span class="spark">✦</span>
-              <span class="lbl">Asiakirjan sisältö</span>
-            </span>
-            <span class="read">{d.charCount.toLocaleString("fi")} merkkiä</span>
-          </div>
-          <div class="summary__in">
-            <div class="summary__q">Mistä tässä on kyse?</div>
-            {d.questionParagraphs.length > 0 && (
-              <p class="summary__lead">
-                {esc(d.questionParagraphs[0]!.slice(0, 280))}…
-              </p>
-            )}
-          </div>
-        </div>
+        {d.textSections.length > 0 &&
+          d.textSections[0]!.paragraphs.length > 0 && (
+            <div class="summary">
+              <div class="summary__bar">
+                <span class="l">
+                  <span class="spark">✦</span>
+                  <span class="lbl">Asiakirjan sisältö</span>
+                </span>
+                <span class="read">
+                  {d.charCount.toLocaleString("fi")} merkkiä
+                </span>
+              </div>
+              <div class="summary__in">
+                <div class="summary__q">Mistä tässä on kyse?</div>
+                <p class="summary__lead">
+                  {esc(d.textSections[0]!.paragraphs[0]!.slice(0, 280))}…
+                </p>
+              </div>
+            </div>
+          )}
       </div>
 
       <div class="doc-body wrap">
         <article class="article" id="kysymys">
-          {d.lifecycleStages.length > 0 &&
-            d.lifecycleStages.find((s) => s.step === 1) && (
-              <div class="article__phase">
-                Vaihe{" "}
-                {String(
-                  d.lifecycleStages.find((s) => s.step === 1)!.step,
-                ).padStart(2, "0")}{" "}
-                · {d.documentType} — alkuperäinen teksti
-              </div>
-            )}
+          {d.textSections.map((section, si) => (
+            <>
+              <div class="article__phase">{section.heading}</div>
+              {section.paragraphs.map((para, pi) =>
+                pi === 0 && si === 0 ? (
+                  <p class="standfirst">{esc(para)}</p>
+                ) : (
+                  <p>{esc(para)}</p>
+                ),
+              )}
+            </>
+          ))}
 
-          {d.questionParagraphs.map((para, i) =>
-            i === 0 ? (
-              <p class="standfirst">{esc(para)}</p>
-            ) : (
-              <p>{esc(para)}</p>
-            ),
+          {(d.signatories.length > 0 || d.laws.length > 0) && (
+            <div style="margin-top:28px;padding-top:20px;border-top:1px solid var(--rule)">
+              {d.signatories.length > 0 && (
+                <div style="margin-bottom:20px">
+                  <h3>Allekirjoittajat</h3>
+                  <div class="signatory-list">
+                    {d.signatories.map((sig) => (
+                      <div class="signatory-row">
+                        {sig.partyColor && (
+                          <span
+                            class="pdot"
+                            style={`background:${sig.partyColor}`}
+                          ></span>
+                        )}
+                        <span class="signatory-name">
+                          {sig.personId ? (
+                            <a href={`/edustaja/${sig.personId}`}>
+                              {esc(sig.name)}
+                            </a>
+                          ) : (
+                            esc(sig.name)
+                          )}
+                        </span>
+                        {sig.role && (
+                          <span class="signatory-role">{esc(sig.role)}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {d.laws.length > 0 && (
+                <div>
+                  <h3>Lait</h3>
+                  <ul class="law-list">
+                    {d.laws.map((law) => (
+                      <li>
+                        {law.type && (
+                          <span class="law-type">{esc(law.type)}</span>
+                        )}
+                        <span>{esc(law.name ?? "")}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           )}
 
           <div class="article__sig">
-            <div class="name">
-              {esc(d.authorName)} /{d.authorParty}
+            <div class="name">{esc(d.authorName)}</div>
+            <div class="meta">
+              {[
+                d.authorRole,
+                d.primaryDate ? `${d.primaryDateLabel} ${d.primaryDate}` : "",
+                d.authorDistrict ?? "",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
             </div>
-            <div class="meta">{esc(d.signatureText)}</div>
           </div>
 
           {sourceNote({
@@ -196,14 +289,13 @@ export default function Asiakirja({ data }: Props) {
             fetchedAt: d.fetchedAt,
             extra: cite("varmenna teksti", {
               value: d.identifier,
-              caption: `${d.documentType}n koko teksti`,
+              caption: `${d.documentTypeLabel}n koko teksti`,
               set: "Eduskunnan avoin data · VaskiData",
-              table: "WrittenQuestion.question_text",
+              table: "VaskiData",
               endpoint: `GET /api/v1/tables/VaskiData?eduskuntaTunnus=${encodeURIComponent(d.identifier)}`,
-              record: `WrittenQuestion.id · ${d.charCount.toLocaleString("fi")} merkkiä`,
+              record: `${d.documentTypeLabel} · ${d.charCount.toLocaleString("fi")} merkkiä`,
               fetched: d.fetchedAt,
-              chain:
-                "avoindata.eduskunta.fi > WrittenQuestion > Asiakirjanäkymä",
+              chain: "avoindata.eduskunta.fi > VaskiData > Asiakirjanäkymä",
               url: "https://avoindata.eduskunta.fi/",
               orig: "Avaa alkuperäinen",
               mark: "off",
@@ -216,12 +308,7 @@ export default function Asiakirja({ data }: Props) {
               style="margin-top:40px;padding-top:4px;border-top:2px solid var(--ink)"
             >
               <div class="article__phase" style="margin-top:20px">
-                Vaihe{" "}
-                {String(
-                  d.lifecycleStages.find((s) => s.tag === "vastattu")?.step ??
-                    3,
-                ).padStart(2, "0")}{" "}
-                · Vastaus — {d.answerMinisterTitle} ·{" "}
+                Vastaus — {d.answerMinisterTitle} ·{" "}
                 {d.answerDate ? formatFi(d.answerDate) : ""}
               </div>
               <h3 style="margin-top:0">Ministerin vastaus</h3>
@@ -236,9 +323,8 @@ export default function Asiakirja({ data }: Props) {
                 <div class="summary__in">
                   <div class="summary__q">Mitä ministeri vastasi?</div>
                   <p class="summary__lead">
-                    {d.answerText
-                      ? esc(d.answerText)
-                      : `Ministeri ${d.answerMinisterName ?? ""} antoi vastauksen ${d.answerDate ? formatFi(d.answerDate) : ""}.`}
+                    Ministeri {d.answerMinisterName ?? ""} antoi vastauksen{" "}
+                    {d.answerDate ? formatFi(d.answerDate) : ""}.
                   </p>
                   <ul class="summary__points">
                     <li>
@@ -329,19 +415,19 @@ export default function Asiakirja({ data }: Props) {
               <dt>Tunnus</dt>
               <dd>{esc(d.identifier)}</dd>
               <dt>Tyyppi</dt>
-              <dd>{esc(d.documentType)}</dd>
-              <dt>Jätetty</dt>
-              <dd>{d.submissionDate}</dd>
-              {d.hasAnswer && d.answerDate && (
+              <dd>{esc(d.documentTypeLabel)}</dd>
+              <dt>{d.primaryDateLabel}</dt>
+              <dd>{d.primaryDate}</dd>
+              {d.secondaryDate && (
                 <>
-                  <dt>Vastattu</dt>
-                  <dd>{formatFi(d.answerDate)}</dd>
+                  <dt>{d.secondaryDateLabel}</dt>
+                  <dd>{d.secondaryDate}</dd>
                 </>
               )}
-              {d.answerMinisterTitle && (
+              {d.sourceReference && (
                 <>
-                  <dt>Vastaaja</dt>
-                  <dd>{esc(d.answerMinisterTitle)}</dd>
+                  <dt>Viite</dt>
+                  <dd>{esc(d.sourceReference)}</dd>
                 </>
               )}
               <dt>Pituus</dt>
@@ -350,7 +436,15 @@ export default function Asiakirja({ data }: Props) {
           </div>
 
           <div class="blk">
-            <h4>Tekijä</h4>
+            <h4>
+              {d.kind === "he"
+                ? "Esittelijä"
+                : d.kind === "mietinto"
+                  ? "Valiokunta"
+                  : d.kind === "vastaus"
+                    ? "Vastaaja"
+                    : "Tekijä"}
+            </h4>
             <a
               href={d.authorPersonId ? `/edustaja/${d.authorPersonId}` : "#"}
               class="related-row"
@@ -358,16 +452,23 @@ export default function Asiakirja({ data }: Props) {
             >
               <span style="width:40px;height:40px;background:var(--paper-2);border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;font:800 15px var(--head);color:var(--faint);position:relative;overflow:hidden">
                 {d.authorInitials}
-                <span
-                  style={`position:absolute;left:0;bottom:0;height:4px;width:100%;background:${d.authorPartyColor}`}
-                ></span>
+                {d.kind === "kk" ||
+                d.kind === "valikysymys" ||
+                d.kind === "aloite" ||
+                d.kind === "suullinen" ? (
+                  <span
+                    style={`position:absolute;left:0;bottom:0;height:4px;width:100%;background:${d.authorPartyColor}`}
+                  ></span>
+                ) : null}
               </span>
               <span>
                 <span style="display:block;font:700 14px var(--head);color:var(--ink)">
                   {esc(d.authorName)}
                 </span>
                 <span style="font-size:12px;color:var(--muted)">
-                  {partyShortName(d.authorParty, d.authorParty)}
+                  {d.authorParty
+                    ? partyShortName(d.authorParty, d.authorParty)
+                    : (d.authorRole ?? "")}
                   {d.authorDistrict ? ` · ${esc(d.authorDistrict)}` : ""}
                 </span>
               </span>

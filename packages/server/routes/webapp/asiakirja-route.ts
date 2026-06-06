@@ -1,203 +1,53 @@
 import Asiakirja, {
   type AsiakirjaViewModel,
+  type TextSection,
+  type Signatory,
+  type Law,
 } from "../../../webapp/templates/pages/asiakirja";
 import { partyColor } from "../../../webapp/templates/helpers";
+import { renderFullPage } from "../../../webapp/eta";
 import { page, getTimelineData } from "./helpers";
 import type { WebappDeps } from "./deps";
 
-interface StageRow {
-  question_id: number;
-  stage_order: number;
-  stage_title: string;
-  stage_code: string | null;
-  event_date: string | null;
-  event_title: string | null;
-  event_description: string | null;
-}
+const KIND_TO_LABEL: Record<string, string> = {
+  kk: "Kirjallinen kysymys",
+  suullinen: "Suullinen kysymys",
+  valikysymys: "Välikysymys",
+  he: "Hallituksen esitys",
+  aloite: "Lakialoite",
+  mietinto: "Mietintö",
+  vastaus: "Kirjallinen vastaus",
+  "vastaus-edk": "Eduskunnan vastaus",
+};
+
+const LA_LABELS: Record<string, string> = {
+  LA: "Lakialoite",
+  TPA: "Toimenpidealoite",
+  RA: "Rahoitusaloite",
+  A: "Aloite",
+};
+
+const REPORT_LABELS: Record<string, string> = {
+  M: "Mietintö",
+  L: "Lausunto",
+};
 
 export function createAsiakirjaRoute(deps: WebappDeps) {
   return {
     "/asiakirja/:id": {
       GET: (req: Request) => {
-        const id = (req as any).params.id;
-        if (!id || !/^\d+$/.test(id)) {
-          return new Response("Not found", { status: 404 });
+        const rawId = (req as any).params.id;
+        if (!rawId || !/^\d+$/.test(rawId)) {
+          return notFoundResponse(req);
         }
+        const id = rawId;
 
-        const detail = deps.documentRepository.fetchWrittenQuestionById({ id });
-        if (!detail) {
-          return new Response("Not found", { status: 404 });
-        }
+        const url = new URL(req.url);
+        const kind = url.searchParams.get("kind") ?? "kk";
 
-        const stages: StageRow[] = (detail as any).stages ?? [];
-        const subjects: string[] = ((detail as any).subjects ?? []).map(
-          (s: { subject_text: string }) => s.subject_text,
-        );
-
-        const parsedStages = stages.map((s) => ({
-          stage_order: s.stage_order,
-          stage_title: s.stage_title,
-          stage_code: s.stage_code,
-          event_date: s.event_date,
-          event_title: s.event_title,
-          event_description: s.event_description,
-        }));
-
-        const submissionDate = detail.submission_date ?? "";
-        const answerDate = detail.answer_date ?? null;
-
-        const lifecycleStages: AsiakirjaViewModel["lifecycleStages"] = [];
-
-        if (submissionDate) {
-          lifecycleStages.push({
-            step: 1,
-            label: "Kysymys jätetty",
-            date: submissionDate,
-            done: true,
-          });
-        }
-
-        const sentStage = parsedStages.find(
-          (s) =>
-            s.stage_title?.toLowerCase().includes("lähetetty") ||
-            s.event_title?.toLowerCase().includes("lähetetty") ||
-            s.stage_code === "VK" ||
-            s.stage_code === "LA",
-        );
-
-        if (sentStage?.event_date) {
-          lifecycleStages.push({
-            step: lifecycleStages.length + 1,
-            label:
-              sentStage.event_title ||
-              sentStage.stage_title ||
-              "Lähetetty käsittelyyn",
-            date: sentStage.event_date,
-            done: true,
-          });
-        } else if (parsedStages.length > 0) {
-          for (const s of parsedStages) {
-            lifecycleStages.push({
-              step: lifecycleStages.length + 1,
-              label: s.stage_title || s.event_title || "Käsittelyvaihe",
-              date: s.event_date,
-              done: true,
-            });
-          }
-        }
-
-        if (answerDate) {
-          lifecycleStages.push({
-            step: lifecycleStages.length + 1,
-            label: "Ministerin vastaus",
-            date: answerDate,
-            done: true,
-            tag: "vastattu",
-          });
-        }
-
-        const authorParty = detail.first_signer_party ?? "";
-        const authorPartyColor = partyColor(authorParty);
-        const authorName =
-          [detail.first_signer_first_name, detail.first_signer_last_name]
-            .filter(Boolean)
-            .join(" ") || "Tuntematon";
-
-        const authorInitials =
-          `${detail.first_signer_first_name?.charAt(0) ?? ""}${detail.first_signer_last_name?.charAt(0) ?? ""}`.toUpperCase() ||
-          "?";
-
-        let authorDistrict: string | null = null;
-        if (detail.first_signer_person_id) {
-          const districts = deps.personRepository.fetchRepresentativeDistricts({
-            id: String(detail.first_signer_person_id),
-          });
-          const current = districts.find((d) => !d.end_date);
-          authorDistrict =
-            current?.district_name
-              ?.replace(/ vaalipiiri$/, "")
-              ?.replace(/n$/, "") ??
-            districts[0]?.district_name ??
-            null;
-        }
-
-        const questionText = detail.question_text ?? "";
-        const questionParagraphs = questionText
-          .split(/\n\n+/)
-          .map((p) => p.trim())
-          .filter(Boolean);
-
-        if (questionParagraphs.length === 0 && questionText.trim()) {
-          questionParagraphs.push(questionText.trim());
-        }
-
-        const charCount = questionText.length;
-
-        const statusLabel = answerDate
-          ? "Vastattu " + formatFi(answerDate)
-          : submissionDate
-            ? "Jätetty " + formatFi(submissionDate)
-            : "Vireillä";
-        const statusColor = answerDate ? "var(--hall)" : "var(--muted)";
-
-        const signatureText = [
-          submissionDate ? `Helsingissä ${formatFi(submissionDate)}` : "",
-          authorDistrict ?? "",
-        ]
-          .filter(Boolean)
-          .join(" · ");
-
-        const answerMinisterName =
-          [detail.answer_minister_first_name, detail.answer_minister_last_name]
-            .filter(Boolean)
-            .join(" ") || null;
-
-        const fetchedAt = new Date().toLocaleString("fi-FI", {
-          day: "numeric",
-          month: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-
-        const sessions: AsiakirjaViewModel["sessions"] = (
-          (detail as any).sessions ?? []
-        ).map((s: any) => ({
-          sessionKey: s.session_key,
-          sessionDate: s.session_date,
-          sessionNumber: s.session_number,
-          sessionYear: s.session_year,
-          sectionTitle: s.section_title ?? null,
-        }));
-
-        const data: AsiakirjaViewModel = {
-          id: detail.id,
-          identifier: detail.parliament_identifier,
-          documentType: "Kirjallinen kysymys",
-          title: detail.title ?? "",
-          authorName,
-          authorParty,
-          authorPartyColor,
-          authorPersonId: detail.first_signer_person_id,
-          authorInitials,
-          authorDistrict,
-          submissionDate: formatFi(submissionDate),
-          statusLabel,
-          statusColor,
-          lifecycleStages,
-          questionParagraphs,
-          signatureText,
-          hasAnswer: answerDate !== null,
-          answerIdentifier: detail.answer_parliament_identifier,
-          answerDate,
-          answerMinisterTitle: detail.answer_minister_title,
-          answerMinisterName,
-          answerText: null,
-          subjects,
-          charCount,
-          sessions,
-          fetchedAt,
-        };
+        const builder = KIND_BUILDERS[kind];
+        const data = builder ? builder(id, deps) : null;
+        if (!data) return notFoundResponse(req);
 
         const tlData = getTimelineData(
           req,
@@ -216,8 +66,684 @@ export function createAsiakirjaRoute(deps: WebappDeps) {
   } as const;
 }
 
+type BuilderFn = (id: string, deps: WebappDeps) => AsiakirjaViewModel | null;
+
+function notFoundResponse(req: Request): Response {
+  const isHtmx = req.headers.get("HX-Request") === "true";
+  const fragment = `<title>Sivua ei löydy — Eduskuntapeili</title>
+<div class="wrap">
+  <section class="page-head">
+    <h1>Sivua ei löydy</h1>
+    <p class="sub">Asiakirjaa ei löytynyt tietokannasta.</p>
+    <p><a href="/asiakirjat" style="color:var(--blue)">Palaa asiakirjoihin</a></p>
+  </section>
+</div>`;
+  const body = isHtmx
+    ? fragment
+    : renderFullPage(fragment, {
+        activePath: "/asiakirjat",
+        title: "Sivua ei löydy",
+      });
+  return new Response(body, {
+    status: 404,
+    headers: { "Content-Type": "text/html; charset=utf-8", Vary: "HX-Request" },
+  });
+}
+
+const KIND_BUILDERS: Record<string, BuilderFn> = {
+  kk: buildWrittenQuestion,
+  suullinen: buildOralQuestion,
+  valikysymys: buildInterpellation,
+  he: buildGovernmentProposal,
+  aloite: buildLegislativeInitiative,
+  mietinto: buildCommitteeReport,
+  vastaus: buildWrittenQuestion,
+  "vastaus-edk": buildParliamentAnswer,
+};
+
+// ─── Shared helpers ───────────────────────────────────────
+
 function formatFi(iso: string | null): string {
   if (!iso) return "";
   const [y, m, d] = iso.split("-");
   return `${Number(d)}.${Number(m)}.${y}`;
+}
+
+function authorsByName(
+  first: string | null | undefined,
+  last: string | null | undefined,
+): string {
+  return [first, last].filter(Boolean).join(" ") || "Tuntematon";
+}
+
+function initialsFrom(
+  first: string | null | undefined,
+  last: string | null | undefined,
+): string {
+  return (
+    `${first?.charAt(0) ?? ""}${last?.charAt(0) ?? ""}`.toUpperCase() || "?"
+  );
+}
+
+function splitParagraphs(text: string | null | undefined): string[] {
+  if (!text) return [];
+  const parts = text
+    .split(/\n\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  return parts.length > 0 ? parts : [text.trim()].filter(Boolean);
+}
+
+function textCharCount(sections: TextSection[]): number {
+  return sections.reduce(
+    (sum, s) => sum + s.paragraphs.reduce((ss, p) => ss + p.length, 0),
+    0,
+  );
+}
+
+function fetchedAt(): string {
+  return new Date().toLocaleString("fi-FI", {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function mapSessions(detail: any): AsiakirjaViewModel["sessions"] {
+  return ((detail as any).sessions ?? []).map((s: any) => ({
+    sessionKey: s.session_key,
+    sessionDate: s.session_date,
+    sessionNumber: s.session_number,
+    sessionYear: s.session_year,
+    sectionTitle: s.section_title ?? null,
+  }));
+}
+
+function mapSubjects(detail: any): string[] {
+  const raw = (detail as any).subjects;
+  if (!raw) return [];
+  if (Array.isArray(raw))
+    return raw.map((s: any) => s.subject_text ?? s).filter(Boolean);
+  if (typeof raw === "string") return raw.split("||").filter(Boolean);
+  return [];
+}
+
+function stagesFromDb(detail: any): any[] {
+  return (detail as any).stages ?? [];
+}
+
+function buildLifecycleFromStages(
+  stages: any[],
+  extras?: Array<{ label: string; date: string | null; tag?: string }>,
+): AsiakirjaViewModel["lifecycleStages"] {
+  const result: AsiakirjaViewModel["lifecycleStages"] = [];
+  for (const s of stages) {
+    result.push({
+      step: result.length + 1,
+      label: s.stage_title || s.event_title || "Käsittelyvaihe",
+      date: s.event_date ?? null,
+      done: true,
+    });
+  }
+  if (extras) {
+    for (const e of extras) {
+      result.push({
+        step: result.length + 1,
+        label: e.label,
+        date: e.date,
+        done: true,
+        tag: e.tag,
+      });
+    }
+  }
+  return result;
+}
+
+function mpDistrict(
+  personId: number | null | undefined,
+  deps: WebappDeps,
+): string | null {
+  if (!personId) return null;
+  const districts = deps.personRepository.fetchRepresentativeDistricts({
+    id: String(personId),
+  });
+  const current = districts.find((d) => !d.end_date);
+  return (
+    (current?.district_name ?? districts[0]?.district_name ?? null)
+      ?.replace(/ vaalipiiri$/, "")
+      ?.replace(/n$/, "") ?? null
+  );
+}
+
+// ─── Kind-specific builders ────────────────────────────────
+
+function buildWrittenQuestion(
+  id: string,
+  deps: WebappDeps,
+): AsiakirjaViewModel | null {
+  const detail = deps.documentRepository.fetchWrittenQuestionById({ id });
+  if (!detail) return null;
+
+  const submissionDate = detail.submission_date ?? "";
+  const answerDate = detail.answer_date ?? null;
+  const stages = stagesFromDb(detail);
+
+  const lifecycleStages: AsiakirjaViewModel["lifecycleStages"] = [];
+  if (submissionDate) {
+    lifecycleStages.push({
+      step: 1,
+      label: "Kysymys jätetty",
+      date: submissionDate,
+      done: true,
+    });
+  }
+  for (const s of stages) {
+    lifecycleStages.push({
+      step: lifecycleStages.length + 1,
+      label: s.stage_title || s.event_title || "Käsittelyvaihe",
+      date: s.event_date ?? null,
+      done: true,
+    });
+  }
+  if (answerDate) {
+    lifecycleStages.push({
+      step: lifecycleStages.length + 1,
+      label: "Ministerin vastaus",
+      date: answerDate,
+      done: true,
+      tag: "vastattu",
+    });
+  }
+
+  const textSections: TextSection[] = [];
+  const qp = splitParagraphs(detail.question_text);
+  if (qp.length > 0) textSections.push({ heading: "Kysymys", paragraphs: qp });
+
+  const signers = (detail as any).signers ?? [];
+  const signatories: Signatory[] = signers.map((s: any) => ({
+    name: [s.first_name, s.last_name].filter(Boolean).join(" ") || "Tuntematon",
+    role: s.is_first_signer ? "Ensimmäinen allekirjoittaja" : "Allekirjoittaja",
+    party: s.party ?? null,
+    partyColor: s.party ? partyColor(s.party) : null,
+    personId: s.person_id ?? null,
+  }));
+
+  const authorParty = detail.first_signer_party ?? "";
+  return {
+    kind: "kk",
+    id: detail.id,
+    identifier: detail.parliament_identifier,
+    documentTypeLabel: KIND_TO_LABEL.kk!,
+    title: detail.title ?? "",
+    authorName: authorsByName(
+      detail.first_signer_first_name,
+      detail.first_signer_last_name,
+    ),
+    authorRole: "Kansanedustaja",
+    authorParty,
+    authorPartyColor: partyColor(authorParty),
+    authorPersonId: detail.first_signer_person_id,
+    authorInitials: initialsFrom(
+      detail.first_signer_first_name,
+      detail.first_signer_last_name,
+    ),
+    authorDistrict: mpDistrict(detail.first_signer_person_id, deps),
+    primaryDate: formatFi(submissionDate),
+    primaryDateLabel: "Jätetty",
+    secondaryDate: answerDate ? formatFi(answerDate) : null,
+    secondaryDateLabel: answerDate ? "Vastattu" : null,
+    statusLabel: answerDate
+      ? "Vastattu " + formatFi(answerDate)
+      : submissionDate
+        ? "Jätetty " + formatFi(submissionDate)
+        : "Vireillä",
+    statusColor: answerDate ? "var(--hall)" : "var(--muted)",
+    textSections,
+    lifecycleStages,
+    hasAnswer: answerDate !== null,
+    answerIdentifier: detail.answer_parliament_identifier,
+    answerDate,
+    answerMinisterTitle: detail.answer_minister_title,
+    answerMinisterName:
+      authorsByName(
+        detail.answer_minister_first_name,
+        detail.answer_minister_last_name,
+      ) || null,
+    signatories,
+    laws: [],
+    sourceReference: null,
+    subjects: mapSubjects(detail),
+    charCount: textCharCount(textSections),
+    sessions: mapSessions(detail),
+    fetchedAt: fetchedAt(),
+  };
+}
+
+function buildOralQuestion(
+  id: string,
+  deps: WebappDeps,
+): AsiakirjaViewModel | null {
+  const detail = deps.documentRepository.fetchOralQuestionById({ id });
+  if (!detail) return null;
+
+  const submissionDate = detail.submission_date ?? "";
+  const lifecycleStages = buildLifecycleFromStages(stagesFromDb(detail));
+
+  const textSections: TextSection[] = [];
+  const qp = splitParagraphs(detail.question_text);
+  if (qp.length > 0)
+    textSections.push({ heading: "Suullinen kysymys", paragraphs: qp });
+
+  const author = detail.asker_text ?? "";
+
+  return {
+    kind: "suullinen",
+    id: detail.id,
+    identifier: detail.parliament_identifier,
+    documentTypeLabel: KIND_TO_LABEL.suullinen!,
+    title: detail.title ?? "",
+    authorName: author || "Tuntematon",
+    authorRole: null,
+    authorParty: null,
+    authorPartyColor: "#999999",
+    authorPersonId: null,
+    authorInitials: author ? author.slice(0, 2).toUpperCase() : "?",
+    authorDistrict: null,
+    primaryDate: formatFi(submissionDate),
+    primaryDateLabel: "Jätetty",
+    secondaryDate: null,
+    secondaryDateLabel: null,
+    statusLabel: detail.decision_outcome
+      ? "Käsitelty"
+      : submissionDate
+        ? "Jätetty " + formatFi(submissionDate)
+        : "Vireillä",
+    statusColor: detail.decision_outcome ? "var(--hall)" : "var(--muted)",
+    textSections,
+    lifecycleStages,
+    hasAnswer: false,
+    answerIdentifier: null,
+    answerDate: null,
+    answerMinisterTitle: null,
+    answerMinisterName: null,
+    signatories: [],
+    laws: [],
+    sourceReference: null,
+    subjects: mapSubjects(detail),
+    charCount: textCharCount(textSections),
+    sessions: mapSessions(detail),
+    fetchedAt: fetchedAt(),
+  };
+}
+
+function buildInterpellation(
+  id: string,
+  deps: WebappDeps,
+): AsiakirjaViewModel | null {
+  const detail = deps.documentRepository.fetchInterpellationById({ id });
+  if (!detail) return null;
+
+  const submissionDate = detail.submission_date ?? "";
+  const lifecycleStages = buildLifecycleFromStages(stagesFromDb(detail));
+
+  const textSections: TextSection[] = [];
+  const qp = splitParagraphs(detail.question_text);
+  if (qp.length > 0)
+    textSections.push({ heading: "Välikysymys", paragraphs: qp });
+  const rp = splitParagraphs(detail.resolution_text);
+  if (rp.length > 0) textSections.push({ heading: "Ponsi", paragraphs: rp });
+
+  const signers = (detail as any).signers ?? [];
+  const signatories: Signatory[] = signers.map((s: any) => ({
+    name: [s.first_name, s.last_name].filter(Boolean).join(" ") || "Tuntematon",
+    role: s.is_first_signer ? "Ensimmäinen allekirjoittaja" : "Allekirjoittaja",
+    party: s.party ?? null,
+    partyColor: s.party ? partyColor(s.party) : null,
+    personId: s.person_id ?? null,
+  }));
+
+  const authorParty = detail.first_signer_party ?? "";
+  return {
+    kind: "valikysymys",
+    id: detail.id,
+    identifier: detail.parliament_identifier,
+    documentTypeLabel: KIND_TO_LABEL.valikysymys!,
+    title: detail.title ?? "",
+    authorName: authorsByName(
+      detail.first_signer_first_name,
+      detail.first_signer_last_name,
+    ),
+    authorRole: "Kansanedustaja",
+    authorParty,
+    authorPartyColor: partyColor(authorParty),
+    authorPersonId: detail.first_signer_person_id,
+    authorInitials: initialsFrom(
+      detail.first_signer_first_name,
+      detail.first_signer_last_name,
+    ),
+    authorDistrict: mpDistrict(detail.first_signer_person_id, deps),
+    primaryDate: formatFi(submissionDate),
+    primaryDateLabel: "Jätetty",
+    secondaryDate: null,
+    secondaryDateLabel: null,
+    statusLabel: detail.decision_outcome ? "Käsitelty" : "Vireillä",
+    statusColor: detail.decision_outcome ? "var(--hall)" : "var(--muted)",
+    textSections,
+    lifecycleStages,
+    hasAnswer: false,
+    answerIdentifier: null,
+    answerDate: null,
+    answerMinisterTitle: null,
+    answerMinisterName: null,
+    signatories,
+    laws: [],
+    sourceReference: null,
+    subjects: mapSubjects(detail),
+    charCount: textCharCount(textSections),
+    sessions: mapSessions(detail),
+    fetchedAt: fetchedAt(),
+  };
+}
+
+function buildGovernmentProposal(
+  id: string,
+  deps: WebappDeps,
+): AsiakirjaViewModel | null {
+  const detail = deps.documentRepository.fetchGovernmentProposalById({ id });
+  if (!detail) return null;
+
+  const submissionDate = detail.submission_date ?? "";
+  const lifecycleStages = buildLifecycleFromStages(stagesFromDb(detail));
+
+  const textSections: TextSection[] = [];
+  const sum = splitParagraphs(detail.summary_text);
+  if (sum.length > 0)
+    textSections.push({ heading: "Tiivistelmä", paragraphs: sum });
+  const jst = splitParagraphs(detail.justification_text);
+  if (jst.length > 0)
+    textSections.push({ heading: "Perustelut", paragraphs: jst });
+  const prop = splitParagraphs(detail.proposal_text);
+  if (prop.length > 0)
+    textSections.push({ heading: "Ehdotus", paragraphs: prop });
+  const app = splitParagraphs(detail.appendix_text);
+  if (app.length > 0) textSections.push({ heading: "Liite", paragraphs: app });
+
+  const rawSignatories = (detail as any).signatories ?? [];
+  const signatories: Signatory[] = rawSignatories.map((s: any) => ({
+    name: [s.first_name, s.last_name].filter(Boolean).join(" ") || "Tuntematon",
+    role: s.title_text ?? null,
+    party: null,
+    partyColor: null,
+    personId: null,
+  }));
+
+  const rawLaws = (detail as any).laws ?? [];
+  const laws: Law[] = rawLaws.map((l: any) => ({
+    order: l.law_order,
+    type: l.law_type ?? null,
+    name: l.law_name ?? null,
+  }));
+
+  const author = detail.author ?? "";
+  return {
+    kind: "he",
+    id: detail.id,
+    identifier: detail.parliament_identifier,
+    documentTypeLabel: KIND_TO_LABEL.he!,
+    title: detail.title ?? "",
+    authorName: author || "Tuntematon",
+    authorRole: "Ministeriö",
+    authorParty: null,
+    authorPartyColor: "#999999",
+    authorPersonId: null,
+    authorInitials: author ? author.slice(0, 2).toUpperCase() : "?",
+    authorDistrict: null,
+    primaryDate: formatFi(submissionDate),
+    primaryDateLabel: "Jätetty",
+    secondaryDate: detail.signature_date
+      ? formatFi(detail.signature_date)
+      : null,
+    secondaryDateLabel: detail.signature_date ? "Allekirjoitettu" : null,
+    statusLabel: detail.decision_outcome ? "Käsitelty" : "Vireillä",
+    statusColor: detail.decision_outcome ? "var(--hall)" : "var(--muted)",
+    textSections,
+    lifecycleStages,
+    hasAnswer: false,
+    answerIdentifier: null,
+    answerDate: null,
+    answerMinisterTitle: null,
+    answerMinisterName: null,
+    signatories,
+    laws,
+    sourceReference: null,
+    subjects: mapSubjects(detail),
+    charCount: textCharCount(textSections),
+    sessions: mapSessions(detail),
+    fetchedAt: fetchedAt(),
+  };
+}
+
+function buildLegislativeInitiative(
+  id: string,
+  deps: WebappDeps,
+): AsiakirjaViewModel | null {
+  const detail = deps.documentRepository.fetchLegislativeInitiativeById({ id });
+  if (!detail) return null;
+
+  const submissionDate = detail.submission_date ?? "";
+  const typeCode = detail.initiative_type_code ?? "";
+  const lifecycleStages = buildLifecycleFromStages(stagesFromDb(detail));
+
+  const textSections: TextSection[] = [];
+  const jst = splitParagraphs(detail.justification_text);
+  if (jst.length > 0)
+    textSections.push({ heading: "Perustelut", paragraphs: jst });
+  const prop = splitParagraphs(detail.proposal_text);
+  if (prop.length > 0)
+    textSections.push({ heading: "Ehdotus", paragraphs: prop });
+  const law = splitParagraphs(detail.law_text);
+  if (law.length > 0)
+    textSections.push({ heading: "Lakiteksti", paragraphs: law });
+
+  const signers = (detail as any).signers ?? [];
+  const signatories: Signatory[] = signers.map((s: any) => ({
+    name: [s.first_name, s.last_name].filter(Boolean).join(" ") || "Tuntematon",
+    role: s.is_first_signer ? "Ensimmäinen allekirjoittaja" : "Allekirjoittaja",
+    party: s.party ?? null,
+    partyColor: s.party ? partyColor(s.party) : null,
+    personId: s.person_id ?? null,
+  }));
+
+  const authorParty = detail.first_signer_party ?? "";
+  const label = LA_LABELS[typeCode] ?? "Aloite";
+  return {
+    kind: "aloite",
+    id: detail.id,
+    identifier: detail.parliament_identifier,
+    documentTypeLabel: label,
+    title: detail.title ?? "",
+    authorName: authorsByName(
+      detail.first_signer_first_name,
+      detail.first_signer_last_name,
+    ),
+    authorRole: "Kansanedustaja",
+    authorParty,
+    authorPartyColor: partyColor(authorParty),
+    authorPersonId: detail.first_signer_person_id,
+    authorInitials: initialsFrom(
+      detail.first_signer_first_name,
+      detail.first_signer_last_name,
+    ),
+    authorDistrict: mpDistrict(detail.first_signer_person_id, deps),
+    primaryDate: formatFi(submissionDate),
+    primaryDateLabel: "Jätetty",
+    secondaryDate: null,
+    secondaryDateLabel: null,
+    statusLabel: detail.decision_outcome ? "Käsitelty" : "Vireillä",
+    statusColor: detail.decision_outcome ? "var(--hall)" : "var(--muted)",
+    textSections,
+    lifecycleStages,
+    hasAnswer: false,
+    answerIdentifier: null,
+    answerDate: null,
+    answerMinisterTitle: null,
+    answerMinisterName: null,
+    signatories,
+    laws: [],
+    sourceReference: null,
+    subjects: mapSubjects(detail),
+    charCount: textCharCount(textSections),
+    sessions: mapSessions(detail),
+    fetchedAt: fetchedAt(),
+  };
+}
+
+function buildCommitteeReport(
+  id: string,
+  deps: WebappDeps,
+): AsiakirjaViewModel | null {
+  const detail = deps.documentRepository.fetchCommitteeReportById({ id });
+  if (!detail) return null;
+
+  const signatureDate = detail.signature_date ?? detail.draft_date ?? "";
+  const reportType = REPORT_LABELS[detail.report_type_code ?? ""] ?? "Mietintö";
+
+  const textSections: TextSection[] = [];
+  const sum = splitParagraphs(detail.summary_text);
+  if (sum.length > 0)
+    textSections.push({ heading: "Tiivistelmä", paragraphs: sum });
+  const gen = splitParagraphs(detail.general_reasoning_text);
+  if (gen.length > 0)
+    textSections.push({ heading: "Yleisperustelut", paragraphs: gen });
+  const det = splitParagraphs(detail.detailed_reasoning_text);
+  if (det.length > 0)
+    textSections.push({
+      heading: "Yksityiskohtaiset perustelut",
+      paragraphs: det,
+    });
+  const dec = splitParagraphs(detail.decision_text);
+  if (dec.length > 0)
+    textSections.push({ heading: "Päätösehdotus", paragraphs: dec });
+  const amd = splitParagraphs(detail.legislation_amendment_text);
+  if (amd.length > 0)
+    textSections.push({ heading: "Lainsäädäntömuutos", paragraphs: amd });
+  const min = splitParagraphs(detail.minority_opinion_text);
+  if (min.length > 0)
+    textSections.push({ heading: "Eriävä mielipide", paragraphs: min });
+  const res = splitParagraphs(detail.resolution_text);
+  if (res.length > 0) textSections.push({ heading: "Ponsi", paragraphs: res });
+
+  const members = (detail as any).members ?? [];
+  const experts = (detail as any).experts ?? [];
+  const signatories: Signatory[] = [
+    ...members.map((m: any) => ({
+      name:
+        [m.first_name, m.last_name].filter(Boolean).join(" ") || "Tuntematon",
+      role: m.role ?? "Jäsen",
+      party: m.party ?? null,
+      partyColor: m.party ? partyColor(m.party) : null,
+      personId: m.person_id ?? null,
+    })),
+    ...experts.map((e: any) => ({
+      name:
+        [e.first_name, e.last_name].filter(Boolean).join(" ") || "Tuntematon",
+      role: e.title ?? e.organization ?? "Asiantuntija",
+      party: null,
+      partyColor: null,
+      personId: e.person_id ?? null,
+    })),
+  ];
+
+  const committee = detail.committee_name ?? "";
+  return {
+    kind: "mietinto",
+    id: detail.id,
+    identifier: detail.parliament_identifier,
+    documentTypeLabel: reportType,
+    title: detail.title ?? "",
+    authorName: committee || "Tuntematon",
+    authorRole: "Valiokunta",
+    authorParty: null,
+    authorPartyColor: "#999999",
+    authorPersonId: null,
+    authorInitials: committee ? committee.slice(0, 2).toUpperCase() : "?",
+    authorDistrict: null,
+    primaryDate: formatFi(signatureDate),
+    primaryDateLabel: "Annettu",
+    secondaryDate: detail.draft_date ? formatFi(detail.draft_date) : null,
+    secondaryDateLabel: detail.draft_date ? "Luonnos" : null,
+    statusLabel: "Annettu",
+    statusColor: "var(--hall)",
+    textSections,
+    lifecycleStages: [],
+    hasAnswer: false,
+    answerIdentifier: null,
+    answerDate: null,
+    answerMinisterTitle: null,
+    answerMinisterName: null,
+    signatories,
+    laws: [],
+    sourceReference: detail.source_reference ?? null,
+    subjects: mapSubjects(detail),
+    charCount: textCharCount(textSections),
+    sessions: mapSessions(detail),
+    fetchedAt: fetchedAt(),
+  };
+}
+
+function buildParliamentAnswer(
+  id: string,
+  deps: WebappDeps,
+): AsiakirjaViewModel | null {
+  const detail = deps.documentRepository.fetchParliamentAnswerById({ id });
+  if (!detail) return null;
+
+  const submissionDate = detail.submission_date ?? detail.signature_date ?? "";
+
+  const textSections: TextSection[] = [];
+  const dec = splitParagraphs(detail.decision_text);
+  if (dec.length > 0) textSections.push({ heading: "Päätös", paragraphs: dec });
+  const leg = splitParagraphs(detail.legislation_text);
+  if (leg.length > 0)
+    textSections.push({ heading: "Lainsäädäntö", paragraphs: leg });
+
+  return {
+    kind: "vastaus-edk",
+    id: detail.id,
+    identifier: detail.parliament_identifier,
+    documentTypeLabel: KIND_TO_LABEL["vastaus-edk"]!,
+    title: detail.title ?? "",
+    authorName: "Eduskunta",
+    authorRole: null,
+    authorParty: null,
+    authorPartyColor: "#999999",
+    authorPersonId: null,
+    authorInitials: "E",
+    authorDistrict: null,
+    primaryDate: formatFi(submissionDate),
+    primaryDateLabel: "Annettu",
+    secondaryDate: detail.signature_date
+      ? formatFi(detail.signature_date)
+      : null,
+    secondaryDateLabel: detail.signature_date ? "Allekirjoitettu" : null,
+    statusLabel: "Annettu",
+    statusColor: "var(--hall)",
+    textSections,
+    lifecycleStages: [],
+    hasAnswer: false,
+    answerIdentifier: null,
+    answerDate: null,
+    answerMinisterTitle: null,
+    answerMinisterName: null,
+    signatories: [],
+    laws: [],
+    sourceReference:
+      detail.source_reference ?? detail.committee_report_reference ?? null,
+    subjects: mapSubjects(detail),
+    charCount: textCharCount(textSections),
+    sessions: mapSessions(detail),
+    fetchedAt: fetchedAt(),
+  };
 }

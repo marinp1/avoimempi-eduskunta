@@ -540,6 +540,12 @@
   text-decoration: none;
   color: inherit;
 }
+a.doc-row {
+  cursor: pointer;
+}
+div.doc-row {
+  cursor: default;
+}
 .doc-row:first-of-type {
   border-top: 1px solid var(--rule);
 }
@@ -623,4 +629,66 @@
   font-size: 11px;
   padding: 3px 9px;
   border-radius: 2px;
+}
+
+/* ============================================================
+   SIGNATORIES & LAWS (article extras)
+   ============================================================ */
+.signatory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.signatory-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--rule-soft);
+  font-size: var(--fs-sm);
+  color: var(--body);
+}
+.signatory-row:first-child {
+  border-top: 1px solid var(--rule);
+}
+.signatory-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+.signatory-name a {
+  color: var(--ink);
+  text-decoration: none;
+}
+.signatory-name a:hover {
+  color: var(--blue);
+}
+.signatory-role {
+  margin-left: auto;
+  font-size: var(--fs-meta);
+  color: var(--muted);
+  font-family: var(--mono);
+}
+.law-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.law-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--rule-soft);
+  font-size: var(--fs-sm);
+  color: var(--body);
+}
+.law-list li:first-child {
+  border-top: 1px solid var(--rule);
+}
+.law-type {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--blue);
+  font-weight: 600;
+  white-space: nowrap;
 }

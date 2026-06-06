@@ -1,35 +1,96 @@
 /** @jsxImportSource ../../src/jsx */
 import Kicker from "../components/kicker";
-import { esc, formatDate } from "../helpers";
+import { esc } from "../helpers";
 
-export interface QuestionRow {
+export interface DocumentRow {
   id: number;
-  parliamentIdentifier: string;
+  linkId: number;
+  hasDetail: boolean;
+  kind: string;
+  identifier: string;
   title: string;
-  submissionDate: string;
-  firstSignerName: string;
-  firstSignerParty: string;
-  firstSignerPartyColor: string;
-  answerDate: string | null;
-  answerMinisterTitle: string | null;
+  date: string;
+  dateLabel: string;
+  authorName: string | null;
+  authorParty: string | null;
+  authorPartyColor: string;
+  statusLabel: string | null;
+  statusClass: string;
   subjects: string[];
+  highlight: string | null;
 }
 
 export interface AsiakirjatIndexData {
-  questions: QuestionRow[];
+  rows: DocumentRow[];
   totalCount: number;
   page: number;
   totalPages: number;
+  kind: string;
   fetchedAt: string;
 }
+
+export interface DocKindChip {
+  key: string;
+  chipLabel: string;
+  dotColor: string;
+}
+
+export const DOC_KIND_CHIPS: DocKindChip[] = [
+  {
+    key: "kk",
+    chipLabel: "Kirjalliset kysymykset",
+    dotColor: "var(--blue)",
+  },
+  {
+    key: "suullinen",
+    chipLabel: "Suulliset kysymykset",
+    dotColor: "var(--blue)",
+  },
+  {
+    key: "valikysymys",
+    chipLabel: "Välikysymykset",
+    dotColor: "var(--red)",
+  },
+  {
+    key: "vastaus",
+    chipLabel: "Kirj. vastaukset",
+    dotColor: "var(--hall)",
+  },
+  {
+    key: "he",
+    chipLabel: "Hallituksen esitykset",
+    dotColor: "var(--opp)",
+  },
+  {
+    key: "aloite",
+    chipLabel: "Lakialoitteet",
+    dotColor: "var(--hall)",
+  },
+  {
+    key: "mietinto",
+    chipLabel: "Mietinnöt",
+    dotColor: "var(--muted)",
+  },
+  {
+    key: "asiantuntija",
+    chipLabel: "Asiantuntijalausunnot",
+    dotColor: "var(--faint)",
+  },
+  {
+    key: "vastaus-edk",
+    chipLabel: "Eduskunnan vastaukset",
+    dotColor: "var(--hall)",
+  },
+];
 
 interface Props {
   title?: string;
   data?: AsiakirjatIndexData;
   query?: string;
+  kind?: string;
 }
 
-export default function Asiakirjat({ title, data, query }: Props) {
+export default function Asiakirjat({ title, data, query, kind }: Props) {
   return (
     <>
       <title>{title} — Eduskuntapeili</title>
@@ -48,7 +109,7 @@ export default function Asiakirjat({ title, data, query }: Props) {
 
       <hr class="rule" />
 
-      <AsiakirjatList data={data} query={query} />
+      <AsiakirjatList data={data} query={query} kind={kind} />
     </>
   );
 }
@@ -56,10 +117,13 @@ export default function Asiakirjat({ title, data, query }: Props) {
 function AsiakirjatList({
   data,
   query,
+  kind,
 }: {
   data?: AsiakirjatIndexData;
   query?: string;
+  kind?: string;
 }) {
+  const activeKind = kind ?? "";
   return (
     <div
       id="tl-reactive"
@@ -82,7 +146,7 @@ function AsiakirjatList({
             placeholder="Hae asiakirjoista — tunnus, otsikko tai aihe…"
             name="q"
             value={query ?? ""}
-            hx-get="/asiakirjat"
+            hx-get={`/asiakirjat${activeKind ? `?kind=${activeKind}` : ""}`}
             hx-trigger="input changed delay:200ms"
             hx-target="#doc-root"
             hx-select="#doc-root"
@@ -99,73 +163,27 @@ function AsiakirjatList({
       </div>
 
       <div class="fchips">
-        <a class="fchip is-active" href="/asiakirjat">
+        <a class={`fchip${!activeKind ? " is-active" : ""}`} href="/asiakirjat">
           Kaikki
         </a>
-        <a class="fchip" href="/asiakirjat?kind=kk">
-          <span class="pdot" style="background:var(--blue)"></span>
-          Kirjalliset kysymykset
-        </a>
-        <a class="fchip" href="/asiakirjat?kind=initiative">
-          <span class="pdot" style="background:var(--hall)"></span>
-          Aloitteet
-        </a>
-        <a class="fchip" href="/asiakirjat?kind=he">
-          <span class="pdot" style="background:var(--opp)"></span>
-          Hallituksen esitykset
-        </a>
+        {DOC_KIND_CHIPS.map((chip) => (
+          <a
+            class={`fchip${activeKind === chip.key ? " is-active" : ""}`}
+            href={`/asiakirjat?kind=${chip.key}`}
+          >
+            <span class="pdot" style={`background:${chip.dotColor}`}></span>
+            {chip.chipLabel}
+          </a>
+        ))}
       </div>
 
       <div id="doc-root" class="loading-overlay">
         <div class="htmx-indicator loading-spinner">Ladataan…</div>
         {data ? (
-          data.questions.length > 0 ? (
+          data.rows.length > 0 ? (
             <div class="doc-list">
-              {data.questions.map((q) => (
-                <a
-                  class="doc-row"
-                  href={`/asiakirja/${q.id}`}
-                  data-id={String(q.id)}
-                >
-                  <div class="doc-row__left">
-                    <span class="doc-row__id">
-                      {esc(q.parliamentIdentifier)}
-                    </span>
-                    <span
-                      class="pdot"
-                      style={`background:${q.firstSignerPartyColor}`}
-                    ></span>
-                  </div>
-                  <div class="doc-row__main">
-                    <div class="doc-row__title">{esc(q.title)}</div>
-                    <div class="doc-row__sub">
-                      <span>{esc(q.firstSignerName)}</span>
-                      <span class="sep"></span>
-                      <span>Jätetty {formatDate(q.submissionDate)}</span>
-                      {q.answerDate && (
-                        <>
-                          <span class="sep"></span>
-                          <span>Vastattu {formatDate(q.answerDate)}</span>
-                        </>
-                      )}
-                    </div>
-                    {q.subjects.length > 0 && (
-                      <div class="doc-row__tags">
-                        {q.subjects.slice(0, 4).map((s) => (
-                          <span class="topic-tag">{esc(s)}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div class="doc-row__right">
-                    {q.answerDate ? (
-                      <span class="spill spill--done">Vastattu</span>
-                    ) : (
-                      <span class="spill spill--draft">Vireillä</span>
-                    )}
-                    <span class="sit-go">Avaa →</span>
-                  </div>
-                </a>
+              {data.rows.map((row) => (
+                <DocumentRowComponent row={row} />
               ))}
             </div>
           ) : (
@@ -191,7 +209,8 @@ function AsiakirjatList({
           <div class="source-note">
             <span>Lähde:</span>
             <span class="dset">
-              Eduskunnan avoin data · VaskiData · WrittenQuestion
+              Eduskunnan avoin data · VaskiData
+              {activeKind ? ` · ${currentChipLabel(activeKind)}` : ""}
             </span>
             <span>·</span>
             <span class="fresh">haettu {data.fetchedAt}</span>
@@ -200,14 +219,14 @@ function AsiakirjatList({
               class="cite verify"
               data-mark="off"
               data-value={`${data.totalCount} asiakirjaa`}
-              data-caption="Kirjalliset kysymykset — parlamenttiaineisto"
+              data-caption="Parlamenttiasiakirjat"
               data-set="Eduskunnan avoin data · VaskiData"
-              data-table="WrittenQuestion"
-              data-endpoint="SELECT * FROM WrittenQuestion ORDER BY submission_date DESC"
-              data-record={`WrittenQuestion · ${data.totalCount} kpl`}
+              data-table="WrittenQuestion + muut asiakirjatyypit"
+              data-endpoint="SELECT * FROM asiakirjat ORDER BY date DESC"
+              data-record={`${data.totalCount} kpl`}
               data-jakso="Vaalikausi 2023–2027"
               data-fetched={data.fetchedAt}
-              data-chain="avoindata.eduskunta.fi > WrittenQuestion > Asiakirjalista"
+              data-chain="avoindata.eduskunta.fi > Asiakirjat"
               data-url="https://avoindata.eduskunta.fi/"
               data-orig="Avaa aineisto"
             >
@@ -218,4 +237,64 @@ function AsiakirjatList({
       )}
     </div>
   );
+}
+
+function DocumentRowComponent({ row }: { row: DocumentRow }) {
+  const href = row.hasDetail
+    ? row.kind === "written_question"
+      ? `/asiakirja/${row.linkId}`
+      : `/asiakirja/${row.linkId}?kind=${row.kind}`
+    : undefined;
+  const inner = (
+    <>
+      <div class="doc-row__left">
+        <span class="doc-row__id">{esc(row.identifier)}</span>
+        <span class="pdot" style={`background:${row.authorPartyColor}`}></span>
+      </div>
+      <div class="doc-row__main">
+        <div class="doc-row__title">{esc(row.title)}</div>
+        <div class="doc-row__sub">
+          {row.authorName && <span>{esc(row.authorName)}</span>}
+          {row.date && (
+            <>
+              {row.authorName && <span class="sep"></span>}
+              <span>{row.dateLabel}</span>
+            </>
+          )}
+          {row.highlight && (
+            <>
+              <span class="sep"></span>
+              <span>{esc(row.highlight)}</span>
+            </>
+          )}
+        </div>
+        {row.subjects.length > 0 && (
+          <div class="doc-row__tags">
+            {row.subjects.slice(0, 4).map((s) => (
+              <span class="topic-tag">{esc(s)}</span>
+            ))}
+          </div>
+        )}
+      </div>
+      <div class="doc-row__right">
+        {row.statusLabel && (
+          <span class={`spill ${row.statusClass}`}>{row.statusLabel}</span>
+        )}
+        {row.hasDetail && <span class="sit-go">Avaa →</span>}
+      </div>
+    </>
+  );
+
+  return row.hasDetail ? (
+    <a class="doc-row" href={href} data-id={String(row.id)}>
+      {inner}
+    </a>
+  ) : (
+    <div class="doc-row">{inner}</div>
+  );
+}
+
+function currentChipLabel(key: string): string {
+  const chip = DOC_KIND_CHIPS.find((c) => c.key === key);
+  return chip?.chipLabel ?? key;
 }
