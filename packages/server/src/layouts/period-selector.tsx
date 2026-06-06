@@ -113,6 +113,7 @@ export default function PeriodSelector({
               hx-swap="innerHTML"
               hx-push-url="true"
               hx-include="#period-value"
+              hx-browser-indicator="true"
             >
               {i18next.t("components:period_selector.apply")}
             </button>

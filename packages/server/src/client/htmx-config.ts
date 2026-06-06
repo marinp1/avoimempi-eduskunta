@@ -2,6 +2,11 @@ import htmx from "htmx.org";
 
 htmx.config.defaultSwap = "innerHTML";
 htmx.config.defaultSettleDelay = 20;
+// Smoothly crossfade page swaps via the View Transitions API. Only the
+// #main-content region carries a view-transition-name (see _components.css),
+// so the page chrome stays put while the content morphs. No-op where the API
+// is unsupported (Firefox) — htmx falls back to an instant swap.
+htmx.config.transitions = true;
 
 // Preserve scroll position in #main-content when navigating back.
 document.body.setAttribute("hx-history-elt", "");

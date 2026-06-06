@@ -201,17 +201,6 @@
   }
 }
 
-@keyframes loading-slide {
-  0% {
-    transform: translateX(-100%);
-  }
-  50% {
-    transform: translateX(250%);
-  }
-  100% {
-    transform: translateX(400%);
-  }
-}
 
 .loading-spinner {
   display: flex;
@@ -254,26 +243,9 @@
   background: rgba(251, 250, 247, 0.7);
 }
 
-/* Global loading bar: thin animated strip at the very top of the viewport,
-   driven by body.is-loading (set via htmx:before:request / htmx:after:request). */
-body.is-loading::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 9999;
-  width: 120px;
-  height: 3px;
-  border-radius: 0 2px 2px 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--blue) 40%,
-    var(--blue) 60%,
-    transparent 100%
-  );
-  animation: loading-slide 1.2s ease-in-out infinite;
-}
+/* Page navigation feedback is handled natively now: the browser's own tab
+   spinner (hx-browser-indicator extension, Chromium) plus a View Transition
+   crossfade on #main-content (see _transitions below). No custom top bar. */
 
 /* Dim the nav links during an active request so the user sees which tab
    they clicked and that a navigation is in progress. */
@@ -526,4 +498,85 @@ body.is-loading .nav a.is-active {
   height: 9px;
   border-radius: 50%;
   flex: 0 0 auto;
+}
+
+/* ============================================================
+   PAGE TRANSITIONS (View Transitions API)
+   Enabled globally via htmx.config.transitions = true. Only the
+   #main-content region is swapped on navigation, so we give it its
+   own transition name to lift it out of the (unchanging) page chrome
+   and crossfade just the content. Chromium + Safari 18+; Firefox and
+   reduced-motion users get an instant swap with no animation.
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  #main-content {
+    view-transition-name: main-content;
+  }
+
+  ::view-transition-old(main-content) {
+    animation: vt-content-out 110ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  ::view-transition-new(main-content) {
+    animation: vt-content-in 200ms cubic-bezier(0, 0, 0.2, 1) both;
+  }
+}
+
+@keyframes vt-content-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes vt-content-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* ============================================================
+   CROSS-DOCUMENT TRANSITIONS + SHARED-ELEMENT MORPH
+   Roster -> profile is a full-document navigation, so we opt into
+   MPA (cross-document) View Transitions. The clicked roster row's
+   name + party dot morph into the profile hero's name + portrait bar.
+   The roster side is named per-click in nav-morph.ts; the profile
+   side (one representative per page) is named statically below.
+
+   NOTE: the `@view-transition { navigation: auto }` opt-in lives at the top
+   level of styles.css, NOT here — that at-rule is ignored when nested inside
+   a cascade @layer (every file imported via `@import ... layer()` is wrapped
+   in one). The view-transition-name properties below are fine in a layer.
+   ============================================================ */
+
+/* Profile hero — the morph destinations (unique per profile page). */
+.bio-name {
+  view-transition-name: vt-bio-name;
+}
+
+.bio-portrait .pbar {
+  view-transition-name: vt-bio-accent;
+}
+
+/* Ease + duration for the two morphing groups. The group animates
+   position/size between the two pages; old/new images crossfade within. */
+::view-transition-group(vt-bio-name),
+::view-transition-group(vt-bio-accent) {
+  animation-duration: 360ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* The big H1 and the small row name are very different sizes; let the new
+   text fade in a touch faster so the scaled old snapshot isn't visible long. */
+::view-transition-old(vt-bio-name) {
+  animation-duration: 160ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }

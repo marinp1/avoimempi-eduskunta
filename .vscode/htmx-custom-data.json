@@ -1,0 +1,15 @@
+{
+  "version": 1.1,
+  "globalAttributes": [
+    {
+      "name": "hx-browser-indicator",
+      "description": "htmx `hx-browser-indicator` extension attribute. When set to \"true\", shows the browser's native loading indicator (tab spinner, via the Navigation API) while the htmx request on this element is in flight. Chromium-only; a no-op elsewhere.",
+      "references": [
+        {
+          "name": "hx-browser-indicator extension docs",
+          "url": "https://four.htmx.org/extensions/hx-browser-indicator"
+        }
+      ]
+    }
+  ]
+}

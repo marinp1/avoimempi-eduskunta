@@ -35,3 +35,11 @@
 @import "./styles/_votes.css" layer(votes);
 @import "./styles/_timeline.css" layer(timeline);
 @import "./styles/_responsive.css" layer(responsive);
+
+/* Cross-document (MPA) View Transitions opt-in. MUST be top-level: this
+   at-rule is ignored inside a cascade @layer, and every @import above is
+   layer-wrapped. Drives the roster -> profile shared-element morph (see
+   _components.css and nav-morph.ts). */
+@view-transition {
+  navigation: auto;
+}

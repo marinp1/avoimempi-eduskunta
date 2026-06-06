@@ -34,6 +34,7 @@ export default function Nav({ activePath }: Props) {
           hx-target="#main-content"
           hx-push-url="true"
           hx-swap="innerHTML"
+          hx-browser-indicator="true"
         >
           {i18next.t(item.label)}
         </a>
