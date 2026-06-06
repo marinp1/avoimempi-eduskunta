@@ -1,0 +1,26 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error"
+  },
+  "ignorePatterns": ["**/*.eta", "design/**/*"],
+  "options": {
+    "typeAware": true
+  },
+  "rules": {
+    "typescript/await-thenable": "off",
+    "typescript/no-base-to-string": "off",
+    "typescript/no-redundant-type-constituents": "off",
+    "typescript/require-array-sort-compare": "off",
+    "typescript/unbound-method": "off",
+    "unicorn/no-new-array": "warn",
+    "no-unused-expressions": "warn",
+    "no-constant-condition": "warn",
+    "unicorn/no-useless-spread": "warn",
+    "oxc/const-comparisons": "warn"
+  },
+  "env": {
+    "builtin": true
+  }
+}
