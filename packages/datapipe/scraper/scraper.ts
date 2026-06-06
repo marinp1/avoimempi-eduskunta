@@ -201,13 +201,16 @@ export async function scrapeTable(
 
   // Fetch column info early — needed both for the skip-check peek and for scraping.
   const { primaryColumn } = await getTableColumns(tableName);
+  // Always-full-scrape tables are re-scraped from PK 0 on every run regardless
+  // of cached counts or current mode, because their rows may change in-place.
+  const isFullScrape = isAlwaysFullScrapeTable(tableName);
 
   // Skip scraping if local data is already up-to-date according to the saved count.
   // The count alone is not reliable: the API may have deleted rows (lowering the
   // count) while simultaneously adding new rows with higher PKs. When counts
   // suggest nothing changed, do a lightweight peek just beyond our local max PK
   // to confirm there are no new rows before skipping.
-  if (options.skipIfUnchanged && cachedCount !== null) {
+  if (!isFullScrape && options.skipIfUnchanged && cachedCount !== null) {
     const localCount = await rawStore.count(tableName);
     if (localCount >= cachedCount) {
       const localMaxPk = await rawStore.maxPk(tableName);
@@ -524,9 +527,6 @@ export async function scrapeTable(
     return ranges;
   };
 
-  // Always-full-scrape tables are re-scraped from PK 0 on every run regardless
-  // of cached counts or current mode, because their rows may change in-place.
-  const isFullScrape = isAlwaysFullScrapeTable(tableName);
   if (isFullScrape) {
     console.log(
       `🔁 ${tableName} is an always-full-scrape table — starting from PK 0 (preserving revisions)`,
