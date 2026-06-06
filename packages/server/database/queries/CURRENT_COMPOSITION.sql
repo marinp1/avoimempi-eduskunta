@@ -5,7 +5,7 @@ WITH government_groups AS (
     JOIN Government g ON g.id = gm.government_id
     JOIN ParliamentaryGroupMembership pgm ON gm.person_id = pgm.person_id
     WHERE g.start_date <= $date
-      AND (g.end_date IS NULL OR g.end_date >= $date)
+      AND (g.end_date IS NULL OR g.end_date > $date)
       AND gm.start_date <= $date
       AND (gm.end_date IS NULL OR gm.end_date >= $date)
       AND pgm.start_date <= $date
@@ -34,11 +34,13 @@ SELECT
 FROM
     representative r
 JOIN
-    term t ON r.person_id = t.person_id
-LEFT JOIN
     ParliamentaryGroupMembership pgm ON r.person_id = pgm.person_id
     AND pgm.start_date <= $date
     AND (pgm.end_date IS NULL OR pgm.end_date >= $date)
+LEFT JOIN
+    term t ON r.person_id = t.person_id
+    AND t.start_date <= $date
+    AND (t.end_date IS NULL OR t.end_date >= $date)
 LEFT JOIN
     government_groups gg ON gg.group_name = pgm.group_name
 LEFT JOIN
@@ -48,12 +50,11 @@ LEFT JOIN
 LEFT JOIN
     District d ON rd.district_code = d.code
 WHERE
-    t.start_date <= $date
-    AND (t.end_date IS NULL OR t.end_date >= $date)
-    AND NOT EXISTS (
+    NOT EXISTS (
         SELECT 1
         FROM temporaryabsence ta
         WHERE ta.person_id = r.person_id
+          AND ta.start_date IS NOT NULL
           AND ta.start_date <= $date
           AND (ta.end_date IS NULL OR ta.end_date >= $date)
     );

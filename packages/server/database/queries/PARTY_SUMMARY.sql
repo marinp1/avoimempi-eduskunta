@@ -12,15 +12,9 @@ active_members AS (
     pgm.start_date,
     pgm.end_date
   FROM ParliamentaryGroupMembership pgm
-  WHERE pgm.start_date <= $asOfDate
+  WHERE pgm.start_date IS NOT NULL
+    AND pgm.start_date <= $asOfDate
     AND (pgm.end_date IS NULL OR pgm.end_date >= $asOfDate)
-    AND EXISTS (
-      SELECT 1
-      FROM Term t INDEXED BY idx_term_person_dates
-      WHERE t.person_id = pgm.person_id
-        AND t.start_date <= $asOfDate
-        AND (t.end_date IS NULL OR t.end_date >= $asOfDate)
-    )
   GROUP BY
     pgm.group_code,
     pgm.group_name,
@@ -107,6 +101,7 @@ gov_groups AS (
   CROSS JOIN window w
   WHERE gm.start_date <= w.end_date
     AND (gm.end_date IS NULL OR gm.end_date >= w.start_date)
+    AND (g.end_date IS NULL OR g.end_date > w.start_date)
     AND (
       $governmentName IS NULL OR (
         TRIM(g.name) = TRIM($governmentName)
