@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0-alpha.3] — 2026-04-01
+
+### Features
+- add inter fonts locally (d551e73)
+
+### Bug Fixes
+- fix full scrape issue (6021adc)
+- minify build and add inter font definitons (7e1780e)
+
+### Other
+- refactor(client): start app redesign (fad0f1a)
+- refactor(client): denser ui (3e5fbda)
+
 ## [1.1.0-alpha.2] — 2026-03-30
 
 ### Other
