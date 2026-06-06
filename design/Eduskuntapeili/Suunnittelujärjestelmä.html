@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Suunnittelujärjestelmä — Eduskuntapeili</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="peili.css" rel="stylesheet" />
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="masthead">
+    <div class="masthead__top">
+      <div>
+        <div class="brand__name">Eduskuntapeili</div>
+        <div class="brand__tag">Eduskunnan avoin data, luettavassa muodossa</div>
+      </div>
+      <div class="masthead__meta">
+        <span class="masthead__date">Suunnittelujärjestelmä</span>
+        <div class="period" data-period>
+          <button class="period__btn" aria-expanded="false" aria-haspopup="true">
+            <span class="period__k">Tietojakso</span>
+            <span class="period__v" data-period-v>Vaalikausi 2023–2027</span>
+            <span class="period__badge is-now" data-period-badge>nykyinen</span>
+            <span class="period__caret">▾</span>
+          </button>
+          <div class="period__menu" hidden role="menu">
+            <div class="period__menu-head">Valitse tietojakso</div>
+            <button class="period__opt is-selected" role="menuitemradio" aria-checked="true" data-val="2023"><span class="period__opt-main">Vaalikausi 2023–2027</span><span class="period__opt-sub">Orpon hallitus · nykyinen</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="2019"><span class="period__opt-main">Vaalikausi 2019–2023</span><span class="period__opt-sub">Marinin / Rinteen hallitus</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="all"><span class="period__opt-main">Kaikki vaalikaudet</span><span class="period__opt-sub">koko avoin data</span></button>
+            <div class="period__note">Tietojakso rajaa kaikki sivun luvut ja koosteet. Oletuksena nykyinen kausi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="rule-ink" />
+    <nav class="nav">
+      <a href="Etusivu.html">Etusivu</a>
+      <a href="#">Kansanedustajat</a>
+      <a href="#">Puolueet</a>
+      <a href="#">Istunnot</a>
+      <a href="#">Äänestykset</a>
+      <a href="#">Asiakirjat</a>
+      <span class="nav__search">Haku ⌕</span>
+    </nav>
+    <hr class="rule" />
+  </header>
+
+  <!-- ============ TITLE ============ -->
+  <section class="lead">
+    <p class="kicker kicker--red"><span class="dot"></span>Suunnittelujärjestelmä · Suunta A</p>
+    <h1>Uutispöytä</h1>
+    <p class="ds-section__lead" style="margin-top:18px">Toimituksellinen tietopöytä: selkeä hierarkia, hiusviivat sirpaleisten korttien sijaan, ja
+      rakenteellinen tapa jäljittää jokainen luku alkuperäiseen aineistoon. Tämä sivu kokoaa värit,
+      typografian, komponentit ja lähteiden jäljitettävyyden.</p>
+  </section>
+
+  <!-- ============ PERIAATTEET ============ -->
+  <section class="ds-section">
+    <p class="kicker">Periaatteet</p>
+    <h2 class="ds-section__h">Neljä lähtökohtaa</h2>
+    <div class="ds-grid ds-grid--2">
+      <div>
+        <h3 style="font-size:19px;margin-bottom:6px">01 — Sisältö ennen koristelua</h3>
+        <p style="color:var(--body)">Tieto kannattelee itse itseään. Vältämme laatikoiden paljoutta; sidomme osiot toisiinsa hiusviivoilla, otsikoilla ja sarakkeilla.</p>
+      </div>
+      <div>
+        <h3 style="font-size:19px;margin-bottom:6px">02 — Vain merkitsevät luvut</h3>
+        <p style="color:var(--body)">Jokaisen luvun on ansaittava paikkansa. Ei tilastoja tilastojen vuoksi.</p>
+      </div>
+      <div>
+        <h3 style="font-size:19px;margin-bottom:6px">03 — Jokainen luku on jäljitettävissä</h3>
+        <p style="color:var(--body)">Numero, lainaus ja kooste kantavat lähdettä: aineisto, rajapintakutsu, tietue ja hakuhetki — yhden klikkauksen päässä.</p>
+      </div>
+      <div>
+        <h3 style="font-size:19px;margin-bottom:6px">04 — Tekoäly avoimin kortein</h3>
+        <p style="color:var(--body)">Kun yhdistämme ja tiivistämme virallista dataa, näytämme aina alkuperäiset tietueet — koneellinen tulkinta on tarkistettavissa.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VÄRIT ============ -->
+  <section class="ds-section">
+    <p class="kicker">Värit</p>
+    <h2 class="ds-section__h">Paperi, muste ja pidätellyt aksentit</h2>
+    <p class="ds-section__lead">Lämmin paperisävy ja musteenmusta teksti. Väriä käytetään säästeliäästi: sininen linkeille ja toimitukselliselle aksentille, punainen "juuri nyt" -merkinnöille, sekä vihreä ja okra erottamaan hallitus ja oppositio.</p>
+    <div class="ds-grid ds-grid--swatch">
+      <div class="swatch-card"><div class="chip" style="background:var(--paper)"></div><div class="name">Paperi</div><div class="hex">#FBFAF7</div></div>
+      <div class="swatch-card"><div class="chip" style="background:var(--paper-2)"></div><div class="name">Paperi-inset</div><div class="hex">#F4F1E8</div></div>
+      <div class="swatch-card"><div class="chip" style="background:var(--ink)"></div><div class="name">Muste</div><div class="hex">#16130F</div></div>
+      <div class="swatch-card"><div class="chip" style="background:var(--body)"></div><div class="name">Leipäteksti</div><div class="hex">#3A352D</div></div>
+      <div class="swatch-card"><div class="chip" style="background:var(--muted)"></div><div class="name">Vaimennettu</div><div class="hex">#847B6D</div></div>
+      <div class="swatch-card"><div class="chip" style="background:var(--blue)"></div><div class="name">Sininen · linkit</div><div class="hex">#1B3A6B</div></div>
+      <div class="swatch-card"><div class="chip" style="background:var(--red)"></div><div class="name">Punainen · nyt</div><div class="hex">#BC3A23</div></div>
+      <div class="swatch-card"><div class="chip" style="background:var(--hall)"></div><div class="name">Hallitus</div><div class="hex">#2F6B4F</div></div>
+      <div class="swatch-card"><div class="chip" style="background:var(--opp)"></div><div class="name">Oppositio</div><div class="hex">#B97324</div></div>
+    </div>
+  </section>
+
+  <!-- ============ TYPOGRAFIA ============ -->
+  <section class="ds-section">
+    <p class="kicker">Typografia</p>
+    <h2 class="ds-section__h">Schibsted Grotesk · Hanken Grotesk · IBM Plex Mono</h2>
+    <p class="ds-section__lead">Luonteikas groteski otsikoille, rauhallinen groteski leipätekstille, ja monospace lähdetiedoille — monospace on "raakadatan ääni", joka erottaa jäljitteen muusta sisällöstä.</p>
+    <div class="type-spec"><div class="tok">--fs-display<small>Schibsted 800</small></div><div style="font-family:var(--head);font-weight:800;font-size:48px;line-height:1;letter-spacing:-.025em">Eduskunta juuri nyt</div></div>
+    <div class="type-spec"><div class="tok">--fs-h2<small>Schibsted 700</small></div><div style="font-family:var(--head);font-weight:700;font-size:25px;letter-spacing:-.01em">Kokoonpano ja blokit</div></div>
+    <div class="type-spec"><div class="tok">--fs-lead<small>Hanken 400</small></div><div style="font-size:19px;line-height:1.5;color:var(--body)">Viimeisin täysistunto oli 2026/57 torstaina 28.5.2026.</div></div>
+    <div class="type-spec"><div class="tok">--fs-body<small>Hanken 400/600</small></div><div style="font-size:16px;line-height:1.5;color:var(--body)">Hallituspohjan muodostavat kokoomus, perussuomalaiset, RKP ja kristillisdemokraatit. <b>Yhteensä 108 paikkaa.</b></div></div>
+    <div class="type-spec"><div class="tok">--fs-mono<small>Plex Mono 500</small></div><div style="font-family:var(--mono);font-size:12px;color:var(--muted)">GET /api/v1/tables/SaliDBAanestys/rows?VotingId=56229 · haettu 30.5.2026 07.16</div></div>
+  </section>
+
+  <!-- ============ KICKERIT, VIIVAT, PAINIKKEET ============ -->
+  <section class="ds-section">
+    <p class="kicker">Merkinnät</p>
+    <h2 class="ds-section__h">Kickerit, viivat, painikkeet</h2>
+    <div class="demo">
+      <p class="kicker kicker--red"><span class="dot"></span>Eduskunta juuri nyt</p>
+      <p class="kicker">Voimasuhteet</p>
+      <p class="kicker kicker--blue">Tekoälykooste</p>
+      <hr class="rule-ink" style="margin:18px 0" />
+      <hr class="rule" style="margin:18px 0" />
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:6px">
+        <button class="btn">Avaa istunnot ↗</button>
+        <button class="btn btn--ghost">Lisää vertailuun</button>
+        <span class="link-arrow">Avaa kokoonpano →</span>
+        <span class="tag tag--hall">Hallitus</span>
+        <span class="tag tag--opp">Oppositio</span>
+        <span class="tag tag--ghost">kok</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TILASTOT + KOMPOSITIO ============ -->
+  <section class="ds-section">
+    <p class="kicker">Data</p>
+    <h2 class="ds-section__h">Luvut ja kokoonpano</h2>
+    <p class="ds-section__lead">Tunnusluvut elävät tekstin rytmissä, eivät erillisissä laatikoissa: suuret numerot hiusviivoin eroteltuina. Kokoonpano on yksi pylväs ja siisti taulukko.</p>
+    <div class="demo">
+      <div class="stat-row">
+        <div class="stat"><div class="stat__label">Kansanedustajia</div><div class="stat__value">200</div></div>
+        <div class="stat"><div class="stat__label">Hallituksessa</div><div class="stat__value hall">108</div></div>
+        <div class="stat"><div class="stat__label">Oppositiossa</div><div class="stat__value opp">92</div></div>
+        <div class="stat"><div class="stat__label">Puolueita</div><div class="stat__value">8</div></div>
+      </div>
+      <div style="margin-top:30px">
+        <div class="bloc-bar">
+          <span class="seg-hall" style="width:24%"></span><span class="seg-hall" style="width:22.5%"></span>
+          <span class="seg-opp" style="width:21.5%"></span><span class="seg-opp" style="width:11.5%"></span>
+          <span class="seg-opp" style="width:6.5%"></span><span class="seg-opp" style="width:5.5%"></span>
+          <span class="seg-hall" style="width:5%"></span><span class="seg-hall" style="width:2.5%"></span>
+        </div>
+        <div class="bloc-legend">
+          <span class="item"><span class="swatch" style="background:var(--hall)"></span>Hallitus <b>108</b></span>
+          <span class="item"><span class="swatch" style="background:var(--opp)"></span>Oppositio <b>92</b></span>
+          <span class="note">200 paikkaa · 8 puoluetta + 2 ryhmää</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ JÄLJITETTÄVYYS (centerpiece) ============ -->
+  <section class="ds-section">
+    <p class="kicker kicker--blue">Ydinkomponentti</p>
+    <h2 class="ds-section__h">Lähteet &amp; jäljitettävyys</h2>
+    <p class="ds-section__lead">Jokainen virallinen luku, lainaus ja kooste sidotaan alkuperäiseen tietueeseen. Ketju on aina sama:
+      <b>avoindata.eduskunta.fi → Eduskuntapeilin taulu → näytetty luku</b>. Lukija pääsee jokaisesta solmusta eteenpäin.</p>
+
+    <!-- 1. inline cite -->
+    <h3 style="font-size:17px;margin-bottom:10px">1 · Lähdemerkki tekstissä</h3>
+    <div class="demo">
+      <p style="font-size:18px;line-height:1.65;color:var(--body);max-width:62ch">
+        Tiukin äänestys ratkesi
+        <span class="cite"
+          data-value="83 JAA – 76 EI"
+          data-caption="Lakiehdotusten hyväksyminen JAA / hylkääminen EI"
+          data-set="Eduskunnan avoin data · SaliDBAanestys"
+          data-table="Voting"
+          data-endpoint="GET /api/v1/tables/SaliDBAanestys/rows?VotingId=56229"
+          data-record="voting.id = 56229 · session 2026/21"
+          data-jakso="Vaalikausi 2023–2027"
+          data-fetched="30.5.2026 klo 07.16"
+          data-chain="avoindata.eduskunta.fi > Voting > Etusivu-kooste"
+          data-url="https://avoindata.eduskunta.fi/"
+          data-orig="Avaa äänestystulos">seitsemän äänen erolla</span>
+        sähköistä tiedoksiantoa koskevassa laissa 11.3.2026.
+        Pisteviivalla merkitty luku avaa jäljitteen.
+      </p>
+    </div>
+    <p class="ds-label"><b>.cite</b> — pisteviiva-alleviivaus + monospace-merkki (*) — § on varattu pykälille. Klikkaus tai Enter avaa lähdepopoverin. Data-attribuutit: <b>data-set, data-table, data-endpoint, data-record, data-fetched, data-url, data-chain</b>.</p>
+
+    <!-- 2. source note -->
+    <h3 style="font-size:17px;margin:30px 0 10px">2 · Osion lähdeviite</h3>
+    <div class="demo">
+      <div style="font-size:15px;color:var(--body)">Kokoonpano 30.5.2026 — 200 voimassa olevaa jäsenyyttä.</div>
+      <div class="source-note">
+        <span>Lähde:</span>
+        <span class="dset">Eduskunnan avoin data · MemberOfParliament + jäsenyydet</span>
+        <span>·</span>
+        <span class="fresh">haettu 30.5.2026 07.16</span>
+        <span>·</span>
+        <span class="cite verify"
+          data-value="200 jäsenyyttä"
+          data-caption="Voimassa olevat eduskuntaryhmän jäsenyydet"
+          data-set="Eduskunnan avoin data · SaliDBJasenyys"
+          data-table="ParliamentaryGroupMembership"
+          data-endpoint="SELECT group_name, COUNT(*) … WHERE end_date IS NULL"
+          data-record="200 riviä"
+          data-fetched="30.5.2026 klo 07.16"
+          data-chain="avoindata.eduskunta.fi > ParliamentaryGroupMembership > Kokoonpano-kooste"
+          data-url="https://avoindata.eduskunta.fi/"
+          data-orig="Avaa aineisto"
+          data-mark="off">varmenna jäljite</span>
+      </div>
+    </div>
+    <p class="ds-label"><b>.source-note</b> — sanomalehtikaavion "Lähde:"-alaviite osion alle. Monospace korostaa, että kyseessä on tekninen jäljite.</p>
+
+    <!-- 3. AI summary with sources -->
+    <h3 style="font-size:17px;margin:30px 0 10px">3 · Tekoälykooste, jolla on lähteet</h3>
+    <div class="ai">
+      <div class="ai__head"><span class="ai__spark">✦</span><span class="ai__label">Tekoälykooste</span></div>
+      <p class="ai__body">Viikon istunnoissa painottui talous- ja ilmastopolitiikka. Hallitus vei läpi kansallisen energia- ja
+        ilmastostrategian selonteon niukalla enemmistöllä, ja oppositio jätti välikysymyksen talouspolitiikasta.
+        Äänestyskuri piti molemmissa blokeissa: ylityksiä oli vain kuusi.</p>
+      <div class="ai__foot">
+        <span class="ai__note">Koneellisesti tuotettu · pohjautuu 4 tietueeseen</span>
+        <button class="ai-sources-toggle" data-label="Näytä lähteet (4)"><span class="chev">›</span><span class="lbl">Näytä lähteet (4)</span></button>
+      </div>
+      <div class="ai-sources">
+        <div class="ai-sources__title">Koosteen lähteet — tarkistettavissa</div>
+        <div class="src-row"><span class="src-row__n">1</span><div class="src-row__main"><div class="src-row__title">Äänestys: energia- ja ilmastostrategian selonteko (hyväksytty)</div><div class="src-row__api">GET /api/v1/tables/SaliDBAanestys/rows?VotingId=56572</div></div><div class="src-row__meta">29.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+        <div class="src-row"><span class="src-row__n">2</span><div class="src-row__main"><div class="src-row__title">Äänestys: luottamuslause / Tuppuraisen ehdotus (99–86)</div><div class="src-row__api">GET /api/v1/tables/SaliDBAanestys/rows?VotingId=56318</div></div><div class="src-row__meta">13.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+        <div class="src-row"><span class="src-row__n">3</span><div class="src-row__main"><div class="src-row__title">Välikysymys hallituksen talouspolitiikasta</div><div class="src-row__api">GET /api/v1/tables/VaskiData?eduskuntaTunnus=VK+3/2026</div></div><div class="src-row__meta">30.4.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+        <div class="src-row"><span class="src-row__n">4</span><div class="src-row__main"><div class="src-row__title">Täysistunnon pöytäkirja 2026/57</div><div class="src-row__api">GET /api/v1/tables/SaliDBPoytakirja?istunto=2026/57</div></div><div class="src-row__meta">28.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+      </div>
+    </div>
+    <p class="ds-label"><b>.ai</b> + <b>.ai-sources</b> — toimituksellinen inset (vasen sinipalkki, ei pyöristettyä korttia). "Näytä lähteet" avaa koneellisen koosteen alkuperäiset tietueet rajapintakutsuineen.</p>
+  </section>
+
+  <!-- ============ TIETOJAKSO ============ -->
+  <section class="ds-section">
+    <p class="kicker">Rajaus</p>
+    <h2 class="ds-section__h">Tietojakso</h2>
+    <p class="ds-section__lead">Jokainen näkymä on sidottu yhteen tietojaksoon — oletuksena <b>nykyiseen vaalikauteen (2023–2027, Orpon hallitus)</b>.
+      Valittu jakso näkyy aina ylhäällä ja toistetaan selkeästi alatunnisteessa, jotta lukija tietää minkä ajan luvuista on kyse.
+      Yksityiskohdat avautuvat pyydettäessä.</p>
+    <div class="ds-grid ds-grid--2">
+      <div>
+        <h3 style="font-size:17px;margin-bottom:10px">Valitsin · ylätunniste</h3>
+        <div class="demo" style="display:flex;justify-content:flex-start">
+          <div class="period" data-period-demo style="position:static">
+            <button class="period__btn" type="button">
+              <span class="period__k">Tietojakso</span>
+              <span class="period__v">Vaalikausi 2023–2027</span>
+              <span class="period__badge is-now">nykyinen</span>
+              <span class="period__caret">▾</span>
+            </button>
+          </div>
+        </div>
+        <p class="ds-label">Oletus on valmiiksi valittuna. Klikkaus avaa kausilistan; valinta säilyy sivulta toiselle.</p>
+      </div>
+      <div>
+        <h3 style="font-size:17px;margin-bottom:10px">Selvitys · alatunniste</h3>
+        <div class="demo">
+          <div class="foot__period" style="padding-top:0;border:0">
+            <span class="pk">Tietojakso</span>
+            <span class="pv">Vaalikausi 2023–2027 · Orpon hallitus</span>
+            <span class="pbadge is-now">nykyinen</span>
+          </div>
+          <div style="font-family:var(--mono);font-size:var(--fs-mono);color:var(--muted);margin-top:8px">20.6.2023 – kesken · 200 paikkaa · hallitus 108 / oppositio 92</div>
+        </div>
+        <p class="ds-label">Sama jakso toistetaan jokaisen sivun lopussa — yksiselitteinen vastaus kysymykseen "minkä ajan dataa tämä on?".</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="foot">
+    <div class="foot__period">
+      <span class="pk">Tietojakso</span>
+      <span class="pv" data-period-label>Vaalikausi 2023–2027 · Orpon hallitus</span>
+      <span class="pbadge is-now" data-period-badge>nykyinen</span>
+      <span class="pdetail" data-period-detail>20.6.2023 – kesken · 200 paikkaa · hallitus 108 / oppositio 92</span>
+    </div>
+    <div class="foot__legal">
+      <span>Suunta A · Uutispöytä — suunnittelumalli</span>
+      <span>Tietolähde: Eduskunnan avoin data · avoindata.eduskunta.fi</span>
+    </div>
+  </footer>
+
+</div>
+<script defer src="period.js"></script>
+<script defer src="trace.js"></script>
+</body>
+</html>

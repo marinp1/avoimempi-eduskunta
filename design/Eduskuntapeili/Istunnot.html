@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Istunnot — Eduskuntapeili</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="peili.css" rel="stylesheet" />
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="masthead">
+    <div class="masthead__top">
+      <div>
+        <div class="brand__name">Eduskuntapeili</div>
+        <div class="brand__tag">Eduskunnan avoin data, luettavassa muodossa</div>
+      </div>
+      <div class="masthead__meta">
+        <span class="masthead__date">lauantai 30. toukokuuta 2026</span>
+        <div class="period" data-period>
+          <button class="period__btn" aria-expanded="false" aria-haspopup="true">
+            <span class="period__k">Tietojakso</span>
+            <span class="period__v" data-period-v>Vaalikausi 2023–2027</span>
+            <span class="period__badge is-now" data-period-badge>nykyinen</span>
+            <span class="period__caret">▾</span>
+          </button>
+          <div class="period__menu" hidden role="menu">
+            <div class="period__menu-head">Valitse tietojakso</div>
+            <button class="period__opt is-selected" role="menuitemradio" aria-checked="true" data-val="2023"><span class="period__opt-main">Vaalikausi 2023–2027</span><span class="period__opt-sub">Orpon hallitus · nykyinen</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="2019"><span class="period__opt-main">Vaalikausi 2019–2023</span><span class="period__opt-sub">Marinin / Rinteen hallitus</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="all"><span class="period__opt-main">Kaikki vaalikaudet</span><span class="period__opt-sub">koko avoin data</span></button>
+            <div class="period__note">Tietojakso rajaa kaikki sivun luvut ja koosteet. Oletuksena nykyinen kausi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="rule-ink" />
+    <nav class="nav">
+      <a href="Etusivu.html">Etusivu</a>
+      <a href="Kansanedustajat.html">Kansanedustajat</a>
+      <a href="#">Puolueet</a>
+      <a href="Istunnot.html" class="is-active">Istunnot</a>
+      <a href="#">Äänestykset</a>
+      <a href="#">Asiakirjat</a>
+      <span class="nav__search">Haku ⌕</span>
+    </nav>
+    <hr class="rule" />
+  </header>
+
+  <!-- ============ PAGE HEAD ============ -->
+  <section class="page-head">
+    <p class="kicker">Täysistunnot</p>
+    <h1>Istunnot</h1>
+    <p class="sub">Eduskunnan täysistunnot istuntoviikoittain — mitä käsiteltiin, mistä äänestettiin ja mistä keskusteltiin. Jokainen luku avautuu alkuperäiseen pöytäkirjaan ja äänestystulokseen.</p>
+  </section>
+
+  <!-- ============ AI WEEKLY SYNTHESIS ============ -->
+  <section style="padding:8px 0 6px">
+    <div class="ai">
+      <div class="ai__head"><span class="ai__spark">✦</span><span class="ai__label">Tekoälykooste · istuntoviikko 19.–22.5.2026</span></div>
+      <p class="ai__body">Toukokuun kolmas istuntoviikko huipentui perjantain äänestyspäivään: <b>metsälakipaketti hyväksyttiin 149–22</b>,
+        sisäisen turvallisuuden selonteon kannanotto 155–13 ja hyvinvointialueiden rahoitus niukasti <b>94–77</b>.
+        Keskiviikkona äänestettiin kymmenen kertaa — muun muassa ammattikorkeakoulu- ja opintotukilaista (91–77) sekä
+        työsopimuslaista (93–78). Torstain kyselytunnilla nousivat drooniuhka, Suomen ja Israelin puolustusyhteistyö ja
+        vaaratiedotejärjestelmä.</p>
+      <div class="ai__foot">
+        <span class="ai__note">Koneellisesti tuotettu · pohjautuu 4 tietueeseen</span>
+        <button class="ai-sources-toggle" data-label="Näytä lähteet (4)"><span class="chev">›</span><span class="lbl">Näytä lähteet (4)</span></button>
+      </div>
+      <div class="ai-sources">
+        <div class="ai-sources__title">Koosteen lähteet — tarkistettavissa</div>
+        <div class="src-row"><span class="src-row__n">1</span><div class="src-row__main"><div class="src-row__title">Täysistunnot 2026/51–2026/54 · 4 istuntoa</div><div class="src-row__api">GET /api/v1/tables/Session/rows?key=2026/51..2026/54</div></div><div class="src-row__meta">22.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+        <div class="src-row"><span class="src-row__n">2</span><div class="src-row__main"><div class="src-row__title">Äänestykset viikolla · 16 äänestystä, mm. VotingId 56552 (metsälaki 149–22)</div><div class="src-row__api">SELECT * FROM Voting WHERE session_key BETWEEN '2026/51' AND '2026/54'</div></div><div class="src-row__meta">22.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+        <div class="src-row"><span class="src-row__n">3</span><div class="src-row__main"><div class="src-row__title">Puheenvuorot · 470 kpl (Speech, session_key 2026/51–54)</div><div class="src-row__api">SELECT COUNT(*) FROM Speech WHERE session_key LIKE '2026/5%'</div></div><div class="src-row__meta">22.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+        <div class="src-row"><span class="src-row__n">4</span><div class="src-row__main"><div class="src-row__title">Päiväjärjestykset · Section + Agenda (65 asiakohtaa)</div><div class="src-row__api">SELECT * FROM Section WHERE session_key BETWEEN '2026/51' AND '2026/54'</div></div><div class="src-row__meta">22.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WEEK STAT STRIP ============ -->
+  <section style="padding:24px 0 4px">
+    <p class="kicker" style="margin-bottom:14px">Istuntoviikko 19.–22.5.2026 · lukuina</p>
+    <div class="stat-row">
+      <div class="stat"><div class="stat__label">Täysistuntoa</div><div class="stat__value">4</div></div>
+      <div class="stat"><div class="stat__label">Äänestystä</div><div class="stat__value">
+        <span class="cite" data-mark="off"
+          data-value="16 äänestystä"
+          data-caption="Täysistuntoäänestykset viikolla 19.–22.5.2026"
+          data-set="Eduskunnan avoin data · Voting"
+          data-table="Voting"
+          data-endpoint="SELECT COUNT(*) FROM Voting WHERE session_key BETWEEN '2026/51' AND '2026/54'"
+          data-record="16 riviä · istunnot 2026/51–54"
+          data-jakso="Vaalikausi 2023–2027"
+          data-fetched="30.5.2026 klo 07.16"
+          data-chain="avoindata.eduskunta.fi > Voting > Istuntokooste"
+          data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa äänestykset">16</span></div></div>
+      <div class="stat"><div class="stat__label">Puheenvuoroa</div><div class="stat__value">
+        <span class="cite" data-mark="off"
+          data-value="470 puheenvuoroa"
+          data-caption="Pidetyt puheenvuorot viikolla 19.–22.5.2026"
+          data-set="Eduskunnan avoin data · Speech"
+          data-table="Speech"
+          data-endpoint="SELECT COUNT(*) FROM Speech WHERE session_key IN ('2026/51','2026/52','2026/53','2026/54')"
+          data-record="470 riviä · 10 + 108 + 204 + 148"
+          data-jakso="Vaalikausi 2023–2027"
+          data-fetched="30.5.2026 klo 07.16"
+          data-chain="avoindata.eduskunta.fi > Speech > Istuntokooste"
+          data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa puheenvuorot">470</span></div></div>
+      <div class="stat"><div class="stat__label">Istuntoaikaa</div><div class="stat__value">≈17<small style="font-size:16px;font-weight:600;color:var(--muted);margin-left:3px">h</small></div></div>
+    </div>
+  </section>
+  <hr class="rule" style="margin-top:20px" />
+
+  <!-- ============ TOOLBAR ============ -->
+  <div class="toolbar">
+    <label class="search">
+      <span class="ic">⌕</span>
+      <input id="sit-search" type="text" placeholder="Hae istunnoista — laki, aihe tai istuntonumero…" />
+    </label>
+    <span class="count"><b id="sit-count">10</b> istuntoa</span>
+  </div>
+  <div class="fchips">
+    <button class="fchip is-active" data-filter="all">Kaikki</button>
+    <button class="fchip" data-filter="vote"><span class="pdot" style="background:var(--blue)"></span>Äänestyspäivät</button>
+    <button class="fchip" data-filter="kysely"><span class="pdot" style="background:var(--opp)"></span>Kyselytunti</button>
+    <button class="fchip" data-filter="vali"><span class="pdot" style="background:var(--red)"></span>Välikysymys</button>
+    <button class="fchip" data-filter="talk"><span class="pdot" style="background:var(--faint)"></span>Keskustelut</button>
+  </div>
+
+  <!-- ============ SESSION LIST ============ -->
+  <div id="sit-root">
+
+    <!-- WEEK · this week -->
+    <section class="week" data-week>
+      <div class="week-head">
+        <span class="week-head__k">Tällä viikolla</span>
+        <span class="week-head__t">26. toukokuuta 2026</span>
+        <span class="week-head__meta">1 täysistunto · pöytäkirja laadittu</span>
+      </div>
+      <div class="sit-list">
+        <a class="sit-row" href="Istunto.html" data-kind="draft" data-text="2026/55 täysistunto pöytäkirja laadittu">
+          <div class="sit-date"><span class="sit-dow"><span class="kdot quiet"></span>Ti</span><span class="sit-day">26.5.</span><span class="sit-mon">touko</span></div>
+          <div class="sit-main">
+            <div class="sit-top"><span class="sit-id">Täysistunto 2026/55</span><span class="spill spill--draft">pöytäkirja laadittu</span></div>
+            <div class="sit-head">Täysistunto pidetty — pöytäkirja juuri laadittu</div>
+            <div class="sit-note">Asiakohdat, puheenvuorot ja mahdolliset äänestykset kirjautuvat järjestelmään pöytäkirjan valmistuttua.</div>
+          </div>
+          <div class="sit-meta"><span class="sit-go">Pöytäkirja →</span></div>
+        </a>
+      </div>
+    </section>
+
+    <!-- WEEK · 19–22 May -->
+    <section class="week" data-week>
+      <div class="week-head">
+        <span class="week-head__k">Istuntoviikko</span>
+        <span class="week-head__t">19.–22. toukokuuta 2026</span>
+        <span class="week-head__meta">4 istuntoa · 16 äänestystä · 470 puheenvuoroa</span>
+      </div>
+      <div class="sit-list">
+
+        <a class="sit-row" href="Istunto.html" data-kind="vote" data-text="2026/54 äänestyspäivä metsälaki luonnonsuojelu sisäinen turvallisuus hyvinvointialue rahoitus äänestys">
+          <div class="sit-date"><span class="sit-dow"><span class="kdot vote"></span>Pe</span><span class="sit-day">22.5.</span><span class="sit-mon">touko</span></div>
+          <div class="sit-main">
+            <div class="sit-top"><span class="sit-id">Täysistunto 2026/54</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 13.00–13.31</span></div>
+            <div class="sit-head">Äänestyspäivä: metsälaki, sisäinen turvallisuus ja hyvinvointialueet</div>
+            <div class="sit-note">Lyhyt äänestysistunto — kuusi ratkaisua noin kahdeksassa minuutissa (klo 10.04–10.10).</div>
+            <div class="sit-items">
+              <span class="dchip"><span class="dchip__k">äänestys</span><span class="dchip__t">Metsälakipaketti</span><span class="dchip__r ok">149–22</span></span>
+              <span class="dchip"><span class="dchip__k">äänestys</span><span class="dchip__t">Sisäisen turvallisuuden selonteko</span><span class="dchip__r ok">155–13</span></span>
+              <span class="dchip"><span class="dchip__k">äänestys</span><span class="dchip__t">Hyvinvointialuelaki</span><span class="dchip__r ok">94–77</span></span>
+              <span class="dchip dchip--more">+3 muuta äänestystä</span>
+            </div>
+          </div>
+          <div class="sit-meta">
+            <div class="sit-figs"><div class="sit-fig"><b>6</b><span>Äänestystä</span></div><div class="sit-fig"><b>15</b><span>Asiakohtaa</span></div></div>
+            <span class="sit-go">Avaa istunto →</span>
+          </div>
+        </a>
+
+        <a class="sit-row" href="Istunto.html" data-kind="kysely talk" data-text="2026/53 kyselytunti suullinen kysymys drooniuhka israel puolustusyhteistyö vaaratiedote eläinten oikeudet kansalaisaloite">
+          <div class="sit-date"><span class="sit-dow"><span class="kdot talk"></span>To</span><span class="sit-day">21.5.</span><span class="sit-mon">touko</span></div>
+          <div class="sit-main">
+            <div class="sit-top"><span class="sit-id">Täysistunto 2026/53</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 16.00–20.07</span></div>
+            <div class="sit-head">Kyselytunti: drooniuhka, Israel-yhteistyö ja eläinten oikeudet</div>
+            <div class="sit-note">108 puheenvuoroa · suullinen kyselytunti ja kansalaisaloitteen palautekeskustelu, ei äänestyksiä.</div>
+            <div class="sit-items">
+              <span class="dchip"><span class="dchip__k">kyselytunti</span><span class="dchip__t">Drooniuhka ja viranomaisyhteistyö</span></span>
+              <span class="dchip"><span class="dchip__k">kyselytunti</span><span class="dchip__t">Suomen ja Israelin puolustusyhteistyö</span></span>
+              <span class="dchip"><span class="dchip__k">kansalaisaloite</span><span class="dchip__t">Eläinten oikeudet perustuslakiin</span></span>
+            </div>
+          </div>
+          <div class="sit-meta">
+            <div class="sit-figs"><div class="sit-fig"><b class="zero">0</b><span>Äänestystä</span></div><div class="sit-fig"><b>16</b><span>Asiakohtaa</span></div></div>
+            <span class="sit-go">Avaa istunto →</span>
+          </div>
+        </a>
+
+        <a class="sit-row" href="Istunto.html" data-kind="vote" data-text="2026/52 äänestys ammattikorkeakoulu opintotuki työsopimuslaki lastensuojelu poronhoito arkistointi">
+          <div class="sit-date"><span class="sit-dow"><span class="kdot vote"></span>Ke</span><span class="sit-day">20.5.</span><span class="sit-mon">touko</span></div>
+          <div class="sit-main">
+            <div class="sit-top"><span class="sit-id">Täysistunto 2026/52</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 14.00–21.38</span></div>
+            <div class="sit-head">Kymmenen äänestystä: opintotuki, työsopimus- ja lastensuojelulaki</div>
+            <div class="sit-note">204 puheenvuoroa · viikon vilkkain äänestyspäivä.</div>
+            <div class="sit-items">
+              <span class="dchip"><span class="dchip__k">äänestys</span><span class="dchip__t">Opintotuki- ja AMK-laki</span><span class="dchip__r ok">91–77</span></span>
+              <span class="dchip"><span class="dchip__k">äänestys</span><span class="dchip__t">Työsopimuslaki</span><span class="dchip__r ok">93–78</span></span>
+              <span class="dchip"><span class="dchip__k">äänestys</span><span class="dchip__t">Lastensuojelulaki</span><span class="dchip__r ok">117–54</span></span>
+              <span class="dchip dchip--more">+7 muuta äänestystä</span>
+            </div>
+          </div>
+          <div class="sit-meta">
+            <div class="sit-figs"><div class="sit-fig"><b>10</b><span>Äänestystä</span></div><div class="sit-fig"><b>19</b><span>Asiakohtaa</span></div></div>
+            <span class="sit-go">Avaa istunto →</span>
+          </div>
+        </a>
+
+        <a class="sit-row" href="Istunto.html" data-kind="talk" data-text="2026/51 lähetekeskustelu venäjä verosopimus keskeytys puolustusvoimalaki vesilaki luonnonsuojelu patentti asunto-osakeyhtiö">
+          <div class="sit-date"><span class="sit-dow"><span class="kdot talk"></span>Ti</span><span class="sit-day">19.5.</span><span class="sit-mon">touko</span></div>
+          <div class="sit-main">
+            <div class="sit-top"><span class="sit-id">Täysistunto 2026/51</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 14.00–18.46</span></div>
+            <div class="sit-head">Lähetekeskustelut: Venäjä-verosopimus, puolustusvoimat ja vesilaki</div>
+            <div class="sit-note">148 puheenvuoroa · pelkkiä lähetekeskusteluja, ei äänestyksiä.</div>
+            <div class="sit-items">
+              <span class="dchip"><span class="dchip__k">lähetekeskustelu</span><span class="dchip__t">Venäjä-verosopimuksen keskeytys</span></span>
+              <span class="dchip"><span class="dchip__k">lähetekeskustelu</span><span class="dchip__t">Puolustusvoimalaki</span></span>
+              <span class="dchip"><span class="dchip__k">lähetekeskustelu</span><span class="dchip__t">Vesilaki &amp; luonnonsuojelu</span></span>
+            </div>
+          </div>
+          <div class="sit-meta">
+            <div class="sit-figs"><div class="sit-fig"><b class="zero">0</b><span>Äänestystä</span></div><div class="sit-fig"><b>15</b><span>Asiakohtaa</span></div></div>
+            <span class="sit-go">Avaa istunto →</span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- WEEK · 12–13 May -->
+    <section class="week" data-week>
+      <div class="week-head">
+        <span class="week-head__k">Istuntoviikko</span>
+        <span class="week-head__t">12.–13. toukokuuta 2026</span>
+        <span class="week-head__meta">2 istuntoa · välikysymys talouspolitiikasta</span>
+      </div>
+      <div class="sit-list">
+
+        <a class="sit-row" href="Istunto.html" data-kind="vali vote" data-text="2026/50 välikysymys talouspolitiikka luottamus luottamusäänestys hallitus">
+          <div class="sit-date"><span class="sit-dow"><span class="kdot vote"></span>Ke</span><span class="sit-day">13.5.</span><span class="sit-mon">touko</span></div>
+          <div class="sit-main">
+            <div class="sit-top"><span class="sit-id">Täysistunto 2026/50</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 14.00–19.26</span></div>
+            <div class="sit-head">Välikysymys talouspolitiikasta — hallitus säilytti luottamuksen</div>
+            <div class="sit-note">160 puheenvuoroa · välikysymyksen päätöskeskustelu ja luottamusäänestys.</div>
+            <div class="sit-items">
+              <span class="dchip"><span class="dchip__k">välikysymys</span><span class="dchip__t">Hallituksen talouspolitiikka · luottamus</span><span class="dchip__r ok">99–86</span></span>
+              <span class="dchip dchip--more">hallitus nautti eduskunnan luottamusta</span>
+            </div>
+          </div>
+          <div class="sit-meta">
+            <div class="sit-figs"><div class="sit-fig"><b>1</b><span>Äänestys</span></div><div class="sit-fig"><b>22</b><span>Asiakohtaa</span></div></div>
+            <span class="sit-go">Avaa istunto →</span>
+          </div>
+        </a>
+
+        <a class="sit-row" href="Istunto.html" data-kind="vali talk" data-text="2026/49 välikysymys talouspolitiikka keskustelu työsopimuslaki poronhoito patentti lähetekeskustelu pisin istunto">
+          <div class="sit-date"><span class="sit-dow"><span class="kdot talk"></span>Ti</span><span class="sit-day">12.5.</span><span class="sit-mon">touko</span></div>
+          <div class="sit-main">
+            <div class="sit-top"><span class="sit-id">Täysistunto 2026/49</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 14.00–23.00</span></div>
+            <div class="sit-head">Välikysymyskeskustelu talouspolitiikasta — viikon pisin istunto</div>
+            <div class="sit-note">Klo 14–23 · välikysymyksen lähetekeskustelu ja lakien lähetekeskusteluja.</div>
+            <div class="sit-items">
+              <span class="dchip"><span class="dchip__k">välikysymys</span><span class="dchip__t">Talouspolitiikka (keskustelu)</span></span>
+              <span class="dchip"><span class="dchip__k">lähetekeskustelu</span><span class="dchip__t">Työsopimus-, poronhoito- ja patenttilaki</span></span>
+            </div>
+          </div>
+          <div class="sit-meta">
+            <div class="sit-figs"><div class="sit-fig"><b class="zero">0</b><span>Äänestystä</span></div><div class="sit-fig"><b>4</b><span>Asiakohtaa</span></div></div>
+            <span class="sit-go">Avaa istunto →</span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- WEEK · 5–8 May -->
+    <section class="week" data-week>
+      <div class="week-head">
+        <span class="week-head__k">Istuntoviikko</span>
+        <span class="week-head__t">5.–8. toukokuuta 2026</span>
+        <span class="week-head__meta">3 istuntoa · 7 äänestystä</span>
+      </div>
+      <div class="sit-list">
+
+        <a class="sit-row" href="Istunto.html" data-kind="vote" data-text="2026/48 äänestys metsälaki valiokuntaan arkistointilaki lastensuojelu poliisi hiilirajamekanismi">
+          <div class="sit-date"><span class="sit-dow"><span class="kdot vote"></span>Pe</span><span class="sit-day">8.5.</span><span class="sit-mon">touko</span></div>
+          <div class="sit-main">
+            <div class="sit-top"><span class="sit-id">Täysistunto 2026/48</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 13.00–13.29</span></div>
+            <div class="sit-head">Äänestykset: metsälaki valiokuntaan, arkistointilaki etenee</div>
+            <div class="sit-note">Lyhyt äänestysistunto, neljä äänestystä.</div>
+            <div class="sit-items">
+              <span class="dchip"><span class="dchip__k">äänestys</span><span class="dchip__t">Metsälaki · lähettäminen valiokuntaan</span><span class="dchip__r neu">20–148</span></span>
+              <span class="dchip"><span class="dchip__k">äänestys</span><span class="dchip__t">Arkistointilaki</span></span>
+              <span class="dchip dchip--more">+2 muuta äänestystä</span>
+            </div>
+          </div>
+          <div class="sit-meta">
+            <div class="sit-figs"><div class="sit-fig"><b>4</b><span>Äänestystä</span></div><div class="sit-fig"><b>5</b><span>Asiakohtaa</span></div></div>
+            <span class="sit-go">Avaa istunto →</span>
+          </div>
+        </a>
+
+        <a class="sit-row" href="Istunto.html" data-kind="talk" data-text="2026/47 lähetekeskustelu metsälaki arvonlisävero kotihoidontuki avioliittolaki tuloverolaki vilkas">
+          <div class="sit-date"><span class="sit-dow"><span class="kdot talk"></span>To</span><span class="sit-day">7.5.</span><span class="sit-mon">touko</span></div>
+          <div class="sit-main">
+            <div class="sit-top"><span class="sit-id">Täysistunto 2026/47</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 16.00–21.46</span></div>
+            <div class="sit-head">Vilkas lähetekeskustelupäivä — 24 asiakohtaa</div>
+            <div class="sit-note">Kevätkauden täydempiä istuntoja · mm. metsälakipaketin lähetekeskustelu.</div>
+            <div class="sit-items">
+              <span class="dchip"><span class="dchip__k">lähetekeskustelu</span><span class="dchip__t">Metsälakipaketti</span></span>
+              <span class="dchip"><span class="dchip__k">lähetekeskustelu</span><span class="dchip__t">Arvonlisävero &amp; kotihoidontuki</span></span>
+              <span class="dchip dchip--more">+20 muuta asiakohtaa</span>
+            </div>
+          </div>
+          <div class="sit-meta">
+            <div class="sit-figs"><div class="sit-fig"><b class="zero">0</b><span>Äänestystä</span></div><div class="sit-fig"><b>24</b><span>Asiakohtaa</span></div></div>
+            <span class="sit-go">Avaa istunto →</span>
+          </div>
+        </a>
+
+        <a class="sit-row" href="Istunto.html" data-kind="vali talk" data-text="2026/46 ilmastosuunnitelma selonteko alueidenkäyttölaki välikysymys talouspolitiikka julkisen talouden suunnitelma">
+          <div class="sit-date"><span class="sit-dow"><span class="kdot talk"></span>Ke</span><span class="sit-day">6.5.</span><span class="sit-mon">touko</span></div>
+          <div class="sit-main">
+            <div class="sit-top"><span class="sit-id">Täysistunto 2026/46</span><span class="spill spill--done">päättynyt</span><span class="sit-time">klo 14.00–21.32</span></div>
+            <div class="sit-head">Ilmastosuunnitelma ja alueidenkäyttölaki keskustelussa</div>
+            <div class="sit-note">Selonteko- ja lähetekeskustelupäivä · välikysymys talouspolitiikasta jätettiin.</div>
+            <div class="sit-items">
+              <span class="dchip"><span class="dchip__k">selonteko</span><span class="dchip__t">Keskipitkän aikavälin ilmastosuunnitelma</span></span>
+              <span class="dchip"><span class="dchip__k">lähetekeskustelu</span><span class="dchip__t">Uusi alueidenkäyttölaki</span></span>
+              <span class="dchip"><span class="dchip__k">välikysymys</span><span class="dchip__t">Talouspolitiikka (jätetty)</span></span>
+            </div>
+          </div>
+          <div class="sit-meta">
+            <div class="sit-figs"><div class="sit-fig"><b>3</b><span>Äänestystä</span></div><div class="sit-fig"><b>16</b><span>Asiakohtaa</span></div></div>
+            <span class="sit-go">Avaa istunto →</span>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- empty state -->
+    <div id="sit-empty" class="src-row" hidden style="display:block;text-align:center;color:var(--muted);padding:40px 0;border:0">
+      Ei istuntoja näillä hakuehdoilla.
+    </div>
+  </div>
+
+  <div class="source-note">
+    <span>Lähde:</span>
+    <span class="dset">Eduskunnan avoin data · Session + Voting + Speech</span><span>·</span>
+    <span class="fresh">haettu 30.5.2026 07.16</span><span>·</span>
+    <span class="cite verify" data-mark="off"
+      data-value="2026/46–2026/55"
+      data-caption="Kevätistuntokauden 2026 täysistunnot — viimeisimmät"
+      data-set="Eduskunnan avoin data · Session"
+      data-table="Session + Voting + Speech + Section"
+      data-endpoint="SELECT key, date, state_text_fi, minutes_title FROM Session WHERE type='TAYSISTUN' ORDER BY date DESC"
+      data-record="10 istuntoa · 2026/46–2026/55"
+      data-jakso="Vaalikausi 2023–2027"
+      data-fetched="30.5.2026 klo 07.16"
+      data-chain="avoindata.eduskunta.fi > Session > Istuntolista"
+      data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa aineisto">varmenna jäljite</span>
+  </div>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="foot">
+    <div class="foot__period">
+      <span class="pk">Tietojakso</span>
+      <span class="pv" data-period-label>Vaalikausi 2023–2027 · Orpon hallitus</span>
+      <span class="pbadge is-now" data-period-badge>nykyinen</span>
+      <span class="pdetail" data-period-detail>20.6.2023 – kesken · 200 paikkaa · hallitus 108 / oppositio 92</span>
+    </div>
+    <div class="foot__legal">
+      <span>Tietolähde: Eduskunnan avoin data · avoindata.eduskunta.fi</span>
+      <span>Tietokanta päivitetty 30.5.2026 klo 07.16</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+/* Istunnot — client-side filter (search + kind chips). */
+(function () {
+  var rows = [].slice.call(document.querySelectorAll('.sit-row'));
+  var chips = [].slice.call(document.querySelectorAll('.fchip'));
+  var search = document.getElementById('sit-search');
+  var count = document.getElementById('sit-count');
+  var empty = document.getElementById('sit-empty');
+  var filter = 'all';
+
+  function apply() {
+    var q = (search.value || '').trim().toLowerCase();
+    var shown = 0;
+    rows.forEach(function (r) {
+      var kind = r.getAttribute('data-kind') || '';
+      var text = r.getAttribute('data-text') || '';
+      var okKind = filter === 'all' || kind.indexOf(filter) !== -1;
+      var okText = !q || text.indexOf(q) !== -1;
+      var show = okKind && okText;
+      r.style.display = show ? '' : 'none';
+      if (show) shown++;
+    });
+    // hide week sections with no visible rows
+    document.querySelectorAll('[data-week]').forEach(function (w) {
+      var any = [].slice.call(w.querySelectorAll('.sit-row')).some(function (r) { return r.style.display !== 'none'; });
+      w.style.display = any ? '' : 'none';
+    });
+    count.textContent = shown;
+    empty.hidden = shown !== 0;
+  }
+
+  chips.forEach(function (c) {
+    c.addEventListener('click', function () {
+      chips.forEach(function (x) { x.classList.remove('is-active'); });
+      c.classList.add('is-active');
+      filter = c.getAttribute('data-filter');
+      apply();
+    });
+  });
+  search.addEventListener('input', apply);
+})();
+</script>
+<script defer src="period.js"></script>
+<script defer src="trace.js"></script>
+</body>
+</html>

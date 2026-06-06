@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kansanedustajat — Eduskuntapeili</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="peili.css" rel="stylesheet" />
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="masthead">
+    <div class="masthead__top">
+      <div>
+        <div class="brand__name">Eduskuntapeili</div>
+        <div class="brand__tag">Eduskunnan avoin data, luettavassa muodossa</div>
+      </div>
+      <div class="masthead__meta">
+        <span class="masthead__date">lauantai 30. toukokuuta 2026</span>
+        <div class="period" data-period>
+          <button class="period__btn" aria-expanded="false" aria-haspopup="true">
+            <span class="period__k">Tietojakso</span>
+            <span class="period__v" data-period-v>Vaalikausi 2023–2027</span>
+            <span class="period__badge is-now" data-period-badge>nykyinen</span>
+            <span class="period__caret">▾</span>
+          </button>
+          <div class="period__menu" hidden role="menu">
+            <div class="period__menu-head">Valitse tietojakso</div>
+            <button class="period__opt is-selected" role="menuitemradio" aria-checked="true" data-val="2023"><span class="period__opt-main">Vaalikausi 2023–2027</span><span class="period__opt-sub">Orpon hallitus · nykyinen</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="2019"><span class="period__opt-main">Vaalikausi 2019–2023</span><span class="period__opt-sub">Marinin / Rinteen hallitus</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="all"><span class="period__opt-main">Kaikki vaalikaudet</span><span class="period__opt-sub">koko avoin data</span></button>
+            <div class="period__note">Tietojakso rajaa kaikki sivun luvut ja koosteet. Oletuksena nykyinen kausi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="rule-ink" />
+    <nav class="nav">
+      <a href="Etusivu.html">Etusivu</a>
+      <a href="Kansanedustajat.html" class="is-active">Kansanedustajat</a>
+      <a href="#">Puolueet</a>
+      <a href="Istunnot.html">Istunnot</a>
+      <a href="#">Äänestykset</a>
+      <a href="#">Asiakirjat</a>
+      <span class="nav__search">Haku ⌕</span>
+    </nav>
+    <hr class="rule" />
+  </header>
+
+  <!-- ============ PAGE HEAD ============ -->
+  <section class="page-head">
+    <p class="kicker">Kansanedustajat</p>
+    <h1>200 kansanedustajaa</h1>
+    <p class="sub">Nykyisen vaalikauden edustajat. Suodata ryhmän tai blokin mukaan, hae nimellä tai vaalipiirillä, ja avaa edustaja tarkempaa profiilia varten.</p>
+  </section>
+
+  <!-- ============ COMPOSITION STRIP ============ -->
+  <section style="padding-bottom:8px">
+    <div class="bloc-bar">
+      <span class="seg-hall" style="width:24%"></span><span class="seg-hall" style="width:22.5%"></span>
+      <span class="seg-opp" style="width:21.5%"></span><span class="seg-opp" style="width:11.5%"></span>
+      <span class="seg-opp" style="width:6.5%"></span><span class="seg-opp" style="width:5.5%"></span>
+      <span class="seg-hall" style="width:5%"></span><span class="seg-hall" style="width:2.5%"></span>
+    </div>
+    <div class="bloc-legend">
+      <span class="item"><span class="swatch" style="background:var(--hall)"></span>Hallitus <b>108</b></span>
+      <span class="item"><span class="swatch" style="background:var(--opp)"></span>Oppositio <b>92</b></span>
+      <span class="note">200 paikkaa · 8 puoluetta + 2 ryhmää</span>
+    </div>
+  </section>
+
+  <!-- ============ TOOLBAR ============ -->
+  <div class="toolbar">
+    <label class="search">
+      <span class="ic">⌕</span>
+      <input id="mp-search" type="text" placeholder="Hae nimellä tai vaalipiirillä…" />
+    </label>
+    <span class="count"><b id="mp-count">20</b> / 200 edustajaa</span>
+  </div>
+  <div class="fchips">
+    <button class="fchip is-active" data-filter="all">Kaikki</button>
+    <button class="fchip" data-filter="hallitus"><span class="pdot" style="background:var(--hall)"></span>Hallitus</button>
+    <button class="fchip" data-filter="oppositio"><span class="pdot" style="background:var(--opp)"></span>Oppositio</button>
+    <button class="fchip" data-filter="kok"><span class="pdot" style="background:#1d4f91"></span>Kokoomus</button>
+    <button class="fchip" data-filter="ps"><span class="pdot" style="background:#2c3e8c"></span>Perussuomalaiset</button>
+    <button class="fchip" data-filter="sd"><span class="pdot" style="background:#d3243a"></span>SDP</button>
+    <button class="fchip" data-filter="kesk"><span class="pdot" style="background:#0b8a4a"></span>Keskusta</button>
+    <button class="fchip" data-filter="vihr"><span class="pdot" style="background:#5aa829"></span>Vihreät</button>
+    <button class="fchip" data-filter="vas"><span class="pdot" style="background:#9e1f4b"></span>Vasemmistoliitto</button>
+    <button class="fchip" data-filter="r"><span class="pdot" style="background:#1278b6"></span>RKP</button>
+    <button class="fchip" data-filter="kd"><span class="pdot" style="background:#1a3f86"></span>KD</button>
+  </div>
+
+  <!-- ============ TABLE HEAD ============ -->
+  <div class="mp-table-head">
+    <span></span>
+    <button class="mp-sort" data-sort="name">Edustaja <span class="ar"></span></button>
+    <button class="mp-sort" data-sort="partysort">Ryhmä <span class="ar"></span></button>
+    <button class="mp-sort" data-sort="district">Vaalipiiri <span class="ar"></span></button>
+    <button class="mp-sort ta-r" data-sort="age">Ikä <span class="ar"></span></button>
+    <button class="mp-sort ta-r" data-sort="att">Läsnäolo <span class="ar"></span></button>
+  </div>
+
+  <!-- ============ LIST ============ -->
+  <div class="mp-list">
+    <a class="mp-row" href="Kansanedustaja.html" data-name="sanna antikainen" data-party="ps" data-bloc="hallitus" data-partysort="Perussuomalaiset" data-district="savo-karjala" data-age="38" data-att="76">
+      <span class="c-dot"><span style="background:#2c3e8c"></span></span>
+      <span class="mp-name">Sanna Antikainen</span>
+      <span class="mp-party">Perussuomalaiset <small>Hallitus</small></span>
+      <span class="mp-district">Savo-Karjala</span>
+      <span class="mp-age">38</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:76%"></span></span><span class="pct">76 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="jussi halla-aho" data-party="ps" data-bloc="hallitus" data-partysort="Perussuomalaiset" data-district="helsinki" data-age="55" data-att="71">
+      <span class="c-dot"><span style="background:#2c3e8c"></span></span>
+      <span class="mp-name">Jussi Halla-aho <span class="role">Puhemies</span></span>
+      <span class="mp-party">Perussuomalaiset <small>Hallitus</small></span>
+      <span class="mp-district">Helsinki</span>
+      <span class="mp-age">55</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:71%"></span></span><span class="pct">71 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="tarja filatov" data-party="sd" data-bloc="oppositio" data-partysort="SDP" data-district="häme" data-age="63" data-att="93">
+      <span class="c-dot"><span style="background:#d3243a"></span></span>
+      <span class="mp-name">Tarja Filatov <span class="role">2. varapuhemies</span></span>
+      <span class="mp-party">SDP <small>Oppositio</small></span>
+      <span class="mp-district">Häme</span>
+      <span class="mp-age">63</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:93%"></span></span><span class="pct">93 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="sari essayah" data-party="kd" data-bloc="hallitus" data-partysort="Kristillisdemokraatit" data-district="savo-karjala" data-age="59" data-att="93">
+      <span class="c-dot"><span style="background:#1a3f86"></span></span>
+      <span class="mp-name">Sari Essayah <span class="role">Ministeri</span></span>
+      <span class="mp-party">Kristillisdemokraatit <small>Hallitus</small></span>
+      <span class="mp-district">Savo-Karjala</span>
+      <span class="mp-age">59</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:93%"></span></span><span class="pct">93 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="antti häkkänen" data-party="kok" data-bloc="hallitus" data-partysort="Kokoomus" data-district="kaakkois-suomi" data-age="41" data-att="88">
+      <span class="c-dot"><span style="background:#1d4f91"></span></span>
+      <span class="mp-name">Antti Häkkänen <span class="role">Ministeri</span></span>
+      <span class="mp-party">Kokoomus <small>Hallitus</small></span>
+      <span class="mp-district">Kaakkois-Suomi</span>
+      <span class="mp-age">41</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:88%"></span></span><span class="pct">88 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="pauli aalto-setälä" data-party="kok" data-bloc="hallitus" data-partysort="Kokoomus" data-district="varsinais-suomi" data-age="60" data-att="90">
+      <span class="c-dot"><span style="background:#1d4f91"></span></span>
+      <span class="mp-name">Pauli Aalto-Setälä</span>
+      <span class="mp-party">Kokoomus <small>Hallitus</small></span>
+      <span class="mp-district">Varsinais-Suomi</span>
+      <span class="mp-age">60</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:90%"></span></span><span class="pct">90 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="anders adlercreutz" data-party="r" data-bloc="hallitus" data-partysort="RKP" data-district="uusimaa" data-age="56" data-att="85">
+      <span class="c-dot"><span style="background:#1278b6"></span></span>
+      <span class="mp-name">Anders Adlercreutz <span class="role">Ministeri</span></span>
+      <span class="mp-party">RKP <small>Hallitus</small></span>
+      <span class="mp-district">Uusimaa</span>
+      <span class="mp-age">56</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:85%"></span></span><span class="pct">85 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="heikki autto" data-party="kok" data-bloc="hallitus" data-partysort="Kokoomus" data-district="lappi" data-age="42" data-att="91">
+      <span class="c-dot"><span style="background:#1d4f91"></span></span>
+      <span class="mp-name">Heikki Autto</span>
+      <span class="mp-party">Kokoomus <small>Hallitus</small></span>
+      <span class="mp-district">Lappi</span>
+      <span class="mp-age">42</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:91%"></span></span><span class="pct">91 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="markku eestilä" data-party="kok" data-bloc="hallitus" data-partysort="Kokoomus" data-district="savo-karjala" data-age="70" data-att="89">
+      <span class="c-dot"><span style="background:#1d4f91"></span></span>
+      <span class="mp-name">Markku Eestilä</span>
+      <span class="mp-party">Kokoomus <small>Hallitus</small></span>
+      <span class="mp-district">Savo-Karjala</span>
+      <span class="mp-age">70</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:89%"></span></span><span class="pct">89 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="juho eerola" data-party="ps" data-bloc="hallitus" data-partysort="Perussuomalaiset" data-district="kaakkois-suomi" data-age="51" data-att="82">
+      <span class="c-dot"><span style="background:#2c3e8c"></span></span>
+      <span class="mp-name">Juho Eerola</span>
+      <span class="mp-party">Perussuomalaiset <small>Hallitus</small></span>
+      <span class="mp-district">Kaakkois-Suomi</span>
+      <span class="mp-age">51</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:82%"></span></span><span class="pct">82 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="miko bergbom" data-party="ps" data-bloc="hallitus" data-partysort="Perussuomalaiset" data-district="pirkanmaa" data-age="30" data-att="79">
+      <span class="c-dot"><span style="background:#2c3e8c"></span></span>
+      <span class="mp-name">Miko Bergbom</span>
+      <span class="mp-party">Perussuomalaiset <small>Hallitus</small></span>
+      <span class="mp-district">Pirkanmaa</span>
+      <span class="mp-age">30</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:79%"></span></span><span class="pct">79 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="sanni grahn-laasonen" data-party="kok" data-bloc="hallitus" data-partysort="Kokoomus" data-district="häme" data-age="43" data-att="87">
+      <span class="c-dot"><span style="background:#1d4f91"></span></span>
+      <span class="mp-name">Sanni Grahn-Laasonen</span>
+      <span class="mp-party">Kokoomus <small>Hallitus</small></span>
+      <span class="mp-district">Häme</span>
+      <span class="mp-age">43</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:87%"></span></span><span class="pct">87 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="tuula haatainen" data-party="sd" data-bloc="oppositio" data-partysort="SDP" data-district="helsinki" data-age="66" data-att="90">
+      <span class="c-dot"><span style="background:#d3243a"></span></span>
+      <span class="mp-name">Tuula Haatainen</span>
+      <span class="mp-party">SDP <small>Oppositio</small></span>
+      <span class="mp-district">Helsinki</span>
+      <span class="mp-age">66</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:90%"></span></span><span class="pct">90 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="marko asell" data-party="sd" data-bloc="oppositio" data-partysort="SDP" data-district="pirkanmaa" data-age="56" data-att="84">
+      <span class="c-dot"><span style="background:#d3243a"></span></span>
+      <span class="mp-name">Marko Asell</span>
+      <span class="mp-party">SDP <small>Oppositio</small></span>
+      <span class="mp-district">Pirkanmaa</span>
+      <span class="mp-age">56</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:84%"></span></span><span class="pct">84 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="eeva-johanna eloranta" data-party="sd" data-bloc="oppositio" data-partysort="SDP" data-district="varsinais-suomi" data-age="60" data-att="68">
+      <span class="c-dot"><span style="background:#d3243a"></span></span>
+      <span class="mp-name">Eeva-Johanna Eloranta</span>
+      <span class="mp-party">SDP <small>Oppositio</small></span>
+      <span class="mp-district">Varsinais-Suomi</span>
+      <span class="mp-age">60</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:68%"></span></span><span class="pct">68 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="alviina alametsä" data-party="vihr" data-bloc="oppositio" data-partysort="Vihreät" data-district="helsinki" data-age="34" data-att="80">
+      <span class="c-dot"><span style="background:#5aa829"></span></span>
+      <span class="mp-name">Alviina Alametsä</span>
+      <span class="mp-party">Vihreät <small>Oppositio</small></span>
+      <span class="mp-district">Helsinki</span>
+      <span class="mp-age">34</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:80%"></span></span><span class="pct">80 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="fatim diarra" data-party="vihr" data-bloc="oppositio" data-partysort="Vihreät" data-district="helsinki" data-age="40" data-att="78">
+      <span class="c-dot"><span style="background:#5aa829"></span></span>
+      <span class="mp-name">Fatim Diarra</span>
+      <span class="mp-party">Vihreät <small>Oppositio</small></span>
+      <span class="mp-district">Helsinki</span>
+      <span class="mp-age">40</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:78%"></span></span><span class="pct">78 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="bella forsgrén" data-party="vihr" data-bloc="oppositio" data-partysort="Vihreät" data-district="keski-suomi" data-age="34" data-att="83">
+      <span class="c-dot"><span style="background:#5aa829"></span></span>
+      <span class="mp-name">Bella Forsgrén</span>
+      <span class="mp-party">Vihreät <small>Oppositio</small></span>
+      <span class="mp-district">Keski-Suomi</span>
+      <span class="mp-age">34</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:83%"></span></span><span class="pct">83 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="eva biaudet" data-party="r" data-bloc="hallitus" data-partysort="RKP" data-district="helsinki" data-age="65" data-att="69">
+      <span class="c-dot"><span style="background:#1278b6"></span></span>
+      <span class="mp-name">Eva Biaudet</span>
+      <span class="mp-party">RKP <small>Hallitus</small></span>
+      <span class="mp-district">Helsinki</span>
+      <span class="mp-age">65</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:69%"></span></span><span class="pct">69 %</span></span>
+    </a>
+    <a class="mp-row" href="#" data-name="otto andersson" data-party="r" data-bloc="hallitus" data-partysort="RKP" data-district="uusimaa" data-age="43" data-att="86">
+      <span class="c-dot"><span style="background:#1278b6"></span></span>
+      <span class="mp-name">Otto Andersson</span>
+      <span class="mp-party">RKP <small>Hallitus</small></span>
+      <span class="mp-district">Uusimaa</span>
+      <span class="mp-age">43</span>
+      <span class="mp-att"><span class="track"><span class="fill" style="width:86%"></span></span><span class="pct">86 %</span></span>
+    </a>
+  </div>
+
+  <div class="source-note">
+    <span>Lähde:</span>
+    <span class="dset">Eduskunnan avoin data · MemberOfParliament + SaliDBJasenyys</span><span>·</span>
+    <span class="fresh">haettu 30.5.2026 07.16</span><span>·</span>
+    <span>läsnäolo: SaliDBAanestys, koko vaalikausi</span><span>·</span>
+    <span class="cite verify" data-mark="off"
+      data-value="200 edustajaa"
+      data-caption="Nykyisen vaalikauden kansanedustajat"
+      data-set="Eduskunnan avoin data · MemberOfParliament"
+      data-table="Representative + ParliamentaryGroupMembership"
+      data-endpoint="GET /api/v1/tables/MemberOfParliament/rows"
+      data-record="200 voimassa olevaa jäsenyyttä"
+      data-jakso="Vaalikausi 2023–2027"
+      data-fetched="30.5.2026 klo 07.16"
+      data-chain="avoindata.eduskunta.fi > Representative > Edustajalista"
+      data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa aineisto">varmenna jäljite</span>
+  </div>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="foot">
+    <div class="foot__period">
+      <span class="pk">Tietojakso</span>
+      <span class="pv" data-period-label>Vaalikausi 2023–2027 · Orpon hallitus</span>
+      <span class="pbadge is-now" data-period-badge>nykyinen</span>
+      <span class="pdetail" data-period-detail>20.6.2023 – kesken · 200 paikkaa · hallitus 108 / oppositio 92</span>
+    </div>
+    <div class="foot__legal">
+      <span>Tietolähde: Eduskunnan avoin data · avoindata.eduskunta.fi</span>
+      <span>Tietokanta päivitetty 30.5.2026 klo 07.16</span>
+    </div>
+  </footer>
+
+</div>
+<script defer src="period.js"></script>
+<script defer src="roster.js"></script>
+<script defer src="trace.js"></script>
+</body>
+</html>

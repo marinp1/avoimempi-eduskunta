@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KK 14/2026 vp — Eduskuntapeili</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="peili.css" rel="stylesheet" />
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="masthead">
+    <div class="masthead__top">
+      <div>
+        <div class="brand__name">Eduskuntapeili</div>
+        <div class="brand__tag">Eduskunnan avoin data, luettavassa muodossa</div>
+      </div>
+      <div class="masthead__meta">
+        <span class="masthead__date">lauantai 30. toukokuuta 2026</span>
+        <div class="period" data-period>
+          <button class="period__btn" aria-expanded="false" aria-haspopup="true">
+            <span class="period__k">Tietojakso</span>
+            <span class="period__v" data-period-v>Vaalikausi 2023–2027</span>
+            <span class="period__badge is-now" data-period-badge>nykyinen</span>
+            <span class="period__caret">▾</span>
+          </button>
+          <div class="period__menu" hidden role="menu">
+            <div class="period__menu-head">Valitse tietojakso</div>
+            <button class="period__opt is-selected" role="menuitemradio" aria-checked="true" data-val="2023"><span class="period__opt-main">Vaalikausi 2023–2027</span><span class="period__opt-sub">Orpon hallitus · nykyinen</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="2019"><span class="period__opt-main">Vaalikausi 2019–2023</span><span class="period__opt-sub">Marinin / Rinteen hallitus</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="all"><span class="period__opt-main">Kaikki vaalikaudet</span><span class="period__opt-sub">koko avoin data</span></button>
+            <div class="period__note">Tietojakso rajaa kaikki sivun luvut ja koosteet. Oletuksena nykyinen kausi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="rule-ink" />
+    <nav class="nav">
+      <a href="Etusivu.html">Etusivu</a>
+      <a href="Kansanedustajat.html">Kansanedustajat</a>
+      <a href="#">Puolueet</a>
+      <a href="Istunnot.html">Istunnot</a>
+      <a href="#">Äänestykset</a>
+      <a href="#" class="is-active">Asiakirjat</a>
+      <span class="nav__search">Haku ⌕</span>
+    </nav>
+    <hr class="rule" />
+  </header>
+
+  <!-- ============ BREADCRUMB ============ -->
+  <div style="padding-top:16px;font-size:13px;color:var(--muted)">
+    <a href="#" style="color:var(--blue)">Asiakirjat</a> &nbsp;›&nbsp; <a href="#" style="color:var(--blue)">Kirjalliset kysymykset</a> &nbsp;›&nbsp; <span>KK 14/2026 vp</span>
+  </div>
+
+  <!-- ============ DOC HEAD ============ -->
+  <section class="doc-head">
+    <div class="doc-head__top">
+      <span class="doc-id">KK 14/2026 vp</span>
+      <span class="doc-type">Kirjallinen kysymys</span>
+    </div>
+    <h1>Pohjois-Karjalan turvallisuuden vahvistaminen muuttuneessa turvallisuustilanteessa</h1>
+    <div class="doc-byline">
+      <span class="pdot" style="background:#2c3e8c"></span>
+      <a href="Kansanedustaja.html" class="who" style="color:var(--ink)">Sanna Antikainen</a>
+      <span>(ps)</span>
+      <span class="sep"></span>
+      <span>Jätetty 9.2.2026</span>
+      <span class="sep"></span>
+      <span>Vastattavana: puolustusministeri</span>
+    </div>
+  </section>
+
+  <!-- ============ TOOLBAR ============ -->
+  <div class="doc-toolbar">
+    <button class="tbtn"><span class="ic">✦</span> Tiivistä uudelleen</button>
+    <button class="tbtn"><span class="ic">⌕</span> Etsi tekstistä</button>
+    <span class="grow"></span>
+    <button class="tbtn"><span class="ic">↗</span> Alkuperäinen (PDF)</button>
+    <button class="tbtn"><span class="ic">⧉</span> Jaa</button>
+  </div>
+
+  <!-- ============ LIFECYCLE ============ -->
+  <p class="kicker" style="margin:22px 0 0">Asian kulku — kysymys ja vastaus yhdessä näkymässä</p>
+  <nav class="lifecycle">
+    <a href="#kysymys" class="lc-step done">
+      <div class="lc-step__top"><span class="lc-step__dot"></span><span class="lc-step__num">01</span></div>
+      <div class="lc-step__label">Kysymys jätetty</div>
+      <div class="lc-step__date">9.2.2026</div>
+    </a>
+    <a href="#kysymys" class="lc-step done">
+      <div class="lc-step__top"><span class="lc-step__dot"></span><span class="lc-step__num">02</span></div>
+      <div class="lc-step__label">Lähetetty ministerille</div>
+      <div class="lc-step__date">10.2.2026</div>
+    </a>
+    <a href="#vastaus" class="lc-step done">
+      <div class="lc-step__top"><span class="lc-step__dot"></span><span class="lc-step__num">03</span></div>
+      <div class="lc-step__label">Ministerin vastaus</div>
+      <div class="lc-step__date">4.3.2026</div>
+      <div class="lc-step__tag ok">vastattu</div>
+    </a>
+  </nav>
+
+  <!-- ============ SUMMARY — "Mistä tässä on kyse?" ============ -->
+  <div class="summary">
+    <div class="summary__bar">
+      <span class="l"><span class="spark">✦</span><span class="lbl">Tekoälytiivistelmä</span></span>
+      <span class="read">alkuperäinen ~2 700 sanaa · lukuaika 11 min</span>
+    </div>
+    <div class="summary__in">
+      <div class="summary__q">Mistä tässä on kyse?</div>
+      <p class="summary__lead">Edustaja vaatii puolustusministeriä vahvistamaan Pohjois-Karjalan sotilaallista läsnäoloa ja rajaturvallisuutta — esteaidan lisäksi pysyvämmillä ratkaisuilla ja EU-rahoituksella.</p>
+
+      <ul class="summary__points">
+        <li>Suomen turvallisuustilanne on Venäjän hyökkäyspolitiikan myötä <b>pysyvästi muuttunut</b>, ja uhka kohdistuu erityisesti itärajaan.</li>
+        <li>Itä-Suomen sotilaallisen läsnäolon aiempaa <b>vähentämistä pidetään virheenä</b>; esteaita ei yksin riitä hybridi- ja sotilaallisiin uhkiin.</li>
+        <li>EU-komissio on esittänyt Suomelle <b>noin 1,6 mrd. €</b> sisäisen turvallisuuden ja ulkorajavalvonnan rahoitusta kaudelle 2028–2034.</li>
+        <li>Esiin nostetaan myös <b>drooniosaamis- tai koulutuskeskus</b> osana alueen puolustuskykyä.</li>
+      </ul>
+
+      <div class="summary__sub">Mitä ministeriltä kysytään</div>
+      <ol class="summary__asks">
+        <li><span class="n">1</span>Miten Pohjois-Karjalan puolustuskykyä vahvistetaan esteaidan lisäksi?</li>
+        <li><span class="n">2</span>Suunnataanko EU:n 2028–2034 turvallisuusrahoitusta nimenomaan alueelle?</li>
+        <li><span class="n">3</span>Miten edistetään drooniosaamis- tai koulutuskeskuksen perustamista?</li>
+        <li><span class="n">4</span>Miten pysyvää sotilaallista läsnäoloa ja harjoittelutoimintaa kehitetään?</li>
+      </ol>
+
+      <div class="summary__foot">
+        <span class="summary__disc">Koneellisesti tuotettu tiivistelmä alkuperäisestä asiakirjasta. Tarkista aina virallinen teksti alta.</span>
+        <button class="ai-sources-toggle" data-label="Näytä lähde"><span class="chev">›</span><span class="lbl">Näytä lähde</span></button>
+      </div>
+      <div class="ai-sources">
+        <div class="ai-sources__title">Tiivistelmän lähde — tarkistettavissa</div>
+        <div class="src-row"><span class="src-row__n">1</span><div class="src-row__main"><div class="src-row__title">Kirjallinen kysymys KK 14/2026 vp · koko teksti (2 673 merkkiä)</div><div class="src-row__api">GET /api/v1/tables/VaskiData?eduskuntaTunnus=KK+14/2026</div></div><div class="src-row__meta">9.2.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DOC BODY ============ -->
+  <div class="doc-body">
+
+    <!-- ARTICLE -->
+    <article class="article" id="kysymys">
+      <div class="article__phase">Vaihe 01 · Kysymys — alkuperäinen teksti · perustelut</div>
+      <p class="standfirst">Suomen turvallisuustilanne on Venäjän hyökkäyspolitiikan seurauksena vakavasti ja pysyvästi muuttunut. Kyse ei ole vain Ukrainan sodasta, vaan laajemmasta ja pitkäkestoisesta uhkakuvasta, joka kohdistuu myös Suomeen ja erityisesti sen itärajaan. Tässä tilanteessa on välttämätöntä vahvistaa puolustuskykyä ja turvallisuutta siellä, missä uhka on todellinen.</p>
+      <p>Pohjois-Karjala on maantieteellisen sijaintinsa vuoksi keskeisessä asemassa Suomen itärajan turvallisuuden kannalta. Aiemmat ratkaisut, joissa Itä-Suomen sotilaallista läsnäoloa vähennettiin, ovat osoittautuneet virheellisiksi muuttuneessa turvallisuustilanteessa.</p>
+      <p>Itärajan esteaidan rakentaminen on tärkeä osa rajaturvallisuuden kokonaisuutta, mutta se ei yksin riitä vastaamaan sotilaallisiin ja hybridiuhkiin. Tarvitaan pysyvämpää sotilaallista läsnäoloa, harjoittelukykyä sekä uusia teknologisia ja operatiivisia ratkaisuja osaksi kokonaisturvallisuutta.</p>
+      <p>Moderni sodankäynti ja rajaturvallisuus nojaavat yhä enemmän miehittämättömään teknologiaan. Drooniosaamisen ja -koulutuksen keskittäminen Pohjois-Karjalaan vahvistaisi sekä alueen että koko maan valmiutta.</p>
+      <p>Lisäksi Euroopan komissio on esittänyt Suomelle noin 1,6 miljardin euron rahoitusta EU:n seuraavassa monivuotisessa rahoituskehyksessä (2028—2034) sisäisen turvallisuuden ja ulkorajavalvonnan vahvistamiseen. Kyseessä on merkittävä lisäresurssi, jonka kohdentaminen edellyttää aktiivisia kansallisia päätöksiä ja poliittista tahtoa.</p>
+
+      <h3>Edellä olevan perusteella esitän asianomaisen ministerin vastattavaksi seuraavan kysymyksen:</h3>
+      <ol class="qlist">
+        <li>Kuinka puolustusministeri aikoo edistää Pohjois-Karjalan turvallisuuden ja puolustuskyvyn vahvistamista itärajalle rakennettavan esteaidan lisäksi?</li>
+        <li>Aikooko puolustusministeri suunnata tai edistää EU:n seuraavan monivuotisen rahoituskehyksen (2028—2034) sisäisen turvallisuuden ja ulkorajavalvonnan rahoitusta nimenomaisesti Pohjois-Karjalan turvallisuuden ja sotilaallisen läsnäolon vahvistamiseen?</li>
+        <li>Kuinka puolustusministeri aikoo edistää drooniosaamis- tai koulutuskeskuksen perustamista Pohjois-Karjalaan osaksi Suomen puolustuskykyä, rajaturvallisuutta ja hybridiuhkiin varautumista?</li>
+        <li>Miten puolustusministeri näkee pysyvän sotilaallisen läsnäolon, harjoittelutoiminnan tai muun Puolustusvoimien toiminnan kehittämisen Pohjois-Karjalassa osana koko Suomen ja Itä-Suomen turvallisuuden vahvistamista?</li>
+      </ol>
+
+      <div class="article__sig">
+        <div class="name">Sanna Antikainen /ps</div>
+        <div class="meta">Helsingissä 9.2.2026 · Savo-Karjalan vaalipiiri</div>
+      </div>
+
+      <div class="source-note">
+        <span>Lähde:</span>
+        <span class="dset">Eduskunnan avoin data · VaskiData</span><span>·</span>
+        <span class="fresh">haettu 30.5.2026 07.16</span><span>·</span>
+        <span class="cite verify" data-mark="off"
+          data-value="KK 14/2026 vp"
+          data-caption="Kirjallisen kysymyksen koko teksti"
+          data-set="Eduskunnan avoin data · VaskiData"
+          data-table="WrittenQuestion.question_text"
+          data-endpoint="GET /api/v1/tables/VaskiData?eduskuntaTunnus=KK+14/2026"
+          data-record="WrittenQuestion.id · 2 673 merkkiä"
+          data-jakso="Vaalikausi 2023–2027"
+          data-fetched="30.5.2026 klo 07.16"
+          data-chain="avoindata.eduskunta.fi > WrittenQuestion > Asiakirjanäkymä"
+          data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa alkuperäinen">varmenna teksti</span>
+      </div>
+
+      <!-- INLINE ANSWER -->
+      <div id="vastaus" style="margin-top:40px;padding-top:4px;border-top:2px solid var(--ink)">
+        <div class="article__phase" style="margin-top:20px">Vaihe 03 · Vastaus — puolustusministeri · 4.3.2026</div>
+        <h3 style="margin-top:0">Ministerin vastaus</h3>
+
+        <div class="summary" style="margin:14px 0 22px">
+          <div class="summary__bar">
+            <span class="l"><span class="spark">✦</span><span class="lbl">Tekoälytiivistelmä · vastaus</span></span>
+            <span class="read">vastaus ~1 400 sanaa · lukuaika 6 min</span>
+          </div>
+          <div class="summary__in">
+            <div class="summary__q">Mitä ministeri vastasi?</div>
+            <p class="summary__lead">Ministeri korostaa, että itärajan turvallisuutta vahvistetaan jo monin tavoin, mutta ei lupaa erillistä Pohjois-Karjalaan kohdennettua rahoitusta tai drooniosaamiskeskusta tässä vaiheessa.</p>
+            <ul class="summary__points">
+              <li>Esteaita ja rajavalvonnan resurssit ovat <b>etenemässä suunnitellusti</b> koko itärajalla.</li>
+              <li>EU:n 2028–2034 rahoituskehyksen kohdennukset <b>ratkaistaan myöhemmin</b> osana kansallista valmistelua.</li>
+              <li>Pysyvän sotilaallisen läsnäolon muutoksia <b>arvioidaan osana Puolustusvoimien kokonaissuunnittelua</b>, ei aluekohtaisesti.</li>
+            </ul>
+          </div>
+        </div>
+
+        <p style="font-size:17px;line-height:1.65;color:var(--body);max-width:66ch">Vastauksena edustaja Antikaisen kirjalliseen kysymykseen totean, että Suomen itärajan turvallisuus on hallituksen keskeisiä painopisteitä. Rajavartiolaitoksen ja Puolustusvoimien yhteistoimintaa on vahvistettu, ja itärajan esteaidan rakentaminen etenee suunnitellusti…</p>
+        <div style="margin-top:14px"><a href="#" class="tbtn"><span class="ic">↗</span> Vastauksen koko teksti</a></div>
+
+        <div class="article__sig">
+          <div class="name">Puolustusministeri</div>
+          <div class="meta">Vastaus annettu 4.3.2026 · KKV 14/2026 vp</div>
+        </div>
+
+        <div class="source-note">
+          <span>Lähde:</span>
+          <span class="dset">Eduskunnan avoin data · VaskiData (ministerin vastaus)</span><span>·</span>
+          <span class="fresh">haettu 30.5.2026 07.16</span><span>·</span>
+          <span class="cite verify" data-mark="off"
+            data-value="Vastaus KK 14/2026 vp"
+            data-caption="Ministerin kirjallinen vastaus"
+            data-set="Eduskunnan avoin data · VaskiData"
+            data-table="WrittenQuestion (answer fields)"
+            data-endpoint="GET /api/v1/tables/VaskiData?eduskuntaTunnus=KK+14/2026&osa=vastaus"
+            data-record="answer_date = 4.3.2026 · vastaaja puolustusministeri"
+            data-jakso="Vaalikausi 2023–2027"
+            data-fetched="30.5.2026 klo 07.16"
+            data-chain="avoindata.eduskunta.fi > WrittenQuestion > Vastaus"
+            data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa vastaus">varmenna vastaus</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- SIDEBAR -->
+    <aside class="doc-aside">
+      <div class="blk">
+        <h4>Käsittelyn vaihe</h4>
+        <div class="statusline"><span class="statusdot" style="background:var(--hall)"></span> Vastattu 4.3.2026</div>
+        <ul class="timeline" style="margin-top:14px">
+          <li class="done"><div class="tl-when">9.2.2026</div><div class="tl-what">Kysymys jätetty</div></li>
+          <li class="done"><div class="tl-when">10.2.2026</div><div class="tl-what">Lähetetty ministerille</div></li>
+          <li class="done"><div class="tl-when">4.3.2026</div><div class="tl-what">Ministerin vastaus annettu</div></li>
+        </ul>
+      </div>
+
+      <div class="blk">
+        <h4>Tiedot</h4>
+        <dl>
+          <dt>Tunnus</dt><dd>KK 14/2026 vp</dd>
+          <dt>Tyyppi</dt><dd>Kirjallinen kysymys</dd>
+          <dt>Jätetty</dt><dd>9.2.2026</dd>
+          <dt>Vastattu</dt><dd>4.3.2026</dd>
+          <dt>Vastaaja</dt><dd>Puolustusministeri</dd>
+          <dt>Pituus</dt><dd>2 673 merkkiä</dd>
+        </dl>
+      </div>
+
+      <div class="blk">
+        <h4>Tekijä</h4>
+        <a href="Kansanedustaja.html" class="related-row" style="display:flex;align-items:center;gap:11px;border:0;padding:0">
+          <span style="width:40px;height:40px;background:var(--paper-2);border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;font:800 15px var(--head);color:var(--faint);position:relative;overflow:hidden">SA<span style="position:absolute;left:0;bottom:0;height:4px;width:100%;background:#2c3e8c"></span></span>
+          <span><span style="display:block;font:700 14px var(--head);color:var(--ink)">Sanna Antikainen</span><span style="font-size:12px;color:var(--muted)">Perussuomalaiset · Savo-Karjala</span></span>
+        </a>
+      </div>
+
+      <div class="blk">
+        <h4>Aiheet</h4>
+        <div class="topics">
+          <span class="topic-tag" style="font-size:13px;padding:6px 10px">turvallisuus</span>
+          <span class="topic-tag" style="font-size:13px;padding:6px 10px">itäraja</span>
+          <span class="topic-tag" style="font-size:13px;padding:6px 10px">puolustus</span>
+          <span class="topic-tag" style="font-size:13px;padding:6px 10px">Venäjä</span>
+        </div>
+      </div>
+
+      <div class="blk">
+        <h4>Liittyvät asiakirjat</h4>
+        <a href="#" class="related-row"><span class="rid">KK 169/2025 vp</span><span class="rt">Tutkimushanke koskien Venäjän laaja-alaista vaikuttamista Suomeen</span></a>
+        <a href="#" class="related-row"><span class="rid">KK 190/2025 vp</span><span class="rt">Opiskeluperusteisen maahanmuuton hallitsematon kasvu</span></a>
+        <a href="#" class="related-row"><span class="rid">VK 3/2026 vp</span><span class="rt">Välikysymys hallituksen talouspolitiikasta</span></a>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="foot">
+    <div class="foot__period">
+      <span class="pk">Tietojakso</span>
+      <span class="pv" data-period-label>Vaalikausi 2023–2027 · Orpon hallitus</span>
+      <span class="pbadge is-now" data-period-badge>nykyinen</span>
+      <span class="pdetail" data-period-detail>20.6.2023 – kesken · 200 paikkaa · hallitus 108 / oppositio 92</span>
+    </div>
+    <div class="foot__legal">
+      <span>Tietolähde: Eduskunnan avoin data · avoindata.eduskunta.fi</span>
+      <span>Tietokanta päivitetty 30.5.2026 klo 07.16</span>
+    </div>
+  </footer>
+
+</div>
+<script defer src="period.js"></script>
+<script defer src="trace.js"></script>
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Täysistunto 2026/52 — Eduskuntapeili</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="peili.css" rel="stylesheet" />
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="masthead">
+    <div class="masthead__top">
+      <div>
+        <div class="brand__name">Eduskuntapeili</div>
+        <div class="brand__tag">Eduskunnan avoin data, luettavassa muodossa</div>
+      </div>
+      <div class="masthead__meta">
+        <span class="masthead__date">lauantai 30. toukokuuta 2026</span>
+        <div class="period" data-period>
+          <button class="period__btn" aria-expanded="false" aria-haspopup="true">
+            <span class="period__k">Tietojakso</span>
+            <span class="period__v" data-period-v>Vaalikausi 2023–2027</span>
+            <span class="period__badge is-now" data-period-badge>nykyinen</span>
+            <span class="period__caret">▾</span>
+          </button>
+          <div class="period__menu" hidden role="menu">
+            <div class="period__menu-head">Valitse tietojakso</div>
+            <button class="period__opt is-selected" role="menuitemradio" aria-checked="true" data-val="2023"><span class="period__opt-main">Vaalikausi 2023–2027</span><span class="period__opt-sub">Orpon hallitus · nykyinen</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="2019"><span class="period__opt-main">Vaalikausi 2019–2023</span><span class="period__opt-sub">Marinin / Rinteen hallitus</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="all"><span class="period__opt-main">Kaikki vaalikaudet</span><span class="period__opt-sub">koko avoin data</span></button>
+            <div class="period__note">Tietojakso rajaa kaikki sivun luvut ja koosteet. Oletuksena nykyinen kausi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="rule-ink" />
+    <nav class="nav">
+      <a href="Etusivu.html">Etusivu</a>
+      <a href="Kansanedustajat.html">Kansanedustajat</a>
+      <a href="#">Puolueet</a>
+      <a href="Istunnot.html" class="is-active">Istunnot</a>
+      <a href="#">Äänestykset</a>
+      <a href="#">Asiakirjat</a>
+      <span class="nav__search">Haku ⌕</span>
+    </nav>
+    <hr class="rule" />
+  </header>
+
+  <!-- ============ BREADCRUMB ============ -->
+  <div style="padding-top:16px;font-size:13px;color:var(--muted)">
+    <a href="Istunnot.html" style="color:var(--blue)">Istunnot</a> &nbsp;›&nbsp; <span>Täysistunto 2026/52</span>
+  </div>
+
+  <!-- ============ SESSION HEAD ============ -->
+  <section class="doc-head">
+    <div class="doc-head__top">
+      <span class="doc-id">PTK 52/2026 vp</span>
+      <span class="doc-type">Täysistunnon pöytäkirja</span>
+      <span class="sess-state done" style="margin-left:auto">Istunto päättynyt</span>
+    </div>
+    <h1>Täysistunto 2026/52</h1>
+    <div class="sess-meta">
+      <span><b>Keskiviikko 20.5.2026</b></span><span class="sep"></span>
+      <span>klo 14.00–21.38</span><span class="sep"></span>
+      <span>kesto <b>7 h 38 min</b></span><span class="sep"></span>
+      <span><b>20</b> asiakohtaa</span><span class="sep"></span>
+      <span><b>10</b> äänestystä</span><span class="sep"></span>
+      <span><b>204</b> puheenvuoroa</span>
+    </div>
+  </section>
+
+  <!-- ============ TOOLBAR ============ -->
+  <div class="doc-toolbar">
+    <a href="#" class="tbtn"><span class="ic">↗</span> Pöytäkirja (PDF)</a>
+    <a href="#" class="tbtn"><span class="ic">▤</span> Päiväjärjestys</a>
+    <a href="#paatosasiat" class="tbtn"><span class="ic">⚖</span> Äänestykset</a>
+    <span class="grow"></span>
+    <button class="tbtn"><span class="ic">⧉</span> Jaa</button>
+  </div>
+
+  <!-- ============ JUMP BAR ============ -->
+  <nav class="sess-jump">
+    <a href="#lasnaolo">Läsnäolo</a>
+    <a href="#paatosasiat">Päätösasiat · 10 äänestystä</a>
+    <a href="#keskustelut">Keskustelut</a>
+    <a href="#poydalle">Pöydälle pannut</a>
+  </nav>
+
+  <!-- ============ AI SUMMARY ============ -->
+  <div class="summary">
+    <div class="summary__bar">
+      <span class="l"><span class="spark">✦</span><span class="lbl">Tekoälykooste · koko istunto</span></span>
+      <span class="read">20 asiakohtaa · 10 äänestystä · 204 puheenvuoroa</span>
+    </div>
+    <div class="summary__in">
+      <div class="summary__q">Mitä istunnossa tapahtui?</div>
+      <p class="summary__lead">Pitkä keskiviikon istunto (klo 14.00–21.38): kymmenen äänestystä toisessa käsittelyssä sekä laajat lähetekeskustelut Ukrainan tukemisesta ja sisäisestä turvallisuudesta.</p>
+      <ul class="summary__points">
+        <li>Toisessa käsittelyssä hyväksyttiin muun muassa <b>ammattikorkeakoulu- ja opintotukilaki</b> (91–77), <b>työsopimuslaki</b> (93–78) ja <b>lastensuojelulaki</b> (117–54).</li>
+        <li>Poronhoitolain muutos sai laajan tuen yli puoluerajojen — <b>151–20</b>.</li>
+        <li>Valtioneuvoston selonteosta <b>Suomen osallistumisesta Ukrainan tukemiseen</b> käytiin lähetekeskustelu (47 puheenvuoroa).</li>
+        <li>Sisäisen turvallisuuden selonteosta pidettiin <b>ryhmäpuheenvuorokierros</b> kaikilta puolueilta (72 puheenvuoroa).</li>
+        <li>Nimenhuudossa läsnä <b>172 / 200</b> edustajaa — 28 poissa, 1 saapui myöhässä.</li>
+      </ul>
+      <div class="summary__foot">
+        <span class="summary__disc">Koneellisesti tuotettu kooste istunnon pöytäkirjasta, äänestyksistä ja puheenvuoroista. Tarkista virallinen pöytäkirja.</span>
+        <button class="ai-sources-toggle" data-label="Näytä lähteet (4)"><span class="chev">›</span><span class="lbl">Näytä lähteet (4)</span></button>
+      </div>
+      <div class="ai-sources">
+        <div class="ai-sources__title">Koosteen lähteet — tarkistettavissa</div>
+        <div class="src-row"><span class="src-row__n">1</span><div class="src-row__main"><div class="src-row__title">Täysistunto 2026/52 · pöytäkirja, päiväjärjestys ja kesto</div><div class="src-row__api">GET /api/v1/tables/Session/rows?key=2026/52</div></div><div class="src-row__meta">20.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+        <div class="src-row"><span class="src-row__n">2</span><div class="src-row__main"><div class="src-row__title">10 äänestystä · tulokset ryhmittäin (VotingId 56401–56410)</div><div class="src-row__api">SELECT * FROM Voting WHERE session_key='2026/52' ORDER BY number</div></div><div class="src-row__meta">20.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+        <div class="src-row"><span class="src-row__n">3</span><div class="src-row__main"><div class="src-row__title">204 puheenvuoroa · puhujat ja asiakohdat</div><div class="src-row__api">SELECT * FROM Speech WHERE session_key='2026/52'</div></div><div class="src-row__meta">20.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+        <div class="src-row"><span class="src-row__n">4</span><div class="src-row__main"><div class="src-row__title">Nimenhuutoraportti klo 14.00 · 28 poissa, 1 myöhässä</div><div class="src-row__api">SELECT * FROM RollCallEntry WHERE roll_call_id=341194</div></div><div class="src-row__meta">20.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ LÄSNÄOLO / ATTENDANCE ============ -->
+  <section class="attend" id="lasnaolo">
+    <p class="kicker" style="margin:30px 0 6px">Läsnäolo · nimenhuuto klo 14.00</p>
+    <div class="psec__h" style="margin-bottom:18px"><h2>Ketkä olivat paikalla</h2><span class="meta">asiakohta 1 · KOKNHU</span></div>
+
+    <div class="attend__grid">
+      <!-- summary -->
+      <div class="attend__sum">
+        <div class="att-big"><span class="n">172</span><span class="of">/ 200 läsnä</span></div>
+        <div class="att-cap">Nimenhuudossa kirjattu läsnäolo istunnon alkaessa.</div>
+        <div class="att-bar"><span class="pres" style="width:86%"></span><span class="abs" style="width:14%"></span></div>
+        <div class="att-chips">
+          <div class="att-chip"><span class="sw" style="background:var(--hall)"></span>Läsnä <b>172</b></div>
+          <div class="att-chip"><span class="sw ring"></span>Poissa <b>28</b></div>
+          <div class="att-chip"><span class="sw" style="background:var(--opp)"></span>Saapui myöhässä <b>1</b></div>
+        </div>
+      </div>
+      <!-- seat grid -->
+      <div class="seatwrap">
+        <div class="seatgrid" id="seatgrid" role="img" aria-label="200 edustajan paikkakartta, 172 läsnä ja 28 poissa, puolueittain väritettynä"></div>
+        <div class="seat-legend" id="seatlegend"></div>
+      </div>
+    </div>
+
+    <!-- named absentees -->
+    <div class="absentees">
+      <div class="psec__h" style="margin-bottom:6px"><h3 style="font-size:var(--fs-h3)">Poissa olleet edustajat</h3><span class="meta">28 poissa · 1 myöhässä</span></div>
+      <div id="absentees"></div>
+      <div class="source-note">
+        <span>Lähde:</span>
+        <span class="dset">Eduskunnan avoin data · RollCallReport</span><span>·</span>
+        <span>poissaolon syy: <b>e</b> eduskuntatyö · <b>h</b> hyväksytty poissaolo · <b>–</b> ei ilmoitettu</span><span>·</span>
+        <span class="cite verify" data-mark="off"
+          data-value="172 / 200 läsnä"
+          data-caption="Nimenhuuto keskiviikko 20.5.2026 klo 14.00"
+          data-set="Eduskunnan avoin data · RollCallReport"
+          data-table="RollCallReport + RollCallEntry"
+          data-endpoint="SELECT entry_type, party FROM RollCallEntry WHERE roll_call_id = 341194"
+          data-record="29 merkintää · 28 poissa, 1 myöhässä"
+          data-jakso="Vaalikausi 2023–2027"
+          data-fetched="30.5.2026 klo 07.16"
+          data-chain="avoindata.eduskunta.fi > RollCallReport > Istuntonäkymä"
+          data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa nimenhuutoraportti">varmenna läsnäolo</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PÄÄTÖSASIAT (votes) ============ -->
+  <section class="ph" id="paatosasiat">
+    <p class="kicker kicker--blue"><span class="dot"></span>Päätösasiat · toinen käsittely</p>
+    <div class="ph__head"><h2>Mistä äänestettiin</h2><span class="meta">5 asiaa · 10 äänestystä</span></div>
+    <p class="ph__intro">Toisen käsittelyn lopulliset äänestykset. Jokaisessa äänestyksessä JAA on valiokunnan mietinnön tai lakiehdotuksen kanta.</p>
+
+    <!-- item 2 -->
+    <div class="ag-item">
+      <div class="ag-num">02</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk vote"></span>Toinen käsittely · 3 äänestystä</div>
+        <span class="ag-title">Ammattikorkeakoulu- ja opintotukilain muutos</span>
+        <div class="ag-docs"><span class="ag-doc">HE 197/2025 vp</span><span class="ag-doc cmt">SIVM 3/2026 vp</span></div>
+        <div class="ag-votes">
+          <div class="agvote"><div class="agvote__t">Lakiehdotusten hyväksyminen (JAA) / hylkääminen (EI)</div><div class="agvote__bar"><span class="j" style="width:54.2%"></span><span class="e" style="width:45.8%"></span></div><div class="agvote__n"><span class="j">91</span>–<span class="e">77</span><span class="out ok">hyväksytty</span></div></div>
+          <div class="agvote"><div class="agvote__t">Mietintö (JAA) / Lohikosken lausumaehdotus 1 (EI)</div><div class="agvote__bar"><span class="j" style="width:54.1%"></span><span class="e" style="width:45.9%"></span></div><div class="agvote__n"><span class="j">92</span>–<span class="e">78</span><span class="out ok">mietintö</span></div></div>
+          <div class="agvote"><div class="agvote__t">Mietintö (JAA) / Lohikosken lausumaehdotus 2 (EI)</div><div class="agvote__bar"><span class="j" style="width:54.1%"></span><span class="e" style="width:45.9%"></span></div><div class="agvote__n"><span class="j">92</span>–<span class="e">78</span><span class="out ok">mietintö</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- item 3 -->
+    <div class="ag-item">
+      <div class="ag-num">03</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk vote"></span>Toinen käsittely · 3 äänestystä</div>
+        <span class="ag-title">Arkistointilaki ja tiedonhallintalain muutos</span>
+        <div class="ag-docs"><span class="ag-doc">HE 169/2025 vp</span><span class="ag-doc cmt">SIVM 4/2026 vp</span></div>
+        <div class="ag-votes">
+          <div class="agvote"><div class="agvote__t">Lakiehdotusten hyväksyminen (JAA) / hylkääminen (EI)</div><div class="agvote__bar"><span class="j" style="width:68%"></span><span class="e" style="width:32%"></span></div><div class="agvote__n"><span class="j">115</span>–<span class="e">54</span><span class="out ok">hyväksytty</span></div></div>
+          <div class="agvote"><div class="agvote__t">Mietintö (JAA) / Lohikosken lausumaehdotus 1 (EI)</div><div class="agvote__bar"><span class="j" style="width:56.1%"></span><span class="e" style="width:43.9%"></span></div><div class="agvote__n"><span class="j">96</span>–<span class="e">75</span><span class="out ok">mietintö</span></div></div>
+          <div class="agvote"><div class="agvote__t">Mietintö (JAA) / Lohikosken lausumaehdotus 2 (EI)</div><div class="agvote__bar"><span class="j" style="width:54.4%"></span><span class="e" style="width:45.6%"></span></div><div class="agvote__n"><span class="j">93</span>–<span class="e">78</span><span class="out ok">mietintö</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- item 4 -->
+    <div class="ag-item">
+      <div class="ag-num">04</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk vote"></span>Toinen käsittely · 2 äänestystä</div>
+        <span class="ag-title">Lastensuojelulain muutos</span>
+        <div class="ag-docs"><span class="ag-doc">HE 149/2025 vp</span><span class="ag-doc cmt">STVM 4/2026 vp</span></div>
+        <div class="ag-votes">
+          <div class="agvote"><div class="agvote__t">Lakiehdotusten hyväksyminen (JAA) / hylkääminen (EI)</div><div class="agvote__bar"><span class="j" style="width:68.4%"></span><span class="e" style="width:31.6%"></span></div><div class="agvote__n"><span class="j">117</span>–<span class="e">54</span><span class="out ok">hyväksytty</span></div></div>
+          <div class="agvote"><div class="agvote__t">Mietintö (JAA) / Ville Merisen lausumaehdotus (EI)</div><div class="agvote__bar"><span class="j" style="width:68.4%"></span><span class="e" style="width:31.6%"></span></div><div class="agvote__n"><span class="j">117</span>–<span class="e">54</span><span class="out ok">mietintö</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- item 5 -->
+    <div class="ag-item">
+      <div class="ag-num">05</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk vote"></span>Toinen käsittely · 1 äänestys</div>
+        <span class="ag-title">Työsopimuslain muutos</span>
+        <div class="ag-docs"><span class="ag-doc">HE 199/2025 vp</span><span class="ag-doc cmt">TYVM 1/2026 vp</span></div>
+        <div class="ag-votes">
+          <div class="agvote"><div class="agvote__t">Lakiehdotusten hyväksyminen (JAA) / hylkääminen (EI)</div><div class="agvote__bar"><span class="j" style="width:54.4%"></span><span class="e" style="width:45.6%"></span></div><div class="agvote__n"><span class="j">93</span>–<span class="e">78</span><span class="out ok">hyväksytty</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- item 6 -->
+    <div class="ag-item">
+      <div class="ag-num">06</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk vote"></span>Toinen käsittely · 1 äänestys</div>
+        <span class="ag-title">Poronhoitolain muutos</span>
+        <div class="ag-docs"><span class="ag-doc">HE 161/2025 vp</span><span class="ag-doc cmt">MMVM 8/2026 vp</span></div>
+        <div class="ag-votes">
+          <div class="agvote"><div class="agvote__t">Mietintö (JAA) / Tiina Elon lausumaehdotus (EI)</div><div class="agvote__bar"><span class="j" style="width:88.3%"></span><span class="e" style="width:11.7%"></span></div><div class="agvote__n"><span class="j">151</span>–<span class="e">20</span><span class="out ok">mietintö</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="source-note">
+      <span>Lähde:</span>
+      <span class="dset">Eduskunnan avoin data · Voting + VotingPartyStats</span><span>·</span>
+      <span class="fresh">haettu 30.5.2026 07.16</span><span>·</span>
+      <span class="cite verify" data-mark="off"
+        data-value="10 äänestystä"
+        data-caption="Täysistunnon 2026/52 äänestykset toisessa käsittelyssä"
+        data-set="Eduskunnan avoin data · Voting"
+        data-table="Voting"
+        data-endpoint="SELECT number, section_title, title, n_yes, n_no FROM Voting WHERE session_key='2026/52'"
+        data-record="10 riviä · istunto 2026/52"
+        data-jakso="Vaalikausi 2023–2027"
+        data-fetched="30.5.2026 klo 07.16"
+        data-chain="avoindata.eduskunta.fi > Voting > Istuntonäkymä"
+        data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa äänestykset">varmenna äänestykset</span>
+    </div>
+  </section>
+
+  <!-- ============ KESKUSTELUT (speeches) ============ -->
+  <section class="ph" id="keskustelut">
+    <p class="kicker"><span class="dot" style="background:var(--opp)"></span>Keskustelut ja käsittelyt</p>
+    <div class="ph__head"><h2>Mistä keskusteltiin</h2><span class="meta">9 asiaa · 186 puheenvuoroa</span></div>
+    <p class="ph__intro">Lähete- ja ainoan käsittelyn keskustelut sekä ensimmäiset käsittelyt. Puheenvuorojen määrä kertoo, kuinka vilkasta keskustelu oli.</p>
+
+    <!-- item 7 -->
+    <div class="ag-item">
+      <div class="ag-num">07</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk talk"></span>Lähetekeskustelu</div>
+        <span class="ag-title">Valtioneuvoston selonteko Suomen osallistumisesta Ukrainan tukemiseen</span>
+        <div class="ag-docs"><span class="ag-doc">VNS 4/2026 vp</span></div>
+        <div class="ag-activity"><span class="ag-badge talk"><span class="i">🗣</span> 47 puheenvuoroa</span><span class="ag-badge none">ei äänestyksiä</span></div>
+      </div>
+    </div>
+
+    <!-- item 12 — group speeches round (feature) -->
+    <div class="ag-item">
+      <div class="ag-num">12</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk talk"></span>Ainoa käsittely · ryhmäpuheenvuorot</div>
+        <span class="ag-title">Valtioneuvoston selonteko sisäisestä turvallisuudesta</span>
+        <div class="ag-docs"><span class="ag-doc">VNS 6/2025 vp</span><span class="ag-doc cmt">HAVM 5/2026 vp</span></div>
+        <div class="ag-activity"><span class="ag-badge talk"><span class="i">🗣</span> 72 puheenvuoroa</span></div>
+        <div class="ag-speakers">
+          <span class="spk"><span class="d" style="background:#2c3e8c"></span>Mauri Peltokangas <small>ps</small></span>
+          <span class="spk"><span class="d" style="background:#1d4f91"></span>Mari Kaunistola <small>kok</small></span>
+          <span class="spk"><span class="d" style="background:#d3243a"></span>Juha Viitala <small>sd</small></span>
+          <span class="spk"><span class="d" style="background:#0b8a4a"></span>Hanna Räsänen <small>kesk</small></span>
+          <span class="spk"><span class="d" style="background:#5aa829"></span>Alviina Alametsä <small>vihr</small></span>
+          <span class="spk"><span class="d" style="background:#9e1f4b"></span>Aino-Kaisa Pekonen <small>vas</small></span>
+          <span class="spk"><span class="d" style="background:#1278b6"></span>Mikko Ollikainen <small>r</small></span>
+          <span class="spk"><span class="d" style="background:#1a3f86"></span>Sari Tanus <small>kd</small></span>
+        </div>
+        <div class="ag-more"><a href="Keskustelu.html" class="link-arrow">Näytä kaikki 72 puheenvuoroa →</a></div>
+      </div>
+    </div>
+
+    <!-- item 14 — links to Asia -->
+    <div class="ag-item">
+      <div class="ag-num">14</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk talk"></span>Ensimmäinen käsittely</div>
+        <a href="Asia.html" class="ag-title">Metsälain ja luonnonsuojelulain muuttaminen</a>
+        <div class="ag-docs"><span class="ag-doc">HE 30/2026 vp</span><span class="ag-doc cmt">MMVM 7/2026 vp</span><span class="ag-doc cmt">MMVM 9/2026 vp</span></div>
+        <div class="ag-activity"><span class="ag-badge talk"><span class="i">🗣</span> 16 puheenvuoroa</span><a href="Asia.html" class="ag-badge vote"><span class="i">→</span> koko asian kulku</a></div>
+      </div>
+    </div>
+
+    <!-- items 8–11, 15 compact -->
+    <div class="ag-item">
+      <div class="ag-num">08</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk talk"></span>Lähetekeskustelu</div>
+        <span class="ag-title">Sosiaali- ja terveydenhuollon palveluverkko</span>
+        <div class="ag-docs"><span class="ag-doc">HE 90/2026 vp</span></div>
+        <div class="ag-activity"><span class="ag-badge talk"><span class="i">🗣</span> 23 puheenvuoroa</span></div>
+      </div>
+    </div>
+    <div class="ag-item">
+      <div class="ag-num">09</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk talk"></span>Lähetekeskustelu</div>
+        <span class="ag-title">Työnhakijan avoimet korkeakouluopinnot</span>
+        <div class="ag-docs"><span class="ag-doc">HE 86/2026 vp</span></div>
+        <div class="ag-activity"><span class="ag-badge talk"><span class="i">🗣</span> 14 puheenvuoroa</span></div>
+      </div>
+    </div>
+    <div class="ag-item">
+      <div class="ag-num">10</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk talk"></span>Lähetekeskustelu</div>
+        <span class="ag-title">Valtioneuvoston lainanottovaltuuden muuttaminen</span>
+        <div class="ag-docs"><span class="ag-doc">HE 87/2026 vp</span></div>
+        <div class="ag-activity"><span class="ag-badge talk"><span class="i">🗣</span> 12 puheenvuoroa</span></div>
+      </div>
+    </div>
+    <div class="ag-item">
+      <div class="ag-num">11</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk talk"></span>Lähetekeskustelu</div>
+        <span class="ag-title">Suomen jäsenosuuden korottaminen kansainvälisessä järjestössä</span>
+        <div class="ag-docs"><span class="ag-doc">HE 88/2026 vp</span></div>
+        <div class="ag-activity"><span class="ag-badge talk"><span class="i">🗣</span> 1 puheenvuoro</span></div>
+      </div>
+    </div>
+    <div class="ag-item">
+      <div class="ag-num">15</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk talk"></span>Ensimmäinen käsittely</div>
+        <span class="ag-title">Puolustusvoimista annetun lain muuttaminen</span>
+        <div class="ag-docs"><span class="ag-doc">HE 55/2026 vp</span><span class="ag-doc cmt">PUVM 3/2026 vp</span></div>
+        <div class="ag-activity"><span class="ag-badge talk"><span class="i">🗣</span> 1 puheenvuoro</span></div>
+      </div>
+    </div>
+
+    <div class="source-note">
+      <span>Lähde:</span>
+      <span class="dset">Eduskunnan avoin data · Speech + Section</span><span>·</span>
+      <span class="fresh">haettu 30.5.2026 07.16</span><span>·</span>
+      <span class="cite verify" data-mark="off"
+        data-value="186 puheenvuoroa"
+        data-caption="Puheenvuorot asiakohdittain · täysistunto 2026/52"
+        data-set="Eduskunnan avoin data · Speech"
+        data-table="Speech + Section"
+        data-endpoint="SELECT section_key, COUNT(*) FROM Speech WHERE session_key='2026/52' GROUP BY section_key"
+        data-record="puheenvuorot asiakohdittain"
+        data-jakso="Vaalikausi 2023–2027"
+        data-fetched="30.5.2026 klo 07.16"
+        data-chain="avoindata.eduskunta.fi > Speech > Istuntonäkymä"
+        data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa puheenvuorot">varmenna puheenvuorot</span>
+    </div>
+  </section>
+
+  <!-- ============ PÖYDÄLLE PANNUT (tabled) ============ -->
+  <section class="ph" id="poydalle">
+    <p class="kicker"><span class="dot" style="background:var(--faint)"></span>Pöydälle pannut asiat</p>
+    <div class="ph__head"><h2>Siirtyivät seuraavaan istuntoon</h2><span class="meta">5 asiaa · ei keskustelua</span></div>
+    <p class="ph__intro">Valiokuntien mietinnöt pantiin pöydälle ja niistä päätetään seuraavissa täysistunnoissa.</p>
+
+    <div class="ag-item">
+      <div class="ag-num">16</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk tabled"></span>Pöydällepano</div>
+        <span class="ag-title">Eläinten oikeudet perustuslakiin</span>
+        <div class="ag-docs"><span class="ag-doc">KAA 8/2023 vp</span><span class="ag-doc cmt">PEVM 3/2026 vp</span></div>
+      </div>
+    </div>
+    <div class="ag-item">
+      <div class="ag-num">17</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk tabled"></span>Pöydällepano</div>
+        <span class="ag-title">Yleisradion hallintoneuvoston kertomus 2025</span>
+        <div class="ag-docs"><span class="ag-doc">K 4/2026 vp</span><span class="ag-doc cmt">LIVM 7/2026 vp</span></div>
+      </div>
+    </div>
+    <div class="ag-item">
+      <div class="ag-num">18</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk tabled"></span>Pöydällepano</div>
+        <span class="ag-title">Hallituksen kertomus kielilainsäädännön soveltamisesta 2025</span>
+        <div class="ag-docs"><span class="ag-doc">K 20/2025 vp</span><span class="ag-doc cmt">SIVM 5/2026 vp</span></div>
+      </div>
+    </div>
+    <div class="ag-item">
+      <div class="ag-num">19</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk tabled"></span>Pöydällepano</div>
+        <span class="ag-title">Sähkömarkkinalain 65 b §:n muuttaminen</span>
+        <div class="ag-docs"><span class="ag-doc">HE 61/2026 vp</span><span class="ag-doc cmt">TAVM 13/2026 vp</span></div>
+      </div>
+    </div>
+    <div class="ag-item">
+      <div class="ag-num">20</div>
+      <div class="ag-body">
+        <div class="ag-phase"><span class="pk tabled"></span>Pöydällepano</div>
+        <span class="ag-title">Polttoaineiden kestävyyskriteerit ja päästökauppalaki</span>
+        <div class="ag-docs"><span class="ag-doc">HE 62/2026 vp</span><span class="ag-doc cmt">TAVM 14/2026 vp</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:22px;padding-top:16px;border-top:1px solid var(--rule)">
+      <div style="font-family:var(--mono);font-size:var(--fs-mono);color:var(--muted)">Asiakohta 21 · Seuraava täysistunto: torstai 21.5.2026 klo 16.00</div>
+      <a href="Istunnot.html" class="link-arrow">← Takaisin istuntoihin</a>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="foot">
+    <div class="foot__period">
+      <span class="pk">Tietojakso</span>
+      <span class="pv" data-period-label>Vaalikausi 2023–2027 · Orpon hallitus</span>
+      <span class="pbadge is-now" data-period-badge>nykyinen</span>
+      <span class="pdetail" data-period-detail>20.6.2023 – kesken · 200 paikkaa · hallitus 108 / oppositio 92</span>
+    </div>
+    <div class="foot__legal">
+      <span>Tietolähde: Eduskunnan avoin data · avoindata.eduskunta.fi</span>
+      <span>Tietokanta päivitetty 30.5.2026 klo 07.16</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+/* Istunto 2026/52 — build the 200-seat attendance map + named absentees. */
+(function () {
+  // party: [label, color, totalSeats, absentCount, bloc]
+  var PARTIES = [
+    ['Kokoomus', 'kok', '#1d4f91', 48, 5, 'hallitus'],
+    ['Perussuomalaiset', 'ps', '#2c3e8c', 45, 8, 'hallitus'],
+    ['RKP', 'r', '#1278b6', 10, 1, 'hallitus'],
+    ['Kristillisdemokraatit', 'kd', '#1a3f86', 5, 1, 'hallitus'],
+    ['SDP', 'sd', '#d3243a', 43, 9, 'oppositio'],
+    ['Keskusta', 'kesk', '#0b8a4a', 23, 0, 'oppositio'],
+    ['Vihreät', 'vihr', '#5aa829', 13, 2, 'oppositio'],
+    ['Vasemmistoliitto', 'vas', '#9e1f4b', 11, 2, 'oppositio'],
+    ['Liike Nyt', 'liik', '#e0922f', 1, 0, 'oppositio'],
+    ['Muu', 'muu', '#8a8178', 1, 0, 'oppositio']
+  ];
+  // absentees: party-abbr -> [ [name, reason], ... ]   reason: e / h / '-'
+  var ABSENT = {
+    kok: [['Janne Heikkinen','e'],['Antti Häkkänen','e'],['Terhi Koulumies','e'],['Jarno Limnell','e'],['Ville Valkonen','h']],
+    ps:  [['Vilhelm Junnila','e'],['Kaisa Juuso','h'],['Antti Kangas','-'],['Juha Mäenpää','h'],['Jani Mäkelä','e'],['Sakari Puisto','e'],['Riikka Purra','e'],['Pia Sillanpää','e']],
+    r:   [['Eva Biaudet','e']],
+    kd:  [['Mika Poutala','e']],
+    sd:  [['Tuula Haatainen','m'],['Timo Harakka','e'],['Kimmo Kiljunen','h'],['Miapetra Kumpula-Natri','e'],['Suna Kymäläinen','h'],['Hanna Laine-Nousimaa','-'],['Pinja Perholehto','e'],['Joona Räsänen','-'],['Tuula Väätäinen','e']],
+    vas: [['Mai Kivelä','e'],['Laura Meriluoto','h']],
+    vihr:[['Inka Hopsu','e'],['Krista Mikkonen','e']]
+  };
+
+  // ---- seat grid (200 seats, party order; absent = hollow ring) ----
+  var grid = document.getElementById('seatgrid');
+  if (grid) {
+    var html = '';
+    PARTIES.forEach(function (p) {
+      var total = p[3], absent = p[4], color = p[2];
+      for (var i = 0; i < total; i++) {
+        var isAbsent = i >= (total - absent); // last N of each party shown hollow
+        html += '<span class="seat' + (isAbsent ? ' absent' : '') + '" style="--p:' + color + '" title="' + p[0] + (isAbsent ? ' · poissa' : ' · läsnä') + '"></span>';
+      }
+    });
+    grid.innerHTML = html;
+  }
+
+  // ---- legend ----
+  var legend = document.getElementById('seatlegend');
+  if (legend) {
+    var lg = PARTIES.filter(function (p) { return p[1] !== 'muu' && p[1] !== 'liik'; })
+      .map(function (p) { return '<span class="it"><span class="d" style="background:' + p[2] + '"></span>' + p[1] + '</span>'; }).join('');
+    lg += '<span class="it"><span class="d ring"></span>poissa</span>';
+    legend.innerHTML = lg;
+  }
+
+  // ---- named absentees grouped by party ----
+  var box = document.getElementById('absentees');
+  if (box) {
+    var REASON = { e: 'e', h: 'h', '-': '–', m: 'h' };
+    var rows = PARTIES.filter(function (p) { return ABSENT[p[1]]; }).map(function (p) {
+      var list = ABSENT[p[1]];
+      var names = list.map(function (a) {
+        var late = a[1] === 'm' ? ' <span class="r">myöhässä</span>' : ' <span class="r">' + REASON[a[1]] + '</span>';
+        return '<span class="nm">' + a[0] + late + '</span>';
+      }).join(' &nbsp;·&nbsp; ');
+      return '<div class="abs-row"><div class="abs-row__p"><span class="d" style="background:' + p[2] + '"></span>' + p[1] +
+        ' <small>' + list.length + '</small></div><div class="abs-names">' + names + '</div></div>';
+    }).join('');
+    box.innerHTML = rows;
+  }
+})();
+</script>
+<script defer src="period.js"></script>
+<script defer src="trace.js"></script>
+</body>
+</html>

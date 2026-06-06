@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Keskustelu: sisäinen turvallisuus — Eduskuntapeili</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="peili.css" rel="stylesheet" />
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="masthead">
+    <div class="masthead__top">
+      <div>
+        <div class="brand__name">Eduskuntapeili</div>
+        <div class="brand__tag">Eduskunnan avoin data, luettavassa muodossa</div>
+      </div>
+      <div class="masthead__meta">
+        <span class="masthead__date">lauantai 30. toukokuuta 2026</span>
+        <div class="period" data-period>
+          <button class="period__btn" aria-expanded="false" aria-haspopup="true">
+            <span class="period__k">Tietojakso</span>
+            <span class="period__v" data-period-v>Vaalikausi 2023–2027</span>
+            <span class="period__badge is-now" data-period-badge>nykyinen</span>
+            <span class="period__caret">▾</span>
+          </button>
+          <div class="period__menu" hidden role="menu">
+            <div class="period__menu-head">Valitse tietojakso</div>
+            <button class="period__opt is-selected" role="menuitemradio" aria-checked="true" data-val="2023"><span class="period__opt-main">Vaalikausi 2023–2027</span><span class="period__opt-sub">Orpon hallitus · nykyinen</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="2019"><span class="period__opt-main">Vaalikausi 2019–2023</span><span class="period__opt-sub">Marinin / Rinteen hallitus</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="all"><span class="period__opt-main">Kaikki vaalikaudet</span><span class="period__opt-sub">koko avoin data</span></button>
+            <div class="period__note">Tietojakso rajaa kaikki sivun luvut ja koosteet. Oletuksena nykyinen kausi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="rule-ink" />
+    <nav class="nav">
+      <a href="Etusivu.html">Etusivu</a>
+      <a href="Kansanedustajat.html">Kansanedustajat</a>
+      <a href="#">Puolueet</a>
+      <a href="Istunnot.html" class="is-active">Istunnot</a>
+      <a href="#">Äänestykset</a>
+      <a href="#">Asiakirjat</a>
+      <span class="nav__search">Haku ⌕</span>
+    </nav>
+    <hr class="rule" />
+  </header>
+
+  <!-- ============ BREADCRUMB ============ -->
+  <div style="padding-top:16px;font-size:13px;color:var(--muted)">
+    <a href="Istunnot.html" style="color:var(--blue)">Istunnot</a> &nbsp;›&nbsp; <a href="Istunto.html" style="color:var(--blue)">Täysistunto 2026/52</a> &nbsp;›&nbsp; <span>Keskustelu · asiakohta 12</span>
+  </div>
+
+  <!-- ============ DEBATE HEAD ============ -->
+  <section class="doc-head">
+    <div class="doc-head__top">
+      <span class="doc-id">Asiakohta 12</span>
+      <span class="doc-type">Täysistuntokeskustelu · ainoa käsittely</span>
+      <span class="tag tag--ghost" style="margin-left:auto">VNS 6/2025 vp</span>
+    </div>
+    <h1>Keskustelu: sisäisen turvallisuuden selonteko</h1>
+    <div class="debate-meta">
+      <span><b>Keskiviikko 20.5.2026</b></span><span class="sep"></span>
+      <span>klo 17.50–21.10</span><span class="sep"></span>
+      <span><b>72</b> puheenvuoroa</span><span class="sep"></span>
+      <span><b>8</b> ryhmäpuheenvuoroa</span><span class="sep"></span>
+      <a href="Istunto.html" style="color:var(--blue)">Avaa istunto ↗</a>
+    </div>
+  </section>
+
+  <!-- ============ TOOLBAR ============ -->
+  <div class="doc-toolbar">
+    <a href="#" class="tbtn"><span class="ic">↗</span> Selonteko (VNS 6/2025)</a>
+    <a href="#" class="tbtn"><span class="ic">▤</span> Mietintö HAVM 5/2026</a>
+    <a href="Istunto.html" class="tbtn"><span class="ic">⚖</span> Istunnon äänestykset</a>
+    <span class="grow"></span>
+    <button class="tbtn"><span class="ic">⧉</span> Jaa</button>
+  </div>
+
+  <!-- ============ AI SUMMARY ============ -->
+  <div class="summary">
+    <div class="summary__bar">
+      <span class="l"><span class="spark">✦</span><span class="lbl">Tekoälykooste · keskustelu</span></span>
+      <span class="read">8 ryhmäpuheenvuoroa · 72 puheenvuoroa yhteensä</span>
+    </div>
+    <div class="summary__in">
+      <div class="summary__q">Mistä keskusteltiin?</div>
+      <p class="summary__lead">Hallintovaliokunnan mietintö sisäisen turvallisuuden selonteosta sai laajan kannatuksen, mutta puolueet painottivat ryhmäpuheenvuoroissaan eri asioita.</p>
+      <ul class="summary__points">
+        <li>Hallituspuolueet <b>kokoomus ja perussuomalaiset</b> korostivat viranomaisten resursseja, jengirikollisuutta ja uusia uhkia kuten drooneja.</li>
+        <li><b>SDP ja keskusta</b> asettivat selonteon osaksi kolmen turvallisuusselonteon kokonaisuutta ja painottivat alueellista yhdenvertaisuutta.</li>
+        <li><b>Vihreät ja vasemmistoliitto</b> nostivat köyhyyden ja eriarvoisuuden sisäisen turvallisuuden kysymyksiksi.</li>
+        <li>Yhteinen näkemys: turvallisuusympäristö on muuttunut <b>perustavanlaatuisesti</b> vuoden 2021 edellisestä selonteosta.</li>
+      </ul>
+      <div class="summary__foot">
+        <span class="summary__disc">Koneellisesti tuotettu kooste ryhmäpuheenvuoroista. Lue alkuperäiset puheenvuorot alta tai pöytäkirjasta.</span>
+        <button class="ai-sources-toggle" data-label="Näytä lähteet (2)"><span class="chev">›</span><span class="lbl">Näytä lähteet (2)</span></button>
+      </div>
+      <div class="ai-sources">
+        <div class="ai-sources__title">Koosteen lähteet — tarkistettavissa</div>
+        <div class="src-row"><span class="src-row__n">1</span><div class="src-row__main"><div class="src-row__title">Ryhmäpuheenvuorot · 8 kpl koko teksti (Speech + SpeechContent)</div><div class="src-row__api">SELECT * FROM SpeechContent c JOIN Speech sp … WHERE session_key='2026/52' AND speech_type='NR'</div></div><div class="src-row__meta">20.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+        <div class="src-row"><span class="src-row__n">2</span><div class="src-row__main"><div class="src-row__title">Täysistunnon 2026/52 puheenvuorot · 72 kpl, asiakohta 12</div><div class="src-row__api">SELECT * FROM Speech WHERE session_key='2026/52' AND section_key=…</div></div><div class="src-row__meta">20.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ASIAYHTEYS / CONTEXT ============ -->
+  <section class="ph" id="asiayhteys" style="margin-top:30px">
+    <p class="kicker kicker--blue"><span class="dot"></span>Asiayhteys · mistä selonteossa on kyse</p>
+    <div class="ph__head"><h2>Sisäisen turvallisuuden selonteko</h2><span class="meta">VNS 6/2025 vp · HaVM 5/2026 vp</span></div>
+    <p class="ph__intro">Hallituksen järjestyksessä kolmas sisäisen turvallisuuden selonteko annettiin eduskunnalle 7.10.2025. Se muodostaa yhdessä ulko- ja turvallisuuspoliittisen selonteon ja puolustusselonteon kanssa kolmen turvallisuusselonteon kokonaisuuden. Hallintovaliokunta antoi mietintönsä 23.4.2026 — tämä keskustelu on asian <b>ainoa käsittely</b>.</p>
+
+    <!-- lifecycle: where this debate sits -->
+    <nav class="lifecycle" style="margin-top:18px">
+      <a href="#asiayhteys" class="lc-step done">
+        <div class="lc-step__top"><span class="lc-step__dot"></span><span class="lc-step__num">01</span></div>
+        <div class="lc-step__label">Selonteko annettu</div><div class="lc-step__date">7.10.2025</div>
+      </a>
+      <a href="#asiayhteys" class="lc-step done">
+        <div class="lc-step__top"><span class="lc-step__dot"></span><span class="lc-step__num">02</span></div>
+        <div class="lc-step__label">Lähetekeskustelu</div><div class="lc-step__date">7.10.2025</div>
+      </a>
+      <a href="#asiayhteys" class="lc-step done">
+        <div class="lc-step__top"><span class="lc-step__dot"></span><span class="lc-step__num">03</span></div>
+        <div class="lc-step__label">Hallintovaliokunta · HaVM 5/2026</div><div class="lc-step__date">23.4.2026</div>
+      </a>
+      <a href="Istunto.html" class="lc-step done">
+        <div class="lc-step__top"><span class="lc-step__dot"></span><span class="lc-step__num">04</span></div>
+        <div class="lc-step__label">Pöydällepano</div><div class="lc-step__date">19.5.2026</div>
+      </a>
+      <a href="#transcript" class="lc-step done current">
+        <div class="lc-step__top"><span class="lc-step__dot"></span><span class="lc-step__num">05</span></div>
+        <div class="lc-step__label">Ainoa käsittely · keskustelu</div><div class="lc-step__date">20.5.2026</div>
+      </a>
+      <a href="#paatos" class="lc-step done is-vote">
+        <div class="lc-step__top"><span class="lc-step__dot"></span><span class="lc-step__num">06</span></div>
+        <div class="lc-step__label">Päätös · kannanotto</div><div class="lc-step__date">22.5.2026</div>
+        <div class="lc-step__tag ok">hyväksytty 147–21</div>
+      </a>
+    </nav>
+
+    <!-- what it covers + committee position -->
+    <div class="ctx-grid">
+      <div class="ctx-box">
+        <h3>Mitä selonteko käsittelee</h3>
+        <ul class="ctx-themes">
+          <li><b>Kokonaisturvallisuus</b> — sisäisen ja ulkoisen turvallisuuden tiivistyvä yhteys.</li>
+          <li><b>Uusi teknologia ja droonit</b> — viranomaisten kyky ennakoida ja vastata uhkiin.</li>
+          <li><b>Hybridivaikuttaminen ja maahanmuutto</b> — EU:n turvapaikkalainsäädännön täytäntöönpano.</li>
+          <li><b>Jengi- ja nuorisorikollisuus</b> sekä poliisin ja viranomaisten resurssit.</li>
+          <li><b>Polarisaatio ja eriarvoistuminen</b> luottamusyhteiskunnan uhkana.</li>
+        </ul>
+      </div>
+      <div class="ctx-box">
+        <h3>Valiokunnan kannanotto<small>Mitä eduskunta edellyttää valtioneuvostolta</small></h3>
+        <ul class="ctx-list">
+          <li><span class="n">1</span>Vahvistaa turvallisuusviranomaisten <b>rahoituspohjaa</b> ja roolia ensivasteena sekä viranomaisyhteistyötä.</li>
+          <li><span class="n">2</span>Seuraa <b>teknologista kehitystä</b> ja varmistaa kyvyn vastata uusien teknologioiden uhkiin.</li>
+          <li><span class="n">3</span>Varautuu <b>hybridivaikuttamiseen</b> ja huolehtii turvapaikkalainsäädännön täytäntöönpanosta.</li>
+          <li><span class="n">4</span>Torjuu <b>polarisaatio- ja eriarvoistumiskehitystä</b> luottamusyhteiskunnan turvaamiseksi.</li>
+        </ul>
+        <div class="ctx-src">Lähde: HaVM 5/2026 vp · kannanottoehdotus ·
+          <span class="cite verify" data-mark="off"
+            data-value="Valiokunnan kannanotto · 4 kohtaa"
+            data-caption="Hallintovaliokunnan kannanottoehdotus eduskunnalle"
+            data-set="Eduskunnan avoin data · CommitteeReport"
+            data-table="CommitteeReport.resolution_text"
+            data-endpoint="SELECT resolution_text FROM CommitteeReport WHERE parliament_identifier='HaVM 5/2026 vp'"
+            data-record="HaVM 5/2026 vp · allekirjoitettu 23.4.2026 · Hallintovaliokunta"
+            data-jakso="Vaalikausi 2023–2027"
+            data-fetched="30.5.2026 klo 07.16"
+            data-chain="avoindata.eduskunta.fi > CommitteeReport > Keskustelunäkymä"
+            data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa mietintö">varmenna kannanotto</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- dividing line -->
+    <p class="kicker" style="margin:30px 0 0">Kiistakohta · mistä äänestyksessä oli kyse</p>
+    <div class="viewpoints" style="margin-top:14px">
+      <div class="vp for">
+        <div class="vp__h"><span class="vp__t">Valiokunnan enemmistö</span><span class="vp__who">mietintö</span></div>
+        <ul>
+          <li>Selonteon uhka- ja viranomaiskeskeinen linja on perusteltu muuttuneessa tilanteessa.</li>
+          <li>Painopiste resursseissa, teknologiassa ja hybridivarautumisessa.</li>
+          <li>Taustalla hallituspuolueet sekä SDP ja keskusta.</li>
+        </ul>
+      </div>
+      <div class="vp against">
+        <div class="vp__h"><span class="vp__t">Vastalause</span><span class="vp__who">vihr · vas</span></div>
+        <ul>
+          <li>Selonteko on liian <b>rikos- ja uhkakeskeinen</b> ja poikkeaa edellisestä.</li>
+          <li>Turvallisuus perustuu ensisijaisesti <b>ennaltaehkäisyyn</b> — köyhyyden, syrjäytymisen ja eriarvoisuuden torjuntaan.</li>
+          <li>Pekosen (vas) ja Alametsän (vihr) vaihtoehtoiset kannanottoehdotukset.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FILTER ============ -->
+  <div class="toolbar">
+    <label class="search">
+      <span class="ic">⌕</span>
+      <input id="sp-search" type="text" placeholder="Hae puhujalla tai puolueella…" />
+    </label>
+    <span class="count"><b id="sp-count">8</b> ryhmäpuheenvuoroa</span>
+  </div>
+  <div class="fchips">
+    <button class="fchip is-active" data-filter="all">Kaikki</button>
+    <button class="fchip" data-filter="hallitus"><span class="pdot" style="background:var(--hall)"></span>Hallitus</button>
+    <button class="fchip" data-filter="oppositio"><span class="pdot" style="background:var(--opp)"></span>Oppositio</button>
+  </div>
+
+  <!-- ============ TRANSCRIPT ============ -->
+  <p class="kicker" style="margin:26px 0 14px">Ryhmäpuheenvuorot · puhejärjestyksessä</p>
+  <div class="transcript" id="transcript">
+
+    <article class="speech" data-bloc="hallitus" data-text="mari kaunistola kokoomus kok">
+      <div class="speech__av"><span>MK</span><span class="pbar" style="background:#1d4f91"></span></div>
+      <div class="speech__main">
+        <div class="speech__head">
+          <span class="speech__name">Mari Kaunistola</span>
+          <span class="tag"><span style="width:9px;height:9px;border-radius:50%;background:#1d4f91;display:inline-block"></span>Kokoomus</span>
+          <span class="speech__role">Ryhmäpuheenvuoro</span>
+          <span class="speech__time">klo 17.50 · 5 min 43 s</span>
+        </div>
+        <div class="speech__sum"><span class="sp">✦</span><span>Uudet uhat — droonit sekä nuoriso- ja jengirikollisuus — vaativat puuttumista.</span></div>
+        <div class="speech__body">
+          <p>Arvoisa rouva puhemies! Suomea koskettavat monet uudet sisäisen turvallisuuden uhat ja ongelmat, joiden kehityskulkuun meillä on mahdollisuus vaikuttaa. Ajankohtaisena esimerkkinä viime viikon droonihavainnot Uudellamaalla konkretisoivat jälleen, miten turvallisuuttamme uhkaavat uuden ajan ilmiöt vaikuttavat arkeemme. Sisäisen turvallisuuden selonteossa on nostettu esille monia uhkakuvia.</p>
+          <p>Nuoriso- ja jengirikollisuuden vakavoituminen on ilmiö, johon meidän on puutu<span class="speech__cont">…</span></p>
+        </div>
+        <div class="speech__foot"><a href="#" class="link-arrow">Lue koko puheenvuoro (PTK 52/2026) ↗</a><span class="meta">5 085 merkkiä · suomi</span></div>
+      </div>
+    </article>
+
+    <article class="speech" data-bloc="hallitus" data-text="rami lehtinen perussuomalaiset ps">
+      <div class="speech__av"><span>RL</span><span class="pbar" style="background:#2c3e8c"></span></div>
+      <div class="speech__main">
+        <div class="speech__head">
+          <span class="speech__name">Rami Lehtinen</span>
+          <span class="tag"><span style="width:9px;height:9px;border-radius:50%;background:#2c3e8c;display:inline-block"></span>Perussuomalaiset</span>
+          <span class="speech__role">Ryhmäpuheenvuoro</span>
+          <span class="speech__time">klo 17.56 · 5 min 6 s</span>
+        </div>
+        <div class="speech__sum"><span class="sp">✦</span><span>Arjen turva nojaa viranomaisten näkymättömään, ympärivuorokautiseen työhön.</span></div>
+        <div class="speech__body">
+          <p>Arvoisa rouva puhemies! On helppo kulkea kadulla ja pitää itsestäänselvyytenä sitä, ettei kukaan käy kimppuun tai yritä ryöstää. Mutta juuri sen itsestäänselvyyden taustalla on valtava määrä näkymätöntä työtä. Viranomaiset valvovat, ennakoivat, suunnittelevat ja tekevät ympäri vuorokauden töitä sen eteen, että meidän arkemme pysyy turvallisena.</p>
+          <p>Harva meistä pysähtyy ajattelemaan, kuinka paljon taustalla tapahtuu juuri silloin, kun kävelemme rauhassa kotiin, viemme l<span class="speech__cont">…</span></p>
+        </div>
+        <div class="speech__foot"><a href="#" class="link-arrow">Lue koko puheenvuoro (PTK 52/2026) ↗</a><span class="meta">4 175 merkkiä · suomi</span></div>
+      </div>
+    </article>
+
+    <article class="speech" data-bloc="oppositio" data-text="juha viitala sdp sd">
+      <div class="speech__av"><span>JV</span><span class="pbar" style="background:#d3243a"></span></div>
+      <div class="speech__main">
+        <div class="speech__head">
+          <span class="speech__name">Juha Viitala</span>
+          <span class="tag"><span style="width:9px;height:9px;border-radius:50%;background:#d3243a;display:inline-block"></span>SDP</span>
+          <span class="speech__role">Ryhmäpuheenvuoro</span>
+          <span class="speech__time">klo 18.01 · 5 min 38 s</span>
+        </div>
+        <div class="speech__sum"><span class="sp">✦</span><span>Järjestyksessä kolmas turvallisuusselonteko — tilanteen muutos on perustavanlaatuinen.</span></div>
+        <div class="speech__body">
+          <p>Arvoisa rouva puhemies! Hallintovaliokunta on käsitellyt järjestyksessä kolmannen sisäisen turvallisuuden selonteon, joka muodostaa yhdessä ulko- ja turvallisuuspoliittisen selonteon ja puolustusselonteon kanssa kolmen turvallisuusselonteon tärkeän kokonaisuuden.</p>
+          <p>Käsittelimme nyt hyvin erilaista selontekoa kuin edellisellä kerralla, vuonna 2021. Turvallisuustilanteen muutos on ollut perustavanlaatuinen. Onkin olennaista, että tämä muutos näkyy niin selonteossa kuin<span class="speech__cont">…</span></p>
+        </div>
+        <div class="speech__foot"><a href="#" class="link-arrow">Lue koko puheenvuoro (PTK 52/2026) ↗</a><span class="meta">4 489 merkkiä · suomi</span></div>
+      </div>
+    </article>
+
+    <article class="speech" data-bloc="oppositio" data-text="hanna räsänen keskusta kesk">
+      <div class="speech__av"><span>HR</span><span class="pbar" style="background:#0b8a4a"></span></div>
+      <div class="speech__main">
+        <div class="speech__head">
+          <span class="speech__name">Hanna Räsänen</span>
+          <span class="tag"><span style="width:9px;height:9px;border-radius:50%;background:#0b8a4a;display:inline-block"></span>Keskusta</span>
+          <span class="speech__role">Ryhmäpuheenvuoro</span>
+          <span class="speech__time">klo 18.07 · 5 min 12 s</span>
+        </div>
+        <div class="speech__sum"><span class="sp">✦</span><span>Turvallisuus on perusoikeus — se ei saa olla kiinni postinumerosta.</span></div>
+        <div class="speech__body">
+          <p>Arvoisa puhemies! Keskustan lähtökohta tässä keskustelussa on selvä: turvallisuus on perusoikeus. Se tarkoittaa, että jokaisella suomalaisella on oikeus turvalliseen elämään asuinpaikasta riippumatta. Turvallisuus ei saa olla kiinni postinumerosta. Valtiovallan on kannettava vastuunsa koko Suomesta ja kaikista suomalaisista.</p>
+          <p>Turvallisuus on arjen sujuvuutta, yhteiskunnan vakautta ja luottamusta siihen, että apu tulee silloin kun apua tarvitaan. Siksi turvallisuuden<span class="speech__cont">…</span></p>
+        </div>
+        <div class="speech__foot"><a href="#" class="link-arrow">Lue koko puheenvuoro (PTK 52/2026) ↗</a><span class="meta">4 419 merkkiä · suomi</span></div>
+      </div>
+    </article>
+
+    <article class="speech" data-bloc="oppositio" data-text="alviina alametsä vihreät vihr">
+      <div class="speech__av"><span>AA</span><span class="pbar" style="background:#5aa829"></span></div>
+      <div class="speech__main">
+        <div class="speech__head">
+          <span class="speech__name">Alviina Alametsä</span>
+          <span class="tag"><span style="width:9px;height:9px;border-radius:50%;background:#5aa829;display:inline-block"></span>Vihreät</span>
+          <span class="speech__role">Ryhmäpuheenvuoro</span>
+          <span class="speech__time">klo 18.12 · 2 min 59 s</span>
+        </div>
+        <div class="speech__sum"><span class="sp">✦</span><span>Uhat on nähtävä kokonaisvaltaisesti — myös köyhyys ja eriarvoisuus ovat turvallisuuskysymyksiä.</span></div>
+        <div class="speech__body">
+          <p>Arvoisa puhemies! Sisäisen turvallisuuden selonteon täytyy vihreistä tunnistaa ja käsitellä uhkia kokonaisvaltaisesti. Turvallisuusympäristömme on muuttunut viime vuosina, mikä huomioidaan tässä selonteossa. Venäjä on hyökännyt Ukrainaan, maailmalla kuohuu, ja Suomessakin on reagoitava drooneihin sekä viestittävä kansalaisille tehokkaammin turvallisuuskysymyksistä.</p>
+          <p>Samalla moni sisäisen turvallisuuden ilmiö kaipaa vahvempaa vastausta meiltä. Esimerkiksi köyhyyden,<span class="speech__cont">…</span></p>
+        </div>
+        <div class="speech__foot"><a href="#" class="link-arrow">Lue koko puheenvuoro (PTK 52/2026) ↗</a><span class="meta">4 501 merkkiä · suomi</span></div>
+      </div>
+    </article>
+
+    <article class="speech" data-bloc="oppositio" data-text="aino-kaisa pekonen vasemmistoliitto vas">
+      <div class="speech__av"><span>AP</span><span class="pbar" style="background:#9e1f4b"></span></div>
+      <div class="speech__main">
+        <div class="speech__head">
+          <span class="speech__name">Aino-Kaisa Pekonen</span>
+          <span class="tag"><span style="width:9px;height:9px;border-radius:50%;background:#9e1f4b;display:inline-block"></span>Vasemmistoliitto</span>
+          <span class="speech__role">Ryhmäpuheenvuoro</span>
+          <span class="speech__time">klo 18.17 · 5 min 36 s</span>
+        </div>
+        <div class="speech__sum"><span class="sp">✦</span><span>Turvallisuudentunne syntyy monen asian summasta; tarvitaan yhteinen tilannekuva.</span></div>
+        <div class="speech__body">
+          <p>Arvoisa rouva puhemies! Turvallisuuden takaaminen on yhteiskunnan tärkeä tehtävä. Yhteiskunnan turvallisuus ja toisaalta yksilön kokema turvallisuudentunne syntyvät monen asian summasta. Ne luovat peruskallion kaltaisen pohjan, vakauden, josta Suomi on saanut pitkään nauttia.</p>
+          <p>On tärkeää, että sekä meillä päättäjillä, viranomaisilla että kaikilla Suomessa asuvilla on yhteinen tilannekuva ja ymmärrys turvallisuutta tukevista elementeistä. Vain siten voimme ylläpitää S<span class="speech__cont">…</span></p>
+        </div>
+        <div class="speech__foot"><a href="#" class="link-arrow">Lue koko puheenvuoro (PTK 52/2026) ↗</a><span class="meta">4 450 merkkiä · suomi</span></div>
+      </div>
+    </article>
+
+    <article class="speech" data-bloc="hallitus" data-text="mikko ollikainen rkp r">
+      <div class="speech__av"><span>MO</span><span class="pbar" style="background:#1278b6"></span></div>
+      <div class="speech__main">
+        <div class="speech__head">
+          <span class="speech__name">Mikko Ollikainen</span>
+          <span class="tag"><span style="width:9px;height:9px;border-radius:50%;background:#1278b6;display:inline-block"></span>RKP</span>
+          <span class="speech__role">Ryhmäpuheenvuoro</span>
+          <span class="speech__time">klo 18.23 · 1 min 14 s</span>
+        </div>
+        <div class="speech__sum"><span class="sp">✦</span><span>Suomi yhä turvallisimpia maita — sisäinen turvallisuus on muutakin kuin resurssit.</span></div>
+        <div class="speech__body">
+          <p>Arvoisa rouva puhemies! Suomi kuuluu edelleen maailman turvallisimpiin maihin. Mutta turvallisuus ei ole muuttumaton tila. Sitä on ylläpidettävä ja se on sopeutettava kulloiseenkin tilanteeseen.</p>
+          <p>Sisäisestä turvallisuudesta keskusteltaessa huomio kiinnittyy usein viranomaisten resursseihin, poliisiin, Rajavartiolaitokseen ja rikosoikeuteen. Nämä kaikki ovat hyvin tärkeitä, mutta emme saa unohtaa sitä, että sisäinen turvallisuus on myös jotain vielä enemmän. Turvalli<span class="speech__cont">…</span></p>
+        </div>
+        <div class="speech__foot"><a href="#" class="link-arrow">Lue koko puheenvuoro (PTK 52/2026) ↗</a><span class="meta">4 611 merkkiä · suomi</span></div>
+      </div>
+    </article>
+
+    <article class="speech" data-bloc="hallitus" data-text="sari tanus kristillisdemokraatit kd">
+      <div class="speech__av"><span>ST</span><span class="pbar" style="background:#1a3f86"></span></div>
+      <div class="speech__main">
+        <div class="speech__head">
+          <span class="speech__name">Sari Tanus</span>
+          <span class="tag"><span style="width:9px;height:9px;border-radius:50%;background:#1a3f86;display:inline-block"></span>Kristillisdemokraatit</span>
+          <span class="speech__role">Ryhmäpuheenvuoro</span>
+          <span class="speech__time">klo 18.29 · 5 min 17 s</span>
+        </div>
+        <div class="speech__sum"><span class="sp">✦</span><span>Ulkoisen ja sisäisen turvallisuuden raja on hämärtynyt — uhat kietoutuvat toisiinsa.</span></div>
+        <div class="speech__body">
+          <p>Arvoisa puhemies! Kristillisdemokraattien eduskuntaryhmä kiittää hallintovaliokuntaa perusteellisesta mietinnöstä, joka tarjoaa laaja-alaisen kuvan sisäisen turvallisuuden tilanteesta sekä muuttuneen toimintaympäristön uhista. Suomi on edelleen turvallinen maa, mutta turvallisuutemme ei ole itsestäänselvyys.</p>
+          <p>Turvallisuusympäristö on muuttunut perusteellisesti. Ulkoisen ja sisäisen turvallisuuden välinen raja on hämärtynyt, ja erilaiset uhat kietoutuvat toisiinsa ai<span class="speech__cont">…</span></p>
+        </div>
+        <div class="speech__foot"><a href="#" class="link-arrow">Lue koko puheenvuoro (PTK 52/2026) ↗</a><span class="meta">4 165 merkkiä · suomi</span></div>
+      </div>
+    </article>
+
+  </div>
+
+  <!-- empty state -->
+  <div id="sp-empty" hidden style="text-align:center;color:var(--muted);padding:34px 0">Ei puheenvuoroja näillä hakuehdoilla.</div>
+
+  <!-- ============ PÄÄTÖS / OUTCOME ============ -->
+  <section class="ph" id="paatos">
+    <p class="kicker kicker--blue"><span class="dot"></span>Päätös · ainoa käsittely jatkui 22.5.2026</p>
+    <div class="ph__head"><h2>Miten asia ratkesi</h2><span class="meta">istunto 2026/54</span></div>
+    <p class="ph__intro">Tämän keskustelun jälkeen asiasta äänestettiin kahdesti perjantain istunnossa. Kyse ei ollut laista vaan eduskunnan <b>kannanotosta</b> — siitä, mitä eduskunta edellyttää valtioneuvostolta.</p>
+    <div class="ag-votes" style="margin-top:8px">
+      <div class="agvote"><div class="agvote__t">Vaihtoehtoiset kannanotot: Pekosen (vas) ehdotus JAA / Alametsän (vihr) ehdotus EI</div><div class="agvote__bar"><span class="j" style="width:92.3%"></span><span class="e" style="width:7.7%"></span></div><div class="agvote__n"><span class="j">155</span>–<span class="e">13</span><span class="out ok">Pekonen</span></div></div>
+      <div class="agvote"><div class="agvote__t">Valiokunnan kannanotto (mietintö) JAA / Pekosen ehdotus EI</div><div class="agvote__bar"><span class="j" style="width:87.5%"></span><span class="e" style="width:12.5%"></span></div><div class="agvote__n"><span class="j">147</span>–<span class="e">21</span><span class="out ok">mietintö</span></div></div>
+    </div>
+    <div class="decision" style="margin-top:18px">
+      <div class="decision__icon">✓</div>
+      <div class="decision__main">
+        <div class="t">Eduskunta hyväksyi valiokunnan kannanoton, 147–21</div>
+        <div class="s">Opposition vaihtoehtoiset ehdotukset hävisivät: ensin Pekosen (vas) ehdotus voitti Alametsän (vihr) ehdotuksen, sitten valiokunnan mietintö voitti Pekosen ehdotuksen. Eduskunta edellyttää valtioneuvostolta yllä lueteltuja neljää toimenpidettä.</div>
+      </div>
+    </div>
+    <div class="source-note">
+      <span>Lähde:</span>
+      <span class="dset">Eduskunnan avoin data · Voting</span><span>·</span>
+      <span class="fresh">haettu 30.5.2026 07.16</span><span>·</span>
+      <span class="cite verify" data-mark="off"
+        data-value="147–21 · kannanotto hyväksytty"
+        data-caption="Kannanottoäänestykset 22.5.2026 · selonteko sisäisestä turvallisuudesta"
+        data-set="Eduskunnan avoin data · Voting"
+        data-table="Voting"
+        data-endpoint="SELECT number, title, n_yes, n_no FROM Voting WHERE session_key='2026/54' AND number IN (5,6)"
+        data-record="2 äänestystä · istunto 2026/54 · VNS 6/2025 vp"
+        data-jakso="Vaalikausi 2023–2027"
+        data-fetched="30.5.2026 klo 07.16"
+        data-chain="avoindata.eduskunta.fi > Voting > Keskustelunäkymä"
+        data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa äänestykset">varmenna äänestykset</span>
+    </div>
+  </section>
+
+  <!-- ============ DEBATE TAIL ============ -->
+  <div class="more-speeches">
+    <h4>Ryhmäpuheenvuorojen jälkeen</h4>
+    <p style="font-size:14.5px;line-height:1.55;color:var(--body);margin:0">Ryhmäpuheenvuorokierroksen jälkeen käytiin vilkas debatti, jossa pidettiin <b style="color:var(--ink)">64 vastaus- ja muuta puheenvuoroa</b>. Niissä toistuivat erityisesti droonihavainnot, poliisin resurssit ja nuorisorikollisuus.</p>
+    <div style="margin-top:14px;display:flex;gap:16px;flex-wrap:wrap">
+      <a href="#" class="link-arrow">Näytä kaikki 72 puheenvuoroa pöytäkirjasta ↗</a>
+      <a href="Istunto.html" class="link-arrow">Takaisin istuntoon →</a>
+    </div>
+  </div>
+
+  <div class="source-note">
+    <span>Lähde:</span>
+    <span class="dset">Eduskunnan avoin data · Speech + SpeechContent</span><span>·</span>
+    <span class="fresh">haettu 30.5.2026 07.16</span><span>·</span>
+    <span class="cite verify" data-mark="off"
+      data-value="8 ryhmäpuheenvuoroa"
+      data-caption="Sisäisen turvallisuuden selonteon ryhmäpuheenvuorot · täysistunto 2026/52"
+      data-set="Eduskunnan avoin data · SpeechContent"
+      data-table="Speech + SpeechContent"
+      data-endpoint="SELECT c.content, sp.party_abbreviation … WHERE session_key='2026/52' AND speech_type='NR'"
+      data-record="8 puheenvuoroa · asiakohta 12 · VNS 6/2025 vp"
+      data-jakso="Vaalikausi 2023–2027"
+      data-fetched="30.5.2026 klo 07.16"
+      data-chain="avoindata.eduskunta.fi > SpeechContent > Keskustelunäkymä"
+      data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa puheenvuorot">varmenna puheenvuorot</span>
+  </div>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="foot">
+    <div class="foot__period">
+      <span class="pk">Tietojakso</span>
+      <span class="pv" data-period-label>Vaalikausi 2023–2027 · Orpon hallitus</span>
+      <span class="pbadge is-now" data-period-badge>nykyinen</span>
+      <span class="pdetail" data-period-detail>20.6.2023 – kesken · 200 paikkaa · hallitus 108 / oppositio 92</span>
+    </div>
+    <div class="foot__legal">
+      <span>Tietolähde: Eduskunnan avoin data · avoindata.eduskunta.fi</span>
+      <span>Tietokanta päivitetty 30.5.2026 klo 07.16</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+/* Keskustelu — filter speeches by bloc + search. */
+(function () {
+  var rows = [].slice.call(document.querySelectorAll('.speech'));
+  var chips = [].slice.call(document.querySelectorAll('.fchip'));
+  var search = document.getElementById('sp-search');
+  var count = document.getElementById('sp-count');
+  var empty = document.getElementById('sp-empty');
+  var filter = 'all';
+  function apply() {
+    var q = (search.value || '').trim().toLowerCase();
+    var shown = 0;
+    rows.forEach(function (r) {
+      var okB = filter === 'all' || r.getAttribute('data-bloc') === filter;
+      var okT = !q || (r.getAttribute('data-text') || '').indexOf(q) !== -1;
+      var show = okB && okT;
+      r.style.display = show ? '' : 'none';
+      if (show) shown++;
+    });
+    count.textContent = shown;
+    empty.hidden = shown !== 0;
+  }
+  chips.forEach(function (c) {
+    c.addEventListener('click', function () {
+      chips.forEach(function (x) { x.classList.remove('is-active'); });
+      c.classList.add('is-active');
+      filter = c.getAttribute('data-filter');
+      apply();
+    });
+  });
+  search.addEventListener('input', apply);
+})();
+</script>
+<script defer src="period.js"></script>
+<script defer src="trace.js"></script>
+</body>
+</html>
