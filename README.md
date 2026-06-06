@@ -2,7 +2,7 @@
 
 Data aggregation and analysis platform for Finnish Parliament (Eduskunta) data.
 
-The project ingests source data from the Eduskunta Open API, transforms it through a three-stage pipeline, imports it into SQLite, and serves it through a Bun + React web app.
+The project ingests source data from the Eduskunta Open API, transforms it through a three-stage pipeline, imports it into SQLite, and serves it through a Bun + htmx web app.
 
 ## Requirements
 
@@ -13,7 +13,8 @@ The project ingests source data from the Eduskunta Open API, transforms it throu
 
 ```txt
 packages/
-├── client/      React frontend (Material UI)
+├── client/      [DEPRECATED] old React/MUI frontend — replaced by packages/webapp
+├── webapp/      Frontend (htmx-based, active development)
 ├── server/      Bun HTTP API + database access
 ├── datapipe/    Scraper, parser, and migrator CLIs
 └── shared/      Shared constants, types, storage, and DB utilities
@@ -191,7 +192,7 @@ Common variables:
 
 ## Production deployment notes
 
-For infrastructure/deploy review, production topology, and hardening checklist, see [PRODUCTION_SETUP.md](./PRODUCTION_SETUP.md).
+For infrastructure/deploy review, production topology, and hardening checklist, see [scripts/README.md](./scripts/README.md).
 
 ## Notes
 

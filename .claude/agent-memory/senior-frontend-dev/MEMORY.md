@@ -33,14 +33,8 @@ Note: The `analytics-repository.ts` uses direct SQL file imports (not `readFileS
 
 - Use `BunRequest<"/path/:param">` for typed route parameters
 - Fetch methods return data directly, API routes wrap in Response with JSON
-- Client-side fetches use `apiFetch` from `#client/utils/fetch` — fully typed against server routes
 - Parameterized fetch: `apiFetch(\`/api/path/${id}\`)` — template literals work fine, type inferred
 - `ApiRouteItem<"/api/path/:param">` extracts the array item type for parameterized routes
-
-### i18n Translation Pattern
-
-- `useScopedTranslation("insights")` then call `t("attendance.xxx")` — never use nested prefix like `"insights.attendance"` (not a valid `TranslationNamespace`)
-- Valid namespaces: `"navigation" | "app" | "home" | "parties" | "documents" | "common" | "hallitukset" | "errors" | "composition" | "votings" | "sessions" | "insights" | "pageSources"`
 
 ## Security Middleware (packages/server/middleware/)
 
@@ -71,83 +65,6 @@ Note: The `analytics-repository.ts` uses direct SQL file imports (not `readFileS
 - Pattern: `const identifier = decodeURIComponent(req.params.identifier).trim(); if (!identifier) return badRequest("Missing document identifier");`
 - Applied to all `by-identifier/:identifier` endpoints
 
-## Known Pre-existing Type Errors
-
-- `packages/client/pages/Composition/helpers.ts` and `index.tsx` have `'result' is of type 'unknown'` TS18046 errors — pre-existing, unrelated to security work
-
-## UI Patterns
-
-### Color Scheme
-
-- **Primary**: Purple/blue (`themedColors.primary`) - used for sessions, main actions
-- **Success**: Green (`themedColors.success`) - used for passed votes, positive states
-- **Error**: Red (`themedColors.error`) - used for failed votes, negative states
-
-### Common Components
-
-- Use `GlassCard` for hero sections
-- Use `Chip` for badges, labels, counts
-- Use `Collapse` for expandable content with `timeout="auto" unmountOnExit`
-- Use `InlineSpinner` (from `#client/theme/components`) instead of raw `CircularProgress` for loading states
-- Use `EmptyState` (from `#client/theme/components`) for no-data/no-results UI
-- Use `PageSkeleton` (from `#client/theme/components`) as `<Suspense>` fallback
-- `DocumentCard`, `RelatedVotings`, `extractDocumentIdentifiers` from `#client/components/DocumentCards`
-- `VotingResultsTable` from `#client/components/VotingResultsTable`
-
-### Theme Helpers
-
-- `commonStyles.tableHeaderRow` — apply to `<TableRow sx={commonStyles.tableHeaderRow}>` in `<TableHead>` for a consistent primary-color header. Handles `background`, `color: #fff`, `fontWeight`, `letterSpacing`, `textTransform`, `borderBottom` on all cells via `& .MuiTableCell-root`. Per-cell color/fontWeight overrides are not needed when using this. `TableSortLabel` inside still needs its own `color: "white !important"` override.
-- `commonStyles.tableHeader` — per-cell header style (older pattern; prefer `tableHeaderRow` on the row going forward)
-
-### Responsive Design
-
-- Mobile cards: Display at `xs` to `md` breakpoints with `display: { xs: "block", md: "none" }`
-- Desktop tables: Display at `md+` with `display: { xs: "none", md: "block" }`
-- Use MUI spacing system: `spacing.sm`, `spacing.md`, `spacing.lg`
-
-### Data Fetching Pattern
-
-1. Create state for data: `useState<Record<number, Type[]>>({})`
-2. Create loading state: `useState<Set<number>>(new Set())`
-3. Fetch on-demand when expanding (e.g., section expansion)
-4. Check if already loaded before fetching
-5. Display loading spinner while fetching
-6. Handle empty states gracefully
-
-## Sessions/Home Page Architecture
-
-### Shared Section Rendering
-
-Both Home (`packages/client/pages/Home/index.tsx`) and Sessions (`packages/client/pages/Sessions/index.tsx`) render the same session/section content. They share:
-
-- Identical section expand logic fetching: speeches (paginated), votings, links, subsections, roll calls
-- `renderVaskiInfo`, `renderMinutesInfo`, `renderSectionMinutesContent`, `renderSectionSubSections`
-- `renderSessionNotices`, `renderSectionNotices`, `renderSessionMinutesOutline`, `renderSessionAttachments`
-- `renderSectionLinks`, `renderSectionRollCall`, `renderSectionVotings` (uses `VotingResultsTable`)
-- `DocumentCard` + `RelatedVotings` for sections with `extractSectionDocRefs`
-- `getSectionOrderLabel` for section chip, `isRollCallSection` to detect nimenhuuto sections
-
-### Sessions-only UI (not in Home)
-
-- Date picker, view mode toggle (list/calendar/timeline), navigation controls
-- Focused session/section highlighting, scroll-to-section
-- "Open section" link from minutes outline items
-
-### Section expand: what gets fetched
-
-When a section expands: speeches (paginated), votings, links (`/api/sections/{key}/links`),
-subsections (`/api/sections/{key}/subsections`), roll call if `isRollCallSection` (`/api/sections/{key}/roll-call`)
-
-## SPA Navigation Pattern
-
-Client-side navigation uses `window.history.pushState({}, "", href)` + `window.dispatchEvent(new PopStateEvent("popstate"))`. No React Router. The Documents page reads URL params on mount via `useEffect(fn, [])` to initialize state from `?type=...&q=...`.
-
-## Documents Page Cross-Linking
-
-- `refs.documents(type, q?)` in `packages/client/references.ts` builds `/asiakirjat?type=...&q=...`
-- `inferDocumentType(identifier)` in `questions.tsx` maps bill identifier prefixes (HE, KK, LA, etc.) to document type strings
-- Expert statement `bill_identifier` chip navigates to the referenced document type filtered by that identifier
-- `GovernmentProposalCard` fetches `/api/expert-statements/by-bill?identifier=...` on expand and shows a count chip that navigates to expert-statements filtered by the proposal identifier
 
 ## Server Route Structure
 

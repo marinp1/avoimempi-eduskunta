@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Avoimempi Eduskunta (More Open Parliament) is a data aggregation and analysis platform for Finnish Parliament (Eduskunta) data. The project fetches, parses, and imports data from the Eduskunta Open API into a normalized SQLite database, then serves it through a React-based web application.
+Avoimempi Eduskunta (More Open Parliament) is a data aggregation and analysis platform for Finnish Parliament (Eduskunta) data. The project fetches, parses, and imports data from the Eduskunta Open API into a normalized SQLite database, then serves it through an htmx-based web application.
 
 ## Issues
 
@@ -16,7 +16,7 @@ Issues are tracked locally in .issues folder.
 - **Language**: TypeScript with ESM modules
 - **Database**: SQLite with WAL mode
 - **Storage**: Offline-first storage abstraction (JSON files on local filesystem)
-- **Frontend**: React 19 with Material-UI (MUI) and Emotion styling
+- **Frontend**: htmx with CSS
 - **Container**: Podman or Docker
 
 ## Workspace Structure
@@ -55,7 +55,6 @@ Storage abstraction is managed through `packages/shared/storage/index.ts` which 
 bun run typecheck
 
 # Check specific workspace
-cd packages/client && bun run typecheck
 cd packages/server && bun run typecheck
 cd packages/datapipe && bun run typecheck
 cd packages/shared && bun run typecheck
@@ -143,12 +142,13 @@ The web application is split into clear client/server separation:
   - `database/` - Database access layer with `DatabaseConnection` class
   - `public/` - Static assets and HTML entry point
 
-- **packages/client/** - **[DEPRECATED]** React/MUI SPA — do not add new features here; use `packages/webapp` instead
-  - Pages: `Etusivu/`, `Edustajat/`, `Puolueet/`, `Istunnot/`, `Äänestykset/`, `Asiakirjat/`, `Analytiikka/`, `Muutokset/`
-  - Entry point: `root.tsx` → `app.tsx`
-  - Material-UI components with Emotion styling
+- **packages/client/** - **[DEPRECATED]** old React/MUI SPA — read for reference only
 
 - **packages/webapp/** - New htmx-based frontend (active development, replaces `packages/client`)
+  - `templates/pages/` - Page templates (home, edustajat, aanestykset, istunnot, etc.)
+  - `templates/components/` - Reusable UI components (btn, stat, tag, etc.)
+  - `templates/partials/` - Layout partials (masthead, nav, footer)
+  - `src/styles.css` - Application styles
 
 - **packages/shared/** - Shared code
   - `constants/` - Table names, primary keys, etc.
