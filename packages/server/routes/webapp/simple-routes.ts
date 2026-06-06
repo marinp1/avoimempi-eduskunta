@@ -5,7 +5,7 @@ import Hallitukset from "../../../webapp/templates/pages/hallitukset";
 import Home, { HomeReactive } from "../../../webapp/templates/pages/home";
 import Muutokset from "../../../webapp/templates/pages/muutokset";
 import Puolueet from "../../../webapp/templates/pages/puolueet";
-import { htmlResponse } from "../../../webapp/eta";
+import { htmlResponse, fragmentResponse } from "../../../webapp/eta";
 import {
   page,
   getTimelineData,
@@ -38,18 +38,22 @@ export function createSimplePageRoutes(deps: WebappDeps) {
         ).length;
 
         const isHtmx = req.headers.get("HX-Request") === "true";
-        const isBoosted = req.headers.get("HX-Boosted") === "true";
-
         const cookieHeader = dateParam ? setCursorCookie(dateParam) : undefined;
 
-        if (isHtmx && !isBoosted && dateParam) {
-          const fragment = HomeReactive({ data, cursor, sessionCount });
-          const headers: Record<string, string> = {
-            "Content-Type": "text/html; charset=utf-8",
-            Vary: "HX-Request",
-          };
-          if (cookieHeader) headers["Set-Cookie"] = cookieHeader;
-          return new Response(fragment, { headers });
+        if (isHtmx) {
+          const hxTarget = req.headers.get("HX-Target") || "";
+          if (hxTarget.includes("tl-reactive") && dateParam) {
+            const fragment = HomeReactive({ data, cursor, sessionCount });
+            const headers: Record<string, string> = {
+              "Content-Type": "text/html; charset=utf-8",
+              Vary: "HX-Request",
+            };
+            if (cookieHeader) headers["Set-Cookie"] = cookieHeader;
+            return new Response(fragment, { headers });
+          }
+          return fragmentResponse(
+            Home({ title: "Etusivu", data, cursor, sessionCount }),
+          );
         }
 
         const resolvedTl = dateParam

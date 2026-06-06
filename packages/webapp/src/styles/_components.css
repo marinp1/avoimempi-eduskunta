@@ -174,3 +174,119 @@
   background: var(--hall-soft);
   color: var(--hall);
 }
+
+/* ============================================================
+   HTMX LOADING INDICATORS
+   ============================================================ */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loading-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(250%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+}
+
+.loading-spinner::before {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--rule);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.loading-overlay {
+  position: relative;
+}
+
+/* Only show the overlay spinner when htmx marks the container as busy */
+.loading-overlay.htmx-request > .htmx-indicator {
+  position: absolute;
+  inset: 0;
+  background: rgba(251, 250, 247, 0.7);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Global loading bar: thin animated strip at the very top of the viewport,
+   driven by body.is-loading (set via htmx:before:request / htmx:after:request). */
+body.is-loading::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  width: 120px;
+  height: 3px;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--blue) 40%,
+    var(--blue) 60%,
+    transparent 100%
+  );
+  animation: loading-slide 1.2s ease-in-out infinite;
+}
+
+/* Dim the nav links during an active request so the user sees which tab
+   they clicked and that a navigation is in progress. */
+body.is-loading .nav a {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+body.is-loading .nav a.is-active {
+  opacity: 0.7;
+}
+
+/* === Toast notifications (for htmx errors) === */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10000;
+  max-width: 380px;
+  padding: 14px 20px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: 1.4;
+  box-shadow: 0 4px 24px rgba(22, 19, 15, 0.18);
+  animation: toast-in 0.25s ease-out;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

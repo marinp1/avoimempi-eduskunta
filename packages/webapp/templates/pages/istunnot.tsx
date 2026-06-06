@@ -96,14 +96,16 @@ export function SessionList({
   return (
     <div
       id="tl-reactive"
-      class="wrap"
+      class="wrap loading-overlay"
       hx-get="/istunnot"
       hx-trigger="tl:commit from:document"
       hx-include="#tl-date-input"
       hx-swap="outerHTML"
       hx-push-url="true"
+      hx-indicator="#tl-reactive"
     >
-      <div class="toolbar" hx-boost="true">
+      <div class="htmx-indicator loading-spinner">Ladataan…</div>
+      <div class="toolbar">
         <label class="search">
           <span class="ic">⌕</span>
           <input
@@ -117,6 +119,7 @@ export function SessionList({
             hx-select="#sit-root"
             hx-swap="outerHTML"
             hx-push-url="true"
+            hx-indicator="#sit-root"
           />
         </label>
         <span class="count">
@@ -138,6 +141,7 @@ export function SessionList({
           hx-select="#sit-root"
           hx-swap="outerHTML"
           hx-push-url="true"
+          hx-indicator="#sit-root"
         >
           Kaikki
         </a>
@@ -149,6 +153,7 @@ export function SessionList({
           hx-select="#sit-root"
           hx-swap="outerHTML"
           hx-push-url="true"
+          hx-indicator="#sit-root"
         >
           <span class="pdot" style="background:var(--blue)"></span>
           Äänestyspäivät
@@ -161,6 +166,7 @@ export function SessionList({
           hx-select="#sit-root"
           hx-swap="outerHTML"
           hx-push-url="true"
+          hx-indicator="#sit-root"
         >
           <span class="pdot" style="background:var(--opp)"></span>Kyselytunti
         </a>
@@ -172,6 +178,7 @@ export function SessionList({
           hx-select="#sit-root"
           hx-swap="outerHTML"
           hx-push-url="true"
+          hx-indicator="#sit-root"
         >
           <span class="pdot" style="background:var(--red)"></span>Välikysymys
         </a>
@@ -183,12 +190,14 @@ export function SessionList({
           hx-select="#sit-root"
           hx-swap="outerHTML"
           hx-push-url="true"
+          hx-indicator="#sit-root"
         >
           <span class="pdot" style="background:var(--faint)"></span>Keskustelut
         </a>
       </div>
 
-      <div id="sit-root">
+      <div id="sit-root" class="loading-overlay">
+        <div class="htmx-indicator loading-spinner">Ladataan…</div>
         {weeks.map((week) => (
           <section class="week" data-week>
             <div class="week-head">

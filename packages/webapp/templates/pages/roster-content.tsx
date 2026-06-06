@@ -52,6 +52,7 @@ export default function RosterContent({
           hx-get="/edustajat"
           hx-target="#roster-content"
           hx-push-url="true"
+          hx-indicator="#roster-content"
         >
           Kaikki
         </a>
@@ -62,6 +63,7 @@ export default function RosterContent({
           hx-get={hallHref}
           hx-target="#roster-content"
           hx-push-url="true"
+          hx-indicator="#roster-content"
         >
           <span class="pdot" style="background:var(--hall)"></span>Hallitus
         </a>
@@ -72,6 +74,7 @@ export default function RosterContent({
           hx-get={oppHref}
           hx-target="#roster-content"
           hx-push-url="true"
+          hx-indicator="#roster-content"
         >
           <span class="pdot" style="background:var(--opp)"></span>Oppositio
         </a>
@@ -89,6 +92,7 @@ export default function RosterContent({
               hx-get={cpHref}
               hx-target="#roster-content"
               hx-push-url="true"
+              hx-indicator="#roster-content"
             >
               <span
                 class="pdot"
@@ -108,6 +112,7 @@ export default function RosterContent({
           hx-get={sortHref(params, "name")}
           hx-target="#roster-content"
           hx-push-url="true"
+          hx-indicator="#roster-content"
         >
           Edustaja <span class="ar"></span>
         </a>
@@ -117,6 +122,7 @@ export default function RosterContent({
           hx-get={sortHref(params, "party")}
           hx-target="#roster-content"
           hx-push-url="true"
+          hx-indicator="#roster-content"
         >
           Ryhmä <span class="ar"></span>
         </a>
@@ -126,6 +132,7 @@ export default function RosterContent({
           hx-get={sortHref(params, "district")}
           hx-target="#roster-content"
           hx-push-url="true"
+          hx-indicator="#roster-content"
         >
           Vaalipiiri <span class="ar"></span>
         </a>
@@ -135,6 +142,7 @@ export default function RosterContent({
           hx-get={sortHref(params, "age")}
           hx-target="#roster-content"
           hx-push-url="true"
+          hx-indicator="#roster-content"
         >
           Ikä <span class="ar"></span>
         </a>
@@ -144,6 +152,7 @@ export default function RosterContent({
           hx-get={sortHref(params, "att")}
           hx-target="#roster-content"
           hx-push-url="true"
+          hx-indicator="#roster-content"
         >
           Läsnäolo <span class="ar"></span>
         </a>

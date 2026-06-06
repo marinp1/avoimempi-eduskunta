@@ -28,12 +28,15 @@ export default function Home({ title, data, sessionCount }: Props) {
 
       <div
         id="tl-reactive"
+        class="loading-overlay"
         hx-get="/"
         hx-trigger="tl:commit from:document"
         hx-include="#tl-date-input"
         hx-swap="outerHTML"
         hx-push-url="true"
+        hx-indicator="#tl-reactive"
       >
+        <div class="htmx-indicator loading-spinner">Ladataan…</div>
         <div class="wrap">
           <section class="lead">
             <p class="kicker kicker--red" data-tl-kicker>
@@ -101,7 +104,7 @@ export function HomeReactive({
   cursor?: string;
   sessionCount?: number;
 }) {
-  return `<div id="tl-reactive" hx-get="/" hx-trigger="tl:commit from:document" hx-include="#tl-date-input" hx-swap="outerHTML" hx-push-url="true">${
+  return `<div id="tl-reactive" class="loading-overlay" hx-get="/" hx-trigger="tl:commit from:document" hx-include="#tl-date-input" hx-swap="outerHTML" hx-push-url="true" hx-indicator="#tl-reactive"><div class="htmx-indicator loading-spinner">Ladataan…</div>${
     data
       ? HomeBodyStr(data, sessionCount)
       : '<div class="wrap"><p style="padding:40px 0;color:var(--muted)">Ladataan tietoja…</p></div>'

@@ -78,6 +78,7 @@ export default function Edustajat({ title, allRows, filtered, params }: Props) {
               hx-target="#roster-content"
               hx-include="#sort-field,#dir-field"
               hx-push-url="true"
+              hx-indicator="#roster-content"
             />
           </label>
           <span class="count" id="mp-count">
@@ -98,7 +99,8 @@ export default function Edustajat({ title, allRows, filtered, params }: Props) {
         />
       </div>
 
-      <div id="roster-content" class="wrap">
+      <div id="roster-content" class="wrap loading-overlay">
+        <div class="htmx-indicator loading-spinner">Ladataan…</div>
         <RosterContent allRows={allRows} filtered={filtered} params={params} />
       </div>
     </>

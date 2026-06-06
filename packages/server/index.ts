@@ -190,11 +190,11 @@ const apiRoutes = devFeatures
 export type ApiRoutes = typeof baseApiRoutes &
   ReturnType<typeof import("./routes/sanity-dev-routes").createSanityDevRoutes>;
 
-// Cache key for webapp page routes: fragment and full-page responses for the
-// same URL must be stored separately because the content differs based on
-// whether the request carries the HX-Request header.
+// Cache key for webapp page routes: responses for the same URL may differ
+// based on HX-Request (full page vs fragment) and HX-Target (which partial
+// to return — main-content, roster-content, sit-root, tl-reactive, etc.).
 const webappCacheKey = (req: Request, url: URL) =>
-  `${url.pathname}${url.search}|htmx=${req.headers.get("HX-Request") ?? "0"}`;
+  `${url.pathname}${url.search}|htmx=${req.headers.get("HX-Request") ?? "0"}|target=${req.headers.get("HX-Target") ?? ""}`;
 
 const allRoutes = withSecurityHeaders({
   ...createWebappStaticRoutes(), // in-memory strings, no cache wrapper needed

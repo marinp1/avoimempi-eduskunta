@@ -23,12 +23,19 @@ export function createEdustajatRoute(deps: WebappDeps) {
         const allRows = deps.personRepository.fetchRoster();
         const filtered = applyFilters(allRows, params);
         const isHtmx = req.headers.get("HX-Request") === "true";
-        const isBoosted = req.headers.get("HX-Boosted") === "true";
-        if (isHtmx && !isBoosted) {
+
+        if (isHtmx) {
+          const hxTarget = req.headers.get("HX-Target") || "";
+          if (hxTarget.includes("roster-content")) {
+            return fragmentResponse(
+              RosterContent({ allRows, filtered, params, oob: true }),
+            );
+          }
           return fragmentResponse(
-            RosterContent({ allRows, filtered, params, oob: true }),
+            Edustajat({ title: "Kansanedustajat", allRows, filtered, params }),
           );
         }
+
         const tlData = getTimelineData(req, deps.sessionRepository);
         return page(
           req,

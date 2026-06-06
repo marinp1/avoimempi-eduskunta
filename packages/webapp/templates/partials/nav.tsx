@@ -18,7 +18,9 @@ const NAV_ITEMS = [
   { href: "/muutokset", label: "Muutokset" },
 ];
 
-/** Top-level navigation bar with htmx-boosted links. */
+/** Top-level navigation bar. Uses explicit hx-get so the server can return
+ *  content-area-only fragments (no layout wrapper), avoiding the nested-DOM
+ *  problems that hx-boost with hx-target causes. */
 export default function Nav({ activePath }: Props) {
   return (
     <nav class="nav">
@@ -26,10 +28,10 @@ export default function Nav({ activePath }: Props) {
         <a
           href={item.href}
           class={activePath === item.href ? "is-active" : undefined}
-          hx-boost="true"
+          hx-get={item.href}
           hx-target="#main-content"
           hx-push-url="true"
-          hx-swap="innerHTML transition:true"
+          hx-swap="innerHTML"
         >
           {item.label}
         </a>

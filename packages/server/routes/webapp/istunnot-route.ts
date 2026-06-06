@@ -9,6 +9,7 @@ import {
   readPeriod,
   getTermBounds,
 } from "./helpers";
+import { fragmentResponse } from "../../../webapp/eta";
 import type { WebappDeps } from "./deps";
 
 export function createIstunnotRoute(deps: WebappDeps) {
@@ -26,7 +27,6 @@ export function createIstunnotRoute(deps: WebappDeps) {
         const period = readPeriod(req);
         const bounds = getTermBounds(period);
 
-        // Fetch a large set; filter in-process by term bounds then cursor
         const raw = deps.sessionRepository.fetchSessionsIndex(2000);
         const termFiltered = raw.filter(
           (r) =>
@@ -40,25 +40,32 @@ export function createIstunnotRoute(deps: WebappDeps) {
         const data = buildSessionsViewModel(filtered, { kind, q });
 
         const isHtmx = req.headers.get("HX-Request") === "true";
-        const isBoosted = req.headers.get("HX-Boosted") === "true";
-
         const cookieHeader = dateParam ? setCursorCookie(dateParam) : undefined;
         const cursorFormatted = formatFi(cursor);
         const isAtPresent = cursor >= tlData.today;
         const shownCursor = isAtPresent ? undefined : cursorFormatted;
 
-        if (isHtmx && !isBoosted) {
-          const fragment = SessionList({
-            weeks: data.weeks,
-            totalSessions: data.totalSessions,
-            cursorFormatted: shownCursor,
-          });
-          const headers: Record<string, string> = {
-            "Content-Type": "text/html; charset=utf-8",
-            Vary: "HX-Request",
-          };
-          if (cookieHeader) headers["Set-Cookie"] = cookieHeader;
-          return new Response(fragment, { headers });
+        if (isHtmx) {
+          const hxTarget = req.headers.get("HX-Target") || "";
+          if (
+            hxTarget.includes("sit-root") ||
+            hxTarget.includes("tl-reactive")
+          ) {
+            const fragment = SessionList({
+              weeks: data.weeks,
+              totalSessions: data.totalSessions,
+              cursorFormatted: shownCursor,
+            });
+            const headers: Record<string, string> = {
+              "Content-Type": "text/html; charset=utf-8",
+              Vary: "HX-Request",
+            };
+            if (cookieHeader) headers["Set-Cookie"] = cookieHeader;
+            return new Response(fragment, { headers });
+          }
+          return fragmentResponse(
+            Istunnot({ title: "Istunnot", data, cursorFormatted: shownCursor }),
+          );
         }
 
         const resolvedTl = dateParam
