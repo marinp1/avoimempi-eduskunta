@@ -1,11 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { eta } from "../eta";
-import * as helpers from "../templates/helpers";
+import Edustajat from "../templates/pages/edustajat";
+import RosterContent from "../templates/pages/roster-content";
 import { makeRow } from "./fixtures";
-
-// Render smoke tests — the only guard against .eta breakage, since template
-// files are not type-checked. They assert the route→template data contract
-// holds (helpers reachable on `it`, expected markup emitted).
 
 const allRows = [
   makeRow({
@@ -26,8 +22,7 @@ const allRows = [
 
 describe("pages/edustajat", () => {
   test("renders roster page with bloc bar and table", () => {
-    const html = eta.render("pages/edustajat", {
-      ...helpers,
+    const html = Edustajat({
       title: "Kansanedustajat",
       allRows,
       filtered: allRows,
@@ -43,8 +38,7 @@ describe("pages/edustajat", () => {
 
 describe("pages/roster-content", () => {
   test("emits the OOB count span only when oob is set", () => {
-    const withOob = eta.render("pages/roster-content", {
-      ...helpers,
+    const withOob = RosterContent({
       allRows,
       filtered: allRows,
       params: {},
@@ -53,8 +47,7 @@ describe("pages/roster-content", () => {
     expect(withOob).toContain('id="mp-count"');
     expect(withOob).toContain('hx-swap-oob="true"');
 
-    const withoutOob = eta.render("pages/roster-content", {
-      ...helpers,
+    const withoutOob = RosterContent({
       allRows,
       filtered: allRows,
       params: {},
@@ -64,8 +57,7 @@ describe("pages/roster-content", () => {
   });
 
   test("renders party filter chips and sortable headers", () => {
-    const html = eta.render("pages/roster-content", {
-      ...helpers,
+    const html = RosterContent({
       allRows,
       filtered: allRows,
       params: { sort: "party", dir: "desc" },

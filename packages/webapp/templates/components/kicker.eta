@@ -1,4 +1,0 @@
-<p class="kicker<%= it.modifier ? ' kicker--' + it.modifier : '' %>">
-  <% if (it.dot) { %><span class="dot"></span><% } %>
-  <%= it.text %>
-</p>

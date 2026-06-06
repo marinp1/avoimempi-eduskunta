@@ -1,12 +1,23 @@
 import { createHash } from "node:crypto";
 import {
-  eta,
   fragmentResponse,
   htmlResponse,
   renderFullPage,
 } from "../../webapp/eta";
-import type { RosterParams } from "../../webapp/templates/helpers";
-import * as helpers from "../../webapp/templates/helpers";
+import {
+  applyFilters,
+  type RosterParams,
+} from "../../webapp/templates/helpers";
+import Aanestykset from "../../webapp/templates/pages/aanestykset";
+import Analytiikka from "../../webapp/templates/pages/analytiikka";
+import Asiakirjat from "../../webapp/templates/pages/asiakirjat";
+import Edustajat from "../../webapp/templates/pages/edustajat";
+import Hallitukset from "../../webapp/templates/pages/hallitukset";
+import Home from "../../webapp/templates/pages/home";
+import Istunnot from "../../webapp/templates/pages/istunnot";
+import Muutokset from "../../webapp/templates/pages/muutokset";
+import Puolueet from "../../webapp/templates/pages/puolueet";
+import RosterContent from "../../webapp/templates/pages/roster-content";
 import type { HomeRepository } from "../database/repositories/home-repository";
 import type { PersonRepository } from "../database/repositories/person-repository";
 
@@ -84,12 +95,10 @@ function cssAsset() {
 
 function page(
   req: Request,
-  templateName: string,
-  data: Record<string, unknown>,
+  fragment: string,
   activePath: string,
   title?: string,
 ): Response {
-  const fragment = eta.render(templateName, { ...helpers, title, ...data });
   return htmlResponse(req, fragment, { activePath, title, assetVersion });
 }
 
@@ -121,7 +130,7 @@ export function createWebappPageRoutes(deps: WebappDeps) {
     "/": {
       GET: async (req: Request) => {
         const data = await deps.homeRepository.fetchOverview({});
-        return page(req, "pages/home", { data }, "/", "Etusivu");
+        return page(req, Home({ title: "Etusivu", data }), "/", "Etusivu");
       },
     },
     "/edustajat": {
@@ -135,24 +144,18 @@ export function createWebappPageRoutes(deps: WebappDeps) {
           dir: url.searchParams.get("dir") ?? undefined,
         };
         const allRows = deps.personRepository.fetchRoster();
-        const filtered = helpers.applyFilters(allRows, params);
+        const filtered = applyFilters(allRows, params);
         const isHtmx = req.headers.get("HX-Request") === "true";
         const isBoosted = req.headers.get("HX-Boosted") === "true";
         // Filter/search request (not a full-page navigation): return only roster content
         if (isHtmx && !isBoosted) {
-          const fragment = eta.render("pages/roster-content", {
-            ...helpers,
-            allRows,
-            filtered,
-            params,
-            oob: true,
-          });
-          return fragmentResponse(fragment);
+          return fragmentResponse(
+            RosterContent({ allRows, filtered, params, oob: true }),
+          );
         }
         return page(
           req,
-          "pages/edustajat",
-          { allRows, filtered, params },
+          Edustajat({ title: "Kansanedustajat", allRows, filtered, params }),
           "/edustajat",
           "Kansanedustajat",
         );
@@ -160,31 +163,51 @@ export function createWebappPageRoutes(deps: WebappDeps) {
     },
     "/puolueet": {
       GET: (req: Request) =>
-        page(req, "pages/puolueet", {}, "/puolueet", "Puolueet"),
+        page(req, Puolueet({ title: "Puolueet" }), "/puolueet", "Puolueet"),
     },
     "/istunnot": {
       GET: (req: Request) =>
-        page(req, "pages/istunnot", {}, "/istunnot", "Istunnot"),
+        page(req, Istunnot({ title: "Istunnot" }), "/istunnot", "Istunnot"),
     },
     "/aanestykset": {
       GET: (req: Request) =>
-        page(req, "pages/aanestykset", {}, "/aanestykset", "Äänestykset"),
+        page(
+          req,
+          Aanestykset({ title: "Äänestykset" }),
+          "/aanestykset",
+          "Äänestykset",
+        ),
     },
     "/asiakirjat": {
       GET: (req: Request) =>
-        page(req, "pages/asiakirjat", {}, "/asiakirjat", "Asiakirjat"),
+        page(
+          req,
+          Asiakirjat({ title: "Asiakirjat" }),
+          "/asiakirjat",
+          "Asiakirjat",
+        ),
     },
     "/hallitukset": {
       GET: (req: Request) =>
-        page(req, "pages/hallitukset", {}, "/hallitukset", "Hallitukset"),
+        page(
+          req,
+          Hallitukset({ title: "Hallitukset" }),
+          "/hallitukset",
+          "Hallitukset",
+        ),
     },
     "/analytiikka": {
       GET: (req: Request) =>
-        page(req, "pages/analytiikka", {}, "/analytiikka", "Analytiikka"),
+        page(
+          req,
+          Analytiikka({ title: "Analytiikka" }),
+          "/analytiikka",
+          "Analytiikka",
+        ),
     },
     "/muutokset": {
       GET: (req: Request) =>
-        page(req, "pages/muutokset", {}, "/muutokset", "Muutokset"),
+        page(req, Muutokset({ title: "Muutokset" }), "/muutokset", "Muutokset"),
     },
     "/edustaja/:id": {
       GET: (req: Request) => {

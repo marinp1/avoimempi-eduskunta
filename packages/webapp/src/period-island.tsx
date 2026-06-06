@@ -1,3 +1,5 @@
+/** @jsxImportSource ./jsx */
+
 // Period selector island — lives in the masthead shell (never swapped by htmx),
 // so DOMContentLoaded is sufficient for initial setup.
 

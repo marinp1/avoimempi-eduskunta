@@ -1,1 +1,0 @@
-<span class="tag tag--<%= it.modifier %>"><%= it.text %></span>

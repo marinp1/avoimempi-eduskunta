@@ -1,4 +1,0 @@
-<div class="stat">
-  <div class="stat__label"><%= it.label %></div>
-  <div class="stat__value<%= it.modifier ? ' ' + it.modifier : '' %>"><%= it.value %></div>
-</div>

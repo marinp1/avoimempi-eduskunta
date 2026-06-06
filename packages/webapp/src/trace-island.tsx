@@ -1,3 +1,5 @@
+/** @jsxImportSource ./jsx */
+
 import htmx from "htmx.org";
 
 // Data provenance trace popover island.
@@ -16,13 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let traceCurrent: HTMLElement | null = null;
 
-function traceEsc(s: string | null | undefined): string {
-  return (s == null ? "" : String(s)).replace(
-    /[&<>"]/g,
-    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c,
-  );
-}
-
 function traceBuild(el: HTMLElement): void {
   const d = el.dataset;
   const chain = (d.chain ?? "")
@@ -39,45 +34,57 @@ function traceBuild(el: HTMLElement): void {
     ["Haettu", d.fetched, false],
   ];
 
-  pop.innerHTML =
-    `<div class="trace-pop__bar"><span class="lbl">Tietolähde · jäljite</span>` +
-    `<button class="trace-pop__close" aria-label="Sulje">×</button></div>` +
-    `<div class="trace-pop__body">` +
-    (d.value
-      ? `<div class="trace-pop__value">${traceEsc(d.value)}</div>`
-      : "") +
-    (d.caption
-      ? `<div class="trace-pop__caption">${traceEsc(d.caption)}</div>`
-      : "") +
-    `<div class="trace-fields">` +
-    fields
-      .filter((r) => r[1])
-      .map(
-        (r) =>
-          `<div class="trace-field">` +
-          `<div class="trace-field__k">${traceEsc(r[0])}</div>` +
-          `<div class="trace-field__v${r[2] ? " is-code" : ""}">${traceEsc(r[1])}</div>` +
-          `</div>`,
-      )
-      .join("") +
-    `</div>` +
-    (chain.length
-      ? `<div class="trace-pop__chain">` +
-        chain
-          .map(
-            (n, i) =>
-              (i ? `<span class="arr">→</span>` : "") +
-              `<span class="node">${traceEsc(n)}</span>`,
-          )
-          .join("") +
-        `</div>`
-      : "") +
-    `<div class="trace-pop__foot">` +
-    (d.url
-      ? `<a class="trace-pop__orig" href="${traceEsc(d.url)}" target="_blank" rel="noopener">${traceEsc(d.orig ?? "Avaa alkuperäinen")} ↗</a>`
-      : `<span></span>`) +
-    (d.fetched ? `<span class="trace-pop__fresh">tuore</span>` : "") +
-    `</div></div>`;
+  pop.innerHTML = (
+    <>
+      <div class="trace-pop__bar">
+        <span class="lbl">Tietolähde · jäljite</span>
+        <button class="trace-pop__close" aria-label="Sulje">
+          ×
+        </button>
+      </div>
+      <div class="trace-pop__body">
+        {d.value && <div class="trace-pop__value">{d.value}</div>}
+        {d.caption && <div class="trace-pop__caption">{d.caption}</div>}
+        <div class="trace-fields">
+          {fields
+            .filter((r) => r[1])
+            .map(([label, val, isCode]) => (
+              <div class="trace-field">
+                <div class="trace-field__k">{label}</div>
+                <div class={`trace-field__v${isCode ? " is-code" : ""}`}>
+                  {val}
+                </div>
+              </div>
+            ))}
+        </div>
+        {chain.length > 0 && (
+          <div class="trace-pop__chain">
+            {chain.map((n, i) => (
+              <>
+                {i > 0 && <span class="arr">→</span>}
+                <span class="node">{n}</span>
+              </>
+            ))}
+          </div>
+        )}
+        <div class="trace-pop__foot">
+          {d.url ? (
+            <a
+              class="trace-pop__orig"
+              href={d.url}
+              target="_blank"
+              rel="noopener"
+            >
+              {d.orig ?? "Avaa alkuperäinen"} ↗
+            </a>
+          ) : (
+            <span />
+          )}
+          {d.fetched && <span class="trace-pop__fresh">tuore</span>}
+        </div>
+      </div>
+    </>
+  );
 
   pop.querySelector(".trace-pop__close")?.addEventListener("click", traceClose);
 }

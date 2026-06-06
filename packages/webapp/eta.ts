@@ -1,13 +1,4 @@
-import { fileURLToPath } from "node:url";
-import { Eta } from "eta";
-
-export const eta = new Eta({
-  views: fileURLToPath(new URL("./templates/", import.meta.url)),
-  // In dev, re-read templates from disk on every render (enables hot-reload without server restart).
-  // In production, compile once and cache for performance.
-  cache: process.env.NODE_ENV === "production",
-  autoEscape: true,
-});
+import Layout from "./templates/layout";
 
 export interface LayoutOptions {
   activePath: string;
@@ -19,20 +10,18 @@ export function renderFullPage(
   fragment: string,
   options: LayoutOptions,
 ): string {
-  return eta.render("layout", {
+  return Layout({
     content: fragment,
-    ...options,
     finnishDate: new Date().toLocaleDateString("fi-FI", {
       weekday: "long",
       day: "numeric",
       month: "long",
       year: "numeric",
     }),
+    ...options,
   });
 }
 
-// Bare HTML fragment response (no layout wrapper). Used for htmx-only endpoints
-// that always return a partial, e.g. the roster content swap.
 export function fragmentResponse(html: string): Response {
   return new Response(html, {
     headers: {

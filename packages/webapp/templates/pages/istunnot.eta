@@ -1,6 +1,0 @@
-<title><%= it.title %> — Eduskuntapeili</title>
-<section class="page-head wrap">
-  <%~ include("../components/kicker", { text: "Istunnot" }) %>
-  <h1>Istunnot</h1>
-  <p class="sub">Täysistuntojen pöytäkirjat, puheenvuorot ja äänestykset. Tulossa pian.</p>
-</section>

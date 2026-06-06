@@ -1,4 +1,0 @@
-<span class="spill spill--<%= it.modifier %>">
-  <% if (it.modifier === 'live') { %><span class="ld"></span><% } %>
-  <%= it.text %>
-</span>
