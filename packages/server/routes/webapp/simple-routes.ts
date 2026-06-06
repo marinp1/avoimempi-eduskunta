@@ -67,7 +67,8 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           resolvedTl,
         );
         if (cookieHeader && resp.status === 200) {
-          return new Response(resp.body, {
+          const bodyStr = await resp.text();
+          return new Response(bodyStr, {
             status: resp.status,
             headers: {
               ...Object.fromEntries(resp.headers),

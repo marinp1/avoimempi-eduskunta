@@ -15,7 +15,7 @@ import type { WebappDeps } from "./deps";
 export function createIstunnotRoute(deps: WebappDeps) {
   return {
     "/istunnot": {
-      GET: (req: Request) => {
+      GET: async (req: Request) => {
         const url = new URL(req.url);
         const kind = url.searchParams.get("kind") ?? undefined;
         const q = url.searchParams.get("q") ?? undefined;
@@ -79,7 +79,8 @@ export function createIstunnotRoute(deps: WebappDeps) {
           resolvedTl,
         );
         if (cookieHeader) {
-          return new Response(resp.body, {
+          const bodyStr = await resp.text();
+          return new Response(bodyStr, {
             status: resp.status,
             headers: {
               ...Object.fromEntries(resp.headers),

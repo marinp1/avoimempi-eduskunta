@@ -152,12 +152,13 @@ const generationKey = (() => {
 })();
 
 const cache = createResponseCache({
-  generationKey: isDev ? null : generationKey,
+  generationKey: isDev ? "dev" : generationKey,
+  ttlMs: isDev ? 15_000 : 5 * 60 * 1000,
 });
 
 console.log(
   isDev
-    ? "Response cache disabled (dev mode)"
+    ? "Response cache enabled (dev mode, TTL: 15s)"
     : generationKey
       ? `Response cache enabled (generation: ${generationKey})`
       : "Response cache disabled (no migration timestamp found)",
