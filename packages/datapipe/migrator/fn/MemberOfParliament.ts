@@ -69,7 +69,13 @@ const toEpochDay = (date: string): number => {
 };
 
 const toIsoDate = (epochDay: number): string => {
-  return new Date(epochDay).toISOString().slice(0, 10);
+  try {
+    return new Date(epochDay).toISOString().slice(0, 10);
+  }
+  catch (err) {
+    console.error("Invalid date to convert", epochDay)
+    throw err;
+  }
 };
 
 const normalizeGovernmentName = (name?: string | null): string | null => {
@@ -161,12 +167,17 @@ const intersectTermRowsWithGroupMemberships = (
       : Number.POSITIVE_INFINITY;
 
     const overlaps = groupMembershipRows.flatMap((group): DateInterval[] => {
+      if (group.end_date === null && group.end_date === null) return [];
       const groupStart = toEpochDay(group.start_date);
       const groupEnd = group.end_date
         ? toEpochDay(group.end_date)
         : Number.POSITIVE_INFINITY;
       const overlapStart = Math.max(termStart, groupStart);
       const overlapEnd = Math.min(termEnd, groupEnd);
+
+      if (Number.isNaN(overlapStart) || Number.isNaN(overlapEnd)) {
+        console.warn(`Overlaps are probably not correct ${JSON.stringify(group)}`)
+      }
 
       if (overlapStart > overlapEnd) {
         return [];
