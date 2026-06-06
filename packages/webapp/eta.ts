@@ -31,17 +31,29 @@ export function renderFullPage(
   });
 }
 
+// Bare HTML fragment response (no layout wrapper). Used for htmx-only endpoints
+// that always return a partial, e.g. the roster content swap.
+export function fragmentResponse(html: string): Response {
+  return new Response(html, {
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      Vary: "HX-Request",
+    },
+  });
+}
+
 export function htmlResponse(
   req: Request,
   fragment: string,
   options: LayoutOptions,
 ): Response {
   const isHtmx = req.headers.get("HX-Request") === "true";
-  const body = isHtmx ? fragment : renderFullPage(fragment, options);
-  return new Response(body, {
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      Vary: "HX-Request",
-    },
-  });
+  return isHtmx
+    ? fragmentResponse(fragment)
+    : new Response(renderFullPage(fragment, options), {
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          Vary: "HX-Request",
+        },
+      });
 }

@@ -3,20 +3,7 @@
   const filtered = it.filtered;
   const params   = it.params;
   const q        = params.q || "";
-
-  const byParty  = new Map();
-  for (const r of allRows) {
-    const code  = r.group_abbreviation || "unknown";
-    const entry = byParty.get(code) || { count: 0, gov: 0 };
-    entry.count++;
-    if (r.is_in_government === 1) entry.gov++;
-    byParty.set(code, entry);
-  }
-  const sortedParties = [...byParty.entries()]
-    .filter(([c]) => c !== "unknown")
-    .sort((a, b) => b[1].count - a[1].count);
-  const govTotal = allRows.filter(r => r.is_in_government === 1).length;
-  const oppTotal = allRows.length - govTotal;
+  const bloc     = it.buildBlocBar(allRows, it.partyShortName);
 %>
 
 <title><%= it.title %> — Eduskuntapeili</title>
@@ -31,23 +18,16 @@
 
 <div class="wrap" style="padding-bottom:8px">
   <div class="bloc-bar">
-    <% sortedParties.filter(([, v]) => v.gov > 0).forEach(function([code, v]) { %>
-      <span class="seg-hall"
-        style="width:<%~ ((v.gov / allRows.length) * 100).toFixed(1) + '%' %>;background:<%~ it.partyColor(code) %>"
-        title="<%= it.partyShortName(code) %> <%= v.gov %>"></span>
-    <% }) %>
-    <% sortedParties.filter(([, v]) => v.count - v.gov > 0).forEach(function([code, v]) {
-      const opp = v.count - v.gov;
-    %>
-      <span class="seg-opp"
-        style="width:<%~ ((opp / allRows.length) * 100).toFixed(1) + '%' %>;background:<%~ it.partyColor(code) %>"
-        title="<%= it.partyShortName(code) %> <%= opp %>"></span>
+    <% bloc.segments.forEach(function(seg) { %>
+      <span class="seg-<%= seg.side %>"
+        style="width:<%= seg.width %>;background:<%= seg.color %>"
+        title="<%= seg.label %> <%= seg.count %>"></span>
     <% }) %>
   </div>
   <div class="bloc-legend">
-    <span class="item"><span class="swatch" style="background:var(--hall)"></span>Hallitus <b><%= govTotal %></b></span>
-    <span class="item"><span class="swatch" style="background:var(--opp)"></span>Oppositio <b><%= oppTotal %></b></span>
-    <span class="note"><%= allRows.length %> edustajaa</span>
+    <span class="item"><span class="swatch" style="background:var(--hall)"></span>Hallitus <b><%= bloc.govTotal %></b></span>
+    <span class="item"><span class="swatch" style="background:var(--opp)"></span>Oppositio <b><%= bloc.oppTotal %></b></span>
+    <span class="note"><%= bloc.total %> edustajaa</span>
   </div>
 </div>
 
@@ -56,7 +36,7 @@
     <label class="search">
       <span class="ic">⌕</span>
       <input id="mp-search" name="q" type="text"
-        value="<%= it.esc(q) %>"
+        value="<%= q %>"
         placeholder="Hae nimellä tai vaalipiirillä…"
         hx-get="/edustajat"
         hx-trigger="input changed delay:300ms"
@@ -66,8 +46,8 @@
     </label>
     <span class="count" id="mp-count"><b><%= filtered.length %></b> / <%= allRows.length %> edustajaa</span>
   </div>
-  <input type="hidden" id="sort-field" name="sort" value="<%= it.esc(params.sort || 'name') %>" />
-  <input type="hidden" id="dir-field"  name="dir"  value="<%= it.esc(params.dir  || 'asc')  %>" />
+  <input type="hidden" id="sort-field" name="sort" value="<%= params.sort || 'name' %>" />
+  <input type="hidden" id="dir-field"  name="dir"  value="<%= params.dir  || 'asc'  %>" />
 </div>
 
 <div id="roster-content" class="wrap">

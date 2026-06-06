@@ -1,5 +1,10 @@
 import { createHash } from "node:crypto";
-import { eta, htmlResponse, renderFullPage } from "../../webapp/eta";
+import {
+  eta,
+  fragmentResponse,
+  htmlResponse,
+  renderFullPage,
+} from "../../webapp/eta";
 import type { RosterParams } from "../../webapp/templates/helpers";
 import * as helpers from "../../webapp/templates/helpers";
 import type { HomeRepository } from "../database/repositories/home-repository";
@@ -140,12 +145,7 @@ export function createWebappPageRoutes(deps: WebappDeps) {
             params,
             oob: true,
           });
-          return new Response(fragment, {
-            headers: {
-              "Content-Type": "text/html; charset=utf-8",
-              Vary: "HX-Request",
-            },
-          });
+          return fragmentResponse(fragment);
         }
         return page(
           req,
@@ -186,22 +186,36 @@ export function createWebappPageRoutes(deps: WebappDeps) {
     },
     "/edustaja/:id": {
       GET: (req: Request) => {
+        // Profile page not yet implemented — return a proper 404 for now.
         const path = new URL(req.url).pathname;
-        return page(req, "/", { notFound: path }, "/edustajat", "Edustaja");
+        const fragment = notFoundFragment(path);
+        const isHtmx = req.headers.get("HX-Request") === "true";
+        const body = isHtmx
+          ? fragment
+          : renderFullPage(fragment, {
+              activePath: "/edustajat",
+              title: "Sivua ei löydy",
+              assetVersion,
+            });
+        return new Response(body, {
+          status: 404,
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            Vary: "HX-Request",
+          },
+        });
       },
     },
     "/laadunvalvonta": {
-      GET: (_req: Request) =>
-        new Response(
-          renderFullPage(
-            `<section class="page-hero"><h1>Laadunvalvonta</h1></section>`,
-            { activePath: "/laadunvalvonta", assetVersion },
-          ),
+      GET: (req: Request) =>
+        htmlResponse(
+          req,
+          `<title>Laadunvalvonta — Eduskuntapeili</title>
+<section class="page-hero"><h1>Laadunvalvonta</h1></section>`,
           {
-            headers: {
-              "Content-Type": "text/html; charset=utf-8",
-              Vary: "HX-Request",
-            },
+            activePath: "/laadunvalvonta",
+            title: "Laadunvalvonta",
+            assetVersion,
           },
         ),
     },

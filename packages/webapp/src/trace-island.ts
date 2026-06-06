@@ -164,6 +164,10 @@ htmx.onLoad((root) => {
     .querySelectorAll<HTMLButtonElement>(".ai-sources-toggle")
     .forEach((btn) => {
       btn.setAttribute("aria-expanded", "false");
+      // htmx.onLoad fires on every swap; guard against binding the click
+      // handler more than once if this node is processed again.
+      if (btn.dataset.bound === "1") return;
+      btn.dataset.bound = "1";
       btn.addEventListener("click", () => {
         const scope = btn.closest<HTMLElement>(".ai, .summary");
         const tgt = btn.dataset.target

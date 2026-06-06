@@ -4,9 +4,13 @@ export type { RosterRow };
 export { partyColor, partyShortName } from "./components/party";
 export type { CiteData, SourceNoteOptions } from "./components/provenance";
 export { cite, sourceNote } from "./components/provenance";
+export type { BlocBar, BlocSegment } from "./view-models";
+export { buildBlocBar } from "./view-models";
 
 // ── HTML escaping ─────────────────────────────────────────────────────────────
-// Used in templates for attribute values inside raw (%~) blocks.
+// Used by the TS HTML-builders (e.g. components/provenance.ts) that assemble raw
+// markup included via <%~ %>. Do NOT use inside <%= %> — Eta's autoEscape already
+// escapes those, so wrapping in esc() would double-escape.
 
 export function esc(s: string | number | null | undefined): string {
   return s == null

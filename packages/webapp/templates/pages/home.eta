@@ -8,7 +8,7 @@
       <% if (it.data && it.data.latestDay && it.data.latestDay.date) {
            const s = it.data.latestDay.sessions[0];
       %>
-        <span>Viimeisin istunto <b><%= s ? it.esc(s.key) : "" %></b></span>
+        <span>Viimeisin istunto <b><%= s ? s.key : "" %></b></span>
         <span class="sep"></span>
         <span><%= it.formatDate(it.data.latestDay.date) %></span>
         <% if (s && s.voting_count) { %>
