@@ -73,9 +73,9 @@ Apply these official Finnish parliamentary terms consistently:
 
 ### Step 1: Locate Finnish Text
 Search the codebase for Finnish-language strings in:
-- React component files (`packages/client/`)
-- Page components (`Etusivu/`, `Edustajat/`, `Puolueet/`, `Istunnot/`, `Äänestykset/`, `Asiakirjat/`, `Analytiikka/`, `Muutokset/`)
-- Any string literals, JSX text content, aria-labels, tooltips, placeholder text, error messages
+- New frontend (`packages/webapp/`) — **primary target for all new reviews**
+- Legacy React component files (`packages/client/`) — **[DEPRECATED]**, no new features added here; review only if explicitly requested
+- Any string literals, JSX/HTML text content, aria-labels, tooltips, placeholder text, error messages
 - Focus on recently modified files when doing targeted reviews
 
 ### Step 2: Evaluate Each String

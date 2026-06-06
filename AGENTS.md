@@ -25,7 +25,8 @@ This is a Bun workspace monorepo with the following structure:
 
 ```
 packages/
-  client/      - React frontend (browser)
+  client/      - [DEPRECATED] React/MUI frontend — being replaced by packages/webapp
+  webapp/      - New frontend (htmx-based, in active development)
   server/      - Bun backend API (node)
   datapipe/    - Data pipeline CLIs (node)
   shared/      - Shared types & utilities
@@ -136,10 +137,12 @@ The web application is split into clear client/server separation:
   - `database/` - Database access layer with `DatabaseConnection` class
   - `public/` - Static assets and HTML entry point
 
-- **packages/client/** - React SPA
+- **packages/client/** - **[DEPRECATED]** React/MUI SPA — do not add new features here; use `packages/webapp` instead
   - Pages: `Etusivu/`, `Edustajat/`, `Puolueet/`, `Istunnot/`, `Äänestykset/`, `Asiakirjat/`, `Analytiikka/`, `Muutokset/`
   - Entry point: `root.tsx` → `app.tsx`
   - Material-UI components with Emotion styling
+
+- **packages/webapp/** - New htmx-based frontend (active development, replaces `packages/client`)
 
 - **packages/shared/** - Shared code
   - `constants/` - Table names, primary keys, etc.

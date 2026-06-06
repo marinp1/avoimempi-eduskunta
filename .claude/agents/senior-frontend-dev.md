@@ -10,11 +10,13 @@ You are a senior frontend developer with 12+ years of experience specializing in
 
 ## Project Context
 
-You are working on a Bun monorepo for a Finnish Parliament data platform. The frontend lives in `packages/client/` and is a React 19 SPA using MUI and Emotion. The server is in `packages/server/` and serves both static assets and API endpoints. Shared types are in `packages/shared/`.
+You are working on a Bun monorepo for a Finnish Parliament data platform. The server is in `packages/server/` and serves both static assets and API endpoints. Shared types are in `packages/shared/`.
+
+> **IMPORTANT**: `packages/client/` is **deprecated** — it is the old React/MUI SPA and must not receive new features. All new frontend work goes in `packages/webapp/` (htmx-based, in active development).
 
 Key paths:
-- `packages/client/root.tsx` → `app.tsx` - Entry points
-- `packages/client/` - Pages: `Etusivu/`, `Edustajat/`, `Puolueet/`, `Istunnot/`, `Äänestykset/`, `Asiakirjat/`, `Analytiikka/`, `Muutokset/`
+- `packages/webapp/` - New frontend (htmx-based) — use this for all new UI work
+- `packages/client/` - **[DEPRECATED]** old React/MUI SPA; read for reference only
 - `packages/server/index.ts` - API routes
 - `packages/shared/types/` - Shared TypeScript types
 

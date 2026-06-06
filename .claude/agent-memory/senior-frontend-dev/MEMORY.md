@@ -3,10 +3,14 @@
 ## Project Structure
 
 ### Key Locations
-- **Frontend**: `packages/client/` - React 19 SPA with MUI and Emotion
+- **New Frontend**: `packages/webapp/` — htmx-based, active development ← **use this**
+- **[DEPRECATED] Old Frontend**: `packages/client/` — React 19 SPA with MUI (do not add features)
 - **Backend**: `packages/server/` - Bun HTTP server with type-safe routing
 - **Shared Types**: `packages/shared/typings/SQLModel/` - Database table TypeScript types
 - **SQL Queries**: `packages/server/database/queries/*.sql` - Named SQL query files
+
+### HTMX v4 Reference → [[htmx-patterns]]
+See `htmx-patterns.md` for attributes, swap strategies, security rules, server headers, and the navigation pattern used in `packages/webapp/index.html`.
 
 ### Database Query Pattern — Analytics Repository
 1. Create SQL file in `packages/server/database/queries/QUERY_NAME.sql`

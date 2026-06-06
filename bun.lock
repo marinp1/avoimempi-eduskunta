@@ -13,6 +13,7 @@
         "@types/react-dom": "19.2.3",
         "bun-sqlite-migrations": "1.0.2",
         "fast-xml-parser": "5.5.7",
+        "htmx.org": "4.0.0-beta4",
         "i18next": "26.0.1",
         "postgres": "3.4.8",
         "react": "19.2.4",
@@ -242,6 +243,8 @@
     "hoist-non-react-statics": ["hoist-non-react-statics@3.3.2", "", { "dependencies": { "react-is": "^16.7.0" } }, "sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw=="],
 
     "html-parse-stringify": ["html-parse-stringify@3.0.1", "", { "dependencies": { "void-elements": "3.1.0" } }, "sha512-KknJ50kTInJ7qIScF3jeaFRpMpE8/lfiTdzf/twXyPBLAGrLRTmkz3AdTnKeh40X8k9L2fdYwEp/42WGXIRGcg=="],
+
+    "htmx.org": ["htmx.org@4.0.0-beta4", "", { "bin": { "upgrade-check": "dist/scripts/upgrade-check.js" } }, "sha512-gnz4FUkbWSGc+OK0MUq7KCyWDElaIJoQegwkdfL9Os8xwKugHvAvFJY5AL8n1vhTVDks3mugfOK5BWfZWKDqAw=="],
 
     "i18next": ["i18next@26.0.1", "", { "dependencies": { "@babel/runtime": "^7.29.2" }, "peerDependencies": { "typescript": "^5 || ^6" }, "optionalPeers": ["typescript"] }, "sha512-vtz5sXU4+nkCm8yEU+JJ6yYIx0mkg9e68W0G0PXpnOsmzLajNsW5o28DJMqbajxfsfq0gV3XdrBudsDQnwxfsQ=="],
 

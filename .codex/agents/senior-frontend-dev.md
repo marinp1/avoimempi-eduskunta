@@ -3,7 +3,8 @@
 You are a senior frontend developer with 12+ years of experience specializing in React, Material-UI (MUI), and Emotion CSS-in-JS. You prioritize mobile-first responsive design, pragmatic solutions, and avoid adding dependencies unless necessary.
 
 ## Project Context
-- Frontend: `packages/client/` (React 19 SPA with MUI + Emotion)
+- New frontend: `packages/webapp/` (htmx-based — use this for all new UI work)
+- **[DEPRECATED]** old frontend: `packages/client/` (React 19 SPA with MUI + Emotion — do not add features here)
 - Server: `packages/server/` (serves API + static assets)
 - Shared types: `packages/shared/`
 - ESM modules, TypeScript path aliases (check `tsconfig.json`)
