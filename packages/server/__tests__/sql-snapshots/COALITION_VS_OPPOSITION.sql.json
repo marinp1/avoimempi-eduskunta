@@ -1,0 +1,31 @@
+{
+  "columns": {
+    "coalition_no": "number",
+    "coalition_total": "number",
+    "coalition_yes": "number",
+    "n_no": "number",
+    "n_yes": "number",
+    "opposition_no": "number",
+    "opposition_total": "number",
+    "opposition_yes": "number",
+    "section_title": "string",
+    "start_time": "string",
+    "title": "string",
+    "voting_id": "number"
+  },
+  "hasNulls": {
+    "coalition_no": false,
+    "coalition_total": false,
+    "coalition_yes": false,
+    "n_no": false,
+    "n_yes": false,
+    "opposition_no": false,
+    "opposition_total": false,
+    "opposition_yes": false,
+    "section_title": false,
+    "start_time": false,
+    "title": false,
+    "voting_id": false
+  },
+  "rowCount": 2
+}

@@ -1,0 +1,21 @@
+{
+  "columns": {
+    "end_date": "null",
+    "group_abbreviation": "string",
+    "group_code": "string",
+    "group_name": "string",
+    "id": "number",
+    "person_id": "number",
+    "start_date": "string"
+  },
+  "hasNulls": {
+    "end_date": true,
+    "group_abbreviation": false,
+    "group_code": false,
+    "group_name": false,
+    "id": false,
+    "person_id": false,
+    "start_date": false
+  },
+  "rowCount": 1
+}

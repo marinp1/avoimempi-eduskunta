@@ -5,7 +5,8 @@ import i18next from "i18next";
 export { i18next };
 
 export type { RosterRow };
-export { partyColor, partyShortName } from "./components/party";
+export { partyColor, partyShortName, resolveParty } from "#shared/domain";
+export type { Party } from "#shared/domain";
 export type { CiteProps, SourceNoteOptions } from "./components/provenance";
 export { cite, sourceNote } from "./components/provenance";
 export type { BlocBar, BlocSegment } from "./view-models";
@@ -14,7 +15,12 @@ export { buildBlocBar } from "./view-models";
 export { formatFi, fetchedAt, isHtmx } from "#shared-helpers";
 
 /** A party's composition data for the home page overview. */
-export type { PartyInfo, CloseVote, SpeakerActivity, HomeData } from "./pages/home-view-model";
+export type {
+  PartyInfo,
+  CloseVote,
+  SpeakerActivity,
+  HomeData,
+} from "./pages/home-view-model";
 
 /**
  * Escapes HTML metacharacters (`&`, `<`, `>`, `"`).

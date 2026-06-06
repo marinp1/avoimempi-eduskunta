@@ -1,0 +1,27 @@
+{
+  "columns": {
+    "birth_date": "string",
+    "current_municipality": "null",
+    "first_name": "string",
+    "gender": "string",
+    "is_minister": "number",
+    "last_name": "string",
+    "ministry": "null",
+    "party": "string",
+    "person_id": "number",
+    "profession": "null"
+  },
+  "hasNulls": {
+    "birth_date": false,
+    "current_municipality": true,
+    "first_name": false,
+    "gender": false,
+    "is_minister": false,
+    "last_name": false,
+    "ministry": true,
+    "party": false,
+    "person_id": false,
+    "profession": true
+  },
+  "rowCount": 1
+}

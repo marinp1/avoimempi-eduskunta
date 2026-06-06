@@ -1,18 +1,6 @@
-import Istunnot, {
-  SessionList,
-} from "../../../webapp/templates/pages/istunnot";
-import { buildSessionsViewModel } from "../../../webapp/templates/pages/istunnot-view-models";
-import {
-  page,
-  getTimelineData,
-  setCursorCookie,
-  readPeriod,
-  getTermBounds,
-  timelineOobHtml,
-  isHtmx,
-  formatFi,
-  getPeriodSelectorData,
-} from "./helpers";
+import Istunnot, { SessionList } from "#webapp/templates/pages/istunnot";
+import { buildSessionsViewModel } from "#webapp/templates/pages/istunnot-view-models";
+import { setCursorCookie, formatFi, withWebappPage } from "./helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#shared-helpers";
@@ -20,108 +8,66 @@ import { defineRoute } from "#shared-helpers";
 export function createIstunnotRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/istunnot",
-    GET: async (req) => {
-        const url = new URL(req.url);
-        const kind = url.searchParams.get("kind") ?? undefined;
-        const q = url.searchParams.get("q") ?? undefined;
-        const dateParam = url.searchParams.get("date");
+    GET: withWebappPage(deps, async (ctx) => {
+      const url = new URL(ctx.req.url);
+      const kind = url.searchParams.get("kind") ?? undefined;
+      const q = url.searchParams.get("q") ?? undefined;
+      const dateParam = url.searchParams.get("date");
 
-        const tlData = getTimelineData(
-          req,
-          deps.sessionRepository,
-          deps.metadataRepository,
-        );
-        const cursor = dateParam ?? tlData.cursor;
+      const cursor = dateParam ?? ctx.tlData.cursor;
 
-        const period = readPeriod(req, deps.metadataRepository);
-        const bounds = getTermBounds(period, deps.metadataRepository);
+      const raw = ctx.deps.sessionRepository.fetchSessionsIndex(2000);
+      const termFiltered = raw.filter(
+        (r) =>
+          r.date >= ctx.bounds.startDate &&
+          (!ctx.bounds.endDate || r.date <= ctx.bounds.endDate),
+      );
+      const filtered =
+        cursor < ctx.tlData.today
+          ? termFiltered.filter((r) => r.date <= cursor)
+          : termFiltered;
+      const data = buildSessionsViewModel(filtered, { kind, q });
 
-        const raw = deps.sessionRepository.fetchSessionsIndex(2000);
-        const termFiltered = raw.filter(
-          (r) =>
-            r.date >= bounds.startDate &&
-            (!bounds.endDate || r.date <= bounds.endDate),
-        );
-        const filtered =
-          cursor < tlData.today
-            ? termFiltered.filter((r) => r.date <= cursor)
-            : termFiltered;
-        const data = buildSessionsViewModel(filtered, { kind, q });
+      const isAtPresent = cursor >= ctx.tlData.today;
+      const shownCursor = isAtPresent ? undefined : formatFi(cursor);
 
-        const cookieHeader = dateParam ? setCursorCookie(dateParam) : undefined;
-        const cursorFormatted = formatFi(cursor);
-        const isAtPresent = cursor >= tlData.today;
-        const shownCursor = isAtPresent ? undefined : cursorFormatted;
+      const cookieHeader = dateParam ? setCursorCookie(dateParam) : undefined;
+      const replaceUrl = buildIstunnotUrl({
+        cursor,
+        today: ctx.tlData.today,
+        kind,
+        q,
+      });
 
-        if (isHtmx(req)) {
-          const hxTarget = req.headers.get("HX-Target") || "";
-          if (
-            hxTarget.includes("sit-root") ||
-            hxTarget.includes("tl-reactive")
-          ) {
-            const fragment = SessionList({
-              weeks: data.weeks,
-              totalSessions: data.totalSessions,
-              cursorFormatted: shownCursor,
-            });
-            const headers: Record<string, string> = {
-              "Content-Type": "text/html; charset=utf-8",
-              Vary: "HX-Request",
-            };
-            if (cookieHeader) headers["Set-Cookie"] = cookieHeader;
-            const replaceUrl = buildIstunnotUrl({
-              cursor,
-              today: tlData.today,
-              kind,
-              q,
-            });
-            if (replaceUrl) headers["HX-Replace-Url"] = replaceUrl;
-            return new Response(fragment, { headers });
-          }
+      const extraHeaders: Record<string, string> = {};
+      if (cookieHeader) extraHeaders["Set-Cookie"] = cookieHeader;
+      if (replaceUrl) extraHeaders["HX-Replace-Url"] = replaceUrl;
 
-          const tlHtml = timelineOobHtml(tlData);
-          const fullHeaders: Record<string, string> = {
-            "Content-Type": "text/html; charset=utf-8",
-            Vary: "HX-Request",
-          };
-          const replaceUrl = buildIstunnotUrl({
-            cursor,
-            today: tlData.today,
-            kind,
-            q,
-          });
-          if (replaceUrl) fullHeaders["HX-Replace-Url"] = replaceUrl;
-          return new Response(
-            tlHtml +
-              Istunnot({
-                title: i18next.t("istunnot:title"),
-                data,
-                cursorFormatted: shownCursor,
-              }),
-            { headers: fullHeaders },
-          );
-        }
+      const resolvedTl = dateParam
+        ? { ...ctx.tlData, cursor, cursorFormatted: formatFi(cursor) }
+        : ctx.tlData;
 
-        const resolvedTl = dateParam
-          ? { ...tlData, cursor, cursorFormatted }
-          : tlData;
-        const periodData = getPeriodSelectorData(req, deps.metadataRepository);
-        return page({
-          req,
-          fragment: Istunnot({
-            title: i18next.t("istunnot:title"),
-            data,
+      return {
+        fragment: Istunnot({
+          title: i18next.t("istunnot:title"),
+          data,
+          cursorFormatted: shownCursor,
+        }),
+        activePath: "/istunnot",
+        title: i18next.t("istunnot:title"),
+        timelineData: resolvedTl,
+        extraHeaders:
+          Object.keys(extraHeaders).length > 0 ? extraHeaders : undefined,
+        partial: {
+          target: ["sit-root", "tl-reactive"],
+          fragment: SessionList({
+            weeks: data.weeks,
+            totalSessions: data.totalSessions,
             cursorFormatted: shownCursor,
           }),
-          activePath: "/istunnot",
-          title: i18next.t("istunnot:title"),
-          timelineData: resolvedTl,
-          extraHeaders: cookieHeader
-            ? { "Set-Cookie": cookieHeader }
-            : undefined,
-          periodData,
-        });
-      },
+        },
+      };
+    }),
   });
 }
 

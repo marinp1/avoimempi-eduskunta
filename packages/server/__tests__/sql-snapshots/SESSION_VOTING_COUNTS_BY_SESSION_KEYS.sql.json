@@ -1,0 +1,11 @@
+{
+  "columns": {
+    "session_key": "string",
+    "voting_count": "number"
+  },
+  "hasNulls": {
+    "session_key": false,
+    "voting_count": false
+  },
+  "rowCount": 1
+}

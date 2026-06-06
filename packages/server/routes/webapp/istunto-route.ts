@@ -1,12 +1,12 @@
-import Istunto from "../../../webapp/templates/pages/istunto";
-import { buildSessionDetailViewModel } from "../../../webapp/templates/pages/istunto-view-model";
+import Istunto from "#webapp/templates/pages/istunto";
+import { buildSessionDetailViewModel } from "#webapp/templates/pages/istunto-view-model";
 import {
   page,
   getWebappContext,
   getPeriodSelectorData,
   notFoundResponse,
 } from "./helpers";
-import { fetchedAt } from "../../../webapp/templates/helpers";
+import { fetchedAt } from "#webapp/templates/helpers";
 import type { PartySeatRow } from "#shared-types";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
@@ -58,8 +58,7 @@ export function createIstuntoRoute(deps: WebappDeps) {
         deps.sessionRepository.fetchPartySeatCounts(
           session.date ?? new Date().toISOString().slice(0, 10),
         );
-      const seatCounts: Record<string, { seats: number; inGov: boolean }> =
-        {};
+      const seatCounts: Record<string, { seats: number; inGov: boolean }> = {};
       for (const row of partySeatRows) {
         seatCounts[row.party_code] = {
           seats: row.seat_count,

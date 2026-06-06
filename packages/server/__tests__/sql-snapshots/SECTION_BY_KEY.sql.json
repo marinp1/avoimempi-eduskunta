@@ -1,0 +1,31 @@
+{
+  "columns": {
+    "identifier": "string",
+    "key": "string",
+    "minutes_content_text": "null",
+    "minutes_item_number": "null",
+    "minutes_item_title": "null",
+    "minutes_processing_phase_code": "null",
+    "minutes_related_document_identifier": "null",
+    "note": "null",
+    "processing_title": "string",
+    "resolution": "null",
+    "session_key": "string",
+    "title": "string"
+  },
+  "hasNulls": {
+    "identifier": false,
+    "key": false,
+    "minutes_content_text": true,
+    "minutes_item_number": true,
+    "minutes_item_title": true,
+    "minutes_processing_phase_code": true,
+    "minutes_related_document_identifier": true,
+    "note": true,
+    "processing_title": false,
+    "resolution": true,
+    "session_key": false,
+    "title": false
+  },
+  "rowCount": 1
+}

@@ -1,4 +1,4 @@
-import { partyColor, partyShortName } from "../components/party";
+import { partyColor, partyShortName } from "#shared/domain";
 import { formatFiLongDate } from "#shared-helpers";
 import i18next from "i18next";
 

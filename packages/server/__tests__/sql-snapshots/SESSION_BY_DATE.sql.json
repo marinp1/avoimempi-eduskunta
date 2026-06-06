@@ -1,0 +1,33 @@
+{
+  "columns": {
+    "agenda_key": "string",
+    "agenda_state": "string",
+    "agenda_title": "string",
+    "date": "string",
+    "description": "null",
+    "id": "number",
+    "key": "string",
+    "number": "number",
+    "start_time_actual": "null",
+    "start_time_reported": "null",
+    "state": "string",
+    "type": "string",
+    "year": "number"
+  },
+  "hasNulls": {
+    "agenda_key": false,
+    "agenda_state": false,
+    "agenda_title": false,
+    "date": false,
+    "description": true,
+    "id": false,
+    "key": false,
+    "number": false,
+    "start_time_actual": true,
+    "start_time_reported": true,
+    "state": false,
+    "type": false,
+    "year": false
+  },
+  "rowCount": 1
+}

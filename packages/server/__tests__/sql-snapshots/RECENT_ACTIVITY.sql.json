@@ -1,0 +1,23 @@
+{
+  "columns": {
+    "close_vote_count": "number",
+    "date": "string",
+    "description": "null",
+    "section_count": "number",
+    "session_key": "string",
+    "session_type": "string",
+    "total_votes_cast": "number",
+    "voting_count": "number"
+  },
+  "hasNulls": {
+    "close_vote_count": false,
+    "date": false,
+    "description": true,
+    "section_count": false,
+    "session_key": false,
+    "session_type": false,
+    "total_votes_cast": false,
+    "voting_count": false
+  },
+  "rowCount": 1
+}

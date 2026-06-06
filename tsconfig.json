@@ -26,7 +26,8 @@
       "#client/*": ["./packages/client/*"],
       "#shared/*": ["./packages/shared/*"],
       "#shared-types": ["./packages/shared/types/webapp.ts"],
-      "#shared-helpers": ["./packages/shared/helpers/index.ts"]
+      "#shared-helpers": ["./packages/shared/helpers/index.ts"],
+      "#webapp/*": ["./packages/webapp/*"]
     }
   },
   "include": [

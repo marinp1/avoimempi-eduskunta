@@ -1,0 +1,15 @@
+{
+  "columns": {
+    "end_date": "null",
+    "government": "string",
+    "id": "number",
+    "start_date": "string"
+  },
+  "hasNulls": {
+    "end_date": true,
+    "government": false,
+    "id": false,
+    "start_date": false
+  },
+  "rowCount": 1
+}

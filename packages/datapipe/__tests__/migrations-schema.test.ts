@@ -79,6 +79,7 @@ describe("Migration schema", () => {
       "V001.033__votes_by_person_query_indexes.sql",
       "V001.034__parliament_answer_schema.sql",
       "V001.035__person_question_indexes.sql",
+      "V001.036__fix_government_coalition_party_names.sql",
     ]);
   });
 

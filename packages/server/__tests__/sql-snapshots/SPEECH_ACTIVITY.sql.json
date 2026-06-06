@@ -1,0 +1,25 @@
+{
+  "columns": {
+    "avg_words_per_speech": "number",
+    "first_name": "string",
+    "first_speech": "string",
+    "last_name": "string",
+    "last_speech": "string",
+    "party": "string",
+    "person_id": "number",
+    "speech_count": "number",
+    "total_words": "number"
+  },
+  "hasNulls": {
+    "avg_words_per_speech": false,
+    "first_name": false,
+    "first_speech": false,
+    "last_name": false,
+    "last_speech": false,
+    "party": false,
+    "person_id": false,
+    "speech_count": false,
+    "total_words": false
+  },
+  "rowCount": 2
+}

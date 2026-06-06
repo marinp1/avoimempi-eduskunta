@@ -1,7 +1,12 @@
-import Keskustelu from "../../../webapp/templates/pages/keskustelu";
-import { buildDebateViewModel } from "../../../webapp/templates/pages/keskustelu-view-model";
-import { page, getWebappContext, getPeriodSelectorData, notFoundResponse } from "./helpers";
-import { fetchedAt } from "../../../webapp/templates/helpers";
+import Keskustelu from "#webapp/templates/pages/keskustelu";
+import { buildDebateViewModel } from "#webapp/templates/pages/keskustelu-view-model";
+import {
+  page,
+  getWebappContext,
+  getPeriodSelectorData,
+  notFoundResponse,
+} from "./helpers";
+import { fetchedAt } from "#webapp/templates/helpers";
 import type { PartySeatRow } from "#shared-types";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
@@ -21,19 +26,28 @@ export function createKeskusteluRoute(deps: WebappDeps) {
         sectionKey,
       });
       if (!section) {
-        return notFoundResponse(req, `/keskustelu?key=${encodeURIComponent(sectionKey)}`);
+        return notFoundResponse(
+          req,
+          `/keskustelu?key=${encodeURIComponent(sectionKey)}`,
+        );
       }
 
       const sessionKey = section.session_key;
       if (!sessionKey) {
-        return notFoundResponse(req, `/keskustelu?key=${encodeURIComponent(sectionKey)}`);
+        return notFoundResponse(
+          req,
+          `/keskustelu?key=${encodeURIComponent(sectionKey)}`,
+        );
       }
 
       const { session } = deps.sessionRepository.fetchSessionByKey({
         key: sessionKey,
       });
       if (!session) {
-        return notFoundResponse(req, `/keskustelu?key=${encodeURIComponent(sectionKey)}`);
+        return notFoundResponse(
+          req,
+          `/keskustelu?key=${encodeURIComponent(sectionKey)}`,
+        );
       }
 
       const { speeches } = deps.sessionRepository.fetchSectionSpeeches({

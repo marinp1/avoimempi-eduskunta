@@ -1,0 +1,19 @@
+{
+  "columns": {
+    "first_name": "string",
+    "is_government": "number",
+    "last_name": "string",
+    "party_code": "string",
+    "person_id": "number",
+    "vote": "string"
+  },
+  "hasNulls": {
+    "first_name": false,
+    "is_government": false,
+    "last_name": false,
+    "party_code": false,
+    "person_id": false,
+    "vote": false
+  },
+  "rowCount": 3
+}

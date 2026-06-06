@@ -1,0 +1,35 @@
+{
+  "columns": {
+    "id": "number",
+    "margin": "number",
+    "n_absent": "number",
+    "n_abstain": "number",
+    "n_no": "number",
+    "n_total": "number",
+    "n_yes": "number",
+    "proceedings_url": "null",
+    "result_url": "null",
+    "section_key": "string",
+    "section_title": "string",
+    "session_key": "string",
+    "start_time": "string",
+    "title": "string"
+  },
+  "hasNulls": {
+    "id": false,
+    "margin": false,
+    "n_absent": false,
+    "n_abstain": false,
+    "n_no": false,
+    "n_total": false,
+    "n_yes": false,
+    "proceedings_url": true,
+    "result_url": true,
+    "section_key": false,
+    "section_title": false,
+    "session_key": false,
+    "start_time": false,
+    "title": false
+  },
+  "rowCount": 1
+}

@@ -1,4 +1,4 @@
-import { partyColor, partyShortName } from "../components/party";
+import { partyColor, partyShortName } from "#shared/domain";
 import { formatFiLongDate } from "#shared-helpers";
 import i18next from "i18next";
 
@@ -304,7 +304,9 @@ export function buildSessionDetailViewModel(
         color: partyColor(code),
         total: seatCounts[code]?.seats ?? 0,
         absent: countAbsent(absentByParty, code),
-        bloc: (seatCounts[code]?.inGov ? "hallitus" : "oppositio") as "hallitus" | "oppositio",
+        bloc: (seatCounts[code]?.inGov ? "hallitus" : "oppositio") as
+          | "hallitus"
+          | "oppositio",
       }))
       .sort((a, b) => b.total - a.total);
 
@@ -435,7 +437,10 @@ function countAbsent(map: Map<string, AbsenteeGroup>, party: string): number {
   return map.get(party)?.members.filter((m) => !m.isLate).length ?? 0;
 }
 
-function buildDocRefs(section: SectionDetailRow, docIdMap?: Map<string, number>): DocRef[] {
+function buildDocRefs(
+  section: SectionDetailRow,
+  docIdMap?: Map<string, number>,
+): DocRef[] {
   const refs: DocRef[] = [];
   const docId = section.minutes_related_document_identifier;
   const docType = section.minutes_related_document_type;

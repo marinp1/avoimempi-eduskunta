@@ -1,0 +1,27 @@
+{
+  "columns": {
+    "government_absent": "number",
+    "government_abstain": "number",
+    "government_no": "number",
+    "government_total": "number",
+    "government_yes": "number",
+    "opposition_absent": "number",
+    "opposition_abstain": "number",
+    "opposition_no": "number",
+    "opposition_total": "number",
+    "opposition_yes": "number"
+  },
+  "hasNulls": {
+    "government_absent": false,
+    "government_abstain": false,
+    "government_no": false,
+    "government_total": false,
+    "government_yes": false,
+    "opposition_absent": false,
+    "opposition_abstain": false,
+    "opposition_no": false,
+    "opposition_total": false,
+    "opposition_yes": false
+  },
+  "rowCount": 1
+}

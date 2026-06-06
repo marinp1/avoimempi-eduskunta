@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { partyShortName } from "../templates/components/party";
+import { partyShortName } from "#shared/domain";
 import { buildBlocBar } from "../templates/view-models";
 import { makeRow } from "./fixtures";
 

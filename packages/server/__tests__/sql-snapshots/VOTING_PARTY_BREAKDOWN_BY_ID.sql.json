@@ -1,0 +1,21 @@
+{
+  "columns": {
+    "n_absent": "number",
+    "n_abstain": "number",
+    "n_no": "number",
+    "n_total": "number",
+    "n_yes": "number",
+    "party_code": "string",
+    "party_name": "string"
+  },
+  "hasNulls": {
+    "n_absent": false,
+    "n_abstain": false,
+    "n_no": false,
+    "n_total": false,
+    "n_yes": false,
+    "party_code": false,
+    "party_name": false
+  },
+  "rowCount": 3
+}

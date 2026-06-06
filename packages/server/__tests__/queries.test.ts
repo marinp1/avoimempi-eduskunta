@@ -1,112 +1,58 @@
 import type { Database } from "bun:sqlite";
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import ageDivisionOverTime from "../database/queries/AGE_DIVISION_OVER_TIME.sql";
 import closeVotes from "../database/queries/CLOSE_VOTES.sql";
 import coalitionVsOpposition from "../database/queries/COALITION_VS_OPPOSITION.sql";
-import committeeOverview from "../database/queries/COMMITTEE_OVERVIEW.sql";
-import currentComposition from "../database/queries/CURRENT_COMPOSITION.sql";
-import dissentTracking from "../database/queries/DISSENT_TRACKING.sql";
-import federatedSearch from "../database/queries/FEDERATED_SEARCH.sql";
-import genderDivisionOverTime from "../database/queries/GENDER_DIVISION_OVER_TIME.sql";
-import governmentMemberships from "../database/queries/GOVERNMENT_MEMBERSHIPS.sql";
-import leavingParliamentRecords from "../database/queries/LEAVING_PARLIAMENT.sql";
-import mpActivityRanking from "../database/queries/MP_ACTIVITY_RANKING.sql";
 import partyDiscipline from "../database/queries/PARTY_DISCIPLINE.sql";
 import partyMembers from "../database/queries/PARTY_MEMBERS.sql";
-import partyParticipationByGovernment from "../database/queries/PARTY_PARTICIPATION_BY_GOVERNMENT.sql";
 import partySummary from "../database/queries/PARTY_SUMMARY.sql";
 import personCommittees from "../database/queries/PERSON_COMMITTEES.sql";
 import personDissents from "../database/queries/PERSON_DISSENTS.sql";
 import personGroupMemberships from "../database/queries/PERSON_GROUP_MEMBERSHIPS.sql";
 import personQuestions from "../database/queries/PERSON_QUESTIONS.sql";
-import personSearch from "../database/queries/PERSON_SEARCH.sql";
 import personSpeeches from "../database/queries/PERSON_SPEECHES.sql";
 import personTerms from "../database/queries/PERSON_TERMS.sql";
 import recentActivity from "../database/queries/RECENT_ACTIVITY.sql";
 import representativeDetails from "../database/queries/REPRESENTATIVE_DETAILS.sql";
 import representativeDistricts from "../database/queries/REPRESENTATIVE_DISTRICTS.sql";
-import representativesPaginated from "../database/queries/REPRESENTATIVES_PAGINATED.sql";
 import sectionDocumentLinks from "../database/queries/SECTION_DOCUMENT_LINKS.sql";
 import sectionSpeechCount from "../database/queries/SECTION_SPEECH_COUNT.sql";
 import sectionSpeeches from "../database/queries/SECTION_SPEECHES.sql";
 import sectionVotings from "../database/queries/SECTION_VOTINGS.sql";
 import sessionByDate from "../database/queries/SESSION_BY_DATE.sql";
-import sessionCount from "../database/queries/SESSION_COUNT.sql";
-import sessionDates from "../database/queries/SESSION_DATES.sql";
-import sessionDocuments from "../database/queries/SESSION_DOCUMENTS.sql";
 import sessionNotices from "../database/queries/SESSION_NOTICES.sql";
 import sessionSectionsBySessionKeys from "../database/queries/SESSION_SECTIONS_BY_SESSION_KEYS.sql";
-import sessionsPaginated from "../database/queries/SESSIONS_PAGINATED.sql";
 import speechActivity from "../database/queries/SPEECH_ACTIVITY.sql";
-import speechesByDate from "../database/queries/SPEECHES_BY_DATE.sql";
-import trustPositions from "../database/queries/TRUST_POSITIONS.sql";
 import votesByPerson from "../database/queries/VOTES_BY_PERSON.sql";
-import votingParticipation from "../database/queries/VOTING_PARTICIPATION.sql";
-import votingParticipationByGovernment from "../database/queries/VOTING_PARTICIPATION_BY_GOVERNMENT.sql";
 import votingRelatedById from "../database/queries/VOTING_RELATED_BY_ID.sql";
 import votingsBrowse from "../database/queries/VOTINGS_BROWSE.sql";
-import votingsByDocument from "../database/queries/VOTINGS_BY_DOCUMENT.sql";
-import votingsOverviewClose from "../database/queries/VOTINGS_OVERVIEW_CLOSE.sql";
-import votingsOverviewMetrics from "../database/queries/VOTINGS_OVERVIEW_METRICS.sql";
-import votingsOverviewPhases from "../database/queries/VOTINGS_OVERVIEW_PHASES.sql";
-import votingsOverviewSessions from "../database/queries/VOTINGS_OVERVIEW_SESSIONS.sql";
-import votingsOverviewTurnout from "../database/queries/VOTINGS_OVERVIEW_TURNOUT.sql";
-import votingsSearch from "../database/queries/VOTINGS_SEARCH.sql";
 import { createTestDb, seedFullDataset } from "./helpers/setup-db";
 
 const queries = {
-  ageDivisionOverTime,
   closeVotes,
   coalitionVsOpposition,
-  committeeOverview,
-  currentComposition,
-  dissentTracking,
-  federatedSearch,
-  genderDivisionOverTime,
-  governmentMemberships,
-  leavingParliamentRecords,
-  mpActivityRanking,
   partyDiscipline,
   partyMembers,
-  partyParticipationByGovernment,
   partySummary,
   personCommittees,
   personDissents,
   personGroupMemberships,
   personQuestions,
-  personSearch,
   personSpeeches,
   personTerms,
   recentActivity,
   representativeDetails,
   representativeDistricts,
-  representativesPaginated,
   sectionDocumentLinks,
   sectionSpeechCount,
   sectionSpeeches,
   sectionVotings,
   sessionByDate,
-  sessionCount,
-  sessionDates,
-  sessionDocuments,
   sessionNotices,
   sessionSectionsBySessionKeys,
-  sessionsPaginated,
   speechActivity,
-  speechesByDate,
-  trustPositions,
   votesByPerson,
   votingsBrowse,
-  votingsOverviewClose,
-  votingsOverviewMetrics,
-  votingsOverviewPhases,
-  votingsOverviewSessions,
-  votingsOverviewTurnout,
-  votingParticipation,
-  votingParticipationByGovernment,
   votingRelatedById,
-  votingsByDocument,
-  votingsSearch,
 } as const;
 
 /**
@@ -154,17 +100,6 @@ describe("Query compilation", () => {
 // ─── REPRESENTATIVE QUERIES ─────────────────────────────────
 
 describe("Representative queries", () => {
-  test("SELECT * FROM Representative returns paginated results", () => {
-    const stmt = db.prepare(representativesPaginated);
-    const rows = stmt.all({ $limit: 10, $offset: 0 }) as any[];
-    stmt.finalize();
-
-    expect(rows.length).toBeGreaterThan(0);
-    expect(rows[0]).toHaveProperty("person_id");
-    expect(rows[0]).toHaveProperty("first_name");
-    expect(rows[0]).toHaveProperty("last_name");
-  });
-
   test("REPRESENTATIVE_DETAILS returns single rep by id", () => {
     const stmt = db.prepare(representativeDetails);
     const row = stmt.get({ $personId: 1000 }) as any;
@@ -429,23 +364,6 @@ describe("Person question queries", () => {
 // ─── SESSION QUERIES ────────────────────────────────────────
 
 describe("Session queries", () => {
-  test("SESSION_COUNT returns total session count", () => {
-    const stmt = db.prepare(sessionCount);
-    const row = stmt.get() as any;
-    stmt.finalize();
-
-    expect(row.count).toBe(2);
-  });
-
-  test("SESSIONS_PAGINATED respects limit and offset", () => {
-    const stmt = db.prepare(sessionsPaginated);
-    const rows = stmt.all({ $limit: 1, $offset: 0 }) as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(1);
-    expect(rows[0].key).toBe("2024/2");
-  });
-
   test("SESSION_SECTIONS_BY_SESSION_KEYS returns sections for a session", () => {
     const stmt = db.prepare(sessionSectionsBySessionKeys);
     const rows = stmt.all({
@@ -523,57 +441,6 @@ describe("Session queries", () => {
       db.run(`DELETE FROM Section WHERE id = 31360`);
       db.run(`DELETE FROM Session WHERE id = 3136`);
       db.run(`DELETE FROM Agenda WHERE key = 'PJ_2025_136'`);
-    }
-  });
-
-  test("SESSION_DOCUMENTS returns agenda, minutes, and roll call documents", () => {
-    try {
-      db.run(
-        `INSERT INTO Session (id, number, key, date, year, type, state)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [3140, 140, "2025/140", "2025-12-22", 2025, "varsinainen", "Päättynyt"],
-      );
-      db.run(
-        `UPDATE Session SET agenda_document_id = ?, minutes_document_id = ?, roll_call_document_id = ? WHERE key = ?`,
-        [9100, 9101, 9102, "2025/140"],
-      );
-
-      const stmt = db.prepare(sessionDocuments);
-      const rows = stmt.all({ $sessionKey: "2025/140" }) as any[];
-      stmt.finalize();
-
-      const kinds = rows.map((r) => r.document_kind).sort();
-      expect(kinds).toEqual(["agenda", "minutes", "roll_call"]);
-      const ids = rows.map((r) => r.id).sort();
-      expect(ids).toEqual([9100, 9101, 9102]);
-      expect(rows[0].eduskunta_tunnus).toBeNull();
-    } finally {
-      db.run(`DELETE FROM Session WHERE id = 3140`);
-    }
-  });
-
-  test("SESSION_DOCUMENTS uses roll_call_document_id when available", () => {
-    try {
-      db.run(
-        `INSERT INTO Session (id, number, key, date, year, type, state)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [3141, 141, "2025/141", "2025-12-28", 2025, "varsinainen", "Päättynyt"],
-      );
-      db.run(`UPDATE Session SET roll_call_document_id = ? WHERE key = ?`, [
-        9103,
-        "2025/141",
-      ]);
-
-      const stmt = db.prepare(sessionDocuments);
-      const rows = stmt.all({ $sessionKey: "2025/141" }) as any[];
-      stmt.finalize();
-
-      const rollCall = rows.find((r) => r.document_kind === "roll_call");
-      expect(rollCall).toBeDefined();
-      expect(rollCall?.id).toBe(9103);
-      expect(rollCall?.eduskunta_tunnus).toBeNull();
-    } finally {
-      db.run(`DELETE FROM Session WHERE id = 3141`);
     }
   });
 
@@ -766,16 +633,6 @@ describe("Session queries", () => {
 
     expect(rows).toHaveLength(0);
   });
-
-  test("SESSION_DATES returns distinct dates in descending order", () => {
-    const stmt = db.prepare(sessionDates);
-    const rows = stmt.all() as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(2);
-    expect(rows[0].date).toBe("2024-01-16");
-    expect(rows[1].date).toBe("2024-01-15");
-  });
 });
 
 // ─── SPEECH QUERIES ─────────────────────────────────────────
@@ -868,78 +725,6 @@ describe("Speech queries", () => {
 // ─── VOTING QUERIES ─────────────────────────────────────────
 
 describe("Voting queries", () => {
-  test("VOTINGS_SEARCH returns computed context_title", () => {
-    const stmt = db.prepare(votingsSearch);
-    const rows = stmt.all({
-      $query: "Äänestys",
-    }) as Array<DatabaseQueries.VotingSearchResult>;
-    stmt.finalize();
-
-    expect(rows.length).toBeGreaterThan(0);
-    expect(rows[0]).toHaveProperty("context_title");
-    const row100 = rows.find((row) => row.id === 100);
-    expect(row100).toBeDefined();
-    expect(row100?.context_title).toBe("Hallituksen esitys");
-  });
-
-  test("VOTINGS_BY_DOCUMENT uses exact document references instead of text contains", () => {
-    db.run(
-      `INSERT INTO Voting (id, number, start_time, session_key, parliamentary_item, section_title)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [9100, 1, "2024-01-15T13:00:00.000", "2024/1", "HE 1/2024 vp", "Dummy"],
-    );
-
-    try {
-      const stmt = db.prepare(votingsByDocument);
-      const rows = stmt.all({ $identifier: "HE 1/2024 vp" }) as any[];
-      stmt.finalize();
-
-      expect(rows.find((row) => row.id === 9100)).toBeUndefined();
-    } finally {
-      db.run(`DELETE FROM Voting WHERE id = 9100`);
-    }
-  });
-
-  test("VOTINGS_BY_DOCUMENT resolves votings from exact document_tunnus links", () => {
-    db.run(
-      `INSERT INTO Voting (id, number, start_time, session_key, parliamentary_item, section_title)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        9101,
-        2,
-        "2024-01-15T13:10:00.000",
-        "2024/1",
-        "Ei sisalla tunnusta",
-        "Dummy",
-      ],
-    );
-    db.run(
-      `INSERT INTO SaliDBDocumentReference (source_type, voting_id, section_key, document_tunnus, source_text, source_url, created_datetime, imported_datetime)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        "voting_item",
-        9101,
-        null,
-        "HE 1/2024 vp",
-        "HE 1/2024 vp",
-        null,
-        null,
-        "2024-01-15T13:10:00.000",
-      ],
-    );
-
-    try {
-      const stmt = db.prepare(votingsByDocument);
-      const rows = stmt.all({ $identifier: "HE 1/2024 vp" }) as any[];
-      stmt.finalize();
-
-      expect(rows.find((row) => row.id === 9101)).toBeDefined();
-    } finally {
-      db.run(`DELETE FROM SaliDBDocumentReference WHERE voting_id = 9101`);
-      db.run(`DELETE FROM Voting WHERE id = 9101`);
-    }
-  });
-
   test("VOTING_RELATED_BY_ID does not relate votings only by textual parliamentary_item", () => {
     db.run(
       `INSERT INTO Voting (id, number, start_time, session_key, parliamentary_item)
@@ -1101,172 +886,13 @@ describe("Voting queries", () => {
       rows[rows.length - 1].n_total,
     );
   });
-
-  test("voting overview queries expose summary metrics and curated lists", () => {
-    const metricsStmt = db.prepare(votingsOverviewMetrics);
-    const metrics = metricsStmt.get({
-      $startDate: null,
-      $endDateExclusive: null,
-      $closeThreshold: 10,
-    }) as any;
-    metricsStmt.finalize();
-
-    const closeStmt = db.prepare(votingsOverviewClose);
-    const closeRows = closeStmt.all({
-      $startDate: null,
-      $endDateExclusive: null,
-      $limit: 5,
-    }) as any[];
-    closeStmt.finalize();
-
-    const turnoutStmt = db.prepare(votingsOverviewTurnout);
-    const turnoutRows = turnoutStmt.all({
-      $startDate: null,
-      $endDateExclusive: null,
-      $limit: 5,
-    }) as any[];
-    turnoutStmt.finalize();
-
-    const phaseStmt = db.prepare(votingsOverviewPhases);
-    const phaseRows = phaseStmt.all({
-      $startDate: null,
-      $endDateExclusive: null,
-      $limit: 5,
-    }) as any[];
-    phaseStmt.finalize();
-
-    const sessionStmt = db.prepare(votingsOverviewSessions);
-    const sessionRows = sessionStmt.all({
-      $startDate: null,
-      $endDateExclusive: null,
-      $limit: 5,
-    }) as any[];
-    sessionStmt.finalize();
-
-    expect(metrics.total_votings).toBeGreaterThan(0);
-    expect(metrics.phase_count).toBeGreaterThanOrEqual(0);
-    expect(Array.isArray(closeRows)).toBe(true);
-    expect(Array.isArray(turnoutRows)).toBe(true);
-    expect(Array.isArray(phaseRows)).toBe(true);
-    expect(Array.isArray(sessionRows)).toBe(true);
-  });
 });
 
 // ─── VOTING PARTICIPATION ───────────────────────────────────
 
-describe("Voting participation queries", () => {
-  test("VOTING_PARTICIPATION returns participation rates", () => {
-    const stmt = db.prepare(votingParticipation);
-    const rows = stmt.all({
-      $startDate: null,
-      $endDateExclusive: null,
-    }) as any[];
-    stmt.finalize();
-
-    expect(rows.length).toBeGreaterThan(0);
-
-    const matti = rows.find((r: any) => r.person_id === 1000);
-    expect(matti).toBeDefined();
-    expect(matti.votes_cast).toBe(2);
-    expect(matti.total_votings).toBe(2);
-    expect(matti.participation_rate).toBe(100);
-
-    const pekka = rows.find((r: any) => r.person_id === 1002);
-    expect(pekka).toBeDefined();
-    expect(pekka.votes_cast).toBe(0);
-    expect(pekka.participation_rate).toBe(0);
-  });
-
-  test("VOTING_PARTICIPATION filters by date range", () => {
-    const stmt = db.prepare(votingParticipation);
-    const rows = stmt.all({
-      $startDate: "2024-01-15",
-      $endDateExclusive: "2024-01-16",
-    }) as any[];
-    stmt.finalize();
-
-    expect(rows.length).toBeGreaterThan(0);
-  });
-
-  test("VOTING_PARTICIPATION returns empty for date range with no votings", () => {
-    const stmt = db.prepare(votingParticipation);
-    const rows = stmt.all({
-      $startDate: "2099-01-01",
-      $endDateExclusive: "2100-01-01",
-    }) as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(0);
-  });
-});
-
 // ─── PARLIAMENT COMPOSITION ─────────────────────────────────
 
-describe("Parliament composition query", () => {
-  test("CURRENT_COMPOSITION returns active representatives on date", () => {
-    const stmt = db.prepare(currentComposition);
-    const rows = stmt.all({
-      $date: new Date("2024-01-15").toISOString(),
-    }) as any[];
-    stmt.finalize();
-
-    expect(rows.length).toBeGreaterThan(0);
-    for (const row of rows) {
-      expect(row).toHaveProperty("person_id");
-      expect(row).toHaveProperty("party_name");
-    }
-  });
-
-  test("CURRENT_COMPOSITION returns empty before term start", () => {
-    const stmt = db.prepare(currentComposition);
-    const rows = stmt.all({
-      $date: new Date("2020-01-01").toISOString(),
-    }) as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(0);
-  });
-});
-
 // ─── GOVERNMENT & TRUST POSITIONS ───────────────────────────
-
-describe("Government and trust position queries", () => {
-  test("GOVERNMENT_MEMBERSHIPS returns memberships for a person", () => {
-    const stmt = db.prepare(governmentMemberships);
-    const rows = stmt.all({ $personId: 1002 }) as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(1);
-    expect(rows[0].government).toBe("Orpon hallitus");
-    expect(rows[0].ministry).toBe("Valtiovarainministeriö");
-  });
-
-  test("GOVERNMENT_MEMBERSHIPS returns empty for non-minister", () => {
-    const stmt = db.prepare(governmentMemberships);
-    const rows = stmt.all({ $personId: 1000 }) as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(0);
-  });
-
-  test("TRUST_POSITIONS returns positions for a person", () => {
-    const stmt = db.prepare(trustPositions);
-    const rows = stmt.all({ $personId: 1000 }) as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(1);
-    expect(rows[0].name).toBe("Kunnanvaltuuston jäsen");
-  });
-
-  test("LEAVING_PARLIAMENT returns records", () => {
-    const stmt = db.prepare(leavingParliamentRecords);
-    const rows = stmt.all({ $personId: 1000 }) as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(1);
-    expect(rows[0].description).toBe("Eroilmoitus");
-  });
-});
 
 // ─── COMMITTEE QUERIES ──────────────────────────────────────
 
@@ -1279,18 +905,6 @@ describe("Committee queries", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].committee_name).toBe("Valtiovarainvaliokunta");
     expect(rows[0].role).toBe("jäsen");
-  });
-
-  test("COMMITTEE_OVERVIEW returns committees with member counts", () => {
-    const stmt = db.prepare(committeeOverview);
-    const rows = stmt.all() as any[];
-    stmt.finalize();
-
-    expect(rows.length).toBeGreaterThan(0);
-    const vav = rows.find((r: any) => r.committee_code === "VaV");
-    expect(vav).toBeDefined();
-    expect(vav.current_members).toBe(2);
-    expect(vav.current_chairs).toContain("Pekka Korhonen");
   });
 });
 
@@ -1335,19 +949,6 @@ describe("Coalition vs opposition query", () => {
 // ─── ANALYTICS: DISSENT TRACKING ────────────────────────────
 
 describe("Dissent tracking query", () => {
-  test("DISSENT_TRACKING executes without error", () => {
-    const stmt = db.prepare(dissentTracking);
-    const rows = stmt.all({ $personId: null, $limit: 100 }) as any[];
-    stmt.finalize();
-
-    expect(Array.isArray(rows)).toBe(true);
-    for (const row of rows) {
-      expect(row).toHaveProperty("mp_vote");
-      expect(row).toHaveProperty("majority_vote");
-      expect(row.mp_vote).not.toBe(row.majority_vote);
-    }
-  });
-
   test("PERSON_DISSENTS executes for a specific person", () => {
     const stmt = db.prepare(personDissents);
     const rows = stmt.all({ $personId: 1001, $limit: 100 }) as any[];
@@ -1376,29 +977,6 @@ describe("Speech activity query", () => {
 });
 
 // ─── ANALYTICS: MP ACTIVITY RANKING ─────────────────────────
-
-describe("MP activity ranking query", () => {
-  test("MP_ACTIVITY_RANKING returns activity scores", () => {
-    const stmt = db.prepare(mpActivityRanking);
-    const rows = stmt.all({ $limit: 50 }) as any[];
-    stmt.finalize();
-
-    expect(rows.length).toBeGreaterThan(0);
-    for (const row of rows) {
-      expect(row).toHaveProperty("activity_score");
-      expect(row).toHaveProperty("votes_cast");
-      expect(row).toHaveProperty("speech_count");
-      expect(row).toHaveProperty("committee_count");
-    }
-
-    // Should be sorted by activity_score DESC
-    for (let i = 1; i < rows.length; i++) {
-      expect(rows[i].activity_score).toBeLessThanOrEqual(
-        rows[i - 1].activity_score,
-      );
-    }
-  });
-});
 
 // ─── ANALYTICS: RECENT ACTIVITY ─────────────────────────────
 
@@ -1534,204 +1112,11 @@ describe("Party queries", () => {
 
 // ─── FEDERATED SEARCH ───────────────────────────────────────
 
-describe("Federated search query", () => {
-  test("FEDERATED_SEARCH finds MPs by name", () => {
-    const stmt = db.prepare(federatedSearch);
-    const rows = stmt.all({ $q: "Meikäläinen", $limit: 30 }) as any[];
-    stmt.finalize();
-
-    const mpResults = rows.filter((r: any) => r.type === "mp");
-    expect(mpResults.length).toBeGreaterThan(0);
-    expect(mpResults[0].title).toContain("Meikäläinen");
-  });
-
-  test("FEDERATED_SEARCH finds votings by section title", () => {
-    const stmt = db.prepare(federatedSearch);
-    const rows = stmt.all({ $q: "Hallituksen", $limit: 30 }) as any[];
-    stmt.finalize();
-
-    const votingResults = rows.filter((r: any) => r.type === "voting");
-    expect(votingResults.length).toBeGreaterThan(0);
-  });
-
-  test("FEDERATED_SEARCH returns empty for no-match query", () => {
-    const stmt = db.prepare(federatedSearch);
-    const rows = stmt.all({ $q: "zzzznonexistent", $limit: 30 }) as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(0);
-  });
-});
-
-describe("Person search query", () => {
-  test("PERSON_SEARCH finds both current and former MPs", () => {
-    const tempDb = createTestDb();
-    seedFullDataset(tempDb);
-
-    tempDb.run(
-      `INSERT INTO Representative (person_id, last_name, first_name, sort_name, party, gender, birth_date, minister)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        1100,
-        "Meikäläinen",
-        "Mikko",
-        "Meikäläinen Mikko",
-        "vihr",
-        "Mies",
-        "1965-02-01",
-        0,
-      ],
-    );
-    tempDb.run(`INSERT INTO ParliamentaryGroup (code) VALUES (?)`, ["vihr"]);
-    tempDb.run(
-      `INSERT INTO ParliamentaryGroupMembership (id, person_id, group_code, group_name, start_date, end_date)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [1100, 1100, "vihr", "Vihreä eduskuntaryhmä", "2011-04-01", "2015-04-21"],
-    );
-    tempDb.run(
-      `INSERT INTO Term (id, person_id, start_date, end_date, start_year, end_year)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [1100, 1100, "2011-04-01", "2015-04-21", 2011, 2015],
-    );
-
-    const stmt = tempDb.prepare(personSearch);
-    const rows = stmt.all({
-      $query: "Meikäläinen",
-      $exactQuery: "Meikäläinen",
-      $prefixQuery: "Meikäläinen%",
-      $limit: 20,
-      $date: "2024-01-15",
-    }) as DatabaseQueries.PersonSearchResult[];
-    stmt.finalize();
-    tempDb.close();
-
-    expect(rows.map((row) => row.person_id)).toEqual([1000, 1100]);
-    expect(rows[0]?.is_current_mp).toBe(1);
-    expect(rows[1]?.is_current_mp).toBe(0);
-    expect(rows[0]?.is_active_on_selected_date).toBe(1);
-    expect(rows[1]?.is_active_on_selected_date).toBe(0);
-  });
-
-  test("PERSON_SEARCH returns latest party and term summary", () => {
-    const stmt = db.prepare(personSearch);
-    const row = stmt.get({
-      $query: "Virtanen",
-      $exactQuery: "Virtanen",
-      $prefixQuery: "Virtanen%",
-      $limit: 20,
-      $date: null,
-    }) as DatabaseQueries.PersonSearchResult | null;
-    stmt.finalize();
-
-    expect(row).not.toBeNull();
-    expect(row?.latest_party_name).toBe("Sosialidemokraattinen eduskuntaryhmä");
-    expect(row?.first_term_start).toBe("2023-04-01");
-    expect(row?.last_term_end).toBeNull();
-    expect(row?.latest_active_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-  });
-});
-
 // ─── DEMOGRAPHIC QUERIES ────────────────────────────────────
-
-describe("Demographic queries", () => {
-  test("GENDER_DIVISION_OVER_TIME returns gender stats by year", () => {
-    const stmt = db.prepare(genderDivisionOverTime);
-    const rows = stmt.all() as any[];
-    stmt.finalize();
-
-    expect(rows.length).toBeGreaterThan(0);
-    for (const row of rows) {
-      expect(row).toHaveProperty("year");
-      expect(row).toHaveProperty("female_count");
-      expect(row).toHaveProperty("male_count");
-      expect(row).toHaveProperty("total_count");
-      expect(row).toHaveProperty("female_percentage");
-      expect(row).toHaveProperty("male_percentage");
-      expect(row.female_count + row.male_count).toBe(row.total_count);
-    }
-  });
-
-  test("AGE_DIVISION_OVER_TIME returns age stats by year", () => {
-    const stmt = db.prepare(ageDivisionOverTime);
-    const rows = stmt.all() as any[];
-    stmt.finalize();
-
-    expect(rows.length).toBeGreaterThan(0);
-    for (const row of rows) {
-      expect(row).toHaveProperty("year");
-      expect(row).toHaveProperty("age_under_30");
-      expect(row).toHaveProperty("age_30_39");
-      expect(row).toHaveProperty("age_40_49");
-      expect(row).toHaveProperty("age_50_59");
-      expect(row).toHaveProperty("age_60_plus");
-      expect(row).toHaveProperty("average_age");
-      expect(row.average_age).toBeGreaterThan(0);
-    }
-  });
-});
 
 // ─── GOVERNMENT-PERIOD QUERIES ──────────────────────────────
 
-describe("Government-period queries", () => {
-  test("PARTY_PARTICIPATION_BY_GOVERNMENT returns participation by gov period", () => {
-    const stmt = db.prepare(partyParticipationByGovernment);
-    const rows = stmt.all({
-      $startDate: null,
-      $endDateExclusive: null,
-    }) as any[];
-    stmt.finalize();
-
-    expect(Array.isArray(rows)).toBe(true);
-    for (const row of rows) {
-      expect(row).toHaveProperty("government");
-      expect(row).toHaveProperty("party_name");
-      expect(row).toHaveProperty("participation_rate");
-      expect(row).toHaveProperty("was_in_coalition");
-    }
-  });
-
-  test("VOTING_PARTICIPATION_BY_GOVERNMENT returns per-person gov breakdown", () => {
-    const stmt = db.prepare(votingParticipationByGovernment);
-    const rows = stmt.all({
-      $personId: 1000,
-      $startDate: null,
-      $endDateExclusive: null,
-    }) as any[];
-    stmt.finalize();
-
-    expect(Array.isArray(rows)).toBe(true);
-    for (const row of rows) {
-      expect(row).toHaveProperty("government");
-      expect(row).toHaveProperty("votes_cast");
-      expect(row).toHaveProperty("participation_rate");
-    }
-  });
-});
-
 // ─── SPEECHES BY DATE ───────────────────────────────────────
-
-describe("Speeches by date query", () => {
-  test("SPEECHES_BY_DATE returns speeches with section info", () => {
-    const stmt = db.prepare(speechesByDate);
-    const rows = stmt.all({ $date: "2024-01-15" }) as any[];
-    stmt.finalize();
-
-    expect(Array.isArray(rows)).toBe(true);
-    for (const row of rows) {
-      expect(row).toHaveProperty("content");
-      expect(row).toHaveProperty("first_name");
-      expect(row).toHaveProperty("last_name");
-    }
-  });
-
-  test("SPEECHES_BY_DATE returns empty for date with no speeches", () => {
-    const stmt = db.prepare(speechesByDate);
-    const rows = stmt.all({ $date: "2099-01-01" }) as any[];
-    stmt.finalize();
-
-    expect(rows).toHaveLength(0);
-  });
-});
 
 // ─── SCHEMA INTEGRITY ───────────────────────────────────────
 

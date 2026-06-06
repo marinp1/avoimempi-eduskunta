@@ -1,0 +1,9 @@
+{
+  "columns": {
+    "date": "string"
+  },
+  "hasNulls": {
+    "date": false
+  },
+  "rowCount": 2
+}

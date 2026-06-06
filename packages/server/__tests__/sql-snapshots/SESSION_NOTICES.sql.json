@@ -1,0 +1,25 @@
+{
+  "columns": {
+    "created_datetime": "null",
+    "id": "number",
+    "modified_datetime": "null",
+    "notice_type": "string",
+    "section_key": "string",
+    "sent_at": "string",
+    "session_key": "string",
+    "text_fi": "string",
+    "valid_until": "null"
+  },
+  "hasNulls": {
+    "created_datetime": true,
+    "id": false,
+    "modified_datetime": true,
+    "notice_type": false,
+    "section_key": false,
+    "sent_at": false,
+    "session_key": false,
+    "text_fi": false,
+    "valid_until": true
+  },
+  "rowCount": 1
+}

@@ -1,153 +1,15 @@
 import type { Database } from "bun:sqlite";
-import ageDivisionOverTime from "../queries/AGE_DIVISION_OVER_TIME.sql";
-import attendanceByParty from "../queries/ATTENDANCE_BY_PARTY.sql";
-import attendancePerPerson from "../queries/ATTENDANCE_PER_PERSON.sql";
-import attendancePersonHistory from "../queries/ATTENDANCE_PERSON_HISTORY.sql";
 import closeVotes from "../queries/CLOSE_VOTES.sql";
 import coalitionVsOpposition from "../queries/COALITION_VS_OPPOSITION.sql";
-import committeeOverview from "../queries/COMMITTEE_OVERVIEW.sql";
-import dissentTracking from "../queries/DISSENT_TRACKING.sql";
-import genderDivisionOverTime from "../queries/GENDER_DIVISION_OVER_TIME.sql";
-import mpActivityRanking from "../queries/MP_ACTIVITY_RANKING.sql";
 import partyDiscipline from "../queries/PARTY_DISCIPLINE.sql";
 import partyMembers from "../queries/PARTY_MEMBERS.sql";
-import partyParticipationByGovernment from "../queries/PARTY_PARTICIPATION_BY_GOVERNMENT.sql";
 import partySummary from "../queries/PARTY_SUMMARY.sql";
 import recentActivity from "../queries/RECENT_ACTIVITY.sql";
 import speechActivity from "../queries/SPEECH_ACTIVITY.sql";
-import votingParticipation from "../queries/VOTING_PARTICIPATION.sql";
-import votingParticipationByGovernment from "../queries/VOTING_PARTICIPATION_BY_GOVERNMENT.sql";
 import { endDateExclusive } from "../query-helpers";
 
 export class AnalyticsRepository {
   constructor(private readonly db: Database) {}
-
-  public fetchVotingParticipation(params?: {
-    startDate?: string;
-    endDate?: string;
-  }) {
-    const endDateExclusiveValue = endDateExclusive(params?.endDate);
-    const stmt = this.db.query<
-      {
-        person_id: number;
-        first_name: string;
-        last_name: string;
-        sort_name: string;
-        votes_cast: number;
-        total_votings: number;
-        participation_rate: number;
-      },
-      {
-        $startDate: string | null;
-        $endDateExclusive: string | null;
-      }
-    >(votingParticipation);
-    const data = stmt.all({
-      $startDate: params?.startDate || null,
-      $endDateExclusive: endDateExclusiveValue,
-    });
-    return data;
-  }
-
-  public fetchVotingParticipationByGovernment(params: {
-    personId: string;
-    startDate?: string;
-    endDate?: string;
-  }) {
-    const endDateExclusiveValue = endDateExclusive(params?.endDate);
-    const stmt = this.db.query<
-      {
-        person_id: number;
-        first_name: string;
-        last_name: string;
-        sort_name: string;
-        government: string;
-        government_start: string;
-        government_end: string | null;
-        votes_cast: number;
-        total_votings: number;
-        participation_rate: number;
-        was_in_government: 0 | 1;
-        was_in_coalition: 0 | 1;
-      },
-      {
-        $personId: number;
-        $startDate: string | null;
-        $endDateExclusive: string | null;
-      }
-    >(votingParticipationByGovernment);
-    const data = stmt.all({
-      $personId: +params.personId,
-      $startDate: params?.startDate || null,
-      $endDateExclusive: endDateExclusiveValue,
-    });
-    return data;
-  }
-
-  public fetchGenderDivisionOverTime() {
-    const stmt = this.db.query<
-      {
-        year: number;
-        female_count: number;
-        male_count: number;
-        total_count: number;
-        female_percentage: number;
-        male_percentage: number;
-      },
-      []
-    >(genderDivisionOverTime);
-    const data = stmt.all();
-    return data;
-  }
-
-  public fetchAgeDivisionOverTime() {
-    const stmt = this.db.query<
-      {
-        year: number;
-        age_under_30: number;
-        age_30_39: number;
-        age_40_49: number;
-        age_50_59: number;
-        age_60_plus: number;
-        average_age: number;
-        min_age: number;
-        max_age: number;
-        total_count: number;
-      },
-      []
-    >(ageDivisionOverTime);
-    const data = stmt.all();
-    return data;
-  }
-
-  public fetchPartyParticipationByGovernment(params?: {
-    startDate?: string;
-    endDate?: string;
-  }) {
-    const endDateExclusiveValue = endDateExclusive(params?.endDate);
-    const stmt = this.db.query<
-      {
-        government: string;
-        government_start: string;
-        government_end: string | null;
-        party_name: string;
-        votes_cast: number;
-        total_votings: number;
-        participation_rate: number;
-        party_member_count: number;
-        was_in_coalition: number;
-      },
-      {
-        $startDate: string | null;
-        $endDateExclusive: string | null;
-      }
-    >(partyParticipationByGovernment);
-    const data = stmt.all({
-      $startDate: params?.startDate || null,
-      $endDateExclusive: endDateExclusiveValue,
-    });
-    return data;
-  }
 
   public fetchPartyDiscipline(params?: {
     startDate?: string;
@@ -211,25 +73,6 @@ export class AnalyticsRepository {
     return data;
   }
 
-  public fetchMpActivityRanking(params: { limit?: number }) {
-    const stmt = this.db.query<
-      {
-        person_id: number;
-        first_name: string;
-        last_name: string;
-        party: string;
-        votes_cast: number;
-        total_votings: number;
-        speech_count: number;
-        committee_count: number;
-        activity_score: number;
-      },
-      { $limit: number }
-    >(mpActivityRanking);
-    const data = stmt.all({ $limit: params.limit ?? 50 });
-    return data;
-  }
-
   public fetchCoalitionVsOpposition(params: {
     limit?: number;
     startDate?: string;
@@ -265,43 +108,6 @@ export class AnalyticsRepository {
     return data;
   }
 
-  public fetchDissentTracking(params: {
-    personId?: number;
-    limit?: number;
-    startDate?: string;
-    endDate?: string;
-  }) {
-    const endDateExclusiveValue = endDateExclusive(params.endDate);
-    const stmt = this.db.query<
-      {
-        person_id: number;
-        first_name: string;
-        last_name: string;
-        party_name: string;
-        party_code: string;
-        voting_id: number;
-        start_time: string;
-        title: string;
-        section_title: string;
-        mp_vote: string;
-        majority_vote: string;
-      },
-      {
-        $personId: number | null;
-        $limit: number;
-        $startDate: string | null;
-        $endDateExclusive: string | null;
-      }
-    >(dissentTracking);
-    const data = stmt.all({
-      $personId: params.personId ?? null,
-      $limit: params.limit ?? 100,
-      $startDate: params.startDate || null,
-      $endDateExclusive: endDateExclusiveValue,
-    });
-    return data;
-  }
-
   public fetchSpeechActivity(params: {
     limit?: number;
     startDate?: string;
@@ -331,21 +137,6 @@ export class AnalyticsRepository {
       $startDate: params.startDate || null,
       $endDateExclusive: endDateExclusiveValue,
     });
-    return data;
-  }
-
-  public fetchCommitteeOverview() {
-    const stmt = this.db.query<
-      {
-        committee_code: string;
-        committee_name: string;
-        current_members: number;
-        total_historical_members: number;
-        current_chairs: string | null;
-      },
-      []
-    >(committeeOverview);
-    const data = stmt.all();
     return data;
   }
 
@@ -423,88 +214,6 @@ export class AnalyticsRepository {
       $governmentStartDate: governmentStartDate,
     });
     return data;
-  }
-
-  public fetchAttendanceAnalytics(params?: {
-    startDate?: string;
-    endDate?: string;
-  }) {
-    const endDateExclusiveValue = endDateExclusive(params?.endDate);
-    const stmt = this.db.query<
-      {
-        person_id: number;
-        first_name: string;
-        last_name: string;
-        sort_name: string;
-        party: string;
-        absent_count: number;
-        late_count: number;
-        total_roll_calls: number;
-        absence_rate: number;
-      },
-      {
-        $startDate: string | null;
-        $endDateExclusive: string | null;
-      }
-    >(attendancePerPerson);
-    return stmt.all({
-      $startDate: params?.startDate || null,
-      $endDateExclusive: endDateExclusiveValue,
-    });
-  }
-
-  public fetchAttendanceByParty(params?: {
-    startDate?: string;
-    endDate?: string;
-  }) {
-    const endDateExclusiveValue = endDateExclusive(params?.endDate);
-    const stmt = this.db.query<
-      {
-        party: string;
-        absent_member_count: number;
-        total_absences: number;
-        total_late: number;
-        total_roll_calls: number;
-        avg_absence_rate: number;
-      },
-      {
-        $startDate: string | null;
-        $endDateExclusive: string | null;
-      }
-    >(attendanceByParty);
-    return stmt.all({
-      $startDate: params?.startDate || null,
-      $endDateExclusive: endDateExclusiveValue,
-    });
-  }
-
-  public fetchAttendancePersonHistory(params: {
-    personId: number;
-    startDate?: string;
-    endDate?: string;
-  }): {
-    session_date: string;
-    entry_type: string | null;
-    absence_reason: string | null;
-  }[] {
-    const endDateExclusiveValue = endDateExclusive(params.endDate);
-    const stmt = this.db.query<
-      {
-        session_date: string;
-        entry_type: string | null;
-        absence_reason: string | null;
-      },
-      {
-        $personId: number;
-        $startDate: string | null;
-        $endDateExclusive: string | null;
-      }
-    >(attendancePersonHistory);
-    return stmt.all({
-      $personId: params.personId,
-      $startDate: params.startDate ?? null,
-      $endDateExclusive: endDateExclusiveValue,
-    });
   }
 
   public fetchPartyMembers(params: {

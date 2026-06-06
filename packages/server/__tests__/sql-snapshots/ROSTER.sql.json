@@ -1,0 +1,27 @@
+{
+  "columns": {
+    "birth_year": "number",
+    "district_name": "string",
+    "first_name": "string",
+    "group_abbreviation": "string",
+    "is_in_government": "number",
+    "last_name": "string",
+    "minister": "number",
+    "participation_rate": "number",
+    "person_id": "number",
+    "sort_name": "string"
+  },
+  "hasNulls": {
+    "birth_year": false,
+    "district_name": true,
+    "first_name": false,
+    "group_abbreviation": false,
+    "is_in_government": false,
+    "last_name": false,
+    "minister": false,
+    "participation_rate": false,
+    "person_id": false,
+    "sort_name": false
+  },
+  "rowCount": 3
+}

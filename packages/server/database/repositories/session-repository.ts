@@ -8,24 +8,16 @@ import sessionByKey from "../queries/SESSION_BY_KEY.sql";
 import sectionRollCallReport from "../queries/SECTION_ROLL_CALL_REPORT.sql";
 import sectionSpeechCount from "../queries/SECTION_SPEECH_COUNT.sql";
 import sectionSpeeches from "../queries/SECTION_SPEECHES.sql";
-import sectionSubSections from "../queries/SECTION_SUBSECTIONS.sql";
 import sectionVotings from "../queries/SECTION_VOTINGS.sql";
 import sessionByDate from "../queries/SESSION_BY_DATE.sql";
-import sessionCount from "../queries/SESSION_COUNT.sql";
-import sessionDates from "../queries/SESSION_DATES.sql";
 import sessionDatesCompleted from "../queries/SESSION_DATES_COMPLETED.sql";
-import sessionDocuments from "../queries/SESSION_DOCUMENTS.sql";
-import sessionDocumentsBySessionKeys from "../queries/SESSION_DOCUMENTS_BY_SESSION_KEYS.sql";
 import sessionNotices from "../queries/SESSION_NOTICES.sql";
-import sessionNoticesBySessionKeys from "../queries/SESSION_NOTICES_BY_SESSION_KEYS.sql";
 import sessionSectionsBySessionKeys from "../queries/SESSION_SECTIONS_BY_SESSION_KEYS.sql";
 import sessionVotingCountsBySessionKeys from "../queries/SESSION_VOTING_COUNTS_BY_SESSION_KEYS.sql";
 import sessionsIndex from "../queries/SESSIONS_INDEX.sql";
-import sessionsPaginated from "../queries/SESSIONS_PAGINATED.sql";
 import sessionTicks from "../queries/SESSION_TICKS.sql";
 import compositionChangeDates from "../queries/COMPOSITION_CHANGE_DATES.sql";
 import compositionChangeDetail from "../queries/COMPOSITION_CHANGE_DETAIL.sql";
-import speechesByDate from "../queries/SPEECHES_BY_DATE.sql";
 
 type SessionRow = DatabaseTables.Session & {
   agenda_title?: string;
@@ -153,53 +145,6 @@ export class SessionRepository {
     return votingCountBySessionKey;
   }
 
-  public fetchDocumentsBySessionKeys(
-    sessionKeys: string[],
-  ): Map<string, ReturnType<SessionRepository["fetchSessionDocuments"]>> {
-    if (sessionKeys.length === 0) return new Map();
-
-    const stmt = this.db.prepare<
-      { session_key: string } & ReturnType<
-        SessionRepository["fetchSessionDocuments"]
-      >[number],
-      { $sessionKeysJson: string }
-    >(sessionDocumentsBySessionKeys);
-    const rows = stmt.all({ $sessionKeysJson: JSON.stringify(sessionKeys) });
-    stmt.finalize();
-
-    const byKey = new Map<
-      string,
-      ReturnType<SessionRepository["fetchSessionDocuments"]>
-    >();
-    for (const { session_key, ...doc } of rows) {
-      const list = byKey.get(session_key);
-      if (list) list.push(doc as any);
-      else byKey.set(session_key, [doc as any]);
-    }
-    return byKey;
-  }
-
-  public fetchNoticesBySessionKeys(
-    sessionKeys: string[],
-  ): Map<string, DatabaseTables.SessionNotice[]> {
-    if (sessionKeys.length === 0) return new Map();
-
-    const stmt = this.db.prepare<
-      DatabaseTables.SessionNotice,
-      { $sessionKeysJson: string }
-    >(sessionNoticesBySessionKeys);
-    const rows = stmt.all({ $sessionKeysJson: JSON.stringify(sessionKeys) });
-    stmt.finalize();
-
-    const byKey = new Map<string, DatabaseTables.SessionNotice[]>();
-    for (const row of rows) {
-      const list = byKey.get(row.session_key);
-      if (list) list.push(row);
-      else byKey.set(row.session_key, [row]);
-    }
-    return byKey;
-  }
-
   private attachSectionsAndVotingCounts(
     sessions: SessionRow[],
   ): SessionWithSectionsRow[] {
@@ -220,34 +165,18 @@ export class SessionRepository {
     });
   }
 
-  public fetchSessions(params: { page: number; limit: number }) {
-    const offset = (params.page - 1) * params.limit;
-
-    const countStmt = this.db.prepare<{ count: number }, []>(sessionCount);
-    const countResult = countStmt.get();
-    const totalCount = countResult?.count || 0;
-    countStmt.finalize();
-
-    const stmt = this.db.prepare<
-      SessionRow,
-      { $limit: number; $offset: number }
-    >(sessionsPaginated);
-    const sessions = stmt.all({ $limit: params.limit, $offset: offset });
-    stmt.finalize();
-
-    const sessionsWithSections = this.attachSectionsAndVotingCounts(sessions);
-
-    return {
-      sessions: sessionsWithSections,
-      totalCount,
-      page: params.page,
-      limit: params.limit,
-      totalPages: Math.ceil(totalCount / params.limit),
-    };
-  }
-
   public fetchSessionByKey(params: { key: string }): {
-    session: (SessionRow & { voting_count: number; section_count: number; speech_count: number; speaker_count: number; minutes_title?: string | null; minutes_start_time?: string | null; minutes_end_time?: string | null }) | null;
+    session:
+      | (SessionRow & {
+          voting_count: number;
+          section_count: number;
+          speech_count: number;
+          speaker_count: number;
+          minutes_title?: string | null;
+          minutes_start_time?: string | null;
+          minutes_end_time?: string | null;
+        })
+      | null;
     sections: SessionSectionRow[];
   } {
     const stmt = this.db.prepare<
@@ -418,16 +347,6 @@ export class SessionRepository {
     return votings;
   }
 
-  public fetchSectionSubSections(params: { sectionKey: string }) {
-    const stmt = this.db.prepare<
-      DatabaseTables.SubSection,
-      { $sectionKey: string }
-    >(sectionSubSections);
-    const rows = stmt.all({ $sectionKey: params.sectionKey });
-    stmt.finalize();
-    return rows;
-  }
-
   public fetchSectionRollCall(params: { sectionKey: string }) {
     const infoStmt = this.db.prepare<
       {
@@ -501,29 +420,6 @@ export class SessionRepository {
     return this.attachSectionsAndVotingCounts(sessions);
   }
 
-  public fetchSessionDocuments(params: { sessionKey: string }) {
-    const stmt = this.db.prepare<
-      {
-        document_kind: "agenda" | "minutes" | "roll_call";
-        id: number;
-        type_slug: string;
-        type_name_fi: string | null;
-        root_family: string | null;
-        eduskunta_tunnus: string | null;
-        document_type_code: string | null;
-        document_number_text: string | null;
-        parliamentary_year_text: string | null;
-        title: string | null;
-        status_text: string | null;
-        created_at: string | null;
-      },
-      { $sessionKey: string }
-    >(sessionDocuments);
-    const data = stmt.all({ $sessionKey: params.sessionKey });
-    stmt.finalize();
-    return data;
-  }
-
   public fetchSessionNotices(params: { sessionKey: string }) {
     const stmt = this.db.prepare<
       DatabaseTables.SessionNotice,
@@ -552,42 +448,6 @@ export class SessionRepository {
       { $sectionKey: string }
     >(sectionDocumentLinks);
     const data = stmt.all({ $sectionKey: params.sectionKey });
-    stmt.finalize();
-    return data;
-  }
-
-  public fetchSpeechesByDate(params: { date: string }) {
-    const stmt = this.db.prepare<
-      {
-        id: number;
-        excel_id?: string | null;
-        processing_phase?: string | null;
-        document?: string | null;
-        ordinal?: number | null;
-        position?: string | null;
-        first_name?: string | null;
-        last_name?: string | null;
-        party?: string | null;
-        speech_type?: string | null;
-        start_time?: string | null;
-        end_time?: string | null;
-        content?: string | null;
-        minutes_url?: string | null;
-        source_file?: string | null;
-        section_title?: string;
-        section_processing_title?: string;
-        section_ordinal?: number;
-      },
-      { $date: string }
-    >(speechesByDate);
-    const data = stmt.all({ $date: params.date });
-    stmt.finalize();
-    return data;
-  }
-
-  public fetchSessionDates() {
-    const stmt = this.db.prepare<{ date: string }, []>(sessionDates);
-    const data = stmt.all();
     stmt.finalize();
     return data;
   }

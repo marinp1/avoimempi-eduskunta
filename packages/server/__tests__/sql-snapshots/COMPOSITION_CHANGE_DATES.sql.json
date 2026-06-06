@@ -1,0 +1,13 @@
+{
+  "columns": {
+    "date": "string",
+    "joined": "number",
+    "left_count": "number"
+  },
+  "hasNulls": {
+    "date": false,
+    "joined": false,
+    "left_count": false
+  },
+  "rowCount": 1
+}

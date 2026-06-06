@@ -1,0 +1,19 @@
+{
+  "columns": {
+    "committee_code": "string",
+    "committee_name": "string",
+    "end_date": "null",
+    "id": "number",
+    "role": "string",
+    "start_date": "string"
+  },
+  "hasNulls": {
+    "committee_code": false,
+    "committee_name": false,
+    "end_date": true,
+    "id": false,
+    "role": false,
+    "start_date": false
+  },
+  "rowCount": 1
+}

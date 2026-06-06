@@ -1,0 +1,23 @@
+{
+  "columns": {
+    "initiative_count": "number",
+    "interpellation_count": "number",
+    "party": "string",
+    "person_id": "number",
+    "speech_count": "number",
+    "vote_cast": "number",
+    "vote_total": "number",
+    "written_question_count": "number"
+  },
+  "hasNulls": {
+    "initiative_count": false,
+    "interpellation_count": false,
+    "party": false,
+    "person_id": false,
+    "speech_count": false,
+    "vote_cast": false,
+    "vote_total": false,
+    "written_question_count": false
+  },
+  "rowCount": 3
+}

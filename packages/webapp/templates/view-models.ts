@@ -1,5 +1,5 @@
 import type { RosterRow } from "#shared-types";
-import { partyColor } from "./components/party";
+import { partyColor } from "#shared/domain";
 
 /** A single segment within the bloc bar — one party's share of government or opposition. */
 export interface BlocSegment {

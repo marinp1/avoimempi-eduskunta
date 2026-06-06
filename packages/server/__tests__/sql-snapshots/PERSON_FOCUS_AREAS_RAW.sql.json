@@ -1,0 +1,13 @@
+{
+  "columns": {
+    "label": "string",
+    "source": "string",
+    "weight": "number"
+  },
+  "hasNulls": {
+    "label": false,
+    "source": false,
+    "weight": false
+  },
+  "rowCount": 2
+}

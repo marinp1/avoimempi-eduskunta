@@ -1,0 +1,17 @@
+{
+  "columns": {
+    "district_name": "string",
+    "end_date": "null",
+    "id": "number",
+    "person_id": "number",
+    "start_date": "string"
+  },
+  "hasNulls": {
+    "district_name": false,
+    "end_date": true,
+    "id": false,
+    "person_id": false,
+    "start_date": false
+  },
+  "rowCount": 1
+}

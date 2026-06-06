@@ -12,7 +12,7 @@ Each constraint entry includes:
 - `query_refs` - Optional references to query builders/constants
 - `params` - Optional configurable values for constraint logic (for example `min_count`)
 
-The server validates the YAML at startup and exposes this metadata in `/api/status/sanity-checks`.
+The server validates the YAML at startup.
 
 Adding a new constraint is easiest when done in this order:
 

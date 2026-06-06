@@ -77,7 +77,8 @@ export function defineRoute<const Path extends string>(
     const handler = raw[method];
     if (handler) {
       adapted[method] = (req: Request) => {
-        const params = (req as { params?: Record<string, string> }).params ?? {};
+        const params =
+          (req as { params?: Record<string, string> }).params ?? {};
         return handler(req, params as ExtractParams<Path>);
       };
     }
@@ -85,4 +86,3 @@ export function defineRoute<const Path extends string>(
 
   return { [path]: adapted } as { [K in Path]: Record<string, AdaptedHandler> };
 }
-

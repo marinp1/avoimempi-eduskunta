@@ -1,25 +1,18 @@
 import type { Database } from "bun:sqlite";
 import roster from "../queries/ROSTER.sql";
-import governmentMemberships from "../queries/GOVERNMENT_MEMBERSHIPS.sql";
-import leavingParliamentRecords from "../queries/LEAVING_PARLIAMENT.sql";
 import personCommittees from "../queries/PERSON_COMMITTEES.sql";
 import personDissents from "../queries/PERSON_DISSENTS.sql";
 import personFocusAreasRaw from "../queries/PERSON_FOCUS_AREAS_RAW.sql";
-import personGovernmentPeriods from "../queries/PERSON_GOVERNMENT_PERIODS.sql";
 import personGroupMemberships from "../queries/PERSON_GROUP_MEMBERSHIPS.sql";
 import personInitiatives from "../queries/PERSON_INITIATIVES.sql";
 import personMetricAggregates from "../queries/PERSON_METRIC_AGGREGATES.sql";
 import personQuestions from "../queries/PERSON_QUESTIONS.sql";
-import personSearch from "../queries/PERSON_SEARCH.sql";
 import personSpeeches from "../queries/PERSON_SPEECHES.sql";
 import personSpeechesCount from "../queries/PERSON_SPEECHES_COUNT.sql";
 import personTerms from "../queries/PERSON_TERMS.sql";
 import representativeDetails from "../queries/REPRESENTATIVE_DETAILS.sql";
 import representativeDistricts from "../queries/REPRESENTATIVE_DISTRICTS.sql";
-import representativesPaginated from "../queries/REPRESENTATIVES_PAGINATED.sql";
-import trustPositions from "../queries/TRUST_POSITIONS.sql";
 import votesByPerson from "../queries/VOTES_BY_PERSON.sql";
-import { buildSearchQuery } from "../query-helpers";
 import type { RosterRow } from "#shared-types";
 
 export type { RosterRow };
@@ -30,49 +23,6 @@ export class PersonRepository {
   public fetchRoster(): RosterRow[] {
     const stmt = this.db.prepare<RosterRow, []>(roster);
     const data = stmt.all();
-    stmt.finalize();
-    return data;
-  }
-
-  public fetchRepresentativePage(params: { page: number; limit: number }) {
-    const offset = (params.page - 1) * params.limit;
-    const stmt = this.db.prepare<
-      DatabaseTables.Representative,
-      {
-        $limit: number;
-        $offset: number;
-      }
-    >(representativesPaginated);
-    const data = stmt.all({ $limit: params.limit, $offset: offset });
-    stmt.finalize();
-    return data;
-  }
-
-  public fetchPersonSearch(params: {
-    q: string;
-    limit?: number;
-    date?: string | null;
-  }) {
-    const searchQuery = buildSearchQuery(params.q);
-    if (!searchQuery) return [];
-    const exactQuery = params.q.trim().replace(/\s+/g, " ");
-    const stmt = this.db.prepare<
-      DatabaseQueries.PersonSearchResult,
-      {
-        $query: string;
-        $exactQuery: string;
-        $prefixQuery: string;
-        $limit: number;
-        $date: string | null;
-      }
-    >(personSearch);
-    const data = stmt.all({
-      $query: searchQuery,
-      $exactQuery: exactQuery,
-      $prefixQuery: `${exactQuery}%`,
-      $limit: params.limit ?? 20,
-      $date: params.date ?? null,
-    });
     stmt.finalize();
     return data;
   }
@@ -127,51 +77,6 @@ export class PersonRepository {
       },
       { $personId: number }
     >(representativeDistricts);
-    const data = stmt.all({ $personId: +params.id });
-    stmt.finalize();
-    return data;
-  }
-
-  public fetchLeavingParliamentRecords(params: { id: string }) {
-    const stmt = this.db.prepare<
-      DatabaseTables.PeopleLeavingParliament,
-      { $personId: number }
-    >(leavingParliamentRecords);
-    const data = stmt.all({ $personId: +params.id });
-    stmt.finalize();
-    return data;
-  }
-
-  public fetchTrustPositions(params: { id: string }) {
-    const stmt = this.db.prepare<
-      DatabaseTables.TrustPosition,
-      { $personId: number }
-    >(trustPositions);
-    const data = stmt.all({ $personId: +params.id });
-    stmt.finalize();
-    return data;
-  }
-
-  public fetchGovernmentMemberships(params: { id: string }) {
-    const stmt = this.db.prepare<
-      DatabaseTables.GovernmentMembership,
-      { $personId: number }
-    >(governmentMemberships);
-    const data = stmt.all({ $personId: +params.id });
-    stmt.finalize();
-    return data;
-  }
-
-  public fetchGovernmentPeriods(params: { id: string }) {
-    const stmt = this.db.prepare<
-      {
-        government_name: string;
-        government_start_date: string;
-        government_end_date: string | null;
-        is_coalition: 0 | 1;
-      },
-      { $personId: number }
-    >(personGovernmentPeriods);
     const data = stmt.all({ $personId: +params.id });
     stmt.finalize();
     return data;
@@ -281,37 +186,6 @@ export class PersonRepository {
     }));
   }
 
-  public fetchPersonInterpellations(params: { personId: string }) {
-    const all = this.fetchPersonQuestions({
-      personId: params.personId,
-      limit: 1_000,
-    });
-    return all.filter((q) => q.question_kind === "interpellation");
-  }
-
-  public fetchPersonTies(params: { personId: string }) {
-    const trustPositions = this.fetchTrustPositions({ id: params.personId });
-    const today = new Date().toISOString().slice(0, 10);
-    const isActive = (period: string | null | undefined) => {
-      if (!period) return true;
-      const trimmed = String(period).trim();
-      if (!trimmed) return true;
-      // period strings are heterogenous; treat as active when no end year present
-      // or when an end year >= current year is found.
-      const years = trimmed.match(/\d{4}/g);
-      if (!years || years.length === 0) return true;
-      const last = +years[years.length - 1]!;
-      return last >= new Date().getFullYear();
-    };
-    return {
-      activeTrustPositions: trustPositions.filter((tp) =>
-        isActive((tp as { period?: string | null }).period),
-      ),
-      allTrustPositions: trustPositions,
-      generatedAt: today,
-    };
-  }
-
   public fetchPersonFocusAreas(params: { personId: string; topN?: number }) {
     const stmt = this.db.prepare<
       {
@@ -362,12 +236,6 @@ export class PersonRepository {
     };
   }
 
-  public fetchPersonElectionContext(_params: { personId: string }) {
-    // Schema for Election / Candidacy is sketched but not yet ingested.
-    // Returning null is the documented contract for v1; the UI renders an empty strip.
-    return null;
-  }
-
   public fetchPersonCapabilities(params: { personId: string }) {
     const personId = +params.personId;
     if (!Number.isFinite(personId) || personId <= 0) {
@@ -387,34 +255,6 @@ export class PersonRepository {
       hasSentiment: false,
       hasTopicTags: false,
       hasElectionContext: false,
-    };
-  }
-
-  public fetchPersonAnnotations(_params: {
-    personId: string;
-    kind?: string | null;
-  }) {
-    // Annotation tables (EntityAnnotation) are sketched in the plan but not migrated yet.
-    // Returns empty array; defines the response contract.
-    return [] as Array<{
-      kind: string;
-      model: string;
-      modelVersion: string;
-      value: unknown;
-      confidence: number | null;
-      generatedAt: string;
-    }>;
-  }
-
-  public fetchPeopleCompare(params: { personIds: number[] }) {
-    const aggregates = this.fetchPersonMetricAggregates();
-    const byPerson = new Map(aggregates.rows.map((r) => [r.person_id, r]));
-    return {
-      people: params.personIds.map((id) => ({
-        personId: id,
-        metrics: byPerson.get(id) ?? null,
-      })),
-      baselines: aggregates.baselines,
     };
   }
 
@@ -456,18 +296,6 @@ export class PersonRepository {
       party: partyId ? this.computeAverageRow(partyRows, partyId) : null,
       parliament: baselines.parliament,
     };
-  }
-
-  public fetchBaselines(params: { partyId?: string | null }) {
-    const { rows, baselines } = this.fetchPersonMetricAggregates();
-    if (params.partyId) {
-      const partyRows = rows.filter((r) => r.party === params.partyId);
-      return {
-        parliament: baselines.parliament,
-        party: this.computeAverageRow(partyRows, params.partyId),
-      };
-    }
-    return baselines;
   }
 
   private computeBaselinesFromRows(

@@ -1,0 +1,19 @@
+{
+  "columns": {
+    "end_date": "null",
+    "end_year": "null",
+    "id": "number",
+    "person_id": "number",
+    "start_date": "string",
+    "start_year": "number"
+  },
+  "hasNulls": {
+    "end_date": true,
+    "end_year": true,
+    "id": false,
+    "person_id": false,
+    "start_date": false,
+    "start_year": false
+  },
+  "rowCount": 1
+}

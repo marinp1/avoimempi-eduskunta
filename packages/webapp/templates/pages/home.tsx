@@ -4,13 +4,7 @@ import { clsx } from "clsx";
 import Kicker from "../components/kicker";
 import Rule from "../components/rule";
 import StatRow from "../components/stat-row";
-import {
-  esc,
-  formatDate,
-  partyColor,
-  partyShortName,
-  pct,
-} from "../helpers";
+import { esc, formatDate, partyColor, partyShortName, pct } from "../helpers";
 import type { HomeData } from "./home-view-model";
 
 interface Props {

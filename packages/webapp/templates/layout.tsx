@@ -2,8 +2,7 @@
 import i18next from "i18next";
 import Footer from "./partials/footer";
 import Masthead from "./partials/masthead";
-import { timeline, type TimelineData } from "./partials/timeline";
-import type { PeriodSelectorData } from "../src/period-selector-data";
+import { timeline } from "./partials/timeline";
 import type { LayoutOptions } from "../eta";
 
 /** Options passed to the root HTML layout template. Extends the public

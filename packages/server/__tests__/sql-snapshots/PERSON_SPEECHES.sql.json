@@ -1,0 +1,35 @@
+{
+  "columns": {
+    "content": "null",
+    "document": "string",
+    "end_time": "null",
+    "id": "number",
+    "minutes_url": "null",
+    "party": "string",
+    "processing_phase": "string",
+    "section_identifier": "string",
+    "section_key": "string",
+    "section_title": "string",
+    "session_key": "string",
+    "speech_type": "string",
+    "start_time": "null",
+    "word_count": "number"
+  },
+  "hasNulls": {
+    "content": true,
+    "document": false,
+    "end_time": true,
+    "id": false,
+    "minutes_url": true,
+    "party": false,
+    "processing_phase": false,
+    "section_identifier": false,
+    "section_key": false,
+    "section_title": false,
+    "session_key": false,
+    "speech_type": false,
+    "start_time": true,
+    "word_count": false
+  },
+  "rowCount": 1
+}

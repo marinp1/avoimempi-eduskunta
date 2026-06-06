@@ -284,10 +284,10 @@ export function seedFullDataset(db: Database) {
     ],
   );
 
-  // Votings
+  // Votings (linked to their sections via section_key)
   db.run(
-    `INSERT INTO Voting (id, number, start_time, annulled, title, n_yes, n_no, n_abstain, n_absent, n_total, section_title, session_key)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO Voting (id, number, start_time, annulled, title, n_yes, n_no, n_abstain, n_absent, n_total, section_title, section_key, session_key)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       100,
       1,
@@ -300,12 +300,13 @@ export function seedFullDataset(db: Database) {
       45,
       200,
       "Hallituksen esitys",
+      "2024/1/3",
       "2024/1",
     ],
   );
   db.run(
-    `INSERT INTO Voting (id, number, start_time, annulled, title, n_yes, n_no, n_abstain, n_absent, n_total, section_title, session_key)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO Voting (id, number, start_time, annulled, title, n_yes, n_no, n_abstain, n_absent, n_total, section_title, section_key, session_key)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       101,
       2,
@@ -318,7 +319,50 @@ export function seedFullDataset(db: Database) {
       0,
       200,
       "Välikysymys",
+      "2024/1/4",
       "2024/1",
+    ],
+  );
+
+  // Sub-sections (agenda items within a section)
+  db.run(
+    `INSERT INTO SubSection (session_key, section_key, entry_order, entry_kind, item_identifier,
+       item_number, item_order, item_title, processing_phase_code, match_mode, minutes_document_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      "2024/1",
+      "2024/1/3",
+      1,
+      "asiakohta",
+      3,
+      "3",
+      1,
+      "Hallituksen esitys laiksi",
+      "AINOA_KASITTELY",
+      "direct",
+      1,
+    ],
+  );
+
+  // Document references (links a voting to a document tunnus)
+  db.run(
+    `INSERT INTO SaliDBDocumentReference (source_type, voting_id, section_key, document_tunnus, source_text)
+     VALUES (?, ?, ?, ?, ?)`,
+    ["voting", 100, "2024/1/3", "HE 1/2024", "Hallituksen esitys HE 1/2024"],
+  );
+
+  // Session notices
+  db.run(
+    `INSERT INTO SessionNotice (id, key, session_key, section_key, notice_type, text_fi, sent_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [
+      1,
+      "notice_1",
+      "2024/1",
+      "2024/1/3",
+      "puhemiehen_ilmoitus",
+      "Puhemiehen ilmoitus täysistunnon kulusta",
+      "2024-01-15T09:30:00",
     ],
   );
 
@@ -699,6 +743,10 @@ export function seedFullDataset(db: Database) {
     }
   }
 
+  seedFederatedSearch(db);
+}
+
+function seedFederatedSearch(db: Database) {
   if (tableExists(db, "FederatedSearchFts")) {
     db.run(`DELETE FROM FederatedSearchFts`);
 
@@ -728,4 +776,59 @@ export function seedFullDataset(db: Database) {
       ],
     );
   }
+}
+
+/**
+ * Adversarial rows on top of seedFullDataset() — the "awkward" cases the happy-path
+ * seed omits, so query/builder tests can exercise null/empty/boundary handling.
+ * Kept separate (not folded into seedFullDataset) so the committed snapshots and the
+ * existing suites that depend on the happy-path counts stay stable.
+ *
+ * Extend this as new edge cases are discovered; each addition should be paired with an
+ * assertion in sql-contract.test.ts or a builder/method test that proves the null is
+ * handled.
+ *
+ * Currently seeds:
+ *  - person 1003: a sitting MP (current group, current term) with NO district, NO
+ *    votes, NO committee → sparse joins (null district_name; participation defaults).
+ *  - voting 199: a boundary voting with n_total = 0 (division-by-zero guard).
+ */
+export function seedEdgeCases(db: Database) {
+  // Sparse MP: appears in the roster (has a current group) but has no district,
+  // no votes and no committee membership.
+  db.run(
+    `INSERT INTO Representative (person_id, last_name, first_name, sort_name, party, gender, birth_date, minister)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [1003, "Niemi", "Liisa", "Niemi Liisa", "kesk", "Nainen", "1990-09-09", 0],
+  );
+  db.run(
+    `INSERT INTO Term (id, person_id, start_date, end_date, start_year, end_year)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [4, 1003, "2023-04-01", null, 2023, null],
+  );
+  db.run(
+    `INSERT INTO ParliamentaryGroupMembership (id, person_id, group_code, group_name, start_date, end_date)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [4, 1003, "kesk", "Keskustan eduskuntaryhmä", "2023-04-01", null],
+  );
+
+  // Boundary voting: nobody present, n_total = 0.
+  db.run(
+    `INSERT INTO Voting (id, number, start_time, annulled, title, n_yes, n_no, n_abstain, n_absent, n_total, section_title, session_key)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      199,
+      99,
+      "2024-01-16T10:00:00",
+      0,
+      null,
+      0,
+      0,
+      0,
+      0,
+      0,
+      "Välikysymys",
+      "2024/2",
+    ],
+  );
 }

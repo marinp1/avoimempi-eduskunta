@@ -1,0 +1,13 @@
+{
+  "columns": {
+    "is_in_government": "number",
+    "party_code": "string",
+    "seat_count": "number"
+  },
+  "hasNulls": {
+    "is_in_government": false,
+    "party_code": false,
+    "seat_count": false
+  },
+  "rowCount": 3
+}

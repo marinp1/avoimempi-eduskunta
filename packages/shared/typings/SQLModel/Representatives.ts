@@ -162,8 +162,8 @@ declare global {
       birth_place: string;
       death_place: string;
       profession: string;
-      start_date: string;
-      end_date: string;
+      t_start_date: string;
+      t_end_date: string | null;
       party_name: string;
       party_code: string | null;
       is_in_government: 1 | 0;

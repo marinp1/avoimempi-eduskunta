@@ -1,0 +1,29 @@
+{
+  "columns": {
+    "average_age": "number",
+    "female_count": "number",
+    "is_in_government": "number",
+    "male_count": "number",
+    "member_count": "number",
+    "participation_rate": "number",
+    "party_code": "string",
+    "party_display_code": "string",
+    "party_name": "string",
+    "total_votings": "number",
+    "votes_cast": "number"
+  },
+  "hasNulls": {
+    "average_age": false,
+    "female_count": false,
+    "is_in_government": false,
+    "male_count": false,
+    "member_count": false,
+    "participation_rate": false,
+    "party_code": false,
+    "party_display_code": false,
+    "party_name": false,
+    "total_votings": false,
+    "votes_cast": false
+  },
+  "rowCount": 3
+}
