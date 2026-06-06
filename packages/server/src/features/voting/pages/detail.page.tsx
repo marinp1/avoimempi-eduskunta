@@ -238,47 +238,70 @@ export default function Aanestys({ title, data }: Props) {
           </div>
         </div>
 
-        <section id="ryhmat" class="mt-28" style="scroll-margin-top:14px">
+        <section id="ryhmat" class="ph mt-28" style="scroll-margin-top:14px">
           <Kicker
             text={i18next.t("votings:detail.section_groups_kicker")}
             modifier="blue"
             dot
           />
-          <div class="vote-block">
-            <div class="vote-block__h">
-              <span class="vote-block__title">
-                {i18next.t("votings:detail.section_groups_title")}
-              </span>
-            </div>
-            {data.partyBreakdown.map((pb) => (
-              <div class="pvote">
-                <div class="pvote__name">
-                  <span class="d" style={`background:${pb.partyColor}`}></span>
-                  {esc(pb.partyName)}
+          <div class="ph__head">
+            <h2>{i18next.t("votings:detail.section_groups_h2")}</h2>
+            <span class="meta">
+              {data.partyBreakdown.length} ryhmää · {v.nYes + v.nNo + v.nEmpty}{" "}
+              annettua ääntä
+            </span>
+          </div>
+          <p class="ph__intro">
+            {i18next.t("votings:detail.section_groups_intro")}
+          </p>
+          <div class="vote-block" style="border:0;padding:0;margin-top:6px">
+            {data.partyBreakdown.map((pb) => {
+              const votesCast = pb.nYes + pb.nNo + pb.nEmpty;
+              return (
+                <div class="pvote">
+                  <div class="pvote__name">
+                    <span
+                      class="d"
+                      style={`background:${pb.partyColor}`}
+                    ></span>
+                    {esc(pb.partyName)}
+                  </div>
+                  <div class="pvote__bar">
+                    <span
+                      class="j"
+                      style={`width:${votesCast > 0 ? ((pb.nYes / votesCast) * 100).toFixed(1) : 0}%`}
+                    ></span>
+                    <span
+                      class="e"
+                      style={`width:${votesCast > 0 ? ((pb.nNo / votesCast) * 100).toFixed(1) : 0}%`}
+                    ></span>
+                    {pb.nEmpty > 0 && (
+                      <span
+                        class="a"
+                        style={`width:${votesCast > 0 ? ((pb.nEmpty / votesCast) * 100).toFixed(1) : 0}%`}
+                      ></span>
+                    )}
+                  </div>
+                  <div class="pvote__num">
+                    {pb.nYes > 0 ? (
+                      <>
+                        <b>{pb.nYes}</b> jaa
+                        {pb.nEmpty > 0 && <> · {pb.nEmpty} tyh</>}
+                      </>
+                    ) : pb.nNo > 0 ? (
+                      <>
+                        <b>{pb.nNo}</b> ei
+                        {pb.nEmpty > 0 && <> · {pb.nEmpty} tyh</>}
+                      </>
+                    ) : (
+                      <>
+                        <b>{pb.nEmpty}</b> tyh
+                      </>
+                    )}
+                  </div>
                 </div>
-                <div class="pvote__bar">
-                  <span
-                    class="j"
-                    style={`width:${pb.nTotal > 0 ? ((pb.nYes / pb.nTotal) * 100).toFixed(1) : 0}%`}
-                  ></span>
-                  <span
-                    class="e"
-                    style={`width:${pb.nTotal > 0 ? ((pb.nNo / pb.nTotal) * 100).toFixed(1) : 0}%`}
-                  ></span>
-                  <span
-                    class="a"
-                    style={`width:${pb.nTotal > 0 ? (((pb.nEmpty + pb.nAbsent) / pb.nTotal) * 100).toFixed(1) : 0}%`}
-                  ></span>
-                </div>
-                <div class="pvote__num">
-                  <b>{pb.nYes}</b>–{pb.nNo}
-                  {pb.nEmpty > 0 ? ` · ${pb.nEmpty}` : ""}
-                  {pb.nAbsent > 0
-                    ? ` · ${i18next.t("common:absent_count", { count: pb.nAbsent })}`
-                    : ""}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
@@ -297,30 +320,33 @@ export default function Aanestys({ title, data }: Props) {
               dot
             />
             <div class="ag-votes mt-4">
-              {data.relatedVotes.map((rv) => (
-                <a
-                  href={`/aanestys/${rv.id}`}
-                  hx-get={`/aanestys/${rv.id}`}
-                  {...NAV}
-                  class="agvote"
-                >
-                  <div class="agvote__t">{esc(rv.title)}</div>
-                  <div class="agvote__bar">
-                    <span
-                      class="j"
-                      style={`width:${rv.nYes > 0 ? 50 : 0}%`}
-                    ></span>
-                    <span
-                      class="e"
-                      style={`width:${rv.nNo > 0 ? 50 : 0}%`}
-                    ></span>
-                  </div>
-                  <div class="agvote__n">
-                    <span class="j">{rv.nYes}</span>–
-                    <span class="e">{rv.nNo}</span>
-                  </div>
-                </a>
-              ))}
+              {data.relatedVotes.map((rv) => {
+                const rvTotal = rv.nYes + rv.nNo;
+                return (
+                  <a
+                    href={`/aanestys/${rv.id}`}
+                    hx-get={`/aanestys/${rv.id}`}
+                    {...NAV}
+                    class="agvote"
+                  >
+                    <div class="agvote__t">{esc(rv.title)}</div>
+                    <div class="agvote__bar">
+                      <span
+                        class="j"
+                        style={`width:${rvTotal > 0 ? ((rv.nYes / rvTotal) * 100).toFixed(1) : 0}%`}
+                      ></span>
+                      <span
+                        class="e"
+                        style={`width:${rvTotal > 0 ? ((rv.nNo / rvTotal) * 100).toFixed(1) : 0}%`}
+                      ></span>
+                    </div>
+                    <div class="agvote__n">
+                      <span class="j">{rv.nYes}</span>–
+                      <span class="e">{rv.nNo}</span>
+                    </div>
+                  </a>
+                );
+              })}
             </div>
           </section>
         )}

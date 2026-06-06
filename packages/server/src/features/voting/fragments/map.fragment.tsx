@@ -1,5 +1,6 @@
 /** @jsxImportSource ../../../jsx */
 import { clsx } from "clsx";
+import Kicker from "#server/components/kicker";
 import { esc } from "#server/helpers/template-helpers";
 import i18next from "i18next";
 import type { SingleVoteData } from "../pages/detail.view-model";
@@ -9,8 +10,19 @@ interface Props {
 }
 
 export default function VotingMapFragment({ mpVotes }: Props) {
+  const nYes = mpVotes.filter((m) => m.vote === "jaa").length;
+  const nNo = mpVotes.filter((m) => m.vote === "ei").length;
+  const nEmpty = mpVotes.filter((m) => m.vote === "tyhjaa").length;
+  const nAbsent = mpVotes.filter((m) => m.vote === "poissa").length;
+
   return (
-    <section id="kartta" class="mt-28" style="scroll-margin-top:14px">
+    <section id="kartta" class="ph mt-28" style="scroll-margin-top:14px">
+      <Kicker text={i18next.t("votings:detail.section_map_kicker")} dot />
+      <div class="ph__head">
+        <h2>{i18next.t("votings:detail.section_map_title")}</h2>
+        <span class="meta">{mpVotes.length} edustajaa · ryhmittäin</span>
+      </div>
+      <p class="ph__intro">{i18next.t("votings:detail.section_map_intro")}</p>
       <div class="attend__grid mt-14">
         <div class="seatwrap">
           <div class="seatgrid" id="vote-seatgrid">
@@ -35,19 +47,21 @@ export default function VotingMapFragment({ mpVotes }: Props) {
           <div class="seat-legend">
             <div class="it">
               <span class="d" style="background:var(--hall)"></span>
-              {i18next.t("common:yes")}
+              {i18next.t("common:yes")} {nYes}
             </div>
             <div class="it">
               <span class="d" style="background:var(--red)"></span>
-              {i18next.t("common:no")}
+              {i18next.t("common:no")} {nNo}
             </div>
-            <div class="it">
-              <span class="d" style="background:var(--opp)"></span>
-              {i18next.t("common:empty")}
-            </div>
+            {nEmpty > 0 && (
+              <div class="it">
+                <span class="d" style="background:var(--opp)"></span>
+                {i18next.t("common:empty")} {nEmpty}
+              </div>
+            )}
             <div class="it">
               <span class="d ring"></span>
-              {i18next.t("common:absent")}
+              {i18next.t("common:absent")} {nAbsent}
             </div>
           </div>
         </div>
