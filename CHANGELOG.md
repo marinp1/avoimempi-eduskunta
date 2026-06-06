@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.2] — 2026-06-05
+
+### Features
+- load more on request (dd400c8)
+- implement lazy loading (1fc187d)
+
 ## [2.0.1] — 2026-06-05
 
 ### Bug Fixes

@@ -1,6 +1,6 @@
 {
   "name": "eduskunta-forum",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "private": true,
   "description": "Data aggregation and analysis platform for Finnish Parliament",
   "type": "module",
