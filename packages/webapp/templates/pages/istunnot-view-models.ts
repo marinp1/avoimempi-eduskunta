@@ -24,6 +24,8 @@ export interface WeekGroup {
 export interface SessionRow {
   kind: string;
   searchText: string;
+  /** ISO date "2026-05-28" — used by the timeline island for date filtering */
+  date: string;
   dayOfWeek: string;
   dayNum: string;
   month: string;
@@ -348,6 +350,7 @@ export function buildSessionsViewModel(
           return {
             kind,
             searchText: buildSearchText(row),
+            date: row.date,
             dayOfWeek: fd.dow,
             dayNum: fd.day,
             month: fd.mon,

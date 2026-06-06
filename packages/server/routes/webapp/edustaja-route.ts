@@ -2,7 +2,7 @@ import { partyColor, partyShortName } from "../../../webapp/templates/helpers";
 import Edustaja, {
   type PersonProfileData,
 } from "../../../webapp/templates/pages/edustaja";
-import { page, personNotFoundResponse } from "./helpers";
+import { page, personNotFoundResponse, getTimelineData } from "./helpers";
 import type { WebappDeps } from "./deps";
 
 export function createEdustajaRoute(deps: WebappDeps) {
@@ -237,11 +237,13 @@ export function createEdustajaRoute(deps: WebappDeps) {
           fetchedAt,
         };
 
+        const tlData = getTimelineData(req, deps.sessionRepository);
         return page(
           req,
           Edustaja({ data }),
           "/edustajat",
           `${firstName} ${lastName}`,
+          tlData,
         );
       },
     },

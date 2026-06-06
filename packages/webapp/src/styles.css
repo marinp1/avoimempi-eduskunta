@@ -15,6 +15,7 @@
   documents,
   sessions,
   debate,
+  timeline,
   responsive;
 
 @import "./styles/_tokens.css" layer(tokens);
@@ -28,4 +29,5 @@
 @import "./styles/_documents.css" layer(documents);
 @import "./styles/_sessions.css" layer(sessions);
 @import "./styles/_debate.css" layer(debate);
+@import "./styles/_timeline.css" layer(timeline);
 @import "./styles/_responsive.css" layer(responsive);

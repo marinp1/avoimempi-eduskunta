@@ -2,3 +2,4 @@
 import "./htmx-config";
 import "./period-island";
 import "./trace-island";
+import "./timeline-island";

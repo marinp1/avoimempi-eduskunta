@@ -1,6 +1,7 @@
 /** @jsxImportSource ../src/jsx */
 import Footer from "./partials/footer";
 import Masthead from "./partials/masthead";
+import { timeline, type TimelineData } from "./partials/timeline";
 
 /** Options passed to the root HTML layout template. */
 export interface LayoutOptions {
@@ -14,6 +15,8 @@ export interface LayoutOptions {
   assetVersion?: string;
   /** Today's date formatted in Finnish locale, shown in the masthead. */
   finnishDate: string;
+  /** When provided, renders the time scrubber after the masthead. */
+  timelineData?: TimelineData;
 }
 
 /** Root HTML document shell: `<head>`, masthead, `<main>`, and footer. */
@@ -23,6 +26,7 @@ export default function Layout({
   title,
   assetVersion,
   finnishDate,
+  timelineData,
 }: LayoutOptions) {
   const v = assetVersion ? `?v=${assetVersion}` : "";
   const pageTitle = title ? `${title} — Eduskuntapeili` : "Eduskuntapeili";
@@ -51,6 +55,7 @@ export default function Layout({
             <header class="masthead">
               <Masthead finnishDate={finnishDate} activePath={activePath} />
             </header>
+            {timelineData ? timeline(timelineData) + '<hr class="rule">' : ""}
           </div>
           <main id="main-content">{content}</main>
           <div class="wrap">

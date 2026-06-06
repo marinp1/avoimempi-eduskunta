@@ -5,7 +5,7 @@ import {
 import Edustajat from "../../../webapp/templates/pages/edustajat";
 import RosterContent from "../../../webapp/templates/pages/roster-content";
 import { fragmentResponse } from "../../../webapp/eta";
-import { page } from "./helpers";
+import { page, getTimelineData } from "./helpers";
 import type { WebappDeps } from "./deps";
 
 export function createEdustajatRoute(deps: WebappDeps) {
@@ -29,11 +29,13 @@ export function createEdustajatRoute(deps: WebappDeps) {
             RosterContent({ allRows, filtered, params, oob: true }),
           );
         }
+        const tlData = getTimelineData(req, deps.sessionRepository);
         return page(
           req,
           Edustajat({ title: "Kansanedustajat", allRows, filtered, params }),
           "/edustajat",
           "Kansanedustajat",
+          tlData,
         );
       },
     },

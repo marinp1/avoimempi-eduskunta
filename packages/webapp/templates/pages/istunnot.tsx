@@ -11,6 +11,8 @@ import type {
 interface Props {
   title?: string;
   data?: SessionsIndexData;
+  /** Finnish-formatted cursor date shown in the "as-of" indicator */
+  cursorFormatted?: string;
 }
 
 function statusLabel(s: "done" | "draft" | "live"): string {
@@ -24,7 +26,7 @@ function statusLabel(s: "done" | "draft" | "live"): string {
   }
 }
 
-export default function Istunnot({ title, data }: Props) {
+export default function Istunnot({ title, data, cursorFormatted }: Props) {
   const d = data!;
   return (
     <>
@@ -44,7 +46,11 @@ export default function Istunnot({ title, data }: Props) {
 
       <hr class="rule" />
 
-      <SessionList weeks={d.weeks} totalSessions={d.totalSessions} />
+      <SessionList
+        weeks={d.weeks}
+        totalSessions={d.totalSessions}
+        cursorFormatted={cursorFormatted}
+      />
 
       <div class="wrap">
         <div class="source-note">
@@ -81,12 +87,22 @@ export default function Istunnot({ title, data }: Props) {
 export function SessionList({
   weeks,
   totalSessions,
+  cursorFormatted,
 }: {
   weeks: WeekGroup[];
   totalSessions: number;
+  cursorFormatted?: string;
 }) {
   return (
-    <div class="wrap">
+    <div
+      id="tl-reactive"
+      class="wrap"
+      hx-get="/istunnot"
+      hx-trigger="tl:commit from:document"
+      hx-include="#tl-date-input"
+      hx-swap="outerHTML"
+      hx-push-url="true"
+    >
       <div class="toolbar" hx-boost="true">
         <label class="search">
           <span class="ic">⌕</span>
@@ -98,12 +114,19 @@ export function SessionList({
             hx-get="/istunnot"
             hx-trigger="input changed delay:200ms"
             hx-target="#sit-root"
+            hx-select="#sit-root"
+            hx-swap="outerHTML"
             hx-push-url="true"
           />
         </label>
         <span class="count">
           <b id="sit-count">{totalSessions}</b> istuntoa
         </span>
+        {cursorFormatted && (
+          <span class="sit-asof" data-sit-asof>
+            tilanne <b data-tl-asof>{cursorFormatted}</b>
+          </span>
+        )}
       </div>
 
       <div class="fchips">
@@ -112,6 +135,8 @@ export function SessionList({
           href="/istunnot"
           hx-get="/istunnot"
           hx-target="#sit-root"
+          hx-select="#sit-root"
+          hx-swap="outerHTML"
           hx-push-url="true"
         >
           Kaikki
@@ -121,6 +146,8 @@ export function SessionList({
           href="/istunnot?kind=vote"
           hx-get="/istunnot?kind=vote"
           hx-target="#sit-root"
+          hx-select="#sit-root"
+          hx-swap="outerHTML"
           hx-push-url="true"
         >
           <span class="pdot" style="background:var(--blue)"></span>
@@ -131,6 +158,8 @@ export function SessionList({
           href="/istunnot?kind=kysely"
           hx-get="/istunnot?kind=kysely"
           hx-target="#sit-root"
+          hx-select="#sit-root"
+          hx-swap="outerHTML"
           hx-push-url="true"
         >
           <span class="pdot" style="background:var(--opp)"></span>Kyselytunti
@@ -140,6 +169,8 @@ export function SessionList({
           href="/istunnot?kind=vali"
           hx-get="/istunnot?kind=vali"
           hx-target="#sit-root"
+          hx-select="#sit-root"
+          hx-swap="outerHTML"
           hx-push-url="true"
         >
           <span class="pdot" style="background:var(--red)"></span>Välikysymys
@@ -149,6 +180,8 @@ export function SessionList({
           href="/istunnot?kind=talk"
           hx-get="/istunnot?kind=talk"
           hx-target="#sit-root"
+          hx-select="#sit-root"
+          hx-swap="outerHTML"
           hx-push-url="true"
         >
           <span class="pdot" style="background:var(--faint)"></span>Keskustelut
@@ -190,6 +223,7 @@ function SessionRowComponent({ session }: { session: SessionRow }) {
       class="sit-row"
       href={session.href}
       data-kind={session.kind}
+      data-date={session.date}
       data-text={session.searchText}
     >
       <div class="sit-date">

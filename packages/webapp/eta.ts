@@ -1,4 +1,5 @@
 import Layout from "./templates/layout";
+import type { TimelineData } from "./templates/partials/timeline";
 
 /** Options for configuring the HTML layout wrapper. */
 export interface LayoutOptions {
@@ -8,6 +9,8 @@ export interface LayoutOptions {
   title?: string;
   /** Cache-busting version string for asset URLs. */
   assetVersion?: string;
+  /** When provided, renders the time scrubber after the masthead. */
+  timelineData?: TimelineData;
 }
 
 /**

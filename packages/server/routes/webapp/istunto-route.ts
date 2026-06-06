@@ -1,6 +1,6 @@
 import Istunto from "../../../webapp/templates/pages/istunto";
 import { buildSessionDetailViewModel } from "../../../webapp/templates/pages/istunto-view-model";
-import { page } from "./helpers";
+import { page, getTimelineData } from "./helpers";
 import type { WebappDeps } from "./deps";
 
 export function createIstuntoRoute(deps: WebappDeps) {
@@ -72,7 +72,14 @@ export function createIstuntoRoute(deps: WebappDeps) {
           seatCounts,
         );
 
-        return page(req, Istunto({ data }), "/istunnot", `Täysistunto ${key}`);
+        const tlData = getTimelineData(req, deps.sessionRepository);
+        return page(
+          req,
+          Istunto({ data }),
+          "/istunnot",
+          `Täysistunto ${key}`,
+          tlData,
+        );
       },
     },
   } as const;

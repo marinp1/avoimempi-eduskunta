@@ -22,6 +22,7 @@ import sessionSectionsBySessionKeys from "../queries/SESSION_SECTIONS_BY_SESSION
 import sessionVotingCountsBySessionKeys from "../queries/SESSION_VOTING_COUNTS_BY_SESSION_KEYS.sql";
 import sessionsIndex from "../queries/SESSIONS_INDEX.sql";
 import sessionsPaginated from "../queries/SESSIONS_PAGINATED.sql";
+import sessionTicks from "../queries/SESSION_TICKS.sql";
 import speechesByDate from "../queries/SPEECHES_BY_DATE.sql";
 
 type SessionRow = DatabaseTables.Session & {
@@ -287,6 +288,21 @@ export class SessionRepository {
     return rows;
   }
 
+  public fetchSittingTicks(): {
+    date: string;
+    key: string;
+    voting_count: number;
+    speech_count: number;
+  }[] {
+    const stmt = this.db.prepare<
+      { date: string; key: string; voting_count: number; speech_count: number },
+      []
+    >(sessionTicks);
+    const rows = stmt.all();
+    stmt.finalize();
+    return rows;
+  }
+
   public fetchSectionSpeeches(params: {
     sectionKey: string;
     limit?: number;
@@ -413,9 +429,7 @@ export class SessionRepository {
     };
   }
 
-  public fetchPartySeatCounts(
-    date: string,
-  ): Array<{
+  public fetchPartySeatCounts(date: string): Array<{
     party_code: string;
     seat_count: number;
     is_in_government: number;
