@@ -22,7 +22,6 @@ import {
   addSecurityHeaders,
   withSecurityHeaders,
 } from "./middleware/security-headers";
-import homepage from "./public/index.html";
 import { createCoreRoutes } from "./routes/core-routes";
 import { createDocumentRoutes } from "./routes/document-routes";
 import { createGovernmentRoutes } from "./routes/government-routes";
@@ -32,8 +31,8 @@ import { createPartyRoutes } from "./routes/party-routes";
 import { createPersonRoutes } from "./routes/person-routes";
 import { createSanityRoutes } from "./routes/sanity-routes";
 import { createSessionRoutes } from "./routes/session-routes";
-import { createStaticPageRoutes } from "./routes/static-page-routes";
 import { createVotingRoutes } from "./routes/voting-routes";
+import { createWebappRoutes } from "./routes/webapp-routes";
 import { getQualityDb } from "./sanity/quality-db";
 import { ResolutionStore } from "./sanity/resolution-store";
 
@@ -189,7 +188,7 @@ export type ApiRoutes = typeof baseApiRoutes &
   ReturnType<typeof import("./routes/sanity-dev-routes").createSanityDevRoutes>;
 
 const allRoutes = withSecurityHeaders({
-  ...createStaticPageRoutes(homepage),
+  ...createWebappRoutes(),
   ...apiRoutes,
   "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
 });
