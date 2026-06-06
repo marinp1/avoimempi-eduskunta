@@ -6,6 +6,7 @@ import { esc, partyShortName } from "../helpers";
 export interface TextSection {
   heading: string;
   paragraphs: string[];
+  html: string | null;
 }
 
 export interface Signatory {
@@ -186,7 +187,8 @@ export default function Asiakirja({ data }: Props) {
         )}
 
         {d.textSections.length > 0 &&
-          d.textSections[0]!.paragraphs.length > 0 && (
+          (d.textSections[0]!.paragraphs.length > 0 ||
+            d.textSections[0]!.html) && (
             <div class="summary">
               <div class="summary__bar">
                 <span class="l">
@@ -200,7 +202,14 @@ export default function Asiakirja({ data }: Props) {
               <div class="summary__in">
                 <div class="summary__q">Mistä tässä on kyse?</div>
                 <p class="summary__lead">
-                  {esc(d.textSections[0]!.paragraphs[0]!.slice(0, 280))}…
+                  {d.textSections[0]!.paragraphs[0]
+                    ? esc(d.textSections[0]!.paragraphs[0]!.slice(0, 280)) + "…"
+                    : d.textSections[0]!.html
+                      ? d.textSections[0]!.html.replace(/<[^>]+>/g, "").slice(
+                          0,
+                          280,
+                        ) + "…"
+                      : ""}
                 </p>
               </div>
             </div>
@@ -212,13 +221,15 @@ export default function Asiakirja({ data }: Props) {
           {d.textSections.map((section, si) => (
             <>
               <div class="article__phase">{section.heading}</div>
-              {section.paragraphs.map((para, pi) =>
-                pi === 0 && si === 0 ? (
-                  <p class="standfirst">{esc(para)}</p>
-                ) : (
-                  <p>{esc(para)}</p>
-                ),
-              )}
+              {section.html
+                ? section.html
+                : section.paragraphs.map((para, pi) =>
+                    pi === 0 && si === 0 ? (
+                      <p class="standfirst">{esc(para)}</p>
+                    ) : (
+                      <p>{esc(para)}</p>
+                    ),
+                  )}
             </>
           ))}
 

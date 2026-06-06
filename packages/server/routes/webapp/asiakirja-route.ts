@@ -5,6 +5,7 @@ import Asiakirja, {
   type Law,
 } from "../../../webapp/templates/pages/asiakirja";
 import { partyColor } from "../../../webapp/templates/helpers";
+import { richTextToHtml } from "../../../webapp/templates/components/rich-text";
 import { renderFullPage } from "../../../webapp/eta";
 import { page, getTimelineData } from "./helpers";
 import type { WebappDeps } from "./deps";
@@ -134,6 +135,17 @@ function splitParagraphs(text: string | null | undefined): string[] {
   return parts.length > 0 ? parts : [text.trim()].filter(Boolean);
 }
 
+function buildTextSection(
+  heading: string,
+  plainText: string | null | undefined,
+  richTextJson: string | null | undefined,
+): TextSection | null {
+  const html = richTextToHtml(richTextJson);
+  const paragraphs = splitParagraphs(plainText);
+  if (!html && paragraphs.length === 0) return null;
+  return { heading, paragraphs, html: html || null };
+}
+
 function textCharCount(sections: TextSection[]): number {
   return sections.reduce(
     (sum, s) => sum + s.paragraphs.reduce((ss, p) => ss + p.length, 0),
@@ -258,8 +270,12 @@ function buildWrittenQuestion(
   }
 
   const textSections: TextSection[] = [];
-  const qp = splitParagraphs(detail.question_text);
-  if (qp.length > 0) textSections.push({ heading: "Kysymys", paragraphs: qp });
+  const qs = buildTextSection(
+    "Kysymys",
+    detail.question_text,
+    detail.question_rich_text,
+  );
+  if (qs) textSections.push(qs);
 
   const signers = (detail as any).signers ?? [];
   const signatories: Signatory[] = signers.map((s: any) => ({
@@ -332,9 +348,8 @@ function buildOralQuestion(
   const lifecycleStages = buildLifecycleFromStages(stagesFromDb(detail));
 
   const textSections: TextSection[] = [];
-  const qp = splitParagraphs(detail.question_text);
-  if (qp.length > 0)
-    textSections.push({ heading: "Suullinen kysymys", paragraphs: qp });
+  const qs = buildTextSection("Suullinen kysymys", detail.question_text, null);
+  if (qs) textSections.push(qs);
 
   const author = detail.asker_text ?? "";
 
@@ -389,11 +404,18 @@ function buildInterpellation(
   const lifecycleStages = buildLifecycleFromStages(stagesFromDb(detail));
 
   const textSections: TextSection[] = [];
-  const qp = splitParagraphs(detail.question_text);
-  if (qp.length > 0)
-    textSections.push({ heading: "Välikysymys", paragraphs: qp });
-  const rp = splitParagraphs(detail.resolution_text);
-  if (rp.length > 0) textSections.push({ heading: "Ponsi", paragraphs: rp });
+  const qs = buildTextSection(
+    "Välikysymys",
+    detail.question_text,
+    detail.question_rich_text,
+  );
+  if (qs) textSections.push(qs);
+  const rs = buildTextSection(
+    "Ponsi",
+    detail.resolution_text,
+    detail.resolution_rich_text,
+  );
+  if (rs) textSections.push(rs);
 
   const signers = (detail as any).signers ?? [];
   const signatories: Signatory[] = signers.map((s: any) => ({
@@ -458,17 +480,30 @@ function buildGovernmentProposal(
   const lifecycleStages = buildLifecycleFromStages(stagesFromDb(detail));
 
   const textSections: TextSection[] = [];
-  const sum = splitParagraphs(detail.summary_text);
-  if (sum.length > 0)
-    textSections.push({ heading: "Tiivistelmä", paragraphs: sum });
-  const jst = splitParagraphs(detail.justification_text);
-  if (jst.length > 0)
-    textSections.push({ heading: "Perustelut", paragraphs: jst });
-  const prop = splitParagraphs(detail.proposal_text);
-  if (prop.length > 0)
-    textSections.push({ heading: "Ehdotus", paragraphs: prop });
-  const app = splitParagraphs(detail.appendix_text);
-  if (app.length > 0) textSections.push({ heading: "Liite", paragraphs: app });
+  const sum = buildTextSection(
+    "Tiivistelmä",
+    detail.summary_text,
+    detail.summary_rich_text,
+  );
+  if (sum) textSections.push(sum);
+  const jst = buildTextSection(
+    "Perustelut",
+    detail.justification_text,
+    detail.justification_rich_text,
+  );
+  if (jst) textSections.push(jst);
+  const prop = buildTextSection(
+    "Ehdotus",
+    detail.proposal_text,
+    detail.proposal_rich_text,
+  );
+  if (prop) textSections.push(prop);
+  const app = buildTextSection(
+    "Liite",
+    detail.appendix_text,
+    detail.appendix_rich_text,
+  );
+  if (app) textSections.push(app);
 
   const rawSignatories = (detail as any).signatories ?? [];
   const signatories: Signatory[] = rawSignatories.map((s: any) => ({
@@ -537,15 +572,24 @@ function buildLegislativeInitiative(
   const lifecycleStages = buildLifecycleFromStages(stagesFromDb(detail));
 
   const textSections: TextSection[] = [];
-  const jst = splitParagraphs(detail.justification_text);
-  if (jst.length > 0)
-    textSections.push({ heading: "Perustelut", paragraphs: jst });
-  const prop = splitParagraphs(detail.proposal_text);
-  if (prop.length > 0)
-    textSections.push({ heading: "Ehdotus", paragraphs: prop });
-  const law = splitParagraphs(detail.law_text);
-  if (law.length > 0)
-    textSections.push({ heading: "Lakiteksti", paragraphs: law });
+  const jst = buildTextSection(
+    "Perustelut",
+    detail.justification_text,
+    detail.justification_rich_text,
+  );
+  if (jst) textSections.push(jst);
+  const prop = buildTextSection(
+    "Ehdotus",
+    detail.proposal_text,
+    detail.proposal_rich_text,
+  );
+  if (prop) textSections.push(prop);
+  const law = buildTextSection(
+    "Lakiteksti",
+    detail.law_text,
+    detail.law_rich_text,
+  );
+  if (law) textSections.push(law);
 
   const signers = (detail as any).signers ?? [];
   const signatories: Signatory[] = signers.map((s: any) => ({
@@ -611,29 +655,48 @@ function buildCommitteeReport(
   const reportType = REPORT_LABELS[detail.report_type_code ?? ""] ?? "Mietintö";
 
   const textSections: TextSection[] = [];
-  const sum = splitParagraphs(detail.summary_text);
-  if (sum.length > 0)
-    textSections.push({ heading: "Tiivistelmä", paragraphs: sum });
-  const gen = splitParagraphs(detail.general_reasoning_text);
-  if (gen.length > 0)
-    textSections.push({ heading: "Yleisperustelut", paragraphs: gen });
-  const det = splitParagraphs(detail.detailed_reasoning_text);
-  if (det.length > 0)
-    textSections.push({
-      heading: "Yksityiskohtaiset perustelut",
-      paragraphs: det,
-    });
-  const dec = splitParagraphs(detail.decision_text);
-  if (dec.length > 0)
-    textSections.push({ heading: "Päätösehdotus", paragraphs: dec });
-  const amd = splitParagraphs(detail.legislation_amendment_text);
-  if (amd.length > 0)
-    textSections.push({ heading: "Lainsäädäntömuutos", paragraphs: amd });
-  const min = splitParagraphs(detail.minority_opinion_text);
-  if (min.length > 0)
-    textSections.push({ heading: "Eriävä mielipide", paragraphs: min });
-  const res = splitParagraphs(detail.resolution_text);
-  if (res.length > 0) textSections.push({ heading: "Ponsi", paragraphs: res });
+  const sum = buildTextSection(
+    "Tiivistelmä",
+    detail.summary_text,
+    detail.summary_rich_text,
+  );
+  if (sum) textSections.push(sum);
+  const gen = buildTextSection(
+    "Yleisperustelut",
+    detail.general_reasoning_text,
+    detail.general_reasoning_rich_text,
+  );
+  if (gen) textSections.push(gen);
+  const det = buildTextSection(
+    "Yksityiskohtaiset perustelut",
+    detail.detailed_reasoning_text,
+    detail.detailed_reasoning_rich_text,
+  );
+  if (det) textSections.push(det);
+  const dec = buildTextSection(
+    "Päätösehdotus",
+    detail.decision_text,
+    detail.decision_rich_text,
+  );
+  if (dec) textSections.push(dec);
+  const amd = buildTextSection(
+    "Lainsäädäntömuutos",
+    detail.legislation_amendment_text,
+    detail.legislation_amendment_rich_text,
+  );
+  if (amd) textSections.push(amd);
+  const min = buildTextSection(
+    "Eriävä mielipide",
+    detail.minority_opinion_text,
+    detail.minority_opinion_rich_text,
+  );
+  if (min) textSections.push(min);
+  const res = buildTextSection(
+    "Ponsi",
+    detail.resolution_text,
+    detail.resolution_rich_text,
+  );
+  if (res) textSections.push(res);
 
   const members = (detail as any).members ?? [];
   const experts = (detail as any).experts ?? [];
@@ -703,11 +766,18 @@ function buildParliamentAnswer(
   const submissionDate = detail.submission_date ?? detail.signature_date ?? "";
 
   const textSections: TextSection[] = [];
-  const dec = splitParagraphs(detail.decision_text);
-  if (dec.length > 0) textSections.push({ heading: "Päätös", paragraphs: dec });
-  const leg = splitParagraphs(detail.legislation_text);
-  if (leg.length > 0)
-    textSections.push({ heading: "Lainsäädäntö", paragraphs: leg });
+  const dec = buildTextSection(
+    "Päätös",
+    detail.decision_text,
+    detail.decision_rich_text,
+  );
+  if (dec) textSections.push(dec);
+  const leg = buildTextSection(
+    "Lainsäädäntö",
+    detail.legislation_text,
+    detail.legislation_rich_text,
+  );
+  if (leg) textSections.push(leg);
 
   return {
     kind: "vastaus-edk",

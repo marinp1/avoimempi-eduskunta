@@ -692,3 +692,80 @@ div.doc-row {
   font-weight: 600;
   white-space: nowrap;
 }
+
+/* ============================================================
+   RICH TEXT ELEMENTS
+   ============================================================ */
+.rt-p {
+  font-size: 18px;
+  line-height: 1.72;
+  color: var(--body);
+  margin: 0 0 20px;
+}
+.article .rt-p:first-of-type {
+  font-size: 20px;
+  line-height: 1.6;
+  color: var(--ink);
+  font-weight: 500;
+}
+.rt-h {
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--ink);
+  margin: 32px 0 14px;
+  letter-spacing: -0.01em;
+}
+.rt-indent {
+  margin: 16px 0;
+  padding: 12px 18px;
+  border-left: 3px solid var(--rule);
+  background: var(--paper-2);
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--body);
+}
+.rt-list {
+  margin: 12px 0 20px;
+  padding: 0 0 0 24px;
+  list-style: disc;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.rt-list li {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--body);
+}
+.rt-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--body);
+}
+.rt-table th,
+.rt-table td {
+  padding: 8px 12px;
+  border: 1px solid var(--rule);
+  vertical-align: top;
+  text-align: left;
+}
+.rt-table th {
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--paper-2);
+}
+.rt-ref {
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--blue);
+}
+.rt-ref:hover {
+  color: var(--blue-ink);
+  border-bottom-style: solid;
+}
