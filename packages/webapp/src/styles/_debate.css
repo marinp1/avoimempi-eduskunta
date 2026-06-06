@@ -118,40 +118,58 @@
   margin-left: auto;
   white-space: nowrap;
 }
+/* per-speech AI summary — labeled reading aid above full text */
 .speech__sum {
-  display: flex;
-  gap: 9px;
-  margin: 13px 0;
-  font-size: 13.5px;
-  color: var(--blue-ink);
+  margin: 14px 0 18px;
   background: var(--paper-2);
   border-left: 3px solid var(--blue);
-  padding: 10px 14px;
-  line-height: 1.45;
+  padding: 12px 16px 13px;
 }
-.speech__sum .sp {
+.speech__sum-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 700 9.5px var(--head);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--blue);
-  flex: 0 0 auto;
+  margin-bottom: 7px;
+}
+.speech__sum-tag .sp {
+  font-size: 12px;
+}
+.speech__sum p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--blue-ink);
+  max-width: 66ch;
+}
+.speech__body {
+  border-left: 2px solid var(--rule);
+  padding-left: 18px;
 }
 .speech__body p {
   font-size: 16px;
-  line-height: 1.68;
+  line-height: 1.72;
   color: var(--body);
-  margin: 0 0 14px;
+  margin: 0 0 15px;
   max-width: 64ch;
+}
+.speech__body p:first-child::first-letter {
+  font-weight: 600;
 }
 .speech__body p:last-child {
   margin-bottom: 0;
-}
-.speech__cont {
-  color: var(--faint);
 }
 .speech__foot {
   display: flex;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
-  margin-top: 15px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule-soft);
 }
 .speech__foot .link-arrow {
   font-size: 13px;
@@ -160,6 +178,7 @@
   font-family: var(--mono);
   font-size: 11px;
   color: var(--faint);
+  margin-right: auto;
 }
 
 /* "show more replies" block */

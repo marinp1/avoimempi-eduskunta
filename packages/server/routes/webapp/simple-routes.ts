@@ -1,4 +1,9 @@
 import Aanestykset from "../../../webapp/templates/pages/aanestykset";
+import type {
+  AanestyksetData,
+  VoteRow,
+  VoteGroup,
+} from "../../../webapp/templates/pages/aanestykset-view-model";
 import Analytiikka from "../../../webapp/templates/pages/analytiikka";
 import Asiakirjat, {
   type AsiakirjatIndexData,
@@ -8,7 +13,11 @@ import Hallitukset from "../../../webapp/templates/pages/hallitukset";
 import Home, { HomeReactive } from "../../../webapp/templates/pages/home";
 import Muutokset from "../../../webapp/templates/pages/muutokset";
 import Puolueet from "../../../webapp/templates/pages/puolueet";
-import { partyColor } from "../../../webapp/templates/helpers";
+import type {
+  PuolueetData,
+  PartyRow,
+} from "../../../webapp/templates/pages/puolueet-view-model";
+import { partyColor, partyShortName } from "../../../webapp/templates/helpers";
 import { htmlResponse } from "../../../webapp/eta";
 import {
   page,
@@ -107,9 +116,71 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           deps.sessionRepository,
           deps.metadataRepository,
         );
+        const period = readPeriod(req, deps.metadataRepository);
+        const bounds = getTermBounds(period, deps.metadataRepository);
+
+        const summaryRows = deps.analyticsRepository.fetchPartySummary({
+          asOfDate: tlData.cursor,
+          startDate: bounds.startDate,
+          endDate: bounds.endDate,
+          governmentStartDate: bounds.governmentStartDate,
+        });
+
+        const partyDiscipline = deps.analyticsRepository.fetchPartyDiscipline({
+          startDate: bounds.startDate,
+          endDate: bounds.endDate,
+        });
+
+        const govSeats = summaryRows
+          .filter((r) => r.is_in_government === 1)
+          .reduce((s, r) => s + r.member_count, 0);
+        const oppSeats = summaryRows
+          .filter((r) => r.is_in_government === 0)
+          .reduce((s, r) => s + r.member_count, 0);
+        const totalSeats = govSeats + oppSeats;
+
+        const fetchedAt = new Date().toLocaleString("fi-FI", {
+          day: "numeric",
+          month: "numeric",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        const rows: PartyRow[] = summaryRows.map((r) => {
+          const disc = partyDiscipline?.find(
+            (d) => d.party_code === r.party_code,
+          );
+          const cohesionPct = disc?.discipline_rate ?? null;
+          return {
+            code: r.party_code,
+            name: partyShortName(r.party_display_code, r.party_name),
+            shortName: r.party_display_code,
+            color: partyColor(r.party_display_code),
+            bloc: r.is_in_government === 1 ? "government" : "opposition",
+            chairName: null,
+            seatCount: r.member_count,
+            seatShare:
+              totalSeats > 0
+                ? `${((r.member_count / totalSeats) * 100).toFixed(1)} %`
+                : "–",
+            cohesionPct: cohesionPct != null ? Math.round(cohesionPct) : null,
+            cohesionLabel:
+              cohesionPct != null ? `${Math.round(cohesionPct)} %` : "–",
+          };
+        });
+
+        const data: PuolueetData = {
+          rows,
+          govSeats,
+          oppSeats,
+          totalSeats,
+          fetchedAt,
+        };
+
         return page(
           req,
-          Puolueet({ title: "Puolueet" }),
+          Puolueet({ title: "Puolueet", data }),
           "/puolueet",
           "Puolueet",
           tlData,
@@ -123,9 +194,78 @@ export function createSimplePageRoutes(deps: WebappDeps) {
           deps.sessionRepository,
           deps.metadataRepository,
         );
+        const period = readPeriod(req, deps.metadataRepository);
+        const bounds = getTermBounds(period, deps.metadataRepository);
+
+        const browseResult = deps.votingRepository.browseVotings({
+          startDate: bounds.startDate,
+          endDate: bounds.endDate,
+          sort: "newest",
+          limit: 500,
+        });
+
+        const fetchedAt = new Date().toLocaleString("fi-FI", {
+          day: "numeric",
+          month: "numeric",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        // Group votes by session
+        const groupMap = new Map<string, VoteRow[]>();
+        for (const v of browseResult) {
+          const nYes = v.n_yes ?? 0;
+          const nNo = v.n_no ?? 0;
+          const nEmpty = v.n_abstain ?? 0;
+          const nAbsent = v.n_absent ?? 0;
+          const nTotal = v.n_total ?? 0;
+          const row: VoteRow = {
+            id: v.id,
+            votingNumber: v.number,
+            time: v.start_time ?? "",
+            title: v.title ?? "",
+            questionText: (v.title ?? "").substring(0, 120),
+            sessionKey: v.session_key ?? "",
+            sessionDate: v.start_date ?? "",
+            asiakohtaNum: v.section_order ?? null,
+            sectionKey: v.section_key ?? null,
+            documents: [],
+            references: [],
+            nYes,
+            nNo,
+            nEmpty,
+            nAbsent,
+            nTotal,
+            yesPct: nTotal > 0 ? (nYes / nTotal) * 100 : 0,
+            noPct: nTotal > 0 ? (nNo / nTotal) * 100 : 0,
+            outcome: nYes > nNo ? "ok" : "no",
+            outcomeLabel: nYes > nNo ? "Hyväksytty" : "Hylätty",
+          };
+          const sk = v.session_key ?? "";
+          if (!groupMap.has(sk)) groupMap.set(sk, []);
+          groupMap.get(sk)!.push(row);
+        }
+
+        const groups: VoteGroup[] = Array.from(groupMap.entries())
+          .sort(([a], [b]) => b.localeCompare(a))
+          .slice(0, 30)
+          .map(([sessionKey, rows]) => ({
+            sessionKey,
+            sessionDate: rows[0]?.sessionDate ?? "",
+            sessionDateLabel: `Täysistunto ${sessionKey}`,
+            rows,
+          }));
+
+        const data: AanestyksetData = {
+          groups,
+          totalCount: browseResult.length,
+          fetchedAt,
+        };
+
         return page(
           req,
-          Aanestykset({ title: "Äänestykset" }),
+          Aanestykset({ title: "Äänestykset", data }),
           "/aanestykset",
           "Äänestykset",
           tlData,

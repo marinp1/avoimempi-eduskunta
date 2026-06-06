@@ -295,6 +295,12 @@ function SpeechTranscript({
       <p class="kicker" style="margin:26px 0 14px">
         Ryhmäpuheenvuorot · puhejärjestyksessä
       </p>
+      <p style="font-size:14px;line-height:1.55;color:var(--muted);max-width:66ch;margin:0 0 16px">
+        Kaikki ryhmäpuheenvuorot kokonaisina, lyhentämättöminä. Kunkin edellä on{" "}
+        <b style="color:var(--ink);font-weight:600">tekoälytiivistelmä</b>{" "}
+        nopeaa silmäilyä varten — varsinainen puheenvuoro on aina luettavissa
+        sen alla.
+      </p>
       <div class="transcript" id="transcript">
         {speeches.map((sp) => (
           <SpeechCard speech={sp} />
@@ -337,25 +343,22 @@ function SpeechCard({ speech: sp }: { speech: SpeechEntry }) {
         </div>
         {sp.summary && (
           <div class="speech__sum">
-            <span class="sp">✦</span>
-            <span>{sp.summary}</span>
+            <span class="speech__sum-tag">
+              <span class="sp">✦</span>Tekoälytiivistelmä
+            </span>
+            <p>{sp.summary}</p>
           </div>
         )}
-        <div class="speech__body">
-          {sp.contentPreview && (
-            <p>
-              {sp.contentPreview}
-              {sp.contentTruncated && <span class="speech__cont">…</span>}
-            </p>
-          )}
-        </div>
+        <div class="speech__body">{sp.content && <p>{sp.content}</p>}</div>
         <div class="speech__foot">
-          <a href="#" class="link-arrow">
-            Lue koko puheenvuoro (PTK) ↗
-          </a>
           <span class="meta">
-            {sp.contentLength.toLocaleString("fi-FI")} merkkiä · suomi
+            {sp.contentLength.toLocaleString("fi-FI")} merkkiä
+            {sp.durationLabel ? ` · ${sp.durationLabel}` : ""}
+            {" · "}suomi
           </span>
+          <a href="#" class="link-arrow">
+            Avaa pöytäkirjassa (PTK) ↗
+          </a>
         </div>
       </div>
     </article>

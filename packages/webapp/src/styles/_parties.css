@@ -1,0 +1,175 @@
+/* ============================================================
+   PUOLUEET — Party index rows & party detail
+   ============================================================ */
+
+/* ----- party index grouping ----- */
+.pgroup {
+  margin-top: 30px;
+}
+.prow-list {
+  display: block;
+}
+
+/* ----- party row (Puolueet index) ----- */
+.prow {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 132px minmax(150px, 230px) 24px;
+  gap: 0 20px;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid var(--rule);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.12s ease;
+}
+.prow:hover {
+  background: var(--paper-2);
+}
+.prow__sq {
+  width: 44px;
+  height: 44px;
+  background: var(--p);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 800 13px var(--head);
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+}
+.prow__id {
+  min-width: 0;
+}
+.prow__name {
+  display: block;
+  font: 700 19px var(--head);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.prow__sub {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.prow__seats {
+  text-align: left;
+  white-space: nowrap;
+}
+.prow__seats b {
+  font: 800 24px var(--head);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.prow__seats small {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+/* ----- party cohesion bar ----- */
+.prow__coh {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 9px;
+}
+.prow__coh-k {
+  font: 700 9.5px var(--head);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.prow__track {
+  height: 8px;
+  background: var(--paper-3);
+  display: block;
+}
+.prow__track .fill {
+  display: block;
+  height: 100%;
+}
+.prow__coh-v {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  min-width: 30px;
+  text-align: right;
+}
+.prow__go {
+  font-size: 17px;
+  color: var(--blue);
+  text-align: right;
+}
+.prow:hover .prow__go {
+  color: var(--blue-ink);
+}
+
+/* ----- bloc composition strip ----- */
+.bloc-bar {
+  display: flex;
+  height: 16px;
+  border: 1px solid var(--rule);
+  margin: 20px 0 14px;
+}
+.bloc-bar .gov {
+  background: var(--hall);
+}
+.bloc-bar .opp {
+  background: var(--red);
+}
+.bloc-legend {
+  display: flex;
+  gap: 22px;
+  font-size: 12.5px;
+  color: var(--body);
+  margin-bottom: 6px;
+}
+.bloc-legend span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.bloc-legend .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+/* ----- responsive ----- */
+@media (max-width: 760px) {
+  .prow {
+    grid-template-columns: 44px 1fr auto;
+    grid-template-areas:
+      "sq id seats"
+      "sq coh coh";
+    row-gap: 12px;
+  }
+  .prow__sq {
+    grid-area: sq;
+    align-self: start;
+  }
+  .prow__id {
+    grid-area: id;
+  }
+  .prow__sub {
+    white-space: normal;
+  }
+  .prow__seats {
+    grid-area: seats;
+    text-align: right;
+  }
+  .prow__coh {
+    grid-area: coh;
+  }
+  .prow__go {
+    display: none;
+  }
+}

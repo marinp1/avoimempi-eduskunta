@@ -206,19 +206,13 @@ interface SpeechRow {
   ordinal_number: number | null;
 }
 
-const CONTENT_PREVIEW_LENGTH = 400;
-
+/** Full speech content is always shown — no truncation. */
 function contentPreview(content: string | null): {
   preview: string | null;
   truncated: boolean;
 } {
   if (!content) return { preview: null, truncated: false };
-  if (content.length <= CONTENT_PREVIEW_LENGTH) {
-    return { preview: content, truncated: false };
-  }
-  const cut = content.lastIndexOf(" ", CONTENT_PREVIEW_LENGTH);
-  const end = cut > CONTENT_PREVIEW_LENGTH / 2 ? cut : CONTENT_PREVIEW_LENGTH;
-  return { preview: content.slice(0, end) + "…", truncated: true };
+  return { preview: content, truncated: false };
 }
 
 export function buildDebateViewModel(params: {

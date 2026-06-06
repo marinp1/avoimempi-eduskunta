@@ -477,7 +477,14 @@ function AgendaItemComponent({
         )}
 
         {item.titleHref ? (
-          <a href={item.titleHref} class="ag-title">
+          <a
+            href={item.titleHref}
+            class="ag-title"
+            hx-get={item.titleHref}
+            hx-target="#main-content"
+            hx-push-url="true"
+            hx-swap="innerHTML"
+          >
             {item.title}
           </a>
         ) : (
@@ -538,7 +545,22 @@ function VoteList({ votes }: { votes: VoteResultData[] }) {
     <div class="ag-votes">
       {votes.map((v) => (
         <div class="agvote">
-          <div class="agvote__t">{v.title}</div>
+          <div class="agvote__t">
+            {v.id != null ? (
+              <a
+                href={`/aanestys/${v.id}`}
+                style="color:var(--blue);text-decoration:none"
+                hx-get={`/aanestys/${v.id}`}
+                hx-target="#main-content"
+                hx-push-url="true"
+                hx-swap="innerHTML"
+              >
+                {v.title}
+              </a>
+            ) : (
+              v.title
+            )}
+          </div>
           <div class="agvote__bar">
             <span class="j" style={`width:${v.yesPct.toFixed(1)}%`}></span>
             <span class="e" style={`width:${v.noPct.toFixed(1)}%`}></span>

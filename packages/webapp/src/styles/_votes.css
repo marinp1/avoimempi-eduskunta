@@ -1,0 +1,264 @@
+/* ============================================================
+   ÄÄNESTYKSET & ÄÄNESTYS — Vote index rows & single-vote detail
+   ============================================================ */
+
+/* ----- vote group (Äänestykset index) ----- */
+.vgroup {
+  margin-top: 28px;
+}
+.vgroup:first-of-type {
+  margin-top: 10px;
+}
+.vrow-list {
+  display: block;
+}
+
+/* ----- vote row ----- */
+.vrow {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 188px 22px;
+  gap: 0 22px;
+  align-items: center;
+  padding: 16px 2px;
+  border-bottom: 1px solid var(--rule-soft);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.12s ease;
+}
+.vrow:hover {
+  background: var(--paper-2);
+}
+.vrow__rail {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.vrow__id {
+  font: 700 13px var(--head);
+  color: var(--ink);
+}
+.vrow__time {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+.vrow__main {
+  min-width: 0;
+}
+.vrow__q {
+  display: block;
+  font: 700 16.5px var(--head);
+  line-height: 1.28;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+}
+.vrow:hover .vrow__q {
+  color: var(--blue-ink);
+}
+.vrow__docs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.vrow__links {
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 7px;
+}
+.vrow__links a,
+.vrow__links .ref {
+  color: var(--blue);
+}
+
+/* result column */
+.vrow__res {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.vrow__nums {
+  font-family: var(--head);
+  font-weight: 800;
+  font-size: 21px;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+.vrow__nums .j {
+  color: var(--hall);
+}
+.vrow__nums .e {
+  color: var(--red);
+}
+.vrow__nums .dash {
+  color: var(--faint);
+  font-weight: 400;
+}
+.vrow__bar {
+  display: flex;
+  height: 7px;
+  background: var(--paper-3);
+}
+.vrow__bar .j {
+  background: var(--hall);
+}
+.vrow__bar .e {
+  background: var(--red);
+}
+.vrow__out {
+  font: 700 9.5px var(--head);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  align-self: flex-start;
+  background: var(--paper-3);
+  color: var(--muted);
+}
+.vrow__out.ok {
+  background: var(--hall-soft);
+  color: var(--hall);
+}
+.vrow__out.no {
+  background: var(--opp-soft);
+  color: #8a531a;
+}
+.vrow__go {
+  font-size: 16px;
+  color: var(--blue);
+  text-align: right;
+}
+.vrow:hover .vrow__go {
+  color: var(--blue-ink);
+}
+
+/* doc chips in vote rows invert global .ag-doc emphasis */
+.vrow__docs .ag-doc {
+  color: var(--muted);
+  padding: 2px 7px;
+}
+.vrow__docs .ag-doc.cmt {
+  color: var(--blue);
+  border-color: color-mix(in srgb, var(--blue) 28%, transparent);
+}
+
+/* ============================================================
+   SINGLE-VOTE DETAIL (Äänestys)
+   ============================================================ */
+
+/* ----- vote result headline ----- */
+.vresult {
+  margin-top: 26px;
+}
+.vresult__q {
+  display: grid;
+  gap: 8px;
+}
+.vresult__q .prop {
+  display: flex;
+  align-items: baseline;
+  gap: 11px;
+  font-size: 15px;
+  color: var(--body);
+  line-height: 1.4;
+}
+.vresult__q .prop .k {
+  font: 800 11px var(--head);
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  flex: 0 0 auto;
+  color: #fff;
+}
+.vresult__q .prop .k.j {
+  background: var(--hall);
+}
+.vresult__q .prop .k.e {
+  background: var(--red);
+}
+
+/* ----- MP lookup (searchable per-MP vote list) ----- */
+.mlookup {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.mlist {
+  margin-top: 12px;
+  border-top: 1px solid var(--rule);
+  max-height: 420px;
+  overflow: auto;
+}
+.mvote {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.mvote .mn {
+  font-size: 14px;
+  color: var(--ink);
+}
+.mvote .mn small {
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  margin-left: 5px;
+  text-transform: uppercase;
+}
+.mvote .mb {
+  font: 700 10px var(--head);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  flex: 0 0 auto;
+}
+.mvote .mb.j {
+  background: var(--hall-soft);
+  color: var(--hall);
+}
+.mvote .mb.e {
+  background: var(--opp-soft);
+  color: var(--red);
+}
+.mvote .mb.tyh {
+  background: var(--opp-soft);
+  color: #8a531a;
+}
+.mvote .mb.out {
+  background: var(--paper-3);
+  color: var(--muted);
+}
+
+/* ----- responsive ----- */
+@media (max-width: 760px) {
+  .vrow {
+    grid-template-columns: 60px 1fr;
+    grid-template-areas:
+      "rail main"
+      "rail res";
+    row-gap: 12px;
+  }
+  .vrow__rail {
+    grid-area: rail;
+  }
+  .vrow__main {
+    grid-area: main;
+  }
+  .vrow__res {
+    grid-area: res;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .vrow__bar {
+    width: 120px;
+  }
+  .vrow__go {
+    display: none;
+  }
+}

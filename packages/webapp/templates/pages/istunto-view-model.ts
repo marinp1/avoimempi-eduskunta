@@ -68,6 +68,7 @@ export interface AgendaItemData {
   number: number;
   title: string;
   titleHref?: string;
+  sectionKey?: string;
   documents: DocRef[];
   votingPhase?: VotingPhaseData;
   activity?: ActivityData;
@@ -80,6 +81,7 @@ export interface VotingPhaseData {
 }
 
 export interface VoteResultData {
+  id?: number;
   title: string;
   nYes: number;
   nNo: number;
@@ -338,10 +340,10 @@ export function buildSessionDetailViewModel(
       title,
       documents,
       activity,
-      titleHref:
-        !out.isVoting && phaseCode !== "poydallepano" && speechCount > 0
-          ? `/keskustelu?key=${encodeURIComponent(section.key)}`
-          : undefined,
+      sectionKey: section.key,
+      titleHref: section.key
+        ? `/asiakohta/${encodeURIComponent(section.key)}`
+        : undefined,
     };
 
     if (out.isVoting) {
@@ -351,6 +353,7 @@ export function buildSessionDetailViewModel(
         const total = nYes + nNo;
         const isApproved = nYes > nNo;
         return {
+          id: v.id,
           title: v.title ?? "",
           nYes,
           nNo,

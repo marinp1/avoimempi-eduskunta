@@ -1,23 +1,147 @@
 /** @jsxImportSource ../../src/jsx */
 import Kicker from "../components/kicker";
+import { esc } from "../helpers";
+import type { AanestyksetData, VoteRow } from "./aanestykset-view-model";
 
 interface Props {
-  /** Page `<title>` suffix. */
   title?: string;
+  data: AanestyksetData;
 }
 
-/** Voting results page (placeholder — not yet implemented). */
-export default function Aanestykset({ title }: Props) {
+export default function Aanestykset({ title, data }: Props) {
+  const d = data;
+
   return (
     <>
       <title>{title} — Eduskuntapeili</title>
-      <section class="page-head wrap">
-        <Kicker text="Äänestykset" />
-        <h1>Äänestykset</h1>
-        <p class="sub">
-          Eduskunnan äänestystulokset ja äänestyshistoria. Tulossa pian.
-        </p>
-      </section>
+
+      <div class="wrap">
+        <section class="page-head">
+          <Kicker text="Äänestykset" />
+          <h1>Äänestykset</h1>
+          <p class="sub">
+            Täysistuntojen äänestystulokset ·{" "}
+            <b style="color:var(--ink)">{d.totalCount}</b> äänestystä
+          </p>
+        </section>
+
+        <div class="toolbar" style="margin-top:20px">
+          <label class="search">
+            <span class="ic">⌕</span>
+            <input
+              id="aanestys-search"
+              type="text"
+              placeholder="Hae äänestyksellä, asiakirjalla tai istunnolla…"
+            />
+          </label>
+          <span class="count">
+            <b id="aanestys-count">{d.totalCount}</b> äänestystä
+          </span>
+        </div>
+
+        <div class="fchips" style="margin-top:14px">
+          <button class="fchip is-active" data-filter="all">
+            Kaikki
+          </button>
+          <button class="fchip" data-filter="lait">
+            Lait
+          </button>
+          <button class="fchip" data-filter="selonteot">
+            Selonteot
+          </button>
+          <button class="fchip" data-filter="luottamus">
+            Luottamusäänestykset
+          </button>
+          <button class="fchip" data-filter="tiukat">
+            Tiukat
+          </button>
+        </div>
+
+        {d.groups.map((group) => (
+          <div class="vgroup">
+            <div class="week-head">
+              <span class="week-head__k">Istunto</span>
+              <span class="week-head__t">{esc(group.sessionDateLabel)}</span>
+              <span class="week-head__meta">
+                {group.rows.length} äänestystä
+              </span>
+            </div>
+            <div class="vrow-list">
+              {group.rows.map((row) => (
+                <VoteRowItem row={row} />
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {d.groups.length === 0 && (
+          <div style="text-align:center;color:var(--muted);padding:40px 0">
+            Ei äänestyksiä näillä hakuehdoilla.
+          </div>
+        )}
+
+        <div class="source-note" style="margin-top:32px">
+          <span>Lähde:</span>
+          <span class="dset">
+            Eduskunnan avoin data · SaliDBAanestys + Vote
+          </span>
+          <span>·</span>
+          <span class="fresh">haettu {d.fetchedAt}</span>
+        </div>
+      </div>
     </>
+  );
+}
+
+function VoteRowItem({ row }: { row: VoteRow }) {
+  return (
+    <a
+      href={`/aanestys/${row.id}`}
+      hx-get={`/aanestys/${row.id}`}
+      hx-target="#main-content"
+      hx-push-url="true"
+      hx-swap="innerHTML"
+      class="vrow"
+    >
+      <div class="vrow__rail">
+        <span class="vrow__id">Ä {row.votingNumber}</span>
+        <span class="vrow__time">{esc(row.time)}</span>
+      </div>
+      <div class="vrow__main">
+        <span class="vrow__q">{esc(row.questionText || row.title)}</span>
+        {row.documents.length > 0 && (
+          <div class="vrow__docs">
+            {row.documents.map((doc) => (
+              <span class={`ag-doc${doc.isCommittee ? " cmt" : ""}`}>
+                {esc(doc.label)}
+              </span>
+            ))}
+          </div>
+        )}
+        {row.references.length > 0 && (
+          <div class="vrow__links">
+            {row.references.map((ref, i) => (
+              <>
+                {i > 0 && " · "}
+                <span class="ref">{esc(ref.label)}</span>
+              </>
+            ))}
+          </div>
+        )}
+      </div>
+      <div class="vrow__res">
+        <div class="vrow__nums">
+          <span class="j">{row.nYes}</span>
+          <span class="dash">–</span>
+          <span class="e">{row.nNo}</span>
+        </div>
+        <div class="vrow__bar">
+          <span class="j" style={`width:${row.yesPct.toFixed(1)}%`}></span>
+          <span class="e" style={`width:${row.noPct.toFixed(1)}%`}></span>
+        </div>
+        <span class={`vrow__out ${row.outcome}`}>{row.outcomeLabel}</span>
+      </div>
+      <span class="vrow__go">→</span>
+    </a>
   );
 }
