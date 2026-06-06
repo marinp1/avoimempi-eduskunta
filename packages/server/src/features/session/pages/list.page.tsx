@@ -16,6 +16,24 @@ interface Props {
   data?: SessionsIndexData;
   /** Finnish-formatted cursor date shown in the "as-of" indicator */
   cursorFormatted?: string;
+  currentKind?: string;
+  currentQuery?: string;
+  currentDate?: string;
+}
+
+function scrollUrl(
+  nextOffset: number,
+  kind: string,
+  query: string,
+  date: string,
+): string {
+  const params = new URLSearchParams();
+  params.set("offset", String(nextOffset));
+  params.set("scroll", "1");
+  if (kind) params.set("kind", kind);
+  if (query) params.set("q", query);
+  if (date) params.set("date", date);
+  return `/istunnot?${params.toString()}`;
 }
 
 function statusLabel(s: "done" | "draft"): string {
@@ -27,7 +45,14 @@ function statusLabel(s: "done" | "draft"): string {
   }
 }
 
-export default function Istunnot({ title, data, cursorFormatted }: Props) {
+export default function Istunnot({
+  title,
+  data,
+  cursorFormatted,
+  currentKind,
+  currentQuery,
+  currentDate,
+}: Props) {
   const d = data!;
   return (
     <>
@@ -52,6 +77,10 @@ export default function Istunnot({ title, data, cursorFormatted }: Props) {
         weeks={d.weeks}
         totalSessions={d.totalSessions}
         cursorFormatted={cursorFormatted}
+        nextOffset={d.nextOffset}
+        currentKind={currentKind}
+        currentQuery={currentQuery}
+        currentDate={currentDate}
       />
 
       <div class="wrap">
@@ -92,10 +121,18 @@ export function SessionList({
   weeks,
   totalSessions,
   cursorFormatted,
+  nextOffset,
+  currentKind,
+  currentQuery,
+  currentDate,
 }: {
   weeks: WeekGroup[];
   totalSessions: number;
   cursorFormatted?: string;
+  nextOffset?: number | null;
+  currentKind?: string;
+  currentQuery?: string;
+  currentDate?: string;
 }) {
   return (
     <div
@@ -225,6 +262,25 @@ export function SessionList({
           </section>
         ))}
 
+        {nextOffset != null && (
+          <div
+            id="sit-scroll-sentinel"
+            hx-get={scrollUrl(
+              nextOffset,
+              currentKind ?? "",
+              currentQuery ?? "",
+              currentDate ?? "",
+            )}
+            hx-trigger="revealed"
+            hx-swap="outerHTML"
+            hx-target="this"
+          >
+            <div class="htmx-indicator loading-spinner">
+              {i18next.t("common:loading")}
+            </div>
+          </div>
+        )}
+
         <div
           id="sit-empty"
           class="src-row"
@@ -235,6 +291,52 @@ export function SessionList({
         </div>
       </div>
     </div>
+  );
+}
+
+export function SessionScrollFragment({
+  weeks,
+  nextOffset,
+  currentKind,
+  currentQuery,
+  currentDate,
+}: {
+  weeks: WeekGroup[];
+  nextOffset: number | null;
+  currentKind: string;
+  currentQuery: string;
+  currentDate: string;
+}) {
+  return (
+    <>
+      {weeks.map((week) => (
+        <section class="week" data-week>
+          <div class="week-head">
+            <span class="week-head__k">{week.label}</span>
+            <span class="week-head__t">{week.dateRange}</span>
+            <span class="week-head__meta">{week.meta}</span>
+          </div>
+          <div class="sit-list">
+            {week.sessions.map((s) => (
+              <SessionRowComponent session={s} />
+            ))}
+          </div>
+        </section>
+      ))}
+      {nextOffset != null && (
+        <div
+          id="sit-scroll-sentinel"
+          hx-get={scrollUrl(nextOffset, currentKind, currentQuery, currentDate)}
+          hx-trigger="revealed"
+          hx-swap="outerHTML"
+          hx-target="this"
+        >
+          <div class="htmx-indicator loading-spinner">
+            {i18next.t("common:loading")}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

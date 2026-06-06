@@ -10,6 +10,11 @@
           "url": "https://four.htmx.org/extensions/hx-browser-indicator"
         }
       ]
+    },
+    {
+      "name": "hx-include:inherited",
+      "description": "",
+      "references": []
     }
   ]
 }

@@ -1,11 +1,12 @@
 import Istunnot, {
   SessionList,
+  SessionScrollFragment,
 } from "#server/features/session/pages/list.page";
 import { buildSessionsViewModel } from "#server/features/session/pages/list.view-model";
 import { formatFi, withWebappPage } from "./helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
-import { defineRoute } from "#server/helpers";
+import { defineRoute, isHtmx } from "#server/helpers";
 
 export function createSessionsListRoute(deps: WebappDeps) {
   return defineRoute({
@@ -14,7 +15,9 @@ export function createSessionsListRoute(deps: WebappDeps) {
       const url = new URL(ctx.req.url);
       const kind = url.searchParams.get("kind") ?? undefined;
       const q = url.searchParams.get("q") ?? undefined;
-      const dateParam = url.searchParams.get("date");
+      const dateParam = url.searchParams.get("date") || undefined;
+      const offsetParam = url.searchParams.get("offset");
+      const isScroll = url.searchParams.has("scroll");
 
       const cursor = dateParam ?? ctx.tlData.cursor;
 
@@ -28,7 +31,26 @@ export function createSessionsListRoute(deps: WebappDeps) {
         cursor < ctx.tlData.today
           ? termFiltered.filter((r) => r.date <= cursor)
           : termFiltered;
-      const data = buildSessionsViewModel(filtered, { kind, q });
+      const data = buildSessionsViewModel(
+        filtered,
+        { kind, q },
+        offsetParam ? Number(offsetParam) : 0,
+      );
+
+      if (isHtmx(ctx.req) && isScroll && offsetParam) {
+        return new Response(
+          SessionScrollFragment({
+            weeks: data.weeks,
+            nextOffset: data.nextOffset,
+            currentKind: kind ?? "",
+            currentQuery: q ?? "",
+            currentDate: dateParam ?? "",
+          }),
+          {
+            headers: { "Content-Type": "text/html; charset=utf-8" },
+          },
+        );
+      }
 
       const isAtPresent = cursor >= ctx.tlData.today;
       const shownCursor = isAtPresent ? undefined : formatFi(cursor);
@@ -53,6 +75,9 @@ export function createSessionsListRoute(deps: WebappDeps) {
           title: i18next.t("sessions:title"),
           data,
           cursorFormatted: shownCursor,
+          currentKind: kind ?? "",
+          currentQuery: q ?? "",
+          currentDate: dateParam ?? "",
         }),
         activePath: "/istunnot",
         title: i18next.t("sessions:title"),
@@ -65,6 +90,10 @@ export function createSessionsListRoute(deps: WebappDeps) {
             weeks: data.weeks,
             totalSessions: data.totalSessions,
             cursorFormatted: shownCursor,
+            nextOffset: data.nextOffset,
+            currentKind: kind ?? "",
+            currentQuery: q ?? "",
+            currentDate: dateParam ?? "",
           }),
         },
       };

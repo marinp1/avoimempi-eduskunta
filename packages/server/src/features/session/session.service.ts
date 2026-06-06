@@ -18,6 +18,7 @@ export class SessionService {
     today: string;
     kind?: string;
     q?: string;
+    offset?: number;
   }) {
     const raw = this.sessionRepo.fetchSessionsIndex(2000);
     const termFiltered = raw.filter(
@@ -29,10 +30,11 @@ export class SessionService {
       params.cursor < params.today
         ? termFiltered.filter((r) => r.date <= params.cursor)
         : termFiltered;
-    return buildSessionsViewModel(filtered, {
-      kind: params.kind,
-      q: params.q,
-    });
+    return buildSessionsViewModel(
+      filtered,
+      { kind: params.kind, q: params.q },
+      params.offset ?? 0,
+    );
   }
 
   getSessionDetail(sessionKey: string) {

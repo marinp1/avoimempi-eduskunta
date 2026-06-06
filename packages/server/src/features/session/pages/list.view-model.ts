@@ -1,11 +1,14 @@
 import type { SessionsIndexRow } from "../session.repository";
 import { formatFiDateParts } from "#server/helpers";
 
+export const WEEKS_PER_PAGE = 5;
+
 export interface SessionsIndexData {
   weeks: WeekGroup[];
   weekStats: WeekStats;
   fetchedAt: string;
   totalSessions: number;
+  nextOffset: number | null;
 }
 
 export interface WeekStats {
@@ -16,6 +19,7 @@ export interface WeekStats {
 }
 
 export interface WeekGroup {
+  id: string;
   label: string;
   dateRange: string;
   meta: string;
@@ -266,6 +270,7 @@ function computeWeekStats(rows: SessionsIndexRow[]): WeekStats {
 export function buildSessionsViewModel(
   raw: SessionsIndexRow[],
   filters: { kind?: string; q?: string } = {},
+  offset: number = 0,
 ): SessionsIndexData {
   const today = new Date();
 
@@ -289,9 +294,9 @@ export function buildSessionsViewModel(
     groups.set(key, existing);
   }
 
-  const weeks: WeekGroup[] = [];
+  const allWeeks: WeekGroup[] = [];
 
-  for (const [, rows] of groups) {
+  for (const [weekKey, rows] of groups) {
     const dates = rows.map((r) => r.date).sort();
     const firstDate = dates[0]!;
 
@@ -300,7 +305,8 @@ export function buildSessionsViewModel(
     const weekEndDate = getWeekEnd(firstDate);
     const weekStats = computeWeekStats(rows);
 
-    weeks.push({
+    allWeeks.push({
+      id: weekKey,
       label: isCurrent ? "Tällä viikolla" : "Istuntoviikko",
       dateRange: formatDateRange(weekStartDate, weekEndDate),
       meta: `${rows.length} istuntoa${weekStats.votingCount > 0 ? ` · ${weekStats.votingCount} äänestystä` : ""}${weekStats.speechCount > 0 ? ` · ${weekStats.speechCount} puheenvuoroa` : ""}`,
@@ -332,6 +338,12 @@ export function buildSessionsViewModel(
     });
   }
 
+  allWeeks.sort((a, b) => b.id.localeCompare(a.id));
+
+  const weeks = allWeeks.slice(offset, offset + WEEKS_PER_PAGE);
+  const nextOffset =
+    offset + WEEKS_PER_PAGE < allWeeks.length ? offset + WEEKS_PER_PAGE : null;
+
   return {
     weeks,
     weekStats: computeWeekStats(filtered),
@@ -343,5 +355,6 @@ export function buildSessionsViewModel(
       minute: "2-digit",
     }),
     totalSessions: filtered.length,
+    nextOffset,
   };
 }
