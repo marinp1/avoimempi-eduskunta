@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.0-alpha.4] — 2026-04-01
+
+### Bug Fixes
+- properly handle null membership entries (5a261a7)
+
 ## [1.1.0-alpha.3] — 2026-04-01
 
 ### Features
