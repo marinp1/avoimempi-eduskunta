@@ -1,4 +1,4 @@
-import { resolveParty } from "#server/domain";
+import { resolveParty, partyShortName } from "#server/domain";
 import i18next from "i18next";
 
 interface PartySummaryRow {
@@ -145,7 +145,7 @@ export function buildPartyDetailData(input: {
         id: m.person_id,
         firstName: m.first_name,
         lastName: m.last_name,
-        partyCode: m.party,
+        partyCode: partyShortName(m.party ?? "", m.party ?? ""),
         color: party.color,
         district: m.current_municipality ?? "",
         age,

@@ -1,6 +1,7 @@
 /** @jsxImportSource ../../src/jsx */
 import i18next from "i18next";
 import { formatDate } from "#server/helpers/template-helpers";
+import { partyShortName } from "#server/domain";
 
 export interface PersonChangeRow {
   person_id: number;
@@ -18,7 +19,7 @@ interface Props {
 }
 
 function partyShort(p: string | null): string {
-  return p ?? "";
+  return p ? partyShortName(p, p) : "";
 }
 
 export default function CompositionChange({ date, rows }: Props) {
