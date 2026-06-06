@@ -133,7 +133,7 @@ export function notFoundResponse(
 export function personNotFoundResponse(req: Request, path: string): Response {
   return notFoundResponse(req, path, {
     activePath: "/edustajat",
-    title: i18next.t("edustajat:profile.not_found"),
+    title: i18next.t("persons:profile.not_found"),
   });
 }
 

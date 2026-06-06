@@ -6,7 +6,7 @@ import { fetchedAt } from "#server/helpers/template-helpers";
 import type { WebappDeps } from "./deps";
 import { defineRoute } from "#server/helpers";
 
-export function createPuolueRoute(deps: WebappDeps) {
+export function createPartyRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/puolue/:code",
     GET: async (req, params) => {

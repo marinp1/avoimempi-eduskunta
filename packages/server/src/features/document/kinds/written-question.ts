@@ -39,7 +39,7 @@ export function buildWrittenQuestion(
   if (submissionDate) {
     lifecycleStages.push({
       step: 1,
-      label: i18next.t("asiakirjat:detail.stage_question_submitted"),
+      label: i18next.t("documents:detail.stage_question_submitted"),
       date: submissionDate,
       done: true,
     });
@@ -52,7 +52,7 @@ export function buildWrittenQuestion(
         label: String(
           s.stage_title ||
             s.event_title ||
-            i18next.t("asiakirjat:detail.stage_processing"),
+            i18next.t("documents:detail.stage_processing"),
         ),
         date: s.event_date ?? null,
         done: true,
@@ -62,7 +62,7 @@ export function buildWrittenQuestion(
   if (answerDate) {
     lifecycleStages.push({
       step: lifecycleStages.length + 1,
-      label: i18next.t("asiakirjat:detail.stage_minister_answer"),
+      label: i18next.t("documents:detail.stage_minister_answer"),
       date: answerDate,
       done: true,
       tag: "vastattu",
@@ -71,7 +71,7 @@ export function buildWrittenQuestion(
 
   const textSections: TextSection[] = [];
   const qs = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_question"),
+    i18next.t("documents:detail.text_section_question"),
     detail.question_text,
     detail.question_rich_text,
   );
@@ -84,13 +84,13 @@ export function buildWrittenQuestion(
     kind: "kk",
     id: detail.id,
     identifier: detail.parliament_identifier,
-    documentTypeLabel: i18next.t("asiakirjat:kind_labels.kk"),
+    documentTypeLabel: i18next.t("documents:kind_labels.kk"),
     title: detail.title ?? "",
     authorName: authorsByName(
       detail.first_signer_first_name,
       detail.first_signer_last_name,
     ),
-    authorRole: i18next.t("asiakirjat:detail.mp_role"),
+    authorRole: i18next.t("documents:detail.mp_role"),
     authorParty,
     authorPartyColor: partyColor(authorParty),
     authorPersonId: detail.first_signer_person_id,
@@ -100,20 +100,20 @@ export function buildWrittenQuestion(
     ),
     authorDistrict: mpDistrict(detail.first_signer_person_id, ctx.personRepo),
     primaryDate: formatFi(submissionDate),
-    primaryDateLabel: i18next.t("asiakirjat:status_labels.submitted"),
+    primaryDateLabel: i18next.t("documents:status_labels.submitted"),
     secondaryDate: answerDate ? formatFi(answerDate) : null,
     secondaryDateLabel: answerDate
-      ? i18next.t("asiakirjat:status_labels.answered")
+      ? i18next.t("documents:status_labels.answered")
       : null,
     statusLabel: answerDate
-      ? i18next.t("asiakirjat:status_labels.answered_on", {
+      ? i18next.t("documents:status_labels.answered_on", {
           date: formatFi(answerDate),
         })
       : submissionDate
-        ? i18next.t("asiakirjat:status_labels.submitted_on", {
+        ? i18next.t("documents:status_labels.submitted_on", {
             date: formatFi(submissionDate),
           })
-        : i18next.t("asiakirjat:status_labels.pending"),
+        : i18next.t("documents:status_labels.pending"),
     statusColor: answerDate ? "var(--hall)" : "var(--muted)",
     textSections,
     lifecycleStages,
@@ -138,7 +138,7 @@ export function buildWrittenQuestion(
 
 export const writtenQuestion: DocumentKindModule = {
   key: "kk",
-  chip: { labelI18n: "asiakirjat:chip_labels.kk", dotColor: "var(--blue)" },
+  chip: { labelI18n: "documents:chip_labels.kk", dotColor: "var(--blue)" },
   list(repo, params) {
     const { items, totalCount } = repo.fetchWrittenQuestions(params);
     return {
@@ -155,7 +155,7 @@ export const writtenQuestion: DocumentKindModule = {
           date: r.submission_date ?? "",
           dateLabel: dateLabel(
             r.submission_date,
-            "asiakirjat:status_labels.submitted_on",
+            "documents:status_labels.submitted_on",
           ),
           authorName: authorName(
             r.first_signer_first_name,

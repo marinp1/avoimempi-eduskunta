@@ -9,7 +9,7 @@ import { noStatus, joinHighlight } from "./row-helpers";
 export const expertStatement: DocumentKindModule = {
   key: "asiantuntija",
   chip: {
-    labelI18n: "asiakirjat:chip_labels.asiantuntija",
+    labelI18n: "documents:chip_labels.asiantuntija",
     dotColor: "var(--faint)",
   },
   list(repo, params) {

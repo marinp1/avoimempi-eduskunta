@@ -1,8 +1,8 @@
-import KarttaFragment from "#server/features/voting/fragments/kartta.fragment";
+import VotingMapFragment from "#server/features/voting/fragments/map.fragment";
 import type { WebappDeps } from "./deps";
 import { defineRoute } from "#server/helpers";
 
-export function createAanestysKarttaRoute(deps: WebappDeps) {
+export function createVotingMapRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/aanestys/:id/kartta",
     GET: async (_req, params) => {
@@ -10,9 +10,9 @@ export function createAanestysKarttaRoute(deps: WebappDeps) {
       if (!id || !/^\d+$/.test(id)) {
         return new Response("", { status: 404 });
       }
-      const kartta = deps.votingService.getVotingKartta(id);
+      const kartta = deps.votingService.getVotingMap(id);
       if (!kartta) return new Response("", { status: 404 });
-      const html = KarttaFragment({ mpVotes: kartta.mpVotes });
+      const html = VotingMapFragment({ mpVotes: kartta.mpVotes });
       return new Response(html, {
         headers: { "Content-Type": "text/html; charset=utf-8" },
       });

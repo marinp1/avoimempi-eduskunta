@@ -11,7 +11,7 @@ import { buildWrittenQuestion } from "./written-question";
 export const writtenQuestionResponse: DocumentKindModule = {
   key: "vastaus",
   chip: {
-    labelI18n: "asiakirjat:chip_labels.vastaus",
+    labelI18n: "documents:chip_labels.vastaus",
     dotColor: "var(--hall)",
   },
   list(repo, params) {
@@ -28,7 +28,7 @@ export const writtenQuestionResponse: DocumentKindModule = {
         date: r.answer_date ?? "",
         dateLabel: dateLabel(
           r.answer_date,
-          "asiakirjat:status_labels.answered_on",
+          "documents:status_labels.answered_on",
         ),
         authorName: null,
         authorParty: null,

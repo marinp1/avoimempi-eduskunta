@@ -5,7 +5,7 @@ import { orNotFound } from "#server/helpers/errors";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
 
-export function createIstuntoRoute(deps: WebappDeps) {
+export function createSessionRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/istunto/:year/:num",
     GET: withWebappPage(deps, async (ctx, params) => {

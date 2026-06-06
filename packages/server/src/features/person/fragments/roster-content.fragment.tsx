@@ -49,7 +49,7 @@ export default function RosterContent({
     <>
       {oob && (
         <span id="mp-count" hx-swap-oob="true">
-          {i18next.t("edustajat:count_of", {
+          {i18next.t("persons:count_of", {
             filtered: filtered.length,
             total: allRows.length,
           })}
@@ -149,7 +149,7 @@ export default function RosterContent({
           hx-indicator="#roster-content"
           aria-sort={sortAria(params, "name")}
         >
-          {i18next.t("edustajat:col_name")} <span class="ar"></span>
+          {i18next.t("persons:col_name")} <span class="ar"></span>
         </a>
         <a
           class={sortClass(params, "party")}
@@ -160,7 +160,7 @@ export default function RosterContent({
           hx-indicator="#roster-content"
           aria-sort={sortAria(params, "party")}
         >
-          {i18next.t("edustajat:col_party")} <span class="ar"></span>
+          {i18next.t("persons:col_party")} <span class="ar"></span>
         </a>
         <a
           class={sortClass(params, "district")}
@@ -171,7 +171,7 @@ export default function RosterContent({
           hx-indicator="#roster-content"
           aria-sort={sortAria(params, "district")}
         >
-          {i18next.t("edustajat:col_district")} <span class="ar"></span>
+          {i18next.t("persons:col_district")} <span class="ar"></span>
         </a>
         <a
           class={sortClass(params, "age", true)}
@@ -182,7 +182,7 @@ export default function RosterContent({
           hx-indicator="#roster-content"
           aria-sort={sortAria(params, "age")}
         >
-          {i18next.t("edustajat:col_age")} <span class="ar"></span>
+          {i18next.t("persons:col_age")} <span class="ar"></span>
         </a>
         <a
           class={sortClass(params, "att", true)}
@@ -193,7 +193,7 @@ export default function RosterContent({
           hx-indicator="#roster-content"
           aria-sort={sortAria(params, "att")}
         >
-          {i18next.t("edustajat:col_attendance")} <span class="ar"></span>
+          {i18next.t("persons:col_attendance")} <span class="ar"></span>
         </a>
       </div>
 

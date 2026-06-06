@@ -33,7 +33,7 @@ function presenceStatus(
   return value
     ? { statusLabel: i18next.t(presentLabelKey), statusClass: "spill--done" }
     : {
-        statusLabel: i18next.t("asiakirjat:status_labels.pending"),
+        statusLabel: i18next.t("documents:status_labels.pending"),
         statusClass: "spill--draft",
       };
 }
@@ -41,17 +41,17 @@ function presenceStatus(
 /** Answered (if `answer_date`) / pending. */
 export const answeredStatus = (
   answerDate: string | null | undefined,
-): RowStatus => presenceStatus(answerDate, "asiakirjat:status_labels.answered");
+): RowStatus => presenceStatus(answerDate, "documents:status_labels.answered");
 
 /** Handled (if `decision_outcome`) / pending. */
 export const handledStatus = (
   decisionOutcome: string | null | undefined,
 ): RowStatus =>
-  presenceStatus(decisionOutcome, "asiakirjat:status_labels.handled");
+  presenceStatus(decisionOutcome, "documents:status_labels.handled");
 
 /** Always-present "response" badge. */
 export const responseStatus = (): RowStatus => ({
-  statusLabel: i18next.t("asiakirjat:status_labels.response"),
+  statusLabel: i18next.t("documents:status_labels.response"),
   statusClass: "spill--done",
 });
 

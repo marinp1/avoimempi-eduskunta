@@ -228,11 +228,11 @@ export function buildPersonProfileData(input: {
 
   const firstTerm = terms[0];
   const memberSince = firstTerm?.start_year
-    ? i18next.t("edustajat:profile.member_since_prefix", {
+    ? i18next.t("persons:profile.member_since_prefix", {
         year: firstTerm.start_year,
       })
     : firstTerm?.start_date
-      ? i18next.t("edustajat:profile.member_since_prefix", {
+      ? i18next.t("persons:profile.member_since_prefix", {
           year: new Date(firstTerm.start_date).getFullYear(),
         })
       : "";
@@ -329,7 +329,7 @@ export function buildPersonProfileData(input: {
       initiativeTypeCode: i.initiative_type_code ?? "",
       initiativeTypeLabel:
         initiativeTypeLabel(i.initiative_type_code) ??
-        i18next.t("asiakirjat:initiative_type_labels.A"),
+        i18next.t("documents:initiative_type_labels.A"),
       title: i.title ?? "",
       submissionDate: i.submission_date ?? null,
       relationRole: i.relation_role ?? "",

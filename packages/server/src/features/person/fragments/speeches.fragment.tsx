@@ -14,9 +14,9 @@ export default function SpeechesFragment({ data }: Props) {
 
   return (
     <div class="rail__item">
-      <Kicker text={i18next.t("edustajat:profile.recent_speeches_kicker")} />
+      <Kicker text={i18next.t("persons:profile.recent_speeches_kicker")} />
       <p class="psec__desc psec__desc--tight">
-        {i18next.t("edustajat:profile.recent_speeches_subtitle")}
+        {i18next.t("persons:profile.recent_speeches_subtitle")}
       </p>
       {data.speeches.map((sp) => (
         <div class="spoke-row">

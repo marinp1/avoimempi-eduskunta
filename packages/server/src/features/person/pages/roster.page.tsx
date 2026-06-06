@@ -46,9 +46,9 @@ export default function Edustajat({
 
       <div class="wrap">
         <PageHead
-          kicker={i18next.t("edustajat:kicker")}
-          heading={i18next.t("edustajat:heading", { count: allRows.length })}
-          subtitle={i18next.t("edustajat:subtitle")}
+          kicker={i18next.t("persons:kicker")}
+          heading={i18next.t("persons:heading", { count: allRows.length })}
+          subtitle={i18next.t("persons:subtitle")}
         />
       </div>
 
@@ -72,7 +72,7 @@ export default function Edustajat({
             {i18next.t("common:opposition")} <b>{bloc.oppTotal}</b>
           </span>
           <span class="note">
-            {i18next.t("edustajat:count", { count: bloc.total })}
+            {i18next.t("persons:count", { count: bloc.total })}
           </span>
         </div>
       </div>
@@ -100,7 +100,7 @@ export default function Edustajat({
               name="q"
               type="text"
               value={esc(q)}
-              placeholder={i18next.t("edustajat:search_placeholder")}
+              placeholder={i18next.t("persons:search_placeholder")}
               hx-get="/edustajat"
               hx-trigger="input changed delay:300ms"
               hx-target="#roster-content"
@@ -111,7 +111,7 @@ export default function Edustajat({
             />
           </label>
           <span class="count" id="mp-count">
-            {i18next.t("edustajat:count_of", {
+            {i18next.t("persons:count_of", {
               filtered: filtered.length,
               total: allRows.length,
             })}

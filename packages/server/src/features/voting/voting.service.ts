@@ -50,7 +50,7 @@ export class VotingService {
     });
   }
 
-  getVotingKartta(votingId: string) {
+  getVotingMap(votingId: string) {
     const voting = this.votingRepo.fetchVotingById({ votingId });
     if (!voting) return null;
     const memberVotes = this.votingRepo.fetchVotingMemberVotes({ votingId });

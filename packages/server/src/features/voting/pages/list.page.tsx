@@ -30,9 +30,9 @@ export default function Aanestykset({ title, data }: Props) {
 
       <div class="wrap">
         <PageHead
-          kicker={i18next.t("aanestykset:kicker")}
-          heading={i18next.t("aanestykset:heading")}
-          subtitle={`${i18next.t("aanestykset:subtitle")} · ${i18next.t("aanestykset:count", { count: d.totalCount })}`}
+          kicker={i18next.t("votings:kicker")}
+          heading={i18next.t("votings:heading")}
+          subtitle={`${i18next.t("votings:subtitle")} · ${i18next.t("votings:count", { count: d.totalCount })}`}
         />
 
         <div class="toolbar mt-20">
@@ -42,7 +42,7 @@ export default function Aanestykset({ title, data }: Props) {
               id="aanestys-search"
               type="search"
               name="q"
-              placeholder={i18next.t("aanestykset:search_placeholder")}
+              placeholder={i18next.t("votings:search_placeholder")}
               hx-get="/aanestykset"
               hx-trigger="keyup changed delay:300ms"
               hx-target="#main-content"
@@ -52,26 +52,26 @@ export default function Aanestykset({ title, data }: Props) {
           </label>
           <span class="count">
             <b id="aanestys-count">
-              {i18next.t("aanestykset:count", { count: d.totalCount })}
+              {i18next.t("votings:count", { count: d.totalCount })}
             </b>
           </span>
         </div>
 
         <div class="fchips mt-14">
           <button type="button" class="fchip is-active" data-filter="all">
-            {i18next.t("aanestykset:filter_all")}
+            {i18next.t("votings:filter_all")}
           </button>
           <button type="button" class="fchip" data-filter="lait">
-            {i18next.t("aanestykset:filter_laws")}
+            {i18next.t("votings:filter_laws")}
           </button>
           <button type="button" class="fchip" data-filter="selonteot">
-            {i18next.t("aanestykset:filter_reports")}
+            {i18next.t("votings:filter_reports")}
           </button>
           <button type="button" class="fchip" data-filter="luottamus">
-            {i18next.t("aanestykset:filter_confidence")}
+            {i18next.t("votings:filter_confidence")}
           </button>
           <button type="button" class="fchip" data-filter="tiukat">
-            {i18next.t("aanestykset:filter_tight")}
+            {i18next.t("votings:filter_tight")}
           </button>
         </div>
 
@@ -79,7 +79,7 @@ export default function Aanestykset({ title, data }: Props) {
 
         {d.groups.length === 0 && (
           <div style="text-align:center;color:var(--muted);padding:40px 0">
-            {i18next.t("aanestykset:none_found")}
+            {i18next.t("votings:none_found")}
           </div>
         )}
 
@@ -113,7 +113,7 @@ function VoteGroupsAndMore({ data }: { data: AanestyksetData }) {
           hx-swap="outerHTML"
           hx-browser-indicator="true"
         >
-          {i18next.t("aanestykset:load_more")}
+          {i18next.t("votings:load_more")}
         </button>
       )}
     </>
@@ -136,7 +136,7 @@ export function VoteGroupsFragment({ data }: { data: AanestyksetData }) {
           hx-swap="outerHTML"
           hx-browser-indicator="true"
         >
-          {i18next.t("aanestykset:load_more")}
+          {i18next.t("votings:load_more")}
         </button>
       )}
     </>
@@ -147,12 +147,10 @@ function VoteGroupBlock({ group }: { group: VoteGroup }) {
   return (
     <div class="vgroup">
       <div class="week-head">
-        <span class="week-head__k">
-          {i18next.t("aanestykset:group_header")}
-        </span>
+        <span class="week-head__k">{i18next.t("votings:group_header")}</span>
         <span class="week-head__t">{esc(group.sessionDateLabel)}</span>
         <span class="week-head__meta">
-          {i18next.t("aanestykset:count", { count: group.rows.length })}
+          {i18next.t("votings:count", { count: group.rows.length })}
         </span>
       </div>
       <div class="vrow-list">

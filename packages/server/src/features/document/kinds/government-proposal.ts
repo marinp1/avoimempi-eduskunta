@@ -34,25 +34,25 @@ export function buildGovernmentProposal(
 
   const textSections: TextSection[] = [];
   const sum = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_summary"),
+    i18next.t("documents:detail.text_section_summary"),
     detail.summary_text,
     detail.summary_rich_text,
   );
   if (sum) textSections.push(sum);
   const jst = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_justification"),
+    i18next.t("documents:detail.text_section_justification"),
     detail.justification_text,
     detail.justification_rich_text,
   );
   if (jst) textSections.push(jst);
   const prop = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_proposal"),
+    i18next.t("documents:detail.text_section_proposal"),
     detail.proposal_text,
     detail.proposal_rich_text,
   );
   if (prop) textSections.push(prop);
   const app = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_appendix"),
+    i18next.t("documents:detail.text_section_appendix"),
     detail.appendix_text,
     detail.appendix_rich_text,
   );
@@ -62,7 +62,7 @@ export function buildGovernmentProposal(
   const signatories: Signatory[] = rawSignatories.map((s) => ({
     name:
       [s.first_name, s.last_name].filter(Boolean).join(" ") ||
-      i18next.t("asiakirjat:detail.unknown_author"),
+      i18next.t("documents:detail.unknown_author"),
     role: s.title_text ?? null,
     party: null,
     partyColor: null,
@@ -81,26 +81,26 @@ export function buildGovernmentProposal(
     kind: "he",
     id: detail.id,
     identifier: detail.parliament_identifier,
-    documentTypeLabel: i18next.t("asiakirjat:kind_labels.he"),
+    documentTypeLabel: i18next.t("documents:kind_labels.he"),
     title: detail.title ?? "",
-    authorName: author || i18next.t("asiakirjat:detail.unknown_author"),
-    authorRole: i18next.t("asiakirjat:detail.ministry_role"),
+    authorName: author || i18next.t("documents:detail.unknown_author"),
+    authorRole: i18next.t("documents:detail.ministry_role"),
     authorParty: null,
     authorPartyColor: "#999999",
     authorPersonId: null,
     authorInitials: author ? author.slice(0, 2).toUpperCase() : "?",
     authorDistrict: null,
     primaryDate: formatFi(submissionDate),
-    primaryDateLabel: i18next.t("asiakirjat:status_labels.submitted"),
+    primaryDateLabel: i18next.t("documents:status_labels.submitted"),
     secondaryDate: detail.signature_date
       ? formatFi(detail.signature_date)
       : null,
     secondaryDateLabel: detail.signature_date
-      ? i18next.t("asiakirjat:status_labels.signed")
+      ? i18next.t("documents:status_labels.signed")
       : null,
     statusLabel: detail.decision_outcome
-      ? i18next.t("asiakirjat:status_labels.handled")
-      : i18next.t("asiakirjat:status_labels.pending"),
+      ? i18next.t("documents:status_labels.handled")
+      : i18next.t("documents:status_labels.pending"),
     statusColor: detail.decision_outcome ? "var(--hall)" : "var(--muted)",
     textSections,
     lifecycleStages,
@@ -121,7 +121,7 @@ export function buildGovernmentProposal(
 
 export const governmentProposal: DocumentKindModule = {
   key: "he",
-  chip: { labelI18n: "asiakirjat:chip_labels.he", dotColor: "var(--opp)" },
+  chip: { labelI18n: "documents:chip_labels.he", dotColor: "var(--opp)" },
   list(repo, params) {
     const { items, totalCount } = repo.fetchGovernmentProposals(params);
     return {
@@ -136,7 +136,7 @@ export const governmentProposal: DocumentKindModule = {
         date: r.submission_date ?? "",
         dateLabel: dateLabel(
           r.submission_date,
-          "asiakirjat:status_labels.submitted_on",
+          "documents:status_labels.submitted_on",
         ),
         authorName: null,
         authorParty: null,

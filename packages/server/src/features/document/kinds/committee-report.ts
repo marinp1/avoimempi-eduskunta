@@ -28,48 +28,48 @@ export function buildCommitteeReport(
   const reportType = i18next.t(
     reportTypeCode in REPORT_LABELS
       ? REPORT_LABELS[reportTypeCode as keyof typeof REPORT_LABELS]
-      : "asiakirjat:report_type_labels.M",
+      : "documents:report_type_labels.M",
   );
 
   const textSections: TextSection[] = [];
   const sum = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_summary"),
+    i18next.t("documents:detail.text_section_summary"),
     detail.summary_text,
     detail.summary_rich_text,
   );
   if (sum) textSections.push(sum);
   const gen = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_general_reasoning"),
+    i18next.t("documents:detail.text_section_general_reasoning"),
     detail.general_reasoning_text,
     detail.general_reasoning_rich_text,
   );
   if (gen) textSections.push(gen);
   const det = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_detailed_reasoning"),
+    i18next.t("documents:detail.text_section_detailed_reasoning"),
     detail.detailed_reasoning_text,
     detail.detailed_reasoning_rich_text,
   );
   if (det) textSections.push(det);
   const dec = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_decision_proposal"),
+    i18next.t("documents:detail.text_section_decision_proposal"),
     detail.decision_text,
     detail.decision_rich_text,
   );
   if (dec) textSections.push(dec);
   const amd = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_legislation_amendment"),
+    i18next.t("documents:detail.text_section_legislation_amendment"),
     detail.legislation_amendment_text,
     detail.legislation_amendment_rich_text,
   );
   if (amd) textSections.push(amd);
   const min = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_minority_opinion"),
+    i18next.t("documents:detail.text_section_minority_opinion"),
     detail.minority_opinion_text,
     detail.minority_opinion_rich_text,
   );
   if (min) textSections.push(min);
   const res = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_resolution"),
+    i18next.t("documents:detail.text_section_resolution"),
     detail.resolution_text,
     detail.resolution_rich_text,
   );
@@ -81,8 +81,8 @@ export function buildCommitteeReport(
     ...rawMembers.map((m) => ({
       name:
         [m.first_name, m.last_name].filter(Boolean).join(" ") ||
-        i18next.t("asiakirjat:detail.unknown_author"),
-      role: (m.role ?? "") || i18next.t("asiakirjat:detail.member_role"),
+        i18next.t("documents:detail.unknown_author"),
+      role: (m.role ?? "") || i18next.t("documents:detail.member_role"),
       party: m.party ?? null,
       partyColor: m.party ? partyColor(m.party) : null,
       personId: m.person_id ?? null,
@@ -90,11 +90,11 @@ export function buildCommitteeReport(
     ...rawExperts.map((e) => ({
       name:
         [e.first_name, e.last_name].filter(Boolean).join(" ") ||
-        i18next.t("asiakirjat:detail.unknown_author"),
+        i18next.t("documents:detail.unknown_author"),
       role:
         (e.title ?? "") ||
         (e.organization ?? "") ||
-        i18next.t("asiakirjat:detail.expert_role"),
+        i18next.t("documents:detail.expert_role"),
       party: null,
       partyColor: null,
       personId: e.person_id ?? null,
@@ -108,20 +108,20 @@ export function buildCommitteeReport(
     identifier: detail.parliament_identifier,
     documentTypeLabel: reportType,
     title: detail.title ?? "",
-    authorName: committee || i18next.t("asiakirjat:detail.unknown_author"),
-    authorRole: i18next.t("asiakirjat:detail.committee_role"),
+    authorName: committee || i18next.t("documents:detail.unknown_author"),
+    authorRole: i18next.t("documents:detail.committee_role"),
     authorParty: null,
     authorPartyColor: "#999999",
     authorPersonId: null,
     authorInitials: committee ? committee.slice(0, 2).toUpperCase() : "?",
     authorDistrict: null,
     primaryDate: formatFi(signatureDate),
-    primaryDateLabel: i18next.t("asiakirjat:status_labels.given"),
+    primaryDateLabel: i18next.t("documents:status_labels.given"),
     secondaryDate: detail.draft_date ? formatFi(detail.draft_date) : null,
     secondaryDateLabel: detail.draft_date
-      ? i18next.t("asiakirjat:detail.stage_draft")
+      ? i18next.t("documents:detail.stage_draft")
       : null,
-    statusLabel: i18next.t("asiakirjat:status_labels.given"),
+    statusLabel: i18next.t("documents:status_labels.given"),
     statusColor: "var(--hall)",
     textSections,
     lifecycleStages: [],
@@ -143,7 +143,7 @@ export function buildCommitteeReport(
 export const committeeReport: DocumentKindModule = {
   key: "mietinto",
   chip: {
-    labelI18n: "asiakirjat:chip_labels.mietinto",
+    labelI18n: "documents:chip_labels.mietinto",
     dotColor: "var(--muted)",
   },
   list(repo, params) {
@@ -160,7 +160,7 @@ export const committeeReport: DocumentKindModule = {
         date: r.signature_date ?? "",
         dateLabel: dateLabel(
           r.signature_date,
-          "asiakirjat:status_labels.given_on",
+          "documents:status_labels.given_on",
         ),
         authorName: null,
         authorParty: null,

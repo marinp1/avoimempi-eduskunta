@@ -12,7 +12,7 @@ import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
 
-export function createKeskusteluRoute(deps: WebappDeps) {
+export function createDebateRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/keskustelu",
     GET: (req) => {

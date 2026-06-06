@@ -21,11 +21,11 @@ interface Props {
 function statusLabel(s: "done" | "draft" | "live"): string {
   switch (s) {
     case "live":
-      return i18next.t("istunnot:status_live");
+      return i18next.t("sessions:status_live");
     case "done":
-      return i18next.t("istunnot:status_done");
+      return i18next.t("sessions:status_done");
     case "draft":
-      return i18next.t("istunnot:status_draft");
+      return i18next.t("sessions:status_draft");
   }
 }
 
@@ -42,9 +42,9 @@ export default function Istunnot({ title, data, cursorFormatted }: Props) {
 
       <div class="wrap">
         <PageHead
-          kicker={i18next.t("istunnot:kicker")}
-          heading={i18next.t("istunnot:heading")}
-          subtitle={i18next.t("istunnot:subtitle")}
+          kicker={i18next.t("sessions:kicker")}
+          heading={i18next.t("sessions:heading")}
+          subtitle={i18next.t("sessions:subtitle")}
         />
       </div>
 
@@ -119,7 +119,7 @@ export function SessionList({
           <input
             id="sit-search"
             type="text"
-            placeholder={i18next.t("istunnot:search_placeholder")}
+            placeholder={i18next.t("sessions:search_placeholder")}
             name="q"
             hx-get="/istunnot"
             hx-trigger="input changed delay:200ms"
@@ -132,11 +132,11 @@ export function SessionList({
         </label>
         <span class="count">
           <b id="sit-count">{totalSessions}</b>{" "}
-          {i18next.t("istunnot:count_suffix")}
+          {i18next.t("sessions:count_suffix")}
         </span>
         {cursorFormatted && (
           <span class="sit-asof" data-sit-asof>
-            {i18next.t("istunnot:as_of")} <b data-tl-asof>{cursorFormatted}</b>
+            {i18next.t("sessions:as_of")} <b data-tl-asof>{cursorFormatted}</b>
           </span>
         )}
       </div>
@@ -152,7 +152,7 @@ export function SessionList({
           hx-push-url="true"
           hx-indicator="#sit-root"
         >
-          {i18next.t("istunnot:filter_all")}
+          {i18next.t("sessions:filter_all")}
         </a>
         <a
           class="fchip"
@@ -165,7 +165,7 @@ export function SessionList({
           hx-indicator="#sit-root"
         >
           <span class="pdot" style="background:var(--blue)"></span>
-          {i18next.t("istunnot:filter_vote_days")}
+          {i18next.t("sessions:filter_vote_days")}
         </a>
         <a
           class="fchip"
@@ -178,7 +178,7 @@ export function SessionList({
           hx-indicator="#sit-root"
         >
           <span class="pdot" style="background:var(--opp)"></span>
-          {i18next.t("istunnot:filter_question_hour")}
+          {i18next.t("sessions:filter_question_hour")}
         </a>
         <a
           class="fchip"
@@ -191,7 +191,7 @@ export function SessionList({
           hx-indicator="#sit-root"
         >
           <span class="pdot" style="background:var(--red)"></span>
-          {i18next.t("istunnot:filter_interpellation")}
+          {i18next.t("sessions:filter_interpellation")}
         </a>
         <a
           class="fchip"
@@ -204,7 +204,7 @@ export function SessionList({
           hx-indicator="#sit-root"
         >
           <span class="pdot" style="background:var(--faint)"></span>
-          {i18next.t("istunnot:filter_discussions")}
+          {i18next.t("sessions:filter_discussions")}
         </a>
       </div>
 
@@ -233,7 +233,7 @@ export function SessionList({
           hidden
           style="display:block;text-align:center;color:var(--muted);padding:40px 0;border:0"
         >
-          {i18next.t("istunnot:none_found")}
+          {i18next.t("sessions:none_found")}
         </div>
       </div>
     </div>

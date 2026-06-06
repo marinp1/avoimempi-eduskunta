@@ -2,7 +2,7 @@ import {
   applyFilters,
   type RosterParams,
 } from "#server/helpers/template-helpers";
-import Koostumusmuutos from "#server/components/koostumusmuutos";
+import CompositionChange from "#server/components/composition-change";
 import Edustajat from "#server/features/person/pages/roster.page";
 import RosterContent from "#server/features/person/fragments/roster-content.fragment";
 import { fragmentResponse } from "#server/eta";
@@ -21,7 +21,7 @@ function parseRosterParams(url: URL): RosterParams {
   };
 }
 
-export function createEdustajatRoute(deps: WebappDeps) {
+export function createRosterRoute(deps: WebappDeps) {
   return {
     ...defineRoute({
       path: "/edustajat",
@@ -37,21 +37,21 @@ export function createEdustajatRoute(deps: WebappDeps) {
             ctx.deps.sessionRepository.fetchCompositionChangeDetail({
               date: ctx.tlData.cursor,
             });
-          const compDetailHtml = Koostumusmuutos({
+          const compDetailHtml = CompositionChange({
             date: ctx.tlData.cursor,
             rows: compRows,
           });
 
           return {
             fragment: Edustajat({
-              title: i18next.t("edustajat:title"),
+              title: i18next.t("persons:title"),
               allRows,
               filtered,
               params,
               compDetailHtml,
             }),
             activePath: "/edustajat",
-            title: i18next.t("edustajat:title"),
+            title: i18next.t("persons:title"),
             partial: {
               target: "roster-content",
               fragment: RosterContent({ allRows, filtered, params, oob: true }),
@@ -68,7 +68,7 @@ export function createEdustajatRoute(deps: WebappDeps) {
         const dateParam = url.searchParams.get("date");
 
         if (!dateParam || !/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
-          return fragmentResponse(Koostumusmuutos({ date: "", rows: [] }));
+          return fragmentResponse(CompositionChange({ date: "", rows: [] }));
         }
 
         const rows = deps.sessionRepository.fetchCompositionChangeDetail({
@@ -86,7 +86,7 @@ export function createEdustajatRoute(deps: WebappDeps) {
         if (replaceUrl) headers["HX-Replace-Url"] = replaceUrl;
 
         return new Response(
-          Koostumusmuutos({
+          CompositionChange({
             date: dateParam,
             rows,
           }),

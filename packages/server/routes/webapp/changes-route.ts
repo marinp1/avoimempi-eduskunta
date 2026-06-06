@@ -4,7 +4,7 @@ import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
 
-export function createMuutoksetRoute(deps: WebappDeps) {
+export function createChangesRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/muutokset",
     GET: withWebappPage(deps, async () => ({

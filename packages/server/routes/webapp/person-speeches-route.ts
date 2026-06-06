@@ -2,7 +2,7 @@ import SpeechesFragment from "#server/features/person/fragments/speeches.fragmen
 import type { WebappDeps } from "./deps";
 import { defineRoute } from "#server/helpers";
 
-export function createEdustajaSpeechesRoute(deps: WebappDeps) {
+export function createPersonSpeechesRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/edustaja/:id/puheet",
     GET: async (_req, params) => {

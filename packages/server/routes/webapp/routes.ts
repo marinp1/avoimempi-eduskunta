@@ -1,23 +1,23 @@
 import { cssAsset, jsAsset } from "./assets";
-import { createAanestysRoute } from "./aanestys-route";
-import { createAanestysKarttaRoute } from "./aanestys-kartta-route";
-import { createAanestyksetListRoute } from "./aanestykset-list-route";
-import { createAnalytiikkaRoute } from "./analytiikka-route";
-import { createAsiakirjaRoute } from "./asiakirja-route";
-import { createAsiakirjatListRoute } from "./asiakirjat-list-route";
-import { createAsiakohtaRoute } from "./asiakohta-route";
-import { createEdustajaRoute } from "./edustaja-route";
-import { createEdustajaSpeechesRoute } from "./edustaja-speeches-route";
-import { createEdustajatRoute } from "./edustajat-route";
-import { createHallituksetRoute } from "./hallitukset-route";
+import { createVotingRoute } from "./voting-route";
+import { createVotingMapRoute } from "./voting-map-route";
+import { createVotingsListRoute } from "./votings-list-route";
+import { createAnalyticsRoute } from "./analytics-route";
+import { createDocumentRoute } from "./document-route";
+import { createDocumentsListRoute } from "./documents-list-route";
+import { createAgendaItemRoute } from "./agenda-item-route";
+import { createPersonRoute } from "./person-route";
+import { createPersonSpeechesRoute } from "./person-speeches-route";
+import { createRosterRoute } from "./roster-route";
+import { createGovernmentsRoute } from "./governments-route";
 import { createHomeRoute } from "./home-route";
-import { createIstunnotRoute } from "./istunnot-route";
-import { createIstuntoRoute } from "./istunto-route";
-import { createKeskusteluRoute } from "./keskustelu-route";
-import { createLaadunvalvontaRoute } from "./laadunvalvonta-route";
-import { createMuutoksetRoute } from "./muutokset-route";
-import { createPuolueRoute } from "./puolue-route";
-import { createPuolueetListRoute } from "./puolueet-list-route";
+import { createSessionsListRoute } from "./sessions-list-route";
+import { createSessionRoute } from "./session-route";
+import { createDebateRoute } from "./debate-route";
+import { createDataQualityRoute } from "./data-quality-route";
+import { createChangesRoute } from "./changes-route";
+import { createPartyRoute } from "./party-route";
+import { createPartiesListRoute } from "./parties-list-route";
 import type { WebappDeps } from "./deps";
 
 export function createWebappStaticRoutes() {
@@ -31,24 +31,24 @@ export type { WebappDeps } from "./deps";
 
 export function createWebappPageRoutes(deps: WebappDeps) {
   return {
-    ...createAanestysRoute(deps),
-    ...createAanestysKarttaRoute(deps),
-    ...createAanestyksetListRoute(deps),
-    ...createAnalytiikkaRoute(deps),
-    ...createAsiakirjaRoute(deps),
-    ...createAsiakirjatListRoute(deps),
-    ...createAsiakohtaRoute(deps),
-    ...createEdustajaRoute(deps),
-    ...createEdustajaSpeechesRoute(deps),
-    ...createEdustajatRoute(deps),
-    ...createHallituksetRoute(deps),
+    ...createVotingRoute(deps),
+    ...createVotingMapRoute(deps),
+    ...createVotingsListRoute(deps),
+    ...createAnalyticsRoute(deps),
+    ...createDocumentRoute(deps),
+    ...createDocumentsListRoute(deps),
+    ...createAgendaItemRoute(deps),
+    ...createPersonRoute(deps),
+    ...createPersonSpeechesRoute(deps),
+    ...createRosterRoute(deps),
+    ...createGovernmentsRoute(deps),
     ...createHomeRoute(deps),
-    ...createIstunnotRoute(deps),
-    ...createIstuntoRoute(deps),
-    ...createKeskusteluRoute(deps),
-    ...createLaadunvalvontaRoute(deps),
-    ...createMuutoksetRoute(deps),
-    ...createPuolueRoute(deps),
-    ...createPuolueetListRoute(deps),
+    ...createSessionsListRoute(deps),
+    ...createSessionRoute(deps),
+    ...createDebateRoute(deps),
+    ...createDataQualityRoute(deps),
+    ...createChangesRoute(deps),
+    ...createPartyRoute(deps),
+    ...createPartiesListRoute(deps),
   } as const;
 }

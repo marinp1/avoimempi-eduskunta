@@ -40,19 +40,19 @@ export function buildLegislativeInitiative(
 
   const textSections: TextSection[] = [];
   const jst = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_justification"),
+    i18next.t("documents:detail.text_section_justification"),
     detail.justification_text,
     detail.justification_rich_text,
   );
   if (jst) textSections.push(jst);
   const prop = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_proposal"),
+    i18next.t("documents:detail.text_section_proposal"),
     detail.proposal_text,
     detail.proposal_rich_text,
   );
   if (prop) textSections.push(prop);
   const law = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_law_text"),
+    i18next.t("documents:detail.text_section_law_text"),
     detail.law_text,
     detail.law_rich_text,
   );
@@ -64,7 +64,7 @@ export function buildLegislativeInitiative(
   const label = i18next.t(
     typeCode in LA_LABELS
       ? LA_LABELS[typeCode as keyof typeof LA_LABELS]
-      : "asiakirjat:initiative_type_labels.RA",
+      : "documents:initiative_type_labels.RA",
   );
   return {
     kind: "aloite",
@@ -76,7 +76,7 @@ export function buildLegislativeInitiative(
       detail.first_signer_first_name,
       detail.first_signer_last_name,
     ),
-    authorRole: i18next.t("asiakirjat:detail.mp_role"),
+    authorRole: i18next.t("documents:detail.mp_role"),
     authorParty,
     authorPartyColor: partyColor(authorParty),
     authorPersonId: detail.first_signer_person_id,
@@ -86,12 +86,12 @@ export function buildLegislativeInitiative(
     ),
     authorDistrict: mpDistrict(detail.first_signer_person_id, ctx.personRepo),
     primaryDate: formatFi(submissionDate),
-    primaryDateLabel: i18next.t("asiakirjat:status_labels.submitted"),
+    primaryDateLabel: i18next.t("documents:status_labels.submitted"),
     secondaryDate: null,
     secondaryDateLabel: null,
     statusLabel: detail.decision_outcome
-      ? i18next.t("asiakirjat:status_labels.handled")
-      : i18next.t("asiakirjat:status_labels.pending"),
+      ? i18next.t("documents:status_labels.handled")
+      : i18next.t("documents:status_labels.pending"),
     statusColor: detail.decision_outcome ? "var(--hall)" : "var(--muted)",
     textSections,
     lifecycleStages,
@@ -112,7 +112,7 @@ export function buildLegislativeInitiative(
 
 export const legislativeInitiative: DocumentKindModule = {
   key: "aloite",
-  chip: { labelI18n: "asiakirjat:chip_labels.aloite", dotColor: "var(--hall)" },
+  chip: { labelI18n: "documents:chip_labels.aloite", dotColor: "var(--hall)" },
   list(repo, params) {
     const { items, totalCount } = repo.fetchLegislativeInitiatives(params);
     return {
@@ -129,7 +129,7 @@ export const legislativeInitiative: DocumentKindModule = {
           date: r.submission_date ?? "",
           dateLabel: dateLabel(
             r.submission_date,
-            "asiakirjat:status_labels.submitted_on",
+            "documents:status_labels.submitted_on",
           ),
           authorName: authorName(
             r.first_signer_first_name,

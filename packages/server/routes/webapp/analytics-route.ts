@@ -4,7 +4,7 @@ import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
 
-export function createAnalytiikkaRoute(deps: WebappDeps) {
+export function createAnalyticsRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/analytiikka",
     GET: withWebappPage(deps, async () => ({

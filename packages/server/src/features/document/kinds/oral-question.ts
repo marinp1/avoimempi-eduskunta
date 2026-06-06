@@ -24,7 +24,7 @@ export function buildOralQuestion(
 
   const textSections: TextSection[] = [];
   const qs = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_oral_question"),
+    i18next.t("documents:detail.text_section_oral_question"),
     detail.question_text,
     null,
   );
@@ -36,9 +36,9 @@ export function buildOralQuestion(
     kind: "suullinen",
     id: detail.id,
     identifier: detail.parliament_identifier,
-    documentTypeLabel: i18next.t("asiakirjat:kind_labels.suullinen"),
+    documentTypeLabel: i18next.t("documents:kind_labels.suullinen"),
     title: detail.title ?? "",
-    authorName: author || i18next.t("asiakirjat:detail.unknown_author"),
+    authorName: author || i18next.t("documents:detail.unknown_author"),
     authorRole: null,
     authorParty: null,
     authorPartyColor: "#999999",
@@ -46,16 +46,16 @@ export function buildOralQuestion(
     authorInitials: author ? author.slice(0, 2).toUpperCase() : "?",
     authorDistrict: null,
     primaryDate: formatFi(submissionDate),
-    primaryDateLabel: i18next.t("asiakirjat:status_labels.submitted"),
+    primaryDateLabel: i18next.t("documents:status_labels.submitted"),
     secondaryDate: null,
     secondaryDateLabel: null,
     statusLabel: detail.decision_outcome
-      ? i18next.t("asiakirjat:status_labels.handled")
+      ? i18next.t("documents:status_labels.handled")
       : submissionDate
-        ? i18next.t("asiakirjat:status_labels.submitted_on", {
+        ? i18next.t("documents:status_labels.submitted_on", {
             date: formatFi(submissionDate),
           })
-        : i18next.t("asiakirjat:status_labels.pending"),
+        : i18next.t("documents:status_labels.pending"),
     statusColor: detail.decision_outcome ? "var(--hall)" : "var(--muted)",
     textSections,
     lifecycleStages,
@@ -77,7 +77,7 @@ export function buildOralQuestion(
 export const oralQuestion: DocumentKindModule = {
   key: "suullinen",
   chip: {
-    labelI18n: "asiakirjat:chip_labels.suullinen",
+    labelI18n: "documents:chip_labels.suullinen",
     dotColor: "var(--blue)",
   },
   list(repo, params) {
@@ -94,7 +94,7 @@ export const oralQuestion: DocumentKindModule = {
         date: r.submission_date ?? "",
         dateLabel: dateLabel(
           r.submission_date,
-          "asiakirjat:status_labels.submitted_on",
+          "documents:status_labels.submitted_on",
         ),
         authorName: null,
         authorParty: null,

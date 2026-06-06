@@ -15,7 +15,7 @@ function dayBefore(isoDate: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-export function createAanestyksetListRoute(deps: WebappDeps) {
+export function createVotingsListRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/aanestykset",
     GET: withWebappPage(deps, async (ctx) => {
@@ -52,11 +52,11 @@ export function createAanestyksetListRoute(deps: WebappDeps) {
 
       return {
         fragment: Aanestykset({
-          title: i18next.t("aanestykset:title"),
+          title: i18next.t("votings:title"),
           data,
         }),
         activePath: pageUrl,
-        title: i18next.t("aanestykset:title"),
+        title: i18next.t("votings:title"),
       };
     }),
   });

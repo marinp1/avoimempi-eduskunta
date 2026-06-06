@@ -37,7 +37,7 @@ export default function Aanestys({ title, data }: Props) {
             hx-get="/aanestykset"
             {...NAV}
           >
-            {i18next.t("aanestykset:title")}
+            {i18next.t("votings:title")}
           </a>
           &nbsp;›&nbsp;{" "}
           <a
@@ -46,13 +46,13 @@ export default function Aanestys({ title, data }: Props) {
             hx-get={`/istunto/${esc(v.sessionKey)}`}
             {...NAV}
           >
-            {i18next.t("aanestykset:detail.breadcrumb_session", {
+            {i18next.t("votings:detail.breadcrumb_session", {
               key: esc(v.sessionKey),
             })}
           </a>
           &nbsp;›&nbsp;{" "}
           <span>
-            {i18next.t("aanestykset:detail.breadcrumb_voting", {
+            {i18next.t("votings:detail.breadcrumb_voting", {
               number: v.votingNumber,
             })}
           </span>
@@ -61,13 +61,13 @@ export default function Aanestys({ title, data }: Props) {
         <section class="doc-head">
           <div class="doc-head__top">
             <span class="doc-id">
-              {i18next.t("aanestykset:detail.doc_id_format", {
+              {i18next.t("votings:detail.doc_id_format", {
                 number: v.votingNumber,
                 sessionKey: esc(v.sessionKey),
               })}
             </span>
             <span class="doc-type">
-              {v.titleExtra ?? i18next.t("aanestykset:detail.type_fallback")}
+              {v.titleExtra ?? i18next.t("votings:detail.type_fallback")}
             </span>
             <span
               class={clsx(
@@ -95,7 +95,7 @@ export default function Aanestys({ title, data }: Props) {
                   hx-get={`/asiakohta/${esc(v.sectionKey)}`}
                   {...NAV}
                 >
-                  {i18next.t("aanestykset:detail.section_link", {
+                  {i18next.t("votings:detail.section_link", {
                     num: v.asiakohtaNum,
                   })}
                 </a>
@@ -122,7 +122,7 @@ export default function Aanestys({ title, data }: Props) {
               {...NAV}
             >
               <span class="ic">▤</span>
-              {i18next.t("aanestykset:detail.toolbar_section", {
+              {i18next.t("votings:detail.toolbar_section", {
                 number: v.asiakohtaNum,
               })}
             </a>
@@ -169,7 +169,7 @@ export default function Aanestys({ title, data }: Props) {
               ></span>
             )}
             <span class="v-poi" style={`width:${v.absentPct.toFixed(1)}%`}>
-              {i18next.t("aanestykset:detail.result_bar_absent", {
+              {i18next.t("votings:detail.result_bar_absent", {
                 count: v.nAbsent,
               })}
             </span>
@@ -220,21 +220,19 @@ export default function Aanestys({ title, data }: Props) {
           <div class="summary__bar">
             <span class="l">
               <span class="spark">✦</span>
-              <span class="lbl">
-                {i18next.t("aanestykset:detail.ai_summary")}
-              </span>
+              <span class="lbl">{i18next.t("votings:detail.ai_summary")}</span>
             </span>
           </div>
           <div class="summary__in">
             <div class="summary__q">
-              {i18next.t("aanestykset:detail.ai_question")}
+              {i18next.t("votings:detail.ai_question")}
             </div>
             <p class="summary__lead">
-              {i18next.t("aanestykset:detail.ai_not_available")}
+              {i18next.t("votings:detail.ai_not_available")}
             </p>
             <div class="summary__foot">
               <span class="summary__disc">
-                {i18next.t("aanestykset:detail.ai_disclaimer")}
+                {i18next.t("votings:detail.ai_disclaimer")}
               </span>
             </div>
           </div>
@@ -242,14 +240,14 @@ export default function Aanestys({ title, data }: Props) {
 
         <section id="ryhmat" class="mt-28" style="scroll-margin-top:14px">
           <Kicker
-            text={i18next.t("aanestykset:detail.section_groups_kicker")}
+            text={i18next.t("votings:detail.section_groups_kicker")}
             modifier="blue"
             dot
           />
           <div class="vote-block">
             <div class="vote-block__h">
               <span class="vote-block__title">
-                {i18next.t("aanestykset:detail.section_groups_title")}
+                {i18next.t("votings:detail.section_groups_title")}
               </span>
             </div>
             {data.partyBreakdown.map((pb) => (
@@ -294,7 +292,7 @@ export default function Aanestys({ title, data }: Props) {
         {data.relatedVotes.length > 0 && (
           <section class="mt-28">
             <Kicker
-              text={i18next.t("aanestykset:detail.related_votes_kicker")}
+              text={i18next.t("votings:detail.related_votes_kicker")}
               modifier="blue"
               dot
             />

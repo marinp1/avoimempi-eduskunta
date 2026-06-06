@@ -2,11 +2,11 @@ import i18next from "i18next";
 import common from "./locales/fi/common.json";
 import nav from "./locales/fi/nav.json";
 import home from "./locales/fi/home.json";
-import edustajat from "./locales/fi/edustajat.json";
-import aanestykset from "./locales/fi/aanestykset.json";
-import istunnot from "./locales/fi/istunnot.json";
-import puolueet from "./locales/fi/puolueet.json";
-import asiakirjat from "./locales/fi/asiakirjat.json";
+import persons from "./locales/fi/persons.json";
+import votings from "./locales/fi/votings.json";
+import sessions from "./locales/fi/sessions.json";
+import parties from "./locales/fi/parties.json";
+import documents from "./locales/fi/documents.json";
 import errors from "./locales/fi/errors.json";
 import componentsNs from "./locales/fi/components.json";
 
@@ -14,11 +14,11 @@ export const NS = [
   "common",
   "nav",
   "home",
-  "edustajat",
-  "aanestykset",
-  "istunnot",
-  "puolueet",
-  "asiakirjat",
+  "persons",
+  "votings",
+  "sessions",
+  "parties",
+  "documents",
   "errors",
   "components",
 ] as const;
@@ -31,11 +31,11 @@ await i18next.init({
       common,
       nav,
       home,
-      edustajat,
-      aanestykset,
-      istunnot,
-      puolueet,
-      asiakirjat,
+      persons,
+      votings,
+      sessions,
+      parties,
+      documents,
       errors,
       components: componentsNs,
     },

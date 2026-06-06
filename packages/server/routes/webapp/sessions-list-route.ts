@@ -7,7 +7,7 @@ import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
 
-export function createIstunnotRoute(deps: WebappDeps) {
+export function createSessionsListRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/istunnot",
     GET: withWebappPage(deps, async (ctx) => {
@@ -33,7 +33,7 @@ export function createIstunnotRoute(deps: WebappDeps) {
       const isAtPresent = cursor >= ctx.tlData.today;
       const shownCursor = isAtPresent ? undefined : formatFi(cursor);
 
-      const replaceUrl = buildIstunnotUrl({
+      const replaceUrl = buildSessionsListUrl({
         cursor,
         today: ctx.tlData.today,
         term: ctx.tlData.term,
@@ -50,12 +50,12 @@ export function createIstunnotRoute(deps: WebappDeps) {
 
       return {
         fragment: Istunnot({
-          title: i18next.t("istunnot:title"),
+          title: i18next.t("sessions:title"),
           data,
           cursorFormatted: shownCursor,
         }),
         activePath: "/istunnot",
-        title: i18next.t("istunnot:title"),
+        title: i18next.t("sessions:title"),
         timelineData: resolvedTl,
         extraHeaders:
           Object.keys(extraHeaders).length > 0 ? extraHeaders : undefined,
@@ -72,7 +72,7 @@ export function createIstunnotRoute(deps: WebappDeps) {
   });
 }
 
-function buildIstunnotUrl(opts: {
+function buildSessionsListUrl(opts: {
   cursor: string;
   today: string;
   term: string;

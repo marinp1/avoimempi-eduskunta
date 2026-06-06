@@ -6,7 +6,7 @@ import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
 
-export function createPuolueetListRoute(deps: WebappDeps) {
+export function createPartiesListRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/puolueet",
     GET: withWebappPage(deps, async (ctx) => {
@@ -31,9 +31,9 @@ export function createPuolueetListRoute(deps: WebappDeps) {
       });
 
       return {
-        fragment: Puolueet({ title: i18next.t("puolueet:title"), data }),
+        fragment: Puolueet({ title: i18next.t("parties:title"), data }),
         activePath: "/puolueet",
-        title: i18next.t("puolueet:title"),
+        title: i18next.t("parties:title"),
       };
     }),
   });

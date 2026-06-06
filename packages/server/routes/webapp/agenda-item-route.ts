@@ -6,7 +6,7 @@ import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
 
-export function createAsiakohtaRoute(deps: WebappDeps) {
+export function createAgendaItemRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/asiakohta/:key",
     GET: withWebappPage(deps, async (ctx, params) => {
@@ -17,9 +17,9 @@ export function createAsiakohtaRoute(deps: WebappDeps) {
       });
       if (!section) {
         return {
-          fragment: `<section class="page-hero"><h1>${i18next.t("istunnot:detail.asiakohta_not_found")}</h1></section>`,
+          fragment: `<section class="page-hero"><h1>${i18next.t("sessions:detail.asiakohta_not_found")}</h1></section>`,
           activePath: `/asiakohta/${key}`,
-          title: i18next.t("istunnot:detail.asiakohta_not_found"),
+          title: i18next.t("sessions:detail.asiakohta_not_found"),
         };
       }
 

@@ -21,7 +21,7 @@ function partyShort(p: string | null): string {
   return p ?? "";
 }
 
-export default function Koostumusmuutos({ date, rows }: Props) {
+export default function CompositionChange({ date, rows }: Props) {
   const joined = rows.filter((r) => r.change_type === "join");
   const left = rows.filter((r) => r.change_type === "leave");
 

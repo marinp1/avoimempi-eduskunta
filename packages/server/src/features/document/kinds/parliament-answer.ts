@@ -27,13 +27,13 @@ export function buildParliamentAnswer(
 
   const textSections: TextSection[] = [];
   const dec = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_decision"),
+    i18next.t("documents:detail.text_section_decision"),
     detail.decision_text,
     detail.decision_rich_text,
   );
   if (dec) textSections.push(dec);
   const leg = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_legislation"),
+    i18next.t("documents:detail.text_section_legislation"),
     detail.legislation_text,
     detail.legislation_rich_text,
   );
@@ -43,9 +43,9 @@ export function buildParliamentAnswer(
     kind: "vastaus-edk",
     id: detail.id,
     identifier: detail.parliament_identifier,
-    documentTypeLabel: i18next.t("asiakirjat:kind_labels.vastaus-edk"),
+    documentTypeLabel: i18next.t("documents:kind_labels.vastaus-edk"),
     title: detail.title ?? "",
-    authorName: i18next.t("asiakirjat:detail.author_parliament"),
+    authorName: i18next.t("documents:detail.author_parliament"),
     authorRole: null,
     authorParty: null,
     authorPartyColor: "#999999",
@@ -53,14 +53,14 @@ export function buildParliamentAnswer(
     authorInitials: "E",
     authorDistrict: null,
     primaryDate: formatFi(submissionDate),
-    primaryDateLabel: i18next.t("asiakirjat:status_labels.given"),
+    primaryDateLabel: i18next.t("documents:status_labels.given"),
     secondaryDate: detail.signature_date
       ? formatFi(detail.signature_date)
       : null,
     secondaryDateLabel: detail.signature_date
-      ? i18next.t("asiakirjat:status_labels.signed")
+      ? i18next.t("documents:status_labels.signed")
       : null,
-    statusLabel: i18next.t("asiakirjat:status_labels.given"),
+    statusLabel: i18next.t("documents:status_labels.given"),
     statusColor: "var(--hall)",
     textSections,
     lifecycleStages: [],
@@ -83,7 +83,7 @@ export function buildParliamentAnswer(
 export const parliamentAnswer: DocumentKindModule = {
   key: "vastaus-edk",
   chip: {
-    labelI18n: "asiakirjat:chip_labels.vastaus-edk",
+    labelI18n: "documents:chip_labels.vastaus-edk",
     dotColor: "var(--hall)",
   },
   list(repo, params) {
@@ -100,7 +100,7 @@ export const parliamentAnswer: DocumentKindModule = {
         date: r.submission_date ?? "",
         dateLabel: dateLabel(
           r.submission_date,
-          "asiakirjat:status_labels.given_on",
+          "documents:status_labels.given_on",
         ),
         authorName: null,
         authorParty: null,

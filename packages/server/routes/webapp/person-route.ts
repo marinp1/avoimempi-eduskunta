@@ -4,7 +4,7 @@ import type { WebappDeps } from "./deps";
 import { defineRoute } from "#server/helpers";
 import { personOrNotFound } from "#server/helpers/errors";
 
-export function createEdustajaRoute(deps: WebappDeps) {
+export function createPersonRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/edustaja/:id",
     GET: withWebappPage(deps, async (ctx, params) => {

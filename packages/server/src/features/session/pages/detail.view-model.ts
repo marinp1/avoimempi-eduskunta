@@ -201,26 +201,26 @@ function deriveState(
   stateTextFi: string | null | undefined,
 ): { class: "done" | "live" | "draft"; label: string } {
   if (state === "KAYNNISSA")
-    return { class: "live", label: i18next.t("istunnot:status_live") };
+    return { class: "live", label: i18next.t("sessions:status_live") };
   if (state === "LOPETETTU" && stateTextFi === "Istunto päättynyt")
-    return { class: "done", label: i18next.t("istunnot:status_done") };
+    return { class: "done", label: i18next.t("sessions:status_done") };
   if (state === "PJLAADITTU")
-    return { class: "draft", label: i18next.t("istunnot:status_draft") };
-  return { class: "draft", label: i18next.t("istunnot:status_unknown") };
+    return { class: "draft", label: i18next.t("sessions:status_draft") };
+  return { class: "draft", label: i18next.t("sessions:status_unknown") };
 }
 
 function phaseLabel(code: string | null | undefined): string {
   switch (code) {
     case "2_kasittely":
-      return i18next.t("istunnot:detail.phase_toinen_kasittely");
+      return i18next.t("sessions:detail.phase_toinen_kasittely");
     case "lahetekeskustelu":
-      return i18next.t("istunnot:detail.phase_lahetekeskustelu");
+      return i18next.t("sessions:detail.phase_lahetekeskustelu");
     case "1_kasittely":
-      return i18next.t("istunnot:detail.phase_ensimmainen_kasittely");
+      return i18next.t("sessions:detail.phase_ensimmainen_kasittely");
     case "ainoakasittely":
-      return i18next.t("istunnot:detail.phase_ainoa_kasittely");
+      return i18next.t("sessions:detail.phase_ainoa_kasittely");
     case "poydallepano":
-      return i18next.t("istunnot:detail.phase_poydallepano");
+      return i18next.t("sessions:detail.phase_poydallepano");
     default:
       return code ?? "";
   }
@@ -246,7 +246,7 @@ export function buildSessionDetailViewModel(
   const header: SessionHeaderData = {
     key: session.key,
     ptkId: `PTK ${session.key.split("/")[1]}/${session.key.split("/")[0]} vp`,
-    typeLabel: i18next.t("istunnot:detail.minutes_protocol_label"),
+    typeLabel: i18next.t("sessions:detail.minutes_protocol_label"),
     stateClass: stateInfo.class,
     stateLabel: stateInfo.label,
     title: i18next.t("common:session_title_format", { key: session.key }),
@@ -401,7 +401,7 @@ export function buildSessionDetailViewModel(
       if (!currentTabled) {
         currentTabled = {
           phaseCode: "poydallepano",
-          phaseLabel: i18next.t("istunnot:detail.section_tabled_label"),
+          phaseLabel: i18next.t("sessions:detail.section_tabled_label"),
           items: [],
         };
         tabledItems.push(currentTabled);

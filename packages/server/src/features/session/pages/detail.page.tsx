@@ -92,15 +92,15 @@ export default function Istunto({ data }: Props) {
         <div class="doc-toolbar">
           <a href="#" class="tbtn">
             <span class="ic">↗</span>{" "}
-            {i18next.t("istunnot:detail.toolbar_minutes")}
+            {i18next.t("sessions:detail.toolbar_minutes")}
           </a>
           <a href="#" class="tbtn">
             <span class="ic">▤</span>{" "}
-            {i18next.t("istunnot:detail.toolbar_agenda")}
+            {i18next.t("sessions:detail.toolbar_agenda")}
           </a>
           <a href="#paatosasiat" class="tbtn">
             <span class="ic">⚖</span>{" "}
-            {i18next.t("istunnot:detail.toolbar_votings")}
+            {i18next.t("sessions:detail.toolbar_votings")}
           </a>
           <span class="grow"></span>
           <button class="tbtn">
@@ -109,17 +109,17 @@ export default function Istunto({ data }: Props) {
         </div>
 
         <nav class="sess-jump">
-          <a href="#lasnaolo">{i18next.t("istunnot:detail.jump_attendance")}</a>
+          <a href="#lasnaolo">{i18next.t("sessions:detail.jump_attendance")}</a>
           <a href="#paatosasiat">
-            {i18next.t("istunnot:detail.jump_voting")}
+            {i18next.t("sessions:detail.jump_voting")}
             {s.votingCount > 0
-              ? ` \u00b7 ${i18next.t("aanestykset:count", { count: s.votingCount })}`
+              ? ` \u00b7 ${i18next.t("votings:count", { count: s.votingCount })}`
               : ""}
           </a>
           <a href="#keskustelut">
-            {i18next.t("istunnot:detail.jump_discussion")}
+            {i18next.t("sessions:detail.jump_discussion")}
           </a>
-          <a href="#poydalle">{i18next.t("istunnot:detail.jump_tabled")}</a>
+          <a href="#poydalle">{i18next.t("sessions:detail.jump_tabled")}</a>
         </nav>
 
         <div class="summary">
@@ -127,11 +127,11 @@ export default function Istunto({ data }: Props) {
             <span class="l">
               <span class="spark">✦</span>
               <span class="lbl">
-                {i18next.t("istunnot:detail.ai_summary_label")}
+                {i18next.t("sessions:detail.ai_summary_label")}
               </span>
             </span>
             <span class="read">
-              {i18next.t("istunnot:detail.ai_summary_meta", {
+              {i18next.t("sessions:detail.ai_summary_meta", {
                 items: s.itemCount,
                 votes: s.votingCount,
                 speeches: s.speechCount,
@@ -140,10 +140,10 @@ export default function Istunto({ data }: Props) {
           </div>
           <div class="summary__in">
             <div class="summary__q">
-              {i18next.t("istunnot:detail.ai_summary_question")}
+              {i18next.t("sessions:detail.ai_summary_question")}
             </div>
             <p class="summary__lead">
-              {i18next.t("istunnot:detail.ai_summary_not_available")}
+              {i18next.t("sessions:detail.ai_summary_not_available")}
             </p>
           </div>
         </div>
@@ -210,15 +210,15 @@ function AttendanceSection({
   return (
     <section class="attend" id="lasnaolo">
       <p class="kicker" style="margin:30px 0 6px">
-        {i18next.t("istunnot:detail.attendance_roll_call")}{" "}
+        {i18next.t("sessions:detail.attendance_roll_call")}{" "}
         {attendance.rollCallTime
-          ? `${i18next.t("istunnot:detail.attendance_time_format", { time: attendance.rollCallTime.slice(11, 16) })}`
+          ? `${i18next.t("sessions:detail.attendance_time_format", { time: attendance.rollCallTime.slice(11, 16) })}`
           : ""}
       </p>
       <div class="psec__h" style="margin-bottom:18px">
-        <h2>{i18next.t("istunnot:detail.attendance_title")}</h2>
+        <h2>{i18next.t("sessions:detail.attendance_title")}</h2>
         <span class="meta">
-          {i18next.t("istunnot:detail.attendance_agenda_item")}
+          {i18next.t("sessions:detail.attendance_agenda_item")}
         </span>
       </div>
 
@@ -228,11 +228,11 @@ function AttendanceSection({
             <span class="n">{attendance.totalPresent}</span>
             <span class="of">
               / {attendance.totalMembers}{" "}
-              {i18next.t("istunnot:detail.attendance_present_suffix")}
+              {i18next.t("sessions:detail.attendance_present_suffix")}
             </span>
           </div>
           <div class="att-cap">
-            {i18next.t("istunnot:detail.attendance_caption")}
+            {i18next.t("sessions:detail.attendance_caption")}
           </div>
           <div class="att-bar">
             <span class="pres" style={`width:${presentPct.toFixed(0)}%`}></span>
@@ -241,18 +241,18 @@ function AttendanceSection({
           <div class="att-chips">
             <div class="att-chip">
               <span class="sw" style="background:var(--hall)"></span>
-              {i18next.t("istunnot:detail.attendance_present")}{" "}
+              {i18next.t("sessions:detail.attendance_present")}{" "}
               <b>{attendance.totalPresent}</b>
             </div>
             <div class="att-chip">
               <span class="sw ring"></span>
-              {i18next.t("istunnot:detail.attendance_absent")}{" "}
+              {i18next.t("sessions:detail.attendance_absent")}{" "}
               <b>{attendance.totalAbsent}</b>
             </div>
             {attendance.totalLate > 0 && (
               <div class="att-chip">
                 <span class="sw" style="background:var(--opp)"></span>
-                {i18next.t("istunnot:detail.attendance_late")}{" "}
+                {i18next.t("sessions:detail.attendance_late")}{" "}
                 <b>{attendance.totalLate}</b>
               </div>
             )}
@@ -272,13 +272,13 @@ function AttendanceSection({
       <div class="absentees">
         <div class="psec__h" style="margin-bottom:6px">
           <h3 style="font-size:var(--fs-h3)">
-            {i18next.t("istunnot:detail.absentees_title")}
+            {i18next.t("sessions:detail.absentees_title")}
           </h3>
           <span class="meta">
             {attendance.totalAbsent}{" "}
-            {i18next.t("istunnot:detail.absentees_subtitle")}
+            {i18next.t("sessions:detail.absentees_subtitle")}
             {attendance.totalLate > 0
-              ? ` \u00b7 ${i18next.t("istunnot:detail.absentees_late_format", { count: attendance.totalLate })}`
+              ? ` \u00b7 ${i18next.t("sessions:detail.absentees_late_format", { count: attendance.totalLate })}`
               : ""}
           </span>
         </div>
@@ -298,7 +298,7 @@ function AttendanceSection({
                     {m.isLate ? (
                       <span class="r">
                         {" "}
-                        {i18next.t("istunnot:detail.absentees_late_label")}
+                        {i18next.t("sessions:detail.absentees_late_label")}
                       </span>
                     ) : (
                       <span class="r">
@@ -319,7 +319,7 @@ function AttendanceSection({
           <span>
             <span
               dangerouslySetInnerHTML={{
-                __html: i18next.t("istunnot:detail.absentees_explanation"),
+                __html: i18next.t("sessions:detail.absentees_explanation"),
               }}
             ></span>
           </span>
@@ -348,7 +348,7 @@ function SeatGrid({
     <div
       class="seatgrid"
       role="img"
-      aria-label={i18next.t("istunnot:detail.seat_aria_label", {
+      aria-label={i18next.t("sessions:detail.seat_aria_label", {
         present: totalPresent,
         absent: totalAbsent,
       })}
@@ -364,7 +364,7 @@ function SeatGrid({
             <span
               class={clsx("seat", { absent: kind === "abs" })}
               style={`--p:${p.color}`}
-              title={`${p.label} \u00b7 ${kind === "abs" ? i18next.t("istunnot:detail.seat_absent_tooltip") : i18next.t("istunnot:detail.seat_present_tooltip")}`}
+              title={`${p.label} \u00b7 ${kind === "abs" ? i18next.t("sessions:detail.seat_absent_tooltip") : i18next.t("sessions:detail.seat_present_tooltip")}`}
             ></span>
           ));
         })}
@@ -389,7 +389,7 @@ function SeatLegend({
         ))}
       <span class="it">
         <span class="d ring"></span>
-        {i18next.t("istunnot:detail.seat_legend_absent")}
+        {i18next.t("sessions:detail.seat_legend_absent")}
       </span>
     </div>
   );
@@ -406,19 +406,19 @@ function VotingSections({ sections }: { sections: AgendaSectionData[] }) {
     <section class="ph" id="paatosasiat">
       <p class="kicker kicker--blue">
         <span class="dot"></span>
-        {i18next.t("istunnot:detail.section_voting_kicker")}
+        {i18next.t("sessions:detail.section_voting_kicker")}
       </p>
       <div class="ph__head">
-        <h2>{i18next.t("istunnot:detail.section_voting_title")}</h2>
+        <h2>{i18next.t("sessions:detail.section_voting_title")}</h2>
         <span class="meta">
-          {i18next.t("istunnot:detail.section_voting_meta", {
+          {i18next.t("sessions:detail.section_voting_meta", {
             items: totalItems,
             votes: totalVotes,
           })}
         </span>
       </div>
       <p class="ph__intro">
-        {i18next.t("istunnot:detail.section_voting_intro")}
+        {i18next.t("sessions:detail.section_voting_intro")}
       </p>
 
       {sections.map((s) =>
@@ -450,19 +450,19 @@ function DiscussionSections({ sections }: { sections: AgendaSectionData[] }) {
     <section class="ph" id="keskustelut">
       <p class="kicker">
         <span class="dot" style="background:var(--opp)"></span>
-        {i18next.t("istunnot:detail.section_discussion_kicker")}
+        {i18next.t("sessions:detail.section_discussion_kicker")}
       </p>
       <div class="ph__head">
-        <h2>{i18next.t("istunnot:detail.section_discussion_title")}</h2>
+        <h2>{i18next.t("sessions:detail.section_discussion_title")}</h2>
         <span class="meta">
-          {i18next.t("istunnot:detail.section_discussion_meta", {
+          {i18next.t("sessions:detail.section_discussion_meta", {
             items: totalItems,
             speeches: totalSpeeches,
           })}
         </span>
       </div>
       <p class="ph__intro">
-        {i18next.t("istunnot:detail.section_discussion_intro")}
+        {i18next.t("sessions:detail.section_discussion_intro")}
       </p>
 
       {sections.map((s) =>
@@ -490,18 +490,18 @@ function TabledSection({ items }: { items: AgendaSectionData[] }) {
     <section class="ph" id="poydalle">
       <p class="kicker">
         <span class="dot" style="background:var(--faint)"></span>
-        {i18next.t("istunnot:detail.section_tabled_kicker")}
+        {i18next.t("sessions:detail.section_tabled_kicker")}
       </p>
       <div class="ph__head">
-        <h2>{i18next.t("istunnot:detail.section_tabled_title")}</h2>
+        <h2>{i18next.t("sessions:detail.section_tabled_title")}</h2>
         <span class="meta">
-          {i18next.t("istunnot:detail.section_tabled_meta", {
+          {i18next.t("sessions:detail.section_tabled_meta", {
             items: items.reduce((s, g) => s + g.items.length, 0),
           })}
         </span>
       </div>
       <p class="ph__intro">
-        {i18next.t("istunnot:detail.section_tabled_intro")}
+        {i18next.t("sessions:detail.section_tabled_intro")}
       </p>
 
       {items.map((g) =>
@@ -539,18 +539,18 @@ function AgendaItemComponent({
             <span class={`pk ${phaseIcon}`}></span>
             {item.votingPhase.label} &middot;{" "}
             {item.votingPhase.votes.length > 0
-              ? i18next.t("aanestykset:count", {
+              ? i18next.t("votings:count", {
                   count: item.votingPhase.votes.length,
                 })
-              : i18next.t("istunnot:detail.agenda_no_votings")}
+              : i18next.t("sessions:detail.agenda_no_votings")}
           </div>
         )}
         {!item.votingPhase && (
           <div class="ag-phase">
             <span class={`pk ${phaseIcon}`}></span>
             {isTabled
-              ? i18next.t("istunnot:detail.phase_tabled_label")
-              : i18next.t("istunnot:detail.phase_discussion_label")}
+              ? i18next.t("sessions:detail.phase_tabled_label")
+              : i18next.t("sessions:detail.phase_discussion_label")}
           </div>
         )}
 
@@ -600,7 +600,7 @@ function AgendaItemComponent({
             </span>
             {!item.activity.hasVotings && (
               <span class="ag-badge none">
-                {i18next.t("istunnot:detail.agenda_no_votings")}
+                {i18next.t("sessions:detail.agenda_no_votings")}
               </span>
             )}
           </div>

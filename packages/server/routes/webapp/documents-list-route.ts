@@ -8,7 +8,7 @@ import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute, isHtmx } from "#server/helpers";
 
-export function createAsiakirjatListRoute(deps: WebappDeps) {
+export function createDocumentsListRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/asiakirjat",
     GET: withWebappPage(deps, async (ctx) => {
@@ -46,13 +46,13 @@ export function createAsiakirjatListRoute(deps: WebappDeps) {
 
       return {
         fragment: Asiakirjat({
-          title: i18next.t("asiakirjat:title"),
+          title: i18next.t("documents:title"),
           data,
           query: q,
           kind,
         }),
         activePath: "/asiakirjat",
-        title: i18next.t("asiakirjat:title"),
+        title: i18next.t("documents:title"),
       };
     }),
   });

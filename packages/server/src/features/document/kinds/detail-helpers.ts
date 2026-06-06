@@ -14,7 +14,7 @@ export function authorsByName(
 ): string {
   return (
     [first, last].filter(Boolean).join(" ") ||
-    i18next.t("asiakirjat:detail.unknown_author")
+    i18next.t("documents:detail.unknown_author")
   );
 }
 
@@ -89,7 +89,7 @@ export function buildLifecycleFromStages(
       label: String(
         s.stage_title ||
           s.event_title ||
-          i18next.t("asiakirjat:detail.stage_processing"),
+          i18next.t("documents:detail.stage_processing"),
       ),
       date: s.event_date ?? null,
       done: true,
@@ -113,10 +113,10 @@ export function mapMpSignatories(rawSigners: DocSigner[]): Signatory[] {
     return {
       name:
         [s.first_name, s.last_name].filter(Boolean).join(" ") ||
-        i18next.t("asiakirjat:detail.unknown_author"),
+        i18next.t("documents:detail.unknown_author"),
       role: s.is_first_signer
-        ? i18next.t("asiakirjat:detail.first_signer")
-        : i18next.t("asiakirjat:detail.signer"),
+        ? i18next.t("documents:detail.first_signer")
+        : i18next.t("documents:detail.signer"),
       party: party?.code ?? null,
       partyColor: party?.color ?? null,
       personId: s.person_id ?? null,

@@ -249,8 +249,8 @@ export function buildSingleVoteData(input: {
       nNo: rv.n_no,
       outcomeLabel:
         rv.n_yes > rv.n_no
-          ? i18next.t("aanestykset:outcome_approved")
-          : i18next.t("aanestykset:outcome_rejected"),
+          ? i18next.t("votings:outcome_approved")
+          : i18next.t("votings:outcome_rejected"),
     })) ?? [];
 
   return {
@@ -281,8 +281,8 @@ export function buildSingleVoteData(input: {
       outcome: tally.outcome,
       outcomeLabel:
         tally.outcome === "ok"
-          ? i18next.t("aanestykset:outcome_approved")
-          : i18next.t("aanestykset:outcome_rejected"),
+          ? i18next.t("votings:outcome_approved")
+          : i18next.t("votings:outcome_rejected"),
       yesProposition: null,
       noProposition: null,
     },

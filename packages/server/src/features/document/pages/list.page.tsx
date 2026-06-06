@@ -49,9 +49,9 @@ export default function Asiakirjat({ title, data, query, kind }: Props) {
 
       <div class="wrap">
         <PageHead
-          kicker={i18next.t("asiakirjat:kicker")}
-          heading={i18next.t("asiakirjat:heading")}
-          subtitle={i18next.t("asiakirjat:subtitle")}
+          kicker={i18next.t("documents:kicker")}
+          heading={i18next.t("documents:heading")}
+          subtitle={i18next.t("documents:subtitle")}
         />
       </div>
 
@@ -93,7 +93,7 @@ function AsiakirjatList({
             id="doc-search"
             type="text"
             autocomplete="off"
-            placeholder={i18next.t("asiakirjat:search_placeholder")}
+            placeholder={i18next.t("documents:search_placeholder")}
             name="q"
             value={query ?? ""}
             hx-get={`/asiakirjat${activeKind ? `?kind=${activeKind}` : ""}`}
@@ -108,7 +108,7 @@ function AsiakirjatList({
         {data && (
           <span class="count">
             <b id="doc-count">{data.totalCount}</b>{" "}
-            {i18next.t("asiakirjat:count", { count: data.totalCount })}
+            {i18next.t("documents:count", { count: data.totalCount })}
           </span>
         )}
       </div>
@@ -150,7 +150,7 @@ function AsiakirjatList({
               id="doc-empty"
               style="display:block;text-align:center;color:var(--muted);padding:40px 0"
             >
-              {i18next.t("asiakirjat:none_found")}
+              {i18next.t("documents:none_found")}
             </div>
           )
         ) : (
@@ -280,7 +280,7 @@ function LoadMoreButton({
       hx-swap="outerHTML"
       hx-browser-indicator="true"
     >
-      {i18next.t("asiakirjat:load_more")}
+      {i18next.t("documents:load_more")}
     </button>
   );
 }

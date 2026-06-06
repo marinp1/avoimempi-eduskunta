@@ -92,19 +92,19 @@ export interface AsiakohtaData {
 function phaseLabel(code: string | null): string {
   switch (code) {
     case "yksikasittely":
-      return i18next.t("istunnot:detail.phase_yksi_kasittely");
+      return i18next.t("sessions:detail.phase_yksi_kasittely");
     case "ensimmainenkasittely":
-      return i18next.t("istunnot:detail.phase_ensimmainen_kasittely");
+      return i18next.t("sessions:detail.phase_ensimmainen_kasittely");
     case "toinenkasittely":
-      return i18next.t("istunnot:detail.phase_toinen_kasittely");
+      return i18next.t("sessions:detail.phase_toinen_kasittely");
     case "ainoa":
-      return i18next.t("istunnot:detail.phase_ainoa_kasittely");
+      return i18next.t("sessions:detail.phase_ainoa_kasittely");
     case "kasittely":
-      return i18next.t("istunnot:detail.phase_kasittely");
+      return i18next.t("sessions:detail.phase_kasittely");
     case "poydallepano":
-      return i18next.t("istunnot:detail.phase_poydallepano");
+      return i18next.t("sessions:detail.phase_poydallepano");
     default:
-      return code ?? i18next.t("istunnot:detail.phase_kasittely");
+      return code ?? i18next.t("sessions:detail.phase_kasittely");
   }
 }
 
@@ -201,8 +201,8 @@ export function buildAsiakohtaData(input: {
         outcome: t.outcome,
         outcomeLabel:
           t.outcome === "ok"
-            ? i18next.t("aanestykset:outcome_approved").toLowerCase()
-            : i18next.t("aanestykset:outcome_rejected").toLowerCase(),
+            ? i18next.t("votings:outcome_approved").toLowerCase()
+            : i18next.t("votings:outcome_rejected").toLowerCase(),
       };
     }),
     speeches: speeches.map((s) => {
@@ -231,7 +231,7 @@ export function buildAsiakohtaData(input: {
               ? "reply"
               : "",
         timeLabel: s.start_time
-          ? i18next.t("istunnot:detail.attendance_time_format", {
+          ? i18next.t("sessions:detail.attendance_time_format", {
               time: s.start_time.slice(11, 16).replace(":", "."),
             })
           : "",

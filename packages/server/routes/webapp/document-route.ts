@@ -5,7 +5,7 @@ import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
 
-export function createAsiakirjaRoute(deps: WebappDeps) {
+export function createDocumentRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/asiakirja/:id",
     GET: withWebappPage(deps, async (ctx, params) => {
@@ -30,10 +30,10 @@ export function createAsiakirjaRoute(deps: WebappDeps) {
 function docNotFound(req: Request, idPath: string): Response {
   return notFoundResponse(req, `/asiakirja/${idPath}`, {
     activePath: "/asiakirjat",
-    title: i18next.t("asiakirjat:detail.not_found_title"),
-    heading: i18next.t("asiakirjat:detail.not_found_title"),
-    desc: i18next.t("asiakirjat:detail.not_found_desc"),
+    title: i18next.t("documents:detail.not_found_title"),
+    heading: i18next.t("documents:detail.not_found_title"),
+    desc: i18next.t("documents:detail.not_found_desc"),
     backHref: "/asiakirjat",
-    backLabel: i18next.t("asiakirjat:detail.back_to_docs"),
+    backLabel: i18next.t("documents:detail.back_to_docs"),
   });
 }

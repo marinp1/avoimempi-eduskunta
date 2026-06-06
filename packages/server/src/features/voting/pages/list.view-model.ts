@@ -108,8 +108,8 @@ export function buildAanestyksetData(input: {
       outcome: t.outcome,
       outcomeLabel:
         t.outcome === "ok"
-          ? i18next.t("aanestykset:outcome_approved")
-          : i18next.t("aanestykset:outcome_rejected"),
+          ? i18next.t("votings:outcome_approved")
+          : i18next.t("votings:outcome_rejected"),
     };
     const sk = v.session_key ?? "";
     if (!groupMap.has(sk)) groupMap.set(sk, []);
@@ -125,7 +125,7 @@ export function buildAanestyksetData(input: {
     .map(([sessionKey, rows]) => ({
       sessionKey,
       sessionDate: rows[0]?.sessionDate ?? "",
-      sessionDateLabel: i18next.t("aanestykset:group_session_prefix", {
+      sessionDateLabel: i18next.t("votings:group_session_prefix", {
         key: sessionKey,
       }),
       rows,

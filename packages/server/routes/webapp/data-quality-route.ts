@@ -4,7 +4,7 @@ import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
 
-export function createLaadunvalvontaRoute(_deps: WebappDeps) {
+export function createDataQualityRoute(_deps: WebappDeps) {
   return defineRoute({
     path: "/laadunvalvonta",
     GET: (req) =>

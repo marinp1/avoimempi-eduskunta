@@ -6,7 +6,7 @@ import { fetchedAt } from "#server/helpers/template-helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
-export function createAanestysRoute(deps: WebappDeps) {
+export function createVotingRoute(deps: WebappDeps) {
   return defineRoute({
     path: "/aanestys/:id",
     GET: withWebappPage(deps, async (ctx, params) => {
@@ -36,7 +36,7 @@ export function createAanestysRoute(deps: WebappDeps) {
       return {
         fragment: Aanestys({ title: voting.title ?? undefined, data }),
         activePath: `/aanestys/${id}`,
-        title: voting.title ?? i18next.t("aanestykset:title"),
+        title: voting.title ?? i18next.t("votings:title"),
       };
     }),
   });

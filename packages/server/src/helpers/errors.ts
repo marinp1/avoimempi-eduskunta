@@ -23,7 +23,7 @@ export function personOrNotFound(
   if (value == null) {
     throw notFoundResponse(req, path, {
       activePath: "/edustajat",
-      title: i18next.t("edustajat:profile.not_found"),
+      title: i18next.t("persons:profile.not_found"),
     });
   }
 }

@@ -37,13 +37,13 @@ export function buildInterpellation(
 
   const textSections: TextSection[] = [];
   const qs = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_interpellation"),
+    i18next.t("documents:detail.text_section_interpellation"),
     detail.question_text,
     detail.question_rich_text,
   );
   if (qs) textSections.push(qs);
   const rs = buildTextSection(
-    i18next.t("asiakirjat:detail.text_section_resolution"),
+    i18next.t("documents:detail.text_section_resolution"),
     detail.resolution_text,
     detail.resolution_rich_text,
   );
@@ -56,13 +56,13 @@ export function buildInterpellation(
     kind: "valikysymys",
     id: detail.id,
     identifier: detail.parliament_identifier,
-    documentTypeLabel: i18next.t("asiakirjat:kind_labels.valikysymys"),
+    documentTypeLabel: i18next.t("documents:kind_labels.valikysymys"),
     title: detail.title ?? "",
     authorName: authorsByName(
       detail.first_signer_first_name,
       detail.first_signer_last_name,
     ),
-    authorRole: i18next.t("asiakirjat:detail.mp_role"),
+    authorRole: i18next.t("documents:detail.mp_role"),
     authorParty,
     authorPartyColor: partyColor(authorParty),
     authorPersonId: detail.first_signer_person_id,
@@ -72,12 +72,12 @@ export function buildInterpellation(
     ),
     authorDistrict: mpDistrict(detail.first_signer_person_id, ctx.personRepo),
     primaryDate: formatFi(submissionDate),
-    primaryDateLabel: i18next.t("asiakirjat:status_labels.submitted"),
+    primaryDateLabel: i18next.t("documents:status_labels.submitted"),
     secondaryDate: null,
     secondaryDateLabel: null,
     statusLabel: detail.decision_outcome
-      ? i18next.t("asiakirjat:status_labels.handled")
-      : i18next.t("asiakirjat:status_labels.pending"),
+      ? i18next.t("documents:status_labels.handled")
+      : i18next.t("documents:status_labels.pending"),
     statusColor: detail.decision_outcome ? "var(--hall)" : "var(--muted)",
     textSections,
     lifecycleStages,
@@ -99,7 +99,7 @@ export function buildInterpellation(
 export const interpellation: DocumentKindModule = {
   key: "valikysymys",
   chip: {
-    labelI18n: "asiakirjat:chip_labels.valikysymys",
+    labelI18n: "documents:chip_labels.valikysymys",
     dotColor: "var(--red)",
   },
   list(repo, params) {
@@ -118,7 +118,7 @@ export const interpellation: DocumentKindModule = {
           date: r.submission_date ?? "",
           dateLabel: dateLabel(
             r.submission_date,
-            "asiakirjat:status_labels.submitted_on",
+            "documents:status_labels.submitted_on",
           ),
           authorName: authorName(
             r.first_signer_first_name,

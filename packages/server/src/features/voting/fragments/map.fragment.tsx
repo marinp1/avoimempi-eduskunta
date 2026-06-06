@@ -8,7 +8,7 @@ interface Props {
   mpVotes: SingleVoteData["mpVotes"];
 }
 
-export default function KarttaFragment({ mpVotes }: Props) {
+export default function VotingMapFragment({ mpVotes }: Props) {
   return (
     <section id="kartta" class="mt-28" style="scroll-margin-top:14px">
       <div class="attend__grid mt-14">
@@ -57,7 +57,7 @@ export default function KarttaFragment({ mpVotes }: Props) {
             <input
               id="mp-search"
               type="search"
-              placeholder={i18next.t("aanestykset:detail.search_mp")}
+              placeholder={i18next.t("votings:detail.search_mp")}
               data-mp-search
               autocomplete="off"
             />

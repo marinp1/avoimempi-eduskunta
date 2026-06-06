@@ -31,9 +31,9 @@ export default function Puolueet({ title, data }: Props) {
 
       <div class="wrap">
         <PageHead
-          kicker={i18next.t("puolueet:kicker")}
-          heading={i18next.t("puolueet:heading")}
-          subtitle={i18next.t("puolueet:subtitle", {
+          kicker={i18next.t("parties:kicker")}
+          heading={i18next.t("parties:heading")}
+          subtitle={i18next.t("parties:subtitle", {
             seats: d.totalSeats,
             groups: d.rows.length,
           })}
@@ -54,11 +54,11 @@ export default function Puolueet({ title, data }: Props) {
             <div class="bloc-legend">
               <span>
                 <span class="dot" style="background:var(--hall)"></span>
-                {i18next.t("puolueet:gov_seats", { seats: d.govSeats })}
+                {i18next.t("parties:gov_seats", { seats: d.govSeats })}
               </span>
               <span>
                 <span class="dot" style="background:var(--red)"></span>
-                {i18next.t("puolueet:opp_seats", { seats: d.oppSeats })}
+                {i18next.t("parties:opp_seats", { seats: d.oppSeats })}
               </span>
             </div>
           </>
@@ -68,11 +68,9 @@ export default function Puolueet({ title, data }: Props) {
           <div class="pgroup">
             <div class="week-head">
               <span class="week-head__k">{i18next.t("common:government")}</span>
-              <span class="week-head__t">
-                {i18next.t("puolueet:gov_label")}
-              </span>
+              <span class="week-head__t">{i18next.t("parties:gov_label")}</span>
               <span class="week-head__meta">
-                {i18next.t("puolueet:groups_label", { count: govRows.length })}
+                {i18next.t("parties:groups_label", { count: govRows.length })}
               </span>
             </div>
             <div class="prow-list">
@@ -87,11 +85,9 @@ export default function Puolueet({ title, data }: Props) {
           <div class="pgroup">
             <div class="week-head">
               <span class="week-head__k">{i18next.t("common:opposition")}</span>
-              <span class="week-head__t">
-                {i18next.t("puolueet:opp_label")}
-              </span>
+              <span class="week-head__t">{i18next.t("parties:opp_label")}</span>
               <span class="week-head__meta">
-                {i18next.t("puolueet:groups_label", { count: oppRows.length })}
+                {i18next.t("parties:groups_label", { count: oppRows.length })}
               </span>
             </div>
             <div class="prow-list">
@@ -132,18 +128,18 @@ function PartyRowItem({ row }: { row: PartyRow }) {
         <span class="prow__name">{esc(row.name)}</span>
         {row.chairName && (
           <span class="prow__sub">
-            {i18next.t("puolueet:chair_prefix")} {esc(row.chairName)}
+            {i18next.t("parties:chair_prefix")} {esc(row.chairName)}
           </span>
         )}
       </div>
       <div class="prow__seats">
         <b>{row.seatCount}</b>
         <small>
-          {row.seatShare} {i18next.t("puolueet:share_of_seats")}
+          {row.seatShare} {i18next.t("parties:share_of_seats")}
         </small>
       </div>
       <div class="prow__coh">
-        <span class="prow__coh-k">{i18next.t("puolueet:cohesion_label")}</span>
+        <span class="prow__coh-k">{i18next.t("parties:cohesion_label")}</span>
         <span class="prow__track">
           <span
             class="fill"

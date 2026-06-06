@@ -119,7 +119,7 @@ export default function Asiakirja({ data }: Props) {
             {...NAV}
             style="color:var(--blue)"
           >
-            {i18next.t("asiakirjat:detail.breadcrumb")}
+            {i18next.t("documents:detail.breadcrumb")}
           </a>
           &nbsp;›&nbsp; <span>{d.identifier}</span>
         </div>
@@ -183,7 +183,7 @@ export default function Asiakirja({ data }: Props) {
         {d.lifecycleStages.length > 0 && (
           <>
             <Kicker
-              text={i18next.t("asiakirjat:detail.lifecycle_kicker")}
+              text={i18next.t("documents:detail.lifecycle_kicker")}
               modifier=""
             />
             <nav class="lifecycle mt-8">
@@ -222,7 +222,7 @@ export default function Asiakirja({ data }: Props) {
                 <span class="l">
                   <span class="spark">✦</span>
                   <span class="lbl">
-                    {i18next.t("asiakirjat:detail.content_label")}
+                    {i18next.t("documents:detail.content_label")}
                   </span>
                 </span>
                 <span class="read">
@@ -232,7 +232,7 @@ export default function Asiakirja({ data }: Props) {
               </div>
               <div class="summary__in">
                 <div class="summary__q">
-                  {i18next.t("asiakirjat:detail.content_question")}
+                  {i18next.t("documents:detail.content_question")}
                 </div>
                 <p class="summary__lead">
                   {d.textSections[0]!.paragraphs[0]
@@ -270,7 +270,7 @@ export default function Asiakirja({ data }: Props) {
             <div class="mt-28 pt-20 bt-rule">
               {d.signatories.length > 0 && (
                 <div style="margin-bottom:20px">
-                  <h3>{i18next.t("asiakirjat:detail.signatories")}</h3>
+                  <h3>{i18next.t("documents:detail.signatories")}</h3>
                   <div class="signatory-list">
                     {d.signatories.map((sig) => (
                       <div class="signatory-row">
@@ -303,7 +303,7 @@ export default function Asiakirja({ data }: Props) {
               )}
               {d.laws.length > 0 && (
                 <div>
-                  <h3>{i18next.t("asiakirjat:detail.laws")}</h3>
+                  <h3>{i18next.t("documents:detail.laws")}</h3>
                   <ul class="law-list">
                     {d.laws.map((law) => (
                       <li>
@@ -353,44 +353,44 @@ export default function Asiakirja({ data }: Props) {
           {d.hasAnswer && (
             <div id="vastaus" class="mt-40 pt-4 bt-ink">
               <div class="article__phase mt-20">
-                {i18next.t("asiakirjat:detail.answer_section_title", {
+                {i18next.t("documents:detail.answer_section_title", {
                   ministerTitle: d.answerMinisterTitle,
                   date: d.answerDate ? formatFi(d.answerDate) : "",
                 })}
               </div>
-              <h3>{i18next.t("asiakirjat:detail.answer_heading")}</h3>
+              <h3>{i18next.t("documents:detail.answer_heading")}</h3>
 
               <div class="summary" style="margin:14px 0 22px">
                 <div class="summary__bar">
                   <span class="l">
                     <span class="spark">✦</span>
                     <span class="lbl">
-                      {i18next.t("asiakirjat:detail.answer_info_label")}
+                      {i18next.t("documents:detail.answer_info_label")}
                     </span>
                   </span>
                 </div>
                 <div class="summary__in">
                   <div class="summary__q">
-                    {i18next.t("asiakirjat:detail.answer_question")}
+                    {i18next.t("documents:detail.answer_question")}
                   </div>
                   <p class="summary__lead">
-                    {i18next.t("asiakirjat:detail.answer_minister_gave", {
+                    {i18next.t("documents:detail.answer_minister_gave", {
                       name: d.answerMinisterName ?? "",
                       date: d.answerDate ? formatFi(d.answerDate) : "",
                     })}
                   </p>
                   <ul class="summary__points">
                     <li>
-                      {i18next.t("asiakirjat:detail.answer_id_label")}{" "}
+                      {i18next.t("documents:detail.answer_id_label")}{" "}
                       <b>{esc(d.answerIdentifier ?? "")}</b>
                     </li>
                     <li>
-                      {i18next.t("asiakirjat:detail.answer_respondent_label")}{" "}
+                      {i18next.t("documents:detail.answer_respondent_label")}{" "}
                       <b>{esc(d.answerMinisterName ?? "")}</b> ·{" "}
                       {esc(d.answerMinisterTitle ?? "")}
                     </li>
                     <li>
-                      {i18next.t("asiakirjat:detail.answer_given_label")}{" "}
+                      {i18next.t("documents:detail.answer_given_label")}{" "}
                       <b>{d.answerDate ? formatFi(d.answerDate) : ""}</b>
                     </li>
                   </ul>
@@ -405,7 +405,7 @@ export default function Asiakirja({ data }: Props) {
                   rel="noopener"
                 >
                   <span class="ic">↗</span>{" "}
-                  {i18next.t("asiakirjat:detail.answer_original_link")}
+                  {i18next.t("documents:detail.answer_original_link")}
                 </a>
               </div>
 
@@ -413,11 +413,11 @@ export default function Asiakirja({ data }: Props) {
                 <div class="name">
                   {esc(
                     d.answerMinisterTitle ??
-                      i18next.t("asiakirjat:detail.answer_signature_title"),
+                      i18next.t("documents:detail.answer_signature_title"),
                   )}
                 </div>
                 <div class="meta">
-                  {i18next.t("asiakirjat:detail.answer_signature_meta", {
+                  {i18next.t("documents:detail.answer_signature_meta", {
                     date: d.answerDate ? formatFi(d.answerDate) : "",
                     id: esc(d.answerIdentifier ?? ""),
                   })}
@@ -448,7 +448,7 @@ export default function Asiakirja({ data }: Props) {
 
         <aside class="doc-aside">
           <div class="blk">
-            <h4>{i18next.t("asiakirjat:detail.statusline_phase")}</h4>
+            <h4>{i18next.t("documents:detail.statusline_phase")}</h4>
             <div class="statusline">
               <span
                 class="statusdot"
@@ -471,11 +471,11 @@ export default function Asiakirja({ data }: Props) {
           </div>
 
           <div class="blk">
-            <h4>{i18next.t("asiakirjat:detail.details_block")}</h4>
+            <h4>{i18next.t("documents:detail.details_block")}</h4>
             <dl>
-              <dt>{i18next.t("asiakirjat:detail.details_identifier")}</dt>
+              <dt>{i18next.t("documents:detail.details_identifier")}</dt>
               <dd>{esc(d.identifier)}</dd>
-              <dt>{i18next.t("asiakirjat:detail.details_type")}</dt>
+              <dt>{i18next.t("documents:detail.details_type")}</dt>
               <dd>{esc(d.documentTypeLabel)}</dd>
               <dt>{d.primaryDateLabel}</dt>
               <dd>{d.primaryDate}</dd>
@@ -487,11 +487,11 @@ export default function Asiakirja({ data }: Props) {
               )}
               {d.sourceReference && (
                 <>
-                  <dt>{i18next.t("asiakirjat:detail.details_ref")}</dt>
+                  <dt>{i18next.t("documents:detail.details_ref")}</dt>
                   <dd>{esc(d.sourceReference)}</dd>
                 </>
               )}
-              <dt>{i18next.t("asiakirjat:detail.details_length")}</dt>
+              <dt>{i18next.t("documents:detail.details_length")}</dt>
               <dd>{d.charCount.toLocaleString("fi")} merkkiä</dd>
             </dl>
           </div>
@@ -499,12 +499,12 @@ export default function Asiakirja({ data }: Props) {
           <div class="blk">
             <h4>
               {d.kind === "he"
-                ? i18next.t("asiakirjat:detail.author_presenter")
+                ? i18next.t("documents:detail.author_presenter")
                 : d.kind === "mietinto"
-                  ? i18next.t("asiakirjat:detail.author_committee")
+                  ? i18next.t("documents:detail.author_committee")
                   : d.kind === "vastaus"
-                    ? i18next.t("asiakirjat:detail.author_respondent")
-                    : i18next.t("asiakirjat:detail.author_creator")}
+                    ? i18next.t("documents:detail.author_respondent")
+                    : i18next.t("documents:detail.author_creator")}
             </h4>
             <a
               href={d.authorPersonId ? `/edustaja/${d.authorPersonId}` : "#"}
@@ -538,7 +538,7 @@ export default function Asiakirja({ data }: Props) {
 
           {d.subjects.length > 0 && (
             <div class="blk">
-              <h4>{i18next.t("asiakirjat:detail.subjects")}</h4>
+              <h4>{i18next.t("documents:detail.subjects")}</h4>
               <div class="topics">
                 {d.subjects.map((s) => (
                   <span
@@ -554,7 +554,7 @@ export default function Asiakirja({ data }: Props) {
 
           {d.sessions.length > 0 && (
             <div class="blk">
-              <h4>{i18next.t("asiakirjat:detail.related_sessions")}</h4>
+              <h4>{i18next.t("documents:detail.related_sessions")}</h4>
               {d.sessions.map((s) => (
                 <a
                   class="related-row"
@@ -565,7 +565,7 @@ export default function Asiakirja({ data }: Props) {
                   <span class="rid">{s.sessionKey}</span>
                   <span class="rt">
                     {s.sectionTitle ??
-                      i18next.t("asiakirjat:detail.session_label", {
+                      i18next.t("documents:detail.session_label", {
                         key: s.sessionKey,
                       })}
                   </span>

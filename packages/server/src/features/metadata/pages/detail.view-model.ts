@@ -123,10 +123,10 @@ export function buildPartyDetailData(input: {
       pct: cohesionPct != null ? Math.round(cohesionPct) : null,
       label:
         cohesionPct != null
-          ? i18next.t("puolueet:detail.cohesion_unified_format", {
+          ? i18next.t("parties:detail.cohesion_unified_format", {
               pct: Math.round(cohesionPct),
             })
-          : i18next.t("puolueet:detail.cohesion_no_data"),
+          : i18next.t("parties:detail.cohesion_no_data"),
       totalVotings: cohRow?.total_votes ?? null,
     },
     members: members.map((m) => {

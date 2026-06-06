@@ -38,7 +38,7 @@ export default function Puolue({ title, data }: Props) {
             hx-get="/puolueet"
             {...NAV}
           >
-            {i18next.t("puolueet:detail.breadcrumb")}
+            {i18next.t("parties:detail.breadcrumb")}
           </a>
           &nbsp;›&nbsp; <span>{esc(p.name)}</span>
         </div>
@@ -64,20 +64,20 @@ export default function Puolue({ title, data }: Props) {
             <h1 class="bio-name">{esc(p.name)}</h1>
             <div class="bio-meta">
               <span>
-                {esc(p.name)} {i18next.t("puolueet:detail.mp_group_suffix")}
+                {esc(p.name)} {i18next.t("parties:detail.mp_group_suffix")}
               </span>
               <span class="sep"></span>
               {p.chairName && (
                 <>
                   <span>
-                    {i18next.t("puolueet:chair_prefix")}{" "}
+                    {i18next.t("parties:chair_prefix")}{" "}
                     <b style="color:var(--ink)">{esc(p.chairName)}</b>
                   </span>
                   <span class="sep"></span>
                 </>
               )}
               <span>
-                {i18next.t("puolueet:seat_ratio_format", {
+                {i18next.t("parties:seat_ratio_format", {
                   own: p.seatCount,
                   total: data.totalSeats,
                 })}
@@ -85,7 +85,7 @@ export default function Puolue({ title, data }: Props) {
               <span class="sep"></span>
               {p.govtSince && (
                 <span>
-                  {i18next.t("puolueet:detail.in_government_since", {
+                  {i18next.t("parties:detail.in_government_since", {
                     year: esc(p.govtSince),
                   })}
                 </span>
@@ -96,27 +96,27 @@ export default function Puolue({ title, data }: Props) {
 
         <div class="bio-stats">
           <div class="bio-stat">
-            <div class="k">{i18next.t("puolueet:detail.stat_seats")}</div>
+            <div class="k">{i18next.t("parties:detail.stat_seats")}</div>
             <div class="v">
               {p.seatCount} <small>{p.seatShare}</small>
             </div>
           </div>
           <div class="bio-stat">
-            <div class="k">{i18next.t("puolueet:detail.stat_cohesion")}</div>
+            <div class="k">{i18next.t("parties:detail.stat_cohesion")}</div>
             <div class="v">
               {coh.pct != null ? coh.pct : "–"}
               {coh.pct != null ? <small>%</small> : null}
             </div>
           </div>
           <div class="bio-stat">
-            <div class="k">{i18next.t("puolueet:detail.stat_attendance")}</div>
+            <div class="k">{i18next.t("parties:detail.stat_attendance")}</div>
             <div class="v">
               {p.avgAttendance ?? "–"}
               {p.avgAttendance ? <small>%</small> : null}
             </div>
           </div>
           <div class="bio-stat">
-            <div class="k">{i18next.t("puolueet:detail.stat_avg_age")}</div>
+            <div class="k">{i18next.t("parties:detail.stat_avg_age")}</div>
             <div class="v">
               {p.avgAge ?? "–"}
               {p.avgAge ? <small>v</small> : null}
@@ -130,29 +130,29 @@ export default function Puolue({ title, data }: Props) {
               <div class="ai__head">
                 <span class="ai__spark">✦</span>
                 <span class="ai__label">
-                  {i18next.t("puolueet:detail.ai_summary_label")}
+                  {i18next.t("parties:detail.ai_summary_label")}
                 </span>
               </div>
               <p class="ai__body">
-                {i18next.t("puolueet:detail.ai_not_available")}
+                {i18next.t("parties:detail.ai_not_available")}
               </p>
               <div class="ai__foot">
-                <span>{i18next.t("puolueet:detail.ai_disclaimer")}</span>
+                <span>{i18next.t("parties:detail.ai_disclaimer")}</span>
               </div>
             </div>
 
             {coh.pct != null && (
               <section class="psec mt-28">
                 <Kicker
-                  text={i18next.t("puolueet:detail.cohesion_kicker")}
+                  text={i18next.t("parties:detail.cohesion_kicker")}
                   modifier="blue"
                   dot
                 />
                 <div class="psec__h">
-                  <h2>{i18next.t("puolueet:detail.cohesion_title")}</h2>
+                  <h2>{i18next.t("parties:detail.cohesion_title")}</h2>
                   {coh.totalVotings != null && (
                     <span class="meta">
-                      {i18next.t("puolueet:detail.cohesion_vote_count", {
+                      {i18next.t("parties:detail.cohesion_vote_count", {
                         count: coh.totalVotings,
                       })}
                     </span>
@@ -161,7 +161,7 @@ export default function Puolue({ title, data }: Props) {
                 <p class="psec__intro">{esc(coh.label)}</p>
                 <div class="vote-bar mt-14">
                   <span class="v-jaa" style={`width:${coh.pct}%`}>
-                    {i18next.t("puolueet:detail.cohesion_unified")} {coh.pct}%
+                    {i18next.t("parties:detail.cohesion_unified")} {coh.pct}%
                   </span>
                   <span class="v-ei" style={`width:${100 - coh.pct}%`}></span>
                 </div>
@@ -170,7 +170,7 @@ export default function Puolue({ title, data }: Props) {
                     <span class="sw" style="background:var(--hall)"></span>
                     <div>
                       <span class="vk">
-                        {i18next.t("puolueet:detail.cohesion_unified")}
+                        {i18next.t("parties:detail.cohesion_unified")}
                       </span>
                       <span class="vv">{coh.pct}%</span>
                     </div>
@@ -179,7 +179,7 @@ export default function Puolue({ title, data }: Props) {
                     <span class="sw" style="background:var(--red)"></span>
                     <div>
                       <span class="vk">
-                        {i18next.t("puolueet:detail.cohesion_split")}
+                        {i18next.t("parties:detail.cohesion_split")}
                       </span>
                       <span class="vv">{100 - coh.pct}%</span>
                     </div>
@@ -192,7 +192,7 @@ export default function Puolue({ title, data }: Props) {
                       style="font-size:14.5px;color:var(--body);line-height:1.5"
                       class="mt-22"
                     >
-                      {i18next.t("puolueet:detail.cohesion_most_split")}
+                      {i18next.t("parties:detail.cohesion_most_split")}
                     </p>
                     {data.splitVotes.map((v) => (
                       <a
@@ -220,7 +220,7 @@ export default function Puolue({ title, data }: Props) {
 
             <section class="psec mt-28">
               <Kicker
-                text={i18next.t("puolueet:detail.members_kicker")}
+                text={i18next.t("parties:detail.members_kicker")}
                 modifier="blue"
                 dot
               />
@@ -267,7 +267,7 @@ export default function Puolue({ title, data }: Props) {
             {data.committeeChairs.length > 0 && (
               <section class="psec mt-28">
                 <Kicker
-                  text={i18next.t("puolueet:detail.committees_kicker")}
+                  text={i18next.t("parties:detail.committees_kicker")}
                   modifier="blue"
                   dot
                 />
@@ -286,17 +286,17 @@ export default function Puolue({ title, data }: Props) {
           <div>
             <section class="psec">
               <Kicker
-                text={i18next.t("puolueet:detail.facts_kicker")}
+                text={i18next.t("parties:detail.facts_kicker")}
                 modifier="blue"
                 dot
               />
               <dl class="mt-16 flex-col-g12">
                 <div>
                   <dt style="font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">
-                    {i18next.t("puolueet:detail.facts_gender")}
+                    {i18next.t("parties:detail.facts_gender")}
                   </dt>
                   <dd style="font-size:14px;color:var(--ink);margin:4px 0 0">
-                    {i18next.t("puolueet:detail.facts_gender_format", {
+                    {i18next.t("parties:detail.facts_gender_format", {
                       female: p.femaleCount,
                       male: p.maleCount,
                     })}
@@ -304,22 +304,22 @@ export default function Puolue({ title, data }: Props) {
                 </div>
                 <div>
                   <dt style="font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">
-                    {i18next.t("puolueet:detail.facts_avg_age")}
+                    {i18next.t("parties:detail.facts_avg_age")}
                   </dt>
                   <dd style="font-size:14px;color:var(--ink);margin:4px 0 0">
-                    {i18next.t("puolueet:detail.facts_age_format", {
+                    {i18next.t("parties:detail.facts_age_format", {
                       age: p.avgAge ?? "–",
                     })}
                   </dd>
                 </div>
                 <div>
                   <dt style="font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">
-                    {i18next.t("puolueet:detail.facts_status")}
+                    {i18next.t("parties:detail.facts_status")}
                   </dt>
                   <dd style="font-size:14px;color:var(--ink);margin:4px 0 0">
                     {p.bloc === "government"
-                      ? i18next.t("puolueet:detail.status_gov")
-                      : i18next.t("puolueet:detail.status_opp")}
+                      ? i18next.t("parties:detail.status_gov")
+                      : i18next.t("parties:detail.status_opp")}
                   </dd>
                 </div>
               </dl>
@@ -328,7 +328,7 @@ export default function Puolue({ title, data }: Props) {
             {data.topics.length > 0 && (
               <section class="psec mt-28">
                 <Kicker
-                  text={i18next.t("puolueet:detail.topics_kicker")}
+                  text={i18next.t("parties:detail.topics_kicker")}
                   modifier="blue"
                   dot
                 />
@@ -343,7 +343,7 @@ export default function Puolue({ title, data }: Props) {
             {data.recentSpeeches.length > 0 && (
               <section class="psec mt-28">
                 <Kicker
-                  text={i18next.t("puolueet:detail.recent_speeches_kicker")}
+                  text={i18next.t("parties:detail.recent_speeches_kicker")}
                   modifier="blue"
                   dot
                 />
