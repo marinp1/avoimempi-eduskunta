@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Asiakohta 2 · Täysistunto 2026/52 — Eduskuntapeili</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="peili.css" rel="stylesheet" />
+<link href="timeline.css" rel="stylesheet" />
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="masthead">
+    <div class="masthead__top">
+      <div>
+        <div class="brand__name">Eduskuntapeili</div>
+        <div class="brand__tag">Eduskunnan avoin data, luettavassa muodossa</div>
+      </div>
+      <div class="masthead__meta">
+        <span class="masthead__date">lauantai 30. toukokuuta 2026</span>
+        <div class="period" data-period>
+          <button class="period__btn" aria-expanded="false" aria-haspopup="true">
+            <span class="period__k">Tietojakso</span>
+            <span class="period__v" data-period-v>Vaalikausi 2023–2027</span>
+            <span class="period__badge is-now" data-period-badge>nykyinen</span>
+            <span class="period__caret">▾</span>
+          </button>
+          <div class="period__menu" hidden role="menu">
+            <div class="period__menu-head">Valitse tietojakso</div>
+            <button class="period__opt is-selected" role="menuitemradio" aria-checked="true" data-val="2023"><span class="period__opt-main">Vaalikausi 2023–2027</span><span class="period__opt-sub">Orpon hallitus · nykyinen</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="2019"><span class="period__opt-main">Vaalikausi 2019–2023</span><span class="period__opt-sub">Marinin / Rinteen hallitus</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="all"><span class="period__opt-main">Kaikki vaalikaudet</span><span class="period__opt-sub">koko avoin data</span></button>
+            <div class="period__note">Tietojakso rajaa kaikki sivun luvut ja koosteet. Oletuksena nykyinen kausi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="rule-ink" />
+    <nav class="nav">
+      <a href="Etusivu.html">Etusivu</a>
+      <a href="Kansanedustajat.html">Kansanedustajat</a>
+      <a href="Puolueet.html">Puolueet</a>
+      <a href="Istunnot.html" class="is-active">Istunnot</a>
+      <a href="Äänestykset.html">Äänestykset</a>
+      <a href="#">Asiakirjat</a>
+      <span class="nav__search">Haku ⌕</span>
+    </nav>
+    <hr class="rule" />
+  </header>
+
+  <!-- ============ BREADCRUMB ============ -->
+  <div style="padding-top:16px;font-size:13px;color:var(--muted)">
+    <a href="Istunnot.html" style="color:var(--blue)">Istunnot</a> &nbsp;›&nbsp; <a href="Istunto.html" style="color:var(--blue)">Täysistunto 2026/52</a> &nbsp;›&nbsp; <span>Asiakohta 2</span>
+  </div>
+
+  <!-- ============ SUBSECTION NAV (prev / next within sitting) ============ -->
+  <nav class="subnav" aria-label="Selaa istunnon asiakohtia">
+    <a class="subnav__side prev" href="Istunto.html#lasnaolo">
+      <span class="subnav__dir">‹ Asiakohta 1</span>
+      <span class="subnav__t">Nimenhuuto</span>
+    </a>
+    <a class="subnav__mid" href="Istunto.html">
+      <span class="subnav__pos">2 / 20</span>
+      <span class="subnav__lbl">Päiväjärjestys</span>
+    </a>
+    <a class="subnav__side next" href="Istunto.html#paatosasiat">
+      <span class="subnav__dir">Asiakohta 3 ›</span>
+      <span class="subnav__t">Arkistointilaki</span>
+    </a>
+  </nav>
+
+  <!-- ============ SUBSECTION HEAD ============ -->
+  <section class="doc-head">
+    <div class="doc-head__top">
+      <span class="doc-id">Asiakohta 2 · PTK 52/2026 vp</span>
+      <span class="doc-type">Täysistunnon asiakohta · toinen käsittely</span>
+      <span class="tag tag--hall" style="margin-left:auto">Hyväksytty 91–77</span>
+    </div>
+    <h1>Ammattikorkeakoulu- ja opintotukilain muutos</h1>
+    <div class="sess-meta">
+      <span><b>Keskiviikko 20.5.2026</b></span><span class="sep"></span>
+      <span>klo 14.32–15.18</span><span class="sep"></span>
+      <span><b>3</b> äänestystä</span><span class="sep"></span>
+      <span><b>12</b> puheenvuoroa</span><span class="sep"></span>
+      <a href="Asia.html" style="color:var(--blue)">Koko asian kulku ↗</a>
+    </div>
+  </section>
+
+  <!-- ============ TOOLBAR ============ -->
+  <div class="doc-toolbar">
+    <a href="#" class="tbtn"><span class="ic">↗</span> Pöytäkirjan kohta (PDF)</a>
+    <a href="#aanestykset" class="tbtn"><span class="ic">⚖</span> Äänestykset</a>
+    <a href="#puheenvuorot" class="tbtn"><span class="ic">🗣</span> Puheenvuorot</a>
+    <span class="grow"></span>
+    <button class="tbtn"><span class="ic">⧉</span> Jaa</button>
+  </div>
+
+  <!-- ============ JUMP BAR ============ -->
+  <nav class="sess-jump">
+    <a href="#kasittely">Käsittelyvaihe</a>
+    <a href="#aanestykset">Äänestykset · 3</a>
+    <a href="#puheenvuorot">Puheenvuorot · 12</a>
+    <a href="#paatos">Päätös</a>
+  </nav>
+
+  <!-- ============ AI SUMMARY ============ -->
+  <div class="summary">
+    <div class="summary__bar">
+      <span class="l"><span class="spark">✦</span><span class="lbl">Tekoälykooste · asiakohta</span></span>
+      <span class="read">3 äänestystä · 12 puheenvuoroa · kesto 46 min</span>
+    </div>
+    <div class="summary__in">
+      <div class="summary__q">Mitä asiakohdassa tapahtui?</div>
+      <p class="summary__lead">Toisessa käsittelyssä eduskunta hyväksyi ammattikorkeakoulu- ja opintotukilain muutoksen valiokunnan mietinnön pohjalta. Äänestys jakautui tarkasti hallitus–oppositio-rajaa pitkin — <b>91–77</b> — kun opposition mukaan opintotuen leikkaus heikentää pienituloisten opiskelijoiden asemaa.</p>
+      <ul class="summary__points">
+        <li>Lakiehdotukset hyväksyttiin <b>91–77</b>; mietintö voitti Lohikosken (vas) kaksi lausumaehdotusta kummatkin <b>92–78</b>.</li>
+        <li>Hallituspuolueet kannattivat: <b>kok, ps, r ja kd</b> äänestivät JAA lähes yksimielisesti.</li>
+        <li>Koko oppositio — <b>sd, kesk, vihr ja vas</b> — äänesti vastaan.</li>
+        <li>Kiistakohtana oli <b>opintotuen tulorajojen jäädytys</b> ja sen vaikutus opiskelijoiden toimeentuloon.</li>
+      </ul>
+      <div class="summary__foot">
+        <span class="summary__disc">Koneellisesti tuotettu kooste tämän asiakohdan äänestyksistä ja puheenvuoroista. Tarkista virallinen pöytäkirja.</span>
+        <button class="ai-sources-toggle" data-label="Näytä lähteet (3)"><span class="chev">›</span><span class="lbl">Näytä lähteet (3)</span></button>
+      </div>
+      <div class="ai-sources">
+        <div class="ai-sources__title">Koosteen lähteet — tarkistettavissa</div>
+        <div class="src-row"><span class="src-row__n">1</span><div class="src-row__main"><div class="src-row__title">Asiakohta 2 · Sivistysvaliokunnan mietintö SIVM 3/2026 vp</div><div class="src-row__api">GET /api/v1/tables/VaskiData?eduskuntaTunnus=SIVM+3/2026</div></div><div class="src-row__meta">19.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+        <div class="src-row"><span class="src-row__n">2</span><div class="src-row__main"><div class="src-row__title">3 äänestystä · tulokset ryhmittäin (VotingId 56401–56403)</div><div class="src-row__api">SELECT * FROM Voting WHERE session_key='2026/52' AND section_number=2</div></div><div class="src-row__meta">20.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+        <div class="src-row"><span class="src-row__n">3</span><div class="src-row__main"><div class="src-row__title">12 puheenvuoroa · asiakohta 2 · puhujat ja kestot</div><div class="src-row__api">SELECT * FROM Speech WHERE session_key='2026/52' AND section_number=2</div></div><div class="src-row__meta">20.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ KÄSITTELYVAIHE / HANDLING PHASE ============ -->
+  <section class="ph" id="kasittely">
+    <p class="kicker kicker--blue"><span class="dot"></span>Käsittelyvaihe · missä asia on menossa</p>
+    <div class="ph__head"><h2>Toinen käsittely</h2><span class="meta">HE 197/2025 vp · SIVM 3/2026 vp</span></div>
+    <p class="ph__intro">Toisessa käsittelyssä eduskunta päättää, hyväksytäänkö vai hylätäänkö lakiehdotukset. Sisällöstä ei enää keskustella pykälä kerrallaan — äänestys käydään valiokunnan mietinnön ja sitä vastaan tehtyjen ehdotusten välillä. Tämä asiakohta on osa laajempaa lainsäädäntöasian elinkaarta.</p>
+
+    <!-- where this subsection sits in the matter's lifecycle -->
+    <nav class="lifecycle" style="margin-top:18px">
+      <a href="Asia.html" class="lc-step done">
+        <div class="lc-step__top"><span class="lc-step__dot"></span><span class="lc-step__num">01</span></div>
+        <div class="lc-step__label">Esitys annettu</div><div class="lc-step__date">3.12.2025</div>
+      </a>
+      <a href="Asia.html" class="lc-step done">
+        <div class="lc-step__top"><span class="lc-step__dot"></span><span class="lc-step__num">02</span></div>
+        <div class="lc-step__label">Lähetekeskustelu</div><div class="lc-step__date">11.12.2025</div>
+      </a>
+      <a href="Asia.html" class="lc-step done">
+        <div class="lc-step__top"><span class="lc-step__dot"></span><span class="lc-step__num">03</span></div>
+        <div class="lc-step__label">Sivistysvaliokunta · SIVM 3/2026</div><div class="lc-step__date">6.5.2026</div>
+      </a>
+      <a href="Asia.html" class="lc-step done">
+        <div class="lc-step__top"><span class="lc-step__dot"></span><span class="lc-step__num">04</span></div>
+        <div class="lc-step__label">Ensimmäinen käsittely</div><div class="lc-step__date">14.5.2026</div>
+      </a>
+      <a href="#aanestykset" class="lc-step done current">
+        <div class="lc-step__top"><span class="lc-step__dot"></span><span class="lc-step__num">05</span></div>
+        <div class="lc-step__label">Toinen käsittely · tämä istunto</div><div class="lc-step__date">20.5.2026</div>
+        <div class="lc-step__tag ok">hyväksytty 91–77</div>
+      </a>
+    </nav>
+
+    <!-- what's being decided -->
+    <div class="viewpoints" style="margin-top:30px">
+      <div class="vp for">
+        <div class="vp__h"><span class="vp__t">Mietintö · puolesta</span><span class="vp__who">kok · ps · r · kd</span></div>
+        <ul>
+          <li>Korkeakoulujen rahoitusmalli ja opintotuen rakenne saatetaan kestävälle pohjalle.</li>
+          <li>Muutos kannustaa nopeampaan valmistumiseen ja opintojen etenemiseen.</li>
+          <li>Julkisen talouden sopeutus edellyttää myös opintoetuuksien tarkistamista.</li>
+        </ul>
+      </div>
+      <div class="vp against">
+        <div class="vp__h"><span class="vp__t">Vastalause</span><span class="vp__who">sd · kesk · vihr · vas</span></div>
+        <ul>
+          <li>Opintotuen tulorajojen <b>jäädytys</b> heikentää pienituloisten opiskelijoiden toimeentuloa.</li>
+          <li>Leikkaus kohdistuu epäoikeudenmukaisesti niihin, joiden on pakko käydä töissä.</li>
+          <li>Lohikoski (vas) esitti kaksi lausumaehdotusta tulorajojen turvaamiseksi.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ÄÄNESTYKSET / VOTES ============ -->
+  <section class="ph" id="aanestykset">
+    <p class="kicker kicker--blue"><span class="dot"></span>Äänestykset · toinen käsittely</p>
+    <div class="ph__head"><h2>Mistä äänestettiin</h2><span class="meta">3 äänestystä</span></div>
+    <p class="ph__intro">Ratkaiseva äänestys käytiin lakiehdotusten hyväksymisestä. Sen jälkeen äänestettiin kahdesta Lohikosken (vas) lausumaehdotuksesta valiokunnan mietintöä vastaan.</p>
+
+    <!-- main vote — full party breakdown -->
+    <div class="vote-block">
+      <div class="vote-block__h"><span class="vote-block__title">1. Ratkaiseva äänestys — lakiehdotukset hyväksytään (JAA) / hylätään (EI)</span><span class="vote-block__when">klo 15.04 · äänestys 56401</span></div>
+      <div class="vote-block__result"><span class="big" style="color:var(--hall)">91</span><span style="color:var(--muted)">JAA</span><span class="big" style="color:var(--red)">77</span><span style="color:var(--muted)">EI</span><span class="tag tag--hall" style="margin-left:auto">Lakiehdotukset hyväksyttiin</span></div>
+      <div class="vote-bar" style="margin-bottom:18px"><span class="v-jaa" style="width:54.2%">JAA 91</span><span class="v-ei" style="width:45.8%">EI 77</span></div>
+
+      <div style="font-family:var(--head);font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Miten ryhmät äänestivät</div>
+      <div class="pvote"><span class="pvote__name"><span class="d" style="background:#1d4f91"></span>Kokoomus</span><span class="pvote__bar"><span class="j" style="width:100%"></span></span><span class="pvote__num"><b>43</b> jaa</span></div>
+      <div class="pvote"><span class="pvote__name"><span class="d" style="background:#2c3e8c"></span>Perussuomal.</span><span class="pvote__bar"><span class="j" style="width:97.3%"></span><span class="a" style="width:2.7%"></span></span><span class="pvote__num"><b>36</b> jaa · 1 tyhjä</span></div>
+      <div class="pvote"><span class="pvote__name"><span class="d" style="background:#1278b6"></span>RKP</span><span class="pvote__bar"><span class="j" style="width:100%"></span></span><span class="pvote__num"><b>9</b> jaa</span></div>
+      <div class="pvote"><span class="pvote__name"><span class="d" style="background:#1a3f86"></span>KD</span><span class="pvote__bar"><span class="j" style="width:100%"></span></span><span class="pvote__num"><b>3</b> jaa</span></div>
+      <div class="pvote"><span class="pvote__name"><span class="d" style="background:#d3243a"></span>SDP</span><span class="pvote__bar"><span class="e" style="width:100%"></span></span><span class="pvote__num"><b>34</b> ei</span></div>
+      <div class="pvote"><span class="pvote__name"><span class="d" style="background:#0b8a4a"></span>Keskusta</span><span class="pvote__bar"><span class="e" style="width:100%"></span></span><span class="pvote__num"><b>23</b> ei</span></div>
+      <div class="pvote"><span class="pvote__name"><span class="d" style="background:#5aa829"></span>Vihreät</span><span class="pvote__bar"><span class="e" style="width:100%"></span></span><span class="pvote__num"><b>11</b> ei</span></div>
+      <div class="pvote"><span class="pvote__name"><span class="d" style="background:#9e1f4b"></span>Vasemmisto</span><span class="pvote__bar"><span class="e" style="width:100%"></span></span><span class="pvote__num"><b>9</b> ei</span></div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap;gap:10px">
+        <a href="Äänestys.html" class="link-arrow">Näytä nimitiedot — kuka äänesti miten →</a>
+        <span class="cite verify" data-mark="off"
+          data-value="JAA 91 · EI 77"
+          data-caption="Lakiehdotukset hyväksytään JAA / hylätään EI"
+          data-set="Eduskunnan avoin data · SaliDBAanestys"
+          data-table="Voting + VotingPartyStats"
+          data-endpoint="GET /api/v1/tables/SaliDBAanestys/rows?VotingId=56401"
+          data-record="voting.id = 56401 · istunto 2026/52 · asiakohta 2"
+          data-jakso="Vaalikausi 2023–2027"
+          data-fetched="30.5.2026 klo 07.16"
+          data-chain="avoindata.eduskunta.fi > Voting > Asiakohtanäkymä"
+          data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa äänestystulos">varmenna äänestys</span>
+      </div>
+    </div>
+
+    <!-- compact secondary votes -->
+    <div class="ag-votes" style="margin-top:14px">
+      <div class="agvote"><div class="agvote__t">2. Mietintö (JAA) / Lohikosken lausumaehdotus 1 (EI) — opintotuen tulorajat</div><div class="agvote__bar"><span class="j" style="width:54.1%"></span><span class="e" style="width:45.9%"></span></div><div class="agvote__n"><span class="j">92</span>–<span class="e">78</span><span class="out ok">mietintö</span></div></div>
+      <div class="agvote"><div class="agvote__t">3. Mietintö (JAA) / Lohikosken lausumaehdotus 2 (EI) — seurantaselvitys</div><div class="agvote__bar"><span class="j" style="width:54.1%"></span><span class="e" style="width:45.9%"></span></div><div class="agvote__n"><span class="j">92</span>–<span class="e">78</span><span class="out ok">mietintö</span></div></div>
+    </div>
+
+    <div class="source-note">
+      <span>Lähde:</span>
+      <span class="dset">Eduskunnan avoin data · Voting + VotingPartyStats</span><span>·</span>
+      <span class="fresh">haettu 30.5.2026 07.16</span><span>·</span>
+      <span class="cite verify" data-mark="off"
+        data-value="3 äänestystä"
+        data-caption="Asiakohdan 2 äänestykset toisessa käsittelyssä"
+        data-set="Eduskunnan avoin data · Voting"
+        data-table="Voting"
+        data-endpoint="SELECT number, title, n_yes, n_no FROM Voting WHERE session_key='2026/52' AND section_number=2"
+        data-record="3 riviä · asiakohta 2 · VotingId 56401–56403"
+        data-jakso="Vaalikausi 2023–2027"
+        data-fetched="30.5.2026 klo 07.16"
+        data-chain="avoindata.eduskunta.fi > Voting > Asiakohtanäkymä"
+        data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa äänestykset">varmenna äänestykset</span>
+    </div>
+  </section>
+
+  <!-- ============ PUHEENVUOROT / SPEECHES ============ -->
+  <section class="ph" id="puheenvuorot" style="border-top:0;padding-top:8px">
+    <p class="kicker"><span class="dot" style="background:var(--opp)"></span>Puheenvuorot · puhejärjestyksessä</p>
+    <div class="ph__head"><h2>Mitä salissa sanottiin</h2><span class="meta">12 puheenvuoroa · klo 14.32–15.04</span></div>
+    <p class="ph__intro">Toisen käsittelyn keskustelussa pidettiin 12 puheenvuoroa ennen äänestystä. Keskeiset viisi ovat alla kokonaisina, lyhentämättöminä — kunkin edellä tekoälytiivistelmä. Loput avautuvat samalla tavalla pöytäkirjasta.</p>
+
+    <!-- filter -->
+    <div class="fchips" style="margin-top:6px">
+      <button class="fchip is-active" data-filter="all">Kaikki</button>
+      <button class="fchip" data-filter="hallitus"><span class="pdot" style="background:var(--hall)"></span>Hallitus</button>
+      <button class="fchip" data-filter="oppositio"><span class="pdot" style="background:var(--opp)"></span>Oppositio</button>
+    </div>
+
+    <div class="transcript" id="transcript" style="margin-top:8px">
+
+      <article class="speech" data-bloc="hallitus" data-text="mari kaunistola kokoomus kok">
+        <div class="speech__av"><span>MK</span><span class="pbar" style="background:#1d4f91"></span></div>
+        <div class="speech__main">
+          <div class="speech__head">
+            <span class="speech__name">Mari Kaunistola</span>
+            <span class="tag"><span style="width:9px;height:9px;border-radius:50%;background:#1d4f91;display:inline-block"></span>Kokoomus</span>
+            <span class="speech__role">Esittelypuheenvuoro</span>
+            <span class="speech__time">klo 14.32 · 4 min 11 s</span>
+          </div>
+          <div class="speech__sum"><span class="speech__sum-tag"><span class="sp">✦</span>Tekoälytiivistelmä</span><p>Sivistysvaliokunnan esittely: uudistus turvaa korkeakoulujen rahoituksen kestävyyden ja kannustaa opintojen ripeään etenemiseen. Vaikutuksia on seurattava.</p></div>
+          <div class="speech__body">
+            <p>Arvoisa puhemies! Sivistysvaliokunta on käsitellyt hallituksen esityksen ammattikorkeakoululain ja opintotukilain muuttamisesta huolellisesti ja kuullut laajasti asiantuntijoita. Esityksen tavoite on selkeä: turvata korkeakoulujen rahoituksen kestävyys ja kannustaa opiskelijoita opintojen ripeään etenemiseen.</p>
+            <p>Opintotuen rakenteeseen tehtävät muutokset on mitoitettu niin, että ne tukevat täysipäiväistä opiskelua. Valiokunta korostaa, että uudistusta on seurattava ja sen vaikutuksia opiskelijoiden toimeentuloon ja opintojen etenemiseen on arvioitava säännöllisesti. Mahdollisiin epäkohtiin on puututtava ripeästi.</p>
+            <p>Valiokunta pitää tärkeänä, että korkeakoulut voivat suunnitella toimintaansa pitkäjänteisesti ja että rahoituksen ennustettavuus säilyy. Esitän, että lakiehdotukset hyväksytään mietinnön mukaisina.</p>
+          </div>
+          <div class="speech__foot"><span class="meta">3 940 merkkiä · 4 min 11 s · suomi</span><a href="#" class="link-arrow">Avaa pöytäkirjassa (PTK 52/2026) ↗</a></div>
+        </div>
+      </article>
+
+      <article class="speech" data-bloc="oppositio" data-text="pinja lohikoski vasemmistoliitto vas">
+        <div class="speech__av"><span>PL</span><span class="pbar" style="background:#9e1f4b"></span></div>
+        <div class="speech__main">
+          <div class="speech__head">
+            <span class="speech__name">Pinja Lohikoski</span>
+            <span class="tag"><span style="width:9px;height:9px;border-radius:50%;background:#9e1f4b;display:inline-block"></span>Vasemmistoliitto</span>
+            <span class="speech__role reply">Vastalause</span>
+            <span class="speech__time">klo 14.39 · 5 min 24 s</span>
+          </div>
+          <div class="speech__sum"><span class="speech__sum-tag"><span class="sp">✦</span>Tekoälytiivistelmä</span><p>Tulorajojen jäädytys leikkaa pienituloisimpien opiskelijoiden toimeentulosta. Lohikoski esittää kahta lausumaa tulorajojen turvaamiseksi ja esityksen hylkäämistä tältä osin.</p></div>
+          <div class="speech__body">
+            <p>Arvoisa puhemies! Tämä esitys on epäoikeudenmukainen. Opintotuen tulorajojen jäädytys tarkoittaa käytännössä, että yhä useampi opiskelija joutuu rajaamaan työntekoaan tai menettää osan tuestaan. Leikkaus kohdistuu juuri niihin, joilla ei ole varaa olla käymättä töissä opintojen ohella.</p>
+            <p>Hallitus perustelee muutosta kannustavuudella, mutta todellisuudessa se lisää opiskelijoiden epävarmuutta ja velkaantumista. Pienituloisimmat ovat aina haavoittuvimmassa asemassa, ja juuri heihin tämä leikkaus osuu kovimmin.</p>
+            <p>Esitän, että eduskunta hyväksyy kaksi lausumaa: ensimmäisessä edellytetään tulorajojen sitomista ansiotasoindeksiin ja toisessa selvitystä leikkauksen vaikutuksista opiskelijoiden toimeentuloon ja opintojen etenemiseen. Nämä ovat kohtuullisia ja välttämättömiä korjauksia.</p>
+            <p>Vasemmistoliiton eduskuntaryhmä ei voi hyväksyä esitystä sellaisenaan ja esittää sen hylkäämistä siltä osin kuin se heikentää opiskelijoiden asemaa.</p>
+          </div>
+          <div class="speech__foot"><span class="meta">4 612 merkkiä · 5 min 24 s · suomi</span><a href="#" class="link-arrow">Avaa pöytäkirjassa (PTK 52/2026) ↗</a></div>
+        </div>
+      </article>
+
+      <article class="speech" data-bloc="oppositio" data-text="juha viitala sdp sd">
+        <div class="speech__av"><span>JV</span><span class="pbar" style="background:#d3243a"></span></div>
+        <div class="speech__main">
+          <div class="speech__head">
+            <span class="speech__name">Juha Viitala</span>
+            <span class="tag"><span style="width:9px;height:9px;border-radius:50%;background:#d3243a;display:inline-block"></span>SDP</span>
+            <span class="speech__role">Ryhmäpuheenvuoro</span>
+            <span class="speech__time">klo 14.46 · 3 min 58 s</span>
+          </div>
+          <div class="speech__sum"><span class="speech__sum-tag"><span class="sp">✦</span>Tekoälytiivistelmä</span><p>Koulutuksesta ei pidä leikata, kun osaamistaso jää muista Pohjoismaista jälkeen. SDP pitää koulutusta investointina ja kannattaa Lohikosken lausumia.</p></div>
+          <div class="speech__body">
+            <p>Arvoisa puhemies! Sosialidemokraatit eivät voi hyväksyä esitystä, joka heikentää opiskelijoiden toimeentuloa samaan aikaan kun Suomen korkeakoulutettujen osuus on jäämässä jälkeen muista Pohjoismaista. Koulutus on investointi, ei menoerä, josta leikataan ensimmäisenä.</p>
+            <p>Hallitus puhuu kannustavuudesta, mutta käytännössä esitys lisää opiskelijoiden epävarmuutta ja velkaantumista. Kun toimeentulo on tiukoilla, opinnot eivät etene nopeammin vaan hitaammin — moni joutuu lisäämään työssäkäyntiä tuen pienentyessä.</p>
+            <p>Sosialidemokraattinen eduskuntaryhmä kannattaa Lohikosken lausumaehdotuksia ja edellyttää, että opiskelijoiden toimeentulo turvataan myös jatkossa.</p>
+          </div>
+          <div class="speech__foot"><span class="meta">3 705 merkkiä · 3 min 58 s · suomi</span><a href="#" class="link-arrow">Avaa pöytäkirjassa (PTK 52/2026) ↗</a></div>
+        </div>
+      </article>
+
+      <article class="speech" data-bloc="hallitus" data-text="rami lehtinen perussuomalaiset ps">
+        <div class="speech__av"><span>RL</span><span class="pbar" style="background:#2c3e8c"></span></div>
+        <div class="speech__main">
+          <div class="speech__head">
+            <span class="speech__name">Rami Lehtinen</span>
+            <span class="tag"><span style="width:9px;height:9px;border-radius:50%;background:#2c3e8c;display:inline-block"></span>Perussuomalaiset</span>
+            <span class="speech__role">Ryhmäpuheenvuoro</span>
+            <span class="speech__time">klo 14.52 · 3 min 12 s</span>
+          </div>
+          <div class="speech__sum"><span class="speech__sum-tag"><span class="sp">✦</span>Tekoälytiivistelmä</span><p>Julkisen talouden sopeutus edellyttää, että myös opintoetuuksia tarkastellaan. Perussuomalaiset pitävät esitystä tasapainoisena ja kannattavat mietintöä.</p></div>
+          <div class="speech__body">
+            <p>Arvoisa puhemies! Julkisen talouden tasapainottaminen edellyttää, että jokaista menoerää tarkastellaan kriittisesti. Se ei tarkoita koulutuksen aliarvostamista, vaan vastuullista taloudenpitoa, joka turvaa hyvinvointipalvelut myös tuleville opiskelijapolville.</p>
+            <p>Esitys on tasapainoinen ja siihen on valiokuntakäsittelyssä tehty tarpeelliset täsmennykset. Velaksi eläminen ei ole reilua tulevia sukupolvia kohtaan, ja siksi myös opintoetuuksien on oltava osa kokonaisuutta, kun valtiontaloutta saatetaan kestävälle pohjalle.</p>
+            <p>Perussuomalaisten eduskuntaryhmä kannattaa valiokunnan mietintöä ja lakiehdotusten hyväksymistä.</p>
+          </div>
+          <div class="speech__foot"><span class="meta">3 188 merkkiä · 3 min 12 s · suomi</span><a href="#" class="link-arrow">Avaa pöytäkirjassa (PTK 52/2026) ↗</a></div>
+        </div>
+      </article>
+
+      <article class="speech" data-bloc="oppositio" data-text="hanna räsänen keskusta kesk">
+        <div class="speech__av"><span>HR</span><span class="pbar" style="background:#0b8a4a"></span></div>
+        <div class="speech__main">
+          <div class="speech__head">
+            <span class="speech__name">Hanna Räsänen</span>
+            <span class="tag"><span style="width:9px;height:9px;border-radius:50%;background:#0b8a4a;display:inline-block"></span>Keskusta</span>
+            <span class="speech__role reply">Vastauspuheenvuoro</span>
+            <span class="speech__time">klo 14.57 · 1 min 46 s</span>
+          </div>
+          <div class="speech__sum"><span class="speech__sum-tag"><span class="sp">✦</span>Tekoälytiivistelmä</span><p>Leikkaus osuu erityisesti alueiden opiskelijoihin, joilla etäisyydet kasvattavat menoja. Keskusta vaatii vaikutusten tarkkaa seurantaa maakunnissa.</p></div>
+          <div class="speech__body">
+            <p>Arvoisa puhemies! Keskusta kantaa erityistä huolta siitä, miten muutos kohtelee opiskelijoita eri puolilla maata. Etäisyydet, asumiskustannukset ja työn saatavuus vaihtelevat suuresti, eikä yhden mallin leikkaus kohtele kaikkia opiskelijoita yhdenvertaisesti.</p>
+            <p>Toivomme, että uudistuksen vaikutuksia seurataan tarkasti erityisesti maakunnissa ja että havaittuihin epäkohtiin reagoidaan nopeasti. Opiskelu ei saa olla kiinni asuinpaikasta.</p>
+          </div>
+          <div class="speech__foot"><span class="meta">1 920 merkkiä · 1 min 46 s · suomi</span><a href="#" class="link-arrow">Avaa pöytäkirjassa (PTK 52/2026) ↗</a></div>
+        </div>
+      </article>
+
+    </div>
+
+    <!-- empty state -->
+    <div id="sp-empty" hidden style="text-align:center;color:var(--muted);padding:34px 0">Ei puheenvuoroja näillä hakuehdoilla.</div>
+
+    <div class="more-speeches" style="margin-top:22px">
+      <h4>Loput puheenvuorot · 7 lisää</h4>
+      <p style="font-size:14.5px;line-height:1.55;color:var(--body);margin:0">Yllä olevat viisi ovat keskustelun ryhmä- ja vastalausepuheenvuorot kokonaisina. Lisäksi pidettiin <b style="color:var(--ink)">7 lyhyempää vastaus- ja muuta puheenvuoroa</b>, jotka avautuvat samalla tavalla kokonaisina — mitään ei ole tiivistetty pois.</p>
+      <div style="margin-top:16px;display:flex;gap:16px;flex-wrap:wrap">
+        <a href="#" class="link-arrow">Avaa loput 7 puheenvuoroa kokonaisina ↗</a>
+      </div>
+    </div>
+
+    <div class="source-note">
+      <span>Lähde:</span>
+      <span class="dset">Eduskunnan avoin data · Speech + SpeechContent</span><span>·</span>
+      <span class="fresh">haettu 30.5.2026 07.16</span><span>·</span>
+      <span class="cite verify" data-mark="off"
+        data-value="12 puheenvuoroa"
+        data-caption="Asiakohdan 2 puheenvuorot · täysistunto 2026/52"
+        data-set="Eduskunnan avoin data · Speech"
+        data-table="Speech + SpeechContent"
+        data-endpoint="SELECT sp.speaker, sp.party, c.content FROM Speech sp JOIN SpeechContent c … WHERE session_key='2026/52' AND section_number=2"
+        data-record="12 puheenvuoroa · asiakohta 2 · HE 197/2025 vp"
+        data-jakso="Vaalikausi 2023–2027"
+        data-fetched="30.5.2026 klo 07.16"
+        data-chain="avoindata.eduskunta.fi > Speech > Asiakohtanäkymä"
+        data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa puheenvuorot">varmenna puheenvuorot</span>
+    </div>
+  </section>
+
+  <!-- ============ PÄÄTÖS / OUTCOME ============ -->
+  <section class="ph" id="paatos">
+    <p class="kicker kicker--blue"><span class="dot"></span>Päätös</p>
+    <div class="ph__head"><h2>Miten asiakohta ratkesi</h2><span class="meta">toinen käsittely päättyi</span></div>
+    <div class="decision" style="margin-top:8px">
+      <div class="decision__icon">✓</div>
+      <div class="decision__main">
+        <div class="t">Eduskunta hyväksyi lakiehdotukset valiokunnan mietinnön mukaisina, 91–77</div>
+        <div class="s">Lohikosken (vas) lausumaehdotukset hylättiin (92–78). Lait ammattikorkeakoululain ja opintotukilain muuttamisesta etenevät vahvistettaviksi. Asian käsittely eduskunnassa on päättynyt.</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-top:22px">
+      <a href="Asia.html" class="link-arrow">Koko asian kulku — esityksestä päätökseen →</a>
+      <a href="Istunto.html" class="link-arrow">← Takaisin istuntoon</a>
+    </div>
+  </section>
+
+  <!-- ============ SUBSECTION NAV (bottom) ============ -->
+  <nav class="subnav subnav--foot" aria-label="Selaa istunnon asiakohtia">
+    <a class="subnav__side prev" href="Istunto.html#lasnaolo">
+      <span class="subnav__dir">‹ Asiakohta 1</span>
+      <span class="subnav__t">Nimenhuuto</span>
+    </a>
+    <a class="subnav__mid" href="Istunto.html">
+      <span class="subnav__pos">2 / 20</span>
+      <span class="subnav__lbl">Päiväjärjestys</span>
+    </a>
+    <a class="subnav__side next" href="Istunto.html#paatosasiat">
+      <span class="subnav__dir">Asiakohta 3 ›</span>
+      <span class="subnav__t">Arkistointilaki</span>
+    </a>
+  </nav>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="foot">
+    <div class="foot__period">
+      <span class="pk">Tietojakso</span>
+      <span class="pv" data-period-label>Vaalikausi 2023–2027 · Orpon hallitus</span>
+      <span class="pbadge is-now" data-period-badge>nykyinen</span>
+      <span class="pdetail" data-period-detail>20.6.2023 – kesken · 200 paikkaa · hallitus 108 / oppositio 92</span>
+    </div>
+    <div class="foot__legal">
+      <span>Tietolähde: Eduskunnan avoin data · avoindata.eduskunta.fi</span>
+      <span>Tietokanta päivitetty 30.5.2026 klo 07.16</span>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+/* Asiakohta — filter speeches by bloc. */
+(function () {
+  var rows = [].slice.call(document.querySelectorAll('.speech'));
+  var chips = [].slice.call(document.querySelectorAll('.fchip'));
+  var empty = document.getElementById('sp-empty');
+  var filter = 'all';
+  function apply() {
+    var shown = 0;
+    rows.forEach(function (r) {
+      var show = filter === 'all' || r.getAttribute('data-bloc') === filter;
+      r.style.display = show ? '' : 'none';
+      if (show) shown++;
+    });
+    if (empty) empty.hidden = shown !== 0;
+  }
+  chips.forEach(function (c) {
+    c.addEventListener('click', function () {
+      chips.forEach(function (x) { x.classList.remove('is-active'); });
+      c.classList.add('is-active');
+      filter = c.getAttribute('data-filter');
+      apply();
+    });
+  });
+})();
+</script>
+<script defer src="period.js"></script>
+<script defer src="trace.js"></script>
+<script defer src="timeline.js"></script>
+</body>
+</html>

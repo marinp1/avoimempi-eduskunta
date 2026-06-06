@@ -34,7 +34,9 @@ Why htmx maps cleanly to each behavior — see **Interactions & Behavior** below
 
 ## Screens / Views
 
-All pages share the same shell: **masthead** (brand + `Tietojakso` period selector), the **time scrubber** (`.timeline`, injected under the masthead by `timeline.js`), **nav**, the page body inside `.wrap` (max-width 1180px, 40px gutters), and a **footer** that restates the active data period. Filenames map 1:1 to views.
+All pages share the same shell: **masthead** (brand + `Tietojakso` period selector), the **time scrubber** (`.timeline`, injected under the masthead by `timeline.js`), **nav** (Etusivu · Kansanedustajat · Puolueet · Istunnot · Äänestykset · Asiakirjat), the page body inside `.wrap` (max-width 1180px, 40px gutters), and a **footer** that restates the active data period. Filenames map 1:1 to views.
+
+The app is organized as **index → entity** pairs across four domains — people (Kansanedustajat → Kansanedustaja), parties (Puolueet → Puolue), sittings (Istunnot → Istunto → Asiakohta), and votes (Äänestykset → Äänestys) — plus the cross-cutting Asia (matter lifecycle), Asiakirja (document) and Keskustelu (debate) views. The deep views cross-link heavily (a vote row → Äänestys; an asiakohta → Asia; a speech → Keskustelu; etc.).
 
 ### 1. `Etusivu.html` — Home / "Eduskunta juuri nyt"
 - **Purpose:** at-a-glance snapshot of Parliament, reframed by the time scrubber to any selected sitting day.
@@ -50,26 +52,53 @@ All pages share the same shell: **masthead** (brand + `Tietojakso` period select
 - **Purpose:** one MP in depth.
 - **Layout:** `.bio-head` (116px portrait placeholder w/ initials + party bar, name, meta) → `.bio-stats` (4-up ruled) → `.bio-grid` (1.5fr/1fr) → substance sections (`.psec`): voting record (`.vote-bar` + `.vote-legend`), dissent / notable votes (`.vote-row`), topics (`.topic-tag`), actions — written questions & initiatives (`.act-row`); sidebar has committees (`.committee-row`) and spoken topics (`.spoke-row`).
 
-### 4. `Istunnot.html` — Plenary sessions index
+### 4. `Puolueet.html` — Parties index *(new)*
+- **Purpose:** all ten parliamentary groups, grouped by bloc, comparable at a glance.
+- **Layout:** page head → composition strip (`.bloc-bar` + `.bloc-legend`) → two `.pgroup` sections (**Hallitus** / **Oppositio**) split by `.week-head` dividers, each a `.prow-list` of `.prow`: color square (`.prow__sq`), name + group chair (`.prow__id`), seat count/share (`.prow__seats`), group-cohesion bar (`.prow__coh`, *ryhmäkuri*). Rows link to Puolue.
+- **Note:** `.prow` is defined in `peili.css` (Index / row components).
+
+### 5. `Puolue.html` — Single party *(new)*
+- **Purpose:** one parliamentary group in depth (prototype shows Perussuomalaiset).
+- **Layout:** reuses the MP-profile skeleton. `.bio-head` (party-abbr square + party bar, asema tag) → `.bio-stats` (seats / ryhmäkuri / attendance / avg age) → `.bio-grid`: **left** = AI "millainen ryhmä" (`.ai`), cohesion section (`.psec` + `.vote-bar` + most-split votes as `.vote-row`s), members (`.mp-list`), committee chairmanships (`.committee-row`); **right** = facts `dl`, topics (`.topic-tag`), recent group speeches (`.spoke-row`). No new CSS — all existing components + inline grid.
+
+### 6. `Istunnot.html` — Plenary sessions index
 - **Purpose:** chronological list of sittings, grouped by sitting-week.
 - **Layout:** `.week` groups with `.week-head` dividers → `.sit-list` of `.sit-row` (grid `64px 1fr 168px`): left date rail (`.sit-date` with keyed dot — vote/talk/quiet), middle (id, time, status pill `.spill--live/done/draft`, headline, note, agenda chips `.dchip` with result coloring), right meta.
 - **Time-reactive:** each `.sit-row` carries `data-date` (ISO). The scrubber filters the list to sittings on/before the cursor date (later ones hide, empty weeks collapse, count updates); a red "tilanne <date>" note (`[data-sit-asof]`) appears when not viewing the present.
 
-### 5. `Istunto.html` — Single sitting
+### 7. `Istunto.html` — Single sitting
 - **Purpose:** one plenary sitting's agenda and outcomes in detail.
+- **Layout:** agenda items (`.ag-item`) with phase, documents, activity and compact per-item vote/speaker summaries. The vote-bearing agenda items link onward to their **Asiakohta** subsection.
 
-### 6. `Asia.html` — Matter / lifecycle view
+### 8. `Asiakohta.html` — Agenda item / session subsection *(new)*
+- **Purpose:** one agenda item (*asiakohta*) handled end-to-end — the level **between** the whole sitting (Istunto) and the whole matter (Asia). The prototype is the student-aid law's second reading.
+- **Layout:** `.doc-head` + `.sess-meta` → `.doc-toolbar` + `.sess-jump` anchor bar → AI summary (`.summary`) → handling-phase section (`.lifecycle` stepper + for/against `.viewpoints`) → **votes** (one decisive `.vote-block` with full party breakdown + compact secondary `.ag-votes`/`.agvote`) → **speeches** (`.transcript` of full `.speech`s, filterable by bloc) → `.decision` banner → prev/next `.subnav`.
+- **Note:** `.subnav` (prev/next subsection pager) is new (in `peili.css`).
+
+### 9. `Äänestykset.html` — Votings index *(new)*
+- **Purpose:** all plenary votes, reverse-chronological, grouped by sitting.
+- **Layout:** page head → `.toolbar` (search + live count) → `.fchips` type filters (Lait / Selonteot / Luottamusäänestykset / Tiukat) → `.vgroup` per sitting (`.week-head`) → `.vrow-list` of `.vrow`: mono id/time rail, question + `.ag-doc` chips + inner references (`.ref`), and a result block (JAA–EI numbers + mini bar + outcome pill). Search + chips filter live and collapse empty session groups.
+- **Note:** `.vrow` lives in `peili.css`; rows link to Äänestys. Inner reference links are plain `.ref` spans (the row itself is the anchor — no nested `<a>`).
+
+### 10. `Äänestys.html` — Single vote *(new)*
+- **Purpose:** one vote in full — the richest result view in the app.
+- **Layout:** `.doc-head` → `.vresult` (JAA/EI propositions spelled out, four-segment `.vote-bar` Jaa/Ei/Tyhjää/Poissa + legend + `.decision`) → AI "mitä tulos tarkoittaa" gist (`.summary`) → party-by-party breakdown (`.pvote`) → **edustajakartta**: a 200-seat `.seatgrid` colored by *how each MP voted* (green jaa / red ei / orange tyhjä / hollow poissa), clustered by party, built by inline JS — alongside an **MP lookup** (`.mlookup` search over a `.mvote` list) → related votes of the same asiakohta.
+- **Note:** reuses the Istunto attendance seat-grid recolored by vote; `.vresult` / `.mlookup` are in `peili.css`.
+
+### 11. `Asia.html` — Matter / lifecycle view
 - **Purpose:** a legislative matter across its whole lifecycle (proposal → debate → vote → decision).
 - **Layout:** `.lifecycle` stepper (`.lc-step`, done states colored) → per-stage `.stage` sections: debate viewpoints for/against (`.viewpoints`/`.vp`), `.speakers` list, party-by-party vote breakdown (`.vote-block`/`.pvote`), and a `.decision` banner.
 
-### 7. `Asiakirja.html` — Document reading view
+### 12. `Asiakirja.html` — Document reading view
 - **Purpose:** full-text speeches, written questions, proposals, initiatives.
 - **Layout:** `.doc-head` (id pill, type, headline, byline) → `.doc-toolbar` → **the summary element** `.summary` ("Mistä tässä on kyse?" — AI-generated TL;DR with lead, dash points, numbered asks, disclaimer) → `.doc-body` two-column (article `66ch` + `.doc-aside` with status, timeline, related).
 
-### 8. `Keskustelu.html` — Debate view
-- **Purpose:** threaded plenary debate / speeches.
+### 13. `Keskustelu.html` — Debate view
+- **Purpose:** the full plenary debate / speeches for a matter. **Speeches are treated as the value — nothing is hidden.**
+- **Layout:** debate head + AI "mistä keskusteltiin" summary (`.summary`) → asiayhteys/context (`.lifecycle` + `.ctx-grid` + `.viewpoints`) → filter (`.toolbar` + bloc `.fchips`) → `.transcript` of `.speech`s → `.decision` → continuation tail (`.more-speeches`).
+- **Speech treatment (this iteration):** each `.speech` shows its **full, untruncated body** by default (no “…”, no “read elsewhere” link). Above each body sits a **labeled per-speech AI summary** — `.speech__sum` now opens with a `.speech__sum-tag` (“✦ Tekoälytiivistelmä”) and a one–two sentence gist, using the same blue/sparkle AI vocabulary as the page-level summary. The `.speech__foot` is a **provenance line** (char count · duration · “Avaa pöytäkirjassa”), not a truncation affordance. The `.more-speeches` tail frames remaining reply speeches as openable *in full* (“mitään ei ole tiivistetty pois”). The same treatment is mirrored on Asiakohta's speech list.
 
-### 9. `Suunnittelujärjestelmä.html` — Design system page
+### 14. `Suunnittelujärjestelmä.html` — Design system page
 - **Not a product screen.** It is the living style guide: principles, color swatches, type specs, kickers/rules/buttons, stats/composition, and the full provenance component gallery. Use it as the visual reference of record.
 
 ---
@@ -182,11 +211,15 @@ Party dot colors are inline per-party hex (e.g. Kokoomus `#1d4f91`, SDP `#d3243a
 In `design_files/`:
 - `Etusivu.html` — home
 - `Kansanedustajat.html` — MP roster · `Kansanedustaja.html` — MP profile
-- `Istunnot.html` — sessions index · `Istunto.html` — single sitting
+- `Puolueet.html` — parties index · `Puolue.html` — single party
+- `Istunnot.html` — sessions index · `Istunto.html` — single sitting · `Asiakohta.html` — agenda item / subsection
+- `Äänestykset.html` — votings index · `Äänestys.html` — single vote (breakdown + seat map)
 - `Asia.html` — matter lifecycle · `Asiakirja.html` — document reader · `Keskustelu.html` — debate
 - `Suunnittelujärjestelmä.html` — **design system / style guide (read first)**
 - `peili.css` — **the complete, commented design system (the spec)** · `timeline.css` — time-scrubber styling
 - `period.js` · `trace.js` · `roster.js` · `timeline.js` — behavior modules (logic contracts above)
+
+> Index/row components introduced this iteration (`.prow`, `.vrow`, `.subnav`, `.vresult`, `.mlookup`) are defined in **`peili.css` → “Index / row components”** (ported out of the per-page inline `<style>` blocks). They follow the same token/hairline rules as the rest of the system; see COMPONENTS.md for their markup and signatures.
 
 And alongside this README:
 - **`COMPONENTS.md`** — the reusable **component library**: every primitive/component catalogued with copy-ready markup, the class API, and a proposed partial/file architecture for the Bun+htmx build. Read it before writing any markup so pages share one vocabulary instead of reinventing it.

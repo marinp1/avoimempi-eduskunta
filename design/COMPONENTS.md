@@ -24,20 +24,21 @@ A flat, function-per-component layout. Each function takes a typed view-model an
 src/
   server.ts                 # Bun.serve router; routes → page templates / fragments
   data/                     # typed Eduskunta open-data API clients → view-models (+ provenance)
-    parliament.ts  votes.ts  members.ts  sessions.ts  documents.ts
+    parliament.ts  votes.ts  members.ts  parties.ts  sessions.ts  documents.ts
   html.ts                   # tiny tagged-template `html` helper + escape()
   components/
     shell.ts                # masthead(), nav(), footer(), periodSelector(), timeline()
     primitives.ts           # kicker(), rule(), tag(), spill(), btn(), linkArrow(), stat()
     provenance.ts           # cite(), sourceNote(), aiSummary(), traceData()  (+ trace.js island)
-    data-display.ts         # statRow(), blocBar(), partyTable(), voteBar(), seatGrid()
-    lists.ts                # mpRow(), sessionRow(), agendaItem(), actionRow(), voteRow()
+    data-display.ts         # statRow(), blocBar(), partyTable(), voteBar(), seatGrid(), voteResult(), seatVoteMap(), mpLookup()
+    lists.ts                # mpRow(), partyRow(), sessionRow(), agendaItem(), voteListRow(), actionRow(), voteRow(), subnav()
     editorial.ts            # summaryBlock(), article(), docAside(), timeline()
     matter.ts               # lifecycle(), viewpoints(), voteBlock(), decision()
     debate.ts               # speech(), speakerTally()
   pages/
-    etusivu.ts  kansanedustajat.ts  kansanedustaja.ts
-    istunnot.ts  istunto.ts  asia.ts  asiakirja.ts  keskustelu.ts
+    etusivu.ts  kansanedustajat.ts  kansanedustaja.ts  puolueet.ts  puolue.ts
+    istunnot.ts  istunto.ts  asiakohta.ts  aanestykset.ts  aanestys.ts
+    asia.ts  asiakirja.ts  keskustelu.ts
   public/
     peili.css   trace.js   period-island.js   fonts/
 ```
@@ -68,7 +69,11 @@ Each entry: **purpose · variants · canonical markup · suggested signature**. 
   <nav class="nav">
     <a href="/" class="is-active">Etusivu</a>
     <a href="/kansanedustajat">Kansanedustajat</a>
-    … <span class="nav__search">Haku ⌕</span>
+    <a href="/puolueet">Puolueet</a>
+    <a href="/istunnot">Istunnot</a>
+    <a href="/aanestykset">Äänestykset</a>
+    <a href="/asiakirjat">Asiakirjat</a>
+    <span class="nav__search">Haku ⌕</span>
   </nav>
   <hr class="rule" />
 </header>
@@ -145,6 +150,9 @@ Reset button uses `.is-hidden` (visibility, not display) so prev/next never shif
 - **`partyTable(rows[])`** — `.party-table` (dot · name+bloc small · `.pt-bar` track/fill · `.pt-seats`). Bar hidden on phone.
 - **`voteBar(result) + voteLegend()`** — JAA/EI/TYH/POISSA breakdown (`.vote-bar .v-jaa/.v-ei/.v-tyh/.v-poi` + `.vote-legend`).
 - **`seatGrid(seats[]) + attendance()`** — istunto attendance: `.att-big` headline number, `.att-bar`, `.att-chips`, and `.seatgrid` of `.seat[.absent]` dots (per-seat color via `--p`). Legend `.seat-legend`.
+- **`voteResult(result)`** *(new)* — Äänestys headline: `.vresult` (JAA/EI `.prop`s with `.k.j`/`.k.e` labels · four-segment `.vote-bar` `.v-jaa/.v-ei/.v-tyh/.v-poi` + `.vote-legend` · `.decision`).
+- **`seatVoteMap(votes[])`** *(new)* — the attendance `.seatgrid` recolored by *how each MP voted* (per-seat `--p`: hall-green = jaa, red = ei, opp-orange = tyhjä, `.absent` hollow = poissa), clustered by party. Built by inline JS from a per-MP vote list; reuses `.seatgrid`/`.seat` + `.seat-legend`.
+- **`mpLookup(votes[])`** *(new)* — searchable per-MP vote list beside the seat map: `.mlookup` (`.search` + `.mlist` of `.mvote`: `.mn` name + party · `.mb.j|.e|.tyh|.out` vote badge).
 
 ### — Lists & rows (the workhorses) —
 
@@ -166,6 +174,9 @@ Collapses to a stacked card on phone (grid-areas in the 720px block). → server
 - **`voteRow(vote)`** — notable/dissent vote (profile + matter): `.vote-row` (`.vote-row__badge.jaa|.tyh` · title+sub · `.vote-row__result`).
 - **`actionRow(item)`** — written question / initiative: `.act-row` (`.act-row__id` · title/sub · `.act-row__date`).
 - **`dchip(model)`** — decision/agenda chip: `.dchip > .dchip__k / .dchip__t / .dchip__r.ok|.no|.neu`; `.dchip--more` for overflow.
+- **`partyRow(party)`** *(new)* — Puolueet index row: `.prow` grid (`.prow__sq` color square · `.prow__id` name + group chair · `.prow__seats` count/share · `.prow__coh` *ryhmäkuri* track · `.prow__go`). Grouped under `.pgroup` + `.week-head` by bloc; links to Puolue.
+- **`voteListRow(vote)`** *(new)* — Äänestykset index row: `.vrow` grid (mono `.vrow__rail` id/time · `.vrow__main` question + `.ag-doc` chips + inner `.ref` spans · `.vrow__res` `.vrow__nums` JAA–EI + `.vrow__bar` + `.vrow__out.ok|.no` pill · `.vrow__go`). Grouped under `.vgroup` + `.week-head` by sitting; **the row is the only anchor** — inner references are `.ref` spans, never nested `<a>`. Doc chips re-scope `.ag-doc` under `.vrow__docs` (committee report = blue).
+- **`subnav(prev, cur, next)`** *(new)* — prev/next pager between sibling subsections (Asiakohta): `.subnav` 3-col (`.subnav__side.prev|.next` dir + title · `.subnav__mid` position + label).
 
 ### — Editorial / document (Asiakirja) —
 
@@ -185,12 +196,14 @@ Collapses to a stacked card on phone (grid-areas in the 720px block). → server
 
 ### — Debate (Keskustelu) —
 
-- **`speech(model)`** — transcript entry: `.speech` (`.speech__av` initials+party bar · `.speech__head` name/`.speech__role`/time · optional `.speech__sum` blue AI gist · `.speech__body` paragraphs · `.speech__foot`). First gets `2px solid ink` top.
+- **`speech(model)`** — transcript entry, **shown in full by default** (no truncation): `.speech` (`.speech__av` initials+party bar · `.speech__head` name/`.speech__role`/time · **`.speech__sum` labeled per-speech AI summary** — opens with `.speech__sum-tag` “✦ Tekoälytiivistelmä” then a 1–2 sentence gist · `.speech__body` complete paragraphs, left-ruled · `.speech__foot` **provenance line**: char count · duration · “Avaa pöytäkirjassa”). First gets `2px solid ink` top. *(The old single-line `.speech__sum` gist and `.speech__cont` “…” truncation are removed — speeches are the value, nothing is hidden.)* Same treatment on Asiakohta.
 - **`speakerTally(parties[])`** — `.spk-tally` strip of per-party speech counts.
 - **`moreSpeeches(rows[])`** — collapsed `.more-speeches` block of `.reply-row`s (good `hx-get` lazy-load target).
 - **`ctxGrid(themes, points)`** — debate synthesis: `.ctx-grid` two columns (`.ctx-themes`, numbered `.ctx-list`, `.ctx-src`).
 
 ---
+
+> Index/row components added this iteration (`.prow`, `.vrow`, `.subnav`, `.vresult`, `.mlookup`, `.mvote`) live in `peili.css` under **“Index / row components”** — already lifted out of the per-page inline `<style>` blocks, so the stylesheet remains the single source of truth.
 
 ## Adding a new component coherently
 1. Check it isn't an existing component + a modifier first (prefer `--variant` over a new block).

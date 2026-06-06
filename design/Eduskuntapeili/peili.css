@@ -918,14 +918,19 @@ a.ag-title:hover { color: var(--blue); }
 .speech__role.min { color: var(--hall); }
 .speech__role.reply { color: var(--opp); }
 .speech__time { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: auto; white-space: nowrap; }
-.speech__sum { display: flex; gap: 9px; margin: 13px 0; font-size: 13.5px; color: var(--blue-ink); background: var(--paper-2); border-left: 3px solid var(--blue); padding: 10px 14px; line-height: 1.45; }
-.speech__sum .sp { color: var(--blue); flex: 0 0 auto; }
-.speech__body p { font-size: 16px; line-height: 1.68; color: var(--body); margin: 0 0 14px; max-width: 64ch; }
+/* per-speech AI summary — a labeled reading aid above the full text.
+   The full speech is always shown; the gist just lets you skim. */
+.speech__sum { margin: 14px 0 18px; background: var(--paper-2); border-left: 3px solid var(--blue); padding: 12px 16px 13px; }
+.speech__sum-tag { display: inline-flex; align-items: center; gap: 6px; font: 700 9.5px var(--head); letter-spacing: .12em; text-transform: uppercase; color: var(--blue); margin-bottom: 7px; }
+.speech__sum-tag .sp { font-size: 12px; }
+.speech__sum p { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--blue-ink); max-width: 66ch; }
+.speech__body { border-left: 2px solid var(--rule); padding-left: 18px; }
+.speech__body p { font-size: 16px; line-height: 1.72; color: var(--body); margin: 0 0 15px; max-width: 64ch; }
+.speech__body p:first-child::first-letter { font-weight: 600; }
 .speech__body p:last-child { margin-bottom: 0; }
-.speech__cont { color: var(--faint); }
-.speech__foot { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 15px; }
+.speech__foot { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule-soft); }
 .speech__foot .link-arrow { font-size: 13px; }
-.speech__foot .meta { font-family: var(--mono); font-size: 11px; color: var(--faint); }
+.speech__foot .meta { font-family: var(--mono); font-size: 11px; color: var(--faint); margin-right: auto; }
 
 /* "show more replies" block */
 .more-speeches { margin-top: 26px; padding: 20px 22px; background: var(--paper-2); border-left: 3px solid var(--rule-ink); }
@@ -1118,4 +1123,138 @@ a.ag-title:hover { color: var(--blue); }
   .vote-row > div:nth-child(2) { grid-area: title; }
   .vote-row__result { grid-area: result; text-align: left; }
   .vote-row__result .r-line { justify-content: flex-start; }
+}
+
+/* ============================================================
+   INDEX / ROW COMPONENTS — Puolueet, Äänestykset, Asiakohta, Äänestys
+   (ported from per-page inline <style> blocks; same tokens & hairline rules)
+   ============================================================ */
+
+/* ----- party row (Puolueet index) ----- */
+.pgroup { margin-top: 30px; }
+.prow-list { display: block; }
+.prow {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 132px minmax(150px, 230px) 24px;
+  gap: 0 20px; align-items: center;
+  padding: 16px 0; border-top: 1px solid var(--rule);
+  text-decoration: none; color: inherit; transition: background .12s ease;
+}
+.prow:hover { background: var(--paper-2); }
+.prow__sq {
+  width: 44px; height: 44px; background: var(--p); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font: 800 13px var(--head); letter-spacing: .02em; text-transform: lowercase;
+}
+.prow__id { min-width: 0; }
+.prow__name { display: block; font: 700 19px var(--head); letter-spacing: -.02em; color: var(--ink); }
+.prow__sub { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prow__seats { text-align: left; white-space: nowrap; }
+.prow__seats b { font: 800 24px var(--head); color: var(--ink); font-variant-numeric: tabular-nums; }
+.prow__seats small { display: block; font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 1px; }
+.prow__coh { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 9px; }
+.prow__coh-k { font: 700 9.5px var(--head); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.prow__track { height: 8px; background: var(--paper-3); display: block; }
+.prow__track .fill { display: block; height: 100%; }
+.prow__coh-v { font-family: var(--mono); font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; min-width: 30px; text-align: right; }
+.prow__go { font-size: 17px; color: var(--blue); text-align: right; }
+.prow:hover .prow__go { color: var(--blue-ink); }
+
+/* ----- vote row (Äänestykset index) ----- */
+.vgroup { margin-top: 28px; }
+.vgroup:first-of-type { margin-top: 10px; }
+.vrow-list { display: block; }
+.vrow {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 188px 22px;
+  gap: 0 22px; align-items: center;
+  padding: 16px 2px; border-bottom: 1px solid var(--rule-soft);
+  text-decoration: none; color: inherit; transition: background .12s ease;
+}
+.vrow:hover { background: var(--paper-2); }
+.vrow__rail { display: flex; flex-direction: column; gap: 3px; }
+.vrow__id { font: 700 13px var(--head); color: var(--ink); }
+.vrow__time { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.vrow__main { min-width: 0; }
+.vrow__q { display: block; font: 700 16.5px var(--head); line-height: 1.28; letter-spacing: -.012em; color: var(--ink); }
+.vrow:hover .vrow__q { color: var(--blue-ink); }
+.vrow__docs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.vrow__links { display: block; font-size: 12.5px; color: var(--muted); margin-top: 7px; }
+.vrow__links a, .vrow__links .ref { color: var(--blue); }
+.vrow__res { display: flex; flex-direction: column; gap: 7px; }
+.vrow__nums { font-family: var(--head); font-weight: 800; font-size: 21px; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 5px; }
+.vrow__nums .j { color: var(--hall); }
+.vrow__nums .e { color: var(--red); }
+.vrow__nums .dash { color: var(--faint); font-weight: 400; }
+.vrow__bar { display: flex; height: 7px; background: var(--paper-3); }
+.vrow__bar .j { background: var(--hall); } .vrow__bar .e { background: var(--red); }
+.vrow__out { font: 700 9.5px var(--head); letter-spacing: .07em; text-transform: uppercase; padding: 3px 8px; align-self: flex-start; background: var(--paper-3); color: var(--muted); }
+.vrow__out.ok { background: var(--hall-soft); color: var(--hall); }
+.vrow__out.no { background: var(--opp-soft); color: #8a531a; }
+.vrow__go { font-size: 16px; color: var(--blue); text-align: right; }
+.vrow:hover .vrow__go { color: var(--blue-ink); }
+/* doc chips in vote rows invert the global .ag-doc emphasis (committee report = blue) */
+.vrow__docs .ag-doc { color: var(--muted); padding: 2px 7px; }
+.vrow__docs .ag-doc.cmt { color: var(--blue); border-color: color-mix(in srgb, var(--blue) 28%, transparent); }
+
+/* ----- subsection pager (Asiakohta) ----- */
+.subnav { display: grid; grid-template-columns: 1fr auto 1fr; gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin-top: 18px; }
+.subnav--foot { margin-top: 30px; }
+.subnav a { background: var(--paper); padding: 12px 16px; text-decoration: none; display: flex; flex-direction: column; gap: 3px; transition: background .12s ease; }
+.subnav a:hover { background: var(--paper-2); }
+.subnav__side { min-width: 0; }
+.subnav__side.next { text-align: right; align-items: flex-end; }
+.subnav__dir { font-family: var(--mono); font-size: var(--fs-mono); color: var(--blue); letter-spacing: .01em; }
+.subnav__side:hover .subnav__dir { color: var(--blue-ink); }
+.subnav__t { font: 600 14px var(--head); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.subnav__mid { align-items: center; justify-content: center; text-align: center; }
+.subnav__pos { font: 800 15px var(--head); color: var(--ink); font-variant-numeric: tabular-nums; }
+.subnav__lbl { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+/* ----- single-vote headline + MP lookup (Äänestys) ----- */
+.vresult { margin-top: 26px; }
+.vresult__q { display: grid; gap: 8px; }
+.vresult__q .prop { display: flex; align-items: baseline; gap: 11px; font-size: 15px; color: var(--body); line-height: 1.4; }
+.vresult__q .prop .k { font: 800 11px var(--head); letter-spacing: .08em; padding: 3px 8px; flex: 0 0 auto; color: #fff; }
+.vresult__q .prop .k.j { background: var(--hall); }
+.vresult__q .prop .k.e { background: var(--red); }
+.mlookup { min-width: 0; display: flex; flex-direction: column; }
+.mlist { margin-top: 12px; border-top: 1px solid var(--rule); max-height: 420px; overflow: auto; }
+.mvote { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 2px; border-bottom: 1px solid var(--rule-soft); }
+.mvote .mn { font-size: 14px; color: var(--ink); }
+.mvote .mn small { color: var(--muted); font-family: var(--mono); font-size: 11px; margin-left: 5px; text-transform: uppercase; }
+.mvote .mb { font: 700 10px var(--head); letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; flex: 0 0 auto; }
+.mvote .mb.j { background: var(--hall-soft); color: var(--hall); }
+.mvote .mb.e { background: var(--opp-soft); color: var(--red); }
+.mvote .mb.tyh { background: var(--opp-soft); color: #8a531a; }
+.mvote .mb.out { background: var(--paper-3); color: var(--muted); }
+
+/* ----- index/row responsive (≤760 rows reflow, ≤560 pager tightens) ----- */
+@media (max-width: 760px) {
+  .prow {
+    grid-template-columns: 44px 1fr auto;
+    grid-template-areas: "sq id seats" "sq coh coh";
+    row-gap: 12px;
+  }
+  .prow__sq { grid-area: sq; align-self: start; }
+  .prow__id { grid-area: id; }
+  .prow__sub { white-space: normal; }
+  .prow__seats { grid-area: seats; text-align: right; }
+  .prow__coh { grid-area: coh; }
+  .prow__go { display: none; }
+
+  .vrow {
+    grid-template-columns: 60px 1fr;
+    grid-template-areas: "rail main" "rail res";
+    row-gap: 12px;
+  }
+  .vrow__rail { grid-area: rail; }
+  .vrow__main { grid-area: main; }
+  .vrow__res { grid-area: res; flex-direction: row; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .vrow__bar { width: 120px; }
+  .vrow__go { display: none; }
+}
+@media (max-width: 560px) {
+  .subnav__t { font-size: 13px; }
+  .subnav a { padding: 10px 12px; }
 }

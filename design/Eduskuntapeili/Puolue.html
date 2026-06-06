@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Perussuomalaiset — Eduskuntapeili</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="peili.css" rel="stylesheet" />
+<link href="timeline.css" rel="stylesheet" />
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="masthead">
+    <div class="masthead__top">
+      <div>
+        <div class="brand__name">Eduskuntapeili</div>
+        <div class="brand__tag">Eduskunnan avoin data, luettavassa muodossa</div>
+      </div>
+      <div class="masthead__meta">
+        <span class="masthead__date">lauantai 30. toukokuuta 2026</span>
+        <div class="period" data-period>
+          <button class="period__btn" aria-expanded="false" aria-haspopup="true">
+            <span class="period__k">Tietojakso</span>
+            <span class="period__v" data-period-v>Vaalikausi 2023–2027</span>
+            <span class="period__badge is-now" data-period-badge>nykyinen</span>
+            <span class="period__caret">▾</span>
+          </button>
+          <div class="period__menu" hidden role="menu">
+            <div class="period__menu-head">Valitse tietojakso</div>
+            <button class="period__opt is-selected" role="menuitemradio" aria-checked="true" data-val="2023"><span class="period__opt-main">Vaalikausi 2023–2027</span><span class="period__opt-sub">Orpon hallitus · nykyinen</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="2019"><span class="period__opt-main">Vaalikausi 2019–2023</span><span class="period__opt-sub">Marinin / Rinteen hallitus</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="all"><span class="period__opt-main">Kaikki vaalikaudet</span><span class="period__opt-sub">koko avoin data</span></button>
+            <div class="period__note">Tietojakso rajaa kaikki sivun luvut ja koosteet. Oletuksena nykyinen kausi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="rule-ink" />
+    <nav class="nav">
+      <a href="Etusivu.html">Etusivu</a>
+      <a href="Kansanedustajat.html">Kansanedustajat</a>
+      <a href="Puolueet.html" class="is-active">Puolueet</a>
+      <a href="Istunnot.html">Istunnot</a>
+      <a href="Äänestykset.html">Äänestykset</a>
+      <a href="#">Asiakirjat</a>
+      <span class="nav__search">Haku ⌕</span>
+    </nav>
+    <hr class="rule" />
+  </header>
+
+  <!-- ============ BREADCRUMB ============ -->
+  <div style="padding-top:16px;font-size:13px;color:var(--muted)">
+    <a href="Puolueet.html" style="color:var(--blue)">Puolueet</a> &nbsp;›&nbsp; <span>Perussuomalaiset</span>
+  </div>
+
+  <!-- ============ PARTY HEAD ============ -->
+  <section class="bio-head">
+    <div class="bio-portrait">
+      <span class="initials" style="font-size:30px">ps</span>
+      <span class="pbar" style="background:#2c3e8c"></span>
+    </div>
+    <div class="bio-head__main">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px">
+        <span class="tag tag--hall">Hallitus</span>
+        <span class="tag"><span style="width:9px;height:9px;border-radius:50%;background:#2c3e8c;display:inline-block"></span>Eduskunnan toiseksi suurin ryhmä</span>
+      </div>
+      <h1 class="bio-name">Perussuomalaiset</h1>
+      <div class="bio-meta">
+        <span>Perussuomalaisten eduskuntaryhmä</span><span class="sep"></span>
+        <span>pj. <b style="color:var(--ink)">Mauri Peltokangas</b></span><span class="sep"></span>
+        <span>45 / 200 paikkaa</span><span class="sep"></span>
+        <span>hallituksessa vuodesta 2023</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KEY STATS ============ -->
+  <div class="bio-stats">
+    <div class="bio-stat">
+      <div class="k">Paikkoja eduskunnassa</div>
+      <div class="v"><span class="cite" data-mark-text="*"
+        data-value="45 / 200 (22,5 %)"
+        data-caption="Voimassa olevat ryhmän jäsenyydet 30.5.2026"
+        data-set="Eduskunnan avoin data · SaliDBJasenyys"
+        data-table="ParliamentaryGroupMembership"
+        data-endpoint="SELECT COUNT(*) WHERE group_name='Perussuomalaiset' AND end_date IS NULL"
+        data-record="45 voimassa olevaa jäsenyyttä"
+        data-jakso="Vaalikausi 2023–2027"
+        data-fetched="30.5.2026 klo 07.16"
+        data-chain="avoindata.eduskunta.fi > ParliamentaryGroupMembership > Puolueprofiili"
+        data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa jäsenyydet">45</span></div>
+    </div>
+    <div class="bio-stat">
+      <div class="k">Ryhmäkuri äänestyksissä</div>
+      <div class="v"><span class="cite" data-mark-text="*"
+        data-value="95 %"
+        data-caption="Osuus äänestyksistä, joissa ryhmä äänesti yhtenäisesti — kuluva kausi"
+        data-set="Eduskunnan avoin data · SaliDBAanestys"
+        data-table="Vote + Voting"
+        data-endpoint="SELECT … GROUP BY voting_id HAVING party='ps' — yhtenäisten osuus"
+        data-record="2 489 / 2 621 äänestyksessä yhtenäinen"
+        data-jakso="Vaalikausi 2023–2027"
+        data-fetched="30.5.2026 klo 07.16"
+        data-chain="avoindata.eduskunta.fi > Vote > Ryhmäkuri"
+        data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa äänestystiedot">95<small>%</small></span></div>
+    </div>
+    <div class="bio-stat">
+      <div class="k">Läsnäolo keskimäärin</div>
+      <div class="v"><span class="cite" data-mark-text="*"
+        data-value="81 %"
+        data-caption="Ryhmän jäsenten keskimääräinen osallistuminen täysistuntoäänestyksiin"
+        data-set="Eduskunnan avoin data · SaliDBAanestys"
+        data-table="Vote"
+        data-endpoint="SELECT AVG(participation) … WHERE party='ps'"
+        data-record="45 edustajan keskiarvo"
+        data-jakso="Vaalikausi 2023–2027"
+        data-fetched="30.5.2026 klo 07.16"
+        data-chain="avoindata.eduskunta.fi > Vote > Puolueprofiili"
+        data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa läsnäolo">81<small>%</small></span></div>
+    </div>
+    <div class="bio-stat">
+      <div class="k">Edustajien ikä ka.</div>
+      <div class="v"><span class="cite" data-mark-text="*"
+        data-value="47 vuotta"
+        data-caption="Ryhmän jäsenten keski-ikä 30.5.2026"
+        data-set="Eduskunnan avoin data · MemberOfParliament"
+        data-table="Representative"
+        data-endpoint="SELECT AVG(age) … WHERE group_name='Perussuomalaiset'"
+        data-record="45 edustajan keski-ikä"
+        data-jakso="Vaalikausi 2023–2027"
+        data-fetched="30.5.2026 klo 07.16"
+        data-chain="avoindata.eduskunta.fi > Representative > Puolueprofiili"
+        data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa edustajat">47<small>v</small></span></div>
+    </div>
+  </div>
+
+  <!-- ============ BODY GRID ============ -->
+  <div class="bio-grid">
+
+    <!-- LEFT -->
+    <div>
+      <!-- AI summary -->
+      <div class="ai">
+        <div class="ai__head"><span class="ai__spark">✦</span><span class="ai__label">Tekoälykooste · millainen ryhmä</span></div>
+        <p class="ai__body">Perussuomalaiset on eduskunnan <b>toiseksi suurin ryhmä</b> ja Orpon hallituksen toinen päähallituspuolue.
+          Ryhmän painopisteitä ovat <b>maahanmuutto, sisäinen turvallisuus, EU-kriittisyys ja autoilun kustannukset</b>.
+          Hallituspuolueena ryhmä äänestää hyvin yhtenäisesti — <b>ryhmäkuri 95 %</b> — mutta poikkeamat keskittyvät
+          muutamaan EU- ja arvokysymykseen, joissa yksittäiset edustajat ovat äänestäneet ryhmän kannasta poiketen.
+          Ryhmällä on kuluvalla kaudella neljä ministerinsalkkua.</p>
+        <div class="ai__foot">
+          <span class="ai__note">Koneellisesti tuotettu · pohjautuu 4 tietueeseen</span>
+          <button class="ai-sources-toggle" data-label="Näytä lähteet (4)"><span class="chev">›</span><span class="lbl">Näytä lähteet (4)</span></button>
+        </div>
+        <div class="ai-sources">
+          <div class="ai-sources__title">Koosteen lähteet — tarkistettavissa</div>
+          <div class="src-row"><span class="src-row__n">1</span><div class="src-row__main"><div class="src-row__title">Ryhmän jäsenet · 45 voimassa olevaa jäsenyyttä</div><div class="src-row__api">GET /api/v1/tables/SaliDBJasenyys?group=Perussuomalaiset</div></div><div class="src-row__meta">30.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+          <div class="src-row"><span class="src-row__n">2</span><div class="src-row__main"><div class="src-row__title">Ryhmäkuri · yhtenäisyys äänestyksissä (kausi)</div><div class="src-row__api">GET /api/v1/tables/SaliDBAanestys?party=ps</div></div><div class="src-row__meta">30.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+          <div class="src-row"><span class="src-row__n">3</span><div class="src-row__main"><div class="src-row__title">Kirjallisten kysymysten aiheet · ryhmän edustajat</div><div class="src-row__api">SELECT subject, COUNT(*) … WHERE party='ps' GROUP BY subject</div></div><div class="src-row__meta">30.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+          <div class="src-row"><span class="src-row__n">4</span><div class="src-row__main"><div class="src-row__title">Ministerinsalkut ja valiokuntapaikat · ryhmä</div><div class="src-row__api">GET /api/v1/tables/SaliDBValiokunta?group=Perussuomalaiset</div></div><div class="src-row__meta">30.5.2026<br /><a href="https://avoindata.eduskunta.fi/" target="_blank" rel="noopener">avaa ↗</a></div></div>
+        </div>
+      </div>
+
+      <!-- COHESION -->
+      <section class="psec">
+        <p class="kicker">Ryhmäkuri · kuluva kausi</p>
+        <div class="psec__h"><h2>Kuinka yhtenäisesti ryhmä äänestää</h2><span class="meta">2 621 äänestystä</span></div>
+        <p class="psec__intro">Perussuomalaiset äänesti yhtenäisesti 2 489 äänestyksessä (95 %). Hajaääniä — yksittäisten edustajien poikkeamia ryhmän enemmistöstä — kertyi 132 äänestyksessä, valtaosin EU- ja arvokysymyksissä.</p>
+        <div class="vote-bar">
+          <span class="v-jaa" style="width:95%">Yhtenäinen 95 %</span>
+          <span class="v-ei" style="width:5%"></span>
+        </div>
+        <div class="vote-legend">
+          <div class="vl"><span class="sw" style="background:var(--hall)"></span><div><span class="vk">Yhtenäinen äänestys</span><span class="vv">2 489</span></div></div>
+          <div class="vl"><span class="sw" style="background:var(--red)"></span><div><span class="vk">Hajaääniä</span><span class="vv">132</span></div></div>
+        </div>
+
+        <div class="dissent">
+          <div class="dissent__lead" style="margin-top:24px"><span class="tag tag--opp" style="border-color:transparent;background:var(--red);color:#fff">Hajaäänet</span> <b>Äänestykset, joissa ryhmä hajosi eniten</b></div>
+          <div class="vote-row">
+            <div class="vote-row__badge tyh">6×</div>
+            <div><div class="vote-row__title">EU:n yhteinen puolustusrahoitusväline (SURE II)</div>
+              <div class="vote-row__sub"><span class="date">14.4.2026</span> · 6 edustajaa äänesti ryhmän kannasta poiketen</div></div>
+            <div class="vote-row__result"><div class="r-line">ryhmä: 33 ei · 6 jaa</div><span class="outcome no">hylätty</span></div>
+          </div>
+          <div class="vote-row">
+            <div class="vote-row__badge tyh">4×</div>
+            <div><div class="vote-row__title">Translain uudistuksen täydennys</div>
+              <div class="vote-row__sub"><span class="date">26.2.2026</span> · 4 edustajaa poikkesi ryhmän enemmistöstä</div></div>
+            <div class="vote-row__result"><div class="r-line">ryhmä: 35 ei · 4 jaa</div><span class="outcome ok">hyväksytty</span></div>
+          </div>
+          <div class="vote-row">
+            <div class="vote-row__badge tyh">3×</div>
+            <div><div class="vote-row__title">Kehitysyhteistyömäärärahojen leikkaus</div>
+              <div class="vote-row__sub"><span class="date">3.12.2025</span> · 3 edustajaa äänesti tyhjää</div></div>
+            <div class="vote-row__result"><div class="r-line">ryhmä: 38 jaa · 3 tyhjää</div><span class="outcome ok">hyväksytty</span></div>
+          </div>
+        </div>
+        <div class="source-note">
+          <span>Lähde:</span>
+          <span class="dset">Eduskunnan avoin data · SaliDBAanestys</span><span>·</span>
+          <span class="fresh">haettu 30.5.2026 07.16</span><span>·</span>
+          <span class="cite verify" data-mark="off"
+            data-value="132 hajaääntä"
+            data-caption="Äänestykset, joissa ryhmä ei ollut yksimielinen"
+            data-set="Eduskunnan avoin data · SaliDBAanestys"
+            data-table="Vote + Voting"
+            data-endpoint="SELECT voting_id … WHERE party='ps' GROUP BY voting_id HAVING COUNT(DISTINCT vote) > 1"
+            data-record="132 äänestystä · ryhmä ps"
+            data-jakso="Vaalikausi 2023–2027"
+            data-fetched="30.5.2026 klo 07.16"
+            data-chain="avoindata.eduskunta.fi > Vote > Ryhmäkuri"
+            data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa äänestykset">varmenna hajaäänet</span>
+        </div>
+      </section>
+
+      <!-- MEMBERS -->
+      <section class="psec">
+        <p class="kicker">Edustajat · ryhmän jäsenet</p>
+        <div class="psec__h"><h2>Keitä ryhmään kuuluu</h2><span class="meta">45 edustajaa</span></div>
+        <p class="psec__intro">Ryhmän puheenjohtaja, ministerit ja eduskunnan puhemies sekä muut edustajat. Avaa edustaja nähdäksesi hänen äänestyksensä ja aloitteensa.</p>
+        <div class="mp-list">
+          <a class="mp-row" href="#">
+            <span class="c-dot"><span style="background:#2c3e8c"></span></span>
+            <span class="mp-name">Mauri Peltokangas <span class="role">Ryhmän pj.</span></span>
+            <span class="mp-party">Perussuomalaiset <small>Hallitus</small></span>
+            <span class="mp-district">Vaasa</span>
+            <span class="mp-age">52</span>
+            <span class="mp-att"><span class="track"><span class="fill" style="width:88%"></span></span><span class="pct">88 %</span></span>
+          </a>
+          <a class="mp-row" href="#">
+            <span class="c-dot"><span style="background:#2c3e8c"></span></span>
+            <span class="mp-name">Jussi Halla-aho <span class="role">Puhemies</span></span>
+            <span class="mp-party">Perussuomalaiset <small>Hallitus</small></span>
+            <span class="mp-district">Helsinki</span>
+            <span class="mp-age">55</span>
+            <span class="mp-att"><span class="track"><span class="fill" style="width:71%"></span></span><span class="pct">71 %</span></span>
+          </a>
+          <a class="mp-row" href="#">
+            <span class="c-dot"><span style="background:#2c3e8c"></span></span>
+            <span class="mp-name">Juho Eerola <span class="role">Ministeri</span></span>
+            <span class="mp-party">Perussuomalaiset <small>Hallitus</small></span>
+            <span class="mp-district">Kaakkois-Suomi</span>
+            <span class="mp-age">51</span>
+            <span class="mp-att"><span class="track"><span class="fill" style="width:82%"></span></span><span class="pct">82 %</span></span>
+          </a>
+          <a class="mp-row" href="Kansanedustaja.html">
+            <span class="c-dot"><span style="background:#2c3e8c"></span></span>
+            <span class="mp-name">Sanna Antikainen</span>
+            <span class="mp-party">Perussuomalaiset <small>Hallitus</small></span>
+            <span class="mp-district">Savo-Karjala</span>
+            <span class="mp-age">38</span>
+            <span class="mp-att"><span class="track"><span class="fill" style="width:76%"></span></span><span class="pct">76 %</span></span>
+          </a>
+          <a class="mp-row" href="#">
+            <span class="c-dot"><span style="background:#2c3e8c"></span></span>
+            <span class="mp-name">Rami Lehtinen</span>
+            <span class="mp-party">Perussuomalaiset <small>Hallitus</small></span>
+            <span class="mp-district">Pirkanmaa</span>
+            <span class="mp-age">44</span>
+            <span class="mp-att"><span class="track"><span class="fill" style="width:90%"></span></span><span class="pct">90 %</span></span>
+          </a>
+          <a class="mp-row" href="#">
+            <span class="c-dot"><span style="background:#2c3e8c"></span></span>
+            <span class="mp-name">Miko Bergbom</span>
+            <span class="mp-party">Perussuomalaiset <small>Hallitus</small></span>
+            <span class="mp-district">Pirkanmaa</span>
+            <span class="mp-age">30</span>
+            <span class="mp-att"><span class="track"><span class="fill" style="width:79%"></span></span><span class="pct">79 %</span></span>
+          </a>
+        </div>
+        <div style="margin-top:16px"><a href="Kansanedustajat.html" class="link-arrow">Näytä kaikki 45 perussuomalaista edustajaa →</a></div>
+        <div class="source-note">
+          <span>Lähde:</span>
+          <span class="dset">Eduskunnan avoin data · MemberOfParliament + SaliDBJasenyys</span><span>·</span>
+          <span class="fresh">haettu 30.5.2026 07.16</span>
+        </div>
+      </section>
+
+      <!-- COMMITTEE LEADERSHIP -->
+      <section class="psec">
+        <p class="kicker">Valiokunnat · ryhmän puheenjohtajuudet</p>
+        <div class="psec__h"><h2>Missä ryhmä johtaa</h2><span class="meta">4 puheenjohtajuutta</span></div>
+        <div class="committee-list">
+          <div class="committee-row"><span class="cname">Hallintovaliokunta</span><span class="crole lead">Puheenjohtaja</span></div>
+          <div class="committee-row"><span class="cname">Tulevaisuusvaliokunta</span><span class="crole lead">Puheenjohtaja</span></div>
+          <div class="committee-row"><span class="cname">Liikenne- ja viestintävaliokunta</span><span class="crole lead">Puheenjohtaja</span></div>
+          <div class="committee-row"><span class="cname">Tarkastusvaliokunta</span><span class="crole lead">Puheenjohtaja</span></div>
+          <div class="committee-row"><span class="cname">Suuri valiokunta</span><span class="crole">Varapuheenjohtaja</span></div>
+        </div>
+        <div class="source-note">
+          <span>Lähde:</span>
+          <span class="dset">Eduskunnan avoin data · SaliDBValiokunta</span><span>·</span>
+          <span class="fresh">haettu 30.5.2026 07.16</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- RIGHT -->
+    <aside>
+      <!-- Facts -->
+      <div class="rail__item" style="padding-top:0">
+        <p class="kicker">Perustiedot</p>
+        <dl style="display:grid;grid-template-columns:auto 1fr;gap:9px 18px;margin:6px 0 0">
+          <dt style="font-size:13px;color:var(--muted)">Ryhmän pj.</dt><dd style="margin:0;font-size:14px;color:var(--ink)">Mauri Peltokangas</dd>
+          <dt style="font-size:13px;color:var(--muted)">Paikkoja</dt><dd style="margin:0;font-size:14px;color:var(--ink)">45 / 200 (22,5 %)</dd>
+          <dt style="font-size:13px;color:var(--muted)">Asema</dt><dd style="margin:0;font-size:14px;color:var(--hall)">Hallitus</dd>
+          <dt style="font-size:13px;color:var(--muted)">Ministereitä</dt><dd style="margin:0;font-size:14px;color:var(--ink)">4 salkkua</dd>
+          <dt style="font-size:13px;color:var(--muted)">Vahvin vaalipiiri</dt><dd style="margin:0;font-size:14px;color:var(--ink)">Pirkanmaa (6)</dd>
+          <dt style="font-size:13px;color:var(--muted)">Puolue perustettu</dt><dd style="margin:0;font-size:14px;color:var(--ink)">1995</dd>
+        </dl>
+        <div class="source-note">
+          <span>Lähde:</span>
+          <span class="dset">ParliamentaryGroup · ps</span><span>·</span>
+          <span class="cite verify" data-mark="off"
+            data-value="Perussuomalaiset"
+            data-caption="Eduskuntaryhmän perustiedot"
+            data-set="Eduskunnan avoin data · ParliamentaryGroup"
+            data-table="ParliamentaryGroup"
+            data-endpoint="GET /api/v1/tables/ParliamentaryGroup?abbr=ps"
+            data-record="group.abbr = ps"
+            data-jakso="Vaalikausi 2023–2027"
+            data-fetched="30.5.2026 klo 07.16"
+            data-chain="avoindata.eduskunta.fi > ParliamentaryGroup > Puolueprofiili"
+            data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa aineisto">jäljite</span>
+        </div>
+      </div>
+
+      <!-- Topics -->
+      <div class="rail__item">
+        <p class="kicker">Teemat · mistä ryhmä puhuu ja kysyy</p>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 14px">Ryhmän edustajien kirjallisten kysymysten ja puheenvuorojen aiheet, painotettuna.</p>
+        <div class="topics">
+          <span class="topic-tag lg">Maahanmuutto <span class="tc">41</span></span>
+          <span class="topic-tag lg">Sisäinen turvallisuus <span class="tc">33</span></span>
+          <span class="topic-tag">EU-politiikka <span class="tc">22</span></span>
+          <span class="topic-tag">Autoilu &amp; polttoaine <span class="tc">18</span></span>
+          <span class="topic-tag">Talous <span class="tc">15</span></span>
+          <span class="topic-tag">Maaseutu <span class="tc">11</span></span>
+        </div>
+        <div class="source-note" style="margin-top:14px">
+          <span>Lähde:</span>
+          <span class="dset">WrittenQuestionSubject · ps</span><span>·</span>
+          <span class="cite verify" data-mark="off"
+            data-value="aiheet"
+            data-caption="Ryhmän kirjallisten kysymysten aihetunnisteet, painotettuna"
+            data-set="Eduskunnan avoin data · VaskiData"
+            data-table="WrittenQuestionSubject"
+            data-endpoint="SELECT subject_text, COUNT(*) … WHERE party='ps' GROUP BY subject_text"
+            data-record="aihetunnisteet aggregoituna · ryhmä ps"
+            data-jakso="Vaalikausi 2023–2027"
+            data-fetched="30.5.2026 klo 07.16"
+            data-chain="avoindata.eduskunta.fi > WrittenQuestionSubject > Puolueprofiili"
+            data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa aiheet">jäljite</span>
+        </div>
+      </div>
+
+      <!-- Recent group speeches -->
+      <div class="rail__item">
+        <p class="kicker">Viimeisimmät ryhmäpuheenvuorot</p>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 6px">Ryhmän viralliset kannanotot salissa.</p>
+        <div class="spoke-row"><div class="st"><a href="Keskustelu.html" style="color:var(--ink)">Selonteko sisäisestä turvallisuudesta</a></div><div class="sd">20.5.2026 · Rami Lehtinen</div></div>
+        <div class="spoke-row"><div class="st"><a href="Asiakohta.html" style="color:var(--ink)">Ammattikorkeakoulu- ja opintotukilaki</a></div><div class="sd">20.5.2026 · Rami Lehtinen</div></div>
+        <div class="spoke-row"><div class="st">Välikysymys talouspolitiikasta</div><div class="sd">13.5.2026 · Mauri Peltokangas</div></div>
+        <div class="spoke-row"><div class="st">Valtion talousarvio 2026</div><div class="sd">18.12.2025 · Mauri Peltokangas</div></div>
+        <div class="source-note" style="margin-top:12px">
+          <span>Lähde:</span>
+          <span class="dset">Speech · speech_type='NR' · ryhmä ps</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="foot">
+    <div class="foot__period">
+      <span class="pk">Tietojakso</span>
+      <span class="pv" data-period-label>Vaalikausi 2023–2027 · Orpon hallitus</span>
+      <span class="pbadge is-now" data-period-badge>nykyinen</span>
+      <span class="pdetail" data-period-detail>20.6.2023 – kesken · 200 paikkaa · hallitus 108 / oppositio 92</span>
+    </div>
+    <div class="foot__legal">
+      <span>Tietolähde: Eduskunnan avoin data · avoindata.eduskunta.fi</span>
+      <span>Tietokanta päivitetty 30.5.2026 klo 07.16</span>
+    </div>
+  </footer>
+
+</div>
+<script defer src="period.js"></script>
+<script defer src="trace.js"></script>
+<script defer src="timeline.js"></script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Puolueet — Eduskuntapeili</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="peili.css" rel="stylesheet" />
+<link href="timeline.css" rel="stylesheet" />
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ MASTHEAD ============ -->
+  <header class="masthead">
+    <div class="masthead__top">
+      <div>
+        <div class="brand__name">Eduskuntapeili</div>
+        <div class="brand__tag">Eduskunnan avoin data, luettavassa muodossa</div>
+      </div>
+      <div class="masthead__meta">
+        <span class="masthead__date">lauantai 30. toukokuuta 2026</span>
+        <div class="period" data-period>
+          <button class="period__btn" aria-expanded="false" aria-haspopup="true">
+            <span class="period__k">Tietojakso</span>
+            <span class="period__v" data-period-v>Vaalikausi 2023–2027</span>
+            <span class="period__badge is-now" data-period-badge>nykyinen</span>
+            <span class="period__caret">▾</span>
+          </button>
+          <div class="period__menu" hidden role="menu">
+            <div class="period__menu-head">Valitse tietojakso</div>
+            <button class="period__opt is-selected" role="menuitemradio" aria-checked="true" data-val="2023"><span class="period__opt-main">Vaalikausi 2023–2027</span><span class="period__opt-sub">Orpon hallitus · nykyinen</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="2019"><span class="period__opt-main">Vaalikausi 2019–2023</span><span class="period__opt-sub">Marinin / Rinteen hallitus</span></button>
+            <button class="period__opt" role="menuitemradio" aria-checked="false" data-val="all"><span class="period__opt-main">Kaikki vaalikaudet</span><span class="period__opt-sub">koko avoin data</span></button>
+            <div class="period__note">Tietojakso rajaa kaikki sivun luvut ja koosteet. Oletuksena nykyinen kausi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <hr class="rule-ink" />
+    <nav class="nav">
+      <a href="Etusivu.html">Etusivu</a>
+      <a href="Kansanedustajat.html">Kansanedustajat</a>
+      <a href="Puolueet.html" class="is-active">Puolueet</a>
+      <a href="Istunnot.html">Istunnot</a>
+      <a href="Äänestykset.html">Äänestykset</a>
+      <a href="#">Asiakirjat</a>
+      <span class="nav__search">Haku ⌕</span>
+    </nav>
+    <hr class="rule" />
+  </header>
+
+  <!-- ============ PAGE HEAD ============ -->
+  <section class="page-head">
+    <p class="kicker">Eduskuntaryhmät</p>
+    <h1>Puolueet ja eduskuntaryhmät</h1>
+    <p class="sub">Kahdeksan puoluetta ja kaksi pienempää ryhmää jakavat eduskunnan 200 paikkaa. Vertaile ryhmien kokoa, ryhmäkuria ja toimintaa — ja avaa ryhmä tarkempaa tarkastelua varten.</p>
+    <p class="tl-asof-note">Kokoonpano tarkasteluhetkellä <b data-tl-asof>28.5.2026</b></p>
+  </section>
+
+  <!-- ============ COMPOSITION STRIP ============ -->
+  <section style="padding-bottom:10px">
+    <div class="bloc-bar">
+      <span class="seg-hall" style="width:24%"></span><span class="seg-hall" style="width:22.5%"></span>
+      <span class="seg-opp" style="width:21.5%"></span><span class="seg-opp" style="width:11.5%"></span>
+      <span class="seg-opp" style="width:6.5%"></span><span class="seg-opp" style="width:5.5%"></span>
+      <span class="seg-hall" style="width:5%"></span><span class="seg-hall" style="width:2.5%"></span>
+      <span class="seg-opp" style="width:0.5%"></span><span class="seg-opp" style="width:0.5%"></span>
+    </div>
+    <div class="bloc-legend">
+      <span class="item"><span class="swatch" style="background:var(--hall)"></span>Hallitus <b>108</b></span>
+      <span class="item"><span class="swatch" style="background:var(--opp)"></span>Oppositio <b>92</b></span>
+      <span class="note">200 paikkaa · 8 puoluetta + 2 ryhmää · enemmistö 101</span>
+    </div>
+  </section>
+
+  <!-- ============ HALLITUS ============ -->
+  <section class="pgroup">
+    <div class="week-head">
+      <span class="week-head__k">Hallituspuolueet</span>
+      <span class="week-head__t">Orpon hallitus</span>
+      <span class="week-head__meta">4 puoluetta · 108 paikkaa · enemmistö 7 yli rajan</span>
+    </div>
+    <div class="prow-list">
+
+      <a class="prow" href="Puolue.html">
+        <span class="prow__sq" style="--p:#1d4f91">kok</span>
+        <span class="prow__id">
+          <span class="prow__name">Kokoomus</span>
+          <span class="prow__sub">Kokoomuksen eduskuntaryhmä · pj. Mari Kaunistola</span>
+        </span>
+        <span class="prow__seats"><b>48</b><small>paikkaa · 24,0 %</small></span>
+        <span class="prow__coh"><span class="prow__coh-k">Ryhmäkuri</span><span class="prow__track"><span class="fill" style="width:99%;background:#1d4f91"></span></span><span class="prow__coh-v">99 %</span></span>
+        <span class="prow__go">→</span>
+      </a>
+
+      <a class="prow" href="Puolue.html">
+        <span class="prow__sq" style="--p:#2c3e8c">ps</span>
+        <span class="prow__id">
+          <span class="prow__name">Perussuomalaiset</span>
+          <span class="prow__sub">Perussuomalaisten eduskuntaryhmä · pj. Mauri Peltokangas</span>
+        </span>
+        <span class="prow__seats"><b>45</b><small>paikkaa · 22,5 %</small></span>
+        <span class="prow__coh"><span class="prow__coh-k">Ryhmäkuri</span><span class="prow__track"><span class="fill" style="width:95%;background:#2c3e8c"></span></span><span class="prow__coh-v">95 %</span></span>
+        <span class="prow__go">→</span>
+      </a>
+
+      <a class="prow" href="Puolue.html">
+        <span class="prow__sq" style="--p:#1278b6">r</span>
+        <span class="prow__id">
+          <span class="prow__name">RKP</span>
+          <span class="prow__sub">Ruotsalainen eduskuntaryhmä · pj. Mikko Ollikainen</span>
+        </span>
+        <span class="prow__seats"><b>10</b><small>paikkaa · 5,0 %</small></span>
+        <span class="prow__coh"><span class="prow__coh-k">Ryhmäkuri</span><span class="prow__track"><span class="fill" style="width:99%;background:#1278b6"></span></span><span class="prow__coh-v">99 %</span></span>
+        <span class="prow__go">→</span>
+      </a>
+
+      <a class="prow" href="Puolue.html">
+        <span class="prow__sq" style="--p:#1a3f86">kd</span>
+        <span class="prow__id">
+          <span class="prow__name">Kristillisdemokraatit</span>
+          <span class="prow__sub">Kristillisdemokraattinen eduskuntaryhmä · pj. Sari Tanus</span>
+        </span>
+        <span class="prow__seats"><b>5</b><small>paikkaa · 2,5 %</small></span>
+        <span class="prow__coh"><span class="prow__coh-k">Ryhmäkuri</span><span class="prow__track"><span class="fill" style="width:99%;background:#1a3f86"></span></span><span class="prow__coh-v">99 %</span></span>
+        <span class="prow__go">→</span>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ============ OPPOSITIO ============ -->
+  <section class="pgroup">
+    <div class="week-head">
+      <span class="week-head__k">Oppositiopuolueet</span>
+      <span class="week-head__t">Oppositio</span>
+      <span class="week-head__meta">4 puoluetta + 2 ryhmää · 92 paikkaa</span>
+    </div>
+    <div class="prow-list">
+
+      <a class="prow" href="Puolue.html">
+        <span class="prow__sq" style="--p:#d3243a">sd</span>
+        <span class="prow__id">
+          <span class="prow__name">SDP</span>
+          <span class="prow__sub">Sosialidemokraattinen eduskuntaryhmä · pj. Juha Viitala</span>
+        </span>
+        <span class="prow__seats"><b>43</b><small>paikkaa · 21,5 %</small></span>
+        <span class="prow__coh"><span class="prow__coh-k">Ryhmäkuri</span><span class="prow__track"><span class="fill" style="width:98%;background:#d3243a"></span></span><span class="prow__coh-v">98 %</span></span>
+        <span class="prow__go">→</span>
+      </a>
+
+      <a class="prow" href="Puolue.html">
+        <span class="prow__sq" style="--p:#0b8a4a">kesk</span>
+        <span class="prow__id">
+          <span class="prow__name">Keskusta</span>
+          <span class="prow__sub">Keskustan eduskuntaryhmä · pj. Hanna Räsänen</span>
+        </span>
+        <span class="prow__seats"><b>23</b><small>paikkaa · 11,5 %</small></span>
+        <span class="prow__coh"><span class="prow__coh-k">Ryhmäkuri</span><span class="prow__track"><span class="fill" style="width:96%;background:#0b8a4a"></span></span><span class="prow__coh-v">96 %</span></span>
+        <span class="prow__go">→</span>
+      </a>
+
+      <a class="prow" href="Puolue.html">
+        <span class="prow__sq" style="--p:#5aa829">vihr</span>
+        <span class="prow__id">
+          <span class="prow__name">Vihreät</span>
+          <span class="prow__sub">Vihreä eduskuntaryhmä · pj. Aaro Niemelä</span>
+        </span>
+        <span class="prow__seats"><b>13</b><small>paikkaa · 6,5 %</small></span>
+        <span class="prow__coh"><span class="prow__coh-k">Ryhmäkuri</span><span class="prow__track"><span class="fill" style="width:97%;background:#5aa829"></span></span><span class="prow__coh-v">97 %</span></span>
+        <span class="prow__go">→</span>
+      </a>
+
+      <a class="prow" href="Puolue.html">
+        <span class="prow__sq" style="--p:#9e1f4b">vas</span>
+        <span class="prow__id">
+          <span class="prow__name">Vasemmistoliitto</span>
+          <span class="prow__sub">Vasemmistoliiton eduskuntaryhmä · pj. Pinja Lohikoski</span>
+        </span>
+        <span class="prow__seats"><b>11</b><small>paikkaa · 5,5 %</small></span>
+        <span class="prow__coh"><span class="prow__coh-k">Ryhmäkuri</span><span class="prow__track"><span class="fill" style="width:96%;background:#9e1f4b"></span></span><span class="prow__coh-v">96 %</span></span>
+        <span class="prow__go">→</span>
+      </a>
+
+      <a class="prow" href="Puolue.html">
+        <span class="prow__sq" style="--p:#e0922f">liik</span>
+        <span class="prow__id">
+          <span class="prow__name">Liike Nyt</span>
+          <span class="prow__sub">Liike Nytin eduskuntaryhmä · 1 edustaja</span>
+        </span>
+        <span class="prow__seats"><b>1</b><small>paikka · 0,5 %</small></span>
+        <span class="prow__coh"><span class="prow__coh-k">Ryhmäkuri</span><span class="prow__track"><span class="fill" style="width:100%;background:#e0922f"></span></span><span class="prow__coh-v">—</span></span>
+        <span class="prow__go">→</span>
+      </a>
+
+      <a class="prow" href="Puolue.html">
+        <span class="prow__sq" style="--p:#8a8178">—</span>
+        <span class="prow__id">
+          <span class="prow__name">Sitoutumaton</span>
+          <span class="prow__sub">Ei eduskuntaryhmää · 1 edustaja</span>
+        </span>
+        <span class="prow__seats"><b>1</b><small>paikka · 0,5 %</small></span>
+        <span class="prow__coh"><span class="prow__coh-k">Ryhmäkuri</span><span class="prow__track"><span class="fill" style="width:100%;background:#8a8178"></span></span><span class="prow__coh-v">—</span></span>
+        <span class="prow__go">→</span>
+      </a>
+
+    </div>
+  </section>
+
+  <div class="source-note">
+    <span>Lähde:</span>
+    <span class="dset">Eduskunnan avoin data · ParliamentaryGroup + jäsenyydet</span><span>·</span>
+    <span class="fresh">haettu 30.5.2026 07.16</span><span>·</span>
+    <span>ryhmäkuri: SaliDBAanestys, koko vaalikausi</span><span>·</span>
+    <span class="cite verify" data-mark="off"
+      data-value="10 eduskuntaryhmää"
+      data-caption="Eduskuntaryhmät ja jäsenmäärät 30.5.2026"
+      data-set="Eduskunnan avoin data · SaliDBJasenyys"
+      data-table="ParliamentaryGroup + ParliamentaryGroupMembership"
+      data-endpoint="SELECT group_name, COUNT(*) FROM ParliamentaryGroupMembership WHERE end_date IS NULL GROUP BY group_name"
+      data-record="10 ryhmää · 200 jäsenyyttä"
+      data-jakso="Vaalikausi 2023–2027"
+      data-fetched="30.5.2026 klo 07.16"
+      data-chain="avoindata.eduskunta.fi > ParliamentaryGroup > Puoluelista"
+      data-url="https://avoindata.eduskunta.fi/" data-orig="Avaa aineisto">varmenna jäljite</span>
+  </div>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="foot">
+    <div class="foot__period">
+      <span class="pk">Tietojakso</span>
+      <span class="pv" data-period-label>Vaalikausi 2023–2027 · Orpon hallitus</span>
+      <span class="pbadge is-now" data-period-badge>nykyinen</span>
+      <span class="pdetail" data-period-detail>20.6.2023 – kesken · 200 paikkaa · hallitus 108 / oppositio 92</span>
+    </div>
+    <div class="foot__legal">
+      <span>Tietolähde: Eduskunnan avoin data · avoindata.eduskunta.fi</span>
+      <span>Tietokanta päivitetty 30.5.2026 klo 07.16</span>
+    </div>
+  </footer>
+
+</div>
+
+<script defer src="period.js"></script>
+<script defer src="trace.js"></script>
+<script defer src="timeline.js"></script>
+</body>
+</html>
