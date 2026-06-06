@@ -92,7 +92,7 @@ export default () => {
           sx={{
             mb: 1.5,
             height: 2,
-            borderRadius: 0,
+            borderRadius: 1,
             backgroundColor: `${colors.primaryLight}20`,
             "& .MuiLinearProgress-bar": {
               backgroundColor: colors.primaryLight,

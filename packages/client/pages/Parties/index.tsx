@@ -617,7 +617,7 @@ const Parties = () => {
               <TableContainer
                 sx={{
                   display: { xs: "none", md: "block" },
-                  borderRadius: 0,
+                  borderRadius: 1,
                   border: `1px solid ${themedColors.dataBorder}`,
                   overflow: "hidden",
                 }}
@@ -799,7 +799,7 @@ const HighlightCard: React.FC<{
               sx={{
                 width: 12,
                 height: 12,
-                borderRadius: 0,
+                borderRadius: 1,
                 bgcolor: partyColor,
                 flexShrink: 0,
               }}
@@ -886,7 +886,7 @@ const DesktopPartyRow: React.FC<{
             sx={{
               width: 10,
               height: 10,
-              borderRadius: 0,
+              borderRadius: 1,
               bgcolor: partyColor,
               flexShrink: 0,
             }}
@@ -971,7 +971,7 @@ const DesktopPartyRow: React.FC<{
           sx={{
             mt: 0.5,
             height: 8,
-            borderRadius: 0,
+            borderRadius: 1,
             overflow: "hidden",
             display: "flex",
             bgcolor: themedColors.backgroundSubtle,
@@ -1035,7 +1035,7 @@ const MobilePartyCard: React.FC<{
                 sx={{
                   width: 10,
                   height: 10,
-                  borderRadius: 0,
+                  borderRadius: 1,
                   bgcolor: partyColor,
                 }}
               />
@@ -1093,7 +1093,7 @@ const MobilePartyCard: React.FC<{
             sx={{
               mt: 0.5,
               height: 8,
-              borderRadius: 0,
+              borderRadius: 1,
               overflow: "hidden",
               display: "flex",
               bgcolor: themedColors.backgroundSubtle,

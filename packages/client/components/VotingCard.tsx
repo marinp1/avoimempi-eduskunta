@@ -239,9 +239,9 @@ const VotingDetailsPanel: React.FC<{
             gap: 1,
             flexWrap: "wrap",
             p: 0.75,
-            borderRadius: 0,
+            borderRadius: 1,
             bgcolor: `${themedColors.primary}05`,
-            border: `1px solid ${themedColors.dataBorder}80`,
+            border: "none",
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
@@ -304,8 +304,8 @@ const VotingDetailsPanel: React.FC<{
         <Box
           sx={{
             p: 0.75,
-            borderRadius: 0,
-            border: `1px solid ${themedColors.dataBorder}60`,
+            borderRadius: 1,
+            border: "none",
             bgcolor: `${themedColors.primary}03`,
           }}
         >
@@ -349,7 +349,7 @@ const VotingDetailsPanel: React.FC<{
                     sx={{
                       width: 7,
                       height: 7,
-                      borderRadius: 0,
+                      borderRadius: 1,
                       flexShrink: 0,
                       bgcolor: rvPassed
                         ? themedColors.success
@@ -468,8 +468,6 @@ const VotingCardComponent: React.FC<{
       className="trace-hover-parent"
       sx={{
         p: 0,
-        overflow: "hidden",
-        background: "#fff",
       }}
     >
       {/* Zone 1 + 2 + 3: header, title, bar */}
@@ -489,9 +487,9 @@ const VotingCardComponent: React.FC<{
             flexWrap: "wrap",
             mb: 0.75,
             p: 0.5,
-            borderRadius: 0,
+            borderRadius: 1,
             backgroundColor: `${themedColors.primary}03`,
-            border: `1px solid ${themedColors.dataBorder}80`,
+            border: "none",
           }}
         >
           {/* Outcome pill — LEFT, prominent */}
@@ -502,7 +500,7 @@ const VotingCardComponent: React.FC<{
               gap: 0.5,
               px: 1,
               py: 0.25,
-              borderRadius: 0,
+              borderRadius: 1,
               bgcolor: passed
                 ? `${themedColors.success}15`
                 : `${themedColors.error}15`,
@@ -664,9 +662,9 @@ const VotingCardComponent: React.FC<{
           sx={{
             mt: 0.75,
             p: 0.75,
-            borderRadius: 0,
+            borderRadius: 1,
             backgroundColor: `${themedColors.primary}03`,
-            border: `1px solid ${themedColors.dataBorder}80`,
+            border: "none",
           }}
         >
           <VoteMarginBar
@@ -698,10 +696,9 @@ const VotingCardComponent: React.FC<{
       {/* Zone 4: actions footer */}
       <Box
         sx={{
-          borderTop: `1px solid ${themedColors.dataBorder}`,
+          mt: 0.5,
           px: { xs: 1.25, sm: 1.5 },
           py: 0.5,
-          bgcolor: `${themedColors.primary}02`,
           display: "flex",
           alignItems: "center",
           gap: 1,
@@ -761,10 +758,13 @@ const VotingCardComponent: React.FC<{
         <Collapse in={expanded} timeout="auto" unmountOnExit>
           <Box
             sx={{
-              borderTop: `1px solid ${themedColors.dataBorder}`,
-              px: { xs: 1.25, sm: 1.5 },
+              mx: { xs: 1.25, sm: 1.5 },
+              mt: 0.5,
+              mb: 1,
               py: 1,
-              bgcolor: `${themedColors.primary}03`,
+              px: 1.25,
+              borderRadius: 1.5,
+              bgcolor: `${themedColors.primary}04`,
             }}
           >
             <VotingDetailsPanel details={details} loading={loading} />
@@ -813,7 +813,7 @@ const VotingSubRowComponent: React.FC<{
           sx={{
             width: 8,
             height: 8,
-            borderRadius: 0,
+            borderRadius: 1,
             bgcolor: passed ? themedColors.success : themedColors.error,
             flexShrink: 0,
           }}
@@ -942,8 +942,8 @@ const VotingSubRowComponent: React.FC<{
             sx={{
               mt: 0.75,
               p: 1,
-              borderRadius: 0,
-              border: `1px solid ${themedColors.dataBorder}60`,
+              borderRadius: 1,
+              border: "none",
               bgcolor: `${themedColors.primary}04`,
             }}
           >
@@ -988,8 +988,6 @@ const VotingGroupCardComponent: React.FC<{
     <DataCard
       sx={{
         p: 0,
-        overflow: "hidden",
-        background: "#fff",
       }}
     >
       <Box
@@ -1008,9 +1006,9 @@ const VotingGroupCardComponent: React.FC<{
             flexWrap: "wrap",
             mb: 0.75,
             p: 0.5,
-            borderRadius: 0,
+            borderRadius: 1,
             backgroundColor: `${themedColors.primary}03`,
-            border: `1px solid ${themedColors.dataBorder}80`,
+            border: "none",
           }}
         >
           {/* Vote count chip — prominent, LEFT */}
@@ -1098,9 +1096,9 @@ const VotingGroupCardComponent: React.FC<{
           spacing={0}
           sx={{
             p: 0.5,
-            borderRadius: 0,
+            borderRadius: 1,
             backgroundColor: `${themedColors.primary}02`,
-            border: `1px solid ${themedColors.dataBorder}70`,
+            border: "none",
           }}
           divider={
             <Box

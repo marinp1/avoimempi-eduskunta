@@ -43,18 +43,33 @@ export const colors = {
   oppositionColor: "#64748B",
   oppositionBackground: "rgba(100, 116, 139, 0.1)",
 
-  // Background colors - flat, no gradients
-  backgroundDefault: "#F8F9FA",
+  // Background colors - warm paper canvas, soft surfaces
+  backgroundDefault: "#FAFAF7",
   backgroundPaper: "#FFFFFF",
-  backgroundSubtle: "#F0F1F3",
+  backgroundSubtle: "rgba(27, 42, 74, 0.035)",
 
   // Text colors - Clear hierarchy
   textPrimary: "#1A1A2E",
   textSecondary: "#5A5A72",
   textTertiary: "#9A9AB0",
 
-  // Data display - stronger borders for visible grid lines
-  dataBorder: "#D0D5DD",
+  // Hairline border - soft, used sparingly (tables, subtle separators).
+  // Hex form so `${dataBorder}80` opacity-suffix idioms keep working.
+  dataBorder: "#E8EAEE",
+
+  // Soft surface tint for grouping without outlines
+  surfaceTint: "rgba(27, 42, 74, 0.035)",
+  surfaceTintStrong: "rgba(27, 42, 74, 0.06)",
+} as const;
+
+/**
+ * Soft shadow tokens for lifted surfaces (drawers, hero, elevated cards)
+ */
+export const shadows = {
+  soft: "0 1px 2px rgba(15, 23, 42, 0.04), 0 2px 12px rgba(15, 23, 42, 0.04)",
+  softHover:
+    "0 2px 4px rgba(15, 23, 42, 0.05), 0 6px 20px rgba(15, 23, 42, 0.06)",
+  drawer: "-12px 0 40px rgba(15, 23, 42, 0.08)",
 } as const;
 
 /**
@@ -81,11 +96,11 @@ export const spacing = {
  * Border radius - zero everywhere for terminal aesthetic
  */
 export const borderRadius = {
-  sm: 0,
-  md: 0,
-  lg: 0,
-  heroInner: 0,
-  heroOuter: 0,
+  sm: 6,
+  md: 8,
+  lg: 12,
+  heroInner: 12,
+  heroOuter: 16,
 } as const;
 
 /**
@@ -114,10 +129,30 @@ export const transitions = {
  */
 export const commonStyles = {
   /**
-   * Data card - clean, flat styling with 1px border
+   * Data card - borderless tinted surface (grouping primitive)
    */
   dataCard: {
-    borderRadius: 0,
+    borderRadius: borderRadius.md,
+    background: colors.surfaceTint,
+    border: "none",
+    boxShadow: "none",
+  } satisfies SxProps<Theme>,
+
+  /**
+   * Elevated data card - soft shadow lift, white surface
+   */
+  dataCardElevated: {
+    borderRadius: borderRadius.md,
+    background: colors.backgroundPaper,
+    border: "none",
+    boxShadow: shadows.soft,
+  } satisfies SxProps<Theme>,
+
+  /**
+   * Outlined data card - retains a hairline, used inside drawers
+   */
+  dataCardOutline: {
+    borderRadius: borderRadius.md,
     background: colors.backgroundPaper,
     border: `1px solid ${colors.dataBorder}`,
     boxShadow: "none",
@@ -262,7 +297,7 @@ export const commonStyles = {
    */
   styledTextField: {
     "& .MuiOutlinedInput-root": {
-      borderRadius: 0,
+      borderRadius: borderRadius.sm,
       background: colors.backgroundPaper,
     },
   } satisfies SxProps<Theme>,
@@ -437,7 +472,7 @@ export const createLightTheme = () => {
       },
     },
     shape: {
-      borderRadius: 0,
+      borderRadius: borderRadius.md,
     },
     components: {
       MuiCard: {
@@ -446,9 +481,10 @@ export const createLightTheme = () => {
         },
         styleOverrides: {
           root: {
-            borderRadius: 0,
-            border: `1px solid ${colors.dataBorder}`,
+            borderRadius: borderRadius.md,
+            border: "none",
             boxShadow: "none",
+            backgroundImage: "none",
           },
         },
       },
@@ -459,7 +495,7 @@ export const createLightTheme = () => {
         styleOverrides: {
           root: {
             backgroundImage: "none",
-            borderRadius: 0,
+            borderRadius: borderRadius.md,
           },
         },
       },
@@ -475,7 +511,7 @@ export const createLightTheme = () => {
           root: {
             textTransform: "none",
             fontWeight: 500,
-            borderRadius: 0,
+            borderRadius: borderRadius.sm,
             padding: "6px 14px",
             boxShadow: "none",
             "&:hover": {
@@ -497,7 +533,7 @@ export const createLightTheme = () => {
         styleOverrides: {
           root: {
             fontWeight: 500,
-            borderRadius: 0,
+            borderRadius: 999,
           },
         },
       },
@@ -521,7 +557,7 @@ export const createLightTheme = () => {
         styleOverrides: {
           root: {
             "& .MuiOutlinedInput-root": {
-              borderRadius: 0,
+              borderRadius: borderRadius.sm,
               "&:hover .MuiOutlinedInput-notchedOutline": {
                 borderColor: colors.primaryLight,
               },

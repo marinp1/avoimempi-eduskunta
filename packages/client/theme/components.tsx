@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import type React from "react";
 import { useScopedTranslation } from "#client/i18n/scoped";
-import { colors, commonStyles, monoFontFamily } from "./index";
+import { borderRadius, colors, commonStyles, monoFontFamily } from "./index";
 import { useThemedColors } from "./ThemeContext";
 
 /**
@@ -99,14 +99,12 @@ export const PageIntro: React.FC<{
       <Box
         sx={{
           position: "relative",
-          overflow: "hidden",
-          borderRadius: 0,
-          border: `1px solid ${tc.dataBorder}`,
-          background: colors.backgroundPaper,
+          borderRadius: `${borderRadius.heroOuter}px`,
+          background: colors.surfaceTint,
           boxShadow: "none",
-          px: { xs: 1.5, md: 2.5 },
-          py: { xs: isImmersiveMobile ? 1.5 : 1.25, md: 2 },
-          mb: showFooterStats ? 1 : 2,
+          px: { xs: 2, md: 3 },
+          py: { xs: isImmersiveMobile ? 2 : 1.75, md: 2.5 },
+          mb: showFooterStats ? 1 : 2.5,
           minHeight: isImmersiveMobile
             ? "calc(100dvh - 48px - 56px - 32px - env(safe-area-inset-bottom, 0px))"
             : "auto",
@@ -276,10 +274,9 @@ export const PageIntro: React.FC<{
                   display: "flex",
                   flexDirection: "column",
                   gap: 1.25,
-                  p: { xs: 1, md: isFeature ? 1.25 : 1 },
-                  borderRadius: 0,
-                  border: `1px solid ${tc.dataBorder}`,
-                  background: colors.backgroundSubtle,
+                  p: { xs: 1.25, md: isFeature ? 1.5 : 1.25 },
+                  borderRadius: `${borderRadius.heroInner}px`,
+                  background: colors.backgroundPaper,
                 }}
               >
                 {supportContent ? <Box>{supportContent}</Box> : null}
@@ -304,9 +301,8 @@ export const PageIntro: React.FC<{
           sx={{
             p: { xs: 1.25, md: 1.5 },
             mb: 3,
-            borderRadius: 0,
-            border: `1px solid ${tc.dataBorder}`,
-            background: colors.backgroundPaper,
+            borderRadius: `${borderRadius.md}px`,
+            background: colors.surfaceTint,
             boxShadow: "none",
           }}
         >
@@ -468,7 +464,6 @@ export const PanelHeader: React.FC<{
     <Box
       sx={{
         p: { xs: 1.5, md: 2 },
-        borderBottom: `1px solid ${tc.dataBorder}`,
         background: colors.backgroundPaper,
         position: sticky ? "sticky" : "relative",
         top: sticky ? 0 : "auto",
@@ -563,8 +558,8 @@ export const FilterBar: React.FC<{
     <Box
       sx={{
         p: { xs: 1.5, md: 2 },
-        background: colors.backgroundSubtle,
-        borderBottom: `1px solid ${tc.dataBorder}`,
+        background: colors.surfaceTint,
+        borderRadius: `${borderRadius.md}px`,
         position: sticky ? "sticky" : "relative",
         top: sticky ? 12 : "auto",
         zIndex: sticky ? 4 : "auto",
@@ -734,7 +729,7 @@ export const InlineMetric: React.FC<{
           <Box
             sx={{
               p: 1,
-              borderRadius: 0,
+              borderRadius: `${borderRadius.sm}px`,
               background: iconContainer === "solid" ? colors.primary : iconBg,
               color: iconContainer === "solid" ? "#fff" : iconColor,
               display: "flex",
@@ -774,9 +769,9 @@ export const ActionLink: React.FC<{
         px: 2,
         py: 1.25,
         gap: 1.5,
-        borderBottom: `1px solid ${tc.dataBorder}`,
+        borderRadius: `${borderRadius.sm}px`,
         "&:hover": {
-          background: `${tc.primary}06`,
+          background: `${tc.primary}0A`,
         },
         ...sx,
       }}
@@ -857,9 +852,9 @@ export const VoteMarginBar: React.FC<{
         display: "flex",
         width: "100%",
         height,
-        borderRadius: 0,
+        borderRadius: 999,
         overflow: "hidden",
-        background: colors.backgroundSubtle,
+        background: colors.surfaceTintStrong,
         ...sx,
       }}
     >
@@ -909,7 +904,7 @@ export const PageSkeleton: React.FC = () => (
         variant="rounded"
         height={h}
         animation="wave"
-        sx={{ mb: 2, borderRadius: 0 }}
+        sx={{ mb: 2, borderRadius: `${borderRadius.md}px` }}
       />
     ))}
   </Box>
@@ -930,11 +925,10 @@ export const EmptyState: React.FC<{
     <Box
       sx={{
         textAlign: "center",
-        py: 4,
+        py: 5,
         px: 2,
-        border: `1px solid ${tc.dataBorder}`,
-        borderRadius: 0,
-        background: tc.backgroundPaper,
+        borderRadius: `${borderRadius.md}px`,
+        background: colors.surfaceTint,
         ...sx,
       }}
     >

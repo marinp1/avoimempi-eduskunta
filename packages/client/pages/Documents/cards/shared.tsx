@@ -140,7 +140,7 @@ export function InlineRelatedSessions({
               sx={{
                 p: 1,
                 borderLeft: `3px solid ${colors.primaryLight}`,
-                borderRadius: 0,
+                borderRadius: 1,
                 backgroundColor: colors.backgroundSubtle,
               }}
             >

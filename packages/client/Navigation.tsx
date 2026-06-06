@@ -251,8 +251,8 @@ export const Navigation: React.FC<{
         sx={{
           borderRadius: 0,
           background: headerBackground,
-          borderBottom: "1px solid rgba(255,255,255,0.15)",
-          boxShadow: "none",
+          borderBottom: "none",
+          boxShadow: "0 1px 0 rgba(15, 23, 42, 0.08)",
           display: { xs: "none", lg: "flex" },
         }}
       >
@@ -337,7 +337,7 @@ export const Navigation: React.FC<{
                 "& .MuiTabs-indicator": {
                   height: 2,
                   background: "white",
-                  borderRadius: 0,
+                  borderRadius: 999,
                   transition: `left ${motion.normal}ms ${motion.easing.emphasized}, width ${motion.normal}ms ${motion.easing.emphasized}`,
                 },
               }}
@@ -363,7 +363,7 @@ export const Navigation: React.FC<{
                 bgcolor: isSecondaryActive
                   ? "rgba(255,255,255,0.14)"
                   : "transparent",
-                borderRadius: 0,
+                borderRadius: 999,
                 transition: `background-color ${motion.fast}ms ${motion.easing.standard}, color ${motion.fast}ms ${motion.easing.standard}`,
                 "&:hover": {
                   color: "white",
@@ -460,7 +460,7 @@ export const Navigation: React.FC<{
                 },
                 ".MuiOutlinedInput-notchedOutline": {
                   borderColor: "rgba(255,255,255,0.25)",
-                  borderRadius: 0,
+                  borderRadius: 1,
                 },
                 "&:hover .MuiOutlinedInput-notchedOutline": {
                   borderColor: "rgba(255,255,255,0.55)",
@@ -493,8 +493,8 @@ export const Navigation: React.FC<{
         sx={{
           borderRadius: 0,
           background: headerBackground,
-          borderBottom: "1px solid rgba(255,255,255,0.15)",
-          boxShadow: "none",
+          borderBottom: "none",
+          boxShadow: "0 1px 0 rgba(15, 23, 42, 0.08)",
           display: { xs: "flex", lg: "none" },
         }}
       >
@@ -565,8 +565,8 @@ export const Navigation: React.FC<{
           bottom: 0,
           borderRadius: 0,
           background: colors.backgroundPaper,
-          borderTop: `1px solid ${colors.dataBorder}`,
-          boxShadow: "none",
+          borderTop: "none",
+          boxShadow: "0 -1px 0 rgba(15, 23, 42, 0.08)",
           display: { xs: "flex", lg: "none" },
         }}
       >

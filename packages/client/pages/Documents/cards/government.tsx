@@ -236,7 +236,7 @@ function GovernmentProposalDrawerContent({
             sx={{
               p: 2,
               backgroundColor: colors.backgroundSubtle,
-              borderRadius: 0,
+              borderRadius: 1,
               borderLeft: `4px solid ${getOutcomeColor(detail.decision_outcome_code)}`,
             }}
           >
@@ -321,7 +321,7 @@ function GovernmentProposalDrawerContent({
               sx={{
                 p: 2,
                 backgroundColor: colors.backgroundSubtle,
-                borderRadius: 0,
+                borderRadius: 1,
                 borderLeft: `3px solid ${colors.primaryLight}`,
               }}
             >
@@ -351,7 +351,7 @@ function GovernmentProposalDrawerContent({
               sx={{
                 p: 2,
                 backgroundColor: colors.backgroundSubtle,
-                borderRadius: 0,
+                borderRadius: 1,
                 borderLeft: `3px solid ${colors.primaryLight}`,
               }}
             >

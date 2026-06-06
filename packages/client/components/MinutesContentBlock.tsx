@@ -42,7 +42,7 @@ export const MinutesContentBlock = ({
           mt: 1.5,
           px: { xs: 1.75, sm: 2 },
           py: 1.5,
-          borderRadius: 0,
+          borderRadius: 1,
           border: `1px solid ${colors.dataBorder}`,
           background: colors.backgroundPaper,
           position: "relative",

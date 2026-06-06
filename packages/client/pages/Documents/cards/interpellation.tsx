@@ -220,7 +220,7 @@ function InterpellationDrawerContent({
               sx={{
                 p: 2,
                 backgroundColor: colors.backgroundSubtle,
-                borderRadius: 0,
+                borderRadius: 1,
                 borderLeft: `4px solid ${colors.primary}`,
               }}
             >
@@ -254,7 +254,7 @@ function InterpellationDrawerContent({
               sx={{
                 p: 2,
                 backgroundColor: colors.backgroundSubtle,
-                borderRadius: 0,
+                borderRadius: 1,
                 borderLeft: `4px solid ${getOutcomeColor(
                   detail.decision_outcome_code,
                 )}`,

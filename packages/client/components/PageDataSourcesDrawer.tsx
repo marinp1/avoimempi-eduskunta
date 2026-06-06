@@ -449,7 +449,7 @@ const TraceOverlayContent = ({
           onChange={(_, nextTab: TraceExplorerTab) => setActiveTab(nextTab)}
           variant="fullWidth"
           sx={{
-            borderRadius: 0,
+            borderRadius: 1,
             p: 0.5,
             bgcolor: themedColors.backgroundSubtle,
             border: `1px solid ${themedColors.dataBorder}`,
@@ -458,7 +458,7 @@ const TraceOverlayContent = ({
             },
             "& .MuiTab-root": {
               minHeight: 44,
-              borderRadius: 0,
+              borderRadius: 1,
               textTransform: "none",
               fontWeight: 600,
               color: themedColors.textSecondary,
@@ -533,7 +533,7 @@ const TraceItemBrowser = ({
     <Box
       sx={{
         border: `1px solid ${themedColors.dataBorder}`,
-        borderRadius: 0,
+        borderRadius: 1,
         bgcolor: themedColors.backgroundPaper,
         overflow: "hidden",
       }}
@@ -607,7 +607,7 @@ const TraceItemBrowser = ({
                         gap: 1,
                         px: 1.25,
                         py: 1,
-                        borderRadius: 0,
+                        borderRadius: 1,
                         border: `1px solid ${
                           selected
                             ? `${themedColors.primary}55`
@@ -695,7 +695,7 @@ const TraceFlowCanvas = ({
     <Box
       sx={{
         border: `1px solid ${themedColors.dataBorder}`,
-        borderRadius: 0,
+        borderRadius: 1,
         bgcolor: themedColors.backgroundPaper,
         p: { xs: 2, md: 2.5 },
       }}
@@ -873,7 +873,7 @@ const TraceFlowStep = ({
     sx={{
       minWidth: 0,
       flex: 1,
-      borderRadius: 0,
+      borderRadius: 1,
       border: `1px solid ${themedColors.dataBorder}`,
       bgcolor: themedColors.backgroundSubtle,
       p: 2,
@@ -886,7 +886,7 @@ const TraceFlowStep = ({
           height: 34,
           display: "grid",
           placeItems: "center",
-          borderRadius: 0,
+          borderRadius: 1,
           bgcolor: `${themedColors.primary}12`,
           color: themedColors.primary,
           flexShrink: 0,
@@ -930,7 +930,7 @@ const TraceFlowConnector = ({
       sx={{
         width: { xs: 2, xl: 26 },
         height: { xs: 20, xl: 2 },
-        borderRadius: 0,
+        borderRadius: 1,
         bgcolor: `${themedColors.primary}33`,
       }}
     />
@@ -1007,7 +1007,7 @@ const TracePageSourcesTab = ({
                 key={sourceDefinition.tableName}
                 sx={{
                   border: `1px solid ${themedColors.dataBorder}`,
-                  borderRadius: 0,
+                  borderRadius: 1,
                   p: 2,
                   bgcolor: themedColors.backgroundPaper,
                 }}

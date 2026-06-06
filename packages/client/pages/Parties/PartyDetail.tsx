@@ -454,7 +454,7 @@ const VotingTab: React.FC = () => {
                   sx={{
                     mt: 0.5,
                     p: 1,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     border: `1px solid ${themedColors.dataBorder}60`,
                     backgroundColor: `${colors.primaryLight}04`,
                   }}
@@ -627,7 +627,7 @@ const DisciplineTab: React.FC<{ partyCode: string; partyName: string }> = ({
           textAlign: "center",
           p: 3,
           mb: 3,
-          borderRadius: 0,
+          borderRadius: 1,
           border: `1px solid ${themedColors.dataBorder}`,
         }}
       >
@@ -709,7 +709,7 @@ const ProfileMetric: React.FC<{
     <Box
       sx={{
         p: 1.5,
-        borderRadius: 0,
+        borderRadius: 1,
         border: `1px solid ${themedColors.dataBorder}`,
         background: themedColors.backgroundPaper,
       }}

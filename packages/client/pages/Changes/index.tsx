@@ -338,7 +338,7 @@ function Changes(): ReactNode {
                                           fontFamily: "monospace",
                                           fontSize: "0.7rem",
                                           lineHeight: 1.6,
-                                          borderRadius: 0,
+                                          borderRadius: 1,
                                           overflow: "auto",
                                           maxHeight: 320,
                                           bgcolor: "action.hover",

@@ -334,7 +334,7 @@ export default () => {
         sx={{
           mt: 0.75,
           p: 1,
-          borderRadius: 0,
+          borderRadius: 1,
           border: `1px solid ${colors.primaryLight}25`,
           background: `${colors.primaryLight}08`,
         }}
@@ -517,7 +517,7 @@ export default () => {
         sx={{
           mt: 0.75,
           p: 1,
-          borderRadius: 0,
+          borderRadius: 1,
           border: `1px solid ${colors.primaryLight}25`,
           background: `${colors.primaryLight}08`,
         }}
@@ -650,7 +650,7 @@ export default () => {
         sx={{
           mt: 1,
           p: 1,
-          borderRadius: 0,
+          borderRadius: 1,
           border: `1px solid ${colors.primaryLight}25`,
           background: `${colors.primaryLight}08`,
         }}
@@ -780,7 +780,7 @@ export default () => {
               key={notice.id}
               sx={{
                 p: 1,
-                borderRadius: 0,
+                borderRadius: 1,
                 border: `1px solid ${colors.warning}30`,
                 background: `${colors.warning}08`,
               }}
@@ -872,7 +872,7 @@ export default () => {
               key={notice.id}
               sx={{
                 p: 1,
-                borderRadius: 0,
+                borderRadius: 1,
                 border: `1px solid ${colors.warning}30`,
                 background: `${colors.warning}08`,
               }}
@@ -1059,7 +1059,7 @@ export default () => {
                 key={item.id}
                 sx={{
                   p: 1,
-                  borderRadius: 0,
+                  borderRadius: 1,
                   border: `1px solid ${colors.dataBorder}`,
                   background: colors.backgroundSubtle,
                 }}
@@ -1220,7 +1220,7 @@ export default () => {
                 key={attachment.id}
                 sx={{
                   p: 1,
-                  borderRadius: 0,
+                  borderRadius: 1,
                   border: `1px solid ${colors.dataBorder}`,
                   background: colors.backgroundSubtle,
                 }}
@@ -1480,7 +1480,7 @@ export default () => {
         sx={{
           mt: 1,
           p: 1,
-          borderRadius: 0,
+          borderRadius: 1,
           border: `1px solid ${colors.primaryLight}25`,
           background: `${colors.primaryLight}08`,
         }}
@@ -1647,7 +1647,7 @@ export default () => {
           sx={{
             mt: 1,
             p: 1,
-            borderRadius: 0,
+            borderRadius: 1,
             background: colors.backgroundDefault,
             border: `1px solid ${colors.dataBorder}`,
           }}
@@ -2084,7 +2084,7 @@ export default () => {
                   key={speech.id}
                   sx={{
                     p: 1,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     background: colors.backgroundSubtle,
                   }}
                 >
@@ -2152,7 +2152,7 @@ export default () => {
                     <Box
                       sx={{
                         p: 1,
-                        borderRadius: 0,
+                        borderRadius: 1,
                         borderLeft: `3px solid ${colors.primaryLight}`,
                         background: colors.backgroundDefault,
                       }}
@@ -2406,7 +2406,7 @@ export default () => {
               onClick={() => setShowCalendar((v) => !v)}
               sx={{
                 border: `1px solid ${showCalendar ? colors.primary : colors.dataBorder}`,
-                borderRadius: 0,
+                borderRadius: 1,
                 color: showCalendar ? "#fff" : colors.textSecondary,
                 background: showCalendar ? colors.primary : "transparent",
                 "&:hover": {

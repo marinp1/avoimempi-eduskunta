@@ -45,7 +45,6 @@ export const StickyRail: React.FC<StickyRailProps> = ({
         flexShrink: 0,
         py: { xs: 1, lg: 2 },
         px: { xs: 1.5, lg: 1.5 },
-        borderRight: { lg: `1px solid ${themed.dataBorder}` },
       }}
     >
       <Box sx={{ display: { xs: "none", lg: "block" } }}>
@@ -99,23 +98,21 @@ export const StickyRail: React.FC<StickyRailProps> = ({
               sx={{
                 display: "block",
                 flexShrink: 0,
-                px: { xs: 1, lg: 1 },
+                px: { xs: 1.25, lg: 1.25 },
                 py: { xs: 0.5, lg: 0.5 },
+                mb: { lg: 0.25 },
                 fontSize: "0.75rem",
                 fontWeight: isActive ? 700 : 500,
                 color: isActive ? themed.textPrimary : themed.textSecondary,
-                borderLeft: {
-                  lg: `2px solid ${isActive ? themed.accent : "transparent"}`,
-                },
-                borderBottom: {
-                  xs: `2px solid ${isActive ? themed.accent : "transparent"}`,
-                  lg: "none",
-                },
+                background: isActive ? "rgba(27, 42, 74, 0.06)" : "transparent",
+                borderRadius: 999,
                 whiteSpace: "nowrap",
                 textDecoration: "none",
+                transition: "background-color 150ms ease",
                 "&:hover": {
                   color: themed.textPrimary,
                   textDecoration: "none",
+                  background: "rgba(27, 42, 74, 0.04)",
                 },
               }}
             >

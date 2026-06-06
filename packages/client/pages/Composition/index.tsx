@@ -200,7 +200,7 @@ const TimelineSelector: React.FC<{
           sx={{
             display: "flex",
             height: 28,
-            borderRadius: 0,
+            borderRadius: 1,
             overflow: "hidden",
             border: `1px solid ${tc.dataBorder}`,
             background: tc.backgroundPaper,
@@ -358,7 +358,7 @@ const BrowserToggleButton: React.FC<{
       border: `1px solid ${active ? colors.primary : colors.dataBorder}`,
       bgcolor: active ? `${colors.primary}10` : "transparent",
       color: active ? colors.primary : colors.textSecondary,
-      borderRadius: 0,
+      borderRadius: 1,
     }}
   >
     {icon}
@@ -1015,7 +1015,7 @@ export default () => {
                 key={result.person_id}
                 onClick={() => handleLookupResultClick(result)}
                 sx={{
-                  borderRadius: 0,
+                  borderRadius: 1,
                   border: `1px solid ${
                     selectedRepresentative?.personId === result.person_id
                       ? themedColors.primary
@@ -1169,7 +1169,7 @@ export default () => {
                   display: "flex",
                   height: 18,
                   overflow: "hidden",
-                  borderRadius: 0,
+                  borderRadius: 1,
                   border: `1px solid ${themedColors.dataBorder}`,
                   background: themedColors.backgroundSubtle,
                 }}
@@ -1218,7 +1218,7 @@ export default () => {
                 <Box
                   sx={{
                     p: 0.75,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     background: themedColors.backgroundSubtle,
                     border: `1px solid ${themedColors.dataBorder}`,
                   }}
@@ -1239,7 +1239,7 @@ export default () => {
                 <Box
                   sx={{
                     p: 0.75,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     background: themedColors.backgroundSubtle,
                     border: `1px solid ${themedColors.dataBorder}`,
                   }}
@@ -1260,7 +1260,7 @@ export default () => {
                 <Box
                   sx={{
                     p: 0.75,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     background: themedColors.backgroundSubtle,
                     border: `1px solid ${themedColors.dataBorder}`,
                   }}
@@ -1281,7 +1281,7 @@ export default () => {
                 <Box
                   sx={{
                     p: 0.75,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     background: themedColors.backgroundSubtle,
                     border: `1px solid ${themedColors.dataBorder}`,
                   }}
@@ -1326,7 +1326,7 @@ export default () => {
                       )
                     }
                     sx={{
-                      borderRadius: 0,
+                      borderRadius: 1,
                       border: `1px solid ${
                         partyFilter === party.partyName
                           ? themedColors.primary
@@ -1373,10 +1373,10 @@ export default () => {
                       sx={{
                         mt: 0.75,
                         height: 6,
-                        borderRadius: 0,
+                        borderRadius: 1,
                         bgcolor: themedColors.backgroundSubtle,
                         "& .MuiLinearProgress-bar": {
-                          borderRadius: 0,
+                          borderRadius: 1,
                           bgcolor: getStatusColor(
                             party.government,
                             party.opposition,
@@ -1564,7 +1564,7 @@ export default () => {
                         key={member.person_id}
                         onClick={() => handleMemberClick(member)}
                         sx={{
-                          borderRadius: 0,
+                          borderRadius: 1,
                           border: `1px solid ${
                             isSelected
                               ? themedColors.primary
@@ -1666,7 +1666,7 @@ export default () => {
                   elevation={0}
                   sx={{
                     border: `1px solid ${themedColors.dataBorder}`,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     overflow: "hidden",
                   }}
                 >

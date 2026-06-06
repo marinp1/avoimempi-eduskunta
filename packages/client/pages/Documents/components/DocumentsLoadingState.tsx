@@ -7,7 +7,7 @@ export const DocumentsLoadingState: React.FC = () => (
       <Box
         key={index}
         sx={{
-          borderRadius: 0,
+          borderRadius: 1,
           overflow: "hidden",
         }}
       >

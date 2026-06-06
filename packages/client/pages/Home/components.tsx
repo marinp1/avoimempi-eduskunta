@@ -120,10 +120,11 @@ const HomeHeroComponent = ({
         overflow: "hidden",
         color: "#fff",
         background: colors.primary,
-        boxShadow: "none",
-        border: `1px solid ${colors.primaryDark}`,
-        mb: { xs: 0, md: spacing.sm },
-        borderRadius: 0,
+        boxShadow:
+          "0 1px 2px rgba(15,23,42,0.06), 0 8px 32px rgba(15,23,42,0.10)",
+        border: "none",
+        mb: { xs: 0, md: spacing.md },
+        borderRadius: 2,
       }}
     >
       <Grid
@@ -167,7 +168,7 @@ const HomeHeroComponent = ({
             <Box
               sx={{
                 p: { xs: 1.5, md: 1.75 },
-                borderRadius: 0,
+                borderRadius: 1.5,
                 border: "1px solid rgba(255,255,255,0.15)",
                 background: "rgba(255,255,255,0.08)",
               }}
@@ -338,7 +339,7 @@ const HomeHeroComponent = ({
             <Box
               sx={{
                 p: 1.5,
-                borderRadius: 0,
+                borderRadius: 1.5,
                 border: "1px solid rgba(255,255,255,0.15)",
                 background: "rgba(255,255,255,0.08)",
               }}
@@ -380,7 +381,7 @@ const HomeHeroComponent = ({
               <Box
                 sx={{
                   height: 14,
-                  borderRadius: 0,
+                  borderRadius: 1.5,
                   overflow: "hidden",
                   display: "flex",
                   background: "rgba(255,255,255,0.08)",
@@ -478,7 +479,7 @@ const HomeHeroComponent = ({
             flexWrap: "wrap",
             px: 1.25,
             py: 1,
-            borderRadius: 0,
+            borderRadius: 1.5,
             background: "rgba(255,255,255,0.06)",
             border: "1px solid rgba(255,255,255,0.15)",
           }}
@@ -547,7 +548,7 @@ const HeroSummaryStat = ({
       position: "relative",
       overflow: "hidden",
       p: 1.35,
-      borderRadius: 0,
+      borderRadius: 1.5,
       background: "rgba(255,255,255,0.08)",
       border: "1px solid rgba(255,255,255,0.15)",
       minHeight: 72,
@@ -557,7 +558,7 @@ const HeroSummaryStat = ({
       sx={{
         width: 32,
         height: 32,
-        borderRadius: 0,
+        borderRadius: 1.5,
         background: `${tone}22`,
         color: tone,
         display: "flex",
@@ -611,7 +612,7 @@ const HeroSignalCard = ({
   <Box
     sx={{
       p: 1.35,
-      borderRadius: 0,
+      borderRadius: 1.5,
       border: "1px solid rgba(255,255,255,0.15)",
       background: "rgba(255,255,255,0.08)",
     }}
@@ -628,7 +629,7 @@ const HeroSignalCard = ({
         sx={{
           width: 34,
           height: 34,
-          borderRadius: 0,
+          borderRadius: 1.5,
           background: "rgba(255,255,255,0.1)",
           color: "#fff",
           display: "flex",
@@ -748,7 +749,7 @@ export const CompositionPanel = ({
                 gap: 1,
                 alignItems: "center",
                 p: 1,
-                borderRadius: 0,
+                borderRadius: 1.5,
                 border: `1px solid ${colors.dataBorder}`,
                 background: colors.backgroundSubtle,
               }}
@@ -844,7 +845,11 @@ export const ProceedingsShell = ({
   children: React.ReactNode;
 }) => (
   <Box
-    sx={{ overflow: "hidden", borderBottom: `1px solid ${colors.dataBorder}` }}
+    sx={{
+      borderRadius: 2,
+      background: colors.surfaceTint,
+      overflow: "hidden",
+    }}
   >
     <PanelHeader
       eyebrow={tHome("proceedingsEyebrow")}
@@ -1151,7 +1156,7 @@ const RowShell = ({
   <Box
     sx={{
       p: 1.25,
-      borderRadius: 0,
+      borderRadius: 1.5,
       border: `1px solid ${colors.dataBorder}`,
       background: colors.backgroundSubtle,
     }}
@@ -1161,7 +1166,7 @@ const RowShell = ({
         sx={{
           width: 32,
           height: 32,
-          borderRadius: 0,
+          borderRadius: 1.5,
           background: `${colors.primaryLight}12`,
           color: colors.primaryLight,
           display: "flex",

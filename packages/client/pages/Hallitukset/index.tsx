@@ -307,7 +307,7 @@ const TimelineSelector: React.FC<{
         sx={{
           display: "flex",
           height: 30,
-          borderRadius: 0,
+          borderRadius: 1,
           overflow: "hidden",
           border: `1px solid ${tc.dataBorder}`,
         }}
@@ -710,7 +710,7 @@ const GovernmentMinistersSection: React.FC<{
                   }
                   sx={{
                     cursor: member.person_id ? "pointer" : "default",
-                    borderRadius: 0,
+                    borderRadius: 1,
                   }}
                 >
                   <DataCard
@@ -822,7 +822,7 @@ const GovernmentMinistersSection: React.FC<{
                   }
                   sx={{
                     p: 1.5,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     border: `1px solid ${tc.dataBorder}`,
                     bgcolor: tc.backgroundPaper,
                     cursor: member.person_id ? "pointer" : "default",
@@ -916,7 +916,7 @@ const GovernmentMinistersSection: React.FC<{
                   }
                   sx={{
                     p: 1.5,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     border: `1px solid ${tc.dataBorder}`,
                     bgcolor: tc.backgroundSubtle,
                     cursor: member.person_id ? "pointer" : "default",
@@ -1024,7 +1024,7 @@ const GovernmentArchiveItem: React.FC<{
     <Paper
       elevation={0}
       sx={{
-        borderRadius: 0,
+        borderRadius: 1,
         overflow: "hidden",
         border: `1px solid ${isActive ? tc.primary : tc.dataBorder}`,
         boxShadow: isActive ? `0 10px 22px ${tc.primary}18` : "none",

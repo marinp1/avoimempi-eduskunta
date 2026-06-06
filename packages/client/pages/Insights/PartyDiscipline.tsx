@@ -204,7 +204,7 @@ export default function PartyDiscipline({ onClose }: PartyDisciplineProps) {
                           sx={{
                             width: 12,
                             height: 12,
-                            borderRadius: 0,
+                            borderRadius: 1,
                             bgcolor:
                               PARTY_COLORS[d.party_code] || colors.neutral,
                             flexShrink: 0,

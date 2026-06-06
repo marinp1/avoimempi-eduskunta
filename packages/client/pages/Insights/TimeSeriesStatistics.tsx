@@ -111,7 +111,7 @@ export default function TimeSeriesStatistics({
           sx={{
             backgroundColor: themedColors.backgroundPaper,
             padding: spacing.sm,
-            borderRadius: 0,
+            borderRadius: 1,
             border: `1px solid ${themedColors.dataBorder}`,
             boxShadow: "none",
           }}
@@ -174,7 +174,7 @@ export default function TimeSeriesStatistics({
           mb: spacing.lg,
           p: spacing.md,
           border: `1px solid ${colors.dataBorder}`,
-          borderRadius: 0,
+          borderRadius: 1,
         }}
       />
 
@@ -322,7 +322,7 @@ export default function TimeSeriesStatistics({
                 <Box
                   sx={{
                     p: spacing.md,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     background: "rgba(233, 30, 99, 0.1)",
                   }}
                 >
@@ -338,7 +338,7 @@ export default function TimeSeriesStatistics({
                 <Box
                   sx={{
                     p: spacing.md,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     background: "rgba(33, 150, 243, 0.1)",
                   }}
                 >
@@ -353,7 +353,7 @@ export default function TimeSeriesStatistics({
                 <Box
                   sx={{
                     p: spacing.md,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     background: "rgba(76, 175, 80, 0.1)",
                   }}
                 >
@@ -520,7 +520,7 @@ export default function TimeSeriesStatistics({
                 <Box
                   sx={{
                     p: spacing.md,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     background: "rgba(102, 126, 234, 0.1)",
                   }}
                 >
@@ -534,7 +534,7 @@ export default function TimeSeriesStatistics({
                 <Box
                   sx={{
                     p: spacing.md,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     background: "rgba(76, 175, 80, 0.1)",
                   }}
                 >
@@ -548,7 +548,7 @@ export default function TimeSeriesStatistics({
                 <Box
                   sx={{
                     p: spacing.md,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     background: "rgba(244, 67, 54, 0.1)",
                   }}
                 >
@@ -562,7 +562,7 @@ export default function TimeSeriesStatistics({
                 <Box
                   sx={{
                     p: spacing.md,
-                    borderRadius: 0,
+                    borderRadius: 1,
                     background: "rgba(156, 39, 176, 0.1)",
                   }}
                 >

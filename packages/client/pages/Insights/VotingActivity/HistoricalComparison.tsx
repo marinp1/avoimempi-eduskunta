@@ -324,7 +324,7 @@ export function HistoricalComparison({
               mt: spacing.sm,
               p: spacing.sm,
               backgroundColor: `${themedColors.info}1A`,
-              borderRadius: 0,
+              borderRadius: 1,
             }}
           >
             <Typography variant="body2" color={colors.info}>

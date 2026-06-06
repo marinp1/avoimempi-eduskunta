@@ -286,7 +286,7 @@ const SpeechCard = ({ speech }: { speech: Speech }) => {
   const timeRange = formatSpeechTimeRange(speech);
 
   return (
-    <Box sx={{ p: 1.5, borderRadius: 0, background: colors.backgroundSubtle }}>
+    <Box sx={{ p: 1.5, borderRadius: 1, background: colors.backgroundSubtle }}>
       <Box
         sx={{
           display: "flex",
@@ -335,7 +335,7 @@ const SpeechCard = ({ speech }: { speech: Speech }) => {
         <Box
           sx={{
             p: 1.5,
-            borderRadius: 0,
+            borderRadius: 1,
             borderLeft: `3px solid ${colors.primaryLight}`,
             background: colors.backgroundPaper,
           }}
@@ -393,7 +393,7 @@ const renderSectionVotings = (
             key={voting.id}
             sx={{
               p: 1.25,
-              borderRadius: 0,
+              borderRadius: 1,
               border: `1px solid ${isPassed ? `${themedColors.success}40` : `${themedColors.error}40`}`,
               background: isPassed
                 ? `${themedColors.success}08`
@@ -464,7 +464,7 @@ const renderSectionVotings = (
                 sx={{
                   mt: 0.75,
                   p: 1,
-                  borderRadius: 0,
+                  borderRadius: 1,
                   border: `1px solid ${colors.dataBorder}`,
                   background: `${colors.primaryLight}04`,
                 }}
@@ -869,7 +869,7 @@ const renderSectionNotices = (
             key={notice.id}
             sx={{
               p: 1.1,
-              borderRadius: 0,
+              borderRadius: 1,
               border: `1px solid ${colors.warning}30`,
               background: `${colors.warning}08`,
             }}
@@ -1053,7 +1053,7 @@ const SectionInfoTitle = ({ children }: { children: React.ReactNode }) => (
 const infoBoxSx = {
   mt: 1.5,
   p: 1.25,
-  borderRadius: 0,
+  borderRadius: 1,
   border: `1px solid ${colors.primaryLight}20`,
   background: `${colors.primaryLight}08`,
 };

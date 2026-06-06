@@ -163,7 +163,7 @@ function MonthTile({ data, statusLabel, reasonLabel }: MonthTileProps) {
                   gridColumn: cell.dayOfWeek + 1,
                   width: CELL_SIZE,
                   height: CELL_SIZE,
-                  borderRadius: 0,
+                  borderRadius: 1,
                   backgroundColor: STATUS_COLORS[cell.status],
                   border: "1px solid",
                   borderColor: STATUS_BORDER_COLORS[cell.status],
@@ -316,7 +316,7 @@ export default function AttendanceHeatmap({ data }: AttendanceHeatmapProps) {
                 sx={{
                   width: CELL_SIZE,
                   height: CELL_SIZE,
-                  borderRadius: 0,
+                  borderRadius: 1,
                   backgroundColor: STATUS_COLORS[status],
                   border: "1px solid",
                   borderColor: STATUS_BORDER_COLORS[status],

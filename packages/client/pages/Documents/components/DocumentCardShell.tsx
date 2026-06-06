@@ -50,16 +50,13 @@ const DocumentCardShellComponent: React.FC<{
 }) => (
   <DataCard
     sx={{
-      overflow: "hidden",
-      background: "#fff",
       contentVisibility: "auto",
       containIntrinsicSize: "420px",
     }}
   >
     <Box
       sx={{
-        p: { xs: 1.5, md: 2 },
-        background: `${colors.primary}03`,
+        p: { xs: 1.75, md: 2.25 },
       }}
     >
       <Stack spacing={1}>
@@ -173,8 +170,8 @@ const DocumentCardShellComponent: React.FC<{
       <Collapse in={expanded} timeout="auto" unmountOnExit>
         <Box
           sx={{
-            borderTop: `1px solid ${colors.dataBorder}`,
-            backgroundColor: colors.backgroundPaper,
+            mt: 0.5,
+            borderRadius: 1.5,
             p: { xs: 1.5, md: 2 },
           }}
         >

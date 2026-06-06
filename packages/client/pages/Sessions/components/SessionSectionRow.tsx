@@ -39,9 +39,10 @@ export const SessionSectionRow = ({
     sx={[
       {
         px: 1.5,
-        py: 1,
+        py: 1.25,
+        mb: 0.5,
+        borderRadius: 1,
         cursor: "pointer",
-        borderBottom: `1px solid ${colors.dataBorder}`,
         background: isActive
           ? `${colors.primaryLight}14`
           : isFocused
