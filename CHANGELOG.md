@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.1.0-alpha.5] — 2026-04-11
+
+### Features
+- add speech conversation drawer (c8dc112)
+
+### Other
+- refactor(client): redesign documents and hallitukset pages (5a230c3)
+- style(client): polish layout consistency across pages (e1f97df)
+- perf(client): lazy-load representative sections (6d76e8e)
+- refactor(client): streamline data card and page layouts (b78d2c9)
+
 ## [1.1.0-alpha.4] — 2026-04-01
 
 ### Bug Fixes
