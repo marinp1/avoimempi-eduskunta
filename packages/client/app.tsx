@@ -117,13 +117,10 @@ export const App: React.FC = () => {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  const handleNavigate = useCallback(
-    (tab: RouteName) => {
-      setActiveTab(tab);
-      setRepresentativePersonId(null);
-    },
-    [],
-  );
+  const handleNavigate = useCallback((tab: RouteName) => {
+    setActiveTab(tab);
+    setRepresentativePersonId(null);
+  }, []);
 
   // Scroll to top on navigation (only for tab-level switches, not within
   // a representative profile where in-page anchor scrolling is used).

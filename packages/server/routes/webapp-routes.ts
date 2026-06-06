@@ -1,17 +1,45 @@
+import { createHash } from "node:crypto";
 import { htmlResponse, renderLayout } from "../../webapp/templates/layout";
-import { AANESTYKSET_TITLE, renderAanestykset } from "../../webapp/templates/pages/aanestykset";
-import { ANALYTIIKKA_TITLE, renderAnalytiikka } from "../../webapp/templates/pages/analytiikka";
-import { ASIAKIRJAT_TITLE, renderAsiakirjat } from "../../webapp/templates/pages/asiakirjat";
-import { EDUSTAJAT_TITLE, renderEdustajat } from "../../webapp/templates/pages/edustajat";
-import { HALLITUKSET_TITLE, renderHallitukset } from "../../webapp/templates/pages/hallitukset";
+import {
+  AANESTYKSET_TITLE,
+  renderAanestykset,
+} from "../../webapp/templates/pages/aanestykset";
+import {
+  ANALYTIIKKA_TITLE,
+  renderAnalytiikka,
+} from "../../webapp/templates/pages/analytiikka";
+import {
+  ASIAKIRJAT_TITLE,
+  renderAsiakirjat,
+} from "../../webapp/templates/pages/asiakirjat";
+import {
+  EDUSTAJAT_TITLE,
+  renderEdustajat,
+} from "../../webapp/templates/pages/edustajat";
+import {
+  HALLITUKSET_TITLE,
+  renderHallitukset,
+} from "../../webapp/templates/pages/hallitukset";
 import { HOME_TITLE, renderHome } from "../../webapp/templates/pages/home";
-import { ISTUNNOT_TITLE, renderIstunnot } from "../../webapp/templates/pages/istunnot";
-import { MUUTOKSET_TITLE, renderMuutokset } from "../../webapp/templates/pages/muutokset";
-import { PUOLUEET_TITLE, renderPuolueet } from "../../webapp/templates/pages/puolueet";
+import {
+  ISTUNNOT_TITLE,
+  renderIstunnot,
+} from "../../webapp/templates/pages/istunnot";
+import {
+  MUUTOKSET_TITLE,
+  renderMuutokset,
+} from "../../webapp/templates/pages/muutokset";
+import {
+  PUOLUEET_TITLE,
+  renderPuolueet,
+} from "../../webapp/templates/pages/puolueet";
 
-// Build setup.ts once at module load time (top-level await, ESM).
-const setupJsPath = new URL("../../webapp/src/setup.ts", import.meta.url).pathname;
-const cssPath = new URL("../../webapp/src/styles.css", import.meta.url).pathname;
+// ── Build setup.ts and read CSS once at module load (top-level await, ESM) ──
+
+const setupJsPath = new URL("../../webapp/src/setup.ts", import.meta.url)
+  .pathname;
+const cssPath = new URL("../../webapp/src/styles.css", import.meta.url)
+  .pathname;
 
 const setupBuild = await Bun.build({
   entrypoints: [setupJsPath],
@@ -29,25 +57,53 @@ const setupJs = setupBuild.success
 
 const cssText = await Bun.file(cssPath).text();
 
-// ── static assets ────────────────────────────────────────────────────────────
+// Content-fingerprint both assets into a single version token.
+// The layout embeds ?v=<hash> in asset URLs so browsers can cache them
+// indefinitely (immutable) and automatically bust the cache on redeploy.
+const assetVersion = createHash("sha256")
+  .update(cssText)
+  .update(setupJs)
+  .digest("hex")
+  .slice(0, 8);
 
-const assetHeaders = (contentType: string) => ({
-  "Content-Type": contentType,
-  "Cache-Control":
-    process.env.NODE_ENV === "production"
-      ? "public, max-age=3600, stale-while-revalidate=86400"
-      : "no-store",
-});
+// ── Static asset responses ────────────────────────────────────────────────────
+// One year / immutable is safe because the URL includes the content hash.
+
+const ASSET_CACHE = "public, max-age=31536000, immutable";
+const NO_CACHE = "no-store";
+
+const assetCacheControl =
+  process.env.NODE_ENV === "production" ? ASSET_CACHE : NO_CACHE;
 
 function jsAsset() {
-  return new Response(setupJs, { headers: assetHeaders("application/javascript; charset=utf-8") });
+  return new Response(setupJs, {
+    headers: {
+      "Content-Type": "application/javascript; charset=utf-8",
+      "Cache-Control": assetCacheControl,
+    },
+  });
 }
 
 function cssAsset() {
-  return new Response(cssText, { headers: assetHeaders("text/css; charset=utf-8") });
+  return new Response(cssText, {
+    headers: {
+      "Content-Type": "text/css; charset=utf-8",
+      "Cache-Control": assetCacheControl,
+    },
+  });
 }
 
-// ── not-found fragment (used for unknown /edustaja/* paths) ──────────────────
+// ── Page helper ───────────────────────────────────────────────────────────────
+// Injects assetVersion so every full-page render links versioned asset URLs.
+
+function page(
+  req: Request,
+  fragment: string,
+  activePath: string,
+  title?: string,
+): Response {
+  return htmlResponse(req, fragment, { activePath, title, assetVersion });
+}
 
 function notFoundFragment(path: string): string {
   return `<title>Sivua ei löydy — Eduskuntapeili</title>
@@ -58,54 +114,79 @@ function notFoundFragment(path: string): string {
 </section>`;
 }
 
-// ── route map ────────────────────────────────────────────────────────────────
+// ── Route maps ────────────────────────────────────────────────────────────────
+//
+// Static asset routes: plain functions, NOT wrapped by ResponseCache.
+// These are already in-memory strings; caching adds overhead without benefit.
+//
+// Page routes: { GET } objects so ResponseCache.wrapRoutes() can wrap them.
+// They must be wrapped with the htmx-aware cache key (see index.ts) so that
+// fragment and full-page responses are cached separately.
 
-export function createWebappRoutes() {
+export function createWebappStaticRoutes() {
   return {
     "/webapp/setup.js": jsAsset,
     "/webapp/styles.css": cssAsset,
+  } as const;
+}
 
-    "/": (req: Request) =>
-      htmlResponse(req, renderHome(), { activePath: "/", title: HOME_TITLE }),
-
-    "/edustajat": (req: Request) =>
-      htmlResponse(req, renderEdustajat(), { activePath: "/edustajat", title: EDUSTAJAT_TITLE }),
-
-    "/puolueet": (req: Request) =>
-      htmlResponse(req, renderPuolueet(), { activePath: "/puolueet", title: PUOLUEET_TITLE }),
-
-    "/istunnot": (req: Request) =>
-      htmlResponse(req, renderIstunnot(), { activePath: "/istunnot", title: ISTUNNOT_TITLE }),
-
-    "/aanestykset": (req: Request) =>
-      htmlResponse(req, renderAanestykset(), { activePath: "/aanestykset", title: AANESTYKSET_TITLE }),
-
-    "/asiakirjat": (req: Request) =>
-      htmlResponse(req, renderAsiakirjat(), { activePath: "/asiakirjat", title: ASIAKIRJAT_TITLE }),
-
-    "/hallitukset": (req: Request) =>
-      htmlResponse(req, renderHallitukset(), { activePath: "/hallitukset", title: HALLITUKSET_TITLE }),
-
-    "/analytiikka": (req: Request) =>
-      htmlResponse(req, renderAnalytiikka(), { activePath: "/analytiikka", title: ANALYTIIKKA_TITLE }),
-
-    "/muutokset": (req: Request) =>
-      htmlResponse(req, renderMuutokset(), { activePath: "/muutokset", title: MUUTOKSET_TITLE }),
-
-    // Representative detail pages — stub until edustaja page is implemented.
-    "/edustaja/:id": (req: Request) => {
-      const fragment = notFoundFragment(new URL(req.url).pathname);
-      return htmlResponse(req, fragment, { activePath: "/edustajat", title: "Edustaja" });
+export function createWebappPageRoutes() {
+  return {
+    "/": {
+      GET: (req: Request) => page(req, renderHome(), "/", HOME_TITLE),
     },
-
-    // Quality control — retained from old routes, served as a full page.
-    "/laadunvalvonta": (req: Request) =>
-      new Response(
-        renderLayout(
-          `<section class="page-hero"><h1>Laadunvalvonta</h1></section>`,
-          { activePath: "/laadunvalvonta" },
+    "/edustajat": {
+      GET: (req: Request) =>
+        page(req, renderEdustajat(), "/edustajat", EDUSTAJAT_TITLE),
+    },
+    "/puolueet": {
+      GET: (req: Request) =>
+        page(req, renderPuolueet(), "/puolueet", PUOLUEET_TITLE),
+    },
+    "/istunnot": {
+      GET: (req: Request) =>
+        page(req, renderIstunnot(), "/istunnot", ISTUNNOT_TITLE),
+    },
+    "/aanestykset": {
+      GET: (req: Request) =>
+        page(req, renderAanestykset(), "/aanestykset", AANESTYKSET_TITLE),
+    },
+    "/asiakirjat": {
+      GET: (req: Request) =>
+        page(req, renderAsiakirjat(), "/asiakirjat", ASIAKIRJAT_TITLE),
+    },
+    "/hallitukset": {
+      GET: (req: Request) =>
+        page(req, renderHallitukset(), "/hallitukset", HALLITUKSET_TITLE),
+    },
+    "/analytiikka": {
+      GET: (req: Request) =>
+        page(req, renderAnalytiikka(), "/analytiikka", ANALYTIIKKA_TITLE),
+    },
+    "/muutokset": {
+      GET: (req: Request) =>
+        page(req, renderMuutokset(), "/muutokset", MUUTOKSET_TITLE),
+    },
+    "/edustaja/:id": {
+      GET: (req: Request) => {
+        const path = new URL(req.url).pathname;
+        return page(req, notFoundFragment(path), "/edustajat", "Edustaja");
+      },
+    },
+    "/laadunvalvonta": {
+      GET: (_req: Request) =>
+        new Response(
+          renderLayout(
+            `<section class="page-hero"><h1>Laadunvalvonta</h1></section>`,
+            { activePath: "/laadunvalvonta", assetVersion },
+          ),
+          {
+            headers: {
+              "Content-Type": "text/html; charset=utf-8",
+              Vary: "HX-Request",
+            },
+          },
         ),
-        { headers: { "Content-Type": "text/html; charset=utf-8" } },
-      ),
+    },
   } as const;
 }

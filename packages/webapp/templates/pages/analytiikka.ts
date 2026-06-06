@@ -4,8 +4,8 @@ export const ANALYTIIKKA_TITLE = "Analytiikka";
 
 export function renderAnalytiikka(): string {
   return html`<title>Analytiikka — Eduskuntapeili</title>
-<section class="page-hero">
+<section class="page-head wrap">
     <h1>Analytiikka</h1>
-    <p class="page-lead">Tilastot, trendit ja data-analyysit eduskunnan toiminnasta.</p>
+    <p class="sub">Tilastot, trendit ja data-analyysit eduskunnan toiminnasta.</p>
 </section>`;
 }

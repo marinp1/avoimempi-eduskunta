@@ -49,9 +49,7 @@ function main() {
     console.error(
       "Usage: bun scripts/section-transcript.ts <session-key|year> [output-dir]",
     );
-    console.error(
-      'Examples: bun scripts/section-transcript.ts "2024/5" out',
-    );
+    console.error('Examples: bun scripts/section-transcript.ts "2024/5" out');
     console.error("          bun scripts/section-transcript.ts 2024 out");
     process.exit(1);
   }

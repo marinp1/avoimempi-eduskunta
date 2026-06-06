@@ -32,7 +32,10 @@ import { createPersonRoutes } from "./routes/person-routes";
 import { createSanityRoutes } from "./routes/sanity-routes";
 import { createSessionRoutes } from "./routes/session-routes";
 import { createVotingRoutes } from "./routes/voting-routes";
-import { createWebappRoutes } from "./routes/webapp-routes";
+import {
+  createWebappPageRoutes,
+  createWebappStaticRoutes,
+} from "./routes/webapp-routes";
 import { getQualityDb } from "./sanity/quality-db";
 import { ResolutionStore } from "./sanity/resolution-store";
 
@@ -187,8 +190,15 @@ const apiRoutes = devFeatures
 export type ApiRoutes = typeof baseApiRoutes &
   ReturnType<typeof import("./routes/sanity-dev-routes").createSanityDevRoutes>;
 
+// Cache key for webapp page routes: fragment and full-page responses for the
+// same URL must be stored separately because the content differs based on
+// whether the request carries the HX-Request header.
+const webappCacheKey = (req: Request, url: URL) =>
+  `${url.pathname}${url.search}|htmx=${req.headers.get("HX-Request") ?? "0"}`;
+
 const allRoutes = withSecurityHeaders({
-  ...createWebappRoutes(),
+  ...createWebappStaticRoutes(), // in-memory strings, no cache wrapper needed
+  ...cache.wrapRoutes(createWebappPageRoutes(), { cacheKey: webappCacheKey }),
   ...apiRoutes,
   "/api/*": Response.json({ message: "Not found" }, { status: 404 }),
 });

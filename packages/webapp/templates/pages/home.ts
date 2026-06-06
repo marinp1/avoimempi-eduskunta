@@ -4,8 +4,11 @@ export const HOME_TITLE = "Etusivu";
 
 export function renderHome(): string {
   return html`<title>Etusivu — Eduskuntapeili</title>
-<section class="page-hero">
-    <h1>Eduskuntapeili</h1>
-    <p class="page-lead">Avoin näkymä Suomen eduskunnan toimintaan &mdash; edustajat, äänestykset, istunnot ja asiakirjat.</p>
+<section class="lead wrap">
+    <p class="kicker kicker--red"><span class="dot"></span>Eduskunta juuri nyt</p>
+    <h1>Avoin näkymä Suomen parlamentin toimintaan</h1>
+    <div class="lead__meta">
+        <span>Edustajat · äänestykset · istunnot · asiakirjat</span>
+    </div>
 </section>`;
 }

@@ -4,8 +4,8 @@ export const ASIAKIRJAT_TITLE = "Asiakirjat";
 
 export function renderAsiakirjat(): string {
   return html`<title>Asiakirjat — Eduskuntapeili</title>
-<section class="page-hero">
+<section class="page-head wrap">
     <h1>Asiakirjat</h1>
-    <p class="page-lead">Hallituksen esitykset, lakialoitteet, kirjalliset kysymykset ja lausunnot.</p>
+    <p class="sub">Hallituksen esitykset, lakialoitteet, kirjalliset kysymykset ja lausunnot.</p>
 </section>`;
 }

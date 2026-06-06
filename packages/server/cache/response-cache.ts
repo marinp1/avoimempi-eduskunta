@@ -24,6 +24,18 @@ export type ResponseCacheOptions = {
   maxEntries?: number;
 };
 
+export type WrapRoutesOptions = {
+  exclude?: Set<string>;
+  /**
+   * Override the default cache key (`pathname + search`). Use this when the
+   * same URL can return different content depending on request headers — for
+   * example, htmx page routes that return a fragment when `HX-Request: true`
+   * and a full page otherwise. Without a custom key those two variants would
+   * collide in the cache.
+   */
+  cacheKey?: (req: Request, url: URL) => string;
+};
+
 export type ResponseCache = {
   /**
    * Wraps all GET handlers in `routes` with caching. Static `Response`
@@ -31,7 +43,7 @@ export type ResponseCache = {
    */
   wrapRoutes: <T extends Record<string, any>>(
     routes: T,
-    opts?: { exclude?: Set<string> },
+    opts?: WrapRoutesOptions,
   ) => T;
   /** Number of live (non-expired) entries currently held in the cache. */
   size: () => number;
@@ -65,10 +77,13 @@ export function createResponseCache(
     store.set(key, entry);
   }
 
-  function wrapHandler(handler: RouteHandler): RouteHandler {
+  function wrapHandler(
+    handler: RouteHandler,
+    keyFn: (req: Request, url: URL) => string,
+  ): RouteHandler {
     return async (req: Request) => {
       const url = new URL(req.url);
-      const key = url.pathname + url.search;
+      const key = keyFn(req, url);
 
       const hit = get(key);
       if (hit) {
@@ -109,15 +124,19 @@ export function createResponseCache(
 
   function wrapRoutes<T extends Record<string, any>>(
     routes: T,
-    opts?: { exclude?: Set<string> },
+    opts?: WrapRoutesOptions,
   ): T {
     if (disabled) return routes;
+
+    const keyFn =
+      opts?.cacheKey ??
+      ((_req: Request, url: URL) => url.pathname + url.search);
 
     return Object.fromEntries(
       Object.entries(routes).map(([path, value]) => {
         if (value instanceof Response) return [path, value];
         if (opts?.exclude?.has(path)) return [path, value];
-        return [path, { GET: wrapHandler(value.GET) }];
+        return [path, { GET: wrapHandler(value.GET, keyFn) }];
       }),
     ) as T;
   }

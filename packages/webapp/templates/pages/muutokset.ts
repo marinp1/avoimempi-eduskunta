@@ -4,8 +4,8 @@ export const MUUTOKSET_TITLE = "Muutokset";
 
 export function renderMuutokset(): string {
   return html`<title>Muutokset — Eduskuntapeili</title>
-<section class="page-hero">
+<section class="page-head wrap">
     <h1>Muutokset</h1>
-    <p class="page-lead">Tietokantaan tuodut päivitykset ja muutosloki.</p>
+    <p class="sub">Tietokantaan tuodut päivitykset ja muutosloki.</p>
 </section>`;
 }
