@@ -344,9 +344,10 @@ function FilterToolbar({
 
 function SpeechTranscript({
   speeches,
+  section,
 }: {
   speeches: SpeechEntry[];
-  section?: { itemNumber: string | null };
+  section: { itemNumber: string | null; title: string };
 }) {
   return (
     <>
@@ -358,7 +359,7 @@ function SpeechTranscript({
       </p>
       <div class="transcript" id="transcript">
         {speeches.map((sp) => (
-          <SpeechCard speech={sp} />
+          <SpeechCard speech={sp} topic={section.title} />
         ))}
       </div>
       <div
@@ -372,7 +373,13 @@ function SpeechTranscript({
   );
 }
 
-function SpeechCard({ speech: sp }: { speech: SpeechEntry }) {
+function SpeechCard({
+  speech: sp,
+  topic,
+}: {
+  speech: SpeechEntry;
+  topic: string;
+}) {
   return (
     <article class="speech" data-bloc={sp.bloc} data-text={sp.searchText}>
       <div class="speech__av">
@@ -426,6 +433,7 @@ function SpeechCard({ speech: sp }: { speech: SpeechEntry }) {
           <button
             class="speech__ai-btn js-ai-block"
             data-ai-kind="speech"
+            data-ai-context={topic}
             aria-label={i18next.t("components:keskustelu.speech_ai_btn_label")}
           >
             ✦

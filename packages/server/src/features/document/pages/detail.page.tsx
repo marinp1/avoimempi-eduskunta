@@ -3,6 +3,7 @@ import { clsx } from "clsx";
 import i18next from "i18next";
 import Kicker from "#server/components/kicker";
 import { cite, sourceNote } from "#server/components/provenance";
+import { trustedHtml } from "#server/jsx/jsx-runtime";
 import {
   partyShortName,
   formatFi as formatFiBase,
@@ -270,7 +271,7 @@ export default function Asiakirja({ data }: Props) {
                 <p class="js-ai-block-text"></p>
               </div>
               {section.html
-                ? section.html
+                ? trustedHtml(section.html)
                 : section.paragraphs.map((para, pi) =>
                     pi === 0 && si === 0 ? (
                       <p class="standfirst">{para}</p>
@@ -390,7 +391,7 @@ export default function Asiakirja({ data }: Props) {
                 d.answerTextSections.map((section) => (
                   <>
                     {section.html
-                      ? section.html
+                      ? trustedHtml(section.html)
                       : section.paragraphs.map((para, pi) =>
                           pi === 0 ? (
                             <p class="standfirst">{para}</p>

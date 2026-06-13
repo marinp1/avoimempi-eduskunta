@@ -201,6 +201,21 @@
   color: var(--blue);
   font-weight: 700;
 }
+.summary__part-h {
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin: 18px 0 8px;
+}
+.summary__result > .summary__part-h:first-child {
+  margin-top: 0;
+}
+.summary__result > .summary__lead + .summary__lead {
+  margin-top: 10px;
+}
 .summary__sub {
   font-family: var(--head);
   font-weight: 700;
