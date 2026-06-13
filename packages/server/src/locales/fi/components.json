@@ -128,21 +128,21 @@
     "hint": "vedä kahvasta · ‹ › · tai napauta janaa"
   },
   "about": {
-    "bar_label": "Toimitukselta",
+    "bar_label": "Kehittäjältä",
     "close_aria": "Sulje",
-    "kicker": "Pääkirjoitus",
-    "title": "Miksi Eduskuntapeili on olemassa",
+    "kicker": "Saatesanat",
+    "title": "Mikä Eduskuntapeili?",
     "writer_name": "Patrik Marin",
-    "writer_role": "Tekijä · Eduskuntapeili",
-    "writer_date": "päivitetty 2.6.2026",
-    "body_p1": "Eduskunnan päätökset syntyvät avoimesta datasta — äänestyksistä, pöytäkirjoista, asiakirjoista — mutta data on hajallaan ja vaikealukuista. Eduskuntapeili kokoaa sen yhteen ja esittää luettavassa, journalistisessa muodossa.",
-    "body_p2": "Jokainen luku tällä sivustolla on jäljitettävissä alkuperäiseen lähteeseensä. Emme tulkitse politiikkaa puolueiden puolesta — näytämme, mitä salissa todella tapahtui, ja annamme lukijan tehdä johtopäätökset.",
-    "body_p3": "Sivusto on riippumaton ja ei-kaupallinen. Tiedot haetaan suoraan eduskunnan avoimesta rajapinnasta, ja päivitykset näkyvät sellaisenaan.",
+    "writer_role": "Ohjelmistokehittäjä",
+    "writer_date": "6.6.2026",
+    "body_p1": "Mielestäni tavalliset kansalaiset tietävät liian eduskunnan ja valtioneuvoston päivittäisestä toiminnasta - mitä on keskusteltu, mistä on äänestetty, keiltä on kysytty mielipiteitä ja näkökulmia. Eduskunnan viralliset sivut sisältävät paljon hyvin jäsenneltyä informaatiota, mutta se toimii hyvin tietolähteenä tarkkoihin kysymyksiin, eikä niinkään informaation luonnolliseen tutkimiseen ja yleiskuvien hahmottamiseen.",
+    "body_p2": "Eduskuntapeili on jo pitkään suunnitteilla ja työn alla oleva projekti, jonka aloitin ensimmäistä kertaa jo viitisen vuotta sitten. Tämä sivusto ei pyri kilpailemaan eduskunnan virallisten sivujen kanssa, vaan tavoitteena on tuoda toinen lähestymiskulma avoimeen dataan, hyödyntäen viimeisempiä teknisiä työkaluja.",
+    "body_p3": "Huomioithan, että sivuston näkymät ovat pääosin kielimallien avulla rakennettu, joten suomen kieli ja näkymät saattavat olla paikoitellen hieman puutteellisia. Korjailen niitä sitä mukaa kun saan viimeisteltyä sivustoa näkymä kerrallaan. Vaikka kaikki sivuston tiedot tulevat sellaisenaaan avoimesta datasta, tarkistathan havainnot aina virallisista lähteistä. Eduskunnan avoin data, erityisesti asiakirjojen osalta, ei ole aina erityisen yksinkertaisesti tulkittavaa joten täysin virheetöntä palvelua en luonnollisesti kykene takaamaan.",
     "signature": "Patrik Marin",
     "signature_meta_html": "<b>Patrik Marin</b> · Eduskuntapeilin tekijä",
-    "colophon_source_label": "Tietolähde: Eduskunnan avoin data · ",
+    "colophon_source_label": "Tietolähde: Eduskunnan avoin data",
     "colophon_link_url": "https://avoindata.eduskunta.fi/",
     "colophon_link_text": "avoindata.eduskunta.fi",
-    "colophon_independent": "Riippumaton, ei-kaupallinen palvelu."
+    "colophon_independent": "Sivuston tiedot haetaan päivittäin eduskunnan avoimen datojen rajapinnoista."
   }
 }

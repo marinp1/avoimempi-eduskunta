@@ -30,13 +30,10 @@ export default function AboutPanel({
   writerRole,
   writerDate,
   bodyParagraphs,
-  signature,
-  signatureMetaHtml,
   portraitUrl,
   colophonSourceLabel,
   colophonLinkUrl,
   colophonLinkText,
-  colophonIndependent,
 }: AboutPanelModel) {
   return (
     <aside
@@ -73,17 +70,21 @@ export default function AboutPanel({
             <p>{p}</p>
           ))}
         </div>
+        {/*
         <div class="about__sig">
           <div class="about__sig-mark">{signature}</div>
           <div class="about__sig-meta">{signatureMetaHtml}</div>
         </div>
+        */}
         <div class="about__colophon">
           {colophonSourceLabel}
           <a href={colophonLinkUrl} target="_blank" rel="noopener">
             {colophonLinkText}
           </a>
+          {/*
           <br />
           {colophonIndependent}
+          */}
         </div>
       </div>
     </aside>
