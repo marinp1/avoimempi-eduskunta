@@ -87,32 +87,29 @@ export class VotingRepository {
   public fetchVotingById(params: { votingId: string }) {
     const votingId = Number.parseInt(params.votingId, 10);
     if (!Number.isFinite(votingId)) return null;
-    const stmt = this.db.prepare<
-      DatabaseQueries.VotingSearchResult,
-      { $id: number }
-    >(votingById);
-    const data = stmt.get({ $id: votingId });
-    stmt.finalize();
-    return data ?? null;
+    return (
+      this.db
+        .query<DatabaseQueries.VotingSearchResult, { $id: number }>(votingById)
+        .get({ $id: votingId }) ?? null
+    );
   }
 
   public fetchVotingMemberVotes(params: { votingId: string }) {
     const votingId = Number.parseInt(params.votingId, 10);
     if (!Number.isFinite(votingId)) return null;
-    const stmt = this.db.prepare<
-      {
-        person_id: number;
-        first_name: string;
-        last_name: string;
-        party_code: string;
-        vote: string;
-        is_government: 0 | 1;
-      },
-      { $id: number }
-    >(votingMemberVotesById);
-    const data = stmt.all({ $id: votingId });
-    stmt.finalize();
-    return data;
+    return this.db
+      .query<
+        {
+          person_id: number;
+          first_name: string;
+          last_name: string;
+          party_code: string;
+          vote: string;
+          is_government: 0 | 1;
+        },
+        { $id: number }
+      >(votingMemberVotesById)
+      .all({ $id: votingId });
   }
 
   public fetchVotingInlineDetails(params: { votingId: string }) {
@@ -121,71 +118,71 @@ export class VotingRepository {
     const voting = this.fetchVotingById({ votingId: String(votingId) });
     if (!voting) return null;
 
-    const partyStmt = this.db.prepare<
-      {
-        party_code: string;
-        party_name: string;
-        n_yes: number;
-        n_no: number;
-        n_abstain: number;
-        n_absent: number;
-        n_total: number;
-        is_government_party: 0 | 1;
-      },
-      { $id: number }
-    >(votingPartyBreakdownById);
-    const partyBreakdown = partyStmt.all({ $id: votingId });
-    partyStmt.finalize();
+    const partyBreakdown = this.db
+      .query<
+        {
+          party_code: string;
+          party_name: string;
+          n_yes: number;
+          n_no: number;
+          n_abstain: number;
+          n_absent: number;
+          n_total: number;
+          is_government_party: 0 | 1;
+        },
+        { $id: number }
+      >(votingPartyBreakdownById)
+      .all({ $id: votingId });
 
-    const memberStmt = this.db.prepare<
-      {
-        person_id: number;
-        first_name: string;
-        last_name: string;
-        party_code: string;
-        vote: string;
-        is_government: 0 | 1;
-      },
-      { $id: number }
-    >(votingMemberVotesById);
-    const memberVotes = memberStmt.all({ $id: votingId });
-    memberStmt.finalize();
+    const memberVotes = this.db
+      .query<
+        {
+          person_id: number;
+          first_name: string;
+          last_name: string;
+          party_code: string;
+          vote: string;
+          is_government: 0 | 1;
+        },
+        { $id: number }
+      >(votingMemberVotesById)
+      .all({ $id: votingId });
 
-    const govStmt = this.db.prepare<
-      {
-        government_yes: number;
-        government_no: number;
-        government_abstain: number;
-        government_absent: number;
-        government_total: number;
-        opposition_yes: number;
-        opposition_no: number;
-        opposition_abstain: number;
-        opposition_absent: number;
-        opposition_total: number;
-      },
-      { $id: number }
-    >(votingGovernmentOppositionById);
-    const governmentOpposition = govStmt.get({ $id: votingId });
-    govStmt.finalize();
+    const governmentOpposition = this.db
+      .query<
+        {
+          government_yes: number;
+          government_no: number;
+          government_abstain: number;
+          government_absent: number;
+          government_total: number;
+          opposition_yes: number;
+          opposition_no: number;
+          opposition_abstain: number;
+          opposition_absent: number;
+          opposition_total: number;
+        },
+        { $id: number }
+      >(votingGovernmentOppositionById)
+      .get({ $id: votingId });
 
-    const relatedStmt = this.db.prepare<
-      {
-        id: number;
-        number: number | null;
-        start_time: string | null;
-        context_title: string;
-        n_yes: number;
-        n_no: number;
-        n_abstain: number;
-        n_absent: number;
-        n_total: number;
-        session_key: string | null;
-      },
-      { $id: number }
-    >(votingRelatedById);
-    const relatedVotings = relatedStmt.all({ $id: votingId });
-    relatedStmt.finalize();
+    const relatedVotings = this.db
+      .query<
+        {
+          id: number;
+          number: number | null;
+          start_time: string | null;
+          context_title: string;
+          n_yes: number;
+          n_no: number;
+          n_abstain: number;
+          n_absent: number;
+          n_total: number;
+          session_key: string | null;
+        },
+        { $id: number }
+      >(votingRelatedById)
+      .all({ $id: votingId });
 
     return {
       voting,
