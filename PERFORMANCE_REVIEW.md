@@ -142,3 +142,21 @@ Largest debate section payload (300-420 speeches) ......... 0.6–1.2 MB raw tex
 Client bundle (minified) ................................... 70 KB
 sqlite_stat1 rows (ANALYZE present) ........................ 195
 ```
+
+## Comments
+
+### Precompute vs. materialized views (items 1 & 2)
+
+The review suggests precomputing at migrate time or memoizing by `generationKey`. Since `Vote` is 4.3M rows and growing, lean toward materialized tables populated at migrate time — the pipeline already clears-and-reloads. In-process memoization keyed by `generationKey` is simpler but consumes RAM and doesn't survive restarts.
+
+### In-flight dedup error handling (item 5)
+
+The "~15 lines" estimate is accurate with `Map<string, Promise<Response>>`, but be sure to evict cache entries on error to avoid permanently poisoning a key.
+
+### Missing: database connection bottleneck
+
+bun:sqlite is synchronous on one shared connection. For a longer-term fix, a worker thread for heavy queries (or read replicas in WAL mode) could unblock the event loop entirely — but likely out of scope for an initial pass.
+
+### Quick wins not listed
+
+Items 10 (`db.prepare()` → `db.query()`) and 11 (push date filter into SQL) are trivially low-effort fixes that could be tackled alongside the high-priority items without much added risk.
