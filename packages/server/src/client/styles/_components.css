@@ -531,6 +531,16 @@ body.is-loading .nav a.is-active {
   ::view-transition-new(main-content) {
     animation: vt-content-in 200ms cubic-bezier(0, 0, 0.2, 1) both;
   }
+
+  /* The browser's default `root` view-transition group still crossfades
+     everything outside #main-content (banner, masthead, footer) even though
+     it never changes. Disable that default animation so the page chrome
+     stays static and only #main-content animates. */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
 }
 
 @keyframes vt-content-out {
