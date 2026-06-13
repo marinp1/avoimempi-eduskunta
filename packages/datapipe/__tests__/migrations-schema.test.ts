@@ -86,6 +86,8 @@ describe("Migration schema", () => {
       "V001.040__expert_statement_author.sql",
       "V001.041__expert_statement_author_org.sql",
       "V001.042__expert_statement_analysis.sql",
+      "V001.043__party_summary_materialized",
+      "V001.044__person_metric_materialized",
     ]);
   });
 
