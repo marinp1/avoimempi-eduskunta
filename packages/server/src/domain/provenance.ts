@@ -62,6 +62,10 @@ export const TABLE_META: Record<
     displayName: "Eduskunnan avoin data · VaskiData",
     endpoint: "GET /api/v1/tables/VaskiData/batch",
   },
+  "edk-documents": {
+    displayName: "Eduskunnan dokumentit · PDF",
+    endpoint: "GET /api/v1/asiakirjat/edktunnus/:edktunnus/pdf",
+  },
   HetekaData: {
     displayName: "Eduskunnan avoin data · HetekaData",
     endpoint: "GET /api/v1/tables/HetekaData/batch",

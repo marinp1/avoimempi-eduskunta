@@ -15,6 +15,7 @@ function validIso(ts: string | null | undefined): string | null {
 }
 
 const API_BASE = "https://avoindata.eduskunta.fi/api/v1/tables";
+const EDK_API_BASE = "https://api.eduskunta.fi/api/v1/asiakirjat/edktunnus";
 const DATASET_PREFIX = "Eduskunnan avoin data";
 
 /**
@@ -34,18 +35,28 @@ function combinedDataset(displayNames: string[]): string | undefined {
   return `${DATASET_PREFIX} · ${suffixes.join(" + ")}`;
 }
 
-/** Deep link to a single source record via the open-data batch API. */
+/** Deep link to a single source record. */
 function buildRecordUrl(
   sourceTable: string,
   pkName: string,
   pkValue: string | number,
 ): string {
+  if (sourceTable === "edk-documents") {
+    return `${EDK_API_BASE}/${String(pkValue)}/pdf`;
+  }
   const params = new URLSearchParams({
     pkName,
     pkStartValue: String(pkValue),
     perPage: "1",
   });
   return `${API_BASE}/${sourceTable}/batch?${params.toString()}`;
+}
+
+/** Resolve the API host for a source table's provenance chain. */
+function sourceHost(sourceTable: string): string {
+  return sourceTable === "edk-documents"
+    ? "api.eduskunta.fi"
+    : "avoindata.eduskunta.fi";
 }
 
 /** Cite data without the `children` (inner HTML) field — storable in view models. */
@@ -107,7 +118,7 @@ export class ProvenanceService {
       record: opts.label,
       url,
       fetched: scrapedAt ? formatFiDateTime(scrapedAt) : fetchedAt(),
-      chain: ["avoindata.eduskunta.fi", rule?.sourceTable]
+      chain: [sourceHost(rule?.sourceTable ?? ""), rule?.sourceTable]
         .filter(Boolean)
         .join(" > "),
       markText: opts.markText,
@@ -187,7 +198,10 @@ export class ProvenanceService {
       table: sources.length ? sources.join(", ") : undefined,
       endpoint: endpoints.length ? endpoints.join(", ") : undefined,
       fetched: scrapedAt ? formatFiDateTime(scrapedAt) : fetchedAt(),
-      chain: ["avoindata.eduskunta.fi", ...sources].join(" > "),
+      chain: [
+        [...new Set(sources.map(sourceHost))].join(" · "),
+        ...sources,
+      ].join(" > "),
       markText: opts.markText,
     };
   }

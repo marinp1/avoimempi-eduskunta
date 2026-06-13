@@ -1,7 +1,7 @@
-import sqlite from "bun:sqlite";
+import sqlite, { type Database } from "bun:sqlite";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
-import { getTraceDatabasePath } from "#database";
+import { getTraceDatabasePath, getDocumentsDatabasePath } from "#database";
 import { getRawRowStore } from "#storage/row-store/factory";
 
 const TRACE_SCHEMA_STATEMENTS = [
@@ -35,6 +35,78 @@ function validIso(ts: string | null | undefined): string | null {
   if (!ts) return null;
   if (ts.startsWith("1970-01-01")) return null;
   return ts;
+}
+
+const PDF_SOURCE_TABLE = "edk-documents";
+
+function importPdfDocumentTrace(
+  traceDb: Database,
+  insertStmt: ReturnType<Database["prepare"]>,
+  runBatch: (
+    batch: Array<[string, string | null, string, string | null, string]>,
+  ) => void,
+  migratedAt: string,
+): number {
+  const docsDbPath = getDocumentsDatabasePath();
+  let docsDb: Database | null = null;
+
+  try {
+    docsDb = sqlite.open(docsDbPath, { readonly: true });
+  } catch {
+    console.log("  ⏭️  Documents DB not available, skipping PDF trace");
+    return 0;
+  }
+
+  try {
+    const records = docsDb
+      .query<
+        {
+          edk_identifier: string;
+          fetched_at: string;
+        },
+        []
+      >(
+        `SELECT edk_identifier, fetched_at
+         FROM DocumentFile
+         WHERE http_status = 200 AND file_size_bytes > 0
+         ORDER BY edk_identifier`,
+      )
+      .all();
+
+    if (records.length === 0) {
+      console.log("  📄 edk-documents: 0 rows (no fetched PDFs found)");
+      return 0;
+    }
+
+    let batch: Array<[string, string | null, string, string | null, string]> =
+      [];
+
+    for (const record of records) {
+      batch.push([
+        PDF_SOURCE_TABLE,
+        "edk_identifier",
+        record.edk_identifier,
+        validIso(record.fetched_at),
+        migratedAt,
+      ]);
+
+      if (batch.length >= BATCH_SIZE) {
+        runBatch(batch);
+        batch = [];
+      }
+    }
+
+    if (batch.length > 0) {
+      runBatch(batch);
+    }
+
+    console.log(
+      `  📄 ${PDF_SOURCE_TABLE}: ${records.length.toLocaleString()} rows`,
+    );
+    return records.length;
+  } finally {
+    docsDb.close();
+  }
 }
 
 export async function rebuildTraceDatabase(): Promise<void> {
@@ -110,6 +182,14 @@ export async function rebuildTraceDatabase(): Promise<void> {
       totalRows += tableRows;
       console.log(`  📋 ${tableName}: ${tableRows.toLocaleString()} rows`);
     }
+
+    const pdfRows = importPdfDocumentTrace(
+      traceDb,
+      insertStmt,
+      runBatch,
+      migratedAt,
+    );
+    totalRows += pdfRows;
 
     traceDb.run(
       `INSERT INTO ImportSourceReferenceSummary
