@@ -18,6 +18,7 @@ import {
   mapMpSignatories,
   mapSubjects,
   mapSessions,
+  cleanBodyText,
 } from "./detail-helpers";
 import {
   dateLabel,
@@ -61,7 +62,7 @@ export function buildLegislativeInitiative(
   if (textSections.length === 0 && detail.body_text) {
     const body = buildTextSection(
       i18next.t("documents:detail.text_section_body"),
-      detail.body_text,
+      cleanBodyText(detail.body_text),
       null,
     );
     if (body) textSections.push(body);

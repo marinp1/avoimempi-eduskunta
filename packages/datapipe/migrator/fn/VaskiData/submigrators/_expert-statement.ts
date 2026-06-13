@@ -80,13 +80,18 @@ function writeMigrationReport(
   );
 }
 
+import {
+  extractAuthorFromTitle,
+  extractOrgFromAuthorText,
+} from "./expert-statement-extract.ts";
+
 export function createExpertStatementSubMigrator(
   db: Database,
   documentType: ExpertStatementDocumentType,
 ) {
   const insertStatement = db.prepare(
-    `INSERT INTO ExpertStatement (id, document_type, edk_identifier, bill_identifier, committee_name, meeting_identifier, meeting_date, title, publicity, language, status, created, source_path, body_text)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO ExpertStatement (id, document_type, edk_identifier, bill_identifier, committee_name, meeting_identifier, meeting_date, title, publicity, language, status, created, source_path, body_text, author_text, author_organization)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(edk_identifier) DO UPDATE SET
        bill_identifier = COALESCE(excluded.bill_identifier, ExpertStatement.bill_identifier),
        committee_name = COALESCE(excluded.committee_name, ExpertStatement.committee_name),
@@ -96,7 +101,9 @@ export function createExpertStatementSubMigrator(
        publicity = COALESCE(excluded.publicity, ExpertStatement.publicity),
        language = COALESCE(excluded.language, ExpertStatement.language),
        source_path = excluded.source_path,
-       body_text = COALESCE(excluded.body_text, ExpertStatement.body_text)`,
+       body_text = COALESCE(excluded.body_text, ExpertStatement.body_text),
+       author_text = COALESCE(excluded.author_text, ExpertStatement.author_text),
+       author_organization = COALESCE(excluded.author_organization, ExpertStatement.author_organization)`,
   );
 
   let documentTextCount = 0;
@@ -160,6 +167,8 @@ export function createExpertStatementSubMigrator(
 
       const bodyText = (row as any)._documentText as string | null;
       if (bodyText != null) documentTextCount++;
+      const authorText = extractAuthorFromTitle(title);
+      const authorOrganization = extractOrgFromAuthorText(authorText);
 
       try {
         insertStatement.run(
@@ -177,6 +186,8 @@ export function createExpertStatementSubMigrator(
           normalizeText(row.created),
           sourcePath,
           bodyText,
+          authorText,
+          authorOrganization,
         );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);

@@ -34,6 +34,9 @@ function buildExpertStatementDetail(
     ),
   };
 
+  const authorName =
+    detail.author_text ?? i18next.t("documents:detail.unknown_author");
+
   return {
     kind: "asiantuntija",
     id: detail.id,
@@ -41,13 +44,12 @@ function buildExpertStatementDetail(
     documentTypeLabel:
       docTypeLabels[detail.document_type] ?? detail.document_type,
     title: detail.title ?? "",
-    authorName:
-      detail.committee_name ?? i18next.t("documents:detail.unknown_author"),
-    authorRole: detail.bill_identifier ?? null,
-    authorParty: detail.committee_name ?? null,
+    authorName,
+    authorRole: detail.committee_name ?? null,
+    authorParty: null,
     authorPartyColor: partyColor(""),
     authorPersonId: null,
-    authorInitials: detail.committee_name?.charAt(0)?.toUpperCase() ?? "?",
+    authorInitials: detail.author_text?.charAt(0)?.toUpperCase() ?? "?",
     authorDistrict: null,
     primaryDate: formatFi(meetingDate),
     primaryDateLabel: meetingDate
@@ -67,7 +69,7 @@ function buildExpertStatementDetail(
     answerMinisterName: null,
     signatories: [],
     laws: [],
-    sourceReference: null,
+    sourceReference: detail.bill_identifier ?? null,
     subjects: [],
     charCount: textCharCount(textSections),
     sessions: [],

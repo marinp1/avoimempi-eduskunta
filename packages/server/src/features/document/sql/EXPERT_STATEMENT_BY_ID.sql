@@ -9,6 +9,8 @@ SELECT
   e.title,
   e.publicity,
   e.language,
-  e.body_text
+  e.body_text,
+  e.author_text,
+  e.author_organization
 FROM ExpertStatement e
 WHERE e.id = $id

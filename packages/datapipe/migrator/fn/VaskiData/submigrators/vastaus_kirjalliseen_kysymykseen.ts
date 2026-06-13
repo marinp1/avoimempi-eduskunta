@@ -100,6 +100,28 @@ function normalizeFinnishDate(dateStr: string | null): string | null {
   return dateStr;
 }
 
+const BODY_SIGNATURE =
+  /(?:Helsingissä|Helsinki),?\s+(?:\d{1,2}\.\d{1,2}\.\d{4}|\d{1,2}\s+[a-zäöå]+kuuta\s+\d{4})\s+([^\n]+)/;
+
+function extractMinisterFromSignature(bodyText: string): {
+  title: string | null;
+  firstName: string | null;
+  lastName: string | null;
+} {
+  const m = BODY_SIGNATURE.exec(bodyText);
+  if (!m) return { title: null, firstName: null, lastName: null };
+  // Strip electronic signature reference ("VN/NNNNN/...") — co-signer lines start on a new line
+  // so [^\n]+ already excludes them
+  const authorBlock = m[1].replace(/\s+VN\/\S+.*$/, "").trim();
+  const parts = authorBlock.split(/\s+/);
+  if (parts.length < 2) return { title: null, firstName: null, lastName: null };
+  return {
+    lastName: parts[parts.length - 1],
+    firstName: parts[parts.length - 2],
+    title: parts.length > 2 ? parts.slice(0, -2).join(" ") : null,
+  };
+}
+
 export default function createVastausKirjallinenKysymysSubMigrator(
   db: Database,
 ) {
@@ -204,9 +226,18 @@ export default function createVastausKirjallinenKysymysSubMigrator(
 
       const toimija = identOsa.Toimija;
       const henkilo = toimija?.Henkilo;
-      const ministerTitle = normalizeText(henkilo?.AsemaTeksti);
-      const ministerFirstName = normalizeText(henkilo?.EtuNimi);
-      const ministerLastName = normalizeText(henkilo?.SukuNimi);
+      let ministerTitle = normalizeText(henkilo?.AsemaTeksti);
+      let ministerFirstName = normalizeText(henkilo?.EtuNimi);
+      let ministerLastName = normalizeText(henkilo?.SukuNimi);
+
+      const bodyText = (row as any)._documentText as string | null;
+
+      if ((!ministerLastName || !ministerFirstName) && bodyText) {
+        const fromBody = extractMinisterFromSignature(bodyText);
+        ministerTitle = ministerTitle ?? fromBody.title;
+        ministerFirstName = ministerFirstName ?? fromBody.firstName;
+        ministerLastName = ministerLastName ?? fromBody.lastName;
+      }
 
       const answerDate =
         normalizeText(meta?.["@_laadintaPvm"]) ||
@@ -228,7 +259,6 @@ export default function createVastausKirjallinenKysymysSubMigrator(
         ? `${row._source.vaskiPath}#id=${id}`
         : `vaski-data/vastaus_kirjalliseen_kysymykseen/unknown#id=${id}`;
 
-      const bodyText = (row as any)._documentText as string | null;
       if (bodyText != null) documentTextCount++;
 
       try {

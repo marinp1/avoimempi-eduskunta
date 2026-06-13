@@ -36,6 +36,50 @@ export function splitParagraphs(text: string | null | undefined): string[] {
   return parts.length > 0 ? parts : [text.trim()].filter(Boolean);
 }
 
+const ANSWER_MARKER =
+  /Vastauksena\s+kysymykseen\s+esit[äa]n\b(?:\s*(?:seur?aavaa)?\s*)?:?\s*/i;
+
+const SIGNATURE_LINE =
+  /(?:Helsingissä|Helsinki),?\s+(?:\d{1,2}\.\d{1,2}\.\d{4}|\d{1,2}\s+[a-zäöå]+kuuta\s+\d{4})/;
+
+const HYPHEN_BREAK = /(\p{L})-\s+(\p{Ll})/gu;
+
+function stripSignatureAndFixHyphens(text: string): string {
+  let body = text;
+  const sigMatch = SIGNATURE_LINE.exec(body);
+  if (sigMatch) {
+    body = body.slice(0, sigMatch.index);
+  }
+  return body.replace(HYPHEN_BREAK, "$1$2").trim();
+}
+
+export function cleanResponseBody(
+  text: string | null | undefined,
+): string | null {
+  if (!text) return null;
+
+  if (text.length < 80 && !/[A-ZÄÖÅa-zäöå]/.test(text)) return null;
+
+  let body = text;
+
+  const markerMatch = ANSWER_MARKER.exec(body);
+  if (markerMatch) {
+    body = body.slice(markerMatch.index + markerMatch[0].length);
+  }
+
+  body = stripSignatureAndFixHyphens(body);
+  return body || null;
+}
+
+export function cleanBodyText(
+  text: string | null | undefined,
+): string | null {
+  if (!text) return null;
+  if (text.length < 80 && !/[A-ZÄÖÅa-zäöå]/.test(text)) return null;
+  const body = stripSignatureAndFixHyphens(text);
+  return body || null;
+}
+
 export function buildTextSection(
   heading: string,
   plainText: string | null | undefined,

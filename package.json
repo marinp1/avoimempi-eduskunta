@@ -20,6 +20,7 @@
     "fetch-docs": "cd packages/datapipe && DOCUMENT_HANDLER=local bun run document-fetcher/cli.ts",
     "fetch-docs:errors": "cd packages/datapipe && bun run document-fetcher/errors-cli.ts",
     "extract-text": "cd packages/datapipe && DOCUMENT_HANDLER=local bun run pdf-extractor/cli.ts",
+    "validate:expert-extract": "cd packages/datapipe && bun run scripts/validate-expert-statement-extract.ts",
     "rowstore:compact": "bun run scripts/compact-row-stores.ts",
     "test": "bun test",
     "test:update-snapshots": "SQL_UPDATE_SNAPSHOTS=1 bun test packages/server/__tests__/sql-contract.test.ts",

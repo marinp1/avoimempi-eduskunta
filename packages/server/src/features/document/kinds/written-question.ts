@@ -16,6 +16,7 @@ import {
   mapMpSignatories,
   mapSubjects,
   mapSessions,
+  cleanResponseBody,
 } from "./detail-helpers";
 import {
   dateLabel,
@@ -78,7 +79,8 @@ export function buildWrittenQuestion(
   if (qs) textSections.push(qs);
 
   const answerTextSections: TextSection[] = [];
-  const answerBody = (detail as any).response_body_text as string | null;
+  const rawAnswerBody = (detail as any).response_body_text as string | null;
+  const answerBody = cleanResponseBody(rawAnswerBody);
   if (answerBody) {
     const as = buildTextSection(
       i18next.t("documents:detail.text_section_answer"),
@@ -165,7 +167,7 @@ export function buildWrittenQuestion(
     laws: [],
     sourceReference: null,
     subjects: mapSubjects(detail.subjects),
-    charCount: textCharCount(textSections),
+    charCount: textCharCount(textSections) + textCharCount(answerTextSections),
     sessions: mapSessions(detail.sessions),
     fetchedAt: fetchedAt(),
   };

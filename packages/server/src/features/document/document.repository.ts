@@ -625,6 +625,7 @@ export class DocumentRepository {
     year?: string;
     committee?: string;
     docType?: string;
+    organization?: string;
     startDate?: string;
     endDate?: string;
     page: number;
@@ -636,6 +637,7 @@ export class DocumentRepository {
     const $year = params.year || null;
     const $committee = params.committee || null;
     const $docType = params.docType || null;
+    const $organization = params.organization?.trim() || null;
 
     const countStmt = this.db.prepare<
       { count: number },
@@ -644,6 +646,7 @@ export class DocumentRepository {
         $year: string | null;
         $committee: string | null;
         $docType: string | null;
+        $organization: string | null;
         $startDate: string | null;
         $endDateExclusive: string | null;
       }
@@ -653,6 +656,7 @@ export class DocumentRepository {
       $year,
       $committee,
       $docType,
+      $organization,
       $startDate: params.startDate || null,
       $endDateExclusive: endDateExclusiveValue,
     });
@@ -677,6 +681,7 @@ export class DocumentRepository {
         $year: string | null;
         $committee: string | null;
         $docType: string | null;
+        $organization: string | null;
         $startDate: string | null;
         $endDateExclusive: string | null;
         $limit: number;
@@ -688,6 +693,7 @@ export class DocumentRepository {
       $year,
       $committee,
       $docType,
+      $organization,
       $startDate: params.startDate || null,
       $endDateExclusive: endDateExclusiveValue,
       $limit: params.limit,
@@ -712,6 +718,8 @@ export class DocumentRepository {
         publicity: string | null;
         language: string | null;
         body_text: string | null;
+        author_text: string | null;
+        author_organization: string | null;
       },
       { $id: number }
     >(expertStatementById);
