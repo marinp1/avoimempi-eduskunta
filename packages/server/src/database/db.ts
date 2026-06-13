@@ -1,6 +1,7 @@
 import { Database } from "bun:sqlite";
-import { getDatabasePath } from "#database";
+import { getDatabasePath, getTraceDatabasePath } from "#database";
 import { SQLITE_PRAGMAS } from "./sql-statements";
+import { installTraceCapture } from "./trace-collector";
 
 export class DatabaseConnection {
   public readonly db: Database;
@@ -17,5 +18,22 @@ export class DatabaseConnection {
     this.db.exec(SQLITE_PRAGMAS.tempStoreMemory);
     this.db.exec(SQLITE_PRAGMAS.cacheSize64Mb);
     this.db.exec(SQLITE_PRAGMAS.mmapSize30Gb);
+
+    // Capture which feature SQL files feed each page render for the data-trace
+    // overlay. No-op unless a request has an active collector (see trace-collector).
+    installTraceCapture(this.db);
+  }
+}
+
+/** Opens the trace DB in read-only mode. Returns null if the file does not exist. */
+export function openTraceDb(): Database | null {
+  try {
+    const db = new Database(getTraceDatabasePath(), {
+      readonly: true,
+      create: false,
+    });
+    return db;
+  } catch {
+    return null;
   }
 }

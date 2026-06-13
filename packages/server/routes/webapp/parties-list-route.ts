@@ -1,7 +1,6 @@
 import Puolueet from "#server/features/metadata/pages/parties.page";
 import { buildPuolueetData } from "#server/features/metadata/pages/list.view-model";
 import { withWebappPage } from "./helpers";
-import { fetchedAt } from "#server/helpers/template-helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
@@ -27,7 +26,7 @@ export function createPartiesListRoute(deps: WebappDeps) {
       const data = buildPuolueetData({
         summaryRows,
         partyDiscipline,
-        fetchedAt: fetchedAt(),
+        fetchedAt: deps.provenanceService.tableFetchedAt("MemberOfParliament"),
       });
 
       return {

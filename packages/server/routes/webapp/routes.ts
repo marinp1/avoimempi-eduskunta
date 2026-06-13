@@ -15,6 +15,11 @@ import { createDebateRoute } from "./debate-route";
 import { createDataQualityRoute } from "./data-quality-route";
 import { createPartyRoute } from "./party-route";
 import { createPartiesListRoute } from "./parties-list-route";
+import {
+  createTraceRoute,
+  createTraceSourceRoute,
+  createTraceSqlRoute,
+} from "./trace-route";
 import type { WebappDeps } from "./deps";
 
 export function createWebappStaticRoutes() {
@@ -44,5 +49,8 @@ export function createWebappPageRoutes(deps: WebappDeps) {
     ...createDataQualityRoute(deps),
     ...createPartyRoute(deps),
     ...createPartiesListRoute(deps),
+    ...createTraceRoute(deps),
+    ...createTraceSqlRoute(deps),
+    ...createTraceSourceRoute(deps),
   } as const;
 }

@@ -283,9 +283,9 @@ export async function getExactTableCountsByRows(
   options?: ExactTableCountOptions,
 ): Promise<TableCountRow[]> {
   const targetTables = resolveTargetTableNames(options);
-  const counts: Array<TableCountRow | undefined> = new Array(
-    targetTables.length,
-  );
+  const counts: Array<TableCountRow | undefined> = Array.from({
+    length: targetTables.length,
+  });
   const errors: string[] = [];
   const concurrency = Math.max(
     1,

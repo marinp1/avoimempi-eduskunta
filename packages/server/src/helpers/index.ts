@@ -40,6 +40,17 @@ export function fetchedAt(): string {
   });
 }
 
+/** Formats an ISO timestamp in Finnish locale (same format as fetchedAt). */
+export function formatFiDateTime(iso: string): string {
+  return new Date(iso).toLocaleString("fi-FI", {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 /** Check if a request is an htmx partial navigation */
 export function isHtmx(req: Request): boolean {
   return req.headers.get("HX-Request") === "true";

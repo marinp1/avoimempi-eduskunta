@@ -166,7 +166,7 @@ const intersectTermRowsWithGroupMemberships = (
       : Number.POSITIVE_INFINITY;
 
     const overlaps = groupMembershipRows.flatMap((group): DateInterval[] => {
-      if (group.end_date === null && group.end_date === null) return [];
+      if (group.start_date === null && group.end_date === null) return [];
       const groupStart = toEpochDay(group.start_date);
       const groupEnd = group.end_date
         ? toEpochDay(group.end_date)

@@ -31,6 +31,12 @@ const TRACE_SCHEMA_STATEMENTS = [
 
 const BATCH_SIZE = 5_000;
 
+function validIso(ts: string | null | undefined): string | null {
+  if (!ts) return null;
+  if (ts.startsWith("1970-01-01")) return null;
+  return ts;
+}
+
 export async function rebuildTraceDatabase(): Promise<void> {
   const tracePath = getTraceDatabasePath();
   const rawStore = getRawRowStore();
@@ -86,7 +92,7 @@ export async function rebuildTraceDatabase(): Promise<void> {
           tableName,
           pkName,
           String(row.pk),
-          row.createdAt || null,
+          validIso(row.createdAt),
           migratedAt,
         ]);
         tableRows++;

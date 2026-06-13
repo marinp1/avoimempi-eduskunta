@@ -30,10 +30,7 @@ export default function SpeechesFragment({ data }: Props) {
           </div>
         </div>
       ))}
-      {sourceNote({
-        dataset: `Speech · ${data.personName}`,
-        fetchedAt: data.fetchedAt,
-      })}
+      {sourceNote(data.sourceNote)}
     </div>
   );
 }

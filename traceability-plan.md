@@ -26,6 +26,7 @@ For multi-source figures (e.g. aggregate across tables), the chain fans out to m
 ## Phase 1: Fix and Extend the Trace DB (Pipeline)
 
 ### Files
+
 - `packages/datapipe/migrator/trace-db.ts`
 - (optional) `packages/datapipe/scraper/` — add batch metadata tracking
 
@@ -54,9 +55,9 @@ interface ScrapeBatchLog {
   tableName: string;
   pkStartValue: number;
   pageNumber: number;
-  endpointUrl: string;     // e.g. "GET /api/v1/tables/Vote/batch?pkStartValue=0"
+  endpointUrl: string; // e.g. "GET /api/v1/tables/Vote/batch?pkStartValue=0"
   rowCount: number;
-  scrapedAt: string;       // ISO timestamp
+  scrapedAt: string; // ISO timestamp
 }
 ```
 
@@ -92,18 +93,18 @@ This enables the full chain: row → endpoint → timestamp.
 ```typescript
 // ==== A single source row ====
 export interface ProvenanceSource {
-  table: string;                // e.g. "Vote"
-  pkName?: string;              // e.g. "PersonId"
-  pkValue?: string | number;    // e.g. 467
-  label?: string;               // human-readable record label, e.g. "Hoskonen, Hannu"
+  table: string; // e.g. "Vote"
+  pkName?: string; // e.g. "PersonId"
+  pkValue?: string | number; // e.g. 467
+  label?: string; // human-readable record label, e.g. "Hoskonen, Hannu"
 }
 
 // ==== Pre-formatted provenance for a displayed figure ====
 export interface ProvenanceInfo {
-  sources: ProvenanceSource[];  // one or more (multi-source support)
-  value?: string;               // headline figure for popover
-  caption?: string;             // descriptive caption
-  markText?: string;            // marker override ("∗" default)
+  sources: ProvenanceSource[]; // one or more (multi-source support)
+  value?: string; // headline figure for popover
+  caption?: string; // descriptive caption
+  markText?: string; // marker override ("∗" default)
 
   /** Build CiteProps ready for the cite() template helper */
   toCiteProps(): CiteProps;
@@ -116,29 +117,89 @@ export interface ProvenanceInfo {
 ### Table → Display Name & Endpoint Mapping
 
 ```typescript
-export const TABLE_META: Record<string, {
-  displayName: string;
-  endpoint: string;
-}> = {
-  "Vote":                  { displayName: "Eduskunnan avoin data · Vote",                endpoint: "GET /api/v1/tables/Vote/batch" },
-  "SaliDBAanestys":        { displayName: "Eduskunnan avoin data · Vote",                endpoint: "GET /api/v1/tables/SaliDBAanestys/batch" },
-  "SaliDBAanestysEdustaja":{ displayName: "Eduskunnan avoin data · Vote",               endpoint: "GET /api/v1/tables/SaliDBAanestysEdustaja/batch" },
-  "MemberOfParliament":    { displayName: "Eduskunnan avoin data · MemberOfParliament",  endpoint: "GET /api/v1/tables/MemberOfParliament/batch" },
-  "SaliDBIstunto":         { displayName: "Eduskunnan avoin data · Session",             endpoint: "GET /api/v1/tables/SaliDBIstunto/batch" },
-  "SaliDBKohta":           { displayName: "Eduskunnan avoin data · Section",             endpoint: "GET /api/v1/tables/SaliDBKohta/batch" },
-  "SaliDBPuheenvuoro":     { displayName: "Eduskunnan avoin data · Speech",              endpoint: "GET /api/v1/tables/SaliDBPuheenvuoro/batch" },
-  "LegislativeInitiative": { displayName: "Eduskunnan avoin data · VaskiData",           endpoint: "GET /api/v1/tables/LegislativeInitiative/batch" },
-  "WrittenQuestion":       { displayName: "Eduskunnan avoin data · VaskiData",           endpoint: "GET /api/v1/tables/WrittenQuestion/batch" },
-  "OralQuestion":          { displayName: "Eduskunnan avoin data · VaskiData",           endpoint: "GET /api/v1/tables/OralQuestion/batch" },
-  "Interpellation":        { displayName: "Eduskunnan avoin data · VaskiData",           endpoint: "GET /api/v1/tables/Interpellation/batch" },
-  "GovernmentProposal":    { displayName: "Eduskunnan avoin data · VaskiData",           endpoint: "GET /api/v1/tables/GovernmentProposal/batch" },
-  "CommitteeReport":       { displayName: "Eduskunnan avoin data · VaskiData",           endpoint: "GET /api/v1/tables/CommitteeReport/batch" },
-  "ParliamentAnswer":      { displayName: "Eduskunnan avoin data · VaskiData",           endpoint: "GET /api/v1/tables/ParliamentAnswer/batch" },
-  "Speech":                { displayName: "Eduskunnan avoin data · Speech",              endpoint: "GET /api/v1/tables/Speech/batch" },
-  "Session":               { displayName: "Eduskunnan avoin data · Session",             endpoint: "GET /api/v1/tables/Session/batch" },
-  "Committee":             { displayName: "Eduskunnan avoin data · Committee",           endpoint: "GET /api/v1/tables/Committee/batch" },
-  "ParliamentaryGroup":    { displayName: "Eduskunnan avoin data · ParliamentaryGroup",  endpoint: "GET /api/v1/tables/ParliamentaryGroup/batch" },
-  "Voting":                { displayName: "Eduskunnan avoin data · Vote",                 endpoint: "GET /api/v1/tables/Voting/batch" },
+export const TABLE_META: Record<
+  string,
+  {
+    displayName: string;
+    endpoint: string;
+  }
+> = {
+  Vote: {
+    displayName: "Eduskunnan avoin data · Vote",
+    endpoint: "GET /api/v1/tables/Vote/batch",
+  },
+  SaliDBAanestys: {
+    displayName: "Eduskunnan avoin data · Vote",
+    endpoint: "GET /api/v1/tables/SaliDBAanestys/batch",
+  },
+  SaliDBAanestysEdustaja: {
+    displayName: "Eduskunnan avoin data · Vote",
+    endpoint: "GET /api/v1/tables/SaliDBAanestysEdustaja/batch",
+  },
+  MemberOfParliament: {
+    displayName: "Eduskunnan avoin data · MemberOfParliament",
+    endpoint: "GET /api/v1/tables/MemberOfParliament/batch",
+  },
+  SaliDBIstunto: {
+    displayName: "Eduskunnan avoin data · Session",
+    endpoint: "GET /api/v1/tables/SaliDBIstunto/batch",
+  },
+  SaliDBKohta: {
+    displayName: "Eduskunnan avoin data · Section",
+    endpoint: "GET /api/v1/tables/SaliDBKohta/batch",
+  },
+  SaliDBPuheenvuoro: {
+    displayName: "Eduskunnan avoin data · Speech",
+    endpoint: "GET /api/v1/tables/SaliDBPuheenvuoro/batch",
+  },
+  LegislativeInitiative: {
+    displayName: "Eduskunnan avoin data · VaskiData",
+    endpoint: "GET /api/v1/tables/LegislativeInitiative/batch",
+  },
+  WrittenQuestion: {
+    displayName: "Eduskunnan avoin data · VaskiData",
+    endpoint: "GET /api/v1/tables/WrittenQuestion/batch",
+  },
+  OralQuestion: {
+    displayName: "Eduskunnan avoin data · VaskiData",
+    endpoint: "GET /api/v1/tables/OralQuestion/batch",
+  },
+  Interpellation: {
+    displayName: "Eduskunnan avoin data · VaskiData",
+    endpoint: "GET /api/v1/tables/Interpellation/batch",
+  },
+  GovernmentProposal: {
+    displayName: "Eduskunnan avoin data · VaskiData",
+    endpoint: "GET /api/v1/tables/GovernmentProposal/batch",
+  },
+  CommitteeReport: {
+    displayName: "Eduskunnan avoin data · VaskiData",
+    endpoint: "GET /api/v1/tables/CommitteeReport/batch",
+  },
+  ParliamentAnswer: {
+    displayName: "Eduskunnan avoin data · VaskiData",
+    endpoint: "GET /api/v1/tables/ParliamentAnswer/batch",
+  },
+  Speech: {
+    displayName: "Eduskunnan avoin data · Speech",
+    endpoint: "GET /api/v1/tables/Speech/batch",
+  },
+  Session: {
+    displayName: "Eduskunnan avoin data · Session",
+    endpoint: "GET /api/v1/tables/Session/batch",
+  },
+  Committee: {
+    displayName: "Eduskunnan avoin data · Committee",
+    endpoint: "GET /api/v1/tables/Committee/batch",
+  },
+  ParliamentaryGroup: {
+    displayName: "Eduskunnan avoin data · ParliamentaryGroup",
+    endpoint: "GET /api/v1/tables/ParliamentaryGroup/batch",
+  },
+  Voting: {
+    displayName: "Eduskunnan avoin data · Vote",
+    endpoint: "GET /api/v1/tables/Voting/batch",
+  },
 };
 ```
 
@@ -198,7 +259,11 @@ export class TraceRepository {
   constructor(private traceDb: Database) {}
 
   /** Single-record lookup */
-  getProvenance(table: string, pkName: string, pkValue: string): TraceRecord | null;
+  getProvenance(
+    table: string,
+    pkName: string,
+    pkValue: string,
+  ): TraceRecord | null;
 
   /** Batch lookup for multi-source figures */
   getProvenances(
@@ -235,18 +300,26 @@ export class ProvenanceService {
   constructor(private traceRepo: TraceRepository) {}
 
   /** Build pre-formatted provenance from one or more source references */
-  forSources(sources: ProvenanceSource[], opts?: {
-    value?: string;
-    caption?: string;
-    markText?: string;
-  }): ProvenanceInfo;
+  forSources(
+    sources: ProvenanceSource[],
+    opts?: {
+      value?: string;
+      caption?: string;
+      markText?: string;
+    },
+  ): ProvenanceInfo;
 
   /** Convenience for single-source figures */
   forTable(
     table: string,
     pkName: string,
     pkValue: string | number,
-    opts?: { value?: string; caption?: string; markText?: string; label?: string },
+    opts?: {
+      value?: string;
+      caption?: string;
+      markText?: string;
+      label?: string;
+    },
   ): ProvenanceInfo;
 
   /** Build sourceNote from a ProvenanceInfo */
@@ -286,10 +359,15 @@ const profile = buildPersonProfileData({
       value: t("persons:profile.voted_no_caption"),
       caption: t("persons:profile.voted_no_caption"),
     }),
-    initiatives: provenanceService.forTable("LegislativeInitiative", "PersonId", personId, {
-      value: t("persons:profile.initiatives_n", { count: nInitiatives }),
-      caption: t("persons:profile.initiatives_caption"),
-    }),
+    initiatives: provenanceService.forTable(
+      "LegislativeInitiative",
+      "PersonId",
+      personId,
+      {
+        value: t("persons:profile.initiatives_n", { count: nInitiatives }),
+        caption: t("persons:profile.initiatives_caption"),
+      },
+    ),
     // ...
   },
 });
@@ -310,11 +388,13 @@ cite(`${s.participationPct}<small>%</small>`, {
   fetched: "...",
   chain: "avoindata.eduskunta.fi > Vote > Etusivu-kooste",
   markText: "*",
-})
+});
 
 // AFTER (data-driven):
-cite(`${s.participationPct}<small>%</small>`,
-  data.provenance.participation.toCiteProps())
+cite(
+  `${s.participationPct}<small>%</small>`,
+  data.provenance.participation.toCiteProps(),
+);
 ```
 
 For multi-source `sourceNote`:
@@ -324,10 +404,10 @@ For multi-source `sourceNote`:
 sourceNote({
   dataset: "Eduskunnan avoin data · Session + Voting + Speech",
   fetchedAt: data.fetchedAt,
-})
+});
 
 // AFTER:
-sourceNote(data.provenance.sessionList.toSourceNoteOptions())
+sourceNote(data.provenance.sessionList.toSourceNoteOptions());
 ```
 
 ## Phase 7: Server Wiring
@@ -375,21 +455,21 @@ export function openTraceDb(): Database {
 
 ## File Change Summary
 
-| Area | File | Change |
-|---|---|---|
-| Pipeline | `packages/datapipe/migrator/trace-db.ts` | Fix `scraped_at` (skip epoch zero), populate `source_page` from batch metadata, add `ImportSourceEndpoint` schema |
-| Pipeline | `packages/datapipe/scraper/*.ts` (optional) | Add `scrape_batches` metadata log per API call |
-| Server (new) | `packages/server/src/database/trace.repository.ts` | `TraceRepository` class — reads trace DB |
-| Server (new) | `packages/server/src/domain/provenance.ts` | Types: `ProvenanceSource`, `ProvenanceInfo`, `TABLE_META` |
-| Server (new) | `packages/server/src/domain/provenance.service.ts` | `ProvenanceService` — builds `ProvenanceInfo`, calls trace repo |
-| Server | `packages/server/src/database/db.ts` | Export `openTraceDb()` helper |
-| Server | `packages/server/index.ts` | Wire trace repo + provenance service (lazy) |
-| Server | `packages/server/src/features/person/person.service.ts` | Build provenance info per field |
-| Server | `packages/server/src/features/person/pages/profile.view-model.ts` | Add `provenance` field |
-| Server | `packages/server/src/features/person/pages/profile.page.tsx` | Use `.toCiteProps()` |
-| Server | `packages/server/src/features/session/session.service.ts` | Build provenance info |
-| Server | Session view models + page templates | Use provenance service |
-| Server | Voting feature | Build + use provenance |
-| Server | Document feature | Build + use provenance |
-| Server | Metadata (parties) feature | Build + use provenance |
-| Server | Debate fragment | Build + use provenance |
+| Area         | File                                                              | Change                                                                                                            |
+| ------------ | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Pipeline     | `packages/datapipe/migrator/trace-db.ts`                          | Fix `scraped_at` (skip epoch zero), populate `source_page` from batch metadata, add `ImportSourceEndpoint` schema |
+| Pipeline     | `packages/datapipe/scraper/*.ts` (optional)                       | Add `scrape_batches` metadata log per API call                                                                    |
+| Server (new) | `packages/server/src/database/trace.repository.ts`                | `TraceRepository` class — reads trace DB                                                                          |
+| Server (new) | `packages/server/src/domain/provenance.ts`                        | Types: `ProvenanceSource`, `ProvenanceInfo`, `TABLE_META`                                                         |
+| Server (new) | `packages/server/src/domain/provenance.service.ts`                | `ProvenanceService` — builds `ProvenanceInfo`, calls trace repo                                                   |
+| Server       | `packages/server/src/database/db.ts`                              | Export `openTraceDb()` helper                                                                                     |
+| Server       | `packages/server/index.ts`                                        | Wire trace repo + provenance service (lazy)                                                                       |
+| Server       | `packages/server/src/features/person/person.service.ts`           | Build provenance info per field                                                                                   |
+| Server       | `packages/server/src/features/person/pages/profile.view-model.ts` | Add `provenance` field                                                                                            |
+| Server       | `packages/server/src/features/person/pages/profile.page.tsx`      | Use `.toCiteProps()`                                                                                              |
+| Server       | `packages/server/src/features/session/session.service.ts`         | Build provenance info                                                                                             |
+| Server       | Session view models + page templates                              | Use provenance service                                                                                            |
+| Server       | Voting feature                                                    | Build + use provenance                                                                                            |
+| Server       | Document feature                                                  | Build + use provenance                                                                                            |
+| Server       | Metadata (parties) feature                                        | Build + use provenance                                                                                            |
+| Server       | Debate fragment                                                   | Build + use provenance                                                                                            |

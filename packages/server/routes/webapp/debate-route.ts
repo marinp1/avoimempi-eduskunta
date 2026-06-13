@@ -6,7 +6,6 @@ import {
   getPeriodSelectorData,
   notFoundResponse,
 } from "./helpers";
-import { fetchedAt } from "#server/helpers/template-helpers";
 import type { PartySeatRow } from "#server/types/webapp";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
@@ -80,7 +79,7 @@ export function createDebateRoute(deps: WebappDeps) {
         sectionVotings,
         sectionDocs,
         partyGovMap,
-        fetchedAt: fetchedAt(),
+        fetchedAt: deps.provenanceService.tableFetchedAt("SaliDBPuheenvuoro"),
       });
 
       const title = i18next.t("common:debate_title_format", {

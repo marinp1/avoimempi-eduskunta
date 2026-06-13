@@ -2,7 +2,6 @@ import Aanestykset, {
   VoteGroupsFragment,
 } from "#server/features/voting/pages/list.page";
 import { buildAanestyksetData } from "#server/features/voting/pages/list.view-model";
-import { fetchedAt } from "#server/helpers/template-helpers";
 import { withWebappPage } from "./helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
@@ -25,7 +24,8 @@ export function createVotingsListRoute(deps: WebappDeps) {
       const searchQuery = url.searchParams.get("q")?.trim().toLowerCase();
       const cursor = url.searchParams.get("cursor") ?? undefined;
       const typeParam = url.searchParams.get("type") ?? undefined;
-      const activeFilter = typeParam && VALID_TYPES.has(typeParam) ? typeParam : null;
+      const activeFilter =
+        typeParam && VALID_TYPES.has(typeParam) ? typeParam : null;
 
       // When a cursor is present (load-more), fetch sessions strictly before it.
       const endDate = cursor ? dayBefore(cursor) : ctx.bounds.endDate;
@@ -41,7 +41,7 @@ export function createVotingsListRoute(deps: WebappDeps) {
         votings: browseResult,
         searchQuery,
         activeFilter,
-        fetchedAt: fetchedAt(),
+        fetchedAt: deps.provenanceService.tableFetchedAt("SaliDBAanestys"),
       });
 
       // Click-to-load: return only the new groups + updated button, no page wrapper.

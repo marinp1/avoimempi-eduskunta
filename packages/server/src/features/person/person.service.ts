@@ -4,10 +4,13 @@ import {
   buildPersonSpeeches,
   type PersonProfileData,
 } from "./pages/profile.view-model";
-import { fetchedAt } from "#server/helpers";
+import type { ProvenanceService } from "#server/domain/provenance.service";
 
 export class PersonService {
-  constructor(private readonly personRepo: PersonRepository) {}
+  constructor(
+    private readonly personRepo: PersonRepository,
+    private readonly provenanceService: ProvenanceService,
+  ) {}
 
   async getProfile(personId: string): Promise<PersonProfileData | null> {
     const details = this.personRepo.fetchRepresentativeDetails({ personId });
@@ -52,7 +55,7 @@ export class PersonService {
       committees,
       focusAreas,
       capabilities,
-      fetchedAt: fetchedAt(),
+      provenanceService: this.provenanceService,
     });
   }
 
@@ -68,7 +71,7 @@ export class PersonService {
       firstName: details.first_name ?? "",
       lastName: details.last_name ?? "",
       speeches,
-      fetchedAt: fetchedAt(),
+      provenanceService: this.provenanceService,
     });
   }
 }

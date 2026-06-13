@@ -6,8 +6,10 @@ import {
 } from "../shared/database";
 import { createResponseCache } from "./src/cache/response-cache";
 import { loadRuntimeConfig } from "./src/config/runtime-config";
-import { DatabaseConnection } from "./src/database/db";
+import { DatabaseConnection, openTraceDb } from "./src/database/db";
 import { prepareDatabaseForServerStartup } from "./src/database/launch-db";
+import { TraceRepository } from "./src/database/trace.repository";
+import { ProvenanceService } from "./src/domain/provenance.service";
 import { AnalyticsRepository } from "./src/features/analytics/analytics.repository";
 import { DocumentRepository } from "./src/features/document/document.repository";
 import { HomeRepository } from "./src/features/home/home.repository";
@@ -34,13 +36,23 @@ import {
 await prepareDatabaseForServerStartup();
 const databaseConnection = new DatabaseConnection();
 const db = databaseConnection.db;
+
+const traceDb = openTraceDb();
+if (!traceDb) {
+  console.warn(
+    "Trace DB not found — provenance timestamps will show current time",
+  );
+}
+const traceRepo = traceDb ? new TraceRepository(traceDb) : null;
+const provenanceService = new ProvenanceService(traceRepo);
+
 const analyticsRepository = new AnalyticsRepository(db);
 const documentRepository = new DocumentRepository(db);
 const metadataRepository = new MetadataRepository(db);
 const personRepository = new PersonRepository(db);
 const sessionRepository = new SessionRepository(db);
 const votingRepository = new VotingRepository(db);
-const personService = new PersonService(personRepository);
+const personService = new PersonService(personRepository, provenanceService);
 const documentService = new DocumentService(
   documentRepository,
   personRepository,
@@ -49,8 +61,9 @@ const metadataService = new MetadataService(metadataRepository);
 const sessionService = new SessionService(
   sessionRepository,
   documentRepository,
+  provenanceService,
 );
-const votingService = new VotingService(votingRepository);
+const votingService = new VotingService(votingRepository, provenanceService);
 
 const readTimestamp = async (filePath: string): Promise<string | null> => {
   const file = Bun.file(filePath);
@@ -151,6 +164,9 @@ const allRoutes = withSecurityHeaders({
       sessionService,
       votingRepository,
       votingService,
+      provenanceService,
+      traceRepo,
+      db,
     }),
     { cacheKey: webappCacheKey },
   ),

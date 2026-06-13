@@ -137,7 +137,11 @@ document.addEventListener("click", (e) => {
   const c = (e.target as Element).closest<HTMLElement>(".cite");
   if (c) {
     e.preventDefault();
-    traceCurrent === c ? traceClose() : traceOpen(c);
+    if (traceCurrent === c) {
+      traceClose();
+    } else {
+      traceOpen(c);
+    }
     return;
   }
   if (!(e.target as Element).closest(".trace-pop")) traceClose();
@@ -148,7 +152,11 @@ document.addEventListener("keydown", (e) => {
   const c = (e.target as Element).closest?.<HTMLElement>(".cite");
   if (c && (e.key === "Enter" || e.key === " ")) {
     e.preventDefault();
-    traceCurrent === c ? traceClose() : traceOpen(c);
+    if (traceCurrent === c) {
+      traceClose();
+    } else {
+      traceOpen(c);
+    }
   }
 });
 

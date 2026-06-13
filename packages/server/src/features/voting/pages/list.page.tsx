@@ -24,7 +24,11 @@ const FILTER_CHIPS: Array<{
   { key: null, labelKey: "votings:filter_all", dotColor: null },
   { key: "lait", labelKey: "votings:filter_laws", dotColor: "var(--hall)" },
   { key: "selonteot", labelKey: "votings:filter_reports", dotColor: "#4caf50" },
-  { key: "luottamus", labelKey: "votings:filter_confidence", dotColor: "var(--red)" },
+  {
+    key: "luottamus",
+    labelKey: "votings:filter_confidence",
+    dotColor: "var(--red)",
+  },
   { key: "tiukat", labelKey: "votings:filter_tight", dotColor: "#f90" },
 ];
 
@@ -72,7 +76,9 @@ export default function Aanestykset({ title, data }: Props) {
         <div class="fchips mt-14">
           {FILTER_CHIPS.map((chip) => {
             const isActive = d.activeFilter === chip.key;
-            const href = chip.key ? `/aanestykset?type=${chip.key}` : "/aanestykset";
+            const href = chip.key
+              ? `/aanestykset?type=${chip.key}`
+              : "/aanestykset";
             return (
               <a
                 href={href}
@@ -81,7 +87,10 @@ export default function Aanestykset({ title, data }: Props) {
                 class={clsx("fchip", isActive && "is-active")}
               >
                 {chip.dotColor && (
-                  <span class="pdot" style={`background:${chip.dotColor}`}></span>
+                  <span
+                    class="pdot"
+                    style={`background:${chip.dotColor}`}
+                  ></span>
                 )}
                 {i18next.t(chip.labelKey)}
               </a>

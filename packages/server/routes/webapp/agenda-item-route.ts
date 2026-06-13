@@ -1,7 +1,6 @@
 import Asiakohta from "#server/features/session/pages/agenda-item.page";
 import { buildAsiakohtaData } from "#server/features/session/pages/section.view-model";
 import { withWebappPage } from "./helpers";
-import { fetchedAt } from "#server/helpers/template-helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
@@ -41,7 +40,7 @@ export function createAgendaItemRoute(deps: WebappDeps) {
         sessionSections: sessionData.sections,
         sectionVotings,
         speeches: speechesResult?.speeches ?? [],
-        fetchedAt: fetchedAt(),
+        fetchedAt: deps.provenanceService.tableFetchedAt("SaliDBKohta"),
       });
 
       return {

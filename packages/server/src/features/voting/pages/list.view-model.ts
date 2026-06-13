@@ -64,7 +64,22 @@ export interface AanestyksetData {
   fetchedAt: string;
 }
 
-const COMMITTEE_PREFIXES = ["SIVM", "TVM", "HaVM", "PeVM", "VaVM", "LaVM", "LiVM", "MmVM", "PuVM", "SiVM", "StVM", "TaVM", "UaVM", "VaVL"];
+const COMMITTEE_PREFIXES = [
+  "SIVM",
+  "TVM",
+  "HaVM",
+  "PeVM",
+  "VaVM",
+  "LaVM",
+  "LiVM",
+  "MmVM",
+  "PuVM",
+  "SiVM",
+  "StVM",
+  "TaVM",
+  "UaVM",
+  "VaVL",
+];
 
 function parseDocTunnuses(raw: string | null): VoteRow["documents"] {
   if (!raw) return [];
@@ -84,7 +99,11 @@ function matchesType(v: VotingBrowseRow, type: string): boolean {
   const title = (v.title ?? "").toLowerCase();
   switch (type) {
     case "lait":
-      return title.includes("laki") && !title.includes("luottamus") && !title.includes("selonteko");
+      return (
+        title.includes("laki") &&
+        !title.includes("luottamus") &&
+        !title.includes("selonteko")
+      );
     case "selonteot":
       return title.includes("selonteko");
     case "luottamus":

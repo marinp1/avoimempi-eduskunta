@@ -2,7 +2,6 @@ import Aanestys from "#server/features/voting/pages/detail.page";
 import type { SingleVoteData } from "#server/features/voting/pages/detail.view-model";
 import { buildSingleVoteData } from "#server/features/voting/pages/detail.view-model";
 import { withWebappPage } from "./helpers";
-import { fetchedAt } from "#server/helpers/template-helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
@@ -30,7 +29,7 @@ export function createVotingRoute(deps: WebappDeps) {
       const data: SingleVoteData = buildSingleVoteData({
         voting,
         details,
-        fetchedAt: fetchedAt(),
+        provenanceService: deps.provenanceService,
       });
 
       return {

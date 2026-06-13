@@ -9,6 +9,11 @@ import {
   initiativeTypeLabel,
   questionKindLabel,
 } from "#server/features/document/kinds/labels";
+import type {
+  ProvenanceService,
+  CitePropData,
+} from "#server/domain/provenance.service";
+import type { SourceNoteOptions } from "#server/components/provenance";
 
 interface PersonRow {
   person_id: number;
@@ -172,7 +177,21 @@ export interface PersonProfileData {
     participation: { own: string; partyAvg: string; parliamentAvg: string };
   } | null;
   hasAiSummary: boolean;
-  fetchedAt: string;
+  provenance: {
+    stats: {
+      participation: CitePropData;
+      votedNo: CitePropData;
+      initiatives: CitePropData;
+      writtenQuestions: CitePropData;
+    };
+    notes: {
+      vote: SourceNoteOptions;
+      vaski: SourceNoteOptions;
+      committees: SourceNoteOptions;
+      focusAreas: SourceNoteOptions;
+      basics: SourceNoteOptions;
+    };
+  };
 }
 
 export interface PersonSpeechesData {
@@ -183,7 +202,7 @@ export interface PersonSpeechesData {
     startTime: string | null;
     speechType: string | null;
   }>;
-  fetchedAt: string;
+  sourceNote: SourceNoteOptions;
 }
 
 export function buildPersonProfileData(input: {
@@ -199,7 +218,7 @@ export function buildPersonProfileData(input: {
   committees: CommitteeRow[];
   focusAreas: FocusAreasData;
   capabilities: { hasAiSummary: boolean };
-  fetchedAt: string;
+  provenanceService: ProvenanceService;
 }): PersonProfileData {
   const {
     details,
@@ -214,7 +233,7 @@ export function buildPersonProfileData(input: {
     committees,
     focusAreas,
     capabilities,
-    fetchedAt,
+    provenanceService,
   } = input;
 
   const currentGroup = findCurrentGroup(groupMemberships);
@@ -355,7 +374,58 @@ export function buildPersonProfileData(input: {
     })),
     baselines,
     hasAiSummary: capabilities.hasAiSummary,
-    fetchedAt,
+    provenance: {
+      stats: {
+        participation: provenanceService.citeProps({
+          sources: [{ table: "SaliDBAanestysEdustaja" }],
+          value: `${participationPct} % (${voteTally.nCast} / ${voteTally.nTotal})`,
+          caption: i18next.t("persons:profile.participation_caption"),
+          markText: "*",
+        }),
+        votedNo: provenanceService.citeProps({
+          sources: [
+            {
+              table: "SaliDBAanestysEdustaja",
+              label: i18next.t("persons:profile.voted_no_record", {
+                nYes: voteTally.nYes,
+                nNo: voteTally.nNo,
+                nEmpty: voteTally.nEmpty,
+              }),
+            },
+          ],
+          value: i18next.t("persons:profile.voted_no_caption"),
+          caption: i18next.t("persons:profile.voted_no_caption"),
+          markText: "*",
+        }),
+        initiatives: provenanceService.citeProps({
+          sources: [{ table: "VaskiData" }],
+          value: i18next.t("persons:profile.initiatives_n", {
+            count: nInitiatives,
+          }),
+          caption: i18next.t("persons:profile.initiatives_caption"),
+          markText: "*",
+        }),
+        writtenQuestions: provenanceService.citeProps({
+          sources: [{ table: "VaskiData" }],
+          value: i18next.t("persons:profile.written_questions_n", {
+            count: nWrittenQuestions,
+          }),
+          caption: i18next.t("persons:profile.written_questions_caption"),
+          markText: "*",
+        }),
+      },
+      notes: {
+        vote: provenanceService.sourceNoteForQuery("person-votes.sql"),
+        vaski: provenanceService.sourceNoteOpts(["VaskiData"]),
+        committees: provenanceService.sourceNoteForQuery(
+          "person-committees.sql",
+        ),
+        focusAreas: provenanceService.sourceNoteForQuery(
+          "person-focus-areas.sql",
+        ),
+        basics: provenanceService.sourceNoteForQuery("person-detail.sql"),
+      },
+    },
   };
 }
 
@@ -368,7 +438,7 @@ export function buildPersonSpeeches(input: {
     start_time: string | null;
     speech_type: string | null;
   }>;
-  fetchedAt: string;
+  provenanceService: ProvenanceService;
 }): PersonSpeechesData {
   return {
     personId: input.personId,
@@ -378,6 +448,8 @@ export function buildPersonSpeeches(input: {
       startTime: sp.start_time ?? null,
       speechType: sp.speech_type ?? null,
     })),
-    fetchedAt: input.fetchedAt,
+    sourceNote: input.provenanceService.sourceNoteForQuery(
+      "person-speeches.sql",
+    ),
   };
 }

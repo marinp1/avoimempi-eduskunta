@@ -492,7 +492,7 @@ export async function scrapeTable(
       }
 
       loopCount++;
-    } while (true);
+    } while (true); // eslint-disable-line no-constant-condition
 
     return {
       rowsWritten,

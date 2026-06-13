@@ -3,7 +3,6 @@ import Asiakirjat, {
 } from "#server/features/document/pages/list.page";
 import type { AsiakirjatIndexData } from "#server/features/document/pages/list.page";
 import { withWebappPage } from "./helpers";
-import { fetchedAt } from "#server/helpers/template-helpers";
 import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute, isHtmx } from "#server/helpers";
@@ -33,7 +32,7 @@ export function createDocumentsListRoute(deps: WebappDeps) {
         page: currentPage,
         totalPages: Math.ceil(totalCount / limit),
         kind: kind ?? "",
-        fetchedAt: fetchedAt(),
+        fetchedAt: deps.provenanceService.tableFetchedAt("VaskiData"),
       };
 
       // Click-to-load: return only the new rows + updated button, no page wrapper.

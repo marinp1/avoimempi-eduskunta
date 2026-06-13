@@ -3,6 +3,10 @@
 }
 html {
   -webkit-text-size-adjust: 100%;
+  /* Always reserve the scrollbar gutter so opening a scroll-locking overlay
+     (e.g. the data-trace modal sets `overflow: hidden`) doesn't reclaim the
+     scrollbar's width and reflow the whole page behind it. */
+  scrollbar-gutter: stable;
 }
 body {
   margin: 0;

@@ -14,3 +14,4 @@ import "./mp-search-island";
 import "./nav-morph";
 import "./about-island";
 import "./nav-island";
+import "./trace-overlay-island";

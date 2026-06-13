@@ -1,10 +1,13 @@
 import type { VotingRepository } from "./voting.repository";
 import { buildAanestyksetData } from "./pages/list.view-model";
 import { buildSingleVoteData, buildMpVotes } from "./pages/detail.view-model";
-import { fetchedAt } from "#server/helpers";
+import type { ProvenanceService } from "#server/domain/provenance.service";
 
 export class VotingService {
-  constructor(private readonly votingRepo: VotingRepository) {}
+  constructor(
+    private readonly votingRepo: VotingRepository,
+    private readonly provenanceService: ProvenanceService,
+  ) {}
 
   browseVotings(params: {
     startDate?: string;
@@ -36,7 +39,7 @@ export class VotingService {
       votings: browseResult,
       searchQuery: params.searchQuery,
       activeFilter: null,
-      fetchedAt: fetchedAt(),
+      fetchedAt: this.provenanceService.tableFetchedAt("SaliDBAanestys"),
     });
   }
 
@@ -47,7 +50,7 @@ export class VotingService {
     return buildSingleVoteData({
       voting,
       details,
-      fetchedAt: fetchedAt(),
+      provenanceService: this.provenanceService,
     });
   }
 

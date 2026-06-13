@@ -2,7 +2,6 @@ import Puolue from "#server/features/metadata/pages/party.page";
 import type { PartyDetailData } from "#server/features/metadata/pages/detail.view-model";
 import { page, getWebappContext, getPeriodSelectorData } from "./helpers";
 import { buildPartyDetailData } from "#server/features/metadata/pages/detail.view-model";
-import { fetchedAt } from "#server/helpers/template-helpers";
 import type { WebappDeps } from "./deps";
 import { defineRoute } from "#server/helpers";
 
@@ -52,7 +51,7 @@ export function createPartyRoute(deps: WebappDeps) {
         members,
         cohRow,
         totalSeats,
-        fetchedAt: fetchedAt(),
+        fetchedAt: deps.provenanceService.tableFetchedAt("MemberOfParliament"),
       });
 
       return page({

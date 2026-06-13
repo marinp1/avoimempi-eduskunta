@@ -144,5 +144,32 @@
     "colophon_link_url": "https://avoindata.eduskunta.fi/",
     "colophon_link_text": "avoindata.eduskunta.fi",
     "colophon_independent": "Sivuston tiedot haetaan päivittäin eduskunnan avoimen datojen rajapinnoista."
+  },
+  "trace": {
+    "button": "Tietolähteet",
+    "title": "Tietolähteet ja tiedonkulku",
+    "subtitle": "Kaikki tällä sivulla näkyvä tieto on peräisin eduskunnan avoimesta datasta. Kaavio näyttää, mistä rajapinnoista ja tauluista tämän näkymän tiedot kulkevat: avoimesta datasta lähdetauluihin, tietokantatauluihin, kyselyihin ja lopulta tähän näkymään.",
+    "close_aria": "Sulje",
+    "layer_api": "Avoin data",
+    "layer_sources": "Lähdetaulut",
+    "layer_final": "Tietokantataulut",
+    "layer_queries": "Kyselyt",
+    "layer_view": "Tämä näkymä",
+    "rows_imported": "{{count}} riviä",
+    "last_fetched": "haettu {{when}}",
+    "open_in_api": "Avaa rajapinnassa",
+    "records_summary": "Yksittäiset tietueet ({{count}})",
+    "records_more": "+{{count}} muuta tietuetta",
+    "collapsed_final": "{{count}} tietokantataulua",
+    "empty": "Tälle sivulle ei löytynyt tietolähteitä. Avaa sivu uudelleen ja yritä sitten avata tietolähteet.",
+    "fallback_note": "Tietokantataulut on tiivistetty yhdeksi solmuksi luettavuuden vuoksi.",
+    "view_sql": "Näytä SQL-kysely",
+    "view_source": "Näytä tietolähteen tiedot",
+    "detail_hint": "Valitse kaaviosta solmu nähdäksesi sen tiedot.",
+    "detail_unavailable": "Tietoja ei löytynyt.",
+    "params_title": "Kyselyn parametrit",
+    "record_id_col": "Tunniste",
+    "record_label_col": "Tieto",
+    "aggregated_note": "Nämä luvut on koostettu useasta tietueesta, joten yksittäisiä rivejä ei voi listata. Näkymä on rajattu seuraavilla parametreilla:"
   }
 }

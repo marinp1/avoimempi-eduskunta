@@ -107,14 +107,10 @@ export default function Edustaja({ data }: Props) {
             </div>
             <div class="v">
               {s.nTotal > 0
-                ? cite(`${s.participationPct}<small>%</small>`, {
-                    value: `${s.participationPct} % (${s.nCast} / ${s.nTotal})`,
-                    caption: i18next.t("persons:profile.participation_caption"),
-                    set: "Eduskunnan avoin data · Vote",
-                    table: "Vote",
-                    record: `annetut ${s.nCast} · poissa ${s.nAbsent}`,
-                    markText: "*",
-                  })
+                ? cite(
+                    `${s.participationPct}<small>%</small>`,
+                    data.provenance.stats.participation,
+                  )
                 : "—"}
             </div>
           </div>
@@ -122,18 +118,10 @@ export default function Edustaja({ data }: Props) {
             <div class="k">{i18next.t("persons:profile.voted_no")}</div>
             <div class="v">
               {s.nNo > 0
-                ? cite(`${s.nNo}<small>×</small>`, {
-                    value: i18next.t("persons:profile.voted_no_caption"),
-                    caption: i18next.t("persons:profile.voted_no_caption"),
-                    set: "Eduskunnan avoin data · Vote",
-                    table: "Vote",
-                    record: i18next.t("persons:profile.voted_no_record", {
-                      nYes: s.nYes,
-                      nNo: s.nNo,
-                      nEmpty: s.nEmpty,
-                    }),
-                    markText: "*",
-                  })
+                ? cite(
+                    `${s.nNo}<small>×</small>`,
+                    data.provenance.stats.votedNo,
+                  )
                 : "—"}
             </div>
           </div>
@@ -141,18 +129,10 @@ export default function Edustaja({ data }: Props) {
             <div class="k">{i18next.t("persons:profile.own_initiatives")}</div>
             <div class="v">
               {s.nInitiatives > 0
-                ? cite(String(s.nInitiatives), {
-                    value: i18next.t("persons:profile.initiatives_n", {
-                      count: s.nInitiatives,
-                    }),
-                    caption: i18next.t("persons:profile.initiatives_caption"),
-                    set: "Eduskunnan avoin data · VaskiData",
-                    table: "LegislativeInitiative",
-                    record: i18next.t("persons:profile.initiatives_record", {
-                      count: s.nInitiatives,
-                    }),
-                    markText: "*",
-                  })
+                ? cite(
+                    String(s.nInitiatives),
+                    data.provenance.stats.initiatives,
+                  )
                 : "—"}
             </div>
           </div>
@@ -162,21 +142,10 @@ export default function Edustaja({ data }: Props) {
             </div>
             <div class="v">
               {s.nWrittenQuestions > 0
-                ? cite(String(s.nWrittenQuestions), {
-                    value: i18next.t("persons:profile.written_questions_n", {
-                      count: s.nWrittenQuestions,
-                    }),
-                    caption: i18next.t(
-                      "persons:profile.written_questions_caption",
-                    ),
-                    set: "Eduskunnan avoin data · VaskiData",
-                    table: "WrittenQuestion",
-                    record: i18next.t(
-                      "persons:profile.written_questions_record",
-                      { count: s.nWrittenQuestions },
-                    ),
-                    markText: "*",
-                  })
+                ? cite(
+                    String(s.nWrittenQuestions),
+                    data.provenance.stats.writtenQuestions,
+                  )
                 : "—"}
             </div>
           </div>
@@ -328,10 +297,7 @@ export default function Edustaja({ data }: Props) {
                   ))}
                 </div>
               ) : null}
-              {sourceNote({
-                dataset: "Eduskunnan avoin data · Vote",
-                fetchedAt: data.fetchedAt,
-              })}
+              {sourceNote(data.provenance.notes.vote)}
             </section>
 
             {data.initiatives.length > 0 || data.questions.length > 0 ? (
@@ -400,10 +366,7 @@ export default function Edustaja({ data }: Props) {
                     </div>
                   </a>
                 ))}
-                {sourceNote({
-                  dataset: "Eduskunnan avoin data · VaskiData",
-                  fetchedAt: data.fetchedAt,
-                })}
+                {sourceNote(data.provenance.notes.vaski)}
               </section>
             ) : null}
 
@@ -444,10 +407,7 @@ export default function Edustaja({ data }: Props) {
                     </div>
                   ))}
                 </div>
-                {sourceNote({
-                  dataset: "Eduskunnan avoin data · Committee",
-                  fetchedAt: data.fetchedAt,
-                })}
+                {sourceNote(data.provenance.notes.committees)}
               </section>
             ) : null}
           </div>
@@ -471,10 +431,7 @@ export default function Edustaja({ data }: Props) {
                     </span>
                   ))}
                 </div>
-                {sourceNote({
-                  dataset: "Eduskunnan avoin data · WrittenQuestion, Speech",
-                  fetchedAt: data.fetchedAt,
-                })}
+                {sourceNote(data.provenance.notes.focusAreas)}
               </div>
             ) : null}
 
@@ -521,10 +478,7 @@ export default function Edustaja({ data }: Props) {
                 <dt>{i18next.t("persons:profile.basics_status")}</dt>
                 <dd class={p.isInGovernment ? "gov" : "opp"}>{blocLabel}</dd>
               </dl>
-              {sourceNote({
-                dataset: `MemberOfParliament · ${p.id}`,
-                fetchedAt: data.fetchedAt,
-              })}
+              {sourceNote(data.provenance.notes.basics)}
             </div>
 
             {data.baselines ? (

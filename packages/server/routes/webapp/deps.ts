@@ -1,3 +1,4 @@
+import type { Database } from "bun:sqlite";
 import type { DocumentService } from "../../src/features/document/document.service";
 import type { HomeService } from "../../src/features/home/home.service";
 import type { MetadataService } from "../../src/features/metadata/metadata.service";
@@ -11,6 +12,8 @@ import type { MetadataRepository } from "../../src/features/metadata/metadata.re
 import type { PersonRepository } from "../../src/features/person/person.repository";
 import type { SessionRepository } from "../../src/features/session/session.repository";
 import type { VotingRepository } from "../../src/features/voting/voting.repository";
+import type { ProvenanceService } from "../../src/domain/provenance.service";
+import type { TraceRepository } from "../../src/database/trace.repository";
 
 export interface WebappDeps {
   analyticsRepository: AnalyticsRepository;
@@ -26,4 +29,8 @@ export interface WebappDeps {
   sessionService: SessionService;
   votingRepository: VotingRepository;
   votingService: VotingService;
+  provenanceService: ProvenanceService;
+  traceRepo: TraceRepository | null;
+  /** Main app DB — used by the trace overlay's on-demand provenance probes. */
+  db: Database;
 }

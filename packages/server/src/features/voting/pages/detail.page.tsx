@@ -2,6 +2,7 @@
 import { clsx } from "clsx";
 import Kicker from "#server/components/kicker";
 import { esc } from "#server/helpers/template-helpers";
+import { cite, sourceNote } from "#server/components/provenance";
 import i18next from "i18next";
 import type { SingleVoteData } from "./detail.view-model";
 
@@ -61,10 +62,13 @@ export default function Aanestys({ title, data }: Props) {
         <section class="doc-head">
           <div class="doc-head__top">
             <span class="doc-id">
-              {i18next.t("votings:detail.doc_id_format", {
-                number: v.votingNumber,
-                sessionKey: esc(v.sessionKey),
-              })}
+              {cite(
+                i18next.t("votings:detail.doc_id_format", {
+                  number: v.votingNumber,
+                  sessionKey: esc(v.sessionKey),
+                }),
+                data.provenance,
+              )}
             </span>
             <span class="doc-type">
               {v.titleExtra ?? i18next.t("votings:detail.type_fallback")}
@@ -362,16 +366,7 @@ export default function Aanestys({ title, data }: Props) {
           </section>
         )}
 
-        <div class="source-note mt-32">
-          <span>{i18next.t("common:source")}</span>
-          <span class="dset">
-            Eduskunnan avoin data · SaliDBAanestys + Vote
-          </span>
-          <span>·</span>
-          <span class="fresh">
-            {i18next.t("common:fetched", { timestamp: data.fetchedAt })}
-          </span>
-        </div>
+        <div class="mt-32">{sourceNote(data.sourceNote)}</div>
       </div>
     </>
   );

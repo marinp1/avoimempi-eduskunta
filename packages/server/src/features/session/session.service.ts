@@ -3,12 +3,13 @@ import type { DocumentRepository } from "../document/document.repository";
 import { buildSessionsViewModel } from "#server/features/session/pages/list.view-model";
 import { buildSessionDetailViewModel } from "./pages/detail.view-model";
 import type { PartySeatRow } from "#server/types/webapp";
-import { fetchedAt } from "#server/helpers";
+import type { ProvenanceService } from "#server/domain/provenance.service";
 
 export class SessionService {
   constructor(
     private readonly sessionRepo: SessionRepository,
     private readonly documentRepo: DocumentRepository,
+    private readonly provenanceService: ProvenanceService,
   ) {}
 
   getSessionIndex(params: {
@@ -86,7 +87,7 @@ export class SessionService {
       sections,
       votingsBySectionKey,
       rollCallData,
-      fetchedAt(),
+      this.provenanceService.tableFetchedAt("SaliDBIstunto"),
       seatCounts,
       docIdMap,
     );

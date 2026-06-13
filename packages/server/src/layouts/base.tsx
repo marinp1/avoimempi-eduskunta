@@ -78,6 +78,22 @@ export default function Layout({
             )}
           />
           <div class="about-scrim" data-about-scrim hidden></div>
+          <button
+            type="button"
+            class="trace-fab"
+            data-trace-open
+            hx-get="/api/trace"
+            hx-target="#trace-overlay-root"
+            hx-swap="innerHTML transition:false"
+            aria-label={i18next.t("components:trace.button")}
+            title={i18next.t("components:trace.button")}
+          >
+            <span class="dot"></span>
+            <span class="trace-fab__label">
+              {i18next.t("components:trace.button")}
+            </span>
+          </button>
+          <div id="trace-overlay-root"></div>
           <Banner />
           <div class="wrap">
             <header class="masthead">

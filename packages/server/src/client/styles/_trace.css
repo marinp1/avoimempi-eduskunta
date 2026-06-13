@@ -1,0 +1,562 @@
+/* ============================================================
+   DATA TRACE — page-level "Tietolähteet" overlay
+   Centred modal with the full data-lineage flow graph
+   (avoindata → source tables → DB tables → queries → view).
+   ============================================================ */
+
+/* persistent floating trigger — always reachable, even on long / infinite-scroll
+   pages where the footer never comes into view */
+.trace-fab {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 200;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink);
+  cursor: pointer;
+  font: 600 var(--fs-mono) var(--mono);
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 22px rgba(22, 19, 15, 0.22);
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+.trace-fab:hover {
+  background: #000;
+  transform: translateY(-1px);
+}
+.trace-fab .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  flex: 0 0 auto;
+}
+html.trace-open .trace-fab {
+  opacity: 0;
+  pointer-events: none;
+}
+@media (max-width: 560px) {
+  .trace-fab {
+    right: 12px;
+    bottom: 12px;
+    padding: 9px 11px;
+  }
+  .trace-fab__label {
+    display: none;
+  }
+}
+
+/* lock background scroll while the overlay is open. The scrollbar gutter is
+   reserved globally (see _reset.css), so toggling overflow here doesn't reflow
+   the page behind the modal. */
+html.trace-open {
+  overflow: hidden;
+}
+
+/* scrim */
+.trace-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 320;
+  background: rgba(22, 19, 15, 0.5);
+  opacity: 0;
+  transition: opacity 0.24s ease;
+  display: none;
+}
+.trace-scrim.is-open {
+  opacity: 1;
+}
+.trace-scrim:not([hidden]) {
+  display: block;
+}
+
+/* centred modal */
+html {
+  --trace-w: min(1300px, 95vw);
+}
+.trace {
+  position: fixed;
+  /* Anchored near the top (not vertically centred) so loading taller node
+     detail grows the panel downward instead of re-centring the whole modal —
+     which read as a flash/jump on each swap. */
+  top: 4vh;
+  left: 50%;
+  z-index: 330;
+  width: var(--trace-w);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--rule-ink);
+  box-shadow: 0 30px 90px rgba(22, 19, 15, 0.32);
+  opacity: 0;
+  transform: translateX(-50%) scale(0.985);
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.trace.is-open {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+.trace[hidden] {
+  display: none;
+}
+
+.trace__bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 13px 20px 13px 22px;
+}
+.trace__bar .lbl {
+  font-family: var(--head);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.trace__close {
+  background: none;
+  border: 0;
+  color: var(--paper);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.8;
+  padding: 0 0 0 4px;
+}
+.trace__close:hover {
+  opacity: 1;
+}
+
+.trace__scroll {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 22px 26px 28px;
+}
+.trace__sub {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--body);
+  margin: 0 0 16px;
+  max-width: 78ch;
+}
+.trace__note,
+.trace__empty {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--muted);
+  margin: 12px 0 0;
+}
+
+/* legend */
+.trace-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0 0 16px;
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--body);
+}
+.trace-legend__i {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.trace-legend__i .dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  border: 1px solid var(--rule-ink);
+}
+.trace-legend__i--api .dot {
+  background: var(--blue);
+}
+.trace-legend__i--source .dot {
+  background: var(--paper-3);
+}
+.trace-legend__i--final .dot {
+  background: var(--paper-2);
+}
+.trace-legend__i--query .dot {
+  background: #e7e0cf;
+}
+.trace-legend__i--view .dot {
+  background: var(--red);
+}
+
+/* graph */
+.trace-graph-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  padding: 6px 10px;
+}
+.trace-svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.trace-header {
+  font-family: var(--head);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  fill: var(--muted);
+}
+
+.trace-edge {
+  fill: none;
+  stroke: color-mix(in srgb, var(--ink) 26%, transparent);
+  stroke-width: 1.4;
+}
+.trace-arrow-head {
+  fill: color-mix(in srgb, var(--ink) 38%, transparent);
+}
+
+.trace-node rect {
+  stroke: var(--rule-ink);
+  stroke-width: 1;
+  fill: var(--paper-2);
+  transition: fill 0.12s ease;
+}
+.trace-node__t {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.trace-node__m {
+  font-family: var(--mono);
+  font-size: 10px;
+  fill: var(--muted);
+}
+.trace-node__m--soft {
+  fill: var(--faint);
+}
+.trace-node--api rect {
+  fill: var(--blue);
+}
+.trace-node--api .trace-node__t {
+  fill: #fff;
+}
+.trace-node--source rect {
+  fill: var(--paper-3);
+}
+.trace-node--source {
+  cursor: pointer;
+}
+.trace-node--source:hover rect {
+  fill: #fff;
+  stroke-width: 1.6;
+}
+.trace-node--final-collapsed rect {
+  fill: var(--paper-2);
+  stroke-dasharray: 4 3;
+}
+.trace-node--query rect {
+  fill: #e7e0cf;
+}
+.trace-node--view rect {
+  fill: var(--red);
+}
+.trace-node--view .trace-node__t {
+  fill: #fff;
+}
+
+/* detail pane — a region BELOW the scrolling graph, populated on demand when a
+   node is clicked. Starts compact (just the hint). Once a node is engaged it
+   locks to a fixed height with its own scroll, so every subsequent swap changes
+   only the pane's inner content — the graph above never reflows or scrolls. */
+.trace-detail {
+  flex: 0 0 auto;
+  overflow: auto;
+  border-top: 2px solid var(--rule-ink);
+  background: var(--paper);
+  padding: 14px 26px 18px;
+}
+.trace.is-engaged .trace-detail {
+  flex: 0 0 40vh;
+  height: 40vh;
+}
+.trace-detail__hint {
+  font-family: var(--mono);
+  font-size: var(--fs-mono);
+  color: var(--muted);
+  margin: 0;
+}
+.trace-detail__panel {
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+}
+.trace-detail__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--ink);
+  color: var(--paper);
+}
+.trace-detail__title {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.trace-detail__api {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--paper);
+  opacity: 0.85;
+  white-space: nowrap;
+}
+.trace-detail__api:hover {
+  opacity: 1;
+}
+.trace-detail__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+.trace-detail__close {
+  background: none;
+  border: 0;
+  color: var(--paper);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.8;
+  padding: 0 0 0 2px;
+}
+.trace-detail__close:hover {
+  opacity: 1;
+}
+.trace-detail__body {
+  padding: 12px 14px 14px;
+}
+.trace-detail__sub {
+  font-family: var(--head);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+.trace-detail__meta,
+.trace-detail__ep {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0 0 4px;
+}
+.trace-detail__code {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink);
+  white-space: pre;
+  overflow-x: auto;
+  tab-size: 2;
+}
+.trace-detail__code code {
+  font: inherit;
+}
+
+/* individual record deep links per source */
+.trace-records {
+  margin-top: 10px;
+}
+.trace-records__title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+.trace-records__list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 8px 0 0;
+  border-top: 1px solid var(--rule-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.trace-records__list li {
+  margin: 0;
+}
+.trace-records__list a {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--blue);
+  background: var(--paper-2);
+  padding: 2px 7px;
+  white-space: nowrap;
+}
+.trace-records__list a:hover {
+  background: var(--paper-3);
+}
+.trace-records__more {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+
+/* source + query nodes are clickable (load their detail into #trace-detail) */
+.trace-node--query {
+  cursor: pointer;
+}
+.trace-node--query:hover rect {
+  fill: #f1ead8;
+  stroke-width: 1.6;
+}
+.trace-node--source:focus-visible rect,
+.trace-node--query:focus-visible rect {
+  stroke: var(--blue);
+  stroke-width: 2;
+}
+.trace-node.is-active rect {
+  stroke: var(--blue);
+  stroke-width: 2;
+}
+
+/* flow highlight — selecting a node lights its connected path, dims the rest */
+.trace-svg.has-selection .trace-node,
+.trace-svg.has-selection .trace-edge {
+  opacity: 0.22;
+  transition: opacity 0.15s ease;
+}
+.trace-svg.has-selection .trace-node.is-lit,
+.trace-svg.has-selection .trace-edge.is-lit {
+  opacity: 1;
+}
+.trace-edge.is-lit {
+  stroke: var(--blue);
+  stroke-width: 1.8;
+}
+
+/* aggregated-source note + query parameters */
+.trace-detail__note {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--body);
+  margin: 0 0 10px;
+}
+.trace-params {
+  margin-top: 10px;
+}
+.trace-params__title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 6px;
+}
+.trace-params__list {
+  margin: 0;
+  border-top: 1px solid var(--rule-soft);
+}
+.trace-params__row {
+  display: flex;
+  gap: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.trace-params__key {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--blue);
+  margin: 0;
+  min-width: 120px;
+}
+.trace-params__val {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink);
+  margin: 0;
+  word-break: break-word;
+}
+
+/* individual records — table form */
+.trace-records__table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+.trace-records__table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 1px solid var(--rule-ink);
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+.trace-records__table td {
+  border-bottom: 1px solid var(--rule-soft);
+  padding: 4px 8px;
+  vertical-align: top;
+}
+.trace-records__id {
+  color: var(--ink);
+  white-space: nowrap;
+}
+.trace-records__label {
+  color: var(--body);
+  width: 100%;
+}
+.trace-records__open {
+  text-align: right;
+}
+.trace-records__open a {
+  color: var(--blue);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trace,
+  .trace-scrim {
+    transition: none;
+  }
+}
+@media (max-width: 700px) {
+  html {
+    --trace-w: 100vw;
+  }
+  .trace {
+    top: 0;
+    left: 0;
+    transform: none;
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+  }
+  .trace.is-open {
+    transform: none;
+  }
+  .trace__scroll {
+    padding: 18px 16px 28px;
+  }
+}

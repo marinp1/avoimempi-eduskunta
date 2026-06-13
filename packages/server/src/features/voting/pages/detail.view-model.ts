@@ -6,6 +6,11 @@ import {
   type VoteToken,
 } from "#server/domain";
 import { formatFiLongDate } from "#server/helpers";
+import type {
+  CitePropData,
+  ProvenanceService,
+} from "#server/domain/provenance.service";
+import type { SourceNoteOptions } from "#server/components/provenance";
 import i18next from "i18next";
 
 interface VotingRow {
@@ -103,6 +108,8 @@ export interface SingleVoteData {
     yesProposition: string | null;
     noProposition: string | null;
   };
+  /** Row-level trace for this voting record (deep-links to the source row). */
+  provenance: CitePropData;
   partyBreakdown: Array<{
     partyCode: string;
     partyName: string;
@@ -146,7 +153,8 @@ export interface SingleVoteData {
     nNo: number;
     outcomeLabel: string;
   }>;
-  fetchedAt: string;
+  /** Footer source note derived from the voting-detail query's source datasets. */
+  sourceNote: SourceNoteOptions;
 }
 
 export function buildMpVotes(
@@ -177,9 +185,9 @@ export function buildMpVotes(
 export function buildSingleVoteData(input: {
   voting: VotingRow;
   details: VotingInlineDetails | null;
-  fetchedAt: string;
+  provenanceService: ProvenanceService;
 }): SingleVoteData {
-  const { voting, details, fetchedAt } = input;
+  const { voting, details, provenanceService } = input;
 
   const tally = buildVoteTally({
     nYes: voting.n_yes,
@@ -255,6 +263,11 @@ export function buildSingleVoteData(input: {
           : i18next.t("votings:outcome_rejected"),
     })) ?? [];
 
+  const recordLabel = i18next.t("votings:detail.doc_id_format", {
+    number: voting.number,
+    sessionKey: voting.session_key ?? "",
+  });
+
   return {
     vote: {
       id: voting.id,
@@ -288,10 +301,20 @@ export function buildSingleVoteData(input: {
       yesProposition: null,
       noProposition: null,
     },
+    provenance: provenanceService.forRow("Voting", voting.id, {
+      value: `${i18next.t(
+        tally.outcome === "ok"
+          ? "votings:outcome_approved"
+          : "votings:outcome_rejected",
+      )} (${tally.nYes}–${tally.nNo})`,
+      caption: voting.title ?? undefined,
+      label: recordLabel,
+      markText: "*",
+    }),
     partyBreakdown,
     mpVotes,
     govOppBreakdown,
     relatedVotes,
-    fetchedAt,
+    sourceNote: provenanceService.sourceNoteForQuery("voting-detail.sql"),
   };
 }
