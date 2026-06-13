@@ -112,6 +112,7 @@ export interface ParseResult {
   rowsProcessed: number;
   rowsParsed: number;
   rowsSkipped: number;
+  rowsFailed: number;
 }
 
 /**
@@ -170,6 +171,7 @@ export async function parseTable(options: ParseOptions): Promise<ParseResult> {
       rowsProcessed: 0,
       rowsParsed: 0,
       rowsSkipped: 0,
+      rowsFailed: 0,
     };
   }
 
@@ -198,6 +200,7 @@ export async function parseTable(options: ParseOptions): Promise<ParseResult> {
         rowsProcessed: 0,
         rowsParsed: 0,
         rowsSkipped: totalRawRows,
+        rowsFailed: 0,
       };
     }
   }
@@ -222,6 +225,7 @@ export async function parseTable(options: ParseOptions): Promise<ParseResult> {
   let rowsProcessed = 0;
   let rowsSkipped = 0;
   let rowsParsed = 0;
+  let rowsFailed = 0;
   const progressTotalRows =
     pkStartValue !== undefined && pkEndValue !== undefined
       ? Math.max(pkEndValue - pkStartValue + 1, 1)
@@ -299,10 +303,33 @@ export async function parseTable(options: ParseOptions): Promise<ParseResult> {
       continue;
     }
 
-    const values = JSON.parse(rawRow.data) as any[];
+    let values: any[];
+    try {
+      values = JSON.parse(rawRow.data) as any[];
+    } catch (err) {
+      rowsFailed++;
+      console.warn(
+        `⚠️  Failed to parse row PK ${rawRow.pk} in ${tableName}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      if (rowsFailed <= 10) {
+        console.warn(`   Raw data (truncated): ${rawRow.data.slice(0, 200)}`);
+      }
+      continue;
+    }
+
     const rowObject = rowArrayToObject(schema.columnNames, values);
 
-    const [_identifier, parsedData] = await parseData(rowObject, schema.pkName);
+    let parsedData: ParsedRow;
+    try {
+      const [, result] = await parseData(rowObject, schema.pkName);
+      parsedData = result;
+    } catch (err) {
+      rowsFailed++;
+      console.warn(
+        `⚠️  Failed to parse row PK ${rawRow.pk} in ${tableName}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      continue;
+    }
 
     const parsedRow: ParsedRow = { ...parsedData };
 
@@ -328,7 +355,7 @@ export async function parseTable(options: ParseOptions): Promise<ParseResult> {
         100,
       );
       console.log(
-        `📊 Progress: ${rowsProcessed.toLocaleString()} rows (${percentComplete.toFixed(1)}%) - ${rowsParsed.toLocaleString()} parsed, ${rowsSkipped.toLocaleString()} skipped`,
+        `📊 Progress: ${rowsProcessed.toLocaleString()} rows (${percentComplete.toFixed(1)}%) - ${rowsParsed.toLocaleString()} parsed, ${rowsSkipped.toLocaleString()} skipped, ${rowsFailed.toLocaleString()} failed`,
       );
 
       if (onProgress) {
@@ -352,6 +379,7 @@ export async function parseTable(options: ParseOptions): Promise<ParseResult> {
   console.log(`📊 Total rows processed: ${rowsProcessed.toLocaleString()}`);
   console.log(`📊 Rows parsed (new/changed): ${rowsParsed.toLocaleString()}`);
   console.log(`📊 Rows skipped (unchanged): ${rowsSkipped.toLocaleString()}`);
+  console.log(`📊 Rows failed: ${rowsFailed.toLocaleString()}`);
 
   if (onProgress) {
     onProgress({
@@ -366,6 +394,7 @@ export async function parseTable(options: ParseOptions): Promise<ParseResult> {
     rowsProcessed,
     rowsParsed,
     rowsSkipped,
+    rowsFailed,
   };
 }
 

@@ -320,7 +320,14 @@ export default (db: Database) => {
   };
 
   return (dataToImport: DataModel.Representative) => {
-    const XmlDataFi = JSON.parse(dataToImport.XmlDataFi);
+    let XmlDataFi: any;
+    try {
+      XmlDataFi = JSON.parse(dataToImport.XmlDataFi);
+    } catch (err) {
+      throw new Error(
+        `Failed to parse XmlDataFi for person ${dataToImport.personId}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
 
     if (process.env.DEBUG)
       console.log("Mapping", dataToImport.lastname, dataToImport.personId);

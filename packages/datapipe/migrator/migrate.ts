@@ -381,7 +381,15 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
       },
     });
 
-    const targetDatabase = sqlite.open(getDatabasePath(), {
+    const finalPath = getDatabasePath();
+    const buildPath = finalPath + ".tmp";
+
+    // Remove stale temp file from a previous failed run.
+    if (fs.existsSync(buildPath)) {
+      fs.unlinkSync(buildPath);
+    }
+
+    const targetDatabase = sqlite.open(buildPath, {
       create: true,
       readwrite: true,
     });
@@ -595,6 +603,7 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
       if (migratorModule) {
         const migrator = migratorModule.default(targetDatabase);
         let rowsImported = 0;
+        let rowsFailed = 0;
         let pagesProcessed = 0;
 
         targetDatabase.run(MIGRATOR_SQL.beginTransaction);
@@ -620,14 +629,28 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
                 );
               }
 
-              const result = migrator(rowForMigrator);
-              if (isPromiseLike(result)) {
-                await result;
+              try {
+                const result = migrator(rowForMigrator);
+                if (isPromiseLike(result)) {
+                  await result;
+                }
+                rowsImported++;
+              } catch (rowError) {
+                rowsFailed++;
+                const pk = (row as any)?.pk ?? "?";
+                console.warn(
+                  `⚠️  Failed to migrate row PK=${pk} in ${tableName}: ${rowError instanceof Error ? rowError.message : String(rowError)}`,
+                );
+                if (rowsFailed <= 5) {
+                  console.warn(
+                    `   Row data (truncated): ${JSON.stringify(rowForMigrator).slice(0, 300)}`,
+                  );
+                }
+                // Continue processing remaining rows — one bad row doesn't abort the table.
               }
-              rowsImported++;
 
               // Report progress every 5000 rows to reduce overhead
-              if (rowsImported % 5000 === 0) {
+              if ((rowsImported + rowsFailed) % 5000 === 0) {
                 onMessage({
                   type: "progress",
                   data: {
@@ -644,7 +667,7 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
             // Log progress every 20 pages to reduce console spam
             if (pagesProcessed % 20 === 0) {
               console.log(
-                `  Processed ${pagesProcessed} pages (${rowsImported} rows total)`,
+                `  Processed ${pagesProcessed} pages (${rowsImported} rows imported, ${rowsFailed} failed)`,
               );
             }
           }
@@ -664,7 +687,8 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
             0,
           );
           console.log(
-            `✅ Imported ${rowsImported} rows from ${tableName} in ${tableTime}s (${rowsPerSecond} rows/s)`,
+            `✅ Imported ${rowsImported} rows from ${tableName} in ${tableTime}s (${rowsPerSecond} rows/s)` +
+              (rowsFailed > 0 ? ` — ⚠️  ${rowsFailed} rows failed` : ""),
           );
         } catch (error) {
           targetDatabase.run(MIGRATOR_SQL.rollback);
@@ -794,14 +818,13 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
           totalTables: tablesToImport.length,
         },
       });
-      const databasePath = getDatabasePath();
-      const sizeBeforeBytes = fs.existsSync(databasePath)
-        ? fs.statSync(databasePath).size
+      const sizeBeforeBytes = fs.existsSync(buildPath)
+        ? fs.statSync(buildPath).size
         : 0;
       console.log("🗜️  Running VACUUM to compact database file...");
       targetDatabase.run("VACUUM;");
-      const sizeAfterBytes = fs.existsSync(databasePath)
-        ? fs.statSync(databasePath).size
+      const sizeAfterBytes = fs.existsSync(buildPath)
+        ? fs.statSync(buildPath).size
         : 0;
       const toMb = (bytes: number) => (bytes / (1024 * 1024)).toFixed(1);
       console.log(
@@ -815,6 +838,10 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
 
     console.log("✅ Safety features restored");
     targetDatabase.close();
+
+    // Atomically swap the newly built database into place.
+    fs.renameSync(buildPath, finalPath);
+    console.log(`📦 Database swapped into place: ${finalPath}`);
 
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`\n🎉 Migration completed successfully in ${totalTime}s!`);
@@ -831,6 +858,14 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
       },
     });
   } catch (error: any) {
+    // Clean up the in-progress build file so it doesn't leak.
+    const buildPath = getDatabasePath() + ".tmp";
+    try {
+      if (fs.existsSync(buildPath)) fs.unlinkSync(buildPath);
+    } catch {
+      /* best-effort */
+    }
+
     if (checkStop()) {
       onMessage({
         type: "stopped",

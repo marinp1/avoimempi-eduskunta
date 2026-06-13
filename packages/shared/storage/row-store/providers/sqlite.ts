@@ -344,17 +344,28 @@ export class SqliteRowStore implements IRowStore {
         const colHashHex = schemaHash(pkName, columnNames);
         const colHash = encodeHexHash(colHashHex);
 
-        this.db
-          .prepare(
-            `INSERT OR IGNORE INTO column_schemas (hash, table_name, pk_name, column_names, first_seen) VALUES (?, ?, ?, ?, ?)`,
-          )
-          .run(
-            colHashHex,
-            tableName,
-            pkName,
-            JSON.stringify(columnNames),
-            nowIso,
+        const schemaStmt = this.db.prepare(
+          `INSERT OR IGNORE INTO column_schemas (hash, table_name, pk_name, column_names, first_seen) VALUES (?, ?, ?, ?, ?)`,
+        );
+        const schemaResult = schemaStmt.run(
+          colHashHex,
+          tableName,
+          pkName,
+          JSON.stringify(columnNames),
+          nowIso,
+        );
+
+        if (schemaResult.changes > 0) {
+          console.warn(
+            `\n⚠️  NEW API SCHEMA DETECTED for table '${tableName}'!`,
           );
+          console.warn(
+            `   Columns: ${columnNames.join(", ")} (${columnNames.length} total)`,
+          );
+          console.warn(
+            `   PK: ${pkName}  |  Hash: ${colHashHex.slice(0, 12)}...\n`,
+          );
+        }
 
         // For any row whose hash will change, store a sparse diff of the old version.
         const selectExistingStmt = this.db.prepare(
