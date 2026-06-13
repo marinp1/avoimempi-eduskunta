@@ -44,26 +44,30 @@ export class DocumentService {
     limit: number;
   }): DocumentListResult {
     const allRows: DocumentRow[] = [];
-    const perKindLimit = 100;
+    const perKindLimit = (params.page + 1) * params.limit;
+    let totalCount = 0;
+
     for (const mod of DOCUMENT_KIND_LIST) {
       try {
-        const { rows } = mod.list(this.documentRepo, {
+        const { rows, totalCount: kindCount } = mod.list(this.documentRepo, {
           query: params.query,
           page: 1,
           limit: perKindLimit,
         });
+        totalCount += kindCount;
         allRows.push(...rows);
       } catch {
         // Skip kinds with no data or a failing query.
       }
     }
+
     allRows.sort(
       (a, b) => (b.date ?? "").localeCompare(a.date ?? "") || b.id - a.id,
     );
     const start = (params.page - 1) * params.limit;
     return {
       rows: allRows.slice(start, start + params.limit),
-      totalCount: allRows.length,
+      totalCount,
     };
   }
 }
