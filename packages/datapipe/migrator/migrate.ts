@@ -12,6 +12,7 @@ import {
   normalizeImportedTextData,
   rebuildFederatedSearchIndex,
   rebuildPartySummary,
+  rebuildPersonMetrics,
   rebuildPersonSpeechDailyStats,
   rebuildPersonVotingDailyStats,
   rebuildVotingPartyStats,
@@ -800,6 +801,19 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
     console.log("🧮 Rebuilding party summary table...");
     const partySummaryRows = rebuildPartySummary(targetDatabase);
     console.log(`✅ Party summary table rebuilt (${partySummaryRows} rows)`);
+
+    onMessage({
+      type: "progress",
+      data: {
+        message: "Rebuilding person metrics table...",
+        currentTable: null,
+        tablesCompleted,
+        totalTables: tablesToImport.length,
+      },
+    });
+    console.log("🧮 Rebuilding person metrics table...");
+    const personMetricsRows = rebuildPersonMetrics(targetDatabase);
+    console.log(`✅ Person metrics table rebuilt (${personMetricsRows} rows)`);
 
     console.log("\n📈 Gathering query planner statistics (ANALYZE)...");
     targetDatabase.run("ANALYZE;");

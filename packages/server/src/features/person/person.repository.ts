@@ -17,52 +17,8 @@ import type { RosterRow } from "#server/types/webapp";
 
 export type { RosterRow };
 
-type PersonMetricAggregatesResult = {
-  rows: Array<{
-    person_id: number;
-    party: string | null;
-    speech_count: number;
-    initiative_count: number;
-    interpellation_count: number;
-    written_question_count: number;
-    vote_total: number;
-    vote_cast: number;
-  }>;
-  baselines: {
-    parliament: {
-      label: string | null;
-      n: number;
-      avgSpeechCount: number;
-      avgInitiativeCount: number;
-      avgInterpellationCount: number;
-      avgWrittenQuestionCount: number;
-      avgVoteParticipationRate: number;
-    };
-    parties: Record<
-      string,
-      {
-        label: string | null;
-        n: number;
-        avgSpeechCount: number;
-        avgInitiativeCount: number;
-        avgInterpellationCount: number;
-        avgWrittenQuestionCount: number;
-        avgVoteParticipationRate: number;
-      }
-    >;
-  };
-};
-
 export class PersonRepository {
-  private metricsMemo: {
-    key: string;
-    data: PersonMetricAggregatesResult;
-  } | null = null;
-
-  constructor(
-    private readonly db: Database,
-    private readonly generationKey: string | null = null,
-  ) {}
+  constructor(private readonly db: Database) {}
 
   public fetchRoster(): RosterRow[] {
     const stmt = this.db.prepare<RosterRow, []>(roster);
@@ -303,17 +259,45 @@ export class PersonRepository {
   }
 
   public fetchPersonMetricAggregates() {
-    if (this.generationKey) {
-      const key = this.generationKey;
-      if (this.metricsMemo?.key === key) return this.metricsMemo.data;
-      const data = this.queryPersonMetricAggregates();
-      this.metricsMemo = { key, data };
-      return data;
-    }
     return this.queryPersonMetricAggregates();
   }
 
   private queryPersonMetricAggregates() {
+    try {
+      const rows = this.db
+        .query<
+          {
+            person_id: number;
+            party: string | null;
+            speech_count: number;
+            initiative_count: number;
+            interpellation_count: number;
+            written_question_count: number;
+            vote_total: number;
+            vote_cast: number;
+          },
+          []
+        >(
+          `SELECT
+             person_id,
+             party,
+             speech_count,
+             initiative_count,
+             interpellation_count,
+             written_question_count,
+             vote_total,
+             vote_cast
+           FROM PersonMetric`,
+        )
+        .all();
+      return {
+        rows,
+        baselines: this.computeBaselinesFromRows(rows),
+      };
+    } catch {
+      // Table doesn't exist yet — fall back to live query.
+    }
+
     const rows = this.db
       .query<
         {

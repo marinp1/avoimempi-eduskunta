@@ -706,3 +706,93 @@ export function rebuildPartySummary(db: Database): number {
     .get();
   return row?.count ?? 0;
 }
+
+export function rebuildPersonMetrics(db: Database): number {
+  if (!objectExists(db, "table", "PersonMetric")) {
+    return 0;
+  }
+
+  const stmt = db.prepare<
+    unknown,
+    { $startDate: null; $endDateExclusive: null }
+  >(
+    `INSERT INTO PersonMetric (
+       person_id,
+       party,
+       speech_count,
+       initiative_count,
+       interpellation_count,
+       written_question_count,
+       vote_total,
+       vote_cast
+     )
+     WITH speech_counts AS (
+       SELECT person_id, COUNT(*) AS n
+       FROM Speech
+       WHERE person_id IS NOT NULL
+         AND ($startDate IS NULL OR created_datetime >= $startDate)
+         AND ($endDateExclusive IS NULL OR created_datetime < $endDateExclusive)
+       GROUP BY person_id
+     ),
+     initiative_counts AS (
+       SELECT person_id, COUNT(*) AS n FROM (
+         SELECT first_signer_person_id AS person_id FROM LegislativeInitiative WHERE first_signer_person_id IS NOT NULL
+         UNION ALL
+         SELECT person_id FROM LegislativeInitiativeSigner WHERE person_id IS NOT NULL AND COALESCE(is_first_signer, 0) = 0
+       )
+       GROUP BY person_id
+     ),
+     interpellation_counts AS (
+       SELECT person_id, COUNT(*) AS n FROM (
+         SELECT first_signer_person_id AS person_id FROM Interpellation WHERE first_signer_person_id IS NOT NULL
+         UNION ALL
+         SELECT person_id FROM InterpellationSigner WHERE person_id IS NOT NULL AND COALESCE(is_first_signer, 0) = 0
+       )
+       GROUP BY person_id
+     ),
+     written_question_counts AS (
+       SELECT person_id, COUNT(*) AS n FROM (
+         SELECT first_signer_person_id AS person_id FROM WrittenQuestion WHERE first_signer_person_id IS NOT NULL
+         UNION ALL
+         SELECT person_id FROM WrittenQuestionSigner WHERE person_id IS NOT NULL AND COALESCE(is_first_signer, 0) = 0
+       )
+       GROUP BY person_id
+     ),
+     vote_counts AS (
+       SELECT person_id,
+         COUNT(*) AS total_votes,
+         SUM(CASE WHEN vote IN ('Jaa','Ei','Tyhjää') THEN 1 ELSE 0 END) AS votes_cast
+       FROM Vote
+       WHERE person_id IS NOT NULL
+       GROUP BY person_id
+     )
+     SELECT
+       r.person_id,
+       r.party,
+       COALESCE(sc.n, 0),
+       COALESCE(ic.n, 0),
+       COALESCE(intc.n, 0),
+       COALESCE(wqc.n, 0),
+       COALESCE(vc.total_votes, 0),
+       COALESCE(vc.votes_cast, 0)
+     FROM Representative r
+     LEFT JOIN speech_counts sc ON sc.person_id = r.person_id
+     LEFT JOIN initiative_counts ic ON ic.person_id = r.person_id
+     LEFT JOIN interpellation_counts intc ON intc.person_id = r.person_id
+     LEFT JOIN written_question_counts wqc ON wqc.person_id = r.person_id
+     LEFT JOIN vote_counts vc ON vc.person_id = r.person_id`,
+  );
+
+  const rebuildTransaction = db.transaction(() => {
+    db.run("DELETE FROM PersonMetric");
+    stmt.run({ $startDate: null, $endDateExclusive: null });
+  });
+
+  rebuildTransaction.immediate();
+  stmt.finalize();
+
+  const row = db
+    .query<{ count: number }, []>("SELECT COUNT(*) AS count FROM PersonMetric")
+    .get();
+  return row?.count ?? 0;
+}
