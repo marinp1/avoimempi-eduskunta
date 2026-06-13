@@ -52,6 +52,27 @@ export const PrimaryKeys: Record<TableName, string | null> = {
 };
 
 /**
+ * Fail-fast guard against `PrimaryKeys` drifting out of sync with
+ * `TableNames` or a PK-less table regressing to the old `""` sentinel: every
+ * value must be either `null` (no primary key) or a non-empty string.
+ */
+function assertPrimaryKeysValid(): void {
+  for (const tableName of TableNames) {
+    if (!Object.prototype.hasOwnProperty.call(PrimaryKeys, tableName)) {
+      throw new Error(`PrimaryKeys is missing an entry for table '${tableName}'.`);
+    }
+    const pk = PrimaryKeys[tableName];
+    if (pk !== null && (typeof pk !== "string" || pk.length === 0)) {
+      throw new Error(
+        `PrimaryKeys['${tableName}'] must be a non-empty string or null, got ${JSON.stringify(pk)}.`,
+      );
+    }
+  }
+}
+
+assertPrimaryKeysValid();
+
+/**
  * Tables omitted from data pipeline.
  */
 export const OmittedPipelineTableNames = [

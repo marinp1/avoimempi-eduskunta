@@ -4,20 +4,19 @@
  * Usage:
  *
  * ```typescript
- * import { getStorage, StorageKeyBuilder } from "#storage";
+ * import { getStorage } from "#storage";
  *
  * const storage = getStorage();
  *
  * // Write data
- * const key = StorageKeyBuilder.forPkRange("raw", "MemberOfParliament", 1, 100);
+ * const key = "artifacts/metadata/changes-report.json";
  * await storage.put(key, JSON.stringify(data));
  *
  * // Read data
  * const data = await storage.get(key);
  *
  * // List files
- * const prefix = StorageKeyBuilder.listPrefixForTable("raw", "MemberOfParliament");
- * const result = await storage.list({ prefix });
+ * const result = await storage.list({ prefix: "artifacts/" });
  * ```
  *
  * Configuration via environment variables:

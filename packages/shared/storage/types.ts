@@ -2,7 +2,7 @@
  * Storage abstraction types for offline-first, cloud-agnostic data storage
  */
 
-export type StorageKey = string; // e.g., "raw/MemberOfParliament/page_000000000001+000000000100.json"
+export type StorageKey = string; // e.g., "artifacts/snapshots/avoimempi-eduskunta.db"
 
 export interface StorageMetadata {
   key: StorageKey;
@@ -87,54 +87,4 @@ export interface IStorageProvider {
    * Get the provider name (for logging/debugging)
    */
   readonly name: string;
-}
-
-/**
- * Helper types for data pipeline
- */
-export type DataStage = "raw" | "parsed";
-
-export interface PageReference {
-  table: string;
-  firstPk: number;
-  lastPk: number;
-  stage: DataStage;
-}
-
-/**
- * Helper to construct storage keys
- */
-export class StorageKeyBuilder {
-  static forPkRange(
-    stage: DataStage,
-    tableName: string,
-    firstPk: number,
-    lastPk: number,
-  ): StorageKey {
-    const fKey = String(firstPk).padStart(12, "0");
-    const lKey = String(lastPk).padStart(12, "0");
-    return `${stage}/${tableName}/page_${fKey}+${lKey}.json`;
-  }
-
-  static parseKey(key: StorageKey): PageReference | null {
-    const match = key.match(
-      /^(raw|parsed)\/([^/]+)\/page_(-?\d+)\+(-?\d+)\.json$/,
-    );
-    if (!match) return null;
-
-    return {
-      stage: match[1] as DataStage,
-      table: match[2],
-      firstPk: parseInt(match[3], 10),
-      lastPk: parseInt(match[4], 10),
-    };
-  }
-
-  static listPrefixForTable(stage: DataStage, tableName: string): string {
-    return `${stage}/${tableName}/`;
-  }
-
-  static listPrefixForStage(stage: DataStage): string {
-    return `${stage}/`;
-  }
 }

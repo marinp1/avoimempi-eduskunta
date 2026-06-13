@@ -10,11 +10,10 @@ function mp(overrides: Partial<RosterRow> = {}): RosterRow {
     sort_name: "Meikäläinen, Matti",
     group_abbreviation: "kok",
     is_in_government: 1,
+    minister: 0,
     district_name: "Helsinki",
     birth_year: 1980,
     participation_rate: 0.85,
-    government_start_date: "2023-06-20",
-    government_end_date: null,
     ...overrides,
   };
 }
