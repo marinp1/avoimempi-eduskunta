@@ -1,13 +1,81 @@
 # Eduskuntapeili
 
-Data aggregation and analysis platform for Finnish Parliament (Eduskunta) data.
+**A Finnish Parliament data platform where every number on every page can be
+traced to the exact official record that produced it — including the SQL in
+between.**
 
-The project ingests source data from the Eduskunta Open API, transforms it through a three-stage pipeline, imports it into SQLite, and serves it through a Bun + htmx web app.
+Anyone can point an AI at an open government API and generate a dashboard.
+The premise of this project is the opposite: nothing is asserted that cannot
+be verified. Every page carries a live lineage trace — from the rendered view,
+through the actual queries that fed it, down to the individual source records
+on `avoindata.eduskunta.fi`, with per-row fetch timestamps. The proof resolves
+to a domain I don't control.
 
-## Requirements
+![Data lineage trace demo](docs/media/trace-demo.gif)
 
-- `bun` v1.2.2
-- `podman` or `docker` (optional, for containerized workflows)
+*Click the trace button on any page → see the full lineage graph → inspect the
+real SQL with its bound parameters → deep-link to the exact source record on
+the official Eduskunta API. Storyboard for this recording:
+[docs/trace-demo-storyboard.md](docs/trace-demo-storyboard.md).*
+
+## Table of contents
+
+- [Architecture](#architecture)
+- [Monorepo structure](#monorepo-structure)
+- [Requirements](#requirements)
+- [Getting started](#getting-started)
+- [Data pipeline](#data-pipeline)
+  - [1. Fetching (`scrape`)](#1-fetching-scrape)
+  - [2. Parsing (`parse`)](#2-parsing-parse)
+  - [3. Migrating to app DB (`migrate`)](#3-migrating-to-app-db-migrate)
+  - [Typical workflows](#typical-workflows)
+- [Development](#development)
+- [Configuration](#configuration)
+- [Production deployment](#production-deployment)
+- [Implementation notes](#implementation-notes)
+- [Project metrics](#project-metrics)
+- [Notes](#notes)
+
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph pipeline [Nightly pipeline]
+    A[Eduskunta Open API] --> B[Scraper]
+    B --> C[(raw.db)]
+    C --> D[Parser]
+    D --> E[(parsed.db)]
+    E --> F[Migrator]
+  end
+  F --> G[(app db)]
+  F --> T[(trace db)]
+  subgraph server [Bun server]
+    G --> H[Feature modules<br/>Route → Service → Repository → View Model]
+    T --> I[Lineage engine]
+    H --> J[htmx pages + fragments]
+    I --> J
+    Q[Quality checks] --> J
+    G --> Q
+  end
+  J --> K[Browser]
+  K -. trace any page .-> I
+```
+
+The server is organized by feature, not by layer: each screen owns its
+routes, service, repository, co-located `.sql` files, view models, and
+templates under [`packages/server/src/features/`](packages/server/src/features/).
+The pipeline and the server never import each other's code; they share only
+[`packages/shared/`](packages/shared/).
+
+The lineage engine shown above is what powers the trace overlay in the demo.
+SQL files are auto-parsed into a source registry at startup
+([`src/database/query-provenance.ts`](packages/server/src/database/query-provenance.ts)).
+Each page render records which queries fed it, with bounded overhead
+([`src/database/trace-collector.ts`](packages/server/src/database/trace-collector.ts),
+capped at 200 PKs / 400 rows per statement). A separate trace database built
+during migration ([`migrator/trace-db.ts`](packages/datapipe/migrator/trace-db.ts))
+supplies per-row scrape/migrate timestamps, and an htmx overlay renders the
+resulting lineage graph ([`features/trace/`](packages/server/src/features/trace/)).
 
 ## Monorepo structure
 
@@ -26,7 +94,12 @@ avoimempi-eduskunta.db         Final application SQLite database
 avoimempi-eduskunta-trace.db   Import/source-reference trace database
 ```
 
-## Quick start
+## Requirements
+
+- [Bun](https://bun.sh) v1.2.2
+- `podman` or `docker` (optional, for containerized workflows)
+
+## Getting started
 
 ```bash
 bun install
@@ -38,19 +111,9 @@ In development mode (`bun run start`), the server runs on `http://localhost:3000
 
 ## Data pipeline
 
-```mermaid
-flowchart LR
-  A[Eduskunta Open API] --> B[Scraper]
-  B --> C[data/raw.db]
-  C --> D[Parser]
-  D --> E[data/parsed.db]
-  E --> F[Migrator]
-  F --> G[avoimempi-eduskunta.db]
-```
+The pipeline runs in three stages, in order: **scrape → parse → migrate**.
 
-### 1) Fetching (`scrape`)
-
-Command:
+### 1. Fetching (`scrape`)
 
 ```bash
 bun run scrape <TableName>
@@ -60,7 +123,7 @@ What it does:
 
 - reads table metadata from `/columns`
 - fetches rows from `/batch` using PK-based pagination
-- writes to `data/raw.db` through row-store abstraction
+- writes to `data/raw.db` through the row-store abstraction
 - auto-resumes from the highest stored PK
 - supports targeted repair/range runs (`--from-pk`, `--to-pk`, `--single-pk`, `--patch-pk`)
 
@@ -70,9 +133,7 @@ Status command:
 bun run scrape status
 ```
 
-### 2) Parsing (`parse`)
-
-Command:
+### 2. Parsing (`parse`)
 
 ```bash
 bun run parse <TableName>
@@ -82,7 +143,7 @@ What it does:
 
 - reads raw rows from `data/raw.db`
 - reconstructs row objects from stored column schema
-- applies optional per-table parser from `packages/datapipe/parser/fn/<TableName>.ts`
+- applies an optional per-table parser from `packages/datapipe/parser/fn/<TableName>.ts`
 - writes normalized rows to `data/parsed.db`
 - skips unchanged rows by hash by default (`--force` to reparse)
 
@@ -98,9 +159,7 @@ Parse all known tables:
 bun run parse all
 ```
 
-### 3) Migrating to app DB (`migrate`)
-
-Command:
+### 3. Migrating to app DB (`migrate`)
 
 ```bash
 bun run migrate
@@ -127,9 +186,9 @@ Fresh rebuild (deletes DB files first, then imports):
 bun run migrate:fresh
 ```
 
-## Typical workflows
+### Typical workflows
 
-### Single-table development loop
+**Single-table development loop:**
 
 ```bash
 bun run scrape MemberOfParliament
@@ -137,7 +196,7 @@ bun run parse MemberOfParliament
 bun run migrate
 ```
 
-### Refreshing a targeted PK range
+**Refreshing a targeted PK range:**
 
 ```bash
 bun run scrape MemberOfParliament --from-pk 82000 --to-pk 83000
@@ -145,11 +204,10 @@ bun run parse MemberOfParliament --pk-start 82000 --pk-end 83000
 bun run migrate
 ```
 
-### Manual terminal runbook
+**Manual terminal runbook:** for a clear manual `sync -> parse -> rebuild` guide, see
+[packages/datapipe/README.md](./packages/datapipe/README.md#manual-sync-and-rebuild-runbook).
 
-For a clear manual `sync -> parse -> rebuild` guide, see [packages/datapipe/README.md](./packages/datapipe/README.md#manual-sync-and-rebuild-runbook).
-
-## Development commands
+## Development
 
 ```bash
 # Start server in development mode
@@ -173,7 +231,7 @@ bun run bench:http
 bun run check:table-coverage
 ```
 
-## Configuration highlights
+## Configuration
 
 Copy `.env.example` and adjust only what you need.
 
@@ -189,9 +247,60 @@ Common variables:
   - `MIGRATOR_FOREIGN_KEY_CHECK`
   - `MIGRATOR_VACUUM_AFTER_IMPORT`
 
-## Production deployment notes
+## Production deployment
 
-For infrastructure/deploy review, production topology, and hardening checklist, see [scripts/README.md](./scripts/README.md).
+For infrastructure/deploy review, production topology, and hardening checklist, see
+[scripts/README.md](./scripts/README.md).
+
+## Implementation notes
+
+- **SQL contracts** — queries are checked compile-time via typed SQL
+  contracts ([`sql-contract.test-d.ts`](packages/server/__tests__/sql-contract.test-d.ts)),
+  runtime snapshot audits against the real schema, and a
+  [sargability test](packages/server/__tests__/query-sargability.test.ts)
+  that fails the build if a query can't use an index on the 8.6M-row vote table.
+
+- **ETL** — the scraper resumes from the highest stored PK, repairs gaps,
+  tracks upstream revisions with element-wise diffs, and retries with
+  exponential backoff ([`datapipe/scraper/`](packages/datapipe/scraper/)).
+  The parser skips unchanged rows by hash. The migrator runs `ANALYZE` and
+  rebuilds the trace database on every import.
+
+- **Quality checks** — a startup runner validates real-data invariants and
+  serves a status page at `/laadunvalvonta`
+  ([`features/quality/`](packages/server/src/features/quality/)).
+
+- **JSX runtime** — the server-side JSX runtime escapes by default; raw HTML
+  requires an explicit `trustedHtml()` marker
+  ([`src/jsx/jsx-runtime.ts`](packages/server/src/jsx/jsx-runtime.ts)). CSP
+  headers are applied and tested.
+
+- **AI summaries** — on-page summaries run in the browser via the built-in
+  Summarizer API ([`src/client/ai-summary-island.ts`](packages/server/src/client/ai-summary-island.ts));
+  the server makes no LLM calls. Batch LLM analysis runs in the data pipeline
+  ([`datapipe/llm/`](packages/datapipe/llm/)).
+
+- **Runtime** — server-rendered htmx (the app was previously a React/MUI SPA
+  and was rewritten), SQLite (WAL mode), single VM with atomic symlink-flip
+  releases.
+
+## Project metrics
+
+As of June 2026, a single nightly pipeline imports and row-level-traces:
+
+|            |                                                                             |
+| ---------: | :-------------------------------------------------------------------------- |
+| **10.0 M** | source rows imported, each with scrape + migrate provenance                 |
+|  **8.6 M** | individual MP votes (`SaliDBAanestysEdustaja`)                              |
+|  **412 k** | parliamentary documents (Vaski XML + EDK), parsed into typed document kinds |
+|  **145 k** | plenary speeches                                                            |
+|   **43 k** | plenary votings across 1.7 k sessions                                       |
+|  **2 677** | MP records, past and present                                                |
+|     **14** | source datasets from the Eduskunta Open Data API                            |
+|  **~63 k** | lines of TypeScript, of which **~11 k** are tests                           |
+
+Served by one Bun process over SQLite (WAL, read-only `query_only`
+connection), on a single Hetzner VM with atomic symlink-flip releases.
 
 ## Notes
 
