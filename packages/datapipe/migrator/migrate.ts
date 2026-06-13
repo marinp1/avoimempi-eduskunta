@@ -15,7 +15,6 @@ import {
   rebuildVotingPartyStats,
 } from "./post-import";
 import { TABLE_MIGRATORS } from "./table-migrators";
-import { getAllDocumentTexts } from "../document-fetcher/db.ts";
 import { rebuildTraceDatabase } from "./trace-db";
 import { clearStatementCache } from "./utils";
 
@@ -146,8 +145,16 @@ function loadDocumentTextMap(): Map<string, string> {
   const documentsDbPath = getDocumentsDatabasePath();
   try {
     const docsDb = sqlite.open(documentsDbPath, { readonly: true });
-    const map = getAllDocumentTexts(docsDb);
+    const rows = docsDb
+      .query<{ edk_identifier: string; body_text: string }, []>(
+        "SELECT edk_identifier, body_text FROM DocumentText",
+      )
+      .all();
     docsDb.close();
+    const map = new Map<string, string>();
+    for (const row of rows) {
+      map.set(row.edk_identifier, row.body_text);
+    }
     console.log(
       `📄 Loaded ${map.size} PDF-extracted text records from documents database`,
     );
@@ -155,6 +162,28 @@ function loadDocumentTextMap(): Map<string, string> {
   } catch {
     console.log("⏭️  Documents database not available, skipping PDF text");
     return new Map();
+  }
+}
+
+function hasDocumentTextSince(lastMigrationTs: string): boolean {
+  const documentsDbPath = getDocumentsDatabasePath();
+  try {
+    const docsDb = sqlite.open(documentsDbPath, { readonly: true });
+    const row = docsDb
+      .query<{ extracted_at: string }, [string]>(
+        "SELECT extracted_at FROM DocumentText WHERE extracted_at > ? LIMIT 1",
+      )
+      .get(lastMigrationTs);
+    docsDb.close();
+    if (row) {
+      console.log(
+        `📄 DocumentText has records since last migration (${lastMigrationTs}), will re-migrate`,
+      );
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
   }
 }
 
@@ -273,9 +302,14 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
           tablesToImport.map((t) => parsedStore.lastUpdatedAt(t)),
         );
         const lastMigrationDate = new Date(lastMigrationTs);
-        const anyChanged = lastUpdates.some(
+        let anyChanged = lastUpdates.some(
           (ts) => ts && new Date(ts) > lastMigrationDate,
         );
+
+        if (!anyChanged) {
+          anyChanged = hasDocumentTextSince(lastMigrationTs);
+        }
+
         if (!anyChanged) {
           console.log(
             `⏭️  Skipping migration: parsed data has not changed since last migration (${lastMigrationTs})`,

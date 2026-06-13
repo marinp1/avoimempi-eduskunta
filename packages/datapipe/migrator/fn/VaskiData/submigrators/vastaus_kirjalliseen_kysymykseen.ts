@@ -138,6 +138,8 @@ export default function createVastausKirjallinenKysymysSubMigrator(
      WHERE parliament_identifier = ?`,
   );
 
+  let documentTextCount = 0;
+
   return {
     migrateRow(row: VaskiEntry): void {
       const kkvIdentifier = normalizeText(row.eduskuntaTunnus);
@@ -227,6 +229,7 @@ export default function createVastausKirjallinenKysymysSubMigrator(
         : `vaski-data/vastaus_kirjalliseen_kysymykseen/unknown#id=${id}`;
 
       const bodyText = (row as any)._documentText as string | null;
+      if (bodyText != null) documentTextCount++;
 
       try {
         const responseRow = insertResponse.get(
@@ -271,6 +274,9 @@ export default function createVastausKirjallinenKysymysSubMigrator(
     },
 
     flush() {
+      console.log(
+        `[vastaus_kirjalliseen_kysymykseen] PDF texts: ${documentTextCount} linked`,
+      );
       lookupQuestion.finalize();
       insertResponse.finalize();
       insertSubject.finalize();

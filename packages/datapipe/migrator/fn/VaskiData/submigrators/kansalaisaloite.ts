@@ -371,6 +371,8 @@ export default function createKansalaisaloiteSubMigrator(db: Database) {
     "UPDATE VaskiDocument SET title = ? WHERE id = ? AND title IS NULL",
   );
 
+  let documentTextCount = 0;
+
   return {
     async migrateRow(row: VaskiEntry): Promise<void> {
       const parsed = parseParliamentIdentifier(row.eduskuntaTunnus);
@@ -420,6 +422,7 @@ export default function createKansalaisaloiteSubMigrator(db: Database) {
       try {
         const data = parseKasittelytiedot(body, context);
         const bodyText = (row as any)._documentText as string | null;
+        if (bodyText != null) documentTextCount++;
 
         const initiativeRow = insertInitiative.get(
           id,
@@ -494,6 +497,7 @@ export default function createKansalaisaloiteSubMigrator(db: Database) {
     },
 
     flush() {
+      console.log(`[kansalaisaloite] PDF texts: ${documentTextCount} linked`);
       insertInitiative.finalize();
       deleteSigners.finalize();
       insertSigner.finalize();

@@ -343,6 +343,8 @@ export default function createSuullinenKysymysSubMigrator(db: Database) {
     "UPDATE VaskiDocument SET title = ? WHERE id = ? AND title IS NULL",
   );
 
+  let documentTextCount = 0;
+
   return {
     async migrateRow(row: VaskiEntry): Promise<void> {
       const parsed = parseParliamentIdentifier(row.eduskuntaTunnus);
@@ -392,6 +394,7 @@ export default function createSuullinenKysymysSubMigrator(db: Database) {
       try {
         const data = parseKasittelytiedot(body, context);
         const bodyText = (row as any)._documentText as string | null;
+        if (bodyText != null) documentTextCount++;
 
         const questionRow = insertQuestion.get(
           id,
@@ -448,6 +451,7 @@ export default function createSuullinenKysymysSubMigrator(db: Database) {
     },
 
     flush() {
+      console.log(`[suullinen_kysymys] PDF texts: ${documentTextCount} linked`);
       insertQuestion.finalize();
       deleteStages.finalize();
       insertStage.finalize();

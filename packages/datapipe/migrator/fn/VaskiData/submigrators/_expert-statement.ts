@@ -99,6 +99,8 @@ export function createExpertStatementSubMigrator(
        body_text = COALESCE(excluded.body_text, ExpertStatement.body_text)`,
   );
 
+  let documentTextCount = 0;
+
   return {
     migrateRow(row: VaskiEntry): void {
       const rowDocType = row["#avoimempieduskunta"]?.documentType;
@@ -157,6 +159,7 @@ export function createExpertStatementSubMigrator(
         : `vaski-data/${documentType}/unknown#id=${id}`;
 
       const bodyText = (row as any)._documentText as string | null;
+      if (bodyText != null) documentTextCount++;
 
       try {
         insertStatement.run(
@@ -182,6 +185,7 @@ export function createExpertStatementSubMigrator(
     },
 
     flush() {
+      console.log(`[${documentType}] PDF texts: ${documentTextCount} linked`);
       insertStatement.finalize();
     },
   };
