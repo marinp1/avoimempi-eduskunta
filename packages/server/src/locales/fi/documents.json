@@ -4,6 +4,7 @@
   "heading": "Asiakirjat",
   "subtitle": "Lakiehdotukset, kirjalliset kysymykset, aloitteet ja muut parlamenttiasiakirjat. Jokainen luku avautuu alkuperäiseen asiakirjaan ja sen käsittelytietoihin.",
   "count": "{{count}} asiakirjaa",
+  "as_of": "tilanne",
   "search_placeholder": "Hae asiakirjoista — tunnus, otsikko tai aihe…",
   "none_found": "Ei asiakirjoja näillä hakuehdoilla.",
   "kind_labels": {

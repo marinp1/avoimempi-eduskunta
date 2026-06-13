@@ -302,7 +302,9 @@ export function resolveDissentStatementByProposer(
   dissents: DissentForResolution[],
 ): ResolvedStatement | null {
   const dissent = findUnique(dissents, (d) =>
-    (d.signers ?? []).some((signer) => signerMatchesProposer(signer, ref.proposer)),
+    (d.signers ?? []).some((signer) =>
+      signerMatchesProposer(signer, ref.proposer),
+    ),
   );
   if (!dissent) return null;
 

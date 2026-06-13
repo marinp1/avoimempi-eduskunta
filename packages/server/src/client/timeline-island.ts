@@ -98,6 +98,11 @@ function initTimeline(force = false) {
   ) as HTMLInputElement | null;
   const track = root.querySelector<HTMLElement>("[data-tl-track]")!;
 
+  const tip = document.createElement("span");
+  tip.className = "tl__tip";
+  tip.hidden = true;
+  track.appendChild(tip);
+
   function buildTrack() {
     const t0 = ms(sittings[0]!.d);
     const t1 = ms(sittings[sittings.length - 1]!.d);
@@ -108,7 +113,17 @@ function initTimeline(force = false) {
       t.className = `tl__tick t-${e.type}`;
       t.style.left = rangeFrac(sittings, e.d) * 100 + "%";
       (t as any).dataset.i = i;
-      t.title = `${fmt(e.d)} · ${e.id}`;
+      t.addEventListener("mouseenter", () => {
+        tip.textContent = `${fmt(e.d)} · ${e.id}`;
+        const tickRect = t.getBoundingClientRect();
+        const trackRect = track.getBoundingClientRect();
+        const left = tickRect.left - trackRect.left + tickRect.width / 2;
+        tip.style.left = `${left}px`;
+        tip.hidden = false;
+      });
+      t.addEventListener("mouseleave", () => {
+        tip.hidden = true;
+      });
       ticksEl.appendChild(t);
     });
 
@@ -127,12 +142,13 @@ function initTimeline(force = false) {
         const isYear = d.getMonth() === 0;
         const quarter = d.getMonth() % 3 === 0;
         if (quarter || isYear) {
+          const tier = isYear ? " is-year" : " is-qtr";
           const line = document.createElement("span");
-          line.className = "tl__gline" + (isYear ? " is-year" : "");
+          line.className = "tl__gline" + tier;
           line.style.left = f * 100 + "%";
           gridEl.appendChild(line);
           const lab = document.createElement("span");
-          lab.className = "tl__glabel" + (isYear ? " is-year" : "");
+          lab.className = "tl__glabel" + tier;
           lab.style.left = f * 100 + "%";
           lab.textContent = isYear
             ? String(d.getFullYear())
@@ -157,7 +173,7 @@ function initTimeline(force = false) {
 
     const f = rangeFrac(sittings, e.d);
     handle.style.left = f * 100 + "%";
-    flag.textContent = e.id;
+    flag.textContent = `${fmt(e.d)} · ${e.id}`;
 
     const trackW = track.getBoundingClientRect().width || 1;
     const flagHalf = flag.offsetWidth / 2 + 4;

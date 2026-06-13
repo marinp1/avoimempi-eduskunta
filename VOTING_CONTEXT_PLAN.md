@@ -5,6 +5,7 @@
 The voting detail page resolves the lausumaehdotus (EI side). The user wants (a) the **other half of the vote** — what "Mietintö JAA" meant — and (b) this context **for all votings where possible**, not just lausumaehdotus votes.
 
 **Data findings (verified read-only):**
+
 - `CommitteeReport.decision_text` (VALIOKUNNAN PÄÄTÖSEHDOTUS) is the JAA side's literal content: present on all 2,765 mietinnöt, short (avg 235 chars, max 2.2 KB), `\n\n`-separated paragraphs with two heading lines at top ("VALIOKUNNAN PÄÄTÖSEHDOTUS", "{X}valiokunnan päätösehdotus:").
 - **2,833 votings** map via `Voting.parliamentary_item = CommitteeReport.source_reference` (+ `report_type_code LIKE '%VM'`) to **exactly one** mietintö; 52 map to several (skip as ambiguous). Coverage is bounded by document data: 2025–2026 nearly complete, 2015–2024 partial (many older mietinnöt absent from VaskiData — separate data-completeness issue, out of scope). `idx_committeereport_source_reference` exists (V001.045).
 - `doc_tunnuses`/SaliDBDocumentReference reference the source doc (HE/KAA), never the mietintö — `source_reference` is the only join route.

@@ -70,8 +70,7 @@ describe("parseStatementProposalRef", () => {
       },
     },
     {
-      title:
-        "Mietintö JAA / Veronika Honkasalon lausumaehdotus 2 (moniste) EI",
+      title: "Mietintö JAA / Veronika Honkasalon lausumaehdotus 2 (moniste) EI",
       expected: {
         kind: "moniste",
         proposer: "Veronika Honkasalon",

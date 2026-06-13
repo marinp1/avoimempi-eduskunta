@@ -13,10 +13,7 @@ import {
   buildSearchQuery,
   endDateExclusive,
 } from "../../database/query-helpers";
-import type {
-  StatementProposalRow,
-  StatementSignerRow,
-} from "./voting-title";
+import type { StatementProposalRow, StatementSignerRow } from "./voting-title";
 
 export class VotingRepository {
   constructor(private readonly db: Database) {}

@@ -51,6 +51,7 @@ export default function Timeline({ data }: { data: TimelineData }): string {
     sittings.find((s) => s.d === cursor)?.id ??
     sittings[sittings.length - 1]?.id ??
     "";
+  const flagText = `${data.cursorFormatted} · ${currentId}`;
 
   return (
     <section
@@ -72,6 +73,22 @@ export default function Timeline({ data }: { data: TimelineData }): string {
             {relLabel}
           </span>
         </div>
+        {showLegend && (
+          <div class="tl__legend">
+            <span class="it">
+              <span class="k t-vote"></span>
+              {i18next.t("components:timeline.legend_vote")}
+            </span>
+            <span class="it">
+              <span class="k t-talk"></span>
+              {i18next.t("components:timeline.legend_talk")}
+            </span>
+            <span class="it">
+              <span class="k t-quiet"></span>
+              {i18next.t("components:timeline.legend_quiet")}
+            </span>
+          </div>
+        )}
         <div class="tl__nav">
           <button
             class={clsx("tl__now", { "is-hidden": isNow })}
@@ -113,29 +130,12 @@ export default function Timeline({ data }: { data: TimelineData }): string {
           tabindex="0"
         >
           <div class="tl__flag" data-tl-flag>
-            {currentId}
+            {flagText}
           </div>
           <div class="tl__stem"></div>
           <div class="tl__knob"></div>
         </div>
       </div>
-      {showLegend && (
-        <div class="tl__legend">
-          <span class="it">
-            <span class="k t-vote"></span>
-            {i18next.t("components:timeline.legend_vote")}
-          </span>
-          <span class="it">
-            <span class="k t-talk"></span>
-            {i18next.t("components:timeline.legend_talk")}
-          </span>
-          <span class="it">
-            <span class="k t-quiet"></span>
-            {i18next.t("components:timeline.legend_quiet")}
-          </span>
-          <span class="hint">{i18next.t("components:timeline.hint")}</span>
-        </div>
-      )}
       <input type="hidden" id="tl-date-input" name="date" value={cursor} />
       <input
         type="hidden"

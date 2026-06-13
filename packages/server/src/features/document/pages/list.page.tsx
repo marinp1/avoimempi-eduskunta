@@ -34,9 +34,16 @@ interface Props {
   data?: AsiakirjatIndexData;
   query?: string;
   kind?: string;
+  cursorFormatted?: string;
 }
 
-export default function Asiakirjat({ title, data, query, kind }: Props) {
+export default function Asiakirjat({
+  title,
+  data,
+  query,
+  kind,
+  cursorFormatted,
+}: Props) {
   return (
     <>
       <title>
@@ -56,7 +63,12 @@ export default function Asiakirjat({ title, data, query, kind }: Props) {
 
       <Rule />
 
-      <AsiakirjatList data={data} query={query} kind={kind} />
+      <AsiakirjatList
+        data={data}
+        query={query}
+        kind={kind}
+        cursorFormatted={cursorFormatted}
+      />
     </>
   );
 }
@@ -65,10 +77,12 @@ function AsiakirjatList({
   data,
   query,
   kind,
+  cursorFormatted,
 }: {
   data?: AsiakirjatIndexData;
   query?: string;
   kind?: string;
+  cursorFormatted?: string;
 }) {
   const activeKind = kind ?? "";
   return (
@@ -108,6 +122,11 @@ function AsiakirjatList({
           <span class="count">
             <b id="doc-count">{data.totalCount}</b>{" "}
             {i18next.t("documents:count", { count: data.totalCount })}
+          </span>
+        )}
+        {cursorFormatted && (
+          <span class="sit-asof" data-sit-asof>
+            {i18next.t("documents:as_of")} <b data-tl-asof>{cursorFormatted}</b>
           </span>
         )}
       </div>

@@ -6,7 +6,7 @@
    ============================================================ */
 
 .timeline {
-  padding: 16px 0 20px;
+  padding: 16px 0 6px;
 }
 
 /* — header row: active date + navigation — */
@@ -103,7 +103,7 @@
 /* — the track — */
 .tl__track {
   position: relative;
-  height: 62px;
+  height: 78px;
   cursor: pointer;
   touch-action: none;
   user-select: none;
@@ -113,35 +113,48 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 20px;
+  bottom: 28px;
   height: 2px;
   background: var(--ink);
 }
-/* month / year gridlines + labels */
+/* month / year gridlines + labels — three-tier hierarchy */
 .tl__grid {
   position: absolute;
   inset: 0;
 }
 .tl__gline {
   position: absolute;
-  bottom: 20px;
+  bottom: 28px;
   width: 1px;
-  height: 7px;
+  height: 8px;
   background: var(--rule-soft);
   transform: translateX(-0.5px);
 }
+.tl__gline.is-qtr {
+  height: 12px;
+}
+.tl__gline.is-year {
+  width: 2px;
+  height: 16px;
+  background: var(--rule-ink);
+  transform: translateX(-1px);
+}
 .tl__glabel {
   position: absolute;
-  bottom: 2px;
+  bottom: 10px;
   transform: translateX(-50%);
   font-family: var(--mono);
   font-size: 10px;
   color: var(--faint);
   white-space: nowrap;
 }
-.tl__glabel.is-year {
+.tl__glabel.is-qtr {
   color: var(--muted);
+}
+.tl__glabel.is-year {
+  color: var(--ink);
   font-weight: 600;
+  font-size: 11px;
 }
 
 /* sitting ticks rising from the axis */
@@ -149,7 +162,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 22px;
+  bottom: 30px;
 }
 .tl__tick {
   position: absolute;
@@ -162,19 +175,19 @@
     height 0.12s;
 }
 .tl__tick.t-vote {
-  height: 17px;
+  height: 22px;
   background: var(--ink);
 }
 .tl__tick.t-talk {
-  height: 12px;
+  height: 16px;
   background: var(--blue);
 }
 .tl__tick.t-quiet {
-  height: 8px;
+  height: 10px;
   background: var(--faint);
 }
 .tl__tick.t-comp {
-  height: 10px;
+  height: 12px;
   background: var(--opp);
   opacity: 0.7;
 }
@@ -197,9 +210,9 @@
 /* live "now" marker */
 .tl__today {
   position: absolute;
-  bottom: 16px;
+  bottom: 24px;
   width: 2px;
-  height: 30px;
+  height: 38px;
   background: var(--red);
   transform: translateX(-1px);
 }
@@ -219,10 +232,39 @@
   display: none;
 }
 
+/* hover tooltip on ticks */
+.tl__tip {
+  position: absolute;
+  bottom: 60px;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  padding: 3px 7px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+}
+.tl__tip::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--ink);
+}
+.tl__tip[hidden] {
+  display: none;
+}
+
 /* draggable handle */
 .tl__handle {
   position: absolute;
-  bottom: 14px;
+  bottom: 22px;
   transform: translateX(-50%);
   cursor: grab;
   z-index: 3;
@@ -232,7 +274,7 @@
 }
 .tl__stem {
   width: 2px;
-  height: 36px;
+  height: 42px;
   background: var(--ink);
   margin: 0 auto;
 }
@@ -250,7 +292,7 @@
 }
 .tl__flag {
   position: absolute;
-  bottom: 40px;
+  bottom: 46px;
   left: 50%;
   transform: translateX(-50%);
   background: var(--ink);
@@ -280,40 +322,40 @@
     0 0 0 4px rgba(27, 58, 107, 0.35);
 }
 
-/* legend under the track */
+/* legend — sits in the header row next to nav */
 .tl__legend {
   display: flex;
   align-items: center;
-  gap: 18px;
-  margin-top: 6px;
-  font-size: 12px;
+  gap: 14px;
+  font-size: 11px;
   color: var(--muted);
+  margin-left: auto;
+  margin-right: 12px;
 }
 .tl__legend .it {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 .tl__legend .k {
   width: 2px;
-  height: 12px;
+  height: 10px;
   display: inline-block;
 }
 .tl__legend .k.t-vote {
   background: var(--ink);
+  height: 12px;
 }
 .tl__legend .k.t-talk {
   background: var(--blue);
+  height: 11px;
 }
 .tl__legend .k.t-quiet {
   background: var(--faint);
-  height: 8px;
+  height: 7px;
 }
 .tl__legend .hint {
-  margin-left: auto;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--faint);
+  display: none;
 }
 
 /* archive tint: when not viewing the present, the page reads as a back-issue */
@@ -355,7 +397,9 @@ body.is-archive .tl-asof-note b {
     align-items: stretch;
     gap: 10px;
   }
-  /* stack reset BELOW prev/next so it appears without shifting them and leaves no empty row */
+  .tl__legend {
+    display: none;
+  }
   .tl__nav {
     flex-direction: column;
     align-items: stretch;
@@ -377,34 +421,50 @@ body.is-archive .tl-asof-note b {
   .tl__now.is-hidden {
     display: none;
   }
-  .tl__legend .hint {
-    display: none;
-  }
-  /* keep the handle flag from clipping at the track edges */
   .tl__flag {
     font-size: 10.5px;
     padding: 3px 6px;
   }
 }
 
-/* phone: declutter the axis to year markers only, give the legend room */
-@media (max-width: 560px) {
+/* tablet: hide month-only gridlines, keep quarters + years */
+@media (max-width: 640px) {
+  .tl__gline:not(.is-qtr):not(.is-year) {
+    display: none;
+  }
+  .tl__glabel:not(.is-qtr):not(.is-year) {
+    display: none;
+  }
+}
+
+/* phone: declutter to year markers only */
+@media (max-width: 480px) {
+  .tl__gline:not(.is-year) {
+    display: none;
+  }
   .tl__glabel:not(.is-year) {
     display: none;
   }
-  .tl__gline:not(.is-year) {
-    display: none;
+  .tl__gline.is-year {
+    height: 14px;
   }
   .tl__glabel.is-year {
     font-size: 10.5px;
   }
   .tl__track {
-    height: 58px;
+    height: 68px;
   }
-  .tl__legend {
-    margin-top: 10px;
-    flex-wrap: wrap;
-    gap: 10px 16px;
+  .tl__stem {
+    height: 32px;
+  }
+  .tl__flag {
+    bottom: 36px;
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  .tl__tip {
+    bottom: 50px;
+    font-size: 10px;
   }
   .tl__date {
     font-size: 21px;
