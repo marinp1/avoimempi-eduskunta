@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: "/istunnot", label: "nav:sessions" },
   { href: "/aanestykset", label: "nav:votings" },
   { href: "/asiakirjat", label: "nav:documents" },
+  { href: "/laadunvalvonta", label: "nav:quality_control" },
 ] as const satisfies Array<{ href: string; label: ParseKeys<Namespace> }>;
 
 /** Top-level navigation bar. On desktop the links are a horizontal flex row;

@@ -10,6 +10,7 @@ import type parties from "./locales/fi/parties.json";
 import type documents from "./locales/fi/documents.json";
 import type errors from "./locales/fi/errors.json";
 import type components from "./locales/fi/components.json";
+import type quality from "./locales/fi/quality.json";
 
 declare module "i18next" {
   interface CustomTypeOptions {
@@ -27,6 +28,7 @@ declare module "i18next" {
       documents: typeof documents;
       errors: typeof errors;
       components: typeof components;
+      quality: typeof quality;
     };
   }
 }

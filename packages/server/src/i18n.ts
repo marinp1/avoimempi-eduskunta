@@ -9,6 +9,7 @@ import parties from "./locales/fi/parties.json";
 import documents from "./locales/fi/documents.json";
 import errors from "./locales/fi/errors.json";
 import componentsNs from "./locales/fi/components.json";
+import quality from "./locales/fi/quality.json";
 
 export const NS = [
   "common",
@@ -21,6 +22,7 @@ export const NS = [
   "documents",
   "errors",
   "components",
+  "quality",
 ] as const;
 
 export type Namespace = (typeof NS)[number];
@@ -38,6 +40,7 @@ await i18next.init({
       documents,
       errors,
       components: componentsNs,
+      quality,
     },
   },
   lng: "fi",

@@ -1,5 +1,36 @@
 import type { Database } from "bun:sqlite";
-import type { SanityCheckDefinition } from "./types";
+import type { SanityCheckDefinition } from "./quality.types";
+
+/** Constitutional size of the Finnish parliament (PL 24 §). */
+export const PARLIAMENT_SEATS = 200;
+
+/**
+ * First plenary of the 2015 electoral term. Voting.session_key matches
+ * Session.key reliably only from here on: vote history starts 12.6.1996 but
+ * session history starts 2.6.2014, and pre-April-2015 votings carry a legacy
+ * plenary numbering (e.g. voting key 2014/66 vs Session keys like 2014/257)
+ * that does not correspond to the Session table. Verified against the real
+ * DB: zero unlinked votings from this date on.
+ */
+export const SESSION_LINKAGE_RELIABLE_FROM = "2015-04-22";
+
+/**
+ * Governments seated before 1987 were partly imported with year-precision
+ * placeholder dates (YYYY-01-01 / YYYY-12-31), so day-level date arithmetic
+ * on them is meaningless. From Holkeri (1987) on, all dates are exact.
+ */
+export const GOVERNMENT_DATES_RELIABLE_FROM = "1987-01-01";
+
+const VACANCY_NOTES =
+  "Lähdejärjestelmä laskee poissaoleviksi myös avoimet paikat: kun edustaja " +
+  "kuolee tai eroaa, paikka lasketaan poissaolevaksi seuraajan aloitukseen " +
+  "asti, mutta yksittäistä ääniriviä ei synny. Tunnetut tapaukset: Susanna " +
+  "Haapojan paikka kesäkuussa 2009 (47 äänestystä) ja Ilkka Kanervan paikka " +
+  "27.4.2022 (3 äänestystä). Tarkistus hyväksyy erotukset, jotka selittyvät " +
+  "istuntopäivän avointen paikkojen määrällä — poikkeamarivin " +
+  "vacant_seats-sarake kertoo avointen paikkojen määrän äänestyspäivänä " +
+  "(200 − aktiiviset toimikaudet), joten selittämätön erotus näkyy suoraan " +
+  "datasta.";
 
 export const sanityChecks: SanityCheckDefinition[] = [
   // ── Business Logic ──────────────────────────────────────────────────────────
@@ -31,27 +62,54 @@ export const sanityChecks: SanityCheckDefinition[] = [
   },
 
   {
-    id: "parliament-size-exactly-200",
+    id: "parliament-seat-vacancies",
     category: "Business Logic",
-    severity: "warning",
-    name: "Eduskunnan koko täsmälleen 200",
+    severity: "info",
+    name: "Avoimet edustajanpaikat istuntopäivinä",
     description:
-      "Aktiivisten kansanedustajien määrän pitäisi olla tasan 200 jokaisena istuntopäivänä.",
+      "Listaa istuntopäivät, joina aktiivisia kansanedustajia oli alle 200. Lyhyet vajaukset ovat normaaleja seuraajakatkoksia, eivät datavirheitä.",
+    findingNotes:
+      "Paikka on avoinna edustajan poistumisen ja seuraajan aloituksen välillä — tämä on eduskunnan normaalia toimintaa, ei datavirhe. Jokainen rivi näyttää todisteet suoraan datasta: vacant_seats on avointen paikkojen määrä, recent_departures paikan jättänyt edustaja (toimikauden päättymispäivä) ja next_seatings seuraava aloittaja (toimikauden alkupäivä). Esimerkki: Ilkka Kanerva kuoli 14.4.2022 ja Ville Valkonen aloitti 29.4.2022, joten 19.–28.4.2022 istuntopäivinä edustajia oli 199.",
     query: (db: Database) =>
       db
         .query<Record<string, unknown>, []>(
-          `SELECT s.date, COUNT(DISTINCT r.person_id) AS mp_count
-           FROM Session s
-           JOIN Term t ON t.start_date <= s.date AND (t.end_date IS NULL OR t.end_date >= s.date)
-           JOIN Representative r ON r.person_id = t.person_id
-           WHERE NOT EXISTS (
-             SELECT 1 FROM TemporaryAbsence ta
-             WHERE ta.person_id = r.person_id
-               AND ta.start_date <= s.date
-               AND (ta.end_date IS NULL OR ta.end_date >= s.date)
+          `WITH counts AS (
+             SELECT s.date, COUNT(DISTINCT r.person_id) AS mp_count
+             FROM Session s
+             JOIN Term t ON t.start_date <= s.date AND (t.end_date IS NULL OR t.end_date >= s.date)
+             JOIN Representative r ON r.person_id = t.person_id
+             WHERE NOT EXISTS (
+               SELECT 1 FROM TemporaryAbsence ta
+               WHERE ta.person_id = r.person_id
+                 AND ta.start_date <= s.date
+                 AND (ta.end_date IS NULL OR ta.end_date >= s.date)
+             )
+             GROUP BY s.date
+             HAVING mp_count != ${PARLIAMENT_SEATS}
            )
-           GROUP BY s.date
-           HAVING mp_count != 200`,
+           SELECT c.date, c.mp_count,
+                  ${PARLIAMENT_SEATS} - c.mp_count AS vacant_seats,
+                  (SELECT GROUP_CONCAT(r2.last_name || ' ' || r2.first_name || ' (' || t2.end_date || ')', '; ')
+                   FROM Term t2
+                   JOIN Representative r2 ON r2.person_id = t2.person_id
+                   WHERE t2.end_date < c.date
+                     AND t2.end_date >= DATE(c.date, '-21 days')
+                     AND (SELECT COUNT(*) FROM Term tx WHERE tx.end_date = t2.end_date) <= 5
+                     AND NOT EXISTS (
+                       SELECT 1 FROM Term t3
+                       WHERE t3.person_id = t2.person_id
+                         AND t3.start_date <= c.date
+                         AND (t3.end_date IS NULL OR t3.end_date >= c.date)
+                     )
+                  ) AS recent_departures,
+                  (SELECT GROUP_CONCAT(r2.last_name || ' ' || r2.first_name || ' (' || t2.start_date || ')', '; ')
+                   FROM Term t2
+                   JOIN Representative r2 ON r2.person_id = t2.person_id
+                   WHERE t2.start_date > c.date
+                     AND t2.start_date <= DATE(c.date, '+60 days')
+                     AND (SELECT COUNT(*) FROM Term tx WHERE tx.start_date = t2.start_date) <= 5
+                  ) AS next_seatings
+           FROM counts c`,
         )
         .all(),
   },
@@ -67,6 +125,21 @@ export const sanityChecks: SanityCheckDefinition[] = [
         .query<Record<string, unknown>, []>(
           `SELECT key, date FROM Session
            WHERE date IS NOT NULL AND date > DATE('now')`,
+        )
+        .all(),
+  },
+
+  {
+    id: "no-future-votings",
+    category: "Business Logic",
+    severity: "warning",
+    name: "Ei tulevia äänestyksiä",
+    description: "Äänestysten päivämäärät eivät saa olla tulevaisuudessa.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT id, session_key, number, start_time FROM Voting
+           WHERE start_time IS NOT NULL AND DATE(start_time) > DATE('now')`,
         )
         .all(),
   },
@@ -351,13 +424,16 @@ export const sanityChecks: SanityCheckDefinition[] = [
     severity: "warning",
     name: "Vaski-asiakirjatyypit normalisoitu",
     description:
-      "VaskiDocument.document_type-arvon tulee olla normalisoitu tunnettuihin pienaakkosisiin arvoihin.",
+      "VaskiDocument.document_type-arvon tulee olla normalisoitu pienaakkosinen tunniste (ei tyhjä, ei välilyöntejä). Taulu sisältää kymmeniä laillisia tyyppejä, joten kiinteää sallittujen arvojen listaa ei käytetä.",
     query: (db: Database) =>
       db
         .query<Record<string, unknown>, []>(
           `SELECT id, document_type, edk_identifier, source_path
            FROM VaskiDocument
-           WHERE document_type NOT IN ('pöytäkirja', 'nimenhuutoraportti')`,
+           WHERE document_type IS NULL
+              OR TRIM(document_type) = ''
+              OR document_type != LOWER(document_type)
+              OR document_type LIKE '% %'`,
         )
         .all(),
   },
@@ -510,11 +586,11 @@ export const sanityChecks: SanityCheckDefinition[] = [
       db
         .query<Record<string, unknown>, []>(
           `SELECT a.person_id,
-                  a.group_id AS group_a, a.start_date AS start_a, a.end_date AS end_a,
-                  b.group_id AS group_b, b.start_date AS start_b, b.end_date AS end_b
+                  a.group_code AS group_a, a.start_date AS start_a, a.end_date AS end_a,
+                  b.group_code AS group_b, b.start_date AS start_b, b.end_date AS end_b
            FROM ParliamentaryGroupMembership a
            JOIN ParliamentaryGroupMembership b
-             ON a.person_id = b.person_id AND a.group_id < b.group_id
+             ON a.person_id = b.person_id AND a.group_code < b.group_code
            WHERE a.start_date <= COALESCE(b.end_date, '9999-12-31')
              AND b.start_date <= COALESCE(a.end_date, '9999-12-31')`,
         )
@@ -542,8 +618,9 @@ export const sanityChecks: SanityCheckDefinition[] = [
     id: "government-dates-no-overlap",
     category: "Data Integrity",
     severity: "error",
-    name: "Hallituskaudet eivät päälle",
-    description: "Kaksi hallitusta ei saa olla samanaikaisesti aktiivisia.",
+    name: "Hallituskaudet eivät päällekkäin (1987 alkaen)",
+    description:
+      "Kaksi hallitusta ei saa olla samanaikaisesti aktiivisia. Saman päivän vaihdokset (eroava hallitus päättyy uuden alkaessa) ovat normaaleja, ja vuotta 1987 vanhempia hallituksia ei tarkisteta päivämäärien vuositarkkuuden vuoksi.",
     query: (db: Database) =>
       db
         .query<Record<string, unknown>, []>(
@@ -551,8 +628,29 @@ export const sanityChecks: SanityCheckDefinition[] = [
                   b.id AS gov_b, b.name AS name_b, b.start_date AS start_b, b.end_date AS end_b
            FROM Government a
            JOIN Government b ON a.id < b.id
-           WHERE a.start_date <= COALESCE(b.end_date, '9999-12-31')
-             AND b.start_date <= COALESCE(a.end_date, '9999-12-31')`,
+           WHERE a.start_date >= '${GOVERNMENT_DATES_RELIABLE_FROM}'
+             AND b.start_date >= '${GOVERNMENT_DATES_RELIABLE_FROM}'
+             AND a.start_date < COALESCE(b.end_date, '9999-12-31')
+             AND b.start_date < COALESCE(a.end_date, '9999-12-31')`,
+        )
+        .all(),
+  },
+
+  {
+    id: "government-dates-precision",
+    category: "Data Integrity",
+    severity: "info",
+    name: "Hallituskausien päivämäärätarkkuus",
+    description:
+      "Listaa hallitukset, joiden alku- tai loppupäivä on tuotu vain vuoden tarkkuudella (paikkamerkit VVVV-01-01 / VVVV-12-31).",
+    findingNotes:
+      "21 hallituksella 77:stä (kaikki aloittaneet viimeistään 1983) päivämäärät on tuotu lähdedatasta vain vuoden tarkkuudella ja tallennettu muodossa VVVV-01-01 / VVVV-12-31. Päivätason vertailut eivät ole näille riveille mielekkäitä — siksi hallituskausien päällekkäisyystarkistus kattaa vain hallitukset vuodesta 1987 alkaen.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT id, name, start_date, end_date FROM Government
+           WHERE start_date LIKE '%-01-01'
+              OR COALESCE(end_date, '') LIKE '%-12-31'`,
         )
         .all(),
   },
@@ -579,20 +677,120 @@ export const sanityChecks: SanityCheckDefinition[] = [
     category: "Data Integrity",
     severity: "error",
     name: "Yksittäisten äänien määrä täsmää",
-    description: "Äänestysrivien lukumäärän täytyy vastata n_total-arvoa.",
+    description:
+      "Äänestysrivien lukumäärän täytyy vastata n_total-arvoa, istuntopäivän avoimet edustajanpaikat huomioiden.",
+    findingNotes: VACANCY_NOTES,
     query: (db: Database) =>
       db
         .query<Record<string, unknown>, []>(
-          `SELECT v.id, v.session_key, v.number, v.n_total, COUNT(vo.id) AS actual_votes
+          `WITH mism AS (
+             SELECT v.id, v.session_key, v.number, v.start_date AS d,
+                    COALESCE(v.n_total, 0) AS n_total, COUNT(vo.id) AS actual_votes
+             FROM Voting v
+             LEFT JOIN Vote vo ON v.id = vo.voting_id
+             GROUP BY v.id
+             HAVING actual_votes != COALESCE(v.n_total, 0)
+           ),
+           ctx AS (
+             SELECT mism.*,
+                    CASE WHEN d IS NULL THEN NULL
+                         ELSE ${PARLIAMENT_SEATS} - (
+                           SELECT COUNT(*) FROM Term t
+                           WHERE t.start_date <= mism.d
+                             AND (t.end_date IS NULL OR t.end_date >= mism.d))
+                    END AS vacant_seats
+             FROM mism
+           )
+           SELECT id, session_key, number, d AS start_date, n_total, actual_votes, vacant_seats
+           FROM ctx
+           WHERE vacant_seats IS NULL
+              OR n_total - actual_votes != vacant_seats`,
+        )
+        .all(),
+  },
+
+  {
+    id: "voting-cast-counts-match",
+    category: "Data Integrity",
+    severity: "error",
+    name: "Annettujen äänten jakauma täsmää",
+    description:
+      "Äänestyksen kirjatut Jaa/Ei/Tyhjää-määrät täytyy vastata täsmälleen yksittäisten äänirivien jakaumaa.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT v.id, v.session_key, v.number,
+                  v.n_yes, SUM(vo.vote = 'Jaa') AS actual_yes,
+                  v.n_no, SUM(vo.vote = 'Ei') AS actual_no,
+                  v.n_abstain, SUM(vo.vote = ('Tyhj' || char(228, 228))) AS actual_abstain
            FROM Voting v
-           LEFT JOIN Vote vo ON v.id = vo.voting_id
+           JOIN Vote vo ON vo.voting_id = v.id
            GROUP BY v.id
-           HAVING actual_votes != COALESCE(v.n_total, 0)`,
+           HAVING actual_yes != COALESCE(v.n_yes, 0)
+               OR actual_no != COALESCE(v.n_no, 0)
+               OR actual_abstain != COALESCE(v.n_abstain, 0)`,
+        )
+        .all(),
+  },
+
+  {
+    id: "voting-absent-count-matches",
+    category: "Data Integrity",
+    severity: "error",
+    name: "Poissaolojen määrä täsmää",
+    description:
+      "Äänestyksen kirjatun poissaolomäärän täytyy vastata yksittäisiä Poissa-rivejä, istuntopäivän avoimet edustajanpaikat huomioiden.",
+    findingNotes: VACANCY_NOTES,
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `WITH mism AS (
+             SELECT v.id, v.session_key, v.number, v.start_date AS d,
+                    COALESCE(v.n_absent, 0) AS n_absent,
+                    SUM(vo.vote = 'Poissa') AS actual_absent
+             FROM Voting v
+             JOIN Vote vo ON vo.voting_id = v.id
+             GROUP BY v.id
+             HAVING actual_absent != COALESCE(v.n_absent, 0)
+           ),
+           ctx AS (
+             SELECT mism.*,
+                    CASE WHEN d IS NULL THEN NULL
+                         ELSE ${PARLIAMENT_SEATS} - (
+                           SELECT COUNT(*) FROM Term t
+                           WHERE t.start_date <= mism.d
+                             AND (t.end_date IS NULL OR t.end_date >= mism.d))
+                    END AS vacant_seats
+             FROM mism
+           )
+           SELECT id, session_key, number, d AS start_date, n_absent, actual_absent, vacant_seats
+           FROM ctx
+           WHERE vacant_seats IS NULL
+              OR n_absent - actual_absent != vacant_seats`,
         )
         .all(),
   },
 
   // ── Referential Integrity ────────────────────────────────────────────────────
+
+  {
+    id: "vote-voting-links",
+    category: "Referential Integrity",
+    severity: "error",
+    name: "Äänet → Äänestykset",
+    description:
+      "Kaikkien äänirivien täytyy viitata olemassa olevaan äänestykseen.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT DISTINCT vo.voting_id
+           FROM Vote vo
+           WHERE NOT EXISTS (
+             SELECT 1 FROM Voting v WHERE v.id = vo.voting_id
+           )`,
+        )
+        .all(),
+  },
 
   {
     id: "vote-representative-links",
@@ -634,15 +832,42 @@ export const sanityChecks: SanityCheckDefinition[] = [
     id: "voting-session-links",
     category: "Referential Integrity",
     severity: "error",
-    name: "Äänestykset → Istunnot",
+    name: "Äänestykset → Istunnot (vaalikaudesta 2015 alkaen)",
     description:
-      "Kaikkien äänestyssessioiden täytyy viitata olemassa olevaan istuntoon.",
+      "Vaalikaudesta 2015 (22.4.2015) alkaen jokaisen äänestyksen täytyy viitata olemassa olevaan istuntoon. Vanhempia äänestyksiä ei tarkisteta, koska niiden istuntoviittaukset käyttävät vanhan järjestelmän numerointia.",
+    findingNotes:
+      "Äänestyshistoria alkaa 12.6.1996, mutta istuntohistoria vasta 2.6.2014, ja huhtikuuta 2015 edeltävät äänestykset käyttävät vanhan järjestelmän istuntonumerointia (esim. äänestyksen avain 2014/66, istuntotaulun avaimet muotoa 2014/257). Vanhoja äänestyksiä ei siksi voi linkittää istuntoihin; vaalikauden 2015 ensimmäisestä täysistunnosta alkaen linkityksen täytyy olla aukoton.",
     query: (db: Database) =>
       db
         .query<Record<string, unknown>, []>(
-          `SELECT id, session_key FROM Voting
+          `SELECT id, session_key, start_date FROM Voting
+           WHERE start_date >= '${SESSION_LINKAGE_RELIABLE_FROM}'
+             AND NOT EXISTS (
+               SELECT 1 FROM Session s WHERE s.key = session_key
+             )`,
+        )
+        .all(),
+  },
+
+  {
+    id: "votes-have-active-term",
+    category: "Referential Integrity",
+    severity: "warning",
+    name: "Äänet annettu toimikauden aikana",
+    description:
+      "Jokaisen äänestyspäivän äänillä täytyy olla äänestäjälle voimassa oleva toimikausi.",
+    findingNotes:
+      "Toimikausidata ei kata 1990-luvun sijaisuusjaksoja täydellisesti. Tunnetut tapaukset: Nikula 13.3.1998, Kemppainen 23.4.–18.6.1999 (kolme äänestyspäivää) ja Erlund 25.4.2000 — näinä päivinä annetuille äänille ei löydy voimassa olevaa toimikautta.",
+    query: (db: Database) =>
+      db
+        .query<Record<string, unknown>, []>(
+          `SELECT s.person_id, s.voting_date
+           FROM PersonVotingDailyStats s
            WHERE NOT EXISTS (
-             SELECT 1 FROM Session s WHERE s.key = session_key
+             SELECT 1 FROM Term t
+             WHERE t.person_id = s.person_id
+               AND t.start_date <= s.voting_date
+               AND (t.end_date IS NULL OR t.end_date >= s.voting_date)
            )`,
         )
         .all(),

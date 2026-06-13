@@ -19,6 +19,7 @@
   parties,
   votes,
   timeline,
+  quality,
   responsive;
 
 @import "./styles/_tokens.css" layer(tokens);
@@ -37,6 +38,7 @@
 @import "./styles/_timeline.css" layer(timeline);
 @import "./styles/_about.css" layer(components);
 @import "./styles/_trace.css" layer(trace);
+@import "./styles/_quality.css" layer(quality);
 @import "./styles/_responsive.css" layer(responsive);
 
 /* Cross-document (MPA) View Transitions opt-in. MUST be top-level: this

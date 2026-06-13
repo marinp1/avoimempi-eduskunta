@@ -13,6 +13,7 @@ import type { SessionRepository } from "../../src/features/session/session.repos
 import type { VotingRepository } from "../../src/features/voting/voting.repository";
 import type { ProvenanceService } from "../../src/domain/provenance.service";
 import type { TraceRepository } from "../../src/database/trace.repository";
+import type { SanityRunner } from "../../src/features/quality/quality.runner";
 
 export interface WebappDeps {
   analyticsRepository: AnalyticsRepository;
@@ -29,6 +30,8 @@ export interface WebappDeps {
   votingService: VotingService;
   provenanceService: ProvenanceService;
   traceRepo: TraceRepository | null;
+  /** Startup data sanity-check runner — state is read by /laadunvalvonta. */
+  sanityRunner: SanityRunner;
   /** Main app DB — used by the trace overlay's on-demand provenance probes. */
   db: Database;
 }

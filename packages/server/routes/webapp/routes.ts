@@ -12,7 +12,10 @@ import { createHomeRoute } from "./home-route";
 import { createSessionsListRoute } from "./sessions-list-route";
 import { createSessionRoute } from "./session-route";
 import { createDebateRoute } from "./debate-route";
-import { createDataQualityRoute } from "./data-quality-route";
+import {
+  createDataQualityRoute,
+  createDataQualityStatusRoute,
+} from "./data-quality-route";
 import { createPartyRoute } from "./party-route";
 import { createPartiesListRoute } from "./parties-list-route";
 import {
@@ -47,6 +50,7 @@ export function createWebappPageRoutes(deps: WebappDeps) {
     ...createSessionRoute(deps),
     ...createDebateRoute(deps),
     ...createDataQualityRoute(deps),
+    ...createDataQualityStatusRoute(deps),
     ...createPartyRoute(deps),
     ...createPartiesListRoute(deps),
     ...createTraceRoute(deps),

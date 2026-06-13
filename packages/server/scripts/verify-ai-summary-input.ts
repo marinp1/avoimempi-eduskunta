@@ -23,6 +23,7 @@ import { PersonService } from "../src/features/person/person.service";
 import { SessionService } from "../src/features/session/session.service";
 import { VotingService } from "../src/features/voting/voting.service";
 import { createWebappPageRoutes } from "../routes/webapp-routes";
+import { SanityRunner } from "../src/features/quality/quality.runner";
 import {
   BLOCK_PROFILES,
   buildPartContext,
@@ -64,6 +65,7 @@ const routes = createWebappPageRoutes({
   votingService: new VotingService(votingRepository, provenanceService),
   provenanceService,
   traceRepo: null,
+  sanityRunner: new SanityRunner(db, []),
   db,
 });
 

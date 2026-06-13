@@ -1,0 +1,232 @@
+/* ============================================================
+   LAADUNVALVONTA — startup data sanity checks
+   Status banner (running / complete) + per-category check rows
+   with expandable violation samples.
+   ============================================================ */
+
+.quality-status {
+  margin-top: 24px;
+}
+
+/* — Banner — */
+
+.quality-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid var(--rule);
+  background: var(--paper-2);
+  margin-bottom: 28px;
+}
+
+.quality-banner--complete.is-ok {
+  border-left: 4px solid var(--hall);
+}
+
+.quality-banner--complete.has-findings {
+  border-left: 4px solid var(--red);
+}
+
+.quality-banner__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quality-banner__text strong {
+  font: 700 var(--fs-h3) var(--head);
+  color: var(--ink);
+}
+
+.quality-banner__text span {
+  font: 400 var(--fs-sm) var(--text);
+  color: var(--muted);
+}
+
+.quality-banner__current {
+  font-family: var(--mono);
+}
+
+.quality-spinner {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 3px solid var(--rule);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: quality-spin 0.9s linear infinite;
+}
+
+@keyframes quality-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quality-spinner {
+    animation: none;
+  }
+}
+
+/* — Category groups — */
+
+.quality-group {
+  margin-bottom: 26px;
+}
+
+.quality-group__title {
+  font: 700 var(--fs-kicker) var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 6px;
+  margin-bottom: 0;
+}
+
+/* — Check rows — */
+
+.quality-check {
+  border-bottom: 1px solid var(--rule-soft);
+  padding: 10px 0;
+}
+
+.quality-check__row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.quality-badge {
+  flex: none;
+  min-width: 96px;
+  font: 700 var(--fs-mono) var(--mono);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.quality-badge--pass {
+  color: var(--hall);
+}
+
+.quality-badge--fail {
+  color: var(--red);
+}
+
+.quality-badge--error {
+  color: var(--opp);
+}
+
+.quality-check__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.quality-check__text strong {
+  font: 600 var(--fs-body) var(--text);
+  color: var(--ink);
+}
+
+.quality-check__text p {
+  margin: 2px 0 0;
+  font: 400 var(--fs-sm) var(--text);
+  color: var(--muted);
+}
+
+.quality-check__meta {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font: 400 var(--fs-mono) var(--mono);
+  color: var(--faint);
+}
+
+.quality-severity--error {
+  color: var(--red);
+}
+
+.quality-severity--warning {
+  color: var(--opp);
+}
+
+.quality-severity--info {
+  color: var(--blue);
+}
+
+/* Info-level findings are explained, expected deviations — keep them
+   informational rather than alarming. */
+.quality-check[data-severity="info"] .quality-badge--fail {
+  color: var(--blue);
+}
+
+/* — Known-cause explanation — */
+
+.quality-check__notes {
+  margin: 8px 0 4px 110px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--blue);
+  background: var(--paper-2);
+  font: 400 var(--fs-sm) var(--text);
+  color: var(--body);
+}
+
+.quality-check__notes strong {
+  color: var(--ink);
+}
+
+.quality-check[data-severity="info"] .quality-check__notes {
+  border-left-color: var(--rule);
+}
+
+/* — Violation sample — */
+
+.quality-check__sample {
+  margin: 8px 0 4px 110px;
+}
+
+.quality-check__sample summary {
+  cursor: pointer;
+  font: 600 var(--fs-sm) var(--text);
+  color: var(--blue);
+}
+
+.quality-sample {
+  margin-top: 8px;
+  border-collapse: collapse;
+  font: 400 var(--fs-mono) var(--mono);
+}
+
+.quality-sample th,
+.quality-sample td {
+  text-align: left;
+  padding: 4px 14px 4px 0;
+  border-bottom: 1px solid var(--rule-soft);
+  color: var(--body);
+}
+
+.quality-sample th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.quality-check__error {
+  margin: 6px 0 0 110px;
+  font: 400 var(--fs-sm) var(--mono);
+  color: var(--red);
+}
+
+@media (max-width: 720px) {
+  .quality-check__row {
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+
+  .quality-check__sample,
+  .quality-check__error,
+  .quality-check__notes {
+    margin-left: 0;
+  }
+}

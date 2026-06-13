@@ -10,6 +10,8 @@ import { DatabaseConnection, openTraceDb } from "./src/database/db";
 import { prepareDatabaseForServerStartup } from "./src/database/launch-db";
 import { TraceRepository } from "./src/database/trace.repository";
 import { ProvenanceService } from "./src/domain/provenance.service";
+import { sanityChecks } from "./src/features/quality/quality.checks";
+import { SanityRunner } from "./src/features/quality/quality.runner";
 import { AnalyticsRepository } from "./src/features/analytics/analytics.repository";
 import { DocumentRepository } from "./src/features/document/document.repository";
 import { HomeRepository } from "./src/features/home/home.repository";
@@ -63,6 +65,7 @@ const sessionService = new SessionService(
   provenanceService,
 );
 const votingService = new VotingService(votingRepository, provenanceService);
+const sanityRunner = new SanityRunner(db, sanityChecks);
 
 const readTimestamp = async (filePath: string): Promise<string | null> => {
   const file = Bun.file(filePath);
@@ -136,9 +139,15 @@ const allRoutes = withSecurityHeaders({
       votingService,
       provenanceService,
       traceRepo,
+      sanityRunner,
       db,
     }),
-    { cacheKey: webappCacheKey },
+    {
+      cacheKey: webappCacheKey,
+      // Live runner state: the page must reflect progress and the status
+      // fragment is polled until the run completes — never cache either.
+      exclude: new Set(["/laadunvalvonta", "/laadunvalvonta/status"]),
+    },
   ),
   // Liveness/readiness only — the rest of the JSON API has been removed.
   ...createHealthRoutes(db),
@@ -172,3 +181,16 @@ const server = Bun.serve({
 console.log(
   `Listening on ${server.url} ${server.development ? "(development)" : "(production)"}`,
 );
+
+// Startup data sanity checks: run in the background (never block startup);
+// results appear on /laadunvalvonta as each check completes.
+void sanityRunner.start().then(() => {
+  const state = sanityRunner.getState();
+  if (state.phase === "complete") {
+    const failed = state.completed.filter((c) => c.status !== "pass").length;
+    console.log(
+      `Sanity checks complete: ${state.completed.length - failed}/${state.total} passed` +
+        (failed > 0 ? ` (${failed} with findings — see /laadunvalvonta)` : ""),
+    );
+  }
+});
