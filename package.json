@@ -17,6 +17,8 @@
     "parse": "cd packages/datapipe && bun run parser/cli.ts",
     "migrate": "cd packages/datapipe && bun run migrator/cli.ts",
     "migrate:fresh": "cd packages/datapipe && bun run migrator/cli.ts recreate",
+    "fetch-docs": "cd packages/datapipe && DOCUMENT_HANDLER=local bun run document-fetcher/cli.ts",
+    "fetch-docs:errors": "cd packages/datapipe && bun run document-fetcher/errors-cli.ts",
     "rowstore:compact": "bun run scripts/compact-row-stores.ts",
     "test": "bun test",
     "test:update-snapshots": "SQL_UPDATE_SNAPSHOTS=1 bun test packages/server/__tests__/sql-contract.test.ts",

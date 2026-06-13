@@ -26,6 +26,7 @@
  */
 
 export * from "./config";
+export * from "./document-handler/index";
 export * from "./factory";
 export * from "./list-all";
 export * from "./providers/local";

@@ -144,6 +144,19 @@ const extractEdkIdentifier = (row: VaskiEntry): string | null => {
   return null;
 };
 
+const extractVaskiGuid = (row: VaskiEntry): string | null => {
+  const meta = row.contents?.Siirto?.SiirtoMetatieto;
+  const candidates = [
+    meta?.JulkaisuMetatieto?.["@_identifiointiTunnus"],
+    meta?.["@_identifiointiTunnus"],
+  ];
+  for (const candidate of candidates) {
+    const normalized = normalizeText(candidate);
+    if (normalized) return normalized;
+  }
+  return null;
+};
+
 const buildSourcePath = (row: VaskiEntry, documentType: string, id: number) => {
   const basePath =
     normalizeText(row._source?.vaskiPath) ??
@@ -160,16 +173,18 @@ const upsertVaskiDocument = (
   if (id === null) return;
 
   db.run(
-    `INSERT INTO VaskiDocument (id, document_type, edk_identifier, source_path)
-     VALUES (?, ?, ?, ?)
+    `INSERT INTO VaskiDocument (id, document_type, edk_identifier, vaski_guid, source_path)
+     VALUES (?, ?, ?, ?, ?)
      ON CONFLICT(id) DO UPDATE SET
        document_type = excluded.document_type,
        edk_identifier = COALESCE(excluded.edk_identifier, VaskiDocument.edk_identifier),
+       vaski_guid = COALESCE(excluded.vaski_guid, VaskiDocument.vaski_guid),
        source_path = excluded.source_path`,
     [
       id,
       documentType,
       extractEdkIdentifier(row),
+      extractVaskiGuid(row),
       buildSourcePath(row, documentType, id),
     ],
   );

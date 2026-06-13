@@ -15,19 +15,23 @@ FETCH_COUNTS_ON_CALENDAR="${FETCH_COUNTS_ON_CALENDAR:-*-*-* 01/6:00:00}"
 SCRAPE_ON_CALENDAR="${SCRAPE_ON_CALENDAR:-*-*-* 02/6:00:00}"
 PARSE_ON_CALENDAR="${PARSE_ON_CALENDAR:-*-*-* 03/6:00:00}"
 MIGRATE_ON_CALENDAR="${MIGRATE_ON_CALENDAR:-*-*-* 04/6:00:00}"
+FETCH_DOCS_ON_CALENDAR="${FETCH_DOCS_ON_CALENDAR:-*-*-* 05/6:00:00}"
 FETCH_COUNTS_TIMEOUT="${FETCH_COUNTS_TIMEOUT:-10m}"
 SCRAPE_TIMEOUT="${SCRAPE_TIMEOUT:-30m}"
 PARSE_TIMEOUT="${PARSE_TIMEOUT:-12h}"
 MIGRATE_TIMEOUT="${MIGRATE_TIMEOUT:-12h}"
+FETCH_DOCS_TIMEOUT="${FETCH_DOCS_TIMEOUT:-4h}"
 
 FETCH_COUNTS_SERVICE="${SERVICE_PREFIX}-fetch-counts.service"
 SCRAPE_SERVICE="${SERVICE_PREFIX}-scrape.service"
 PARSE_SERVICE="${SERVICE_PREFIX}-parse.service"
 MIGRATE_SERVICE="${SERVICE_PREFIX}-migrate.service"
+FETCH_DOCS_SERVICE="${SERVICE_PREFIX}-fetch-docs.service"
 FETCH_COUNTS_TIMER="${SERVICE_PREFIX}-fetch-counts.timer"
 SCRAPE_TIMER="${SERVICE_PREFIX}-scrape.timer"
 PARSE_TIMER="${SERVICE_PREFIX}-parse.timer"
 MIGRATE_TIMER="${SERVICE_PREFIX}-migrate.timer"
+FETCH_DOCS_TIMER="${SERVICE_PREFIX}-fetch-docs.timer"
 
 unit_path() { printf '/etc/systemd/system/%s\n' "$1"; }
 
@@ -89,23 +93,27 @@ install_units() {
   write_service_unit "${SCRAPE_SERVICE}"        "scrape-all"   "${SCRAPE_TIMEOUT}"
   write_service_unit "${PARSE_SERVICE}"         "parse-all"    "${PARSE_TIMEOUT}"
   write_service_unit "${MIGRATE_SERVICE}"       "migrate-sync" "${MIGRATE_TIMEOUT}"
+  write_service_unit "${FETCH_DOCS_SERVICE}"    "fetch-docs"   "${FETCH_DOCS_TIMEOUT}"
   write_timer_unit "${FETCH_COUNTS_TIMER}" "${FETCH_COUNTS_SERVICE}" "${FETCH_COUNTS_ON_CALENDAR}"
   write_timer_unit "${SCRAPE_TIMER}"       "${SCRAPE_SERVICE}"       "${SCRAPE_ON_CALENDAR}"
   write_timer_unit "${PARSE_TIMER}"        "${PARSE_SERVICE}"        "${PARSE_ON_CALENDAR}"
   write_timer_unit "${MIGRATE_TIMER}"      "${MIGRATE_SERVICE}"      "${MIGRATE_ON_CALENDAR}"
+  write_timer_unit "${FETCH_DOCS_TIMER}"   "${FETCH_DOCS_SERVICE}"   "${FETCH_DOCS_ON_CALENDAR}"
   write_logrotate_config
   systemctl daemon-reload
-  systemctl enable --now "${FETCH_COUNTS_TIMER}" "${SCRAPE_TIMER}" "${PARSE_TIMER}" "${MIGRATE_TIMER}"
+  systemctl enable --now "${FETCH_COUNTS_TIMER}" "${SCRAPE_TIMER}" "${PARSE_TIMER}" "${MIGRATE_TIMER}" "${FETCH_DOCS_TIMER}"
   echo "Pipeline timers installed."
   status_units
 }
 
 remove_units() {
-  systemctl disable --now "${FETCH_COUNTS_TIMER}" "${SCRAPE_TIMER}" "${PARSE_TIMER}" "${MIGRATE_TIMER}" 2>/dev/null || true
+  systemctl disable --now "${FETCH_COUNTS_TIMER}" "${SCRAPE_TIMER}" "${PARSE_TIMER}" "${MIGRATE_TIMER}" "${FETCH_DOCS_TIMER}" 2>/dev/null || true
   rm -f "$(unit_path "${FETCH_COUNTS_SERVICE}")" "$(unit_path "${SCRAPE_SERVICE}")" \
         "$(unit_path "${PARSE_SERVICE}")"         "$(unit_path "${MIGRATE_SERVICE}")" \
+        "$(unit_path "${FETCH_DOCS_SERVICE}")" \
         "$(unit_path "${FETCH_COUNTS_TIMER}")"    "$(unit_path "${SCRAPE_TIMER}")" \
-        "$(unit_path "${PARSE_TIMER}")"           "$(unit_path "${MIGRATE_TIMER}")"
+        "$(unit_path "${PARSE_TIMER}")"           "$(unit_path "${MIGRATE_TIMER}")" \
+        "$(unit_path "${FETCH_DOCS_TIMER}")"
   rm -f "${LOGROTATE_CONF}"
   systemctl daemon-reload
   echo "Removed pipeline systemd units."
@@ -113,10 +121,10 @@ remove_units() {
 
 status_units() {
   echo "Timers:"
-  systemctl list-timers --all | grep -E "${SERVICE_PREFIX}-(fetch-counts|scrape|parse|migrate)\.timer" || true
+  systemctl list-timers --all | grep -E "${SERVICE_PREFIX}-(fetch-counts|scrape|parse|migrate|fetch-docs)\.timer" || true
   echo
   echo "Services:"
-  systemctl status "${FETCH_COUNTS_SERVICE}" "${SCRAPE_SERVICE}" "${PARSE_SERVICE}" "${MIGRATE_SERVICE}" --no-pager || true
+  systemctl status "${FETCH_COUNTS_SERVICE}" "${SCRAPE_SERVICE}" "${PARSE_SERVICE}" "${MIGRATE_SERVICE}" "${FETCH_DOCS_SERVICE}" --no-pager || true
 }
 
 case "${ACTION}" in

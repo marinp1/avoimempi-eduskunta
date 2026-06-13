@@ -58,7 +58,7 @@ chmod 2775 "${APP_DATA_DIR}/releases"   # setgid: new files inherit app group
 
 # --- Pipeline data directory ---
 
-mkdir -p "${PIPELINE_DATA_DIR}/data" "${PIPELINE_DATA_DIR}/locks"
+mkdir -p "${PIPELINE_DATA_DIR}/data" "${PIPELINE_DATA_DIR}/locks" "${PIPELINE_DATA_DIR}/documents"
 chown -R "${PIPELINE_USER}:${PIPELINE_USER}" "${PIPELINE_DATA_DIR}"
 chmod 750 "${PIPELINE_DATA_DIR}"
 
@@ -87,6 +87,9 @@ DB_PATH=${PIPELINE_DATA_DIR}/avoimempi-eduskunta.db
 MIGRATOR_OVERWRITE_LOG_DIR=${PIPELINE_DATA_DIR}/migration-overwrites
 MIGRATOR_REPORT_LOG_DIR=${PIPELINE_DATA_DIR}/migration-reports
 MIGRATOR_KNOWN_ISSUE_LOG_DIR=${PIPELINE_DATA_DIR}/migration-known-issues
+DOCUMENTS_DB_PATH=${PIPELINE_DATA_DIR}/avoimempi-eduskunta-documents.db
+DOCUMENT_HANDLER=local
+DOCUMENT_STORAGE_DIR=/mnt/bucket/documents
 EOF
   chown "${PIPELINE_USER}:${PIPELINE_USER}" "${PIPELINE_ENV_FILE}"
   chmod 640 "${PIPELINE_ENV_FILE}"

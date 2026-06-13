@@ -48,6 +48,15 @@ export const getQualityDatabasePath = () => {
   );
 };
 
+export const getDocumentsDatabasePath = () => {
+  if (process.env.DOCUMENTS_DB_PATH)
+    return resolvePath(process.env.DOCUMENTS_DB_PATH);
+  return path.join(
+    import.meta.dirname,
+    "../../../avoimempi-eduskunta-documents.db",
+  );
+};
+
 export const getLastScraperRunAtPath = () => {
   const reportPath = getChangesReportPath();
   return path.join(path.dirname(reportPath), "last-scraper-run-at");

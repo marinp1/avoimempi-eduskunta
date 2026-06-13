@@ -185,6 +185,14 @@ async function buildPipelineDist() {
     target: "bun",
   });
 
+  await build({
+    outdir: path.join(distRoot, "document-fetcher"),
+    entrypoints: [
+      path.join(rootDir, "packages/datapipe/document-fetcher/cli.ts"),
+    ],
+    target: "bun",
+  });
+
   const migrationsSource = path.join(
     rootDir,
     "packages/datapipe/migrator/migrations",

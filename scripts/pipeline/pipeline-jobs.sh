@@ -5,11 +5,15 @@ APP_DIR="/opt/avoimempi-eduskunta"
 STORAGE_LOCAL_DIR="${STORAGE_LOCAL_DIR:-/var/lib/avoimempi-eduskunta-pipeline/data}"
 DB_PATH="${DB_PATH:-/var/lib/avoimempi-eduskunta-pipeline/avoimempi-eduskunta.db}"
 TRACE_DB_PATH="${TRACE_DB_PATH:-/var/lib/avoimempi-eduskunta-pipeline/avoimempi-eduskunta-trace.db}"
+DOCUMENTS_DB_PATH="${DOCUMENTS_DB_PATH:-/var/lib/avoimempi-eduskunta-pipeline/avoimempi-eduskunta-documents.db}"
+DOCUMENT_HANDLER="${DOCUMENT_HANDLER:-local}"
+DOCUMENT_STORAGE_DIR="${DOCUMENT_STORAGE_DIR:-/mnt/bucket/documents}"
 PIPELINE_BUILD_DIR="${APP_DIR}/dist/pipeline"
 LOG_FILE="/var/log/avoimempi-eduskunta/pipeline-jobs.log"
 LOCK_DIR="/var/lib/avoimempi-eduskunta-pipeline/locks"
 SCRAPER_MAX_RUNTIME_SECONDS=1800
 FETCH_COUNTS_CLI="${PIPELINE_BUILD_DIR}/scraper/fetch-counts-cli.js"
+FETCH_DOCS_CLI="${PIPELINE_BUILD_DIR}/document-fetcher/cli.js"
 
 # DB + report activation constants (local — no rsync, same VM)
 APP_DATA_DIR="/var/lib/avoimempi-eduskunta-app"
@@ -157,11 +161,28 @@ migrate_and_sync() {
   log "Done"
 }
 
+fetch_docs() {
+  require_bundle "${FETCH_DOCS_CLI}"
+  if [[ ! -d "${DOCUMENT_STORAGE_DIR}" ]]; then
+    log "Skipping fetch-docs: document storage path not found (${DOCUMENT_STORAGE_DIR})"
+    return 0
+  fi
+  log "Fetching documents (handler: ${DOCUMENT_HANDLER})"
+  (cd "${APP_DIR}" && env \
+    DB_PATH="${DB_PATH}" \
+    DOCUMENTS_DB_PATH="${DOCUMENTS_DB_PATH}" \
+    DOCUMENT_HANDLER="${DOCUMENT_HANDLER}" \
+    DOCUMENT_STORAGE_DIR="${DOCUMENT_STORAGE_DIR}" \
+    bun "${FETCH_DOCS_CLI}" all >> "${LOG_FILE}" 2>&1)
+  record_pipeline_stage "document-fetcher"
+}
+
 full_cycle() {
   fetch_counts
   scrape_all
   parse_all
   migrate_and_sync
+  fetch_docs
 }
 
 main() {
@@ -170,13 +191,14 @@ main() {
     scrape-all)   with_lock scrape_all ;;
     parse-all)    with_lock parse_all ;;
     migrate-sync) with_lock migrate_and_sync ;;
+    fetch-docs)   with_lock fetch_docs ;;
     full-cycle)   with_lock full_cycle ;;
     help|-h|--help)
-      echo "Usage: $0 <fetch-counts|scrape-all|parse-all|migrate-sync|full-cycle>"
+      echo "Usage: $0 <fetch-counts|scrape-all|parse-all|migrate-sync|fetch-docs|full-cycle>"
       ;;
     *)
       echo "Error: unknown action '${ACTION}'" >&2
-      echo "Usage: $0 <fetch-counts|scrape-all|parse-all|migrate-sync|full-cycle>" >&2
+      echo "Usage: $0 <fetch-counts|scrape-all|parse-all|migrate-sync|fetch-docs|full-cycle>" >&2
       exit 1
       ;;
   esac
