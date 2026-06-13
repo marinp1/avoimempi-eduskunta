@@ -122,7 +122,7 @@ export async function rebuildTraceDatabase(): Promise<void> {
     traceDb.run("PRAGMA journal_mode = WAL;");
     traceDb.run("PRAGMA synchronous = OFF;");
     traceDb.run("PRAGMA cache_size = -32000;");
-    traceDb.run("PRAGMA temp_store = FILE;");
+    traceDb.run("PRAGMA temp_store = MEMORY;");
 
     for (const stmt of TRACE_SCHEMA_STATEMENTS) {
       traceDb.run(stmt);

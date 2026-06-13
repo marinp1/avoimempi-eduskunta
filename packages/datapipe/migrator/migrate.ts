@@ -32,8 +32,8 @@ const SQLITE_PRAGMAS = {
   synchronousOff: "PRAGMA synchronous = OFF;",
   synchronousFull: "PRAGMA synchronous = FULL;",
   cacheSize64Mb: "PRAGMA cache_size = -64000;",
-  tempStoreFile: "PRAGMA temp_store = FILE;",
-  mmapSize2Gb: "PRAGMA mmap_size = 2000000000;",
+  tempStoreMemory: "PRAGMA temp_store = MEMORY;",
+  mmapSize30Gb: "PRAGMA mmap_size = 30000000000;",
   lockingModeExclusive: "PRAGMA locking_mode = EXCLUSIVE;",
   lockingModeNormal: "PRAGMA locking_mode = NORMAL;",
 } as const;
@@ -316,7 +316,7 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
   const useExclusiveLock = isTruthyEnv(process.env.MIGRATOR_EXCLUSIVE_LOCK);
   const shouldVacuumAfterImport =
     process.env.MIGRATOR_VACUUM_AFTER_IMPORT === undefined
-      ? true
+      ? false
       : isTruthyEnv(process.env.MIGRATOR_VACUUM_AFTER_IMPORT);
   const federatedSearchBodyMaxChars = parseOptionalPositiveInt(
     process.env.MIGRATOR_FEDERATED_SEARCH_BODY_MAX_CHARS,
@@ -401,11 +401,8 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
     console.log("⚙️  Applying SQLite performance optimizations...");
     targetDatabase.run(SQLITE_PRAGMAS.synchronousOff);
     targetDatabase.run(SQLITE_PRAGMAS.cacheSize64Mb);
-    // temp_store must stay FILE: VACUUM rebuilds the whole multi-GB database
-    // through temp storage, which OOM-kills the process on small VMs if kept
-    // in memory.
-    targetDatabase.run(SQLITE_PRAGMAS.tempStoreFile);
-    targetDatabase.run(SQLITE_PRAGMAS.mmapSize2Gb);
+    targetDatabase.run(SQLITE_PRAGMAS.tempStoreMemory);
+    targetDatabase.run(SQLITE_PRAGMAS.mmapSize30Gb);
     targetDatabase.run(SQLITE_PRAGMAS.foreignKeysOff);
     if (useExclusiveLock) {
       targetDatabase.run(SQLITE_PRAGMAS.lockingModeExclusive);
