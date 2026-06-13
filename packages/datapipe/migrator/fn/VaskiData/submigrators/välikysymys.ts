@@ -480,6 +480,9 @@ export default function createValikysymysSubMigrator(db: Database) {
   const linkVaskiDocument = db.prepare(
     "UPDATE Interpellation SET vaski_document_id = ? WHERE id = ?",
   );
+  const linkVaskiDocumentIfAbsent = db.prepare(
+    "UPDATE Interpellation SET vaski_document_id = ? WHERE id = ? AND vaski_document_id IS NULL",
+  );
   const updateVaskiTitle = db.prepare(
     "UPDATE VaskiDocument SET title = ? WHERE id = ? AND title IS NULL",
   );
@@ -561,7 +564,7 @@ export default function createValikysymysSubMigrator(db: Database) {
           const interpellationId =
             (interpellationRow as { id: number } | undefined)?.id ?? id;
 
-          linkVaskiDocument.run(id, interpellationId);
+          linkVaskiDocumentIfAbsent.run(id, interpellationId);
           if (data.title) updateVaskiTitle.run(data.title, id);
 
           deleteStages.run(interpellationId);
@@ -644,6 +647,7 @@ export default function createValikysymysSubMigrator(db: Database) {
       deleteSubjects.finalize();
       insertSubject.finalize();
       linkVaskiDocument.finalize();
+      linkVaskiDocumentIfAbsent.finalize();
       updateVaskiTitle.finalize();
     },
   };

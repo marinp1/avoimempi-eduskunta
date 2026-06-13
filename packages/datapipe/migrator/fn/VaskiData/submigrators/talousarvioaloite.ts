@@ -466,6 +466,9 @@ export default function createTalousarvioaloiteSubMigrator(db: Database) {
   const linkVaskiDocument = db.prepare(
     "UPDATE LegislativeInitiative SET vaski_document_id = ? WHERE id = ?",
   );
+  const linkVaskiDocumentIfAbsent = db.prepare(
+    "UPDATE LegislativeInitiative SET vaski_document_id = ? WHERE id = ? AND vaski_document_id IS NULL",
+  );
   const updateVaskiTitle = db.prepare(
     "UPDATE VaskiDocument SET title = ? WHERE id = ? AND title IS NULL",
   );
@@ -610,7 +613,7 @@ export default function createTalousarvioaloiteSubMigrator(db: Database) {
           const initiativeId =
             (initiativeRow as { id: number } | undefined)?.id ?? id;
 
-          linkVaskiDocument.run(id, initiativeId);
+          linkVaskiDocumentIfAbsent.run(id, initiativeId);
           if (data.title) updateVaskiTitle.run(data.title, id);
 
           if (data.signers.length > 0) {
@@ -669,6 +672,7 @@ export default function createTalousarvioaloiteSubMigrator(db: Database) {
       deleteStages.finalize();
       insertStage.finalize();
       linkVaskiDocument.finalize();
+      linkVaskiDocumentIfAbsent.finalize();
       updateVaskiTitle.finalize();
     },
   };

@@ -137,9 +137,7 @@ async function main() {
 
   const conditions: string[] = ["d.error IS NOT NULL"];
   if (documentType) {
-    conditions.push(
-      `v.document_type = '${documentType.replace(/'/g, "''")}'`,
-    );
+    conditions.push(`v.document_type = '${documentType.replace(/'/g, "''")}'`);
   }
   if (errorFilter) {
     conditions.push(`d.error = '${errorFilter.replace(/'/g, "''")}'`);

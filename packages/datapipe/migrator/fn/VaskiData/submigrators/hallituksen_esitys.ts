@@ -515,6 +515,9 @@ export default function createHallituksenEsitysSubMigrator(db: Database) {
   const linkVaskiDocument = db.prepare(
     "UPDATE GovernmentProposal SET vaski_document_id = ? WHERE id = ?",
   );
+  const linkVaskiDocumentIfAbsent = db.prepare(
+    "UPDATE GovernmentProposal SET vaski_document_id = ? WHERE id = ? AND vaski_document_id IS NULL",
+  );
   const updateVaskiTitle = db.prepare(
     "UPDATE VaskiDocument SET title = ? WHERE id = ? AND title IS NULL",
   );
@@ -666,7 +669,7 @@ export default function createHallituksenEsitysSubMigrator(db: Database) {
           const proposalId =
             (proposalRow as { id: number } | undefined)?.id ?? id;
 
-          linkVaskiDocument.run(id, proposalId);
+          linkVaskiDocumentIfAbsent.run(id, proposalId);
           if (data.title) updateVaskiTitle.run(data.title, id);
 
           if (data.stages.length > 0) {
@@ -709,6 +712,7 @@ export default function createHallituksenEsitysSubMigrator(db: Database) {
       deleteStages.finalize();
       insertStage.finalize();
       linkVaskiDocument.finalize();
+      linkVaskiDocumentIfAbsent.finalize();
       updateVaskiTitle.finalize();
     },
   };

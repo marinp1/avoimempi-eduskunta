@@ -250,7 +250,18 @@ async function fetchAll(options: {
     ? `AND v.document_type = '${options.documentType.replace(/'/g, "''")}'`
     : "";
 
-  let whereClause = `v.edk_identifier IS NOT NULL`;
+  const akCounterpartFilter = `AND NOT (
+    v.edk_identifier NOT LIKE '%-AK-%'
+    AND v.title IS NOT NULL
+    AND EXISTS (
+      SELECT 1 FROM VaskiDocument v2
+      WHERE v2.document_type = v.document_type
+        AND v2.title = v.title
+        AND v2.edk_identifier LIKE '%-AK-%'
+    )
+  )`;
+
+  let whereClause = `v.edk_identifier IS NOT NULL ${akCounterpartFilter}`;
   if (!options.force) {
     if (options.retryErrors) {
       whereClause += ` AND (d.edk_identifier IS NULL OR d.error IS NOT NULL)`;
@@ -270,7 +281,7 @@ async function fetchAll(options: {
          COUNT(CASE WHEN d.error IS NOT NULL AND d.edk_identifier IS NOT NULL THEN 1 END) AS errors
        FROM VaskiDocument v
        LEFT JOIN docsdb.DocumentFile d ON d.edk_identifier = v.edk_identifier
-       WHERE v.edk_identifier IS NOT NULL ${typeFilter}`,
+       WHERE v.edk_identifier IS NOT NULL ${akCounterpartFilter} ${typeFilter}`,
     )
     .get()!;
 
