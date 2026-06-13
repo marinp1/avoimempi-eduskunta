@@ -21,7 +21,8 @@ export class SessionService {
     q?: string;
     offset?: number;
   }) {
-    const raw = this.sessionRepo.fetchSessionsIndex({
+    const cursorDate = params.cursor < params.today ? params.cursor : null;
+    const rows = this.sessionRepo.fetchSessionsIndex({
       limit: 2000,
       startDate: params.startDate,
       endDateExclusive: params.endDate
@@ -31,13 +32,10 @@ export class SessionService {
             return d.toISOString().substring(0, 10);
           })()
         : null,
+      cursorDate,
     });
-    const filtered =
-      params.cursor < params.today
-        ? raw.filter((r) => r.date <= params.cursor)
-        : raw;
     return buildSessionsViewModel(
-      filtered,
+      rows,
       { kind: params.kind, q: params.q },
       params.offset ?? 0,
     );

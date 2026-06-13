@@ -29,5 +29,6 @@ LEFT JOIN (SELECT session_key, GROUP_CONCAT(title, '||') AS voting_titles FROM V
 WHERE s.type = 'TAYSISTUN'
   AND ($startDate IS NULL OR s.date >= $startDate)
   AND ($endDateExclusive IS NULL OR s.date < $endDateExclusive)
+  AND ($cursorDate IS NULL OR s.date <= $cursorDate)
 ORDER BY s.date DESC, s.number DESC
 LIMIT $limit;

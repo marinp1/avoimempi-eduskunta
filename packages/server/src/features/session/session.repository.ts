@@ -217,6 +217,7 @@ export class SessionRepository {
     limit?: number;
     startDate?: string | null;
     endDateExclusive?: string | null;
+    cursorDate?: string | null;
   }): SessionsIndexRow[] {
     return this.db
       .query<
@@ -225,12 +226,14 @@ export class SessionRepository {
           $limit: number;
           $startDate: string | null;
           $endDateExclusive: string | null;
+          $cursorDate: string | null;
         }
       >(sessionsIndex)
       .all({
         $limit: params.limit ?? 50,
         $startDate: params.startDate ?? null,
         $endDateExclusive: params.endDateExclusive ?? null,
+        $cursorDate: params.cursorDate ?? null,
       });
   }
 
