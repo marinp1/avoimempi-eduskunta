@@ -95,6 +95,7 @@ export class VotingRepository {
         n_abstain: number;
         n_absent: number;
         n_total: number;
+        is_government_party: 0 | 1;
       },
       { $id: number }
     >(votingPartyBreakdownById);

@@ -41,6 +41,7 @@ declare global {
   export namespace DatabaseQueries {
     export type VotingSearchResult = DatabaseTables.Voting & {
       context_title: string;
+      doc_tunnuses: string | null;
     };
   }
 }

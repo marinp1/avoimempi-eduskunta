@@ -16,6 +16,18 @@ interface Props {
   data: AanestyksetData;
 }
 
+const FILTER_CHIPS: Array<{
+  key: string | null;
+  labelKey: string;
+  dotColor: string | null;
+}> = [
+  { key: null, labelKey: "votings:filter_all", dotColor: null },
+  { key: "lait", labelKey: "votings:filter_laws", dotColor: "var(--hall)" },
+  { key: "selonteot", labelKey: "votings:filter_reports", dotColor: "#4caf50" },
+  { key: "luottamus", labelKey: "votings:filter_confidence", dotColor: "var(--red)" },
+  { key: "tiukat", labelKey: "votings:filter_tight", dotColor: "#f90" },
+];
+
 export default function Aanestykset({ title, data }: Props) {
   const d = data;
 
@@ -58,21 +70,23 @@ export default function Aanestykset({ title, data }: Props) {
         </div>
 
         <div class="fchips mt-14">
-          <button type="button" class="fchip is-active" data-filter="all">
-            {i18next.t("votings:filter_all")}
-          </button>
-          <button type="button" class="fchip" data-filter="lait">
-            {i18next.t("votings:filter_laws")}
-          </button>
-          <button type="button" class="fchip" data-filter="selonteot">
-            {i18next.t("votings:filter_reports")}
-          </button>
-          <button type="button" class="fchip" data-filter="luottamus">
-            {i18next.t("votings:filter_confidence")}
-          </button>
-          <button type="button" class="fchip" data-filter="tiukat">
-            {i18next.t("votings:filter_tight")}
-          </button>
+          {FILTER_CHIPS.map((chip) => {
+            const isActive = d.activeFilter === chip.key;
+            const href = chip.key ? `/aanestykset?type=${chip.key}` : "/aanestykset";
+            return (
+              <a
+                href={href}
+                hx-get={href}
+                {...NAV}
+                class={clsx("fchip", isActive && "is-active")}
+              >
+                {chip.dotColor && (
+                  <span class="pdot" style={`background:${chip.dotColor}`}></span>
+                )}
+                {i18next.t(chip.labelKey)}
+              </a>
+            );
+          })}
         </div>
 
         <VoteGroupsAndMore data={d} />
@@ -108,7 +122,7 @@ function VoteGroupsAndMore({ data }: { data: AanestyksetData }) {
         <button
           id="vote-load-more"
           class="load-more-btn"
-          hx-get={`/aanestykset?cursor=${encodeURIComponent(data.nextCursor)}&load_more=1`}
+          hx-get={`/aanestykset?cursor=${encodeURIComponent(data.nextCursor)}${data.activeFilter ? `&type=${data.activeFilter}` : ""}&load_more=1`}
           hx-target="this"
           hx-swap="outerHTML"
           hx-browser-indicator="true"
@@ -131,7 +145,7 @@ export function VoteGroupsFragment({ data }: { data: AanestyksetData }) {
         <button
           id="vote-load-more"
           class="load-more-btn"
-          hx-get={`/aanestykset?cursor=${encodeURIComponent(data.nextCursor)}&load_more=1`}
+          hx-get={`/aanestykset?cursor=${encodeURIComponent(data.nextCursor)}${data.activeFilter ? `&type=${data.activeFilter}` : ""}&load_more=1`}
           hx-target="this"
           hx-swap="outerHTML"
           hx-browser-indicator="true"
@@ -163,33 +177,12 @@ function VoteGroupBlock({ group }: { group: VoteGroup }) {
 }
 
 function VoteRowItem({ row }: { row: VoteRow }) {
-  const title = (row.questionText || row.title).toLowerCase();
-  const diff = Math.abs(row.nYes - row.nNo);
-  const types: string[] = [];
-  if (
-    title.includes("laki") &&
-    !title.includes("luottamus") &&
-    !title.includes("selonteko")
-  ) {
-    types.push("lait");
-  }
-  if (title.includes("selonteko")) {
-    types.push("selonteot");
-  }
-  if (title.includes("luottamus") || title.includes("välikysymys")) {
-    types.push("luottamus");
-  }
-  if (diff < 20 && row.nTotal > 0) {
-    types.push("tiukat");
-  }
-
   return (
     <a
       href={`/aanestys/${row.id}`}
       hx-get={`/aanestys/${row.id}`}
       {...NAV}
       class="vrow"
-      data-type={types.join(" ")}
     >
       <div class="vrow__rail">
         <span class="vrow__id">Ä {row.votingNumber}</span>

@@ -8,6 +8,8 @@ import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute, isHtmx } from "#server/helpers";
 
+const VALID_TYPES = new Set(["lait", "selonteot", "luottamus", "tiukat"]);
+
 /** Returns an endDate (exclusive) that is one day before the given ISO date string. */
 function dayBefore(isoDate: string): string {
   const d = new Date(isoDate);
@@ -22,6 +24,8 @@ export function createVotingsListRoute(deps: WebappDeps) {
       const url = new URL(ctx.req.url);
       const searchQuery = url.searchParams.get("q")?.trim().toLowerCase();
       const cursor = url.searchParams.get("cursor") ?? undefined;
+      const typeParam = url.searchParams.get("type") ?? undefined;
+      const activeFilter = typeParam && VALID_TYPES.has(typeParam) ? typeParam : null;
 
       // When a cursor is present (load-more), fetch sessions strictly before it.
       const endDate = cursor ? dayBefore(cursor) : ctx.bounds.endDate;
@@ -36,6 +40,7 @@ export function createVotingsListRoute(deps: WebappDeps) {
       const data = buildAanestyksetData({
         votings: browseResult,
         searchQuery,
+        activeFilter,
         fetchedAt: fetchedAt(),
       });
 
@@ -46,9 +51,9 @@ export function createVotingsListRoute(deps: WebappDeps) {
         });
       }
 
-      const pageUrl = searchQuery
-        ? `/aanestykset?q=${encodeURIComponent(searchQuery)}`
-        : "/aanestykset";
+      let pageUrl = "/aanestykset";
+      if (searchQuery) pageUrl += `?q=${encodeURIComponent(searchQuery)}`;
+      else if (activeFilter) pageUrl += `?type=${activeFilter}`;
 
       return {
         fragment: Aanestykset({

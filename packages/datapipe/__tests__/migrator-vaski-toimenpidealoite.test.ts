@@ -169,7 +169,7 @@ describe("Vaski toimenpidealoite submigrator", () => {
     expect(initiative.decision_outcome).toBe("Hyväksytty");
     expect(initiative.latest_stage_code).toBe("KAS");
     expect(initiative.end_date).toBe("2024-06-01");
-    expect(initiative.vaski_document_id).toBe(9702);
+    expect(initiative.vaski_document_id).toBe(9701);
 
     const signers = db
       .query(

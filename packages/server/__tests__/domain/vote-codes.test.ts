@@ -2,21 +2,22 @@ import { describe, expect, test } from "bun:test";
 import { normalizeVote, normalizeBloc } from "#server/domain";
 
 describe("normalizeVote", () => {
-  test("maps known codes to lowercase tokens", () => {
-    expect(normalizeVote("JAA")).toBe("jaa");
-    expect(normalizeVote("EI")).toBe("ei");
-    expect(normalizeVote("TYHJAA")).toBe("tyhjaa");
-    expect(normalizeVote("POISSA")).toBe("poissa");
+  test("maps Finnish DB values to lowercase tokens", () => {
+    expect(normalizeVote("Jaa")).toBe("jaa");
+    expect(normalizeVote("Ei")).toBe("ei");
+    expect(normalizeVote("Tyhjää")).toBe("tyhjaa");
+    expect(normalizeVote("Poissa")).toBe("poissa");
   });
 
-  test("unknown code → 'poissa'", () => {
-    expect(normalizeVote("UNKNOWN")).toBe("poissa");
-    expect(normalizeVote("")).toBe("poissa");
+  test("unrecognised non-empty string → 'tuntematon'", () => {
+    expect(normalizeVote("UNKNOWN")).toBe("tuntematon");
+    expect(normalizeVote("JAA")).toBe("tuntematon");
   });
 
-  test("null/undefined → 'poissa'", () => {
+  test("falsy values (null, undefined, empty string) → 'poissa'", () => {
     expect(normalizeVote(null)).toBe("poissa");
     expect(normalizeVote(undefined)).toBe("poissa");
+    expect(normalizeVote("")).toBe("poissa");
   });
 });
 

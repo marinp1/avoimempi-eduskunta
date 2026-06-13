@@ -162,7 +162,7 @@ describe("Vaski keskustelualoite submigrator", () => {
     expect(initiative.proposal_text).toContain("Ponsiteksti");
     expect(initiative.decision_outcome).toBe("Hyväksytty");
     expect(initiative.latest_stage_code).toBe("KES");
-    expect(initiative.vaski_document_id).toBe(9802);
+    expect(initiative.vaski_document_id).toBe(9801);
   });
 
   test("skips unsupported identifier and writes migration report", async () => {

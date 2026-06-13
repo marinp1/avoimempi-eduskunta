@@ -161,7 +161,7 @@ describe("Vaski lakialoite submigrator", () => {
     expect(initiative.decision_outcome).toBe("Hyväksytty");
     expect(initiative.latest_stage_code).toBe("EK");
     expect(initiative.end_date).toBe("2024-06-01");
-    expect(initiative.vaski_document_id).toBe(9002);
+    expect(initiative.vaski_document_id).toBe(9001);
 
     const signers = db
       .query(

@@ -25,11 +25,22 @@ SELECT
     ),
     UPPER(pr.party_code)
   ) AS party_name,
-  SUM(CASE WHEN pr.vote_value = 'Jaa' THEN 1 ELSE 0 END) AS n_yes,
-  SUM(CASE WHEN pr.vote_value = 'Ei' THEN 1 ELSE 0 END) AS n_no,
-  SUM(CASE WHEN pr.vote_value = ('Tyhj' || char(228, 228)) THEN 1 ELSE 0 END) AS n_abstain,
+  SUM(CASE WHEN pr.vote_value = 'Jaa'    THEN 1 ELSE 0 END) AS n_yes,
+  SUM(CASE WHEN pr.vote_value = 'Ei'     THEN 1 ELSE 0 END) AS n_no,
+  SUM(CASE WHEN pr.vote_value = 'Tyhjää' THEN 1 ELSE 0 END) AS n_abstain,
   SUM(CASE WHEN pr.vote_value = 'Poissa' THEN 1 ELSE 0 END) AS n_absent,
-  COUNT(*) AS n_total
+  COUNT(*) AS n_total,
+  CASE WHEN EXISTS (
+    SELECT 1
+    FROM InferredGovernmentCoalition igc
+    JOIN voting_context vc
+    WHERE igc.party = pr.party_code
+      AND igc.start_date <= vc.voting_date
+      AND igc.end_date >= vc.voting_date
+  ) THEN 1 ELSE 0 END AS is_government_party
 FROM party_rows pr
 GROUP BY pr.party_code
-ORDER BY n_total DESC, pr.party_code ASC
+ORDER BY
+  is_government_party DESC,
+  n_total DESC,
+  pr.party_code ASC

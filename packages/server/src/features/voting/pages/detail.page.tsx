@@ -212,6 +212,17 @@ export default function Aanestys({ title, data }: Props) {
               <div class="t">
                 {v.outcomeLabel}, {v.nYes}–{v.nNo}
               </div>
+              {data.govOppBreakdown.governmentTotal > 0 && (
+                <div class="t sub">
+                  {i18next.t("votings:detail.gov_label")}{" "}
+                  {data.govOppBreakdown.governmentYes}–
+                  {data.govOppBreakdown.governmentNo}
+                  &nbsp;·&nbsp;
+                  {i18next.t("votings:detail.opp_label")}{" "}
+                  {data.govOppBreakdown.oppositionYes}–
+                  {data.govOppBreakdown.oppositionNo}
+                </div>
+              )}
             </div>
           </div>
         </section>

@@ -26,4 +26,4 @@ SELECT
 FROM Vote v
 LEFT JOIN Representative r ON r.person_id = v.person_id
 WHERE v.voting_id = $id
-ORDER BY party_code ASC, last_name ASC, first_name ASC
+ORDER BY is_government DESC, party_code ASC, last_name ASC, first_name ASC

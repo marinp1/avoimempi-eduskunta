@@ -46,7 +46,7 @@ export default function VotingMapFragment({ mpVotes }: Props) {
                     mp.vote === "tuntematon" && "unknown-vote",
                   )}
                   style={`--p:${seatColor}`}
-                  title={`${esc(mp.firstName)} ${esc(mp.lastName)} (${esc(mp.partyCode)}) — tuntematon ääniarvo`}
+                  title={`${esc(mp.firstName)} ${esc(mp.lastName)} (${esc(mp.partyCode)}) — ${mp.vote === "jaa" ? "Jaa" : mp.vote === "ei" ? "Ei" : mp.vote === "tyhjaa" ? "Tyhjää" : mp.vote === "poissa" ? "Poissa" : "Tuntematon"}`}
                 ></span>
               );
             })}

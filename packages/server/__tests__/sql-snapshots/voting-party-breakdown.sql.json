@@ -1,5 +1,6 @@
 {
   "columns": {
+    "is_government_party": "number",
     "n_absent": "number",
     "n_abstain": "number",
     "n_no": "number",
@@ -9,6 +10,7 @@
     "party_name": "string"
   },
   "hasNulls": {
+    "is_government_party": false,
     "n_absent": false,
     "n_abstain": false,
     "n_no": false,

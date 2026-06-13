@@ -33,6 +33,7 @@ export const TYPE_COLUMN_CONTRACTS = {
     "agenda_title",
     "annulled",
     "context_title",
+    "doc_tunnuses",
     "end_time",
     "id",
     "imported_datetime",

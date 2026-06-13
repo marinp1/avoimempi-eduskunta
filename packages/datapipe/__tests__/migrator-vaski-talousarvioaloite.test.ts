@@ -166,7 +166,7 @@ describe("Vaski talousarvioaloite submigrator", () => {
     expect(initiative.decision_outcome).toBe("Hylätty");
     expect(initiative.latest_stage_code).toBe("VK");
     expect(initiative.end_date).toBe("2024-06-01");
-    expect(initiative.vaski_document_id).toBe(9602);
+    expect(initiative.vaski_document_id).toBe(9601);
 
     const signers = db
       .query(

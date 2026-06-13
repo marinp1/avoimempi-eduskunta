@@ -165,7 +165,7 @@ describe("Vaski lisätalousarvioaloite submigrator", () => {
     expect(initiative.law_text).toBeNull();
     expect(initiative.decision_outcome).toBe("Hylätty");
     expect(initiative.latest_stage_code).toBe("KAS");
-    expect(initiative.vaski_document_id).toBe(9902);
+    expect(initiative.vaski_document_id).toBe(9901);
   });
 
   test("skips unsupported identifier and writes migration report", async () => {

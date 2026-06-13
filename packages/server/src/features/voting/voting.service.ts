@@ -35,6 +35,7 @@ export class VotingService {
     return buildAanestyksetData({
       votings: browseResult,
       searchQuery: params.searchQuery,
+      activeFilter: null,
       fetchedAt: fetchedAt(),
     });
   }

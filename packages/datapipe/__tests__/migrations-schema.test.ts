@@ -80,6 +80,8 @@ describe("Migration schema", () => {
       "V001.034__parliament_answer_schema.sql",
       "V001.035__person_question_indexes.sql",
       "V001.036__fix_government_coalition_party_names.sql",
+      "V001.037__vaski_document_guid.sql",
+      "V001.038__query_performance_indexes.sql",
     ]);
   });
 

@@ -15,6 +15,7 @@ interface VotingBrowseRow {
   n_abstain: number;
   n_absent: number;
   n_total: number;
+  doc_tunnuses: string | null;
 }
 
 export interface VoteRow {
@@ -59,23 +60,60 @@ export interface AanestyksetData {
   totalCount: number;
   /** ISO date of the oldest shown session; non-null when more sessions may exist. */
   nextCursor: string | null;
+  activeFilter: string | null;
   fetchedAt: string;
+}
+
+const COMMITTEE_PREFIXES = ["SIVM", "TVM", "HaVM", "PeVM", "VaVM", "LaVM", "LiVM", "MmVM", "PuVM", "SiVM", "StVM", "TaVM", "UaVM", "VaVL"];
+
+function parseDocTunnuses(raw: string | null): VoteRow["documents"] {
+  if (!raw) return [];
+  const tunnuses = raw.split("||").filter(Boolean);
+  const docs: VoteRow["documents"] = [];
+  for (const tunnus of tunnuses.slice(0, 3)) {
+    const trimmed = tunnus.trim();
+    if (!trimmed) continue;
+    const prefix = trimmed.split(" ")[0] ?? "";
+    const isCommittee = COMMITTEE_PREFIXES.some((p) => prefix.startsWith(p));
+    docs.push({ identifier: trimmed, label: trimmed, isCommittee });
+  }
+  return docs;
+}
+
+function matchesType(v: VotingBrowseRow, type: string): boolean {
+  const title = (v.title ?? "").toLowerCase();
+  switch (type) {
+    case "lait":
+      return title.includes("laki") && !title.includes("luottamus") && !title.includes("selonteko");
+    case "selonteot":
+      return title.includes("selonteko");
+    case "luottamus":
+      return title.includes("luottamus") || title.includes("välikysymys");
+    case "tiukat":
+      return v.n_total > 0 && Math.abs(v.n_yes - v.n_no) < 10;
+    default:
+      return true;
+  }
 }
 
 export function buildAanestyksetData(input: {
   votings: VotingBrowseRow[];
   searchQuery: string | undefined;
+  activeFilter: string | null;
   fetchedAt: string;
 }): AanestyksetData {
-  const { votings, searchQuery, fetchedAt } = input;
+  const { votings, searchQuery, activeFilter, fetchedAt } = input;
 
-  const filtered = searchQuery
-    ? votings.filter(
-        (v) =>
-          (v.title ?? "").toLowerCase().includes(searchQuery) ||
-          (v.session_key ?? "").toLowerCase().includes(searchQuery),
-      )
-    : votings;
+  const filtered = votings.filter((v) => {
+    if (searchQuery) {
+      const matchesSearch =
+        (v.title ?? "").toLowerCase().includes(searchQuery) ||
+        (v.session_key ?? "").toLowerCase().includes(searchQuery);
+      if (!matchesSearch) return false;
+    }
+    if (activeFilter) return matchesType(v, activeFilter);
+    return true;
+  });
 
   const groupMap = new Map<string, VoteRow[]>();
   for (const v of filtered) {
@@ -96,7 +134,7 @@ export function buildAanestyksetData(input: {
       sessionDate: v.start_date ?? "",
       asiakohtaNum: v.section_order ?? null,
       sectionKey: v.section_key ?? null,
-      documents: [],
+      documents: parseDocTunnuses(v.doc_tunnuses),
       references: [],
       nYes: t.nYes,
       nNo: t.nNo,
@@ -140,6 +178,7 @@ export function buildAanestyksetData(input: {
     groups,
     totalCount: filtered.length,
     nextCursor,
+    activeFilter,
     fetchedAt,
   };
 }
