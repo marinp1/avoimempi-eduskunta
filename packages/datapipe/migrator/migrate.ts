@@ -4,6 +4,7 @@ import path from "node:path";
 import { getMigrations, migrate } from "bun-sqlite-migrations";
 import { type TableName, TableNames } from "#constants/index";
 import { getDatabasePath, getDocumentsDatabasePath } from "#database";
+import { getAnalysisDatabasePath, loadAnalysisMap } from "../analysis/db";
 import { getParsedRowStore } from "#storage/row-store/factory";
 import { generateAndSaveChangesReport } from "./changes-report";
 import { migrateVaskiData } from "./fn/VaskiData/migrator";
@@ -165,6 +166,44 @@ function loadDocumentTextMap(): Map<string, string> {
   }
 }
 
+function loadAnalysisMapForMerge(): Map<string, any> {
+  const analysisDbPath = getAnalysisDatabasePath();
+  try {
+    const map = loadAnalysisMap(analysisDbPath);
+    console.log(
+      `🤖 Loaded ${map.size} AI analysis records from analysis database`,
+    );
+    return map;
+  } catch {
+    console.log(
+      "⏭️  Analysis database not available, skipping AI analysis data",
+    );
+    return new Map();
+  }
+}
+
+function hasAnalysisSince(lastMigrationTs: string): boolean {
+  const analysisDbPath = getAnalysisDatabasePath();
+  try {
+    const db = sqlite.open(analysisDbPath, { readonly: true });
+    const row = db
+      .query<{ analyzed_at: string }, [string]>(
+        "SELECT analyzed_at FROM ExpertStatementAnalysis WHERE analyzed_at > ? LIMIT 1",
+      )
+      .get(lastMigrationTs);
+    db.close();
+    if (row) {
+      console.log(
+        `🤖 Analysis data has records since last migration (${lastMigrationTs}), will re-migrate`,
+      );
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 function hasDocumentTextSince(lastMigrationTs: string): boolean {
   const documentsDbPath = getDocumentsDatabasePath();
   try {
@@ -311,6 +350,10 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
         }
 
         if (!anyChanged) {
+          anyChanged = hasAnalysisSince(lastMigrationTs);
+        }
+
+        if (!anyChanged) {
           console.log(
             `⏭️  Skipping migration: parsed data has not changed since last migration (${lastMigrationTs})`,
           );
@@ -409,10 +452,12 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
 
         try {
           const documentTextMap = loadDocumentTextMap();
+          const analysisMap = loadAnalysisMapForMerge();
 
           const summary = await migrateVaskiData(targetDatabase, {
             shouldStop: checkStop,
             documentTextMap,
+            analysisMap,
             documentTypeProgressRowInterval: 5000,
             onDocumentTypeStart: ({ documentType, index, total }) => {
               totalDocumentTypes = total;

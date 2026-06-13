@@ -90,8 +90,8 @@ export function createExpertStatementSubMigrator(
   documentType: ExpertStatementDocumentType,
 ) {
   const insertStatement = db.prepare(
-    `INSERT INTO ExpertStatement (id, document_type, edk_identifier, bill_identifier, committee_name, meeting_identifier, meeting_date, title, publicity, language, status, created, source_path, body_text, author_text, author_organization)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO ExpertStatement (id, document_type, edk_identifier, bill_identifier, committee_name, meeting_identifier, meeting_date, title, publicity, language, status, created, source_path, body_text, author_text, author_organization, analysis_summary, analysis_stance, analysis_arguments, analysis_topics, analysis_model, analysis_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(edk_identifier) DO UPDATE SET
        bill_identifier = COALESCE(excluded.bill_identifier, ExpertStatement.bill_identifier),
        committee_name = COALESCE(excluded.committee_name, ExpertStatement.committee_name),
@@ -103,7 +103,13 @@ export function createExpertStatementSubMigrator(
        source_path = excluded.source_path,
        body_text = COALESCE(excluded.body_text, ExpertStatement.body_text),
        author_text = COALESCE(excluded.author_text, ExpertStatement.author_text),
-       author_organization = COALESCE(excluded.author_organization, ExpertStatement.author_organization)`,
+       author_organization = COALESCE(excluded.author_organization, ExpertStatement.author_organization),
+       analysis_summary = COALESCE(excluded.analysis_summary, ExpertStatement.analysis_summary),
+       analysis_stance = COALESCE(excluded.analysis_stance, ExpertStatement.analysis_stance),
+       analysis_arguments = COALESCE(excluded.analysis_arguments, ExpertStatement.analysis_arguments),
+       analysis_topics = COALESCE(excluded.analysis_topics, ExpertStatement.analysis_topics),
+       analysis_model = COALESCE(excluded.analysis_model, ExpertStatement.analysis_model),
+       analysis_at = COALESCE(excluded.analysis_at, ExpertStatement.analysis_at)`,
   );
 
   let documentTextCount = 0;
@@ -170,6 +176,19 @@ export function createExpertStatementSubMigrator(
       const authorText = extractAuthorFromTitle(title);
       const authorOrganization = extractOrgFromAuthorText(authorText);
 
+      const analysis = (row as any)._analysis as Record<string, any> | null;
+      const analysisSummary = normalizeText(analysis?.summary) || null;
+      const analysisStance = analysis
+        ? JSON.stringify({
+            value: analysis.stance_value,
+            description: analysis.stance_description || null,
+          })
+        : null;
+      const analysisArguments = analysis?.arguments || null;
+      const analysisTopics = analysis?.topics || null;
+      const analysisModel = normalizeText(analysis?.model) || null;
+      const analysisAt = normalizeText(analysis?.analyzed_at) || null;
+
       try {
         insertStatement.run(
           id,
@@ -188,6 +207,12 @@ export function createExpertStatementSubMigrator(
           bodyText,
           authorText,
           authorOrganization,
+          analysisSummary,
+          analysisStance,
+          analysisArguments,
+          analysisTopics,
+          analysisModel,
+          analysisAt,
         );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);

@@ -56,6 +56,11 @@ export interface VaskiMigrationOptions {
    * document types (expert statements, written question responses).
    */
   documentTextMap?: Map<string, string>;
+  /**
+   * Map from EDK identifier to AI analysis rows, loaded from the analysis
+   * database. Used to populate analysis_* columns on ExpertStatement.
+   */
+  analysisMap?: Map<string, any>;
   onDocumentTypeStart?: (event: {
     documentType: string;
     index: number;
@@ -219,20 +224,30 @@ function loadSubMigrator(
   db: Database,
   documentType: string,
   documentTextMap?: Map<string, string>,
+  analysisMap?: Map<string, any>,
 ): VaskiSubMigrator | null {
   const factory = SUBMIGRATOR_FACTORIES[documentType];
   if (!factory) return null;
 
   const sub = factory(db);
 
-  if (!documentTextMap || documentTextMap.size === 0) return sub;
+  const hasDocumentText = documentTextMap && documentTextMap.size > 0;
+  const hasAnalysis = analysisMap && analysisMap.size > 0;
+
+  if (!hasDocumentText && !hasAnalysis) return sub;
 
   const originalMigrateRow = sub.migrateRow;
   return {
     ...sub,
     migrateRow(row: VaskiEntry): void | Promise<void> {
-      (row as any)._documentText =
-        documentTextMap.get(extractEdkIdentifier(row) ?? "") ?? null;
+      if (hasDocumentText) {
+        (row as any)._documentText =
+          documentTextMap.get(extractEdkIdentifier(row) ?? "") ?? null;
+      }
+      if (hasAnalysis) {
+        (row as any)._analysis =
+          analysisMap.get(extractEdkIdentifier(row) ?? "") ?? null;
+      }
       return originalMigrateRow(row);
     },
   };
@@ -268,6 +283,7 @@ export async function migrateVaskiData(
       db,
       documentType,
       options?.documentTextMap,
+      options?.analysisMap,
     );
     if (!subMigrator) {
       skippedDocumentTypes.push(documentType);

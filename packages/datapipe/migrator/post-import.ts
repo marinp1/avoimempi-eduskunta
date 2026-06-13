@@ -63,7 +63,8 @@ export function normalizeImportedTextData(db: Database): void {
         `UPDATE ExpertStatement
          SET
            title = NULLIF(TRIM(title), ''),
-           body_text = NULLIF(TRIM(body_text), '')`,
+           body_text = NULLIF(TRIM(body_text), ''),
+           analysis_summary = NULLIF(TRIM(analysis_summary), '')`,
       );
     }
 
@@ -354,7 +355,8 @@ export function rebuildFederatedSearchIndex(
     `TRIM(
            COALESCE(es.title, '') || ' ' ||
            COALESCE(es.committee_name, '') || ' ' ||
-           COALESCE(es.body_text, '')
+           COALESCE(es.body_text, '') || ' ' ||
+           COALESCE(es.analysis_summary, '')
          )`,
     searchBodyMaxChars,
   );
