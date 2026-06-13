@@ -1,5 +1,4 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { readFileSync } from "node:fs";
 import type { Database } from "bun:sqlite";
 import { SOURCE_LINEAGE } from "#constants/SourceLineage";
 import { listQueryFiles } from "./query-audit";
@@ -86,12 +85,8 @@ let reverseMap: Map<string, string> | null = null;
 export function getSqlReverseMap(): Map<string, string> {
   if (reverseMap) return reverseMap;
   const map = new Map<string, string>();
-  for (const { queryFile, filePath } of listQueryFiles()) {
-    try {
-      map.set(normalizeSql(readFileSync(filePath, "utf8")), queryFile);
-    } catch {
-      // A missing/unreadable SQL file just won't be traceable; ignore.
-    }
+  for (const { queryFile, sql } of listQueryFiles()) {
+    map.set(normalizeSql(sql), queryFile);
   }
   reverseMap = map;
   return map;
@@ -103,12 +98,8 @@ let querySqlMap: Map<string, string> | null = null;
 function getQuerySqlMap(): Map<string, string> {
   if (querySqlMap) return querySqlMap;
   const map = new Map<string, string>();
-  for (const { queryFile, filePath } of listQueryFiles()) {
-    try {
-      map.set(queryFile, readFileSync(filePath, "utf8"));
-    } catch {
-      // A missing/unreadable SQL file just won't be viewable; ignore.
-    }
+  for (const { queryFile, sql } of listQueryFiles()) {
+    map.set(queryFile, sql);
   }
   querySqlMap = map;
   return map;

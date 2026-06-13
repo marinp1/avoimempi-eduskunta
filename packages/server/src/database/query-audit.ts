@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
-import { basename, join, relative } from "node:path";
+import { join, relative } from "node:path";
+import { QUERY_REGISTRY } from "./sql-registry.generated";
 
 type QueryCoverageKind = "behavior" | "execution" | "pattern";
 
@@ -21,7 +22,6 @@ export type QueryAuditRecord = QueryUsage & {
 const DATABASE_DIR = import.meta.dirname;
 const SRC_ROOT = join(DATABASE_DIR, "..");
 const PACKAGE_ROOT = join(SRC_ROOT, "..");
-const FEATURES_DIR = join(SRC_ROOT, "features");
 const TEST_COVERAGE_BY_FILE: Record<string, QueryCoverageKind> = {
   "queries.test.ts": "behavior",
   "runtime-sql-audit.test.ts": "execution",
@@ -36,16 +36,23 @@ function walkFiles(dir: string): string[] {
 }
 
 /**
- * Enumerates every runtime SQL file. After the feature-oriented refactor the SQL
- * lives co-located with each feature (`features/<name>/sql/*.sql`) rather than in a
- * single flat directory, so we walk the feature tree. Basenames are unique across
+ * Enumerates every runtime SQL file. Backed by the generated registry
+ * (`generate-sql-registry.ts`), which statically imports each
+ * `features/<name>/sql/*.sql` file via the same `.sql` text loader the
+ * repositories use — so this works identically in dev and in bundled prod
+ * builds, with no filesystem access at runtime. Basenames are unique across
  * features, which keeps them usable as the audit/snapshot key.
  */
-export function listQueryFiles(): { queryFile: string; filePath: string }[] {
-  return walkFiles(FEATURES_DIR)
-    .filter((filePath) => filePath.endsWith(".sql"))
-    .map((filePath) => ({ queryFile: basename(filePath), filePath }))
-    .sort((a, b) => a.queryFile.localeCompare(b.queryFile));
+export function listQueryFiles(): {
+  queryFile: string;
+  filePath: string;
+  sql: string;
+}[] {
+  return QUERY_REGISTRY.map(({ queryFile, filePath, sql }) => ({
+    queryFile,
+    filePath,
+    sql,
+  })).sort((a, b) => a.queryFile.localeCompare(b.queryFile));
 }
 
 function extractSqlImports(filePath: string): string[] {

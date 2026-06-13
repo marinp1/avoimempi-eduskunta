@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { SOURCE_LINEAGE } from "#constants/SourceLineage";
 import { listQueryFiles } from "./query-audit";
 
@@ -185,9 +184,9 @@ let targetsCache: Map<string, ProbeTarget[]> | null = null;
 export function probeTargetsFor(queryFile: string): ProbeTarget[] {
   if (!targetsCache) {
     targetsCache = new Map();
-    for (const { queryFile: file, filePath } of listQueryFiles()) {
+    for (const { queryFile: file, sql } of listQueryFiles()) {
       try {
-        targetsCache.set(file, targetsFromSql(readFileSync(filePath, "utf8")));
+        targetsCache.set(file, targetsFromSql(sql));
       } catch {
         targetsCache.set(file, []);
       }

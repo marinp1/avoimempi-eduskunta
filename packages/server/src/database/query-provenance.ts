@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { basename } from "node:path";
 import { SOURCE_LINEAGE, type SourceRule } from "#constants/SourceLineage";
 import { listQueryFiles } from "./query-audit";
@@ -158,8 +157,8 @@ let cache: Map<string, QueryProvenance> | null = null;
 export function getQuerySources(): Map<string, QueryProvenance> {
   if (cache) return cache;
   const map = new Map<string, QueryProvenance>();
-  for (const { queryFile, filePath } of listQueryFiles()) {
-    map.set(queryFile, provenanceForSql(readFileSync(filePath, "utf8")));
+  for (const { queryFile, sql } of listQueryFiles()) {
+    map.set(queryFile, provenanceForSql(sql));
   }
   cache = map;
   return map;

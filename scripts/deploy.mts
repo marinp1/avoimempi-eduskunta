@@ -91,6 +91,10 @@ async function deployAppBuild() {
 
   fs.rmSync(dist, { recursive: true, force: true });
 
+  // Regenerate the static SQL registry so its `.sql` text imports are bundled
+  // into dist/index.js (the runtime no longer scans src/features/ for SQL files).
+  await $`bun run generate:sql-registry`;
+
   // Pre-build browser assets so the server bundle can load them at runtime
   // from dist/client/ instead of trying to compile source files on the VM.
   const clientDist = path.join(dist, "client");

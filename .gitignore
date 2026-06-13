@@ -35,4 +35,6 @@ validation-results.json
 
 meta.json
 
+packages/server/src/database/sql-registry.generated.ts
+
 tmp

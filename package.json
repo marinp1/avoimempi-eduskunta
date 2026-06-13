@@ -5,7 +5,10 @@
   "description": "Data aggregation and analysis platform for Finnish Parliament",
   "type": "module",
   "scripts": {
+    "generate:sql-registry": "bun run packages/server/scripts/generate-sql-registry.ts",
+    "pretypecheck": "bun run generate:sql-registry",
     "typecheck": "tsgo -p tsconfig.json --noEmit",
+    "prestart": "bun run generate:sql-registry",
     "start": "NODE_ENV=development bun run packages/server/index.ts",
     "deploy": "bun scripts/deploy.mts all",
     "deploy:app": "bun scripts/deploy.mts app",
@@ -23,6 +26,7 @@
     "analyze": "cd packages/datapipe && bun run analysis/cli.ts",
     "validate:expert-extract": "cd packages/datapipe && bun run scripts/validate-expert-statement-extract.ts",
     "rowstore:compact": "bun run scripts/compact-row-stores.ts",
+    "pretest": "bun run generate:sql-registry",
     "test": "bun test",
     "test:update-snapshots": "SQL_UPDATE_SNAPSHOTS=1 bun test packages/server/__tests__/sql-contract.test.ts",
     "test:reset-snapshots": "SQL_RESET_SNAPSHOTS=1 bun test packages/server/__tests__/sql-contract.test.ts",
