@@ -6,6 +6,7 @@ import type { ProvenanceService } from "#server/domain/provenance.service";
 import {
   groupDissentRows,
   parseStatementProposalRef,
+  resolveDissentReference,
   resolveDissentStatement,
   resolveDissentStatementByProposer,
 } from "./voting-title";
@@ -58,21 +59,38 @@ export class VotingService {
     const voting = this.votingRepo.fetchVotingById({ votingId });
     if (!voting) return null;
     const details = this.votingRepo.fetchVotingInlineDetails({ votingId });
+    const mietinto = this.resolveMietinto(voting);
     return buildSingleVoteData({
       voting,
       details,
+      mietinto,
       statementProposal: this.resolveStatementProposal(voting),
       provenanceService: this.provenanceService,
     });
   }
 
+  private resolveMietinto(voting: DatabaseQueries.VotingSearchResult) {
+    const sourceReference = voting.parliamentary_item;
+    if (!sourceReference) return null;
+    const rows = this.votingRepo.fetchStatementReportRows({ sourceReference });
+    if (rows.length !== 1) return null;
+    const row = rows[0]!;
+    return {
+      reportId: row.id,
+      reportIdentifier: row.parliament_identifier,
+      decisionText: row.decision_text,
+    };
+  }
+
   /**
-   * Resolves the lausumaehdotus referenced by a voting title to its source
-   * text (vastalause statement in the mietintö) or, for moniste proposals
-   * distributed only on paper, to the plenary annex PDF. Plain references
-   * (no "(vl)"/"(moniste)" marker) try the vastalause route via proposer
-   * signer matching first and fall back to the annex. Returns null when the
-   * title carries no reference or resolution is ambiguous.
+   * Resolves the lausumaehdotus or muutosehdotus referenced by a voting
+   * title to its source text (vastalause statement in the mietintö) or, for
+   * moniste proposals distributed only on paper, to the plenary annex PDF.
+   * Plain references (no "(vl)"/"(moniste)" marker) try the vastalause route
+   * via proposer signer matching first and fall back to the annex.
+   * Muutosehdotus references resolve to the dissent heading without statement
+   * text. Returns null when the title carries no reference or resolution is
+   * ambiguous.
    */
   private resolveStatementProposal(
     voting: DatabaseQueries.VotingSearchResult,
@@ -81,6 +99,33 @@ export class VotingService {
     if (!ref) return null;
     const sourceReference = voting.parliamentary_item;
     if (!sourceReference) return null;
+
+    if (ref.kind === "muutosehdotus") {
+      const rows = this.votingRepo.fetchStatementProposalRows({
+        sourceReference,
+      });
+      const signerRows = this.votingRepo.fetchStatementSignerRows({
+        sourceReference,
+      });
+      const grouped = groupDissentRows(rows, signerRows);
+      const resolved = grouped
+        ? resolveDissentReference(ref, grouped.dissents)
+        : null;
+      if (resolved && grouped) {
+        const dissentLabel =
+          resolved.dissentHeading ??
+          (resolved.dissentNumber !== null
+            ? `Vastalause ${resolved.dissentNumber}`
+            : "Vastalause");
+        return {
+          kind: "muutosehdotus",
+          dissentLabel,
+          reportId: grouped.reportId,
+          reportIdentifier: grouped.reportIdentifier,
+        };
+      }
+      return null;
+    }
 
     if (ref.kind === "vastalause" || ref.kind === "plain") {
       const rows = this.votingRepo.fetchStatementProposalRows({

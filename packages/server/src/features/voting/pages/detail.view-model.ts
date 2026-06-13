@@ -15,6 +15,21 @@ import i18next from "i18next";
 import { parseVotePropositions } from "../voting-title";
 import type { ResolvedStatement } from "../voting-title";
 
+/** Splits a mietintö decision text into display paragraphs, stripping the
+ * standard heading lines. */
+export function buildDecisionParagraphs(decisionText: string | null): string[] {
+  if (!decisionText) return [];
+  return decisionText
+    .split(/\n\s*\n/)
+    .map((s) => s.trim())
+    .filter(
+      (s) =>
+        s.length > 0 &&
+        !/^VALIOKUNNAN PÄÄTÖSEHDOTUS$/i.test(s) &&
+        !/päätösehdotus:$/i.test(s),
+    );
+}
+
 /** Resolved statement proposal data as produced by VotingService. */
 export type StatementProposalInput =
   | {
@@ -23,7 +38,13 @@ export type StatementProposalInput =
       reportId: number;
       reportIdentifier: string;
     }
-  | { kind: "moniste"; title: string; edkIdentifier: string };
+  | { kind: "moniste"; title: string; edkIdentifier: string }
+  | {
+      kind: "muutosehdotus";
+      dissentLabel: string;
+      reportId: number;
+      reportIdentifier: string;
+    };
 
 interface VotingRow {
   id: number;
@@ -135,7 +156,19 @@ export interface SingleVoteData {
         reportUrl: string;
       }
     | { kind: "moniste"; title: string; pdfUrl: string }
+    | {
+        kind: "muutosehdotus";
+        dissentLabel: string;
+        reportIdentifier: string;
+        reportUrl: string;
+      }
     | null;
+  /** Mietintö (committee report) that is the JAA proposition for this voting. */
+  mietinto: {
+    decisionParagraphs: string[];
+    reportIdentifier: string;
+    reportUrl: string;
+  } | null;
   /** Row-level trace for this voting record (deep-links to the source row). */
   provenance: CitePropData;
   partyBreakdown: Array<{
@@ -221,6 +254,14 @@ function buildStatementProposal(
       pdfUrl: `https://www.eduskunta.fi/FI/vaski/JulkaisuMetatieto/Documents/${input.edkIdentifier}.pdf`,
     };
   }
+  if (input.kind === "muutosehdotus") {
+    return {
+      kind: "muutosehdotus",
+      dissentLabel: input.dissentLabel,
+      reportIdentifier: input.reportIdentifier,
+      reportUrl: `/asiakirja/${input.reportId}?kind=mietinto`,
+    };
+  }
   const dissentLabel =
     input.resolved.dissentHeading ??
     (input.resolved.dissentNumber !== null
@@ -239,6 +280,11 @@ function buildStatementProposal(
 export function buildSingleVoteData(input: {
   voting: VotingRow;
   details: VotingInlineDetails | null;
+  mietinto?: {
+    reportId: number;
+    reportIdentifier: string;
+    decisionText: string | null;
+  } | null;
   statementProposal?: StatementProposalInput | null;
   provenanceService: ProvenanceService;
 }): SingleVoteData {
@@ -358,6 +404,15 @@ export function buildSingleVoteData(input: {
       noProposition: propositions?.no ?? null,
     },
     statementProposal: buildStatementProposal(input.statementProposal),
+    mietinto: input.mietinto
+      ? {
+          decisionParagraphs: buildDecisionParagraphs(
+            input.mietinto.decisionText,
+          ),
+          reportIdentifier: input.mietinto.reportIdentifier,
+          reportUrl: `/asiakirja/${input.mietinto.reportId}?kind=mietinto`,
+        }
+      : null,
     provenance: provenanceService.forRow("Voting", voting.id, {
       value: `${i18next.t(
         tally.outcome === "ok"

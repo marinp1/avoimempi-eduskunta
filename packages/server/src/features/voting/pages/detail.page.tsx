@@ -20,6 +20,7 @@ interface Props {
 export default function Aanestys({ title, data }: Props) {
   const v = data.vote;
   const sp = data.statementProposal;
+  const mi = data.mietinto;
 
   return (
     <>
@@ -231,61 +232,118 @@ export default function Aanestys({ title, data }: Props) {
           </div>
         </section>
 
-        {sp && (
+        {(mi || sp) && (
           <section class="ph mt-28">
             <Kicker
               text={i18next.t("votings:detail.statement_proposal_kicker")}
               modifier="blue"
               dot
             />
-            <div class="ph__head">
-              <h2>
-                {sp.kind === "vastalause"
-                  ? sp.statementNumber !== null
-                    ? i18next.t("votings:detail.statement_proposal_label", {
-                        number: sp.statementNumber,
-                      })
-                    : i18next.t(
-                        "votings:detail.statement_proposal_label_unnumbered",
-                      )
-                  : sp.title ||
-                    i18next.t(
-                      "votings:detail.statement_proposal_label_unnumbered",
-                    )}
-              </h2>
-            </div>
-            {sp.kind === "vastalause" ? (
+            {mi && (
+              <div class="ph__head">
+                <span class="tag tag--hall">
+                  {i18next.t("common:yes_uppercase")}
+                </span>
+                <h2>
+                  {i18next.t("votings:detail.statement_mietinto_label")} ·{" "}
+                  {mi.reportIdentifier}
+                </h2>
+              </div>
+            )}
+            {mi &&
+              mi.decisionParagraphs.map((p) => <p class="ph__intro">{p}</p>)}
+            {mi && (
+              <div class="sess-meta">
+                <a
+                  href={mi.reportUrl}
+                  class="link-clr"
+                  hx-get={mi.reportUrl}
+                  {...NAV}
+                >
+                  {i18next.t("votings:detail.statement_open_report")}
+                </a>
+              </div>
+            )}
+            {sp && (
               <>
-                <p class="ph__intro">{sp.statementText}</p>
-                <div class="sess-meta">
-                  <a
-                    href={sp.reportUrl}
-                    class="link-clr"
-                    hx-get={sp.reportUrl}
-                    {...NAV}
-                  >
-                    {i18next.t("votings:detail.statement_source_report", {
-                      dissentLabel: sp.dissentLabel,
-                      identifier: sp.reportIdentifier,
-                    })}
-                  </a>
+                <div class={clsx("ph__head", mi && "mt-16")}>
+                  <span class="tag tag--opp">
+                    {i18next.t("common:no_uppercase")}
+                  </span>
+                  {sp.kind === "vastalause" ? (
+                    <h2>
+                      {sp.statementNumber !== null
+                        ? i18next.t("votings:detail.statement_proposal_label", {
+                            number: sp.statementNumber,
+                          })
+                        : i18next.t(
+                            "votings:detail.statement_proposal_label_unnumbered",
+                          )}
+                    </h2>
+                  ) : sp.kind === "muutosehdotus" ? (
+                    <h2>
+                      {sp.dissentLabel} ·{" "}
+                      {i18next.t("votings:detail.statement_amendment_label")}
+                    </h2>
+                  ) : (
+                    <h2>
+                      {sp.title ||
+                        i18next.t(
+                          "votings:detail.statement_proposal_label_unnumbered",
+                        )}
+                    </h2>
+                  )}
                 </div>
-              </>
-            ) : (
-              <>
-                <p class="ph__intro">
-                  {i18next.t("votings:detail.statement_annex_intro")}
-                </p>
-                <div class="sess-meta">
-                  <a
-                    href={sp.pdfUrl}
-                    class="link-clr"
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    {i18next.t("votings:detail.statement_annex_link")}
-                  </a>
-                </div>
+                {sp.kind === "vastalause" ? (
+                  <>
+                    <p class="ph__intro">{sp.statementText}</p>
+                    <div class="sess-meta">
+                      <a
+                        href={sp.reportUrl}
+                        class="link-clr"
+                        hx-get={sp.reportUrl}
+                        {...NAV}
+                      >
+                        {i18next.t("votings:detail.statement_source_report", {
+                          dissentLabel: sp.dissentLabel,
+                          identifier: sp.reportIdentifier,
+                        })}
+                      </a>
+                    </div>
+                  </>
+                ) : sp.kind === "muutosehdotus" ? (
+                  <>
+                    <p class="ph__intro">
+                      {i18next.t("votings:detail.statement_amendment_intro")}
+                    </p>
+                    <div class="sess-meta">
+                      <a
+                        href={sp.reportUrl}
+                        class="link-clr"
+                        hx-get={sp.reportUrl}
+                        {...NAV}
+                      >
+                        {i18next.t("votings:detail.statement_open_report")}
+                      </a>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p class="ph__intro">
+                      {i18next.t("votings:detail.statement_annex_intro")}
+                    </p>
+                    <div class="sess-meta">
+                      <a
+                        href={sp.pdfUrl}
+                        class="link-clr"
+                        target="_blank"
+                        rel="noopener"
+                      >
+                        {i18next.t("votings:detail.statement_annex_link")}
+                      </a>
+                    </div>
+                  </>
+                )}
               </>
             )}
           </section>

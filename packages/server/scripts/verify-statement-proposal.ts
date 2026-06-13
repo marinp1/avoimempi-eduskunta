@@ -28,16 +28,18 @@ for (const id of ids) {
   }
   const html = String(Aanestys({ data }));
   const spJson = JSON.stringify(data.statementProposal, null, 2);
+  const miJson = JSON.stringify(data.mietinto, null, 2);
   console.log(`=== voting ${id}: ${data.vote.title} ===`);
   console.log(`yesProposition: ${data.vote.yesProposition}`);
   console.log(`noProposition:  ${data.vote.noProposition}`);
+  console.log(`mietinto: ${miJson}`);
   console.log(`statementProposal: ${spJson}`);
   console.log(
-    `page contains lausumaehdotus section: ${html.includes("Lausumaehdotus · mistä äänestettiin")}`,
+    `page contains äänestysasetelma section: ${html.includes("Äänestysasetelma · mistä äänestettiin")}`,
   );
-  const start = html.indexOf("Lausumaehdotus · mistä äänestettiin");
+  const start = html.indexOf("Äänestysasetelma · mistä äänestettiin");
   if (start >= 0) {
-    console.log(html.slice(start - 200, start + 1200));
+    console.log(html.slice(Math.max(0, start - 200), start + 1600));
   }
   console.log("");
 }

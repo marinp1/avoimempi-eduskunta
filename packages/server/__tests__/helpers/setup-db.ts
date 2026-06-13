@@ -327,9 +327,18 @@ export function seedFullDataset(db: Database) {
   // Committee report with a dissenting opinion (statement proposal source);
   // source_reference matches the $sourceReference contract binding.
   db.run(
-    `INSERT INTO CommitteeReport (id, parliament_identifier, report_type_code, document_number, parliamentary_year, source_reference, source_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [700, "StVM 5/2024 vp", "StVM", 5, "2024", "KK 100/2024", "test"],
+    `INSERT INTO CommitteeReport (id, parliament_identifier, report_type_code, document_number, parliamentary_year, source_reference, source_path, decision_text)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      700,
+      "StVM 5/2024 vp",
+      "StVM",
+      5,
+      "2024",
+      "KK 100/2024",
+      "test",
+      "VALIOKUNNAN PÄÄTÖSEHDOTUS\nSosiaali- ja terveysvaliokunnan päätösehdotus:\n\nEduskunta hyväksyy lakiehdotuksen.\n\nEduskunta edellyttää, että hallitus seuraa tilannetta.",
+    ],
   );
   db.run(
     `INSERT INTO CommitteeReportDissent (report_id, dissent_order, dissent_number, heading, signature_date)

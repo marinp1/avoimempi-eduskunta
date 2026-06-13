@@ -6,6 +6,7 @@ import votingPartyBreakdownById from "./sql/voting-party-breakdown.sql";
 import votingRelatedById from "./sql/voting-related.sql";
 import votingStatementAnnex from "./sql/voting-statement-annex.sql";
 import votingStatementProposals from "./sql/voting-statement-proposals.sql";
+import votingStatementReport from "./sql/voting-statement-report.sql";
 import votingStatementSigners from "./sql/voting-statement-signers.sql";
 import votingsBrowse from "./sql/voting-list.sql";
 import votingsCount from "./sql/voting-count.sql";
@@ -129,6 +130,19 @@ export class VotingRepository {
       .query<StatementSignerRow, { $sourceReference: string }>(
         votingStatementSigners,
       )
+      .all({ $sourceReference: params.sourceReference });
+  }
+
+  public fetchStatementReportRows(params: { sourceReference: string }) {
+    return this.db
+      .query<
+        {
+          id: number;
+          parliament_identifier: string;
+          decision_text: string | null;
+        },
+        { $sourceReference: string }
+      >(votingStatementReport)
       .all({ $sourceReference: params.sourceReference });
   }
 

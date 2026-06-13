@@ -1,6 +1,7 @@
 /**
- * Parsing and resolution of statement proposal ("lausumaehdotus") references
- * embedded in voting titles, e.g.
+ * Parsing and resolution of statement proposal ("lausumaehdotus") and
+ * amendment proposal ("muutosehdotus") references embedded in voting
+ * titles, e.g.
  * "Mietintö JAA / Johannes Yrttiahon lausumaehdotus 4 (vl 4) EI".
  *
  * Only the modern title grammar is supported:
@@ -12,6 +13,8 @@
  *   - "{proposer} lausumaehdotus N (moniste)" → moniste annex
  *   - "{proposer} lausumaehdotus N"          → plain: vastalause located by
  *     proposer signer match, falling back to the moniste annex
+ *   - "{proposer} ehdotus (vl N)"            → muutosehdotus, resolved to
+ *     dissent heading via dissent number or proposer signer match
  * Older formats (e.g. "Kannanotto, mietintö / Pia Viitanen (VL 1)") can be
  * added here later without touching the pipeline.
  */
@@ -24,7 +27,12 @@ export type StatementProposalRef =
       dissentNumber: number | null;
     }
   | { kind: "moniste"; proposer: string; statementNumber: number | null }
-  | { kind: "plain"; proposer: string; statementNumber: number | null };
+  | { kind: "plain"; proposer: string; statementNumber: number | null }
+  | {
+      kind: "muutosehdotus";
+      proposer: string;
+      dissentNumber: number | null;
+    };
 
 // "monistelausumaehdotus" contains the word "lausumaehdotus"; the other
 // patterns require whitespace before the word so they can never match inside
@@ -40,6 +48,9 @@ const MONISTE_SUFFIX_PATTERN =
 
 const PLAIN_PATTERN =
   /(?:^|\/)\s*([^/()]*?)\s+lausumaehdotus(?:\s+(\d+))?\s*(?:EI\b|JAA\b|$)/iu;
+
+const MUUTOSEHDOTUS_PATTERN =
+  /(?:^|\/)\s*([^/()]*?)\s+ehdotus(?:\s+(\d+))?\s*\(\s*vl(?:\s+(\d+))?\s*\)/iu;
 
 function parsePositiveInt(value: string | undefined): number | null {
   if (!value) return null;
@@ -94,6 +105,17 @@ export function parseStatementProposalRef(
       kind: "plain",
       proposer,
       statementNumber: parsePositiveInt(plain[2]),
+    };
+  }
+
+  const muutosehdotus = title.match(MUUTOSEHDOTUS_PATTERN);
+  if (muutosehdotus) {
+    const proposer = muutosehdotus[1]?.trim() ?? "";
+    if (!proposer) return null;
+    return {
+      kind: "muutosehdotus",
+      proposer,
+      dissentNumber: parsePositiveInt(muutosehdotus[3]),
     };
   }
 
@@ -249,6 +271,36 @@ export function resolveDissentStatement(
   return {
     statementText: statement.statementText,
     statementNumber: statement.statementNumber,
+    dissentNumber: dissent.dissentNumber,
+    dissentHeading: dissent.heading,
+  };
+}
+
+/**
+ * Resolves a muutosehdotus reference to a specific dissent. Returns null on
+ * any ambiguity so the UI omits the section rather than risk showing the
+ * wrong information.
+ */
+export function resolveDissentReference(
+  ref: Extract<StatementProposalRef, { kind: "muutosehdotus" }>,
+  dissents: DissentForResolution[],
+): { dissentNumber: number | null; dissentHeading: string | null } | null {
+  let dissent: DissentForResolution | null = null;
+  if (ref.dissentNumber !== null) {
+    dissent =
+      findUnique(dissents, (d) => d.dissentNumber === ref.dissentNumber) ??
+      findUnique(dissents, (d) => d.dissentOrder === ref.dissentNumber);
+  } else if (dissents.length === 1) {
+    dissent = dissents[0]!;
+  } else {
+    dissent = findUnique(dissents, (d) =>
+      (d.signers ?? []).some((signer) =>
+        signerMatchesProposer(signer, ref.proposer),
+      ),
+    );
+  }
+  if (!dissent) return null;
+  return {
     dissentNumber: dissent.dissentNumber,
     dissentHeading: dissent.heading,
   };

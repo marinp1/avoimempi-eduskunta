@@ -4,11 +4,13 @@ import {
   groupDissentRows,
   parseStatementProposalRef,
   parseVotePropositions,
+  resolveDissentReference,
   resolveDissentStatement,
   resolveDissentStatementByProposer,
   surnameMatchesGenitive,
   type DissentForResolution,
 } from "../src/features/voting/voting-title";
+import { buildDecisionParagraphs } from "../src/features/voting/pages/detail.view-model";
 import { VotingRepository } from "../src/features/voting/voting.repository";
 import { createTestDb } from "./helpers/setup-db";
 
@@ -97,14 +99,9 @@ describe("parseStatementProposalRef", () => {
     expect(parseStatementProposalRef(null)).toBeNull();
   });
 
-  test("returns null for titles without a statement proposal", () => {
+  test("returns null for titles without a statement or amendment proposal", () => {
     expect(
       parseStatementProposalRef("Mietintö JAA / Antero Laukkasen ehdotus EI"),
-    ).toBeNull();
-    expect(
-      parseStatementProposalRef(
-        "Mietintö JAA / Eemeli Peltosen ehdotus (vl 1) EI",
-      ),
     ).toBeNull();
     expect(parseStatementProposalRef("Äänestys 1")).toBeNull();
   });
@@ -114,6 +111,49 @@ describe("parseStatementProposalRef", () => {
       "Mietintö JAA / Tiina Elon monistelausumaehdotus 3 EI",
     );
     expect(ref?.kind).toBe("moniste");
+  });
+
+  test("parses muutosehdotus with dissent number", () => {
+    expect(
+      parseStatementProposalRef(
+        "Mietintö JAA / Eemeli Peltosen ehdotus (vl 1) EI",
+      ),
+    ).toEqual({
+      kind: "muutosehdotus",
+      proposer: "Eemeli Peltosen",
+      dissentNumber: 1,
+    });
+  });
+
+  test("parses muutosehdotus without dissent number", () => {
+    expect(
+      parseStatementProposalRef(
+        "Mietintö JAA / Eemeli Peltosen ehdotus (vl) EI",
+      ),
+    ).toEqual({
+      kind: "muutosehdotus",
+      proposer: "Eemeli Peltosen",
+      dissentNumber: null,
+    });
+  });
+
+  test("parses muutosehdotus with section prefix", () => {
+    expect(
+      parseStatementProposalRef(
+        "58 §: mietintö JAA / Eemeli Peltosen ehdotus (vl 1) EI",
+      ),
+    ).toEqual({
+      kind: "muutosehdotus",
+      proposer: "Eemeli Peltosen",
+      dissentNumber: 1,
+    });
+  });
+
+  test("muutosehdotus pattern does not swallow lausumaehdotus", () => {
+    const ref = parseStatementProposalRef(
+      "Mietintö JAA / Johannes Yrttiahon lausumaehdotus 4 (vl 4) EI",
+    );
+    expect(ref?.kind).toBe("vastalause");
   });
 
   test("plain lausumaehdotus without a number still parses", () => {
@@ -410,6 +450,106 @@ describe("resolveDissentStatementByProposer", () => {
   });
 });
 
+describe("resolveDissentReference", () => {
+  const ref = (dissentNumber: number | null) =>
+    ({
+      kind: "muutosehdotus",
+      proposer: "Testi Testaajan",
+      dissentNumber,
+    }) as const;
+
+  test("matches dissent by dissent number", () => {
+    const dissents = [
+      makeDissent(),
+      makeDissent({
+        dissentOrder: 2,
+        dissentNumber: 4,
+        heading: "Vastalause 4",
+        statements: [],
+      }),
+    ];
+    expect(resolveDissentReference(ref(4), dissents)).toEqual({
+      dissentNumber: 4,
+      dissentHeading: "Vastalause 4",
+    });
+  });
+
+  test("falls back to dissent order when no dissent number matches", () => {
+    const dissents = [
+      makeDissent({ dissentNumber: null, heading: "VASTALAUSE" }),
+    ];
+    expect(resolveDissentReference(ref(1), dissents)).toEqual({
+      dissentNumber: null,
+      dissentHeading: "VASTALAUSE",
+    });
+  });
+
+  test("(vl) without number resolves to single dissent", () => {
+    const single = [makeDissent({ statements: [] })];
+    expect(resolveDissentReference(ref(null), single)).toEqual({
+      dissentNumber: 1,
+      dissentHeading: "Vastalause 1",
+    });
+
+    const multiple = [
+      makeDissent(),
+      makeDissent({ dissentOrder: 2, dissentNumber: 2 }),
+    ];
+    expect(resolveDissentReference(ref(null), multiple)).toBeNull();
+  });
+
+  test("resolves via proposer signer match", () => {
+    const harjanneDissent = makeDissent({
+      dissentNumber: null,
+      heading: "Vastalause",
+      statements: [],
+      signers: [
+        { firstName: "Atte", lastName: "Harjanne" },
+        { firstName: "Jessi", lastName: "Jokelainen" },
+      ],
+    });
+    expect(
+      resolveDissentReference(
+        {
+          kind: "muutosehdotus",
+          proposer: "Atte Harjanteen",
+          dissentNumber: null,
+        },
+        [harjanneDissent],
+      ),
+    ).toEqual({
+      dissentNumber: null,
+      dissentHeading: "Vastalause",
+    });
+  });
+
+  test("returns null when proposer matches multiple dissents", () => {
+    const a = makeDissent({
+      signers: [{ firstName: "Matias", lastName: "Mäkynen" }],
+    });
+    const b = makeDissent({
+      dissentOrder: 2,
+      dissentNumber: 2,
+      signers: [{ firstName: "Matias", lastName: "Mäkynen" }],
+    });
+    expect(
+      resolveDissentReference(
+        {
+          kind: "muutosehdotus",
+          proposer: "Matias Mäkysen",
+          dissentNumber: null,
+        },
+        [a, b],
+      ),
+    ).toBeNull();
+  });
+
+  test("returns null when dissent not found", () => {
+    expect(resolveDissentReference(ref(7), [makeDissent()])).toBeNull();
+    expect(resolveDissentReference(ref(1), [])).toBeNull();
+  });
+});
+
 describe("groupDissentRows", () => {
   test("merges signer rows into dissents", () => {
     const grouped = groupDissentRows(
@@ -513,6 +653,29 @@ describe("groupDissentRows", () => {
   });
 });
 
+describe("buildDecisionParagraphs", () => {
+  test("splits text on blank lines and strips headings", () => {
+    const text =
+      "VALIOKUNNAN PÄÄTÖSEHDOTUS\nSosiaali- ja terveysvaliokunnan päätösehdotus:\n\nEduskunta hyväksyy lakiehdotuksen.\n\nEduskunta edellyttää, että hallitus seuraa tilannetta.";
+    expect(buildDecisionParagraphs(text)).toEqual([
+      "Eduskunta hyväksyy lakiehdotuksen.",
+      "Eduskunta edellyttää, että hallitus seuraa tilannetta.",
+    ]);
+  });
+
+  test("returns empty array for null", () => {
+    expect(buildDecisionParagraphs(null)).toEqual([]);
+  });
+
+  test("returns empty array for heading-only text", () => {
+    expect(
+      buildDecisionParagraphs(
+        "VALIOKUNNAN PÄÄTÖSEHDOTUS\nSosiaali- ja terveysvaliokunnan päätösehdotus:",
+      ),
+    ).toEqual([]);
+  });
+});
+
 describe("VotingRepository statement proposal queries", () => {
   let db: Database;
   let repo: VotingRepository;
@@ -522,8 +685,8 @@ describe("VotingRepository statement proposal queries", () => {
     repo = new VotingRepository(db);
 
     db.run(
-      `INSERT INTO CommitteeReport (id, parliament_identifier, report_type_code, document_number, parliamentary_year, source_reference, source_path)
-       VALUES (500, 'TaVM 16/2026 vp', 'TaVM', 16, '2026', 'HE 2/2026 vp', 'test')`,
+      `INSERT INTO CommitteeReport (id, parliament_identifier, report_type_code, document_number, parliamentary_year, source_reference, source_path, decision_text)
+       VALUES (500, 'TaVM 16/2026 vp', 'TaVM', 16, '2026', 'HE 2/2026 vp', 'test', 'VALIOKUNNAN PÄÄTÖSEHDOTUS\nTalousvaliokunnan päätösehdotus:\n\nEduskunta hyväksyy lakiehdotuksen.')`,
     );
     db.run(
       `INSERT INTO CommitteeReportDissent (report_id, dissent_order, dissent_number, heading, signature_date)
@@ -608,5 +771,21 @@ describe("VotingRepository statement proposal queries", () => {
         sessionKey: "2026/64",
       }),
     ).toBeNull();
+  });
+
+  test("fetchStatementReportRows returns the mietintö for the source reference", () => {
+    const rows = repo.fetchStatementReportRows({
+      sourceReference: "HE 2/2026 vp",
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.id).toBe(500);
+    expect(rows[0]?.parliament_identifier).toBe("TaVM 16/2026 vp");
+    expect(rows[0]?.decision_text).toContain("Eduskunta hyväksyy");
+  });
+
+  test("fetchStatementReportRows returns empty for unknown reference", () => {
+    expect(
+      repo.fetchStatementReportRows({ sourceReference: "HE 999/2026 vp" }),
+    ).toHaveLength(0);
   });
 });
