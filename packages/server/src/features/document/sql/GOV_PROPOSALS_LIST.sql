@@ -13,9 +13,11 @@ WITH filtered AS (
     g.end_date
   FROM GovernmentProposal g
   WHERE
-    ($query IS NULL OR (
-      g.title LIKE '%' || $query || '%'
-      OR g.parliament_identifier LIKE '%' || $query || '%'
+    ($query IS NULL OR g.id IN (
+      SELECT CAST(record_id AS INTEGER)
+      FROM FederatedSearchFts
+      WHERE FederatedSearchFts MATCH $query
+        AND type = 'government-proposal'
     ))
     AND ($year IS NULL OR g.parliamentary_year = $year)
     AND ($subject IS NULL OR EXISTS (
@@ -39,10 +41,8 @@ SELECT
   f.decision_outcome_code,
   f.latest_stage_code,
   f.end_date,
-  (
-    SELECT GROUP_CONCAT(s.subject_text, '||')
-    FROM GovernmentProposalSubject s
-    WHERE s.proposal_id = f.id
-  ) AS subjects
+  GROUP_CONCAT(s.subject_text, '||') AS subjects
 FROM filtered f
+LEFT JOIN GovernmentProposalSubject s ON s.proposal_id = f.id
+GROUP BY f.id
 ORDER BY f.submission_date DESC, f.id DESC

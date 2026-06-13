@@ -33,26 +33,24 @@ co_signer_matches AS (
     AND COALESCE(s.is_first_signer, 0) = 0
 )
 SELECT
-  id,
-  parliament_identifier,
-  initiative_type_code,
-  title,
-  submission_date,
-  decision_outcome,
-  decision_outcome_code,
-  latest_stage_code,
-  end_date,
-  relation_role,
-  is_first_signer,
-  (
-    SELECT GROUP_CONCAT(s.subject_text, '||')
-    FROM LegislativeInitiativeSubject s
-    WHERE s.initiative_id = id
-  ) AS subjects
+  u.id,
+  u.parliament_identifier,
+  u.initiative_type_code,
+  u.title,
+  u.submission_date,
+  u.decision_outcome,
+  u.decision_outcome_code,
+  u.latest_stage_code,
+  u.end_date,
+  u.relation_role,
+  u.is_first_signer,
+  GROUP_CONCAT(s.subject_text, '||') AS subjects
 FROM (
   SELECT * FROM first_signer_matches
   UNION ALL
   SELECT * FROM co_signer_matches
-)
-ORDER BY COALESCE(submission_date, '') DESC, id DESC
+) u
+LEFT JOIN LegislativeInitiativeSubject s ON s.initiative_id = u.id
+GROUP BY u.id
+ORDER BY COALESCE(u.submission_date, '') DESC, u.id DESC
 LIMIT $limit;

@@ -163,12 +163,15 @@ export class HomeService {
     >,
     vaskiLatestSpeechDate: string | null,
   ) {
+    const sessionKeys = sessions.map((s) => s.key);
+    const noticesBySessionKey =
+      this.sessions.fetchSessionNoticesBySessionKeys(sessionKeys);
     return {
       date: latestCompletedSessionDate,
       vaskiLatestSpeechDate,
       sessions: sessions.map((session) => ({
         ...session,
-        notices: this.sessions.fetchSessionNotices({ sessionKey: session.key }),
+        notices: noticesBySessionKey.get(session.key) ?? [],
       })),
     };
   }

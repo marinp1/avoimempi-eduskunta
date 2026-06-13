@@ -51,6 +51,7 @@ import writtenQuestionSubjects from "./sql/WRITTEN_QUESTION_SUBJECTS.sql";
 import writtenQuestionsCount from "./sql/WRITTEN_QUESTIONS_COUNT.sql";
 import writtenQuestionsList from "./sql/WRITTEN_QUESTIONS_LIST.sql";
 import {
+  buildFtsSearchQuery,
   endDateExclusive,
   paginatedResult,
 } from "../../database/query-helpers";
@@ -69,7 +70,7 @@ export class DocumentRepository {
   }) {
     const offset = (params.page - 1) * params.limit;
     const endDateExclusiveValue = endDateExclusive(params.endDate);
-    const $query = params.query?.trim() || null;
+    const $query = buildFtsSearchQuery(params.query);
     const $year = params.year || null;
     const $subject = params.subject?.trim() || null;
 
@@ -228,7 +229,7 @@ export class DocumentRepository {
   }) {
     const offset = (params.page - 1) * params.limit;
     const endDateExclusiveValue = endDateExclusive(params.endDate);
-    const $query = params.query?.trim() || null;
+    const $query = buildFtsSearchQuery(params.query);
     const $year = params.year || null;
     const $subject = params.subject?.trim() || null;
 
@@ -400,7 +401,7 @@ export class DocumentRepository {
   }) {
     const offset = (params.page - 1) * params.limit;
     const endDateExclusiveValue = endDateExclusive(params.endDate);
-    const $query = params.query?.trim() || null;
+    const $query = buildFtsSearchQuery(params.query);
     const $year = params.year || null;
     const $subject = params.subject?.trim() || null;
 
@@ -781,7 +782,7 @@ export class DocumentRepository {
   }) {
     const offset = (params.page - 1) * params.limit;
     const endDateExclusiveValue = endDateExclusive(params.endDate);
-    const $query = params.query?.trim() || null;
+    const $query = buildFtsSearchQuery(params.query);
     const $year = params.year || null;
     const $subject = params.subject?.trim() || null;
 
@@ -1085,7 +1086,7 @@ export class DocumentRepository {
   }) {
     const offset = (params.page - 1) * params.limit;
     const endDateExclusiveValue = endDateExclusive(params.endDate);
-    const $query = params.query?.trim() || null;
+    const $query = buildFtsSearchQuery(params.query);
     const $year = params.year || null;
     const $subject = params.subject?.trim() || null;
     const $typeCode = params.initiativeTypeCode?.trim().toUpperCase() || null;

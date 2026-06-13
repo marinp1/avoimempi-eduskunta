@@ -20,9 +20,11 @@ WITH filtered AS (
     q.end_date
   FROM WrittenQuestion q
   WHERE
-    ($query IS NULL OR (
-      q.title LIKE '%' || $query || '%'
-      OR q.parliament_identifier LIKE '%' || $query || '%'
+    ($query IS NULL OR q.id IN (
+      SELECT CAST(record_id AS INTEGER)
+      FROM FederatedSearchFts
+      WHERE FederatedSearchFts MATCH $query
+        AND type = 'written-question'
     ))
     AND ($year IS NULL OR q.parliamentary_year = $year)
     AND ($subject IS NULL OR EXISTS (
@@ -53,10 +55,8 @@ SELECT
   f.decision_outcome_code,
   f.latest_stage_code,
   f.end_date,
-  (
-    SELECT GROUP_CONCAT(s.subject_text, '||')
-    FROM WrittenQuestionSubject s
-    WHERE s.question_id = f.id
-  ) AS subjects
+  GROUP_CONCAT(s.subject_text, '||') AS subjects
 FROM filtered f
+LEFT JOIN WrittenQuestionSubject s ON s.question_id = f.id
+GROUP BY f.id
 ORDER BY f.submission_date DESC, f.id DESC

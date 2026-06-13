@@ -1,9 +1,11 @@
 SELECT COUNT(*) AS count
 FROM GovernmentProposal g
 WHERE
-  ($query IS NULL OR (
-    g.title LIKE '%' || $query || '%'
-    OR g.parliament_identifier LIKE '%' || $query || '%'
+  ($query IS NULL OR g.id IN (
+    SELECT CAST(record_id AS INTEGER)
+    FROM FederatedSearchFts
+    WHERE FederatedSearchFts MATCH $query
+      AND type = 'government-proposal'
   ))
   AND ($year IS NULL OR g.parliamentary_year = $year)
   AND ($subject IS NULL OR EXISTS (

@@ -14,9 +14,11 @@ WITH filtered AS (
     i.decision_outcome_code
   FROM Interpellation i
   WHERE
-    ($query IS NULL OR (
-      i.title LIKE '%' || $query || '%'
-      OR i.parliament_identifier LIKE '%' || $query || '%'
+    ($query IS NULL OR i.id IN (
+      SELECT CAST(record_id AS INTEGER)
+      FROM FederatedSearchFts
+      WHERE FederatedSearchFts MATCH $query
+        AND type = 'interpellation'
     ))
     AND ($year IS NULL OR i.parliamentary_year = $year)
     AND ($subject IS NULL OR EXISTS (
@@ -41,10 +43,8 @@ SELECT
   f.co_signer_count,
   f.decision_outcome,
   f.decision_outcome_code,
-  (
-    SELECT GROUP_CONCAT(s.subject_text, '||')
-    FROM InterpellationSubject s
-    WHERE s.interpellation_id = f.id
-  ) AS subjects
+  GROUP_CONCAT(s.subject_text, '||') AS subjects
 FROM filtered f
+LEFT JOIN InterpellationSubject s ON s.interpellation_id = f.id
+GROUP BY f.id
 ORDER BY f.submission_date DESC, f.id DESC

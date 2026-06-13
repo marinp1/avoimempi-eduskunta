@@ -40,10 +40,8 @@ SELECT
   f.question_id,
   f.question_identifier,
   f.question_title,
-  (
-    SELECT GROUP_CONCAT(s.subject_text, '||')
-    FROM WrittenQuestionResponseSubject s
-    WHERE s.response_id = f.id
-  ) AS subjects
+  GROUP_CONCAT(s.subject_text, '||') AS subjects
 FROM filtered f
+LEFT JOIN WrittenQuestionResponseSubject s ON s.response_id = f.id
+GROUP BY f.id
 ORDER BY f.answer_date DESC, f.id DESC

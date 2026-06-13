@@ -16,9 +16,11 @@ WITH filtered AS (
     li.end_date
   FROM LegislativeInitiative li
   WHERE
-    ($query IS NULL OR (
-      li.title LIKE '%' || $query || '%'
-      OR li.parliament_identifier LIKE '%' || $query || '%'
+    ($query IS NULL OR li.id IN (
+      SELECT CAST(record_id AS INTEGER)
+      FROM FederatedSearchFts
+      WHERE FederatedSearchFts MATCH $query
+        AND type = 'legislative-initiative'
     ))
     AND ($year IS NULL OR li.parliamentary_year = $year)
     AND ($typeCode IS NULL OR li.initiative_type_code = $typeCode)
@@ -46,10 +48,8 @@ SELECT
   f.decision_outcome_code,
   f.latest_stage_code,
   f.end_date,
-  (
-    SELECT GROUP_CONCAT(s.subject_text, '||')
-    FROM LegislativeInitiativeSubject s
-    WHERE s.initiative_id = f.id
-  ) AS subjects
+  GROUP_CONCAT(s.subject_text, '||') AS subjects
 FROM filtered f
+LEFT JOIN LegislativeInitiativeSubject s ON s.initiative_id = f.id
+GROUP BY f.id
 ORDER BY f.submission_date DESC, f.id DESC

@@ -1,10 +1,11 @@
 SELECT COUNT(*) AS count
 FROM OralQuestion oq
 WHERE
-  ($query IS NULL OR (
-    oq.title LIKE '%' || $query || '%'
-    OR oq.question_text LIKE '%' || $query || '%'
-    OR oq.parliament_identifier LIKE '%' || $query || '%'
+  ($query IS NULL OR oq.id IN (
+    SELECT CAST(record_id AS INTEGER)
+    FROM FederatedSearchFts
+    WHERE FederatedSearchFts MATCH $query
+      AND type = 'oral-question'
   ))
   AND ($year IS NULL OR oq.parliamentary_year = $year)
   AND ($subject IS NULL OR EXISTS (

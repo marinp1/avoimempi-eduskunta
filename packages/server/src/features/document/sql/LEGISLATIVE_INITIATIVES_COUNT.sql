@@ -1,9 +1,11 @@
 SELECT COUNT(*) AS count
 FROM LegislativeInitiative li
 WHERE
-  ($query IS NULL OR (
-    li.title LIKE '%' || $query || '%'
-    OR li.parliament_identifier LIKE '%' || $query || '%'
+  ($query IS NULL OR li.id IN (
+    SELECT CAST(record_id AS INTEGER)
+    FROM FederatedSearchFts
+    WHERE FederatedSearchFts MATCH $query
+      AND type = 'legislative-initiative'
   ))
   AND ($year IS NULL OR li.parliamentary_year = $year)
   AND ($typeCode IS NULL OR li.initiative_type_code = $typeCode)

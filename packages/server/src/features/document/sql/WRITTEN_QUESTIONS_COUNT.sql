@@ -1,9 +1,11 @@
 SELECT COUNT(*) AS count
 FROM WrittenQuestion q
 WHERE
-  ($query IS NULL OR (
-    q.title LIKE '%' || $query || '%'
-    OR q.parliament_identifier LIKE '%' || $query || '%'
+  ($query IS NULL OR q.id IN (
+    SELECT CAST(record_id AS INTEGER)
+    FROM FederatedSearchFts
+    WHERE FederatedSearchFts MATCH $query
+      AND type = 'written-question'
   ))
   AND ($year IS NULL OR q.parliamentary_year = $year)
   AND ($subject IS NULL OR EXISTS (

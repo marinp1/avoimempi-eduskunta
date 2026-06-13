@@ -12,6 +12,7 @@ import sectionVotings from "./sql/session-section-votings.sql";
 import sessionByDate from "./sql/session-by-date.sql";
 import sessionDatesCompleted from "./sql/session-dates-completed.sql";
 import sessionNotices from "./sql/session-notices.sql";
+import sessionNoticesBySessionKeys from "./sql/session-notices-batch.sql";
 import sessionSectionsBySessionKeys from "./sql/session-sections.sql";
 import sessionVotingCountsBySessionKeys from "./sql/session-voting-counts.sql";
 import sessionsIndex from "./sql/session-list.sql";
@@ -428,6 +429,25 @@ export class SessionRepository {
     const data = stmt.all({ $sessionKey: params.sessionKey });
     stmt.finalize();
     return data;
+  }
+
+  public fetchSessionNoticesBySessionKeys(
+    sessionKeys: string[],
+  ): Map<string, DatabaseTables.SessionNotice[]> {
+    if (sessionKeys.length === 0) return new Map();
+    const stmt = this.db.prepare<
+      DatabaseTables.SessionNotice,
+      { $sessionKeysJson: string }
+    >(sessionNoticesBySessionKeys);
+    const rows = stmt.all({ $sessionKeysJson: JSON.stringify(sessionKeys) });
+    stmt.finalize();
+    const map = new Map<string, DatabaseTables.SessionNotice[]>();
+    for (const row of rows) {
+      const list = map.get(row.session_key);
+      if (list) list.push(row);
+      else map.set(row.session_key, [row]);
+    }
+    return map;
   }
 
   public fetchSectionDocumentLinks(params: { sectionKey: string }) {
