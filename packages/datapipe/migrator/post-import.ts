@@ -504,3 +504,205 @@ export function rebuildFederatedSearchIndex(
     .get();
   return row?.count ?? 0;
 }
+
+export function rebuildPartySummary(db: Database): number {
+  if (!objectExists(db, "table", "PartySummary")) {
+    return 0;
+  }
+
+  const asOfDate =
+    db
+      .query<{ date: string }, []>(
+        "SELECT MAX(date) AS date FROM Session WHERE date IS NOT NULL",
+      )
+      .get()?.date ?? new Date().toISOString().substring(0, 10);
+
+  const stmt = db.prepare<
+    unknown,
+    {
+      $asOfDate: string;
+      $startDate: null;
+      $endDateExclusive: null;
+      $governmentName: null;
+      $governmentStartDate: null;
+    }
+  >(
+    `INSERT INTO PartySummary (
+       party_code,
+       party_display_code,
+       party_name,
+       member_count,
+       is_in_government,
+       votes_cast,
+       total_votings,
+       participation_rate,
+       female_count,
+       male_count,
+       average_age
+     )
+     WITH window AS (
+       SELECT
+         COALESCE($startDate, $asOfDate) AS start_date,
+         COALESCE(DATE($endDateExclusive, '-1 day'), $asOfDate) AS end_date
+     ),
+     active_members AS (
+       SELECT
+         pgm.group_code,
+         pgm.group_name,
+         pgm.group_abbreviation,
+         pgm.person_id,
+         pgm.start_date,
+         pgm.end_date
+       FROM ParliamentaryGroupMembership pgm
+       WHERE pgm.start_date IS NOT NULL
+         AND pgm.start_date <= $asOfDate
+         AND (pgm.end_date IS NULL OR pgm.end_date >= $asOfDate)
+       GROUP BY
+         pgm.group_code,
+         pgm.group_name,
+         pgm.group_abbreviation,
+         pgm.person_id,
+         pgm.start_date,
+         pgm.end_date
+     ),
+     member_stats AS (
+       SELECT
+         am.group_code,
+         am.group_name,
+         MIN(am.group_abbreviation) AS group_abbreviation,
+         COUNT(*) AS member_count
+       FROM active_members am
+       GROUP BY am.group_code, am.group_name
+     ),
+     recent_votings AS (
+       SELECT id, start_date
+       FROM Voting
+       WHERE start_date <= $asOfDate
+         AND start_date >= COALESCE($startDate, DATE($asOfDate, '-6 months'))
+         AND ($endDateExclusive IS NULL OR start_date < $endDateExclusive)
+     ),
+     vote_stats AS (
+       SELECT
+         pgm.group_code,
+         SUM(CASE WHEN v.vote IN ('Jaa', 'Ei', 'Tyhjää') THEN 1 ELSE 0 END) AS votes_cast,
+         COUNT(*) AS total_votings,
+         ROUND(
+           100.0 * SUM(CASE WHEN v.vote IN ('Jaa', 'Ei', 'Tyhjää') THEN 1 ELSE 0 END) /
+           NULLIF(COUNT(*), 0),
+           1
+         ) AS participation_rate
+       FROM recent_votings rv
+       JOIN Vote v INDEXED BY idx_vote_voting_group_vote ON v.voting_id = rv.id
+       JOIN ParliamentaryGroupMembership pgm INDEXED BY idx_pgm_person_dates
+         ON pgm.person_id = v.person_id
+         AND pgm.start_date <= rv.start_date
+         AND (pgm.end_date IS NULL OR pgm.end_date >= rv.start_date)
+       GROUP BY pgm.group_code
+     ),
+     display_code_candidates AS (
+       SELECT
+         pgm.group_code,
+         v.group_abbreviation,
+         MAX(v.voting_id) AS latest_voting_id
+       FROM recent_votings rv
+       JOIN Vote v INDEXED BY idx_vote_voting_group_vote ON v.voting_id = rv.id
+       JOIN ParliamentaryGroupMembership pgm INDEXED BY idx_pgm_person_dates
+         ON pgm.person_id = v.person_id
+         AND pgm.start_date <= rv.start_date
+         AND (pgm.end_date IS NULL OR pgm.end_date >= rv.start_date)
+       WHERE v.group_abbreviation IS NOT NULL
+         AND TRIM(v.group_abbreviation) != ''
+       GROUP BY pgm.group_code, v.group_abbreviation
+     ),
+     display_codes AS (
+       SELECT
+         dcc.group_code,
+         MIN(dcc.group_abbreviation) AS party_display_code
+       FROM display_code_candidates dcc
+       JOIN (
+         SELECT
+           group_code,
+           MAX(latest_voting_id) AS latest_voting_id
+         FROM display_code_candidates
+         GROUP BY group_code
+       ) latest
+         ON latest.group_code = dcc.group_code
+         AND latest.latest_voting_id = dcc.latest_voting_id
+       GROUP BY dcc.group_code
+     ),
+     gov_groups AS (
+       SELECT
+         pgm.group_code,
+         MAX(CASE WHEN gm.id IS NOT NULL THEN 1 ELSE 0 END) AS is_in_government
+       FROM GovernmentMembership gm
+       JOIN Government g ON g.id = gm.government_id
+       JOIN ParliamentaryGroupMembership pgm
+         ON pgm.person_id = gm.person_id
+         AND pgm.start_date <= COALESCE(gm.end_date, '9999-12-31')
+         AND (pgm.end_date IS NULL OR pgm.end_date >= gm.start_date)
+       CROSS JOIN window w
+       WHERE gm.start_date <= w.end_date
+         AND (gm.end_date IS NULL OR gm.end_date >= w.start_date)
+         AND (g.end_date IS NULL OR g.end_date > w.start_date)
+         AND (
+           $governmentName IS NULL OR (
+             TRIM(g.name) = TRIM($governmentName)
+             AND g.start_date = $governmentStartDate
+           )
+         )
+       GROUP BY pgm.group_code
+     ),
+     demo_stats AS (
+       SELECT
+         am.group_code,
+         SUM(CASE WHEN r.gender = 'Nainen' THEN 1 ELSE 0 END) AS female_count,
+         SUM(CASE WHEN r.gender = 'Mies' THEN 1 ELSE 0 END) AS male_count,
+         AVG(
+           CASE
+             WHEN r.birth_date IS NOT NULL THEN (JULIANDAY($asOfDate) - JULIANDAY(r.birth_date)) / 365.25
+             ELSE NULL
+           END
+         ) AS avg_age
+       FROM active_members am
+       JOIN Representative r ON r.person_id = am.person_id
+       GROUP BY am.group_code
+     )
+     SELECT
+       ms.group_code,
+       COALESCE(dc.party_display_code, ms.group_abbreviation, ms.group_code),
+       ms.group_name,
+       ms.member_count,
+       COALESCE(gg.is_in_government, 0),
+       COALESCE(vs.votes_cast, 0),
+       COALESCE(vs.total_votings, 0),
+       COALESCE(vs.participation_rate, 0),
+       COALESCE(ds.female_count, 0),
+       COALESCE(ds.male_count, 0),
+       ROUND(COALESCE(ds.avg_age, 0), 1)
+     FROM member_stats ms
+     LEFT JOIN display_codes dc ON dc.group_code = ms.group_code
+     LEFT JOIN gov_groups gg ON gg.group_code = ms.group_code
+     LEFT JOIN demo_stats ds ON ds.group_code = ms.group_code
+     LEFT JOIN vote_stats vs ON vs.group_code = ms.group_code
+     ORDER BY ms.member_count DESC`,
+  );
+
+  const rebuildTransaction = db.transaction(() => {
+    db.run("DELETE FROM PartySummary");
+    stmt.run({
+      $asOfDate: asOfDate,
+      $startDate: null,
+      $endDateExclusive: null,
+      $governmentName: null,
+      $governmentStartDate: null,
+    });
+  });
+
+  rebuildTransaction.immediate();
+  stmt.finalize();
+
+  const row = db
+    .query<{ count: number }, []>("SELECT COUNT(*) AS count FROM PartySummary")
+    .get();
+  return row?.count ?? 0;
+}

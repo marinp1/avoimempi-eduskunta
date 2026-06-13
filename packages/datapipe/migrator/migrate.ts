@@ -11,6 +11,7 @@ import { migrateVaskiData } from "./fn/VaskiData/migrator";
 import {
   normalizeImportedTextData,
   rebuildFederatedSearchIndex,
+  rebuildPartySummary,
   rebuildPersonSpeechDailyStats,
   rebuildPersonVotingDailyStats,
   rebuildVotingPartyStats,
@@ -786,6 +787,19 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
     console.log(
       `✅ Federated search index rebuilt (${federatedSearchRows} rows)`,
     );
+
+    onMessage({
+      type: "progress",
+      data: {
+        message: "Rebuilding party summary table...",
+        currentTable: null,
+        tablesCompleted,
+        totalTables: tablesToImport.length,
+      },
+    });
+    console.log("🧮 Rebuilding party summary table...");
+    const partySummaryRows = rebuildPartySummary(targetDatabase);
+    console.log(`✅ Party summary table rebuilt (${partySummaryRows} rows)`);
 
     console.log("\n📈 Gathering query planner statistics (ANALYZE)...");
     targetDatabase.run("ANALYZE;");

@@ -8,14 +8,7 @@ import recentActivity from "./sql/analytics-recent-activity.sql";
 import speechActivity from "./sql/analytics-speech-activity.sql";
 import { endDateExclusive } from "../../database/query-helpers";
 
-const MAX_MEMO_ENTRIES = 200;
-
 export class AnalyticsRepository {
-  private readonly partySummaryMemo = new Map<
-    string,
-    ReturnType<typeof this.queryPartySummary>
-  >();
-
   constructor(
     private readonly db: Database,
     private readonly generationKey: string | null = null,
@@ -188,31 +181,26 @@ export class AnalyticsRepository {
     governmentName?: string;
     governmentStartDate?: string;
   }) {
-    const asOfDate =
-      params?.asOfDate || new Date().toISOString().substring(0, 10);
     const startDate = params?.startDate ?? null;
     const endDateExclusiveValue = endDateExclusive(params?.endDate);
     const governmentName = params?.governmentName ?? null;
     const governmentStartDate = params?.governmentStartDate ?? null;
 
-    if (this.generationKey) {
-      const memoKey = `${this.generationKey}|${asOfDate}|${startDate}|${endDateExclusiveValue}|${governmentName}|${governmentStartDate}`;
-      const cached = this.partySummaryMemo.get(memoKey);
-      if (cached) return cached;
-      const data = this.queryPartySummary({
-        asOfDate,
-        startDate,
-        endDateExclusiveValue,
-        governmentName,
-        governmentStartDate,
-      });
-      if (this.partySummaryMemo.size >= MAX_MEMO_ENTRIES) {
-        const firstKey = this.partySummaryMemo.keys().next().value;
-        if (firstKey !== undefined) this.partySummaryMemo.delete(firstKey);
+    if (
+      startDate === null &&
+      endDateExclusiveValue === null &&
+      governmentName === null &&
+      governmentStartDate === null
+    ) {
+      try {
+        return this.queryPartySummaryMaterialized();
+      } catch {
+        // Table doesn't exist yet — fall back to live query.
       }
-      this.partySummaryMemo.set(memoKey, data);
-      return data;
     }
+
+    const asOfDate =
+      params?.asOfDate || new Date().toISOString().substring(0, 10);
 
     return this.queryPartySummary({
       asOfDate,
@@ -221,6 +209,42 @@ export class AnalyticsRepository {
       governmentName,
       governmentStartDate,
     });
+  }
+
+  private queryPartySummaryMaterialized() {
+    return this.db
+      .query<
+        {
+          party_code: string;
+          party_display_code: string;
+          party_name: string;
+          member_count: number;
+          is_in_government: number;
+          votes_cast: number;
+          total_votings: number;
+          participation_rate: number;
+          female_count: number;
+          male_count: number;
+          average_age: number;
+        },
+        []
+      >(
+        `SELECT
+           party_code,
+           party_display_code,
+           party_name,
+           member_count,
+           is_in_government,
+           votes_cast,
+           total_votings,
+           participation_rate,
+           female_count,
+           male_count,
+           average_age
+         FROM PartySummary
+         ORDER BY member_count DESC`,
+      )
+      .all();
   }
 
   private queryPartySummary(params: {
