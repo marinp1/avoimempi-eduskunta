@@ -1,5 +1,6 @@
 import {
   applyFilters,
+  CHIP_PARTIES,
   type RosterParams,
 } from "#server/helpers/template-helpers";
 import CompositionChange from "#server/components/composition-change";
@@ -11,13 +12,23 @@ import type { WebappDeps } from "./deps";
 import i18next from "i18next";
 import { defineRoute } from "#server/helpers";
 
+const VALID_BLOCS = new Set(["hallitus", "oppositio"]);
+const VALID_SORTS = new Set(["name", "party", "district", "age", "att"]);
+const VALID_DIRS = new Set(["asc", "desc"]);
+const VALID_PARTIES: Set<string> = new Set(CHIP_PARTIES.map((p) => p.code));
+
 function parseRosterParams(url: URL): RosterParams {
+  const party = url.searchParams.get("party") ?? undefined;
+  const bloc = url.searchParams.get("bloc") ?? undefined;
+  const sort = url.searchParams.get("sort") ?? undefined;
+  const dir = url.searchParams.get("dir") ?? undefined;
+
   return {
     q: url.searchParams.get("q") ?? undefined,
-    party: url.searchParams.get("party") ?? undefined,
-    bloc: url.searchParams.get("bloc") ?? undefined,
-    sort: url.searchParams.get("sort") ?? undefined,
-    dir: url.searchParams.get("dir") ?? undefined,
+    party: party && VALID_PARTIES.has(party) ? party : undefined,
+    bloc: bloc && VALID_BLOCS.has(bloc) ? bloc : undefined,
+    sort: sort && VALID_SORTS.has(sort) ? sort : undefined,
+    dir: dir && VALID_DIRS.has(dir) ? dir : undefined,
   };
 }
 

@@ -29,25 +29,25 @@ export const TableNames = Object.values(TableNameMap);
 
 export type TableName = (typeof TableNames)[number];
 
-export const PrimaryKeys: Record<TableName, string> = {
-  Attachment: "",
-  AttachmentGroup: "",
-  HetekaData: "",
+export const PrimaryKeys: Record<TableName, string | null> = {
+  Attachment: null,
+  AttachmentGroup: null,
+  HetekaData: null,
   MemberOfParliament: "personId",
-  PrimaryKeys: "",
+  PrimaryKeys: null,
   SaliDBAanestys: "AanestysId",
-  SaliDBAanestysAsiakirja: "",
+  SaliDBAanestysAsiakirja: null,
   SaliDBAanestysEdustaja: "EdustajaId",
-  SaliDBAanestysJakauma: "",
-  SaliDBAanestysKieli: "",
+  SaliDBAanestysJakauma: null,
+  SaliDBAanestysKieli: null,
   SaliDBIstunto: "Id",
   SaliDBKohta: "Id",
   SaliDBKohtaAanestys: "Id",
   SaliDBKohtaAsiakirja: "Id",
   SaliDBMessageLog: "Id",
-  SaliDBPuheenvuoro: "",
+  SaliDBPuheenvuoro: null,
   SaliDBTiedote: "Id",
-  SeatingOfParliament: "",
+  SeatingOfParliament: null,
   VaskiData: "Id",
 };
 
