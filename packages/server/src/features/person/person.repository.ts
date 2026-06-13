@@ -314,21 +314,21 @@ export class PersonRepository {
   }
 
   private queryPersonMetricAggregates() {
-    const stmt = this.db.prepare<
-      {
-        person_id: number;
-        party: string | null;
-        speech_count: number;
-        initiative_count: number;
-        interpellation_count: number;
-        written_question_count: number;
-        vote_total: number;
-        vote_cast: number;
-      },
-      { $startDate: string | null; $endDateExclusive: string | null }
-    >(personMetricAggregates);
-    const rows = stmt.all({ $startDate: null, $endDateExclusive: null });
-    stmt.finalize();
+    const rows = this.db
+      .query<
+        {
+          person_id: number;
+          party: string | null;
+          speech_count: number;
+          initiative_count: number;
+          interpellation_count: number;
+          written_question_count: number;
+          vote_total: number;
+          vote_cast: number;
+        },
+        { $startDate: string | null; $endDateExclusive: string | null }
+      >(personMetricAggregates)
+      .all({ $startDate: null, $endDateExclusive: null });
     return {
       rows,
       baselines: this.computeBaselinesFromRows(rows),

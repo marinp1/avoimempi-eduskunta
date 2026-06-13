@@ -21,16 +21,21 @@ export class SessionService {
     q?: string;
     offset?: number;
   }) {
-    const raw = this.sessionRepo.fetchSessionsIndex(2000);
-    const termFiltered = raw.filter(
-      (r) =>
-        r.date >= params.startDate &&
-        (!params.endDate || r.date <= params.endDate),
-    );
+    const raw = this.sessionRepo.fetchSessionsIndex({
+      limit: 2000,
+      startDate: params.startDate,
+      endDateExclusive: params.endDate
+        ? (() => {
+            const d = new Date(`${params.endDate}T00:00:00Z`);
+            d.setUTCDate(d.getUTCDate() + 1);
+            return d.toISOString().substring(0, 10);
+          })()
+        : null,
+    });
     const filtered =
       params.cursor < params.today
-        ? termFiltered.filter((r) => r.date <= params.cursor)
-        : termFiltered;
+        ? raw.filter((r) => r.date <= params.cursor)
+        : raw;
     return buildSessionsViewModel(
       filtered,
       { kind: params.kind, q: params.q },
@@ -45,29 +50,18 @@ export class SessionService {
 
     if (!session) return null;
 
-    const votingsBySectionKey = new Map<
-      string,
-      ReturnType<typeof this.sessionRepo.fetchSectionVotings>
-    >();
-    for (const section of sections) {
-      if (section.voting_count > 0) {
-        const votings = this.sessionRepo.fetchSectionVotings({
-          sectionKey: section.key,
-        });
-        votingsBySectionKey.set(section.key, votings);
-      }
-    }
+    // Batch fetch: all section votings in one query.
+    const sectionKeysWithVotings = sections
+      .filter((s) => s.voting_count > 0)
+      .map((s) => s.key);
+    const votingsBySectionKey = this.sessionRepo.fetchSectionVotingsByKeys(
+      sectionKeysWithVotings,
+    );
 
-    let rollCallData = null;
-    for (const section of sections) {
-      const result = this.sessionRepo.fetchSectionRollCall({
-        sectionKey: section.key,
-      });
-      if (result) {
-        rollCallData = result;
-        break;
-      }
-    }
+    // Batch fetch: first section with roll call data.
+    const rollCallData = this.sessionRepo.fetchSectionRollCallByKeys(
+      sections.map((s) => s.key),
+    );
 
     const partySeatRows: PartySeatRow[] = this.sessionRepo.fetchPartySeatCounts(
       session.date ?? new Date().toISOString().slice(0, 10),
@@ -126,21 +120,14 @@ export class SessionService {
       minutes_related_document_identifier?: string | null;
     }>,
   ): Map<string, number> {
-    const map = new Map<string, number>();
-    const seen = new Set<string>();
-    for (const section of sections) {
-      const ident = section.minutes_related_document_identifier;
-      if (!ident || seen.has(ident)) continue;
-      seen.add(ident);
-      try {
-        const wq = this.documentRepo.fetchWrittenQuestionByIdentifier({
-          identifier: ident,
-        });
-        if (wq) map.set(ident, wq.id);
-      } catch {
-        // Identifier not found in WrittenQuestion — skip
-      }
-    }
-    return map;
+    const identifiers = Array.from(
+      new Set(
+        sections
+          .map((s) => s.minutes_related_document_identifier)
+          .filter((id): id is string => !!id),
+      ),
+    );
+    if (identifiers.length === 0) return new Map();
+    return this.sessionRepo.fetchWrittenQuestionsByIdentifiers(identifiers);
   }
 }

@@ -27,5 +27,7 @@ LEFT JOIN (SELECT session_key, COUNT(*) AS speech_count FROM Speech WHERE COALES
 LEFT JOIN (SELECT session_key, GROUP_CONCAT(title, '||') AS section_titles FROM Section WHERE minutes_entry_kind = 'asiakohta' GROUP BY session_key) st ON st.session_key = s.key
 LEFT JOIN (SELECT session_key, GROUP_CONCAT(title, '||') AS voting_titles FROM Voting WHERE annulled = 0 GROUP BY session_key) vv ON vv.session_key = s.key
 WHERE s.type = 'TAYSISTUN'
+  AND ($startDate IS NULL OR s.date >= $startDate)
+  AND ($endDateExclusive IS NULL OR s.date < $endDateExclusive)
 ORDER BY s.date DESC, s.number DESC
 LIMIT $limit;

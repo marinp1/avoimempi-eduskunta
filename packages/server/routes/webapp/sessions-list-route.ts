@@ -21,12 +21,18 @@ export function createSessionsListRoute(deps: WebappDeps) {
 
       const cursor = dateParam ?? ctx.tlData.cursor;
 
-      const raw = ctx.deps.sessionRepository.fetchSessionsIndex(2000);
-      const termFiltered = raw.filter(
-        (r) =>
-          r.date >= ctx.bounds.startDate &&
-          (!ctx.bounds.endDate || r.date <= ctx.bounds.endDate),
-      );
+      const raw = ctx.deps.sessionRepository.fetchSessionsIndex({
+        limit: 2000,
+        startDate: ctx.bounds.startDate,
+        endDateExclusive: ctx.bounds.endDate
+          ? (() => {
+              const d = new Date(`${ctx.bounds.endDate}T00:00:00Z`);
+              d.setUTCDate(d.getUTCDate() + 1);
+              return d.toISOString().substring(0, 10);
+            })()
+          : null,
+      });
+      const termFiltered = raw;
       const filtered =
         cursor < ctx.tlData.today
           ? termFiltered.filter((r) => r.date <= cursor)
