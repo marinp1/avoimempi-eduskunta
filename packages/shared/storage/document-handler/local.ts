@@ -3,6 +3,7 @@ import {
   constants,
   existsSync,
   mkdirSync,
+  readFileSync,
   renameSync,
   writeFileSync,
 } from "node:fs";
@@ -42,6 +43,10 @@ export class LocalDocumentHandler implements IDocumentHandler {
     const target = this.safePath(storageKey);
     mkdirSync(path.dirname(target), { recursive: true });
     writeFileSync(target, data);
+  }
+
+  async get(storageKey: string): Promise<Buffer> {
+    return readFileSync(this.safePath(storageKey));
   }
 
   async exists(storageKey: string): Promise<boolean> {

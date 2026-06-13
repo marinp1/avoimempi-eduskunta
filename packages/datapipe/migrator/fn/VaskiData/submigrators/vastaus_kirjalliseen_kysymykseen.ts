@@ -108,8 +108,8 @@ export default function createVastausKirjallinenKysymysSubMigrator(
   );
 
   const insertResponse = db.prepare(
-    `INSERT INTO WrittenQuestionResponse (id, question_id, parliament_identifier, document_number, parliamentary_year, title, answer_date, minister_title, minister_first_name, minister_last_name, vaski_guid, edk_identifier, status, created, source_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO WrittenQuestionResponse (id, question_id, parliament_identifier, document_number, parliamentary_year, title, answer_date, minister_title, minister_first_name, minister_last_name, vaski_guid, edk_identifier, status, created, source_path, body_text)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(parliament_identifier) DO UPDATE SET
        question_id = COALESCE(excluded.question_id, WrittenQuestionResponse.question_id),
        title = COALESCE(excluded.title, WrittenQuestionResponse.title),
@@ -119,7 +119,8 @@ export default function createVastausKirjallinenKysymysSubMigrator(
        minister_last_name = COALESCE(excluded.minister_last_name, WrittenQuestionResponse.minister_last_name),
        vaski_guid = COALESCE(excluded.vaski_guid, WrittenQuestionResponse.vaski_guid),
        edk_identifier = COALESCE(excluded.edk_identifier, WrittenQuestionResponse.edk_identifier),
-       source_path = excluded.source_path
+       source_path = excluded.source_path,
+       body_text = COALESCE(excluded.body_text, WrittenQuestionResponse.body_text)
      RETURNING id`,
   );
 
@@ -225,6 +226,8 @@ export default function createVastausKirjallinenKysymysSubMigrator(
         ? `${row._source.vaskiPath}#id=${id}`
         : `vaski-data/vastaus_kirjalliseen_kysymykseen/unknown#id=${id}`;
 
+      const bodyText = (row as any)._documentText as string | null;
+
       try {
         const responseRow = insertResponse.get(
           id,
@@ -242,6 +245,7 @@ export default function createVastausKirjallinenKysymysSubMigrator(
           status,
           normalizeText(row.created),
           sourcePath,
+          bodyText,
         ) as { id: number } | undefined;
 
         const responseId = responseRow?.id ?? id;

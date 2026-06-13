@@ -5,6 +5,7 @@ import committeeReportMembers from "./sql/COMMITTEE_REPORT_MEMBERS.sql";
 import committeeReportSessions from "./sql/COMMITTEE_REPORT_SESSIONS.sql";
 import committeeReportsCount from "./sql/COMMITTEE_REPORTS_COUNT.sql";
 import committeeReportsList from "./sql/COMMITTEE_REPORTS_LIST.sql";
+import expertStatementById from "./sql/EXPERT_STATEMENT_BY_ID.sql";
 import expertStatementsCount from "./sql/EXPERT_STATEMENTS_COUNT.sql";
 import expertStatementsList from "./sql/EXPERT_STATEMENTS_LIST.sql";
 import govProposalById from "./sql/GOV_PROPOSAL_BY_ID.sql";
@@ -496,6 +497,7 @@ export class DocumentRepository {
         decision_outcome_code: string | null;
         latest_stage_code: string | null;
         end_date: string | null;
+        response_body_text: string | null;
       },
       { $id: number }
     >(writtenQuestionById);
@@ -694,6 +696,28 @@ export class DocumentRepository {
     stmt.finalize();
 
     return paginatedResult(rows, totalCount, params.page, params.limit);
+  }
+
+  public fetchExpertStatementById(params: { id: string }) {
+    const detailStmt = this.db.prepare<
+      {
+        id: number;
+        document_type: string;
+        edk_identifier: string;
+        bill_identifier: string | null;
+        committee_name: string | null;
+        meeting_identifier: string | null;
+        meeting_date: string | null;
+        title: string | null;
+        publicity: string | null;
+        language: string | null;
+        body_text: string | null;
+      },
+      { $id: number }
+    >(expertStatementById);
+    const detail = detailStmt.get({ $id: +params.id });
+    detailStmt.finalize();
+    return detail ?? null;
   }
 
   public fetchWrittenQuestionResponses(params: {

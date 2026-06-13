@@ -20,6 +20,8 @@ SELECT
   q.decision_outcome,
   q.decision_outcome_code,
   q.latest_stage_code,
-  q.end_date
+  q.end_date,
+  r.body_text AS response_body_text
 FROM WrittenQuestion q
+LEFT JOIN WrittenQuestionResponse r ON r.question_id = q.id
 WHERE q.id = $id

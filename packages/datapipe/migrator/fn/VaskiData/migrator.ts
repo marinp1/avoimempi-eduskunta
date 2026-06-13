@@ -50,6 +50,12 @@ export interface VaskiMigrationOptions {
    * Document types to migrate. If omitted, migrates all indexed document types.
    */
   documentTypes?: string[];
+  /**
+   * Map from EDK identifier to PDF-extracted body text, loaded from the
+   * documents database. Used to populate body_text columns for PDF-only
+   * document types (expert statements, written question responses).
+   */
+  documentTextMap?: Map<string, string>;
   onDocumentTypeStart?: (event: {
     documentType: string;
     index: number;
@@ -212,9 +218,25 @@ const normalizeDocumentTypes = (documentTypes: string[]): string[] =>
 function loadSubMigrator(
   db: Database,
   documentType: string,
+  documentTextMap?: Map<string, string>,
 ): VaskiSubMigrator | null {
   const factory = SUBMIGRATOR_FACTORIES[documentType];
-  return factory ? factory(db) : null;
+  if (!factory) return null;
+
+  const sub = factory(db);
+
+  if (!documentTextMap || documentTextMap.size === 0) return sub;
+
+  const originalMigrateRow = sub.migrateRow;
+  return {
+    ...sub,
+    migrateRow(row: VaskiEntry): void {
+      (row as any)._documentText =
+        documentTextMap.get(extractEdkIdentifier(row) ?? "") ?? null;
+      const result = originalMigrateRow(row);
+      if (isPromiseLike(result)) void result;
+    },
+  };
 }
 
 /**
@@ -243,7 +265,11 @@ export async function migrateVaskiData(
   const dependencyDocumentTypes = new Set<string>();
 
   for (const [index, documentType] of requestedDocumentTypes.entries()) {
-    const subMigrator = loadSubMigrator(db, documentType);
+    const subMigrator = loadSubMigrator(
+      db,
+      documentType,
+      options?.documentTextMap,
+    );
     if (!subMigrator) {
       skippedDocumentTypes.push(documentType);
       if (options?.onDocumentTypeSkipped) {

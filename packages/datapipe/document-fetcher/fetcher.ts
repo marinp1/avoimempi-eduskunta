@@ -86,6 +86,32 @@ export async function fetchAndStoreDocument(
   vaskiGuid: string | null,
   options: FetchOptions = {},
 ): Promise<FetchResult> {
+  return doFetchAndStore(docsDb, edkIdentifier, vaskiGuid, null, options);
+}
+
+export async function fetchAndStoreDocumentWithType(
+  docsDb: Database,
+  edkIdentifier: string,
+  vaskiGuid: string | null,
+  documentType: string | null,
+  options: FetchOptions = {},
+): Promise<FetchResult> {
+  return doFetchAndStore(
+    docsDb,
+    edkIdentifier,
+    vaskiGuid,
+    documentType,
+    options,
+  );
+}
+
+async function doFetchAndStore(
+  docsDb: Database,
+  edkIdentifier: string,
+  vaskiGuid: string | null,
+  documentType: string | null,
+  options: FetchOptions = {},
+): Promise<FetchResult> {
   const handler = getDocumentHandler();
   const filename = buildFilename(edkIdentifier, vaskiGuid);
   const storageKey = shardStorageKey(filename);
@@ -136,6 +162,7 @@ export async function fetchAndStoreDocument(
     upsertDocumentFile(docsDb, {
       edk_identifier: edkIdentifier,
       vaski_guid: vaskiGuid,
+      document_type: documentType,
       storage_key: "",
       fetched_at: new Date().toISOString(),
       file_size_bytes: null,
@@ -159,6 +186,7 @@ export async function fetchAndStoreDocument(
     upsertDocumentFile(docsDb, {
       edk_identifier: edkIdentifier,
       vaski_guid: vaskiGuid,
+      document_type: documentType,
       storage_key: "",
       fetched_at: new Date().toISOString(),
       file_size_bytes: null,
@@ -187,6 +215,7 @@ export async function fetchAndStoreDocument(
     upsertDocumentFile(docsDb, {
       edk_identifier: edkIdentifier,
       vaski_guid: vaskiGuid,
+      document_type: documentType,
       storage_key: "",
       fetched_at: new Date().toISOString(),
       file_size_bytes: null,
@@ -210,6 +239,7 @@ export async function fetchAndStoreDocument(
     upsertDocumentFile(docsDb, {
       edk_identifier: edkIdentifier,
       vaski_guid: vaskiGuid,
+      document_type: documentType,
       storage_key: "",
       fetched_at: new Date().toISOString(),
       file_size_bytes: null,
@@ -237,6 +267,7 @@ export async function fetchAndStoreDocument(
   upsertDocumentFile(docsDb, {
     edk_identifier: edkIdentifier,
     vaski_guid: vaskiGuid,
+    document_type: documentType,
     storage_key: storageKey,
     fetched_at: new Date().toISOString(),
     file_size_bytes: fileSizeBytes,

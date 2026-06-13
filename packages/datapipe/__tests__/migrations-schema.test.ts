@@ -82,6 +82,7 @@ describe("Migration schema", () => {
       "V001.036__fix_government_coalition_party_names.sql",
       "V001.037__vaski_document_guid.sql",
       "V001.038__query_performance_indexes.sql",
+      "V001.039__document_pdf_text.sql",
     ]);
   });
 

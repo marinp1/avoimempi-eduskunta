@@ -25,6 +25,9 @@
     "aloite": "Lakialoitteet",
     "mietinto": "Mietinnöt",
     "asiantuntija": "Asiantuntijalausunnot",
+    "asiantuntijalausunto": "Asiantuntijalausunto",
+    "asiantuntijalausunnon_liite": "Asiantuntijalausunnon liite",
+    "asiantuntijasuunnitelma": "Asiantuntijasuunnitelma",
     "vastaus-edk": "Eduskunnan vastaukset"
   },
   "status_labels": {
@@ -37,7 +40,8 @@
     "signed": "Allekirjoitettu",
     "submitted_on": "Jätetty {{date}}",
     "answered_on": "Vastattu {{date}}",
-    "given_on": "Annettu {{date}}"
+    "given_on": "Annettu {{date}}",
+    "meeting_date": "Kokouspäivä"
   },
   "initiative_type_labels": {
     "LA": "Lakialoite",
@@ -110,6 +114,8 @@
     "text_section_minority_opinion": "Eriävä mielipide",
     "text_section_legislation": "Lainsäädäntö",
     "text_section_oral_question": "Suullinen kysymys",
+    "text_section_answer": "Ministerin vastaus",
+    "text_section_body": "Sisältö",
     "unknown_author": "Tuntematon",
     "author_parliament": "Eduskunta"
   },

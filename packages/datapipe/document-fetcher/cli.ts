@@ -3,7 +3,7 @@ import { getDatabasePath, getDocumentsDatabasePath } from "#database";
 import { getDocumentHandler } from "#storage";
 import { openDocumentsDb } from "./db.ts";
 import {
-  fetchAndStoreDocument,
+  fetchAndStoreDocumentWithType,
   sleep,
   RATE_LIMIT_MS,
   DEFAULT_RETRY_AFTER_SECONDS,
@@ -228,22 +228,33 @@ async function fetchSingle(
 
   const mainDb = new Database(getDatabasePath(), { readonly: true });
   let vaskiGuid: string | null = null;
+  let documentType: string | null = null;
   try {
     const vaskiRow = mainDb
-      .query<{ vaski_guid: string | null }, [string]>(
-        "SELECT vaski_guid FROM VaskiDocument WHERE edk_identifier = ? LIMIT 1",
+      .query<
+        { vaski_guid: string | null; document_type: string | null },
+        [string]
+      >(
+        "SELECT vaski_guid, document_type FROM VaskiDocument WHERE edk_identifier = ? LIMIT 1",
       )
       .get(edkIdentifier);
     vaskiGuid = vaskiRow?.vaski_guid ?? null;
+    documentType = vaskiRow?.document_type ?? null;
   } catch {
     // vaski_guid column not yet in DB (run migrate to add it)
   }
   mainDb.close();
 
-  const result = await fetchAndStoreDocument(docsDb, edkIdentifier, vaskiGuid, {
-    force: options.force,
-    dryRun: options.dryRun,
-  });
+  const result = await fetchAndStoreDocumentWithType(
+    docsDb,
+    edkIdentifier,
+    vaskiGuid,
+    documentType,
+    {
+      force: options.force,
+      dryRun: options.dryRun,
+    },
+  );
 
   if (result.rateLimited && options.poll) {
     const waitSeconds = result.retryAfterSeconds ?? DEFAULT_RETRY_AFTER_SECONDS;
@@ -380,10 +391,11 @@ async function fetchAll(options: {
       if (!first) await sleep(RATE_LIMIT_MS);
       first = false;
 
-      const result = await fetchAndStoreDocument(
+      const result = await fetchAndStoreDocumentWithType(
         docsDb,
         row.edk_identifier,
         row.vaski_guid,
+        row.document_type,
         {
           force: options.force,
           dryRun: options.dryRun,

@@ -53,7 +53,17 @@ export function normalizeImportedTextData(db: Database): void {
            title = NULLIF(TRIM(title), ''),
            minister_title = NULLIF(TRIM(minister_title), ''),
            minister_first_name = NULLIF(TRIM(minister_first_name), ''),
-           minister_last_name = NULLIF(TRIM(minister_last_name), '')`,
+           minister_last_name = NULLIF(TRIM(minister_last_name), ''),
+           body_text = NULLIF(TRIM(body_text), '')`,
+      );
+    }
+
+    if (objectExists(db, "table", "ExpertStatement")) {
+      db.run(
+        `UPDATE ExpertStatement
+         SET
+           title = NULLIF(TRIM(title), ''),
+           body_text = NULLIF(TRIM(body_text), '')`,
       );
     }
 
@@ -336,6 +346,22 @@ export function rebuildFederatedSearchIndex(
          )`,
     searchBodyMaxChars,
   );
+  const expertStatementBodySql = withOptionalSubstrLimit(
+    `TRIM(
+           COALESCE(es.title, '') || ' ' ||
+           COALESCE(es.committee_name, '') || ' ' ||
+           COALESCE(es.body_text, '')
+         )`,
+    searchBodyMaxChars,
+  );
+  const writtenQuestionResponseBodySql = withOptionalSubstrLimit(
+    `TRIM(
+           COALESCE(wqr.title, '') || ' ' ||
+           COALESCE(wqr.parliament_identifier, '') || ' ' ||
+           COALESCE(wqr.body_text, '')
+         )`,
+    searchBodyMaxChars,
+  );
 
   const rebuildTransaction = db.transaction(() => {
     db.run("DELETE FROM FederatedSearchFts");
@@ -436,6 +462,30 @@ export function rebuildFederatedSearchIndex(
          ${legislativeInitiativeBodySql},
          li.submission_date
        FROM LegislativeInitiative li`,
+    );
+
+    db.run(
+      `INSERT INTO FederatedSearchFts (type, record_id, title, subtitle, body, date)
+       SELECT
+         'expert-statement',
+         CAST(es.id AS TEXT),
+         COALESCE(NULLIF(TRIM(es.title), ''), es.edk_identifier),
+         es.edk_identifier,
+         ${expertStatementBodySql},
+         es.meeting_date
+       FROM ExpertStatement es`,
+    );
+
+    db.run(
+      `INSERT INTO FederatedSearchFts (type, record_id, title, subtitle, body, date)
+       SELECT
+         'written-question-response',
+         CAST(wqr.id AS TEXT),
+         COALESCE(NULLIF(TRIM(wqr.title), ''), wqr.parliament_identifier),
+         wqr.parliament_identifier,
+         ${writtenQuestionResponseBodySql},
+         wqr.answer_date
+       FROM WrittenQuestionResponse wqr`,
     );
   });
 

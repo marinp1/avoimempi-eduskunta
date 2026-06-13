@@ -4,6 +4,46 @@ declare global {
       id: number;
       document_type: string;
       edk_identifier: string | null;
+      vaski_guid: string | null;
+      source_path: string;
+    };
+
+    export type ExpertStatement = {
+      id: number;
+      document_type:
+        | "asiantuntijalausunto"
+        | "asiantuntijalausunnon_liite"
+        | "asiantuntijasuunnitelma";
+      edk_identifier: string;
+      bill_identifier: string | null;
+      committee_name: string | null;
+      meeting_identifier: string | null;
+      meeting_date: string | null;
+      title: string | null;
+      publicity: string | null;
+      language: string | null;
+      body_text: string | null;
+      status: number;
+      created: Modules.Common.DateString | null;
+      source_path: string;
+    };
+
+    export type WrittenQuestionResponse = {
+      id: number;
+      question_id: number;
+      parliament_identifier: string;
+      document_number: number;
+      parliamentary_year: string;
+      title: string | null;
+      answer_date: string | null;
+      minister_title: string | null;
+      minister_first_name: string | null;
+      minister_last_name: string | null;
+      body_text: string | null;
+      vaski_guid: string | null;
+      edk_identifier: string | null;
+      status: number;
+      created: Modules.Common.DateString | null;
       source_path: string;
     };
 

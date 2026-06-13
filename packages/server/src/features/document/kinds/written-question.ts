@@ -77,6 +77,16 @@ export function buildWrittenQuestion(
   );
   if (qs) textSections.push(qs);
 
+  const answerBody = (detail as any).response_body_text as string | null;
+  if (answerBody) {
+    const as = buildTextSection(
+      i18next.t("documents:detail.text_section_answer"),
+      answerBody,
+      null,
+    );
+    if (as) textSections.push(as);
+  }
+
   const signatories: Signatory[] = mapMpSignatories(detail.signers ?? []);
 
   const authorParty = detail.first_signer_party ?? "";

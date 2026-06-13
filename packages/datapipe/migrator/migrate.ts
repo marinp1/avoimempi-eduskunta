@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { getMigrations, migrate } from "bun-sqlite-migrations";
 import { type TableName, TableNames } from "#constants/index";
-import { getDatabasePath } from "#database";
+import { getDatabasePath, getDocumentsDatabasePath } from "#database";
 import { getParsedRowStore } from "#storage/row-store/factory";
 import { generateAndSaveChangesReport } from "./changes-report";
 import { migrateVaskiData } from "./fn/VaskiData/migrator";
@@ -140,6 +140,30 @@ const isTruthyEnv = (value: string | undefined): boolean => {
 
 const isPromiseLike = (value: unknown): value is PromiseLike<unknown> =>
   !!value && typeof (value as { then?: unknown }).then === "function";
+
+function loadDocumentTextMap(): Map<string, string> {
+  const documentsDbPath = getDocumentsDatabasePath();
+  try {
+    const docsDb = sqlite.open(documentsDbPath, { readonly: true });
+    const rows = docsDb
+      .query<{ edk_identifier: string; body_text: string }, []>(
+        "SELECT edk_identifier, body_text FROM DocumentText",
+      )
+      .all();
+    docsDb.close();
+    const map = new Map<string, string>();
+    for (const row of rows) {
+      map.set(row.edk_identifier, row.body_text);
+    }
+    console.log(
+      `📄 Loaded ${map.size} PDF-extracted text records from documents database`,
+    );
+    return map;
+  } catch {
+    console.log("⏭️  Documents database not available, skipping PDF text");
+    return new Map();
+  }
+}
 
 const parseOptionalPositiveInt = (
   value: string | undefined,
@@ -357,8 +381,11 @@ export async function runMigration(options?: MigrationOptions): Promise<void> {
         targetDatabase.run(MIGRATOR_SQL.beginTransaction);
 
         try {
+          const documentTextMap = loadDocumentTextMap();
+
           const summary = await migrateVaskiData(targetDatabase, {
             shouldStop: checkStop,
+            documentTextMap,
             documentTypeProgressRowInterval: 5000,
             onDocumentTypeStart: ({ documentType, index, total }) => {
               totalDocumentTypes = total;

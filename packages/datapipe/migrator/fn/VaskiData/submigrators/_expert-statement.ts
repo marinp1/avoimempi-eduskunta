@@ -85,8 +85,8 @@ export function createExpertStatementSubMigrator(
   documentType: ExpertStatementDocumentType,
 ) {
   const insertStatement = db.prepare(
-    `INSERT INTO ExpertStatement (id, document_type, edk_identifier, bill_identifier, committee_name, meeting_identifier, meeting_date, title, publicity, language, status, created, source_path)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `INSERT INTO ExpertStatement (id, document_type, edk_identifier, bill_identifier, committee_name, meeting_identifier, meeting_date, title, publicity, language, status, created, source_path, body_text)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(edk_identifier) DO UPDATE SET
        bill_identifier = COALESCE(excluded.bill_identifier, ExpertStatement.bill_identifier),
        committee_name = COALESCE(excluded.committee_name, ExpertStatement.committee_name),
@@ -95,7 +95,8 @@ export function createExpertStatementSubMigrator(
        title = COALESCE(excluded.title, ExpertStatement.title),
        publicity = COALESCE(excluded.publicity, ExpertStatement.publicity),
        language = COALESCE(excluded.language, ExpertStatement.language),
-       source_path = excluded.source_path`,
+       source_path = excluded.source_path,
+       body_text = COALESCE(excluded.body_text, ExpertStatement.body_text)`,
   );
 
   return {
@@ -155,6 +156,8 @@ export function createExpertStatementSubMigrator(
         ? `${row._source.vaskiPath}#id=${id}`
         : `vaski-data/${documentType}/unknown#id=${id}`;
 
+      const bodyText = (row as any)._documentText as string | null;
+
       try {
         insertStatement.run(
           id,
@@ -170,6 +173,7 @@ export function createExpertStatementSubMigrator(
           status,
           normalizeText(row.created),
           sourcePath,
+          bodyText,
         );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
